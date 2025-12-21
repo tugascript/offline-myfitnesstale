@@ -1,0 +1,24 @@
+{
+  "data": [
+    {
+      "name": "Push",
+      "picture_uri": "assets/images/muscle_groups/push.jpg"
+    },
+    {
+      "name": "Pull",
+      "picture_uri": "assets/images/muscle_groups/pull.jpg"
+    },
+    {
+      "name": "Legs",
+      "picture_uri": "assets/images/muscle_groups/legs.jpg"
+    },
+    {
+      "name": "Core",
+      "picture_uri": "assets/images/muscle_groups/core.jpg"
+    },
+    {
+      "name": "Full",
+      "picture_uri": "assets/images/muscle_groups/full.jpg"
+    }
+  ]
+}

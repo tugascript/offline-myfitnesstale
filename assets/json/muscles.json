@@ -1,0 +1,76 @@
+{
+  "data": {
+    "Push": [
+      {
+        "name": "Chest",
+        "picture_uri": "assets/images/muscles/chest.jpg"
+      },
+      {
+        "name": "Shoulders",
+        "picture_uri": "assets/images/muscles/shoulders.jpg"
+      },
+      {
+        "name": "Triceps",
+        "picture_uri": "assets/images/muscles/triceps.jpg"
+      }
+    ],
+    "Pull": [
+      {
+        "name": "Lats",
+        "picture_uri": "assets/images/muscles/back.jpg"
+      },
+      {
+        "name": "Traps",
+        "picture_uri": "assets/images/muscles/traps.jpg"
+      },
+      {
+        "name": "Biceps",
+        "picture_uri": "assets/images/muscles/biceps.jpg"
+      },
+      {
+        "name": "Forearms",
+        "picture_uri": "assets/images/muscles/forearms.jpg"
+      },
+      {
+        "name": "Rear Shoulders",
+        "picture_uri": "assets/images/muscles/rear_shoulders.jpg"
+      }
+    ],
+    "Legs": [
+      {
+        "name": "Quads",
+        "picture_uri": "assets/images/muscles/quads.jpg"
+      },
+      {
+        "name": "Adductors",
+        "picture_uri": "assets/images/muscles/adductors.jpg"
+      },
+      {
+        "name": "Hamstrings",
+        "picture_uri": "assets/images/muscles/hamstrings.jpg"
+      },
+      {
+        "name": "Calves",
+        "picture_uri": "assets/images/muscles/calves.jpg"
+      },
+      {
+        "name": "Glutes",
+        "picture_uri": "assets/images/muscles/glutes.jpg"
+      }
+    ],
+    "Core": [
+      {
+        "name": "Abs",
+        "picture_uri": "assets/images/muscles/abs.jpg"
+      },
+      {
+        "name": "Obliques",
+        "picture_uri": "assets/images/muscles/obliques.jpg"
+      },
+      {
+        "name": "Lower Back",
+        "picture_uri": "assets/images/muscles/lower_back.jpg"
+      }
+    ]
+  }
+}
