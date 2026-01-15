@@ -171,6 +171,7 @@ class _OnboardingFormState extends State<OnboardingForm> {
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.person_outline),
                 ),
+                textInputAction: TextInputAction.next,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter your name';
@@ -188,6 +189,10 @@ class _OnboardingFormState extends State<OnboardingForm> {
                       _data.name = value;
                     });
                   }
+                },
+                onFieldSubmitted: (_) {
+                  // Move focus to next field instead of submitting form
+                  FocusScope.of(context).nextFocus();
                 },
               ),
               SizedBox(height: widget.sizes.formBreaks),
