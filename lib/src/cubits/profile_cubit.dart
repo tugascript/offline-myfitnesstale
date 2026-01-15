@@ -58,10 +58,7 @@ class ProfileCubit extends Cubit<ProfileState> {
     required bool preLoadWorkouts,
   }) async {
     _logger.info("Onboarding profile");
-    if (state.isLoading ||
-        !state.isInitiated ||
-        state.profile != null ||
-        state.system != null) {
+    if (state.isLoading || state.profile != null || state.system != null) {
       _logger.info("Loading, or profile is already onboarded");
       return;
     }
@@ -85,6 +82,7 @@ class ProfileCubit extends Cubit<ProfileState> {
         profile: profile,
         system: system,
         isLoading: false,
+        isInitiated: true,
         error: null,
       ));
     } catch (e) {
