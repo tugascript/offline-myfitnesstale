@@ -36,28 +36,34 @@ class OnboardingView extends StatelessWidget {
                 subtitle: "Set up your profile to start on your fitness tale",
               ),
               SizedBox(height: sizes.breaks * 4),
-              BlocConsumer<ProfileCubit, ProfileState>(
+              BlocListener<ProfileCubit, ProfileState>(
+                listenWhen: (previous, current) {
+                  // Only listen when transitioning from no profile to having profile
+                  return previous.profile == null &&
+                         previous.system == null &&
+                         current.profile != null &&
+                         current.system != null &&
+                         !current.isLoading;
+                },
                 listener: (context, state) {
-                  if (!state.isLoading &&
-                      state.profile != null &&
-                      state.system != null) {
-                    context.go('/');
-                  }
+                  context.go('/');
                 },
-                builder: (context, state) {
-                  return OnboardingForm(
-                    sizes: sizes,
-                    initialUnits: Units.metric,
-                    initialThemeMode: ThemeType.system,
-                    initialName: "",
-                    initialHeight: 178,
-                    initialGender: Gender.male,
-                    submitButtonLabel: "Create & get started",
-                    isLoading: state.isLoading,
-                    onSubmit: context.read<ProfileCubit>().onboardProfile,
-                    initialPreLoadWorkouts: true,
-                  );
-                },
+                child: BlocBuilder<ProfileCubit, ProfileState>(
+                  builder: (context, state) {
+                    return OnboardingForm(
+                      sizes: sizes,
+                      initialUnits: Units.metric,
+                      initialThemeMode: ThemeType.system,
+                      initialName: "",
+                      initialHeight: 178,
+                      initialGender: Gender.male,
+                      submitButtonLabel: "Create & get started",
+                      isLoading: state.isLoading,
+                      onSubmit: context.read<ProfileCubit>().onboardProfile,
+                      initialPreLoadWorkouts: true,
+                    );
+                  },
+                ),
               ),
             ],
           ),
