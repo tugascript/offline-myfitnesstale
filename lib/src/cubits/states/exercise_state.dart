@@ -50,17 +50,20 @@ final class ExercisePagination extends Equatable {
 
 final class EquipmentPagination extends Equatable {
   final String? name;
+  final int total;
   final int limit;
   final int offset;
 
   const EquipmentPagination({
     this.name,
+    required this.total,
     required this.limit,
     required this.offset,
   });
 
   factory EquipmentPagination.initial() {
     return const EquipmentPagination(
+      total: 0,
       limit: 10,
       offset: 0,
     );
@@ -68,18 +71,20 @@ final class EquipmentPagination extends Equatable {
 
   EquipmentPagination copyWith({
     String? name,
+    int? total,
     int? limit,
     int? offset,
   }) {
     return EquipmentPagination(
       name: name ?? this.name,
+      total: total ?? this.total,
       limit: limit ?? this.limit,
       offset: offset ?? this.offset,
     );
   }
 
   @override
-  List<Object?> get props => [name, limit, offset];
+  List<Object?> get props => [name, total, limit, offset];
 }
 
 final class ExerciseState extends Equatable {

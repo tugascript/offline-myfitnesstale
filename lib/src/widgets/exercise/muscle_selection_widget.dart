@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../cubits/muscle_group_cubit.dart';
-import '../../cubits/states/muscle_group_state.dart';
 import '../../models/enums.dart';
 import '../../models/utilities.dart';
+
+enum ExerciseMuscleCategory {
+  primary,
+  secondary,
+}
 
 class MuscleSelectionWidget extends StatefulWidget {
   final List<(Muscle, ExerciseMuscleCategory)> selectedMuscles;
@@ -27,11 +29,6 @@ class _MuscleSelectionWidgetState extends State<MuscleSelectionWidget> {
   void initState() {
     super.initState();
     _selectedMuscles = List.from(widget.selectedMuscles);
-    _loadData();
-  }
-
-  void _loadData() {
-    context.read<MuscleGroupCubit>().getMuscleGroups();
   }
 
   String _formatMuscleGroupName(MuscleGroup group) {
@@ -74,61 +71,51 @@ class _MuscleSelectionWidgetState extends State<MuscleSelectionWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<MuscleGroupCubit, MuscleGroupState>(
-      builder: (context, muscleGroupState) {
-        if (muscleGroupState.isLoading) {
-          return const Center(child: CircularProgressIndicator());
-        }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Select Muscles',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 16),
+        ...MuscleGroup.values.map((group) {
+          final groupMuscles = kMuscleGroupMuscleMap[group] ?? <Muscle>{};
+          if (groupMuscles.isEmpty) return const SizedBox.shrink();
 
-        final muscleGroups = muscleGroupState.muscleGroups;
-
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Select Muscles',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 16),
-            ...muscleGroups.map((group) {
-              final groupMuscles = kMuscleGroupMuscleMap[group] ?? <Muscle>{};
-              if (groupMuscles.isEmpty) return const SizedBox.shrink();
-
-              return ExpansionTile(
-                title: Text(_formatMuscleGroupName(group)),
-                children: groupMuscles.map((muscle) {
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                              EnumDisplayNames.getMuscleDisplayName(muscle)),
-                        ),
-                        const SizedBox(width: 8),
-                        _buildCategoryChip(
-                          muscle,
-                          ExerciseMuscleCategory.primary,
-                          'Primary',
-                        ),
-                        const SizedBox(width: 8),
-                        _buildCategoryChip(
-                          muscle,
-                          ExerciseMuscleCategory.secondary,
-                          'Secondary',
-                        ),
-                      ],
+          return ExpansionTile(
+            title: Text(_formatMuscleGroupName(group)),
+            children: groupMuscles.map((muscle) {
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child:
+                          Text(EnumDisplayNames.getMuscleDisplayName(muscle)),
                     ),
-                  );
-                }).toList(),
+                    const SizedBox(width: 8),
+                    _buildCategoryChip(
+                      muscle,
+                      ExerciseMuscleCategory.primary,
+                      'Primary',
+                    ),
+                    const SizedBox(width: 8),
+                    _buildCategoryChip(
+                      muscle,
+                      ExerciseMuscleCategory.secondary,
+                      'Secondary',
+                    ),
+                  ],
+                ),
               );
-            }),
-          ],
-        );
-      },
+            }).toList(),
+          );
+        }),
+      ],
     );
   }
 

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../cubits/equipment_cubit.dart';
-import '../../cubits/states/equipment_state.dart';
+import '../../cubits/exercise_cubit.dart';
+import '../../cubits/states/exercise_state.dart';
 import '../../services/dtos/equipment_dto.dart';
 
 class EquipmentSelectionWidget extends StatefulWidget {
@@ -31,7 +31,7 @@ class _EquipmentSelectionWidgetState extends State<EquipmentSelectionWidget> {
   }
 
   void _loadData() {
-    context.read<EquipmentCubit>().getEquipments(limit: 1000);
+    context.read<ExerciseCubit>().getEquipments(limit: 1000, offset: 0);
   }
 
   void _toggleEquipment(int equipmentId) {
@@ -47,13 +47,13 @@ class _EquipmentSelectionWidgetState extends State<EquipmentSelectionWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<EquipmentCubit, EquipmentState>(
-      builder: (context, equipmentState) {
-        if (equipmentState.isLoading) {
+    return BlocBuilder<ExerciseCubit, ExerciseState>(
+      builder: (context, exerciseState) {
+        if (exerciseState.isLoading) {
           return const Center(child: CircularProgressIndicator());
         }
 
-        final equipments = equipmentState.equipments;
+        final equipments = exerciseState.equipments;
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -96,7 +96,8 @@ class _EquipmentSelectionWidgetState extends State<EquipmentSelectionWidget> {
                 itemCount: equipments.length,
                 itemBuilder: (context, index) {
                   final equipment = equipments[index];
-                  final isSelected = _selectedEquipmentIds.contains(equipment.id);
+                  final isSelected =
+                      _selectedEquipmentIds.contains(equipment.id);
                   return CheckboxListTile(
                     title: Text(equipment.name),
                     value: isSelected,
@@ -111,4 +112,3 @@ class _EquipmentSelectionWidgetState extends State<EquipmentSelectionWidget> {
     );
   }
 }
-

@@ -4,11 +4,12 @@ import 'package:go_router/go_router.dart';
 
 import '../../cubits/profile_cubit.dart';
 import '../../cubits/states/profile_state.dart';
+import '../../cubits/states/workout_plan_record_state.dart';
+import '../../cubits/workout_plan_record_cubit.dart';
 import '../../models/enums.dart';
 import '../../services/dtos/profile_dto.dart';
 import '../../utilities/sizes/home_sizes.dart';
 
-// TODO: fix this widget
 class ActivePlanWidget extends StatefulWidget {
   final HomeSizesList sizes;
 
@@ -43,9 +44,10 @@ class _ActivePlanWidgetState extends State<ActivePlanWidget> {
       return;
     }
 
-    final cubit = context.read<CurrentWorkoutPlanRecordCubit>();
+    final cubit = context.read<WorkoutPlanRecordCubit>();
     // Only load if not already loading and no plan exists
-    if (!cubit.state.isLoading && cubit.state.workoutPlan == null) {
+    if (!cubit.state.isLoading &&
+        cubit.state.currentPlanRecord.workoutPlan == null) {
       _hasAttemptedLoad = true;
       // Load active plan record
       cubit.getActivePlanRecord();
@@ -91,16 +93,19 @@ class _ActivePlanWidgetState extends State<ActivePlanWidget> {
           _loadActivePlanIfNeeded(profileState.profile);
         }
       },
-      child: BlocBuilder<CurrentWorkoutPlanRecordCubit,
-          CurrentWorkoutPlanRecordState>(
+      child: BlocBuilder<WorkoutPlanRecordCubit, WorkoutPlanRecordState>(
         builder: (context, state) {
-          if (state.workoutPlan == null) {
+          final currentPlanRecord = state.currentPlanRecord;
+
+          if (currentPlanRecord.workoutPlan == null) {
             return const SizedBox.shrink();
           }
 
-          final plan = state.workoutPlan!;
+          final plan = currentPlanRecord.workoutPlan!;
           final difficulty = Difficulty.fromValue(plan.difficulty);
           final difficultyColor = _difficultyColor(difficulty);
+          final progressPercentange = currentPlanRecord.completedWorkouts /
+              currentPlanRecord.totalWorkouts;
 
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -177,7 +182,7 @@ class _ActivePlanWidgetState extends State<ActivePlanWidget> {
                                   ),
                                 ),
                                 Text(
-                                  '${state.progressPercentage.toStringAsFixed(1)}%',
+                                  '${progressPercentange.toStringAsFixed(1)}%',
                                   style: TextStyle(
                                     fontSize: 14,
                                     fontWeight: FontWeight.w600,
@@ -188,7 +193,7 @@ class _ActivePlanWidgetState extends State<ActivePlanWidget> {
                             ),
                             const SizedBox(height: 8),
                             LinearProgressIndicator(
-                              value: state.progressPercentage / 100,
+                              value: progressPercentange / 100,
                               minHeight: 6,
                               backgroundColor: Colors.grey[200],
                               valueColor: AlwaysStoppedAnimation<Color>(
@@ -197,7 +202,7 @@ class _ActivePlanWidgetState extends State<ActivePlanWidget> {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              '${state.completedWorkouts} of ${state.totalWorkouts} workouts',
+                              '${currentPlanRecord.completedWorkouts} of ${currentPlanRecord.totalWorkouts} workouts',
                               style: TextStyle(
                                 fontSize: 12,
                                 color: Colors.grey[600],
@@ -205,7 +210,7 @@ class _ActivePlanWidgetState extends State<ActivePlanWidget> {
                             ),
                           ],
                         ),
-                        if (state.todaysWorkouts.isNotEmpty) ...[
+                        if (currentPlanRecord.todaysWorkouts.isNotEmpty) ...[
                           const SizedBox(height: 12),
                           Container(
                             padding: const EdgeInsets.all(12),
@@ -236,7 +241,8 @@ class _ActivePlanWidgetState extends State<ActivePlanWidget> {
                                         ),
                                       ),
                                       Text(
-                                        state.todaysWorkouts.first.name,
+                                        currentPlanRecord
+                                            .todaysWorkouts.first.name,
                                         style: TextStyle(
                                           fontSize: 14,
                                           fontWeight: FontWeight.w600,
@@ -253,7 +259,7 @@ class _ActivePlanWidgetState extends State<ActivePlanWidget> {
                                   ),
                                   onPressed: () {
                                     context.push(
-                                      '/workouts/${state.todaysWorkouts.first.id}/active',
+                                      '/workouts/${currentPlanRecord.todaysWorkouts.first.id}/active',
                                     );
                                   },
                                   tooltip: 'Start Workout',
