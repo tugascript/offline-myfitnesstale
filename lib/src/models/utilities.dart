@@ -1,10 +1,23 @@
+import 'enums.dart';
+
 sealed class DateUtilities {
   static int getNowUtcUnix() {
     return DateTime.now().toUtc().millisecondsSinceEpoch ~/ 1000;
   }
 
-  static int getNumericDate(DateTime date) {
+  static int getDateUnix(DateTime date) {
     return date.millisecondsSinceEpoch ~/ 1000;
+  }
+
+  static int getNumericDate(DateTime date) {
+    return date.year * 10000 + date.month * 100 + date.day;
+  }
+
+  static DateTime convertNumericDate(int date) {
+    final int year = date ~/ 10000;
+    final int month = (date ~/ 100) % 100;
+    final int day = date % 100;
+    return DateTime.utc(year, month, day);
   }
 }
 
@@ -46,6 +59,82 @@ class WhereBuilder {
 
     if (arg != null) {
       _args.add(arg);
+    }
+  }
+}
+
+sealed class EnumDisplayNames {
+  static String getMuscleGroupDisplayName(MuscleGroup group) {
+    switch (group) {
+      case MuscleGroup.full:
+        return 'Full Body';
+      case MuscleGroup.push:
+        return 'Push';
+      case MuscleGroup.pull:
+        return 'Pull';
+      case MuscleGroup.legs:
+        return 'Legs';
+      case MuscleGroup.core:
+        return 'Core';
+    }
+  }
+
+  static String getMuscleDisplayName(Muscle muscle) {
+    switch (muscle) {
+      case Muscle.chest:
+        return 'Chest';
+      case Muscle.upperChest:
+        return 'Upper Chest';
+      case Muscle.lowerChest:
+        return 'Lower Chest';
+      case Muscle.innerChest:
+        return 'Inner Chest';
+      case Muscle.shoulders:
+        return 'Shoulders';
+      case Muscle.frontDelts:
+        return 'Front Delts';
+      case Muscle.sideDelts:
+        return 'Side Delts';
+      case Muscle.rearDelts:
+        return 'Rear Delts';
+      case Muscle.triceps:
+        return 'Triceps';
+      case Muscle.neck:
+        return 'Neck';
+      case Muscle.traps:
+        return 'Traps';
+      case Muscle.rhomboids:
+        return 'Rhomboids';
+      case Muscle.lats:
+        return 'Lats';
+      case Muscle.biceps:
+        return 'Biceps';
+      case Muscle.brachialis:
+        return 'Brachialis';
+      case Muscle.forearms:
+        return 'Forearms';
+      case Muscle.quadriceps:
+        return 'Quadriceps';
+      case Muscle.hamstrings:
+        return 'Hamstrings';
+      case Muscle.glutes:
+        return 'Glutes';
+      case Muscle.calves:
+        return 'Calves';
+      case Muscle.tibialis:
+        return 'Tibialis';
+      case Muscle.adductors:
+        return 'Adductors';
+      case Muscle.abdominals:
+        return 'Abdominals';
+      case Muscle.upperAbs:
+        return 'Upper Abs';
+      case Muscle.lowerAbs:
+        return 'Lower Abs';
+      case Muscle.obliques:
+        return 'Obliques';
+      case Muscle.lowerBack:
+        return 'Lower Back';
     }
   }
 }

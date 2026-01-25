@@ -14,13 +14,29 @@ const String _tableCreate = '''
     day INTEGER NOT NULL,
     created_at INTEGER NOT NULL,
     updated_at INTEGER NOT NULL,
-    FOREIGN KEY (workout_plan_id) REFERENCES ${WorkoutPlan.table} (id),
+    FOREIGN KEY (workout_plan_id) REFERENCES ${WorkoutPlan.table} (id)
+      ON DELETE CASCADE,
     FOREIGN KEY (workout_plan_week_id) REFERENCES ${WorkoutPlanWeek.table} (id)
+      ON DELETE CASCADE
   );
   
   CREATE INDEX IF NOT EXISTS idx_workout_plan_days_workout_plan_id ON $_table (workout_plan_id);
   CREATE INDEX IF NOT EXISTS idx_workout_plan_days_workout_plan_week_id ON $_table (workout_plan_week_id);
+  CREATE INDEX IF NOT EXISTS idx_workout_plan_days_workout_plan_week_day ON $_table (workout_plan_week_id, day);
   ''';
+
+enum WorkoutPlanDayColumns {
+  id("id"),
+  workoutPlanId("workout_plan_id"),
+  workoutPlanWeekId("workout_plan_week_id"),
+  day("day"),
+  createdAt("created_at"),
+  updatedAt("updated_at");
+
+  final String value;
+
+  const WorkoutPlanDayColumns(this.value);
+}
 
 class WorkoutPlanDay extends Equatable implements Model {
   @override
@@ -48,33 +64,34 @@ class WorkoutPlanDay extends Equatable implements Model {
   @override
   Map<String, Object?> toMap() {
     return {
-      'id': id,
-      'workout_plan_id': workoutPlanId,
-      'workout_plan_week_id': workoutPlanWeekId,
-      'day': day,
-      'created_at': createdAt,
-      'updated_at': updatedAt,
+      WorkoutPlanDayColumns.id.value: id,
+      WorkoutPlanDayColumns.workoutPlanId.value: workoutPlanId,
+      WorkoutPlanDayColumns.workoutPlanWeekId.value: workoutPlanWeekId,
+      WorkoutPlanDayColumns.day.value: day,
+      WorkoutPlanDayColumns.createdAt.value: createdAt,
+      WorkoutPlanDayColumns.updatedAt.value: updatedAt,
     };
   }
 
   @override
   factory WorkoutPlanDay.fromMap(Map<String, Object?> map) {
     return WorkoutPlanDay(
-      id: map['id'] as int?,
-      workoutPlanId: map['workout_plan_id'] as int,
-      workoutPlanWeekId: map['workout_plan_week_id'] as int,
-      day: map['day'] as int,
-      createdAt: map['created_at'] as int,
-      updatedAt: map['updated_at'] as int,
+      id: map[WorkoutPlanDayColumns.id.value] as int?,
+      workoutPlanId: map[WorkoutPlanDayColumns.workoutPlanId.value] as int,
+      workoutPlanWeekId:
+          map[WorkoutPlanDayColumns.workoutPlanWeekId.value] as int,
+      day: map[WorkoutPlanDayColumns.day.value] as int,
+      createdAt: map[WorkoutPlanDayColumns.createdAt.value] as int,
+      updatedAt: map[WorkoutPlanDayColumns.updatedAt.value] as int,
     );
   }
 
   @override
-  factory WorkoutPlanDay.create(
-    int workoutPlanId,
-    int workoutPlanWeekId,
-    int day,
-  ) {
+  factory WorkoutPlanDay.create({
+    required int workoutPlanId,
+    required int workoutPlanWeekId,
+    required int day,
+  }) {
     final int now = DateUtilities.getNowUtcUnix();
     return WorkoutPlanDay(
       workoutPlanId: workoutPlanId,

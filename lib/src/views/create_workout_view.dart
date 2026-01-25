@@ -51,7 +51,7 @@ class _CreateWorkoutViewState extends State<CreateWorkoutView> {
     await setCubit.getWorkoutSets(widget.workoutId!);
 
     if (mounted) {
-      final workout = workoutCubit.state.selectedWorkout?.workout;
+      final workout = workoutCubit.state.selectedWorkout;
       if (workout != null) {
         _nameController.text = workout.name;
         _descriptionController.text = workout.description ?? '';
@@ -195,7 +195,7 @@ class _CreateWorkoutViewState extends State<CreateWorkoutView> {
               ? null
               : _descriptionController.text.trim(),
         );
-        workoutId = workoutCubit.state.selectedWorkout?.workout.id! ?? 0;
+        workoutId = workoutCubit.state.selectedWorkout?.id ?? 0;
       }
 
       // Create all sets

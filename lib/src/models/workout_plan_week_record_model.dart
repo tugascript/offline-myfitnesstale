@@ -21,6 +21,20 @@ const String _tableCreate = '''
   );
 ''';
 
+enum WorkoutPlanWeekRecordColumns {
+  id("id"),
+  workoutPlanRecordId("workout_plan_record_id"),
+  workoutPlanWeekId("workout_plan_week_id"),
+  week("week"),
+  completedAt("completed_at"),
+  createdAt("created_at"),
+  updatedAt("updated_at");
+
+  final String value;
+
+  const WorkoutPlanWeekRecordColumns(this.value);
+}
+
 class WorkoutPlanWeekRecord extends Equatable implements Model {
   @override
   final int? id;
@@ -49,26 +63,29 @@ class WorkoutPlanWeekRecord extends Equatable implements Model {
   @override
   Map<String, Object?> toMap() {
     return {
-      'id': id,
-      'workout_plan_record_id': workoutPlanRecordId,
-      'workout_plan_week_id': workoutPlanWeekId,
-      'week': week,
-      'completed_at': completedAt,
-      'created_at': createdAt,
-      'updated_at': updatedAt,
+      WorkoutPlanWeekRecordColumns.id.value: id,
+      WorkoutPlanWeekRecordColumns.workoutPlanRecordId.value:
+          workoutPlanRecordId,
+      WorkoutPlanWeekRecordColumns.workoutPlanWeekId.value: workoutPlanWeekId,
+      WorkoutPlanWeekRecordColumns.week.value: week,
+      WorkoutPlanWeekRecordColumns.completedAt.value: completedAt,
+      WorkoutPlanWeekRecordColumns.createdAt.value: createdAt,
+      WorkoutPlanWeekRecordColumns.updatedAt.value: updatedAt,
     };
   }
 
   @override
   factory WorkoutPlanWeekRecord.fromMap(Map<String, Object?> map) {
     return WorkoutPlanWeekRecord(
-      id: map['id'] as int?,
-      workoutPlanRecordId: map['workout_plan_record_id']! as int,
-      workoutPlanWeekId: map['workout_plan_week_id']! as int,
-      week: map['week']! as int,
-      completedAt: map['completed_at'] as int?,
-      createdAt: map['created_at']! as int,
-      updatedAt: map['updated_at']! as int,
+      id: map[WorkoutPlanWeekRecordColumns.id.value] as int?,
+      workoutPlanRecordId:
+          map[WorkoutPlanWeekRecordColumns.workoutPlanRecordId.value]! as int,
+      workoutPlanWeekId:
+          map[WorkoutPlanWeekRecordColumns.workoutPlanWeekId.value]! as int,
+      week: map[WorkoutPlanWeekRecordColumns.week.value]! as int,
+      completedAt: map[WorkoutPlanWeekRecordColumns.completedAt.value] as int?,
+      createdAt: map[WorkoutPlanWeekRecordColumns.createdAt.value]! as int,
+      updatedAt: map[WorkoutPlanWeekRecordColumns.updatedAt.value]! as int,
     );
   }
 

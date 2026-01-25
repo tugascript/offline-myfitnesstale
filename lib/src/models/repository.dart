@@ -7,6 +7,9 @@ import 'utilities.dart';
 
 typedef FromMap<T> = T Function(Map<String, Object?> map);
 
+const int kDefaultLimit = 25;
+const int kDefaultOffset = 0;
+
 class Repository<T extends Model> {
   final DatabaseHelper _databaseHelper;
   final String _tableName;
@@ -25,8 +28,8 @@ class Repository<T extends Model> {
         _logger = Logger("$tableName Repository");
 
   Future<List<T>> selectPaginated({
-    int? limit,
-    int? offset,
+    required int limit,
+    required int offset,
     String? where,
     List<Object?>? whereArgs,
     String? orderBy,
@@ -104,7 +107,7 @@ class Repository<T extends Model> {
     return await db.insert(
       _tableName,
       modelMap,
-      conflictAlgorithm: ConflictAlgorithm.replace,
+      conflictAlgorithm: ConflictAlgorithm.ignore,
     );
   }
 
@@ -118,7 +121,7 @@ class Repository<T extends Model> {
       batch.insert(
         _tableName,
         modelMap,
-        conflictAlgorithm: ConflictAlgorithm.replace,
+        conflictAlgorithm: ConflictAlgorithm.ignore,
       );
     }
 
@@ -243,6 +246,26 @@ class JoinRepository<T extends JoinModel, J extends Model> {
       whereArgs: whereBuilder.args,
     );
     return rowsAffected > 0;
+  }
+
+  Future<T?> selectOne(int pk1, int pk2) async {
+    final WhereBuilder whereBuilder = WhereBuilder();
+    final (String key1, String key2) = primaryKeys;
+
+    whereBuilder.add('$key1 = ?', pk1);
+    whereBuilder.add('$key2 = ?', pk2);
+
+    final DatabaseExecutor db = await databaseHelper.db;
+    final List<Map<String, dynamic>> maps = await db.query(
+      tableName,
+      where: whereBuilder.where,
+      whereArgs: whereBuilder.args,
+    );
+    if (maps.isEmpty) {
+      return null;
+    }
+
+    return fromMap(maps.first);
   }
 
   Future<List<J>> selectJoined(int pk1) async {

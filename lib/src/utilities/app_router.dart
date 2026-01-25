@@ -24,10 +24,6 @@ import '../views/workout_plan_progress_view.dart';
 sealed class AppRouter {
   static final List<GoRoute> _routes = <GoRoute>[
     GoRoute(
-      path: '/',
-      builder: (context, state) => const MainNavigationView(),
-    ),
-    GoRoute(
       path: MainNavigationView.routeName,
       builder: (context, state) => const MainNavigationView(),
     ),

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
 import '../../models/enums.dart';
-import '../../models/exercise_model.dart';
+import '../../services/dtos/exercise_dto.dart';
 
 class ExerciseCardWidget extends StatelessWidget {
-  final Exercise exercise;
+  final ExerciseDto exercise;
   final String? muscleGroupName;
   final VoidCallback? onTap;
   final bool showFavorite;
@@ -79,7 +79,7 @@ class ExerciseCardWidget extends StatelessWidget {
                         ),
                         decoration: BoxDecoration(
                           color: _difficultyColor(Difficulty.fromValue(exercise.difficulty!))
-                              .withOpacity(0.2),
+                              .withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(

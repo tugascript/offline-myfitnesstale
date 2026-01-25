@@ -9,8 +9,8 @@ import '../cubits/states/equipment_state.dart';
 import '../cubits/states/exercise_state.dart';
 import '../cubits/states/muscle_group_state.dart';
 import '../models/enums.dart';
-import '../models/exercise_model.dart';
-import '../models/muscle_group_model.dart';
+import '../services/dtos/exercise_dto.dart';
+import '../models/utilities.dart';
 import '../widgets/exercise/exercise_card_widget.dart';
 import '../widgets/layout/responsive_scaffold.dart';
 
@@ -28,7 +28,7 @@ class _ExerciseLibraryViewState extends State<ExerciseLibraryView> {
   final TextEditingController _searchController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   bool _isGridView = true;
-  int? _selectedMuscleGroupId;
+  MuscleGroup? _selectedMuscleGroup;
   Difficulty? _selectedDifficulty;
   int? _selectedEquipmentId;
   String? _searchQuery;
@@ -66,7 +66,7 @@ class _ExerciseLibraryViewState extends State<ExerciseLibraryView> {
 
     context.read<ExerciseCubit>().getExercises(
           name: _searchQuery,
-          muscleGroupId: _selectedMuscleGroupId,
+          muscleGroup: _selectedMuscleGroup,
           difficulty: _selectedDifficulty?.value,
           limit: 20,
           offset: state.exercises.length,
@@ -87,20 +87,20 @@ class _ExerciseLibraryViewState extends State<ExerciseLibraryView> {
     });
     context.read<ExerciseCubit>().getExercises(
           name: _searchQuery,
-          muscleGroupId: _selectedMuscleGroupId,
+          muscleGroup: _selectedMuscleGroup,
           difficulty: _selectedDifficulty?.value,
           limit: 20,
           offset: 0,
         );
   }
 
-  void _onMuscleGroupFilterChanged(int? muscleGroupId) {
+  void _onMuscleGroupFilterChanged(MuscleGroup? muscleGroup) {
     setState(() {
-      _selectedMuscleGroupId = muscleGroupId;
+      _selectedMuscleGroup = muscleGroup;
     });
     context.read<ExerciseCubit>().getExercises(
           name: _searchQuery,
-          muscleGroupId: _selectedMuscleGroupId,
+          muscleGroup: _selectedMuscleGroup,
           difficulty: _selectedDifficulty?.value,
           limit: 20,
           offset: 0,
@@ -113,7 +113,7 @@ class _ExerciseLibraryViewState extends State<ExerciseLibraryView> {
     });
     context.read<ExerciseCubit>().getExercises(
           name: _searchQuery,
-          muscleGroupId: _selectedMuscleGroupId,
+          muscleGroup: _selectedMuscleGroup,
           difficulty: _selectedDifficulty?.value,
           limit: 20,
           offset: 0,
@@ -129,28 +129,15 @@ class _ExerciseLibraryViewState extends State<ExerciseLibraryView> {
     // TODO: Implement equipment filtering in ExerciseService
     context.read<ExerciseCubit>().getExercises(
           name: _searchQuery,
-          muscleGroupId: _selectedMuscleGroupId,
+          muscleGroup: _selectedMuscleGroup,
           difficulty: _selectedDifficulty?.value,
           limit: 20,
           offset: 0,
         );
   }
 
-  String? _getMuscleGroupName(
-    int muscleGroupId,
-    List<MuscleGroup> muscleGroups,
-  ) {
-    return muscleGroups
-        .firstWhere(
-          (mg) => mg.id == muscleGroupId,
-          orElse: () => MuscleGroup(
-            id: muscleGroupId,
-            name: 'Unknown',
-            createdAt: 0,
-            updatedAt: 0,
-          ),
-        )
-        .name;
+  String _getMuscleGroupName(MuscleGroup muscleGroup) {
+    return EnumDisplayNames.getMuscleGroupDisplayName(muscleGroup);
   }
 
   @override
@@ -215,8 +202,8 @@ class _ExerciseLibraryViewState extends State<ExerciseLibraryView> {
                               children: [
                                 // Muscle Group Filter
                                 Expanded(
-                                  child: DropdownButtonFormField<int?>(
-                                    initialValue: _selectedMuscleGroupId,
+                                  child: DropdownButtonFormField<MuscleGroup?>(
+                                    initialValue: _selectedMuscleGroup,
                                     decoration: InputDecoration(
                                       labelText: 'Muscle Group',
                                       border: OutlineInputBorder(
@@ -224,14 +211,15 @@ class _ExerciseLibraryViewState extends State<ExerciseLibraryView> {
                                       ),
                                     ),
                                     items: [
-                                      const DropdownMenuItem<int?>(
+                                      const DropdownMenuItem<MuscleGroup?>(
                                         value: null,
                                         child: Text('All Muscle Groups'),
                                       ),
                                       ...muscleGroupState.muscleGroups.map(
-                                        (mg) => DropdownMenuItem<int?>(
-                                          value: mg.id,
-                                          child: Text(mg.name),
+                                        (mg) => DropdownMenuItem<MuscleGroup?>(
+                                          value: mg,
+                                          child: Text(EnumDisplayNames
+                                              .getMuscleGroupDisplayName(mg)),
                                         ),
                                       ),
                                     ],
@@ -383,7 +371,7 @@ class _ExerciseLibraryViewState extends State<ExerciseLibraryView> {
   }
 
   Widget _buildGridView(
-    List<Exercise> exercises,
+    List<ExerciseDto> exercises,
     List<MuscleGroup> muscleGroups,
   ) {
     return GridView.builder(
@@ -403,10 +391,7 @@ class _ExerciseLibraryViewState extends State<ExerciseLibraryView> {
         final exercise = exercises[index];
         return ExerciseCardWidget(
           exercise: exercise,
-          muscleGroupName: _getMuscleGroupName(
-            exercise.muscleGroupId,
-            muscleGroups,
-          ),
+          muscleGroupName: _getMuscleGroupName(exercise.muscleGroup),
           onTap: () {
             context.push('/exercises/${exercise.id}');
           },
@@ -416,7 +401,7 @@ class _ExerciseLibraryViewState extends State<ExerciseLibraryView> {
   }
 
   Widget _buildListView(
-    List<Exercise> exercises,
+    List<ExerciseDto> exercises,
     List<MuscleGroup> muscleGroups,
   ) {
     return ListView.builder(
@@ -435,10 +420,7 @@ class _ExerciseLibraryViewState extends State<ExerciseLibraryView> {
           padding: const EdgeInsets.only(bottom: 12.0),
           child: ExerciseCardWidget(
             exercise: exercise,
-            muscleGroupName: _getMuscleGroupName(
-              exercise.muscleGroupId,
-              muscleGroups,
-            ),
+            muscleGroupName: _getMuscleGroupName(exercise.muscleGroup),
             compact: true,
             onTap: () {
               context.push('/exercises/${exercise.id}');

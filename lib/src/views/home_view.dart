@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:myfitnesstale/src/utilities/sizes/home_sizes.dart';
 
+import '../utilities/sizes/home_sizes.dart';
 import '../utilities/sizes/screen_size.dart';
 import '../widgets/dashboard/active_plan_widget.dart';
 import '../widgets/dashboard/quick_actions_widget.dart';

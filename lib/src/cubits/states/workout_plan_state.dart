@@ -1,51 +1,58 @@
 import 'package:equatable/equatable.dart';
 
-import '../../models/workout_plan_model.dart';
+import '../../models/enums.dart';
+import '../../services/dtos/workout_plan_dto.dart';
+import 'common_state.dart';
 
 final class WorkoutPlanPagination extends Equatable {
   final String? name;
-  final int? difficulty;
+  final Difficulty? difficulty;
   final int limit;
   final int offset;
+  final int total;
 
   const WorkoutPlanPagination({
     this.name,
     this.difficulty,
     required this.limit,
     required this.offset,
+    required this.total,
   });
 
   factory WorkoutPlanPagination.initial() {
     return const WorkoutPlanPagination(
       limit: 20,
       offset: 0,
+      total: 0,
     );
   }
 
   WorkoutPlanPagination copyWith({
     String? name,
-    int? difficulty,
+    Difficulty? difficulty,
     int? limit,
     int? offset,
+    int? total,
   }) {
     return WorkoutPlanPagination(
       name: name ?? this.name,
       difficulty: difficulty ?? this.difficulty,
       limit: limit ?? this.limit,
       offset: offset ?? this.offset,
+      total: total ?? this.total,
     );
   }
 
   @override
-  List<Object?> get props => [name, difficulty, limit, offset];
+  List<Object?> get props => [name, difficulty, limit, offset, total];
 }
 
 final class WorkoutPlanState extends Equatable {
-  final List<WorkoutPlan> workoutPlans;
+  final List<WorkoutPlanDto> workoutPlans;
   final WorkoutPlanPagination pagination;
-  final WorkoutPlan? selectedWorkoutPlan;
+  final WorkoutPlanDto? selectedWorkoutPlan;
   final bool isLoading;
-  final String? error;
+  final ErrorState? error;
 
   const WorkoutPlanState({
     required this.workoutPlans,
@@ -64,11 +71,11 @@ final class WorkoutPlanState extends Equatable {
   }
 
   WorkoutPlanState copyWith({
-    List<WorkoutPlan>? workoutPlans,
+    List<WorkoutPlanDto>? workoutPlans,
     WorkoutPlanPagination? pagination,
-    WorkoutPlan? selectedWorkoutPlan,
+    WorkoutPlanDto? selectedWorkoutPlan,
     bool? isLoading,
-    String? error,
+    ErrorState? error,
   }) {
     return WorkoutPlanState(
       workoutPlans: workoutPlans ?? this.workoutPlans,
@@ -88,4 +95,3 @@ final class WorkoutPlanState extends Equatable {
         error,
       ];
 }
-

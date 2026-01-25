@@ -1,20 +1,18 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:logging/logging.dart';
 
 import '../models/enums.dart';
-import '../models/workout_plan_model.dart';
-import '../services/current_workout_plan_record_service.dart';
-import '../services/workout_plan_record_service.dart';
+import '../services/common/errors.dart';
 import '../services/workout_plan_service.dart';
+import 'states/common_state.dart';
 import 'states/workout_plan_state.dart';
 
 class WorkoutPlanCubit extends Cubit<WorkoutPlanState> {
   final WorkoutPlanService _workoutPlanService = WorkoutPlanService();
-  final WorkoutPlanRecordService _workoutPlanRecordService =
-      WorkoutPlanRecordService();
-  final CurrentWorkoutPlanRecordService _currentWorkoutPlanRecordService =
-      CurrentWorkoutPlanRecordService();
 
   WorkoutPlanCubit() : super(WorkoutPlanState.initial());
+
+  final Logger _logger = Logger('WorkoutPlanCubit');
 
   Future<void> getWorkoutPlans({
     String? name,
@@ -22,94 +20,85 @@ class WorkoutPlanCubit extends Cubit<WorkoutPlanState> {
     int? limit,
     int? offset,
   }) async {
+    _logger.info('Getting workout plans');
     emit(state.copyWith(isLoading: true));
 
-    try {
-      final List<WorkoutPlan> plans = await _workoutPlanService.getWorkoutPlans(
-        name: name,
-        difficulty: difficulty,
-        limit: limit,
-        offset: offset,
-      );
+    final result = await _workoutPlanService.getWorkoutPlans(
+      name: name,
+      difficulty: difficulty,
+      limit: limit ?? state.pagination.limit,
+      offset: offset ?? state.pagination.offset,
+    );
+    if (result.isErr()) {
+      final error = result.error;
+      _logger.warning("Failed to get workout plans", error);
+      switch (error.type) {
+        case OperationErrorTypes.invalidInput:
+        case OperationErrorTypes.operationFailure:
+          emit(state.copyWith(
+            error: ErrorState(
+              type: error.type.name,
+              description: "Failed to get workout plans",
+            ),
+            isLoading: false,
+          ));
+          return;
+      }
+    }
 
-      emit(state.copyWith(
-        workoutPlans: plans,
+    _logger.info('Workout plans retrieved successfully');
+    final paginatedData = result.value;
+    emit(
+      state.copyWith(
+        workoutPlans: paginatedData.data,
         pagination: state.pagination.copyWith(
           name: name,
-          difficulty: difficulty?.value,
-          limit: limit,
-          offset: offset,
+          difficulty: difficulty,
+          limit: paginatedData.limit,
+          offset: paginatedData.offset,
+          total: paginatedData.total,
         ),
         isLoading: false,
-      ));
-    } catch (e) {
-      emit(state.copyWith(
-        error: e.toString(),
-        isLoading: false,
-      ));
-    }
+      ),
+    );
   }
 
   Future<void> getWorkoutPlan(int id) async {
+    _logger.info('Getting workout plan $id');
     emit(state.copyWith(isLoading: true));
 
-    try {
-      final WorkoutPlan? plan = await _workoutPlanService.getWorkoutPlan(id);
+    final result = await _workoutPlanService.getWorkoutPlan(id);
+    if (result.isErr()) {
+      final error = result.error;
+      _logger.warning("Failed to get workout plan $id", error);
 
-      if (plan != null) {
-        emit(state.copyWith(
-          selectedWorkoutPlan: plan,
-          isLoading: false,
-        ));
-      } else {
-        emit(state.copyWith(
-          error: 'Workout plan not found',
-          isLoading: false,
-        ));
+      switch (error.type) {
+        case SingleErrorTypes.invalidInput:
+        case SingleErrorTypes.notFound:
+          emit(state.copyWith(
+            error: ErrorState(
+              type: error.type.name,
+              description: error.description,
+            ),
+            isLoading: false,
+          ));
+          return;
+        case SingleErrorTypes.operationFailure:
+          emit(state.copyWith(
+            error: ErrorState(
+              type: error.type.name,
+              description: error.description,
+            ),
+            isLoading: false,
+          ));
+          return;
       }
-    } catch (e) {
-      emit(state.copyWith(
-        error: e.toString(),
-        isLoading: false,
-      ));
     }
-  }
 
-  Future<bool> startWorkoutPlan(int workoutPlanId) async {
-    emit(state.copyWith(isLoading: true));
-
-    try {
-      // Check if user already has an active plan
-      final bool hasActivePlan =
-          await _currentWorkoutPlanRecordService.hasActivePlan();
-      if (hasActivePlan) {
-        emit(state.copyWith(
-          error: 'You already have an active workout plan',
-          isLoading: false,
-        ));
-        return false;
-      }
-
-      // Create workout plan record
-      await _workoutPlanRecordService.createWorkoutPlanRecord(
-        workoutPlanId: workoutPlanId,
-        status: ProgressStatus.inProgress,
-      );
-
-      // Set as current plan
-      await _currentWorkoutPlanRecordService.setCurrentWorkoutPlan(
-        workoutPlanId,
-      );
-
-      emit(state.copyWith(isLoading: false));
-      return true;
-    } catch (e) {
-      emit(state.copyWith(
-        error: e.toString(),
-        isLoading: false,
-      ));
-      return false;
-    }
+    _logger.info('Workout plan $id retrieved successfully');
+    emit(state.copyWith(
+      selectedWorkoutPlan: result.value,
+      isLoading: false,
+    ));
   }
 }
-

@@ -1,4 +1,5 @@
 import 'model.dart';
+import 'utilities.dart';
 import 'workout_model.dart';
 
 const String _table = 'workout_records';
@@ -11,15 +12,32 @@ const String _tableCreate = '''
     total_rest_secs INTEGER NOT NULL,
     started_at INTEGER NOT NULL,
     completed_at INTEGER,
-    weight REAL NOT NULL,
-    reps INTEGER NOT NULL,
+    dropped_at INTEGER,
     created_at INTEGER NOT NULL,
     updated_at INTEGER NOT NULL,
-    FOREIGN KEY (workout_id) REFERENCES ${Workout.table} (id)
+    FOREIGN KEY (workout_id) REFERENCES ${Workout.table} (id) ON DELETE 
   );
   
   CREATE INDEX IF NOT EXISTS idx_workout_records_workout_id ON $_table (workout_id);
+  CREATE INDEX IF NOT EXISTS idx_workout_records_started_at ON $_table (started_at);
   ''';
+
+enum WorkoutRecordColumns {
+  id("id"),
+  workoutId("workout_id"),
+  totalSets("total_sets"),
+  totalReps("total_reps"),
+  totalRestSecs("total_rest_secs"),
+  startedAt("started_at"),
+  completedAt("completed_at"),
+  droppedAt("dropped_at"),
+  createdAt("created_at"),
+  updatedAt("updated_at");
+
+  final String value;
+
+  const WorkoutRecordColumns(this.value);
+}
 
 class WorkoutRecord implements Model {
   @override
@@ -30,8 +48,7 @@ class WorkoutRecord implements Model {
   final int totalRestSecs;
   final int startedAt;
   final int? completedAt;
-  final double weight;
-  final int reps;
+  final int? droppedAt;
   @override
   final int createdAt;
   @override
@@ -45,8 +62,7 @@ class WorkoutRecord implements Model {
     required this.totalRestSecs,
     required this.startedAt,
     this.completedAt,
-    required this.weight,
-    required this.reps,
+    this.droppedAt,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -57,56 +73,54 @@ class WorkoutRecord implements Model {
   @override
   Map<String, Object?> toMap() {
     return {
-      'id': id,
-      'workout_id': workoutId,
-      'total_sets': totalSets,
-      'total_reps': totalReps,
-      'total_rest_secs': totalRestSecs,
-      'started_at': startedAt,
-      'completed_at': completedAt,
-      'weight': weight,
-      'reps': reps,
-      'created_at': createdAt,
-      'updated_at': updatedAt,
+      WorkoutRecordColumns.id.value: id,
+      WorkoutRecordColumns.workoutId.value: workoutId,
+      WorkoutRecordColumns.totalSets.value: totalSets,
+      WorkoutRecordColumns.totalReps.value: totalReps,
+      WorkoutRecordColumns.totalRestSecs.value: totalRestSecs,
+      WorkoutRecordColumns.startedAt.value: startedAt,
+      WorkoutRecordColumns.completedAt.value: completedAt,
+      WorkoutRecordColumns.droppedAt.value: droppedAt,
+      WorkoutRecordColumns.createdAt.value: createdAt,
+      WorkoutRecordColumns.updatedAt.value: updatedAt,
     };
   }
 
   @override
   factory WorkoutRecord.fromMap(Map<String, Object?> map) {
     return WorkoutRecord(
-      id: map['id'] as int?,
-      workoutId: map['workout_id'] as int,
-      totalSets: map['total_sets'] as int,
-      totalReps: map['total_reps'] as int,
-      totalRestSecs: map['total_rest_secs'] as int,
-      startedAt: map['started_at'] as int,
-      completedAt: map['completed_at'] as int?,
-      weight: map['weight'] as double,
-      reps: map['reps'] as int,
-      createdAt: map['created_at'] as int,
-      updatedAt: map['updated_at'] as int,
+      id: map[WorkoutRecordColumns.id.value] as int?,
+      workoutId: map[WorkoutRecordColumns.workoutId.value] as int,
+      totalSets: map[WorkoutRecordColumns.totalSets.value] as int,
+      totalReps: map[WorkoutRecordColumns.totalReps.value] as int,
+      totalRestSecs: map[WorkoutRecordColumns.totalRestSecs.value] as int,
+      startedAt: map[WorkoutRecordColumns.startedAt.value] as int,
+      completedAt: map[WorkoutRecordColumns.completedAt.value] as int?,
+      droppedAt: map[WorkoutRecordColumns.droppedAt.value] as int?,
+      createdAt: map[WorkoutRecordColumns.createdAt.value] as int,
+      updatedAt: map[WorkoutRecordColumns.updatedAt.value] as int,
     );
   }
 
   @override
-  factory WorkoutRecord.create(
-    int workoutId,
-    int totalSets,
-    int totalReps,
-    int totalRestSecs,
-    int startedAt,
-    double weight,
-    int reps,
-  ) {
-    final int now = DateTime.now().millisecondsSinceEpoch;
+  factory WorkoutRecord.create({
+    required int workoutId,
+    required int startedAt,
+    int? totalSets,
+    int? totalReps,
+    int? totalRestSecs,
+    int? completedAt,
+    int? droppedAt,
+  }) {
+    final int now = DateUtilities.getNowUtcUnix();
     return WorkoutRecord(
       workoutId: workoutId,
-      totalSets: totalSets,
-      totalReps: totalReps,
-      totalRestSecs: totalRestSecs,
+      totalSets: totalSets ?? 0,
+      totalReps: totalReps ?? 0,
+      totalRestSecs: totalRestSecs ?? 0,
       startedAt: startedAt,
-      weight: weight,
-      reps: reps,
+      completedAt: completedAt,
+      droppedAt: droppedAt,
       createdAt: now,
       updatedAt: now,
     );
@@ -121,8 +135,7 @@ class WorkoutRecord implements Model {
     int? totalRestSecs,
     int? startedAt,
     int? completedAt,
-    double? weight,
-    int? reps,
+    int? droppedAt,
     int? createdAt,
     int? updatedAt,
   }) {
@@ -134,8 +147,7 @@ class WorkoutRecord implements Model {
       totalRestSecs: totalRestSecs ?? this.totalRestSecs,
       startedAt: startedAt ?? this.startedAt,
       completedAt: completedAt ?? this.completedAt,
-      weight: weight ?? this.weight,
-      reps: reps ?? this.reps,
+      droppedAt: droppedAt ?? this.droppedAt,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -143,6 +155,6 @@ class WorkoutRecord implements Model {
 
   @override
   String toString() {
-    return 'WorkoutProgress{id: $id, workoutId: $workoutId, totalSets: $totalSets, totalReps: $totalReps, totalRestSecs: $totalRestSecs, startedAt: $startedAt, completedAt: $completedAt, weight: $weight, reps: $reps, createdAt: $createdAt, updatedAt: $updatedAt}';
+    return 'WorkoutProgress{id: $id, workoutId: $workoutId, totalSets: $totalSets, totalReps: $totalReps, totalRestSecs: $totalRestSecs, startedAt: $startedAt, completedAt: $completedAt, droppedAt: $droppedAt, createdAt: $createdAt, updatedAt: $updatedAt}';
   }
 }

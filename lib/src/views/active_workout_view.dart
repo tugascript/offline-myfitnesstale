@@ -33,10 +33,15 @@ class _ActiveWorkoutViewState extends State<ActiveWorkoutView> {
   }
 
   Future<void> _loadUnits() async {
-    final system = await SystemService().selectLatest();
-    if (mounted) {
+    final systemResult = await SystemService().selectLatest();
+    if (!mounted) return;
+    if (systemResult.isOk()) {
       setState(() {
-        _units = system?.units ?? Units.metric;
+        _units = systemResult.value.units;
+      });
+    } else {
+      setState(() {
+        _units = Units.metric;
       });
     }
   }
@@ -95,7 +100,7 @@ class _ActiveWorkoutViewState extends State<ActiveWorkoutView> {
             if (state.error != null) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text('Error: ${state.error}'),
+                  content: Text('Error: ${state.error?.toString() ?? 'Unknown error'}'),
                   backgroundColor: Colors.red,
                 ),
               );
@@ -109,9 +114,10 @@ class _ActiveWorkoutViewState extends State<ActiveWorkoutView> {
                   backgroundColor: Colors.green,
                 ),
               );
+              final navigator = Navigator.of(context);
               Future.delayed(const Duration(seconds: 1), () {
                 if (mounted) {
-                  context.pop();
+                  navigator.pop();
                 }
               });
             }
@@ -130,7 +136,7 @@ class _ActiveWorkoutViewState extends State<ActiveWorkoutView> {
                         size: 64, color: Colors.grey),
                     const SizedBox(height: 16),
                     Text(
-                      state.error ?? 'Failed to load workout',
+                      state.error?.toString() ?? 'Failed to load workout',
                       style: const TextStyle(fontSize: 16, color: Colors.grey),
                     ),
                     const SizedBox(height: 16),
@@ -378,11 +384,13 @@ class _ActiveWorkoutViewState extends State<ActiveWorkoutView> {
                             width: double.infinity,
                             child: ElevatedButton.icon(
                               onPressed: () async {
+                                final cubit = context.read<ActiveWorkoutCubit>();
                                 final weight =
                                     _parseWeight(_weightController.text);
                                 final reps = int.tryParse(_repsController.text);
 
                                 if (weight <= 0 || reps == null || reps <= 0) {
+                                  if (!mounted) return;
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     const SnackBar(
                                       content: Text(
@@ -394,24 +402,23 @@ class _ActiveWorkoutViewState extends State<ActiveWorkoutView> {
                                   return;
                                 }
 
-                                await context
-                                    .read<ActiveWorkoutCubit>()
-                                    .logExerciseSet(
-                                      workoutSetExerciseId:
-                                          workoutSetExercise.id!,
-                                      exerciseId: exercise.id!,
-                                      reps: reps,
-                                      weightKg: weight,
-                                    );
+                                await cubit.logExerciseSet(
+                                  workoutSetExerciseId:
+                                      workoutSetExercise.id!,
+                                  exerciseId: exercise.id!,
+                                  reps: reps,
+                                  weightKg: weight,
+                                );
 
                                 // Clear inputs
                                 _weightController.clear();
                                 _repsController.clear();
 
                                 // Start rest timer
-                                context.read<ActiveWorkoutCubit>().startRest(
-                                      currentSet.workoutSet.recommendedRestSecs,
-                                    );
+                                if (!mounted) return;
+                                cubit.startRest(
+                                  currentSet.workoutSet.recommendedRestSecs,
+                                );
                               },
                               icon: const Icon(Icons.check),
                               label: const Text('Log Set'),
@@ -464,9 +471,12 @@ class _ActiveWorkoutViewState extends State<ActiveWorkoutView> {
                       Expanded(
                         child: OutlinedButton.icon(
                           onPressed: () async {
+                            if (!mounted) return;
+                            final cubit = context.read<ActiveWorkoutCubit>();
+                            final navigator = Navigator.of(context);
                             final confirmed = await showDialog<bool>(
                               context: context,
-                              builder: (context) => AlertDialog(
+                              builder: (dialogContext) => AlertDialog(
                                 title: const Text('Cancel Workout'),
                                 content: const Text(
                                   'Are you sure you want to cancel this workout? All progress will be lost.',
@@ -474,12 +484,12 @@ class _ActiveWorkoutViewState extends State<ActiveWorkoutView> {
                                 actions: [
                                   TextButton(
                                     onPressed: () =>
-                                        Navigator.pop(context, false),
+                                        Navigator.pop(dialogContext, false),
                                     child: const Text('No'),
                                   ),
                                   TextButton(
                                     onPressed: () =>
-                                        Navigator.pop(context, true),
+                                        Navigator.pop(dialogContext, true),
                                     style: TextButton.styleFrom(
                                       foregroundColor: Colors.red,
                                     ),
@@ -489,13 +499,10 @@ class _ActiveWorkoutViewState extends State<ActiveWorkoutView> {
                               ),
                             );
 
-                            if (confirmed == true && mounted) {
-                              await context
-                                  .read<ActiveWorkoutCubit>()
-                                  .cancelWorkout();
-                              if (mounted) {
-                                context.pop();
-                              }
+                            if (confirmed == true) {
+                              await cubit.cancelWorkout();
+                              if (!mounted) return;
+                              navigator.pop();
                             }
                           },
                           icon: const Icon(Icons.cancel),

@@ -9,6 +9,7 @@ import '../utilities/sizes/profile/onboarding_sizes.dart';
 import '../utilities/sizes/screen_size.dart';
 import '../widgets/profile/onboarding_form.dart';
 import '../widgets/profile/onboarding_intro.dart';
+import 'home_view.dart';
 
 class OnboardingView extends StatelessWidget {
   static const routeName = "/onboarding";
@@ -40,13 +41,15 @@ class OnboardingView extends StatelessWidget {
                 listenWhen: (previous, current) {
                   // Only listen when transitioning from no profile to having profile
                   return previous.profile == null &&
-                         previous.system == null &&
-                         current.profile != null &&
-                         current.system != null &&
-                         !current.isLoading;
+                      previous.system == null &&
+                      current.profile != null &&
+                      current.system != null &&
+                      !current.isLoading;
                 },
                 listener: (context, state) {
-                  context.go('/');
+                  if (state.profile != null) {
+                    context.go(HomeView.routeName);
+                  }
                 },
                 child: BlocBuilder<ProfileCubit, ProfileState>(
                   builder: (context, state) {
@@ -55,11 +58,29 @@ class OnboardingView extends StatelessWidget {
                       initialUnits: Units.metric,
                       initialThemeMode: ThemeType.system,
                       initialName: "",
-                      initialHeight: 178,
+                      initialHeight: 176, // average height for a male in oz
                       initialGender: Gender.male,
                       submitButtonLabel: "Create & get started",
                       isLoading: state.isLoading,
-                      onSubmit: context.read<ProfileCubit>().onboardProfile,
+                      onSubmit: ({
+                        required Units units,
+                        required ThemeType theme,
+                        required String name,
+                        required int height,
+                        required Gender gender,
+                        required bool preLoadWorkouts,
+                      }) async {
+                        // Use a default birthday (25 years ago) if not provided
+                        final defaultBirthday = DateTime.now().subtract(const Duration(days: 365 * 25));
+                        await context.read<ProfileCubit>().onboardProfile(
+                          units: units,
+                          theme: theme,
+                          name: name,
+                          height: height,
+                          gender: gender,
+                          birthday: defaultBirthday,
+                        );
+                      },
                       initialPreLoadWorkouts: true,
                     );
                   },

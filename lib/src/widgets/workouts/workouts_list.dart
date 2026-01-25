@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../cubits/states/workout_state.dart';
-import '../../models/workout_model.dart';
+import '../../services/dtos/workout_dto.dart';
 import '../../utilities/sizes/workouts_sizes.dart';
 import 'workout_card.dart';
 
 class WorkoutsList extends StatefulWidget {
   final WorkoutsSizesList sizes;
   final bool isLoading;
-  final List<Workout> workouts;
+  final List<WorkoutDto> workouts;
   final WorkoutPagination pagination;
 
   const WorkoutsList({

@@ -11,8 +11,22 @@ const String _tableCreate = '''
     record_date INTEGER NOT NULL,
     created_at INTEGER NOT NULL,
     updated_at INTEGER NOT NULL
-  )
+  );
 ''';
+
+enum WeightRecordColumns {
+  id("id"),
+  weight("weight"),
+  fatPercentage("fat_percentage"),
+  pictureUri("picture_uri"),
+  recordDate("record_date"),
+  createdAt("created_at"),
+  updatedAt("updated_at");
+
+  final String value;
+
+  const WeightRecordColumns(this.value);
+}
 
 class WeightRecord implements Model {
   @override
@@ -42,26 +56,26 @@ class WeightRecord implements Model {
   @override
   Map<String, Object?> toMap() {
     return {
-      'id': id,
-      'weight': weight,
-      'fat_percentage': fatPercentage,
-      'picture_uri': pictureUri,
-      'record_date': recordDate,
-      'created_at': createdAt,
-      'updated_at': updatedAt,
+      WeightRecordColumns.id.value: id,
+      WeightRecordColumns.weight.value: weight,
+      WeightRecordColumns.fatPercentage.value: fatPercentage,
+      WeightRecordColumns.pictureUri.value: pictureUri,
+      WeightRecordColumns.recordDate.value: recordDate,
+      WeightRecordColumns.createdAt.value: createdAt,
+      WeightRecordColumns.updatedAt.value: updatedAt,
     };
   }
 
   @override
   factory WeightRecord.fromMap(Map<String, Object?> map) {
     return WeightRecord(
-      id: map['id'] as int?,
-      weight: map['weight'] as int,
-      fatPercentage: map['fat_percentage'] as int?,
-      pictureUri: map['picture_uri'] as String?,
-      recordDate: map['record_date'] as int,
-      createdAt: map['created_at'] as int,
-      updatedAt: map['updated_at'] as int,
+      id: map[WeightRecordColumns.id.value] as int?,
+      weight: map[WeightRecordColumns.weight.value] as int,
+      fatPercentage: map[WeightRecordColumns.fatPercentage.value] as int?,
+      pictureUri: map[WeightRecordColumns.pictureUri.value] as String?,
+      recordDate: map[WeightRecordColumns.recordDate.value] as int,
+      createdAt: map[WeightRecordColumns.createdAt.value] as int,
+      updatedAt: map[WeightRecordColumns.updatedAt.value] as int,
     );
   }
 

@@ -7,7 +7,7 @@ import '../cubits/muscle_group_cubit.dart';
 import '../cubits/states/exercise_state.dart';
 import '../cubits/states/muscle_group_state.dart';
 import '../models/enums.dart';
-import '../models/muscle_group_model.dart';
+import '../models/utilities.dart';
 import '../widgets/layout/responsive_scaffold.dart';
 
 class ExerciseDetailView extends StatefulWidget {
@@ -63,21 +63,8 @@ class _ExerciseDetailViewState extends State<ExerciseDetailView> {
     );
   }
 
-  String? _getMuscleGroupName(
-    int muscleGroupId,
-    List<MuscleGroup> muscleGroups,
-  ) {
-    return muscleGroups
-        .firstWhere(
-          (mg) => mg.id == muscleGroupId,
-          orElse: () => MuscleGroup(
-            id: muscleGroupId,
-            name: 'Unknown',
-            createdAt: 0,
-            updatedAt: 0,
-          ),
-        )
-        .name;
+  String _getMuscleGroupName(MuscleGroup muscleGroup) {
+    return EnumDisplayNames.getMuscleGroupDisplayName(muscleGroup);
   }
 
   @override
@@ -123,14 +110,13 @@ class _ExerciseDetailViewState extends State<ExerciseDetailView> {
                 );
               }
 
-              final muscleGroupName = _getMuscleGroupName(
-                exercise.muscleGroupId,
-                muscleGroupState.muscleGroups,
-              );
+              final muscleGroupName = _getMuscleGroupName(exercise.muscleGroup);
 
               // Show all muscles (primary and secondary)
-              // Note: Categories are not currently displayed separately
-              final muscles = exerciseState.selectedExerciseMuscles ?? [];
+              final allMuscles = <Muscle>{
+                ...exercise.muscles.primaryMuscles,
+                ...exercise.muscles.secondaryMuscles,
+              };
               final equipments = exerciseState.selectedExerciseEquipments ?? [];
 
               return SingleChildScrollView(
@@ -170,11 +156,10 @@ class _ExerciseDetailViewState extends State<ExerciseDetailView> {
                       spacing: 8,
                       runSpacing: 8,
                       children: [
-                        if (muscleGroupName != null)
-                          Chip(
-                            label: Text(muscleGroupName),
-                            avatar: const Icon(Icons.fitness_center, size: 18),
-                          ),
+                        Chip(
+                          label: Text(muscleGroupName),
+                          avatar: const Icon(Icons.fitness_center, size: 18),
+                        ),
                         if (exercise.difficulty != null)
                           Chip(
                             label: Text(_difficultyLabel(
@@ -187,14 +172,13 @@ class _ExerciseDetailViewState extends State<ExerciseDetailView> {
                             ),
                             backgroundColor: _difficultyColor(
                                     Difficulty.fromValue(exercise.difficulty!))
-                                .withOpacity(0.2),
+                                .withValues(alpha: 0.2),
                           ),
                       ],
                     ),
                     const SizedBox(height: 24),
                     // Description
-                    if (exercise.description != null &&
-                        exercise.description!.isNotEmpty) ...[
+                    if (exercise.description.isNotEmpty) ...[
                       const Text(
                         'Description',
                         style: TextStyle(
@@ -204,13 +188,13 @@ class _ExerciseDetailViewState extends State<ExerciseDetailView> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        exercise.description!,
+                        exercise.description,
                         style: const TextStyle(fontSize: 16),
                       ),
                       const SizedBox(height: 24),
                     ],
                     // Muscles Targeted
-                    if (muscles.isNotEmpty) ...[
+                    if (allMuscles.isNotEmpty) ...[
                       const Text(
                         'Muscles Targeted',
                         style: TextStyle(
@@ -222,9 +206,10 @@ class _ExerciseDetailViewState extends State<ExerciseDetailView> {
                       Wrap(
                         spacing: 8,
                         runSpacing: 8,
-                        children: muscles.map((muscle) {
+                        children: allMuscles.map((muscle) {
                           return Chip(
-                            label: Text(muscle.name),
+                            label: Text(
+                                EnumDisplayNames.getMuscleDisplayName(muscle)),
                             avatar:
                                 const Icon(Icons.accessibility_new, size: 18),
                           );
@@ -233,8 +218,7 @@ class _ExerciseDetailViewState extends State<ExerciseDetailView> {
                       const SizedBox(height: 24),
                     ],
                     // Video Placeholder
-                    if (exercise.videoUri != null &&
-                        exercise.videoUri!.isNotEmpty) ...[
+                    if (exercise.video.uri.isNotEmpty) ...[
                       const Text(
                         'Video',
                         style: TextStyle(
@@ -260,7 +244,7 @@ class _ExerciseDetailViewState extends State<ExerciseDetailView> {
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              'Video: ${exercise.videoPlatform?.value ?? 'Unknown'}',
+                              'Video: ${exercise.video.platform.value}',
                               style: TextStyle(
                                 color: Colors.grey[600],
                                 fontSize: 14,
@@ -268,7 +252,7 @@ class _ExerciseDetailViewState extends State<ExerciseDetailView> {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              exercise.videoUri!,
+                              exercise.video.uri,
                               style: TextStyle(
                                 color: Colors.grey[600],
                                 fontSize: 12,
@@ -347,7 +331,7 @@ class _ExerciseDetailViewState extends State<ExerciseDetailView> {
                             state.selectedExercise != null) {
                           WidgetsBinding.instance.addPostFrameCallback((_) {
                             context.read<ExerciseCubit>().getExercises(
-                                  muscleGroupId: exercise.muscleGroupId,
+                                  muscleGroup: exercise.muscleGroup,
                                   limit: 5,
                                   offset: 0,
                                 );

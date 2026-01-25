@@ -79,7 +79,7 @@ class WorkoutPlanCard extends StatelessWidget {
                   vertical: 4,
                 ),
                 decoration: BoxDecoration(
-                  color: difficultyColor.withOpacity(0.2),
+                  color: difficultyColor.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
                     color: difficultyColor,

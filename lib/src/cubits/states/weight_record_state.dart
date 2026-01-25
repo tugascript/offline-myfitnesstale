@@ -1,82 +1,67 @@
 import 'package:equatable/equatable.dart';
 
-import '../../models/weight_record_model.dart';
-
-final class WeightRecordPagination extends Equatable {
-  final int limit;
-  final int offset;
-
-  const WeightRecordPagination({
-    required this.limit,
-    required this.offset,
-  });
-
-  factory WeightRecordPagination.initial() {
-    return const WeightRecordPagination(
-      limit: 7,
-      offset: 0,
-    );
-  }
-
-  WeightRecordPagination copyWith({int? limit, int? offset}) {
-    return WeightRecordPagination(
-      limit: limit ?? this.limit,
-      offset: offset ?? this.offset,
-    );
-  }
-
-  @override
-  List<Object?> get props => [
-        limit,
-        offset,
-      ];
-}
+import '../../services/dtos/weight_goal_dto.dart';
+import '../../services/dtos/weight_record_dto.dart';
+import 'common_state.dart';
 
 final class WeightRecordState extends Equatable {
-  final List<WeightRecord> weightRecords;
-  final WeightRecord? selectedWeightRecord;
-  final WeightRecord? latestWeightRecord;
-  final WeightRecordPagination pagination;
-  final int weightTotal;
+  final List<WeightRecordDto> weightRecords;
+  final WeightRecordDto? selectedWeightRecord;
+  final WeightRecordDto? latestWeightRecord;
+  final PaginationState recordPagination;
+  final List<WeightGoalDto> weightGoals;
+  final WeightGoalDto? selectedWeightGoal;
+  final WeightGoalDto? activeWeightGoal;
+  final PaginationState goalPagination;
   final bool isLoading;
-  final String? error;
+  final ErrorState? error;
 
   const WeightRecordState({
     required this.weightRecords,
     this.selectedWeightRecord,
     this.latestWeightRecord,
-    required this.pagination,
+    required this.recordPagination,
+    required this.weightGoals,
+    this.selectedWeightGoal,
+    this.activeWeightGoal,
+    required this.goalPagination,
     required this.isLoading,
-    required this.weightTotal,
     this.error,
   });
 
   factory WeightRecordState.initial() {
     return WeightRecordState(
       weightRecords: [],
-      pagination: WeightRecordPagination.initial(),
+      recordPagination: PaginationState.initial(),
+      weightGoals: [],
+      goalPagination: PaginationState.initial(),
       isLoading: false,
-      weightTotal: 0,
     );
   }
 
   WeightRecordState copyWith({
-    List<WeightRecord>? weightRecords,
-    WeightRecord? selectedWeightRecord,
-    WeightRecord? latestWeightRecord,
-    WeightRecordPagination? pagination,
+    List<WeightRecordDto>? weightRecords,
+    WeightRecordDto? selectedWeightRecord,
+    WeightRecordDto? latestWeightRecord,
+    PaginationState? recordPagination,
+    List<WeightGoalDto>? weightGoals,
+    WeightGoalDto? selectedWeightGoal,
+    WeightGoalDto? activeWeightGoal,
+    PaginationState? goalPagination,
     bool? isLoading,
-    String? error,
-    int? weightTotal,
+    ErrorState? error,
   }) {
     return WeightRecordState(
       weightRecords: weightRecords ?? this.weightRecords,
       selectedWeightRecord: selectedWeightRecord ?? this.selectedWeightRecord,
       latestWeightRecord: latestWeightRecord ?? this.latestWeightRecord,
-      pagination: pagination ?? this.pagination,
+      recordPagination: recordPagination ?? this.recordPagination,
+      weightGoals: weightGoals ?? this.weightGoals,
+      selectedWeightGoal: selectedWeightGoal ?? this.selectedWeightGoal,
+      activeWeightGoal: activeWeightGoal ?? this.activeWeightGoal,
+      goalPagination: goalPagination ?? this.goalPagination,
       isLoading: isLoading ?? this.isLoading,
       error: error ?? this.error,
-      weightTotal: weightTotal ?? this.weightTotal,
     );
   }
 
@@ -85,8 +70,11 @@ final class WeightRecordState extends Equatable {
         weightRecords,
         selectedWeightRecord,
         latestWeightRecord,
-        pagination,
-        weightTotal,
+        recordPagination,
+        weightGoals,
+        selectedWeightGoal,
+        activeWeightGoal,
+        goalPagination,
         isLoading,
         error,
       ];

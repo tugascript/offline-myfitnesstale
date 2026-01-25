@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 
 import '../../models/enums.dart';
-import '../../models/workout_model.dart';
+import '../../services/dtos/workout_dto.dart';
 import '../../utilities/sizes/workouts_sizes.dart';
 
 class WorkoutCard extends StatelessWidget {
-  final Workout workout;
+  final WorkoutDto workout;
   final VoidCallback? onTap;
   final WorkoutsSizesList sizes;
 
@@ -83,7 +83,7 @@ class _DifficultyChip extends StatelessWidget {
   Widget build(BuildContext context) {
     return Chip(
       label: Text(_difficultyLabel(difficulty)),
-      backgroundColor: _difficultyColor(difficulty).withOpacity(0.15),
+      backgroundColor: _difficultyColor(difficulty).withValues(alpha: 0.15),
       labelStyle: TextStyle(
         color: _difficultyColor(difficulty),
         fontWeight: FontWeight.w600,
@@ -91,7 +91,7 @@ class _DifficultyChip extends StatelessWidget {
       ),
       materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
       padding: EdgeInsets.symmetric(horizontal: sizes.cardPadding / 2),
-      side: BorderSide(color: _difficultyColor(difficulty).withOpacity(0.3)),
+      side: BorderSide(color: _difficultyColor(difficulty).withValues(alpha: 0.3)),
     );
   }
 

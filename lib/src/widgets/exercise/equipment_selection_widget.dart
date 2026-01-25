@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../cubits/equipment_cubit.dart';
 import '../../cubits/states/equipment_state.dart';
-import '../../models/equipment_model.dart';
+import '../../services/dtos/equipment_dto.dart';
 
 class EquipmentSelectionWidget extends StatefulWidget {
   final List<int> selectedEquipmentIds;
@@ -74,11 +74,9 @@ class _EquipmentSelectionWidgetState extends State<EquipmentSelectionWidget> {
                 children: _selectedEquipmentIds.map((equipmentId) {
                   final equipment = equipments.firstWhere(
                     (e) => e.id == equipmentId,
-                    orElse: () => Equipment(
+                    orElse: () => EquipmentDto(
                       id: equipmentId,
-                      name: 'Unknown',
-                      createdAt: 0,
-                      updatedAt: 0,
+                      name: 'Unknown Equipment',
                     ),
                   );
                   return Chip(
@@ -102,7 +100,7 @@ class _EquipmentSelectionWidgetState extends State<EquipmentSelectionWidget> {
                   return CheckboxListTile(
                     title: Text(equipment.name),
                     value: isSelected,
-                    onChanged: (_) => _toggleEquipment(equipment.id!),
+                    onChanged: (_) => _toggleEquipment(equipment.id),
                   );
                 },
               ),

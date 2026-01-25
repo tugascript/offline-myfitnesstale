@@ -114,7 +114,7 @@ class _WorkoutDetailViewState extends State<WorkoutDetailView> {
               );
             }
 
-            final workout = selectedWorkout.workout;
+            final workout = selectedWorkout;
             final difficultyColor = _difficultyColor(workout.difficulty);
 
             return BlocBuilder<WorkoutSetCubit, WorkoutSetState>(
@@ -149,7 +149,7 @@ class _WorkoutDetailViewState extends State<WorkoutDetailView> {
                                       vertical: 6,
                                     ),
                                     decoration: BoxDecoration(
-                                      color: difficultyColor.withOpacity(0.2),
+                                      color: difficultyColor.withValues(alpha: 0.2),
                                       borderRadius: BorderRadius.circular(16),
                                       border: Border.all(
                                         color: difficultyColor,

@@ -1,24 +1,28 @@
 import 'package:equatable/equatable.dart';
 
-import '../../models/equipment_model.dart';
-import '../../models/exercise_model.dart';
-import '../../models/muscle_model.dart';
+import '../../models/enums.dart';
+import '../../services/dtos/equipment_dto.dart';
+import '../../services/dtos/exercise_dto.dart';
+import 'common_state.dart';
 
 final class ExercisePagination extends Equatable {
   final String? name;
-  final int? muscleGroupId;
+  final MuscleGroup? muscleGroup;
+  final int total;
   final int limit;
   final int offset;
 
   const ExercisePagination({
     this.name,
-    this.muscleGroupId,
+    this.muscleGroup,
+    required this.total,
     required this.limit,
     required this.offset,
   });
 
   factory ExercisePagination.initial() {
     return const ExercisePagination(
+      total: 0,
       limit: 10,
       offset: 0,
     );
@@ -26,72 +30,109 @@ final class ExercisePagination extends Equatable {
 
   ExercisePagination copyWith({
     String? name,
-    int? muscleGroupId,
+    MuscleGroup? muscleGroup,
+    int? total,
     int? limit,
     int? offset,
   }) {
     return ExercisePagination(
       name: name ?? this.name,
-      muscleGroupId: muscleGroupId ?? this.muscleGroupId,
+      muscleGroup: muscleGroup ?? this.muscleGroup,
+      total: total ?? this.total,
       limit: limit ?? this.limit,
       offset: offset ?? this.offset,
     );
   }
 
   @override
-  List<Object?> get props => [name, muscleGroupId, limit, offset];
+  List<Object?> get props => [name, muscleGroup, total, limit, offset];
+}
+
+final class EquipmentPagination extends Equatable {
+  final String? name;
+  final int limit;
+  final int offset;
+
+  const EquipmentPagination({
+    this.name,
+    required this.limit,
+    required this.offset,
+  });
+
+  factory EquipmentPagination.initial() {
+    return const EquipmentPagination(
+      limit: 10,
+      offset: 0,
+    );
+  }
+
+  EquipmentPagination copyWith({
+    String? name,
+    int? limit,
+    int? offset,
+  }) {
+    return EquipmentPagination(
+      name: name ?? this.name,
+      limit: limit ?? this.limit,
+      offset: offset ?? this.offset,
+    );
+  }
+
+  @override
+  List<Object?> get props => [name, limit, offset];
 }
 
 final class ExerciseState extends Equatable {
-  final List<Exercise> exercises;
-  final ExercisePagination pagination;
-  final Exercise? selectedExercise;
-  final List<Muscle>? selectedExerciseMuscles;
-  final List<Equipment>? selectedExerciseEquipments;
-  final List<Exercise>? favoriteExercises;
+  final List<ExerciseDto> exercises;
+  final ExercisePagination exercisePagination;
+  final ExerciseDto? selectedExercise;
+  final List<EquipmentDto> equipments;
+  final EquipmentPagination equipmentPagination;
+  final EquipmentDto? selectedEquipment;
   final bool isLoading;
-  final String? error;
+  final ErrorState? error;
 
   const ExerciseState({
     required this.exercises,
-    required this.pagination,
+    required this.exercisePagination,
     this.selectedExercise,
-    this.selectedExerciseMuscles,
-    this.selectedExerciseEquipments,
-    this.favoriteExercises,
     required this.isLoading,
+    required this.equipments,
+    this.selectedEquipment,
+    required this.equipmentPagination,
     this.error,
   });
 
   factory ExerciseState.initial() {
     return ExerciseState(
       exercises: const [],
-      pagination: ExercisePagination.initial(),
+      exercisePagination: ExercisePagination.initial(),
       isLoading: false,
+      equipments: const [],
+      equipmentPagination: EquipmentPagination.initial(),
     );
   }
 
   ExerciseState copyWith({
-    List<Exercise>? exercises,
+    List<ExerciseDto>? exercises,
     ExercisePagination? pagination,
-    Exercise? selectedExercise,
-    List<Muscle>? selectedExerciseMuscles,
-    List<Equipment>? selectedExerciseEquipments,
-    List<Exercise>? favoriteExercises,
+    ExerciseDto? selectedExercise,
+    List<ExerciseDto>? favoriteExercises,
     bool? isLoading,
-    String? error,
+    ErrorState? error,
+    List<EquipmentDto>? equipments,
+    EquipmentPagination? equipmentPagination,
+    EquipmentDto? selectedEquipment,
   }) {
     return ExerciseState(
       exercises: exercises ?? this.exercises,
-      pagination: pagination ?? this.pagination,
+      exercisePagination: pagination ?? exercisePagination,
       selectedExercise: selectedExercise ?? this.selectedExercise,
-      selectedExerciseMuscles:
-          selectedExerciseMuscles ?? this.selectedExerciseMuscles,
-      selectedExerciseEquipments:
-          selectedExerciseEquipments ?? this.selectedExerciseEquipments,
-      favoriteExercises: favoriteExercises ?? this.favoriteExercises,
       isLoading: isLoading ?? this.isLoading,
       error: error ?? this.error,
+      equipments: equipments ?? this.equipments,
+      equipmentPagination: equipmentPagination ?? this.equipmentPagination,
+      selectedEquipment: selectedEquipment ?? this.selectedEquipment,
     );
   }
 
@@ -101,9 +142,9 @@ final class ExerciseState extends Equatable {
         error,
         exercises,
         selectedExercise,
-        selectedExerciseMuscles,
-        selectedExerciseEquipments,
-        favoriteExercises,
-        pagination,
+        exercisePagination,
+        equipments,
+        selectedEquipment,
+        equipmentPagination,
       ];
 }
