@@ -8,20 +8,32 @@ const String _tableCreate = '''
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     target_weight INTEGER NOT NULL,
     start_date INTEGER NOT NULL,
-    end_date INTEGER NOT NULL,
     completed_at INTEGER,
     status TEXT NOT NULL,
     created_at INTEGER NOT NULL,
     updated_at INTEGER NOT NULL
-  )
+  );
 ''';
+
+enum WeightGoalColumns {
+  id("id"),
+  targetWeight("target_weight"),
+  startDate("start_date"),
+  completedAt("completed_at"),
+  status("status"),
+  createdAt("created_at"),
+  updatedAt("updated_at");
+
+  final String value;
+
+  const WeightGoalColumns(this.value);
+}
 
 class WeightGoal implements Model {
   @override
   final int? id;
   final int targetWeight;
   final int startDate;
-  final int endDate;
   final int? completedAt;
   final ProgressStatus status;
   @override
@@ -33,7 +45,6 @@ class WeightGoal implements Model {
     this.id,
     required this.targetWeight,
     required this.startDate,
-    required this.endDate,
     this.completedAt,
     required this.status,
     required this.createdAt,
@@ -46,36 +57,34 @@ class WeightGoal implements Model {
   @override
   Map<String, Object?> toMap() {
     return {
-      'id': id,
-      'target_weight': targetWeight,
-      'start_date': startDate,
-      'end_date': endDate,
-      'completed_at': completedAt,
-      'status': status.value,
-      'created_at': createdAt,
-      'updated_at': updatedAt,
+      WeightGoalColumns.id.value: id,
+      WeightGoalColumns.targetWeight.value: targetWeight,
+      WeightGoalColumns.startDate.value: startDate,
+      WeightGoalColumns.completedAt.value: completedAt,
+      WeightGoalColumns.status.value: status.value,
+      WeightGoalColumns.createdAt.value: createdAt,
+      WeightGoalColumns.updatedAt.value: updatedAt,
     };
   }
 
   @override
   factory WeightGoal.fromMap(Map<String, Object?> map) {
     return WeightGoal(
-      id: map['id'] as int?,
-      targetWeight: map['target_weight'] as int,
-      startDate: map['start_date'] as int,
-      endDate: map['end_date'] as int,
-      completedAt: map['completed_at'] as int?,
-      status: ProgressStatus.fromValue(map['status'] as String),
-      createdAt: map['created_at'] as int,
-      updatedAt: map['updated_at'] as int,
+      id: map[WeightGoalColumns.id.value] as int?,
+      targetWeight: map[WeightGoalColumns.targetWeight.value] as int,
+      startDate: map[WeightGoalColumns.startDate.value] as int,
+      completedAt: map[WeightGoalColumns.completedAt.value] as int?,
+      status: ProgressStatus.fromValue(
+          map[WeightGoalColumns.status.value] as String),
+      createdAt: map[WeightGoalColumns.createdAt.value] as int,
+      updatedAt: map[WeightGoalColumns.updatedAt.value] as int,
     );
   }
 
   @override
-  factory WeightGoal.create(
-    int targetWeight,
-    int startDate,
-    int endDate, {
+  factory WeightGoal.create({
+    required int targetWeight,
+    required int startDate,
     ProgressStatus status = ProgressStatus.inProgress,
     int? completedAt,
   }) {
@@ -83,7 +92,6 @@ class WeightGoal implements Model {
     return WeightGoal(
       targetWeight: targetWeight,
       startDate: startDate,
-      endDate: endDate,
       completedAt: completedAt,
       status: status,
       createdAt: now,
@@ -97,7 +105,6 @@ class WeightGoal implements Model {
     int? targetWeight,
     int? startWeight,
     int? startDate,
-    int? endDate,
     ProgressStatus? status,
     int? completedAt,
     int? createdAt,
@@ -107,7 +114,6 @@ class WeightGoal implements Model {
       id: id ?? this.id,
       targetWeight: targetWeight ?? this.targetWeight,
       startDate: startDate ?? this.startDate,
-      endDate: endDate ?? this.endDate,
       status: status ?? this.status,
       completedAt: completedAt ?? this.completedAt,
       createdAt: createdAt ?? this.createdAt,

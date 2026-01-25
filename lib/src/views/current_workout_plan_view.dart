@@ -156,7 +156,7 @@ class _CurrentWorkoutPlanViewState extends State<CurrentWorkoutPlanView> {
                                   vertical: 6,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: difficultyColor.withOpacity(0.2),
+                                  color: difficultyColor.withValues(alpha: 0.2),
                                   borderRadius: BorderRadius.circular(12),
                                   border: Border.all(
                                     color: difficultyColor,
@@ -263,7 +263,7 @@ class _CurrentWorkoutPlanViewState extends State<CurrentWorkoutPlanView> {
                         child: ListTile(
                           leading: CircleAvatar(
                             backgroundColor:
-                                Theme.of(context).primaryColor.withOpacity(0.1),
+                                Theme.of(context).primaryColor.withValues(alpha: 0.1),
                             child: Icon(
                               Icons.fitness_center,
                               color: Theme.of(context).primaryColor,

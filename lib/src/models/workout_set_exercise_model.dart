@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:equatable/equatable.dart';
 
 import 'enums.dart';
@@ -16,21 +18,68 @@ const String _tableCreate = '''
     position INTEGER NOT NULL,
     min_reps INTEGER NOT NULL,
     max_reps INTEGER,
-    difficulty_value INTEGER,
-    difficulty_type TEXT,
+    difficulty TEXT,
     created_at INTEGER NOT NULL,
     updated_at INTEGER NOT NULL,
-    FOREIGN KEY (workout_set_id) REFERENCES ${WorkoutSet.table} (id) ON DELETE CASCADE,
-    FOREIGN KEY (exercise_id) REFERENCES ${Exercise.table} (id) ON DELETE CASCADE,
-    UNIQUE(workout_set_id, position) ON CONFLICT REPLACE
+    FOREIGN KEY (workout_set_id) REFERENCES ${WorkoutSet.table} (id)
+      ON DELETE CASCADE,
+    FOREIGN KEY (exercise_id) REFERENCES ${Exercise.table} (id)
+      ON DELETE CASCADE
   );
   
   CREATE INDEX IF NOT EXISTS idx_set_exercise_set_id ON $_table (workout_set_id);
   CREATE INDEX IF NOT EXISTS idx_set_exercise_exercise_id ON $_table (exercise_id);
   CREATE INDEX IF NOT EXISTS idx_set_exercise_workout_id ON $_table (workout_id);
   CREATE INDEX IF NOT EXISTS idx_set_exercise_position_set_id ON $_table (position, workout_set_id);
-  CREATE INDEX IF NOT EXISTS idx_set_exercise_position_workout_id ON $_table (position, workout_id);
   ''';
+
+enum WorkoutSetExerciseColumns {
+  id("id"),
+  workoutId("workout_id"),
+  workoutSetId("workout_set_id"),
+  exerciseId("exercise_id"),
+  position("position"),
+  minReps("min_reps"),
+  maxReps("max_reps"),
+  difficulty("difficulty"),
+  createdAt("created_at"),
+  updatedAt("updated_at");
+
+  final String value;
+
+  const WorkoutSetExerciseColumns(this.value);
+}
+
+class WorkoutSetExerciseDifficulty extends Equatable {
+  final int value;
+  final WorkoutSetExerciseDifficultyType type;
+
+  const WorkoutSetExerciseDifficulty({
+    required this.value,
+    required this.type,
+  });
+
+  String toJson() {
+    return jsonEncode({
+      'value': value,
+      'type': type.value,
+    });
+  }
+
+  factory WorkoutSetExerciseDifficulty.fromJson(String json) {
+    return WorkoutSetExerciseDifficulty.fromMap(jsonDecode(json));
+  }
+
+  factory WorkoutSetExerciseDifficulty.fromMap(Map<String, Object?> map) {
+    return WorkoutSetExerciseDifficulty(
+      value: map['value'] as int,
+      type: WorkoutSetExerciseDifficultyType.fromValue(map['type'] as String),
+    );
+  }
+
+  @override
+  List<Object?> get props => [value, type];
+}
 
 class WorkoutSetExercise extends Equatable implements Model {
   @override
@@ -41,8 +90,7 @@ class WorkoutSetExercise extends Equatable implements Model {
   final int position;
   final int minReps;
   final int? maxReps;
-  final int? difficultyValue;
-  final WorkoutSetExerciseDifficulty? difficultyType;
+  final WorkoutSetExerciseDifficulty? difficulty;
   @override
   final int createdAt;
   @override
@@ -56,8 +104,7 @@ class WorkoutSetExercise extends Equatable implements Model {
     required this.position,
     required this.minReps,
     this.maxReps,
-    this.difficultyValue,
-    this.difficultyType,
+    this.difficulty,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -68,51 +115,48 @@ class WorkoutSetExercise extends Equatable implements Model {
   @override
   Map<String, Object?> toMap() {
     return {
-      'id': id,
-      'workout_id': workoutId,
-      'workout_set_id': workoutSetId,
-      'exercise_id': exerciseId,
-      'position': position,
-      'min_reps': minReps,
-      'max_reps': maxReps,
-      'difficulty_value': difficultyValue,
-      'difficulty_type': difficultyType?.value,
-      'created_at': createdAt,
-      'updated_at': updatedAt,
+      WorkoutSetExerciseColumns.id.value: id,
+      WorkoutSetExerciseColumns.workoutId.value: workoutId,
+      WorkoutSetExerciseColumns.workoutSetId.value: workoutSetId,
+      WorkoutSetExerciseColumns.exerciseId.value: exerciseId,
+      WorkoutSetExerciseColumns.position.value: position,
+      WorkoutSetExerciseColumns.minReps.value: minReps,
+      WorkoutSetExerciseColumns.maxReps.value: maxReps,
+      WorkoutSetExerciseColumns.difficulty.value: difficulty?.toJson(),
+      WorkoutSetExerciseColumns.createdAt.value: createdAt,
+      WorkoutSetExerciseColumns.updatedAt.value: updatedAt,
     };
   }
 
   @override
   factory WorkoutSetExercise.fromMap(Map<String, Object?> map) {
     return WorkoutSetExercise(
-      id: map['id'] as int?,
-      workoutId: map['workout_id'] as int,
-      workoutSetId: map['workout_set_id'] as int,
-      exerciseId: map['exercise_id'] as int,
-      position: map['position'] as int,
-      minReps: map['min_reps'] as int,
-      maxReps: map['max_reps'] as int?,
-      difficultyValue: map['difficulty'] as int?,
-      difficultyType: map['difficulty_text'] != null
-          ? WorkoutSetExerciseDifficulty.fromValue(
-              map['difficulty_text'] as String,
-            )
+      id: map[WorkoutSetExerciseColumns.id.value] as int?,
+      workoutId: map[WorkoutSetExerciseColumns.workoutId.value] as int,
+      workoutSetId: map[WorkoutSetExerciseColumns.workoutSetId.value] as int,
+      exerciseId: map[WorkoutSetExerciseColumns.exerciseId.value] as int,
+      position: map[WorkoutSetExerciseColumns.position.value] as int,
+      minReps: map[WorkoutSetExerciseColumns.minReps.value] as int,
+      maxReps: map[WorkoutSetExerciseColumns.maxReps.value] as int?,
+      difficulty: map[WorkoutSetExerciseColumns.difficulty.value] != null
+          ? WorkoutSetExerciseDifficulty.fromJson(
+              map[WorkoutSetExerciseColumns.difficulty.value] as String)
           : null,
-      createdAt: map['created_at'] as int,
-      updatedAt: map['updated_at'] as int,
+      createdAt: map[WorkoutSetExerciseColumns.createdAt.value] as int,
+      updatedAt: map[WorkoutSetExerciseColumns.updatedAt.value] as int,
     );
   }
 
   @override
-  factory WorkoutSetExercise.create(
-    int position,
-    int workoutId,
-    int workoutSetId,
-    int exerciseId,
-    int minReps,
+  factory WorkoutSetExercise.create({
+    required int position,
+    required int workoutId,
+    required int workoutSetId,
+    required int exerciseId,
+    required int minReps,
     int? maxReps,
-    (WorkoutSetExerciseDifficulty, int)? difficulty,
-  ) {
+    WorkoutSetExerciseDifficulty? difficulty,
+  }) {
     final int now = DateUtilities.getNowUtcUnix();
     return WorkoutSetExercise(
       workoutId: workoutId,
@@ -121,8 +165,7 @@ class WorkoutSetExercise extends Equatable implements Model {
       position: position,
       minReps: minReps,
       maxReps: maxReps,
-      difficultyValue: difficulty?.$2,
-      difficultyType: difficulty?.$1,
+      difficulty: difficulty,
       createdAt: now,
       updatedAt: now,
     );
@@ -137,8 +180,7 @@ class WorkoutSetExercise extends Equatable implements Model {
     int? position,
     int? minReps,
     int? maxReps,
-    int? difficultyValue,
-    WorkoutSetExerciseDifficulty? difficultyType,
+    WorkoutSetExerciseDifficulty? difficulty,
     int? createdAt,
     int? updatedAt,
   }) {
@@ -150,8 +192,7 @@ class WorkoutSetExercise extends Equatable implements Model {
       position: position ?? this.position,
       minReps: minReps ?? this.minReps,
       maxReps: maxReps ?? this.maxReps,
-      difficultyValue: difficultyValue ?? this.difficultyValue,
-      difficultyType: difficultyType ?? this.difficultyType,
+      difficulty: difficulty ?? this.difficulty,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -166,8 +207,7 @@ class WorkoutSetExercise extends Equatable implements Model {
         position,
         minReps,
         maxReps,
-        difficultyValue,
-        difficultyType,
+        difficulty,
         createdAt,
         updatedAt,
       ];

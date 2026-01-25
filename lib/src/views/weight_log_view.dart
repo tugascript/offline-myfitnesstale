@@ -6,8 +6,8 @@ import '../cubits/states/profile_state.dart';
 import '../cubits/weight_record_cubit.dart';
 import '../cubits/states/weight_record_state.dart';
 import '../models/enums.dart';
-import '../models/system_model.dart';
-import '../models/weight_record_model.dart';
+import '../services/dtos/system_dto.dart';
+import '../services/dtos/weight_record_dto.dart';
 import '../widgets/layout/responsive_scaffold.dart';
 import '../widgets/weight/weight_input_widget.dart';
 
@@ -144,7 +144,7 @@ class _WeightLogViewState extends State<WeightLogView> {
     );
   }
 
-  Widget _buildCurrentWeightCard(WeightRecord latestWeight, System? system) {
+  Widget _buildCurrentWeightCard(WeightRecordDto latestWeight, SystemDto? system) {
     final units = system?.units ?? Units.metric;
     final displayWeight = units == Units.metric
         ? '${(latestWeight.weight / 1000).toStringAsFixed(1)} kg'
@@ -258,7 +258,7 @@ class _WeightLogViewState extends State<WeightLogView> {
     );
   }
 
-  Widget _buildRecentWeights(List<WeightRecord> weightRecords, System? system) {
+  Widget _buildRecentWeights(List<WeightRecordDto> weightRecords, SystemDto? system) {
     final units = system?.units ?? Units.metric;
 
     return Column(
@@ -274,8 +274,7 @@ class _WeightLogViewState extends State<WeightLogView> {
               ? '${(record.weight / 1000).toStringAsFixed(1)} kg'
               : '${(record.weight / 453.592).toStringAsFixed(1)} lbs';
 
-          final date =
-              DateTime.fromMillisecondsSinceEpoch(record.recordDate * 1000);
+          final date = record.recordDate;
           final dateString = '${date.day}/${date.month}/${date.year}';
 
           return Card(

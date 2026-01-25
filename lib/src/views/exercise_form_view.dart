@@ -4,11 +4,11 @@ import 'package:go_router/go_router.dart';
 
 import '../cubits/equipment_cubit.dart';
 import '../cubits/exercise_cubit.dart';
-import '../cubits/muscle_cubit.dart';
 import '../cubits/muscle_group_cubit.dart';
 import '../cubits/states/exercise_state.dart';
 import '../cubits/states/muscle_group_state.dart';
 import '../models/enums.dart';
+import '../models/utilities.dart';
 import '../widgets/exercise/equipment_selection_widget.dart';
 import '../widgets/exercise/muscle_selection_widget.dart';
 import '../widgets/layout/responsive_scaffold.dart';
@@ -36,10 +36,10 @@ class _ExerciseFormViewState extends State<ExerciseFormView> {
   final _pictureUriController = TextEditingController();
   final _videoUriController = TextEditingController();
 
-  int? _selectedMuscleGroupId;
+  MuscleGroup? _selectedMuscleGroup;
   VideoPlatform? _selectedVideoPlatform;
   bool _isFavorite = false;
-  List<(int, ExerciseMuscleCategory)> _selectedMuscles = [];
+  List<(Muscle, ExerciseMuscleCategory)> _selectedMuscles = [];
   List<int> _selectedEquipmentIds = [];
   Difficulty? _selectedDifficulty;
   bool _isLoading = false;
@@ -57,7 +57,6 @@ class _ExerciseFormViewState extends State<ExerciseFormView> {
 
   void _loadInitialData() {
     context.read<MuscleGroupCubit>().getMuscleGroups();
-    context.read<MuscleCubit>().getMuscles(limit: 1000);
     context.read<EquipmentCubit>().getEquipments(limit: 1000);
   }
 
@@ -79,7 +78,7 @@ class _ExerciseFormViewState extends State<ExerciseFormView> {
       return;
     }
 
-    if (_selectedMuscleGroupId == null) {
+    if (_selectedMuscleGroup == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Please select a muscle group'),
@@ -94,6 +93,29 @@ class _ExerciseFormViewState extends State<ExerciseFormView> {
     });
 
     try {
+      // Convert selected muscles to ExerciseMuscles
+      final Set<Muscle> primaryMuscles = _selectedMuscles
+          .where((m) => m.$2 == ExerciseMuscleCategory.primary)
+          .map((m) => m.$1)
+          .toSet();
+      final Set<Muscle> secondaryMuscles = _selectedMuscles
+          .where((m) => m.$2 == ExerciseMuscleCategory.secondary)
+          .map((m) => m.$1)
+          .toSet();
+      final ExerciseMuscles muscles = ExerciseMuscles(
+        primaryMuscles: primaryMuscles,
+        secondaryMuscles: secondaryMuscles,
+      );
+
+      (VideoPlatform, String)? videoData;
+      if (_videoUriController.text.trim().isNotEmpty &&
+          _selectedVideoPlatform != null) {
+        videoData = (
+          _selectedVideoPlatform!,
+          _videoUriController.text.trim(),
+        );
+      }
+
       if (isEditMode) {
         // Update existing exercise
         await context.read<ExerciseCubit>().updateExercise(
@@ -102,34 +124,23 @@ class _ExerciseFormViewState extends State<ExerciseFormView> {
               description: _descriptionController.text.trim().isEmpty
                   ? null
                   : _descriptionController.text.trim(),
-              muscleGroupId: _selectedMuscleGroupId,
+              muscleGroup: _selectedMuscleGroup,
+              muscles: muscles,
               pictureUri: _pictureUriController.text.trim().isEmpty
                   ? null
                   : _pictureUriController.text.trim(),
-              videoUri: _videoUriController.text.trim().isEmpty
-                  ? null
-                  : _videoUriController.text.trim(),
+              videoData: videoData,
               isFavorite: _isFavorite,
               difficulty: _selectedDifficulty?.value,
+              equipmentIds:
+                  _selectedEquipmentIds.isEmpty ? null : _selectedEquipmentIds,
             );
-
-        // TODO: Update exercise muscles and equipment separately
-        // For now, we'll need to handle this in the service layer
-        // This is a limitation - we'd need to add methods to update exercise muscles and equipment
       } else {
         // Create new exercise
-        (VideoPlatform, String)? videoData;
-        if (_videoUriController.text.trim().isNotEmpty &&
-            _selectedVideoPlatform != null) {
-          videoData = (
-            _selectedVideoPlatform!,
-            _videoUriController.text.trim(),
-          );
-        }
-
         await context.read<ExerciseCubit>().createExercise(
               name: _nameController.text.trim(),
-              muscleGroupId: _selectedMuscleGroupId!,
+              muscleGroup: _selectedMuscleGroup!,
+              muscles: muscles,
               description: _descriptionController.text.trim().isEmpty
                   ? null
                   : _descriptionController.text.trim(),
@@ -137,7 +148,6 @@ class _ExerciseFormViewState extends State<ExerciseFormView> {
                   ? null
                   : _pictureUriController.text.trim(),
               videoData: videoData,
-              muscleIds: _selectedMuscles.isEmpty ? null : _selectedMuscles,
               equipmentIds:
                   _selectedEquipmentIds.isEmpty ? null : _selectedEquipmentIds,
               difficulty: _selectedDifficulty?.value,
@@ -201,18 +211,20 @@ class _ExerciseFormViewState extends State<ExerciseFormView> {
             _descriptionController.text = exercise.description ?? '';
             _pictureUriController.text = exercise.pictureUri ?? '';
             _videoUriController.text = exercise.videoUri ?? '';
-            _selectedMuscleGroupId = exercise.muscleGroupId;
+            _selectedMuscleGroup = exercise.muscleGroup;
             _selectedVideoPlatform = exercise.videoPlatform;
             _isFavorite = exercise.isFavorite;
             _selectedDifficulty = exercise.difficulty != null
                 ? Difficulty.fromValue(exercise.difficulty!)
                 : null;
 
-            // Load selected muscles (without categories for now)
-            // TODO: Load with categories from exercise_muscles table
-            _selectedMuscles = (state.selectedExerciseMuscles ?? [])
-                .map((m) => (m.id!, ExerciseMuscleCategory.primary))
-                .toList();
+            // Load selected muscles from exercise.muscles
+            _selectedMuscles = [
+              ...exercise.muscles.primaryMuscles
+                  .map((m) => (m, ExerciseMuscleCategory.primary)),
+              ...exercise.muscles.secondaryMuscles
+                  .map((m) => (m, ExerciseMuscleCategory.secondary)),
+            ];
 
             // Load selected equipment
             _selectedEquipmentIds = (state.selectedExerciseEquipments ?? [])
@@ -259,27 +271,29 @@ class _ExerciseFormViewState extends State<ExerciseFormView> {
                       ),
                       const SizedBox(height: 16),
                       // Muscle Group
-                      DropdownButtonFormField<int?>(
-                        initialValue: _selectedMuscleGroupId,
+                      DropdownButtonFormField<MuscleGroup?>(
+                        initialValue: _selectedMuscleGroup,
                         decoration: const InputDecoration(
                           labelText: 'Muscle Group *',
                           border: OutlineInputBorder(),
                         ),
                         items: [
-                          const DropdownMenuItem<int?>(
+                          const DropdownMenuItem<MuscleGroup?>(
                             value: null,
                             child: Text('Select a muscle group'),
                           ),
                           ...muscleGroupState.muscleGroups.map(
-                            (mg) => DropdownMenuItem<int?>(
-                              value: mg.id,
-                              child: Text(mg.name),
+                            (mg) => DropdownMenuItem<MuscleGroup?>(
+                              value: mg,
+                              child: Text(
+                                  EnumDisplayNames.getMuscleGroupDisplayName(
+                                      mg)),
                             ),
                           ),
                         ],
                         onChanged: (value) {
                           setState(() {
-                            _selectedMuscleGroupId = value;
+                            _selectedMuscleGroup = value;
                           });
                         },
                         validator: (value) {

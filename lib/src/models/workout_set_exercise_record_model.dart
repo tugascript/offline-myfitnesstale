@@ -1,6 +1,7 @@
 import 'exercise_model.dart';
 import 'model.dart';
 import 'utilities.dart';
+import 'workout_record_model.dart';
 import 'workout_set_exercise_model.dart';
 import 'workout_set_record_model.dart';
 
@@ -9,7 +10,8 @@ const String _tableCreate = '''
   CREATE TABLE IF NOT EXISTS $_table (
     id INTEGER PRIMARY KEY,
     workout_set_exercise_id INTEGER NOT NULL,
-    workout_set_progress_id INTEGER NOT NULL,
+    workout_record_id INTEGER NOT NULL,
+    workout_set_record_id INTEGER NOT NULL,
     exercise_id INTEGER NOT NULL,
     reps INTEGER NOT NULL,
     weight_grams INTEGER NOT NULL,
@@ -17,18 +19,50 @@ const String _tableCreate = '''
     difficulty_type TEXT,
     created_at INTEGER NOT NULL,
     updated_at INTEGER NOT NULL,
-    FOREIGN KEY (workout_set_exercise_id) REFERENCES ${WorkoutSetExercise.table} (id),
-    FOREIGN KEY (workout_set_progress_id) REFERENCES ${WorkoutSetRecord.table} (id),
+    FOREIGN KEY (workout_set_exercise_id) REFERENCES ${WorkoutSetExercise.table} (id)
+      ON DELETE CASCADE,
+    FOREIGN KEY (workout_set_record_id) REFERENCES ${WorkoutSetRecord.table} (id)
+      ON DELETE CASCADE,
+    FOREIGN KEY (workout_record_id) REFERENCES ${WorkoutRecord.table} (id)
+      ON DELETE CASCADE,
     FOREIGN KEY (exercise_id) REFERENCES ${Exercise.table} (id)
+      ON DELETE CASCADE
   );
+
+  CREATE INDEX IF NOT EXISTS idx_workout_set_exercise_records_set_exercise_id ON $_table (workout_set_exercise_id);
+  CREATE INDEX IF NOT EXISTS idx_workout_set_exercise_records_set_record_id ON $_table (workout_set_record_id);
+  CREATE INDEX IF NOT EXISTS idx_workout_set_exercise_records_workout_record_id ON $_table (workout_record_id);
+  CREATE INDEX IF NOT EXISTS idx_workout_set_exercise_records_exercise_id ON $_table (exercise_id);
+  CREATE INDEX IF NOT EXISTS idx_workout_set_exercise_records_position ON $_table (workout_set_record_id, position);
   ''';
+
+enum WorkoutSetExerciseRecordColumns {
+  id("id"),
+  workoutSetExerciseId("workout_set_exercise_id"),
+  workoutRecordId("workout_record_id"),
+  workoutSetRecordId("workout_set_record_id"),
+  exerciseId("exercise_id"),
+  position("position"),
+  reps("reps"),
+  weightGrams("weight_grams"),
+  difficulty("difficulty"),
+  difficultyType("difficulty_type"),
+  createdAt("created_at"),
+  updatedAt("updated_at");
+
+  final String value;
+
+  const WorkoutSetExerciseRecordColumns(this.value);
+}
 
 class WorkoutSetExerciseRecord implements Model {
   @override
   final int? id;
   final int workoutSetExerciseId;
-  final int workoutSetProgressId;
+  final int workoutRecordId;
+  final int workoutSetRecordId;
   final int exerciseId;
+  final int position;
   final int reps;
   final int weightGrams;
   final int? difficulty;
@@ -41,8 +75,10 @@ class WorkoutSetExerciseRecord implements Model {
   const WorkoutSetExerciseRecord({
     this.id,
     required this.workoutSetExerciseId,
-    required this.workoutSetProgressId,
+    required this.workoutRecordId,
+    required this.workoutSetRecordId,
     required this.exerciseId,
+    required this.position,
     required this.reps,
     required this.weightGrams,
     this.difficulty,
@@ -57,50 +93,65 @@ class WorkoutSetExerciseRecord implements Model {
   @override
   Map<String, Object?> toMap() {
     return {
-      'id': id,
-      'workout_set_exercise_id': workoutSetExerciseId,
-      'workout_set_progress_id': workoutSetProgressId,
-      'exercise_id': exerciseId,
-      'reps': reps,
-      'weight_grams': weightGrams,
-      'difficulty': difficulty,
-      'difficulty_type': difficultyType,
-      'created_at': createdAt,
-      'updated_at': updatedAt,
+      WorkoutSetExerciseRecordColumns.id.value: id,
+      WorkoutSetExerciseRecordColumns.workoutSetExerciseId.value:
+          workoutSetExerciseId,
+      WorkoutSetExerciseRecordColumns.workoutRecordId.value: workoutRecordId,
+      WorkoutSetExerciseRecordColumns.workoutSetRecordId.value:
+          workoutSetRecordId,
+      WorkoutSetExerciseRecordColumns.exerciseId.value: exerciseId,
+      WorkoutSetExerciseRecordColumns.reps.value: reps,
+      WorkoutSetExerciseRecordColumns.weightGrams.value: weightGrams,
+      WorkoutSetExerciseRecordColumns.difficulty.value: difficulty,
+      WorkoutSetExerciseRecordColumns.difficultyType.value: difficultyType,
+      WorkoutSetExerciseRecordColumns.createdAt.value: createdAt,
+      WorkoutSetExerciseRecordColumns.updatedAt.value: updatedAt,
     };
   }
 
   @override
   factory WorkoutSetExerciseRecord.fromMap(Map<String, Object?> map) {
     return WorkoutSetExerciseRecord(
-      id: map['id'] as int,
-      workoutSetExerciseId: map['workout_set_exercise_id'] as int,
-      workoutSetProgressId: map['workout_set_progress_id'] as int,
-      exerciseId: map['exercise_id'] as int,
-      reps: map['reps'] as int,
-      weightGrams: map['weight_grams'] as int,
-      difficulty: map['difficulty'] as int?,
-      difficultyType: map['difficulty_type'] as String?,
-      createdAt: map['created_at'] as int,
-      updatedAt: map['updated_at'] as int,
+      id: map[WorkoutSetExerciseRecordColumns.id.value] as int,
+      workoutSetExerciseId:
+          map[WorkoutSetExerciseRecordColumns.workoutSetExerciseId.value]
+              as int,
+      workoutRecordId:
+          map[WorkoutSetExerciseRecordColumns.workoutRecordId.value] as int,
+      workoutSetRecordId:
+          map[WorkoutSetExerciseRecordColumns.workoutSetRecordId.value] as int,
+      exerciseId: map[WorkoutSetExerciseRecordColumns.exerciseId.value] as int,
+      position: map[WorkoutSetExerciseRecordColumns.position.value] as int,
+      reps: map[WorkoutSetExerciseRecordColumns.reps.value] as int,
+      weightGrams:
+          map[WorkoutSetExerciseRecordColumns.weightGrams.value] as int,
+      difficulty: map[WorkoutSetExerciseRecordColumns.difficulty.value] as int?,
+      difficultyType:
+          map[WorkoutSetExerciseRecordColumns.difficultyType.value] as String?,
+      createdAt: map[WorkoutSetExerciseRecordColumns.createdAt.value] as int,
+      updatedAt: map[WorkoutSetExerciseRecordColumns.updatedAt.value] as int,
     );
   }
 
   @override
-  factory WorkoutSetExerciseRecord.create(
-    int workoutSetExerciseId,
-    int workoutSetProgressId,
-    int exerciseId,
-    int reps,
-    int weightGrams,
+  factory WorkoutSetExerciseRecord.create({
+    required int workoutSetExerciseId,
+    required int workoutRecordId,
+    required int workoutSetRecordId,
+    required int exerciseId,
+    required int position,
+    required int reps,
+    required int weightGrams,
     int? difficulty,
     String? difficultyType,
-  ) {
+  }) {
     final int now = DateUtilities.getNowUtcUnix();
     return WorkoutSetExerciseRecord(
       workoutSetExerciseId: workoutSetExerciseId,
-      workoutSetProgressId: workoutSetProgressId,
+      workoutRecordId: workoutRecordId,
+      workoutSetRecordId: workoutSetRecordId,
       exerciseId: exerciseId,
+      position: position,
       reps: reps,
       weightGrams: weightGrams,
       difficulty: difficulty,
@@ -114,8 +165,10 @@ class WorkoutSetExerciseRecord implements Model {
   WorkoutSetExerciseRecord copyWith({
     int? id,
     int? workoutSetExerciseId,
-    int? workoutSetProgressId,
+    int? workoutRecordId,
+    int? workoutSetRecordId,
     int? exerciseId,
+    int? position,
     int? reps,
     int? weightGrams,
     int? difficulty,
@@ -126,8 +179,10 @@ class WorkoutSetExerciseRecord implements Model {
     return WorkoutSetExerciseRecord(
       id: id ?? this.id,
       workoutSetExerciseId: workoutSetExerciseId ?? this.workoutSetExerciseId,
-      workoutSetProgressId: workoutSetProgressId ?? this.workoutSetProgressId,
+      workoutRecordId: workoutRecordId ?? this.workoutRecordId,
+      workoutSetRecordId: workoutSetRecordId ?? this.workoutSetRecordId,
       exerciseId: exerciseId ?? this.exerciseId,
+      position: position ?? this.position,
       reps: reps ?? this.reps,
       weightGrams: weightGrams ?? this.weightGrams,
       difficulty: difficulty ?? this.difficulty,
@@ -139,6 +194,6 @@ class WorkoutSetExerciseRecord implements Model {
 
   @override
   String toString() {
-    return 'WorkoutSetExerciseProgress{id: $id, workoutSetExerciseId: $workoutSetExerciseId, workoutSetProgressId: $workoutSetProgressId, exerciseId: $exerciseId, reps: $reps, weightGrams: $weightGrams, difficulty: $difficulty, difficultyType: $difficultyType, createdAt: $createdAt, updatedAt: $updatedAt}';
+    return 'WorkoutSetExerciseRecord{id: $id, workoutSetExerciseId: $workoutSetExerciseId, workoutRecordId: $workoutRecordId, workoutSetRecordId: $workoutSetRecordId, exerciseId: $exerciseId, position: $position, reps: $reps, weightGrams: $weightGrams, difficulty: $difficulty, difficultyType: $difficultyType, createdAt: $createdAt, updatedAt: $updatedAt}';
   }
 }

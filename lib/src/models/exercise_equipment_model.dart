@@ -17,6 +17,16 @@ const String _tableCreate = '''
   );
   ''';
 
+enum ExerciseEquipmentColumns {
+  exerciseId("exercise_id"),
+  equipmentId("equipment_id"),
+  createdAt("created_at");
+
+  final String value;
+
+  const ExerciseEquipmentColumns(this.value);
+}
+
 class ExerciseEquipment implements JoinModel {
   final int exerciseId;
   final int equipmentId;
@@ -36,26 +46,26 @@ class ExerciseEquipment implements JoinModel {
   @override
   Map<String, Object?> toMap() {
     return {
-      'exercise_id': exerciseId,
-      'equipment_id': equipmentId,
-      'created_at': createdAt,
+      ExerciseEquipmentColumns.exerciseId.value: exerciseId,
+      ExerciseEquipmentColumns.equipmentId.value: equipmentId,
+      ExerciseEquipmentColumns.createdAt.value: createdAt,
     };
   }
 
   @override
   factory ExerciseEquipment.fromMap(Map<String, Object?> map) {
     return ExerciseEquipment(
-      exerciseId: map['exercise_id'] as int,
-      equipmentId: map['equipment_id'] as int,
-      createdAt: map['created_at'] as int,
+      exerciseId: map[ExerciseEquipmentColumns.exerciseId.value] as int,
+      equipmentId: map[ExerciseEquipmentColumns.equipmentId.value] as int,
+      createdAt: map[ExerciseEquipmentColumns.createdAt.value] as int,
     );
   }
 
   @override
-  factory ExerciseEquipment.create(
-    int exerciseId,
-    int equipmentId,
-  ) {
+  factory ExerciseEquipment.create({
+    required int exerciseId,
+    required int equipmentId,
+  }) {
     return ExerciseEquipment(
       exerciseId: exerciseId,
       equipmentId: equipmentId,
@@ -81,4 +91,3 @@ class ExerciseEquipment implements JoinModel {
     return 'ExerciseEquipment{exerciseId: $exerciseId, equipmentId: $equipmentId, createdAt: $createdAt}';
   }
 }
-

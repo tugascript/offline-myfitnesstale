@@ -5,8 +5,8 @@ import 'package:go_router/go_router.dart';
 import '../cubits/profile_cubit.dart';
 import '../cubits/states/profile_state.dart';
 import '../models/enums.dart';
-import '../models/profile_model.dart';
-import '../models/system_model.dart';
+import '../services/dtos/profile_dto.dart';
+import '../services/dtos/system_dto.dart';
 import '../utilities/converters.dart';
 import '../widgets/layout/responsive_scaffold.dart';
 import '../widgets/profile/height_input.dart';
@@ -35,7 +35,7 @@ class _ProfileViewState extends State<ProfileView> {
     super.dispose();
   }
 
-  void _startEditing(Profile profile) {
+  void _startEditing(ProfileDto profile) {
     setState(() {
       _isEditing = true;
       _nameController.text = profile.name;
@@ -150,7 +150,7 @@ class _ProfileViewState extends State<ProfileView> {
     );
   }
 
-  Widget _buildProfileHeader(Profile profile, System? system) {
+  Widget _buildProfileHeader(ProfileDto profile, SystemDto? system) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -188,7 +188,7 @@ class _ProfileViewState extends State<ProfileView> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    "Started on ${_formatDate(profile.createdAt)}",
+                    "Profile",
                     style: TextStyle(
                       fontSize: 14,
                       color: Colors.grey[500],
@@ -209,7 +209,7 @@ class _ProfileViewState extends State<ProfileView> {
     );
   }
 
-  Widget _buildProfileInfo(Profile profile, System? system) {
+  Widget _buildProfileInfo(ProfileDto profile, SystemDto? system) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -231,14 +231,14 @@ class _ProfileViewState extends State<ProfileView> {
                     ? "${profile.height}cm"
                     : Converters().formatImperialHeight(profile.height)),
             _buildInfoRow("Gender", profile.gender.name),
-            _buildInfoRow("Last Updated", _formatDate(profile.updatedAt)),
+            _buildInfoRow("Birthdate", _formatDate(profile.birthdate.millisecondsSinceEpoch ~/ 1000)),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildEditForm(Profile profile, System? system) {
+  Widget _buildEditForm(ProfileDto profile, SystemDto? system) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -329,7 +329,7 @@ class _ProfileViewState extends State<ProfileView> {
     );
   }
 
-  Widget _buildSettingsSection(System? system) {
+  Widget _buildSettingsSection(SystemDto? system) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16.0),

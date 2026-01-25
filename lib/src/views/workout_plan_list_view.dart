@@ -5,7 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../cubits/workout_plan_cubit.dart';
 import '../cubits/states/workout_plan_state.dart';
 import '../models/enums.dart';
-import '../models/workout_plan_model.dart';
+import '../services/dtos/workout_plan_dto.dart';
 import '../widgets/layout/responsive_scaffold.dart';
 
 class WorkoutPlanListView extends StatefulWidget {
@@ -278,7 +278,7 @@ class _WorkoutPlanListViewState extends State<WorkoutPlanListView> {
     );
   }
 
-  Widget _buildGridView(List<WorkoutPlan> plans, WorkoutPlanState state) {
+  Widget _buildGridView(List<WorkoutPlanDto> plans, WorkoutPlanState state) {
     return GridView.builder(
       controller: _scrollController,
       padding: const EdgeInsets.all(16.0),
@@ -298,7 +298,7 @@ class _WorkoutPlanListViewState extends State<WorkoutPlanListView> {
     );
   }
 
-  Widget _buildListView(List<WorkoutPlan> plans, WorkoutPlanState state) {
+  Widget _buildListView(List<WorkoutPlanDto> plans, WorkoutPlanState state) {
     return ListView.builder(
       controller: _scrollController,
       padding: const EdgeInsets.all(16.0),
@@ -318,7 +318,7 @@ class _WorkoutPlanListViewState extends State<WorkoutPlanListView> {
     );
   }
 
-  Widget _buildPlanCard(WorkoutPlan plan, {bool isList = false}) {
+  Widget _buildPlanCard(WorkoutPlanDto plan, {bool isList = false}) {
     final difficulty = Difficulty.fromValue(plan.difficulty);
     final difficultyLabel = _difficultyLabel(difficulty);
     final difficultyColor = _difficultyColor(difficulty);
@@ -353,7 +353,7 @@ class _WorkoutPlanListViewState extends State<WorkoutPlanListView> {
                   vertical: 4,
                 ),
                 decoration: BoxDecoration(
-                  color: difficultyColor.withOpacity(0.2),
+                  color: difficultyColor.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
                     color: difficultyColor,

@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
 
-import 'enums.dart';
+import 'common.dart';
 import 'model.dart';
 import 'utilities.dart';
 
@@ -11,9 +11,8 @@ const String _tableCreate = '''
     name TEXT NOT NULL,
     description TEXT,
     total_weeks INTEGER NOT NULL,
-    picture_uri TEXT,
-    video_uri TEXT,
-    video_platform TEXT,
+    picture TEXT,
+    video TEXT,
     difficulty INTEGER NOT NULL,
     created_at INTEGER NOT NULL,
     updated_at INTEGER NOT NULL
@@ -22,15 +21,30 @@ const String _tableCreate = '''
   CREATE UNIQUE INDEX IF NOT EXISTS unique_idx_workout_plans_name ON $_table (name);
   ''';
 
+enum WorkoutPlanColumns {
+  id("id"),
+  name("name"),
+  description("description"),
+  totalWeeks("total_weeks"),
+  picture("picture"),
+  video("video"),
+  difficulty("difficulty"),
+  createdAt("created_at"),
+  updatedAt("updated_at");
+
+  final String value;
+
+  const WorkoutPlanColumns(this.value);
+}
+
 class WorkoutPlan extends Equatable implements Model {
   @override
   final int? id;
   final String name;
   final String? description;
   final int totalWeeks;
-  final String? pictureUri;
-  final String? videoUri;
-  final String? videoPlatform;
+  final PictureData? picture;
+  final VideoData? video;
   final int difficulty;
   @override
   final int createdAt;
@@ -42,9 +56,8 @@ class WorkoutPlan extends Equatable implements Model {
     required this.name,
     this.description,
     required this.totalWeeks,
-    this.pictureUri,
-    this.videoUri,
-    this.videoPlatform,
+    this.picture,
+    this.video,
     required this.difficulty,
     required this.createdAt,
     required this.updatedAt,
@@ -56,53 +69,55 @@ class WorkoutPlan extends Equatable implements Model {
   @override
   Map<String, Object?> toMap() {
     return {
-      'id': id,
-      'name': name,
-      'description': description,
-      'total_weeks': totalWeeks,
-      'picture_uri': pictureUri,
-      'video_uri': videoUri,
-      'video_platform': videoPlatform,
-      'difficulty': difficulty,
-      'created_at': createdAt,
-      'updated_at': updatedAt,
+      WorkoutPlanColumns.id.value: id,
+      WorkoutPlanColumns.name.value: name,
+      WorkoutPlanColumns.description.value: description,
+      WorkoutPlanColumns.totalWeeks.value: totalWeeks,
+      WorkoutPlanColumns.picture.value: picture,
+      WorkoutPlanColumns.video.value: video,
+      WorkoutPlanColumns.difficulty.value: difficulty,
+      WorkoutPlanColumns.createdAt.value: createdAt,
+      WorkoutPlanColumns.updatedAt.value: updatedAt,
     };
   }
 
   @override
   factory WorkoutPlan.fromMap(Map<String, Object?> map) {
     return WorkoutPlan(
-      id: map['id'] as int?,
-      name: map['name'] as String,
-      description: map['description'] as String?,
-      totalWeeks: map['total_weeks'] as int,
-      pictureUri: map['picture_uri'] as String?,
-      videoUri: map['video_uri'] as String?,
-      videoPlatform: map['video_platform'] as String?,
-      difficulty: map['difficulty'] as int,
-      createdAt: map['created_at'] as int,
-      updatedAt: map['updated_at'] as int,
+      id: map[WorkoutPlanColumns.id.value] as int?,
+      name: map[WorkoutPlanColumns.name.value] as String,
+      description: map[WorkoutPlanColumns.description.value] as String?,
+      totalWeeks: map[WorkoutPlanColumns.totalWeeks.value] as int,
+      picture: map[WorkoutPlanColumns.picture.value] != null
+          ? PictureData.fromJson(
+              map[WorkoutPlanColumns.picture.value] as String)
+          : null,
+      video: map[WorkoutPlanColumns.video.value] != null
+          ? VideoData.fromJson(map[WorkoutPlanColumns.video.value] as String)
+          : null,
+      difficulty: map[WorkoutPlanColumns.difficulty.value] as int,
+      createdAt: map[WorkoutPlanColumns.createdAt.value] as int,
+      updatedAt: map[WorkoutPlanColumns.updatedAt.value] as int,
     );
   }
 
   @override
-  factory WorkoutPlan.create(
-    String name,
-    int totalWeeks,
-    int difficulty,
+  factory WorkoutPlan.create({
+    required String name,
+    required int totalWeeks,
+    required int difficulty,
     String? description,
-    String? pictureUri,
-    (VideoPlatform, String)? videoData,
-  ) {
+    PictureData? picture,
+    VideoData? video,
+  }) {
     final int now = DateUtilities.getNowUtcUnix();
     return WorkoutPlan(
       name: name,
       totalWeeks: totalWeeks,
       difficulty: difficulty,
       description: description,
-      pictureUri: pictureUri,
-      videoUri: videoData?.$2,
-      videoPlatform: videoData?.$1.value,
+      picture: picture,
+      video: video,
       createdAt: now,
       updatedAt: now,
     );
@@ -126,9 +141,8 @@ class WorkoutPlan extends Equatable implements Model {
       name: name ?? this.name,
       description: description ?? this.description,
       totalWeeks: totalWeeks ?? this.totalWeeks,
-      pictureUri: pictureUri ?? this.pictureUri,
-      videoUri: videoUri ?? this.videoUri,
-      videoPlatform: videoPlatform ?? this.videoPlatform,
+      picture: picture ?? picture,
+      video: video ?? video,
       difficulty: difficulty ?? this.difficulty,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -141,9 +155,8 @@ class WorkoutPlan extends Equatable implements Model {
         name,
         description,
         totalWeeks,
-        pictureUri,
-        videoUri,
-        videoPlatform,
+        picture,
+        video,
         difficulty,
         createdAt,
         updatedAt

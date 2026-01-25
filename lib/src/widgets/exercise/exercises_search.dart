@@ -3,20 +3,21 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../cubits/muscle_group_cubit.dart';
 import '../../cubits/states/muscle_group_state.dart';
+import '../../models/enums.dart';
 import '../../utilities/sizes/exercises_list_sizes.dart';
 
 class ExercisesSearch extends StatefulWidget {
   final ExercisesListSizesList sizes;
   final bool isLoading;
   final String initialName;
-  final int? initialMuscleGroupId;
+  final MuscleGroup? initialMuscleGroup;
 
   const ExercisesSearch({
     super.key,
     required this.sizes,
     required this.isLoading,
     required this.initialName,
-    required this.initialMuscleGroupId,
+    required this.initialMuscleGroup,
   });
 
   @override
@@ -33,7 +34,7 @@ class _ExercisesSearchState extends State<ExercisesSearch> {
     super.initState();
     _data = _FormData(
       name: widget.initialName,
-      muscleGroupId: widget.initialMuscleGroupId,
+      muscleGroup: widget.initialMuscleGroup,
     );
     _nameController.text = _data.name;
   }
@@ -89,28 +90,29 @@ class _ExercisesSearchState extends State<ExercisesSearch> {
               Expanded(
                 child: BlocBuilder<MuscleGroupCubit, MuscleGroupState>(
                     builder: (context, state) {
-                  return DropdownButtonFormField<int?>(
-                    initialValue: _data.muscleGroupId,
+                  final muscleGroups = state.muscleGroups;
+                  return DropdownButtonFormField<MuscleGroup?>(
+                    initialValue: _data.muscleGroup,
                     items: [
-                      const DropdownMenuItem<int?>(
+                      const DropdownMenuItem<MuscleGroup?>(
                         value: null,
                         child: Text('All muscle group'),
                       ),
-                      ...state.muscleGroups.map(
-                        (mg) => DropdownMenuItem<int?>(
-                          value: mg.id,
-                          child: Text(mg.name),
+                      ...muscleGroups.map(
+                        (group) => DropdownMenuItem<MuscleGroup?>(
+                          value: group,
+                          child: Text(_formatMuscleGroupName(group)),
                         ),
                       )
                     ],
                     onChanged: (value) {
                       setState(() {
-                        _data.muscleGroupId = value;
+                        _data.muscleGroup = value;
                       });
                     },
                     onSaved: (value) {
                       setState(() {
-                        _data.muscleGroupId = value;
+                        _data.muscleGroup = value;
                       });
                     },
                   );
@@ -122,14 +124,29 @@ class _ExercisesSearchState extends State<ExercisesSearch> {
       ),
     );
   }
+
+  String _formatMuscleGroupName(MuscleGroup group) {
+    switch (group) {
+      case MuscleGroup.full:
+        return 'Full Body';
+      case MuscleGroup.push:
+        return 'Push';
+      case MuscleGroup.pull:
+        return 'Pull';
+      case MuscleGroup.legs:
+        return 'Legs';
+      case MuscleGroup.core:
+        return 'Core';
+    }
+  }
 }
 
 final class _FormData {
   String name;
-  int? muscleGroupId;
+  MuscleGroup? muscleGroup;
 
   _FormData({
     required this.name,
-    required this.muscleGroupId,
+    required this.muscleGroup,
   });
 }

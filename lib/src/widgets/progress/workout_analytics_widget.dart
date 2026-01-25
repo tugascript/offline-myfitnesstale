@@ -7,6 +7,7 @@ import '../../services/workout_set_exercise_record_service.dart';
 import '../../services/workout_record_service.dart';
 import '../../services/workout_set_record_service.dart';
 import '../../services/exercise_service.dart';
+import '../../services/common/result.dart';
 
 class WorkoutAnalyticsWidget extends StatefulWidget {
   const WorkoutAnalyticsWidget({super.key});
@@ -40,9 +41,14 @@ class _WorkoutAnalyticsWidgetState extends State<WorkoutAnalyticsWidget> {
     setState(() => _isLoading = true);
 
     try {
-      final workoutRecords = await _workoutRecordService.getWorkoutRecords(
+      final workoutRecordsResult = await _workoutRecordService.getWorkoutRecords(
         limit: 100,
       );
+      if (workoutRecordsResult.isErr()) {
+        setState(() => _isLoading = false);
+        return;
+      }
+      final workoutRecords = (workoutRecordsResult as Ok).value.data;
 
       final exerciseRecordsMap = <int, List<WorkoutSetExerciseRecord>>{};
       final volumeByDate = <int, double>{};
@@ -53,18 +59,22 @@ class _WorkoutAnalyticsWidgetState extends State<WorkoutAnalyticsWidget> {
         if (record.id == null) continue;
 
         // Get set records for this workout
-        final setRecords = await _setRecordService.getWorkoutSetRecords(
+        final setRecordsResult = await _setRecordService.getWorkoutSetRecords(
           workoutProgressId: record.id,
         );
+        if (setRecordsResult.isErr()) continue;
+        final setRecords = (setRecordsResult as Ok).value.data;
 
         // Get exercise records for each set
         for (final setRecord in setRecords) {
           if (setRecord.id == null) continue;
 
-          final exerciseRecords =
+          final exerciseRecordsResult =
               await _exerciseRecordService.getWorkoutSetExerciseRecords(
             workoutSetProgressId: setRecord.id,
           );
+          if (exerciseRecordsResult.isErr()) continue;
+          final exerciseRecords = (exerciseRecordsResult as Ok).value;
 
           exerciseRecordsMap[setRecord.id!] = exerciseRecords;
           exerciseIds.addAll(exerciseRecords.map((e) => e.exerciseId));
@@ -97,16 +107,20 @@ class _WorkoutAnalyticsWidgetState extends State<WorkoutAnalyticsWidget> {
           workoutRecords.where((r) => r.completedAt != null).toList();
       for (final record in completedRecords) {
         if (record.id == null) continue;
-        final setRecords = await _setRecordService.getWorkoutSetRecords(
+        final setRecordsResult = await _setRecordService.getWorkoutSetRecords(
           workoutProgressId: record.id,
         );
+        if (setRecordsResult.isErr()) continue;
+        final setRecords = (setRecordsResult as Ok).value.data;
         double workoutVolume = 0.0;
         for (final setRecord in setRecords) {
           if (setRecord.id == null) continue;
-          final exerciseRecords =
+          final exerciseRecordsResult =
               await _exerciseRecordService.getWorkoutSetExerciseRecords(
             workoutSetProgressId: setRecord.id,
           );
+          if (exerciseRecordsResult.isErr()) continue;
+          final exerciseRecords = (exerciseRecordsResult as Ok).value;
           workoutVolume += exerciseRecords.fold<double>(
             0.0,
             (sum, er) => sum + (er.weightGrams / 1000.0) * er.reps,
@@ -419,7 +433,7 @@ class _WorkoutAnalyticsWidgetState extends State<WorkoutAnalyticsWidget> {
                 padding: const EdgeInsets.only(bottom: 12),
                 child: Card(
                   elevation: 0,
-                  color: Colors.blue.withOpacity(0.05),
+                  color: Colors.blue.withValues(alpha: 0.05),
                   child: Padding(
                     padding: const EdgeInsets.all(12.0),
                     child: Column(
@@ -442,10 +456,10 @@ class _WorkoutAnalyticsWidgetState extends State<WorkoutAnalyticsWidget> {
                                 vertical: 6,
                               ),
                               decoration: BoxDecoration(
-                                color: Colors.blue.withOpacity(0.1),
+                                color: Colors.blue.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
-                                  color: Colors.blue.withOpacity(0.3),
+                                  color: Colors.blue.withValues(alpha: 0.3),
                                 ),
                               ),
                               child: Text(
@@ -639,9 +653,9 @@ class _WorkoutAnalyticsWidgetState extends State<WorkoutAnalyticsWidget> {
     return Container(
       padding: const EdgeInsets.all(16.0),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Column(
         children: [
@@ -676,9 +690,9 @@ class _WorkoutAnalyticsWidgetState extends State<WorkoutAnalyticsWidget> {
     return Container(
       padding: const EdgeInsets.all(12.0),
       decoration: BoxDecoration(
-        color: Colors.amber.withOpacity(0.1),
+        color: Colors.amber.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.amber.withOpacity(0.3)),
+        border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [

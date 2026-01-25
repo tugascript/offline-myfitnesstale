@@ -1,14 +1,15 @@
 import 'package:equatable/equatable.dart';
 
-import '../../models/profile_model.dart';
-import '../../models/system_model.dart';
+import '../../services/dtos/profile_dto.dart';
+import '../../services/dtos/system_dto.dart';
+import 'common_state.dart';
 
 final class ProfileState extends Equatable {
-  final Profile? profile;
-  final System? system;
+  final ProfileDto? profile;
+  final SystemDto? system;
   final bool isLoading;
   final bool isInitiated;
-  final String? error;
+  final ErrorState? error;
 
   const ProfileState({
     this.profile,
@@ -26,11 +27,11 @@ final class ProfileState extends Equatable {
   }
 
   ProfileState copyWith({
-    Profile? profile,
-    System? system,
+    ProfileDto? profile,
+    SystemDto? system,
     bool? isLoading,
     bool? isInitiated,
-    String? error,
+    ErrorState? error,
   }) {
     return ProfileState(
       profile: profile ?? this.profile,

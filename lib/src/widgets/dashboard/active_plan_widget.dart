@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:myfitnesstale/src/utilities/sizes/home_sizes.dart';
 
-import '../../cubits/current_workout_plan_record_cubit.dart';
 import '../../cubits/profile_cubit.dart';
-import '../../cubits/states/current_workout_plan_record_state.dart';
 import '../../cubits/states/profile_state.dart';
 import '../../models/enums.dart';
-import '../../models/profile_model.dart';
+import '../../services/dtos/profile_dto.dart';
+import '../../utilities/sizes/home_sizes.dart';
 
 // TODO: fix this widget
 class ActivePlanWidget extends StatefulWidget {
@@ -40,7 +38,7 @@ class _ActivePlanWidgetState extends State<ActivePlanWidget> {
     });
   }
 
-  void _loadActivePlanIfNeeded(Profile? profile) {
+  void _loadActivePlanIfNeeded(ProfileDto? profile) {
     if (_hasAttemptedLoad || profile == null) {
       return;
     }
@@ -49,8 +47,8 @@ class _ActivePlanWidgetState extends State<ActivePlanWidget> {
     // Only load if not already loading and no plan exists
     if (!cubit.state.isLoading && cubit.state.workoutPlan == null) {
       _hasAttemptedLoad = true;
-      // Pass profile to avoid fetching it again (prevents selectLatest loop)
-      cubit.getActivePlanRecord(profile);
+      // Load active plan record
+      cubit.getActivePlanRecord();
     }
   }
 
@@ -144,7 +142,7 @@ class _ActivePlanWidgetState extends State<ActivePlanWidget> {
                                 vertical: 4,
                               ),
                               decoration: BoxDecoration(
-                                color: difficultyColor.withOpacity(0.2),
+                                color: difficultyColor.withValues(alpha: 0.2),
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
                                   color: difficultyColor,
@@ -214,7 +212,7 @@ class _ActivePlanWidgetState extends State<ActivePlanWidget> {
                             decoration: BoxDecoration(
                               color: Theme.of(context)
                                   .primaryColor
-                                  .withOpacity(0.1),
+                                  .withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Row(

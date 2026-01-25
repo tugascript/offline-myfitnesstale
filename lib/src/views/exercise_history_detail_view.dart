@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
+import '../models/db.dart';
 import '../models/exercise_model.dart';
+import '../models/repository.dart';
 import '../models/workout_set_exercise_record_model.dart';
-import '../services/exercise_service.dart';
-import '../services/workout_set_exercise_record_service.dart';
 import '../widgets/layout/responsive_scaffold.dart';
 
 class ExerciseHistoryDetailView extends StatefulWidget {
@@ -19,12 +19,7 @@ class ExerciseHistoryDetailView extends StatefulWidget {
       _ExerciseHistoryDetailViewState();
 }
 
-class _ExerciseHistoryDetailViewState
-    extends State<ExerciseHistoryDetailView> {
-  final ExerciseService _exerciseService = ExerciseService();
-  final WorkoutSetExerciseRecordService _exerciseRecordService =
-      WorkoutSetExerciseRecordService();
-
+class _ExerciseHistoryDetailViewState extends State<ExerciseHistoryDetailView> {
   Exercise? _exercise;
   List<WorkoutSetExerciseRecord> _records = [];
   bool _isLoading = true;
@@ -43,8 +38,13 @@ class _ExerciseHistoryDetailViewState
     });
 
     try {
-      // Load exercise
-      final exercise = await _exerciseService.getExercise(widget.exerciseId);
+      // Load exercise directly from repository to have all fields
+      final exerciseRepository = Repository<Exercise>(
+        databaseHelper: DatabaseHelper(),
+        tableName: Exercise.table,
+        fromMap: (map) => Exercise.fromMap(map),
+      );
+      final exercise = await exerciseRepository.selectOne(widget.exerciseId);
       if (exercise == null) {
         setState(() {
           _error = 'Exercise not found';
@@ -53,10 +53,16 @@ class _ExerciseHistoryDetailViewState
         return;
       }
 
-      // Load all exercise records
-      final records =
-          await _exerciseRecordService.getWorkoutSetExerciseRecords(
-        exerciseId: widget.exerciseId,
+      // Load all exercise records directly from repository
+      final repository = Repository<WorkoutSetExerciseRecord>(
+        databaseHelper: DatabaseHelper(),
+        tableName: WorkoutSetExerciseRecord.table,
+        fromMap: (map) => WorkoutSetExerciseRecord.fromMap(map),
+      );
+      final records = await repository.selectMany(
+        where: 'exercise_id = ?',
+        whereArgs: [widget.exerciseId],
+        orderBy: 'created_at DESC',
       );
 
       // Sort by creation date (most recent first)
@@ -304,9 +310,9 @@ class _ExerciseHistoryDetailViewState
     return Container(
       padding: const EdgeInsets.all(12.0),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Column(
         children: [
@@ -341,7 +347,8 @@ class _ExerciseHistoryDetailViewState
     final Map<String, double> weightByDate = {};
     for (final record in _records) {
       final date = DateTime.fromMillisecondsSinceEpoch(record.createdAt * 1000);
-      final dateKey = '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+      final dateKey =
+          '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
       final weight = record.weightGrams / 1000.0;
       final currentMax = weightByDate[dateKey] ?? 0.0;
       if (weight > currentMax) {
@@ -405,10 +412,10 @@ class _ExerciseHistoryDetailViewState
                           vertical: 6,
                         ),
                         decoration: BoxDecoration(
-                          color: Colors.blue.withOpacity(0.1),
+                          color: Colors.blue.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                            color: Colors.blue.withOpacity(0.3),
+                            color: Colors.blue.withValues(alpha: 0.3),
                           ),
                         ),
                         child: Text(
@@ -485,10 +492,10 @@ class _ExerciseHistoryDetailViewState
                         vertical: 6,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.orange.withOpacity(0.1),
+                        color: Colors.orange.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: Colors.orange.withOpacity(0.3),
+                          color: Colors.orange.withValues(alpha: 0.3),
                         ),
                       ),
                       child: Text(
@@ -553,4 +560,3 @@ class _ExerciseHistoryDetailViewState
     );
   }
 }
-

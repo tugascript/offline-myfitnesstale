@@ -4,8 +4,8 @@ import 'package:go_router/go_router.dart';
 
 import '../cubits/workout_record_cubit.dart';
 import '../cubits/states/workout_record_state.dart';
-import '../models/workout_record_model.dart';
-import '../models/workout_model.dart';
+import '../services/dtos/workout_record_dto.dart';
+import '../services/dtos/workout_dto.dart';
 import '../services/workout_service.dart';
 import '../widgets/layout/responsive_scaffold.dart';
 
@@ -19,7 +19,7 @@ class WorkoutHistoryView extends StatefulWidget {
 }
 
 class _WorkoutHistoryViewState extends State<WorkoutHistoryView> {
-  final Map<int, Workout> _workoutCache = {};
+  final Map<int, WorkoutDto> _workoutCache = {};
   final WorkoutService _workoutService = WorkoutService();
 
   @override
@@ -31,20 +31,17 @@ class _WorkoutHistoryViewState extends State<WorkoutHistoryView> {
         );
   }
 
-  Future<Workout?> _getWorkout(int workoutId) async {
+  Future<WorkoutDto?> _getWorkout(int workoutId) async {
     if (_workoutCache.containsKey(workoutId)) {
       return _workoutCache[workoutId];
     }
 
-    try {
-      final workout = await _workoutService.getWorkout(workoutId);
-      if (workout != null) {
-        _workoutCache[workoutId] = workout;
-      }
-      return workout;
-    } catch (e) {
-      return null;
+    final workoutResult = await _workoutService.getWorkout(workoutId);
+    if (workoutResult.isOk()) {
+      _workoutCache[workoutId] = workoutResult.value;
+      return workoutResult.value;
     }
+    return null;
   }
 
   String _formatDate(int timestamp) {
@@ -156,7 +153,7 @@ class _WorkoutHistoryViewState extends State<WorkoutHistoryView> {
                   final isPersonalBest =
                       _isPersonalBest(record, personalRecords);
 
-                  return FutureBuilder<Workout?>(
+                  return FutureBuilder<WorkoutDto?>(
                     future: _getWorkout(record.workoutId),
                     builder: (context, snapshot) {
                       final workout = snapshot.data;
@@ -164,7 +161,7 @@ class _WorkoutHistoryViewState extends State<WorkoutHistoryView> {
                         margin: const EdgeInsets.only(bottom: 12),
                         elevation: isPersonalBest ? 4 : 1,
                         color: isPersonalBest
-                            ? Colors.amber.withOpacity(0.05)
+                            ? Colors.amber.withValues(alpha: 0.05)
                             : null,
                         child: InkWell(
                           onTap: () {
@@ -235,7 +232,9 @@ class _WorkoutHistoryViewState extends State<WorkoutHistoryView> {
                                           ),
                                           const SizedBox(height: 4),
                                           Text(
-                                            _formatDate(record.startedAt),
+                                            _formatDate(record.startedAt
+                                                    .millisecondsSinceEpoch ~/
+                                                1000),
                                             style: TextStyle(
                                               fontSize: 14,
                                               color: Colors.grey[600],
@@ -277,8 +276,14 @@ class _WorkoutHistoryViewState extends State<WorkoutHistoryView> {
                                       child: _buildMetricChip(
                                         Icons.timer,
                                         _formatDuration(
-                                          record.startedAt,
-                                          record.completedAt,
+                                          record.startedAt
+                                                  .millisecondsSinceEpoch ~/
+                                              1000,
+                                          record.completedAt != null
+                                              ? record.completedAt!
+                                                      .millisecondsSinceEpoch ~/
+                                                  1000
+                                              : null,
                                         ),
                                       ),
                                     ),
@@ -320,8 +325,8 @@ class _WorkoutHistoryViewState extends State<WorkoutHistoryView> {
     );
   }
 
-  Map<String, WorkoutRecord> _calculatePersonalRecords(
-    List<WorkoutRecord> records,
+  Map<String, WorkoutRecordDto> _calculatePersonalRecords(
+    List<WorkoutRecordDto> records,
   ) {
     if (records.isEmpty) return {};
 
@@ -329,7 +334,7 @@ class _WorkoutHistoryViewState extends State<WorkoutHistoryView> {
         records.where((r) => r.completedAt != null).toList();
     if (completedRecords.isEmpty) return {};
 
-    final Map<String, WorkoutRecord> personalRecords = {};
+    final Map<String, WorkoutRecordDto> personalRecords = {};
 
     // Most sets
     final maxSets = completedRecords.reduce(
@@ -345,8 +350,8 @@ class _WorkoutHistoryViewState extends State<WorkoutHistoryView> {
 
     // Longest workout (by duration)
     final longestWorkout = completedRecords.reduce((a, b) {
-      final durationA = (a.completedAt! - a.startedAt);
-      final durationB = (b.completedAt! - b.startedAt);
+      final durationA = a.completedAt!.difference(a.startedAt).inSeconds;
+      final durationB = b.completedAt!.difference(b.startedAt).inSeconds;
       return durationA > durationB ? a : b;
     });
     personalRecords['longestWorkout'] = longestWorkout;
@@ -355,14 +360,14 @@ class _WorkoutHistoryViewState extends State<WorkoutHistoryView> {
   }
 
   bool _isPersonalBest(
-      WorkoutRecord record, Map<String, WorkoutRecord> personalRecords) {
+      WorkoutRecordDto record, Map<String, WorkoutRecordDto> personalRecords) {
     return personalRecords.values.any((pb) => pb.id == record.id);
   }
 
   Widget _buildPersonalRecordsSection(
-      Map<String, WorkoutRecord> personalRecords) {
+      Map<String, WorkoutRecordDto> personalRecords) {
     return Card(
-      color: Colors.amber.withOpacity(0.1),
+      color: Colors.amber.withValues(alpha: 0.1),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -399,8 +404,16 @@ class _WorkoutHistoryViewState extends State<WorkoutHistoryView> {
               _buildPersonalRecordItem(
                 'Longest Workout',
                 _formatDuration(
-                  personalRecords['longestWorkout']!.startedAt,
-                  personalRecords['longestWorkout']!.completedAt,
+                  personalRecords['longestWorkout']!
+                          .startedAt
+                          .millisecondsSinceEpoch ~/
+                      1000,
+                  personalRecords['longestWorkout']!.completedAt != null
+                      ? personalRecords['longestWorkout']!
+                              .completedAt!
+                              .millisecondsSinceEpoch ~/
+                          1000
+                      : null,
                 ),
                 Icons.timer,
                 Colors.purple,
@@ -424,7 +437,7 @@ class _WorkoutHistoryViewState extends State<WorkoutHistoryView> {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              color: color.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(icon, color: color, size: 20),

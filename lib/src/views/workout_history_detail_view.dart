@@ -6,14 +6,12 @@ import '../cubits/workout_cubit.dart';
 import '../cubits/workout_record_cubit.dart';
 import '../cubits/states/workout_state.dart';
 import '../cubits/states/workout_record_state.dart';
-import '../models/workout_set_record_model.dart';
-import '../models/workout_set_exercise_record_model.dart';
+import '../models/db.dart';
 import '../models/exercise_model.dart';
-import '../services/workout_set_record_service.dart';
-import '../services/workout_set_exercise_record_service.dart';
-import '../services/exercise_service.dart';
+import '../models/repository.dart';
+import '../models/workout_set_exercise_record_model.dart';
+import '../models/workout_set_record_model.dart';
 import '../widgets/layout/responsive_scaffold.dart';
-import '../utilities/converters.dart';
 
 class WorkoutHistoryDetailView extends StatefulWidget {
   final int workoutRecordId;
@@ -29,10 +27,6 @@ class WorkoutHistoryDetailView extends StatefulWidget {
 }
 
 class _WorkoutHistoryDetailViewState extends State<WorkoutHistoryDetailView> {
-  final WorkoutSetRecordService _setRecordService = WorkoutSetRecordService();
-  final WorkoutSetExerciseRecordService _exerciseRecordService =
-      WorkoutSetExerciseRecordService();
-  final ExerciseService _exerciseService = ExerciseService();
 
   List<WorkoutSetRecord>? _setRecords;
   Map<int, List<WorkoutSetExerciseRecord>>? _exerciseRecords;
@@ -46,52 +40,83 @@ class _WorkoutHistoryDetailViewState extends State<WorkoutHistoryDetailView> {
   }
 
   Future<void> _loadWorkoutRecordDetails() async {
+    if (!mounted) return;
     setState(() => _isLoading = true);
 
     try {
+      // Store cubit references before async operations
+      final workoutRecordCubit = context.read<WorkoutRecordCubit>();
+      final workoutCubit = context.read<WorkoutCubit>();
+      
       // Get workout record
-      await context
-          .read<WorkoutRecordCubit>()
-          .getWorkoutRecord(widget.workoutRecordId);
+      await workoutRecordCubit.getWorkoutRecord(widget.workoutRecordId);
 
-      final state = context.read<WorkoutRecordCubit>().state;
+      if (!mounted) return;
+      final state = workoutRecordCubit.state;
       final workoutRecord = state.selectedWorkoutRecord;
 
       if (workoutRecord == null) {
+        if (!mounted) return;
         setState(() => _isLoading = false);
         return;
       }
 
       // Get workout details
-      await context.read<WorkoutCubit>().getWorkout(workoutRecord.workoutId);
+      await workoutCubit.getWorkout(workoutRecord.workoutId);
 
-      // Get set records
-      final setRecords = await _setRecordService.getWorkoutSetRecords(
-        workoutProgressId: workoutRecord.id,
+      if (!mounted) return;
+      
+      // Get set records directly from repository
+      final setRecordRepository = Repository<WorkoutSetRecord>(
+        databaseHelper: DatabaseHelper(),
+        tableName: WorkoutSetRecord.table,
+        fromMap: (map) => WorkoutSetRecord.fromMap(map),
       );
+      final setRecords = await setRecordRepository.selectMany(
+        where: 'workout_progress_id = ?',
+        whereArgs: [workoutRecord.id],
+        orderBy: 'set_number ASC',
+      );
+
+      if (!mounted) return;
 
       // Get exercise records for each set
       final exerciseRecordsMap = <int, List<WorkoutSetExerciseRecord>>{};
       final exerciseIds = <int>{};
+      final exerciseRecordRepository = Repository<WorkoutSetExerciseRecord>(
+        databaseHelper: DatabaseHelper(),
+        tableName: WorkoutSetExerciseRecord.table,
+        fromMap: (map) => WorkoutSetExerciseRecord.fromMap(map),
+      );
 
       for (final setRecord in setRecords) {
-        final exerciseRecords =
-            await _exerciseRecordService.getWorkoutSetExerciseRecords(
-          workoutSetProgressId: setRecord.id,
+        if (!mounted) return;
+        final exerciseRecords = await exerciseRecordRepository.selectMany(
+          where: 'workout_set_progress_id = ?',
+          whereArgs: [setRecord.id],
         );
         exerciseRecordsMap[setRecord.id!] = exerciseRecords;
         exerciseIds.addAll(exerciseRecords.map((e) => e.exerciseId));
       }
 
-      // Get all exercises
+      if (!mounted) return;
+
+      // Get all exercises directly from repository
+      final exerciseRepository = Repository<Exercise>(
+        databaseHelper: DatabaseHelper(),
+        tableName: Exercise.table,
+        fromMap: (map) => Exercise.fromMap(map),
+      );
       final exercisesMap = <int, Exercise>{};
       for (final exerciseId in exerciseIds) {
-        final exercise = await _exerciseService.getExercise(exerciseId);
+        if (!mounted) return;
+        final exercise = await exerciseRepository.selectOne(exerciseId);
         if (exercise != null) {
           exercisesMap[exerciseId] = exercise;
         }
       }
 
+      if (!mounted) return;
       setState(() {
         _setRecords = setRecords;
         _exerciseRecords = exerciseRecordsMap;
@@ -99,6 +124,7 @@ class _WorkoutHistoryDetailViewState extends State<WorkoutHistoryDetailView> {
         _isLoading = false;
       });
     } catch (e) {
+      if (!mounted) return;
       setState(() => _isLoading = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -151,7 +177,7 @@ class _WorkoutHistoryDetailViewState extends State<WorkoutHistoryDetailView> {
 
           return BlocBuilder<WorkoutCubit, WorkoutState>(
             builder: (context, workoutState) {
-              final workout = workoutState.selectedWorkout?.workout;
+              final workout = workoutState.selectedWorkout;
 
               return SingleChildScrollView(
                 padding: const EdgeInsets.all(16.0),
@@ -179,7 +205,7 @@ class _WorkoutHistoryDetailViewState extends State<WorkoutHistoryDetailView> {
                                     size: 16, color: Colors.grey[600]),
                                 const SizedBox(width: 4),
                                 Text(
-                                  'Started: ${_formatDate(workoutRecord.startedAt)}',
+                                  'Started: ${_formatDate(workoutRecord.startedAt.millisecondsSinceEpoch ~/ 1000)}',
                                   style: TextStyle(
                                     fontSize: 14,
                                     color: Colors.grey[600],
@@ -195,7 +221,7 @@ class _WorkoutHistoryDetailViewState extends State<WorkoutHistoryDetailView> {
                                       size: 16, color: Colors.green),
                                   const SizedBox(width: 4),
                                   Text(
-                                    'Completed: ${_formatDate(workoutRecord.completedAt!)}',
+                                    'Completed: ${_formatDate(workoutRecord.completedAt!.millisecondsSinceEpoch ~/ 1000)}',
                                     style: TextStyle(
                                       fontSize: 14,
                                       color: Colors.green[700],
@@ -210,7 +236,7 @@ class _WorkoutHistoryDetailViewState extends State<WorkoutHistoryDetailView> {
                                       size: 16, color: Colors.grey[600]),
                                   const SizedBox(width: 4),
                                   Text(
-                                    'Duration: ${_formatDuration(workoutRecord.startedAt, workoutRecord.completedAt)}',
+                                    'Duration: ${_formatDuration(workoutRecord.startedAt.millisecondsSinceEpoch ~/ 1000, workoutRecord.completedAt != null ? workoutRecord.completedAt!.millisecondsSinceEpoch ~/ 1000 : null)}',
                                     style: TextStyle(
                                       fontSize: 14,
                                       color: Colors.grey[600],
@@ -366,7 +392,6 @@ class _WorkoutHistoryDetailViewState extends State<WorkoutHistoryDetailView> {
                                         _exercises?[exerciseRecord.exerciseId];
                                     final weightKg =
                                         exerciseRecord.weightGrams / 1000.0;
-                                    final converters = Converters();
 
                                     return ListTile(
                                       leading: const Icon(Icons.fitness_center),
@@ -425,9 +450,9 @@ class _WorkoutHistoryDetailViewState extends State<WorkoutHistoryDetailView> {
     return Container(
       padding: const EdgeInsets.all(12.0),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

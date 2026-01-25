@@ -1,3 +1,126 @@
+enum MuscleGroup {
+  full("full"),
+  push("push"),
+  pull("pull"),
+  legs("legs"),
+  core("core");
+
+  final String value;
+
+  const MuscleGroup(this.value);
+
+  static MuscleGroup fromValue(String v) => MuscleGroup.values.firstWhere(
+        (m) => m.value == v,
+        orElse: () => MuscleGroup.full,
+      );
+}
+
+enum Muscle {
+  chest("chest"),
+  upperChest("upper_chest"),
+  lowerChest("lower_chest"),
+  innerChest("inner_chest"),
+  shoulders("shoulders"),
+  frontDelts("front_delts"),
+  sideDelts("side_delts"),
+  rearDelts("rear_delts"),
+  triceps("triceps"),
+  neck("neck"),
+  traps("traps"),
+  rhomboids("rhomboids"),
+  lats("lats"),
+  biceps("biceps"),
+  brachialis("brachialis"),
+  forearms("forearms"),
+  quadriceps("quadriceps"),
+  hamstrings("hamstrings"),
+  glutes("glutes"),
+  calves("calves"),
+  tibialis("tibialis"),
+  adductors("adductors"),
+  abdominals("abdominals"),
+  upperAbs("upper_abs"),
+  lowerAbs("lower_abs"),
+  obliques("obliques"),
+  lowerBack("lower_back");
+
+  final String value;
+
+  const Muscle(this.value);
+
+  static Muscle fromValue(String v) => Muscle.values.firstWhere(
+        (m) => m.value == v,
+        orElse: () => Muscle.chest,
+      );
+}
+
+const Map<MuscleGroup, Set<Muscle>> kMuscleGroupMuscleMap = {
+  MuscleGroup.full: {
+    Muscle.chest,
+    Muscle.upperChest,
+    Muscle.lowerChest,
+    Muscle.innerChest,
+    Muscle.shoulders,
+    Muscle.frontDelts,
+    Muscle.sideDelts,
+    Muscle.rearDelts,
+    Muscle.triceps,
+    Muscle.neck,
+    Muscle.traps,
+    Muscle.rhomboids,
+    Muscle.lats,
+    Muscle.biceps,
+    Muscle.brachialis,
+    Muscle.forearms,
+    Muscle.quadriceps,
+    Muscle.hamstrings,
+    Muscle.glutes,
+    Muscle.calves,
+    Muscle.tibialis,
+    Muscle.adductors,
+    Muscle.abdominals,
+    Muscle.upperAbs,
+    Muscle.lowerAbs,
+    Muscle.obliques,
+    Muscle.lowerBack,
+  },
+  MuscleGroup.push: {
+    Muscle.chest,
+    Muscle.upperChest,
+    Muscle.lowerChest,
+    Muscle.innerChest,
+    Muscle.shoulders,
+    Muscle.frontDelts,
+    Muscle.sideDelts,
+    Muscle.triceps,
+  },
+  MuscleGroup.pull: {
+    Muscle.rearDelts,
+    Muscle.neck,
+    Muscle.traps,
+    Muscle.rhomboids,
+    Muscle.lats,
+    Muscle.biceps,
+    Muscle.brachialis,
+    Muscle.forearms,
+  },
+  MuscleGroup.legs: {
+    Muscle.quadriceps,
+    Muscle.hamstrings,
+    Muscle.glutes,
+    Muscle.calves,
+    Muscle.tibialis,
+    Muscle.adductors,
+  },
+  MuscleGroup.core: {
+    Muscle.abdominals,
+    Muscle.upperAbs,
+    Muscle.lowerAbs,
+    Muscle.obliques,
+    Muscle.lowerBack,
+  },
+};
+
 enum Gender {
   male("male"),
   female("female"),
@@ -42,21 +165,6 @@ enum ThemeType {
       );
 }
 
-enum ExerciseMuscleCategory {
-  primary("primary"),
-  secondary("secondary");
-
-  final String value;
-
-  const ExerciseMuscleCategory(this.value);
-
-  static ExerciseMuscleCategory fromValue(String v) =>
-      ExerciseMuscleCategory.values.firstWhere(
-        (e) => e.value == v,
-        orElse: () => ExerciseMuscleCategory.primary,
-      );
-}
-
 enum VideoPlatform {
   youtube('youtube'),
   vimeo('vimeo'),
@@ -64,6 +172,8 @@ enum VideoPlatform {
   tiktok('tiktok'),
   instagram('instagram'),
   dailymotion('dailymotion'),
+  assets('assets'),
+  files('files'),
   custom('custom');
 
   final String value;
@@ -73,6 +183,21 @@ enum VideoPlatform {
   static VideoPlatform fromValue(String v) => VideoPlatform.values.firstWhere(
         (p) => p.value == v,
         orElse: () => VideoPlatform.youtube,
+      );
+}
+
+enum PictureStorage {
+  assets("assets"),
+  files("files"),
+  network("network");
+
+  final String value;
+
+  const PictureStorage(this.value);
+
+  static PictureStorage fromValue(String v) => PictureStorage.values.firstWhere(
+        (p) => p.value == v,
+        orElse: () => PictureStorage.files,
       );
 }
 
@@ -140,18 +265,36 @@ enum ProgressStatus {
       );
 }
 
-enum WorkoutSetExerciseDifficulty {
+enum WorkoutSetExerciseDifficultyType {
   rir("RIR"),
   rpe("RPE"),
   rmp("RMP");
 
   final String value;
 
-  const WorkoutSetExerciseDifficulty(this.value);
+  const WorkoutSetExerciseDifficultyType(this.value);
 
-  static WorkoutSetExerciseDifficulty fromValue(String v) =>
-      WorkoutSetExerciseDifficulty.values.firstWhere(
+  static WorkoutSetExerciseDifficultyType fromValue(String v) =>
+      WorkoutSetExerciseDifficultyType.values.firstWhere(
         (d) => d.value == v,
-        orElse: () => WorkoutSetExerciseDifficulty.rir,
+        orElse: () => WorkoutSetExerciseDifficultyType.rir,
+      );
+}
+
+enum WorkoutSetType {
+  standard("standard"),
+  drop("drop"),
+  superSet("super"),
+  giant("giant"),
+  pyramid("pyramid"),
+  circuit("circuit");
+
+  final String value;
+
+  const WorkoutSetType(this.value);
+
+  static WorkoutSetType fromValue(String v) => WorkoutSetType.values.firstWhere(
+        (t) => t.value == v,
+        orElse: () => WorkoutSetType.standard,
       );
 }

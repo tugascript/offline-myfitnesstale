@@ -11,10 +11,25 @@ const String _tableCreate = '''
     name TEXT NOT NULL,
     height INTEGER NOT NULL,
     gender TEXT NOT NULL,
+    birthdate INTEGER NOT NULL,
     created_at INTEGER NOT NULL,
     updated_at INTEGER NOT NULL
   );
   ''';
+
+enum ProfileColumns {
+  id("id"),
+  name("name"),
+  height("height"),
+  gender("gender"),
+  birthdate("birthdate"),
+  createdAt("created_at"),
+  updatedAt("updated_at");
+
+  final String value;
+
+  const ProfileColumns(this.value);
+}
 
 class Profile extends Equatable implements Model {
   @override
@@ -22,6 +37,7 @@ class Profile extends Equatable implements Model {
   final String name;
   final int height;
   final Gender gender;
+  final int birthdate;
   @override
   final int createdAt;
   @override
@@ -32,6 +48,7 @@ class Profile extends Equatable implements Model {
     required this.name,
     required this.height,
     required this.gender,
+    required this.birthdate,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -42,24 +59,26 @@ class Profile extends Equatable implements Model {
   @override
   Map<String, Object?> toMap() {
     return {
-      'id': id,
-      'name': name,
-      'height': height,
-      'gender': gender.value,
-      'created_at': createdAt,
-      'updated_at': updatedAt,
+      ProfileColumns.id.value: id,
+      ProfileColumns.name.value: name,
+      ProfileColumns.height.value: height,
+      ProfileColumns.gender.value: gender.value,
+      ProfileColumns.birthdate.value: birthdate,
+      ProfileColumns.createdAt.value: createdAt,
+      ProfileColumns.updatedAt.value: updatedAt,
     };
   }
 
   @override
   factory Profile.fromMap(Map<String, Object?> map) {
     return Profile(
-      id: map['id'] as int?,
-      name: map['name'] as String,
-      height: map['height'] as int,
-      gender: Gender.fromValue(map['gender']! as String),
-      createdAt: map['created_at'] as int,
-      updatedAt: map['updated_at'] as int,
+      id: map[ProfileColumns.id.value] as int?,
+      name: map[ProfileColumns.name.value] as String,
+      height: map[ProfileColumns.height.value] as int,
+      gender: Gender.fromValue(map[ProfileColumns.gender.value]! as String),
+      birthdate: map[ProfileColumns.birthdate.value] as int,
+      createdAt: map[ProfileColumns.createdAt.value] as int,
+      updatedAt: map[ProfileColumns.updatedAt.value] as int,
     );
   }
 
@@ -68,12 +87,14 @@ class Profile extends Equatable implements Model {
     String name,
     int height,
     Gender gender,
+    DateTime birthdate,
   ) {
     final int now = DateUtilities.getNowUtcUnix();
     return Profile(
       name: name,
       height: height,
       gender: gender,
+      birthdate: DateUtilities.getNumericDate(birthdate),
       createdAt: now,
       updatedAt: now,
     );
@@ -85,6 +106,7 @@ class Profile extends Equatable implements Model {
     String? name,
     int? height,
     Gender? gender,
+    int? birthdate,
     int? createdAt,
     int? updatedAt,
   }) {
@@ -93,6 +115,7 @@ class Profile extends Equatable implements Model {
       name: name ?? this.name,
       height: height ?? this.height,
       gender: gender ?? this.gender,
+      birthdate: birthdate ?? this.birthdate,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );

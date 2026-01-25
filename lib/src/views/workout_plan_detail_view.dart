@@ -5,9 +5,9 @@ import 'package:go_router/go_router.dart';
 import '../cubits/workout_plan_cubit.dart';
 import '../cubits/states/workout_plan_state.dart';
 import '../models/enums.dart';
-import '../models/workout_model.dart';
+import '../services/dtos/workout_dto.dart';
+import '../services/dtos/workout_plan_dto.dart';
 import '../models/workout_plan_day_model.dart';
-import '../models/workout_plan_model.dart';
 import '../models/workout_plan_week_model.dart';
 import '../models/workout_plan_workout_model.dart';
 import '../services/current_workout_plan_record_service.dart';
@@ -33,11 +33,11 @@ class _WorkoutPlanDetailViewState extends State<WorkoutPlanDetailView> {
   final CurrentWorkoutPlanRecordService _currentWorkoutPlanRecordService =
       CurrentWorkoutPlanRecordService();
 
-  WorkoutPlan? _plan;
+  WorkoutPlanDto? _plan;
   List<WorkoutPlanWeek> _weeks = [];
   Map<int, List<WorkoutPlanDay>> _daysByWeek = {};
   Map<int, List<WorkoutPlanWorkout>> _workoutsByDay = {};
-  final Map<int, Workout> _workoutCache = {};
+  final Map<int, WorkoutDto> _workoutCache = {};
   bool _isLoading = true;
   bool _isActive = false;
   String? _error;
@@ -57,21 +57,26 @@ class _WorkoutPlanDetailViewState extends State<WorkoutPlanDetailView> {
 
     try {
       // Load plan
-      final plan = await _workoutPlanService.getWorkoutPlan(widget.workoutPlanId);
-      if (plan == null) {
+      final planResult =
+          await _workoutPlanService.getWorkoutPlan(widget.workoutPlanId);
+      if (planResult.isErr()) {
         setState(() {
-          _error = 'Workout plan not found';
+          _error = 'Failed to load workout plan';
           _isLoading = false;
         });
         return;
       }
+      final plan = planResult.value;
 
       // Check if plan is active
-      final currentPlan = await _currentWorkoutPlanRecordService.getCurrentWorkoutPlanRecord();
-      final isActive = currentPlan?.workoutPlanId == widget.workoutPlanId;
+      final currentPlanResult =
+          await _currentWorkoutPlanRecordService.getCurrentWorkoutPlanRecord();
+      final isActive = currentPlanResult.isOk() &&
+          currentPlanResult.value.workoutPlanId == widget.workoutPlanId;
 
       // Load weeks
-      final weeks = await _workoutPlanService.getWorkoutPlanWeeks(widget.workoutPlanId);
+      final weeks =
+          await _workoutPlanService.getWorkoutPlanWeeks(widget.workoutPlanId);
 
       // Load days and workouts for each week
       final daysByWeek = <int, List<WorkoutPlanDay>>{};
@@ -94,9 +99,10 @@ class _WorkoutPlanDetailViewState extends State<WorkoutPlanDetailView> {
           // Pre-load workout details
           for (final planWorkout in workouts) {
             if (!_workoutCache.containsKey(planWorkout.workoutId)) {
-              final workout = await _workoutService.getWorkout(planWorkout.workoutId);
-              if (workout != null) {
-                _workoutCache[planWorkout.workoutId] = workout;
+              final workoutResult =
+                  await _workoutService.getWorkout(planWorkout.workoutId);
+              if (workoutResult.isOk()) {
+                _workoutCache[planWorkout.workoutId] = workoutResult.value;
               }
             }
           }
@@ -171,7 +177,9 @@ class _WorkoutPlanDetailViewState extends State<WorkoutPlanDetailView> {
   }
 
   Future<void> _startPlan() async {
-    final success = await context.read<WorkoutPlanCubit>().startWorkoutPlan(widget.workoutPlanId);
+    final success = await context
+        .read<WorkoutPlanCubit>()
+        .startWorkoutPlan(widget.workoutPlanId);
     if (success && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -258,7 +266,7 @@ class _WorkoutPlanDetailViewState extends State<WorkoutPlanDetailView> {
                                 vertical: 6,
                               ),
                               decoration: BoxDecoration(
-                                color: difficultyColor.withOpacity(0.2),
+                                color: difficultyColor.withValues(alpha: 0.2),
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
                                   color: difficultyColor,
@@ -290,7 +298,8 @@ class _WorkoutPlanDetailViewState extends State<WorkoutPlanDetailView> {
                         const SizedBox(height: 16),
                         Row(
                           children: [
-                            Icon(Icons.calendar_today, size: 18, color: Colors.grey[600]),
+                            Icon(Icons.calendar_today,
+                                size: 18, color: Colors.grey[600]),
                             const SizedBox(width: 8),
                             Text(
                               '${_plan!.totalWeeks} ${_plan!.totalWeeks == 1 ? 'week' : 'weeks'}',
@@ -306,7 +315,7 @@ class _WorkoutPlanDetailViewState extends State<WorkoutPlanDetailView> {
                           Container(
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
-                              color: Colors.green.withOpacity(0.1),
+                              color: Colors.green.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(8),
                               border: Border.all(
                                 color: Colors.green,
@@ -315,7 +324,8 @@ class _WorkoutPlanDetailViewState extends State<WorkoutPlanDetailView> {
                             ),
                             child: Row(
                               children: [
-                                const Icon(Icons.check_circle, color: Colors.green),
+                                const Icon(Icons.check_circle,
+                                    color: Colors.green),
                                 const SizedBox(width: 8),
                                 const Text(
                                   'This plan is currently active',
@@ -337,7 +347,8 @@ class _WorkoutPlanDetailViewState extends State<WorkoutPlanDetailView> {
                               icon: const Icon(Icons.play_arrow),
                               label: const Text('Start Plan'),
                               style: ElevatedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(vertical: 16),
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 16),
                                 backgroundColor: Theme.of(context).primaryColor,
                                 foregroundColor: Colors.white,
                               ),
@@ -370,7 +381,8 @@ class _WorkoutPlanDetailViewState extends State<WorkoutPlanDetailView> {
 
   Widget _buildWeekCard(WorkoutPlanWeek week, Color difficultyColor) {
     final days = _daysByWeek[week.id] ?? [];
-    final isExpanded = week.id == _weeks.first.id; // Expand first week by default
+    final isExpanded =
+        week.id == _weeks.first.id; // Expand first week by default
 
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
@@ -406,10 +418,11 @@ class _WorkoutPlanDetailViewState extends State<WorkoutPlanDetailView> {
     );
   }
 
-  Widget _buildWorkoutCard(WorkoutPlanWorkout planWorkout, Workout? workout) {
+  Widget _buildWorkoutCard(
+      WorkoutPlanWorkout planWorkout, WorkoutDto? workout) {
     return ListTile(
       leading: CircleAvatar(
-        backgroundColor: Theme.of(context).primaryColor.withOpacity(0.1),
+        backgroundColor: Theme.of(context).primaryColor.withValues(alpha: 0.1),
         child: Icon(
           Icons.fitness_center,
           color: Theme.of(context).primaryColor,
@@ -432,4 +445,3 @@ class _WorkoutPlanDetailViewState extends State<WorkoutPlanDetailView> {
     );
   }
 }
-

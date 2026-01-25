@@ -8,8 +8,8 @@ import '../cubits/states/weight_record_state.dart';
 import '../cubits/workout_record_cubit.dart';
 import '../cubits/states/workout_record_state.dart';
 import '../models/enums.dart';
-import '../models/system_model.dart';
-import '../models/weight_record_model.dart';
+import '../services/dtos/system_dto.dart';
+import '../services/dtos/weight_record_dto.dart';
 import '../utilities/converters.dart';
 import '../widgets/layout/responsive_scaffold.dart';
 import '../widgets/weight/weight_goal_tracking_widget.dart';
@@ -133,7 +133,7 @@ class _ProgressViewState extends State<ProgressView>
     );
   }
 
-  Widget _buildWeightTab(WeightRecordState weightState, System? system) {
+  Widget _buildWeightTab(WeightRecordState weightState, SystemDto? system) {
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: Column(
@@ -244,7 +244,7 @@ class _ProgressViewState extends State<ProgressView>
     );
   }
 
-  Widget _buildAnalyticsTab(WeightRecordState weightState, System? system) {
+  Widget _buildAnalyticsTab(WeightRecordState weightState, SystemDto? system) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16.0),
       child: Column(
@@ -278,7 +278,8 @@ class _ProgressViewState extends State<ProgressView>
     );
   }
 
-  Widget _buildCurrentWeightCard(WeightRecord latestWeight, System? system) {
+  Widget _buildCurrentWeightCard(
+      WeightRecordDto latestWeight, SystemDto? system) {
     final units = system?.units ?? Units.metric;
     final displayWeight = units == Units.metric
         ? '${(latestWeight.weight / 1000).toStringAsFixed(1)} kg'
@@ -313,7 +314,7 @@ class _ProgressViewState extends State<ProgressView>
             ],
             const SizedBox(height: 8),
             Text(
-              'Last updated: ${_formatDate(latestWeight.recordDate)}',
+              'Last updated: ${_formatDate(latestWeight.recordDate.millisecondsSinceEpoch ~/ 1000)}',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: Colors.grey[600],
                   ),
@@ -324,8 +325,8 @@ class _ProgressViewState extends State<ProgressView>
     );
   }
 
-  Widget _buildWeightHistory(List<WeightRecord> weightRecords, System? system,
-      WeightRecordState weightState) {
+  Widget _buildWeightHistory(List<WeightRecordDto> weightRecords,
+      SystemDto? system, WeightRecordState weightState) {
     final units = system?.units ?? Units.metric;
 
     return Column(
@@ -350,7 +351,8 @@ class _ProgressViewState extends State<ProgressView>
                 child: ListTile(
                     leading: const Icon(Icons.monitor_weight),
                     title: Text(displayWeight),
-                    subtitle: Text(_formatDate(record.recordDate)),
+                    subtitle: Text(_formatDate(
+                        record.recordDate.millisecondsSinceEpoch ~/ 1000)),
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -387,7 +389,7 @@ class _ProgressViewState extends State<ProgressView>
   }
 
   Widget _buildWeightStatistics(
-      List<WeightRecord> weightRecords, int weightTotal, System? system) {
+      List<WeightRecordDto> weightRecords, int weightTotal, SystemDto? system) {
     final units = system?.units ?? Units.metric;
 
     // Calculate statistics
@@ -489,7 +491,7 @@ class _ProgressViewState extends State<ProgressView>
   }
 
   Widget _buildWeightTrendChart(
-      List<WeightRecord> weightRecords, System? system) {
+      List<WeightRecordDto> weightRecords, SystemDto? system) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -539,14 +541,14 @@ class _ProgressViewState extends State<ProgressView>
     return '${date.day}/${date.month}/${date.year}';
   }
 
-  void _showDeleteConfirmation(WeightRecord record) {
+  void _showDeleteConfirmation(WeightRecordDto record) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text('Delete Weight Record'),
           content: Text(
-            'Are you sure you want to delete this weight record from ${_formatDate(record.recordDate)}?',
+            'Are you sure you want to delete this weight record from ${_formatDate(record.recordDate.millisecondsSinceEpoch ~/ 1000)}?',
           ),
           actions: [
             TextButton(

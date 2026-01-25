@@ -1,12 +1,42 @@
+import 'package:logging/logging.dart';
+
+import '../models/common.dart';
 import '../models/db.dart';
 import '../models/enums.dart';
 import '../models/equipment_model.dart';
 import '../models/exercise_equipment_model.dart';
 import '../models/exercise_model.dart';
-import '../models/exercise_muscle_model.dart';
-import '../models/muscle_model.dart';
 import '../models/repository.dart';
 import '../models/utilities.dart';
+import 'common/errors.dart';
+import 'common/result.dart';
+import 'dtos/equipment_dto.dart';
+import 'dtos/exercise_dto.dart';
+import 'dtos/paginated_dto.dart';
+
+class ExerciseInput {
+  final String name;
+  final MuscleGroup muscleGroup;
+  final ExerciseMuscles muscles;
+  final List<EquipmentDto>? equipments;
+  final String? description;
+  final PictureData? picture;
+  final VideoData? video;
+  final int? difficulty;
+  final bool isFavorite;
+
+  const ExerciseInput({
+    required this.name,
+    required this.muscleGroup,
+    required this.muscles,
+    this.equipments,
+    this.description,
+    this.picture,
+    this.video,
+    this.difficulty,
+    this.isFavorite = false,
+  });
+}
 
 class ExerciseService {
   ExerciseService._();
@@ -15,22 +45,20 @@ class ExerciseService {
 
   factory ExerciseService() => instance;
 
+  final Logger _logger = Logger("Exercise Service");
+
   final DatabaseHelper _databaseHelper = DatabaseHelper();
 
   final Repository<Exercise> _repository = Repository<Exercise>(
     databaseHelper: DatabaseHelper(),
     tableName: Exercise.table,
-    fromMap: (map) => Exercise.fromMap(map),
+    fromMap: Exercise.fromMap,
   );
 
-  final JoinRepository<ExerciseMuscle, Muscle> _exerciseMuscleRepository =
-      JoinRepository<ExerciseMuscle, Muscle>(
+  final Repository<Equipment> _equipmentRepository = Repository<Equipment>(
     databaseHelper: DatabaseHelper(),
-    tableName: ExerciseMuscle.table,
-    fromMap: (map) => ExerciseMuscle.fromMap(map),
-    primaryKeys: ExerciseMuscle.primaryKeys,
-    joinTableName: Muscle.table,
-    joinFromMap: (map) => Muscle.fromMap(map),
+    tableName: Equipment.table,
+    fromMap: Equipment.fromMap,
   );
 
   final JoinRepository<ExerciseEquipment, Equipment>
@@ -38,50 +66,105 @@ class ExerciseService {
       JoinRepository<ExerciseEquipment, Equipment>(
     databaseHelper: DatabaseHelper(),
     tableName: ExerciseEquipment.table,
-    fromMap: (map) => ExerciseEquipment.fromMap(map),
+    fromMap: ExerciseEquipment.fromMap,
     primaryKeys: ExerciseEquipment.primaryKeys,
     joinTableName: Equipment.table,
-    joinFromMap: (map) => Equipment.fromMap(map),
+    joinFromMap: Equipment.fromMap,
   );
 
-  Future<List<Exercise>> getExercises({
+  Future<
+      Result<PaginatedDto<ExerciseDto, Exercise>,
+          ServiceError<OperationErrorTypes>>> getExercises({
     String? name,
-    int? muscleGroupId,
+    MuscleGroup? muscleGroup,
     bool? isFavorite,
     int? difficulty,
-    int? limit,
-    int? offset,
+    int limit = kDefaultLimit,
+    int offset = kDefaultOffset,
   }) async {
+    _logger.info("Getting exercises...");
     final WhereBuilder query = WhereBuilder();
 
     if (name != null) {
-      query.add('name LIKE ?', '%$name%');
+      query.add('${ExerciseColumns.name.value} LIKE ?', '%$name%');
     }
-    if (muscleGroupId != null) {
-      query.add('muscle_group_id = ?', muscleGroupId);
+    if (muscleGroup != null) {
+      query.add('${ExerciseColumns.muscleGroup.value} = ?', muscleGroup.value);
     }
     if (isFavorite != null) {
-      query.add('is_favorite = ?', isFavorite ? 1 : 0);
+      query.add('${ExerciseColumns.isFavorite.value} = ?', isFavorite ? 1 : 0);
     }
     if (difficulty != null) {
-      query.add('difficulty = ?', difficulty);
+      query.add('${ExerciseColumns.difficulty.value} = ?', difficulty);
     }
 
-    return await _repository.selectPaginated(
-      limit: limit,
-      offset: offset,
-      where: query.where,
-      whereArgs: query.args,
-    );
+    try {
+      final List<Exercise> exercises = await _repository.selectPaginated(
+        limit: limit,
+        offset: offset,
+        where: query.where,
+        whereArgs: query.args,
+      );
+      final int total = await _repository.count(
+        where: query.where,
+        whereArgs: query.args,
+      );
+      _logger.info("Found ${exercises.length} exercises");
+      return ok(PaginatedDto<ExerciseDto, Exercise>.mapData(
+        data: exercises,
+        mapper: ExerciseDto.fromModel,
+        limit: limit,
+        offset: offset,
+        total: total,
+      ));
+    } catch (e) {
+      _logger.severe("Failed to get exercises", e);
+      return err(const ServiceError(
+        type: OperationErrorTypes.operationFailure,
+        description: 'Failed to get exercises',
+      ));
+    }
   }
 
-  Future<Exercise?> getExercise(int id) async {
-    return await _repository.selectOne(id);
+  Future<Result<ExerciseDto, ServiceError<SingleErrorTypes>>> getExercise(
+    int id,
+  ) async {
+    _logger.info("Getting exercise with id: $id");
+    try {
+      final Exercise? exercise = await _repository.selectOne(id);
+      if (exercise == null) {
+        _logger.info("Exercise with id: $id not found");
+        return err(const ServiceError(
+          type: SingleErrorTypes.notFound,
+          description: 'Exercise not found',
+        ));
+      }
+
+      _logger.info(
+        "Found exercise with id: $id, Getting the equipments for the exercise",
+      );
+      final List<Equipment> equipments =
+          await _exerciseEquipmentRepository.selectJoined(id);
+      _logger.info("Found ${equipments.length} equipments");
+
+      return ok(
+        ExerciseDto.fromModel(
+          exercise,
+          equipments: equipments.map((e) => EquipmentDto.mapData(e)).toList(),
+        ),
+      );
+    } catch (e) {
+      _logger.severe("Failed to get exercise with id: $id", e);
+      return err(const ServiceError(
+        type: SingleErrorTypes.operationFailure,
+        description: 'Failed to get exercise',
+      ));
+    }
   }
 
   Future<Map<int, Exercise>> getExercisesByIdsLoader(List<int> ids) async {
     final WhereBuilder query = WhereBuilder();
-    query.add('id IN (${ids.join(',')})');
+    query.add('${ExerciseColumns.id.value} IN (${ids.join(',')})');
 
     final List<Exercise> exercises = await _repository.selectMany(
       where: query.where,
@@ -91,147 +174,487 @@ class ExerciseService {
     return {for (final Exercise e in exercises) e.id!: e};
   }
 
-  Future<List<Muscle>> getExerciseMuscles(int exerciseId) async {
-    return await _exerciseMuscleRepository.selectJoined(exerciseId);
-  }
-
-  Future<List<Equipment>> getExerciseEquipments(int exerciseId) async {
-    return await _exerciseEquipmentRepository.selectJoined(exerciseId);
-  }
-
-  Future<Exercise> createExercise({
+  Future<Result<ExerciseDto, ServiceError<SingleErrorTypes>>> createExercise({
     required String name,
-    required int muscleGroupId,
-    String? description,
-    String? pictureUri,
-    (VideoPlatform, String)? videoData,
-    List<(int, ExerciseMuscleCategory)>? muscleIds,
+    required MuscleGroup muscleGroup,
+    required ExerciseMuscles muscles,
     List<int>? equipmentIds,
+    String? description,
+    PictureData? picture,
+    VideoData? video,
     int? difficulty,
     bool isFavorite = false,
   }) async {
+    _logger.info("Creating exercise with name: $name");
     final Exercise exercise = Exercise.create(
       name: name,
-      muscleGroupId: muscleGroupId,
+      muscleGroup: muscleGroup,
+      muscles: muscles,
       description: description,
-      pictureUri: pictureUri,
-      videoData: videoData,
-    ).copyWith(
+      picture: picture,
+      video: video,
       isFavorite: isFavorite,
       difficulty: difficulty,
     );
 
-    if (muscleIds == null && equipmentIds == null) {
-      final int id = await _repository.insert(exercise);
-      return exercise.copyWith(id: id);
-    }
-
-    final int id = await (await _databaseHelper.db).transaction((txn) async {
-      final int exerciseId = await _repository.insert(exercise, txn);
-
-      if (muscleIds != null) {
-        final List<ExerciseMuscle> exerciseMuscles = muscleIds
-            .map((e) => ExerciseMuscle.create(exerciseId, e.$1, e.$2))
-            .toList();
-        await _exerciseMuscleRepository.insertMany(exerciseMuscles, txn);
+    try {
+      if (equipmentIds == null) {
+        final id = await _repository.insert(exercise);
+        return ok(ExerciseDto.fromModel(exercise.copyWith(id: id)));
       }
 
-      if (equipmentIds != null) {
+      final List<Equipment> equipments = await _equipmentRepository.selectMany(
+        where:
+            "${EquimentColumns.id.value} IN (${List.filled(equipmentIds.length, '?').join(', ')})",
+        whereArgs: equipmentIds,
+      );
+      if (equipments.length != equipmentIds.length) {
+        _logger.info(
+          "Not all equipments were found, ${equipments.length} equipments found, ${equipmentIds.length} equipments expected",
+        );
+        return err(const ServiceError(
+          type: SingleErrorTypes.notFound,
+          description: 'Not all equipments were found',
+        ));
+      }
+
+      final int id = await (await _databaseHelper.db).transaction((txn) async {
+        final int exerciseId = await _repository.insert(exercise, txn);
         final List<ExerciseEquipment> exerciseEquipments = equipmentIds
-            .map((e) => ExerciseEquipment.create(exerciseId, e))
+            .map(
+              (e) => ExerciseEquipment.create(
+                exerciseId: exerciseId,
+                equipmentId: e,
+              ),
+            )
             .toList();
         await _exerciseEquipmentRepository.insertMany(exerciseEquipments, txn);
-      }
-
-      return exerciseId;
-    });
-    return exercise.copyWith(id: id);
+        return exerciseId;
+      });
+      _logger.info("Created exercise with id: $id");
+      return ok(
+        ExerciseDto.fromModel(exercise.copyWith(id: id)).copyWith(
+          equipments: equipments.map((e) => EquipmentDto.mapData(e)).toList(),
+        ),
+      );
+    } catch (e) {
+      _logger.severe("Failed to create exercise", e);
+      return err(const ServiceError(
+        type: SingleErrorTypes.operationFailure,
+        description: 'Failed to create exercise',
+      ));
+    }
   }
 
-  Future<void> createExercises(List<Exercise> exercises) async {
-    await _repository.insertMany(exercises);
+  Future<Result<List<ExerciseDto>, ServiceError<OperationErrorTypes>>>
+      createExercises(
+    List<ExerciseInput> exerciseInputs,
+  ) async {
+    _logger.info("Creating ${exerciseInputs.length} exercises...");
+    try {
+      final List<ExerciseDto> exercises =
+          await (await _databaseHelper.db).transaction(
+        (txn) async {
+          final List<ExerciseDto> exercises = [];
+
+          for (final exerciseInput in exerciseInputs) {
+            final exercise = Exercise.create(
+              name: exerciseInput.name,
+              muscleGroup: exerciseInput.muscleGroup,
+              muscles: exerciseInput.muscles,
+            );
+            final id = await _repository.insert(exercise, txn);
+
+            if (exerciseInput.equipments == null) {
+              exercises.add(ExerciseDto.fromModel(exercise.copyWith(id: id)));
+              continue;
+            }
+
+            final List<EquipmentDto> equipments = [];
+            for (final equipment in exerciseInput.equipments!) {
+              final exerciseEquipment = ExerciseEquipment.create(
+                equipmentId: equipment.id,
+                exerciseId: id,
+              );
+              await _exerciseEquipmentRepository.insert(exerciseEquipment, txn);
+              equipments.add(equipment);
+            }
+
+            exercises.add(ExerciseDto.fromModel(
+              exercise.copyWith(id: id),
+              equipments: equipments,
+            ));
+          }
+
+          return exercises;
+        },
+      );
+
+      return ok(exercises);
+    } catch (e) {
+      _logger.severe("Failed to creates exercises", e);
+      return err(const ServiceError(
+        type: OperationErrorTypes.operationFailure,
+        description: 'Failed to create exercises',
+      ));
+    }
   }
 
-  Future<Exercise?> updateExercise(
+  Future<Result<ExerciseDto, ServiceError<SingleErrorTypes>>> updateExercise(
     int id, {
     String? name,
     String? description,
-    int? muscleGroupId,
-    String? pictureUri,
-    String? videoUri,
+    MuscleGroup? muscleGroup,
+    ExerciseMuscles? muscles,
+    PictureData? picture,
+    VideoData? video,
     bool? isFavorite,
     int? difficulty,
   }) async {
-    final Exercise? exercise = await _repository.selectOne(id);
-    if (exercise == null) {
-      return null;
+    _logger.info("Updating exercise with id: $id");
+    try {
+      final Exercise? exercise = await _repository.selectOne(id);
+      if (exercise == null) {
+        _logger.info("Exercise with id: $id not found");
+        return err(const ServiceError(
+          type: SingleErrorTypes.notFound,
+          description: 'Exercise not found',
+        ));
+      }
+
+      final Exercise updatedExercise = exercise.copyWith(
+        name: name,
+        description: description,
+        muscles: muscles,
+        muscleGroup: muscleGroup,
+        picture: picture,
+        video: video,
+        isFavorite: isFavorite,
+        difficulty: difficulty,
+        updatedAt: DateUtilities.getNowUtcUnix(),
+      );
+      await _repository.update(updatedExercise);
+      _logger.info("Updated exercise with id: $id");
+
+      final List<Equipment> equipments =
+          await _exerciseEquipmentRepository.selectJoined(id);
+      return ok(
+        ExerciseDto.fromModel(updatedExercise).copyWith(
+          equipments: equipments.map((e) => EquipmentDto.mapData(e)).toList(),
+        ),
+      );
+    } catch (e) {
+      _logger.severe("Failed to update exercise with id: $id", e);
+      return err(const ServiceError(
+        type: SingleErrorTypes.operationFailure,
+        description: 'Failed to update exercise',
+      ));
     }
-
-    final Exercise updatedExercise = exercise.copyWith(
-      name: name,
-      description: description,
-      muscleGroupId: muscleGroupId,
-      pictureUri: pictureUri,
-      videoUri: videoUri,
-      isFavorite: isFavorite,
-      difficulty: difficulty,
-      updatedAt: DateUtilities.getNowUtcUnix(),
-    );
-    await _repository.update(updatedExercise);
-
-    return updatedExercise;
   }
 
-  Future<List<Exercise>> getFavoriteExercises({
-    int? limit,
-    int? offset,
-  }) async {
-    return await getExercises(
-      isFavorite: true,
-      limit: limit,
-      offset: offset,
-    );
-  }
-
-  Future<bool> addExerciseMuscle(
-    int exerciseId,
-    int muscleId,
-    ExerciseMuscleCategory category,
-  ) async {
-    final Exercise? exercise = await _repository.selectOne(exerciseId);
-    if (exercise == null) {
-      return false;
-    }
-
-    final ExerciseMuscle exerciseMuscle =
-        ExerciseMuscle.create(exerciseId, muscleId, category);
-    return await _exerciseMuscleRepository.insert(exerciseMuscle) > 0;
-  }
-
-  Future<bool> removeExerciseMuscle(int exerciseId, int muscleId) async {
-    return await _exerciseMuscleRepository.deleteOne(exerciseId, muscleId);
-  }
-
-  Future<bool> addExerciseEquipment(
+  Future<Result<void, ServiceError<SingleErrorTypes>>> addExerciseEquipment(
     int exerciseId,
     int equipmentId,
   ) async {
-    final Exercise? exercise = await _repository.selectOne(exerciseId);
-    if (exercise == null) {
-      return false;
+    _logger.info(
+      "Adding exercise equipment with exerciseId: $exerciseId and equipmentId: $equipmentId",
+    );
+    try {
+      final ExerciseEquipment? exerciseEquipment =
+          await _exerciseEquipmentRepository.selectOne(
+        exerciseId,
+        equipmentId,
+      );
+      if (exerciseEquipment != null) {
+        _logger.info(
+          "Exercise equipment with exerciseId: $exerciseId and equipmentId: $equipmentId already exists",
+        );
+        return ok(null);
+      }
+
+      final Exercise? exercise = await _repository.selectOne(exerciseId);
+      if (exercise == null) {
+        _logger.info("Exercise with id: $exerciseId not found");
+        return err(const ServiceError(
+          type: SingleErrorTypes.notFound,
+          description: 'Exercise not found',
+        ));
+      }
+
+      final Equipment? equipment =
+          await _equipmentRepository.selectOne(equipmentId);
+      if (equipment == null) {
+        _logger.info("Equipment with id: $equipmentId not found");
+        return err(const ServiceError(
+          type: SingleErrorTypes.notFound,
+          description: 'Equipment not found',
+        ));
+      }
+
+      final ExerciseEquipment newExerciseEquipment = ExerciseEquipment.create(
+        exerciseId: exerciseId,
+        equipmentId: equipmentId,
+      );
+      await _exerciseEquipmentRepository.insert(newExerciseEquipment);
+      _logger.info(
+        "Added exercise equipment with exerciseId: $exerciseId and equipmentId: $equipmentId",
+      );
+      return ok(null);
+    } catch (e) {
+      _logger.severe(
+        "Failed to add exercise equipment with exerciseId: $exerciseId and equipmentId: $equipmentId",
+        e,
+      );
+      return err(const ServiceError(
+        type: SingleErrorTypes.operationFailure,
+        description: 'Failed to add exercise equipment',
+      ));
+    }
+  }
+
+  Future<Result<void, ServiceError<SingleErrorTypes>>> removeExerciseEquipment(
+    int exerciseId,
+    int equipmentId,
+  ) async {
+    _logger.info(
+      "Removing exercise equipment with exerciseId: $exerciseId and equipmentId: $equipmentId",
+    );
+    final deleted = await _exerciseEquipmentRepository.deleteOne(
+      exerciseId,
+      equipmentId,
+    );
+    if (!deleted) {
+      _logger.info(
+        "Exercise equipment with exerciseId: $exerciseId and equipmentId: $equipmentId not found",
+      );
+      return err(const ServiceError(
+        type: SingleErrorTypes.notFound,
+        description: 'Exercise equipment not found',
+      ));
     }
 
-    final ExerciseEquipment exerciseEquipment =
-        ExerciseEquipment.create(exerciseId, equipmentId);
-    return await _exerciseEquipmentRepository.insert(exerciseEquipment) > 0;
+    _logger.info(
+      "Removed exercise equipment with exerciseId: $exerciseId and equipmentId: $equipmentId",
+    );
+    return ok(null);
   }
 
-  Future<bool> removeExerciseEquipment(int exerciseId, int equipmentId) async {
-    return await _exerciseEquipmentRepository.deleteOne(
-        exerciseId, equipmentId);
+  Future<Result<void, ServiceError<SingleErrorTypes>>> deleteExercise(
+      int id) async {
+    _logger.info("Deleting exercise with id: $id");
+
+    try {
+      final bool deleted = await _repository.deleteOne(id);
+      if (!deleted) {
+        return err(const ServiceError(
+          type: SingleErrorTypes.notFound,
+          description: 'Exercise not found',
+        ));
+      }
+
+      _logger.info("Exercise with id: $id deleted successfully");
+      return ok(null);
+    } catch (e) {
+      _logger.severe("Failed to delete exercise with id: $id", e);
+      return err(const ServiceError(
+        type: SingleErrorTypes.operationFailure,
+        description: 'Failed to delete exercise',
+      ));
+    }
   }
 
-  Future<bool> deleteExercise(int id) async {
-    return await _repository.deleteOne(id);
+  Future<
+      Result<PaginatedDto<EquipmentDto, Equipment>,
+          ServiceError<OperationErrorTypes>>> getEquipments({
+    String? name,
+    int limit = kDefaultLimit,
+    int offset = kDefaultOffset,
+  }) async {
+    _logger.info('Getting equipments');
+    final WhereBuilder query = WhereBuilder();
+
+    if (name != null) {
+      query.add('name LIKE ?', '%$name%');
+    }
+
+    try {
+      final List<Equipment> equipments =
+          await _equipmentRepository.selectPaginated(
+        limit: limit,
+        offset: offset,
+        where: query.where,
+        whereArgs: query.args,
+        orderBy: 'name ASC',
+      );
+      final int total = await _equipmentRepository.count(
+        where: query.where,
+        whereArgs: query.args,
+      );
+      _logger.info('Got ${equipments.length} equipments');
+      return ok(PaginatedDto<EquipmentDto, Equipment>.mapData(
+        data: equipments,
+        mapper: (equipment) => EquipmentDto.mapData(equipment),
+        total: total,
+        limit: limit,
+        offset: offset,
+      ));
+    } catch (e) {
+      _logger.severe("Failed to get equipments", e);
+      return err(const ServiceError(
+        type: OperationErrorTypes.operationFailure,
+        description: 'Failed to get equipments',
+      ));
+    }
+  }
+
+  Future<Result<EquipmentDto, ServiceError<SingleErrorTypes>>> getEquipment(
+      int id) async {
+    _logger.info('Getting equipment with id $id');
+
+    try {
+      final Equipment? equipment = await _equipmentRepository.selectOne(id);
+      if (equipment == null) {
+        return err(const ServiceError(
+          type: SingleErrorTypes.notFound,
+          description: 'Equipment not found',
+        ));
+      }
+
+      _logger.info('Got equipment with id $id');
+      return ok(EquipmentDto.mapData(equipment));
+    } catch (e) {
+      _logger.severe("Failed to get equipment with id $id", e);
+      return err(const ServiceError(
+        type: SingleErrorTypes.operationFailure,
+        description: 'Failed to get equipment',
+      ));
+    }
+  }
+
+  Future<Result<EquipmentDto, ServiceError<OperationErrorTypes>>>
+      createEquipment({
+    required String name,
+    String? pictureUri,
+  }) async {
+    _logger.info('Creating equipment with name $name');
+    final Equipment equipment = Equipment.create(
+      name: name,
+      pictureUri: pictureUri,
+    );
+
+    try {
+      final int id = await _equipmentRepository.insert(equipment);
+      return ok(EquipmentDto.mapData(equipment.copyWith(id: id)));
+    } catch (e) {
+      _logger.severe("Failed to create equipment with name $name", e);
+      return err(const ServiceError(
+        type: OperationErrorTypes.operationFailure,
+        description: 'Failed to create equipment',
+      ));
+    }
+  }
+
+  Future<Result<int, ServiceError<OperationErrorTypes>>>
+      countEquipments() async {
+    _logger.info('Counting equipments');
+    try {
+      final int count = await _equipmentRepository.count();
+      _logger.info('Counted $count equipments');
+      return ok(count);
+    } catch (e) {
+      _logger.severe("Failed to count equipments", e);
+      return err(const ServiceError(
+        type: OperationErrorTypes.operationFailure,
+        description: 'Failed to count equipments',
+      ));
+    }
+  }
+
+  Future<Result<List<EquipmentDto>, ServiceError<OperationErrorTypes>>>
+      createEquipments(
+    List<String> names,
+  ) async {
+    _logger.info('Creating ${names.length} equipments...');
+    try {
+      final List<Equipment> equipments =
+          await (await _databaseHelper.db).transaction((txn) async {
+        final List<Equipment> equipments = [];
+
+        for (final name in names) {
+          final equipment = Equipment.create(name: name);
+          final id = await _equipmentRepository.insert(equipment, txn);
+          equipments.add(equipment.copyWith(id: id));
+        }
+
+        return equipments;
+      });
+
+      _logger.info('Created ${equipments.length} equipments');
+      return ok(equipments.map((e) => EquipmentDto.mapData(e)).toList());
+    } catch (e) {
+      _logger.severe("Failed to create equipments", e);
+      return err(const ServiceError(
+        type: OperationErrorTypes.operationFailure,
+        description: 'Failed to create equipments',
+      ));
+    }
+  }
+
+  Future<Result<void, ServiceError<SingleErrorTypes>>> deleteEquipment(
+    int id,
+  ) async {
+    _logger.info('Deleting equipment with id: $id');
+    try {
+      final deleted = await _equipmentRepository.deleteOne(id);
+      if (!deleted) {
+        _logger.info('Equipment with id: $id not found');
+        return err(const ServiceError(
+          type: SingleErrorTypes.notFound,
+          description: 'Equipment not found',
+        ));
+      }
+
+      _logger.info('Deleted equipment with id: $id');
+      return ok(null);
+    } catch (e) {
+      _logger.severe("Failed to delete equipment with id: $id", e);
+      return err(const ServiceError(
+        type: SingleErrorTypes.operationFailure,
+        description: 'Failed to delete equipment',
+      ));
+    }
+  }
+
+  Future<Result<EquipmentDto, ServiceError<SingleErrorTypes>>> updateEquipment(
+    int id, {
+    String? name,
+    String? pictureUri,
+  }) async {
+    _logger.info('Updating equipment with id: $id');
+    try {
+      final Equipment? equipment = await _equipmentRepository.selectOne(id);
+      if (equipment == null) {
+        _logger.info('Equipment with id: $id not found');
+        return err(const ServiceError(
+          type: SingleErrorTypes.notFound,
+          description: 'Equipment not found',
+        ));
+      }
+
+      final Equipment updatedEquipment = equipment.copyWith(
+        name: name,
+        pictureUri: pictureUri,
+        updatedAt: DateUtilities.getNowUtcUnix(),
+      );
+      await _equipmentRepository.update(updatedEquipment);
+      _logger.info('Updated equipment with id: $id');
+      return ok(EquipmentDto.mapData(updatedEquipment));
+    } catch (e) {
+      _logger.severe("Failed to update equipment with id: $id", e);
+      return err(const ServiceError(
+        type: SingleErrorTypes.operationFailure,
+        description: 'Failed to update equipment',
+      ));
+    }
   }
 }

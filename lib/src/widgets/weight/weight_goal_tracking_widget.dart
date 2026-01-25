@@ -8,8 +8,8 @@ import '../../cubits/states/weight_goal_state.dart';
 import '../../cubits/weight_record_cubit.dart';
 import '../../cubits/states/weight_record_state.dart';
 import '../../models/enums.dart';
-import '../../models/weight_goal_model.dart';
-import '../../models/weight_record_model.dart';
+import '../../services/dtos/weight_goal_dto.dart';
+import '../../services/dtos/weight_record_dto.dart';
 import '../../utilities/converters.dart';
 import '../../views/weight_goal_view.dart';
 
@@ -100,15 +100,13 @@ class WeightGoalTrackingWidget extends StatelessWidget {
 
   Widget _buildGoalProgressCard(
     BuildContext context,
-    WeightGoal goal,
-    WeightRecord? latestWeight,
+    WeightGoalDto goal,
+    WeightRecordDto? latestWeight,
     Units units,
   ) {
     final progress = _calculateProgress(goal, latestWeight, units);
     final remainingWeight =
         _calculateRemainingWeight(goal, latestWeight, units);
-    final estimatedCompletion =
-        _calculateEstimatedCompletion(goal, latestWeight);
 
     return Card(
       child: Padding(
@@ -194,8 +192,8 @@ class WeightGoalTrackingWidget extends StatelessWidget {
 
   Widget _buildGoalDetails(
     BuildContext context,
-    WeightGoal goal,
-    WeightRecord? latestWeight,
+    WeightGoalDto goal,
+    WeightRecordDto? latestWeight,
     Units units,
   ) {
     final targetWeight = units == Units.metric
@@ -208,10 +206,7 @@ class WeightGoalTrackingWidget extends StatelessWidget {
             : Converters().formatImperialWeight(latestWeight.weight))
         : 'No data';
 
-    final startDate =
-        DateTime.fromMillisecondsSinceEpoch(goal.startDate * 1000);
-    final endDate = DateTime.fromMillisecondsSinceEpoch(goal.endDate * 1000);
-
+    final startDate = goal.startDate;
     return Column(
       children: [
         Row(
@@ -233,13 +228,6 @@ class WeightGoalTrackingWidget extends StatelessWidget {
                 'Start',
                 '${startDate.day}/${startDate.month}/${startDate.year}',
                 Icons.calendar_today,
-              ),
-            ),
-            Expanded(
-              child: _buildDetailItem(
-                'Target Date',
-                '${endDate.day}/${endDate.month}/${endDate.year}',
-                Icons.event,
               ),
             ),
           ],
@@ -342,7 +330,7 @@ class WeightGoalTrackingWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildActionButtons(BuildContext context, WeightGoal goal) {
+  Widget _buildActionButtons(BuildContext context, WeightGoalDto goal) {
     return Row(
       children: [
         Expanded(
@@ -350,7 +338,7 @@ class WeightGoalTrackingWidget extends StatelessWidget {
             onPressed: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
-                  builder: (context) => WeightGoalView(goalToEdit: goal),
+                  builder: (context) => const WeightGoalView(),
                 ),
               );
             },
@@ -409,7 +397,7 @@ class WeightGoalTrackingWidget extends StatelessWidget {
     );
   }
 
-  void _showGoalActionDialog(BuildContext context, WeightGoal goal) {
+  void _showGoalActionDialog(BuildContext context, WeightGoalDto goal) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -423,7 +411,7 @@ class WeightGoalTrackingWidget extends StatelessWidget {
                 title: const Text('Mark as Completed'),
                 onTap: () {
                   Navigator.of(context).pop();
-                  context.read<WeightGoalCubit>().completeWeightGoal(goal.id!);
+                  context.read<WeightGoalCubit>().completeWeightGoal(goal.id);
                 },
               ),
               ListTile(
@@ -431,7 +419,7 @@ class WeightGoalTrackingWidget extends StatelessWidget {
                 title: const Text('Abandon Goal'),
                 onTap: () {
                   Navigator.of(context).pop();
-                  context.read<WeightGoalCubit>().abandonWeightGoal(goal.id!);
+                  context.read<WeightGoalCubit>().abandonWeightGoal(goal.id);
                 },
               ),
             ],
@@ -447,27 +435,8 @@ class WeightGoalTrackingWidget extends StatelessWidget {
     );
   }
 
-  double _calculateProgress(
-      WeightGoal goal, WeightRecord? latestWeight, Units units) {
-    if (latestWeight == null) return 0.0;
-
-    final startDate =
-        DateTime.fromMillisecondsSinceEpoch(goal.startDate * 1000);
-    final endDate = DateTime.fromMillisecondsSinceEpoch(goal.endDate * 1000);
-    final now = DateTime.now();
-
-    // Calculate time progress
-    final totalDuration = endDate.difference(startDate).inDays;
-    final elapsedDuration = now.difference(startDate).inDays;
-    final timeProgress = elapsedDuration / totalDuration;
-
-    // Calculate weight progress (simplified - assumes linear progress)
-    // This is a basic calculation and could be improved with more sophisticated logic
-    return timeProgress.clamp(0.0, 1.0);
-  }
-
   String _calculateRemainingWeight(
-      WeightGoal goal, WeightRecord? latestWeight, Units units) {
+      WeightGoalDto goal, WeightRecordDto? latestWeight, Units units) {
     if (latestWeight == null) return 'Unknown';
 
     final currentWeight = latestWeight.weight.toDouble();
@@ -478,22 +447,6 @@ class WeightGoalTrackingWidget extends StatelessWidget {
       return '${(difference / 1000).toStringAsFixed(1)} kg';
     } else {
       return '${(difference / 453.592).toStringAsFixed(1)} lbs';
-    }
-  }
-
-  String _calculateEstimatedCompletion(
-      WeightGoal goal, WeightRecord? latestWeight) {
-    final endDate = DateTime.fromMillisecondsSinceEpoch(goal.endDate * 1000);
-    final now = DateTime.now();
-    final daysRemaining = endDate.difference(now).inDays;
-
-    if (daysRemaining <= 0) {
-      return 'Overdue';
-    } else if (daysRemaining < 7) {
-      return '$daysRemaining days';
-    } else {
-      final weeks = (daysRemaining / 7).ceil();
-      return '$weeks weeks';
     }
   }
 }

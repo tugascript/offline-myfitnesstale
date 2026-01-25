@@ -3,7 +3,7 @@ import 'package:equatable/equatable.dart';
 import 'model.dart';
 import 'utilities.dart';
 import 'workout_plan_day_model.dart';
-import 'workout_plan_record.dart';
+import 'workout_plan_record_model.dart';
 import 'workout_plan_week_record_model.dart';
 
 const String _table = 'workout_plan_day_records';
@@ -28,6 +28,20 @@ const String _tableCreate = '''
   CREATE INDEX IF NOT EXISTS idx_workout_plan_day_records_plan_week_record_id ON $_table (workout_plan_week_record_id);
   CREATE INDEX IF NOT EXISTS idx_workout_plan_day_records_plan_day_id ON $_table (workout_plan_day_id);
   ''';
+
+enum WorkoutPlanDayRecordColumns {
+  id("id"),
+  workoutPlanRecordId("workout_plan_record_id"),
+  workoutPlanWeekRecordId("workout_plan_week_record_id"),
+  workoutPlanDayId("workout_plan_day_id"),
+  completedAt("completed_at"),
+  createdAt("created_at"),
+  updatedAt("updated_at");
+
+  final String value;
+
+  const WorkoutPlanDayRecordColumns(this.value);
+}
 
 class WorkoutPlanDayRecord extends Equatable implements Model {
   @override
@@ -57,26 +71,32 @@ class WorkoutPlanDayRecord extends Equatable implements Model {
   @override
   Map<String, Object?> toMap() {
     return {
-      'id': id,
-      'workout_plan_record_id': workoutPlanRecordId,
-      'workout_plan_week_record_id': workoutPlanWeekRecordId,
-      'workout_plan_day_id': workoutPlanDayId,
-      'completed_at': completedAt,
-      'created_at': createdAt,
-      'updated_at': updatedAt,
+      WorkoutPlanDayRecordColumns.id.value: id,
+      WorkoutPlanDayRecordColumns.workoutPlanRecordId.value:
+          workoutPlanRecordId,
+      WorkoutPlanDayRecordColumns.workoutPlanWeekRecordId.value:
+          workoutPlanWeekRecordId,
+      WorkoutPlanDayRecordColumns.workoutPlanDayId.value: workoutPlanDayId,
+      WorkoutPlanDayRecordColumns.completedAt.value: completedAt,
+      WorkoutPlanDayRecordColumns.createdAt.value: createdAt,
+      WorkoutPlanDayRecordColumns.updatedAt.value: updatedAt,
     };
   }
 
   @override
   factory WorkoutPlanDayRecord.fromMap(Map<String, Object?> map) {
     return WorkoutPlanDayRecord(
-      id: map['id'] as int?,
-      workoutPlanRecordId: map['workout_plan_record_id']! as int,
-      workoutPlanWeekRecordId: map['workout_plan_week_record_id']! as int,
-      workoutPlanDayId: map['workout_plan_day_id']! as int,
-      completedAt: map['completed_at'] as int?,
-      createdAt: map['created_at']! as int,
-      updatedAt: map['updated_at']! as int,
+      id: map[WorkoutPlanDayRecordColumns.id.value] as int?,
+      workoutPlanRecordId:
+          map[WorkoutPlanDayRecordColumns.workoutPlanRecordId.value]! as int,
+      workoutPlanWeekRecordId:
+          map[WorkoutPlanDayRecordColumns.workoutPlanWeekRecordId.value]!
+              as int,
+      workoutPlanDayId:
+          map[WorkoutPlanDayRecordColumns.workoutPlanDayId.value]! as int,
+      completedAt: map[WorkoutPlanDayRecordColumns.completedAt.value] as int?,
+      createdAt: map[WorkoutPlanDayRecordColumns.createdAt.value]! as int,
+      updatedAt: map[WorkoutPlanDayRecordColumns.updatedAt.value]! as int,
     );
   }
 

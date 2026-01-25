@@ -1,38 +1,49 @@
 import 'package:equatable/equatable.dart';
 
-import '../../models/muscle_group_model.dart';
-import '../../models/muscle_model.dart';
-import '../../models/workout_model.dart';
-import '../../models/workout_set_exercise_model.dart';
-import '../../models/workout_set_model.dart';
+import '../../models/enums.dart';
+import '../../services/dtos/workout_dto.dart';
+import 'common_state.dart';
 
 final class WorkoutPagination extends Equatable {
   final String? name;
+  final MuscleGroup? muscleGroup;
+  final Difficulty? difficulty;
   final int limit;
   final int offset;
+  final int total;
 
   const WorkoutPagination({
     this.name,
+    this.muscleGroup,
+    this.difficulty,
     required this.limit,
     required this.offset,
+    required this.total,
   });
 
   factory WorkoutPagination.initial() {
     return const WorkoutPagination(
       limit: 10,
       offset: 0,
+      total: 0,
     );
   }
 
   WorkoutPagination copyWith({
     String? name,
+    MuscleGroup? muscleGroup,
+    Difficulty? difficulty,
     int? limit,
     int? offset,
+    int? total,
   }) {
     return WorkoutPagination(
       name: name ?? this.name,
+      muscleGroup: muscleGroup ?? this.muscleGroup,
+      difficulty: difficulty ?? this.difficulty,
       limit: limit ?? this.limit,
       offset: offset ?? this.offset,
+      total: total ?? this.total,
     );
   }
 
@@ -40,80 +51,12 @@ final class WorkoutPagination extends Equatable {
   List<Object?> get props => [name, limit, offset];
 }
 
-final class SelectedWorkoutSets extends Equatable {
-  final WorkoutSet workoutSet;
-  final List<WorkoutSetExercise> exercises;
-
-  const SelectedWorkoutSets({
-    required this.workoutSet,
-    required this.exercises,
-  });
-
-  SelectedWorkoutSets copyWith({
-    WorkoutSet? workoutSet,
-    List<WorkoutSetExercise>? exercises,
-  }) {
-    return SelectedWorkoutSets(
-      workoutSet: workoutSet ?? this.workoutSet,
-      exercises: exercises ?? this.exercises,
-    );
-  }
-
-  @override
-  List<Object?> get props => [
-        workoutSet.id,
-        workoutSet.createdAt,
-        workoutSet.updatedAt,
-        exercises.length,
-      ];
-}
-
-final class WorkoutWithMusclesAndGroups extends Equatable {
-  final Workout workout;
-  final List<MuscleGroup> muscleGroups;
-  final List<Muscle> muscles;
-
-  const WorkoutWithMusclesAndGroups({
-    required this.workout,
-    required this.muscleGroups,
-    required this.muscles,
-  });
-
-  factory WorkoutWithMusclesAndGroups.create(Workout workout) {
-    return WorkoutWithMusclesAndGroups(
-      workout: workout,
-      muscleGroups: const [],
-      muscles: const [],
-    );
-  }
-
-  WorkoutWithMusclesAndGroups copyWith({
-    Workout? workout,
-    List<MuscleGroup>? muscleGroups,
-    List<Muscle>? muscles,
-  }) {
-    return WorkoutWithMusclesAndGroups(
-      workout: workout ?? this.workout,
-      muscleGroups: muscleGroups ?? this.muscleGroups,
-      muscles: muscles ?? this.muscles,
-    );
-  }
-
-  @override
-  List<Object?> get props => [
-        workout.id,
-        workout.createdAt,
-        workout.updatedAt,
-        muscles.length,
-      ];
-}
-
 final class WorkoutState extends Equatable {
-  final List<Workout> workouts;
+  final List<WorkoutDto> workouts;
   final WorkoutPagination pagination;
-  final WorkoutWithMusclesAndGroups? selectedWorkout;
+  final WorkoutDto? selectedWorkout;
   final bool isLoading;
-  final String? error;
+  final ErrorState? error;
 
   const WorkoutState({
     required this.workouts,
@@ -132,11 +75,11 @@ final class WorkoutState extends Equatable {
   }
 
   WorkoutState copyWith({
-    List<Workout>? workouts,
+    List<WorkoutDto>? workouts,
     WorkoutPagination? pagination,
-    WorkoutWithMusclesAndGroups? selectedWorkout,
+    WorkoutDto? selectedWorkout,
     bool? isLoading,
-    String? error,
+    ErrorState? error,
   }) {
     return WorkoutState(
       workouts: workouts ?? this.workouts,

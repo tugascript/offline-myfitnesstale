@@ -4,7 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../cubits/profile_cubit.dart';
 import '../cubits/states/profile_state.dart';
 import '../models/enums.dart';
-import '../models/system_model.dart';
+import '../services/dtos/system_dto.dart';
 import '../utilities/theme_generator.dart';
 import '../widgets/layout/responsive_scaffold.dart';
 
@@ -87,7 +87,7 @@ class _SettingsViewState extends State<SettingsView> {
     );
   }
 
-  Widget _buildAppSettingsCard(System? system, bool isLoading) {
+  Widget _buildAppSettingsCard(SystemDto? system, bool isLoading) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16.0),

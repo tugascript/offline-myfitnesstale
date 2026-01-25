@@ -8,8 +8,8 @@ import '../../cubits/states/equipment_state.dart';
 import '../../cubits/states/exercise_state.dart';
 import '../../cubits/states/muscle_group_state.dart';
 import '../../models/enums.dart';
-import '../../models/exercise_model.dart';
-import '../../models/muscle_group_model.dart';
+import '../../models/utilities.dart';
+import '../../services/dtos/exercise_dto.dart';
 import 'exercise_card_widget.dart';
 
 class ExerciseSelectionWidget extends StatefulWidget {
@@ -36,7 +36,7 @@ class _ExerciseSelectionWidgetState extends State<ExerciseSelectionWidget> {
   final ScrollController _scrollController = ScrollController();
   late Set<int> _selectedExerciseIds;
   bool _isGridView = true;
-  int? _selectedMuscleGroupId;
+  MuscleGroup? _selectedMuscleGroup;
   Difficulty? _selectedDifficulty;
   int? _selectedEquipmentId;
   String? _searchQuery;
@@ -75,7 +75,7 @@ class _ExerciseSelectionWidgetState extends State<ExerciseSelectionWidget> {
 
     context.read<ExerciseCubit>().getExercises(
           name: _searchQuery,
-          muscleGroupId: _selectedMuscleGroupId,
+          muscleGroup: _selectedMuscleGroup,
           difficulty: _selectedDifficulty?.value,
           limit: 20,
           offset: state.exercises.length,
@@ -96,20 +96,20 @@ class _ExerciseSelectionWidgetState extends State<ExerciseSelectionWidget> {
     });
     context.read<ExerciseCubit>().getExercises(
           name: _searchQuery,
-          muscleGroupId: _selectedMuscleGroupId,
+          muscleGroup: _selectedMuscleGroup,
           difficulty: _selectedDifficulty?.value,
           limit: 20,
           offset: 0,
         );
   }
 
-  void _onMuscleGroupFilterChanged(int? muscleGroupId) {
+  void _onMuscleGroupFilterChanged(MuscleGroup? muscleGroup) {
     setState(() {
-      _selectedMuscleGroupId = muscleGroupId;
+      _selectedMuscleGroup = muscleGroup;
     });
     context.read<ExerciseCubit>().getExercises(
           name: _searchQuery,
-          muscleGroupId: _selectedMuscleGroupId,
+          muscleGroup: _selectedMuscleGroup,
           difficulty: _selectedDifficulty?.value,
           limit: 20,
           offset: 0,
@@ -122,7 +122,7 @@ class _ExerciseSelectionWidgetState extends State<ExerciseSelectionWidget> {
     });
     context.read<ExerciseCubit>().getExercises(
           name: _searchQuery,
-          muscleGroupId: _selectedMuscleGroupId,
+          muscleGroup: _selectedMuscleGroup,
           difficulty: _selectedDifficulty?.value,
           limit: 20,
           offset: 0,
@@ -138,7 +138,7 @@ class _ExerciseSelectionWidgetState extends State<ExerciseSelectionWidget> {
     // TODO: Implement equipment filtering in ExerciseService
     context.read<ExerciseCubit>().getExercises(
           name: _searchQuery,
-          muscleGroupId: _selectedMuscleGroupId,
+          muscleGroup: _selectedMuscleGroup,
           difficulty: _selectedDifficulty?.value,
           limit: 20,
           offset: 0,
@@ -161,21 +161,19 @@ class _ExerciseSelectionWidgetState extends State<ExerciseSelectionWidget> {
     });
   }
 
-  String? _getMuscleGroupName(
-    int muscleGroupId,
-    List<MuscleGroup> muscleGroups,
-  ) {
-    return muscleGroups
-        .firstWhere(
-          (mg) => mg.id == muscleGroupId,
-          orElse: () => MuscleGroup(
-            id: muscleGroupId,
-            name: 'Unknown',
-            createdAt: 0,
-            updatedAt: 0,
-          ),
-        )
-        .name;
+  String _formatMuscleGroupName(MuscleGroup group) {
+    switch (group) {
+      case MuscleGroup.full:
+        return 'Full Body';
+      case MuscleGroup.push:
+        return 'Push';
+      case MuscleGroup.pull:
+        return 'Pull';
+      case MuscleGroup.legs:
+        return 'Legs';
+      case MuscleGroup.core:
+        return 'Core';
+    }
   }
 
   @override
@@ -247,8 +245,8 @@ class _ExerciseSelectionWidgetState extends State<ExerciseSelectionWidget> {
                 children: [
                   // Muscle Group Filter
                   Expanded(
-                    child: DropdownButtonFormField<int?>(
-                      initialValue: _selectedMuscleGroupId,
+                    child: DropdownButtonFormField<MuscleGroup?>(
+                      initialValue: _selectedMuscleGroup,
                       decoration: InputDecoration(
                         labelText: 'Muscle Group',
                         border: OutlineInputBorder(
@@ -258,7 +256,7 @@ class _ExerciseSelectionWidgetState extends State<ExerciseSelectionWidget> {
                         contentPadding: const EdgeInsets.all(12),
                       ),
                       items: [
-                        const DropdownMenuItem<int?>(
+                        const DropdownMenuItem<MuscleGroup?>(
                           value: null,
                           child: Text('All Muscle Groups'),
                         ),
@@ -267,9 +265,9 @@ class _ExerciseSelectionWidgetState extends State<ExerciseSelectionWidget> {
                             .state
                             .muscleGroups
                             .map(
-                              (mg) => DropdownMenuItem<int?>(
-                                value: mg.id,
-                                child: Text(mg.name),
+                              (group) => DropdownMenuItem<MuscleGroup?>(
+                                value: group,
+                                child: Text(_formatMuscleGroupName(group)),
                               ),
                             ),
                       ],
@@ -412,7 +410,7 @@ class _ExerciseSelectionWidgetState extends State<ExerciseSelectionWidget> {
   }
 
   Widget _buildGridView(
-    List<Exercise> exercises,
+    List<ExerciseDto> exercises,
     List<MuscleGroup> muscleGroups,
   ) {
     return GridView.builder(
@@ -432,15 +430,13 @@ class _ExerciseSelectionWidgetState extends State<ExerciseSelectionWidget> {
         final exercise = exercises[index];
         final isSelected = _selectedExerciseIds.contains(exercise.id);
         return GestureDetector(
-          onTap: () => _toggleSelection(exercise.id!),
+          onTap: () => _toggleSelection(exercise.id),
           child: Stack(
             children: [
               ExerciseCardWidget(
                 exercise: exercise,
-                muscleGroupName: _getMuscleGroupName(
-                  exercise.muscleGroupId,
-                  muscleGroups,
-                ),
+                muscleGroupName: EnumDisplayNames.getMuscleGroupDisplayName(
+                    exercise.muscleGroup),
                 compact: true,
               ),
               if (isSelected)
@@ -468,7 +464,7 @@ class _ExerciseSelectionWidgetState extends State<ExerciseSelectionWidget> {
   }
 
   Widget _buildListView(
-    List<Exercise> exercises,
+    List<ExerciseDto> exercises,
     List<MuscleGroup> muscleGroups,
   ) {
     return ListView.builder(
@@ -485,15 +481,13 @@ class _ExerciseSelectionWidgetState extends State<ExerciseSelectionWidget> {
         final exercise = exercises[index];
         final isSelected = _selectedExerciseIds.contains(exercise.id);
         return GestureDetector(
-          onTap: () => _toggleSelection(exercise.id!),
+          onTap: () => _toggleSelection(exercise.id),
           child: Stack(
             children: [
               ExerciseCardWidget(
                 exercise: exercise,
-                muscleGroupName: _getMuscleGroupName(
-                  exercise.muscleGroupId,
-                  muscleGroups,
-                ),
+                muscleGroupName: EnumDisplayNames.getMuscleGroupDisplayName(
+                    exercise.muscleGroup),
                 compact: true,
               ),
               if (isSelected)

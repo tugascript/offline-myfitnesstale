@@ -7,9 +7,9 @@ const String _tableCreate = '''
   CREATE TABLE IF NOT EXISTS $_table (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     workout_set_id INTEGER NOT NULL,
-    workout_progress_id INTEGER NOT NULL,
+    workout_record_id INTEGER NOT NULL,
     set_number INTEGER NOT NULL,
-    total_rest_secs INTEGER NOT NULL,
+    total_rest_secs INTEGER,
     started_at INTEGER NOT NULL,
     completed_at INTEGER,
     created_at INTEGER NOT NULL,
@@ -22,16 +22,33 @@ const String _tableCreate = '''
   
   CREATE INDEX IF NOT EXISTS idx_workout_set_progress_set_id ON $_table (workout_set_id);
   CREATE INDEX IF NOT EXISTS idx_workout_set_progress_progress_id ON $_table (workout_progress_id);
+  CREATE INDEX IF NOT EXISTS idx_workout_set_progress_set_id_number ON $_table (workout_set_id, set_number);
   ''';
+
+enum WorkoutSetRecordColumns {
+  id("id"),
+  workoutSetId("workout_set_id"),
+  workoutRecordId("workout_record_id"),
+  setNumber("set_number"),
+  totalRestSecs("total_rest_secs"),
+  startedAt("started_at"),
+  completedAt("completed_at"),
+  createdAt("created_at"),
+  updatedAt("updated_at");
+
+  final String value;
+
+  const WorkoutSetRecordColumns(this.value);
+}
 
 class WorkoutSetRecord implements Model {
   @override
   final int? id;
   final int workoutSetId;
-  final int workoutProgressId;
+  final int workoutRecordId;
   final int setNumber;
-  final int totalRestSecs;
   final int startedAt;
+  final int? totalRestSecs;
   final int? completedAt;
   @override
   final int createdAt;
@@ -41,10 +58,10 @@ class WorkoutSetRecord implements Model {
   const WorkoutSetRecord({
     this.id,
     required this.workoutSetId,
-    required this.workoutProgressId,
+    required this.workoutRecordId,
     required this.setNumber,
-    required this.totalRestSecs,
     required this.startedAt,
+    this.totalRestSecs,
     this.completedAt,
     required this.createdAt,
     required this.updatedAt,
@@ -56,48 +73,51 @@ class WorkoutSetRecord implements Model {
   @override
   Map<String, Object?> toMap() {
     return {
-      'id': id,
-      'workout_set_id': workoutSetId,
-      'workout_progress_id': workoutProgressId,
-      'set_number': setNumber,
-      'total_rest_secs': totalRestSecs,
-      'started_at': startedAt,
-      'completed_at': completedAt,
-      'created_at': createdAt,
-      'updated_at': updatedAt,
+      WorkoutSetRecordColumns.id.value: id,
+      WorkoutSetRecordColumns.workoutSetId.value: workoutSetId,
+      WorkoutSetRecordColumns.workoutRecordId.value: workoutRecordId,
+      WorkoutSetRecordColumns.setNumber.value: setNumber,
+      WorkoutSetRecordColumns.totalRestSecs.value: totalRestSecs,
+      WorkoutSetRecordColumns.startedAt.value: startedAt,
+      WorkoutSetRecordColumns.completedAt.value: completedAt,
+      WorkoutSetRecordColumns.createdAt.value: createdAt,
+      WorkoutSetRecordColumns.updatedAt.value: updatedAt,
     };
   }
 
   @override
   factory WorkoutSetRecord.fromMap(Map<String, Object?> map) {
     return WorkoutSetRecord(
-      id: map['id'] as int?,
-      workoutSetId: map['workout_set_id'] as int,
-      workoutProgressId: map['workout_progress_id'] as int,
-      setNumber: map['set_number'] as int,
-      totalRestSecs: map['total_rest_secs'] as int,
-      startedAt: map['started_at'] as int,
-      completedAt: map['completed_at'] as int?,
-      createdAt: map['created_at'] as int,
-      updatedAt: map['updated_at'] as int,
+      id: map[WorkoutSetRecordColumns.id.value] as int?,
+      workoutSetId: map[WorkoutSetRecordColumns.workoutSetId.value] as int,
+      workoutRecordId:
+          map[WorkoutSetRecordColumns.workoutRecordId.value] as int,
+      setNumber: map[WorkoutSetRecordColumns.setNumber.value] as int,
+      totalRestSecs: map[WorkoutSetRecordColumns.totalRestSecs.value] as int?,
+      startedAt: map[WorkoutSetRecordColumns.startedAt.value] as int,
+      completedAt: map[WorkoutSetRecordColumns.completedAt.value] as int?,
+      createdAt: map[WorkoutSetRecordColumns.createdAt.value] as int,
+      updatedAt: map[WorkoutSetRecordColumns.updatedAt.value] as int,
     );
   }
 
   @override
-  factory WorkoutSetRecord.create(
-    int workoutSetId,
-    int workoutProgressId,
-    int setNumber,
-    int totalRestSecs,
-    int startedAt,
-  ) {
+  factory WorkoutSetRecord.create({
+    required int workoutSetId,
+    required int workoutRecordId,
+    required int setNumber,
+    required int startedAt,
+    int? totalRestSecs,
+    int? completedAt,
+  }) {
     final int now = DateTime.now().millisecondsSinceEpoch;
     return WorkoutSetRecord(
       workoutSetId: workoutSetId,
-      workoutProgressId: workoutProgressId,
+      workoutRecordId: workoutRecordId,
       setNumber: setNumber,
-      totalRestSecs: totalRestSecs,
       startedAt: startedAt,
+      totalRestSecs: totalRestSecs,
+      completedAt: completedAt,
       createdAt: now,
       updatedAt: now,
     );
@@ -107,7 +127,7 @@ class WorkoutSetRecord implements Model {
   WorkoutSetRecord copyWith({
     int? id,
     int? workoutSetId,
-    int? workoutProgressId,
+    int? workoutRecordId,
     int? setNumber,
     int? totalRestSecs,
     int? startedAt,
@@ -118,7 +138,7 @@ class WorkoutSetRecord implements Model {
     return WorkoutSetRecord(
       id: id ?? this.id,
       workoutSetId: workoutSetId ?? this.workoutSetId,
-      workoutProgressId: workoutProgressId ?? this.workoutProgressId,
+      workoutRecordId: workoutRecordId ?? this.workoutRecordId,
       setNumber: setNumber ?? this.setNumber,
       totalRestSecs: totalRestSecs ?? this.totalRestSecs,
       startedAt: startedAt ?? this.startedAt,
@@ -130,6 +150,6 @@ class WorkoutSetRecord implements Model {
 
   @override
   String toString() {
-    return 'WorkoutSetProgress{id: $id, workoutSetId: $workoutSetId, workoutProgressId: $workoutProgressId, setNumber: $setNumber, totalRestSecs: $totalRestSecs, startedAt: $startedAt, completedAt: $completedAt, createdAt: $createdAt, updatedAt: $updatedAt}';
+    return 'WorkoutSetRecord{id: $id, workoutSetId: $workoutSetId, workoutRecordId: $workoutRecordId, setNumber: $setNumber, totalRestSecs: $totalRestSecs, startedAt: $startedAt, completedAt: $completedAt, createdAt: $createdAt, updatedAt: $updatedAt}';
   }
 }

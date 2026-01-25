@@ -1,8 +1,10 @@
+import 'dart:convert';
+
 import 'package:equatable/equatable.dart';
 
+import 'common.dart';
 import 'enums.dart';
 import 'model.dart';
-import 'muscle_group_model.dart';
 import 'utilities.dart';
 
 const String _table = 'exercises';
@@ -11,31 +13,97 @@ const String _tableCreate = """
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
     description TEXT,
-    picture_uri TEXT,
-    video_uri TEXT,
-    video_platform TEXT,
-    muscle_group_id INTEGER NOT NULL,
+    picture TEXT,
+    video TEXT,
+    muscle_group TEXT NOT NULL,
+    muscles TEXT NOT NULL,
     is_favorite INTEGER NOT NULL DEFAULT 0,
     difficulty INTEGER,
     created_at INTEGER NOT NULL,
-    updated_at INTEGER NOT NULL,
-    FOREIGN KEY (muscle_group_id) REFERENCES ${MuscleGroup.table} (id)
-      ON DELETE CASCADE
+    updated_at INTEGER NOT NULL
   );
   
-  CREATE INDEX IF NOT EXISTS idx_exercises_muscle_group_id ON $_table (muscle_group_id);
+  CREATE INDEX IF NOT EXISTS idx_exercises_muscle_group ON $_table (muscle_group);
   CREATE UNIQUE INDEX IF NOT EXISTS unique_idx_exercises_name_id ON $_table (name);
   """;
+
+enum ExerciseColumns {
+  id("id"),
+  name("name"),
+  description("description"),
+  picture("picture"),
+  video("video"),
+  muscleGroup("muscle_group"),
+  muscles("muscles"),
+  isFavorite("is_favorite"),
+  difficulty("difficulty"),
+  createdAt("created_at"),
+  updatedAt("updated_at");
+
+  final String value;
+
+  const ExerciseColumns(this.value);
+}
+
+class ExerciseMuscles extends Equatable {
+  final Set<Muscle> primaryMuscles;
+  final Set<Muscle> secondaryMuscles;
+
+  const ExerciseMuscles({
+    required this.primaryMuscles,
+    required this.secondaryMuscles,
+  });
+
+  Map<String, List<String>> toMap() {
+    return {
+      'primary_muscles': primaryMuscles.map((m) => m.value).toList(),
+      'secondary_muscles': secondaryMuscles.map((m) => m.value).toList(),
+    };
+  }
+
+  factory ExerciseMuscles.fromJson(String json) {
+    return ExerciseMuscles.fromMap(
+        jsonDecode(json) as Map<String, List<String>>);
+  }
+
+  factory ExerciseMuscles.fromMap(Map<String, List<String>> map) {
+    return ExerciseMuscles(
+      primaryMuscles:
+          map['primary_muscles']?.map((m) => Muscle.fromValue(m)).toSet() ??
+              <Muscle>{},
+      secondaryMuscles:
+          map['secondary_muscles']?.map((m) => Muscle.fromValue(m)).toSet() ??
+              <Muscle>{},
+    );
+  }
+
+  ExerciseMuscles copyWith({
+    Set<Muscle>? primaryMuscles,
+    Set<Muscle>? secondaryMuscles,
+  }) {
+    return ExerciseMuscles(
+      primaryMuscles: primaryMuscles ?? this.primaryMuscles,
+      secondaryMuscles: secondaryMuscles ?? this.secondaryMuscles,
+    );
+  }
+
+  String toJson() {
+    return jsonEncode(toMap());
+  }
+
+  @override
+  List<Object?> get props => [primaryMuscles, secondaryMuscles];
+}
 
 class Exercise extends Equatable implements Model {
   @override
   final int? id;
   final String name;
   final String? description;
-  final String? pictureUri;
-  final String? videoUri;
-  final VideoPlatform? videoPlatform;
-  final int muscleGroupId;
+  final PictureData? picture;
+  final VideoData? video;
+  final MuscleGroup muscleGroup;
+  final ExerciseMuscles muscles;
   final bool isFavorite;
   final int? difficulty;
   @override
@@ -47,10 +115,10 @@ class Exercise extends Equatable implements Model {
     this.id,
     required this.name,
     this.description,
-    this.pictureUri,
-    this.videoUri,
-    this.videoPlatform,
-    required this.muscleGroupId,
+    this.picture,
+    this.video,
+    required this.muscleGroup,
+    required this.muscles,
     this.isFavorite = false,
     this.difficulty,
     required this.createdAt,
@@ -63,55 +131,65 @@ class Exercise extends Equatable implements Model {
   @override
   Map<String, Object?> toMap() {
     return {
-      'id': id,
-      'name': name,
-      'description': description,
-      'picture_uri': pictureUri,
-      'video_uri': videoUri,
-      'video_platform': videoPlatform?.value,
-      'muscle_group_id': muscleGroupId,
-      'is_favorite': isFavorite ? 1 : 0,
-      'difficulty': difficulty,
-      'created_at': createdAt,
-      'updated_at': updatedAt,
+      ExerciseColumns.id.value: id,
+      ExerciseColumns.name.value: name,
+      ExerciseColumns.description.value: description,
+      ExerciseColumns.picture.value: picture?.toJson(),
+      ExerciseColumns.video.value: video?.toJson(),
+      ExerciseColumns.muscleGroup.value: muscleGroup.value,
+      ExerciseColumns.muscles.value: muscles.toJson(),
+      ExerciseColumns.isFavorite.value: isFavorite ? 1 : 0,
+      ExerciseColumns.difficulty.value: difficulty,
+      ExerciseColumns.createdAt.value: createdAt,
+      ExerciseColumns.updatedAt.value: updatedAt,
     };
   }
 
   @override
   factory Exercise.fromMap(Map<String, Object?> map) {
     return Exercise(
-      id: map['id'] as int?,
-      name: map['name'] as String,
-      description: map['description'] as String?,
-      pictureUri: map['picture_uri'] as String?,
-      videoUri: map['video_uri'] as String?,
-      videoPlatform: map['video_platform'] != null
-          ? VideoPlatform.fromValue(map['video_platform']! as String)
+      id: map[ExerciseColumns.id.value] as int?,
+      name: map[ExerciseColumns.name.value] as String,
+      description: map[ExerciseColumns.description.value] as String?,
+      picture: map[ExerciseColumns.picture.value] != null
+          ? PictureData.fromJson(map[ExerciseColumns.picture.value] as String)
           : null,
-      muscleGroupId: map['muscle_group_id'] as int,
-      isFavorite: (map['is_favorite'] as int? ?? 0) == 1,
-      difficulty: map['difficulty'] as int?,
-      createdAt: map['created_at'] as int,
-      updatedAt: map['updated_at'] as int,
+      video: map[ExerciseColumns.video.value] != null
+          ? VideoData.fromJson(map[ExerciseColumns.video.value] as String)
+          : null,
+      muscleGroup: MuscleGroup.fromValue(
+          map[ExerciseColumns.muscleGroup.value] as String),
+      muscles: ExerciseMuscles.fromJson(
+          map[ExerciseColumns.muscles.value] as String? ??
+              '{"primary_muscles":[],"secondary_muscles":[]}'),
+      isFavorite: (map[ExerciseColumns.isFavorite.value] as int? ?? 0) == 1,
+      difficulty: map[ExerciseColumns.difficulty.value] as int?,
+      createdAt: map[ExerciseColumns.createdAt.value] as int,
+      updatedAt: map[ExerciseColumns.updatedAt.value] as int,
     );
   }
 
   @override
   factory Exercise.create({
     required String name,
-    required int muscleGroupId,
+    required MuscleGroup muscleGroup,
+    required ExerciseMuscles muscles,
     String? description,
-    String? pictureUri,
-    (VideoPlatform, String)? videoData,
+    PictureData? picture,
+    VideoData? video,
+    int? difficulty,
+    bool? isFavorite,
   }) {
     final int now = DateUtilities.getNowUtcUnix();
     return Exercise(
       name: name,
-      muscleGroupId: muscleGroupId,
+      muscleGroup: muscleGroup,
+      muscles: muscles,
       description: description,
-      pictureUri: pictureUri,
-      videoUri: videoData?.$2,
-      videoPlatform: videoData?.$1,
+      picture: picture,
+      video: video,
+      isFavorite: isFavorite ?? false,
+      difficulty: difficulty,
       createdAt: now,
       updatedAt: now,
     );
@@ -122,10 +200,10 @@ class Exercise extends Equatable implements Model {
     int? id,
     String? name,
     String? description,
-    String? pictureUri,
-    String? videoUri,
-    VideoPlatform? videoPlatform,
-    int? muscleGroupId,
+    PictureData? picture,
+    VideoData? video,
+    MuscleGroup? muscleGroup,
+    ExerciseMuscles? muscles,
     bool? isFavorite,
     int? difficulty,
     int? createdAt,
@@ -135,10 +213,10 @@ class Exercise extends Equatable implements Model {
       id: id ?? this.id,
       name: name ?? this.name,
       description: description ?? this.description,
-      pictureUri: pictureUri ?? this.pictureUri,
-      videoUri: videoUri ?? this.videoUri,
-      videoPlatform: videoPlatform ?? this.videoPlatform,
-      muscleGroupId: muscleGroupId ?? this.muscleGroupId,
+      picture: picture ?? this.picture,
+      video: video ?? this.video,
+      muscleGroup: muscleGroup ?? this.muscleGroup,
+      muscles: muscles ?? this.muscles,
       isFavorite: isFavorite ?? this.isFavorite,
       difficulty: difficulty ?? this.difficulty,
       createdAt: createdAt ?? this.createdAt,
@@ -148,7 +226,7 @@ class Exercise extends Equatable implements Model {
 
   @override
   String toString() {
-    return 'Exercise{id: $id, name: $name, pictureUri: $pictureUri, videoUri: $videoUri, videoPlatform: $videoPlatform, muscleGroupId: $muscleGroupId, isFavorite: $isFavorite, difficulty: $difficulty, createdAt: $createdAt, updatedAt: $updatedAt}';
+    return 'Exercise{id: $id, name: $name, picture: $picture, video: $video, muscleGroup: $muscleGroup, muscles: $muscles, isFavorite: $isFavorite, difficulty: $difficulty, createdAt: $createdAt, updatedAt: $updatedAt}';
   }
 
   @override
@@ -156,10 +234,10 @@ class Exercise extends Equatable implements Model {
         id,
         name,
         description,
-        pictureUri,
-        videoUri,
-        videoPlatform,
-        muscleGroupId,
+        picture,
+        video,
+        muscleGroup,
+        muscles,
         isFavorite,
         difficulty,
         createdAt,
