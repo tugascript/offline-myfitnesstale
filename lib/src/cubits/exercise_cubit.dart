@@ -282,4 +282,46 @@ class ExerciseCubit extends Cubit<ExerciseState> {
       ),
     );
   }
+
+  Future<void> getEquipments({
+    String? name,
+    required int limit,
+    required int offset,
+  }) async {
+    _logger.info('getEquipments: fetching equipments');
+    emit(state.copyWith(isLoading: true));
+
+    final result = await _exerciseService.getEquipments(
+      name: name,
+      limit: limit,
+      offset: offset,
+    );
+
+    if (result.isErr()) {
+      final error = result.error;
+      _logger.warning("Failed to fetch equipments, error: $error");
+      emit(state.copyWith(
+        error: ErrorState(
+          type: error.type.name,
+          description: "Failed to fetch equipments",
+        ),
+        isLoading: false,
+      ));
+      return;
+    }
+
+    final paginatedData = result.value;
+    emit(state.copyWith(
+      equipments: offset > 0
+          ? [...paginatedData.data, ...state.equipments]
+          : paginatedData.data,
+      equipmentPagination: state.equipmentPagination.copyWith(
+        name: name,
+        limit: paginatedData.limit,
+        offset: paginatedData.offset,
+        total: paginatedData.total,
+      ),
+      isLoading: false,
+    ));
+  }
 }

@@ -3,20 +3,19 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../cubits/profile_cubit.dart';
 import '../cubits/states/profile_state.dart';
-import '../cubits/weight_record_cubit.dart';
 import '../cubits/states/weight_record_state.dart';
-import '../cubits/workout_record_cubit.dart';
 import '../cubits/states/workout_record_state.dart';
+import '../cubits/weight_record_cubit.dart';
+import '../cubits/workout_record_cubit.dart';
 import '../models/enums.dart';
 import '../services/dtos/system_dto.dart';
 import '../services/dtos/weight_record_dto.dart';
 import '../utilities/converters.dart';
 import '../widgets/layout/responsive_scaffold.dart';
 import '../widgets/weight/weight_goal_tracking_widget.dart';
-import '../widgets/progress/workout_analytics_widget.dart';
+import 'exercise_progress_view.dart';
 import 'weight_log_view.dart';
 import 'workout_history_view.dart';
-import 'exercise_progress_view.dart';
 
 class ProgressView extends StatefulWidget {
   static const routeName = "/progress";
@@ -272,7 +271,7 @@ class _ProgressViewState extends State<ProgressView>
             style: Theme.of(context).textTheme.titleLarge,
           ),
           const SizedBox(height: 16),
-          const WorkoutAnalyticsWidget(),
+          // TODO: create a proper workout analytics
         ],
       ),
     );

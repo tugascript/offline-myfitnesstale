@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../cubits/muscle_group_cubit.dart';
-import '../../cubits/states/muscle_group_state.dart';
 import '../../models/enums.dart';
 import '../../utilities/sizes/exercises_list_sizes.dart';
 
@@ -88,35 +85,31 @@ class _ExercisesSearchState extends State<ExercisesSearch> {
           Row(
             children: [
               Expanded(
-                child: BlocBuilder<MuscleGroupCubit, MuscleGroupState>(
-                    builder: (context, state) {
-                  final muscleGroups = state.muscleGroups;
-                  return DropdownButtonFormField<MuscleGroup?>(
-                    initialValue: _data.muscleGroup,
-                    items: [
-                      const DropdownMenuItem<MuscleGroup?>(
-                        value: null,
-                        child: Text('All muscle group'),
+                child: DropdownButtonFormField<MuscleGroup?>(
+                  initialValue: _data.muscleGroup,
+                  items: [
+                    const DropdownMenuItem<MuscleGroup?>(
+                      value: null,
+                      child: Text('All muscle group'),
+                    ),
+                    ...MuscleGroup.values.map(
+                      (group) => DropdownMenuItem<MuscleGroup?>(
+                        value: group,
+                        child: Text(_formatMuscleGroupName(group)),
                       ),
-                      ...muscleGroups.map(
-                        (group) => DropdownMenuItem<MuscleGroup?>(
-                          value: group,
-                          child: Text(_formatMuscleGroupName(group)),
-                        ),
-                      )
-                    ],
-                    onChanged: (value) {
-                      setState(() {
-                        _data.muscleGroup = value;
-                      });
-                    },
-                    onSaved: (value) {
-                      setState(() {
-                        _data.muscleGroup = value;
-                      });
-                    },
-                  );
-                }),
+                    )
+                  ],
+                  onChanged: (value) {
+                    setState(() {
+                      _data.muscleGroup = value;
+                    });
+                  },
+                  onSaved: (value) {
+                    setState(() {
+                      _data.muscleGroup = value;
+                    });
+                  },
+                ),
               )
             ],
           )
