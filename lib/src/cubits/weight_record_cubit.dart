@@ -1,5 +1,23 @@
+// Copyright (C) 2026 Afonso Barracha
+//
+// This file is part of MyFitnessTale.
+//
+// MyFitnessTale is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// MyFitnessTale is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with MyFitnessTale.  If not, see <https://www.gnu.org/licenses/>.
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:logging/logging.dart';
+import 'package:myfitnesstale/src/models/enums.dart';
 
 import '../services/common/errors.dart';
 import '../services/weight_record_service.dart';
@@ -218,6 +236,148 @@ class WeightRecordCubit extends Cubit<WeightRecordState> {
           : state.selectedWeightRecord,
       recordPagination: state.recordPagination.copyWith(
         total: state.recordPagination.total - 1,
+      ),
+      isLoading: false,
+    ));
+  }
+
+  Future<void> createWeightGoal({
+    required int targetWeight,
+    required DateTime startDate,
+    ProgressStatus status = ProgressStatus.inProgress,
+  }) async {
+    emit(state.copyWith(isLoading: true));
+    final result = await _weightRecordService.createWeightGoal(
+      targetWeight: targetWeight,
+      startDate: startDate,
+      status: status,
+    );
+    if (result.isErr()) {
+      final error = result.error;
+      _logger.warning("Failed to create weight goal", error);
+      switch (error.type) {
+        case OperationErrorTypes.invalidInput:
+          emit(
+            state.copyWith(
+              error: ErrorState(
+                type: error.type.name,
+                description: error.description,
+              ),
+              isLoading: false,
+            ),
+          );
+          return;
+        case OperationErrorTypes.operationFailure:
+          emit(state.copyWith(
+            error: ErrorState(
+              type: error.type.name,
+              description: "Failed to create weight goal",
+            ),
+            isLoading: false,
+          ));
+          return;
+      }
+    }
+
+    final weightGoal = result.value;
+    emit(state.copyWith(
+      weightGoals: [weightGoal, ...state.weightGoals],
+      selectedWeightGoal: weightGoal,
+      goalPagination: state.goalPagination.copyWith(
+        total: state.goalPagination.total + 1,
+      ),
+      isLoading: false,
+    ));
+  }
+
+  Future<void> updateWeightGoal({
+    required int id,
+    int? targetWeight,
+    DateTime? startDate,
+    ProgressStatus? status,
+  }) async {
+    emit(state.copyWith(isLoading: true));
+    final result = await _weightRecordService.updateWeightGoal(
+      id: id,
+      targetWeight: targetWeight,
+      startDate: startDate,
+      status: status,
+    );
+    if (result.isErr()) {
+      final error = result.error;
+      _logger.warning("Failed to update weight goal", error);
+      switch (error.type) {
+        case SingleErrorTypes.notFound:
+        case SingleErrorTypes.invalidInput:
+          emit(
+            state.copyWith(
+              error: ErrorState(
+                type: error.type.name,
+                description: error.description,
+              ),
+              isLoading: false,
+            ),
+          );
+          return;
+        case SingleErrorTypes.operationFailure:
+          emit(state.copyWith(
+            error: ErrorState(
+              type: error.type.name,
+              description: "Failed to update weight goal",
+            ),
+            isLoading: false,
+          ));
+          return;
+      }
+    }
+
+    final weightGoal = result.value;
+    emit(state.copyWith(
+      weightGoals: state.weightGoals
+          .map((g) => g.id == weightGoal.id ? weightGoal : g)
+          .toList(),
+      selectedWeightGoal: weightGoal,
+      isLoading: false,
+    ));
+  }
+
+  Future<void> deleteWeightGoal(int id) async {
+    emit(state.copyWith(isLoading: true));
+
+    final result = await _weightRecordService.deleteWeightGoal(id);
+    if (result.isErr()) {
+      final error = result.error;
+      switch (error.type) {
+        case SingleErrorTypes.notFound:
+        case SingleErrorTypes.invalidInput:
+          emit(
+            state.copyWith(
+              error: ErrorState(
+                type: error.type.name,
+                description: error.description,
+              ),
+              isLoading: false,
+            ),
+          );
+          return;
+        case SingleErrorTypes.operationFailure:
+          emit(state.copyWith(
+            error: ErrorState(
+              type: error.type.name,
+              description: "Failed to delete weight goal",
+            ),
+            isLoading: false,
+          ));
+          return;
+      }
+    }
+
+    emit(state.copyWith(
+      weightGoals: state.weightGoals.where((g) => g.id != id).toList(),
+      selectedWeightGoal:
+          state.selectedWeightGoal?.id == id ? null : state.selectedWeightGoal,
+      goalPagination: state.goalPagination.copyWith(
+        total: state.goalPagination.total - 1,
       ),
       isLoading: false,
     ));

@@ -89,6 +89,7 @@ final class EquipmentPagination extends Equatable {
 
 final class ExerciseState extends Equatable {
   final List<ExerciseDto> exercises;
+  final List<ExerciseDto> relatedExercises;
   final ExercisePagination exercisePagination;
   final ExerciseDto? selectedExercise;
   final List<EquipmentDto> equipments;
@@ -99,6 +100,7 @@ final class ExerciseState extends Equatable {
 
   const ExerciseState({
     required this.exercises,
+    required this.relatedExercises,
     required this.exercisePagination,
     this.selectedExercise,
     required this.isLoading,
@@ -111,6 +113,7 @@ final class ExerciseState extends Equatable {
   factory ExerciseState.initial() {
     return ExerciseState(
       exercises: const [],
+      relatedExercises: const [],
       exercisePagination: ExercisePagination.initial(),
       isLoading: false,
       equipments: const [],
@@ -120,6 +123,7 @@ final class ExerciseState extends Equatable {
 
   ExerciseState copyWith({
     List<ExerciseDto>? exercises,
+    List<ExerciseDto>? relatedExercises,
     ExercisePagination? pagination,
     ExerciseDto? selectedExercise,
     List<ExerciseDto>? favoriteExercises,
@@ -131,6 +135,7 @@ final class ExerciseState extends Equatable {
   }) {
     return ExerciseState(
       exercises: exercises ?? this.exercises,
+      relatedExercises: relatedExercises ?? this.relatedExercises,
       exercisePagination: pagination ?? exercisePagination,
       selectedExercise: selectedExercise ?? this.selectedExercise,
       isLoading: isLoading ?? this.isLoading,
@@ -146,6 +151,7 @@ final class ExerciseState extends Equatable {
         isLoading,
         error,
         exercises,
+        relatedExercises,
         selectedExercise,
         exercisePagination,
         equipments,

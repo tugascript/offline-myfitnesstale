@@ -9,12 +9,14 @@ class WorkoutPlanRecordDto extends Equatable implements Dto<WorkoutPlanRecord> {
   final int id;
   final int workoutPlanId;
   final ProgressStatus status;
+  final DateTime createdAt;
   final DateTime? completedAt;
 
   const WorkoutPlanRecordDto({
     required this.id,
     required this.workoutPlanId,
     required this.status,
+    required this.createdAt,
     this.completedAt,
   });
 
@@ -24,6 +26,8 @@ class WorkoutPlanRecordDto extends Equatable implements Dto<WorkoutPlanRecord> {
       id: model.id!,
       workoutPlanId: model.workoutPlanId,
       status: model.status,
+      createdAt: DateTime.fromMillisecondsSinceEpoch(model.createdAt * 1000,
+          isUtc: true),
       completedAt: model.completedAt != null
           ? DateTime.fromMillisecondsSinceEpoch(model.completedAt! * 1000,
               isUtc: true)
@@ -36,12 +40,14 @@ class WorkoutPlanRecordDto extends Equatable implements Dto<WorkoutPlanRecord> {
     int? id,
     int? workoutPlanId,
     ProgressStatus? status,
+    DateTime? createdAt,
     DateTime? completedAt,
   }) {
     return WorkoutPlanRecordDto(
       id: id ?? this.id,
       workoutPlanId: workoutPlanId ?? this.workoutPlanId,
       status: status ?? this.status,
+      createdAt: createdAt ?? this.createdAt,
       completedAt: completedAt ?? this.completedAt,
     );
   }

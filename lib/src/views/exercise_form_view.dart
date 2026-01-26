@@ -2,12 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import '../cubits/equipment_cubit.dart';
 import '../cubits/exercise_cubit.dart';
-import '../cubits/muscle_group_cubit.dart';
 import '../cubits/states/exercise_state.dart';
-import '../cubits/states/muscle_group_state.dart';
+import '../models/common.dart';
 import '../models/enums.dart';
+import '../models/exercise_model.dart';
 import '../models/utilities.dart';
 import '../widgets/exercise/equipment_selection_widget.dart';
 import '../widgets/exercise/muscle_selection_widget.dart';
@@ -49,16 +48,13 @@ class _ExerciseFormViewState extends State<ExerciseFormView> {
   @override
   void initState() {
     super.initState();
-    _loadInitialData();
+    // _loadInitialData(); // Removed as no longer needed
     if (isEditMode) {
       _loadExercise();
     }
   }
 
-  void _loadInitialData() {
-    context.read<MuscleGroupCubit>().getMuscleGroups();
-    context.read<EquipmentCubit>().getEquipments(limit: 1000);
-  }
+  // No initial data load needed for static enums or EquipmentWidget internal loading
 
   void _loadExercise() {
     context.read<ExerciseCubit>().getExercise(widget.exerciseId!);
@@ -126,28 +122,43 @@ class _ExerciseFormViewState extends State<ExerciseFormView> {
                   : _descriptionController.text.trim(),
               muscleGroup: _selectedMuscleGroup,
               muscles: muscles,
-              pictureUri: _pictureUriController.text.trim().isEmpty
+              picture: _pictureUriController.text.trim().isEmpty
                   ? null
-                  : _pictureUriController.text.trim(),
-              videoData: videoData,
+                  : PictureData(
+                      uri: _pictureUriController.text.trim(),
+                      storage: PictureStorage.network,
+                    ),
+              video: videoData != null
+                  ? VideoData(
+                      platform: videoData.$1,
+                      uri: videoData.$2,
+                    )
+                  : null,
               isFavorite: _isFavorite,
               difficulty: _selectedDifficulty?.value,
-              equipmentIds:
-                  _selectedEquipmentIds.isEmpty ? null : _selectedEquipmentIds,
             );
       } else {
         // Create new exercise
         await context.read<ExerciseCubit>().createExercise(
               name: _nameController.text.trim(),
               muscleGroup: _selectedMuscleGroup!,
-              muscles: muscles,
+              primaryMuscles: muscles.primaryMuscles,
+              secondaryMuscles: muscles.secondaryMuscles,
               description: _descriptionController.text.trim().isEmpty
                   ? null
                   : _descriptionController.text.trim(),
-              pictureUri: _pictureUriController.text.trim().isEmpty
+              picture: _pictureUriController.text.trim().isEmpty
                   ? null
-                  : _pictureUriController.text.trim(),
-              videoData: videoData,
+                  : PictureData(
+                      uri: _pictureUriController.text.trim(),
+                      storage: PictureStorage.network,
+                    ),
+              video: videoData != null
+                  ? VideoData(
+                      platform: videoData.$1,
+                      uri: videoData.$2,
+                    )
+                  : null,
               equipmentIds:
                   _selectedEquipmentIds.isEmpty ? null : _selectedEquipmentIds,
               difficulty: _selectedDifficulty?.value,
@@ -208,11 +219,11 @@ class _ExerciseFormViewState extends State<ExerciseFormView> {
               _nameController.text.isEmpty) {
             final exercise = state.selectedExercise!;
             _nameController.text = exercise.name;
-            _descriptionController.text = exercise.description ?? '';
-            _pictureUriController.text = exercise.pictureUri ?? '';
-            _videoUriController.text = exercise.videoUri ?? '';
+            _descriptionController.text = exercise.description;
+            _pictureUriController.text = exercise.picture?.uri ?? '';
+            _videoUriController.text = exercise.video?.uri ?? '';
             _selectedMuscleGroup = exercise.muscleGroup;
-            _selectedVideoPlatform = exercise.videoPlatform;
+            _selectedVideoPlatform = exercise.video?.platform;
             _isFavorite = exercise.isFavorite;
             _selectedDifficulty = exercise.difficulty != null
                 ? Difficulty.fromValue(exercise.difficulty!)
@@ -227,215 +238,210 @@ class _ExerciseFormViewState extends State<ExerciseFormView> {
             ];
 
             // Load selected equipment
-            _selectedEquipmentIds = (state.selectedExerciseEquipments ?? [])
+            _selectedEquipmentIds = (exercise.equipments ?? [])
                 .map((e) => e.id)
                 .whereType<int>()
                 .toList();
           }
         },
         builder: (context, exerciseState) {
-          return BlocBuilder<MuscleGroupCubit, MuscleGroupState>(
-            builder: (context, muscleGroupState) {
-              return SingleChildScrollView(
-                padding: const EdgeInsets.all(16.0),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Exercise Name
-                      TextFormField(
-                        controller: _nameController,
-                        decoration: const InputDecoration(
-                          labelText: 'Exercise Name *',
-                          border: OutlineInputBorder(),
-                        ),
-                        validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
-                            return 'Please enter an exercise name';
-                          }
-                          return null;
-                        },
+          return SingleChildScrollView(
+            padding: const EdgeInsets.all(16.0),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Exercise Name
+                  TextFormField(
+                    controller: _nameController,
+                    decoration: const InputDecoration(
+                      labelText: 'Exercise Name *',
+                      border: OutlineInputBorder(),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Please enter an exercise name';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  // Description
+                  TextFormField(
+                    controller: _descriptionController,
+                    decoration: const InputDecoration(
+                      labelText: 'Description',
+                      border: OutlineInputBorder(),
+                      alignLabelWithHint: true,
+                    ),
+                    maxLines: 4,
+                    textAlignVertical: TextAlignVertical.top,
+                  ),
+                  const SizedBox(height: 16),
+                  // Muscle Group
+                  DropdownButtonFormField<MuscleGroup?>(
+                    initialValue: _selectedMuscleGroup,
+                    decoration: const InputDecoration(
+                      labelText: 'Muscle Group *',
+                      border: OutlineInputBorder(),
+                    ),
+                    items: [
+                      const DropdownMenuItem<MuscleGroup?>(
+                        value: null,
+                        child: Text('Select a muscle group'),
                       ),
-                      const SizedBox(height: 16),
-                      // Description
-                      TextFormField(
-                        controller: _descriptionController,
-                        decoration: const InputDecoration(
-                          labelText: 'Description',
-                          border: OutlineInputBorder(),
-                          alignLabelWithHint: true,
-                        ),
-                        maxLines: 4,
-                        textAlignVertical: TextAlignVertical.top,
-                      ),
-                      const SizedBox(height: 16),
-                      // Muscle Group
-                      DropdownButtonFormField<MuscleGroup?>(
-                        initialValue: _selectedMuscleGroup,
-                        decoration: const InputDecoration(
-                          labelText: 'Muscle Group *',
-                          border: OutlineInputBorder(),
-                        ),
-                        items: [
-                          const DropdownMenuItem<MuscleGroup?>(
-                            value: null,
-                            child: Text('Select a muscle group'),
-                          ),
-                          ...muscleGroupState.muscleGroups.map(
-                            (mg) => DropdownMenuItem<MuscleGroup?>(
-                              value: mg,
-                              child: Text(
-                                  EnumDisplayNames.getMuscleGroupDisplayName(
-                                      mg)),
-                            ),
-                          ),
-                        ],
-                        onChanged: (value) {
-                          setState(() {
-                            _selectedMuscleGroup = value;
-                          });
-                        },
-                        validator: (value) {
-                          if (value == null) {
-                            return 'Please select a muscle group';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 24),
-                      // Muscle Selection
-                      MuscleSelectionWidget(
-                        selectedMuscles: _selectedMuscles,
-                        onSelectionChanged: (muscles) {
-                          setState(() {
-                            _selectedMuscles = muscles;
-                          });
-                        },
-                      ),
-                      const SizedBox(height: 24),
-                      // Difficulty
-                      DropdownButtonFormField<Difficulty?>(
-                        initialValue: _selectedDifficulty,
-                        decoration: const InputDecoration(
-                          labelText: 'Difficulty',
-                          border: OutlineInputBorder(),
-                        ),
-                        items: [
-                          const DropdownMenuItem<Difficulty?>(
-                            value: null,
-                            child: Text('Not specified'),
-                          ),
-                          ...Difficulty.values.map(
-                            (difficulty) => DropdownMenuItem<Difficulty?>(
-                              value: difficulty,
-                              child: Text(_difficultyLabel(difficulty)),
-                            ),
-                          ),
-                        ],
-                        onChanged: (value) {
-                          setState(() {
-                            _selectedDifficulty = value;
-                          });
-                        },
-                      ),
-                      const SizedBox(height: 24),
-                      // Equipment Selection
-                      EquipmentSelectionWidget(
-                        selectedEquipmentIds: _selectedEquipmentIds,
-                        onSelectionChanged: (equipmentIds) {
-                          setState(() {
-                            _selectedEquipmentIds = equipmentIds;
-                          });
-                        },
-                      ),
-                      const SizedBox(height: 24),
-                      // Picture URI
-                      TextFormField(
-                        controller: _pictureUriController,
-                        decoration: const InputDecoration(
-                          labelText: 'Picture URI (placeholder)',
-                          border: OutlineInputBorder(),
-                          helperText: 'File picker coming soon',
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      // Video Platform
-                      DropdownButtonFormField<VideoPlatform?>(
-                        initialValue: _selectedVideoPlatform,
-                        decoration: const InputDecoration(
-                          labelText: 'Video Platform',
-                          border: OutlineInputBorder(),
-                        ),
-                        items: [
-                          const DropdownMenuItem<VideoPlatform?>(
-                            value: null,
-                            child: Text('None'),
-                          ),
-                          ...VideoPlatform.values.map(
-                            (platform) => DropdownMenuItem<VideoPlatform?>(
-                              value: platform,
-                              child: Text(platform.value),
-                            ),
-                          ),
-                        ],
-                        onChanged: (value) {
-                          setState(() {
-                            _selectedVideoPlatform = value;
-                          });
-                        },
-                      ),
-                      const SizedBox(height: 16),
-                      // Video URI
-                      TextFormField(
-                        controller: _videoUriController,
-                        decoration: const InputDecoration(
-                          labelText: 'Video URI',
-                          border: OutlineInputBorder(),
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                      // Favorite Toggle
-                      SwitchListTile(
-                        title: const Text('Favorite'),
-                        subtitle: const Text('Add to favorites'),
-                        value: _isFavorite,
-                        onChanged: (value) {
-                          setState(() {
-                            _isFavorite = value;
-                          });
-                        },
-                      ),
-                      const SizedBox(height: 32),
-                      // Save Button
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: _isLoading ? null : _saveExercise,
-                          style: ElevatedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                          ),
-                          child: _isLoading
-                              ? const SizedBox(
-                                  height: 20,
-                                  width: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                  ),
-                                )
-                              : Text(
-                                  isEditMode
-                                      ? 'Update Exercise'
-                                      : 'Create Exercise',
-                                  style: const TextStyle(fontSize: 16),
-                                ),
+                      ...MuscleGroup.values.map(
+                        (mg) => DropdownMenuItem<MuscleGroup?>(
+                          value: mg,
+                          child: Text(
+                              EnumDisplayNames.getMuscleGroupDisplayName(mg)),
                         ),
                       ),
                     ],
+                    onChanged: (value) {
+                      setState(() {
+                        _selectedMuscleGroup = value;
+                      });
+                    },
+                    validator: (value) {
+                      if (value == null) {
+                        return 'Please select a muscle group';
+                      }
+                      return null;
+                    },
                   ),
-                ),
-              );
-            },
+                  const SizedBox(height: 24),
+                  // Muscle Selection
+                  MuscleSelectionWidget(
+                    selectedMuscles: _selectedMuscles,
+                    onSelectionChanged: (muscles) {
+                      setState(() {
+                        _selectedMuscles = muscles;
+                      });
+                    },
+                  ),
+                  const SizedBox(height: 24),
+                  // Difficulty
+                  DropdownButtonFormField<Difficulty?>(
+                    initialValue: _selectedDifficulty,
+                    decoration: const InputDecoration(
+                      labelText: 'Difficulty',
+                      border: OutlineInputBorder(),
+                    ),
+                    items: [
+                      const DropdownMenuItem<Difficulty?>(
+                        value: null,
+                        child: Text('Not specified'),
+                      ),
+                      ...Difficulty.values.map(
+                        (difficulty) => DropdownMenuItem<Difficulty?>(
+                          value: difficulty,
+                          child: Text(_difficultyLabel(difficulty)),
+                        ),
+                      ),
+                    ],
+                    onChanged: (value) {
+                      setState(() {
+                        _selectedDifficulty = value;
+                      });
+                    },
+                  ),
+                  const SizedBox(height: 24),
+                  // Equipment Selection
+                  EquipmentSelectionWidget(
+                    selectedEquipmentIds: _selectedEquipmentIds,
+                    onSelectionChanged: (equipmentIds) {
+                      setState(() {
+                        _selectedEquipmentIds = equipmentIds;
+                      });
+                    },
+                  ),
+                  const SizedBox(height: 24),
+                  // Picture URI
+                  TextFormField(
+                    controller: _pictureUriController,
+                    decoration: const InputDecoration(
+                      labelText: 'Picture URI (placeholder)',
+                      border: OutlineInputBorder(),
+                      helperText: 'File picker coming soon',
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  // Video Platform
+                  DropdownButtonFormField<VideoPlatform?>(
+                    initialValue: _selectedVideoPlatform,
+                    decoration: const InputDecoration(
+                      labelText: 'Video Platform',
+                      border: OutlineInputBorder(),
+                    ),
+                    items: [
+                      const DropdownMenuItem<VideoPlatform?>(
+                        value: null,
+                        child: Text('None'),
+                      ),
+                      ...VideoPlatform.values.map(
+                        (platform) => DropdownMenuItem<VideoPlatform?>(
+                          value: platform,
+                          child: Text(platform.value),
+                        ),
+                      ),
+                    ],
+                    onChanged: (value) {
+                      setState(() {
+                        _selectedVideoPlatform = value;
+                      });
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  // Video URI
+                  TextFormField(
+                    controller: _videoUriController,
+                    decoration: const InputDecoration(
+                      labelText: 'Video URI',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  // Favorite Toggle
+                  SwitchListTile(
+                    title: const Text('Favorite'),
+                    subtitle: const Text('Add to favorites'),
+                    value: _isFavorite,
+                    onChanged: (value) {
+                      setState(() {
+                        _isFavorite = value;
+                      });
+                    },
+                  ),
+                  const SizedBox(height: 32),
+                  // Save Button
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: _isLoading ? null : _saveExercise,
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                      ),
+                      child: _isLoading
+                          ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : Text(
+                              isEditMode
+                                  ? 'Update Exercise'
+                                  : 'Create Exercise',
+                              style: const TextStyle(fontSize: 16),
+                            ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           );
         },
       ),

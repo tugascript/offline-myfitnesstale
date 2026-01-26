@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'src/cubits/active_workout_cubit.dart';
 import 'src/cubits/exercise_cubit.dart';
+import 'src/cubits/exercise_record_cubit.dart';
 import 'src/cubits/profile_cubit.dart';
 import 'src/cubits/weight_record_cubit.dart';
 import 'src/cubits/workout_cubit.dart';
@@ -23,6 +25,9 @@ class MyApp extends StatelessWidget {
         BlocProvider<ExerciseCubit>(
           create: (BuildContext context) => ExerciseCubit(),
         ),
+        BlocProvider<ExerciseRecordCubit>(
+          create: (BuildContext context) => ExerciseRecordCubit(),
+        ),
         BlocProvider<WeightRecordCubit>(
           create: (BuildContext context) => WeightRecordCubit(),
         ),
@@ -34,6 +39,9 @@ class MyApp extends StatelessWidget {
         ),
         BlocProvider<WorkoutPlanRecordCubit>(
           create: (BuildContext context) => WorkoutPlanRecordCubit(),
+        ),
+        BlocProvider<ActiveWorkoutCubit>(
+          create: (BuildContext context) => ActiveWorkoutCubit(),
         ),
       ],
       child: MaterialApp.router(

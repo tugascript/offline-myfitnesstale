@@ -126,6 +126,22 @@ final class WorkoutPlanRecordState extends Equatable {
     );
   }
 
+  WorkoutPlanRecordState copyWith({
+    CurrentWorkouPlanRecordState? currentPlanRecord,
+    List<WorkoutPlanRecordDto>? planRecords,
+    WorkoutPlanRecordPagination? pagination,
+    bool? isLoading,
+    ErrorState? error,
+  }) {
+    return WorkoutPlanRecordState(
+      currentPlanRecord: currentPlanRecord ?? this.currentPlanRecord,
+      planRecords: planRecords ?? this.planRecords,
+      pagination: pagination ?? this.pagination,
+      isLoading: isLoading ?? this.isLoading,
+      error: error ?? this.error,
+    );
+  }
+
   @override
   List<Object?> get props => [
         currentPlanRecord,

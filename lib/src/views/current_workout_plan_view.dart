@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import '../cubits/current_workout_plan_record_cubit.dart';
-import '../cubits/states/current_workout_plan_record_state.dart';
+import '../cubits/workout_plan_record_cubit.dart';
+import '../cubits/states/workout_plan_record_state.dart';
 import '../models/enums.dart';
 import '../widgets/layout/responsive_scaffold.dart';
 
@@ -20,8 +20,7 @@ class _CurrentWorkoutPlanViewState extends State<CurrentWorkoutPlanView> {
   @override
   void initState() {
     super.initState();
-    context.read<CurrentWorkoutPlanRecordCubit>().getActivePlanRecord();
-    context.read<CurrentWorkoutPlanRecordCubit>().getTodaysWorkout();
+    context.read<WorkoutPlanRecordCubit>().getActivePlanRecord();
   }
 
   String _difficultyLabel(Difficulty d) {
@@ -58,24 +57,25 @@ class _CurrentWorkoutPlanViewState extends State<CurrentWorkoutPlanView> {
   Widget build(BuildContext context) {
     return ResponsiveScaffold(
       title: 'Current Plan',
-      body: BlocConsumer<CurrentWorkoutPlanRecordCubit,
-          CurrentWorkoutPlanRecordState>(
+      body: BlocConsumer<WorkoutPlanRecordCubit, WorkoutPlanRecordState>(
         listener: (context, state) {
           if (state.error != null) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('Error: ${state.error}'),
+                content: Text('Error: ${state.error!.description}'),
                 backgroundColor: Colors.red,
               ),
             );
           }
         },
         builder: (context, state) {
-          if (state.isLoading && state.workoutPlan == null) {
+          final currentPlanRecord = state.currentPlanRecord;
+
+          if (state.isLoading && currentPlanRecord.workoutPlan == null) {
             return const Center(child: CircularProgressIndicator());
           }
 
-          if (state.workoutPlan == null) {
+          if (currentPlanRecord.workoutPlan == null) {
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -115,17 +115,20 @@ class _CurrentWorkoutPlanViewState extends State<CurrentWorkoutPlanView> {
             );
           }
 
-          final plan = state.workoutPlan!;
+          final plan = currentPlanRecord.workoutPlan!;
           final difficulty = Difficulty.fromValue(plan.difficulty);
           final difficultyColor = _difficultyColor(difficulty);
+          final progressPercentage = (currentPlanRecord.totalWorkouts > 0)
+              ? (currentPlanRecord.completedWorkouts /
+                      currentPlanRecord.totalWorkouts) *
+                  100
+              : 0.0;
 
           return RefreshIndicator(
             onRefresh: () async {
-              context
-                  .read<CurrentWorkoutPlanRecordCubit>()
+              await context
+                  .read<WorkoutPlanRecordCubit>()
                   .getActivePlanRecord();
-              context.read<CurrentWorkoutPlanRecordCubit>().getTodaysWorkout();
-              context.read<CurrentWorkoutPlanRecordCubit>().refreshProgress();
             },
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(16.0),
@@ -192,7 +195,7 @@ class _CurrentWorkoutPlanViewState extends State<CurrentWorkoutPlanView> {
                                     ),
                                   ),
                                   Text(
-                                    '${state.progressPercentage.toStringAsFixed(1)}%',
+                                    '${progressPercentage.toStringAsFixed(1)}%',
                                     style: TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.w600,
@@ -203,7 +206,7 @@ class _CurrentWorkoutPlanViewState extends State<CurrentWorkoutPlanView> {
                               ),
                               const SizedBox(height: 8),
                               LinearProgressIndicator(
-                                value: state.progressPercentage / 100,
+                                value: progressPercentage / 100,
                                 minHeight: 8,
                                 backgroundColor: Colors.grey[200],
                                 valueColor: AlwaysStoppedAnimation<Color>(
@@ -212,7 +215,7 @@ class _CurrentWorkoutPlanViewState extends State<CurrentWorkoutPlanView> {
                               ),
                               const SizedBox(height: 8),
                               Text(
-                                '${state.completedWorkouts} of ${state.totalWorkouts} workouts completed',
+                                '${currentPlanRecord.completedWorkouts} of ${currentPlanRecord.totalWorkouts} workouts completed',
                                 style: TextStyle(
                                   fontSize: 12,
                                   color: Colors.grey[600],
@@ -235,7 +238,7 @@ class _CurrentWorkoutPlanViewState extends State<CurrentWorkoutPlanView> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  if (state.todaysWorkouts.isEmpty)
+                  if (currentPlanRecord.todaysWorkouts.isEmpty)
                     Card(
                       child: Padding(
                         padding: const EdgeInsets.all(16.0),
@@ -257,13 +260,14 @@ class _CurrentWorkoutPlanViewState extends State<CurrentWorkoutPlanView> {
                       ),
                     )
                   else
-                    ...state.todaysWorkouts.map((workout) {
+                    ...currentPlanRecord.todaysWorkouts.map((workout) {
                       return Card(
                         margin: const EdgeInsets.only(bottom: 12),
                         child: ListTile(
                           leading: CircleAvatar(
-                            backgroundColor:
-                                Theme.of(context).primaryColor.withValues(alpha: 0.1),
+                            backgroundColor: Theme.of(context)
+                                .primaryColor
+                                .withValues(alpha: 0.1),
                             child: Icon(
                               Icons.fitness_center,
                               color: Theme.of(context).primaryColor,

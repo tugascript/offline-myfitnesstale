@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import '../models/exercise_model.dart';
-import '../models/workout_set_exercise_record_model.dart';
-import '../services/exercise_service.dart';
-import '../services/workout_set_exercise_record_service.dart';
+import '../cubits/exercise_record_cubit.dart';
+import '../cubits/states/exercise_record_state.dart';
+import '../services/dtos/exercise_dto.dart';
+import '../services/dtos/exercise_record_dto.dart';
 import '../widgets/layout/responsive_scaffold.dart';
 
 class ExerciseProgressView extends StatefulWidget {
@@ -17,84 +18,57 @@ class ExerciseProgressView extends StatefulWidget {
 }
 
 class _ExerciseProgressViewState extends State<ExerciseProgressView> {
-  final ExerciseService _exerciseService = ExerciseService();
-  final WorkoutSetExerciseRecordService _exerciseRecordService =
-      WorkoutSetExerciseRecordService();
-
-  List<Exercise> _exercises = [];
-  Map<int, List<WorkoutSetExerciseRecord>> _exerciseRecords = {};
-  Map<int, ExerciseProgressData> _progressData = {};
-  bool _isLoading = true;
-  String? _error;
   String _searchQuery = '';
 
   @override
   void initState() {
     super.initState();
-    _loadExercises();
+    // Load all records to calculate stats.
+    // Assuming 1000 is enough for now, or implement infinite scroll later if needed for this view specifically.
+    // But since we need to aggregate stats for 'progress', fetching all might be necessary or a dedicated 'stats' endpoint.
+    // For now, using getExerciseRecords with a large limit as per plan.
+    context.read<ExerciseRecordCubit>().getExerciseRecords(limit: 1000);
   }
 
-  Future<void> _loadExercises() async {
-    setState(() {
-      _isLoading = true;
-      _error = null;
-    });
-
-    try {
-      final exercises = await _exerciseService.getExercises();
-      final progressDataMap = <int, ExerciseProgressData>{};
-      final exerciseRecordsMap = <int, List<WorkoutSetExerciseRecord>>{};
-
-      for (final exercise in exercises) {
-        if (exercise.id == null) continue;
-
-        final records =
-            await _exerciseRecordService.getWorkoutSetExerciseRecords(
-          exerciseId: exercise.id,
-        );
-
-        if (records.isNotEmpty) {
-          exerciseRecordsMap[exercise.id!] = records;
-          progressDataMap[exercise.id!] = _calculateProgressData(records);
-        }
-      }
-
-      setState(() {
-        _exercises = exercises;
-        _exerciseRecords = exerciseRecordsMap;
-        _progressData = progressDataMap;
-        _isLoading = false;
-      });
-    } catch (e) {
-      setState(() {
-        _error = e.toString();
-        _isLoading = false;
-      });
-    }
-  }
-
-  ExerciseProgressData _calculateProgressData(
-    List<WorkoutSetExerciseRecord> records,
+  Map<int, List<ExerciseRecordDto>> _groupRecordsByExercise(
+    List<ExerciseRecordDto> records,
   ) {
+    final Map<int, List<ExerciseRecordDto>> grouped = {};
+    for (final record in records) {
+      if (!grouped.containsKey(record.exerciseId)) {
+        grouped[record.exerciseId] = [];
+      }
+      grouped[record.exerciseId]!.add(record);
+    }
+    return grouped;
+  }
+
+  ExerciseProgressData _calculateProgressData(List<ExerciseRecordDto> records) {
     if (records.isEmpty) {
       return ExerciseProgressData.empty();
     }
 
-    final weights = records.map((r) => r.weightGrams / 1000.0).toList();
+    // records are likely ordered by date DESC from the API/Cubit
+    final weights = records.map((r) => r.weight / 1000.0).toList();
     final reps = records.map((r) => r.reps).toList();
-    final volumes =
-        records.map((r) => (r.weightGrams / 1000.0) * r.reps).toList();
+    final volumes = weights.asMap().entries.map((entry) {
+      return entry.value * reps[entry.key];
+    }).toList();
 
     final maxWeight = weights.reduce((a, b) => a > b ? a : b);
     final maxReps = reps.reduce((a, b) => a > b ? a : b);
     final maxVolume = volumes.reduce((a, b) => a > b ? a : b);
-    final avgWeight = weights.reduce((a, b) => a + b) / weights.length;
-    final avgReps = reps.reduce((a, b) => a + b) / reps.length;
-    final totalVolume = volumes.reduce((a, b) => a + b);
+
+    final sumWeight = weights.fold(0.0, (a, b) => a + b);
+    final avgWeight = sumWeight / weights.length;
+
+    final sumReps = reps.fold(0, (a, b) => a + b);
+    final avgReps = sumReps / reps.length;
+
+    final totalVolume = volumes.fold(0.0, (a, b) => a + b);
 
     // Find personal bests
-    final pbWeight =
-        records.reduce((a, b) => a.weightGrams > b.weightGrams ? a : b);
+    final pbWeight = records.reduce((a, b) => a.weight > b.weight ? a : b);
     final pbReps = records.reduce((a, b) => a.reps > b.reps ? a : b);
 
     return ExerciseProgressData(
@@ -111,15 +85,25 @@ class _ExerciseProgressViewState extends State<ExerciseProgressView> {
     );
   }
 
-  List<Exercise> get _filteredExercises {
-    if (_searchQuery.isEmpty) {
-      return _exercises.where((e) => _progressData.containsKey(e.id)).toList();
+  List<ExerciseDto> _getFilteredExercises(
+    Map<int, List<ExerciseRecordDto>> groupedRecords,
+  ) {
+    // Extract unique exercises from records
+    final exercises = <int, ExerciseDto>{};
+    for (final records in groupedRecords.values) {
+      if (records.isNotEmpty && records.first.exercise != null) {
+        exercises[records.first.exerciseId] = records.first.exercise!;
+      }
     }
 
-    return _exercises
-        .where((e) =>
-            _progressData.containsKey(e.id) &&
-            e.name.toLowerCase().contains(_searchQuery.toLowerCase()))
+    final exerciseList = exercises.values.toList();
+
+    if (_searchQuery.isEmpty) {
+      return exerciseList;
+    }
+
+    return exerciseList
+        .where((e) => e.name.toLowerCase().contains(_searchQuery.toLowerCase()))
         .toList();
   }
 
@@ -127,243 +111,237 @@ class _ExerciseProgressViewState extends State<ExerciseProgressView> {
   Widget build(BuildContext context) {
     return ResponsiveScaffold(
       title: 'Exercise Progress',
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _error != null
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.error_outline,
-                          size: 64, color: Colors.grey[400]),
-                      const SizedBox(height: 16),
-                      Text(
-                        'Error loading exercises',
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Colors.grey[600],
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        _error!,
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey[500],
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 16),
-                      ElevatedButton(
-                        onPressed: _loadExercises,
-                        child: const Text('Retry'),
-                      ),
-                    ],
+      body: BlocBuilder<ExerciseRecordCubit, ExerciseRecordState>(
+        builder: (context, state) {
+          if (state.isLoading && state.exerciseRecords.isEmpty) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (state.error != null && state.exerciseRecords.isEmpty) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.error_outline, size: 64, color: Colors.grey[400]),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Error loading exercises',
+                    style: TextStyle(fontSize: 16, color: Colors.grey[600]),
                   ),
-                )
-              : _filteredExercises.isEmpty
-                  ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.fitness_center,
-                              size: 64, color: Colors.grey[400]),
-                          const SizedBox(height: 16),
-                          Text(
-                            _searchQuery.isEmpty
-                                ? 'No Exercise Progress'
-                                : 'No exercises found',
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w500,
-                              color: Colors.grey[600],
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            _searchQuery.isEmpty
-                                ? 'Complete workouts with exercises to see progress here'
-                                : 'Try a different search term',
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.grey[500],
-                            ),
-                          ),
-                        ],
-                      ),
-                    )
-                  : Column(
-                      children: [
-                        // Search Bar
-                        Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: TextField(
-                            decoration: InputDecoration(
-                              hintText: 'Search exercises...',
-                              prefixIcon: const Icon(Icons.search),
-                              suffixIcon: _searchQuery.isNotEmpty
-                                  ? IconButton(
-                                      icon: const Icon(Icons.clear),
-                                      onPressed: () {
-                                        setState(() => _searchQuery = '');
-                                      },
-                                    )
-                                  : null,
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                            onChanged: (value) {
-                              setState(() => _searchQuery = value);
+                  const SizedBox(height: 8),
+                  Text(
+                    state.error!.description,
+                    style: TextStyle(fontSize: 14, color: Colors.grey[500]),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () {
+                      context
+                          .read<ExerciseRecordCubit>()
+                          .getExerciseRecords(limit: 1000);
+                    },
+                    child: const Text('Retry'),
+                  ),
+                ],
+              ),
+            );
+          }
+
+          final groupedRecords = _groupRecordsByExercise(state.exerciseRecords);
+          final filteredExercises = _getFilteredExercises(groupedRecords);
+
+          if (filteredExercises.isEmpty) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.fitness_center, size: 64, color: Colors.grey[400]),
+                  const SizedBox(height: 16),
+                  Text(
+                    _searchQuery.isEmpty
+                        ? 'No Exercise Progress'
+                        : 'No exercises found',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    _searchQuery.isEmpty
+                        ? 'Complete workouts with exercises to see progress here'
+                        : 'Try a different search term',
+                    style: TextStyle(fontSize: 14, color: Colors.grey[500]),
+                  ),
+                ],
+              ),
+            );
+          }
+
+          return Column(
+            children: [
+              // Search Bar
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: TextField(
+                  decoration: InputDecoration(
+                    hintText: 'Search exercises...',
+                    prefixIcon: const Icon(Icons.search),
+                    suffixIcon: _searchQuery.isNotEmpty
+                        ? IconButton(
+                            icon: const Icon(Icons.clear),
+                            onPressed: () {
+                              setState(() => _searchQuery = '');
                             },
-                          ),
-                        ),
-                        // Exercise List
-                        Expanded(
-                          child: RefreshIndicator(
-                            onRefresh: _loadExercises,
-                            child: ListView.builder(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16.0,
-                              ),
-                              itemCount: _filteredExercises.length,
-                              itemBuilder: (context, index) {
-                                final exercise = _filteredExercises[index];
-                                final progress = _progressData[exercise.id];
+                          )
+                        : null,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  onChanged: (value) {
+                    setState(() => _searchQuery = value);
+                  },
+                ),
+              ),
+              // Exercise List
+              Expanded(
+                child: RefreshIndicator(
+                  onRefresh: () async {
+                    await context
+                        .read<ExerciseRecordCubit>()
+                        .getExerciseRecords(limit: 1000);
+                  },
+                  child: ListView.builder(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    itemCount: filteredExercises.length,
+                    itemBuilder: (context, index) {
+                      final exercise = filteredExercises[index];
+                      final records = groupedRecords[exercise.id] ?? [];
+                      final progress = _calculateProgressData(records);
 
-                                if (progress == null) {
-                                  return const SizedBox.shrink();
-                                }
-
-                                return Card(
-                                  margin: const EdgeInsets.only(bottom: 12),
-                                  child: InkWell(
-                                    onTap: () {
-                                      context.push(
-                                        '/exercises/${exercise.id}/history',
-                                      );
-                                    },
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(16.0),
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Row(
-                                            children: [
-                                              Expanded(
-                                                child: Text(
-                                                  exercise.name,
-                                                  style: const TextStyle(
-                                                    fontSize: 18,
-                                                    fontWeight: FontWeight.bold,
-                                                  ),
-                                                ),
-                                              ),
-                                              IconButton(
-                                                icon: const Icon(
-                                                  Icons.arrow_forward_ios,
-                                                  size: 16,
-                                                ),
-                                                onPressed: () {
-                                                  context.push(
-                                                    '/exercises/${exercise.id}/history',
-                                                  );
-                                                },
-                                              ),
-                                            ],
-                                          ),
-                                          const SizedBox(height: 12),
-                                          // Progress Stats
-                                          Row(
-                                            children: [
-                                              Expanded(
-                                                child: _buildProgressStat(
-                                                  'Sessions',
-                                                  '${progress.totalSessions}',
-                                                  Icons.event,
-                                                  Colors.blue,
-                                                ),
-                                              ),
-                                              Expanded(
-                                                child: _buildProgressStat(
-                                                  'Max Weight',
-                                                  '${progress.maxWeight.toStringAsFixed(1)} kg',
-                                                  Icons.fitness_center,
-                                                  Colors.orange,
-                                                ),
-                                              ),
-                                              Expanded(
-                                                child: _buildProgressStat(
-                                                  'Max Reps',
-                                                  '${progress.maxReps}',
-                                                  Icons.repeat,
-                                                  Colors.green,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                          const SizedBox(height: 12),
-                                          // Personal Bests
-                                          Container(
-                                            padding: const EdgeInsets.all(12),
-                                            decoration: BoxDecoration(
-                                              color:
-                                                  Colors.amber.withValues(alpha: 0.1),
-                                              borderRadius:
-                                                  BorderRadius.circular(8),
-                                              border: Border.all(
-                                                color: Colors.amber
-                                                    .withValues(alpha: 0.3),
-                                              ),
-                                            ),
-                                            child: Row(
-                                              children: [
-                                                Icon(Icons.emoji_events,
-                                                    color: Colors.amber[700],
-                                                    size: 20),
-                                                const SizedBox(width: 8),
-                                                Expanded(
-                                                  child: Column(
-                                                    crossAxisAlignment:
-                                                        CrossAxisAlignment
-                                                            .start,
-                                                    children: [
-                                                      Text(
-                                                        'Personal Best',
-                                                        style: TextStyle(
-                                                          fontSize: 12,
-                                                          color:
-                                                              Colors.grey[700],
-                                                        ),
-                                                      ),
-                                                      Text(
-                                                        '${(progress.pbWeight.weightGrams / 1000.0).toStringAsFixed(1)} kg × ${progress.pbReps.reps} reps',
-                                                        style: TextStyle(
-                                                          fontSize: 14,
-                                                          fontWeight:
-                                                              FontWeight.bold,
-                                                          color:
-                                                              Colors.amber[900],
-                                                        ),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                        ],
+                      return Card(
+                        margin: const EdgeInsets.only(bottom: 12),
+                        child: InkWell(
+                          onTap: () {
+                            context.push('/exercises/${exercise.id}/history');
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        exercise.name,
+                                        style: const TextStyle(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.bold,
+                                        ),
                                       ),
                                     ),
+                                    IconButton(
+                                      icon: const Icon(
+                                        Icons.arrow_forward_ios,
+                                        size: 16,
+                                      ),
+                                      onPressed: () {
+                                        context.push(
+                                            '/exercises/${exercise.id}/history');
+                                      },
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 12),
+                                // Progress Stats
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: _buildProgressStat(
+                                        'Sessions',
+                                        '${progress.totalSessions}',
+                                        Icons.event,
+                                        Colors.blue,
+                                      ),
+                                    ),
+                                    Expanded(
+                                      child: _buildProgressStat(
+                                        'Max Weight',
+                                        '${progress.maxWeight.toStringAsFixed(1)} kg',
+                                        Icons.fitness_center,
+                                        Colors.orange,
+                                      ),
+                                    ),
+                                    Expanded(
+                                      child: _buildProgressStat(
+                                        'Max Reps',
+                                        '${progress.maxReps}',
+                                        Icons.repeat,
+                                        Colors.green,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 12),
+                                // Personal Bests
+                                Container(
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    color: Colors.amber.withValues(alpha: 0.1),
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(
+                                      color:
+                                          Colors.amber.withValues(alpha: 0.3),
+                                    ),
                                   ),
-                                );
-                              },
+                                  child: Row(
+                                    children: [
+                                      Icon(Icons.emoji_events,
+                                          color: Colors.amber[700], size: 20),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              'Personal Best',
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                color: Colors.grey[700],
+                                              ),
+                                            ),
+                                            Text(
+                                              '${(progress.pbWeight.weight / 1000.0).toStringAsFixed(1)} kg × ${progress.pbReps.reps} reps',
+                                              style: TextStyle(
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.bold,
+                                                color: Colors.amber[900],
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ),
-                      ],
-                    ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
+      ),
     );
   }
 
@@ -387,10 +365,7 @@ class _ExerciseProgressViewState extends State<ExerciseProgressView> {
         ),
         Text(
           label,
-          style: TextStyle(
-            fontSize: 11,
-            color: Colors.grey[600],
-          ),
+          style: TextStyle(fontSize: 11, color: Colors.grey[600]),
         ),
       ],
     );
@@ -405,9 +380,9 @@ class ExerciseProgressData {
   final double avgWeight;
   final double avgReps;
   final double totalVolume;
-  final WorkoutSetExerciseRecord pbWeight;
-  final WorkoutSetExerciseRecord pbReps;
-  final List<WorkoutSetExerciseRecord> recentRecords;
+  final ExerciseRecordDto pbWeight;
+  final ExerciseRecordDto pbReps;
+  final List<ExerciseRecordDto> recentRecords;
 
   ExerciseProgressData({
     required this.totalSessions,
@@ -423,14 +398,14 @@ class ExerciseProgressData {
   });
 
   factory ExerciseProgressData.empty() {
-    final emptyRecord = WorkoutSetExerciseRecord(
-      workoutSetExerciseId: 0,
-      workoutSetProgressId: 0,
+    // Placeholder empty record
+    final emptyRecord = const ExerciseRecordDto(
+      id: 0,
       exerciseId: 0,
+      weight: 0,
       reps: 0,
-      weightGrams: 0,
-      createdAt: 0,
-      updatedAt: 0,
+      maxStrength: 0,
+      recordDate: 0,
     );
 
     return ExerciseProgressData(
