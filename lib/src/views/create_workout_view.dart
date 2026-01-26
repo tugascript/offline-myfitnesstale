@@ -3,12 +3,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../cubits/exercise_cubit.dart';
-import '../cubits/muscle_group_cubit.dart';
 import '../cubits/workout_cubit.dart';
-import '../cubits/workout_set_cubit.dart';
 import '../models/enums.dart';
 import '../services/exercise_service.dart';
-import '../services/workout_set_service.dart';
+import '../services/workout_service.dart';
 import '../widgets/exercise/exercise_selection_widget.dart';
 import '../widgets/layout/responsive_scaffold.dart';
 
@@ -45,10 +43,7 @@ class _CreateWorkoutViewState extends State<CreateWorkoutView> {
 
   Future<void> _loadWorkoutForEditing() async {
     final workoutCubit = context.read<WorkoutCubit>();
-    final setCubit = context.read<WorkoutSetCubit>();
-
     await workoutCubit.getWorkout(widget.workoutId!);
-    await setCubit.getWorkoutSets(widget.workoutId!);
 
     if (mounted) {
       final workout = workoutCubit.state.selectedWorkout;
@@ -56,27 +51,29 @@ class _CreateWorkoutViewState extends State<CreateWorkoutView> {
         _nameController.text = workout.name;
         _descriptionController.text = workout.description ?? '';
         _selectedDifficulty = workout.difficulty;
-      }
 
-      final sets = setCubit.state.workoutSets;
-      _workoutSets.clear();
-      for (final set in sets) {
-        _workoutSets.add(WorkoutSetData(
-          minSets: set.workoutSet.minSets,
-          maxSets: set.workoutSet.maxSets,
-          recommendedRestSecs: set.workoutSet.recommendedRestSecs,
-          maxRestSecs: set.workoutSet.maxRestSecs,
-          exercises: set.exercises
-              .map((e) => ExerciseData(
-                    exerciseId: e.exercise.id!,
-                    exerciseName: e.exercise.name,
-                    minReps: e.workoutSetExercise.minReps,
-                    maxReps: e.workoutSetExercise.maxReps,
-                  ))
-              .toList(),
-        ));
+        _workoutSets.clear();
+        if (workout.sets != null) {
+          for (final set in workout.sets!) {
+            _workoutSets.add(WorkoutSetData(
+              minSets: set.minSets,
+              maxSets: set.maxSets,
+              recommendedRestSecs: set.recommendedRestSecs,
+              maxRestSecs: set.maxRestSecs,
+              exercises: set.exercises
+                      ?.map((e) => ExerciseData(
+                            exerciseId: e.exerciseId,
+                            exerciseName: e.exercise?.name ?? 'Unknown',
+                            minReps: e.minReps,
+                            maxReps: e.maxReps,
+                          ))
+                      .toList() ??
+                  [],
+            ));
+          }
+        }
+        setState(() {});
       }
-      setState(() {});
     }
   }
 
@@ -166,13 +163,12 @@ class _CreateWorkoutViewState extends State<CreateWorkoutView> {
 
     try {
       final workoutCubit = context.read<WorkoutCubit>();
-      final setCubit = context.read<WorkoutSetCubit>();
 
       int workoutId;
       if (widget.workoutId != null) {
         // Update existing workout
         await workoutCubit.updateWorkout(
-          widget.workoutId!,
+          id: widget.workoutId!,
           name: _nameController.text.trim(),
           difficulty: _selectedDifficulty,
           description: _descriptionController.text.trim().isEmpty
@@ -182,9 +178,15 @@ class _CreateWorkoutViewState extends State<CreateWorkoutView> {
         workoutId = widget.workoutId!;
 
         // Delete existing sets and recreate them
-        final existingSets = setCubit.state.workoutSets;
+        // Note: Ideally we would diff the sets, but for MVP re-creating is safer/easier
+        // if we assume full overwrite of structure
+        // However, we need IDs of sets to delete them.
+        final existingSets = workoutCubit.state.selectedWorkout?.sets ?? [];
         for (final set in existingSets) {
-          await setCubit.deleteWorkoutSet(set.workoutSet.id!);
+          await workoutCubit.deleteWorkoutSet(
+            workoutSetId: set.id,
+            workoutId: workoutId,
+          );
         }
       } else {
         // Create new workout
@@ -195,7 +197,8 @@ class _CreateWorkoutViewState extends State<CreateWorkoutView> {
               ? null
               : _descriptionController.text.trim(),
         );
-        workoutId = workoutCubit.state.selectedWorkout?.id ?? 0;
+        workoutId = workoutCubit
+            .state.workouts.first.id; // Assuming newly created is first
       }
 
       // Create all sets
@@ -208,11 +211,12 @@ class _CreateWorkoutViewState extends State<CreateWorkoutView> {
           );
         }).toList();
 
-        await setCubit.createWorkoutSet(
+        await workoutCubit.createWorkoutSet(
           workoutId: workoutId,
+          setType: WorkoutSetType.standard, // Default for now
           minSets: setData.minSets,
           recommendedRestSecs: setData.recommendedRestSecs,
-          exerciseInputs: exerciseInputs,
+          exercises: exerciseInputs,
           maxSets: setData.maxSets,
           maxRestSecs: setData.maxRestSecs,
         );
@@ -252,17 +256,11 @@ class _CreateWorkoutViewState extends State<CreateWorkoutView> {
       title: widget.workoutId != null ? 'Edit Workout' : 'Create Workout',
       body: MultiBlocProvider(
         providers: [
-          BlocProvider<WorkoutCubit>(
-            create: (_) => WorkoutCubit(),
-          ),
-          BlocProvider<WorkoutSetCubit>(
-            create: (_) => WorkoutSetCubit(),
+          BlocProvider.value(
+            value: context.read<WorkoutCubit>(),
           ),
           BlocProvider<ExerciseCubit>(
             create: (_) => ExerciseCubit(),
-          ),
-          BlocProvider<MuscleGroupCubit>(
-            create: (_) => MuscleGroupCubit(),
           ),
         ],
         child: Form(
@@ -629,18 +627,12 @@ class _CreateWorkoutViewState extends State<CreateWorkoutView> {
                 ),
               ],
             ),
-            body: MultiBlocProvider(
-              providers: [
-                BlocProvider.value(value: context.read<ExerciseCubit>()),
-                BlocProvider.value(value: context.read<MuscleGroupCubit>()),
-              ],
-              child: ExerciseSelectionWidget(
-                initialSelections: currentExerciseIds,
-                allowMultiSelect: true,
-                onSelectionChanged: (ids) {
-                  selectedIds = ids;
-                },
-              ),
+            body: ExerciseSelectionWidget(
+              initialSelections: currentExerciseIds,
+              allowMultiSelect: true,
+              onSelectionChanged: (ids) {
+                selectedIds = ids;
+              },
             ),
           ),
         ),

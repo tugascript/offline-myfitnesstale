@@ -3,8 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../cubits/profile_cubit.dart';
 import '../cubits/states/profile_state.dart';
-import '../cubits/weight_goal_cubit.dart';
-import '../cubits/states/weight_goal_state.dart';
+import '../cubits/states/weight_record_state.dart';
+import '../cubits/weight_record_cubit.dart';
 import '../models/enums.dart';
 import '../models/weight_goal_model.dart';
 import '../widgets/layout/responsive_scaffold.dart';
@@ -26,7 +26,6 @@ class _WeightGoalViewState extends State<WeightGoalView> {
   final _formKey = GlobalKey<FormState>();
   double _targetWeight = 0.0;
   DateTime _startDate = DateTime.now();
-  DateTime _endDate = DateTime.now().add(const Duration(days: 30));
   ProgressStatus _selectedStatus = ProgressStatus.inProgress;
   bool _isLoading = false;
 
@@ -43,7 +42,6 @@ class _WeightGoalViewState extends State<WeightGoalView> {
     setState(() {
       _targetWeight = goal.targetWeight.toDouble();
       _startDate = DateTime.fromMillisecondsSinceEpoch(goal.startDate * 1000);
-      _endDate = DateTime.fromMillisecondsSinceEpoch(goal.endDate * 1000);
       _selectedStatus = goal.status;
     });
   }
@@ -65,7 +63,7 @@ class _WeightGoalViewState extends State<WeightGoalView> {
           }
         },
         builder: (context, profileState) {
-          return BlocConsumer<WeightGoalCubit, WeightGoalState>(
+          return BlocConsumer<WeightRecordCubit, WeightRecordState>(
             listener: (context, goalState) {
               if (goalState.error != null) {
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -115,11 +113,6 @@ class _WeightGoalViewState extends State<WeightGoalView> {
                         },
                         isLoading: _isLoading,
                       ),
-
-                      const SizedBox(height: 24),
-
-                      // Timeline Section
-                      _buildTimelineSection(),
 
                       const SizedBox(height: 24),
 
@@ -255,142 +248,6 @@ class _WeightGoalViewState extends State<WeightGoalView> {
     );
   }
 
-  Widget _buildTimelineSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Timeline',
-          style: Theme.of(context).textTheme.titleMedium,
-        ),
-        const SizedBox(height: 16),
-        Row(
-          children: [
-            Expanded(
-              child: _buildDatePicker(
-                'Start Date',
-                _startDate,
-                (date) => setState(() => _startDate = date),
-                firstDate: DateTime.now().subtract(const Duration(days: 365)),
-                lastDate: DateTime.now().add(const Duration(days: 365)),
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: _buildDatePicker(
-                'Target Date',
-                _endDate,
-                (date) => setState(() => _endDate = date),
-                firstDate: _startDate,
-                lastDate:
-                    DateTime.now().add(const Duration(days: 1095)), // 3 years
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-        _buildTimelineInfo(),
-      ],
-    );
-  }
-
-  Widget _buildDatePicker(
-    String label,
-    DateTime selectedDate,
-    Function(DateTime) onDateChanged, {
-    required DateTime firstDate,
-    required DateTime lastDate,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.w500,
-              ),
-        ),
-        const SizedBox(height: 8),
-        InkWell(
-          onTap: _isLoading
-              ? null
-              : () =>
-                  _selectDate(selectedDate, onDateChanged, firstDate, lastDate),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey),
-              borderRadius: BorderRadius.circular(4),
-            ),
-            child: Row(
-              children: [
-                const Icon(Icons.calendar_today, size: 20),
-                const SizedBox(width: 8),
-                Text(
-                  '${selectedDate.day}/${selectedDate.month}/${selectedDate.year}',
-                  style: Theme.of(context).textTheme.bodyMedium,
-                ),
-                const Spacer(),
-                const Icon(Icons.arrow_drop_down, size: 20),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildTimelineInfo() {
-    final days = _endDate.difference(_startDate).inDays;
-    final weeks = (days / 7).ceil();
-
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Timeline Summary',
-              style: Theme.of(context).textTheme.titleSmall,
-            ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Expanded(
-                  child: _buildTimelineStat('Duration', '$days days'),
-                ),
-                Expanded(
-                  child: _buildTimelineStat('Weeks', '$weeks weeks'),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTimelineStat(String label, String value) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Colors.grey[600],
-              ),
-        ),
-        Text(
-          value,
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-        ),
-      ],
-    );
-  }
-
   Widget _buildStatusSection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -427,24 +284,6 @@ class _WeightGoalViewState extends State<WeightGoalView> {
     );
   }
 
-  Future<void> _selectDate(
-    DateTime currentDate,
-    Function(DateTime) onDateChanged,
-    DateTime firstDate,
-    DateTime lastDate,
-  ) async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: currentDate,
-      firstDate: firstDate,
-      lastDate: lastDate,
-    );
-
-    if (picked != null && picked != currentDate) {
-      onDateChanged(picked);
-    }
-  }
-
   void _submitGoal() {
     if (_formKey.currentState!.validate()) {
       if (_targetWeight <= 0) {
@@ -457,37 +296,26 @@ class _WeightGoalViewState extends State<WeightGoalView> {
         return;
       }
 
-      if (_endDate.isBefore(_startDate)) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Target date must be after start date'),
-            backgroundColor: Colors.red,
-          ),
-        );
-        return;
-      }
-
       setState(() {
         _isLoading = true;
       });
 
+      final recordCubit = context.read<WeightRecordCubit>();
       if (widget.goalToEdit != null) {
         // Update existing goal
-        context.read<WeightGoalCubit>().updateWeightGoal(
-              id: widget.goalToEdit!.id!,
-              targetWeight: _targetWeight.round(),
-              startDate: _startDate,
-              endDate: _endDate,
-              status: _selectedStatus,
-            );
+        recordCubit.updateWeightGoal(
+          id: widget.goalToEdit!.id!,
+          targetWeight: _targetWeight.round(),
+          startDate: _startDate,
+          status: _selectedStatus,
+        );
       } else {
         // Create new goal
-        context.read<WeightGoalCubit>().createWeightGoal(
-              targetWeight: _targetWeight.round(),
-              startDate: _startDate,
-              endDate: _endDate,
-              status: _selectedStatus,
-            );
+        recordCubit.createWeightGoal(
+          targetWeight: _targetWeight.round(),
+          startDate: _startDate,
+          status: _selectedStatus,
+        );
       }
     }
   }
@@ -511,7 +339,7 @@ class _WeightGoalViewState extends State<WeightGoalView> {
                 Navigator.of(context).pop();
                 if (widget.goalToEdit?.id != null) {
                   context
-                      .read<WeightGoalCubit>()
+                      .read<WeightRecordCubit>()
                       .deleteWeightGoal(widget.goalToEdit!.id!);
                 }
               },

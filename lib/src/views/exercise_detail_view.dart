@@ -3,9 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../cubits/exercise_cubit.dart';
-import '../cubits/muscle_group_cubit.dart';
 import '../cubits/states/exercise_state.dart';
-import '../cubits/states/muscle_group_state.dart';
+
 import '../models/enums.dart';
 import '../models/utilities.dart';
 import '../widgets/layout/responsive_scaffold.dart';
@@ -30,11 +29,14 @@ class _ExerciseDetailViewState extends State<ExerciseDetailView> {
   void initState() {
     super.initState();
     context.read<ExerciseCubit>().getExercise(widget.exerciseId);
-    context.read<MuscleGroupCubit>().getMuscleGroups();
   }
 
+  // TODO: fix me
   void _toggleFavorite() {
-    context.read<ExerciseCubit>().toggleFavorite(widget.exerciseId);
+    context.read<ExerciseCubit>().updateExercise(
+          id: widget.exerciseId,
+          isFavorite: true,
+        );
   }
 
   void _deleteExercise() {
@@ -94,284 +96,276 @@ class _ExerciseDetailViewState extends State<ExerciseDetailView> {
               ),
             );
           }
+
+          // Load related exercises when exercise is loaded
+          if (state.selectedExercise != null &&
+              state.relatedExercises.isEmpty) {
+            // We check isEmpty to avoid infinite loop if it's already loaded or loading.
+            // However, since we clear it on getExercise, it should be empty initially.
+            // To be safe against potential loops if fetch fails and remains empty,
+            // maybe check if we just loaded the exercise?
+            // But relying on empty check is standard for "load once".
+            context.read<ExerciseCubit>().getRelatedExercises(
+                  muscleGroup: state.selectedExercise!.muscleGroup,
+                );
+          }
         },
         builder: (context, exerciseState) {
-          return BlocBuilder<MuscleGroupCubit, MuscleGroupState>(
-            builder: (context, muscleGroupState) {
-              if (exerciseState.isLoading &&
-                  exerciseState.selectedExercise == null) {
-                return const Center(child: CircularProgressIndicator());
-              }
+          if (exerciseState.isLoading &&
+              exerciseState.selectedExercise == null) {
+            return const Center(child: CircularProgressIndicator());
+          }
 
-              final exercise = exerciseState.selectedExercise;
-              if (exercise == null) {
-                return const Center(
-                  child: Text('Exercise not found'),
-                );
-              }
+          final exercise = exerciseState.selectedExercise;
+          if (exercise == null) {
+            return const Center(
+              child: Text('Exercise not found'),
+            );
+          }
 
-              final muscleGroupName = _getMuscleGroupName(exercise.muscleGroup);
+          final muscleGroupName = _getMuscleGroupName(exercise.muscleGroup);
 
-              // Show all muscles (primary and secondary)
-              final allMuscles = <Muscle>{
-                ...exercise.muscles.primaryMuscles,
-                ...exercise.muscles.secondaryMuscles,
-              };
-              final equipments = exerciseState.selectedExerciseEquipments ?? [];
+          // Show all muscles (primary and secondary)
+          final allMuscles = <Muscle>{
+            ...exercise.muscles.primaryMuscles,
+            ...exercise.muscles.secondaryMuscles,
+          };
 
-              return SingleChildScrollView(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+          final equipments = exercise.equipments ?? [];
+
+          return SingleChildScrollView(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Exercise Name and Favorite
+                Row(
                   children: [
-                    // Exercise Name and Favorite
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            exercise.name,
-                            style: const TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                        IconButton(
-                          icon: Icon(
-                            exercise.isFavorite
-                                ? Icons.favorite
-                                : Icons.favorite_border,
-                            color: exercise.isFavorite ? Colors.red : null,
-                          ),
-                          onPressed: _toggleFavorite,
-                          tooltip: exercise.isFavorite
-                              ? 'Remove from favorites'
-                              : 'Add to favorites',
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    // Muscle Group and Difficulty
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: [
-                        Chip(
-                          label: Text(muscleGroupName),
-                          avatar: const Icon(Icons.fitness_center, size: 18),
-                        ),
-                        if (exercise.difficulty != null)
-                          Chip(
-                            label: Text(_difficultyLabel(
-                                Difficulty.fromValue(exercise.difficulty!))),
-                            avatar: Icon(
-                              Icons.trending_up,
-                              size: 18,
-                              color: _difficultyColor(
-                                  Difficulty.fromValue(exercise.difficulty!)),
-                            ),
-                            backgroundColor: _difficultyColor(
-                                    Difficulty.fromValue(exercise.difficulty!))
-                                .withValues(alpha: 0.2),
-                          ),
-                      ],
-                    ),
-                    const SizedBox(height: 24),
-                    // Description
-                    if (exercise.description.isNotEmpty) ...[
-                      const Text(
-                        'Description',
-                        style: TextStyle(
-                          fontSize: 18,
+                    Expanded(
+                      child: Text(
+                        exercise.name,
+                        style: const TextStyle(
+                          fontSize: 24,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      const SizedBox(height: 8),
-                      Text(
-                        exercise.description,
-                        style: const TextStyle(fontSize: 16),
-                      ),
-                      const SizedBox(height: 24),
-                    ],
-                    // Muscles Targeted
-                    if (allMuscles.isNotEmpty) ...[
-                      const Text(
-                        'Muscles Targeted',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: allMuscles.map((muscle) {
-                          return Chip(
-                            label: Text(
-                                EnumDisplayNames.getMuscleDisplayName(muscle)),
-                            avatar:
-                                const Icon(Icons.accessibility_new, size: 18),
-                          );
-                        }).toList(),
-                      ),
-                      const SizedBox(height: 24),
-                    ],
-                    // Video Placeholder
-                    if (exercise.video.uri.isNotEmpty) ...[
-                      const Text(
-                        'Video',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Container(
-                        width: double.infinity,
-                        height: 200,
-                        decoration: BoxDecoration(
-                          color: Colors.grey[300],
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.play_circle_outline,
-                              size: 64,
-                              color: Colors.grey[600],
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'Video: ${exercise.video.platform.value}',
-                              style: TextStyle(
-                                color: Colors.grey[600],
-                                fontSize: 14,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              exercise.video.uri,
-                              style: TextStyle(
-                                color: Colors.grey[600],
-                                fontSize: 12,
-                              ),
-                              textAlign: TextAlign.center,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                    ],
-                    // Equipment
-                    if (equipments.isNotEmpty) ...[
-                      const Text(
-                        'Equipment',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: equipments.map((equipment) {
-                          return Chip(
-                            label: Text(equipment.name),
-                            avatar: const Icon(Icons.build, size: 18),
-                          );
-                        }).toList(),
-                      ),
-                      const SizedBox(height: 24),
-                    ],
-                    // Action Buttons
-                    Row(
-                      children: [
-                        Expanded(
-                          child: OutlinedButton.icon(
-                            icon: const Icon(Icons.edit),
-                            label: const Text('Edit'),
-                            onPressed: () {
-                              context.push('/exercises/${exercise.id}/edit');
-                            },
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: OutlinedButton.icon(
-                            icon: const Icon(Icons.delete),
-                            label: const Text('Delete'),
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: Colors.red,
-                            ),
-                            onPressed: _deleteExercise,
-                          ),
-                        ),
-                      ],
                     ),
-                    const SizedBox(height: 24),
-                    // Related Exercises (same muscle group)
-                    const Text(
-                      'Related Exercises',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
+                    IconButton(
+                      icon: Icon(
+                        exercise.isFavorite
+                            ? Icons.favorite
+                            : Icons.favorite_border,
+                        color: exercise.isFavorite ? Colors.red : null,
                       ),
-                    ),
-                    const SizedBox(height: 8),
-                    BlocBuilder<ExerciseCubit, ExerciseState>(
-                      builder: (context, state) {
-                        // Load related exercises
-                        if (state.exercises.isEmpty &&
-                            !state.isLoading &&
-                            state.selectedExercise != null) {
-                          WidgetsBinding.instance.addPostFrameCallback((_) {
-                            context.read<ExerciseCubit>().getExercises(
-                                  muscleGroup: exercise.muscleGroup,
-                                  limit: 5,
-                                  offset: 0,
-                                );
-                          });
-                        }
-
-                        final relatedExercises = state.exercises
-                            .where((e) => e.id != exercise.id)
-                            .take(5)
-                            .toList();
-
-                        if (relatedExercises.isEmpty) {
-                          return const Text(
-                            'No related exercises found',
-                            style: TextStyle(color: Colors.grey),
-                          );
-                        }
-
-                        return Column(
-                          children: relatedExercises.map((relatedExercise) {
-                            return ListTile(
-                              leading: const Icon(Icons.fitness_center),
-                              title: Text(relatedExercise.name),
-                              trailing: relatedExercise.isFavorite
-                                  ? const Icon(Icons.favorite,
-                                      color: Colors.red)
-                                  : null,
-                              onTap: () {
-                                context
-                                    .push('/exercises/${relatedExercise.id}');
-                              },
-                            );
-                          }).toList(),
-                        );
-                      },
+                      onPressed: _toggleFavorite,
+                      tooltip: exercise.isFavorite
+                          ? 'Remove from favorites'
+                          : 'Add to favorites',
                     ),
                   ],
                 ),
-              );
-            },
+                const SizedBox(height: 16),
+                // Muscle Group and Difficulty
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    Chip(
+                      label: Text(muscleGroupName),
+                      avatar: const Icon(Icons.fitness_center, size: 18),
+                    ),
+                    if (exercise.difficulty != null)
+                      Chip(
+                        label: Text(_difficultyLabel(
+                            Difficulty.fromValue(exercise.difficulty!))),
+                        avatar: Icon(
+                          Icons.trending_up,
+                          size: 18,
+                          color: _difficultyColor(
+                              Difficulty.fromValue(exercise.difficulty!)),
+                        ),
+                        backgroundColor: _difficultyColor(
+                                Difficulty.fromValue(exercise.difficulty!))
+                            .withValues(alpha: 0.2),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+                // Description
+                if (exercise.description.isNotEmpty) ...[
+                  const Text(
+                    'Description',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    exercise.description,
+                    style: const TextStyle(fontSize: 16),
+                  ),
+                  const SizedBox(height: 24),
+                ],
+                // Muscles Targeted
+                if (allMuscles.isNotEmpty) ...[
+                  const Text(
+                    'Muscles Targeted',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: allMuscles.map((muscle) {
+                      return Chip(
+                        label:
+                            Text(EnumDisplayNames.getMuscleDisplayName(muscle)),
+                        avatar: const Icon(Icons.accessibility_new, size: 18),
+                      );
+                    }).toList(),
+                  ),
+                  const SizedBox(height: 24),
+                ],
+                // Video Placeholder
+                if (exercise.video != null &&
+                    exercise.video!.uri.isNotEmpty) ...[
+                  const Text(
+                    'Video',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Container(
+                    width: double.infinity,
+                    height: 200,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[300],
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.play_circle_outline,
+                          size: 64,
+                          color: Colors.grey[600],
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Video: ${exercise.video!.platform.value}',
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 14,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          exercise.video!.uri,
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 12,
+                          ),
+                          textAlign: TextAlign.center,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                ],
+                // Equipment
+                if (equipments.isNotEmpty) ...[
+                  const Text(
+                    'Equipment',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: equipments.map((equipment) {
+                      return Chip(
+                        label: Text(equipment.name),
+                        avatar: const Icon(Icons.build, size: 18),
+                      );
+                    }).toList(),
+                  ),
+                  const SizedBox(height: 24),
+                ],
+                // Action Buttons
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        icon: const Icon(Icons.edit),
+                        label: const Text('Edit'),
+                        onPressed: () {
+                          context.push('/exercises/${exercise.id}/edit');
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        icon: const Icon(Icons.delete),
+                        label: const Text('Delete'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.red,
+                        ),
+                        onPressed: _deleteExercise,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+                // Related Exercises (same muscle group)
+                const Text(
+                  'Related Exercises',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                if (exerciseState.relatedExercises.isEmpty)
+                  const Text(
+                    'No related exercises found',
+                    style: TextStyle(color: Colors.grey),
+                  )
+                else
+                  Column(
+                    children: exerciseState.relatedExercises
+                        .where((e) => e.id != exercise.id)
+                        .take(5)
+                        .map((relatedExercise) {
+                      return ListTile(
+                        leading: const Icon(Icons.fitness_center),
+                        title: Text(relatedExercise.name),
+                        trailing: relatedExercise.isFavorite
+                            ? const Icon(Icons.favorite, color: Colors.red)
+                            : null,
+                        onTap: () {
+                          // If we push to same route, we might need to update exerciseId.
+                          // Since route is /exercises/:id, push will trigger new page?
+                          // Or standard behavior.
+                          // Better to use push (stack)
+                          context.push('/exercises/${relatedExercise.id}');
+                        },
+                      );
+                    }).toList(),
+                  ),
+              ],
+            ),
           );
         },
       ),

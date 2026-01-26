@@ -144,8 +144,120 @@ class WorkoutService {
           description: 'Workout not found',
         ));
       }
-      _logger.info('Got workout with id $id');
-      return ok(WorkoutDto.fromModel(workout));
+
+      final List<WorkoutSet> sets = await _setRepository.selectMany(
+        where: '${WorkoutSetColumns.workoutId.value} = ?',
+        whereArgs: [id],
+        orderBy: '${WorkoutSetColumns.position.value} ASC',
+      );
+      if (sets.isEmpty) {
+        _logger.info('Got workout with id $id');
+        return ok(WorkoutDto.fromModel(workout));
+      }
+
+      final List<WorkoutSetExercise> setExercises =
+          await _setExerciseRepository.selectMany(
+        where: '${WorkoutSetExerciseColumns.workoutId.value} = ?',
+        whereArgs: [id],
+        orderBy:
+            '${WorkoutSetExerciseColumns.workoutSetId.value} ASC, ${WorkoutSetExerciseColumns.position.value} ASC',
+      );
+      if (setExercises.isEmpty) {
+        _logger.info('Got workout with id $id');
+        return ok(WorkoutDto.fromModel(
+          workout,
+          sets: sets.map((s) => WorkoutSetDto.fromModel(s)).toList(),
+        ));
+      }
+
+      final List<WorkoutSetExerciseOption> setExerciseOptions =
+          await _setExerciseOptionRepository.selectMany(
+        where: '${WorkoutSetExerciseOptionColumns.workoutId.value} = ?',
+        whereArgs: [id],
+        orderBy:
+            '${WorkoutSetExerciseOptionColumns.workoutSetExerciseId.value} ASC, ${WorkoutSetExerciseOptionColumns.position.value} ASC',
+      );
+      final Set<int> exerciseIds = {
+        ...setExercises.map((s) => s.exerciseId),
+        ...setExerciseOptions.map((s) => s.exerciseId),
+      };
+      final List<Exercise> exercises = await _exerciseRepository.selectMany(
+        where:
+            '${ExerciseColumns.id.value} IN (${List.filled(exerciseIds.length, '?').join(", ")})',
+        whereArgs: exerciseIds.toList(),
+      );
+      if (exerciseIds.length != exercises.length) {
+        _logger.severe('Failed to get exercises for workout with id $id');
+        return err(const ServiceError(
+          type: SingleErrorTypes.operationFailure,
+          description: 'Failed to get exercises for workout',
+        ));
+      }
+      final Map<int, ExerciseDto> exercisesMap = exercises.fold({}, (map, e) {
+        map[e.id!] = ExerciseDto.fromModel(e);
+        return map;
+      });
+
+      final Map<int, List<WorkoutSetExerciseOptionDto>> optionsMap =
+          setExerciseOptions.isEmpty
+              ? {}
+              : setExerciseOptions.fold(
+                  {},
+                  (map, s) => map
+                    ..update(
+                      s.workoutSetExerciseId,
+                      (value) => value
+                        ..add(
+                          WorkoutSetExerciseOptionDto.fromModel(
+                            s,
+                            exercise: exercisesMap[s.exerciseId],
+                          ),
+                        ),
+                      ifAbsent: () => [
+                        WorkoutSetExerciseOptionDto.fromModel(
+                          s,
+                          exercise: exercisesMap[s.exerciseId],
+                        ),
+                      ],
+                    ),
+                );
+
+      final Map<int, List<WorkoutSetExerciseDto>> setExercisesMap =
+          setExercises.fold(
+        {},
+        (map, s) => map
+          ..update(
+            s.workoutSetId,
+            (value) => value
+              ..add(
+                WorkoutSetExerciseDto.fromModel(
+                  s,
+                  exercise: exercisesMap[s.exerciseId],
+                  options: optionsMap[s.id],
+                ),
+              ),
+            ifAbsent: () => [
+              WorkoutSetExerciseDto.fromModel(
+                s,
+                exercise: exercisesMap[s.exerciseId],
+                options: optionsMap[s.id],
+              ),
+            ],
+          ),
+      );
+      return ok(
+        WorkoutDto.fromModel(
+          workout,
+          sets: sets
+              .map(
+                (s) => WorkoutSetDto.fromModel(
+                  s,
+                  exercises: setExercisesMap[s.id!],
+                ),
+              )
+              .toList(),
+        ),
+      );
     } catch (e) {
       _logger.severe('Failed to get workout with id $id', e);
       return err(const ServiceError(

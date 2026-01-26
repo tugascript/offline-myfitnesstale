@@ -1,6 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:logging/logging.dart';
 
+import '../models/common.dart';
 import '../models/enums.dart';
 import '../services/common/errors.dart';
 import '../services/workout_plan_service.dart';
@@ -98,6 +99,129 @@ class WorkoutPlanCubit extends Cubit<WorkoutPlanState> {
     _logger.info('Workout plan $id retrieved successfully');
     emit(state.copyWith(
       selectedWorkoutPlan: result.value,
+      isLoading: false,
+    ));
+  }
+
+  Future<void> createWorkoutPlan({
+    required String name,
+    required int totalWeeks,
+    required Difficulty difficulty,
+    String? description,
+    PictureData? picture,
+    VideoData? video,
+  }) async {
+    _logger.info('Creating workout plan');
+    emit(state.copyWith(isLoading: true));
+
+    final result = await _workoutPlanService.createWorkoutPlan(
+      name: name,
+      totalWeeks: totalWeeks,
+      difficulty: difficulty,
+      description: description,
+      picture: picture,
+      video: video,
+    );
+
+    if (result.isErr()) {
+      final error = result.error;
+      _logger.warning("Failed to create workout plan", error);
+      emit(state.copyWith(
+        error: ErrorState(
+          type: error.type.name,
+          description: error.description,
+        ),
+        isLoading: false,
+      ));
+      return;
+    }
+
+    _logger.info('Workout plan created successfully');
+    final newPlan = result.value;
+    emit(state.copyWith(
+      workoutPlans: [newPlan, ...state.workoutPlans],
+      pagination: state.pagination.copyWith(
+        total: state.pagination.total + 1,
+      ),
+      isLoading: false,
+    ));
+  }
+
+  Future<void> updateWorkoutPlan({
+    required int id,
+    String? name,
+    int? totalWeeks,
+    Difficulty? difficulty,
+    String? description,
+    String? pictureUri,
+    (VideoPlatform, String)? videoData,
+  }) async {
+    _logger.info('Updating workout plan $id');
+    emit(state.copyWith(isLoading: true));
+
+    final result = await _workoutPlanService.updateWorkoutPlan(
+      id,
+      name: name,
+      totalWeeks: totalWeeks,
+      difficulty: difficulty,
+      description: description,
+      pictureUri: pictureUri,
+      videoData: videoData,
+    );
+
+    if (result.isErr()) {
+      final error = result.error;
+      _logger.warning("Failed to update workout plan $id", error);
+      emit(state.copyWith(
+        error: ErrorState(
+          type: error.type.name,
+          description: error.description,
+        ),
+        isLoading: false,
+      ));
+      return;
+    }
+
+    _logger.info('Workout plan $id updated successfully');
+    final updatedPlan = result.value;
+    emit(state.copyWith(
+      workoutPlans:
+          state.workoutPlans.map((p) => p.id == id ? updatedPlan : p).toList(),
+      selectedWorkoutPlan: state.selectedWorkoutPlan?.id == id
+          ? updatedPlan
+          : state.selectedWorkoutPlan,
+      isLoading: false,
+    ));
+  }
+
+  Future<void> deleteWorkoutPlan(int id) async {
+    _logger.info('Deleting workout plan $id');
+    emit(state.copyWith(isLoading: true));
+
+    final result = await _workoutPlanService.deleteWorkoutPlan(id);
+
+    if (result.isErr()) {
+      final error = result.error;
+      _logger.warning("Failed to delete workout plan $id", error);
+      emit(state.copyWith(
+        error: ErrorState(
+          type: error.type.name,
+          description: error.description,
+        ),
+        isLoading: false,
+      ));
+      return;
+    }
+
+    _logger.info('Workout plan $id deleted successfully');
+    emit(state.copyWith(
+      workoutPlans: state.workoutPlans.where((p) => p.id != id).toList(),
+      selectedWorkoutPlan: state.selectedWorkoutPlan?.id == id
+          ? null
+          : state.selectedWorkoutPlan,
+      pagination: state.pagination.copyWith(
+        total: state.pagination.total - 1,
+      ),
       isLoading: false,
     ));
   }

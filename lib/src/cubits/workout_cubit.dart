@@ -258,4 +258,111 @@ class WorkoutCubit extends Cubit<WorkoutState> {
       isLoading: false,
     ));
   }
+
+  Future<void> createWorkoutSet({
+    required int workoutId,
+    required WorkoutSetType setType,
+    required int minSets,
+    required int recommendedRestSecs,
+    required List<WorkoutSetExerciseInput> exercises,
+    int? position,
+    int? maxSets,
+    int? maxRestSecs,
+  }) async {
+    _logger.info('Creating workout set for workout $workoutId');
+    emit(state.copyWith(isLoading: true));
+
+    final result = await _workoutService.createWorkoutSet(
+      workoutId: workoutId,
+      setType: setType,
+      minSets: minSets,
+      recommendedRestSecs: recommendedRestSecs,
+      exercises: exercises,
+      position: position,
+      maxSets: maxSets,
+      maxRestSecs: maxRestSecs,
+    );
+
+    if (result.isErr()) {
+      final error = result.error;
+      _logger.warning("Failed to create workout set", error);
+      emit(state.copyWith(
+        error: ErrorState(
+          type: error.type.name,
+          description: error.description,
+        ),
+        isLoading: false,
+      ));
+      return;
+    }
+
+    // Refresh workout to get updated sets
+    await getWorkout(workoutId);
+  }
+
+  Future<void> updateWorkoutSet({
+    required int workoutSetId,
+    required int workoutId,
+    WorkoutSetType? setType,
+    int? minSets,
+    int? recommendedRestSecs,
+    int? position,
+    int? maxSets,
+    int? maxRestSecs,
+  }) async {
+    _logger.info('Updating workout set $workoutSetId');
+    emit(state.copyWith(isLoading: true));
+
+    final result = await _workoutService.updateWorkoutSet(
+      workoutSetId: workoutSetId,
+      setType: setType,
+      minSets: minSets,
+      recommendedRestSecs: recommendedRestSecs,
+      position: position,
+      maxSets: maxSets,
+      maxRestSecs: maxRestSecs,
+    );
+
+    if (result.isErr()) {
+      final error = result.error;
+      _logger.warning("Failed to update workout set", error);
+      emit(state.copyWith(
+        error: ErrorState(
+          type: error.type.name,
+          description: error.description,
+        ),
+        isLoading: false,
+      ));
+      return;
+    }
+
+    // Refresh workout
+    await getWorkout(workoutId);
+  }
+
+  Future<void> deleteWorkoutSet({
+    required int workoutSetId,
+    required int workoutId,
+  }) async {
+    _logger.info('Deleting workout set $workoutSetId');
+    emit(state.copyWith(isLoading: true));
+
+    final result = await _workoutService.deleteWorkoutSet(workoutSetId);
+
+    if (result.isErr()) {
+      final error = result.error;
+      _logger.warning("Failed to delete workout set", error);
+      emit(state.copyWith(
+        error: ErrorState(
+          type: error.type.name,
+          description: error.description,
+        ),
+        isLoading: false,
+      ));
+      return;
+    }
+
+    // Refresh workout
+    await getWorkout(workoutId);
+  }
 }

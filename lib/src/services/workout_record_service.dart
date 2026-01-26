@@ -271,4 +271,73 @@ class WorkoutRecordService {
       ));
     }
   }
+
+  Future<Result<WorkoutSetRecordDto, ServiceError<OperationErrorTypes>>>
+      createWorkoutSetRecord({
+    required int workoutSetId,
+    required int workoutRecordId,
+    required int setNumber,
+    required DateTime startedAt,
+    int? totalRestSecs,
+    DateTime? completedAt,
+  }) async {
+    _logger.info('Creating workout set record');
+    try {
+      final WorkoutSetRecord record = WorkoutSetRecord.create(
+        workoutSetId: workoutSetId,
+        workoutRecordId: workoutRecordId,
+        setNumber: setNumber,
+        startedAt: DateUtilities.getDateUnix(startedAt),
+        totalRestSecs: totalRestSecs,
+        completedAt:
+            completedAt != null ? DateUtilities.getDateUnix(completedAt) : null,
+      );
+      final int id = await _setRecordRepository.insert(record);
+      _logger.info('Created workout set record with id $id');
+      return ok(WorkoutSetRecordDto.fromModel(record.copyWith(id: id)));
+    } catch (e) {
+      _logger.severe('Failed to create workout set record', e);
+      return err(const ServiceError(
+        type: OperationErrorTypes.operationFailure,
+        description: 'Failed to create workout set record',
+      ));
+    }
+  }
+
+  Future<Result<WorkoutSetExerciseRecordDto, ServiceError<OperationErrorTypes>>>
+      createWorkoutSetExerciseRecord({
+    required int workoutSetExerciseId,
+    required int workoutRecordId,
+    required int workoutSetRecordId,
+    required int exerciseId,
+    required int position,
+    required int reps,
+    required double weightKg,
+    int? difficulty,
+    String? difficultyType,
+  }) async {
+    _logger.info('Creating workout set exercise record');
+    try {
+      final WorkoutSetExerciseRecord record = WorkoutSetExerciseRecord.create(
+        workoutSetExerciseId: workoutSetExerciseId,
+        workoutRecordId: workoutRecordId,
+        workoutSetRecordId: workoutSetRecordId,
+        exerciseId: exerciseId,
+        position: position,
+        reps: reps,
+        weightGrams: (weightKg * 1000).round(),
+        difficulty: difficulty,
+        difficultyType: difficultyType,
+      );
+      final int id = await _setExerciseRecordRepository.insert(record);
+      _logger.info('Created workout set exercise record with id $id');
+      return ok(WorkoutSetExerciseRecordDto.fromModel(record.copyWith(id: id)));
+    } catch (e) {
+      _logger.severe('Failed to create workout set exercise record', e);
+      return err(const ServiceError(
+        type: OperationErrorTypes.operationFailure,
+        description: 'Failed to create workout set exercise record',
+      ));
+    }
+  }
 }

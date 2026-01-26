@@ -2,12 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import '../cubits/equipment_cubit.dart';
 import '../cubits/exercise_cubit.dart';
-import '../cubits/muscle_group_cubit.dart';
-import '../cubits/states/equipment_state.dart';
 import '../cubits/states/exercise_state.dart';
-import '../cubits/states/muscle_group_state.dart';
 import '../models/enums.dart';
 import '../services/dtos/exercise_dto.dart';
 import '../models/utilities.dart';
@@ -42,9 +38,9 @@ class _ExerciseLibraryViewState extends State<ExerciseLibraryView> {
   }
 
   void _loadInitialData() {
-    context.read<ExerciseCubit>().getExercises(limit: 20, offset: 0);
-    context.read<MuscleGroupCubit>().getMuscleGroups();
-    context.read<EquipmentCubit>().getEquipments(limit: 1000);
+    final exerciseCubit = context.read<ExerciseCubit>();
+    exerciseCubit.getExercises(limit: 20, offset: 0);
+    exerciseCubit.getEquipments(limit: 1000, offset: 0);
   }
 
   void _onScroll() {
@@ -166,191 +162,172 @@ class _ExerciseLibraryViewState extends State<ExerciseLibraryView> {
               }
             },
             builder: (context, exerciseState) {
-              return BlocBuilder<MuscleGroupCubit, MuscleGroupState>(
-                builder: (context, muscleGroupState) {
-                  return Column(
-                    children: [
-                      // Search and Filters
-                      Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Column(
+              return Column(
+                children: [
+                  // Search and Filters
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      children: [
+                        // Search Bar
+                        TextField(
+                          controller: _searchController,
+                          decoration: InputDecoration(
+                            hintText: 'Search exercises...',
+                            prefixIcon: const Icon(Icons.search),
+                            suffixIcon: _searchController.text.isNotEmpty
+                                ? IconButton(
+                                    icon: const Icon(Icons.clear),
+                                    onPressed: () {
+                                      _searchController.clear();
+                                      _onSearchChanged('');
+                                    },
+                                  )
+                                : null,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          onChanged: _onSearchChanged,
+                        ),
+                        const SizedBox(height: 12),
+                        // Filters Row 1
+                        Row(
                           children: [
-                            // Search Bar
-                            TextField(
-                              controller: _searchController,
-                              decoration: InputDecoration(
-                                hintText: 'Search exercises...',
-                                prefixIcon: const Icon(Icons.search),
-                                suffixIcon: _searchController.text.isNotEmpty
-                                    ? IconButton(
-                                        icon: const Icon(Icons.clear),
-                                        onPressed: () {
-                                          _searchController.clear();
-                                          _onSearchChanged('');
-                                        },
-                                      )
-                                    : null,
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8),
+                            // Muscle Group Filter
+                            Expanded(
+                              child: DropdownButtonFormField<MuscleGroup?>(
+                                initialValue: _selectedMuscleGroup,
+                                decoration: InputDecoration(
+                                  labelText: 'Muscle Group',
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
                                 ),
+                                items: [
+                                  const DropdownMenuItem<MuscleGroup?>(
+                                    value: null,
+                                    child: Text('All Muscle Groups'),
+                                  ),
+                                  ...MuscleGroup.values.map(
+                                    (mg) => DropdownMenuItem<MuscleGroup?>(
+                                      value: mg,
+                                      child: Text(EnumDisplayNames
+                                          .getMuscleGroupDisplayName(mg)),
+                                    ),
+                                  ),
+                                ],
+                                onChanged: _onMuscleGroupFilterChanged,
                               ),
-                              onChanged: _onSearchChanged,
                             ),
-                            const SizedBox(height: 12),
-                            // Filters Row 1
-                            Row(
-                              children: [
-                                // Muscle Group Filter
-                                Expanded(
-                                  child: DropdownButtonFormField<MuscleGroup?>(
-                                    initialValue: _selectedMuscleGroup,
-                                    decoration: InputDecoration(
-                                      labelText: 'Muscle Group',
-                                      border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                    ),
-                                    items: [
-                                      const DropdownMenuItem<MuscleGroup?>(
-                                        value: null,
-                                        child: Text('All Muscle Groups'),
-                                      ),
-                                      ...muscleGroupState.muscleGroups.map(
-                                        (mg) => DropdownMenuItem<MuscleGroup?>(
-                                          value: mg,
-                                          child: Text(EnumDisplayNames
-                                              .getMuscleGroupDisplayName(mg)),
-                                        ),
-                                      ),
-                                    ],
-                                    onChanged: _onMuscleGroupFilterChanged,
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                // View Toggle
-                                IconButton(
-                                  icon: Icon(
-                                    _isGridView ? Icons.list : Icons.grid_view,
-                                  ),
-                                  onPressed: () {
-                                    setState(() {
-                                      _isGridView = !_isGridView;
-                                    });
-                                  },
-                                  tooltip: _isGridView
-                                      ? 'Switch to List View'
-                                      : 'Switch to Grid View',
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 12),
-                            // Filters Row 2
-                            BlocBuilder<EquipmentCubit, EquipmentState>(
-                              builder: (context, equipmentState) {
-                                return Row(
-                                  children: [
-                                    // Difficulty Filter
-                                    Expanded(
-                                      child:
-                                          DropdownButtonFormField<Difficulty?>(
-                                        initialValue: _selectedDifficulty,
-                                        decoration: InputDecoration(
-                                          labelText: 'Difficulty',
-                                          border: OutlineInputBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(8),
-                                          ),
-                                        ),
-                                        items: [
-                                          const DropdownMenuItem<Difficulty?>(
-                                            value: null,
-                                            child: Text('All Difficulties'),
-                                          ),
-                                          ...Difficulty.values.map(
-                                            (d) =>
-                                                DropdownMenuItem<Difficulty?>(
-                                              value: d,
-                                              child: Text(_difficultyLabel(d)),
-                                            ),
-                                          ),
-                                        ],
-                                        onChanged: _onDifficultyFilterChanged,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 12),
-                                    // Equipment Filter
-                                    Expanded(
-                                      child: DropdownButtonFormField<int?>(
-                                        initialValue: _selectedEquipmentId,
-                                        decoration: InputDecoration(
-                                          labelText: 'Equipment',
-                                          border: OutlineInputBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(8),
-                                          ),
-                                        ),
-                                        items: [
-                                          const DropdownMenuItem<int?>(
-                                            value: null,
-                                            child: Text('All Equipment'),
-                                          ),
-                                          ...equipmentState.equipments.map(
-                                            (e) => DropdownMenuItem<int?>(
-                                              value: e.id,
-                                              child: Text(e.name),
-                                            ),
-                                          ),
-                                        ],
-                                        onChanged: _onEquipmentFilterChanged,
-                                      ),
-                                    ),
-                                  ],
-                                );
+                            const SizedBox(width: 12),
+                            // View Toggle
+                            IconButton(
+                              icon: Icon(
+                                _isGridView ? Icons.list : Icons.grid_view,
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  _isGridView = !_isGridView;
+                                });
                               },
+                              tooltip: _isGridView
+                                  ? 'Switch to List View'
+                                  : 'Switch to Grid View',
                             ),
                           ],
                         ),
-                      ),
-                      // Exercises List/Grid
-                      Expanded(
-                        child: exerciseState.isLoading &&
-                                exerciseState.exercises.isEmpty
-                            ? const Center(child: CircularProgressIndicator())
-                            : exerciseState.exercises.isEmpty
-                                ? Center(
-                                    child: Column(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        Icon(
-                                          Icons.fitness_center,
-                                          size: 64,
-                                          color: Colors.grey[400],
-                                        ),
-                                        const SizedBox(height: 16),
-                                        Text(
-                                          'No exercises found',
-                                          style: TextStyle(
-                                            fontSize: 18,
-                                            color: Colors.grey[600],
-                                          ),
-                                        ),
-                                      ],
+                        const SizedBox(height: 12),
+                        // Filters Row 2
+                        Row(
+                          children: [
+                            // Difficulty Filter
+                            Expanded(
+                              child: DropdownButtonFormField<Difficulty?>(
+                                initialValue: _selectedDifficulty,
+                                decoration: InputDecoration(
+                                  labelText: 'Difficulty',
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                ),
+                                items: [
+                                  const DropdownMenuItem<Difficulty?>(
+                                    value: null,
+                                    child: Text('All Difficulties'),
+                                  ),
+                                  ...Difficulty.values.map(
+                                    (d) => DropdownMenuItem<Difficulty?>(
+                                      value: d,
+                                      child: Text(_difficultyLabel(d)),
                                     ),
-                                  )
-                                : _isGridView
-                                    ? _buildGridView(
-                                        exerciseState.exercises,
-                                        muscleGroupState.muscleGroups,
-                                      )
-                                    : _buildListView(
-                                        exerciseState.exercises,
-                                        muscleGroupState.muscleGroups,
+                                  ),
+                                ],
+                                onChanged: _onDifficultyFilterChanged,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            // Equipment Filter
+                            Expanded(
+                              child: DropdownButtonFormField<int?>(
+                                initialValue: _selectedEquipmentId,
+                                decoration: InputDecoration(
+                                  labelText: 'Equipment',
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                ),
+                                items: [
+                                  const DropdownMenuItem<int?>(
+                                    value: null,
+                                    child: Text('All Equipment'),
+                                  ),
+                                  ...exerciseState.equipments.map(
+                                    (e) => DropdownMenuItem<int?>(
+                                      value: e.id,
+                                      child: Text(e.name),
+                                    ),
+                                  ),
+                                ],
+                                onChanged: _onEquipmentFilterChanged,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  // Exercises List/Grid
+                  Expanded(
+                    child: exerciseState.isLoading &&
+                            exerciseState.exercises.isEmpty
+                        ? const Center(child: CircularProgressIndicator())
+                        : exerciseState.exercises.isEmpty
+                            ? Center(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.fitness_center,
+                                      size: 64,
+                                      color: Colors.grey[400],
+                                    ),
+                                    const SizedBox(height: 16),
+                                    Text(
+                                      'No exercises found',
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        color: Colors.grey[600],
                                       ),
-                      ),
-                    ],
-                  );
-                },
+                                    ),
+                                  ],
+                                ),
+                              )
+                            : _isGridView
+                                ? _buildGridView(exerciseState.exercises)
+                                : _buildListView(exerciseState.exercises),
+                  ),
+                ],
               );
             },
           ),
@@ -370,10 +347,7 @@ class _ExerciseLibraryViewState extends State<ExerciseLibraryView> {
     );
   }
 
-  Widget _buildGridView(
-    List<ExerciseDto> exercises,
-    List<MuscleGroup> muscleGroups,
-  ) {
+  Widget _buildGridView(List<ExerciseDto> exercises) {
     return GridView.builder(
       controller: _scrollController,
       padding: const EdgeInsets.all(16.0),
@@ -402,7 +376,6 @@ class _ExerciseLibraryViewState extends State<ExerciseLibraryView> {
 
   Widget _buildListView(
     List<ExerciseDto> exercises,
-    List<MuscleGroup> muscleGroups,
   ) {
     return ListView.builder(
       controller: _scrollController,

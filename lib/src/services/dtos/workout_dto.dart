@@ -5,6 +5,7 @@ import '../../models/workout_model.dart';
 import 'dto.dart';
 import 'picture_dto.dart';
 import 'video_dto.dart';
+import 'workout_set_dto.dart';
 
 class WorkoutDto extends Equatable implements Dto<Workout> {
   @override
@@ -16,6 +17,9 @@ class WorkoutDto extends Equatable implements Dto<Workout> {
   final VideoDto? video;
   final Difficulty difficulty;
 
+  // related data
+  final List<WorkoutSetDto>? sets;
+
   const WorkoutDto({
     required this.id,
     required this.name,
@@ -24,10 +28,11 @@ class WorkoutDto extends Equatable implements Dto<Workout> {
     this.picture,
     this.video,
     required this.difficulty,
+    this.sets,
   });
 
   @override
-  factory WorkoutDto.fromModel(Workout model) {
+  factory WorkoutDto.fromModel(Workout model, {List<WorkoutSetDto>? sets}) {
     return WorkoutDto(
       id: model.id!,
       name: model.name,
@@ -37,6 +42,7 @@ class WorkoutDto extends Equatable implements Dto<Workout> {
       video: model.video != null ? VideoDto.fromModel(model.video!) : null,
       muscleGroups: model.muscleGroups,
       difficulty: model.difficulty,
+      sets: sets,
     );
   }
 
@@ -49,6 +55,7 @@ class WorkoutDto extends Equatable implements Dto<Workout> {
     PictureDto? picture,
     VideoDto? video,
     Difficulty? difficulty,
+    List<WorkoutSetDto>? sets,
   }) {
     return WorkoutDto(
       id: id ?? this.id,
@@ -58,6 +65,7 @@ class WorkoutDto extends Equatable implements Dto<Workout> {
       picture: picture ?? this.picture,
       video: video ?? this.video,
       difficulty: difficulty ?? this.difficulty,
+      sets: sets ?? this.sets,
     );
   }
 
@@ -70,5 +78,6 @@ class WorkoutDto extends Equatable implements Dto<Workout> {
         picture,
         video,
         difficulty,
+        sets,
       ];
 }

@@ -15,6 +15,7 @@ const String _tableCreate = """
     max_strength INTEGER NOT NULL,
     picture TEXT,
     video TEXT,
+    record_date INTEGER NOT NULL,
     created_at INTEGER NOT NULL,
     updated_at INTEGER NOT NULL,
     FOREIGN KEY (exercise_id) REFERENCES ${Exercise.table} (id)
@@ -32,6 +33,7 @@ enum ExerciseRecordColumns {
   maxStrength("max_strength"),
   picture("picture"),
   video("video"),
+  recordDate("record_date"),
   createdAt("created_at"),
   updatedAt("updated_at");
 
@@ -49,6 +51,7 @@ class ExerciseRecord extends Equatable implements Model {
   final int maxStrength;
   final PictureData? picture;
   final VideoData? video;
+  final int recordDate;
   @override
   final int createdAt;
   @override
@@ -62,6 +65,7 @@ class ExerciseRecord extends Equatable implements Model {
     required this.maxStrength,
     this.picture,
     this.video,
+    required this.recordDate,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -79,6 +83,7 @@ class ExerciseRecord extends Equatable implements Model {
       ExerciseRecordColumns.maxStrength.value: maxStrength,
       ExerciseRecordColumns.picture.value: picture,
       ExerciseRecordColumns.video.value: video,
+      ExerciseRecordColumns.recordDate.value: recordDate,
       ExerciseRecordColumns.createdAt.value: createdAt,
       ExerciseRecordColumns.updatedAt.value: updatedAt,
     };
@@ -99,6 +104,7 @@ class ExerciseRecord extends Equatable implements Model {
       video: map[ExerciseRecordColumns.video.value] != null
           ? VideoData.fromJson(map[ExerciseRecordColumns.video.value] as String)
           : null,
+      recordDate: map[ExerciseRecordColumns.recordDate.value] as int,
       createdAt: map[ExerciseRecordColumns.createdAt.value] as int,
       updatedAt: map[ExerciseRecordColumns.updatedAt.value] as int,
     );
@@ -108,6 +114,7 @@ class ExerciseRecord extends Equatable implements Model {
     required int exerciseId,
     required int weight,
     required int reps,
+    required int recordDate,
     PictureData? picture,
     VideoData? video,
   }) {
@@ -119,6 +126,7 @@ class ExerciseRecord extends Equatable implements Model {
       maxStrength: MaxStrengthCalculator.calculateMaxStrength(reps, weight),
       picture: picture,
       video: video,
+      recordDate: recordDate,
       createdAt: now,
       updatedAt: now,
     );
@@ -133,6 +141,7 @@ class ExerciseRecord extends Equatable implements Model {
     int? maxStrength,
     PictureData? picture,
     VideoData? video,
+    int? recordDate,
     int? createdAt,
     int? updatedAt,
   }) {
@@ -144,6 +153,7 @@ class ExerciseRecord extends Equatable implements Model {
       maxStrength: maxStrength ?? this.maxStrength,
       picture: picture ?? this.picture,
       video: video ?? this.video,
+      recordDate: recordDate ?? this.recordDate,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -163,6 +173,7 @@ class ExerciseRecord extends Equatable implements Model {
         maxStrength,
         picture,
         video,
+        recordDate,
         createdAt,
         updatedAt,
       ];

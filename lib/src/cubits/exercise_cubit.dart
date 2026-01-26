@@ -109,7 +109,41 @@ class ExerciseCubit extends Cubit<ExerciseState> {
     _logger.info('Exercise retrieved successfully');
     emit(state.copyWith(
       selectedExercise: result.value,
+      relatedExercises: [], // Clear related exercises when a new exercise is selected
       isLoading: false,
+    ));
+  }
+
+  Future<void> getRelatedExercises({
+    required MuscleGroup muscleGroup,
+    int limit = 5,
+  }) async {
+    _logger.info(
+        'getRelatedExercises: getting related exercises for $muscleGroup');
+    // We don't set global loading here to avoid full screen spinner if we want partial loading,
+    // but implies UI handles it. If UI relies on isLoading, we might flicker.
+    // Assuming related exercises load quietly or with their own indicator if we added one,
+    // but for now reusing isLoading is okay if we are careful, OR just don't set isLoading=true
+    // if we don't want to block UI.
+    // Let's set isLoading=false initially or just don't emit loading.
+    // Actually, let's keep it simple: just fetch and emit.
+
+    final result = await _exerciseService.getExercises(
+      muscleGroup: muscleGroup,
+      limit: limit,
+      offset: 0,
+    );
+
+    if (result.isErr()) {
+      _logger.warning('Failed to get related exercises', result.error);
+      // We can choose to ignore error for related exercises or show snackbar.
+      // For now, let's just not update the list.
+      return;
+    }
+
+    final paginatedData = result.value;
+    emit(state.copyWith(
+      relatedExercises: paginatedData.data,
     ));
   }
 
