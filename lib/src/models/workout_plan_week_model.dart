@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 
+import 'enums.dart';
 import 'model.dart';
 import 'utilities.dart';
 import 'workout_plan_model.dart';
@@ -12,6 +13,7 @@ const String _tableCreate = '''
     workout_plan_id INTEGER NOT NULL,
     start_week INTEGER NOT NULL,
     end_week INTEGER NOT NULL,
+    created_by TEXT NOT NULL,
     created_at INTEGER NOT NULL,
     updated_at INTEGER NOT NULL,
     FOREIGN KEY (workout_plan_id) REFERENCES ${WorkoutPlan.table} (id)
@@ -27,6 +29,7 @@ enum WorkoutPlanWeekColumns {
   workoutPlanId("workout_plan_id"),
   startWeek("start_week"),
   endWeek("end_week"),
+  createdBy("created_by"),
   createdAt("created_at"),
   updatedAt("updated_at");
 
@@ -41,6 +44,7 @@ class WorkoutPlanWeek extends Equatable implements Model {
   final int workoutPlanId;
   final int startWeek;
   final int endWeek;
+  final CreatedBy createdBy;
   @override
   final int createdAt;
   @override
@@ -51,6 +55,7 @@ class WorkoutPlanWeek extends Equatable implements Model {
     required this.workoutPlanId,
     required this.startWeek,
     required this.endWeek,
+    required this.createdBy,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -65,6 +70,7 @@ class WorkoutPlanWeek extends Equatable implements Model {
       WorkoutPlanWeekColumns.workoutPlanId.value: workoutPlanId,
       WorkoutPlanWeekColumns.startWeek.value: startWeek,
       WorkoutPlanWeekColumns.endWeek.value: endWeek,
+      WorkoutPlanWeekColumns.createdBy.value: createdBy.value,
       WorkoutPlanWeekColumns.createdAt.value: createdAt,
       WorkoutPlanWeekColumns.updatedAt.value: updatedAt,
     };
@@ -77,6 +83,9 @@ class WorkoutPlanWeek extends Equatable implements Model {
       workoutPlanId: map[WorkoutPlanWeekColumns.workoutPlanId.value] as int,
       startWeek: map[WorkoutPlanWeekColumns.startWeek.value] as int,
       endWeek: map[WorkoutPlanWeekColumns.endWeek.value] as int,
+      createdBy: CreatedBy.fromValue(
+        map[WorkoutPlanWeekColumns.createdBy.value] as String,
+      ),
       createdAt: map[WorkoutPlanWeekColumns.createdAt.value] as int,
       updatedAt: map[WorkoutPlanWeekColumns.updatedAt.value] as int,
     );
@@ -87,12 +96,14 @@ class WorkoutPlanWeek extends Equatable implements Model {
     required int workoutPlanId,
     required int startWeek,
     required int endWeek,
+    CreatedBy createdBy = CreatedBy.user,
   }) {
     final now = DateUtilities.getNowUtcUnix();
     return WorkoutPlanWeek(
       workoutPlanId: workoutPlanId,
       startWeek: startWeek,
       endWeek: endWeek,
+      createdBy: createdBy,
       createdAt: now,
       updatedAt: now,
     );
@@ -104,6 +115,7 @@ class WorkoutPlanWeek extends Equatable implements Model {
     int? workoutPlanId,
     int? startWeek,
     int? endWeek,
+    CreatedBy? createdBy,
     int? createdAt,
     int? updatedAt,
   }) {
@@ -112,6 +124,7 @@ class WorkoutPlanWeek extends Equatable implements Model {
       workoutPlanId: workoutPlanId ?? this.workoutPlanId,
       startWeek: startWeek ?? this.startWeek,
       endWeek: endWeek ?? this.endWeek,
+      createdBy: createdBy ?? this.createdBy,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -123,12 +136,13 @@ class WorkoutPlanWeek extends Equatable implements Model {
         workoutPlanId,
         startWeek,
         endWeek,
+        createdBy,
         createdAt,
         updatedAt,
       ];
 
   @override
   String toString() {
-    return 'WorkoutPlanWeek { id: $id, workoutPlanId: $workoutPlanId, startWeek: $startWeek, endWeek: $endWeek, createdAt: $createdAt, updatedAt: $updatedAt }';
+    return 'WorkoutPlanWeek { id: $id, workoutPlanId: $workoutPlanId, startWeek: $startWeek, endWeek: $endWeek, createdBy: $createdBy, createdAt: $createdAt, updatedAt: $updatedAt }';
   }
 }

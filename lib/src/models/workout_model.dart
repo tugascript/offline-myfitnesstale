@@ -16,6 +16,7 @@ const String _tableCreate = '''
     muscle_groups TEXT NOT NULL,
     muscles TEXT NOT NULL,
     difficulty INTEGER NOT NULL,
+    created_by TEXT NOT NULL,
     created_at INTEGER NOT NULL,
     updated_at INTEGER NOT NULL
   );
@@ -32,6 +33,7 @@ enum WorkoutColumns {
   muscleGroups("muscle_groups"),
   muscles("muscles"),
   difficulty("difficulty"),
+  createdBy("created_by"),
   createdAt("created_at"),
   updatedAt("updated_at");
 
@@ -50,6 +52,7 @@ class Workout implements Model {
   final Set<MuscleGroup> muscleGroups;
   final Set<Muscle> muscles;
   final Difficulty difficulty;
+  final CreatedBy createdBy;
   @override
   final int createdAt;
   @override
@@ -64,6 +67,7 @@ class Workout implements Model {
     required this.muscleGroups,
     required this.muscles,
     required this.difficulty,
+    required this.createdBy,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -84,6 +88,7 @@ class Workout implements Model {
       WorkoutColumns.muscles.value:
           jsonEncode(muscles.map((m) => m.value).toList()),
       WorkoutColumns.difficulty.value: difficulty.value,
+      WorkoutColumns.createdBy.value: createdBy.value,
       WorkoutColumns.createdAt.value: createdAt,
       WorkoutColumns.updatedAt.value: updatedAt,
     };
@@ -115,6 +120,8 @@ class Workout implements Model {
           : <Muscle>{}),
       difficulty:
           Difficulty.fromValue(map[WorkoutColumns.difficulty.value] as int),
+      createdBy:
+          CreatedBy.fromValue(map[WorkoutColumns.createdBy.value] as String),
       createdAt: map[WorkoutColumns.createdAt.value] as int,
       updatedAt: map[WorkoutColumns.updatedAt.value] as int,
     );
@@ -129,6 +136,7 @@ class Workout implements Model {
     String? description,
     PictureData? picture,
     VideoData? video,
+    CreatedBy createdBy = CreatedBy.user,
   }) {
     final int now = DateUtilities.getNowUtcUnix();
     return Workout(
@@ -139,6 +147,7 @@ class Workout implements Model {
       difficulty: difficulty,
       muscleGroups: muscleGroups ?? <MuscleGroup>{},
       muscles: muscles ?? <Muscle>{},
+      createdBy: createdBy,
       createdAt: now,
       updatedAt: now,
     );
@@ -154,6 +163,7 @@ class Workout implements Model {
     Set<MuscleGroup>? muscleGroups,
     Set<Muscle>? muscles,
     Difficulty? difficulty,
+    CreatedBy? createdBy,
     int? createdAt,
     int? updatedAt,
   }) {
@@ -166,6 +176,7 @@ class Workout implements Model {
       difficulty: difficulty ?? this.difficulty,
       muscleGroups: muscleGroups ?? this.muscleGroups,
       muscles: muscles ?? this.muscles,
+      createdBy: createdBy ?? this.createdBy,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -173,6 +184,6 @@ class Workout implements Model {
 
   @override
   String toString() {
-    return 'Workout{id: $id, name: $name, description: $description, picture: $picture, video: $video, createdAt: $createdAt, updatedAt: $updatedAt}';
+    return 'Workout{id: $id, name: $name, description: $description, picture: $picture, video: $video, createdBy: $createdBy, createdAt: $createdAt, updatedAt: $updatedAt}';
   }
 }

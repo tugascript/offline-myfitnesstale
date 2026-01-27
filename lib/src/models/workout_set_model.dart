@@ -14,6 +14,7 @@ const String _tableCreate = '''
     max_sets INTEGER,
     recommended_rest_secs INTEGER NOT NULL,
     max_rest_secs INTEGER,
+    created_by TEXT NOT NULL,
     created_at INTEGER NOT NULL,
     updated_at INTEGER NOT NULL,
     FOREIGN KEY (workout_id) REFERENCES ${Workout.table} (id) ON DELETE CASCADE
@@ -32,6 +33,7 @@ enum WorkoutSetColumns {
   maxSets("max_sets"),
   recommendedRestSecs("recommended_rest_secs"),
   maxRestSecs("max_rest_secs"),
+  createdBy("created_by"),
   createdAt("created_at"),
   updatedAt("updated_at");
 
@@ -50,6 +52,7 @@ class WorkoutSet implements Model {
   final int? maxSets;
   final int recommendedRestSecs;
   final int? maxRestSecs;
+  final CreatedBy createdBy;
   @override
   final int createdAt;
   @override
@@ -64,6 +67,7 @@ class WorkoutSet implements Model {
     this.maxSets,
     required this.recommendedRestSecs,
     this.maxRestSecs,
+    required this.createdBy,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -82,6 +86,7 @@ class WorkoutSet implements Model {
       WorkoutSetColumns.maxSets.value: maxSets,
       WorkoutSetColumns.recommendedRestSecs.value: recommendedRestSecs,
       WorkoutSetColumns.maxRestSecs.value: maxRestSecs,
+      WorkoutSetColumns.createdBy.value: createdBy.value,
       WorkoutSetColumns.createdAt.value: createdAt,
       WorkoutSetColumns.updatedAt.value: updatedAt,
     };
@@ -100,6 +105,8 @@ class WorkoutSet implements Model {
       recommendedRestSecs:
           map[WorkoutSetColumns.recommendedRestSecs.value] as int,
       maxRestSecs: map[WorkoutSetColumns.maxRestSecs.value] as int?,
+      createdBy:
+          CreatedBy.fromValue(map[WorkoutSetColumns.createdBy.value] as String),
       createdAt: map[WorkoutSetColumns.createdAt.value] as int,
       updatedAt: map[WorkoutSetColumns.updatedAt.value] as int,
     );
@@ -114,6 +121,7 @@ class WorkoutSet implements Model {
     required int recommendedRestSecs,
     int? maxSets,
     int? maxRestSecs,
+    CreatedBy createdBy = CreatedBy.user,
   }) {
     final int now = DateUtilities.getNowUtcUnix();
     return WorkoutSet(
@@ -124,6 +132,7 @@ class WorkoutSet implements Model {
       maxSets: maxSets,
       recommendedRestSecs: recommendedRestSecs,
       maxRestSecs: maxRestSecs,
+      createdBy: createdBy,
       createdAt: now,
       updatedAt: now,
     );
@@ -139,6 +148,7 @@ class WorkoutSet implements Model {
     int? maxSets,
     int? recommendedRestSecs,
     int? maxRestSecs,
+    CreatedBy? createdBy,
     int? createdAt,
     int? updatedAt,
   }) {
@@ -151,6 +161,7 @@ class WorkoutSet implements Model {
       maxSets: maxSets ?? this.maxSets,
       recommendedRestSecs: recommendedRestSecs ?? this.recommendedRestSecs,
       maxRestSecs: maxRestSecs ?? this.maxRestSecs,
+      createdBy: createdBy ?? this.createdBy,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -158,6 +169,6 @@ class WorkoutSet implements Model {
 
   @override
   String toString() {
-    return 'WorkoutSet{id: $id, position: $position, workoutId: $workoutId, minSets: $minSets, maxSets: $maxSets, recommendedRestSecs: $recommendedRestSecs, maxRestSecs: $maxRestSecs, createdAt: $createdAt, updatedAt: $updatedAt}';
+    return 'WorkoutSet{id: $id, position: $position, workoutId: $workoutId, minSets: $minSets, maxSets: $maxSets, recommendedRestSecs: $recommendedRestSecs, maxRestSecs: $maxRestSecs, createdBy: $createdBy, createdAt: $createdAt, updatedAt: $updatedAt}';
   }
 }
