@@ -205,7 +205,7 @@ class ExerciseService {
 
       final List<Equipment> equipments = await _equipmentRepository.selectMany(
         where:
-            "${EquimentColumns.id.value} IN (${List.filled(equipmentIds.length, '?').join(', ')})",
+            "${EquipmentColumns.id.value} IN (${List.filled(equipmentIds.length, '?').join(', ')})",
         whereArgs: equipmentIds,
       );
       if (equipments.length != equipmentIds.length) {

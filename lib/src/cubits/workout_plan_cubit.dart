@@ -153,8 +153,8 @@ class WorkoutPlanCubit extends Cubit<WorkoutPlanState> {
     int? totalWeeks,
     Difficulty? difficulty,
     String? description,
-    String? pictureUri,
-    (VideoPlatform, String)? videoData,
+    PictureData? picture,
+    VideoData? video,
   }) async {
     _logger.info('Updating workout plan $id');
     emit(state.copyWith(isLoading: true));
@@ -165,8 +165,8 @@ class WorkoutPlanCubit extends Cubit<WorkoutPlanState> {
       totalWeeks: totalWeeks,
       difficulty: difficulty,
       description: description,
-      pictureUri: pictureUri,
-      videoData: videoData,
+      picture: picture,
+      video: video,
     );
 
     if (result.isErr()) {

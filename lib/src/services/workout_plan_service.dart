@@ -185,8 +185,8 @@ class WorkoutPlanService {
     int? totalWeeks,
     Difficulty? difficulty,
     String? description,
-    String? pictureUri,
-    (VideoPlatform, String)? videoData,
+    PictureData? picture,
+    VideoData? video,
   }) async {
     _logger.info('Updating workout plan with id $id');
     try {
@@ -204,9 +204,8 @@ class WorkoutPlanService {
         totalWeeks: totalWeeks,
         difficulty: difficulty?.value ?? plan.difficulty,
         description: description,
-        pictureUri: pictureUri,
-        videoUri: videoData?.$2,
-        videoPlatform: videoData?.$1.value,
+        picture: picture,
+        video: video,
         updatedAt: DateUtilities.getNowUtcUnix(),
       );
       await _repository.update(updatedPlan);

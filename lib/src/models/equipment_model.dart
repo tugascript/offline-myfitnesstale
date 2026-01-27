@@ -1,3 +1,4 @@
+import 'enums.dart';
 import 'model.dart';
 import 'utilities.dart';
 
@@ -7,6 +8,7 @@ const String _tableCreate = '''
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
     picture_uri TEXT,
+    created_by TEXT NOT NULL,
     created_at INTEGER NOT NULL,
     updated_at INTEGER NOT NULL
   );
@@ -14,16 +16,17 @@ const String _tableCreate = '''
   CREATE UNIQUE INDEX IF NOT EXISTS idx_equipment_name_id ON $_table (name);
   ''';
 
-enum EquimentColumns {
+enum EquipmentColumns {
   id("id"),
   name("name"),
   pictureUri("picture_uri"),
+  createdBy("created_by"),
   createdAt("created_at"),
   updatedAt("updated_at");
 
   final String value;
 
-  const EquimentColumns(this.value);
+  const EquipmentColumns(this.value);
 }
 
 class Equipment implements Model {
@@ -31,6 +34,7 @@ class Equipment implements Model {
   final int? id;
   final String name;
   final String? pictureUri;
+  final CreatedBy createdBy;
   @override
   final int createdAt;
   @override
@@ -40,6 +44,7 @@ class Equipment implements Model {
     this.id,
     required this.name,
     this.pictureUri,
+    required this.createdBy,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -50,22 +55,25 @@ class Equipment implements Model {
   @override
   Map<String, Object?> toMap() {
     return {
-      EquimentColumns.id.value: id,
-      EquimentColumns.name.value: name,
-      EquimentColumns.pictureUri.value: pictureUri,
-      EquimentColumns.createdAt.value: createdAt,
-      EquimentColumns.updatedAt.value: updatedAt,
+      EquipmentColumns.id.value: id,
+      EquipmentColumns.name.value: name,
+      EquipmentColumns.pictureUri.value: pictureUri,
+      EquipmentColumns.createdBy.value: createdBy.value,
+      EquipmentColumns.createdAt.value: createdAt,
+      EquipmentColumns.updatedAt.value: updatedAt,
     };
   }
 
   @override
   factory Equipment.fromMap(Map<String, Object?> map) {
     return Equipment(
-      id: map[EquimentColumns.id.value] as int?,
-      name: map[EquimentColumns.name.value] as String,
-      pictureUri: map[EquimentColumns.pictureUri.value] as String?,
-      createdAt: map[EquimentColumns.createdAt.value] as int,
-      updatedAt: map[EquimentColumns.updatedAt.value] as int,
+      id: map[EquipmentColumns.id.value] as int?,
+      name: map[EquipmentColumns.name.value] as String,
+      pictureUri: map[EquipmentColumns.pictureUri.value] as String?,
+      createdBy:
+          CreatedBy.fromValue(map[EquipmentColumns.createdBy.value] as String),
+      createdAt: map[EquipmentColumns.createdAt.value] as int,
+      updatedAt: map[EquipmentColumns.updatedAt.value] as int,
     );
   }
 
@@ -73,11 +81,13 @@ class Equipment implements Model {
   factory Equipment.create({
     required String name,
     String? pictureUri,
+    CreatedBy createdBy = CreatedBy.user,
   }) {
     final int now = DateUtilities.getNowUtcUnix();
     return Equipment(
       name: name,
       pictureUri: pictureUri,
+      createdBy: createdBy,
       createdAt: now,
       updatedAt: now,
     );
@@ -88,6 +98,7 @@ class Equipment implements Model {
     int? id,
     String? name,
     String? pictureUri,
+    CreatedBy? createdBy,
     int? createdAt,
     int? updatedAt,
   }) {
@@ -95,6 +106,7 @@ class Equipment implements Model {
       id: id ?? this.id,
       name: name ?? this.name,
       pictureUri: pictureUri ?? this.pictureUri,
+      createdBy: createdBy ?? this.createdBy,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -102,6 +114,6 @@ class Equipment implements Model {
 
   @override
   String toString() {
-    return 'Equipment{id: $id, name: $name, pictureUri: $pictureUri, createdAt: $createdAt, updatedAt: $updatedAt}';
+    return 'Equipment{id: $id, name: $name, pictureUri: $pictureUri, createdBy: $createdBy, createdAt: $createdAt, updatedAt: $updatedAt}';
   }
 }
