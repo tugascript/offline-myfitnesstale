@@ -350,6 +350,7 @@ class WorkoutPlanRecordService {
       if (current != null) {
         final CurrentWorkoutPlanRecord updated = current.copyWith(
           workoutPlanRecordId: workoutPlanRecordId,
+          workoutPlanId: existing.workoutPlanId,
           updatedAt: DateUtilities.getNowUtcUnix(),
         );
         await _currentRepository.update(updated);
