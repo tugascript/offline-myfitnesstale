@@ -41,7 +41,7 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
       emit(state.copyWith(
         error: ErrorState(
           type: error.type.name,
-          description: error.description,
+          description: "Something went wrong",
         ),
         isLoading: false,
       ));
@@ -180,5 +180,44 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
     } catch (e) {
       _logger.warning("Failed to refresh progress", e);
     }
+  }
+
+  Future<void> startWorkoutPlan(int workoutPlanId) async {
+    emit(state.copyWith(isLoading: true));
+
+    final result = await _workoutPlanRecordService.createWorkoutPlanRecord(
+      workoutPlanId: workoutPlanId,
+    );
+    if (result.isErr()) {
+      emit(state.copyWith(
+        error: ErrorState(
+          type: result.error.type.name,
+          description: result.error.description,
+        ),
+        isLoading: false,
+      ));
+      return;
+    }
+
+    final currentResult = await _workoutPlanRecordService.setCurrentWorkoutPlan(
+      result.value.id,
+    );
+    if (currentResult.isErr()) {
+      emit(state.copyWith(
+        error: ErrorState(
+          type: currentResult.error.type.name,
+          description: currentResult.error.description,
+        ),
+        isLoading: false,
+      ));
+      return;
+    }
+
+    emit(state.copyWith(
+      currentPlanRecord: state.currentPlanRecord.copyWith(
+        currentPlanRecord: result.value,
+      ),
+      isLoading: false,
+    ));
   }
 }

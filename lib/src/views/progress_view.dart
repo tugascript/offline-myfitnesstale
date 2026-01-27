@@ -1,3 +1,20 @@
+// Copyright (C) 2026 Afonso Barracha
+//
+// This file is part of MyFitnessTale.
+//
+// MyFitnessTale is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// MyFitnessTale is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with MyFitnessTale.  If not, see <https://www.gnu.org/licenses/>.
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -12,7 +29,6 @@ import '../services/dtos/system_dto.dart';
 import '../services/dtos/weight_record_dto.dart';
 import '../utilities/converters.dart';
 import '../widgets/layout/responsive_scaffold.dart';
-import '../widgets/weight/weight_goal_tracking_widget.dart';
 import 'exercise_progress_view.dart';
 import 'weight_log_view.dart';
 import 'workout_history_view.dart';
@@ -38,8 +54,6 @@ class _ProgressViewState extends State<ProgressView>
 
     // Load weight records
     context.read<WeightRecordCubit>().getWeightRecords(limit: 20, offset: 0);
-    context.read<WeightRecordCubit>().getWeightTotal();
-
     // Load workout records
     context.read<WorkoutRecordCubit>().getWorkoutRecords(limit: 50, offset: 0);
   }
@@ -61,7 +75,7 @@ class _ProgressViewState extends State<ProgressView>
               if (state.error != null) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text(state.error!),
+                    content: Text(state.error!.description),
                     backgroundColor: Colors.red,
                   ),
                 );
@@ -194,9 +208,9 @@ class _ProgressViewState extends State<ProgressView>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Weight Goal Tracking Widget
-          const WeightGoalTrackingWidget(),
+          // const WeightGoalTrackingWidget(),
 
-          const SizedBox(height: 24),
+          // const SizedBox(height: 24),
 
           // Goal History (Future enhancement)
           Expanded(
@@ -258,7 +272,7 @@ class _ProgressViewState extends State<ProgressView>
             const SizedBox(height: 16),
             _buildWeightStatistics(
               weightState.weightRecords,
-              weightState.weightTotal,
+              weightState.recordPagination.total,
               system,
             ),
             const SizedBox(height: 24),

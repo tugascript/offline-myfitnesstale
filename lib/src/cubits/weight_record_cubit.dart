@@ -17,8 +17,8 @@
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:logging/logging.dart';
-import 'package:myfitnesstale/src/models/enums.dart';
 
+import '../models/enums.dart';
 import '../services/common/errors.dart';
 import '../services/weight_record_service.dart';
 import 'states/common_state.dart';
