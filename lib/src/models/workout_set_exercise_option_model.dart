@@ -1,11 +1,12 @@
 import 'package:equatable/equatable.dart';
 
+import 'enums.dart';
 import 'exercise_model.dart';
 import 'model.dart';
 import 'utilities.dart';
 import 'workout_model.dart';
-import 'workout_set_model.dart';
 import 'workout_set_exercise_model.dart';
+import 'workout_set_model.dart';
 
 const String _table = 'workout_set_exercise_options';
 const String _tableCreate = '''
@@ -16,6 +17,7 @@ const String _tableCreate = '''
     workout_set_exercise_id INTEGER NOT NULL,
     exercise_id INTEGER NOT NULL,
     position INTEGER NOT NULL,
+    created_by TEXT NOT NULL,
     created_at INTEGER NOT NULL,
     updated_at INTEGER NOT NULL,
     FOREIGN KEY (workout_id) REFERENCES ${Workout.table} (id) ON DELETE CASCADE,
@@ -40,6 +42,7 @@ enum WorkoutSetExerciseOptionColumns {
   workoutSetExerciseId("workout_set_exercise_id"),
   exerciseId("exercise_id"),
   position("position"),
+  createdBy("created_by"),
   createdAt("created_at"),
   updatedAt("updated_at");
 
@@ -56,6 +59,7 @@ class WorkoutSetExerciseOption extends Equatable implements Model {
   final int workoutSetExerciseId;
   final int exerciseId;
   final int position;
+  final CreatedBy createdBy;
   @override
   final int createdAt;
   @override
@@ -68,6 +72,7 @@ class WorkoutSetExerciseOption extends Equatable implements Model {
     required this.workoutSetExerciseId,
     required this.exerciseId,
     required this.position,
+    required this.createdBy,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -85,6 +90,7 @@ class WorkoutSetExerciseOption extends Equatable implements Model {
           workoutSetExerciseId,
       WorkoutSetExerciseOptionColumns.exerciseId.value: exerciseId,
       WorkoutSetExerciseOptionColumns.position.value: position,
+      WorkoutSetExerciseOptionColumns.createdBy.value: createdBy.value,
       WorkoutSetExerciseOptionColumns.createdAt.value: createdAt,
       WorkoutSetExerciseOptionColumns.updatedAt.value: updatedAt,
     };
@@ -102,6 +108,9 @@ class WorkoutSetExerciseOption extends Equatable implements Model {
               as int,
       exerciseId: map[WorkoutSetExerciseOptionColumns.exerciseId.value] as int,
       position: map[WorkoutSetExerciseOptionColumns.position.value] as int,
+      createdBy: CreatedBy.fromValue(
+        map[WorkoutSetExerciseOptionColumns.createdBy.value] as String,
+      ),
       createdAt: map[WorkoutSetExerciseOptionColumns.createdAt.value] as int,
       updatedAt: map[WorkoutSetExerciseOptionColumns.updatedAt.value] as int,
     );
@@ -114,6 +123,7 @@ class WorkoutSetExerciseOption extends Equatable implements Model {
     required int workoutSetExerciseId,
     required int exerciseId,
     required int position,
+    CreatedBy createdBy = CreatedBy.user,
   }) {
     final int now = DateUtilities.getNowUtcUnix();
     return WorkoutSetExerciseOption(
@@ -122,6 +132,7 @@ class WorkoutSetExerciseOption extends Equatable implements Model {
       workoutSetExerciseId: workoutSetExerciseId,
       exerciseId: exerciseId,
       position: position,
+      createdBy: createdBy,
       createdAt: now,
       updatedAt: now,
     );
@@ -135,6 +146,7 @@ class WorkoutSetExerciseOption extends Equatable implements Model {
     int? workoutSetExerciseId,
     int? exerciseId,
     int? position,
+    CreatedBy? createdBy,
     int? createdAt,
     int? updatedAt,
   }) {
@@ -145,6 +157,7 @@ class WorkoutSetExerciseOption extends Equatable implements Model {
       workoutSetExerciseId: workoutSetExerciseId ?? this.workoutSetExerciseId,
       exerciseId: exerciseId ?? this.exerciseId,
       position: position ?? this.position,
+      createdBy: createdBy ?? this.createdBy,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -158,6 +171,7 @@ class WorkoutSetExerciseOption extends Equatable implements Model {
         workoutSetExerciseId,
         exerciseId,
         position,
+        createdBy,
         createdAt,
         updatedAt,
       ];

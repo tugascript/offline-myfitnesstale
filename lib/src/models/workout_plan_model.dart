@@ -1,6 +1,7 @@
 import 'package:equatable/equatable.dart';
 
 import 'common.dart';
+import 'enums.dart';
 import 'model.dart';
 import 'utilities.dart';
 
@@ -14,6 +15,7 @@ const String _tableCreate = '''
     picture TEXT,
     video TEXT,
     difficulty INTEGER NOT NULL,
+    created_by TEXT NOT NULL,
     created_at INTEGER NOT NULL,
     updated_at INTEGER NOT NULL
   );
@@ -29,6 +31,7 @@ enum WorkoutPlanColumns {
   picture("picture"),
   video("video"),
   difficulty("difficulty"),
+  createdBy("created_by"),
   createdAt("created_at"),
   updatedAt("updated_at");
 
@@ -46,6 +49,7 @@ class WorkoutPlan extends Equatable implements Model {
   final PictureData? picture;
   final VideoData? video;
   final int difficulty;
+  final CreatedBy createdBy;
   @override
   final int createdAt;
   @override
@@ -59,6 +63,7 @@ class WorkoutPlan extends Equatable implements Model {
     this.picture,
     this.video,
     required this.difficulty,
+    required this.createdBy,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -76,6 +81,7 @@ class WorkoutPlan extends Equatable implements Model {
       WorkoutPlanColumns.picture.value: picture,
       WorkoutPlanColumns.video.value: video,
       WorkoutPlanColumns.difficulty.value: difficulty,
+      WorkoutPlanColumns.createdBy.value: createdBy.value,
       WorkoutPlanColumns.createdAt.value: createdAt,
       WorkoutPlanColumns.updatedAt.value: updatedAt,
     };
@@ -96,6 +102,9 @@ class WorkoutPlan extends Equatable implements Model {
           ? VideoData.fromJson(map[WorkoutPlanColumns.video.value] as String)
           : null,
       difficulty: map[WorkoutPlanColumns.difficulty.value] as int,
+      createdBy: CreatedBy.fromValue(
+        map[WorkoutPlanColumns.createdBy.value] as String,
+      ),
       createdAt: map[WorkoutPlanColumns.createdAt.value] as int,
       updatedAt: map[WorkoutPlanColumns.updatedAt.value] as int,
     );
@@ -109,6 +118,7 @@ class WorkoutPlan extends Equatable implements Model {
     String? description,
     PictureData? picture,
     VideoData? video,
+    CreatedBy createdBy = CreatedBy.user,
   }) {
     final int now = DateUtilities.getNowUtcUnix();
     return WorkoutPlan(
@@ -118,6 +128,7 @@ class WorkoutPlan extends Equatable implements Model {
       description: description,
       picture: picture,
       video: video,
+      createdBy: createdBy,
       createdAt: now,
       updatedAt: now,
     );
@@ -132,6 +143,7 @@ class WorkoutPlan extends Equatable implements Model {
     PictureData? picture,
     VideoData? video,
     int? difficulty,
+    CreatedBy? createdBy,
     int? createdAt,
     int? updatedAt,
   }) {
@@ -143,6 +155,7 @@ class WorkoutPlan extends Equatable implements Model {
       picture: picture ?? this.picture,
       video: video ?? this.video,
       difficulty: difficulty ?? this.difficulty,
+      createdBy: createdBy ?? this.createdBy,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -157,6 +170,7 @@ class WorkoutPlan extends Equatable implements Model {
         picture,
         video,
         difficulty,
+        createdBy,
         createdAt,
         updatedAt
       ];

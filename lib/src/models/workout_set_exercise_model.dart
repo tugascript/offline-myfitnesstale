@@ -19,6 +19,7 @@ const String _tableCreate = '''
     min_reps INTEGER NOT NULL,
     max_reps INTEGER,
     difficulty TEXT,
+    created_by TEXT NOT NULL,
     created_at INTEGER NOT NULL,
     updated_at INTEGER NOT NULL,
     FOREIGN KEY (workout_set_id) REFERENCES ${WorkoutSet.table} (id)
@@ -42,6 +43,7 @@ enum WorkoutSetExerciseColumns {
   minReps("min_reps"),
   maxReps("max_reps"),
   difficulty("difficulty"),
+  createdBy("created_by"),
   createdAt("created_at"),
   updatedAt("updated_at");
 
@@ -91,6 +93,7 @@ class WorkoutSetExercise extends Equatable implements Model {
   final int minReps;
   final int? maxReps;
   final WorkoutSetExerciseDifficulty? difficulty;
+  final CreatedBy createdBy;
   @override
   final int createdAt;
   @override
@@ -105,6 +108,7 @@ class WorkoutSetExercise extends Equatable implements Model {
     required this.minReps,
     this.maxReps,
     this.difficulty,
+    required this.createdBy,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -123,6 +127,7 @@ class WorkoutSetExercise extends Equatable implements Model {
       WorkoutSetExerciseColumns.minReps.value: minReps,
       WorkoutSetExerciseColumns.maxReps.value: maxReps,
       WorkoutSetExerciseColumns.difficulty.value: difficulty?.toJson(),
+      WorkoutSetExerciseColumns.createdBy.value: createdBy.value,
       WorkoutSetExerciseColumns.createdAt.value: createdAt,
       WorkoutSetExerciseColumns.updatedAt.value: updatedAt,
     };
@@ -142,6 +147,8 @@ class WorkoutSetExercise extends Equatable implements Model {
           ? WorkoutSetExerciseDifficulty.fromJson(
               map[WorkoutSetExerciseColumns.difficulty.value] as String)
           : null,
+      createdBy: CreatedBy.fromValue(
+          map[WorkoutSetExerciseColumns.createdBy.value] as String),
       createdAt: map[WorkoutSetExerciseColumns.createdAt.value] as int,
       updatedAt: map[WorkoutSetExerciseColumns.updatedAt.value] as int,
     );
@@ -156,6 +163,7 @@ class WorkoutSetExercise extends Equatable implements Model {
     required int minReps,
     int? maxReps,
     WorkoutSetExerciseDifficulty? difficulty,
+    CreatedBy createdBy = CreatedBy.user,
   }) {
     final int now = DateUtilities.getNowUtcUnix();
     return WorkoutSetExercise(
@@ -166,6 +174,7 @@ class WorkoutSetExercise extends Equatable implements Model {
       minReps: minReps,
       maxReps: maxReps,
       difficulty: difficulty,
+      createdBy: createdBy,
       createdAt: now,
       updatedAt: now,
     );
@@ -181,6 +190,7 @@ class WorkoutSetExercise extends Equatable implements Model {
     int? minReps,
     int? maxReps,
     WorkoutSetExerciseDifficulty? difficulty,
+    CreatedBy? createdBy,
     int? createdAt,
     int? updatedAt,
   }) {
@@ -193,6 +203,7 @@ class WorkoutSetExercise extends Equatable implements Model {
       minReps: minReps ?? this.minReps,
       maxReps: maxReps ?? this.maxReps,
       difficulty: difficulty ?? this.difficulty,
+      createdBy: createdBy ?? this.createdBy,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -208,6 +219,7 @@ class WorkoutSetExercise extends Equatable implements Model {
         minReps,
         maxReps,
         difficulty,
+        createdBy,
         createdAt,
         updatedAt,
       ];

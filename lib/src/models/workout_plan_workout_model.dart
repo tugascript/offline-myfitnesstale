@@ -17,6 +17,7 @@ const String _tableCreate = '''
     workout_plan_week_id INTEGER NOT NULL,
     workout_plan_day_id INTEGER NOT NULL,
     workout_id INTEGER NOT NULL,
+    created_by TEXT NOT NULL,
     created_at INTEGER NOT NULL,
     updated_at INTEGER NOT NULL,
     FOREIGN KEY (workout_plan_id) REFERENCES ${WorkoutPlan.table} (id)
@@ -44,6 +45,7 @@ enum WorkoutPlanWorkoutColumns {
   workoutPlanWeekId("workout_plan_week_id"),
   workoutPlanDayId("workout_plan_day_id"),
   workoutId("workout_id"),
+  createdBy("created_by"),
   createdAt("created_at"),
   updatedAt("updated_at");
 
@@ -61,6 +63,7 @@ class WorkoutPlanWorkout extends Equatable implements Model {
   final int workoutPlanWeekId;
   final int workoutPlanDayId;
   final int workoutId;
+  final CreatedBy createdBy;
   @override
   final int createdAt;
   @override
@@ -74,6 +77,7 @@ class WorkoutPlanWorkout extends Equatable implements Model {
     required this.workoutPlanWeekId,
     required this.workoutPlanDayId,
     required this.workoutId,
+    required this.createdBy,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -91,6 +95,7 @@ class WorkoutPlanWorkout extends Equatable implements Model {
       WorkoutPlanWorkoutColumns.workoutPlanWeekId.value: workoutPlanWeekId,
       WorkoutPlanWorkoutColumns.workoutPlanDayId.value: workoutPlanDayId,
       WorkoutPlanWorkoutColumns.workoutId.value: workoutId,
+      WorkoutPlanWorkoutColumns.createdBy.value: createdBy.value,
       WorkoutPlanWorkoutColumns.createdAt.value: createdAt,
       WorkoutPlanWorkoutColumns.updatedAt.value: updatedAt,
     };
@@ -112,6 +117,9 @@ class WorkoutPlanWorkout extends Equatable implements Model {
       workoutPlanDayId:
           map[WorkoutPlanWorkoutColumns.workoutPlanDayId.value] as int,
       workoutId: map[WorkoutPlanWorkoutColumns.workoutId.value] as int,
+      createdBy: CreatedBy.fromValue(
+        map[WorkoutPlanWorkoutColumns.createdBy.value] as String,
+      ),
       createdAt: map[WorkoutPlanWorkoutColumns.createdAt.value] as int,
       updatedAt: map[WorkoutPlanWorkoutColumns.updatedAt.value] as int,
     );
@@ -125,6 +133,7 @@ class WorkoutPlanWorkout extends Equatable implements Model {
     required int workoutPlanDayId,
     required int workoutId,
     TimeOfDay? timeOfDay,
+    CreatedBy createdBy = CreatedBy.user,
   }) {
     final int now = DateTime.now().millisecondsSinceEpoch;
     return WorkoutPlanWorkout(
@@ -134,6 +143,7 @@ class WorkoutPlanWorkout extends Equatable implements Model {
       workoutPlanWeekId: workoutPlanWeekId,
       workoutPlanDayId: workoutPlanDayId,
       workoutId: workoutId,
+      createdBy: createdBy,
       createdAt: now,
       updatedAt: now,
     );
@@ -148,6 +158,7 @@ class WorkoutPlanWorkout extends Equatable implements Model {
     int? workoutPlanWeekId,
     int? workoutPlanDayId,
     int? workoutId,
+    CreatedBy? createdBy,
     int? createdAt,
     int? updatedAt,
   }) {
@@ -159,6 +170,7 @@ class WorkoutPlanWorkout extends Equatable implements Model {
       workoutPlanWeekId: workoutPlanWeekId ?? this.workoutPlanWeekId,
       workoutPlanDayId: workoutPlanDayId ?? this.workoutPlanDayId,
       workoutId: workoutId ?? this.workoutId,
+      createdBy: createdBy ?? this.createdBy,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -173,6 +185,7 @@ class WorkoutPlanWorkout extends Equatable implements Model {
         workoutPlanWeekId,
         workoutPlanDayId,
         workoutId,
+        createdBy,
         createdAt,
         updatedAt,
       ];
