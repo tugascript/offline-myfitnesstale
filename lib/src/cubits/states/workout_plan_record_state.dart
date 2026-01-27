@@ -47,7 +47,7 @@ final class WorkoutPlanRecordPagination extends Equatable {
   List<Object?> get props => [limit, offset, total];
 }
 
-final class CurrentWorkouPlanRecordState extends Equatable {
+final class CurrentWorkoutPlanRecordState extends Equatable {
   final WorkoutPlanRecordDto? currentPlanRecord;
   final WorkoutPlanDto? workoutPlan;
   final List<WorkoutDto> todaysWorkouts;
@@ -55,7 +55,7 @@ final class CurrentWorkouPlanRecordState extends Equatable {
   final int completedWorkouts;
   final int totalWorkouts;
 
-  const CurrentWorkouPlanRecordState({
+  const CurrentWorkoutPlanRecordState({
     this.currentPlanRecord,
     this.workoutPlan,
     required this.todaysWorkouts,
@@ -64,8 +64,8 @@ final class CurrentWorkouPlanRecordState extends Equatable {
     required this.totalWorkouts,
   });
 
-  factory CurrentWorkouPlanRecordState.initial() {
-    return const CurrentWorkouPlanRecordState(
+  factory CurrentWorkoutPlanRecordState.initial() {
+    return const CurrentWorkoutPlanRecordState(
       todaysWorkouts: [],
       workoutIndex: 0,
       completedWorkouts: 0,
@@ -73,7 +73,7 @@ final class CurrentWorkouPlanRecordState extends Equatable {
     );
   }
 
-  CurrentWorkouPlanRecordState copyWith({
+  CurrentWorkoutPlanRecordState copyWith({
     WorkoutPlanRecordDto? currentPlanRecord,
     WorkoutPlanDto? workoutPlan,
     List<WorkoutDto>? todaysWorkouts,
@@ -81,7 +81,7 @@ final class CurrentWorkouPlanRecordState extends Equatable {
     int? completedWorkouts,
     int? totalWorkouts,
   }) {
-    return CurrentWorkouPlanRecordState(
+    return CurrentWorkoutPlanRecordState(
       currentPlanRecord: currentPlanRecord ?? this.currentPlanRecord,
       workoutPlan: workoutPlan ?? this.workoutPlan,
       todaysWorkouts: todaysWorkouts ?? this.todaysWorkouts,
@@ -103,7 +103,7 @@ final class CurrentWorkouPlanRecordState extends Equatable {
 }
 
 final class WorkoutPlanRecordState extends Equatable {
-  final CurrentWorkouPlanRecordState currentPlanRecord;
+  final CurrentWorkoutPlanRecordState currentPlanRecord;
   final List<WorkoutPlanRecordDto> planRecords;
   final WorkoutPlanRecordPagination pagination;
   final bool isLoading;
@@ -119,7 +119,7 @@ final class WorkoutPlanRecordState extends Equatable {
 
   factory WorkoutPlanRecordState.initial() {
     return WorkoutPlanRecordState(
-      currentPlanRecord: CurrentWorkouPlanRecordState.initial(),
+      currentPlanRecord: CurrentWorkoutPlanRecordState.initial(),
       planRecords: const [],
       pagination: WorkoutPlanRecordPagination.initial(),
       isLoading: false,
@@ -127,7 +127,7 @@ final class WorkoutPlanRecordState extends Equatable {
   }
 
   WorkoutPlanRecordState copyWith({
-    CurrentWorkouPlanRecordState? currentPlanRecord,
+    CurrentWorkoutPlanRecordState? currentPlanRecord,
     List<WorkoutPlanRecordDto>? planRecords,
     WorkoutPlanRecordPagination? pagination,
     bool? isLoading,

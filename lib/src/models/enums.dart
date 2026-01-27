@@ -1,3 +1,17 @@
+enum CreatedBy {
+  user("user"),
+  system("system");
+
+  final String value;
+
+  const CreatedBy(this.value);
+
+  static CreatedBy fromValue(String v) => CreatedBy.values.firstWhere(
+        (c) => c.value == v,
+        orElse: () => CreatedBy.user,
+      );
+}
+
 enum MuscleGroup {
   full("full"),
   push("push"),

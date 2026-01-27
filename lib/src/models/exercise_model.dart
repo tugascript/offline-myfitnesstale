@@ -19,6 +19,7 @@ const String _tableCreate = """
     muscles TEXT NOT NULL,
     is_favorite INTEGER NOT NULL DEFAULT 0,
     difficulty INTEGER,
+    created_by TEXT NOT NULL,
     created_at INTEGER NOT NULL,
     updated_at INTEGER NOT NULL
   );
@@ -37,6 +38,7 @@ enum ExerciseColumns {
   muscles("muscles"),
   isFavorite("is_favorite"),
   difficulty("difficulty"),
+  createdBy("created_by"),
   createdAt("created_at"),
   updatedAt("updated_at");
 
@@ -106,6 +108,7 @@ class Exercise extends Equatable implements Model {
   final ExerciseMuscles muscles;
   final bool isFavorite;
   final int? difficulty;
+  final CreatedBy createdBy;
   @override
   final int createdAt;
   @override
@@ -121,6 +124,7 @@ class Exercise extends Equatable implements Model {
     required this.muscles,
     this.isFavorite = false,
     this.difficulty,
+    required this.createdBy,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -140,6 +144,7 @@ class Exercise extends Equatable implements Model {
       ExerciseColumns.muscles.value: muscles.toJson(),
       ExerciseColumns.isFavorite.value: isFavorite ? 1 : 0,
       ExerciseColumns.difficulty.value: difficulty,
+      ExerciseColumns.createdBy.value: createdBy.value,
       ExerciseColumns.createdAt.value: createdAt,
       ExerciseColumns.updatedAt.value: updatedAt,
     };
@@ -164,6 +169,8 @@ class Exercise extends Equatable implements Model {
               '{"primary_muscles":[],"secondary_muscles":[]}'),
       isFavorite: (map[ExerciseColumns.isFavorite.value] as int? ?? 0) == 1,
       difficulty: map[ExerciseColumns.difficulty.value] as int?,
+      createdBy:
+          CreatedBy.fromValue(map[ExerciseColumns.createdBy.value] as String),
       createdAt: map[ExerciseColumns.createdAt.value] as int,
       updatedAt: map[ExerciseColumns.updatedAt.value] as int,
     );
@@ -179,6 +186,7 @@ class Exercise extends Equatable implements Model {
     VideoData? video,
     int? difficulty,
     bool? isFavorite,
+    CreatedBy createdBy = CreatedBy.user,
   }) {
     final int now = DateUtilities.getNowUtcUnix();
     return Exercise(
@@ -190,6 +198,7 @@ class Exercise extends Equatable implements Model {
       video: video,
       isFavorite: isFavorite ?? false,
       difficulty: difficulty,
+      createdBy: createdBy,
       createdAt: now,
       updatedAt: now,
     );
@@ -206,6 +215,7 @@ class Exercise extends Equatable implements Model {
     ExerciseMuscles? muscles,
     bool? isFavorite,
     int? difficulty,
+    CreatedBy? createdBy,
     int? createdAt,
     int? updatedAt,
   }) {
@@ -219,6 +229,7 @@ class Exercise extends Equatable implements Model {
       muscles: muscles ?? this.muscles,
       isFavorite: isFavorite ?? this.isFavorite,
       difficulty: difficulty ?? this.difficulty,
+      createdBy: createdBy ?? this.createdBy,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -226,7 +237,7 @@ class Exercise extends Equatable implements Model {
 
   @override
   String toString() {
-    return 'Exercise{id: $id, name: $name, picture: $picture, video: $video, muscleGroup: $muscleGroup, muscles: $muscles, isFavorite: $isFavorite, difficulty: $difficulty, createdAt: $createdAt, updatedAt: $updatedAt}';
+    return 'Exercise{id: $id, name: $name, picture: $picture, video: $video, muscleGroup: $muscleGroup, muscles: $muscles, isFavorite: $isFavorite, difficulty: $difficulty, createdBy: $createdBy, createdAt: $createdAt, updatedAt: $updatedAt}';
   }
 
   @override
@@ -240,6 +251,7 @@ class Exercise extends Equatable implements Model {
         muscles,
         isFavorite,
         difficulty,
+        createdBy,
         createdAt,
         updatedAt,
       ];

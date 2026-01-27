@@ -15,7 +15,7 @@ const String _tableCreate = '''
     dropped_at INTEGER,
     created_at INTEGER NOT NULL,
     updated_at INTEGER NOT NULL,
-    FOREIGN KEY (workout_id) REFERENCES ${Workout.table} (id) ON DELETE 
+    FOREIGN KEY (workout_id) REFERENCES ${Workout.table} (id) ON DELETE CASCADE
   );
   
   CREATE INDEX IF NOT EXISTS idx_workout_records_workout_id ON $_table (workout_id);
