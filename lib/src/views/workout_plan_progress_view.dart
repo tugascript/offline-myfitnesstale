@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../cubits/current_workout_plan_record_cubit.dart';
-import '../cubits/states/current_workout_plan_record_state.dart';
+import '../cubits/states/workout_plan_record_state.dart';
+import '../cubits/workout_plan_record_cubit.dart';
 import '../models/enums.dart';
 import '../widgets/layout/responsive_scaffold.dart';
 
@@ -20,8 +20,7 @@ class _WorkoutPlanProgressViewState extends State<WorkoutPlanProgressView> {
   @override
   void initState() {
     super.initState();
-    context.read<CurrentWorkoutPlanRecordCubit>().getActivePlanRecord();
-    context.read<CurrentWorkoutPlanRecordCubit>().refreshProgress();
+    context.read<WorkoutPlanRecordCubit>().getActivePlanRecord();
   }
 
   String _difficultyLabel(Difficulty d) {
@@ -58,8 +57,7 @@ class _WorkoutPlanProgressViewState extends State<WorkoutPlanProgressView> {
   Widget build(BuildContext context) {
     return ResponsiveScaffold(
       title: 'Plan Progress',
-      body: BlocConsumer<CurrentWorkoutPlanRecordCubit,
-          CurrentWorkoutPlanRecordState>(
+      body: BlocConsumer<WorkoutPlanRecordCubit, WorkoutPlanRecordState>(
         listener: (context, state) {
           if (state.error != null) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -71,11 +69,12 @@ class _WorkoutPlanProgressViewState extends State<WorkoutPlanProgressView> {
           }
         },
         builder: (context, state) {
-          if (state.isLoading && state.workoutPlan == null) {
+          final currentPlanRecord = state.currentPlanRecord;
+          if (state.isLoading && currentPlanRecord.workoutPlan == null) {
             return const Center(child: CircularProgressIndicator());
           }
 
-          if (state.workoutPlan == null) {
+          if (currentPlanRecord.workoutPlan == null) {
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -107,16 +106,16 @@ class _WorkoutPlanProgressViewState extends State<WorkoutPlanProgressView> {
             );
           }
 
-          final plan = state.workoutPlan!;
+          final plan = currentPlanRecord.workoutPlan!;
           final difficulty = Difficulty.fromValue(plan.difficulty);
           final difficultyColor = _difficultyColor(difficulty);
+          final progressPercentage = (currentPlanRecord.completedWorkouts /
+                  currentPlanRecord.totalWorkouts) *
+              100;
 
           return RefreshIndicator(
             onRefresh: () async {
-              context
-                  .read<CurrentWorkoutPlanRecordCubit>()
-                  .getActivePlanRecord();
-              context.read<CurrentWorkoutPlanRecordCubit>().refreshProgress();
+              context.read<WorkoutPlanRecordCubit>().getActivePlanRecord();
             },
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(16.0),
@@ -196,7 +195,7 @@ class _WorkoutPlanProgressViewState extends State<WorkoutPlanProgressView> {
                       Expanded(
                         child: _buildStatCard(
                           'Completed',
-                          '${state.completedWorkouts}',
+                          '${state.currentPlanRecord.completedWorkouts}',
                           Icons.check_circle,
                           Colors.green,
                         ),
@@ -205,7 +204,7 @@ class _WorkoutPlanProgressViewState extends State<WorkoutPlanProgressView> {
                       Expanded(
                         child: _buildStatCard(
                           'Total',
-                          '${state.totalWorkouts}',
+                          '${state.currentPlanRecord.totalWorkouts}',
                           Icons.fitness_center,
                           Colors.blue,
                         ),
@@ -218,7 +217,7 @@ class _WorkoutPlanProgressViewState extends State<WorkoutPlanProgressView> {
                       Expanded(
                         child: _buildStatCard(
                           'Remaining',
-                          '${state.totalWorkouts - state.completedWorkouts}',
+                          '${currentPlanRecord.totalWorkouts - currentPlanRecord.completedWorkouts}',
                           Icons.pending,
                           Colors.orange,
                         ),
@@ -227,7 +226,7 @@ class _WorkoutPlanProgressViewState extends State<WorkoutPlanProgressView> {
                       Expanded(
                         child: _buildStatCard(
                           'Progress',
-                          '${state.progressPercentage.toStringAsFixed(1)}%',
+                          '${progressPercentage.toStringAsFixed(1)}%',
                           Icons.trending_up,
                           Theme.of(context).primaryColor,
                         ),
@@ -263,7 +262,7 @@ class _WorkoutPlanProgressViewState extends State<WorkoutPlanProgressView> {
                                 ),
                               ),
                               Text(
-                                '${state.progressPercentage.toStringAsFixed(1)}%',
+                                '${progressPercentage.toStringAsFixed(1)}%',
                                 style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.w600,
@@ -274,7 +273,7 @@ class _WorkoutPlanProgressViewState extends State<WorkoutPlanProgressView> {
                           ),
                           const SizedBox(height: 12),
                           LinearProgressIndicator(
-                            value: state.progressPercentage / 100,
+                            value: progressPercentage / 100,
                             minHeight: 12,
                             backgroundColor: Colors.grey[200],
                             valueColor: AlwaysStoppedAnimation<Color>(
@@ -283,7 +282,7 @@ class _WorkoutPlanProgressViewState extends State<WorkoutPlanProgressView> {
                           ),
                           const SizedBox(height: 12),
                           Text(
-                            '${state.completedWorkouts} of ${state.totalWorkouts} workouts completed',
+                            '${currentPlanRecord.completedWorkouts} of ${currentPlanRecord.totalWorkouts} workouts completed',
                             style: TextStyle(
                               fontSize: 14,
                               color: Colors.grey[600],

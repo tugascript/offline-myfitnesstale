@@ -86,7 +86,7 @@ class _WorkoutHistoryViewState extends State<WorkoutHistoryView> {
           if (state.error != null) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text(state.error!),
+                content: Text(state.error!.description),
                 backgroundColor: Colors.red,
               ),
             );

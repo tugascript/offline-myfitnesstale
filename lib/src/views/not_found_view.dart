@@ -9,7 +9,7 @@ class NotFoundView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const ResponsiveScaffold(
-      title: "404",
+      title: "Not Found",
       showBackButton: true,
       body: NotFound(),
     );
