@@ -1048,36 +1048,83 @@ class WorkoutPlanService {
       }
 
       final List<WorkoutPlanDay> planDays = await _dayRepository.selectMany(
-          where: "${WorkoutPlanDayColumns.workoutPlanWeekId.value} = ?",
-          whereArgs: [workoutPlanWeekId],
-          orderBy: '');
+        where: "${WorkoutPlanDayColumns.workoutPlanWeekId.value} = ?",
+        whereArgs: [workoutPlanWeekId],
+        orderBy: '${WorkoutPlanDayColumns.day.value} ASC',
+      );
       if (planDays.isEmpty) {
         return ok([]);
       }
 
       final List<WorkoutPlanWorkout> planWorkouts =
           await _planWorkoutRepository.selectMany(
-        where:
-            "${WorkoutPlanWorkoutColumns.workoutPlanDayId.value} IN (${List.filled(
-          planDays.length,
+        where: "${WorkoutPlanWorkoutColumns.workoutPlanWeekId.value} = ?",
+        whereArgs: [workoutPlanWeekId],
+        orderBy:
+            '${WorkoutPlanWorkoutColumns.workoutPlanDayId.value} ASC, ${WorkoutPlanWorkoutColumns.position} ASC',
+      );
+      final Set<int> workoutIds = planWorkouts.map((e) => e.workoutId).toSet();
+      final List<Workout> workouts = await _workoutRepository.selectMany(
+        where: "${WorkoutColumns.id.value} IN (${List.filled(
+          workoutIds.length,
           '?',
         ).join(
           ', ',
         )})",
-        whereArgs: planDays.map((e) => e.id).toList(),
+        whereArgs: workoutIds.toList(),
+      );
+      if (workouts.length != workoutIds.length) {
+        _logger.warning(
+          'Workout plan week with id $workoutPlanWeekId not found',
+        );
+        return err(
+          ServiceError(
+            type: SingleErrorTypes.notFound,
+            description:
+                'Workout plan week with id $workoutPlanWeekId not found',
+          ),
+        );
+      }
+
+      final Map<int, WorkoutDto> workoutMap = workouts.fold({}, (map, workout) {
+        map[workout.id!] = WorkoutDto.fromModel(workout);
+        return map;
+      });
+      final Map<int, List<WorkoutPlanWorkoutDto>> planWorkoutMap =
+          planWorkouts.fold(
+        {},
+        (map, planWorkout) => map
+          ..update(
+            planWorkout.workoutPlanDayId,
+            (value) => value
+              ..add(
+                WorkoutPlanWorkoutDto.fromModel(
+                  planWorkout,
+                  workout: workoutMap[planWorkout.workoutId],
+                ),
+              ),
+            ifAbsent: () => [
+              WorkoutPlanWorkoutDto.fromModel(
+                planWorkout,
+                workout: workoutMap[planWorkout.workoutId],
+              ),
+            ],
+          ),
       );
 
-      final List<WorkoutPlanDayDto> planDayDtos = planDays.map((e) {
-        final List<WorkoutPlanWorkoutDto> planWorkoutDtos = planWorkouts
-            .where((e) => e.workoutPlanDayId == e.id)
-            .map((e) => WorkoutPlanWorkoutDto.fromModel(e))
-            .toList();
-        return WorkoutPlanDayDto.fromModel(e, planWorkouts: planWorkoutDtos);
-      }).toList();
       _logger.info(
         'Got workout plan days with workout plan week id $workoutPlanWeekId',
       );
-      return ok(planDayDtos);
+      return ok(
+        planDays
+            .map(
+              (e) => WorkoutPlanDayDto.fromModel(
+                e,
+                planWorkouts: planWorkoutMap[e.id],
+              ),
+            )
+            .toList(),
+      );
     } catch (e) {
       _logger.severe(
         'Failed to get workout plan days with workout plan week id $workoutPlanWeekId',
@@ -1215,7 +1262,6 @@ class WorkoutPlanService {
       }
 
       final int id = await (await _databaseHelper.db).transaction((txn) async {
-        final int id = await _planWorkoutRepository.insert(planWorkout, txn);
         await txn.rawUpdate("""
           UPDATE workout_plan_workouts
           SET position = position + 1
@@ -1225,6 +1271,7 @@ class WorkoutPlanService {
           workoutPlanDayId,
           workoutPosition,
         ]);
+        final int id = await _planWorkoutRepository.insert(planWorkout, txn);
         return id;
       });
 
