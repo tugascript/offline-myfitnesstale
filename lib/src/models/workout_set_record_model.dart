@@ -16,12 +16,12 @@ const String _tableCreate = '''
     updated_at INTEGER NOT NULL,
     FOREIGN KEY (workout_set_id) REFERENCES ${WorkoutSet.table} (id)
       ON DELETE CASCADE,
-    FOREIGN KEY (workout_progress_id) REFERENCES ${WorkoutRecord.table} (id)
+    FOREIGN KEY (workout_record_id) REFERENCES ${WorkoutRecord.table} (id)
       ON DELETE CASCADE
   );
   
   CREATE INDEX IF NOT EXISTS idx_workout_set_progress_set_id ON $_table (workout_set_id);
-  CREATE INDEX IF NOT EXISTS idx_workout_set_progress_progress_id ON $_table (workout_progress_id);
+  CREATE INDEX IF NOT EXISTS idx_workout_set_progress_progress_id ON $_table (workout_record_id);
   CREATE INDEX IF NOT EXISTS idx_workout_set_progress_set_id_number ON $_table (workout_set_id, set_number);
   ''';
 

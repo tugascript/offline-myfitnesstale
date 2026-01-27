@@ -2,25 +2,28 @@ import 'package:equatable/equatable.dart';
 
 import '../../models/equipment_model.dart';
 import 'dto.dart';
+import 'picture_dto.dart';
 
 class EquipmentDto extends Equatable implements Dto<Equipment> {
   @override
   final int id;
   final String name;
-  final String? pictureUri;
+  final PictureDto? picture;
 
   const EquipmentDto({
     required this.id,
     required this.name,
-    this.pictureUri,
+    this.picture,
   });
 
   @override
-  factory EquipmentDto.mapData(Equipment equipment) {
+  factory EquipmentDto.fromModel(Equipment equipment) {
     return EquipmentDto(
       id: equipment.id!,
       name: equipment.name,
-      pictureUri: equipment.pictureUri,
+      picture: equipment.picture != null
+          ? PictureDto.fromModel(equipment.picture!)
+          : null,
     );
   }
 
@@ -28,15 +31,15 @@ class EquipmentDto extends Equatable implements Dto<Equipment> {
   EquipmentDto copyWith({
     int? id,
     String? name,
-    String? pictureUri,
+    PictureDto? picture,
   }) {
     return EquipmentDto(
       id: id ?? this.id,
       name: name ?? this.name,
-      pictureUri: pictureUri ?? this.pictureUri,
+      picture: picture ?? this.picture,
     );
   }
 
   @override
-  List<Object?> get props => [id, name, pictureUri];
+  List<Object?> get props => [id, name, picture];
 }
