@@ -1,3 +1,4 @@
+import 'common.dart';
 import 'enums.dart';
 import 'model.dart';
 import 'utilities.dart';
@@ -19,7 +20,7 @@ const String _tableCreate = '''
 enum EquipmentColumns {
   id("id"),
   name("name"),
-  pictureUri("picture_uri"),
+  picture("picture"),
   createdBy("created_by"),
   createdAt("created_at"),
   updatedAt("updated_at");
@@ -33,7 +34,7 @@ class Equipment implements Model {
   @override
   final int? id;
   final String name;
-  final String? pictureUri;
+  final PictureData? picture;
   final CreatedBy createdBy;
   @override
   final int createdAt;
@@ -43,7 +44,7 @@ class Equipment implements Model {
   const Equipment({
     this.id,
     required this.name,
-    this.pictureUri,
+    this.picture,
     required this.createdBy,
     required this.createdAt,
     required this.updatedAt,
@@ -57,7 +58,7 @@ class Equipment implements Model {
     return {
       EquipmentColumns.id.value: id,
       EquipmentColumns.name.value: name,
-      EquipmentColumns.pictureUri.value: pictureUri,
+      EquipmentColumns.picture.value: picture?.toJson(),
       EquipmentColumns.createdBy.value: createdBy.value,
       EquipmentColumns.createdAt.value: createdAt,
       EquipmentColumns.updatedAt.value: updatedAt,
@@ -69,7 +70,9 @@ class Equipment implements Model {
     return Equipment(
       id: map[EquipmentColumns.id.value] as int?,
       name: map[EquipmentColumns.name.value] as String,
-      pictureUri: map[EquipmentColumns.pictureUri.value] as String?,
+      picture: map[EquipmentColumns.picture.value] != null
+          ? PictureData.fromJson(map[EquipmentColumns.picture.value] as String)
+          : null,
       createdBy:
           CreatedBy.fromValue(map[EquipmentColumns.createdBy.value] as String),
       createdAt: map[EquipmentColumns.createdAt.value] as int,
@@ -80,13 +83,13 @@ class Equipment implements Model {
   @override
   factory Equipment.create({
     required String name,
-    String? pictureUri,
+    PictureData? picture,
     CreatedBy createdBy = CreatedBy.user,
   }) {
     final int now = DateUtilities.getNowUtcUnix();
     return Equipment(
       name: name,
-      pictureUri: pictureUri,
+      picture: picture,
       createdBy: createdBy,
       createdAt: now,
       updatedAt: now,
@@ -97,7 +100,7 @@ class Equipment implements Model {
   Equipment copyWith({
     int? id,
     String? name,
-    String? pictureUri,
+    PictureData? picture,
     CreatedBy? createdBy,
     int? createdAt,
     int? updatedAt,
@@ -105,7 +108,7 @@ class Equipment implements Model {
     return Equipment(
       id: id ?? this.id,
       name: name ?? this.name,
-      pictureUri: pictureUri ?? this.pictureUri,
+      picture: picture ?? this.picture,
       createdBy: createdBy ?? this.createdBy,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -114,6 +117,6 @@ class Equipment implements Model {
 
   @override
   String toString() {
-    return 'Equipment{id: $id, name: $name, pictureUri: $pictureUri, createdBy: $createdBy, createdAt: $createdAt, updatedAt: $updatedAt}';
+    return 'Equipment{id: $id, name: $name, picture: $picture, createdBy: $createdBy, createdAt: $createdAt, updatedAt: $updatedAt}';
   }
 }

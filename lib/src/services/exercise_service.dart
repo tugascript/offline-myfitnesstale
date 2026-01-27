@@ -150,7 +150,7 @@ class ExerciseService {
       return ok(
         ExerciseDto.fromModel(
           exercise,
-          equipments: equipments.map((e) => EquipmentDto.mapData(e)).toList(),
+          equipments: equipments.map((e) => EquipmentDto.fromModel(e)).toList(),
         ),
       );
     } catch (e) {
@@ -234,7 +234,7 @@ class ExerciseService {
       _logger.info("Created exercise with id: $id");
       return ok(
         ExerciseDto.fromModel(exercise.copyWith(id: id)).copyWith(
-          equipments: equipments.map((e) => EquipmentDto.mapData(e)).toList(),
+          equipments: equipments.map((e) => EquipmentDto.fromModel(e)).toList(),
         ),
       );
     } catch (e) {
@@ -340,7 +340,7 @@ class ExerciseService {
           await _exerciseEquipmentRepository.selectJoined(id);
       return ok(
         ExerciseDto.fromModel(updatedExercise).copyWith(
-          equipments: equipments.map((e) => EquipmentDto.mapData(e)).toList(),
+          equipments: equipments.map((e) => EquipmentDto.fromModel(e)).toList(),
         ),
       );
     } catch (e) {
@@ -493,7 +493,7 @@ class ExerciseService {
       _logger.info('Got ${equipments.length} equipments');
       return ok(PaginatedDto<EquipmentDto, Equipment>.mapData(
         data: equipments,
-        mapper: (equipment) => EquipmentDto.mapData(equipment),
+        mapper: (equipment) => EquipmentDto.fromModel(equipment),
         total: total,
         limit: limit,
         offset: offset,
@@ -521,7 +521,7 @@ class ExerciseService {
       }
 
       _logger.info('Got equipment with id $id');
-      return ok(EquipmentDto.mapData(equipment));
+      return ok(EquipmentDto.fromModel(equipment));
     } catch (e) {
       _logger.severe("Failed to get equipment with id $id", e);
       return err(const ServiceError(
@@ -534,17 +534,17 @@ class ExerciseService {
   Future<Result<EquipmentDto, ServiceError<OperationErrorTypes>>>
       createEquipment({
     required String name,
-    String? pictureUri,
+    PictureData? picture,
   }) async {
     _logger.info('Creating equipment with name $name');
     final Equipment equipment = Equipment.create(
       name: name,
-      pictureUri: pictureUri,
+      picture: picture,
     );
 
     try {
       final int id = await _equipmentRepository.insert(equipment);
-      return ok(EquipmentDto.mapData(equipment.copyWith(id: id)));
+      return ok(EquipmentDto.fromModel(equipment.copyWith(id: id)));
     } catch (e) {
       _logger.severe("Failed to create equipment with name $name", e);
       return err(const ServiceError(
@@ -590,7 +590,7 @@ class ExerciseService {
       });
 
       _logger.info('Created ${equipments.length} equipments');
-      return ok(equipments.map((e) => EquipmentDto.mapData(e)).toList());
+      return ok(equipments.map((e) => EquipmentDto.fromModel(e)).toList());
     } catch (e) {
       _logger.severe("Failed to create equipments", e);
       return err(const ServiceError(
@@ -628,7 +628,7 @@ class ExerciseService {
   Future<Result<EquipmentDto, ServiceError<SingleErrorTypes>>> updateEquipment(
     int id, {
     String? name,
-    String? pictureUri,
+    PictureData? picture,
   }) async {
     _logger.info('Updating equipment with id: $id');
     try {
@@ -643,12 +643,12 @@ class ExerciseService {
 
       final Equipment updatedEquipment = equipment.copyWith(
         name: name,
-        pictureUri: pictureUri,
+        picture: picture,
         updatedAt: DateUtilities.getNowUtcUnix(),
       );
       await _equipmentRepository.update(updatedEquipment);
       _logger.info('Updated equipment with id: $id');
-      return ok(EquipmentDto.mapData(updatedEquipment));
+      return ok(EquipmentDto.fromModel(updatedEquipment));
     } catch (e) {
       _logger.severe("Failed to update equipment with id: $id", e);
       return err(const ServiceError(

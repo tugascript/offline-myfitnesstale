@@ -42,7 +42,6 @@ class WorkoutSetExerciseRecordDto extends Equatable
   WorkoutSetExerciseRecordDto copyWith({
     int? id,
     int? workoutSetExerciseId,
-    int? workoutSetProgressId,
     int? exerciseId,
     int? reps,
     int? weightGrams,

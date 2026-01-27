@@ -64,7 +64,7 @@ class ExerciseCubit extends Cubit<ExerciseState> {
     _logger.info('Exercises retrieved successfully');
     emit(state.copyWith(
       exercises: paginatedData.data,
-      pagination: state.exercisePagination.copyWith(
+      exercisePagination: state.exercisePagination.copyWith(
         name: name,
         muscleGroup: muscleGroup,
         total: paginatedData.total,

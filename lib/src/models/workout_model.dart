@@ -77,7 +77,7 @@ class Workout implements Model {
       WorkoutColumns.id.value: id,
       WorkoutColumns.name.value: name,
       WorkoutColumns.description.value: description,
-      WorkoutColumns.picture.value: picture?.uri,
+      WorkoutColumns.picture.value: picture?.toJson(),
       WorkoutColumns.video.value: video?.toJson(),
       WorkoutColumns.muscleGroups.value:
           jsonEncode(muscleGroups.map((g) => g.value).toList()),

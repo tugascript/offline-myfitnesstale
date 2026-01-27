@@ -124,7 +124,7 @@ final class ExerciseState extends Equatable {
   ExerciseState copyWith({
     List<ExerciseDto>? exercises,
     List<ExerciseDto>? relatedExercises,
-    ExercisePagination? pagination,
+    ExercisePagination? exercisePagination,
     ExerciseDto? selectedExercise,
     List<ExerciseDto>? favoriteExercises,
     bool? isLoading,
@@ -136,7 +136,7 @@ final class ExerciseState extends Equatable {
     return ExerciseState(
       exercises: exercises ?? this.exercises,
       relatedExercises: relatedExercises ?? this.relatedExercises,
-      exercisePagination: pagination ?? exercisePagination,
+      exercisePagination: exercisePagination ?? this.exercisePagination,
       selectedExercise: selectedExercise ?? this.selectedExercise,
       isLoading: isLoading ?? this.isLoading,
       error: error ?? this.error,

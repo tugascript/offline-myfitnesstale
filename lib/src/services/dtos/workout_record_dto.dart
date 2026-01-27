@@ -62,8 +62,6 @@ class WorkoutRecordDto extends Equatable implements Dto<WorkoutRecord> {
     int? totalRestSecs,
     DateTime? startedAt,
     DateTime? completedAt,
-    double? weight,
-    int? reps,
     List<WorkoutSetRecordDto>? setRecords,
   }) {
     return WorkoutRecordDto(

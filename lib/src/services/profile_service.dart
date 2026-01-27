@@ -214,9 +214,6 @@ class ProfileService {
       final System updatedSystem = existingSystem.copyWith(
         theme: theme,
         units: units,
-        exerciseSetup: exerciseSetup,
-        workoutSetup: workoutSetup,
-        workoutPlanSetup: workoutPlanSetup,
         initialSetup: initialSetup,
         updatedAt: DateUtilities.getNowUtcUnix(),
       );
