@@ -22,7 +22,7 @@ import 'dtos/workout_plan_workout_dto.dart';
 
 class WeekWorkoutInput {
   final int workoutId;
-  final TimeOfDay? timeOfDay;
+  final WorkoutTimeOfDay? timeOfDay;
 
   const WeekWorkoutInput({
     required this.workoutId,
@@ -161,7 +161,7 @@ class WorkoutPlanService {
       final WorkoutPlan plan = WorkoutPlan.create(
         name: name,
         totalWeeks: totalWeeks,
-        difficulty: difficulty.value,
+        difficulty: difficulty,
         description: description,
         picture: picture,
         video: video,
@@ -202,7 +202,7 @@ class WorkoutPlanService {
       final WorkoutPlan updatedPlan = plan.copyWith(
         name: name,
         totalWeeks: totalWeeks,
-        difficulty: difficulty?.value ?? plan.difficulty,
+        difficulty: difficulty,
         description: description,
         picture: picture,
         video: video,
@@ -1199,7 +1199,7 @@ class WorkoutPlanService {
     required int workoutPlanDayId,
     required int workoutId,
     int? position,
-    TimeOfDay? timeOfDay,
+    WorkoutTimeOfDay? timeOfDay,
   }) async {
     _logger.info(
       "Creating workout plan workout for workout plan day with id $workoutPlanDayId",
@@ -1301,7 +1301,7 @@ class WorkoutPlanService {
       updateWorkoutPlanWorkout({
     required int workoutPlanWorkoutId,
     required int position,
-    TimeOfDay? timeOfDay,
+    WorkoutTimeOfDay? timeOfDay,
   }) async {
     _logger.info('Updating workout plan workout with id $workoutPlanWorkoutId');
     try {

@@ -54,11 +54,11 @@ enum WorkoutPlanWorkoutColumns {
   const WorkoutPlanWorkoutColumns(this.value);
 }
 
-class WorkoutPlanWorkout extends Equatable implements Model {
+final class WorkoutPlanWorkout extends Equatable implements Model {
   @override
   final int? id;
   final int position;
-  final TimeOfDay? timeOfDay;
+  final WorkoutTimeOfDay? timeOfDay;
   final int workoutPlanId;
   final int workoutPlanWeekId;
   final int workoutPlanDayId;
@@ -107,7 +107,7 @@ class WorkoutPlanWorkout extends Equatable implements Model {
       id: map[WorkoutPlanWorkoutColumns.id.value] as int?,
       position: map[WorkoutPlanWorkoutColumns.position.value] as int,
       timeOfDay: map[WorkoutPlanWorkoutColumns.timeOfDay.value] != null
-          ? TimeOfDay.fromValue(
+          ? WorkoutTimeOfDay.fromValue(
               map[WorkoutPlanWorkoutColumns.timeOfDay.value] as String,
             )
           : null,
@@ -132,7 +132,7 @@ class WorkoutPlanWorkout extends Equatable implements Model {
     required int workoutPlanWeekId,
     required int workoutPlanDayId,
     required int workoutId,
-    TimeOfDay? timeOfDay,
+    WorkoutTimeOfDay? timeOfDay,
     CreatedBy createdBy = CreatedBy.user,
   }) {
     final int now = DateTime.now().millisecondsSinceEpoch;
@@ -153,7 +153,7 @@ class WorkoutPlanWorkout extends Equatable implements Model {
   WorkoutPlanWorkout copyWith({
     int? id,
     int? position,
-    TimeOfDay? timeOfDay,
+    WorkoutTimeOfDay? timeOfDay,
     int? workoutPlanId,
     int? workoutPlanWeekId,
     int? workoutPlanDayId,

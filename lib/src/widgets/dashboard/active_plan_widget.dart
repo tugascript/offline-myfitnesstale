@@ -102,8 +102,7 @@ class _ActivePlanWidgetState extends State<ActivePlanWidget> {
           }
 
           final plan = currentPlanRecord.workoutPlan!;
-          final difficulty = Difficulty.fromValue(plan.difficulty);
-          final difficultyColor = _difficultyColor(difficulty);
+          final difficultyColor = _difficultyColor(plan.difficulty);
           final progressPercentange = currentPlanRecord.completedWorkouts /
               currentPlanRecord.totalWorkouts;
 
@@ -155,7 +154,7 @@ class _ActivePlanWidgetState extends State<ActivePlanWidget> {
                                 ),
                               ),
                               child: Text(
-                                _difficultyLabel(difficulty),
+                                _difficultyLabel(plan.difficulty),
                                 style: TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w600,

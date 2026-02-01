@@ -319,9 +319,8 @@ class _WorkoutPlanListViewState extends State<WorkoutPlanListView> {
   }
 
   Widget _buildPlanCard(WorkoutPlanDto plan, {bool isList = false}) {
-    final difficulty = Difficulty.fromValue(plan.difficulty);
-    final difficultyLabel = _difficultyLabel(difficulty);
-    final difficultyColor = _difficultyColor(difficulty);
+    final difficultyLabel = _difficultyLabel(plan.difficulty);
+    final difficultyColor = _difficultyColor(plan.difficulty);
 
     return Card(
       elevation: 2,
@@ -388,8 +387,7 @@ class _WorkoutPlanListViewState extends State<WorkoutPlanListView> {
                   ),
                 ],
               ),
-              if (plan.description != null &&
-                  plan.description!.isNotEmpty) ...[
+              if (plan.description != null && plan.description!.isNotEmpty) ...[
                 const SizedBox(height: 8),
                 Text(
                   plan.description!,
@@ -423,4 +421,3 @@ class _WorkoutPlanListViewState extends State<WorkoutPlanListView> {
     );
   }
 }
-

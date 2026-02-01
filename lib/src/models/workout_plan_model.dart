@@ -11,9 +11,11 @@ const String _tableCreate = '''
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
     description TEXT,
-    total_weeks INTEGER NOT NULL,
     picture TEXT,
     video TEXT,
+    total_weeks INTEGER NOT NULL,
+    total_days INTEGER NOT NULL,
+    total_workouts INTEGER NOT NULL,
     difficulty INTEGER NOT NULL,
     created_by TEXT NOT NULL,
     created_at INTEGER NOT NULL,
@@ -27,10 +29,12 @@ enum WorkoutPlanColumns {
   id("id"),
   name("name"),
   description("description"),
-  totalWeeks("total_weeks"),
   picture("picture"),
   video("video"),
   difficulty("difficulty"),
+  totalWeeks("total_weeks"),
+  totalDays("total_days"),
+  totalWorkouts("total_workouts"),
   createdBy("created_by"),
   createdAt("created_at"),
   updatedAt("updated_at");
@@ -46,9 +50,11 @@ class WorkoutPlan extends Equatable implements Model {
   final String name;
   final String? description;
   final int totalWeeks;
+  final int totalDays;
+  final int totalWorkouts;
   final PictureData? picture;
   final VideoData? video;
-  final int difficulty;
+  final Difficulty difficulty;
   final CreatedBy createdBy;
   @override
   final int createdAt;
@@ -60,6 +66,8 @@ class WorkoutPlan extends Equatable implements Model {
     required this.name,
     this.description,
     required this.totalWeeks,
+    required this.totalDays,
+    required this.totalWorkouts,
     this.picture,
     this.video,
     required this.difficulty,
@@ -78,9 +86,11 @@ class WorkoutPlan extends Equatable implements Model {
       WorkoutPlanColumns.name.value: name,
       WorkoutPlanColumns.description.value: description,
       WorkoutPlanColumns.totalWeeks.value: totalWeeks,
+      WorkoutPlanColumns.totalDays.value: totalDays,
+      WorkoutPlanColumns.totalWorkouts.value: totalWorkouts,
       WorkoutPlanColumns.picture.value: picture,
       WorkoutPlanColumns.video.value: video,
-      WorkoutPlanColumns.difficulty.value: difficulty,
+      WorkoutPlanColumns.difficulty.value: difficulty.value,
       WorkoutPlanColumns.createdBy.value: createdBy.value,
       WorkoutPlanColumns.createdAt.value: createdAt,
       WorkoutPlanColumns.updatedAt.value: updatedAt,
@@ -101,29 +111,36 @@ class WorkoutPlan extends Equatable implements Model {
       video: map[WorkoutPlanColumns.video.value] != null
           ? VideoData.fromJson(map[WorkoutPlanColumns.video.value] as String)
           : null,
-      difficulty: map[WorkoutPlanColumns.difficulty.value] as int,
+      difficulty:
+          Difficulty.fromValue(map[WorkoutPlanColumns.difficulty.value] as int),
       createdBy: CreatedBy.fromValue(
         map[WorkoutPlanColumns.createdBy.value] as String,
       ),
       createdAt: map[WorkoutPlanColumns.createdAt.value] as int,
       updatedAt: map[WorkoutPlanColumns.updatedAt.value] as int,
+      totalDays: map[WorkoutPlanColumns.totalDays.value] as int,
+      totalWorkouts: map[WorkoutPlanColumns.totalWorkouts.value] as int,
     );
   }
 
   @override
   factory WorkoutPlan.create({
     required String name,
-    required int totalWeeks,
-    required int difficulty,
+    required Difficulty difficulty,
     String? description,
     PictureData? picture,
     VideoData? video,
+    int totalWeeks = 0,
+    int totalDays = 0,
+    int totalWorkouts = 0,
     CreatedBy createdBy = CreatedBy.user,
   }) {
     final int now = DateUtilities.getNowUtcUnix();
     return WorkoutPlan(
       name: name,
       totalWeeks: totalWeeks,
+      totalDays: totalDays,
+      totalWorkouts: totalWorkouts,
       difficulty: difficulty,
       description: description,
       picture: picture,
@@ -140,9 +157,11 @@ class WorkoutPlan extends Equatable implements Model {
     String? name,
     String? description,
     int? totalWeeks,
+    int? totalDays,
+    int? totalWorkouts,
     PictureData? picture,
     VideoData? video,
-    int? difficulty,
+    Difficulty? difficulty,
     CreatedBy? createdBy,
     int? createdAt,
     int? updatedAt,
@@ -152,6 +171,8 @@ class WorkoutPlan extends Equatable implements Model {
       name: name ?? this.name,
       description: description ?? this.description,
       totalWeeks: totalWeeks ?? this.totalWeeks,
+      totalDays: totalDays ?? this.totalDays,
+      totalWorkouts: totalWorkouts ?? this.totalWorkouts,
       picture: picture ?? this.picture,
       video: video ?? this.video,
       difficulty: difficulty ?? this.difficulty,
@@ -167,6 +188,8 @@ class WorkoutPlan extends Equatable implements Model {
         name,
         description,
         totalWeeks,
+        totalDays,
+        totalWorkouts,
         picture,
         video,
         difficulty,

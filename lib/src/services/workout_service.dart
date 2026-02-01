@@ -35,6 +35,60 @@ class WorkoutSetExerciseInput {
   });
 }
 
+class WorkoutSetExerciseRegistrationInput {
+  final ExerciseDto exercise;
+  final int minReps;
+  final int? maxReps;
+  final WorkoutSetExerciseDifficulty? difficulty;
+  final List<ExerciseDto> alternativeExercises;
+
+  const WorkoutSetExerciseRegistrationInput({
+    required this.exercise,
+    required this.minReps,
+    this.maxReps,
+    this.difficulty,
+    this.alternativeExercises = const [],
+  });
+}
+
+class WorkoutSetRegistrationInput {
+  final WorkoutSetType setType;
+  final int minSets;
+  final int maxSets;
+  final int recommendedRestSecs;
+  final int maxRestSecs;
+  final List<WorkoutSetExerciseRegistrationInput> exercises;
+
+  const WorkoutSetRegistrationInput({
+    required this.setType,
+    required this.minSets,
+    required this.maxSets,
+    required this.recommendedRestSecs,
+    required this.maxRestSecs,
+    required this.exercises,
+  });
+}
+
+class WorkoutRegistrationInput {
+  final String name;
+  final String description;
+  final PictureData? picture;
+  final VideoData? video;
+  final Difficulty difficulty;
+  final WorkoutPhase? phase;
+  final List<WorkoutSetRegistrationInput> sets;
+
+  const WorkoutRegistrationInput({
+    required this.name,
+    required this.description,
+    this.picture,
+    this.video,
+    required this.difficulty,
+    this.phase,
+    required this.sets,
+  });
+}
+
 class WorkoutService {
   WorkoutService._();
 
@@ -292,6 +346,125 @@ class WorkoutService {
       return err(const ServiceError(
         type: OperationErrorTypes.operationFailure,
         description: 'Failed to create workout',
+      ));
+    }
+  }
+
+  Future<Result<List<WorkoutDto>, ServiceError<OperationErrorTypes>>>
+      createWorkouts(
+    List<WorkoutRegistrationInput> workouts, {
+    CreatedBy createdBy = CreatedBy.user,
+  }) async {
+    _logger.info("Creating ${workouts.length} workouts...");
+    try {
+      final List<WorkoutDto> createdWorkouts =
+          await (await _databaseHelper.db).transaction((txn) async {
+        final List<WorkoutDto> createdWorkouts = [];
+
+        for (final workoutInput in workouts) {
+          final workout = Workout.create(
+            name: workoutInput.name,
+            description: workoutInput.description,
+            picture: workoutInput.picture,
+            video: workoutInput.video,
+            difficulty: workoutInput.difficulty,
+            phase: workoutInput.phase,
+            createdBy: createdBy,
+          );
+
+          final int workoutId = await _repository.insert(workout, txn);
+          final List<WorkoutSetDto> createdSets = [];
+
+          for (int i = 0; i < workoutInput.sets.length; i++) {
+            final setInput = workoutInput.sets[i];
+            final set = WorkoutSet.create(
+              position: i + 1,
+              workoutId: workoutId,
+              setType: setInput.setType,
+              minSets: setInput.minSets,
+              maxSets: setInput.maxSets,
+              recommendedRestSecs: setInput.recommendedRestSecs,
+              maxRestSecs: setInput.maxRestSecs,
+              createdBy: createdBy,
+            );
+
+            final int setId = await _setRepository.insert(set, txn);
+            final List<WorkoutSetExerciseDto> createdSetExercises = [];
+
+            for (int j = 0; j < setInput.exercises.length; j++) {
+              final exerciseInput = setInput.exercises[j];
+
+              final setExercise = WorkoutSetExercise.create(
+                position: j + 1,
+                workoutId: workoutId,
+                workoutSetId: setId,
+                exerciseId: exerciseInput.exercise.id,
+                minReps: exerciseInput.minReps,
+                maxReps: exerciseInput.maxReps,
+                difficulty: exerciseInput.difficulty,
+                createdBy: createdBy,
+              );
+
+              final int setExerciseId = await _setExerciseRepository.insert(
+                setExercise,
+                txn,
+              );
+
+              final List<WorkoutSetExerciseOptionDto> createdOptions = [];
+              for (int k = 0;
+                  k < exerciseInput.alternativeExercises.length;
+                  k++) {
+                final optionDto = exerciseInput.alternativeExercises[k];
+
+                final option = WorkoutSetExerciseOption.create(
+                  workoutId: workoutId,
+                  workoutSetId: setId,
+                  workoutSetExerciseId: setExerciseId,
+                  exerciseId: optionDto.id,
+                  position: k + 1,
+                  createdBy: createdBy,
+                );
+
+                final int optionKey = await _setExerciseOptionRepository.insert(
+                  option,
+                  txn,
+                );
+
+                createdOptions.add(WorkoutSetExerciseOptionDto.fromModel(
+                  option.copyWith(id: optionKey),
+                  exercise: optionDto,
+                ));
+              }
+
+              createdSetExercises.add(WorkoutSetExerciseDto.fromModel(
+                setExercise.copyWith(id: setExerciseId),
+                exercise: exerciseInput.exercise,
+                options: createdOptions,
+              ));
+            }
+
+            createdSets.add(WorkoutSetDto.fromModel(
+              set.copyWith(id: setId),
+              exercises: createdSetExercises,
+            ));
+          }
+
+          createdWorkouts.add(WorkoutDto.fromModel(
+            workout.copyWith(id: workoutId),
+            sets: createdSets,
+          ));
+        }
+
+        return createdWorkouts;
+      });
+
+      _logger.info("Created ${createdWorkouts.length} workouts");
+      return ok(createdWorkouts);
+    } catch (e) {
+      _logger.severe("Failed to create workouts", e);
+      return err(ServiceError(
+        type: OperationErrorTypes.operationFailure,
+        description: 'Failed to create workouts with error: ${e.toString()}',
       ));
     }
   }

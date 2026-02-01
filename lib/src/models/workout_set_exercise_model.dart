@@ -68,6 +68,16 @@ class WorkoutSetExerciseDifficulty extends Equatable {
     });
   }
 
+  factory WorkoutSetExerciseDifficulty.create({
+    required int value,
+    required WorkoutSetExerciseDifficultyType type,
+  }) {
+    return WorkoutSetExerciseDifficulty(
+      value: value,
+      type: type,
+    );
+  }
+
   factory WorkoutSetExerciseDifficulty.fromJson(String json) {
     return WorkoutSetExerciseDifficulty.fromMap(jsonDecode(json));
   }
@@ -83,7 +93,7 @@ class WorkoutSetExerciseDifficulty extends Equatable {
   List<Object?> get props => [value, type];
 }
 
-class WorkoutSetExercise extends Equatable implements Model {
+final class WorkoutSetExercise extends Equatable implements Model {
   @override
   final int? id;
   final int workoutId;

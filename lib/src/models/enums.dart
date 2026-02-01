@@ -232,7 +232,7 @@ enum Difficulty {
       );
 }
 
-enum TimeOfDay {
+enum WorkoutTimeOfDay {
   anytime("anytime"),
   morning("morning"),
   afternoon("afternoon"),
@@ -241,11 +241,12 @@ enum TimeOfDay {
 
   final String value;
 
-  const TimeOfDay(this.value);
+  const WorkoutTimeOfDay(this.value);
 
-  static TimeOfDay fromValue(String v) => TimeOfDay.values.firstWhere(
+  static WorkoutTimeOfDay fromValue(String v) =>
+      WorkoutTimeOfDay.values.firstWhere(
         (t) => t.value == v,
-        orElse: () => TimeOfDay.anytime,
+        orElse: () => WorkoutTimeOfDay.anytime,
       );
 }
 
@@ -276,6 +277,22 @@ enum ProgressStatus {
   static ProgressStatus fromValue(String v) => ProgressStatus.values.firstWhere(
         (p) => p.value == v,
         orElse: () => ProgressStatus.inProgress,
+      );
+}
+
+enum WorkoutPhase {
+  endurance("endurance"),
+  hypertrophy("hypertrophy"),
+  maxStrength("max_strength"),
+  power("power");
+
+  final String value;
+
+  const WorkoutPhase(this.value);
+
+  static WorkoutPhase fromValue(String v) => WorkoutPhase.values.firstWhere(
+        (p) => p.value == v,
+        orElse: () => WorkoutPhase.endurance,
       );
 }
 

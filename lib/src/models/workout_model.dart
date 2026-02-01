@@ -13,9 +13,12 @@ const String _tableCreate = '''
     description TEXT,
     picture TEXT,
     video TEXT,
+    phase TEXT,
     muscle_groups TEXT NOT NULL,
     muscles TEXT NOT NULL,
     difficulty INTEGER NOT NULL,
+    total_sets INTEGER NOT NULL,
+    total_reps INTEGER NOT NULL,
     created_by TEXT NOT NULL,
     created_at INTEGER NOT NULL,
     updated_at INTEGER NOT NULL
@@ -30,9 +33,12 @@ enum WorkoutColumns {
   description("description"),
   picture("picture"),
   video("video"),
+  phase("phase"),
   muscleGroups("muscle_groups"),
   muscles("muscles"),
   difficulty("difficulty"),
+  totalSets("total_sets"),
+  totalReps("total_reps"),
   createdBy("created_by"),
   createdAt("created_at"),
   updatedAt("updated_at");
@@ -42,16 +48,19 @@ enum WorkoutColumns {
   const WorkoutColumns(this.value);
 }
 
-class Workout implements Model {
+final class Workout implements Model {
   @override
   final int? id;
   final String name;
   final String? description;
   final PictureData? picture;
   final VideoData? video;
+  final WorkoutPhase? phase;
   final Set<MuscleGroup> muscleGroups;
   final Set<Muscle> muscles;
   final Difficulty difficulty;
+  final int totalSets;
+  final int totalReps;
   final CreatedBy createdBy;
   @override
   final int createdAt;
@@ -64,9 +73,12 @@ class Workout implements Model {
     this.description,
     this.picture,
     this.video,
+    this.phase,
     required this.muscleGroups,
     required this.muscles,
     required this.difficulty,
+    required this.totalSets,
+    required this.totalReps,
     required this.createdBy,
     required this.createdAt,
     required this.updatedAt,
@@ -88,6 +100,9 @@ class Workout implements Model {
       WorkoutColumns.muscles.value:
           jsonEncode(muscles.map((m) => m.value).toList()),
       WorkoutColumns.difficulty.value: difficulty.value,
+      WorkoutColumns.phase.value: phase?.value,
+      WorkoutColumns.totalSets.value: totalSets,
+      WorkoutColumns.totalReps.value: totalReps,
       WorkoutColumns.createdBy.value: createdBy.value,
       WorkoutColumns.createdAt.value: createdAt,
       WorkoutColumns.updatedAt.value: updatedAt,
@@ -120,6 +135,11 @@ class Workout implements Model {
           : <Muscle>{}),
       difficulty:
           Difficulty.fromValue(map[WorkoutColumns.difficulty.value] as int),
+      phase: map[WorkoutColumns.phase.value] != null
+          ? WorkoutPhase.fromValue(map[WorkoutColumns.phase.value] as String)
+          : null,
+      totalSets: map[WorkoutColumns.totalSets.value] as int,
+      totalReps: map[WorkoutColumns.totalReps.value] as int,
       createdBy:
           CreatedBy.fromValue(map[WorkoutColumns.createdBy.value] as String),
       createdAt: map[WorkoutColumns.createdAt.value] as int,
@@ -131,11 +151,14 @@ class Workout implements Model {
   factory Workout.create({
     required String name,
     required Difficulty difficulty,
-    Set<MuscleGroup>? muscleGroups,
-    Set<Muscle>? muscles,
+    Set<MuscleGroup> muscleGroups = const <MuscleGroup>{},
+    Set<Muscle> muscles = const <Muscle>{},
     String? description,
     PictureData? picture,
     VideoData? video,
+    WorkoutPhase? phase,
+    int totalSets = 0,
+    int totalReps = 0,
     CreatedBy createdBy = CreatedBy.user,
   }) {
     final int now = DateUtilities.getNowUtcUnix();
@@ -145,8 +168,11 @@ class Workout implements Model {
       picture: picture,
       video: video,
       difficulty: difficulty,
-      muscleGroups: muscleGroups ?? <MuscleGroup>{},
-      muscles: muscles ?? <Muscle>{},
+      muscleGroups: muscleGroups,
+      muscles: muscles,
+      phase: phase,
+      totalSets: totalSets,
+      totalReps: totalReps,
       createdBy: createdBy,
       createdAt: now,
       updatedAt: now,
@@ -164,6 +190,9 @@ class Workout implements Model {
     Set<Muscle>? muscles,
     Difficulty? difficulty,
     CreatedBy? createdBy,
+    WorkoutPhase? phase,
+    int? totalSets,
+    int? totalReps,
     int? createdAt,
     int? updatedAt,
   }) {
@@ -179,11 +208,14 @@ class Workout implements Model {
       createdBy: createdBy ?? this.createdBy,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      phase: phase ?? this.phase,
+      totalSets: totalSets ?? this.totalSets,
+      totalReps: totalReps ?? this.totalReps,
     );
   }
 
   @override
   String toString() {
-    return 'Workout{id: $id, name: $name, description: $description, picture: $picture, video: $video, createdBy: $createdBy, createdAt: $createdAt, updatedAt: $updatedAt}';
+    return 'Workout{id: $id, name: $name, description: $description, picture: $picture, video: $video, createdBy: $createdBy, createdAt: $createdAt, updatedAt: $updatedAt, phase: $phase, totalSets: $totalSets, totalReps: $totalReps}';
   }
 }

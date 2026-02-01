@@ -46,9 +46,8 @@ class WorkoutPlanCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final difficulty = Difficulty.fromValue(plan.difficulty);
-    final difficultyLabel = _difficultyLabel(difficulty);
-    final difficultyColor = _difficultyColor(difficulty);
+    final difficultyLabel = _difficultyLabel(plan.difficulty);
+    final difficultyColor = _difficultyColor(plan.difficulty);
 
     return Card(
       elevation: 2,
@@ -146,4 +145,3 @@ class WorkoutPlanCard extends StatelessWidget {
     );
   }
 }
-

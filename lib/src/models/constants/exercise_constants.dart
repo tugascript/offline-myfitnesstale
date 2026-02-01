@@ -22,8 +22,10 @@ const String kDumbbellChestPressName = "Dumbbell Chest Press";
 const String kInclineDumbbellChestPressName = "Incline Dumbbell Chest Press";
 const String kInclineMachineChestPressName = "Incline Machine Chest Press";
 const String kMachineChestPressName = "Machine Chest Press";
-const String kMachineChestFlyName = "Machine Chest Fly";
-const String kCableUnderhandFlyName = "Cable Underhand Fly";
+const String kMachineChestFlysName = "Machine Chest Flys";
+const String kCableUnderhandFlysName = "Cable Underhand Flys";
+const String kCableFlysName = "Cable Flys";
+const String kInclineCableFlysName = "Incline Cable Flys";
 const String kStandingBarbellShoulderPressName =
     "Standing Barbell Shoulder Press";
 const String kSeatedBarbellShoulderPressName = "Seated Barbell Shoulder Press";
@@ -42,6 +44,7 @@ const String kDumbbellOverheadTricepsExtensionName =
     "Dumbbell Overhead Triceps Extension";
 const String kSkullCrushersName = "Skull Crushers";
 const String kTricepsPushdownName = "Triceps Pushdown";
+const String kCableTricepKickbackName = "Cable Tricep Kickback";
 const String kDipsName = "Dips";
 const String kPullUpsName = "Pull ups";
 const String kChinUpsName = "Chin ups";
@@ -53,11 +56,14 @@ const String kSingleArmSupportedDumbbellRowName =
 const String kInclineDumbbellRowName = "Incline Dumbbell Row";
 const String kTBarRowName = "T-Bar Row";
 const String kChestSupportedTBarRowName = "Chest Supported T-Bar Row";
+const String kChestSupportedRowMachineName = "Chest Supported Row Machine";
 const String kSeatedCableRowName = "Seated Cable Row";
 const String kFacePullsName = "Face Pulls";
-const String kMachineReverseFlyName = "Machine Reverse Fly";
-const String kBentOverDumbbellReverseFlyName = "Bent Over Dumbbell Reverse Fly";
-const String kInclineDumbbellReverseFlyName = "Incline Dumbbell Reverse Fly";
+const String kMachineReverseFlysName = "Machine Reverse Flys";
+const String kBentOverDumbbellReverseFlysName =
+    "Bent Over Dumbbell Reverse Flys";
+const String kInclineDumbbellReverseFlysName = "Incline Dumbbell Reverse Flys";
+const String kBentOverCableReverseFlysName = "Bent Over Cable Reverse Flys";
 const String kBarbellBicepCurlName = "Barbell Bicep Curl";
 const String kDumbbellBicepCurlName = "Dumbbell Bicep Curl";
 const String kHammerCurlName = "Hammer Curl";
@@ -65,6 +71,7 @@ const String kBarbellPreacherCurlName = "Barbell Preacher Curl";
 const String kDumbbellPreacherCurlName = "Dumbbell Preacher Curl";
 const String kCableEZBarBicepCurlName = "Cable EZ Bar Bicep Curl";
 const String kCableDHandleBicepCurlName = "Cable D-Handle Bicep Curl";
+const String kBayesianCableCurlName = "Bayesian Cable Curl";
 const String kBarbellBackSquatName = "Barbell Back Squat";
 const String kBarbellFrontSquatName = "Barbell Front Squat";
 const String kSmithMachineSquatName = "Smith Machine Squat";
@@ -80,15 +87,28 @@ const String kSmithMachineGoodMorningName = "Smith Machine Good Morning";
 const String kWalkingLungesName = "Walking Lunges";
 const String kLungeName = "Lunge";
 const String kSmithMachineElevatedLungeName = "Smith Machine Elevated Lunge";
-const String kLegCurlName = "Leg Curl";
+const String kSeatedLegCurlName = "Seated Leg Curl";
+const String kLyingLegCurlName = "Lying Leg Curl";
 const String kLegExtensionName = "Leg Extension";
 const String kStandingCalfRaisesName = "Standing Calf Raises";
+const String kSeatedCalfMachineName = "Seated Calf Machine";
 const String kCrunchesName = "Crunches";
 const String kCableCrunchesName = "Cable Crunches";
-const String kLegRaisesName = "Leg Raises";
+const String kCaptainsChairLegRaisesName = "Captain's Chair Leg Raises";
+const String kHangingLegRaisesName = "Hanging Leg Raises";
+const String kLyingLegRaisesName = "Lying Leg Raises";
 const String kCableWoodchopperName = "Cable Woodchopper";
 const String kBackExtensionName = "Back Extension";
 const String kBurpeesName = "Burpees";
+const String kHipThrustName = "Hip Thrust";
+const String kCrunchMachineName = "Crunch Machine";
+const String kAssistedPullUpName = "Assisted Pull-up";
+const String kAssistedChinUpName = "Assisted Chin Up";
+const String kSmithMachineSkullCrushersName = "Smith Machine Skull Crusher";
+const String kInclineDumbbellChestFlysName = "Incline Dumbbell Chest Flys";
+const String kWeightedPullUpName = "Weighted Pull-up";
+const String kWeightedChinUpName = "Weighted Chin Up";
+const String kPendlayRowsName = "Pendlay Rows";
 
 const List<String> kExerciseNames = [
   kBarbellChestPressName,
@@ -97,8 +117,10 @@ const List<String> kExerciseNames = [
   kInclineDumbbellChestPressName,
   kInclineMachineChestPressName,
   kMachineChestPressName,
-  kMachineChestFlyName,
-  kCableUnderhandFlyName,
+  kMachineChestFlysName,
+  kCableUnderhandFlysName,
+  kCableFlysName,
+  kInclineCableFlysName,
   kStandingBarbellShoulderPressName,
   kSeatedBarbellShoulderPressName,
   kSmithMachineShoulderPressName,
@@ -112,21 +134,25 @@ const List<String> kExerciseNames = [
   kDumbbellOverheadTricepsExtensionName,
   kSkullCrushersName,
   kTricepsPushdownName,
+  kCableTricepKickbackName,
   kDipsName,
   kPullUpsName,
   kChinUpsName,
   kOverhandLatPulldownName,
   kUnderhandLatPulldownName,
+  kPendlayRowsName,
   kBarbellBentOverRowsName,
   kSingleArmSupportedDumbbellRowName,
   kInclineDumbbellRowName,
   kTBarRowName,
   kChestSupportedTBarRowName,
+  kChestSupportedRowMachineName,
   kSeatedCableRowName,
   kFacePullsName,
-  kMachineReverseFlyName,
-  kBentOverDumbbellReverseFlyName,
-  kInclineDumbbellReverseFlyName,
+  kMachineReverseFlysName,
+  kBentOverDumbbellReverseFlysName,
+  kInclineDumbbellReverseFlysName,
+  kBentOverCableReverseFlysName,
   kBarbellBicepCurlName,
   kDumbbellBicepCurlName,
   kHammerCurlName,
@@ -134,6 +160,7 @@ const List<String> kExerciseNames = [
   kDumbbellPreacherCurlName,
   kCableEZBarBicepCurlName,
   kCableDHandleBicepCurlName,
+  kBayesianCableCurlName,
   kBarbellBackSquatName,
   kBarbellFrontSquatName,
   kSmithMachineSquatName,
@@ -148,15 +175,26 @@ const List<String> kExerciseNames = [
   kWalkingLungesName,
   kLungeName,
   kSmithMachineElevatedLungeName,
-  kLegCurlName,
+  kSeatedLegCurlName,
+  kLyingLegCurlName,
   kLegExtensionName,
   kStandingCalfRaisesName,
+  kSeatedCalfMachineName,
   kCrunchesName,
   kCableCrunchesName,
-  kLegRaisesName,
+  kCaptainsChairLegRaisesName,
+  kHangingLegRaisesName,
   kCableWoodchopperName,
   kBackExtensionName,
   kBurpeesName,
+  kHipThrustName,
+  kCrunchMachineName,
+  kAssistedPullUpName,
+  kAssistedChinUpName,
+  kSmithMachineSkullCrushersName,
+  kInclineDumbbellChestFlysName,
+  kWeightedPullUpName,
+  kWeightedChinUpName,
 ];
 
 const Set<ExerciseData> kInitialExercises = <ExerciseData>{
@@ -249,7 +287,7 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
     equipments: {kMachineName},
   ),
   ExerciseData(
-    name: kMachineChestFlyName,
+    name: kMachineChestFlysName,
     muscleGroup: MuscleGroup.push,
     muscles: ExerciseMuscles(
       primaryMuscles: {
@@ -260,13 +298,37 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
     equipments: {kMachineName},
   ),
   ExerciseData(
-    name: kCableUnderhandFlyName,
+    name: kCableUnderhandFlysName,
     muscleGroup: MuscleGroup.push,
     muscles: ExerciseMuscles(
       primaryMuscles: {
         Muscle.upperChest,
       },
       secondaryMuscles: {},
+    ),
+    equipments: {kCableName, kDHandleName},
+  ),
+  ExerciseData(
+    name: kCableFlysName,
+    muscleGroup: MuscleGroup.push,
+    muscles: ExerciseMuscles(
+      primaryMuscles: {
+        Muscle.chest,
+      },
+      secondaryMuscles: {},
+    ),
+    equipments: {kCableName, kDHandleName},
+  ),
+  ExerciseData(
+    name: kInclineCableFlysName,
+    muscleGroup: MuscleGroup.push,
+    muscles: ExerciseMuscles(
+      primaryMuscles: {
+        Muscle.upperChest,
+      },
+      secondaryMuscles: {
+        Muscle.chest,
+      },
     ),
     equipments: {kCableName, kDHandleName},
   ),
@@ -454,6 +516,17 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
     equipments: {kDipStationName, kBodyweightName, kWeightBeltName},
   ),
   ExerciseData(
+    name: kCableTricepKickbackName,
+    muscleGroup: MuscleGroup.push,
+    muscles: ExerciseMuscles(
+      primaryMuscles: {
+        Muscle.triceps,
+      },
+      secondaryMuscles: {},
+    ),
+    equipments: {kCableName},
+  ),
+  ExerciseData(
     name: kPullUpsName,
     muscleGroup: MuscleGroup.pull,
     muscles: ExerciseMuscles(
@@ -465,7 +538,7 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
         Muscle.forearms,
       },
     ),
-    equipments: {kPullUpBarName, kBodyweightName, kWeightBeltName},
+    equipments: {kPullUpBarName, kBodyweightName},
   ),
   ExerciseData(
     name: kChinUpsName,
@@ -508,6 +581,21 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
       },
     ),
     equipments: {kCableName, kLatPulldownBarName},
+  ),
+  ExerciseData(
+    name: kPendlayRowsName,
+    muscleGroup: MuscleGroup.pull,
+    muscles: ExerciseMuscles(
+      primaryMuscles: {
+        Muscle.lats,
+      },
+      secondaryMuscles: {
+        Muscle.biceps,
+        Muscle.forearms,
+        Muscle.lowerBack,
+      },
+    ),
+    equipments: {kBarbellName},
   ),
   ExerciseData(
     name: kBarbellBentOverRowsName,
@@ -592,6 +680,23 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
     equipments: {kMachineName},
   ),
   ExerciseData(
+    name: kChestSupportedRowMachineName,
+    muscleGroup: MuscleGroup.pull,
+    muscles: ExerciseMuscles(
+      primaryMuscles: {
+        Muscle.rhomboids,
+        Muscle.lats,
+      },
+      secondaryMuscles: {
+        Muscle.traps,
+        Muscle.rearDelts,
+        Muscle.biceps,
+        Muscle.forearms,
+      },
+    ),
+    equipments: {kMachineName},
+  ),
+  ExerciseData(
     name: kSeatedCableRowName,
     muscleGroup: MuscleGroup.pull,
     muscles: ExerciseMuscles(
@@ -625,7 +730,7 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
     equipments: {kCableName, kTricepsRopeAttachmentName},
   ),
   ExerciseData(
-    name: kMachineReverseFlyName,
+    name: kMachineReverseFlysName,
     muscleGroup: MuscleGroup.pull,
     muscles: ExerciseMuscles(
       primaryMuscles: {
@@ -636,7 +741,7 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
     equipments: {kMachineName},
   ),
   ExerciseData(
-    name: kBentOverDumbbellReverseFlyName,
+    name: kBentOverDumbbellReverseFlysName,
     muscleGroup: MuscleGroup.pull,
     muscles: ExerciseMuscles(
       primaryMuscles: {
@@ -647,7 +752,7 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
     equipments: {kDumbbellsName},
   ),
   ExerciseData(
-    name: kInclineDumbbellReverseFlyName,
+    name: kInclineDumbbellReverseFlysName,
     muscleGroup: MuscleGroup.pull,
     muscles: ExerciseMuscles(
       primaryMuscles: {
@@ -738,6 +843,19 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
   ),
   ExerciseData(
     name: kCableDHandleBicepCurlName,
+    muscleGroup: MuscleGroup.pull,
+    muscles: ExerciseMuscles(
+      primaryMuscles: {
+        Muscle.biceps,
+      },
+      secondaryMuscles: {
+        Muscle.forearms,
+      },
+    ),
+    equipments: {kCableName, kDHandleName},
+  ),
+  ExerciseData(
+    name: kBayesianCableCurlName,
     muscleGroup: MuscleGroup.pull,
     muscles: ExerciseMuscles(
       primaryMuscles: {
@@ -957,7 +1075,18 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
     equipments: {kSmithMachineName, kStepperName},
   ),
   ExerciseData(
-    name: kLegCurlName,
+    name: kSeatedLegCurlName,
+    muscleGroup: MuscleGroup.legs,
+    muscles: ExerciseMuscles(
+      primaryMuscles: {
+        Muscle.hamstrings,
+      },
+      secondaryMuscles: {},
+    ),
+    equipments: {kMachineName},
+  ),
+  ExerciseData(
+    name: kLyingLegCurlName,
     muscleGroup: MuscleGroup.legs,
     muscles: ExerciseMuscles(
       primaryMuscles: {
@@ -990,6 +1119,17 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
     equipments: {kBodyweightName, kMachineName, kStepperName},
   ),
   ExerciseData(
+    name: kSeatedCalfMachineName,
+    muscleGroup: MuscleGroup.legs,
+    muscles: ExerciseMuscles(
+      primaryMuscles: {
+        Muscle.calves,
+      },
+      secondaryMuscles: {},
+    ),
+    equipments: {kMachineName},
+  ),
+  ExerciseData(
     name: kCrunchesName,
     muscleGroup: MuscleGroup.core,
     muscles: ExerciseMuscles(
@@ -1014,14 +1154,42 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
     equipments: {kCableName},
   ),
   ExerciseData(
-    name: kLegRaisesName,
+    name: kCaptainsChairLegRaisesName,
     muscleGroup: MuscleGroup.core,
     muscles: ExerciseMuscles(
       primaryMuscles: {
-        Muscle.abdominals,
         Muscle.lowerAbs,
       },
-      secondaryMuscles: {},
+      secondaryMuscles: {
+        Muscle.abdominals,
+      },
+    ),
+    equipments: {kBodyweightName, kMachineName, kDumbbellsName},
+  ),
+  ExerciseData(
+    name: kHangingLegRaisesName,
+    muscleGroup: MuscleGroup.core,
+    muscles: ExerciseMuscles(
+      primaryMuscles: {
+        Muscle.lowerAbs,
+      },
+      secondaryMuscles: {
+        Muscle.abdominals,
+        Muscle.forearms,
+      },
+    ),
+    equipments: {kBodyweightName, kMachineName, kDumbbellsName},
+  ),
+  ExerciseData(
+    name: kLyingLegRaisesName,
+    muscleGroup: MuscleGroup.core,
+    muscles: ExerciseMuscles(
+      primaryMuscles: {
+        Muscle.lowerAbs,
+      },
+      secondaryMuscles: {
+        Muscle.abdominals,
+      },
     ),
     equipments: {kBodyweightName, kMachineName, kDumbbellsName},
   ),
@@ -1062,5 +1230,59 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
       },
     ),
     equipments: {kBodyweightName},
+  ),
+  ExerciseData(
+    name: kAssistedPullUpName,
+    muscleGroup: MuscleGroup.pull,
+    muscles: ExerciseMuscles(
+      primaryMuscles: {Muscle.lats},
+      secondaryMuscles: {Muscle.biceps, Muscle.forearms},
+    ),
+    equipments: {kMachineName, kPullUpBarName},
+  ),
+  ExerciseData(
+    name: kAssistedChinUpName,
+    muscleGroup: MuscleGroup.pull,
+    muscles: ExerciseMuscles(
+      primaryMuscles: {Muscle.lats},
+      secondaryMuscles: {Muscle.biceps, Muscle.forearms},
+    ),
+    equipments: {kMachineName, kPullUpBarName},
+  ),
+  ExerciseData(
+    name: kSmithMachineSkullCrushersName,
+    muscleGroup: MuscleGroup.push,
+    muscles: ExerciseMuscles(
+      primaryMuscles: {Muscle.triceps},
+      secondaryMuscles: {},
+    ),
+    equipments: {kSmithMachineName, kBenchName},
+  ),
+  ExerciseData(
+    name: kInclineDumbbellChestFlysName,
+    muscleGroup: MuscleGroup.push,
+    muscles: ExerciseMuscles(
+      primaryMuscles: {Muscle.upperChest},
+      secondaryMuscles: {Muscle.chest},
+    ),
+    equipments: {kDumbbellsName, kBenchName},
+  ),
+  ExerciseData(
+    name: kWeightedPullUpName,
+    muscleGroup: MuscleGroup.pull,
+    muscles: ExerciseMuscles(
+      primaryMuscles: {Muscle.lats},
+      secondaryMuscles: {Muscle.biceps, Muscle.forearms},
+    ),
+    equipments: {kPullUpBarName, kWeightBeltName},
+  ),
+  ExerciseData(
+    name: kWeightedChinUpName,
+    muscleGroup: MuscleGroup.pull,
+    muscles: ExerciseMuscles(
+      primaryMuscles: {Muscle.lats},
+      secondaryMuscles: {Muscle.biceps, Muscle.forearms},
+    ),
+    equipments: {kPullUpBarName, kWeightBeltName},
   ),
 };

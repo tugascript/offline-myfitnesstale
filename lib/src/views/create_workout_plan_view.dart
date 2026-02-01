@@ -43,7 +43,7 @@ class _CreateWorkoutPlanViewState extends State<CreateWorkoutPlanView> {
         _nameController.text = plan.name;
         _descriptionController.text = plan.description ?? '';
         _totalWeeksController.text = plan.totalWeeks.toString();
-        _selectedDifficulty = Difficulty.fromValue(plan.difficulty);
+        _selectedDifficulty = plan.difficulty;
       }
     }
   }

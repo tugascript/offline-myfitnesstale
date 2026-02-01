@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:myfitnesstale/src/models/enums.dart';
 
 import '../../models/workout_plan_model.dart';
 import 'dto.dart';
@@ -14,7 +15,7 @@ class WorkoutPlanDto extends Equatable implements Dto<WorkoutPlan> {
   final int totalWeeks;
   final PictureDto? picture;
   final VideoDto? video;
-  final int difficulty;
+  final Difficulty difficulty;
 
   // Related data
   final List<WorkoutPlanWeekDto>? weeks;
@@ -56,7 +57,7 @@ class WorkoutPlanDto extends Equatable implements Dto<WorkoutPlan> {
     int? totalWeeks,
     PictureDto? picture,
     VideoDto? video,
-    int? difficulty,
+    Difficulty? difficulty,
     List<WorkoutPlanWeekDto>? weeks,
   }) {
     return WorkoutPlanDto(

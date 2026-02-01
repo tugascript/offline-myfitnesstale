@@ -10,7 +10,7 @@ class WorkoutPlanWorkoutDto extends Equatable
   @override
   final int id;
   final int position;
-  final TimeOfDay? timeOfDay;
+  final WorkoutTimeOfDay? timeOfDay;
   final int workoutId;
 
   // Related data
@@ -42,7 +42,7 @@ class WorkoutPlanWorkoutDto extends Equatable
   WorkoutPlanWorkoutDto copyWith({
     int? id,
     int? position,
-    TimeOfDay? timeOfDay,
+    WorkoutTimeOfDay? timeOfDay,
     int? workoutId,
     WorkoutDto? workout,
   }) {
