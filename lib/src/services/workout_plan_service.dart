@@ -30,6 +30,62 @@ class WeekWorkoutInput {
   });
 }
 
+class WorkoutPlanWorkoutRegistrationInput {
+  final WorkoutDto workout;
+  final WorkoutTimeOfDay timeOfDay;
+
+  const WorkoutPlanWorkoutRegistrationInput({
+    required this.workout,
+    required this.timeOfDay,
+  });
+}
+
+class WorkoutPlanDayRegistrationInput {
+  final List<WorkoutPlanWorkoutRegistrationInput> workouts;
+
+  const WorkoutPlanDayRegistrationInput({
+    required this.workouts,
+  });
+}
+
+class WorkoutPlanWeekRegistrationInput {
+  final int startWeek;
+  final int endWeek;
+  final WorkoutPhase phase;
+  final List<WorkoutPlanDayRegistrationInput> days;
+
+  const WorkoutPlanWeekRegistrationInput({
+    required this.startWeek,
+    required this.endWeek,
+    required this.phase,
+    required this.days,
+  });
+}
+
+class WorkoutPlanRegistrationInput {
+  final String name;
+  final String description;
+  final PictureData? picture;
+  final VideoData? video;
+  final Difficulty difficulty;
+  final int totalWeeks;
+  final int totalDays;
+  final int totalWorkouts;
+  final List<WorkoutPlanWeekRegistrationInput> weeks;
+
+  const WorkoutPlanRegistrationInput({
+    required this.name,
+    required this.description,
+    this.picture,
+    this.video,
+    required this.difficulty,
+    required this.totalWeeks,
+    required this.totalDays,
+    required this.totalWorkouts,
+    required this.weeks,
+  });
+}
+
 class WorkoutPlanService {
   WorkoutPlanService._();
 
@@ -174,6 +230,114 @@ class WorkoutPlanService {
       return err(const ServiceError(
         type: OperationErrorTypes.operationFailure,
         description: 'Failed to create workout plan',
+      ));
+    }
+  }
+
+  Future<Result<List<WorkoutPlanDto>, ServiceError<OperationErrorTypes>>>
+      createWorkoutPlans(
+    List<WorkoutPlanRegistrationInput> plans, {
+    CreatedBy createdBy = CreatedBy.user,
+  }) async {
+    _logger.info('Creating ${plans.length} workout plans...');
+
+    try {
+      final List<WorkoutPlanDto> createdPlans =
+          await (await _databaseHelper.db).transaction((txn) async {
+        final List<WorkoutPlanDto> createdPlans = [];
+
+        for (final planInput in plans) {
+          final plan = WorkoutPlan.create(
+            name: planInput.name,
+            totalWeeks: planInput.totalWeeks,
+            difficulty: planInput.difficulty,
+            description: planInput.description,
+            picture: planInput.picture,
+            video: planInput.video,
+            totalDays: planInput.totalDays,
+            totalWorkouts: planInput.totalWorkouts,
+            createdBy: createdBy,
+          );
+
+          final int planId = await _repository.insert(plan, txn);
+          final List<WorkoutPlanWeekDto> createdWeeks = [];
+
+          for (final weekInput in planInput.weeks) {
+            final week = WorkoutPlanWeek.create(
+              workoutPlanId: planId,
+              startWeek: weekInput.startWeek,
+              endWeek: weekInput.endWeek,
+              phase: weekInput.phase,
+              createdBy: createdBy,
+            );
+
+            final int weekId = await _weekRepository.insert(week, txn);
+            final List<WorkoutPlanDayDto> createdDays = [];
+
+            for (int i = 0; i < weekInput.days.length; i++) {
+              final dayInput = weekInput.days[i];
+              final day = WorkoutPlanDay.create(
+                workoutPlanId: planId,
+                workoutPlanWeekId: weekId,
+                day: i + 1,
+                createdBy: createdBy,
+              );
+
+              final int dayId = await _dayRepository.insert(day, txn);
+              final List<WorkoutPlanWorkoutDto> createdWorkouts = [];
+
+              for (int j = 0; j < dayInput.workouts.length; j++) {
+                final workoutInput = dayInput.workouts[j];
+                final workout = WorkoutPlanWorkout.create(
+                  position: j + 1,
+                  workoutPlanId: planId,
+                  workoutPlanWeekId: weekId,
+                  workoutPlanDayId: dayId,
+                  workoutId: workoutInput.workout.id,
+                  timeOfDay: workoutInput.timeOfDay,
+                  createdBy: createdBy,
+                );
+
+                final int workoutKey = await _planWorkoutRepository.insert(
+                  workout,
+                  txn,
+                );
+
+                createdWorkouts.add(WorkoutPlanWorkoutDto.fromModel(
+                  workout.copyWith(id: workoutKey),
+                  workout: workoutInput.workout,
+                ));
+              }
+
+              createdDays.add(WorkoutPlanDayDto.fromModel(
+                day.copyWith(id: dayId),
+                planWorkouts: createdWorkouts,
+              ));
+            }
+
+            createdWeeks.add(WorkoutPlanWeekDto.fromModel(
+              week.copyWith(id: weekId),
+              days: createdDays,
+            ));
+          }
+
+          createdPlans.add(WorkoutPlanDto.fromModel(
+            plan.copyWith(id: planId),
+            weeks: createdWeeks,
+          ));
+        }
+
+        return createdPlans;
+      });
+
+      _logger.info('Created ${createdPlans.length} workout plans');
+      return ok(createdPlans);
+    } catch (e) {
+      _logger.severe('Failed to create workout plans', e);
+      return err(ServiceError(
+        type: OperationErrorTypes.operationFailure,
+        description:
+            'Failed to create workout plans with error: ${e.toString()}',
       ));
     }
   }
