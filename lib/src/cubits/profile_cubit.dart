@@ -4,12 +4,15 @@ import 'package:logging/logging.dart';
 import '../models/constants/equipment_constants.dart';
 import '../models/constants/exercise_constants.dart';
 import '../models/constants/workout_constants.dart';
+import '../models/constants/workout_plan_constants.dart';
 import '../models/enums.dart';
 import '../services/common/errors.dart';
 import '../services/dtos/equipment_dto.dart';
 import '../services/dtos/exercise_dto.dart';
+import '../services/dtos/workout_dto.dart';
 import '../services/exercise_service.dart';
 import '../services/profile_service.dart';
+import '../services/workout_plan_service.dart';
 import '../services/workout_service.dart';
 import 'states/common_state.dart';
 import 'states/profile_state.dart';
@@ -18,6 +21,7 @@ class ProfileCubit extends Cubit<ProfileState> {
   final ProfileService _profileService = ProfileService();
   final ExerciseService _exerciseService = ExerciseService();
   final WorkoutService _workoutService = WorkoutService();
+  final WorkoutPlanService _workoutPlanService = WorkoutPlanService();
 
   final Logger _logger = Logger("Profile Cubit");
 
@@ -293,6 +297,63 @@ class ProfileCubit extends Cubit<ProfileState> {
     }
 
     _logger.info("Workouts created successfully");
+    final Map<String, WorkoutDto> workoutNameToDto = workoutResult.value.fold(
+      <String, WorkoutDto>{},
+      (map, workout) {
+        map[workout.name] = workout;
+        return map;
+      },
+    );
+    final workoutPlansResult = await _workoutPlanService.createWorkoutPlans(
+      [
+        WorkoutPlanRegistrationInput(
+          name: kWorkoutPlanData.name,
+          description: kWorkoutPlanData.description,
+          difficulty: kWorkoutPlanData.difficulty,
+          totalWeeks: kWorkoutPlanData.totalWeeks,
+          totalDays: kWorkoutPlanData.totalDays,
+          totalWorkouts: kWorkoutPlanData.totalWorkouts,
+          weeks: kWorkoutPlanData.weeks
+              .map(
+                (w) => WorkoutPlanWeekRegistrationInput(
+                  startWeek: w.startWeek,
+                  endWeek: w.endWeek,
+                  phase: w.phase,
+                  days: w.days
+                      .map(
+                        (d) => WorkoutPlanDayRegistrationInput(
+                          workouts: d.workouts
+                              .map(
+                                (wo) => WorkoutPlanWorkoutRegistrationInput(
+                                  workout: workoutNameToDto[wo.workoutName]!,
+                                  timeOfDay: wo.timeOfDay,
+                                ),
+                              )
+                              .toList(),
+                        ),
+                      )
+                      .toList(),
+                ),
+              )
+              .toList(),
+        ),
+      ],
+      createdBy: CreatedBy.system,
+    );
+
+    if (workoutPlansResult.isErr()) {
+      _logger.severe(
+          "Failed to create workout plans", workoutPlansResult.error);
+      emit(state.copyWith(
+        error: ErrorState(
+          type: SingleErrorTypes.operationFailure.name,
+          description: 'Failed to create workout plans',
+        ),
+        isLoading: false,
+      ));
+    }
+
+    _logger.info("Workout plans created successfully");
     emit(state.copyWith(
       profile: profileResult.value,
       system: systemResult.value,
