@@ -67,8 +67,7 @@ class WorkoutPlanDetailView extends StatelessWidget {
         }
 
         final plan = state.selectedWorkoutPlan!;
-        final difficulty = Difficulty.fromValue(plan.difficulty);
-        final difficultyColor = _difficultyColor(difficulty);
+        final difficultyColor = _difficultyColor(plan.difficulty);
 
         return ResponsiveScaffold(
           title: plan.name,
@@ -109,7 +108,7 @@ class WorkoutPlanDetailView extends StatelessWidget {
                                 ),
                               ),
                               child: Text(
-                                _difficultyLabel(difficulty),
+                                _difficultyLabel(plan.difficulty),
                                 style: TextStyle(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w600,

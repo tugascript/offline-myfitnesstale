@@ -3,17 +3,21 @@ import 'package:logging/logging.dart';
 
 import '../models/constants/equipment_constants.dart';
 import '../models/constants/exercise_constants.dart';
+import '../models/constants/workout_constants.dart';
 import '../models/enums.dart';
 import '../services/common/errors.dart';
 import '../services/dtos/equipment_dto.dart';
+import '../services/dtos/exercise_dto.dart';
 import '../services/exercise_service.dart';
 import '../services/profile_service.dart';
+import '../services/workout_service.dart';
 import 'states/common_state.dart';
 import 'states/profile_state.dart';
 
 class ProfileCubit extends Cubit<ProfileState> {
   final ProfileService _profileService = ProfileService();
   final ExerciseService _exerciseService = ExerciseService();
+  final WorkoutService _workoutService = WorkoutService();
 
   final Logger _logger = Logger("Profile Cubit");
 
@@ -177,6 +181,7 @@ class ProfileCubit extends Cubit<ProfileState> {
     _logger.info("Creating equipments");
     final equipmentResult = await _exerciseService.createEquipments(
       kEquipmentNames,
+      createdBy: CreatedBy.system,
     );
     if (equipmentResult.isErr()) {
       _logger.severe("Failed to create equipments", equipmentResult.error);
@@ -189,6 +194,7 @@ class ProfileCubit extends Cubit<ProfileState> {
       ));
     }
 
+    _logger.info("Equipments created successfully");
     final Map<String, EquipmentDto> equipmentsMap = equipmentResult.value.fold(
       <String, EquipmentDto>{},
       (map, equipment) {
@@ -214,6 +220,7 @@ class ProfileCubit extends Cubit<ProfileState> {
             ),
           )
           .toList(),
+      createdBy: CreatedBy.system,
     );
     if (exerciseResult.isErr()) {
       _logger.severe("Failed to create exercises", exerciseResult.error);
@@ -226,7 +233,66 @@ class ProfileCubit extends Cubit<ProfileState> {
       ));
     }
 
-    _logger.info("Equipments created successfully");
+    _logger.info("Exercises created successfully");
+    final Map<String, ExerciseDto> exerciseNameToDto =
+        exerciseResult.value.fold(
+      <String, ExerciseDto>{},
+      (map, exercise) {
+        map[exercise.name] = exercise;
+        return map;
+      },
+    );
+
+    _logger.info("Creating workouts");
+    final workoutResult = await _workoutService.createWorkouts(
+      kStandardWorkouts
+          .map(
+            (e) => WorkoutRegistrationInput(
+              name: e.name,
+              description: e.description,
+              difficulty: e.difficulty,
+              phase: e.phase,
+              sets: e.sets
+                  .map(
+                    (s) => WorkoutSetRegistrationInput(
+                      setType: s.setType,
+                      minSets: s.minSets,
+                      maxSets: s.maxSets,
+                      recommendedRestSecs: s.recommendedRestSecs,
+                      maxRestSecs: s.maxRestSecs,
+                      exercises: s.exercises
+                          .map(
+                            (ex) => WorkoutSetExerciseRegistrationInput(
+                              exercise: exerciseNameToDto[ex.exerciseName]!,
+                              minReps: ex.minReps,
+                              maxReps: ex.maxReps,
+                              difficulty: ex.difficulty,
+                              alternativeExercises: ex.exerciseOptionsNames
+                                  .map((eon) => exerciseNameToDto[eon]!)
+                                  .toList(),
+                            ),
+                          )
+                          .toList(),
+                    ),
+                  )
+                  .toList(),
+            ),
+          )
+          .toList(),
+      createdBy: CreatedBy.system,
+    );
+    if (workoutResult.isErr()) {
+      _logger.severe("Failed to create workouts", workoutResult.error);
+      emit(state.copyWith(
+        error: ErrorState(
+          type: SingleErrorTypes.operationFailure.name,
+          description: 'Failed to create workouts',
+        ),
+        isLoading: false,
+      ));
+    }
+
+    _logger.info("Workouts created successfully");
     emit(state.copyWith(
       profile: profileResult.value,
       system: systemResult.value,

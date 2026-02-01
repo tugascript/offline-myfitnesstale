@@ -248,8 +248,9 @@ class ExerciseService {
 
   Future<Result<List<ExerciseDto>, ServiceError<OperationErrorTypes>>>
       createExercises(
-    List<ExerciseInput> exerciseInputs,
-  ) async {
+    List<ExerciseInput> exerciseInputs, {
+    CreatedBy createdBy = CreatedBy.user,
+  }) async {
     _logger.info("Creating ${exerciseInputs.length} exercises...");
     try {
       final List<ExerciseDto> exercises =
@@ -262,6 +263,7 @@ class ExerciseService {
               name: exerciseInput.name,
               muscleGroup: exerciseInput.muscleGroup,
               muscles: exerciseInput.muscles,
+              createdBy: createdBy,
             );
             final id = await _repository.insert(exercise, txn);
 
@@ -572,8 +574,9 @@ class ExerciseService {
 
   Future<Result<List<EquipmentDto>, ServiceError<OperationErrorTypes>>>
       createEquipments(
-    List<String> names,
-  ) async {
+    List<String> names, {
+    CreatedBy createdBy = CreatedBy.user,
+  }) async {
     _logger.info('Creating ${names.length} equipments...');
     try {
       final List<Equipment> equipments =
@@ -581,7 +584,7 @@ class ExerciseService {
         final List<Equipment> equipments = [];
 
         for (final name in names) {
-          final equipment = Equipment.create(name: name);
+          final equipment = Equipment.create(name: name, createdBy: createdBy);
           final id = await _equipmentRepository.insert(equipment, txn);
           equipments.add(equipment.copyWith(id: id));
         }

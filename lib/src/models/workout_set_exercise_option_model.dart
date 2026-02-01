@@ -51,7 +51,7 @@ enum WorkoutSetExerciseOptionColumns {
   const WorkoutSetExerciseOptionColumns(this.value);
 }
 
-class WorkoutSetExerciseOption extends Equatable implements Model {
+final class WorkoutSetExerciseOption extends Equatable implements Model {
   @override
   final int? id;
   final int workoutId;

@@ -116,8 +116,7 @@ class _CurrentWorkoutPlanViewState extends State<CurrentWorkoutPlanView> {
           }
 
           final plan = currentPlanRecord.workoutPlan!;
-          final difficulty = Difficulty.fromValue(plan.difficulty);
-          final difficultyColor = _difficultyColor(difficulty);
+          final difficultyColor = _difficultyColor(plan.difficulty);
           final progressPercentage = (currentPlanRecord.totalWorkouts > 0)
               ? (currentPlanRecord.completedWorkouts /
                       currentPlanRecord.totalWorkouts) *
@@ -167,7 +166,7 @@ class _CurrentWorkoutPlanViewState extends State<CurrentWorkoutPlanView> {
                                   ),
                                 ),
                                 child: Text(
-                                  _difficultyLabel(difficulty),
+                                  _difficultyLabel(plan.difficulty),
                                   style: TextStyle(
                                     fontSize: 14,
                                     fontWeight: FontWeight.w600,
