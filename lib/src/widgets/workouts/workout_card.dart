@@ -1,30 +1,32 @@
 import 'package:flutter/material.dart';
 
-import '../../models/enums.dart';
 import '../../services/dtos/workout_dto.dart';
 import '../../utilities/sizes/workouts_sizes.dart';
+import '../common/difficulty_badge.dart';
+import '../common/muscle_group_badge.dart';
 
 class WorkoutCard extends StatelessWidget {
   final WorkoutDto workout;
-  final VoidCallback? onTap;
+  final VoidCallback onTap;
   final WorkoutsSizesList sizes;
 
   const WorkoutCard({
     super.key,
     required this.workout,
     required this.sizes,
-    this.onTap,
+    required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
     return Card(
       clipBehavior: Clip.antiAlias,
-      margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
-      elevation: sizes.cardElevation,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(sizes.cardSpacing),
+      margin: EdgeInsets.symmetric(
+        vertical: sizes.gridSpacing / 2,
+        horizontal: sizes.gridSpacing / 4,
       ),
+      elevation: sizes.cardElevation,
+      shape: BeveledRectangleBorder(),
       child: InkWell(
         onTap: onTap,
         child: Padding(
@@ -34,32 +36,37 @@ class WorkoutCard extends StatelessWidget {
             children: [
               Text(
                 workout.name,
-                style: Theme.of(context)
-                    .textTheme
-                    .titleMedium
-                    ?.copyWith(fontWeight: FontWeight.bold),
-              ),
-              if (workout.description != null &&
-                  workout.description!.isNotEmpty) ...[
-                SizedBox(height: sizes.cardSpacing / 1.5),
-                Text(
-                  workout.description!,
-                  style: Theme.of(context).textTheme.bodyMedium,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: sizes.subtitleFontSize,
+                  fontWeight: FontWeight.w600,
                 ),
-              ],
+              ),
+              SizedBox(height: sizes.cardSpacing),
+              Wrap(
+                spacing: sizes.cardSpacing / 3,
+                runSpacing: sizes.cardSpacing / 3,
+                children: workout.muscleGroups.map((mg) {
+                  return MuscleGroupBadge(
+                    muscleGroup: mg,
+                    fontSize: sizes.fontSize * 0.8,
+                  );
+                }).toList(),
+              ),
               SizedBox(height: sizes.cardSpacing),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  _DifficultyChip(
+                  DifficultyBadge(
                     difficulty: workout.difficulty,
-                    sizes: sizes,
+                    spacing: sizes.cardPadding / 2,
+                    fontSize: sizes.fontSize,
+                    fontWeight: FontWeight.w600,
                   ),
-                  if (onTap != null)
-                    Icon(Icons.arrow_forward_ios,
-                        size: sizes.arrowIconSize, color: Colors.grey),
+                  Icon(
+                    Icons.arrow_forward_ios,
+                    size: sizes.arrowIconSize,
+                    color: Colors.grey,
+                  ),
                 ],
               ),
             ],
@@ -67,61 +74,5 @@ class WorkoutCard extends StatelessWidget {
         ),
       ),
     );
-  }
-}
-
-class _DifficultyChip extends StatelessWidget {
-  final Difficulty difficulty;
-  final WorkoutsSizesList sizes;
-
-  const _DifficultyChip({
-    required this.difficulty,
-    required this.sizes,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Chip(
-      label: Text(_difficultyLabel(difficulty)),
-      backgroundColor: _difficultyColor(difficulty).withValues(alpha: 0.15),
-      labelStyle: TextStyle(
-        color: _difficultyColor(difficulty),
-        fontWeight: FontWeight.w600,
-        fontSize: sizes.titleFontSize * 0.55,
-      ),
-      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-      padding: EdgeInsets.symmetric(horizontal: sizes.cardPadding / 2),
-      side: BorderSide(color: _difficultyColor(difficulty).withValues(alpha: 0.3)),
-    );
-  }
-
-  String _difficultyLabel(Difficulty d) {
-    switch (d) {
-      case Difficulty.beginner:
-        return 'Beginner';
-      case Difficulty.beginnerIntermediate:
-        return 'Beginner / Intermediate';
-      case Difficulty.intermediate:
-        return 'Intermediate';
-      case Difficulty.intermediateAdvanced:
-        return 'Intermediate / Advanced';
-      case Difficulty.advanced:
-        return 'Advanced';
-    }
-  }
-
-  Color _difficultyColor(Difficulty d) {
-    switch (d) {
-      case Difficulty.beginner:
-        return Colors.green;
-      case Difficulty.beginnerIntermediate:
-        return Colors.lightGreen;
-      case Difficulty.intermediate:
-        return Colors.orange;
-      case Difficulty.intermediateAdvanced:
-        return Colors.deepOrange;
-      case Difficulty.advanced:
-        return Colors.red;
-    }
   }
 }

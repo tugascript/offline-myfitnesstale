@@ -144,6 +144,11 @@ class WeightRecordCubit extends Cubit<WeightRecordState> {
       recordPagination: state.recordPagination.copyWith(
         total: state.recordPagination.total + 1,
       ),
+      latestWeightRecord: state.latestWeightRecord == null ||
+              weightRecord.recordDate
+                  .isAfter(state.latestWeightRecord!.recordDate)
+          ? weightRecord
+          : state.latestWeightRecord,
       isLoading: false,
     ));
   }
@@ -237,6 +242,9 @@ class WeightRecordCubit extends Cubit<WeightRecordState> {
       recordPagination: state.recordPagination.copyWith(
         total: state.recordPagination.total - 1,
       ),
+      latestWeightRecord: state.latestWeightRecord?.id == id
+          ? state.weightRecords.lastOrNull
+          : state.latestWeightRecord,
       isLoading: false,
     ));
   }
@@ -280,8 +288,10 @@ class WeightRecordCubit extends Cubit<WeightRecordState> {
     }
 
     final weightGoal = result.value;
+    final sortedWeightGoals = [weightGoal, ...state.weightGoals];
+    sortedWeightGoals.sort((a, b) => b.startDate.compareTo(a.startDate));
     emit(state.copyWith(
-      weightGoals: [weightGoal, ...state.weightGoals],
+      weightGoals: sortedWeightGoals,
       selectedWeightGoal: weightGoal,
       goalPagination: state.goalPagination.copyWith(
         total: state.goalPagination.total + 1,

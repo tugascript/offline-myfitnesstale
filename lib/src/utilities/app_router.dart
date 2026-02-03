@@ -20,6 +20,7 @@ import '../views/workout_history_view.dart';
 import '../views/workout_plan_detail_view.dart';
 import '../views/workout_plan_list_view.dart';
 import '../views/workout_plan_progress_view.dart';
+import '../views/workouts_view.dart';
 
 sealed class AppRouter {
   static final List<GoRoute> _routes = <GoRoute>[
@@ -76,8 +77,22 @@ sealed class AppRouter {
       },
     ),
     GoRoute(
+      path: WorkoutsView.routeName,
+      builder: (context, state) => const WorkoutsView(),
+    ),
+    GoRoute(
       path: '/workouts/create',
       builder: (context, state) => const CreateWorkoutView(),
+    ),
+    GoRoute(
+      path: '/workouts/history/:id',
+      builder: (context, state) {
+        final id = int.tryParse(state.pathParameters['id'] ?? '');
+        if (id == null) {
+          return const NotFoundView();
+        }
+        return WorkoutHistoryDetailView(workoutRecordId: id);
+      },
     ),
     GoRoute(
       path: '/workouts/:id/edit',
@@ -86,7 +101,7 @@ sealed class AppRouter {
         if (id == null) {
           return const NotFoundView();
         }
-        return CreateWorkoutView(workoutId: id);
+        return CreateWorkoutView(workoutId: id); // TODO: fix me
       },
     ),
     GoRoute(
@@ -100,7 +115,7 @@ sealed class AppRouter {
       },
     ),
     GoRoute(
-      path: '/workouts/:id',
+      path: WorkoutDetailView.routeName,
       builder: (context, state) {
         final id = int.tryParse(state.pathParameters['id'] ?? '');
         if (id == null) {
@@ -112,16 +127,6 @@ sealed class AppRouter {
     GoRoute(
       path: WorkoutHistoryView.routeName,
       builder: (context, state) => const WorkoutHistoryView(),
-    ),
-    GoRoute(
-      path: '/workouts/history/:id',
-      builder: (context, state) {
-        final id = int.tryParse(state.pathParameters['id'] ?? '');
-        if (id == null) {
-          return const NotFoundView();
-        }
-        return WorkoutHistoryDetailView(workoutRecordId: id);
-      },
     ),
     GoRoute(
       path: '/exercises/:id/history',
@@ -159,7 +164,7 @@ sealed class AppRouter {
 
   static GoRouter get router => GoRouter(
         routes: _routes,
-        initialLocation: '/',
+        initialLocation: MainNavigationView.routeName,
         errorBuilder: (context, state) => const NotFoundView(),
       );
 }

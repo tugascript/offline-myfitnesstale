@@ -41,6 +41,21 @@ class _StatsOverviewWidgetState extends State<StatsOverviewWidget> {
           ),
         ),
         SizedBox(height: widget.sizes.breaks / 3),
+        Row(
+          children: [
+            Expanded(
+              child: _StatCard(
+                sizes: widget.sizes,
+                icon: Icons.fitness_center,
+                title: "Weekly Workouts",
+                value: "0",
+                // TODO: Calculate from workout records
+                color: Colors.red,
+              ),
+            ),
+          ],
+        ),
+        SizedBox(height: widget.sizes.breaks / 2),
         BlocBuilder<ProfileCubit, ProfileState>(
           builder: (context, state) => Row(
             children: [
@@ -52,7 +67,7 @@ class _StatsOverviewWidgetState extends State<StatsOverviewWidget> {
                   value: state.profile != null
                       ? state.system?.units == Units.metric
                           ? "${state.profile!.height} cm"
-                          : Converters().formatImperialHeight(
+                          : Converters.formatImperialHeight(
                               state.profile!.height,
                             )
                       : "Not set",
@@ -62,16 +77,18 @@ class _StatsOverviewWidgetState extends State<StatsOverviewWidget> {
               SizedBox(width: widget.sizes.breaks / 2),
               Expanded(
                 child: BlocBuilder<WeightRecordCubit, WeightRecordState>(
+                  buildWhen: (previous, current) =>
+                      previous.latestWeightRecord != current.latestWeightRecord,
                   builder: (context, state2) => _StatCard(
                     sizes: widget.sizes,
                     icon: Icons.monitor_weight,
                     title: "Weight",
                     value: state2.latestWeightRecord != null
                         ? state.system?.units == Units.metric
-                            ? Converters().formatMetricWeight(
+                            ? Converters.formatMetricWeight(
                                 state2.latestWeightRecord!.weight,
                               )
-                            : Converters().formatImperialWeight(
+                            : Converters.formatImperialWeight(
                                 state2.latestWeightRecord!.weight,
                               )
                         : "Not logged",
@@ -81,21 +98,6 @@ class _StatsOverviewWidgetState extends State<StatsOverviewWidget> {
               ),
             ],
           ),
-        ),
-        SizedBox(height: widget.sizes.breaks / 2),
-        Row(
-          children: [
-            Expanded(
-              child: _StatCard(
-                sizes: widget.sizes,
-                icon: Icons.fitness_center,
-                title: "Workouts This Week",
-                value: "0",
-                // TODO: Calculate from workout records
-                color: Colors.orange,
-              ),
-            ),
-          ],
         ),
       ],
     );
@@ -121,18 +123,11 @@ class _StatCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       elevation: 1,
+      shape: BeveledRectangleBorder(),
       child: Container(
         padding: EdgeInsets.all(sizes.padding),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(sizes.radius),
-          gradient: LinearGradient(
-            colors: [
-              color.withValues(alpha: 0.2),
-              color.withValues(alpha: 0.07),
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
+          color: color.withValues(alpha: 0.2),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

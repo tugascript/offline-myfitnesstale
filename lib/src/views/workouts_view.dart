@@ -7,15 +7,35 @@ import '../cubits/workout_cubit.dart';
 import '../models/enums.dart';
 import '../utilities/sizes/screen_size.dart';
 import '../utilities/sizes/workouts_sizes.dart';
+import '../widgets/common/base_common_search_form.dart';
 import '../widgets/layout/responsive_scaffold.dart';
 import '../widgets/workouts/workouts_list.dart';
-import '../widgets/workouts/workouts_search.dart';
 
-class WorkoutsView extends StatelessWidget {
+class WorkoutsView extends StatefulWidget {
   static const routeName = "/workouts";
   static const name = "workouts";
 
   const WorkoutsView({super.key});
+
+  @override
+  State<WorkoutsView> createState() => _WorkoutsViewState();
+}
+
+class _WorkoutsViewState extends State<WorkoutsView> {
+  @override
+  void initState() {
+    super.initState();
+    final cubit = context.read<WorkoutCubit>();
+
+    if (cubit.state.workouts.isEmpty) {
+      cubit.getWorkouts(
+        name: "",
+        difficulty: null,
+        limit: 20,
+        offset: 0,
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -24,6 +44,7 @@ class WorkoutsView extends StatelessWidget {
 
     return ResponsiveScaffold(
       title: 'Workouts',
+      showBackButton: GoRouterState.of(context).extra as bool? ?? false,
       body: Padding(
         padding: EdgeInsets.all(sizes.padding),
         child: BlocBuilder<WorkoutCubit, WorkoutState>(
@@ -31,15 +52,24 @@ class WorkoutsView extends StatelessWidget {
             return Column(
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
-                WorkoutsSearch(
+                BaseCommonSearchForm(
                   isLoading: state.isLoading,
-                  sizes: sizes,
+                  nameLabel: "Workouts",
+                  padding: sizes.padding,
+                  fontSize: sizes.fontSize,
+                  spacing: sizes.inputSpacing,
                   initialName: "",
                   initialDifficulty: null,
-                  onSubmit: ({String? name, Difficulty? difficulty}) {
+                  initialMuscleGroup: null,
+                  onSubmit: ({
+                    String? name,
+                    Difficulty? difficulty,
+                    MuscleGroup? muscleGroup,
+                  }) {
                     context.read<WorkoutCubit>().getWorkouts(
                           name: name,
                           difficulty: difficulty,
+                          muscleGroup: muscleGroup,
                           limit: 20,
                           offset: 0,
                         );

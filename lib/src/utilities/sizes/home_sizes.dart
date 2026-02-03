@@ -1,6 +1,6 @@
 import 'screen_size.dart';
 
-class HomeSizesList {
+final class HomeSizesList {
   final double padding;
   final double radius;
   final double titleFontSize;

@@ -4,9 +4,10 @@ import 'package:go_router/go_router.dart';
 import '../../cubits/states/workout_state.dart';
 import '../../services/dtos/workout_dto.dart';
 import '../../utilities/sizes/workouts_sizes.dart';
+import '../../views/workout_detail_view.dart';
 import 'workout_card.dart';
 
-class WorkoutsList extends StatefulWidget {
+class WorkoutsList extends StatelessWidget {
   final WorkoutsSizesList sizes;
   final bool isLoading;
   final List<WorkoutDto> workouts;
@@ -21,17 +22,12 @@ class WorkoutsList extends StatefulWidget {
   });
 
   @override
-  State<WorkoutsList> createState() => _WorkoutsListState();
-}
-
-class _WorkoutsListState extends State<WorkoutsList> {
-  @override
   Widget build(BuildContext context) {
-    if (widget.isLoading && widget.workouts.isEmpty) {
+    if (isLoading && workouts.isEmpty) {
       return const Center(child: CircularProgressIndicator());
     }
 
-    if (widget.workouts.isEmpty) {
+    if (workouts.isEmpty) {
       return SizedBox(
         height: MediaQuery.of(context).size.height / 2,
         child: Center(
@@ -39,17 +35,17 @@ class _WorkoutsListState extends State<WorkoutsList> {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              SizedBox(height: widget.sizes.gridSpacing),
+              SizedBox(height: sizes.gridSpacing),
               Icon(
                 Icons.fitness_center,
-                size: widget.sizes.bigIcon,
+                size: sizes.bigIcon,
                 color: Colors.grey[400],
               ),
-              SizedBox(height: widget.sizes.gridSpacing),
+              SizedBox(height: sizes.gridSpacing),
               Text(
                 'No workouts found',
                 style: TextStyle(
-                  fontSize: widget.sizes.titleFontSize,
+                  fontSize: sizes.titleFontSize,
                   color: Colors.grey[600],
                 ),
               ),
@@ -62,13 +58,18 @@ class _WorkoutsListState extends State<WorkoutsList> {
     return ListView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      itemCount: widget.workouts.length,
+      itemCount: workouts.length,
       itemBuilder: (context, index) {
-        final workout = widget.workouts[index];
+        final workout = workouts[index];
         return WorkoutCard(
           workout: workout,
-          sizes: widget.sizes,
-          onTap: () => context.push('/workouts/${workout.id}'),
+          sizes: sizes,
+          onTap: () => context.push(
+            WorkoutDetailView.routeName.replaceFirst(
+              ":id",
+              workout.id.toString(),
+            ),
+          ),
         );
       },
     );

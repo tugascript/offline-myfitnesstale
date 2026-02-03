@@ -35,7 +35,7 @@ class _HeightInputState extends State<HeightInput> {
     }
 
     final (int, int) feetAndInches =
-        Converters().cmToFeetAndInches(widget.initialHeight);
+        Converters.cmToFeetAndInches(widget.initialHeight);
     _feetController.text = feetAndInches.$1.toString();
     _inchesController.text = feetAndInches.$2.toString();
   }
@@ -132,7 +132,7 @@ class _HeightInputState extends State<HeightInput> {
   void _updateHeight() {
     final int feet = int.tryParse(_feetController.text) ?? 0;
     final int inches = int.tryParse(_inchesController.text) ?? 0;
-    final int totalCm = Converters().feetAndInchesToCm(feet, inches);
+    final int totalCm = Converters.feetAndInchesToCm(feet, inches);
     widget.onChanged(totalCm);
     widget.onSaved(totalCm);
   }

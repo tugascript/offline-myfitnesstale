@@ -8,7 +8,7 @@ import '../models/enums.dart';
 import '../services/dtos/exercise_dto.dart';
 import '../models/utilities.dart';
 import '../widgets/exercise/exercise_card_widget.dart';
-import '../widgets/layout/responsive_scaffold.dart';
+import '../widgets/layout/app_scaffold.dart';
 
 class ExerciseLibraryView extends StatefulWidget {
   static const routeName = "/exercises";
@@ -145,7 +145,7 @@ class _ExerciseLibraryViewState extends State<ExerciseLibraryView> {
 
   @override
   Widget build(BuildContext context) {
-    return ResponsiveScaffold(
+    return AppScaffold(
       title: "Exercise Library",
       showBackButton: true,
       body: Stack(

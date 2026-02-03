@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import '../models/enums.dart';
 
@@ -90,17 +91,19 @@ sealed class ThemeGenerator {
           Colors.orangeAccent, // Use for UI elements that need to stand out
     ),
 
-    // Define the default font family.
-    fontFamily: 'Montserrat',
-    // Make sure to include the font in your pubspec.yaml
-
-    // Define the default `TextTheme`.
-    textTheme: const TextTheme(
-      displayLarge: TextStyle(fontSize: 72.0, fontWeight: FontWeight.bold),
-      titleLarge: TextStyle(fontSize: 36.0, fontStyle: FontStyle.italic),
-      bodyMedium: TextStyle(
+    // Define the default font family using Google Fonts
+    textTheme:
+        GoogleFonts.robotoMonoTextTheme(ThemeData.dark().textTheme).copyWith(
+      displayLarge: GoogleFonts.majorMonoDisplay(
+        fontSize: 72.0,
+        fontWeight: FontWeight.bold,
+      ),
+      titleLarge: GoogleFonts.majorMonoDisplay(
+        fontSize: 36.0,
+        fontStyle: FontStyle.italic,
+      ),
+      bodyMedium: GoogleFonts.robotoMono(
         fontSize: 14.0,
-        fontFamily: 'Hind',
         color: Colors.white,
       ),
     ),
@@ -131,10 +134,10 @@ sealed class ThemeGenerator {
 
     // Define other custom defaults.
     scaffoldBackgroundColor: Colors.black,
-    appBarTheme: const AppBarTheme(
+    appBarTheme: AppBarTheme(
       elevation: 0,
       backgroundColor: Colors.black,
-      titleTextStyle: TextStyle(
+      titleTextStyle: GoogleFonts.majorMonoDisplay(
         color: _orangeSwatch,
         fontSize: 20,
         fontWeight: FontWeight.bold,
@@ -185,19 +188,15 @@ sealed class ThemeGenerator {
           Colors.orangeAccent, // Use for UI elements that need to stand out
     ),
 
-    // Define the default font family.
-    fontFamily: 'Montserrat',
-    // Make sure to include the font in your pubspec.yaml
-
-    // Define the default `TextTheme`.
-    textTheme: const TextTheme(
-      displayLarge: TextStyle(
+    // Define the default font family using Google Fonts
+    textTheme:
+        GoogleFonts.robotoMonoTextTheme(ThemeData.light().textTheme).copyWith(
+      displayLarge: GoogleFonts.majorMonoDisplay(
           fontSize: 72.0, fontWeight: FontWeight.bold, color: Colors.black),
-      titleLarge: TextStyle(
+      titleLarge: GoogleFonts.majorMonoDisplay(
           fontSize: 36.0, fontStyle: FontStyle.italic, color: Colors.black),
-      bodyMedium: TextStyle(
+      bodyMedium: GoogleFonts.robotoMono(
         fontSize: 14.0,
-        fontFamily: 'Hind',
         color: Colors.black,
       ),
     ),
@@ -228,10 +227,10 @@ sealed class ThemeGenerator {
 
     // Define other custom defaults.
     scaffoldBackgroundColor: Colors.white,
-    appBarTheme: const AppBarTheme(
+    appBarTheme: AppBarTheme(
       elevation: 0,
       backgroundColor: Colors.white,
-      titleTextStyle: TextStyle(
+      titleTextStyle: GoogleFonts.majorMonoDisplay(
         color: Colors.black,
         fontSize: 20,
         fontWeight: FontWeight.bold,

@@ -64,7 +64,7 @@ class WhereBuilder {
 }
 
 sealed class EnumDisplayNames {
-  static String getMuscleGroupDisplayName(MuscleGroup group) {
+  static String getMuscleGroupDisplayName(MuscleGroup? group) {
     switch (group) {
       case MuscleGroup.full:
         return 'Full Body';
@@ -76,10 +76,12 @@ sealed class EnumDisplayNames {
         return 'Legs';
       case MuscleGroup.core:
         return 'Core';
+      case null:
+        return 'Unknown';
     }
   }
 
-  static String getMuscleDisplayName(Muscle muscle) {
+  static String getMuscleDisplayName(Muscle? muscle) {
     switch (muscle) {
       case Muscle.chest:
         return 'Chest';
@@ -101,8 +103,14 @@ sealed class EnumDisplayNames {
         return 'Triceps';
       case Muscle.neck:
         return 'Neck';
-      case Muscle.traps:
-        return 'Traps';
+      case Muscle.trapezius:
+        return 'Trapezius';
+      case Muscle.upperTrapezius:
+        return 'Upper Trapezius';
+      case Muscle.middleTrapezius:
+        return 'Middle Trapezius';
+      case Muscle.lowerTrapezius:
+        return 'Lower Trapezius';
       case Muscle.rhomboids:
         return 'Rhomboids';
       case Muscle.lats:
@@ -135,6 +143,44 @@ sealed class EnumDisplayNames {
         return 'Obliques';
       case Muscle.lowerBack:
         return 'Lower Back';
+      case null:
+        return 'Unknown';
+    }
+  }
+
+  static String getDifficultyDisplayName(Difficulty? d) {
+    switch (d) {
+      case Difficulty.beginner:
+        return 'Beginner';
+      case Difficulty.beginnerIntermediate:
+        return 'Beginner / Intermediate';
+      case Difficulty.intermediate:
+        return 'Intermediate';
+      case Difficulty.intermediateAdvanced:
+        return 'Intermediate / Advanced';
+      case Difficulty.advanced:
+        return 'Advanced';
+      case null:
+        return 'Unknown';
+    }
+  }
+
+  static String getSetTypeDisplayName(WorkoutSetType? s) {
+    switch (s) {
+      case WorkoutSetType.standard:
+        return 'Standard';
+      case WorkoutSetType.drop:
+        return 'Drop';
+      case WorkoutSetType.superSet:
+        return 'Super';
+      case WorkoutSetType.giant:
+        return 'Giant';
+      case WorkoutSetType.pyramid:
+        return 'Pyramid';
+      case WorkoutSetType.circuit:
+        return 'Circuit';
+      case null:
+        return 'Unknown';
     }
   }
 }

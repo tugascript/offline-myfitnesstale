@@ -2,6 +2,7 @@ import 'package:equatable/equatable.dart';
 
 import 'enums.dart';
 import 'model.dart';
+import 'utilities.dart';
 import 'workout_model.dart';
 import 'workout_plan_day_model.dart';
 import 'workout_plan_model.dart';
@@ -90,7 +91,7 @@ final class WorkoutPlanWorkout extends Equatable implements Model {
     return {
       WorkoutPlanWorkoutColumns.id.value: id,
       WorkoutPlanWorkoutColumns.position.value: position,
-      WorkoutPlanWorkoutColumns.timeOfDay.value: timeOfDay,
+      WorkoutPlanWorkoutColumns.timeOfDay.value: timeOfDay?.value,
       WorkoutPlanWorkoutColumns.workoutPlanId.value: workoutPlanId,
       WorkoutPlanWorkoutColumns.workoutPlanWeekId.value: workoutPlanWeekId,
       WorkoutPlanWorkoutColumns.workoutPlanDayId.value: workoutPlanDayId,
@@ -135,7 +136,7 @@ final class WorkoutPlanWorkout extends Equatable implements Model {
     WorkoutTimeOfDay? timeOfDay,
     CreatedBy createdBy = CreatedBy.user,
   }) {
-    final int now = DateTime.now().millisecondsSinceEpoch;
+    final int now = DateUtilities.getNowUtcUnix();
     return WorkoutPlanWorkout(
       position: position,
       timeOfDay: timeOfDay,

@@ -8,6 +8,8 @@ class WorkoutsSizesList {
   final double bigIcon;
   final double loadingSize;
   final double titleFontSize;
+  final double subtitleFontSize;
+  final double fontSize;
   final double cardElevation;
   final double cardPadding;
   final double cardSpacing;
@@ -24,6 +26,8 @@ class WorkoutsSizesList {
     required this.bigIcon,
     required this.loadingSize,
     required this.titleFontSize,
+    required this.subtitleFontSize,
+    required this.fontSize,
     required this.cardElevation,
     required this.cardPadding,
     required this.cardSpacing,
@@ -41,12 +45,14 @@ sealed class WorkoutsSizes {
   static const double _gridSpacing = 20;
   static const double _bigIcon = 80;
   static const double _loadingSize = 30;
-  static const double _titleFontSize = 22;
+  static const double _titleFontSize = 24;
+  static const double _subtitleFontSize = 16;
+  static const double _fontSize = 14;
   static const double _cardElevation = 2;
   static const double _cardPadding = 16;
   static const double _cardSpacing = 12;
   static const double _arrowIconSize = 16;
-  static const double _buttonIconSize = 45;
+  static const double _buttonIconSize = 30;
   static const double _buttonSize = 65;
   static const double _elevation = 2;
 
@@ -64,6 +70,8 @@ sealed class WorkoutsSizes {
         bigIcon: _bigIcon * ratio,
         loadingSize: _loadingSize * ratio,
         titleFontSize: _titleFontSize * ratio,
+        subtitleFontSize: _subtitleFontSize * ratio,
+        fontSize: _fontSize * ratio,
         cardElevation: _cardElevation * ratio,
         cardPadding: _cardPadding * ratio,
         cardSpacing: _cardSpacing * ratio,

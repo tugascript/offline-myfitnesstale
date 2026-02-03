@@ -7,6 +7,7 @@ import 'src/cubits/exercise_record_cubit.dart';
 import 'src/cubits/profile_cubit.dart';
 import 'src/cubits/weight_record_cubit.dart';
 import 'src/cubits/workout_cubit.dart';
+import 'src/cubits/workout_plan_cubit.dart';
 import 'src/cubits/workout_plan_record_cubit.dart';
 import 'src/cubits/workout_record_cubit.dart';
 import 'src/utilities/app_router.dart';
@@ -36,6 +37,9 @@ class MyApp extends StatelessWidget {
         ),
         BlocProvider<WorkoutRecordCubit>(
           create: (BuildContext context) => WorkoutRecordCubit(),
+        ),
+        BlocProvider<WorkoutPlanCubit>(
+          create: (BuildContext context) => WorkoutPlanCubit(),
         ),
         BlocProvider<WorkoutPlanRecordCubit>(
           create: (BuildContext context) => WorkoutPlanRecordCubit(),
