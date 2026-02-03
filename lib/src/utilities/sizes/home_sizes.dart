@@ -6,6 +6,7 @@ final class HomeSizesList {
   final double titleFontSize;
   final double subtitleFontSize;
   final double sectionTitleFontSize;
+  final double fontSize;
   final double breaks;
 
   const HomeSizesList({
@@ -14,6 +15,7 @@ final class HomeSizesList {
     required this.titleFontSize,
     required this.subtitleFontSize,
     required this.sectionTitleFontSize,
+    required this.fontSize,
     required this.breaks,
   });
 }
@@ -24,6 +26,7 @@ sealed class HomeSizes {
   static const double _titleFoundSize = 30;
   static const double _subtitleFoundSize = 20;
   static const double _sectionTitleFoundSize = 25;
+  static const double _fontSize = 14;
   static const double _breaks = 30;
 
   static const double _xlRatio = 1.2;
@@ -38,6 +41,7 @@ sealed class HomeSizes {
         titleFontSize: _titleFoundSize * ratio,
         subtitleFontSize: _subtitleFoundSize * ratio,
         sectionTitleFontSize: _sectionTitleFoundSize * ratio,
+        fontSize: _fontSize * ratio,
         breaks: _breaks * ratio,
       );
 

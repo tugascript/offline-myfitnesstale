@@ -5,6 +5,7 @@ import '../models/common.dart';
 import '../models/enums.dart';
 import '../services/common/errors.dart';
 import '../services/workout_service.dart';
+import '../services/dtos/workout_dto.dart';
 import 'states/common_state.dart';
 import 'states/workout_state.dart';
 
@@ -23,7 +24,13 @@ class WorkoutCubit extends Cubit<WorkoutState> {
     int? offset,
   }) async {
     _logger.info('Getting workouts');
+    final isLoadMore = (offset ?? state.pagination.offset) > 0;
+
+    // Only set loading to true if not loading more to avoid flickering or full screen loader?
+    // Usually for infinite scroll we might want a different loading state or just check isLoading in UI
+    // For now let's keep it simple, but we might check this in UI to show bottom loader vs full loader
     emit(state.copyWith(isLoading: true));
+
     final result = await _workoutService.getWorkouts(
       name: name,
       difficulty: difficulty,
@@ -51,8 +58,16 @@ class WorkoutCubit extends Cubit<WorkoutState> {
 
     _logger.info("Got workouts successfully");
     final paginatedData = result.value;
+
+    List<WorkoutDto> updatedWorkouts;
+    if (isLoadMore) {
+      updatedWorkouts = [...state.workouts, ...paginatedData.data];
+    } else {
+      updatedWorkouts = paginatedData.data;
+    }
+
     emit(state.copyWith(
-      workouts: paginatedData.data,
+      workouts: updatedWorkouts,
       pagination: state.pagination.copyWith(
         name: name,
         muscleGroup: muscleGroup,

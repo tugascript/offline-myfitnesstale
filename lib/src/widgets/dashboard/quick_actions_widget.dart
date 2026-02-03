@@ -5,8 +5,6 @@ import '../../utilities/sizes/home_sizes.dart';
 import '../../views/exercise_library_view.dart';
 import '../../views/weight_goal_view.dart';
 import '../../views/weight_log_view.dart';
-import '../../views/workout_history_view.dart';
-import '../../views/workout_plan_list_view.dart';
 import '../../views/workouts_view.dart';
 
 class QuickActionsWidget extends StatelessWidget {
@@ -40,60 +38,54 @@ class QuickActionsWidget extends StatelessWidget {
           children: [
             _ActionCard(
               sizes: sizes,
-              icon: Icons.trending_up,
-              title: "Progress",
-              subtitle: "View your history",
-              color: Colors.green,
-              onTap: () {
-                context.go(WorkoutHistoryView.routeName);
-              },
-            ),
-            _ActionCard(
-              sizes: sizes,
-              icon: Icons.flag,
+              icon: Icon(
+                Icons.flag,
+                size: sizes.titleFontSize,
+                color: Colors.orange,
+              ),
               title: "Set Goal",
               subtitle: "Create weight goal",
-              color: Colors.orange,
               onTap: () {
-                context.go(WeightGoalView.routeName);
+                context.push(WeightGoalView.routeName);
               },
             ),
             _ActionCard(
               sizes: sizes,
-              icon: Icons.monitor_weight,
+              icon: Icon(
+                Icons.monitor_weight,
+                size: sizes.titleFontSize,
+                color: Colors.blue,
+              ),
               title: "Log Weight",
               subtitle: "Log your weight",
-              color: Colors.blue,
               onTap: () {
-                context.go(WeightLogView.routeName);
+                context.push(WeightLogView.routeName);
               },
             ),
             _ActionCard(
               sizes: sizes,
-              icon: Icons.book,
-              title: "Workout Plans",
-              subtitle: "Browse workout plans",
-              color: Colors.purple,
-              onTap: () {
-                context.go(WorkoutPlanListView.routeName);
-              },
-            ),
-            _ActionCard(
-              sizes: sizes,
-              icon: Icons.fitness_center,
+              icon: Text(
+                '🏋️‍♂️',
+                style: TextStyle(
+                  fontSize: sizes.titleFontSize * 0.9,
+                ),
+              ),
               title: "Workouts",
               subtitle: "Browse workouts",
-              color: Colors.red,
               onTap: () {
-                context.go(WorkoutsView.routeName, extra: true);
+                context.push(WorkoutsView.routeName);
               },
             ),
             _ActionCard(
               sizes: sizes,
-              icon: Icons.fitness_center,
+              icon: Text(
+                '💪',
+                style: TextStyle(
+                  fontSize: sizes.titleFontSize * 0.9,
+                ),
+              ),
               title: "Exercises",
               subtitle: "Browse exercises",
-              color: Colors.indigo,
               onTap: () {
                 context.push(ExerciseLibraryView.routeName);
               },
@@ -107,10 +99,9 @@ class QuickActionsWidget extends StatelessWidget {
 
 class _ActionCard extends StatelessWidget {
   final HomeSizesList sizes;
-  final IconData icon;
+  final Widget icon;
   final String title;
   final String subtitle;
-  final Color color;
   final VoidCallback onTap;
 
   const _ActionCard({
@@ -118,7 +109,6 @@ class _ActionCard extends StatelessWidget {
     required this.icon,
     required this.title,
     required this.subtitle,
-    required this.color,
     required this.onTap,
   });
 
@@ -134,11 +124,7 @@ class _ActionCard extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(
-                icon,
-                size: sizes.titleFontSize,
-                color: color,
-              ),
+              icon,
               SizedBox(height: sizes.breaks / 3),
               Text(
                 title,

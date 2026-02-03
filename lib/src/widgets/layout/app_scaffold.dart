@@ -8,14 +8,14 @@ import 'app_icon.dart';
 class AppScaffold extends StatelessWidget {
   final String title;
   final Widget body;
-  final bool showBackButton;
+  final bool? showBackButton;
   final Widget? floatingActionButton;
 
   const AppScaffold({
     super.key,
     required this.title,
     required this.body,
-    this.showBackButton = false,
+    this.showBackButton,
     this.floatingActionButton,
   });
 
@@ -34,7 +34,7 @@ class AppScaffold extends StatelessWidget {
       appBar: AppBar(
         toolbarHeight: sizes.height,
         automaticallyImplyLeading: false, // Disable automatic back button
-        leading: showBackButton
+        leading: (showBackButton ?? context.canPop())
             ? IconButton(
                 icon: const Icon(
                   Icons.arrow_back_ios, // iOS-style back button

@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import '../cubits/workout_plan_cubit.dart';
 import '../cubits/states/workout_plan_state.dart';
+import '../cubits/workout_plan_cubit.dart';
 import '../models/enums.dart';
 import '../services/dtos/workout_plan_dto.dart';
-import '../widgets/layout/responsive_scaffold.dart';
+import '../widgets/layout/app_scaffold.dart';
 
 class WorkoutPlanListView extends StatefulWidget {
   static const routeName = '/workout-plans';
@@ -137,7 +137,7 @@ class _WorkoutPlanListViewState extends State<WorkoutPlanListView> {
 
   @override
   Widget build(BuildContext context) {
-    return ResponsiveScaffold(
+    return AppScaffold(
       title: 'Workout Plans',
       body: BlocConsumer<WorkoutPlanCubit, WorkoutPlanState>(
         listener: (context, state) {
