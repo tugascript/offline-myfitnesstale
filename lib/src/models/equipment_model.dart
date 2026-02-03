@@ -8,7 +8,7 @@ const String _tableCreate = '''
   CREATE TABLE IF NOT EXISTS $_table (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
-    picture_uri TEXT,
+    picture TEXT,
     created_by TEXT NOT NULL,
     created_at INTEGER NOT NULL,
     updated_at INTEGER NOT NULL

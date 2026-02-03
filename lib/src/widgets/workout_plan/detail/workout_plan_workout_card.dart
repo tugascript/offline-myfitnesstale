@@ -35,7 +35,7 @@ class WorkoutPlanWorkoutCard extends StatelessWidget {
       trailing: const Icon(Icons.chevron_right),
       onTap: () {
         context.pushNamed(
-          WorkoutDetailView.routeName,
+          WorkoutDetailView.name,
           pathParameters: {'id': workoutPlanWorkout.workoutId.toString()},
         );
       },

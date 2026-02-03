@@ -286,6 +286,7 @@ class WorkoutPlanService {
               final int dayId = await _dayRepository.insert(day, txn);
               final List<WorkoutPlanWorkoutDto> createdWorkouts = [];
 
+              // TODO: fix this, create workout plan workout fails
               for (int j = 0; j < dayInput.workouts.length; j++) {
                 final workoutInput = dayInput.workouts[j];
                 final workout = WorkoutPlanWorkout.create(
@@ -298,13 +299,13 @@ class WorkoutPlanService {
                   createdBy: createdBy,
                 );
 
-                final int workoutKey = await _planWorkoutRepository.insert(
+                final int planWorkoutId = await _planWorkoutRepository.insert(
                   workout,
                   txn,
                 );
 
                 createdWorkouts.add(WorkoutPlanWorkoutDto.fromModel(
-                  workout.copyWith(id: workoutKey),
+                  workout.copyWith(id: planWorkoutId),
                   workout: workoutInput.workout,
                 ));
               }

@@ -180,7 +180,7 @@ class _ProfileViewState extends State<ProfileView> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    "${system?.units == Units.metric ? "${profile.height}cm" : Converters().formatImperialHeight(profile.height)} • ${profile.gender.name}",
+                    "${system?.units == Units.metric ? "${profile.height}cm" : Converters.formatImperialHeight(profile.height)} • ${profile.gender.name}",
                     style: TextStyle(
                       fontSize: 16,
                       color: Colors.grey[600],
@@ -229,9 +229,10 @@ class _ProfileViewState extends State<ProfileView> {
                 "Height",
                 system?.units == Units.metric
                     ? "${profile.height}cm"
-                    : Converters().formatImperialHeight(profile.height)),
+                    : Converters.formatImperialHeight(profile.height)),
             _buildInfoRow("Gender", profile.gender.name),
-            _buildInfoRow("Birthdate", _formatDate(profile.birthdate.millisecondsSinceEpoch ~/ 1000)),
+            _buildInfoRow("Birthdate",
+                _formatDate(profile.birthdate.millisecondsSinceEpoch ~/ 1000)),
           ],
         ),
       ),

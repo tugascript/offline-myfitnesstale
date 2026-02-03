@@ -5,13 +5,13 @@ import '../../utilities/sizes/app_bar_sizes.dart';
 import '../../utilities/sizes/screen_size.dart';
 import 'app_icon.dart';
 
-class ResponsiveScaffold extends StatelessWidget {
+class AppScaffold extends StatelessWidget {
   final String title;
   final Widget body;
   final bool showBackButton;
   final Widget? floatingActionButton;
 
-  const ResponsiveScaffold({
+  const AppScaffold({
     super.key,
     required this.title,
     required this.body,
@@ -69,11 +69,7 @@ class ResponsiveScaffold extends StatelessWidget {
           ],
         ),
       ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: body,
-        ),
-      ),
+      body: SafeArea(child: body),
       floatingActionButton: floatingActionButton,
     );
   }

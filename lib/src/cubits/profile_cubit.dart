@@ -111,6 +111,7 @@ class ProfileCubit extends Cubit<ProfileState> {
     required int height,
     required Gender gender,
     required DateTime birthday,
+    required bool createWorkouts,
   }) async {
     _logger.info("Onboarding profile");
     if (state.isLoading || state.profile != null || state.system != null) {
@@ -119,6 +120,63 @@ class ProfileCubit extends Cubit<ProfileState> {
     }
 
     emit(state.copyWith(isLoading: true));
+    // TODO: handle creation more gracefully
+    final equipmentResult = await _exerciseService.createEquipments(
+      kEquipmentNames,
+      createdBy: CreatedBy.system,
+    );
+    if (equipmentResult.isErr()) {
+      _logger.severe("Failed to create equipments", equipmentResult.error);
+      emit(state.copyWith(
+        error: ErrorState(
+          type: SingleErrorTypes.operationFailure.name,
+          description: 'Failed to create equipments',
+        ),
+        isLoading: false,
+      ));
+      return;
+    }
+
+    _logger.info("Equipments created successfully");
+    final Map<String, EquipmentDto> equipmentsMap = equipmentResult.value.fold(
+      <String, EquipmentDto>{},
+      (map, equipment) {
+        map[equipment.name] = equipment;
+        return map;
+      },
+    );
+
+    _logger.info("Creating exercises");
+    final exerciseResult = await _exerciseService.createExercises(
+      kInitialExercises
+          .map(
+            (e) => ExerciseInput(
+              name: e.name,
+              muscleGroup: e.muscleGroup,
+              muscles: e.muscles,
+              equipments: e.equipments
+                  .map(
+                    (e) => equipmentsMap[e],
+                  )
+                  .nonNulls
+                  .toList(),
+            ),
+          )
+          .toList(),
+      createdBy: CreatedBy.system,
+    );
+    if (exerciseResult.isErr()) {
+      _logger.severe("Failed to create exercises", exerciseResult.error);
+      emit(state.copyWith(
+        error: ErrorState(
+          type: SingleErrorTypes.operationFailure.name,
+          description: 'Failed to create exercises',
+        ),
+        isLoading: false,
+      ));
+      return;
+    }
+
     _logger.info("Onboarding profile");
     _logger.info("Creating profile");
     final profileResult = await _profileService.upsertProfile(
@@ -159,19 +217,8 @@ class ProfileCubit extends Cubit<ProfileState> {
       return;
     }
 
-    final equipmentCount = await _exerciseService.countEquipments();
-    if (equipmentCount.isErr()) {
-      _logger.severe("Failed to count equipments", equipmentCount.error);
-      emit(state.copyWith(
-        error: ErrorState(
-          type: SingleErrorTypes.operationFailure.name,
-          description: 'Failed to count equipments',
-        ),
-        isLoading: false,
-      ));
-    }
-    if (equipmentCount.value >= kEquipmentNames.length) {
-      _logger.info("Equipments already created");
+    if (!createWorkouts) {
+      _logger.info("Workouts not created");
       emit(state.copyWith(
         profile: profileResult.value,
         system: systemResult.value,
@@ -180,61 +227,6 @@ class ProfileCubit extends Cubit<ProfileState> {
         error: null,
       ));
       return;
-    }
-
-    _logger.info("Creating equipments");
-    final equipmentResult = await _exerciseService.createEquipments(
-      kEquipmentNames,
-      createdBy: CreatedBy.system,
-    );
-    if (equipmentResult.isErr()) {
-      _logger.severe("Failed to create equipments", equipmentResult.error);
-      emit(state.copyWith(
-        error: ErrorState(
-          type: SingleErrorTypes.operationFailure.name,
-          description: 'Failed to create equipments',
-        ),
-        isLoading: false,
-      ));
-    }
-
-    _logger.info("Equipments created successfully");
-    final Map<String, EquipmentDto> equipmentsMap = equipmentResult.value.fold(
-      <String, EquipmentDto>{},
-      (map, equipment) {
-        map[equipment.name] = equipment;
-        return map;
-      },
-    );
-
-    _logger.info("Creating exercises");
-    final exerciseResult = await _exerciseService.createExercises(
-      kInitialExercises
-          .map(
-            (e) => ExerciseInput(
-              name: e.name,
-              muscleGroup: e.muscleGroup,
-              muscles: e.muscles,
-              equipments: e.equipments
-                  .map(
-                    (e) => equipmentsMap[e],
-                  )
-                  .nonNulls
-                  .toList(),
-            ),
-          )
-          .toList(),
-      createdBy: CreatedBy.system,
-    );
-    if (exerciseResult.isErr()) {
-      _logger.severe("Failed to create exercises", exerciseResult.error);
-      emit(state.copyWith(
-        error: ErrorState(
-          type: SingleErrorTypes.operationFailure.name,
-          description: 'Failed to create exercises',
-        ),
-        isLoading: false,
-      ));
     }
 
     _logger.info("Exercises created successfully");
@@ -288,12 +280,16 @@ class ProfileCubit extends Cubit<ProfileState> {
     if (workoutResult.isErr()) {
       _logger.severe("Failed to create workouts", workoutResult.error);
       emit(state.copyWith(
+        profile: profileResult.value,
+        system: systemResult.value,
         error: ErrorState(
           type: SingleErrorTypes.operationFailure.name,
           description: 'Failed to create workouts',
         ),
         isLoading: false,
+        isInitiated: true,
       ));
+      return;
     }
 
     _logger.info("Workouts created successfully");
@@ -345,12 +341,16 @@ class ProfileCubit extends Cubit<ProfileState> {
       _logger.severe(
           "Failed to create workout plans", workoutPlansResult.error);
       emit(state.copyWith(
+        profile: profileResult.value,
+        system: systemResult.value,
         error: ErrorState(
           type: SingleErrorTypes.operationFailure.name,
           description: 'Failed to create workout plans',
         ),
         isLoading: false,
+        isInitiated: true,
       ));
+      return;
     }
 
     _logger.info("Workout plans created successfully");

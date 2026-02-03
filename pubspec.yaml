@@ -43,6 +43,7 @@ dependencies:
   equatable: ^2.0.7
   intl: ^0.20.1
   logging: ^1.2.0
+  google_fonts: ^8.0.0
 
 dev_dependencies:
   flutter_test:

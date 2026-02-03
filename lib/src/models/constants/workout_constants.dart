@@ -46,7 +46,6 @@ final class WorkoutData {
   final Difficulty difficulty;
   final WorkoutPhase? phase;
   final List<WorkoutSetData> sets;
-
   const WorkoutData({
     required this.name,
     required this.description,
@@ -94,7 +93,7 @@ const String kPowerStandardUpperWorkout2Name =
 const String kPowerStandardLowerWorkout2Name =
     "Standard Hamstring Focused Power Lower Body Workout";
 
-const WorkoutData kStandardUpperWorkout1 = WorkoutData(
+const WorkoutData kStandardEnduranceUpperWorkout1 = WorkoutData(
   name: kEnduranceStandardUpperWorkout1Name,
   description:
       "Upper body push focused workout with high reps to build muscular endurance.",
@@ -1797,7 +1796,7 @@ const List<WorkoutData> kStandardWorkouts = [
   kMaxStrengthStandardLowerWorkout1,
   kMaxStrengthStandardUpperWorkout2,
   kMaxStrengthStandardLowerWorkout2,
-  kStandardUpperWorkout1,
+  kStandardEnduranceUpperWorkout1,
   kStandardLowerWorkout1,
   kStandardUpperWorkout2,
   kStandardLowerWorkout2,

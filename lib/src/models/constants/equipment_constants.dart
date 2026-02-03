@@ -1,4 +1,3 @@
-// Equipment name constants
 const String kBarbellName = "Barbell";
 const String kDumbbellsName = "Dumbbells";
 const String kMachineName = "Machine";
@@ -48,4 +47,5 @@ const List<String> kEquipmentNames = [
   kDoubleDHandleName,
   kPowerRackName,
   kWeightBeltName,
+  kStepperName,
 ];

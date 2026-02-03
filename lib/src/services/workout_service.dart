@@ -54,17 +54,17 @@ class WorkoutSetExerciseRegistrationInput {
 class WorkoutSetRegistrationInput {
   final WorkoutSetType setType;
   final int minSets;
-  final int maxSets;
+  final int? maxSets;
   final int recommendedRestSecs;
-  final int maxRestSecs;
+  final int? maxRestSecs;
   final List<WorkoutSetExerciseRegistrationInput> exercises;
 
   const WorkoutSetRegistrationInput({
     required this.setType,
     required this.minSets,
-    required this.maxSets,
+    this.maxSets,
     required this.recommendedRestSecs,
-    required this.maxRestSecs,
+    this.maxRestSecs,
     required this.exercises,
   });
 }
@@ -193,6 +193,7 @@ class WorkoutService {
     try {
       final Workout? workout = await _repository.selectOne(id);
       if (workout == null) {
+        _logger.warning('Workout with id $id not found');
         return err(const ServiceError(
           type: SingleErrorTypes.notFound,
           description: 'Workout not found',
@@ -314,9 +315,9 @@ class WorkoutService {
       );
     } catch (e) {
       _logger.severe('Failed to get workout with id $id', e);
-      return err(const ServiceError(
+      return err(ServiceError(
         type: SingleErrorTypes.operationFailure,
-        description: 'Failed to get workout',
+        description: 'Failed to get workout with error: ${e.toString()}',
       ));
     }
   }
@@ -362,6 +363,21 @@ class WorkoutService {
         final List<WorkoutDto> createdWorkouts = [];
 
         for (final workoutInput in workouts) {
+          int totalSets = 0;
+          int totalReps = 0;
+          final Set<MuscleGroup> muscleGroups = {};
+          final Set<Muscle> muscles = {};
+
+          for (final set in workoutInput.sets) {
+            final int setNum = (set.maxSets ?? set.minSets);
+            totalSets += setNum;
+            for (final exercise in set.exercises) {
+              totalReps += setNum * (exercise.maxReps ?? exercise.minReps);
+              muscleGroups.add(exercise.exercise.muscleGroup);
+              muscles.addAll(exercise.exercise.muscles.primaryMuscles);
+            }
+          }
+
           final workout = Workout.create(
             name: workoutInput.name,
             description: workoutInput.description,
@@ -369,7 +385,11 @@ class WorkoutService {
             video: workoutInput.video,
             difficulty: workoutInput.difficulty,
             phase: workoutInput.phase,
+            muscleGroups: muscleGroups,
+            muscles: muscles,
             createdBy: createdBy,
+            totalSets: totalSets,
+            totalReps: totalReps,
           );
 
           final int workoutId = await _repository.insert(workout, txn);
@@ -561,6 +581,7 @@ class WorkoutService {
       }
     }
 
+    // TODO: fix me by updating total sets and total exercises
     try {
       final workout = await _repository.selectOne(workoutId);
       if (workout == null) {

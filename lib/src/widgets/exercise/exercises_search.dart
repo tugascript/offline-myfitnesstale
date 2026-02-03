@@ -8,6 +8,7 @@ class ExercisesSearch extends StatefulWidget {
   final bool isLoading;
   final String initialName;
   final MuscleGroup? initialMuscleGroup;
+  final Difficulty? initialDifficulty;
 
   const ExercisesSearch({
     super.key,
@@ -15,6 +16,7 @@ class ExercisesSearch extends StatefulWidget {
     required this.isLoading,
     required this.initialName,
     required this.initialMuscleGroup,
+    required this.initialDifficulty,
   });
 
   @override
@@ -32,6 +34,7 @@ class _ExercisesSearchState extends State<ExercisesSearch> {
     _data = _FormData(
       name: widget.initialName,
       muscleGroup: widget.initialMuscleGroup,
+      difficulty: widget.initialDifficulty,
     );
     _nameController.text = _data.name;
   }
@@ -136,10 +139,12 @@ class _ExercisesSearchState extends State<ExercisesSearch> {
 
 final class _FormData {
   String name;
+  Difficulty? difficulty;
   MuscleGroup? muscleGroup;
 
   _FormData({
     required this.name,
+    required this.difficulty,
     required this.muscleGroup,
   });
 }

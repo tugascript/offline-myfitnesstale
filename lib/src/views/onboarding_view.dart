@@ -47,7 +47,10 @@ class OnboardingView extends StatelessWidget {
                       !current.isLoading;
                 },
                 listener: (context, state) {
-                  if (state.profile != null) {
+                  if (state.profile != null &&
+                      state.system != null &&
+                      !state.isLoading &&
+                      state.isInitiated) {
                     context.go(HomeView.routeName);
                   }
                 },
@@ -60,6 +63,9 @@ class OnboardingView extends StatelessWidget {
                       initialName: "",
                       initialHeight: 176, // average height for a male in oz
                       initialGender: Gender.male,
+                      initialBirthday: DateTime.now().subtract(
+                        Duration(days: (365.25 * 25).floor()),
+                      ),
                       submitButtonLabel: "Create & get started",
                       isLoading: state.isLoading,
                       onSubmit: ({
@@ -68,18 +74,18 @@ class OnboardingView extends StatelessWidget {
                         required String name,
                         required int height,
                         required Gender gender,
+                        required DateTime birthday,
                         required bool preLoadWorkouts,
                       }) async {
-                        // Use a default birthday (25 years ago) if not provided
-                        final defaultBirthday = DateTime.now().subtract(const Duration(days: 365 * 25));
                         await context.read<ProfileCubit>().onboardProfile(
-                          units: units,
-                          theme: theme,
-                          name: name,
-                          height: height,
-                          gender: gender,
-                          birthday: defaultBirthday,
-                        );
+                              units: units,
+                              theme: theme,
+                              name: name,
+                              height: height,
+                              gender: gender,
+                              birthday: birthday,
+                              createWorkouts: preLoadWorkouts,
+                            );
                       },
                       initialPreLoadWorkouts: true,
                     );

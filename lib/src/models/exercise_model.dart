@@ -64,8 +64,13 @@ class ExerciseMuscles extends Equatable {
   }
 
   factory ExerciseMuscles.fromJson(String json) {
-    return ExerciseMuscles.fromMap(
-        jsonDecode(json) as Map<String, List<String>>);
+    final Map<String, dynamic> decodedJson = jsonDecode(json);
+    return ExerciseMuscles.fromMap({
+      'primary_muscles':
+          List<String>.from(decodedJson['primary_muscles'] ?? []),
+      'secondary_muscles':
+          List<String>.from(decodedJson['secondary_muscles'] ?? []),
+    });
   }
 
   factory ExerciseMuscles.fromMap(Map<String, List<String>> map) {

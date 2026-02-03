@@ -5,6 +5,8 @@ import '../../utilities/sizes/home_sizes.dart';
 import '../../views/exercise_library_view.dart';
 import '../../views/weight_goal_view.dart';
 import '../../views/weight_log_view.dart';
+import '../../views/workout_history_view.dart';
+import '../../views/workout_plan_list_view.dart';
 import '../../views/workouts_view.dart';
 
 class QuickActionsWidget extends StatelessWidget {
@@ -38,22 +40,12 @@ class QuickActionsWidget extends StatelessWidget {
           children: [
             _ActionCard(
               sizes: sizes,
-              icon: Icons.fitness_center,
-              title: "Start Workout",
-              subtitle: "Begin a new session",
-              color: Colors.blue,
-              onTap: () {
-                context.go(WorkoutsView.routeName);
-              },
-            ),
-            _ActionCard(
-              sizes: sizes,
-              icon: Icons.monitor_weight,
-              title: "Log Weight",
-              subtitle: "Track your progress",
+              icon: Icons.trending_up,
+              title: "Progress",
+              subtitle: "View your history",
               color: Colors.green,
               onTap: () {
-                context.go(WeightLogView.routeName);
+                context.go(WorkoutHistoryView.routeName);
               },
             ),
             _ActionCard(
@@ -68,10 +60,40 @@ class QuickActionsWidget extends StatelessWidget {
             ),
             _ActionCard(
               sizes: sizes,
-              icon: Icons.fitness_center,
-              title: "Browse Exercises",
-              subtitle: "Find new exercises",
+              icon: Icons.monitor_weight,
+              title: "Log Weight",
+              subtitle: "Log your weight",
+              color: Colors.blue,
+              onTap: () {
+                context.go(WeightLogView.routeName);
+              },
+            ),
+            _ActionCard(
+              sizes: sizes,
+              icon: Icons.book,
+              title: "Workout Plans",
+              subtitle: "Browse workout plans",
               color: Colors.purple,
+              onTap: () {
+                context.go(WorkoutPlanListView.routeName);
+              },
+            ),
+            _ActionCard(
+              sizes: sizes,
+              icon: Icons.fitness_center,
+              title: "Workouts",
+              subtitle: "Browse workouts",
+              color: Colors.red,
+              onTap: () {
+                context.go(WorkoutsView.routeName, extra: true);
+              },
+            ),
+            _ActionCard(
+              sizes: sizes,
+              icon: Icons.fitness_center,
+              title: "Exercises",
+              subtitle: "Browse exercises",
+              color: Colors.indigo,
               onTap: () {
                 context.push(ExerciseLibraryView.routeName);
               },
@@ -104,9 +126,9 @@ class _ActionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       elevation: 1,
+      shape: BeveledRectangleBorder(),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(sizes.radius),
         child: Padding(
           padding: EdgeInsets.all(sizes.padding),
           child: Column(
@@ -122,7 +144,7 @@ class _ActionCard extends StatelessWidget {
                 title,
                 style: TextStyle(
                   fontSize: sizes.titleFontSize * 0.6,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w600,
                 ),
                 textAlign: TextAlign.center,
                 overflow: TextOverflow.ellipsis,

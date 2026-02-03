@@ -10,6 +10,7 @@ final class _FormData {
   String name;
   int height;
   Gender gender;
+  DateTime birthday;
   bool preLoadWorkouts;
 
   _FormData({
@@ -18,6 +19,7 @@ final class _FormData {
     required this.name,
     required this.height,
     required this.gender,
+    required this.birthday,
     required this.preLoadWorkouts,
   });
 }
@@ -29,6 +31,7 @@ class OnboardingForm extends StatefulWidget {
   final String initialName;
   final int initialHeight;
   final Gender initialGender;
+  final DateTime initialBirthday;
   final bool initialPreLoadWorkouts;
   final void Function({
     required Units units,
@@ -36,6 +39,7 @@ class OnboardingForm extends StatefulWidget {
     required String name,
     required int height,
     required Gender gender,
+    required DateTime birthday,
     required bool preLoadWorkouts,
   }) onSubmit;
   final String submitButtonLabel;
@@ -49,6 +53,7 @@ class OnboardingForm extends StatefulWidget {
     required this.initialName,
     required this.initialHeight,
     required this.initialGender,
+    required this.initialBirthday,
     required this.initialPreLoadWorkouts,
     required this.onSubmit,
     required this.submitButtonLabel,
@@ -62,6 +67,7 @@ class OnboardingForm extends StatefulWidget {
 class _OnboardingFormState extends State<OnboardingForm> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
+  final _birthdayController = TextEditingController();
   late final _FormData _data;
 
   @override
@@ -73,13 +79,17 @@ class _OnboardingFormState extends State<OnboardingForm> {
       name: widget.initialName,
       height: widget.initialHeight,
       gender: widget.initialGender,
+      birthday: widget.initialBirthday,
       preLoadWorkouts: widget.initialPreLoadWorkouts,
     );
+    _birthdayController.text =
+        "${_data.birthday.day}/${_data.birthday.month}/${_data.birthday.year}";
   }
 
   @override
   void dispose() {
     _nameController.dispose();
+    _birthdayController.dispose();
     super.dispose();
   }
 
@@ -213,6 +223,36 @@ class _OnboardingFormState extends State<OnboardingForm> {
                 },
               ),
               SizedBox(height: widget.sizes.formBreaks),
+              TextFormField(
+                controller: _birthdayController,
+                readOnly: true,
+                decoration: const InputDecoration(
+                  labelText: 'Birthday',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.cake_outlined),
+                  suffixIcon: Icon(Icons.calendar_today),
+                ),
+                onTap: () async {
+                  final DateTime? picked = await showDatePicker(
+                    context: context,
+                    initialDate: _data.birthday,
+                    firstDate: DateTime.now().subtract(
+                      Duration(days: (365.25 * 125).floor()),
+                    ),
+                    lastDate: DateTime.now().subtract(
+                      Duration(days: (365.25 * 16).floor()),
+                    ),
+                  );
+                  if (picked != null && picked != _data.birthday) {
+                    setState(() {
+                      _data.birthday = picked;
+                      _birthdayController.text =
+                          "${picked.day}/${picked.month}/${picked.year}";
+                    });
+                  }
+                },
+              ),
+              SizedBox(height: widget.sizes.formBreaks),
               DropdownButtonFormField<Gender>(
                 initialValue: _data.gender,
                 decoration: const InputDecoration(
@@ -223,7 +263,9 @@ class _OnboardingFormState extends State<OnboardingForm> {
                 items: Gender.values.map((gender) {
                   return DropdownMenuItem(
                     value: gender,
-                    child: Text(gender.name),
+                    child: Text(
+                      "${gender.name[0].toUpperCase()}${gender.name.substring(1)}",
+                    ),
                   );
                 }).toList(),
                 onChanged: (value) {
@@ -267,6 +309,7 @@ class _OnboardingFormState extends State<OnboardingForm> {
                     name: _nameController.text,
                     gender: _data.gender,
                     height: _data.height,
+                    birthday: _data.birthday,
                     preLoadWorkouts: _data.preLoadWorkouts,
                   );
                 }

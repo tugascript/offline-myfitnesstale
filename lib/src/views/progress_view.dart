@@ -356,8 +356,8 @@ class _ProgressViewState extends State<ProgressView>
             itemBuilder: (context, index) {
               final record = weightRecords[index];
               final displayWeight = units == Units.metric
-                  ? Converters().formatMetricWeight(record.weight)
-                  : Converters().formatImperialWeight(record.weight);
+                  ? Converters.formatMetricWeight(record.weight)
+                  : Converters.formatImperialWeight(record.weight);
 
               return Card(
                 margin: const EdgeInsets.only(bottom: 8),

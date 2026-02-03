@@ -1,23 +1,15 @@
 import 'package:flutter/material.dart';
 
 enum ScreenSize {
-  xl,
-  lg,
-  md,
-  sm,
-  xs,
-}
+  xl(1536),
+  lg(1200),
+  md(900),
+  sm(600),
+  xs(0);
 
-extension ScreenSizesExtension on ScreenSize {
-  static const Map<ScreenSize, int> _values = {
-    ScreenSize.xl: 1536,
-    ScreenSize.lg: 1200,
-    ScreenSize.md: 900,
-    ScreenSize.sm: 600,
-    ScreenSize.xs: 0,
-  };
+  final int value;
 
-  int get value => _values[this]!;
+  const ScreenSize(this.value);
 }
 
 class BreakPoint {
@@ -39,6 +31,14 @@ class BreakPoint {
   bool get greatLG => width >= ScreenSize.lg.value;
 
   bool get greatXL => width >= ScreenSize.xl.value;
+
+  bool get lessSM => width < ScreenSize.sm.value;
+
+  bool get lessMD => width < ScreenSize.md.value;
+
+  bool get lessLG => width < ScreenSize.lg.value;
+
+  bool get lessXL => width < ScreenSize.xl.value;
 
   ScreenSize get screenSize {
     if (greatXL) {
