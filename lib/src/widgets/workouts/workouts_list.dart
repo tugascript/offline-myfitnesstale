@@ -12,6 +12,7 @@ class WorkoutsList extends StatelessWidget {
   final bool isLoading;
   final List<WorkoutDto> workouts;
   final WorkoutPagination pagination;
+  final ScrollController? scrollController;
 
   const WorkoutsList({
     super.key,
@@ -19,6 +20,7 @@ class WorkoutsList extends StatelessWidget {
     required this.isLoading,
     required this.workouts,
     required this.pagination,
+    this.scrollController,
   });
 
   @override
@@ -56,10 +58,16 @@ class WorkoutsList extends StatelessWidget {
     }
 
     return ListView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: workouts.length,
+      controller: scrollController,
+      // Remove shrinkWrap and physics to allow normal scrolling behavior in Expanded
+      itemCount: workouts.length + (isLoading ? 1 : 0),
       itemBuilder: (context, index) {
+        if (index == workouts.length) {
+          return const Padding(
+            padding: EdgeInsets.all(16.0),
+            child: Center(child: CircularProgressIndicator()),
+          );
+        }
         final workout = workouts[index];
         return WorkoutCard(
           workout: workout,

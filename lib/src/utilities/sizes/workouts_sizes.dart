@@ -52,7 +52,7 @@ sealed class WorkoutsSizes {
   static const double _cardPadding = 16;
   static const double _cardSpacing = 12;
   static const double _arrowIconSize = 16;
-  static const double _buttonIconSize = 30;
+  static const double _buttonIconSize = 25;
   static const double _buttonSize = 65;
   static const double _elevation = 2;
 

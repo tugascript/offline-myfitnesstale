@@ -9,6 +9,7 @@ import '../../cubits/workout_plan_record_cubit.dart';
 import '../../models/enums.dart';
 import '../../services/dtos/profile_dto.dart';
 import '../../utilities/sizes/home_sizes.dart';
+import 'active_plan/empty_active_plan.dart';
 
 class ActivePlanWidget extends StatefulWidget {
   final HomeSizesList sizes;
@@ -98,7 +99,7 @@ class _ActivePlanWidgetState extends State<ActivePlanWidget> {
           final currentPlanRecord = state.currentPlanRecord;
 
           if (currentPlanRecord.workoutPlan == null) {
-            return const SizedBox.shrink();
+            return EmptyActivePlan(sizes: widget.sizes);
           }
 
           final plan = currentPlanRecord.workoutPlan!;

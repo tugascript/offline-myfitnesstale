@@ -8,7 +8,7 @@ import '../models/enums.dart';
 import '../utilities/sizes/screen_size.dart';
 import '../utilities/sizes/workouts_sizes.dart';
 import '../widgets/common/base_common_search_form.dart';
-import '../widgets/layout/responsive_scaffold.dart';
+import '../widgets/layout/app_scaffold.dart';
 import '../widgets/workouts/workouts_list.dart';
 
 class WorkoutsView extends StatefulWidget {
@@ -22,6 +22,8 @@ class WorkoutsView extends StatefulWidget {
 }
 
 class _WorkoutsViewState extends State<WorkoutsView> {
+  final ScrollController _scrollController = ScrollController();
+
   @override
   void initState() {
     super.initState();
@@ -35,6 +37,33 @@ class _WorkoutsViewState extends State<WorkoutsView> {
         offset: 0,
       );
     }
+
+    _scrollController.addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (_isBottom) {
+      final cubit = context.read<WorkoutCubit>();
+      if (!cubit.state.isLoading &&
+          cubit.state.pagination.total > cubit.state.workouts.length) {
+        cubit.getWorkouts(
+          offset: cubit.state.workouts.length,
+        );
+      }
+    }
+  }
+
+  bool get _isBottom {
+    if (!_scrollController.hasClients) return false;
+    final maxScroll = _scrollController.position.maxScrollExtent;
+    final currentScroll = _scrollController.offset;
+    return currentScroll >= (maxScroll * 0.9);
   }
 
   @override
@@ -42,9 +71,8 @@ class _WorkoutsViewState extends State<WorkoutsView> {
     final breakPoints = BreakPoint.fromContext(context);
     final sizes = WorkoutsSizes.getWorkoutsSizes(breakPoints.screenSize);
 
-    return ResponsiveScaffold(
+    return AppScaffold(
       title: 'Workouts',
-      showBackButton: GoRouterState.of(context).extra as bool? ?? false,
       body: Padding(
         padding: EdgeInsets.all(sizes.padding),
         child: BlocBuilder<WorkoutCubit, WorkoutState>(
@@ -76,11 +104,14 @@ class _WorkoutsViewState extends State<WorkoutsView> {
                   },
                 ),
                 SizedBox(height: sizes.inputSpacing),
-                WorkoutsList(
-                  sizes: sizes,
-                  isLoading: state.isLoading,
-                  workouts: state.workouts,
-                  pagination: state.pagination,
+                Expanded(
+                  child: WorkoutsList(
+                    sizes: sizes,
+                    isLoading: state.isLoading,
+                    workouts: state.workouts,
+                    pagination: state.pagination,
+                    scrollController: _scrollController,
+                  ),
                 ),
               ],
             );
@@ -95,7 +126,7 @@ class _WorkoutsViewState extends State<WorkoutsView> {
           onPressed: () {
             context.push("/workouts/create");
           },
-          shape: const CircleBorder(),
+          shape: BeveledRectangleBorder(),
           child: Icon(Icons.add, size: sizes.buttonIconSize),
         ),
       ),
