@@ -162,9 +162,11 @@ sealed class AppRouter {
     ),
   ];
 
-  static GoRouter get router => GoRouter(
-        routes: _routes,
-        initialLocation: MainNavigationView.routeName,
-        errorBuilder: (context, state) => const NotFoundView(),
-      );
+  static final GoRouter _router = GoRouter(
+    routes: _routes,
+    initialLocation: MainNavigationView.routeName,
+    errorBuilder: (context, state) => const NotFoundView(),
+  );
+
+  static GoRouter get router => _router;
 }

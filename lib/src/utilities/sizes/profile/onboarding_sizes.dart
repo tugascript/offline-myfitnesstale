@@ -1,6 +1,6 @@
 import '../screen_size.dart';
 
-class OnboardingSizesList {
+final class OnboardingSizesList {
   final double padding;
   final double marginTop;
   final double titleFontSize;

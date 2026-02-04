@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../utilities/sizes/home_sizes.dart';
-import '../../layout/app_card.dart';
 
 class EmptyActivePlan extends StatelessWidget {
   final HomeSizesList sizes;
@@ -14,6 +13,8 @@ class EmptyActivePlan extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDarkTheme = theme.brightness == Brightness.dark;
     final spacing = sizes.breaks / 3;
 
     return Column(
@@ -27,8 +28,8 @@ class EmptyActivePlan extends StatelessWidget {
           ),
         ),
         SizedBox(height: sizes.breaks / 3),
-        AppCard(
-          color: Colors.grey[100],
+        Card(
+          color: theme.scaffoldBackgroundColor,
           child: SizedBox(
             width: double.infinity,
             child: InkWell(
@@ -49,7 +50,8 @@ class EmptyActivePlan extends StatelessWidget {
                       style: TextStyle(
                         fontSize: sizes.subtitleFontSize,
                         fontWeight: FontWeight.bold,
-                        color: Colors.grey[800],
+                        color:
+                            isDarkTheme ? Colors.grey[200] : Colors.grey[800],
                       ),
                     ),
                     SizedBox(height: spacing),
@@ -57,7 +59,8 @@ class EmptyActivePlan extends StatelessWidget {
                       'Start an old or create a new workout plan',
                       style: TextStyle(
                         fontSize: sizes.fontSize,
-                        color: Colors.grey[600],
+                        color:
+                            isDarkTheme ? Colors.grey[400] : Colors.grey[600],
                       ),
                     ),
                   ],

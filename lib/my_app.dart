@@ -5,6 +5,7 @@ import 'src/cubits/active_workout_cubit.dart';
 import 'src/cubits/exercise_cubit.dart';
 import 'src/cubits/exercise_record_cubit.dart';
 import 'src/cubits/profile_cubit.dart';
+import 'src/cubits/states/profile_state.dart';
 import 'src/cubits/weight_record_cubit.dart';
 import 'src/cubits/workout_cubit.dart';
 import 'src/cubits/workout_plan_cubit.dart';
@@ -21,7 +22,8 @@ class MyApp extends StatelessWidget {
     return MultiBlocProvider(
       providers: [
         BlocProvider<ProfileCubit>(
-          create: (BuildContext context) => ProfileCubit(),
+          create: (BuildContext context) => ProfileCubit()..loadInitialData(),
+          lazy: false,
         ),
         BlocProvider<ExerciseCubit>(
           create: (BuildContext context) => ExerciseCubit(),
@@ -48,10 +50,20 @@ class MyApp extends StatelessWidget {
           create: (BuildContext context) => ActiveWorkoutCubit(),
         ),
       ],
-      child: MaterialApp.router(
-        title: 'My Fitness Tale',
-        theme: ThemeGenerator.themeFromContext(context),
-        routerConfig: AppRouter.router,
+      child: BlocBuilder<ProfileCubit, ProfileState>(
+        buildWhen: (previous, current) {
+          return previous.system?.theme != current.system?.theme;
+        },
+        builder: (context, state) {
+          return MaterialApp.router(
+            title: 'My Fitness Tale',
+            theme: ThemeGenerator.themeFromContext(
+              context,
+              themeOverride: state.system?.theme,
+            ),
+            routerConfig: AppRouter.router,
+          );
+        },
       ),
     );
   }

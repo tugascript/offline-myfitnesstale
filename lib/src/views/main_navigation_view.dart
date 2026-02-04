@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 
 import '../cubits/profile_cubit.dart';
 import '../cubits/states/profile_state.dart';
-import '../cubits/weight_record_cubit.dart';
 import 'create_profile_button_view.dart';
 import 'home_view.dart';
 import 'loading_view.dart';
@@ -65,8 +64,6 @@ class _MainNavigationViewState extends State<MainNavigationView> {
       body: BlocConsumer<ProfileCubit, ProfileState>(
         builder: (context, state) {
           if (!state.isInitiated) {
-            context.read<ProfileCubit>().loadInitialData();
-            context.read<WeightRecordCubit>().getLatestRecordedWeightRecord();
             return const LoadingView();
           }
 

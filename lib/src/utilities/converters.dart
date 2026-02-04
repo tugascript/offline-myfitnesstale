@@ -48,4 +48,23 @@ sealed class Converters {
     }
     return "${minutes}m ${remainingSeconds}s";
   }
+
+  static String formatDate(DateTime timestamp, {bool imperial = false}) {
+    final day = timestamp.day.toString().padLeft(2, '0');
+    final month = timestamp.month.toString().padLeft(2, '0');
+    final year = timestamp.year.toString().padLeft(4, '0');
+
+    if (imperial) {
+      return "$month/$day/$year";
+    }
+
+    return "$day/$month/$year";
+  }
+
+  static String capitalizeString(String str) {
+    return str
+        .split(RegExp(r'[ _]'))
+        .map((word) => word[0].toUpperCase() + word.substring(1))
+        .join(" ");
+  }
 }

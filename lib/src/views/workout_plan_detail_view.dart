@@ -5,8 +5,8 @@ import '../cubits/states/workout_plan_state.dart';
 import '../cubits/workout_plan_cubit.dart';
 import '../models/enums.dart';
 import '../widgets/layout/responsive_scaffold.dart';
-import '../widgets/workout_plan/detail/start_workout_plan.dart';
-import '../widgets/workout_plan/detail/workout_plan_week_card.dart';
+import '../widgets/workout_plan/details/start_workout_plan.dart';
+import '../widgets/workout_plan/details/workout_plan_week_card.dart';
 import 'error_view.dart';
 import 'loading_view.dart';
 

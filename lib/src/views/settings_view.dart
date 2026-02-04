@@ -5,7 +5,6 @@ import '../cubits/profile_cubit.dart';
 import '../cubits/states/profile_state.dart';
 import '../models/enums.dart';
 import '../services/dtos/system_dto.dart';
-import '../utilities/theme_generator.dart';
 import '../widgets/layout/responsive_scaffold.dart';
 
 class SettingsView extends StatefulWidget {
@@ -157,13 +156,6 @@ class _SettingsViewState extends State<SettingsView> {
                               context
                                   .read<ProfileCubit>()
                                   .updateSystem(units: newValue);
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                      'Units changed to ${newValue == Units.imperial ? "Imperial" : "Metric"}'),
-                                  duration: const Duration(seconds: 2),
-                                ),
-                              );
                             }
                           },
                     items: Units.values
@@ -221,26 +213,6 @@ class _SettingsViewState extends State<SettingsView> {
                               context
                                   .read<ProfileCubit>()
                                   .updateSystem(theme: newValue);
-                              // Set global theme
-                              ThemeGenerator.setGlobalTheme(newValue);
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                      'Theme changed to ${_getThemeDisplayName(newValue)}. Hot reload to see changes.'),
-                                  duration: const Duration(seconds: 3),
-                                  action: SnackBarAction(
-                                    label: 'Hot Reload',
-                                    onPressed: () {
-                                      // This will trigger a hot reload
-                                      WidgetsBinding.instance
-                                          .addPostFrameCallback((_) {
-                                        // Force a rebuild by accessing the theme
-                                        Theme.of(context);
-                                      });
-                                    },
-                                  ),
-                                ),
-                              );
                             }
                           },
                     items: ThemeType.values

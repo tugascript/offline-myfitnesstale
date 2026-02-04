@@ -183,4 +183,17 @@ sealed class EnumDisplayNames {
         return 'Unknown';
     }
   }
+
+  static String getGenderDisplayName(Gender? g) {
+    switch (g) {
+      case Gender.male:
+        return 'Male';
+      case Gender.female:
+        return 'Female';
+      case Gender.other:
+        return 'Other';
+      case null:
+        return 'Unknown';
+    }
+  }
 }

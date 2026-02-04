@@ -25,12 +25,7 @@ class ResponsiveScaffold extends StatelessWidget {
     final AppBarSizesList sizes =
         AppBarSizes.getAppBarSizes(breakPoint.screenSize);
 
-    final backgroundColor = Theme.of(context).brightness == Brightness.light
-        ? Colors.grey[100]
-        : Colors.grey[900];
-
     return Scaffold(
-      backgroundColor: backgroundColor,
       appBar: AppBar(
         toolbarHeight: sizes.height,
         automaticallyImplyLeading: false, // Disable automatic back button

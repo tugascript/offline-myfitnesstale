@@ -7,9 +7,12 @@ import '../cubits/states/profile_state.dart';
 import '../models/enums.dart';
 import '../services/dtos/profile_dto.dart';
 import '../services/dtos/system_dto.dart';
-import '../utilities/converters.dart';
-import '../widgets/layout/responsive_scaffold.dart';
+import '../utilities/sizes/data_display_sizes.dart';
+import '../utilities/sizes/screen_size.dart';
+import '../widgets/layout/app_scaffold.dart';
 import '../widgets/profile/height_input.dart';
+import '../widgets/profile/profile_header.dart';
+import '../widgets/profile/profile_info.dart';
 import 'settings_view.dart';
 
 class ProfileView extends StatefulWidget {
@@ -65,7 +68,11 @@ class _ProfileViewState extends State<ProfileView> {
 
   @override
   Widget build(BuildContext context) {
-    return ResponsiveScaffold(
+    final breakPoints = BreakPoint.fromContext(context);
+    final sizes =
+        DataDisplaySizes.getWorkoutDetailSizes(breakPoints.screenSize);
+
+    return AppScaffold(
       title: "Profile",
       body: BlocBuilder<ProfileCubit, ProfileState>(
         buildWhen: (previous, current) {
@@ -131,12 +138,23 @@ class _ProfileViewState extends State<ProfileView> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Profile Header
-                _buildProfileHeader(profile, state.system),
+                ProfileHeader(
+                  profile: profile,
+                  system: state.system,
+                  sizes: sizes,
+                  isEditing: _isEditing,
+                  editOnPress: () => _startEditing(profile),
+                ),
                 const SizedBox(height: 24),
 
                 // Profile Form
                 if (_isEditing) _buildEditForm(profile, state.system),
-                if (!_isEditing) _buildProfileInfo(profile, state.system),
+                if (!_isEditing)
+                  ProfileInfo(
+                    sizes: sizes,
+                    profile: profile,
+                    system: state.system,
+                  ),
 
                 const SizedBox(height: 24),
 
@@ -146,95 +164,6 @@ class _ProfileViewState extends State<ProfileView> {
             ),
           );
         },
-      ),
-    );
-  }
-
-  Widget _buildProfileHeader(ProfileDto profile, SystemDto? system) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Row(
-          children: [
-            CircleAvatar(
-              radius: 40,
-              backgroundColor:
-                  Theme.of(context).primaryColor.withValues(alpha: 0.1),
-              child: Icon(
-                Icons.person,
-                size: 40,
-                color: Theme.of(context).primaryColor,
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    profile.name,
-                    style: const TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    "${system?.units == Units.metric ? "${profile.height}cm" : Converters.formatImperialHeight(profile.height)} • ${profile.gender.name}",
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.grey[600],
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    "Profile",
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey[500],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            if (!_isEditing)
-              IconButton(
-                onPressed: () => _startEditing(profile),
-                icon: const Icon(Icons.edit),
-                tooltip: "Edit Profile",
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildProfileInfo(ProfileDto profile, SystemDto? system) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              "Profile Information",
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 16),
-            _buildInfoRow("Name", profile.name),
-            _buildInfoRow(
-                "Height",
-                system?.units == Units.metric
-                    ? "${profile.height}cm"
-                    : Converters.formatImperialHeight(profile.height)),
-            _buildInfoRow("Gender", profile.gender.name),
-            _buildInfoRow("Birthdate",
-                _formatDate(profile.birthdate.millisecondsSinceEpoch ~/ 1000)),
-          ],
-        ),
       ),
     );
   }
@@ -388,39 +317,5 @@ class _ProfileViewState extends State<ProfileView> {
         ),
       ),
     );
-  }
-
-  Widget _buildInfoRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 100,
-            child: Text(
-              label,
-              style: const TextStyle(
-                fontWeight: FontWeight.w500,
-                color: Colors.grey,
-              ),
-            ),
-          ),
-          Expanded(
-            child: Text(
-              value,
-              style: const TextStyle(
-                fontSize: 16,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  String _formatDate(int timestamp) {
-    final date = DateTime.fromMillisecondsSinceEpoch(timestamp * 1000);
-    return "${date.day}/${date.month}/${date.year}";
   }
 }

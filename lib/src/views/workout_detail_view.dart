@@ -5,7 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../cubits/states/workout_state.dart';
 import '../cubits/workout_cubit.dart';
 import '../utilities/sizes/screen_size.dart';
-import '../utilities/sizes/workout_detail_sizes.dart';
+import '../utilities/sizes/data_display_sizes.dart';
 import '../views/loading_view.dart';
 import '../widgets/layout/app_scaffold.dart';
 import '../widgets/layout/responsive_scaffold.dart';
@@ -39,7 +39,7 @@ class _WorkoutDetailViewState extends State<WorkoutDetailView> {
   @override
   Widget build(BuildContext context) {
     final breakpoints = BreakPoint.fromContext(context);
-    final sizes = WorkoutDetailSizes.getWorkoutDetailSizes(
+    final sizes = DataDisplaySizes.getWorkoutDetailSizes(
       breakpoints.screenSize,
     );
 
