@@ -9,7 +9,7 @@ import '../../utilities/sizes/data_display_sizes.dart';
 
 class ProfileHeader extends StatelessWidget {
   final ProfileDto profile;
-  final SystemDto? system;
+  final SystemDto system;
   final DataDisplaySizesList sizes;
   final bool isEditing;
   final void Function() editOnPress;
@@ -73,7 +73,7 @@ class ProfileHeader extends StatelessWidget {
                         color: grey,
                       ),
                       Text(
-                        " ${system?.units == Units.metric ? "${profile.height}cm" : Converters.formatImperialHeight(profile.height)} • ",
+                        " ${system.units == Units.metric ? "${profile.height}cm" : Converters.formatImperialHeight(profile.height)} • ",
                         style: TextStyle(
                           fontSize: sizes.subtitleFontSize,
                           color: grey,

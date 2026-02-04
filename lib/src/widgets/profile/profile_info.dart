@@ -9,13 +9,13 @@ import '../../utilities/sizes/data_display_sizes.dart';
 class ProfileInfo extends StatelessWidget {
   final DataDisplaySizesList sizes;
   final ProfileDto profile;
-  final SystemDto? system;
+  final SystemDto system;
 
   const ProfileInfo({
     super.key,
     required this.sizes,
     required this.profile,
-    this.system,
+    required this.system,
   });
 
   @override
@@ -50,7 +50,7 @@ class ProfileInfo extends StatelessWidget {
             _InfoRow(
               name: "Height",
               isDarkTheme: isDarkTheme,
-              value: system?.units == Units.metric
+              value: system.units == Units.metric
                   ? "${profile.height}cm"
                   : Converters.formatImperialHeight(profile.height),
               padding: sizes.padding,
@@ -70,7 +70,7 @@ class ProfileInfo extends StatelessWidget {
               isDarkTheme: isDarkTheme,
               value: Converters.formatDate(
                 profile.birthdate,
-                imperial: system?.units == Units.imperial,
+                imperial: system.units == Units.imperial,
               ),
               padding: sizes.padding,
               fontSize: sizes.subtitleFontSize,
