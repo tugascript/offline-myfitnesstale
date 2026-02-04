@@ -1,147 +1,83 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 
-import '../../models/enums.dart';
-import '../../models/workout_plan_model.dart';
+import '../../services/dtos/workout_plan_dto.dart';
+import '../../utilities/sizes/data_display_sizes.dart';
+import '../common/difficulty_badge.dart';
+import '../common/total_numeric_string.dart';
+import '../layout/list_card.dart';
 
 class WorkoutPlanCard extends StatelessWidget {
-  final WorkoutPlan plan;
-  final bool isList;
+  final WorkoutPlanDto plan;
+  final DataDisplaySizesList sizes;
+  final VoidCallback onTap;
 
   const WorkoutPlanCard({
     super.key,
     required this.plan,
-    this.isList = false,
+    required this.sizes,
+    required this.onTap,
   });
-
-  String _difficultyLabel(Difficulty d) {
-    switch (d) {
-      case Difficulty.beginner:
-        return 'Beginner';
-      case Difficulty.beginnerIntermediate:
-        return 'Beginner / Intermediate';
-      case Difficulty.intermediate:
-        return 'Intermediate';
-      case Difficulty.intermediateAdvanced:
-        return 'Intermediate / Advanced';
-      case Difficulty.advanced:
-        return 'Advanced';
-    }
-  }
-
-  Color _difficultyColor(Difficulty d) {
-    switch (d) {
-      case Difficulty.beginner:
-        return Colors.green;
-      case Difficulty.beginnerIntermediate:
-        return Colors.lightGreen;
-      case Difficulty.intermediate:
-        return Colors.orange;
-      case Difficulty.intermediateAdvanced:
-        return Colors.deepOrange;
-      case Difficulty.advanced:
-        return Colors.red;
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
-    final difficultyLabel = _difficultyLabel(plan.difficulty);
-    final difficultyColor = _difficultyColor(plan.difficulty);
-
-    return Card(
-      elevation: 2,
-      child: InkWell(
-        onTap: () {
-          context.push('/workout-plans/${plan.id}');
-        },
-        borderRadius: BorderRadius.circular(8),
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
+    return ListCard(
+      margin: sizes.margins,
+      padding: sizes.padding,
+      onTap: onTap,
+      children: [
+        Text(
+          plan.name,
+          style: TextStyle(
+            fontSize: sizes.subtitleFontSize,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        SizedBox(height: sizes.spacing),
+        Padding(
+          padding: EdgeInsets.only(right: sizes.padding),
+          child: Wrap(
+            spacing: sizes.spacing,
+            runSpacing: sizes.spacing,
             children: [
-              Text(
-                plan.name,
-                style: TextStyle(
-                  fontSize: isList ? 18 : 16,
-                  fontWeight: FontWeight.bold,
-                ),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
+              TotalNumericString(
+                emoji: '📅',
+                name: "Weeks",
+                total: plan.totalWeeks,
+                fontSize: sizes.fontSize,
               ),
-              const SizedBox(height: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 8,
-                  vertical: 4,
-                ),
-                decoration: BoxDecoration(
-                  color: difficultyColor.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: difficultyColor,
-                    width: 1,
-                  ),
-                ),
-                child: Text(
-                  difficultyLabel,
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: difficultyColor,
-                  ),
-                ),
+              TotalNumericString(
+                emoji: '☀️',
+                name: "Days",
+                total: plan.totalDays,
+                fontSize: sizes.fontSize,
               ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Icon(
-                    Icons.calendar_today,
-                    size: 16,
-                    color: Colors.grey[600],
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    '${plan.totalWeeks} ${plan.totalWeeks == 1 ? 'week' : 'weeks'}',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey[600],
-                    ),
-                  ),
-                ],
-              ),
-              if (plan.description != null && plan.description!.isNotEmpty) ...[
-                const SizedBox(height: 8),
-                Text(
-                  plan.description!,
-                  style: TextStyle(
-                    fontSize: isList ? 14 : 12,
-                    color: Colors.grey[600],
-                  ),
-                  maxLines: isList ? 3 : 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-              const Spacer(),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: () {
-                    context.push('/workout-plans/${plan.id}');
-                  },
-                  icon: const Icon(Icons.arrow_forward),
-                  label: const Text('View Details'),
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                  ),
-                ),
+              TotalNumericString(
+                emoji: '🏋️',
+                name: "Workouts",
+                total: plan.totalWorkouts,
+                fontSize: sizes.fontSize,
               ),
             ],
           ),
         ),
-      ),
+        SizedBox(height: sizes.spacing),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            DifficultyBadge(
+              difficulty: plan.difficulty,
+              spacing: sizes.padding / 2,
+              fontSize: sizes.fontSize,
+              fontWeight: FontWeight.w600,
+            ),
+            Icon(
+              Icons.arrow_forward_ios,
+              size: sizes.fontSize * 1.2,
+              color: Colors.grey,
+            ),
+          ],
+        ),
+      ],
     );
   }
 }

@@ -10,7 +10,6 @@ class WorkoutsSizesList {
   final double titleFontSize;
   final double subtitleFontSize;
   final double fontSize;
-  final double cardElevation;
   final double cardPadding;
   final double cardSpacing;
   final double arrowIconSize;
@@ -28,7 +27,6 @@ class WorkoutsSizesList {
     required this.titleFontSize,
     required this.subtitleFontSize,
     required this.fontSize,
-    required this.cardElevation,
     required this.cardPadding,
     required this.cardSpacing,
     required this.arrowIconSize,
@@ -48,7 +46,6 @@ sealed class WorkoutsSizes {
   static const double _titleFontSize = 24;
   static const double _subtitleFontSize = 16;
   static const double _fontSize = 14;
-  static const double _cardElevation = 2;
   static const double _cardPadding = 16;
   static const double _cardSpacing = 12;
   static const double _arrowIconSize = 16;
@@ -72,7 +69,6 @@ sealed class WorkoutsSizes {
         titleFontSize: _titleFontSize * ratio,
         subtitleFontSize: _subtitleFontSize * ratio,
         fontSize: _fontSize * ratio,
-        cardElevation: _cardElevation * ratio,
         cardPadding: _cardPadding * ratio,
         cardSpacing: _cardSpacing * ratio,
         arrowIconSize: _arrowIconSize * ratio,

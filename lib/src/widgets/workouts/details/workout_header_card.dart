@@ -3,13 +3,12 @@ import 'package:flutter/material.dart';
 import '../../../models/enums.dart';
 import '../../../models/utilities.dart';
 import '../../../services/dtos/workout_dto.dart';
-import '../../../utilities/sizes/workout_detail_sizes.dart';
+import '../../../utilities/sizes/data_display_sizes.dart';
 import '../../common/difficulty_badge.dart';
 import '../../common/muscle_group_badge.dart';
-import '../../layout/app_card.dart';
 
 class WorkoutHeaderCard extends StatelessWidget {
-  final WorkoutDetailSizesList sizes;
+  final DataDisplaySizesList sizes;
   final WorkoutDto workoutDto;
 
   const WorkoutHeaderCard({
@@ -20,7 +19,7 @@ class WorkoutHeaderCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AppCard(
+    return Card(
       child: Padding(
         padding: EdgeInsets.all(sizes.padding),
         child: Column(
@@ -141,7 +140,7 @@ class _SetTotal extends StatelessWidget {
 }
 
 class _MuscleData extends StatelessWidget {
-  final WorkoutDetailSizesList sizes;
+  final DataDisplaySizesList sizes;
   final Set<MuscleGroup> muscleGroups;
   final Set<Muscle> muscles;
 
@@ -192,7 +191,7 @@ class _MuscleData extends StatelessWidget {
 }
 
 class _MuscleGroups extends StatelessWidget {
-  final WorkoutDetailSizesList sizes;
+  final DataDisplaySizesList sizes;
   final Set<MuscleGroup> muscleGroups;
   final ThemeData theme;
 
@@ -234,7 +233,7 @@ class _MuscleGroups extends StatelessWidget {
 }
 
 class _Muscles extends StatelessWidget {
-  final WorkoutDetailSizesList sizes;
+  final DataDisplaySizesList sizes;
   final Set<Muscle> muscles;
   final ThemeData theme;
 

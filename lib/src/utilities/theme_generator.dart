@@ -22,33 +22,26 @@ const int _orangePrimaryValue =
     0xFFDB7B5B; // Choose the primary orange you'll use
 
 sealed class ThemeGenerator {
-  static ThemeType? _globalThemeOverride;
-
-  static void setGlobalTheme(ThemeType? theme) {
-    _globalThemeOverride = theme;
-  }
-
-  static ThemeData themeFromContext(BuildContext? context) {
-    // If global theme is set, use it
-    if (_globalThemeOverride != null) {
-      switch (_globalThemeOverride!) {
-        case ThemeType.light:
-          return _lightTheme;
-        case ThemeType.dark:
-          return _darkTheme;
-        case ThemeType.system:
-          // Fall through to system detection
-          break;
-      }
-    }
-
-    // Use system theme
-    if (context == null) {
-      return _lightTheme; // Default to light theme when context is null
-    }
-    return MediaQuery.of(context).platformBrightness == Brightness.dark
+  static ThemeData themeFromContext(
+    BuildContext context, {
+    ThemeType? themeOverride,
+  }) {
+    final theme = MediaQuery.of(context).platformBrightness == Brightness.dark
         ? _darkTheme
         : _lightTheme;
+
+    if (themeOverride == null) {
+      return theme;
+    }
+
+    switch (themeOverride) {
+      case ThemeType.light:
+        return _lightTheme;
+      case ThemeType.dark:
+        return _darkTheme;
+      case ThemeType.system:
+        return theme;
+    }
   }
 
   static ThemeData get defaultTheme => _lightTheme;
@@ -85,7 +78,7 @@ sealed class ThemeGenerator {
       accentColor: Colors.orangeAccent,
       brightness: Brightness.dark,
       backgroundColor: Colors.black,
-      cardColor: const Color(0xFF1E1E1E), // Dark grey card background
+      cardColor: Colors.black, // Dark grey card background
     ).copyWith(
       secondary:
           Colors.orangeAccent, // Use for UI elements that need to stand out
@@ -133,7 +126,7 @@ sealed class ThemeGenerator {
     ),
 
     // Define other custom defaults.
-    scaffoldBackgroundColor: Colors.black,
+    scaffoldBackgroundColor: Colors.grey[900],
     appBarTheme: AppBarTheme(
       elevation: 0,
       backgroundColor: Colors.black,
@@ -143,11 +136,11 @@ sealed class ThemeGenerator {
         fontWeight: FontWeight.bold,
       ),
     ),
-
     // Define the default `CardTheme`.
     cardTheme: CardThemeData(
-      color: Colors.grey[900],
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
+      color: Colors.black,
+      shape: const BeveledRectangleBorder(),
+      elevation: 1,
     ),
 
     // Define the default `IconTheme`.
@@ -182,7 +175,7 @@ sealed class ThemeGenerator {
       accentColor: Colors.orangeAccent,
       brightness: Brightness.light,
       backgroundColor: Colors.white,
-      cardColor: Colors.grey[50], // Light grey card background
+      cardColor: Colors.white, // Light grey card background
     ).copyWith(
       secondary:
           Colors.orangeAccent, // Use for UI elements that need to stand out
@@ -226,7 +219,7 @@ sealed class ThemeGenerator {
     ),
 
     // Define other custom defaults.
-    scaffoldBackgroundColor: Colors.white,
+    scaffoldBackgroundColor: Colors.grey[100],
     appBarTheme: AppBarTheme(
       elevation: 0,
       backgroundColor: Colors.white,
@@ -241,7 +234,8 @@ sealed class ThemeGenerator {
     // Define the default `CardTheme`.
     cardTheme: CardThemeData(
       color: Colors.white,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
+      shape: const BeveledRectangleBorder(),
+      elevation: 1,
     ),
 
     // Define the default `IconTheme`.

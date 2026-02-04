@@ -17,6 +17,8 @@ class QuickActionsWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDarkTheme = theme.brightness == Brightness.dark;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -38,6 +40,7 @@ class QuickActionsWidget extends StatelessWidget {
           children: [
             _ActionCard(
               sizes: sizes,
+              isDarkTheme: isDarkTheme,
               icon: Icon(
                 Icons.flag,
                 size: sizes.titleFontSize,
@@ -51,6 +54,7 @@ class QuickActionsWidget extends StatelessWidget {
             ),
             _ActionCard(
               sizes: sizes,
+              isDarkTheme: isDarkTheme,
               icon: Icon(
                 Icons.monitor_weight,
                 size: sizes.titleFontSize,
@@ -64,8 +68,9 @@ class QuickActionsWidget extends StatelessWidget {
             ),
             _ActionCard(
               sizes: sizes,
+              isDarkTheme: isDarkTheme,
               icon: Text(
-                '🏋️‍♂️',
+                '🏋️',
                 style: TextStyle(
                   fontSize: sizes.titleFontSize * 0.9,
                 ),
@@ -78,6 +83,7 @@ class QuickActionsWidget extends StatelessWidget {
             ),
             _ActionCard(
               sizes: sizes,
+              isDarkTheme: isDarkTheme,
               icon: Text(
                 '💪',
                 style: TextStyle(
@@ -99,6 +105,7 @@ class QuickActionsWidget extends StatelessWidget {
 
 class _ActionCard extends StatelessWidget {
   final HomeSizesList sizes;
+  final bool isDarkTheme;
   final Widget icon;
   final String title;
   final String subtitle;
@@ -106,6 +113,7 @@ class _ActionCard extends StatelessWidget {
 
   const _ActionCard({
     required this.sizes,
+    required this.isDarkTheme,
     required this.icon,
     required this.title,
     required this.subtitle,
@@ -140,7 +148,7 @@ class _ActionCard extends StatelessWidget {
                 subtitle,
                 style: TextStyle(
                   fontSize: sizes.subtitleFontSize * 0.7,
-                  color: Colors.grey[600],
+                  color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
                 ),
                 textAlign: TextAlign.center,
                 overflow: TextOverflow.ellipsis,

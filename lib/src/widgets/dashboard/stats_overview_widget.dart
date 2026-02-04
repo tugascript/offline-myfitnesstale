@@ -30,6 +30,9 @@ class _StatsOverviewWidgetState extends State<StatsOverviewWidget> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDarkTheme = theme.brightness == Brightness.dark;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -46,6 +49,7 @@ class _StatsOverviewWidgetState extends State<StatsOverviewWidget> {
             Expanded(
               child: _StatCard(
                 sizes: widget.sizes,
+                isDarkTheme: isDarkTheme,
                 icon: Icons.fitness_center,
                 title: "Weekly Workouts",
                 value: "0",
@@ -62,6 +66,7 @@ class _StatsOverviewWidgetState extends State<StatsOverviewWidget> {
               Expanded(
                 child: _StatCard(
                   sizes: widget.sizes,
+                  isDarkTheme: isDarkTheme,
                   icon: Icons.person,
                   title: "Height",
                   value: state.profile != null
@@ -81,6 +86,7 @@ class _StatsOverviewWidgetState extends State<StatsOverviewWidget> {
                       previous.latestWeightRecord != current.latestWeightRecord,
                   builder: (context, state2) => _StatCard(
                     sizes: widget.sizes,
+                    isDarkTheme: isDarkTheme,
                     icon: Icons.monitor_weight,
                     title: "Weight",
                     value: state2.latestWeightRecord != null
@@ -106,6 +112,7 @@ class _StatsOverviewWidgetState extends State<StatsOverviewWidget> {
 
 class _StatCard extends StatelessWidget {
   final HomeSizesList sizes;
+  final bool isDarkTheme;
   final IconData icon;
   final String title;
   final String value;
@@ -113,6 +120,7 @@ class _StatCard extends StatelessWidget {
 
   const _StatCard({
     required this.sizes,
+    required this.isDarkTheme,
     required this.icon,
     required this.title,
     required this.value,
@@ -146,7 +154,7 @@ class _StatCard extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
-                      color: Colors.grey[700],
+                      color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
                     ),
                   ),
                 ),

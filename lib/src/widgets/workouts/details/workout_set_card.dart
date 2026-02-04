@@ -6,11 +6,10 @@ import '../../../models/enums.dart';
 import '../../../models/utilities.dart';
 import '../../../services/dtos/workout_set_dto.dart';
 import '../../../services/dtos/workout_set_exercise_dto.dart';
-import '../../../utilities/sizes/workout_detail_sizes.dart';
-import '../../layout/app_card.dart';
+import '../../../utilities/sizes/data_display_sizes.dart';
 
 class WorkoutSetCard extends StatelessWidget {
-  final WorkoutDetailSizesList sizes;
+  final DataDisplaySizesList sizes;
   final WorkoutSetDto set;
   final int setNumber;
 
@@ -23,7 +22,7 @@ class WorkoutSetCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AppCard(
+    return Card(
       child: ExpansionTile(
         leading: Container(
           width: sizes.subtitleFontSize * 1.75,
@@ -128,7 +127,7 @@ class WorkoutSetCard extends StatelessWidget {
 }
 
 class _SetTypeBadge extends StatelessWidget {
-  final WorkoutDetailSizesList sizes;
+  final DataDisplaySizesList sizes;
   final WorkoutSetType setType;
 
   const _SetTypeBadge({
@@ -182,7 +181,7 @@ class _SetTypeBadge extends StatelessWidget {
 }
 
 class _SetExercise extends StatelessWidget {
-  final WorkoutDetailSizesList sizes;
+  final DataDisplaySizesList sizes;
   final WorkoutSetExerciseDto setExercise;
 
   const _SetExercise({

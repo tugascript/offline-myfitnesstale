@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
-import '../../../utilities/sizes/workout_detail_sizes.dart';
+import '../../../utilities/sizes/data_display_sizes.dart';
 
 class EmptySetsCard extends StatelessWidget {
-  final WorkoutDetailSizesList sizes;
+  final DataDisplaySizesList sizes;
 
   const EmptySetsCard({
     super.key,

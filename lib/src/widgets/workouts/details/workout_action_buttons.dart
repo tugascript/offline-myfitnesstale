@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../utilities/sizes/workout_detail_sizes.dart';
+import '../../../utilities/sizes/data_display_sizes.dart';
 
 class WorkoutActionButtons extends StatelessWidget {
-  final WorkoutDetailSizesList sizes;
+  final DataDisplaySizesList sizes;
   final int workoutId;
 
   const WorkoutActionButtons({
@@ -49,7 +49,7 @@ class WorkoutActionButtons extends StatelessWidget {
 }
 
 class _EditWorkoutButton extends StatelessWidget {
-  final WorkoutDetailSizesList sizes;
+  final DataDisplaySizesList sizes;
   final int workoutId;
 
   const _EditWorkoutButton({
@@ -92,7 +92,7 @@ class _EditWorkoutButton extends StatelessWidget {
 }
 
 class _StartWorkoutButton extends StatelessWidget {
-  final WorkoutDetailSizesList sizes;
+  final DataDisplaySizesList sizes;
   final int workoutId;
 
   const _StartWorkoutButton({
@@ -130,7 +130,7 @@ class _StartWorkoutButton extends StatelessWidget {
 }
 
 class _WorkoutHistoryButton extends StatelessWidget {
-  final WorkoutDetailSizesList sizes;
+  final DataDisplaySizesList sizes;
   final int workoutId;
 
   const _WorkoutHistoryButton({
