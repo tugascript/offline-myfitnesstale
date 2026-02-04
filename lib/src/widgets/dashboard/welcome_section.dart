@@ -15,12 +15,12 @@ class WelcomeSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDarkTheme = theme.brightness == Brightness.dark;
     return SizedBox(
       width: double.infinity,
       child: Card(
-        elevation: 1,
-        color: Theme.of(context).primaryColorLight,
-        shape: BeveledRectangleBorder(),
+        color: isDarkTheme ? theme.primaryColorDark : theme.primaryColorLight,
         child: Padding(
           padding: EdgeInsets.all(sizes.padding),
           child: Column(
@@ -42,7 +42,7 @@ class WelcomeSection extends StatelessWidget {
                 "Let's continue your fitness tale!",
                 style: TextStyle(
                   fontSize: sizes.subtitleFontSize,
-                  color: Colors.grey[600],
+                  color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
                 ),
               ),
             ],

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
 
 import '../cubits/profile_cubit.dart';
 import '../cubits/states/profile_state.dart';
@@ -13,7 +12,7 @@ import '../widgets/layout/app_scaffold.dart';
 import '../widgets/profile/height_input.dart';
 import '../widgets/profile/profile_header.dart';
 import '../widgets/profile/profile_info.dart';
-import 'settings_view.dart';
+import '../widgets/profile/settings_config.dart';
 
 class ProfileView extends StatefulWidget {
   static const routeName = "/profile";
@@ -104,7 +103,8 @@ class _ProfileViewState extends State<ProfileView> {
           }
 
           final profile = state.profile;
-          if (profile == null) {
+          final system = state.system;
+          if (profile == null || system == null) {
             return const Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -140,26 +140,29 @@ class _ProfileViewState extends State<ProfileView> {
                 // Profile Header
                 ProfileHeader(
                   profile: profile,
-                  system: state.system,
+                  system: system,
                   sizes: sizes,
                   isEditing: _isEditing,
                   editOnPress: () => _startEditing(profile),
                 ),
-                const SizedBox(height: 24),
+                SizedBox(height: sizes.spacing * 2),
 
                 // Profile Form
-                if (_isEditing) _buildEditForm(profile, state.system),
+                if (_isEditing) _buildEditForm(profile, system),
                 if (!_isEditing)
                   ProfileInfo(
                     sizes: sizes,
                     profile: profile,
-                    system: state.system,
+                    system: system,
                   ),
 
-                const SizedBox(height: 24),
+                SizedBox(height: sizes.spacing * 2),
 
                 // Settings Section
-                _buildSettingsSection(state.system),
+                SettingsConfig(
+                  sizes: sizes,
+                  system: system,
+                ),
               ],
             ),
           );
@@ -254,66 +257,6 @@ class _ProfileViewState extends State<ProfileView> {
               ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSettingsSection(SystemDto? system) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              "Settings",
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 16),
-            ListTile(
-              leading: const Icon(Icons.settings),
-              title: const Text("App Settings"),
-              subtitle: Text(
-                system != null
-                    ? "${system.units.name} units • ${system.theme.name} theme"
-                    : "Not configured",
-              ),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () {
-                context.push(SettingsView.routeName);
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.notifications),
-              title: const Text("Notifications"),
-              subtitle: const Text("Configure app notifications"),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text("Notification settings coming soon!"),
-                  ),
-                );
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.backup),
-              title: const Text("Data & Backup"),
-              subtitle: const Text("Export/import your data"),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text("Data management coming soon!"),
-                  ),
-                );
-              },
-            ),
-          ],
         ),
       ),
     );
