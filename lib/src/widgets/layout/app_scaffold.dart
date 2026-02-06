@@ -10,6 +10,7 @@ class AppScaffold extends StatelessWidget {
   final Widget body;
   final bool? showBackButton;
   final Widget? floatingActionButton;
+  final bool isEntity;
 
   const AppScaffold({
     super.key,
@@ -17,10 +18,12 @@ class AppScaffold extends StatelessWidget {
     required this.body,
     this.showBackButton,
     this.floatingActionButton,
+    this.isEntity = false,
   });
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final BreakPoint breakPoint = BreakPoint.fromContext(context);
     final AppBarSizesList sizes =
         AppBarSizes.getAppBarSizes(breakPoint.screenSize);
@@ -31,9 +34,10 @@ class AppScaffold extends StatelessWidget {
         automaticallyImplyLeading: false, // Disable automatic back button
         leading: (showBackButton ?? context.canPop())
             ? IconButton(
-                icon: const Icon(
+                padding: EdgeInsets.zero,
+                icon: Icon(
                   Icons.arrow_back_ios, // iOS-style back button
-                  size: 24,
+                  size: sizes.backBtnSize,
                 ),
                 onPressed: () {
                   if (context.canPop()) {
@@ -48,13 +52,15 @@ class AppScaffold extends StatelessWidget {
         title: Row(
           children: [
             AppIcon(size: sizes.icon),
-            SizedBox(width: sizes.title),
             Flexible(
               child: Text(
-                title,
+                " ${isEntity ? title.toUpperCase() : title}",
                 style: TextStyle(
                   fontSize: sizes.title,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: isEntity ? FontWeight.w400 : FontWeight.w600,
+                  fontFamily: isEntity
+                      ? theme.textTheme.bodyLarge?.fontFamily
+                      : theme.textTheme.titleLarge?.fontFamily,
                 ),
                 overflow: TextOverflow.ellipsis,
                 softWrap: false,

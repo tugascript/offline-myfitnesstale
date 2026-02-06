@@ -283,7 +283,7 @@ class ProfileCubit extends Cubit<ProfileState> {
     required bool notificationsOn,
   }) async {
     _logger.info("Onboarding profile");
-    if (state.isLoading || state.profile != null || state.system != null) {
+    if (state.isLoading || state.profile != null) {
       _logger.info("Loading, or profile is already onboarded");
       return;
     }

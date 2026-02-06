@@ -11,6 +11,7 @@ import '../widgets/profile/onboarding_form.dart';
 import '../widgets/profile/onboarding_intro.dart';
 import 'home_view.dart';
 
+// TODO: fix onboard view
 class OnboardingView extends StatelessWidget {
   static const routeName = "/onboarding";
   static const name = "onboarding";
