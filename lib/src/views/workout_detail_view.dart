@@ -94,6 +94,7 @@ class _WorkoutDetailViewState extends State<WorkoutDetailView> {
 
         return ResponsiveScaffold(
           title: workout.name,
+          isEntity: true,
           body: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8.0),
             child: Column(

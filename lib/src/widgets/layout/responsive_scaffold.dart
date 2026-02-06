@@ -1,15 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 
-import '../../utilities/sizes/app_bar_sizes.dart';
-import '../../utilities/sizes/screen_size.dart';
-import 'app_icon.dart';
+import 'app_scaffold.dart';
 
 class ResponsiveScaffold extends StatelessWidget {
   final String title;
   final Widget body;
   final bool? showBackButton;
   final Widget? floatingActionButton;
+  final bool isEntity;
 
   const ResponsiveScaffold({
     super.key,
@@ -17,53 +15,15 @@ class ResponsiveScaffold extends StatelessWidget {
     required this.body,
     this.showBackButton,
     this.floatingActionButton,
+    this.isEntity = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    final BreakPoint breakPoint = BreakPoint.fromContext(context);
-    final AppBarSizesList sizes =
-        AppBarSizes.getAppBarSizes(breakPoint.screenSize);
-
-    return Scaffold(
-      appBar: AppBar(
-        toolbarHeight: sizes.height,
-        automaticallyImplyLeading: false, // Disable automatic back button
-        leading: (showBackButton ?? context.canPop())
-            ? IconButton(
-                icon: const Icon(
-                  Icons.arrow_back_ios, // iOS-style back button
-                  size: 24,
-                ),
-                onPressed: () {
-                  if (context.canPop()) {
-                    context.pop();
-                  } else {
-                    // Fallback to home if no previous route
-                    context.go('/');
-                  }
-                },
-              )
-            : null,
-        title: Row(
-          children: [
-            AppIcon(size: sizes.icon),
-            SizedBox(width: sizes.title),
-            Flexible(
-              child: Text(
-                title,
-                style: TextStyle(
-                  fontSize: sizes.title,
-                  fontWeight: FontWeight.w600,
-                ),
-                overflow: TextOverflow.ellipsis,
-                softWrap: false,
-                maxLines: 1,
-              ),
-            ),
-          ],
-        ),
-      ),
+    return AppScaffold(
+      title: title,
+      showBackButton: showBackButton,
+      isEntity: isEntity,
       body: SafeArea(
         child: SingleChildScrollView(
           child: body,

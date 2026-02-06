@@ -5,12 +5,14 @@ class AppBarSizesList {
   final double title;
   final double icon;
   final double btnPadding;
+  final double backBtnSize;
 
   const AppBarSizesList({
     required this.height,
     required this.title,
     required this.icon,
     required this.btnPadding,
+    required this.backBtnSize,
   });
 
   factory AppBarSizesList.multiply(double x) => AppBarSizesList(
@@ -18,6 +20,7 @@ class AppBarSizesList {
         title: 25.0 * x,
         icon: 50.0 * x,
         btnPadding: 10.0 * x,
+        backBtnSize: 24.0 * x,
       );
 }
 
