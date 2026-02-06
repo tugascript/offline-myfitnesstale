@@ -10,12 +10,14 @@ class SystemDto extends Equatable implements Dto<System> {
   final Units units;
   final ThemeType theme;
   final SetUpStatus initialSetup;
+  final bool notificationsOn;
 
   const SystemDto({
     required this.id,
     required this.units,
     required this.theme,
     required this.initialSetup,
+    required this.notificationsOn,
   });
 
   @override
@@ -25,6 +27,7 @@ class SystemDto extends Equatable implements Dto<System> {
       units: model.units,
       theme: model.theme,
       initialSetup: model.initialSetup,
+      notificationsOn: model.notificationsOn,
     );
   }
 
@@ -34,15 +37,17 @@ class SystemDto extends Equatable implements Dto<System> {
     Units? units,
     ThemeType? theme,
     SetUpStatus? initialSetup,
+    bool? notificationsOn,
   }) {
     return SystemDto(
       id: id ?? this.id,
       units: units ?? this.units,
       theme: theme ?? this.theme,
       initialSetup: initialSetup ?? this.initialSetup,
+      notificationsOn: notificationsOn ?? this.notificationsOn,
     );
   }
 
   @override
-  List<Object?> get props => [id, units, theme, initialSetup];
+  List<Object?> get props => [id, units, theme, initialSetup, notificationsOn];
 }

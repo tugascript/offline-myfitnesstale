@@ -7,10 +7,12 @@ import '../../utilities/sizes/screen_size.dart';
 final class _FormData {
   Units units;
   ThemeType themeMode;
+  bool notificationsOn;
 
   _FormData({
     required this.units,
     required this.themeMode,
+    required this.notificationsOn,
   });
 }
 
@@ -18,9 +20,11 @@ final class SystemForm extends StatefulWidget {
   final BuildContext ctx;
   final Units initialUnits;
   final ThemeType initialThemeMode;
+  final bool initialNotificationsOn;
   final void Function({
     required Units units,
     required ThemeType themeMode,
+    required bool notificationsOn,
   }) onSubmit;
   final bool isLoading;
 
@@ -29,6 +33,7 @@ final class SystemForm extends StatefulWidget {
     required this.ctx,
     required this.initialUnits,
     required this.initialThemeMode,
+    required this.initialNotificationsOn,
     required this.onSubmit,
     required this.isLoading,
   });
@@ -49,6 +54,7 @@ class _SystemFormState extends State<SystemForm> {
     _data = _FormData(
       units: widget.initialUnits,
       themeMode: widget.initialThemeMode,
+      notificationsOn: widget.initialNotificationsOn,
     );
   }
 
@@ -151,6 +157,7 @@ class _SystemFormState extends State<SystemForm> {
               widget.onSubmit(
                 units: _data.units,
                 themeMode: _data.themeMode,
+                notificationsOn: _data.notificationsOn,
               );
               Navigator.pop(context, _route);
             },

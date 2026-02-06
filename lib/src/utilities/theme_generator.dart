@@ -104,25 +104,46 @@ sealed class ThemeGenerator {
     // Define the default `InputDecorationTheme`.
     inputDecorationTheme: InputDecorationTheme(
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(25.0),
-        borderSide: const BorderSide(color: Colors.orange),
+        borderRadius: BorderRadius.zero,
+        borderSide: BorderSide(
+          color: Colors.orange,
+          width: 1.0,
+        ),
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(25.0),
+        borderRadius: BorderRadius.zero,
         borderSide: const BorderSide(color: Colors.orange),
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(25.0),
+        borderRadius: BorderRadius.zero,
         borderSide: const BorderSide(color: Colors.orangeAccent),
       ),
       labelStyle: const TextStyle(color: Colors.orange),
+      isDense: true,
     ),
 
     // Define the default `ButtonTheme`.
     buttonTheme: ButtonThemeData(
       buttonColor: const Color(_orangePrimaryValue),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18.0)),
+      shape: const BeveledRectangleBorder(),
       textTheme: ButtonTextTheme.primary,
+    ),
+
+    // Define new button themes for Material 3
+    elevatedButtonTheme: ElevatedButtonThemeData(
+      style: ElevatedButton.styleFrom(
+        shape: const BeveledRectangleBorder(),
+      ),
+    ),
+    outlinedButtonTheme: OutlinedButtonThemeData(
+      style: OutlinedButton.styleFrom(
+        shape: const BeveledRectangleBorder(),
+      ),
+    ),
+    textButtonTheme: TextButtonThemeData(
+      style: TextButton.styleFrom(
+        shape: const BeveledRectangleBorder(),
+      ),
     ),
 
     // Define other custom defaults.
@@ -160,6 +181,53 @@ sealed class ThemeGenerator {
     floatingActionButtonTheme: const FloatingActionButtonThemeData(
       foregroundColor: Colors.black,
       backgroundColor: Colors.orangeAccent,
+      shape: BeveledRectangleBorder(),
+    ),
+
+    // Define the default `SwitchTheme`.
+    switchTheme: SwitchThemeData(
+      trackColor: WidgetStateProperty.resolveWith(
+        (states) {
+          if (states.contains(WidgetState.selected)) {
+            return const Color(_orangePrimaryValue);
+          }
+          return Colors.grey.withValues(alpha: 0.2);
+        },
+      ),
+      thumbColor: WidgetStateProperty.resolveWith((states) {
+        if (states.contains(WidgetState.selected)) {
+          return Colors.white;
+        }
+        return Colors.grey;
+      }),
+      trackOutlineColor: WidgetStateProperty.resolveWith(
+        (states) {
+          if (states.contains(WidgetState.selected)) {
+            return null;
+          }
+          return Colors.grey.withValues(alpha: 0.5);
+        },
+      ),
+    ),
+
+    // Define the default `CheckboxTheme` (Rectangular/Sharp).
+    checkboxTheme: CheckboxThemeData(
+      shape: const BeveledRectangleBorder(),
+      fillColor:
+          WidgetStateProperty.resolveWith<Color?>((Set<WidgetState> states) {
+        if (states.contains(WidgetState.disabled)) {
+          return null;
+        }
+        if (states.contains(WidgetState.selected)) {
+          return const Color(_orangePrimaryValue);
+        }
+        return null;
+      }),
+    ),
+
+    // Define the default `DialogTheme`.
+    dialogTheme: const DialogThemeData(
+      shape: BeveledRectangleBorder(),
     ),
   );
 
@@ -197,25 +265,43 @@ sealed class ThemeGenerator {
     // Define the default `InputDecorationTheme`.
     inputDecorationTheme: InputDecorationTheme(
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(25.0),
+        borderRadius: BorderRadius.zero,
         borderSide: const BorderSide(color: Colors.orange),
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(25.0),
+        borderRadius: BorderRadius.zero,
         borderSide: const BorderSide(color: Colors.orange),
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(25.0),
+        borderRadius: BorderRadius.zero,
         borderSide: const BorderSide(color: Colors.orangeAccent),
       ),
       labelStyle: const TextStyle(color: Colors.orange),
+      isDense: true,
     ),
 
     // Define the default `ButtonTheme`.
     buttonTheme: ButtonThemeData(
       buttonColor: const Color(_orangePrimaryValue),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18.0)),
+      shape: const BeveledRectangleBorder(),
       textTheme: ButtonTextTheme.primary,
+    ),
+
+    // Define new button themes for Material 3
+    elevatedButtonTheme: ElevatedButtonThemeData(
+      style: ElevatedButton.styleFrom(
+        shape: const BeveledRectangleBorder(),
+      ),
+    ),
+    outlinedButtonTheme: OutlinedButtonThemeData(
+      style: OutlinedButton.styleFrom(
+        shape: const BeveledRectangleBorder(),
+      ),
+    ),
+    textButtonTheme: TextButtonThemeData(
+      style: TextButton.styleFrom(
+        shape: const BeveledRectangleBorder(),
+      ),
     ),
 
     // Define other custom defaults.
@@ -255,6 +341,53 @@ sealed class ThemeGenerator {
     floatingActionButtonTheme: const FloatingActionButtonThemeData(
       foregroundColor: Colors.white,
       backgroundColor: Colors.orangeAccent,
+      shape: BeveledRectangleBorder(),
+    ),
+
+    // Define the default `SwitchTheme`.
+    switchTheme: SwitchThemeData(
+      trackColor: WidgetStateProperty.resolveWith(
+        (states) {
+          if (states.contains(WidgetState.selected)) {
+            return const Color(_orangePrimaryValue);
+          }
+          return Colors.grey.withValues(alpha: 0.2);
+        },
+      ),
+      thumbColor: WidgetStateProperty.resolveWith((states) {
+        if (states.contains(WidgetState.selected)) {
+          return Colors.white;
+        }
+        return Colors.grey;
+      }),
+      trackOutlineColor: WidgetStateProperty.resolveWith(
+        (states) {
+          if (states.contains(WidgetState.selected)) {
+            return null;
+          }
+          return Colors.grey.withValues(alpha: 0.5);
+        },
+      ),
+    ),
+
+    // Define the default `CheckboxTheme` (Rectangular/Sharp).
+    checkboxTheme: CheckboxThemeData(
+      shape: const BeveledRectangleBorder(),
+      fillColor:
+          WidgetStateProperty.resolveWith<Color?>((Set<WidgetState> states) {
+        if (states.contains(WidgetState.disabled)) {
+          return null;
+        }
+        if (states.contains(WidgetState.selected)) {
+          return const Color(_orangePrimaryValue);
+        }
+        return null;
+      }),
+    ),
+
+    // Define the default `DialogTheme`.
+    dialogTheme: const DialogThemeData(
+      shape: BeveledRectangleBorder(),
     ),
   );
 }

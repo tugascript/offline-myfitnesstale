@@ -104,7 +104,8 @@ class _ProfileViewState extends State<ProfileView> {
 
           final profile = state.profile;
           final system = state.system;
-          if (profile == null || system == null) {
+          final remindersConfig = state.remindersConfig;
+          if (profile == null || system == null || remindersConfig == null) {
             return const Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -160,8 +161,11 @@ class _ProfileViewState extends State<ProfileView> {
 
                 // Settings Section
                 SettingsConfig(
+                  profileId: profile.id,
+                  isLoading: state.isLoading,
                   sizes: sizes,
                   system: system,
+                  remindersConfig: remindersConfig,
                 ),
               ],
             ),

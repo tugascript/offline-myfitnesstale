@@ -9,6 +9,7 @@ import '../models/enums.dart';
 import '../services/common/errors.dart';
 import '../services/dtos/equipment_dto.dart';
 import '../services/dtos/exercise_dto.dart';
+import '../services/dtos/system_dto.dart';
 import '../services/dtos/workout_dto.dart';
 import '../services/exercise_service.dart';
 import '../services/profile_service.dart';
@@ -94,13 +95,180 @@ class ProfileCubit extends Cubit<ProfileState> {
       }
     }
 
+    _logger.info("Selecting reminders config");
+    final remindersConfigResult = await _profileService.selectRemindersConfig();
+    if (remindersConfigResult.isErr()) {
+      final error = remindersConfigResult.error;
+      _logger.warning("Failed to load reminders config", error);
+      switch (error.type) {
+        case SingleErrorTypes.invalidInput:
+        case SingleErrorTypes.notFound:
+          emit(state.copyWith(
+            error: ErrorState(
+              type: SingleErrorTypes.notFound.name,
+              description: 'Reminders config not found',
+            ),
+            isInitiated: true,
+            isLoading: false,
+          ));
+          return;
+        case SingleErrorTypes.operationFailure:
+          emit(state.copyWith(
+            error: ErrorState(
+              type: SingleErrorTypes.operationFailure.name,
+              description: 'Failed to load reminders config',
+            ),
+            isLoading: false,
+            isInitiated: false,
+          ));
+          return;
+      }
+    }
+
     _logger.info("Loading initial data completed");
     emit(state.copyWith(
       profile: profileResult.value,
       system: systemResult.value,
+      remindersConfig: remindersConfigResult.value,
       isInitiated: true,
       isLoading: false,
       error: null,
+    ));
+  }
+
+  Future<void> getRemindersConfig() async {
+    _logger.info("Getting reminders config");
+    emit(state.copyWith(isRemindersLoading: true));
+
+    final result = await _profileService.selectRemindersConfig();
+    if (result.isErr()) {
+      final error = result.error;
+      _logger.warning("Failed to get reminders config", error);
+      switch (error.type) {
+        case SingleErrorTypes.notFound:
+          emit(state.copyWith(
+            remindersConfig: null,
+            isRemindersLoading: false,
+          ));
+          return;
+        case SingleErrorTypes.invalidInput:
+        case SingleErrorTypes.operationFailure:
+          emit(state.copyWith(
+            remindersError: ErrorState(
+              type: error.type.name,
+              description: "Failed to get reminders config",
+            ),
+            isRemindersLoading: false,
+          ));
+          return;
+      }
+    }
+
+    emit(state.copyWith(
+      remindersConfig: result.value,
+      isRemindersLoading: false,
+      remindersError: null,
+    ));
+  }
+
+  Future<void> upsertRemindersConfig({
+    required int profileId,
+    required bool workoutsOn,
+    required bool weightRecordsOn,
+  }) async {
+    _logger.info("Upserting reminders config for profile $profileId");
+    emit(state.copyWith(isRemindersLoading: true));
+
+    final result = await _profileService.upsertRemindersConfig(
+      profileId: profileId,
+      workoutsOn: workoutsOn,
+      weightRecordsOn: weightRecordsOn,
+    );
+    if (result.isErr()) {
+      final error = result.error;
+      _logger.warning("Failed to upsert reminders config", error);
+      switch (error.type) {
+        case OperationErrorTypes.invalidInput:
+        case OperationErrorTypes.operationFailure:
+          emit(state.copyWith(
+            remindersError: ErrorState(
+              type: error.type.name,
+              description: "Failed to upsert reminders config",
+            ),
+            isRemindersLoading: false,
+          ));
+          return;
+      }
+    }
+
+    emit(state.copyWith(
+      remindersConfig: result.value,
+      isRemindersLoading: false,
+      remindersError: null,
+    ));
+  }
+
+  Future<void> updateRemindersConfig({
+    bool? workoutsOn,
+    bool? weightRecordsOn,
+  }) async {
+    _logger.info("Updating reminders config");
+    emit(state.copyWith(isRemindersLoading: true));
+
+    final result = await _profileService.updateRemindersConfig(
+      workoutsOn: workoutsOn,
+      weightRecordsOn: weightRecordsOn,
+    );
+    if (result.isErr()) {
+      final error = result.error;
+      _logger.warning("Failed to update reminders config", error);
+      switch (error.type) {
+        case SingleErrorTypes.notFound:
+          emit(state.copyWith(
+            remindersError: ErrorState(
+              type: error.type.name,
+              description: error.description,
+            ),
+            isRemindersLoading: false,
+          ));
+          return;
+        case SingleErrorTypes.invalidInput:
+        case SingleErrorTypes.operationFailure:
+          emit(state.copyWith(
+            remindersError: ErrorState(
+              type: error.type.name,
+              description: "Failed to update reminders config",
+            ),
+            isRemindersLoading: false,
+          ));
+          return;
+      }
+    }
+
+    emit(state.copyWith(
+      remindersConfig: result.value,
+      isRemindersLoading: false,
+      remindersError: null,
+    ));
+  }
+
+  void changeSystem(
+      {required ThemeType theme,
+      required Units units,
+      required bool notificationsOn}) {
+    emit(state.copyWith(
+      system: state.system?.copyWith(
+            theme: theme,
+            units: units,
+            notificationsOn: notificationsOn,
+          ) ??
+          SystemDto(
+            id: 0,
+            initialSetup: SetUpStatus.notStarted,
+            theme: theme,
+            units: units,
+            notificationsOn: notificationsOn,
+          ),
     ));
   }
 
@@ -112,6 +280,7 @@ class ProfileCubit extends Cubit<ProfileState> {
     required Gender gender,
     required DateTime birthday,
     required bool createWorkouts,
+    required bool notificationsOn,
   }) async {
     _logger.info("Onboarding profile");
     if (state.isLoading || state.profile != null || state.system != null) {
@@ -198,11 +367,15 @@ class ProfileCubit extends Cubit<ProfileState> {
       return;
     }
 
+    final profile = profileResult.value;
     _logger.info("Profile created successfully");
+
     _logger.info("Creating system");
     final systemResult = await _profileService.upsertSystem(
       theme: theme,
       units: units,
+      profileId: profile.id,
+      notificationsOn: notificationsOn,
     );
 
     if (systemResult.isErr()) {
@@ -217,11 +390,33 @@ class ProfileCubit extends Cubit<ProfileState> {
       return;
     }
 
+    _logger.info("Creating reminders config");
+    final remindersConfigResult = await _profileService.upsertRemindersConfig(
+      profileId: profile.id,
+      workoutsOn: notificationsOn,
+      weightRecordsOn: notificationsOn,
+    );
+    if (remindersConfigResult.isErr()) {
+      _logger.severe(
+        "Failed to create reminders config",
+        remindersConfigResult.error,
+      );
+      emit(state.copyWith(
+        error: ErrorState(
+          type: SingleErrorTypes.operationFailure.name,
+          description: 'Failed to create reminders config',
+        ),
+        isLoading: false,
+      ));
+      return;
+    }
+
     if (!createWorkouts) {
       _logger.info("Workouts not created");
       emit(state.copyWith(
-        profile: profileResult.value,
+        profile: profile,
         system: systemResult.value,
+        remindersConfig: remindersConfigResult.value,
         isLoading: false,
         isInitiated: true,
         error: null,
@@ -282,6 +477,7 @@ class ProfileCubit extends Cubit<ProfileState> {
       emit(state.copyWith(
         profile: profileResult.value,
         system: systemResult.value,
+        remindersConfig: remindersConfigResult.value,
         error: ErrorState(
           type: SingleErrorTypes.operationFailure.name,
           description: 'Failed to create workouts',
@@ -343,6 +539,7 @@ class ProfileCubit extends Cubit<ProfileState> {
       emit(state.copyWith(
         profile: profileResult.value,
         system: systemResult.value,
+        remindersConfig: remindersConfigResult.value,
         error: ErrorState(
           type: SingleErrorTypes.operationFailure.name,
           description: 'Failed to create workout plans',
@@ -355,8 +552,9 @@ class ProfileCubit extends Cubit<ProfileState> {
 
     _logger.info("Workout plans created successfully");
     emit(state.copyWith(
-      profile: profileResult.value,
+      profile: profile,
       system: systemResult.value,
+      remindersConfig: remindersConfigResult.value,
       isLoading: false,
       isInitiated: true,
       error: null,
@@ -562,17 +760,24 @@ class ProfileCubit extends Cubit<ProfileState> {
   Future<void> createSystem({
     required Units units,
     required ThemeType theme,
+    required bool notificationsOn,
   }) async {
     _logger.info("Creating system");
     if (state.isLoading) {
       _logger.info("Already loading, skipping");
       return;
     }
+    if (state.profile == null) {
+      _logger.info("Profile not found, skipping");
+      return;
+    }
 
     emit(state.copyWith(isLoading: true));
     final systemResult = await _profileService.upsertSystem(
+      profileId: state.profile!.id,
       theme: theme,
       units: units,
+      notificationsOn: notificationsOn,
     );
 
     if (systemResult.isErr()) {

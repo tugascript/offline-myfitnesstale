@@ -38,6 +38,8 @@ class _WorkoutDetailViewState extends State<WorkoutDetailView> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDarkTheme = theme.brightness == Brightness.dark;
     final breakpoints = BreakPoint.fromContext(context);
     final sizes = DataDisplaySizes.getWorkoutDetailSizes(
       breakpoints.screenSize,
@@ -121,6 +123,8 @@ class _WorkoutDetailViewState extends State<WorkoutDetailView> {
                       .entries
                       .map((entry) {
                     return WorkoutSetCard(
+                      theme: theme,
+                      isDarkTheme: isDarkTheme,
                       sizes: sizes,
                       set: entry.value,
                       setNumber: entry.key + 1,

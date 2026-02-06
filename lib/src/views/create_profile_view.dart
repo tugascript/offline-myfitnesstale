@@ -42,13 +42,17 @@ class _CreateProfileViewState extends State<CreateProfileView> {
                 ctx: ctx,
                 initialUnits: _units,
                 initialThemeMode: ThemeType.system,
+                initialNotificationsOn: false,
                 onSubmit: ({
                   required Units units,
                   required ThemeType themeMode,
+                  required bool notificationsOn,
                 }) {
-                  context
-                      .read<ProfileCubit>()
-                      .createSystem(units: units, theme: themeMode);
+                  context.read<ProfileCubit>().createSystem(
+                        units: units,
+                        theme: themeMode,
+                        notificationsOn: notificationsOn,
+                      );
                 },
                 isLoading: state.isLoading,
               ),

@@ -339,3 +339,33 @@ enum WorkoutSetType {
         orElse: () => WorkoutSetType.standard,
       );
 }
+
+enum ReminderSchedule {
+  daily("daily"),
+  weekly("weekly"),
+  monthly("monthly");
+
+  final String value;
+
+  const ReminderSchedule(this.value);
+
+  static ReminderSchedule fromValue(String v) =>
+      ReminderSchedule.values.firstWhere(
+        (s) => s.value == v,
+        orElse: () => ReminderSchedule.daily,
+      );
+}
+
+enum DayOfWeek {
+  monday(1),
+  tuesday(2),
+  wednesday(3),
+  thursday(4),
+  friday(5),
+  saturday(6),
+  sunday(7);
+
+  final int value;
+
+  const DayOfWeek(this.value);
+}
