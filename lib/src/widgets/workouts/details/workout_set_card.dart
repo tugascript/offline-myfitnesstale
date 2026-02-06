@@ -1,20 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:myfitnesstale/src/utilities/converters.dart';
 
 import '../../../models/enums.dart';
 import '../../../models/utilities.dart';
 import '../../../services/dtos/workout_set_dto.dart';
 import '../../../services/dtos/workout_set_exercise_dto.dart';
+import '../../../utilities/converters.dart';
 import '../../../utilities/sizes/data_display_sizes.dart';
 
 class WorkoutSetCard extends StatelessWidget {
+  final ThemeData theme;
+  final bool isDarkTheme;
   final DataDisplaySizesList sizes;
   final WorkoutSetDto set;
   final int setNumber;
 
   const WorkoutSetCard({
     super.key,
+    required this.theme,
+    required this.isDarkTheme,
     required this.sizes,
     required this.set,
     required this.setNumber,
@@ -22,13 +26,16 @@ class WorkoutSetCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final iconGreyColor = isDarkTheme ? Colors.grey[200] : Colors.grey[800];
+    final iconLightGreyColor =
+        isDarkTheme ? Colors.grey[400] : Colors.grey[600];
     return Card(
       child: ExpansionTile(
         leading: Container(
           width: sizes.subtitleFontSize * 1.75,
           height: sizes.subtitleFontSize * 1.75,
           decoration: BoxDecoration(
-            color: Theme.of(context).primaryColor,
+            color: theme.primaryColor,
           ),
           child: Center(
             child: Text(
@@ -44,61 +51,78 @@ class WorkoutSetCard extends StatelessWidget {
         initiallyExpanded: true,
         title: Row(
           children: [
-            Icon(Icons.repeat, size: sizes.subtitleFontSize),
-            SizedBox(width: sizes.subtitleFontSize / 3),
-            Text(
-              '${set.minSets}${set.maxSets != null ? '-${set.maxSets}' : ''}',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: sizes.subtitleFontSize,
+            Expanded(
+              flex: 2,
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.repeat, size: sizes.fontSize * 1.2),
+                    Text(
+                      ' ${set.minSets}${set.maxSets != null ? '-${set.maxSets}' : ''}',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: sizes.fontSize,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ],
-        ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SizedBox(height: sizes.spacing / 5),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                _SetTypeBadge(
+            Expanded(
+              flex: 3,
+              child: Center(
+                child: _SetTypeBadge(
                   sizes: sizes,
                   setType: set.setType,
                 ),
-                Row(
+              ),
+            ),
+            Expanded(
+              flex: 2,
+              child: Center(
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(
                       Icons.fitness_center_outlined,
-                      size: sizes.smallFontSize,
-                      color: Colors.grey[800],
+                      size: sizes.fontSize,
+                      color: iconGreyColor,
                     ),
                     Text(
                       ' ${set.exercises?.length ?? 0} ',
                       style: TextStyle(
-                        fontSize: sizes.smallFontSize,
-                        color: Colors.grey[800],
+                        fontSize: sizes.fontSize,
+                        color: iconGreyColor,
                       ),
                     )
                   ],
                 ),
-                Row(
+              ),
+            ),
+            Expanded(
+              flex: 3,
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(
                       Icons.timer_outlined,
-                      size: sizes.smallFontSize,
-                      color: Colors.grey[600],
+                      size: sizes.fontSize,
+                      color: iconLightGreyColor,
                     ),
                     Text(
                       ' ${Converters.formatDuration(set.recommendedRestSecs)}${set.maxRestSecs != null ? '-${Converters.formatDuration(set.maxRestSecs!)}' : ''}',
                       style: TextStyle(
-                        fontSize: sizes.smallFontSize,
-                        color: Colors.grey[600],
+                        fontSize: sizes.fontSize,
+                        color: iconLightGreyColor,
                       ),
                     ),
                   ],
                 ),
-              ],
+              ),
             ),
           ],
         ),
@@ -117,7 +141,11 @@ class WorkoutSetCard extends StatelessWidget {
             )
           else
             ...set.exercises!.map((setExercise) {
-              return _SetExercise(sizes: sizes, setExercise: setExercise);
+              return _SetExercise(
+                isDarkTheme: isDarkTheme,
+                sizes: sizes,
+                setExercise: setExercise,
+              );
             }),
           SizedBox(height: sizes.padding),
         ],
@@ -157,7 +185,6 @@ class _SetTypeBadge extends StatelessWidget {
     final color = _getSetTypeColor(setType);
 
     return Container(
-      alignment: Alignment.center,
       padding: EdgeInsets.symmetric(
         horizontal: sizes.padding / 4,
         vertical: sizes.padding / 8,
@@ -183,10 +210,12 @@ class _SetTypeBadge extends StatelessWidget {
 class _SetExercise extends StatelessWidget {
   final DataDisplaySizesList sizes;
   final WorkoutSetExerciseDto setExercise;
+  final bool isDarkTheme;
 
   const _SetExercise({
     required this.sizes,
     required this.setExercise,
+    required this.isDarkTheme,
   });
 
   @override
@@ -204,7 +233,7 @@ class _SetExercise extends StatelessWidget {
             '${setExercise.minReps}${setExercise.maxReps != null ? '-${setExercise.maxReps}' : ''}x ',
             style: TextStyle(
               fontSize: sizes.subtitleFontSize,
-              color: Colors.grey[600], // TODO: add theming
+              color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
             ),
           ),
           Text(
@@ -229,7 +258,7 @@ class _SetExercise extends StatelessWidget {
                         'Alternatives: ',
                         style: TextStyle(
                           fontSize: sizes.smallFontSize,
-                          color: Colors.grey[500], // TODO: add theming
+                          color: Colors.grey,
                           fontWeight: FontWeight.w600,
                         ),
                       ),

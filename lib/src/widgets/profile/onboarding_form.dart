@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:permission_handler/permission_handler.dart';
 
+import '../../cubits/profile_cubit.dart';
 import '../../models/enums.dart';
 import '../../utilities/sizes/profile/onboarding_sizes.dart';
+import '../layout/sharp_switch_title.dart';
 import 'height_input.dart';
 
 final class _FormData {
@@ -12,6 +16,7 @@ final class _FormData {
   Gender gender;
   DateTime birthday;
   bool preLoadWorkouts;
+  bool notificationsOn;
 
   _FormData({
     required this.units,
@@ -21,6 +26,7 @@ final class _FormData {
     required this.gender,
     required this.birthday,
     required this.preLoadWorkouts,
+    required this.notificationsOn,
   });
 }
 
@@ -33,6 +39,7 @@ class OnboardingForm extends StatefulWidget {
   final Gender initialGender;
   final DateTime initialBirthday;
   final bool initialPreLoadWorkouts;
+  final bool initialNotificationsOn;
   final void Function({
     required Units units,
     required ThemeType theme,
@@ -41,6 +48,7 @@ class OnboardingForm extends StatefulWidget {
     required Gender gender,
     required DateTime birthday,
     required bool preLoadWorkouts,
+    required bool notificationsOn,
   }) onSubmit;
   final String submitButtonLabel;
   final bool isLoading;
@@ -55,6 +63,7 @@ class OnboardingForm extends StatefulWidget {
     required this.initialGender,
     required this.initialBirthday,
     required this.initialPreLoadWorkouts,
+    required this.initialNotificationsOn,
     required this.onSubmit,
     required this.submitButtonLabel,
     required this.isLoading,
@@ -81,6 +90,7 @@ class _OnboardingFormState extends State<OnboardingForm> {
       gender: widget.initialGender,
       birthday: widget.initialBirthday,
       preLoadWorkouts: widget.initialPreLoadWorkouts,
+      notificationsOn: widget.initialNotificationsOn,
     );
     _birthdayController.text =
         "${_data.birthday.day}/${_data.birthday.month}/${_data.birthday.year}";
@@ -95,6 +105,7 @@ class _OnboardingFormState extends State<OnboardingForm> {
 
   @override
   Widget build(BuildContext context) {
+    final cubit = context.read<ProfileCubit>();
     return Form(
       key: _formKey,
       child: Column(
@@ -126,6 +137,11 @@ class _OnboardingFormState extends State<OnboardingForm> {
                   if (value != null) {
                     setState(() {
                       _data.units = value;
+                      cubit.changeSystem(
+                        theme: _data.themeMode,
+                        units: value,
+                        notificationsOn: _data.notificationsOn,
+                      );
                     });
                   }
                 },
@@ -155,6 +171,11 @@ class _OnboardingFormState extends State<OnboardingForm> {
                   if (value != null) {
                     setState(() {
                       _data.themeMode = value;
+                      cubit.changeSystem(
+                        theme: value,
+                        units: _data.units,
+                        notificationsOn: _data.notificationsOn,
+                      );
                     });
                   }
                 },
@@ -162,6 +183,40 @@ class _OnboardingFormState extends State<OnboardingForm> {
                   if (value != null) {
                     setState(() {
                       _data.themeMode = value;
+                    });
+                  }
+                },
+              ),
+              SizedBox(height: widget.sizes.breaks),
+              SharpSwitchTitle(
+                contentPadding: EdgeInsets.zero,
+                title: 'Allow Notifications',
+                value: _data.notificationsOn,
+                thumbSize: widget.sizes.subtitleFontSize,
+                switchPadding: EdgeInsets.all(widget.sizes.breaks / 4),
+                onChanged: (bool value) async {
+                  if (value) {
+                    final status = await Permission.notification.request();
+                    if (status.isGranted) {
+                      setState(() {
+                        _data.notificationsOn = true;
+                      });
+                    } else {
+                      setState(() {
+                        _data.notificationsOn = false;
+                      });
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                                'Permission denied. Please enable notifications in settings.'),
+                          ),
+                        );
+                      }
+                    }
+                  } else {
+                    setState(() {
+                      _data.notificationsOn = false;
                     });
                   }
                 },
@@ -297,7 +352,7 @@ class _OnboardingFormState extends State<OnboardingForm> {
               ),
             ],
           ),
-          SizedBox(height: widget.sizes.breaks * 4),
+          SizedBox(height: widget.sizes.breaks * 2),
           ElevatedButton(
             onPressed: () {
               if (!widget.isLoading) {
@@ -311,15 +366,13 @@ class _OnboardingFormState extends State<OnboardingForm> {
                     height: _data.height,
                     birthday: _data.birthday,
                     preLoadWorkouts: _data.preLoadWorkouts,
+                    notificationsOn: _data.notificationsOn,
                   );
                 }
               }
             },
             style: ElevatedButton.styleFrom(
               padding: EdgeInsets.symmetric(vertical: widget.sizes.padding / 2),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(widget.sizes.breaks),
-              ),
             ),
             child: widget.isLoading
                 ? SizedBox(

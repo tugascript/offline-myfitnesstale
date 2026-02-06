@@ -3,12 +3,14 @@ import 'package:logging/logging.dart';
 import '../models/db.dart';
 import '../models/enums.dart';
 import '../models/profile_model.dart';
+import '../models/reminders_config_model.dart';
 import '../models/repository.dart';
 import '../models/system_model.dart';
 import '../models/utilities.dart';
 import 'common/errors.dart';
 import 'common/result.dart';
 import 'dtos/profile_dto.dart';
+import 'dtos/reminders_config_dto.dart';
 import 'dtos/system_dto.dart';
 
 class ProfileService {
@@ -20,16 +22,22 @@ class ProfileService {
 
   final Logger _logger = Logger("Profile Service");
 
-  final Repository<Profile> _repository = Repository<Profile>(
+  final _repository = Repository<Profile>(
     databaseHelper: DatabaseHelper(),
     tableName: Profile.table,
     fromMap: Profile.fromMap,
   );
 
-  final Repository<System> _systemRepository = Repository<System>(
+  final _systemRepository = Repository<System>(
     databaseHelper: DatabaseHelper(),
     tableName: System.table,
     fromMap: System.fromMap,
+  );
+
+  final _remindersRepository = Repository<RemindersConfig>(
+    databaseHelper: DatabaseHelper(),
+    tableName: RemindersConfig.table,
+    fromMap: RemindersConfig.fromMap,
   );
 
   Future<Result<ProfileDto, ServiceError<OperationErrorTypes>>> upsertProfile({
@@ -135,6 +143,8 @@ class ProfileService {
   Future<Result<SystemDto, ServiceError<OperationErrorTypes>>> upsertSystem({
     required ThemeType theme,
     required Units units,
+    required int profileId,
+    required bool notificationsOn,
   }) async {
     _logger.info('Upserting system...');
     try {
@@ -153,8 +163,10 @@ class ProfileService {
       }
 
       final System system = System.create(
+        profileId: profileId,
         theme: theme,
         units: units,
+        notificationsOn: notificationsOn,
       );
       final int id = await _systemRepository.insert(system);
       _logger.info('System created successfully');
@@ -188,6 +200,107 @@ class ProfileService {
       return err(const ServiceError(
         type: SingleErrorTypes.operationFailure,
         description: 'Failed to select latest system',
+      ));
+    }
+  }
+
+  Future<Result<RemindersConfigDto, ServiceError<OperationErrorTypes>>>
+      upsertRemindersConfig({
+    required int profileId,
+    required bool workoutsOn,
+    required bool weightRecordsOn,
+  }) async {
+    _logger.info('Upserting reminders config...');
+    try {
+      final RemindersConfig? existingConfig =
+          await _remindersRepository.selectLatest();
+
+      if (existingConfig != null) {
+        _logger.info('Reminders config exists, updating...');
+        final RemindersConfig updatedConfig = existingConfig.copyWith(
+          workoutsOn: workoutsOn,
+          weightRecordsOn: weightRecordsOn,
+          updatedAt: DateUtilities.getNowUtcUnix(),
+        );
+        await _remindersRepository.update(updatedConfig);
+        _logger.info('Updated reminders config with id ${updatedConfig.id}');
+        return ok(RemindersConfigDto.fromModel(updatedConfig));
+      }
+
+      final RemindersConfig remindersConfig = RemindersConfig.create(
+        workoutsOn: workoutsOn,
+        weightRecordsOn: weightRecordsOn,
+        profileId: profileId,
+      );
+      final int id = await _remindersRepository.insert(remindersConfig);
+      _logger.info('Created reminders config with id $id');
+      return ok(
+        RemindersConfigDto.fromModel(remindersConfig.copyWith(id: id)),
+      );
+    } catch (e) {
+      _logger.severe('Failed to upsert reminders config', e);
+      return err(const ServiceError(
+        type: OperationErrorTypes.operationFailure,
+        description: 'Failed to upsert reminders config',
+      ));
+    }
+  }
+
+  Future<Result<RemindersConfigDto, ServiceError<SingleErrorTypes>>>
+      selectRemindersConfig() async {
+    _logger.info('Selecting reminders config...');
+    try {
+      final RemindersConfig? remindersConfig =
+          await _remindersRepository.selectLatest();
+      if (remindersConfig == null) {
+        _logger.info('Reminders config not found');
+        return err(const ServiceError(
+          type: SingleErrorTypes.notFound,
+          description: 'Reminders config not found',
+        ));
+      }
+
+      _logger.info('Reminders config found with id ${remindersConfig.id}');
+      return ok(RemindersConfigDto.fromModel(remindersConfig));
+    } catch (e) {
+      _logger.severe('Failed to select reminders config', e);
+      return err(const ServiceError(
+        type: SingleErrorTypes.operationFailure,
+        description: 'Failed to select reminders config',
+      ));
+    }
+  }
+
+  Future<Result<RemindersConfigDto, ServiceError<SingleErrorTypes>>>
+      updateRemindersConfig({
+    bool? workoutsOn,
+    bool? weightRecordsOn,
+  }) async {
+    _logger.info('Updating reminders config...');
+    try {
+      final RemindersConfig? remindersConfig =
+          await _remindersRepository.selectLatest();
+      if (remindersConfig == null) {
+        _logger.info('Reminders config not found');
+        return err(const ServiceError(
+          type: SingleErrorTypes.notFound,
+          description: 'Reminders config not found',
+        ));
+      }
+
+      final RemindersConfig updatedConfig = remindersConfig.copyWith(
+        workoutsOn: workoutsOn,
+        weightRecordsOn: weightRecordsOn,
+        updatedAt: DateUtilities.getNowUtcUnix(),
+      );
+      await _remindersRepository.update(updatedConfig);
+      _logger.info('Updated reminders config with id ${updatedConfig.id}');
+      return ok(RemindersConfigDto.fromModel(updatedConfig));
+    } catch (e) {
+      _logger.severe('Failed to update reminders config', e);
+      return err(const ServiceError(
+        type: SingleErrorTypes.operationFailure,
+        description: 'Failed to update reminders config',
       ));
     }
   }

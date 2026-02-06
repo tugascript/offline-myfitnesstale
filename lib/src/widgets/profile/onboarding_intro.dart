@@ -18,6 +18,7 @@ class OnboardingIntro extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
 
     return Center(
       child: Column(
@@ -36,7 +37,7 @@ class OnboardingIntro extends StatelessWidget {
           Text(
             subtitle,
             style: theme.textTheme.bodyLarge?.copyWith(
-              color: Colors.grey[600],
+              color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
               fontSize: sizes.subtitleFontSize,
             ),
             textAlign: TextAlign.center,

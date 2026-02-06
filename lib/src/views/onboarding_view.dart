@@ -76,6 +76,7 @@ class OnboardingView extends StatelessWidget {
                         required Gender gender,
                         required DateTime birthday,
                         required bool preLoadWorkouts,
+                        required bool notificationsOn,
                       }) async {
                         await context.read<ProfileCubit>().onboardProfile(
                               units: units,
@@ -85,9 +86,11 @@ class OnboardingView extends StatelessWidget {
                               gender: gender,
                               birthday: birthday,
                               createWorkouts: preLoadWorkouts,
+                              notificationsOn: notificationsOn,
                             );
                       },
                       initialPreLoadWorkouts: true,
+                      initialNotificationsOn: false,
                     );
                   },
                 ),

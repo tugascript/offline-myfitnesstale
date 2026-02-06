@@ -2,25 +2,18 @@ import 'package:equatable/equatable.dart';
 
 import 'enums.dart';
 import 'model.dart';
+import 'profile_model.dart';
 import 'utilities.dart';
 
 const String _table = 'systems';
-const String _tableCreate = '''
-  CREATE TABLE IF NOT EXISTS $_table (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    theme TEXT NOT NULL,
-    units TEXT NOT NULL,
-    initial_setup TEXT NOT NULL,
-    created_at INTEGER NOT NULL,
-    updated_at INTEGER NOT NULL
-  );
-  ''';
 
 enum SystemColumns {
   id("id"),
   theme("theme"),
   units("units"),
   initialSetup("initial_setup"),
+  notificationsOn("notifications_on"),
+  profileId("profile_id"),
   createdAt("created_at"),
   updatedAt("updated_at");
 
@@ -35,6 +28,8 @@ class System extends Equatable implements Model {
   final ThemeType theme;
   final Units units;
   final SetUpStatus initialSetup;
+  final bool notificationsOn;
+  final int profileId;
   @override
   final int createdAt;
   @override
@@ -45,12 +40,30 @@ class System extends Equatable implements Model {
     required this.theme,
     required this.units,
     required this.initialSetup,
+    required this.notificationsOn,
+    required this.profileId,
     required this.createdAt,
     required this.updatedAt,
   });
 
   static const String table = _table;
-  static const String tableCreate = _tableCreate;
+
+  static final String tableCreate = """
+  CREATE TABLE IF NOT EXISTS $_table (
+    ${SystemColumns.id.value} INTEGER PRIMARY KEY AUTOINCREMENT,
+    ${SystemColumns.theme.value} TEXT NOT NULL,
+    ${SystemColumns.units.value} TEXT NOT NULL,
+    ${SystemColumns.initialSetup.value} TEXT NOT NULL,
+    ${SystemColumns.notificationsOn.value} BOOLEAN NOT NULL,
+    ${SystemColumns.profileId.value} INTEGER NOT NULL,
+    ${SystemColumns.createdAt.value} INTEGER NOT NULL,
+    ${SystemColumns.updatedAt.value} INTEGER NOT NULL,
+    FOREIGN KEY (${SystemColumns.profileId.value}) REFERENCES ${Profile.table} (${ProfileColumns.id.value})
+      ON DELETE CASCADE
+  );
+
+  CREATE UNIQUE INDEX IF NOT EXISTS uidx_system_profile_id ON $_table (${SystemColumns.profileId.value});
+  """;
 
   @override
   Map<String, Object?> toMap() {
@@ -59,6 +72,8 @@ class System extends Equatable implements Model {
       SystemColumns.theme.value: theme.value,
       SystemColumns.units.value: units.value,
       SystemColumns.initialSetup.value: initialSetup.value,
+      SystemColumns.notificationsOn.value: notificationsOn,
+      SystemColumns.profileId.value: profileId,
       SystemColumns.createdAt.value: createdAt,
       SystemColumns.updatedAt.value: updatedAt,
     };
@@ -72,6 +87,9 @@ class System extends Equatable implements Model {
       units: Units.fromValue(map[SystemColumns.units.value]! as String),
       initialSetup: SetUpStatus.fromValue(
           map[SystemColumns.initialSetup.value]! as String),
+      notificationsOn:
+          map[SystemColumns.notificationsOn.value]! as int == 1 ? true : false,
+      profileId: map[SystemColumns.profileId.value]! as int,
       createdAt: map[SystemColumns.createdAt.value]! as int,
       updatedAt: map[SystemColumns.updatedAt.value]! as int,
     );
@@ -81,12 +99,16 @@ class System extends Equatable implements Model {
   factory System.create({
     required ThemeType theme,
     required Units units,
+    required int profileId,
+    required bool notificationsOn,
   }) {
     final int now = DateUtilities.getNowUtcUnix();
     return System(
       theme: theme,
       units: units,
       initialSetup: SetUpStatus.notStarted,
+      notificationsOn: notificationsOn,
+      profileId: profileId,
       createdAt: now,
       updatedAt: now,
     );
@@ -98,6 +120,8 @@ class System extends Equatable implements Model {
     ThemeType? theme,
     Units? units,
     SetUpStatus? initialSetup,
+    int? profileId,
+    bool? notificationsOn,
     int? createdAt,
     int? updatedAt,
   }) {
@@ -106,6 +130,8 @@ class System extends Equatable implements Model {
       theme: theme ?? this.theme,
       units: units ?? this.units,
       initialSetup: initialSetup ?? this.initialSetup,
+      profileId: profileId ?? this.profileId,
+      notificationsOn: notificationsOn ?? this.notificationsOn,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -117,6 +143,8 @@ class System extends Equatable implements Model {
         theme,
         units,
         initialSetup,
+        profileId,
+        notificationsOn,
         createdAt,
         updatedAt,
       ];

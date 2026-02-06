@@ -8,6 +8,7 @@ import 'exercise_equipment_model.dart';
 import 'exercise_model.dart';
 import 'exercise_record_model.dart';
 import 'profile_model.dart';
+import 'reminders_config_model.dart';
 import 'system_model.dart';
 import 'weight_goal_model.dart';
 import 'weight_record_model.dart';
@@ -28,7 +29,7 @@ import 'workout_set_model.dart';
 import 'workout_set_record_model.dart';
 
 const String _databaseName = "app.db";
-const int _databaseVersion = 4;
+const int _databaseVersion = 1;
 
 class DatabaseHelper {
   static final DatabaseHelper _instance = DatabaseHelper._();
@@ -78,6 +79,7 @@ class DatabaseHelper {
   Future<void> _onCreate(Database db, int version) async {
     await db.execute(Profile.tableCreate);
     await db.execute(System.tableCreate);
+    await db.execute(RemindersConfig.tableCreate);
     await db.execute(WeightRecord.tableCreate);
     await db.execute(WeightGoal.tableCreate);
     await db.execute(Equipment.tableCreate);
