@@ -85,7 +85,7 @@ sealed class AppRouter {
       builder: (context, state) => const CreateWorkoutView(),
     ),
     GoRoute(
-      path: '/workouts/history/:id',
+      path: '/workouts/:id/history',
       builder: (context, state) {
         final id = int.tryParse(state.pathParameters['id'] ?? '');
         if (id == null) {
