@@ -8,27 +8,8 @@ import 'model.dart';
 import 'utilities.dart';
 
 const String _table = 'exercises';
-const String _tableCreate = """
-  CREATE TABLE IF NOT EXISTS $_table (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,
-    description TEXT,
-    picture TEXT,
-    video TEXT,
-    muscle_group TEXT NOT NULL,
-    muscles TEXT NOT NULL,
-    is_favorite INTEGER NOT NULL DEFAULT 0,
-    difficulty INTEGER,
-    created_by TEXT NOT NULL,
-    created_at INTEGER NOT NULL,
-    updated_at INTEGER NOT NULL
-  );
-  
-  CREATE INDEX IF NOT EXISTS idx_exercises_muscle_group ON $_table (muscle_group);
-  CREATE UNIQUE INDEX IF NOT EXISTS unique_idx_exercises_name_id ON $_table (name);
-  """;
 
-enum ExerciseColumns {
+enum ExerciseColumns with Columns {
   id("id"),
   name("name"),
   description("description"),
@@ -42,6 +23,7 @@ enum ExerciseColumns {
   createdAt("created_at"),
   updatedAt("updated_at");
 
+  @override
   final String value;
 
   const ExerciseColumns(this.value);
@@ -135,7 +117,25 @@ class Exercise extends Equatable implements Model {
   });
 
   static const String table = _table;
-  static const String tableCreate = _tableCreate;
+  static final String tableCreate = """
+  CREATE TABLE IF NOT EXISTS $_table (
+    ${ExerciseColumns.id.value} INTEGER PRIMARY KEY AUTOINCREMENT,
+    ${ExerciseColumns.name.value} TEXT NOT NULL,
+    ${ExerciseColumns.description.value} TEXT,
+    ${ExerciseColumns.picture.value} TEXT,
+    ${ExerciseColumns.video.value} TEXT,
+    ${ExerciseColumns.muscleGroup.value} TEXT NOT NULL,
+    ${ExerciseColumns.muscles.value} TEXT NOT NULL,
+    ${ExerciseColumns.isFavorite.value} INTEGER NOT NULL DEFAULT 0,
+    ${ExerciseColumns.difficulty.value} INTEGER,
+    ${ExerciseColumns.createdBy.value} TEXT NOT NULL,
+    ${ExerciseColumns.createdAt.value} INTEGER NOT NULL,
+    ${ExerciseColumns.updatedAt.value} INTEGER NOT NULL
+  );
+  
+  CREATE INDEX IF NOT EXISTS idx_exercises_muscle_group ON $_table (${ExerciseColumns.muscleGroup.value});
+  CREATE UNIQUE INDEX IF NOT EXISTS unique_idx_exercises_name_id ON $_table (${ExerciseColumns.name.value});
+  """;
 
   @override
   Map<String, Object?> toMap() {

@@ -6,6 +6,10 @@ mixin Columns {
   String get notEqual => "$value <> ?";
   String get notNull => "$value IS NOT NULL";
   String get isNull => "$value IS NULL";
+  String get greaterThan => "$value > ?";
+  String get lessThan => "$value < ?";
+  String get greaterThanOrEqual => "$value >= ?";
+  String get lessThanOrEqual => "$value <= ?";
   String inList(int length) =>
       "$value IN (${List.filled(length, "?").join(", ")})";
 

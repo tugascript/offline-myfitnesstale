@@ -9,32 +9,8 @@ import 'utilities.dart';
 import 'workout_set_model.dart';
 
 const String _table = 'workout_set_exercises';
-const String _tableCreate = '''
-  CREATE TABLE IF NOT EXISTS $_table (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    workout_id INTEGER NOT NULL,
-    workout_set_id INTEGER NOT NULL,
-    exercise_id INTEGER NOT NULL,
-    position INTEGER NOT NULL,
-    min_reps INTEGER NOT NULL,
-    max_reps INTEGER,
-    difficulty TEXT,
-    created_by TEXT NOT NULL,
-    created_at INTEGER NOT NULL,
-    updated_at INTEGER NOT NULL,
-    FOREIGN KEY (workout_set_id) REFERENCES ${WorkoutSet.table} (id)
-      ON DELETE CASCADE,
-    FOREIGN KEY (exercise_id) REFERENCES ${Exercise.table} (id)
-      ON DELETE CASCADE
-  );
-  
-  CREATE INDEX IF NOT EXISTS idx_set_exercise_set_id ON $_table (workout_set_id);
-  CREATE INDEX IF NOT EXISTS idx_set_exercise_exercise_id ON $_table (exercise_id);
-  CREATE INDEX IF NOT EXISTS idx_set_exercise_workout_id ON $_table (workout_id);
-  CREATE INDEX IF NOT EXISTS idx_set_exercise_position_set_id ON $_table (position, workout_set_id);
-  ''';
 
-enum WorkoutSetExerciseColumns {
+enum WorkoutSetExerciseColumns with Columns {
   id("id"),
   workoutId("workout_id"),
   workoutSetId("workout_set_id"),
@@ -47,6 +23,7 @@ enum WorkoutSetExerciseColumns {
   createdAt("created_at"),
   updatedAt("updated_at");
 
+  @override
   final String value;
 
   const WorkoutSetExerciseColumns(this.value);
@@ -124,7 +101,30 @@ final class WorkoutSetExercise extends Equatable implements Model {
   });
 
   static const String table = _table;
-  static const String tableCreate = _tableCreate;
+  static final String tableCreate = '''
+  CREATE TABLE IF NOT EXISTS $_table (
+    ${WorkoutSetExerciseColumns.id.value} INTEGER PRIMARY KEY AUTOINCREMENT,
+    ${WorkoutSetExerciseColumns.workoutId.value} INTEGER NOT NULL,
+    ${WorkoutSetExerciseColumns.workoutSetId.value} INTEGER NOT NULL,
+    ${WorkoutSetExerciseColumns.exerciseId.value} INTEGER NOT NULL,
+    ${WorkoutSetExerciseColumns.position.value} INTEGER NOT NULL,
+    ${WorkoutSetExerciseColumns.minReps.value} INTEGER NOT NULL,
+    ${WorkoutSetExerciseColumns.maxReps.value} INTEGER,
+    ${WorkoutSetExerciseColumns.difficulty.value} TEXT,
+    ${WorkoutSetExerciseColumns.createdBy.value} TEXT NOT NULL,
+    ${WorkoutSetExerciseColumns.createdAt.value} INTEGER NOT NULL,
+    ${WorkoutSetExerciseColumns.updatedAt.value} INTEGER NOT NULL,
+    FOREIGN KEY (${WorkoutSetExerciseColumns.workoutSetId.value}) REFERENCES ${WorkoutSet.table} (${WorkoutSetColumns.id.value})
+      ON DELETE CASCADE,
+    FOREIGN KEY (${WorkoutSetExerciseColumns.exerciseId.value}) REFERENCES ${Exercise.table} (${ExerciseColumns.id.value})
+      ON DELETE CASCADE
+  );
+  
+  CREATE INDEX IF NOT EXISTS idx_set_exercise_set_id ON $_table (${WorkoutSetExerciseColumns.workoutSetId.value});
+  CREATE INDEX IF NOT EXISTS idx_set_exercise_exercise_id ON $_table (${WorkoutSetExerciseColumns.exerciseId.value});
+  CREATE INDEX IF NOT EXISTS idx_set_exercise_workout_id ON $_table (${WorkoutSetExerciseColumns.workoutId.value});
+  CREATE INDEX IF NOT EXISTS idx_set_exercise_position_set_id ON $_table (${WorkoutSetExerciseColumns.position.value}, ${WorkoutSetExerciseColumns.workoutSetId.value});
+  ''';
 
   @override
   Map<String, Object?> toMap() {
