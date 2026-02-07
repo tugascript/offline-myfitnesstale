@@ -190,6 +190,15 @@ class Repository<T extends Model> {
     _logger.info("selectFirst: null");
     return null;
   }
+
+  Future<R> startTransaction<R>(
+    Future<R> Function(Transaction txn) action, {
+    bool? exclusive,
+  }) async {
+    _logger.info("startTransaction");
+    final db = await _databaseHelper.db;
+    return await db.transaction(action, exclusive: exclusive);
+  }
 }
 
 class JoinRepository<T extends JoinModel, J extends Model> {

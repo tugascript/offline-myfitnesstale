@@ -129,8 +129,6 @@ class WorkoutService {
     fromMap: Exercise.fromMap,
   );
 
-  final DatabaseHelper _databaseHelper = DatabaseHelper();
-
   Future<
       Result<PaginatedDto<WorkoutDto, Workout>,
           ServiceError<OperationErrorTypes>>> getWorkouts({
@@ -359,7 +357,7 @@ class WorkoutService {
     _logger.info("Creating ${workouts.length} workouts...");
     try {
       final List<WorkoutDto> createdWorkouts =
-          await (await _databaseHelper.db).transaction((txn) async {
+          await _repository.startTransaction((txn) async {
         final List<WorkoutDto> createdWorkouts = [];
 
         for (final workoutInput in workouts) {
@@ -581,7 +579,6 @@ class WorkoutService {
       }
     }
 
-    // TODO: fix me by updating total sets and total exercises
     try {
       final workout = await _repository.selectOne(workoutId);
       if (workout == null) {
@@ -614,12 +611,16 @@ class WorkoutService {
       );
       final int newPosition = workoutSets.length + 1;
       final int setPosition = position ?? newPosition;
-
+      final int extraSets = maxSets ?? minSets;
+      final int totalReps = exercises.fold(
+        0,
+        (acc, exercise) => acc + (exercise.maxReps ?? exercise.minReps),
+      );
       final (
         WorkoutSet set,
         List<WorkoutSetExercise> setExercises,
         Map<int, List<WorkoutSetExerciseOption>> setExerciseOptions,
-      ) = await (await _databaseHelper.db).transaction((txn) async {
+      ) = await _setRepository.startTransaction((txn) async {
         final WorkoutSet workoutSet = WorkoutSet.create(
           position: setPosition,
           workoutId: workoutId,
@@ -628,6 +629,8 @@ class WorkoutService {
           maxSets: maxSets,
           recommendedRestSecs: recommendedRestSecs,
           maxRestSecs: maxRestSecs,
+          totalExercises: exercises.length,
+          totalReps: totalReps,
         );
         final setId = await _setRepository.insert(workoutSet, txn);
 
@@ -682,6 +685,12 @@ class WorkoutService {
           }
         }
 
+        final updatedWorkout = workout.copyWith(
+          totalSets: workout.totalSets + extraSets,
+          totalReps: workout.totalReps + totalReps,
+          updatedAt: DateUtilities.getNowUtcUnix(),
+        );
+        await _repository.update(updatedWorkout, txn);
         return (workoutSet, setExercises, setExerciseOptions);
       });
 
@@ -946,7 +955,7 @@ class WorkoutService {
         return ok(null);
       }
 
-      final deleted = await (await _databaseHelper.db).transaction(
+      final deleted = await _setRepository.startTransaction(
         (txn) async {
           final deleted = await _setRepository.deleteOne(workoutSetId, txn);
           if (!deleted) {
@@ -987,7 +996,6 @@ class WorkoutService {
     WorkoutSetType? setType,
     int? minSets,
     int? recommendedRestSecs,
-    int? position,
     int? maxSets,
     int? maxRestSecs,
   }) async {
@@ -1001,14 +1009,47 @@ class WorkoutService {
         ));
       }
 
+      final int? oldMaxSets = workoutSet.maxSets;
+      final int oldMinSets = workoutSet.minSets;
       final updatedWorkoutSet = workoutSet.copyWith(
         setType: setType,
         minSets: minSets,
         recommendedRestSecs: recommendedRestSecs,
-        position: position,
         maxSets: maxSets,
         maxRestSecs: maxRestSecs,
       );
+
+      if (oldMaxSets == updatedWorkoutSet.maxSets &&
+          oldMinSets == updatedWorkoutSet.minSets) {
+        final updated = await _setRepository.update(updatedWorkoutSet);
+        if (!updated) {
+          _logger.warning('Workout set with id $workoutSetId not updated');
+          return err(ServiceError(
+            type: SingleErrorTypes.operationFailure,
+            description: 'Error updating workout set: $workoutSetId',
+          ));
+        }
+
+        _logger.info('Workout set with id $workoutSetId updated successfully');
+        return ok(WorkoutSetDto.fromModel(updatedWorkoutSet));
+      }
+
+      final int newTotalSets =
+          (updatedWorkoutSet.maxSets ?? updatedWorkoutSet.minSets) -
+              (oldMaxSets ?? oldMinSets);
+      if (newTotalSets == 0) {
+        final updated = await _setRepository.update(updatedWorkoutSet);
+        if (!updated) {
+          _logger.warning('Workout set with id $workoutSetId not updated');
+          return err(ServiceError(
+            type: SingleErrorTypes.operationFailure,
+            description: 'Error updating workout set: $workoutSetId',
+          ));
+        }
+
+        _logger.info('Workout set with id $workoutSetId updated successfully');
+        return ok(WorkoutSetDto.fromModel(updatedWorkoutSet));
+      }
 
       final updated = await _setRepository.update(updatedWorkoutSet);
       if (!updated) {
@@ -1018,6 +1059,34 @@ class WorkoutService {
           description: 'Error updating workout set: $workoutSetId',
         ));
       }
+
+      final workout = await _repository.selectOne(updatedWorkoutSet.workoutId);
+      if (workout == null) {
+        _logger.warning(
+          'Workout with id ${updatedWorkoutSet.workoutId} not found',
+        );
+        return err(ServiceError(
+          type: SingleErrorTypes.notFound,
+          description:
+              'Workout with id ${updatedWorkoutSet.workoutId} not found',
+        ));
+      }
+
+      await _setRepository.startTransaction((txn) async {
+        final updated = await _setRepository.update(updatedWorkoutSet, txn);
+        if (!updated) {
+          throw Exception('Error updating workout set: $workoutSetId');
+        }
+
+        final updateWorkout = workout.copyWith(
+          totalSets: workout.totalSets + newTotalSets,
+        );
+
+        final updatedWorkout = await _repository.update(updateWorkout, txn);
+        if (!updatedWorkout) {
+          throw Exception('Error updating workout: ${workout.id}');
+        }
+      });
 
       _logger.info('Workout set with id $workoutSetId updated successfully');
       return ok(WorkoutSetDto.fromModel(updatedWorkoutSet));
@@ -1067,7 +1136,7 @@ class WorkoutService {
 
       final oldPosition = set.position;
       final updatedSet = set.copyWith(position: position);
-      await (await _databaseHelper.db).transaction((txn) async {
+      await _setRepository.startTransaction((txn) async {
         if (oldPosition < position) {
           await txn.rawUpdate(
             """
@@ -1344,7 +1413,7 @@ class WorkoutService {
 
       if (newPosition > setExercisePosition || alternativeExerciseIds != null) {
         final (int setExerciseId, List<WorkoutSetExerciseOptionDto>? options) =
-            await (await _databaseHelper.db).transaction((txn) async {
+            await _setExerciseRepository.startTransaction((txn) async {
           if (newPosition > setExercisePosition) {
             await txn.rawQuery(
               "UPDATE ${WorkoutSetExercise.table} SET position = position + 1 WHERE workout_set_id = ? AND position >= ?",
@@ -1460,7 +1529,7 @@ class WorkoutService {
       }
 
       final bool deleted =
-          await (await _databaseHelper.db).transaction((txn) async {
+          await _setExerciseRepository.startTransaction((txn) async {
         final deleted =
             await _setExerciseRepository.deleteOne(workoutSetExerciseId, txn);
         if (!deleted) {
@@ -1594,7 +1663,7 @@ class WorkoutService {
         position: position,
         updatedAt: DateUtilities.getNowUtcUnix(),
       );
-      await (await _databaseHelper.db).transaction((txn) async {
+      await _setExerciseRepository.startTransaction((txn) async {
         if (oldPosition < position) {
           await txn.rawUpdate(
             """
@@ -1774,13 +1843,15 @@ class WorkoutService {
       );
 
       if (newPosition > optionPosition) {
-        final id = await (await _databaseHelper.db).transaction((txn) async {
-          await txn.rawUpdate(
-            "UPDATE ${WorkoutSetExerciseOption.table} SET position = position + 1 WHERE workout_set_exercise_id = ? AND position >= ?",
-            [workoutSetExerciseId, optionPosition],
-          );
-          return await _setExerciseOptionRepository.insert(option, txn);
-        });
+        final id = await _setExerciseOptionRepository.startTransaction(
+          (txn) async {
+            await txn.rawUpdate(
+              "UPDATE ${WorkoutSetExerciseOption.table} SET position = position + 1 WHERE workout_set_exercise_id = ? AND position >= ?",
+              [workoutSetExerciseId, optionPosition],
+            );
+            return await _setExerciseOptionRepository.insert(option, txn);
+          },
+        );
         _logger.info('Workout set exercise option added successfully');
         return ok(WorkoutSetExerciseOptionDto.fromModel(
           option.copyWith(id: id),
@@ -1847,31 +1918,23 @@ class WorkoutService {
         return ok(null);
       }
 
-      final deleted = await (await _databaseHelper.db).transaction((txn) async {
-        final deleted = await _setExerciseOptionRepository.deleteOne(
-            workoutSetExerciseOptionId, txn);
-        if (!deleted) {
-          return false;
-        }
+      await _setExerciseOptionRepository.startTransaction(
+        (txn) async {
+          final deleted = await _setExerciseOptionRepository.deleteOne(
+              workoutSetExerciseOptionId, txn);
+          if (!deleted) {
+            throw Exception('Workout set exercise option failed to delete');
+          }
 
-        await txn.rawUpdate(
-          """
+          await txn.rawUpdate(
+            """
           UPDATE ${WorkoutSetExerciseOption.table} SET position = position - 1 
           WHERE workout_set_exercise_id = ? AND position > ?;
           """,
-          [option.workoutSetExerciseId, position],
-        );
-        return true;
-      });
-
-      if (!deleted) {
-        _logger.warning(
-            'Workout set exercise option with id $workoutSetExerciseOptionId failed to delete');
-        return err(const ServiceError(
-          type: SingleErrorTypes.operationFailure,
-          description: 'Workout set exercise option failed to delete',
-        ));
-      }
+            [option.workoutSetExerciseId, position],
+          );
+        },
+      );
 
       _logger.info(
           'Workout set exercise option with id $workoutSetExerciseOptionId deleted successfully');
@@ -1981,7 +2044,7 @@ class WorkoutService {
         position: position,
         updatedAt: DateUtilities.getNowUtcUnix(),
       );
-      await (await _databaseHelper.db).transaction((txn) async {
+      await _setExerciseOptionRepository.startTransaction((txn) async {
         if (oldPosition < position) {
           await txn.rawUpdate(
             """
