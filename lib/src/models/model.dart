@@ -1,3 +1,18 @@
+mixin Columns {
+  String get value;
+
+  String get equal => "$value = ?";
+  String get like => "$value LIKE ?";
+  String get notEqual => "$value <> ?";
+  String get notNull => "$value IS NOT NULL";
+  String get isNull => "$value IS NULL";
+  String inList(int length) =>
+      "$value IN (${List.filled(length, "?").join(", ")})";
+
+  String get orderAsc => "$value ASC";
+  String get orderDesc => "$value DESC";
+}
+
 abstract class Model {
   final int? id;
   final int createdAt;

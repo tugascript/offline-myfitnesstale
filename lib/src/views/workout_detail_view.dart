@@ -96,7 +96,7 @@ class _WorkoutDetailViewState extends State<WorkoutDetailView> {
           title: workout.name,
           isEntity: true,
           body: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+            padding: EdgeInsets.symmetric(horizontal: sizes.padding / 2),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -112,7 +112,7 @@ class _WorkoutDetailViewState extends State<WorkoutDetailView> {
                   style: TextStyle(
                     fontSize: sizes.titleFountSize,
                     fontWeight: FontWeight.bold,
-                    color: Colors.grey[800],
+                    color: isDarkTheme ? Colors.grey[200] : Colors.grey[800],
                   ),
                 ),
                 SizedBox(height: sizes.spacing),

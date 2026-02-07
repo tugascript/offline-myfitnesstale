@@ -86,16 +86,16 @@ class ExerciseService {
     final WhereBuilder query = WhereBuilder();
 
     if (name != null) {
-      query.add('${ExerciseColumns.name.value} LIKE ?', '%$name%');
+      query.and('${ExerciseColumns.name.value} LIKE ?', '%$name%');
     }
     if (muscleGroup != null) {
-      query.add('${ExerciseColumns.muscleGroup.value} = ?', muscleGroup.value);
+      query.and('${ExerciseColumns.muscleGroup.value} = ?', muscleGroup.value);
     }
     if (isFavorite != null) {
-      query.add('${ExerciseColumns.isFavorite.value} = ?', isFavorite ? 1 : 0);
+      query.and('${ExerciseColumns.isFavorite.value} = ?', isFavorite ? 1 : 0);
     }
     if (difficulty != null) {
-      query.add('${ExerciseColumns.difficulty.value} = ?', difficulty);
+      query.and('${ExerciseColumns.difficulty.value} = ?', difficulty);
     }
 
     try {
@@ -164,7 +164,7 @@ class ExerciseService {
 
   Future<Map<int, Exercise>> getExercisesByIdsLoader(List<int> ids) async {
     final WhereBuilder query = WhereBuilder();
-    query.add('${ExerciseColumns.id.value} IN (${ids.join(',')})');
+    query.and('${ExerciseColumns.id.value} IN (${ids.join(',')})');
 
     final List<Exercise> exercises = await _repository.selectMany(
       where: query.where,
@@ -476,7 +476,7 @@ class ExerciseService {
     final WhereBuilder query = WhereBuilder();
 
     if (name != null) {
-      query.add('name LIKE ?', '%$name%');
+      query.and('name LIKE ?', '%$name%');
     }
 
     try {

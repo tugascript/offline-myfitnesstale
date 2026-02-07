@@ -236,8 +236,8 @@ class JoinRepository<T extends JoinModel, J extends Model> {
   Future<bool> deleteOne(int pk1, int pk2, [Transaction? trx]) async {
     final WhereBuilder whereBuilder = WhereBuilder();
     final (String key1, String key2) = primaryKeys;
-    whereBuilder.add('$key1 = ?', pk1);
-    whereBuilder.add('$key2 = ?', pk2);
+    whereBuilder.and('$key1 = ?', pk1);
+    whereBuilder.and('$key2 = ?', pk2);
 
     final DatabaseExecutor db = trx ?? await databaseHelper.db;
     final int rowsAffected = await db.delete(
@@ -252,8 +252,8 @@ class JoinRepository<T extends JoinModel, J extends Model> {
     final WhereBuilder whereBuilder = WhereBuilder();
     final (String key1, String key2) = primaryKeys;
 
-    whereBuilder.add('$key1 = ?', pk1);
-    whereBuilder.add('$key2 = ?', pk2);
+    whereBuilder.and('$key1 = ?', pk1);
+    whereBuilder.and('$key2 = ?', pk2);
 
     final DatabaseExecutor db = await databaseHelper.db;
     final List<Map<String, dynamic>> maps = await db.query(
