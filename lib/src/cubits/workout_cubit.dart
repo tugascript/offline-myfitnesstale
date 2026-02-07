@@ -321,7 +321,6 @@ class WorkoutCubit extends Cubit<WorkoutState> {
     WorkoutSetType? setType,
     int? minSets,
     int? recommendedRestSecs,
-    int? position,
     int? maxSets,
     int? maxRestSecs,
   }) async {
@@ -333,7 +332,6 @@ class WorkoutCubit extends Cubit<WorkoutState> {
       setType: setType,
       minSets: minSets,
       recommendedRestSecs: recommendedRestSecs,
-      position: position,
       maxSets: maxSets,
       maxRestSecs: maxRestSecs,
     );

@@ -14,6 +14,8 @@ class WorkoutSetDto extends Equatable implements Dto<WorkoutSet> {
   final int? maxSets;
   final int recommendedRestSecs;
   final int? maxRestSecs;
+  final int totalExercises;
+  final int totalReps;
 
   // related data
   final List<WorkoutSetExerciseDto>? exercises;
@@ -26,6 +28,8 @@ class WorkoutSetDto extends Equatable implements Dto<WorkoutSet> {
     this.maxSets,
     required this.recommendedRestSecs,
     this.maxRestSecs,
+    required this.totalExercises,
+    required this.totalReps,
     this.exercises,
   });
 
@@ -38,6 +42,8 @@ class WorkoutSetDto extends Equatable implements Dto<WorkoutSet> {
     int? maxSets,
     int? recommendedRestSecs,
     int? maxRestSecs,
+    int? totalExercises,
+    int? totalReps,
     List<WorkoutSetExerciseDto>? exercises,
   }) {
     return WorkoutSetDto(
@@ -48,6 +54,8 @@ class WorkoutSetDto extends Equatable implements Dto<WorkoutSet> {
       maxSets: maxSets ?? this.maxSets,
       recommendedRestSecs: recommendedRestSecs ?? this.recommendedRestSecs,
       maxRestSecs: maxRestSecs ?? this.maxRestSecs,
+      totalExercises: totalExercises ?? this.totalExercises,
+      totalReps: totalReps ?? this.totalReps,
       exercises: exercises ?? this.exercises,
     );
   }
@@ -61,6 +69,8 @@ class WorkoutSetDto extends Equatable implements Dto<WorkoutSet> {
         maxSets,
         recommendedRestSecs,
         maxRestSecs,
+        totalExercises,
+        totalReps,
         exercises,
       ];
 
@@ -77,6 +87,8 @@ class WorkoutSetDto extends Equatable implements Dto<WorkoutSet> {
       maxSets: model.maxSets,
       recommendedRestSecs: model.recommendedRestSecs,
       maxRestSecs: model.maxRestSecs,
+      totalExercises: model.totalExercises,
+      totalReps: model.totalReps,
       exercises: exercises,
     );
   }
