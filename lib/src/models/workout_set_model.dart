@@ -5,7 +5,7 @@ import 'workout_model.dart';
 
 const String _table = 'workout_sets';
 
-enum WorkoutSetColumns {
+enum WorkoutSetColumns with Columns {
   id("id"),
   position("position"),
   workoutId("workout_id"),
@@ -20,6 +20,7 @@ enum WorkoutSetColumns {
   createdAt("created_at"),
   updatedAt("updated_at");
 
+  @override
   final String value;
 
   const WorkoutSetColumns(this.value);
