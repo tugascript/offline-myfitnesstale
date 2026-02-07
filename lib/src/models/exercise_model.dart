@@ -172,7 +172,7 @@ class Exercise extends Equatable implements Model {
       muscles: ExerciseMuscles.fromJson(
           map[ExerciseColumns.muscles.value] as String? ??
               '{"primary_muscles":[],"secondary_muscles":[]}'),
-      isFavorite: (map[ExerciseColumns.isFavorite.value] as int? ?? 0) == 1,
+      isFavorite: map[ExerciseColumns.isFavorite.value] as int == 1,
       difficulty: map[ExerciseColumns.difficulty.value] as int?,
       createdBy:
           CreatedBy.fromValue(map[ExerciseColumns.createdBy.value] as String),
