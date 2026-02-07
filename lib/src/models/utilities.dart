@@ -66,15 +66,16 @@ class WhereBuilder {
   final List<_WhereStatement> _where = [];
   final List<Object?> _args = [];
 
-  String? get where => _where.isEmpty
-      ? null
-      : _where
-          .map(
-            (e) => _where.length == 1
-                ? e.condition
-                : '${e.union.value} (${e.condition})',
-          )
-          .join(' ');
+  String? get where {
+    if (_where.isEmpty) {
+      return null;
+    }
+    if (_where.length == 1) {
+      return _where.first.condition;
+    }
+
+    return _where.map((e) => '${e.union.value} (${e.condition})').join(' ');
+  }
 
   List<Object?>? get args => _args.isEmpty ? null : _args;
 
