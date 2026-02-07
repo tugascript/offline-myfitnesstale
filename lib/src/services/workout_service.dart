@@ -143,16 +143,16 @@ class WorkoutService {
     _logger.info('Getting workouts');
     final WhereBuilder query = WhereBuilder();
 
-    if (name != null) {
-      query.add('${WorkoutColumns.name.value} LIKE ?', '%$name%');
+    if (name != null && name.isNotEmpty) {
+      query.and('${WorkoutColumns.name.value} LIKE ?', '%$name%');
     }
 
     if (difficulty != null) {
-      query.add('${WorkoutColumns.difficulty.value} = ?', difficulty.value);
+      query.and('${WorkoutColumns.difficulty.value} = ?', difficulty.value);
     }
 
     if (muscleGroup != null) {
-      query.add(
+      query.and(
         '${WorkoutColumns.muscleGroups.value} LIKE ?',
         '%${muscleGroup.value}%',
       );
@@ -606,7 +606,7 @@ class WorkoutService {
       }
 
       final WhereBuilder setQuery = WhereBuilder();
-      setQuery.add('workoutId = ?', workoutId);
+      setQuery.and('workoutId = ?', workoutId);
       final List<WorkoutSet> workoutSets = await _setRepository.selectMany(
         where: setQuery.where,
         whereArgs: setQuery.args,
@@ -727,7 +727,7 @@ class WorkoutService {
     int workoutId,
   ) async {
     final WhereBuilder query = WhereBuilder();
-    query.add('workout_id = ?', workoutId);
+    query.and('workout_id = ?', workoutId);
 
     try {
       final List<WorkoutSet> workoutSets = await _setRepository.selectMany(

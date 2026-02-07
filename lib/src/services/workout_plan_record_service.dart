@@ -50,11 +50,11 @@ class WorkoutPlanRecordService {
     final WhereBuilder query = WhereBuilder();
 
     if (workoutPlanId != null) {
-      query.add('workout_plan_id = ?', workoutPlanId);
+      query.and('workout_plan_id = ?', workoutPlanId);
     }
 
     if (status != null) {
-      query.add('status = ?', status.value);
+      query.and('status = ?', status.value);
     }
 
     try {

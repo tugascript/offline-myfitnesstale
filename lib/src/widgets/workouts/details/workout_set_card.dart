@@ -7,7 +7,9 @@ import '../../../services/dtos/workout_set_dto.dart';
 import '../../../services/dtos/workout_set_exercise_dto.dart';
 import '../../../utilities/converters.dart';
 import '../../../utilities/sizes/data_display_sizes.dart';
+import '../../common/detail_number.dart';
 
+// TODO: make the columns align properly
 class WorkoutSetCard extends StatelessWidget {
   final ThemeData theme;
   final bool isDarkTheme;
@@ -31,98 +33,68 @@ class WorkoutSetCard extends StatelessWidget {
         isDarkTheme ? Colors.grey[400] : Colors.grey[600];
     return Card(
       child: ExpansionTile(
-        leading: Container(
-          width: sizes.subtitleFontSize * 1.75,
-          height: sizes.subtitleFontSize * 1.75,
-          decoration: BoxDecoration(
-            color: theme.primaryColor,
-          ),
-          child: Center(
-            child: Text(
-              setNumber.toString(),
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                fontSize: sizes.subtitleFontSize,
-              ),
-            ),
-          ),
+        leading: DetailNumber(
+          number: setNumber,
+          theme: theme,
+          fontSize: sizes.subtitleFontSize,
         ),
         initiallyExpanded: true,
-        title: Row(
+        title: Wrap(
+          alignment: WrapAlignment.spaceBetween,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          runSpacing: sizes.padding / 2,
           children: [
-            Expanded(
-              flex: 2,
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.repeat, size: sizes.fontSize * 1.2),
-                    Text(
-                      ' ${set.minSets}${set.maxSets != null ? '-${set.maxSets}' : ''}',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: sizes.fontSize,
-                      ),
-                    ),
-                  ],
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.repeat, size: sizes.fontSize * 1.2),
+                Text(
+                  ' ${set.minSets}${set.maxSets != null ? '-${set.maxSets}' : ''}',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: sizes.fontSize,
+                  ),
                 ),
-              ),
+              ],
             ),
-            Expanded(
-              flex: 3,
-              child: Center(
-                child: _SetTypeBadge(
-                  sizes: sizes,
-                  setType: set.setType,
-                ),
-              ),
+            _SetTypeBadge(
+              sizes: sizes,
+              setType: set.setType,
             ),
-            Expanded(
-              flex: 2,
-              child: Center(
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.fitness_center_outlined,
-                      size: sizes.fontSize,
-                      color: iconGreyColor,
-                    ),
-                    Text(
-                      ' ${set.exercises?.length ?? 0} ',
-                      style: TextStyle(
-                        fontSize: sizes.fontSize,
-                        color: iconGreyColor,
-                      ),
-                    )
-                  ],
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.fitness_center_outlined,
+                  size: sizes.fontSize,
+                  color: iconGreyColor,
                 ),
-              ),
+                Text(
+                  ' ${set.exercises?.length ?? 0} ',
+                  style: TextStyle(
+                    fontSize: sizes.fontSize,
+                    color: iconGreyColor,
+                  ),
+                )
+              ],
             ),
-            Expanded(
-              flex: 3,
-              child: Align(
-                alignment: Alignment.centerRight,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.timer_outlined,
-                      size: sizes.fontSize,
-                      color: iconLightGreyColor,
-                    ),
-                    Text(
-                      ' ${Converters.formatDuration(set.recommendedRestSecs)}${set.maxRestSecs != null ? '-${Converters.formatDuration(set.maxRestSecs!)}' : ''}',
-                      style: TextStyle(
-                        fontSize: sizes.fontSize,
-                        color: iconLightGreyColor,
-                      ),
-                    ),
-                  ],
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                Icon(
+                  Icons.timer_outlined,
+                  size: sizes.fontSize,
+                  color: iconLightGreyColor,
                 ),
-              ),
+                Text(
+                  ' ${Converters.formatDuration(set.recommendedRestSecs)}${set.maxRestSecs != null ? '-${Converters.formatDuration(set.maxRestSecs!)}' : ''}',
+                  style: TextStyle(
+                    fontSize: sizes.fontSize,
+                    color: iconLightGreyColor,
+                  ),
+                ),
+              ],
             ),
           ],
         ),

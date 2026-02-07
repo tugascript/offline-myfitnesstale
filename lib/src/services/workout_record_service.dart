@@ -67,7 +67,7 @@ class WorkoutRecordService {
         ));
       }
 
-      query.add('${WorkoutRecordColumns.workoutId.value} = ?', workoutId);
+      query.and('${WorkoutRecordColumns.workoutId.value} = ?', workoutId);
     }
 
     try {

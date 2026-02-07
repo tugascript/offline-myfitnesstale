@@ -37,19 +37,19 @@ class WorkoutPlanWorkoutRecordService {
     final WhereBuilder query = WhereBuilder();
 
     if (workoutPlanRecordId != null) {
-      query.add('workout_plan_record_id = ?', workoutPlanRecordId);
+      query.and('workout_plan_record_id = ?', workoutPlanRecordId);
     }
 
     if (workoutPlanWeekRecordId != null) {
-      query.add('workout_plan_week_record_id = ?', workoutPlanWeekRecordId);
+      query.and('workout_plan_week_record_id = ?', workoutPlanWeekRecordId);
     }
 
     if (workoutPlanDayRecordId != null) {
-      query.add('workout_plan_day_record_id = ?', workoutPlanDayRecordId);
+      query.and('workout_plan_day_record_id = ?', workoutPlanDayRecordId);
     }
 
     if (workoutPlanWorkoutId != null) {
-      query.add('workout_plan_workout_id = ?', workoutPlanWorkoutId);
+      query.and('workout_plan_workout_id = ?', workoutPlanWorkoutId);
     }
 
     try {

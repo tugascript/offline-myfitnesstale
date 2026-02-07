@@ -63,9 +63,9 @@ class WorkoutsList extends StatelessWidget {
       itemCount: workouts.length + (isLoading ? 1 : 0),
       itemBuilder: (context, index) {
         if (index == workouts.length) {
-          return const Padding(
-            padding: EdgeInsets.all(16.0),
-            child: Center(child: CircularProgressIndicator()),
+          return Padding(
+            padding: EdgeInsets.all(sizes.padding),
+            child: const Center(child: CircularProgressIndicator()),
           );
         }
         final workout = workouts[index];

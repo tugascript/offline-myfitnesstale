@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:myfitnesstale/src/widgets/workout_plan/details/workout_plan_header.dart';
 
 import '../cubits/states/workout_plan_state.dart';
 import '../cubits/workout_plan_cubit.dart';
-import '../models/enums.dart';
 import '../utilities/sizes/data_display_sizes.dart';
 import '../utilities/sizes/screen_size.dart';
 import '../widgets/layout/responsive_scaffold.dart';
+import '../widgets/workout_plan/details/workout_plan_header.dart';
 import '../widgets/workout_plan/details/workout_plan_week_card.dart';
 import 'error_view.dart';
 import 'loading_view.dart';
@@ -36,6 +35,8 @@ class _WorkoutPlanDetailViewState extends State<WorkoutPlanDetailView> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDarkTheme = theme.brightness == Brightness.dark;
     final breakpoints = BreakPoint.fromContext(context);
     final sizes = DataDisplaySizes.getWorkoutDetailSizes(
       breakpoints.screenSize,
@@ -60,30 +61,39 @@ class _WorkoutPlanDetailViewState extends State<WorkoutPlanDetailView> {
         return ResponsiveScaffold(
           title: plan.name,
           isEntity: true,
-          body: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Plan Header
-              WorkoutPlanHeader(
-                sizes: sizes,
-                plan: plan,
-              ),
-              const SizedBox(height: 24),
-              // Weekly Breakdown
-              Text(
-                'Weekly Breakdown',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey[800],
+          body: Padding(
+            padding: EdgeInsets.symmetric(horizontal: sizes.padding / 2),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Plan Header
+                WorkoutPlanHeader(
+                  sizes: sizes,
+                  plan: plan,
                 ),
-              ),
-              const SizedBox(height: 16),
-              ...(plan.weeks?.map(
-                    (week) => WorkoutPlanWeekCard(week: week),
-                  ) ??
-                  []),
-            ],
+                SizedBox(height: sizes.spacing * 1.25),
+                // Weekly Breakdown
+                Text(
+                  'Weekly Breakdown',
+                  style: TextStyle(
+                    fontSize: sizes.titleFountSize,
+                    fontWeight: FontWeight.bold,
+                    color: isDarkTheme ? Colors.grey[200] : Colors.grey[800],
+                  ),
+                ),
+                SizedBox(height: sizes.spacing),
+                ...(plan.weeks?.asMap().entries.map(
+                          (entry) => WorkoutPlanWeekCard(
+                            theme: theme,
+                            isDarkTheme: isDarkTheme,
+                            sizes: sizes,
+                            week: entry.value,
+                            weekNumber: entry.key + 1,
+                          ),
+                        ) ??
+                    []),
+              ],
+            ),
           ),
         );
       },

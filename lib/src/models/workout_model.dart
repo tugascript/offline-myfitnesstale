@@ -27,7 +27,7 @@ const String _tableCreate = '''
   CREATE UNIQUE INDEX IF NOT EXISTS unique_idx_workouts_name ON $_table (name);
   ''';
 
-enum WorkoutColumns {
+enum WorkoutColumns with Columns {
   id("id"),
   name("name"),
   description("description"),
@@ -43,6 +43,7 @@ enum WorkoutColumns {
   createdAt("created_at"),
   updatedAt("updated_at");
 
+  @override
   final String value;
 
   const WorkoutColumns(this.value);

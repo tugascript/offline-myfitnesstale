@@ -138,7 +138,7 @@ class ExerciseRecordService {
           ));
         }
 
-        query.add(
+        query.and(
           '${ExerciseRecordColumns.exerciseId.value} = ?',
           [exerciseId],
         );

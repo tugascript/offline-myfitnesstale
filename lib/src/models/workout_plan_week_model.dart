@@ -7,25 +7,7 @@ import 'workout_plan_model.dart';
 
 const String _table = "workout_plan_weeks";
 
-const String _tableCreate = '''
-  CREATE TABLE IF NOT EXISTS $_table (
-    id INTEGER PRIMARY KEY,
-    workout_plan_id INTEGER NOT NULL,
-    start_week INTEGER NOT NULL,
-    end_week INTEGER NOT NULL,
-    phase TEXT,
-    created_by TEXT NOT NULL,
-    created_at INTEGER NOT NULL,
-    updated_at INTEGER NOT NULL,
-    FOREIGN KEY (workout_plan_id) REFERENCES ${WorkoutPlan.table} (id)
-      ON DELETE CASCADE
-  );
-  
-  CREATE INDEX IF NOT EXISTS idx_workout_plan_weeks_workout_plan_id ON $_table (workout_plan_id);
-  CREATE INDEX IF NOT EXISTS idx_workout_plan_weeks_start_week ON $_table (start_week);
-  ''';
-
-enum WorkoutPlanWeekColumns {
+enum WorkoutPlanWeekColumns with Columns {
   id("id"),
   workoutPlanId("workout_plan_id"),
   startWeek("start_week"),
@@ -35,6 +17,7 @@ enum WorkoutPlanWeekColumns {
   createdAt("created_at"),
   updatedAt("updated_at");
 
+  @override
   final String value;
 
   const WorkoutPlanWeekColumns(this.value);
@@ -65,7 +48,23 @@ class WorkoutPlanWeek extends Equatable implements Model {
   });
 
   static const String table = _table;
-  static const String tableCreate = _tableCreate;
+  static final String tableCreate = '''
+  CREATE TABLE IF NOT EXISTS $_table (
+    ${WorkoutPlanWeekColumns.id.value} INTEGER PRIMARY KEY,
+    ${WorkoutPlanWeekColumns.workoutPlanId.value} INTEGER NOT NULL,
+    ${WorkoutPlanWeekColumns.startWeek.value} INTEGER NOT NULL,
+    ${WorkoutPlanWeekColumns.endWeek.value} INTEGER NOT NULL,
+    ${WorkoutPlanWeekColumns.phase.value} TEXT,
+    ${WorkoutPlanWeekColumns.createdBy.value} TEXT NOT NULL,
+    ${WorkoutPlanWeekColumns.createdAt.value} INTEGER NOT NULL,
+    ${WorkoutPlanWeekColumns.updatedAt.value} INTEGER NOT NULL,
+    FOREIGN KEY (${WorkoutPlanWeekColumns.workoutPlanId.value}) REFERENCES ${WorkoutPlan.table} (${WorkoutPlanColumns.id.value})
+      ON DELETE CASCADE
+  );
+  
+  CREATE INDEX IF NOT EXISTS idx_workout_plan_weeks_workout_plan_id ON $_table (${WorkoutPlanWeekColumns.workoutPlanId.value});
+  CREATE INDEX IF NOT EXISTS idx_workout_plan_weeks_start_week ON $_table (${WorkoutPlanWeekColumns.startWeek.value});
+  ''';
 
   @override
   Map<String, Object?> toMap() {

@@ -35,11 +35,11 @@ class WorkoutPlanWeekRecordService {
     final WhereBuilder query = WhereBuilder();
 
     if (workoutPlanRecordId != null) {
-      query.add('workout_plan_record_id = ?', workoutPlanRecordId);
+      query.and('workout_plan_record_id = ?', workoutPlanRecordId);
     }
 
     if (workoutPlanWeekId != null) {
-      query.add('workout_plan_week_id = ?', workoutPlanWeekId);
+      query.and('workout_plan_week_id = ?', workoutPlanWeekId);
     }
 
     try {

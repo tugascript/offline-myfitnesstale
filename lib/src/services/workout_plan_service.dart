@@ -140,12 +140,12 @@ class WorkoutPlanService {
     _logger.info('Getting workout plans');
     final WhereBuilder query = WhereBuilder();
 
-    if (name != null) {
-      query.add('name LIKE ?', '%$name%');
+    if (name != null && name.isNotEmpty) {
+      query.and(WorkoutPlanColumns.name.like, '%$name%');
     }
 
     if (difficulty != null) {
-      query.add('difficulty = ?', difficulty.value);
+      query.and(WorkoutPlanColumns.difficulty.equal, difficulty.value);
     }
 
     try {
@@ -190,10 +190,142 @@ class WorkoutPlanService {
         ));
       }
 
-      // TODO: add weeks, days and workouts to the workout plan
+      final List<WorkoutPlanWeek> weeks = await _weekRepository.selectMany(
+        where: WorkoutPlanWeekColumns.workoutPlanId.equal,
+        whereArgs: [plan.id],
+        orderBy: WorkoutPlanWeekColumns.startWeek.orderAsc,
+      );
+      if (weeks.isEmpty) {
+        _logger.info('No weeks found, got workout plan with id $id');
+        return ok(WorkoutPlanDto.fromModel(plan));
+      }
 
-      _logger.info('Got workout plan with id $id');
-      return ok(WorkoutPlanDto.fromModel(plan));
+      final List<WorkoutPlanDay> days = await _dayRepository.selectMany(
+        where: WorkoutPlanDayColumns.workoutPlanId.equal,
+        whereArgs: [plan.id],
+        orderBy: [
+          WorkoutPlanDayColumns.workoutPlanWeekId.orderAsc,
+          WorkoutPlanDayColumns.day.orderAsc,
+        ].join(", "),
+      );
+      if (days.isEmpty) {
+        _logger.info('No days found, got workout plan with id $id');
+        return ok(
+          WorkoutPlanDto.fromModel(
+            plan,
+            weeks: weeks.map((we) => WorkoutPlanWeekDto.fromModel(we)).toList(),
+          ),
+        );
+      }
+
+      final List<WorkoutPlanWorkout> planWorkouts =
+          await _planWorkoutRepository.selectMany(
+        where: WorkoutPlanWorkoutColumns.workoutPlanId.equal,
+        whereArgs: [plan.id],
+        orderBy: [
+          WorkoutPlanWorkoutColumns.workoutPlanDayId.orderAsc,
+          WorkoutPlanWorkoutColumns.position.orderAsc,
+        ].join(", "),
+      );
+      if (planWorkouts.isEmpty) {
+        _logger.info('No plan workouts found, got workout plan with id $id');
+        final Map<int, List<WorkoutPlanDayDto>> daysMap = days.fold(
+          {},
+          (map, d) => map
+            ..update(
+              d.workoutPlanWeekId,
+              (value) => value..add(WorkoutPlanDayDto.fromModel(d)),
+              ifAbsent: () => [WorkoutPlanDayDto.fromModel(d)],
+            ),
+        );
+        return ok(
+          WorkoutPlanDto.fromModel(
+            plan,
+            weeks: weeks
+                .map(
+                  (we) => WorkoutPlanWeekDto.fromModel(
+                    we,
+                    days: daysMap[we.id],
+                  ),
+                )
+                .toList(),
+          ),
+        );
+      }
+
+      final Set<int> workoutIds = planWorkouts.map((w) => w.workoutId).toSet();
+      final List<Workout> workouts = await _workoutRepository.selectMany(
+        where: WorkoutColumns.id.inList(workoutIds.length),
+        whereArgs: workoutIds.toList(),
+      );
+      if (workouts.isEmpty || workouts.length != workoutIds.length) {
+        _logger
+            .warning('Some workouts not found, got workout plan with id $id');
+        return err(ServiceError(
+          type: SingleErrorTypes.notFound,
+          description: 'Some workouts were not found',
+        ));
+      }
+
+      final Map<int, WorkoutDto> workoutsMap = workouts.fold({}, (map, w) {
+        map[w.id!] = WorkoutDto.fromModel(w);
+        return map;
+      });
+
+      final Map<int, List<WorkoutPlanWorkoutDto>> planWorkoutsMap =
+          planWorkouts.fold(
+        {},
+        (map, pw) => map
+          ..update(
+            pw.workoutPlanDayId,
+            (value) => value
+              ..add(
+                WorkoutPlanWorkoutDto.fromModel(
+                  pw,
+                  workout: workoutsMap[pw.workoutId],
+                ),
+              ),
+            ifAbsent: () => [
+              WorkoutPlanWorkoutDto.fromModel(
+                pw,
+                workout: workoutsMap[pw.workoutId],
+              ),
+            ],
+          ),
+      );
+      final Map<int, List<WorkoutPlanDayDto>> daysMap = days.fold(
+        {},
+        (map, d) => map
+          ..update(
+            d.workoutPlanWeekId,
+            (value) => value
+              ..add(
+                WorkoutPlanDayDto.fromModel(
+                  d,
+                  planWorkouts: planWorkoutsMap[d.id],
+                ),
+              ),
+            ifAbsent: () => [
+              WorkoutPlanDayDto.fromModel(
+                d,
+                planWorkouts: planWorkoutsMap[d.id],
+              ),
+            ],
+          ),
+      );
+
+      _logger.info('Got workout plan with id $id with all data');
+      return ok(WorkoutPlanDto.fromModel(
+        plan,
+        weeks: weeks
+            .map(
+              (we) => WorkoutPlanWeekDto.fromModel(
+                we,
+                days: daysMap[we.id],
+              ),
+            )
+            .toList(),
+      ));
     } catch (e) {
       _logger.severe('Failed to get workout plan with id $id', e);
       return err(ServiceError(
