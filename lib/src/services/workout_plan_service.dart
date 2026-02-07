@@ -41,9 +41,11 @@ class WorkoutPlanWorkoutRegistrationInput {
 }
 
 class WorkoutPlanDayRegistrationInput {
+  final bool isRestDay;
   final List<WorkoutPlanWorkoutRegistrationInput> workouts;
 
   const WorkoutPlanDayRegistrationInput({
+    this.isRestDay = false,
     required this.workouts,
   });
 }
@@ -68,9 +70,6 @@ class WorkoutPlanRegistrationInput {
   final PictureData? picture;
   final VideoData? video;
   final Difficulty difficulty;
-  final int totalWeeks;
-  final int totalDays;
-  final int totalWorkouts;
   final List<WorkoutPlanWeekRegistrationInput> weeks;
 
   const WorkoutPlanRegistrationInput({
@@ -79,9 +78,6 @@ class WorkoutPlanRegistrationInput {
     this.picture,
     this.video,
     required this.difficulty,
-    required this.totalWeeks,
-    required this.totalDays,
-    required this.totalWorkouts,
     required this.weeks,
   });
 }
@@ -321,7 +317,7 @@ class WorkoutPlanService {
             .map(
               (we) => WorkoutPlanWeekDto.fromModel(
                 we,
-                days: daysMap[we.id],
+                days: _addRestDays(we.scheduleMode, daysMap[we.id] ?? []),
               ),
             )
             .toList(),
@@ -333,6 +329,84 @@ class WorkoutPlanService {
         description: 'Failed to get workout plan with error: ${e.toString()}',
       ));
     }
+  }
+
+  List<WorkoutPlanDayDto> _addRestDays(
+    WorkoutPlanWeekScheduleMode scheduleMode,
+    List<WorkoutPlanDayDto> days,
+  ) {
+    if (days.isEmpty) {
+      return [];
+    }
+    if (days.length > 7) {
+      return days.take(7).toList();
+    }
+
+    switch (scheduleMode) {
+      case WorkoutPlanWeekScheduleMode.manual:
+        return days;
+      case WorkoutPlanWeekScheduleMode.automatic:
+        return _addRestDaysAutomatic(days);
+      case WorkoutPlanWeekScheduleMode.hybrid:
+        return _addRestDaysHybrid(days);
+    }
+  }
+
+  List<WorkoutPlanDayDto> _addRestDaysAutomatic(List<WorkoutPlanDayDto> days) {
+    switch (days.length) {
+      case 1:
+        return [
+          days[0],
+          for (int i = 0; i < 6; i++) WorkoutPlanDayDto.autoRestDay(i + 2),
+        ];
+      case 2:
+        return [
+          days[0],
+          for (int i = 2; i < 4; i++) WorkoutPlanDayDto.autoRestDay(i),
+          days[1].copyWith(day: 4),
+          for (int i = 5; i <= 7; i++) WorkoutPlanDayDto.autoRestDay(i),
+        ];
+      case 3:
+        return [
+          days[0],
+          WorkoutPlanDayDto.autoRestDay(2),
+          days[1].copyWith(day: 3),
+          WorkoutPlanDayDto.autoRestDay(4),
+          days[2].copyWith(day: 5),
+          for (int i = 6; i <= 7; i++) WorkoutPlanDayDto.autoRestDay(i),
+        ];
+      case 4:
+        return [
+          days[0],
+          days[1],
+          WorkoutPlanDayDto.autoRestDay(3),
+          days[2].copyWith(day: 4),
+          days[3].copyWith(day: 5),
+          for (int i = 6; i <= 7; i++) WorkoutPlanDayDto.autoRestDay(i),
+        ];
+      case 5:
+        return [
+          ...days,
+          for (int i = 6; i <= 7; i++) WorkoutPlanDayDto.autoRestDay(i),
+        ];
+      case 6:
+        return [...days, WorkoutPlanDayDto.autoRestDay(7)];
+      case 7:
+      default:
+        return days;
+    }
+  }
+
+  List<WorkoutPlanDayDto> _addRestDaysHybrid(List<WorkoutPlanDayDto> days) {
+    final int nextDay = days.length + 1;
+    if (nextDay > 7) {
+      return days;
+    }
+
+    return [
+      ...days,
+      for (int i = nextDay; i <= 7; i++) WorkoutPlanDayDto.autoRestDay(i),
+    ];
   }
 
   Future<Result<WorkoutPlanDto, ServiceError<OperationErrorTypes>>>
@@ -379,15 +453,27 @@ class WorkoutPlanService {
         final List<WorkoutPlanDto> createdPlans = [];
 
         for (final planInput in plans) {
+          int totalWeeks = 0;
+          int totalWorkouts = 0;
+          int totalDays = 0;
+          for (final weekInput in planInput.weeks) {
+            totalWeeks += weekInput.endWeek - weekInput.startWeek + 1;
+
+            for (final dayInput in weekInput.days) {
+              totalDays += dayInput.isRestDay ? 0 : 1;
+              totalWorkouts += dayInput.workouts.length;
+            }
+          }
+
           final plan = WorkoutPlan.create(
             name: planInput.name,
-            totalWeeks: planInput.totalWeeks,
+            totalWeeks: totalWeeks,
             difficulty: planInput.difficulty,
             description: planInput.description,
             picture: planInput.picture,
             video: planInput.video,
-            totalDays: planInput.totalDays,
-            totalWorkouts: planInput.totalWorkouts,
+            totalDays: totalDays,
+            totalWorkouts: totalWorkouts,
             createdBy: createdBy,
           );
 
@@ -395,11 +481,19 @@ class WorkoutPlanService {
           final List<WorkoutPlanWeekDto> createdWeeks = [];
 
           for (final weekInput in planInput.weeks) {
+            int totalDaysInWeek = 0;
+            int totalWorkoutsInWeek = 0;
+            for (final dayInput in weekInput.days) {
+              totalDaysInWeek += dayInput.isRestDay ? 0 : 1;
+              totalWorkoutsInWeek += dayInput.workouts.length;
+            }
             final week = WorkoutPlanWeek.create(
               workoutPlanId: planId,
               startWeek: weekInput.startWeek,
               endWeek: weekInput.endWeek,
               phase: weekInput.phase,
+              totalDays: totalDaysInWeek,
+              totalWorkouts: totalWorkoutsInWeek,
               createdBy: createdBy,
             );
 
@@ -413,6 +507,8 @@ class WorkoutPlanService {
                 workoutPlanWeekId: weekId,
                 day: i + 1,
                 createdBy: createdBy,
+                totalWorkouts: dayInput.workouts.length,
+                isRestDay: dayInput.isRestDay,
               );
 
               final int dayId = await _dayRepository.insert(day, txn);

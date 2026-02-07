@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 import '../cubits/states/workout_plan_state.dart';
 import '../cubits/workout_plan_cubit.dart';
 import '../utilities/sizes/data_display_sizes.dart';
 import '../utilities/sizes/screen_size.dart';
 import '../widgets/layout/responsive_scaffold.dart';
+import '../widgets/common/action_buttons.dart';
 import '../widgets/workout_plan/details/workout_plan_header.dart';
 import '../widgets/workout_plan/details/workout_plan_week_card.dart';
 import 'error_view.dart';
@@ -92,6 +94,19 @@ class _WorkoutPlanDetailViewState extends State<WorkoutPlanDetailView> {
                           ),
                         ) ??
                     []),
+                SizedBox(height: sizes.spacing * 2),
+                ActionButtons(
+                  theme: theme,
+                  sizes: sizes,
+                  onStart: () =>
+                      context.push('/workout-plans/${plan.id}/active'),
+                  startLabel: 'Start Plan',
+                  onEdit: () => context.push('/workout-plans/${plan.id}/edit'),
+                  editLabel: 'Edit',
+                  onHistory: () =>
+                      context.push('/workout-plans/${plan.id}/history'),
+                  historyLabel: 'Plan History',
+                ),
               ],
             ),
           ),

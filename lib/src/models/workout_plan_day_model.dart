@@ -13,6 +13,7 @@ enum WorkoutPlanDayColumns with Columns {
   workoutPlanId("workout_plan_id"),
   workoutPlanWeekId("workout_plan_week_id"),
   day("day"),
+  totalWorkouts("total_workouts"),
   isRestDay("is_rest_day"),
   createdBy("created_by"),
   createdAt("created_at"),
@@ -30,6 +31,7 @@ class WorkoutPlanDay extends Equatable implements Model {
   final int workoutPlanId;
   final int workoutPlanWeekId;
   final int day;
+  final int totalWorkouts;
   final bool isRestDay;
   final CreatedBy createdBy;
   @override
@@ -42,6 +44,7 @@ class WorkoutPlanDay extends Equatable implements Model {
     required this.workoutPlanId,
     required this.workoutPlanWeekId,
     required this.day,
+    required this.totalWorkouts,
     required this.isRestDay,
     required this.createdBy,
     required this.createdAt,
@@ -55,6 +58,7 @@ class WorkoutPlanDay extends Equatable implements Model {
     ${WorkoutPlanDayColumns.workoutPlanId.value} INTEGER NOT NULL,
     ${WorkoutPlanDayColumns.workoutPlanWeekId.value} INTEGER NOT NULL,
     ${WorkoutPlanDayColumns.day.value} INTEGER NOT NULL,
+    ${WorkoutPlanDayColumns.totalWorkouts.value} INTEGER NOT NULL,
     ${WorkoutPlanDayColumns.isRestDay.value} INTEGER NOT NULL,
     ${WorkoutPlanDayColumns.createdBy.value} TEXT NOT NULL,
     ${WorkoutPlanDayColumns.createdAt.value} INTEGER NOT NULL,
@@ -77,6 +81,7 @@ class WorkoutPlanDay extends Equatable implements Model {
       WorkoutPlanDayColumns.workoutPlanId.value: workoutPlanId,
       WorkoutPlanDayColumns.workoutPlanWeekId.value: workoutPlanWeekId,
       WorkoutPlanDayColumns.day.value: day,
+      WorkoutPlanDayColumns.totalWorkouts.value: totalWorkouts,
       WorkoutPlanDayColumns.isRestDay.value: isRestDay ? 1 : 0,
       WorkoutPlanDayColumns.createdBy.value: createdBy.value,
       WorkoutPlanDayColumns.createdAt.value: createdAt,
@@ -92,6 +97,7 @@ class WorkoutPlanDay extends Equatable implements Model {
       workoutPlanWeekId:
           map[WorkoutPlanDayColumns.workoutPlanWeekId.value] as int,
       day: map[WorkoutPlanDayColumns.day.value] as int,
+      totalWorkouts: map[WorkoutPlanDayColumns.totalWorkouts.value] as int,
       isRestDay: map[WorkoutPlanDayColumns.isRestDay.value] as int == 1,
       createdBy: CreatedBy.fromValue(
         map[WorkoutPlanDayColumns.createdBy.value] as String,
@@ -106,6 +112,7 @@ class WorkoutPlanDay extends Equatable implements Model {
     required int workoutPlanId,
     required int workoutPlanWeekId,
     required int day,
+    int totalWorkouts = 0,
     bool isRestDay = false,
     CreatedBy createdBy = CreatedBy.user,
   }) {
@@ -114,6 +121,7 @@ class WorkoutPlanDay extends Equatable implements Model {
       workoutPlanId: workoutPlanId,
       workoutPlanWeekId: workoutPlanWeekId,
       day: day,
+      totalWorkouts: totalWorkouts,
       isRestDay: isRestDay,
       createdBy: createdBy,
       createdAt: now,
@@ -127,6 +135,7 @@ class WorkoutPlanDay extends Equatable implements Model {
     int? workoutPlanId,
     int? workoutPlanWeekId,
     int? day,
+    int? totalWorkouts,
     bool? isRestDay,
     CreatedBy? createdBy,
     int? createdAt,
@@ -137,6 +146,7 @@ class WorkoutPlanDay extends Equatable implements Model {
       workoutPlanId: workoutPlanId ?? this.workoutPlanId,
       workoutPlanWeekId: workoutPlanWeekId ?? this.workoutPlanWeekId,
       day: day ?? this.day,
+      totalWorkouts: totalWorkouts ?? this.totalWorkouts,
       isRestDay: isRestDay ?? this.isRestDay,
       createdBy: createdBy ?? this.createdBy,
       createdAt: createdAt ?? this.createdAt,
@@ -150,6 +160,7 @@ class WorkoutPlanDay extends Equatable implements Model {
         workoutPlanId,
         workoutPlanWeekId,
         day,
+        totalWorkouts,
         isRestDay,
         createdBy,
         createdAt,
@@ -158,6 +169,6 @@ class WorkoutPlanDay extends Equatable implements Model {
 
   @override
   String toString() {
-    return 'WorkoutPlanDay { id: $id, workoutPlanId: $workoutPlanId, workoutPlanWeekId: $workoutPlanWeekId, day: $day, createdAt: $createdAt, updatedAt: $updatedAt }';
+    return 'WorkoutPlanDay { id: $id, workoutPlanId: $workoutPlanId, workoutPlanWeekId: $workoutPlanWeekId, day: $day, totalWorkouts: $totalWorkouts, isRestDay: $isRestDay, createdBy: $createdBy, createdAt: $createdAt, updatedAt: $updatedAt }';
   }
 }

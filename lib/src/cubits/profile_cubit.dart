@@ -502,9 +502,6 @@ class ProfileCubit extends Cubit<ProfileState> {
           name: kWorkoutPlanData.name,
           description: kWorkoutPlanData.description,
           difficulty: kWorkoutPlanData.difficulty,
-          totalWeeks: kWorkoutPlanData.totalWeeks,
-          totalDays: kWorkoutPlanData.totalDays,
-          totalWorkouts: kWorkoutPlanData.totalWorkouts,
           weeks: kWorkoutPlanData.weeks
               .map(
                 (w) => WorkoutPlanWeekRegistrationInput(

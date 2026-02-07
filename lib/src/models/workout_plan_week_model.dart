@@ -13,6 +13,9 @@ enum WorkoutPlanWeekColumns with Columns {
   startWeek("start_week"),
   endWeek("end_week"),
   phase("phase"),
+  totalDays("total_days"),
+  totalWorkouts("total_workouts"),
+  scheduleMode("schedule_mode"),
   createdBy("created_by"),
   createdAt("created_at"),
   updatedAt("updated_at");
@@ -30,6 +33,9 @@ class WorkoutPlanWeek extends Equatable implements Model {
   final int startWeek;
   final int endWeek;
   final WorkoutPhase? phase;
+  final int totalDays;
+  final int totalWorkouts;
+  final WorkoutPlanWeekScheduleMode scheduleMode;
   final CreatedBy createdBy;
   @override
   final int createdAt;
@@ -42,6 +48,9 @@ class WorkoutPlanWeek extends Equatable implements Model {
     required this.startWeek,
     required this.endWeek,
     this.phase,
+    required this.totalDays,
+    required this.totalWorkouts,
+    required this.scheduleMode,
     required this.createdBy,
     required this.createdAt,
     required this.updatedAt,
@@ -55,6 +64,9 @@ class WorkoutPlanWeek extends Equatable implements Model {
     ${WorkoutPlanWeekColumns.startWeek.value} INTEGER NOT NULL,
     ${WorkoutPlanWeekColumns.endWeek.value} INTEGER NOT NULL,
     ${WorkoutPlanWeekColumns.phase.value} TEXT,
+    ${WorkoutPlanWeekColumns.totalDays.value} INTEGER NOT NULL,
+    ${WorkoutPlanWeekColumns.totalWorkouts.value} INTEGER NOT NULL,
+    ${WorkoutPlanWeekColumns.scheduleMode.value} TEXT NOT NULL,
     ${WorkoutPlanWeekColumns.createdBy.value} TEXT NOT NULL,
     ${WorkoutPlanWeekColumns.createdAt.value} INTEGER NOT NULL,
     ${WorkoutPlanWeekColumns.updatedAt.value} INTEGER NOT NULL,
@@ -74,6 +86,9 @@ class WorkoutPlanWeek extends Equatable implements Model {
       WorkoutPlanWeekColumns.startWeek.value: startWeek,
       WorkoutPlanWeekColumns.endWeek.value: endWeek,
       WorkoutPlanWeekColumns.phase.value: phase?.value,
+      WorkoutPlanWeekColumns.totalDays.value: totalDays,
+      WorkoutPlanWeekColumns.totalWorkouts.value: totalWorkouts,
+      WorkoutPlanWeekColumns.scheduleMode.value: scheduleMode.value,
       WorkoutPlanWeekColumns.createdBy.value: createdBy.value,
       WorkoutPlanWeekColumns.createdAt.value: createdAt,
       WorkoutPlanWeekColumns.updatedAt.value: updatedAt,
@@ -94,6 +109,11 @@ class WorkoutPlanWeek extends Equatable implements Model {
           ? WorkoutPhase.fromValue(
               map[WorkoutPlanWeekColumns.phase.value] as String)
           : null,
+      totalDays: map[WorkoutPlanWeekColumns.totalDays.value] as int,
+      totalWorkouts: map[WorkoutPlanWeekColumns.totalWorkouts.value] as int,
+      scheduleMode: WorkoutPlanWeekScheduleMode.fromValue(
+        map[WorkoutPlanWeekColumns.scheduleMode.value] as String,
+      ),
       createdAt: map[WorkoutPlanWeekColumns.createdAt.value] as int,
       updatedAt: map[WorkoutPlanWeekColumns.updatedAt.value] as int,
     );
@@ -105,7 +125,11 @@ class WorkoutPlanWeek extends Equatable implements Model {
     required int startWeek,
     required int endWeek,
     WorkoutPhase? phase,
+    int totalDays = 0,
+    int totalWorkouts = 0,
     CreatedBy createdBy = CreatedBy.user,
+    WorkoutPlanWeekScheduleMode scheduleMode =
+        WorkoutPlanWeekScheduleMode.automatic,
   }) {
     final now = DateUtilities.getNowUtcUnix();
     return WorkoutPlanWeek(
@@ -114,6 +138,9 @@ class WorkoutPlanWeek extends Equatable implements Model {
       endWeek: endWeek,
       phase: phase,
       createdBy: createdBy,
+      scheduleMode: scheduleMode,
+      totalDays: totalDays,
+      totalWorkouts: totalWorkouts,
       createdAt: now,
       updatedAt: now,
     );
@@ -126,7 +153,10 @@ class WorkoutPlanWeek extends Equatable implements Model {
     int? startWeek,
     int? endWeek,
     WorkoutPhase? phase,
+    int? totalDays,
+    int? totalWorkouts,
     CreatedBy? createdBy,
+    WorkoutPlanWeekScheduleMode? scheduleMode,
     int? createdAt,
     int? updatedAt,
   }) {
@@ -136,6 +166,9 @@ class WorkoutPlanWeek extends Equatable implements Model {
       startWeek: startWeek ?? this.startWeek,
       endWeek: endWeek ?? this.endWeek,
       createdBy: createdBy ?? this.createdBy,
+      scheduleMode: scheduleMode ?? this.scheduleMode,
+      totalDays: totalDays ?? this.totalDays,
+      totalWorkouts: totalWorkouts ?? this.totalWorkouts,
       phase: phase ?? this.phase,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -149,13 +182,16 @@ class WorkoutPlanWeek extends Equatable implements Model {
         startWeek,
         endWeek,
         phase,
+        totalDays,
+        totalWorkouts,
         createdBy,
+        scheduleMode,
         createdAt,
         updatedAt,
       ];
 
   @override
   String toString() {
-    return 'WorkoutPlanWeek { id: $id, workoutPlanId: $workoutPlanId, startWeek: $startWeek, endWeek: $endWeek, phase: $phase, createdBy: $createdBy, createdAt: $createdAt, updatedAt: $updatedAt }';
+    return 'WorkoutPlanWeek { id: $id, workoutPlanId: $workoutPlanId, startWeek: $startWeek, endWeek: $endWeek, phase: $phase, totalDays: $totalDays, totalWorkouts: $totalWorkouts, createdBy: $createdBy, scheduleMode: $scheduleMode, createdAt: $createdAt, updatedAt: $updatedAt }';
   }
 }

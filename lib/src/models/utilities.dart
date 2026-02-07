@@ -228,4 +228,35 @@ sealed class EnumDisplayNames {
         return 'Unknown';
     }
   }
+
+  static String getWorkoutPhaseDisplayName(WorkoutPhase? p) {
+    switch (p) {
+      case WorkoutPhase.endurance:
+        return 'Endurance';
+      case WorkoutPhase.hypertrophy:
+        return 'Hypertrophy';
+      case WorkoutPhase.maxStrength:
+        return 'Max Strength';
+      case WorkoutPhase.power:
+        return 'Power';
+      case null:
+        return 'Unknown';
+    }
+  }
+
+  static String getTimeOfDayDisplayName(WorkoutTimeOfDay? t) {
+    switch (t) {
+      case WorkoutTimeOfDay.morning:
+        return 'Morning';
+      case WorkoutTimeOfDay.afternoon:
+        return 'Afternoon';
+      case WorkoutTimeOfDay.evening:
+        return 'Evening';
+      case WorkoutTimeOfDay.night:
+        return 'Night';
+      case WorkoutTimeOfDay.anytime:
+      case null:
+        return 'Anytime';
+    }
+  }
 }

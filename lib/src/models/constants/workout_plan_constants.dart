@@ -37,18 +37,12 @@ final class WorkoutPlanData {
   final String name;
   final String description;
   final Difficulty difficulty;
-  final int totalWeeks;
-  final int totalDays;
-  final int totalWorkouts;
   final List<WorkoutPlanWeekData> weeks;
 
   const WorkoutPlanData({
     required this.name,
     required this.description,
     required this.difficulty,
-    required this.totalWeeks,
-    required this.totalDays,
-    required this.totalWorkouts,
     required this.weeks,
   });
 }
@@ -56,11 +50,8 @@ final class WorkoutPlanData {
 const WorkoutPlanData kWorkoutPlanData = WorkoutPlanData(
   name: "Standard Upper/Lower Workout Plan",
   description:
-      "Workout with Upper and Lower body split.\nIt has the standard volume of 8 sets per muscle per week with 4 workouts per week, 2 upper body and 2 lower body alternating between each.\nIt goes through the 4 phases of the workout plan: Endurance, Hypertrophy, Max Strength and Power, each phase with a duration of 4 weeks for a total of 16 weeks.\nIt is recommended 1 rest day between each pair of workouts, and 2 rest days before the following week workouts.",
+      "Workout with Upper and Lower body split.\n\nIt has the standard volume of 8 sets per muscle per week with 4 workouts per week, 2 upper body and 2 lower body alternating between each.\n\nIt goes through the 4 phases of the workout plan: Endurance, Hypertrophy, Max Strength and Power, each phase with a duration of 4 weeks for a total of 16 weeks.\n\nIt is recommended 1 rest day between each pair of workouts, and 2 rest days before the following week workouts.",
   difficulty: Difficulty.beginner,
-  totalWeeks: 16,
-  totalDays: 64,
-  totalWorkouts: 64,
   weeks: [
     WorkoutPlanWeekData(
       startWeek: 1,

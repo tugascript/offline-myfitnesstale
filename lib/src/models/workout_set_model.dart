@@ -3,6 +3,7 @@ import 'model.dart';
 import 'utilities.dart';
 import 'workout_model.dart';
 
+// TODO: fix me, add total exercises
 const String _table = 'workout_sets';
 const String _tableCreate = '''
   CREATE TABLE IF NOT EXISTS $_table (

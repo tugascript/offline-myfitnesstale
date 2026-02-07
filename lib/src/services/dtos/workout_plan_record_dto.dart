@@ -26,11 +26,15 @@ class WorkoutPlanRecordDto extends Equatable implements Dto<WorkoutPlanRecord> {
       id: model.id!,
       workoutPlanId: model.workoutPlanId,
       status: model.status,
-      createdAt: DateTime.fromMillisecondsSinceEpoch(model.createdAt * 1000,
-          isUtc: true),
+      createdAt: DateTime.fromMillisecondsSinceEpoch(
+        model.createdAt * 1000,
+        isUtc: true,
+      ),
       completedAt: model.completedAt != null
-          ? DateTime.fromMillisecondsSinceEpoch(model.completedAt! * 1000,
-              isUtc: true)
+          ? DateTime.fromMillisecondsSinceEpoch(
+              model.completedAt! * 1000,
+              isUtc: true,
+            )
           : null,
     );
   }
