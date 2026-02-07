@@ -10,7 +10,7 @@ import '../views/loading_view.dart';
 import '../widgets/layout/app_scaffold.dart';
 import '../widgets/layout/responsive_scaffold.dart';
 import '../widgets/workouts/details/empty_sets_card.dart';
-import '../widgets/workouts/details/workout_action_buttons.dart';
+import '../widgets/common/action_buttons.dart';
 import '../widgets/workouts/details/workout_header_card.dart';
 import '../widgets/workouts/details/workout_set_card.dart';
 
@@ -132,9 +132,19 @@ class _WorkoutDetailViewState extends State<WorkoutDetailView> {
                     );
                   }),
                 SizedBox(height: sizes.spacing * 2),
-                WorkoutActionButtons(sizes: sizes, workoutId: workout.id),
+                ActionButtons(
+                  theme: theme,
+                  sizes: sizes,
+                  onStart: () => context
+                      .push('/workouts/${workout.id}/active'), // TODO: fix me
+                  startLabel: 'Start Workout',
+                  onEdit: () => context.push('/workouts/${workout.id}/edit'),
+                  editLabel: 'Edit',
+                  onHistory: () =>
+                      context.push('/workouts/${workout.id}/history'),
+                  historyLabel: 'History',
+                ),
                 SizedBox(height: sizes.spacing),
-                //TODO:  Add Workout History Button
               ],
             ),
           ),

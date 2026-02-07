@@ -340,6 +340,22 @@ enum WorkoutSetType {
       );
 }
 
+enum WorkoutPlanWeekScheduleMode {
+  automatic("automatic"),
+  hybrid("hybrid"),
+  manual("manual");
+
+  final String value;
+
+  const WorkoutPlanWeekScheduleMode(this.value);
+
+  static WorkoutPlanWeekScheduleMode fromValue(String v) =>
+      WorkoutPlanWeekScheduleMode.values.firstWhere(
+        (s) => s.value == v,
+        orElse: () => WorkoutPlanWeekScheduleMode.automatic,
+      );
+}
+
 enum ReminderSchedule {
   daily("daily"),
   weekly("weekly"),
