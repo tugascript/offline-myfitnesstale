@@ -8,6 +8,8 @@ import 'common_state.dart';
 final class ExercisePagination extends Equatable {
   final String? name;
   final MuscleGroup? muscleGroup;
+  final Difficulty? difficulty;
+  final bool isFavorite;
   final int total;
   final int limit;
   final int offset;
@@ -15,6 +17,8 @@ final class ExercisePagination extends Equatable {
   const ExercisePagination({
     this.name,
     this.muscleGroup,
+    this.difficulty,
+    required this.isFavorite,
     required this.total,
     required this.limit,
     required this.offset,
@@ -25,12 +29,15 @@ final class ExercisePagination extends Equatable {
       total: 0,
       limit: 10,
       offset: 0,
+      isFavorite: false,
     );
   }
 
   ExercisePagination copyWith({
     String? name,
     MuscleGroup? muscleGroup,
+    Difficulty? difficulty,
+    bool? isFavorite,
     int? total,
     int? limit,
     int? offset,
@@ -38,6 +45,8 @@ final class ExercisePagination extends Equatable {
     return ExercisePagination(
       name: name ?? this.name,
       muscleGroup: muscleGroup ?? this.muscleGroup,
+      difficulty: difficulty ?? this.difficulty,
+      isFavorite: isFavorite ?? this.isFavorite,
       total: total ?? this.total,
       limit: limit ?? this.limit,
       offset: offset ?? this.offset,

@@ -17,7 +17,7 @@ class ExerciseDto extends Equatable implements Dto<Exercise> {
   final MuscleGroup muscleGroup;
   final ExerciseMuscles muscles;
   final bool isFavorite;
-  final int? difficulty;
+  final Difficulty? difficulty;
 
   // Related data
   final List<EquipmentDto>? equipments;
@@ -68,7 +68,7 @@ class ExerciseDto extends Equatable implements Dto<Exercise> {
     ExerciseMuscles? muscles,
     List<EquipmentDto>? equipments,
     bool? isFavorite,
-    int? difficulty,
+    Difficulty? difficulty,
   }) {
     return ExerciseDto(
       id: id ?? this.id,

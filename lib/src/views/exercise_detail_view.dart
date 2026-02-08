@@ -176,16 +176,13 @@ class _ExerciseDetailViewState extends State<ExerciseDetailView> {
                     ),
                     if (exercise.difficulty != null)
                       Chip(
-                        label: Text(_difficultyLabel(
-                            Difficulty.fromValue(exercise.difficulty!))),
+                        label: Text(_difficultyLabel(exercise.difficulty!)),
                         avatar: Icon(
                           Icons.trending_up,
                           size: 18,
-                          color: _difficultyColor(
-                              Difficulty.fromValue(exercise.difficulty!)),
+                          color: _difficultyColor(exercise.difficulty!),
                         ),
-                        backgroundColor: _difficultyColor(
-                                Difficulty.fromValue(exercise.difficulty!))
+                        backgroundColor: _difficultyColor(exercise.difficulty!)
                             .withValues(alpha: 0.2),
                       ),
                   ],

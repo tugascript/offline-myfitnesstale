@@ -4,9 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../cubits/exercise_cubit.dart';
 import '../../cubits/states/exercise_state.dart';
 import '../../models/enums.dart';
-import '../../models/utilities.dart';
 import '../../services/dtos/exercise_dto.dart';
-import 'exercise_card_widget.dart';
 
 class ExerciseSelectionWidget extends StatefulWidget {
   final List<int> initialSelections;
@@ -70,7 +68,7 @@ class _ExerciseSelectionWidgetState extends State<ExerciseSelectionWidget> {
     context.read<ExerciseCubit>().getExercises(
           name: _searchQuery,
           muscleGroup: _selectedMuscleGroup,
-          difficulty: _selectedDifficulty?.value,
+          difficulty: _selectedDifficulty,
           limit: 20,
           offset: state.exercises.length,
         );
@@ -91,7 +89,7 @@ class _ExerciseSelectionWidgetState extends State<ExerciseSelectionWidget> {
     context.read<ExerciseCubit>().getExercises(
           name: _searchQuery,
           muscleGroup: _selectedMuscleGroup,
-          difficulty: _selectedDifficulty?.value,
+          difficulty: _selectedDifficulty,
           limit: 20,
           offset: 0,
         );
@@ -104,7 +102,7 @@ class _ExerciseSelectionWidgetState extends State<ExerciseSelectionWidget> {
     context.read<ExerciseCubit>().getExercises(
           name: _searchQuery,
           muscleGroup: _selectedMuscleGroup,
-          difficulty: _selectedDifficulty?.value,
+          difficulty: _selectedDifficulty,
           limit: 20,
           offset: 0,
         );
@@ -117,7 +115,7 @@ class _ExerciseSelectionWidgetState extends State<ExerciseSelectionWidget> {
     context.read<ExerciseCubit>().getExercises(
           name: _searchQuery,
           muscleGroup: _selectedMuscleGroup,
-          difficulty: _selectedDifficulty?.value,
+          difficulty: _selectedDifficulty,
           limit: 20,
           offset: 0,
         );
@@ -133,7 +131,7 @@ class _ExerciseSelectionWidgetState extends State<ExerciseSelectionWidget> {
     context.read<ExerciseCubit>().getExercises(
           name: _searchQuery,
           muscleGroup: _selectedMuscleGroup,
-          difficulty: _selectedDifficulty?.value,
+          difficulty: _selectedDifficulty,
           limit: 20,
           offset: 0,
         );
@@ -399,12 +397,6 @@ class _ExerciseSelectionWidgetState extends State<ExerciseSelectionWidget> {
           onTap: () => _toggleSelection(exercise.id),
           child: Stack(
             children: [
-              ExerciseCardWidget(
-                exercise: exercise,
-                muscleGroupName: EnumDisplayNames.getMuscleGroupDisplayName(
-                    exercise.muscleGroup),
-                compact: true,
-              ),
               if (isSelected)
                 Positioned(
                   top: 8,
@@ -447,12 +439,6 @@ class _ExerciseSelectionWidgetState extends State<ExerciseSelectionWidget> {
           onTap: () => _toggleSelection(exercise.id),
           child: Stack(
             children: [
-              ExerciseCardWidget(
-                exercise: exercise,
-                muscleGroupName: EnumDisplayNames.getMuscleGroupDisplayName(
-                    exercise.muscleGroup),
-                compact: true,
-              ),
               if (isSelected)
                 Positioned(
                   top: 8,

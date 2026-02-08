@@ -77,8 +77,8 @@ class ExerciseService {
           ServiceError<OperationErrorTypes>>> getExercises({
     String? name,
     MuscleGroup? muscleGroup,
-    bool? isFavorite,
-    int? difficulty,
+    Difficulty? difficulty,
+    bool isFavorite = false,
     int limit = kDefaultLimit,
     int offset = kDefaultOffset,
   }) async {
@@ -86,16 +86,16 @@ class ExerciseService {
     final WhereBuilder query = WhereBuilder();
 
     if (name != null) {
-      query.and('${ExerciseColumns.name.value} LIKE ?', '%$name%');
+      query.and(ExerciseColumns.name.like, '%$name%');
     }
     if (muscleGroup != null) {
-      query.and('${ExerciseColumns.muscleGroup.value} = ?', muscleGroup.value);
+      query.and(ExerciseColumns.muscleGroup.equal, muscleGroup.value);
     }
-    if (isFavorite != null) {
-      query.and('${ExerciseColumns.isFavorite.value} = ?', isFavorite ? 1 : 0);
+    if (isFavorite) {
+      query.and(ExerciseColumns.isFavorite.equal, 1);
     }
     if (difficulty != null) {
-      query.and('${ExerciseColumns.difficulty.value} = ?', difficulty);
+      query.and(ExerciseColumns.difficulty.equal, difficulty.value);
     }
 
     try {
@@ -112,7 +112,7 @@ class ExerciseService {
       _logger.info("Found ${exercises.length} exercises");
       return ok(PaginatedDto<ExerciseDto, Exercise>.mapData(
         data: exercises,
-        mapper: ExerciseDto.fromModel,
+        mapper: (e) => ExerciseDto.fromModel(e),
         limit: limit,
         offset: offset,
         total: total,
@@ -182,7 +182,7 @@ class ExerciseService {
     String? description,
     PictureData? picture,
     VideoData? video,
-    int? difficulty,
+    Difficulty? difficulty,
     bool isFavorite = false,
   }) async {
     _logger.info("Creating exercise with name: $name");
@@ -311,7 +311,7 @@ class ExerciseService {
     PictureData? picture,
     VideoData? video,
     bool? isFavorite,
-    int? difficulty,
+    Difficulty? difficulty,
   }) async {
     _logger.info("Updating exercise with id: $id");
     try {

@@ -59,7 +59,7 @@ class WorkoutCubit extends Cubit<WorkoutState> {
     _logger.info("Got workouts successfully");
     final paginatedData = result.value;
 
-    List<WorkoutDto> updatedWorkouts;
+    late final List<WorkoutDto> updatedWorkouts;
     if (isLoadMore) {
       updatedWorkouts = [...state.workouts, ...paginatedData.data];
     } else {
