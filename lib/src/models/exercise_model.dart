@@ -94,7 +94,7 @@ class Exercise extends Equatable implements Model {
   final MuscleGroup muscleGroup;
   final ExerciseMuscles muscles;
   final bool isFavorite;
-  final int? difficulty;
+  final Difficulty? difficulty;
   final CreatedBy createdBy;
   @override
   final int createdAt;
@@ -148,7 +148,7 @@ class Exercise extends Equatable implements Model {
       ExerciseColumns.muscleGroup.value: muscleGroup.value,
       ExerciseColumns.muscles.value: muscles.toJson(),
       ExerciseColumns.isFavorite.value: isFavorite ? 1 : 0,
-      ExerciseColumns.difficulty.value: difficulty,
+      ExerciseColumns.difficulty.value: difficulty?.value,
       ExerciseColumns.createdBy.value: createdBy.value,
       ExerciseColumns.createdAt.value: createdAt,
       ExerciseColumns.updatedAt.value: updatedAt,
@@ -173,7 +173,9 @@ class Exercise extends Equatable implements Model {
           map[ExerciseColumns.muscles.value] as String? ??
               '{"primary_muscles":[],"secondary_muscles":[]}'),
       isFavorite: map[ExerciseColumns.isFavorite.value] as int == 1,
-      difficulty: map[ExerciseColumns.difficulty.value] as int?,
+      difficulty: map[ExerciseColumns.difficulty.value] != null
+          ? Difficulty.fromValue(map[ExerciseColumns.difficulty.value] as int)
+          : null,
       createdBy:
           CreatedBy.fromValue(map[ExerciseColumns.createdBy.value] as String),
       createdAt: map[ExerciseColumns.createdAt.value] as int,
@@ -189,7 +191,7 @@ class Exercise extends Equatable implements Model {
     String? description,
     PictureData? picture,
     VideoData? video,
-    int? difficulty,
+    Difficulty? difficulty,
     bool? isFavorite,
     CreatedBy createdBy = CreatedBy.user,
   }) {
@@ -219,7 +221,7 @@ class Exercise extends Equatable implements Model {
     MuscleGroup? muscleGroup,
     ExerciseMuscles? muscles,
     bool? isFavorite,
-    int? difficulty,
+    Difficulty? difficulty,
     CreatedBy? createdBy,
     int? createdAt,
     int? updatedAt,
