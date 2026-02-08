@@ -612,15 +612,27 @@ class WorkoutService {
       final int newPosition = workoutSets.length + 1;
       final int setPosition = position ?? newPosition;
       final int extraSets = maxSets ?? minSets;
-      final int totalReps = exercises.fold(
+      final int perSetReps = exercises.fold(
         0,
         (acc, exercise) => acc + (exercise.maxReps ?? exercise.minReps),
       );
+      final int totalReps = extraSets * perSetReps;
       final (
         WorkoutSet set,
         List<WorkoutSetExercise> setExercises,
         Map<int, List<WorkoutSetExerciseOption>> setExerciseOptions,
       ) = await _setRepository.startTransaction((txn) async {
+        if (setPosition < newPosition) {
+          await txn.rawUpdate(
+            """
+            UPDATE ${WorkoutSet.table}
+            SET ${WorkoutSetColumns.position.value} = ${WorkoutSetColumns.position.value} + 1
+            WHERE ${WorkoutSetColumns.workoutId.equal} AND ${WorkoutSetColumns.position.greaterThanOrEqual};
+          """,
+            [workoutId, setPosition],
+          );
+        }
+
         final WorkoutSet workoutSet = WorkoutSet.create(
           position: setPosition,
           workoutId: workoutId,
@@ -633,17 +645,6 @@ class WorkoutService {
           totalReps: totalReps,
         );
         final setId = await _setRepository.insert(workoutSet, txn);
-
-        if (setPosition < newPosition) {
-          await txn.rawUpdate(
-            """
-            UPDATE ${WorkoutSet.table}
-            SET ${WorkoutSetColumns.position.value} = ${WorkoutSetColumns.position.value} + 1
-            WHERE ${WorkoutSetColumns.workoutId.equal} AND ${WorkoutSetColumns.position.greaterThanOrEqual};
-          """,
-            [workoutId, setPosition],
-          );
-        }
 
         final List<WorkoutSetExercise> setExercises = [];
         final Map<int, List<WorkoutSetExerciseOption>> setExerciseOptions = {};
@@ -1006,8 +1007,11 @@ class WorkoutService {
         }
 
         if (position != setCount) {
-          await txn.rawQuery(
-            "UPDATE ${WorkoutSet.table} SET position = position - 1 WHERE workout_id = ? AND position > ?",
+          await txn.rawUpdate(
+            """
+            UPDATE ${WorkoutSet.table} SET ${WorkoutSetColumns.position.value} = ${WorkoutSetColumns.position.value} - 1
+            WHERE ${WorkoutSetColumns.workoutId.equal} AND ${WorkoutSetColumns.position.greaterThan};
+            """,
             [workoutSet.workoutId, position],
           );
         }
@@ -1232,7 +1236,7 @@ class WorkoutService {
       }
 
       final exerciseOptions = await _setExerciseOptionRepository.selectMany(
-        where: WorkoutSetExerciseOptionColumns.workoutSetExerciseId.equal,
+        where: WorkoutSetExerciseOptionColumns.workoutSetId.equal,
         whereArgs: [workoutSetId],
         orderBy: WorkoutSetExerciseOptionColumns.position.orderAsc,
       );
@@ -1478,7 +1482,7 @@ class WorkoutService {
           await _setExerciseRepository.startTransaction(
         (txn) async {
           if (newPosition > setExercisePosition) {
-            await txn.rawQuery(
+            await txn.rawUpdate(
               """
               UPDATE ${WorkoutSetExercise.table} SET ${WorkoutSetExerciseColumns.position.value} = ${WorkoutSetExerciseColumns.position.value} + 1
               WHERE ${WorkoutSetExerciseColumns.workoutSetId.equal} AND ${WorkoutSetExerciseColumns.position.greaterThanOrEqual};
@@ -1665,16 +1669,20 @@ class WorkoutService {
     _logger.info('Updating workout set exercise with id $workoutSetExerciseId');
     try {
       final WorkoutSetExercise? workoutSetExercise =
-          await _setExerciseRepository.selectOne(workoutSetExerciseId);
+          await _setExerciseRepository.selectOne(
+        workoutSetExerciseId,
+      );
       if (workoutSetExercise == null) {
         _logger.info(
           'Workout set exercise with id $workoutSetExerciseId not found',
         );
-        return err(ServiceError(
-          type: SingleErrorTypes.notFound,
-          description:
-              'Workout set exercise with id: $workoutSetExerciseId not found',
-        ));
+        return err(
+          ServiceError(
+            type: SingleErrorTypes.notFound,
+            description:
+                'Workout set exercise with id: $workoutSetExerciseId not found',
+          ),
+        );
       }
 
       final int oldBaseReps =
@@ -1782,7 +1790,8 @@ class WorkoutService {
     required int position,
   }) async {
     _logger.info(
-        "Updating workout set exercise with id: $workoutSetExerciseId position");
+      "Updating workout set exercise with id: $workoutSetExerciseId position",
+    );
     try {
       final setExercise =
           await _setExerciseRepository.selectOne(workoutSetExerciseId);
