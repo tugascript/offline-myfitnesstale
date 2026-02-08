@@ -2,64 +2,52 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import '../cubits/states/workout_state.dart';
-import '../cubits/workout_cubit.dart';
-import '../models/enums.dart';
+import '../cubits/exercise_cubit.dart';
+import '../cubits/states/exercise_state.dart';
+import '../utilities/sizes/data_display_sizes.dart';
 import '../utilities/sizes/screen_size.dart';
-import '../utilities/sizes/workouts_sizes.dart';
-import '../widgets/common/base_common_search_form.dart';
+import '../widgets/equipment/equipments_list.dart';
+import '../widgets/equipment/equipments_search_form.dart';
 import '../widgets/layout/app_scaffold.dart';
-import '../widgets/workouts/workouts_list.dart';
 
-class WorkoutsView extends StatefulWidget {
-  static const routeName = "/workouts";
-  static const name = "workouts";
+class EquipmentsView extends StatefulWidget {
+  static const routeName = '/equipments';
+  static const name = 'equipments';
 
-  const WorkoutsView({super.key});
+  const EquipmentsView({super.key});
 
   @override
-  State<WorkoutsView> createState() => _WorkoutsViewState();
+  State<EquipmentsView> createState() => _EquipmentsViewState();
 }
 
-class _WorkoutsViewState extends State<WorkoutsView> {
+class _EquipmentsViewState extends State<EquipmentsView> {
   final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
-    final cubit = context.read<WorkoutCubit>();
-
-    if (cubit.state.workouts.isEmpty) {
-      final pagination = cubit.state.pagination;
-      cubit.getWorkouts(
+    final cubit = context.read<ExerciseCubit>();
+    if (cubit.state.equipments.isEmpty) {
+      final pagination = cubit.state.equipmentPagination;
+      cubit.getEquipments(
         name: pagination.name,
-        difficulty: pagination.difficulty,
-        muscleGroup: pagination.muscleGroup,
         limit: 20,
         offset: 0,
       );
     }
-
     _scrollController.addListener(_onScroll);
-  }
-
-  @override
-  void dispose() {
-    _scrollController.dispose();
-    super.dispose();
   }
 
   void _onScroll() {
     if (_isBottom) {
-      final cubit = context.read<WorkoutCubit>();
+      final cubit = context.read<ExerciseCubit>();
       if (!cubit.state.isLoading &&
-          cubit.state.pagination.total > cubit.state.workouts.length) {
-        final pagination = cubit.state.pagination;
-        cubit.getWorkouts(
+          cubit.state.equipmentPagination.total >
+              cubit.state.equipments.length) {
+        final pagination = cubit.state.equipmentPagination;
+        cubit.getEquipments(
           name: pagination.name,
-          difficulty: pagination.difficulty,
-          muscleGroup: pagination.muscleGroup,
-          offset: cubit.state.workouts.length,
+          offset: cubit.state.equipments.length,
           limit: 20,
         );
       }
@@ -74,39 +62,37 @@ class _WorkoutsViewState extends State<WorkoutsView> {
   }
 
   @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final breakPoints = BreakPoint.fromContext(context);
-    final sizes = WorkoutsSizes.getWorkoutsSizes(breakPoints.screenSize);
+    final sizes = DataDisplaySizes.getWorkoutDetailSizes(
+      breakPoints.screenSize,
+    );
 
     return AppScaffold(
-      title: 'Workouts',
+      title: "Equipments",
+      showBackButton: true,
       body: Padding(
         padding: EdgeInsets.all(sizes.padding),
-        child: BlocBuilder<WorkoutCubit, WorkoutState>(
+        child: BlocBuilder<ExerciseCubit, ExerciseState>(
           builder: (context, state) {
             return Column(
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
-                BaseCommonSearchForm(
+                EquipmentsSearchForm(
                   theme: theme,
+                  sizes: sizes,
                   isLoading: state.isLoading,
-                  nameLabel: "Workouts",
-                  padding: sizes.padding,
-                  fontSize: sizes.fontSize,
-                  spacing: sizes.inputSpacing,
-                  initialName: "",
-                  initialDifficulty: null,
-                  initialMuscleGroup: null,
-                  onSubmit: ({
-                    String? name,
-                    Difficulty? difficulty,
-                    MuscleGroup? muscleGroup,
-                  }) {
-                    context.read<WorkoutCubit>().getWorkouts(
+                  initialName: state.exercisePagination.name,
+                  onSubmit: ({String? name}) {
+                    context.read<ExerciseCubit>().getEquipments(
                           name: name,
-                          difficulty: difficulty,
-                          muscleGroup: muscleGroup,
                           limit: 20,
                           offset: 0,
                         );
@@ -114,11 +100,10 @@ class _WorkoutsViewState extends State<WorkoutsView> {
                 ),
                 SizedBox(height: sizes.inputSpacing),
                 Expanded(
-                  child: WorkoutsList(
+                  child: EquipmentsList(
                     sizes: sizes,
                     isLoading: state.isLoading,
-                    workouts: state.workouts,
-                    pagination: state.pagination,
+                    equipments: state.equipments,
                     scrollController: _scrollController,
                   ),
                 ),
@@ -133,7 +118,7 @@ class _WorkoutsViewState extends State<WorkoutsView> {
         child: FloatingActionButton(
           elevation: sizes.elevation,
           onPressed: () {
-            context.push("/workouts/create");
+            context.push("/equipments/create");
           },
           shape: BeveledRectangleBorder(),
           child: Icon(Icons.add, size: sizes.buttonIconSize),

@@ -59,13 +59,13 @@ final class ExercisePagination extends Equatable {
 }
 
 final class EquipmentPagination extends Equatable {
-  final String? name;
+  final String name;
   final int total;
   final int limit;
   final int offset;
 
   const EquipmentPagination({
-    this.name,
+    required this.name,
     required this.total,
     required this.limit,
     required this.offset,
@@ -73,6 +73,7 @@ final class EquipmentPagination extends Equatable {
 
   factory EquipmentPagination.initial() {
     return const EquipmentPagination(
+      name: "",
       total: 0,
       limit: 10,
       offset: 0,

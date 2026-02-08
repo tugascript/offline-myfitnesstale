@@ -4,6 +4,7 @@ import '../views/active_workout_view.dart';
 import '../views/create_profile_view.dart';
 import '../views/create_workout_view.dart';
 import '../views/current_workout_plan_view.dart';
+import '../views/equipments_view.dart';
 import '../views/exercise_detail_view.dart';
 import '../views/exercise_form_view.dart';
 import '../views/exercise_history_detail_view.dart';
@@ -47,6 +48,10 @@ sealed class AppRouter {
     GoRoute(
       path: WeightGoalView.routeName,
       builder: (context, state) => const WeightGoalView(),
+    ),
+    GoRoute(
+      path: EquipmentsView.routeName,
+      builder: (context, state) => const EquipmentsView(),
     ),
     GoRoute(
       path: ExercisesView.routeName,
