@@ -4,7 +4,7 @@ import '../../models/enums.dart';
 import '../../models/utilities.dart';
 
 class DifficultyBadge extends StatelessWidget {
-  final Difficulty difficulty;
+  final Difficulty? difficulty;
   final double spacing;
   final double fontSize;
   final FontWeight fontWeight;

@@ -135,7 +135,7 @@ class _ExerciseFormViewState extends State<ExerciseFormView> {
                     )
                   : null,
               isFavorite: _isFavorite,
-              difficulty: _selectedDifficulty?.value,
+              difficulty: _selectedDifficulty,
             );
       } else {
         // Create new exercise
@@ -161,7 +161,7 @@ class _ExerciseFormViewState extends State<ExerciseFormView> {
                   : null,
               equipmentIds:
                   _selectedEquipmentIds.isEmpty ? null : _selectedEquipmentIds,
-              difficulty: _selectedDifficulty?.value,
+              difficulty: _selectedDifficulty,
               isFavorite: _isFavorite,
             );
       }
@@ -225,9 +225,7 @@ class _ExerciseFormViewState extends State<ExerciseFormView> {
             _selectedMuscleGroup = exercise.muscleGroup;
             _selectedVideoPlatform = exercise.video?.platform;
             _isFavorite = exercise.isFavorite;
-            _selectedDifficulty = exercise.difficulty != null
-                ? Difficulty.fromValue(exercise.difficulty!)
-                : null;
+            _selectedDifficulty = exercise.difficulty;
 
             // Load selected muscles from exercise.muscles
             _selectedMuscles = [

@@ -5,6 +5,7 @@ import '../models/common.dart';
 import '../models/enums.dart';
 import '../models/exercise_model.dart';
 import '../services/common/errors.dart';
+import '../services/dtos/exercise_dto.dart';
 import '../services/exercise_service.dart';
 import 'states/common_state.dart';
 import 'states/exercise_state.dart';
@@ -19,17 +20,20 @@ class ExerciseCubit extends Cubit<ExerciseState> {
   Future<void> getExercises({
     String? name,
     MuscleGroup? muscleGroup,
-    bool? isFavorite,
-    int? difficulty,
+    Difficulty? difficulty,
     int? limit,
     int? offset,
+    bool isFavourite = false,
   }) async {
-    _logger.info('getExercises: getting exercises');
+    _logger.info('Getting exercises');
+    final isLoadMore = (offset ?? state.exercisePagination.offset) > 0;
+
     emit(state.copyWith(isLoading: true));
+
     final result = await _exerciseService.getExercises(
       name: name,
       muscleGroup: muscleGroup,
-      isFavorite: isFavorite,
+      isFavorite: isFavourite,
       difficulty: difficulty,
       limit: limit ?? state.exercisePagination.limit,
       offset: offset ?? state.exercisePagination.offset,
@@ -40,14 +44,6 @@ class ExerciseCubit extends Cubit<ExerciseState> {
       _logger.warning('Failed to get exercises, error: $error');
       switch (error.type) {
         case OperationErrorTypes.invalidInput:
-          emit(state.copyWith(
-            error: ErrorState(
-              type: error.type.name,
-              description: error.description,
-            ),
-            isLoading: false,
-          ));
-          return;
         case OperationErrorTypes.operationFailure:
           emit(state.copyWith(
             error: ErrorState(
@@ -60,13 +56,23 @@ class ExerciseCubit extends Cubit<ExerciseState> {
       }
     }
 
-    final paginatedData = result.value;
     _logger.info('Exercises retrieved successfully');
+    final paginatedData = result.value;
+    late final List<ExerciseDto> updatedExercises;
+
+    if (isLoadMore) {
+      updatedExercises = [...state.exercises, ...paginatedData.data];
+    } else {
+      updatedExercises = paginatedData.data;
+    }
+
     emit(state.copyWith(
-      exercises: paginatedData.data,
+      exercises: updatedExercises,
       exercisePagination: state.exercisePagination.copyWith(
         name: name,
         muscleGroup: muscleGroup,
+        difficulty: difficulty,
+        isFavorite: isFavourite,
         total: paginatedData.total,
         limit: paginatedData.limit,
         offset: paginatedData.offset,
@@ -156,7 +162,7 @@ class ExerciseCubit extends Cubit<ExerciseState> {
     PictureData? picture,
     String? description,
     List<int>? equipmentIds,
-    int? difficulty,
+    Difficulty? difficulty,
     bool isFavorite = false,
   }) async {
     _logger.info('createExercise: creating exercise');
@@ -218,7 +224,7 @@ class ExerciseCubit extends Cubit<ExerciseState> {
     VideoData? video,
     PictureData? picture,
     bool? isFavorite,
-    int? difficulty,
+    Difficulty? difficulty,
   }) async {
     _logger.info('updateExercise: updating exercise by id: $id');
     emit(state.copyWith(isLoading: true));
