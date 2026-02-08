@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../utilities/sizes/home_sizes.dart';
+import '../../views/equipments_view.dart';
 import '../../views/exercises_view.dart';
 import '../../views/weight_goal_view.dart';
 import '../../views/weight_log_view.dart';
@@ -95,6 +96,32 @@ class QuickActionsWidget extends StatelessWidget {
               onTap: () {
                 context.push(ExercisesView.routeName);
               },
+            ),
+            _ActionCard(
+              sizes: sizes,
+              isDarkTheme: isDarkTheme,
+              icon: Icon(
+                Icons.fitness_center,
+                size: sizes.titleFontSize,
+                color: Colors.green,
+              ),
+              title: "Equipments",
+              subtitle: "Browse equipments",
+              onTap: () {
+                context.push(EquipmentsView.routeName);
+              },
+            ),
+            _ActionCard(
+              sizes: sizes,
+              isDarkTheme: isDarkTheme,
+              icon: Icon(
+                Icons.notifications,
+                size: sizes.titleFontSize,
+                color: Colors.deepPurple,
+              ),
+              title: "Reminders",
+              subtitle: "Set or update reminders",
+              onTap: () {},
             ),
           ],
         ),

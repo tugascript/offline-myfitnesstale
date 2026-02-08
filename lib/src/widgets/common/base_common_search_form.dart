@@ -4,8 +4,10 @@ import '../../models/enums.dart';
 import '../../models/utilities.dart';
 import '../layout/app_dropdown.dart';
 import '../layout/app_text_form_field.dart';
+import 'search_form_button.dart';
 
 class BaseCommonSearchForm extends StatefulWidget {
+  final ThemeData theme;
   final String nameLabel;
   final double fontSize;
   final double padding;
@@ -23,6 +25,7 @@ class BaseCommonSearchForm extends StatefulWidget {
 
   const BaseCommonSearchForm({
     super.key,
+    required this.theme,
     required this.nameLabel,
     required this.padding,
     required this.fontSize,
@@ -162,38 +165,23 @@ class _BaseCommonSearchFormState extends State<BaseCommonSearchForm> {
                 ),
               ),
               SizedBox(width: widget.spacing),
-              IconButton(
-                icon: widget.isLoading
-                    ? SizedBox(
-                        width: loadingSize,
-                        height: loadingSize,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                            Theme.of(context).primaryColor,
-                          ),
-                        ),
-                      )
-                    : Icon(
-                        Icons.search,
-                        size: loadingSize,
-                        color: Theme.of(context).primaryColor,
-                      ),
+              SearchFormButton(
+                theme: widget.theme,
+                loadingSize: loadingSize,
+                isLoading: widget.isLoading,
                 onPressed: () {
-                  setState(() {
-                    if (!widget.isLoading) {
-                      if (_formKey.currentState!.validate()) {
-                        _formKey.currentState!.save();
-                        widget.onSubmit(
-                          name: _data.name,
-                          difficulty: _data.difficulty,
-                          muscleGroup: _data.muscleGroup,
-                        );
-                      }
+                  if (!widget.isLoading) {
+                    if (_formKey.currentState!.validate()) {
+                      _formKey.currentState!.save();
+                      widget.onSubmit(
+                        name: _data.name,
+                        difficulty: _data.difficulty,
+                        muscleGroup: _data.muscleGroup,
+                      );
                     }
-                  });
+                  }
                 },
-              )
+              ),
             ],
           ),
         ],

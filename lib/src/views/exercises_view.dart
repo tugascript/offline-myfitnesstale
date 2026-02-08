@@ -75,6 +75,7 @@ class _ExercisesViewState extends State<ExercisesView> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final breakPoints = BreakPoint.fromContext(context);
     final sizes = DataDisplaySizes.getWorkoutDetailSizes(
       breakPoints.screenSize,
@@ -91,9 +92,10 @@ class _ExercisesViewState extends State<ExercisesView> {
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
                 ExerciseSearchForm(
+                  theme: theme,
                   sizes: sizes,
                   isLoading: state.isLoading,
-                  initialName: state.exercisePagination.name ?? "",
+                  initialName: state.exercisePagination.name,
                   initialDifficulty: state.exercisePagination.difficulty,
                   initialMuscleGroup: state.exercisePagination.muscleGroup,
                   initialIsFavourite: state.exercisePagination.isFavorite,
