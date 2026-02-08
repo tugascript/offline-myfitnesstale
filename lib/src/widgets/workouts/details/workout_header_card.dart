@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 
 import '../../../models/enums.dart';
-import '../../../models/utilities.dart';
 import '../../../services/dtos/workout_dto.dart';
 import '../../../utilities/sizes/data_display_sizes.dart';
 import '../../common/base_details_header.dart';
 import '../../common/difficulty_badge.dart';
+import '../../common/muscle_badge.dart';
 import '../../common/muscle_group_badge.dart';
 import '../../common/total_numeric_string.dart';
 
@@ -186,6 +186,7 @@ class _MuscleGroups extends StatelessWidget {
             return MuscleGroupBadge(
               muscleGroup: mg,
               fontSize: sizes.smallFontSize,
+              theme: theme,
             );
           }).toList(),
         ),
@@ -223,21 +224,11 @@ class _Muscles extends StatelessWidget {
         ),
         Wrap(
           spacing: dataSpacing,
-          runSpacing: dataSpacing,
           children: muscles.map((m) {
-            return Chip(
-              shape: BeveledRectangleBorder(),
-              backgroundColor: theme.colorScheme.secondary.withValues(
-                alpha: 0.2,
-              ),
-              visualDensity: VisualDensity.compact,
-              labelPadding: const EdgeInsets.symmetric(horizontal: 4.0),
-              label: Text(
-                EnumDisplayNames.getMuscleDisplayName(m),
-                style: TextStyle(
-                  fontSize: sizes.smallFontSize,
-                ),
-              ),
+            return MuscleBadge(
+              muscle: m,
+              fontSize: sizes.smallFontSize,
+              theme: theme,
             );
           }).toList(),
         ),

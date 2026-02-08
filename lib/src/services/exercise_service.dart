@@ -85,7 +85,7 @@ class ExerciseService {
     _logger.info("Getting exercises...");
     final WhereBuilder query = WhereBuilder();
 
-    if (name != null) {
+    if (name != null && name.isNotEmpty) {
       query.and(ExerciseColumns.name.like, '%$name%');
     }
     if (muscleGroup != null) {
@@ -475,8 +475,8 @@ class ExerciseService {
     _logger.info('Getting equipments');
     final WhereBuilder query = WhereBuilder();
 
-    if (name != null) {
-      query.and('name LIKE ?', '%$name%');
+    if (name != null && name.isNotEmpty) {
+      query.and(EquipmentColumns.name.like, '%$name%');
     }
 
     try {

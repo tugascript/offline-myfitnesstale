@@ -4,6 +4,7 @@ import '../../models/enums.dart';
 import '../../services/dtos/exercise_dto.dart';
 import '../../utilities/sizes/data_display_sizes.dart';
 import '../common/difficulty_badge.dart';
+import '../common/muscle_badge.dart';
 import '../common/muscle_group_badge.dart';
 import '../layout/list_card.dart';
 
@@ -21,6 +22,7 @@ class ExerciseCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return ListCard(
       margin: sizes.margins,
       padding: sizes.padding,
@@ -32,13 +34,21 @@ class ExerciseCard extends StatelessWidget {
           fontSize: sizes.subtitleFontSize,
         ),
         SizedBox(height: sizes.spacing),
+        _ExerciseInfo(
+          muscleGroup: exercise.muscleGroup,
+          primaryMuscles: exercise.muscles.primaryMuscles,
+          sizes: sizes,
+          theme: theme,
+        ),
+        SizedBox(height: sizes.spacing),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            _ExerciseInfo(
-              sizes: sizes,
+            DifficultyBadge(
               difficulty: exercise.difficulty,
-              muscleGroup: exercise.muscleGroup,
+              spacing: sizes.padding / 2,
+              fontSize: sizes.fontSize,
+              fontWeight: FontWeight.w600,
             ),
             Icon(
               Icons.arrow_forward_ios,
@@ -95,32 +105,56 @@ class _ExerciseName extends StatelessWidget {
 }
 
 class _ExerciseInfo extends StatelessWidget {
+  final ThemeData theme;
   final DataDisplaySizesList sizes;
-  final Difficulty? difficulty;
   final MuscleGroup muscleGroup;
+  final Set<Muscle> primaryMuscles;
 
   const _ExerciseInfo({
+    required this.theme,
     required this.sizes,
-    required this.difficulty,
     required this.muscleGroup,
+    required this.primaryMuscles,
   });
 
   @override
   Widget build(BuildContext context) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        DifficultyBadge(
-          difficulty: difficulty,
-          spacing: sizes.padding / 2,
-          fontSize: sizes.fontSize,
-          fontWeight: FontWeight.w600,
+        Expanded(
+          flex: 1,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              MuscleGroupBadge(
+                muscleGroup: muscleGroup,
+                fontSize: sizes.fontSize,
+                theme: theme,
+              ),
+            ],
+          ),
         ),
-        SizedBox(width: sizes.spacing),
-        MuscleGroupBadge(
-          muscleGroup: muscleGroup,
-          fontSize: sizes.fontSize,
+        Expanded(
+          flex: 2,
+          child: Padding(
+            padding: EdgeInsets.only(right: sizes.padding / 2),
+            child: Wrap(
+              spacing: sizes.spacing / 4,
+              alignment: WrapAlignment.start,
+              crossAxisAlignment: WrapCrossAlignment.start,
+              children: primaryMuscles.map((mg) {
+                return MuscleBadge(
+                  muscle: mg,
+                  fontSize: sizes.smallFontSize,
+                  theme: theme,
+                );
+              }).toList(),
+            ),
+          ),
         ),
       ],
     );
