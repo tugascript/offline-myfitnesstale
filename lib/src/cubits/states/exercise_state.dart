@@ -6,7 +6,7 @@ import '../../services/dtos/exercise_dto.dart';
 import 'common_state.dart';
 
 final class ExercisePagination extends Equatable {
-  final String? name;
+  final String name;
   final MuscleGroup? muscleGroup;
   final Difficulty? difficulty;
   final bool isFavorite;
@@ -15,9 +15,9 @@ final class ExercisePagination extends Equatable {
   final int offset;
 
   const ExercisePagination({
-    this.name,
     this.muscleGroup,
     this.difficulty,
+    required this.name,
     required this.isFavorite,
     required this.total,
     required this.limit,
@@ -26,6 +26,7 @@ final class ExercisePagination extends Equatable {
 
   factory ExercisePagination.initial() {
     return const ExercisePagination(
+      name: "",
       total: 0,
       limit: 10,
       offset: 0,
@@ -44,8 +45,8 @@ final class ExercisePagination extends Equatable {
   }) {
     return ExercisePagination(
       name: name ?? this.name,
-      muscleGroup: muscleGroup ?? this.muscleGroup,
-      difficulty: difficulty ?? this.difficulty,
+      muscleGroup: muscleGroup, // if the user passes null
+      difficulty: difficulty, // if the user passes null
       isFavorite: isFavorite ?? this.isFavorite,
       total: total ?? this.total,
       limit: limit ?? this.limit,

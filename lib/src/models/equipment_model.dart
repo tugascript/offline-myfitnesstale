@@ -17,7 +17,7 @@ const String _tableCreate = '''
   CREATE UNIQUE INDEX IF NOT EXISTS idx_equipment_name_id ON $_table (name);
   ''';
 
-enum EquipmentColumns {
+enum EquipmentColumns with Columns {
   id("id"),
   name("name"),
   picture("picture"),
@@ -25,6 +25,7 @@ enum EquipmentColumns {
   createdAt("created_at"),
   updatedAt("updated_at");
 
+  @override
   final String value;
 
   const EquipmentColumns(this.value);

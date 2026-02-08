@@ -21,6 +21,7 @@ class WorkoutCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return ListCard(
       margin: sizes.gridSpacing / 2,
       padding: sizes.cardPadding,
@@ -60,11 +61,11 @@ class WorkoutCard extends StatelessWidget {
         SizedBox(height: sizes.cardSpacing),
         Wrap(
           spacing: sizes.cardSpacing / 3,
-          runSpacing: sizes.cardSpacing / 3,
           children: workout.muscleGroups.map((mg) {
             return MuscleGroupBadge(
               muscleGroup: mg,
               fontSize: sizes.fontSize * 0.8,
+              theme: theme,
             );
           }).toList(),
         ),

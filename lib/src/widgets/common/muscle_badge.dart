@@ -3,14 +3,14 @@ import 'package:flutter/material.dart';
 import '../../models/enums.dart';
 import '../../models/utilities.dart';
 
-class MuscleGroupBadge extends StatelessWidget {
-  final MuscleGroup muscleGroup;
+class MuscleBadge extends StatelessWidget {
+  final Muscle muscle;
   final double fontSize;
   final ThemeData theme;
 
-  const MuscleGroupBadge({
+  const MuscleBadge({
     super.key,
-    required this.muscleGroup,
+    required this.muscle,
     required this.fontSize,
     required this.theme,
   });
@@ -20,12 +20,12 @@ class MuscleGroupBadge extends StatelessWidget {
     return Chip(
       shape: BeveledRectangleBorder(),
       side: BorderSide.none,
-      backgroundColor: theme.colorScheme.primary.withValues(
+      backgroundColor: theme.colorScheme.secondary.withValues(
         alpha: 0.2,
       ),
       visualDensity: VisualDensity.compact,
       label: Text(
-        EnumDisplayNames.getMuscleGroupDisplayName(muscleGroup),
+        EnumDisplayNames.getMuscleDisplayName(muscle),
         style: TextStyle(
           fontSize: fontSize,
         ),
