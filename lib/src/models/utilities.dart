@@ -74,7 +74,10 @@ class WhereBuilder {
       return _where.first.condition;
     }
 
-    return _where.map((e) => '${e.union.value} (${e.condition})').join(' ');
+    return [
+      _where.first.condition,
+      ..._where.skip(1).map((e) => '${e.union.value} (${e.condition})')
+    ].join(' ');
   }
 
   List<Object?>? get args => _args.isEmpty ? null : _args;
