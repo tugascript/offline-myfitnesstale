@@ -72,6 +72,8 @@ class _ExerciseSearchFormState extends State<ExerciseSearchForm> {
       child: Column(
         children: [
           AppTextFormField(
+            theme: widget.theme,
+            isLoading: widget.isLoading,
             controller: _nameController,
             hintText: 'Search Exercises...',
             fontSize: widget.sizes.fontSize,

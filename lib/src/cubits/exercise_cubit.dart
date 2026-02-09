@@ -422,4 +422,36 @@ class ExerciseCubit extends Cubit<ExerciseState> {
       isLoading: false,
     ));
   }
+
+  Future<void> createEquipment(String name) async {
+    _logger.info('createEquipment: creating equipment');
+    emit(state.copyWith(isLoading: true));
+
+    final result = await _exerciseService.createEquipment(name: name);
+    if (result.isErr()) {
+      final error = result.error;
+      _logger.warning('Failed to create equipment, error: $error');
+      switch (error.type) {
+        case OperationErrorTypes.invalidInput:
+        case OperationErrorTypes.operationFailure:
+          emit(state.copyWith(
+            error: ErrorState(
+              type: error.type.name,
+              description: "Failed to create equipment",
+            ),
+            isLoading: false,
+          ));
+          return;
+      }
+    }
+
+    _logger.info('Equipment created successfully');
+    emit(state.copyWith(
+      isLoading: false,
+      selectedEquipment: SelectedEquipment(
+        equipment: result.value,
+        relatedExercises: [],
+      ),
+    ));
+  }
 }

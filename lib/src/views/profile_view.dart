@@ -68,8 +68,7 @@ class _ProfileViewState extends State<ProfileView> {
   @override
   Widget build(BuildContext context) {
     final breakPoints = BreakPoint.fromContext(context);
-    final sizes =
-        DataDisplaySizes.getWorkoutDetailSizes(breakPoints.screenSize);
+    final sizes = DataDisplaySizes.getDataDisplaySizes(breakPoints.screenSize);
 
     return AppScaffold(
       title: "Profile",

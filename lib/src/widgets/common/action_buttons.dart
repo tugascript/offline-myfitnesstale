@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+
 import '../../utilities/sizes/data_display_sizes.dart';
-import 'edit_button.dart';
+import '../layout/app_primary_button.dart';
+import 'mutation_button.dart';
 
 class ActionButtons extends StatelessWidget {
   final ThemeData theme;
   final DataDisplaySizesList sizes;
+  final bool isLoading;
 
   // Primary Action (e.g. Start)
   final VoidCallback? onStart;
@@ -25,6 +28,7 @@ class ActionButtons extends StatelessWidget {
     super.key,
     required this.theme,
     required this.sizes,
+    required this.isLoading,
     this.onStart,
     this.startLabel = 'START',
     this.startIcon = Icons.play_arrow,
@@ -43,7 +47,8 @@ class ActionButtons extends StatelessWidget {
         Row(
           children: [
             Expanded(
-              child: _PrimaryButton(
+              child: AppPrimaryButton(
+                isLoading: isLoading,
                 theme: theme,
                 sizes: sizes,
                 onPressed: onStart,
@@ -52,7 +57,7 @@ class ActionButtons extends StatelessWidget {
               ),
             ),
             SizedBox(width: sizes.spacing),
-            EditButton(
+            MutationButton(
               theme: theme,
               sizes: sizes,
               onPressed: onEdit,
@@ -76,47 +81,6 @@ class ActionButtons extends StatelessWidget {
           ],
         ),
       ],
-    );
-  }
-}
-
-class _PrimaryButton extends StatelessWidget {
-  final ThemeData theme;
-  final DataDisplaySizesList sizes;
-  final VoidCallback? onPressed;
-  final String label;
-  final IconData icon;
-
-  const _PrimaryButton({
-    required this.theme,
-    required this.sizes,
-    required this.onPressed,
-    required this.label,
-    required this.icon,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return ElevatedButton.icon(
-      onPressed: onPressed,
-      icon: Icon(
-        icon,
-        size: sizes.fontSize,
-        fontWeight: FontWeight.w600,
-      ),
-      label: Text(
-        label.toUpperCase(),
-        style: TextStyle(
-          fontSize: sizes.subtitleFontSize,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
-      style: ElevatedButton.styleFrom(
-        padding: EdgeInsets.symmetric(vertical: sizes.padding),
-        backgroundColor: theme.primaryColor,
-        foregroundColor: theme.scaffoldBackgroundColor,
-        shape: BeveledRectangleBorder(),
-      ),
     );
   }
 }

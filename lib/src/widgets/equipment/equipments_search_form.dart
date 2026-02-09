@@ -97,6 +97,8 @@ class _EquipmentsSearchFormState extends State<EquipmentsSearchForm> {
                       },
                     )
                   : null,
+              theme: widget.theme,
+              isLoading: widget.isLoading,
             ),
           ),
           SearchFormButton(

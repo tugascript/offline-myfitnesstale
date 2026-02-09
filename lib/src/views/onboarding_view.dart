@@ -11,7 +11,6 @@ import '../widgets/profile/onboarding_form.dart';
 import '../widgets/profile/onboarding_intro.dart';
 import 'home_view.dart';
 
-// TODO: fix onboard view
 class OnboardingView extends StatelessWidget {
   static const routeName = "/onboarding";
   static const name = "onboarding";
@@ -42,14 +41,11 @@ class OnboardingView extends StatelessWidget {
                 listenWhen: (previous, current) {
                   // Only listen when transitioning from no profile to having profile
                   return previous.profile == null &&
-                      previous.system == null &&
                       current.profile != null &&
-                      current.system != null &&
                       !current.isLoading;
                 },
                 listener: (context, state) {
                   if (state.profile != null &&
-                      state.system != null &&
                       !state.isLoading &&
                       state.isInitiated) {
                     context.go(HomeView.routeName);

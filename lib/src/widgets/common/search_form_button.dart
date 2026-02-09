@@ -33,7 +33,7 @@ class SearchFormButton extends StatelessWidget {
               size: loadingSize,
               color: theme.primaryColor,
             ),
-      onPressed: onPressed,
+      onPressed: isLoading ? null : onPressed,
     );
   }
 }
