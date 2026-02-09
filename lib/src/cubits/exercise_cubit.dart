@@ -364,4 +364,62 @@ class ExerciseCubit extends Cubit<ExerciseState> {
       isLoading: false,
     ));
   }
+
+  Future<void> getEquipment(int id) async {
+    _logger.info('getEquipment: getting equipment by id: $id');
+    emit(state.copyWith(isLoading: true));
+
+    final result = await _exerciseService.getEquipment(id);
+    if (result.isErr()) {
+      final error = result.error;
+      _logger.warning("Failed to get equipment, error: $error");
+      switch (error.type) {
+        case SingleErrorTypes.notFound:
+        case SingleErrorTypes.invalidInput:
+          emit(state.copyWith(
+            error: ErrorState(
+              type: error.type.name,
+              description: error.description,
+            ),
+            isLoading: false,
+          ));
+          return;
+        case SingleErrorTypes.operationFailure:
+          emit(state.copyWith(
+            error: ErrorState(
+              type: error.type.name,
+              description: "Failed to get equipment",
+            ),
+            isLoading: false,
+          ));
+          return;
+      }
+    }
+
+    final equipment = result.value;
+    final exercisesResult = await _exerciseService.getExercisesByEquipmentId(
+      id,
+    );
+    if (exercisesResult.isErr()) {
+      final error = exercisesResult.error;
+      _logger.warning("Failed to get exercises for equipment, error: $error");
+      emit(state.copyWith(
+        error: ErrorState(
+          type: error.type.name,
+          description: "Failed to get exercises for equipment",
+        ),
+        isLoading: false,
+      ));
+      return;
+    }
+
+    _logger.info('Equipment retrieved successfully');
+    emit(state.copyWith(
+      selectedEquipment: SelectedEquipment(
+        equipment: equipment,
+        relatedExercises: exercisesResult.value,
+      ),
+      isLoading: false,
+    ));
+  }
 }

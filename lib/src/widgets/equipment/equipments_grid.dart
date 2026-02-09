@@ -6,13 +6,13 @@ import '../../utilities/sizes/data_display_sizes.dart';
 import '../common/not_found_list.dart';
 import 'equipment_card.dart';
 
-class EquipmentsList extends StatelessWidget {
+class EquipmentsGrid extends StatelessWidget {
   final DataDisplaySizesList sizes;
   final bool isLoading;
   final List<EquipmentDto> equipments;
   final ScrollController? scrollController;
 
-  const EquipmentsList({
+  const EquipmentsGrid({
     super.key,
     required this.sizes,
     required this.isLoading,
@@ -30,9 +30,13 @@ class EquipmentsList extends StatelessWidget {
       return NotFoundList(sizes: sizes, name: 'equipments');
     }
 
-    return ListView.builder(
+    return GridView.builder(
       controller: scrollController,
       itemCount: equipments.length + (isLoading ? 1 : 0),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        childAspectRatio: 3.25,
+      ),
       itemBuilder: (context, index) {
         if (index == equipments.length) {
           return Padding(

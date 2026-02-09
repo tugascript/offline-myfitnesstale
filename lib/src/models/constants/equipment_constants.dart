@@ -16,6 +16,7 @@ const String kPlateName = "Plate";
 const String kDHandleName = "D-Handle";
 const String kStraightBarName = "Straight Bar";
 const String kTricepsRopeAttachmentName = "Triceps Rope Attachment";
+const String kEZBarAttachmentName = "EZ Bar Attachment";
 const String kLatPulldownBarName = "Lat Pulldown Bar";
 const String kWideLatBarName = "Wide Lat Bar";
 const String kDoubleDHandleName = "Double D-Handle";
@@ -23,7 +24,7 @@ const String kPowerRackName = "Power Rack";
 const String kWeightBeltName = "Weight Belt";
 const String kStepperName = "Stepper";
 
-const List<String> kEquipmentNames = [
+const Set<String> kEquipmentNames = {
   kBarbellName,
   kDumbbellsName,
   kMachineName,
@@ -42,10 +43,11 @@ const List<String> kEquipmentNames = [
   kDHandleName,
   kStraightBarName,
   kTricepsRopeAttachmentName,
+  kEZBarAttachmentName,
   kLatPulldownBarName,
   kWideLatBarName,
   kDoubleDHandleName,
   kPowerRackName,
   kWeightBeltName,
   kStepperName,
-];
+};

@@ -23,17 +23,20 @@ class EquipmentCard extends StatelessWidget {
       padding: sizes.padding,
       onTap: onTap,
       children: [
-        Text(
-          equipment.name,
-          style: TextStyle(
-            fontSize: sizes.fontSize,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
         Row(
           mainAxisSize: MainAxisSize.max,
-          mainAxisAlignment: MainAxisAlignment.end,
           children: [
+            Expanded(
+              child: Text(
+                equipment.name,
+                softWrap: true,
+                style: TextStyle(
+                  fontSize: sizes.fontSize,
+                  fontWeight: FontWeight.bold,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ),
             Icon(
               Icons.arrow_forward_ios,
               size: sizes.fontSize * 1.2,

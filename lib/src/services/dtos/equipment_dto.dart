@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 
+import '../../models/enums.dart';
 import '../../models/equipment_model.dart';
 import 'dto.dart';
 import 'picture_dto.dart';
@@ -9,11 +10,13 @@ class EquipmentDto extends Equatable implements Dto<Equipment> {
   final int id;
   final String name;
   final PictureDto? picture;
+  final CreatedBy createdBy;
 
   const EquipmentDto({
     required this.id,
     required this.name,
     this.picture,
+    required this.createdBy,
   });
 
   @override
@@ -24,6 +27,7 @@ class EquipmentDto extends Equatable implements Dto<Equipment> {
       picture: equipment.picture != null
           ? PictureDto.fromModel(equipment.picture!)
           : null,
+      createdBy: equipment.createdBy,
     );
   }
 
@@ -32,14 +36,16 @@ class EquipmentDto extends Equatable implements Dto<Equipment> {
     int? id,
     String? name,
     PictureDto? picture,
+    CreatedBy? createdBy,
   }) {
     return EquipmentDto(
       id: id ?? this.id,
       name: name ?? this.name,
       picture: picture ?? this.picture,
+      createdBy: createdBy ?? this.createdBy,
     );
   }
 
   @override
-  List<Object?> get props => [id, name, picture];
+  List<Object?> get props => [id, name, picture, createdBy];
 }

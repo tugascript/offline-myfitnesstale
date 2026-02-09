@@ -17,11 +17,12 @@ const String _tableCreate = '''
   );
   ''';
 
-enum ExerciseEquipmentColumns {
+enum ExerciseEquipmentColumns with Columns {
   exerciseId("exercise_id"),
   equipmentId("equipment_id"),
   createdAt("created_at");
 
+  @override
   final String value;
 
   const ExerciseEquipmentColumns(this.value);
@@ -41,7 +42,10 @@ class ExerciseEquipment implements JoinModel {
 
   static const String table = _table;
   static const String tableCreate = _tableCreate;
-  static const (String, String) primaryKeys = ('exercise_id', 'equipment_id');
+  static final (String, String) primaryKeys = (
+    ExerciseEquipmentColumns.exerciseId.value,
+    ExerciseEquipmentColumns.equipmentId.value,
+  );
 
   @override
   Map<String, Object?> toMap() {

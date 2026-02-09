@@ -49,27 +49,28 @@ class ExerciseService {
 
   final DatabaseHelper _databaseHelper = DatabaseHelper();
 
-  final Repository<Exercise> _repository = Repository<Exercise>(
+  final _repository = Repository<Exercise>(
     databaseHelper: DatabaseHelper(),
     tableName: Exercise.table,
     fromMap: Exercise.fromMap,
   );
 
-  final Repository<Equipment> _equipmentRepository = Repository<Equipment>(
+  final _equipmentRepository = Repository<Equipment>(
     databaseHelper: DatabaseHelper(),
     tableName: Equipment.table,
     fromMap: Equipment.fromMap,
   );
 
-  final JoinRepository<ExerciseEquipment, Equipment>
-      _exerciseEquipmentRepository =
-      JoinRepository<ExerciseEquipment, Equipment>(
+  final _exerciseEquipmentRepository =
+      JoinRepository<ExerciseEquipment, Equipment, Exercise>(
     databaseHelper: DatabaseHelper(),
     tableName: ExerciseEquipment.table,
     fromMap: ExerciseEquipment.fromMap,
     primaryKeys: ExerciseEquipment.primaryKeys,
     joinTableName: Equipment.table,
     joinFromMap: Equipment.fromMap,
+    reverseTableName: Exercise.table,
+    reverseFromMap: Exercise.fromMap,
   );
 
   Future<
@@ -657,6 +658,39 @@ class ExerciseService {
       return err(const ServiceError(
         type: SingleErrorTypes.operationFailure,
         description: 'Failed to update equipment',
+      ));
+    }
+  }
+
+  Future<Result<List<ExerciseDto>, ServiceError<SingleErrorTypes>>>
+      getExercisesByEquipmentId(int equipmentId) async {
+    _logger.info('Getting exercises for equipment with id: $equipmentId');
+    try {
+      final Equipment? equipment = await _equipmentRepository.selectOne(
+        equipmentId,
+      );
+      if (equipment == null) {
+        _logger.info('Equipment with id: $equipmentId not found');
+        return err(ServiceError(
+          type: SingleErrorTypes.notFound,
+          description: 'Equipment with id: $equipmentId not found',
+        ));
+      }
+
+      final List<Exercise> exercises =
+          await _exerciseEquipmentRepository.selectReverseJoined(
+        equipmentId,
+        ExerciseColumns.name.orderAsc,
+      );
+      _logger.info(
+          'Got ${exercises.length} exercises for equipment with id: $equipmentId');
+      return ok(exercises.map((e) => ExerciseDto.fromModel(e)).toList());
+    } catch (e) {
+      _logger.severe(
+          "Failed to get exercises for equipment with id: $equipmentId", e);
+      return err(const ServiceError(
+        type: SingleErrorTypes.operationFailure,
+        description: 'Failed to get exercises for equipment',
       ));
     }
   }

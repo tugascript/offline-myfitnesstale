@@ -98,6 +98,29 @@ final class EquipmentPagination extends Equatable {
   List<Object?> get props => [name, total, limit, offset];
 }
 
+final class SelectedEquipment extends Equatable {
+  final EquipmentDto equipment;
+  final List<ExerciseDto> relatedExercises;
+
+  const SelectedEquipment({
+    required this.equipment,
+    required this.relatedExercises,
+  });
+
+  SelectedEquipment copyWith({
+    EquipmentDto? equipment,
+    List<ExerciseDto>? relatedExercises,
+  }) {
+    return SelectedEquipment(
+      equipment: equipment ?? this.equipment,
+      relatedExercises: relatedExercises ?? this.relatedExercises,
+    );
+  }
+
+  @override
+  List<Object?> get props => [equipment, relatedExercises];
+}
+
 final class ExerciseState extends Equatable {
   final List<ExerciseDto> exercises;
   final List<ExerciseDto> relatedExercises;
@@ -105,7 +128,7 @@ final class ExerciseState extends Equatable {
   final ExerciseDto? selectedExercise;
   final List<EquipmentDto> equipments;
   final EquipmentPagination equipmentPagination;
-  final EquipmentDto? selectedEquipment;
+  final SelectedEquipment? selectedEquipment;
   final bool isLoading;
   final ErrorState? error;
 
@@ -142,7 +165,7 @@ final class ExerciseState extends Equatable {
     ErrorState? error,
     List<EquipmentDto>? equipments,
     EquipmentPagination? equipmentPagination,
-    EquipmentDto? selectedEquipment,
+    SelectedEquipment? selectedEquipment,
   }) {
     return ExerciseState(
       exercises: exercises ?? this.exercises,
