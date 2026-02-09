@@ -7,7 +7,7 @@ import '../../cubits/states/exercise_state.dart';
 import '../../models/enums.dart';
 import '../../utilities/sizes/data_display_sizes.dart';
 import '../../utilities/sizes/screen_size.dart';
-import '../../widgets/common/edit_button.dart';
+import '../../widgets/common/mutation_buttons.dart';
 import '../../widgets/exercise/exercises_list.dart';
 import '../../widgets/layout/app_scaffold.dart';
 import '../loading_view.dart';
@@ -36,7 +36,7 @@ class _EquipmentDetailsViewState extends State<EquipmentDetailsView> {
     final theme = Theme.of(context);
     final isDarkTheme = theme.brightness == Brightness.dark;
     final breakpoints = BreakPoint.fromContext(context);
-    final sizes = DataDisplaySizes.getWorkoutDetailSizes(
+    final sizes = DataDisplaySizes.getDataDisplaySizes(
       breakpoints.screenSize,
     );
 
@@ -94,26 +94,13 @@ class _EquipmentDetailsViewState extends State<EquipmentDetailsView> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  mainAxisSize: MainAxisSize.max,
-                  children: [
-                    Text(
-                      'Related Exercises',
-                      style: TextStyle(
-                        fontSize: sizes.titleFountSize,
-                        fontWeight: FontWeight.bold,
-                        color:
-                            isDarkTheme ? Colors.grey[200] : Colors.grey[800],
-                      ),
-                    ),
-                    if (equipment.createdBy == CreatedBy.user)
-                      EditButton(
-                        theme: theme,
-                        sizes: sizes,
-                        onPressed: () {},
-                      ),
-                  ],
+                Text(
+                  'Related Exercises',
+                  style: TextStyle(
+                    fontSize: sizes.titleFountSize,
+                    fontWeight: FontWeight.bold,
+                    color: isDarkTheme ? Colors.grey[200] : Colors.grey[800],
+                  ),
                 ),
                 SizedBox(height: sizes.spacing),
                 Expanded(
@@ -122,7 +109,16 @@ class _EquipmentDetailsViewState extends State<EquipmentDetailsView> {
                     isLoading: state.isLoading,
                     exercises: relatedExercises,
                   ),
-                )
+                ),
+                if (equipment.createdBy == CreatedBy.user) ...[
+                  SizedBox(height: sizes.spacing),
+                  MutationButtons(
+                    theme: theme,
+                    sizes: sizes,
+                    onEdit: () {},
+                    onDelete: () {},
+                  ),
+                ],
               ],
             ),
           ),

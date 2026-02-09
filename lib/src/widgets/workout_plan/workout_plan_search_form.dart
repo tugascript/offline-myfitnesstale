@@ -52,6 +52,7 @@ class _WorkoutPlanSearchFormState extends State<WorkoutPlanSearchForm> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final loadingSize = widget.fontSize * 2;
 
     return Form(
@@ -59,6 +60,8 @@ class _WorkoutPlanSearchFormState extends State<WorkoutPlanSearchForm> {
       child: Column(
         children: [
           AppTextFormField(
+            theme: theme,
+            isLoading: widget.isLoading,
             controller: _nameController,
             hintText: 'Search ${widget.nameLabel}...',
             fontSize: widget.fontSize,

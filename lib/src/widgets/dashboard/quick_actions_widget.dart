@@ -20,6 +20,8 @@ class QuickActionsWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDarkTheme = theme.brightness == Brightness.dark;
+    final emojiSize = sizes.titleFontSize * 0.85;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -72,9 +74,7 @@ class QuickActionsWidget extends StatelessWidget {
               isDarkTheme: isDarkTheme,
               icon: Text(
                 '🏋️',
-                style: TextStyle(
-                  fontSize: sizes.titleFontSize * 0.9,
-                ),
+                style: TextStyle(fontSize: emojiSize),
               ),
               title: "Workouts",
               subtitle: "Browse workouts",
@@ -87,9 +87,7 @@ class QuickActionsWidget extends StatelessWidget {
               isDarkTheme: isDarkTheme,
               icon: Text(
                 '💪',
-                style: TextStyle(
-                  fontSize: sizes.titleFontSize * 0.9,
-                ),
+                style: TextStyle(fontSize: emojiSize),
               ),
               title: "Exercises",
               subtitle: "Browse exercises",

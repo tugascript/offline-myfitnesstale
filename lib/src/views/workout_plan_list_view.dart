@@ -68,8 +68,7 @@ class _WorkoutPlanListViewState extends State<WorkoutPlanListView> {
   @override
   Widget build(BuildContext context) {
     final breakPoints = BreakPoint.fromContext(context);
-    final sizes =
-        DataDisplaySizes.getWorkoutDetailSizes(breakPoints.screenSize);
+    final sizes = DataDisplaySizes.getDataDisplaySizes(breakPoints.screenSize);
 
     return AppScaffold(
       title: 'Workout Plans',

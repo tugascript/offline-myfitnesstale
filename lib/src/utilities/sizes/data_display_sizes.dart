@@ -63,7 +63,7 @@ sealed class DataDisplaySizes {
         elevation: _elevation * ratio,
       );
 
-  static DataDisplaySizesList getWorkoutDetailSizes(ScreenSize screenSize) {
+  static DataDisplaySizesList getDataDisplaySizes(ScreenSize screenSize) {
     switch (screenSize) {
       case ScreenSize.xl:
         return _sizeByRatio(_xlRatio);

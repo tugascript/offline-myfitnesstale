@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 
 class AppTextFormField extends StatelessWidget {
+  final ThemeData theme;
   final TextEditingController? controller;
   final String hintText;
   final double fontSize;
   final double padding;
+  final bool isLoading;
   final Widget? prefixIcon;
   final Widget? suffixIcon;
   final void Function(String)? onChanged;
@@ -13,10 +15,12 @@ class AppTextFormField extends StatelessWidget {
 
   const AppTextFormField({
     super.key,
+    required this.theme,
     this.controller,
     required this.hintText,
     required this.fontSize,
     required this.padding,
+    required this.isLoading,
     this.prefixIcon,
     this.suffixIcon,
     this.onChanged,
@@ -26,8 +30,11 @@ class AppTextFormField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final greyColor = theme.colorScheme.brightness == Brightness.light
+        ? Colors.grey[400]
+        : Colors.grey[600];
     return TextFormField(
+      enabled: !isLoading,
       style: TextStyle(
         fontSize: fontSize,
       ),
@@ -66,6 +73,13 @@ class AppTextFormField extends StatelessWidget {
           borderSide: BorderSide(
             color: theme.colorScheme.secondary,
             width: 2.0,
+          ),
+        ),
+        disabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.zero,
+          borderSide: BorderSide(
+            color: greyColor!,
+            width: 1.0,
           ),
         ),
         isDense: true,

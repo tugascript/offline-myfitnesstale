@@ -77,7 +77,7 @@ class _ExercisesViewState extends State<ExercisesView> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final breakPoints = BreakPoint.fromContext(context);
-    final sizes = DataDisplaySizes.getWorkoutDetailSizes(
+    final sizes = DataDisplaySizes.getDataDisplaySizes(
       breakPoints.screenSize,
     );
 

@@ -41,7 +41,7 @@ class _WorkoutDetailViewState extends State<WorkoutDetailView> {
     final theme = Theme.of(context);
     final isDarkTheme = theme.brightness == Brightness.dark;
     final breakpoints = BreakPoint.fromContext(context);
-    final sizes = DataDisplaySizes.getWorkoutDetailSizes(
+    final sizes = DataDisplaySizes.getDataDisplaySizes(
       breakpoints.screenSize,
     );
 
@@ -133,6 +133,7 @@ class _WorkoutDetailViewState extends State<WorkoutDetailView> {
                   }),
                 SizedBox(height: sizes.spacing * 2),
                 ActionButtons(
+                  isLoading: workoutState.isLoading,
                   theme: theme,
                   sizes: sizes,
                   onStart: () => context

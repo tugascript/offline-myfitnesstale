@@ -71,7 +71,7 @@ class _EquipmentsViewState extends State<EquipmentsView> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final breakPoints = BreakPoint.fromContext(context);
-    final sizes = DataDisplaySizes.getWorkoutDetailSizes(
+    final sizes = DataDisplaySizes.getDataDisplaySizes(
       breakPoints.screenSize,
     );
 
@@ -93,7 +93,7 @@ class _EquipmentsViewState extends State<EquipmentsView> {
                   onSubmit: ({String? name}) {
                     context.read<ExerciseCubit>().getEquipments(
                           name: name,
-                          limit: 20,
+                          limit: 50,
                           offset: 0,
                         );
                   },

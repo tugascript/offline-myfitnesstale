@@ -72,6 +72,8 @@ class _BaseCommonSearchFormState extends State<BaseCommonSearchForm> {
       child: Column(
         children: [
           AppTextFormField(
+            theme: widget.theme,
+            isLoading: widget.isLoading,
             controller: _nameController,
             hintText: 'Search ${widget.nameLabel}...',
             fontSize: widget.fontSize,

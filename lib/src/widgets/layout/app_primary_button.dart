@@ -2,26 +2,31 @@ import 'package:flutter/material.dart';
 
 import '../../utilities/sizes/data_display_sizes.dart';
 
-class EditButton extends StatelessWidget {
+class AppPrimaryButton extends StatelessWidget {
   final ThemeData theme;
+  final bool isLoading;
   final DataDisplaySizesList sizes;
   final VoidCallback? onPressed;
   final String label;
   final IconData icon;
 
-  const EditButton({
+  const AppPrimaryButton({
     super.key,
     required this.theme,
+    required this.isLoading,
     required this.sizes,
     required this.onPressed,
-    this.label = 'EDIT',
-    this.icon = Icons.edit,
+    required this.label,
+    required this.icon,
   });
 
   @override
   Widget build(BuildContext context) {
-    return OutlinedButton.icon(
-      onPressed: onPressed,
+    final greyColor = theme.colorScheme.brightness == Brightness.light
+        ? Colors.grey[400]
+        : Colors.grey[600];
+    return ElevatedButton.icon(
+      onPressed: isLoading ? null : onPressed,
       icon: Icon(
         icon,
         size: sizes.fontSize,
@@ -34,14 +39,10 @@ class EditButton extends StatelessWidget {
           fontWeight: FontWeight.w600,
         ),
       ),
-      style: OutlinedButton.styleFrom(
+      style: ElevatedButton.styleFrom(
         padding: EdgeInsets.symmetric(vertical: sizes.padding),
-        backgroundColor: theme.scaffoldBackgroundColor,
-        foregroundColor: theme.colorScheme.primary,
-        side: BorderSide(
-          color: theme.colorScheme.primary,
-          width: 1,
-        ),
+        backgroundColor: isLoading ? greyColor : theme.primaryColor,
+        foregroundColor: theme.scaffoldBackgroundColor,
         shape: BeveledRectangleBorder(),
       ),
     );
