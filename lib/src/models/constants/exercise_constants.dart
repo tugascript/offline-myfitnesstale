@@ -42,6 +42,8 @@ const String kCableOverheadTricepsExtensionName =
     "Cable Overhead Triceps Extension";
 const String kDumbbellOverheadTricepsExtensionName =
     "Dumbbell Overhead Triceps Extension";
+const String kEZBarOverheadTricepsExtensionName =
+    "EZ Bar Overhead Triceps Extension";
 const String kSkullCrushersName = "Skull Crushers";
 const String kTricepsPushdownName = "Triceps Pushdown";
 const String kCableTricepKickbackName = "Cable Tricep Kickback";
@@ -132,6 +134,7 @@ const Set<String> kExerciseNames = {
   kLeaningCableLateralRaiseName,
   kCableOverheadTricepsExtensionName,
   kDumbbellOverheadTricepsExtensionName,
+  kEZBarOverheadTricepsExtensionName,
   kSkullCrushersName,
   kTricepsPushdownName,
   kCableTricepKickbackName,
@@ -471,7 +474,11 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
       },
       secondaryMuscles: {},
     ),
-    equipments: {kCableName, kEZBarName},
+    equipments: {
+      kCableName,
+      kEZBarAttachmentName,
+      kTricepsRopeAttachmentName,
+    },
   ),
   ExerciseData(
     name: kDumbbellOverheadTricepsExtensionName,
@@ -483,6 +490,17 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
       secondaryMuscles: {},
     ),
     equipments: {kDumbbellsName},
+  ),
+  ExerciseData(
+    name: kEZBarOverheadTricepsExtensionName,
+    muscleGroup: MuscleGroup.push,
+    muscles: ExerciseMuscles(
+      primaryMuscles: {
+        Muscle.triceps,
+      },
+      secondaryMuscles: {},
+    ),
+    equipments: {kEZBarName},
   ),
   ExerciseData(
     name: kSkullCrushersName,
@@ -504,7 +522,11 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
       },
       secondaryMuscles: {},
     ),
-    equipments: {kCableName, kEZBarName},
+    equipments: {
+      kCableName,
+      kEZBarAttachmentName,
+      kTricepsRopeAttachmentName,
+    },
   ),
   ExerciseData(
     name: kDipsName,
@@ -868,7 +890,10 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
         Muscle.forearms,
       },
     ),
-    equipments: {kCableName, kEZBarName},
+    equipments: {
+      kCableName,
+      kEZBarAttachmentName,
+    },
   ),
   ExerciseData(
     name: kCableDHandleBicepCurlName,

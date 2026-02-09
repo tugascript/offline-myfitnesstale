@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../utilities/sizes/home_sizes.dart';
-import '../../views/equipments_view.dart';
+import '../../views/equipments/equipments_view.dart';
 import '../../views/exercises_view.dart';
 import '../../views/weight_goal_view.dart';
 import '../../views/weight_log_view.dart';

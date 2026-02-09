@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../cubits/exercise_cubit.dart';
 import '../../cubits/states/exercise_state.dart';
+import '../../models/enums.dart';
 import '../../services/dtos/equipment_dto.dart';
 
 class EquipmentSelectionWidget extends StatefulWidget {
@@ -77,6 +78,7 @@ class _EquipmentSelectionWidgetState extends State<EquipmentSelectionWidget> {
                     orElse: () => EquipmentDto(
                       id: equipmentId,
                       name: 'Unknown Equipment',
+                      createdBy: CreatedBy.system,
                     ),
                   );
                   return Chip(

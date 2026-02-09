@@ -201,13 +201,15 @@ class Repository<T extends Model> {
   }
 }
 
-class JoinRepository<T extends JoinModel, J extends Model> {
+class JoinRepository<T extends JoinModel, J extends Model, R extends Model> {
   final DatabaseHelper databaseHelper;
   final String tableName;
   final (String, String) primaryKeys;
   final FromMap<T> fromMap;
   final String joinTableName;
   final FromMap<J> joinFromMap;
+  final String reverseTableName;
+  final FromMap<R> reverseFromMap;
 
   const JoinRepository({
     required this.databaseHelper,
@@ -216,6 +218,8 @@ class JoinRepository<T extends JoinModel, J extends Model> {
     required this.fromMap,
     required this.joinTableName,
     required this.joinFromMap,
+    required this.reverseTableName,
+    required this.reverseFromMap,
   });
 
   Future<int> insert(T model, [Transaction? trx]) async {
@@ -277,7 +281,7 @@ class JoinRepository<T extends JoinModel, J extends Model> {
     return fromMap(maps.first);
   }
 
-  Future<List<J>> selectJoined(int pk1) async {
+  Future<List<J>> selectJoined(int pk1, [String? orderBy]) async {
     final (String key1, String key2) = primaryKeys;
 
     final DatabaseExecutor db = await databaseHelper.db;
@@ -285,12 +289,28 @@ class JoinRepository<T extends JoinModel, J extends Model> {
       """
       SELECT j.* FROM $tableName m
       LEFT JOIN $joinTableName j ON j.id = m.$key2
-      WHERE $key1 = ?;
+      WHERE $key1 = ?${orderBy != null ? ' ORDER BY j.$orderBy' : ''};
       """,
       [pk1],
     );
 
     return maps.map((map) => joinFromMap(map)).toList();
+  }
+
+  Future<List<R>> selectReverseJoined(int pk2, [String? orderBy]) async {
+    final (String key1, String key2) = primaryKeys;
+
+    final DatabaseExecutor db = await databaseHelper.db;
+    final List<Map<String, dynamic>> maps = await db.rawQuery(
+      """
+      SELECT r.* FROM $tableName m
+      LEFT JOIN $reverseTableName r ON r.id = m.$key1
+      WHERE $key2 = ?${orderBy != null ? ' ORDER BY r.$orderBy' : ''};
+      """,
+      [pk2],
+    );
+
+    return maps.map((map) => reverseFromMap(map)).toList();
   }
 
   Future<List<T>> selectAllByPk1(int pk1) async {

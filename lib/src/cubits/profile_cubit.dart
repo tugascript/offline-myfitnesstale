@@ -291,7 +291,7 @@ class ProfileCubit extends Cubit<ProfileState> {
     emit(state.copyWith(isLoading: true));
     // TODO: handle creation more gracefully
     final equipmentResult = await _exerciseService.createEquipments(
-      kEquipmentNames,
+      kEquipmentNames.toList(),
       createdBy: CreatedBy.system,
     );
     if (equipmentResult.isErr()) {

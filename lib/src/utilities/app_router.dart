@@ -1,10 +1,11 @@
 import 'package:go_router/go_router.dart';
+import 'package:myfitnesstale/src/views/equipments/equipment_details_view.dart';
 
 import '../views/active_workout_view.dart';
 import '../views/create_profile_view.dart';
 import '../views/create_workout_view.dart';
 import '../views/current_workout_plan_view.dart';
-import '../views/equipments_view.dart';
+import '../views/equipments/equipments_view.dart';
 import '../views/exercise_detail_view.dart';
 import '../views/exercise_form_view.dart';
 import '../views/exercise_history_detail_view.dart';
@@ -54,11 +55,21 @@ sealed class AppRouter {
       builder: (context, state) => const EquipmentsView(),
     ),
     GoRoute(
+      path: EquipmentDetailsView.routeName,
+      builder: (context, state) {
+        final id = int.tryParse(state.pathParameters['id'] ?? '');
+        if (id == null) {
+          return const NotFoundView();
+        }
+        return EquipmentDetailsView(equipmentId: id);
+      },
+    ),
+    GoRoute(
       path: ExercisesView.routeName,
       builder: (context, state) => const ExercisesView(),
     ),
     GoRoute(
-      path: '/exercises/:id',
+      path: ExerciseDetailView.routeName,
       builder: (context, state) {
         final id = int.tryParse(state.pathParameters['id'] ?? '');
         if (id == null) {

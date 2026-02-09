@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import '../cubits/exercise_cubit.dart';
-import '../cubits/states/exercise_state.dart';
-import '../utilities/sizes/data_display_sizes.dart';
-import '../utilities/sizes/screen_size.dart';
-import '../widgets/equipment/equipments_list.dart';
-import '../widgets/equipment/equipments_search_form.dart';
-import '../widgets/layout/app_scaffold.dart';
+import '../../cubits/exercise_cubit.dart';
+import '../../cubits/states/exercise_state.dart';
+import '../../utilities/sizes/data_display_sizes.dart';
+import '../../utilities/sizes/screen_size.dart';
+import '../../widgets/equipment/equipments_grid.dart';
+import '../../widgets/equipment/equipments_search_form.dart';
+import '../../widgets/layout/app_scaffold.dart';
 
 class EquipmentsView extends StatefulWidget {
   static const routeName = '/equipments';
@@ -31,7 +31,7 @@ class _EquipmentsViewState extends State<EquipmentsView> {
       final pagination = cubit.state.equipmentPagination;
       cubit.getEquipments(
         name: pagination.name,
-        limit: 20,
+        limit: 50,
         offset: 0,
       );
     }
@@ -48,7 +48,7 @@ class _EquipmentsViewState extends State<EquipmentsView> {
         cubit.getEquipments(
           name: pagination.name,
           offset: cubit.state.equipments.length,
-          limit: 20,
+          limit: 50,
         );
       }
     }
@@ -100,7 +100,7 @@ class _EquipmentsViewState extends State<EquipmentsView> {
                 ),
                 SizedBox(height: sizes.inputSpacing),
                 Expanded(
-                  child: EquipmentsList(
+                  child: EquipmentsGrid(
                     sizes: sizes,
                     isLoading: state.isLoading,
                     equipments: state.equipments,
