@@ -11,6 +11,7 @@ import '../../widgets/common/mutation_buttons.dart';
 import '../../widgets/exercise/exercises_list.dart';
 import '../../widgets/layout/app_scaffold.dart';
 import '../loading_view.dart';
+import 'equipment_update_view.dart';
 
 class EquipmentDetailsView extends StatefulWidget {
   static const routeName = '/equipments/:id';
@@ -113,10 +114,23 @@ class _EquipmentDetailsViewState extends State<EquipmentDetailsView> {
                 if (equipment.createdBy == CreatedBy.user) ...[
                   SizedBox(height: sizes.spacing),
                   MutationButtons(
+                    isLoading: state.isLoading,
                     theme: theme,
                     sizes: sizes,
-                    onEdit: () {},
-                    onDelete: () {},
+                    onEdit: () {
+                      context.push(
+                        EquipmentUpdateView.routeName.replaceFirst(
+                          ':id',
+                          equipment.id.toString(),
+                        ),
+                      );
+                    },
+                    onDelete: () {
+                      context
+                          .read<ExerciseCubit>()
+                          .deleteEquipment(equipment.id);
+                      context.pop();
+                    },
                   ),
                 ],
               ],

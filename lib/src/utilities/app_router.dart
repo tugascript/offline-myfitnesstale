@@ -6,6 +6,7 @@ import '../views/create_workout_view.dart';
 import '../views/current_workout_plan_view.dart';
 import '../views/equipments/equipment_creation_view.dart';
 import '../views/equipments/equipment_details_view.dart';
+import '../views/equipments/equipment_update_view.dart';
 import '../views/equipments/equipments_view.dart';
 import '../views/exercise_detail_view.dart';
 import '../views/exercise_form_view.dart';
@@ -67,6 +68,16 @@ sealed class AppRouter {
           return const NotFoundView();
         }
         return EquipmentDetailsView(equipmentId: id);
+      },
+    ),
+    GoRoute(
+      path: EquipmentUpdateView.routeName,
+      builder: (context, state) {
+        final id = int.tryParse(state.pathParameters['id'] ?? '');
+        if (id == null) {
+          return const NotFoundView();
+        }
+        return EquipmentUpdateView(equipmentId: id);
       },
     ),
     GoRoute(

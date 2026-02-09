@@ -18,8 +18,8 @@ class EquipmentCreationView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final screenSize = BreakPoint.fromContext(context).screenSize;
-    final sizes = DataDisplaySizes.getDataDisplaySizes(screenSize);
+    final breakPoint = BreakPoint.fromContext(context);
+    final sizes = DataDisplaySizes.getDataDisplaySizes(breakPoint.screenSize);
     final theme = Theme.of(context);
 
     return ResponsiveScaffold(
@@ -42,14 +42,6 @@ class EquipmentCreationView extends StatelessWidget {
             }
 
             if (state.selectedEquipment != null) {
-              final cubit = context.read<ExerciseCubit>();
-              final pagination = cubit.state.equipmentPagination;
-              cubit.getEquipments(
-                name: pagination.name,
-                offset: 0,
-                limit: 50,
-              );
-
               if (context.canPop()) {
                 context.pop();
               } else {
@@ -58,15 +50,27 @@ class EquipmentCreationView extends StatelessWidget {
             }
           },
           builder: (context, state) {
-            return EquipmentForm(
-              theme: theme,
-              sizes: sizes,
-              initialName: '',
-              isLoading: state.isLoading,
-              onSubmit: ({required String name}) {
-                final cubit = context.read<ExerciseCubit>();
-                cubit.createEquipment(name);
-              },
+            return Column(
+              children: [
+                SizedBox(height: breakPoint.height * 0.2),
+                Icon(
+                  Icons.fitness_center,
+                  size: sizes.titleFountSize * 4,
+                  color: theme.primaryColor,
+                ),
+                SizedBox(height: sizes.spacing * 2),
+                EquipmentForm(
+                  theme: theme,
+                  sizes: sizes,
+                  initialName: '',
+                  isLoading: state.isLoading,
+                  submitLabel: "CREATE",
+                  onSubmit: ({required String name}) {
+                    final cubit = context.read<ExerciseCubit>();
+                    cubit.createEquipment(name);
+                  },
+                ),
+              ],
             );
           },
         ),

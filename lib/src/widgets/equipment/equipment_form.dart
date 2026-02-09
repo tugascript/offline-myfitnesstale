@@ -9,6 +9,7 @@ class EquipmentForm extends StatefulWidget {
   final DataDisplaySizesList sizes;
   final String initialName;
   final bool isLoading;
+  final String submitLabel;
   final void Function({required String name}) onSubmit;
 
   const EquipmentForm({
@@ -17,6 +18,7 @@ class EquipmentForm extends StatefulWidget {
     required this.sizes,
     required this.initialName,
     required this.isLoading,
+    required this.submitLabel,
     required this.onSubmit,
   });
 
@@ -85,7 +87,7 @@ class _EquipmentFormState extends State<EquipmentForm> {
             },
             sizes: widget.sizes,
             theme: widget.theme,
-            label: 'SUBMIT',
+            label: widget.submitLabel,
             icon: Icons.check,
           ),
         ],
