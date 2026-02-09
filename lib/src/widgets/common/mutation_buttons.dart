@@ -6,6 +6,7 @@ import 'mutation_button.dart';
 class MutationButtons extends StatelessWidget {
   final ThemeData theme;
   final DataDisplaySizesList sizes;
+  final bool isLoading;
   final VoidCallback? onEdit;
   final VoidCallback? onDelete;
 
@@ -13,6 +14,7 @@ class MutationButtons extends StatelessWidget {
     super.key,
     required this.theme,
     required this.sizes,
+    required this.isLoading,
     required this.onEdit,
     required this.onDelete,
   });
@@ -25,6 +27,7 @@ class MutationButtons extends StatelessWidget {
         children: [
           Expanded(
             child: MutationButton(
+              isLoading: isLoading,
               theme: theme,
               sizes: sizes,
               onPressed: onEdit,
@@ -35,6 +38,7 @@ class MutationButtons extends StatelessWidget {
           SizedBox(width: sizes.spacing),
           Expanded(
             child: MutationButton(
+              isLoading: isLoading,
               theme: theme,
               sizes: sizes,
               onPressed: onDelete,

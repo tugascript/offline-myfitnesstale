@@ -58,6 +58,7 @@ class ActionButtons extends StatelessWidget {
             ),
             SizedBox(width: sizes.spacing),
             MutationButton(
+              isLoading: isLoading,
               theme: theme,
               sizes: sizes,
               onPressed: onEdit,

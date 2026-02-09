@@ -14,15 +14,19 @@ enum ScreenSize {
 
 class BreakPoint {
   final double _width;
+  final double _height;
 
-  const BreakPoint(this._width);
+  const BreakPoint(this._width, this._height);
 
   factory BreakPoint.fromContext(BuildContext context) {
     final double width = MediaQuery.sizeOf(context).width;
-    return BreakPoint(width);
+    final double height = MediaQuery.sizeOf(context).height;
+    return BreakPoint(width, height);
   }
 
   double get width => _width;
+
+  double get height => _height;
 
   bool get greatSM => width >= ScreenSize.sm.value;
 

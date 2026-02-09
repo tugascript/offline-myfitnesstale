@@ -445,12 +445,168 @@ class ExerciseCubit extends Cubit<ExerciseState> {
       }
     }
 
+    final pagination = state.equipmentPagination;
+    final equipmentsResult = await _exerciseService.getEquipments(
+      name: pagination.name,
+      limit: pagination.limit,
+      offset: 0,
+    );
+    if (equipmentsResult.isErr()) {
+      final error = equipmentsResult.error;
+      _logger.warning("Failed to get equipments, error: $error");
+      emit(state.copyWith(
+        error: ErrorState(
+          type: error.type.name,
+          description: "Failed to get equipments",
+        ),
+        isLoading: false,
+      ));
+      return;
+    }
+
+    final paginatedData = equipmentsResult.value;
     _logger.info('Equipment created successfully');
     emit(state.copyWith(
       isLoading: false,
+      equipments: paginatedData.data,
+      equipmentPagination: pagination.copyWith(
+        name: pagination.name,
+        limit: pagination.limit,
+        offset: 0,
+        total: paginatedData.total,
+      ),
       selectedEquipment: SelectedEquipment(
         equipment: result.value,
         relatedExercises: [],
+      ),
+    ));
+  }
+
+  Future<void> deleteEquipment(int id) async {
+    _logger.info('deleteEquipment: deleting equipment');
+    emit(state.copyWith(isLoading: true));
+
+    final result = await _exerciseService.deleteEquipment(id);
+    if (result.isErr()) {
+      final error = result.error;
+      _logger.warning('Failed to delete equipment, error: $error');
+      switch (error.type) {
+        case SingleErrorTypes.notFound:
+          emit(state.copyWith(
+            error: ErrorState(
+              type: error.type.name,
+              description: "Equipment not found",
+            ),
+            isLoading: false,
+          ));
+          return;
+        case SingleErrorTypes.invalidInput:
+        case SingleErrorTypes.operationFailure:
+          emit(state.copyWith(
+            error: ErrorState(
+              type: error.type.name,
+              description: "Failed to delete equipment",
+            ),
+            isLoading: false,
+          ));
+          return;
+      }
+    }
+
+    final pagination = state.equipmentPagination;
+    _logger.info('Equipment deleted successfully');
+    emit(state.copyWith(
+      isLoading: false,
+      equipments: state.equipments.where((e) => e.id != id).toList(),
+      equipmentPagination: pagination.copyWith(
+        total: pagination.total - 1,
+      ),
+    ));
+  }
+
+  Future<void> updateEquipment({
+    required int id,
+    required String name,
+  }) async {
+    _logger.info('updateEquipment: updating equipment');
+    emit(state.copyWith(isLoading: true));
+
+    final result = await _exerciseService.updateEquipment(id, name: name);
+    if (result.isErr()) {
+      final error = result.error;
+      _logger.warning('Failed to update equipment, error: $error');
+      switch (error.type) {
+        case SingleErrorTypes.notFound:
+          emit(state.copyWith(
+            error: ErrorState(
+              type: error.type.name,
+              description: "Equipment not found",
+            ),
+            isLoading: false,
+          ));
+          return;
+        case SingleErrorTypes.invalidInput:
+        case SingleErrorTypes.operationFailure:
+          emit(state.copyWith(
+            error: ErrorState(
+              type: error.type.name,
+              description: "Failed to update equipment",
+            ),
+            isLoading: false,
+          ));
+          return;
+      }
+    }
+
+    final exercisesResult = await _exerciseService.getExercisesByEquipmentId(
+      id,
+    );
+    if (exercisesResult.isErr()) {
+      final error = exercisesResult.error;
+      _logger.warning("Failed to get exercises for equipment, error: $error");
+      emit(state.copyWith(
+        error: ErrorState(
+          type: error.type.name,
+          description: "Failed to get exercises for equipment",
+        ),
+        isLoading: false,
+      ));
+      return;
+    }
+
+    final pagination = state.equipmentPagination;
+    final equipmentsResult = await _exerciseService.getEquipments(
+      name: pagination.name,
+      limit: pagination.limit,
+      offset: 0,
+    );
+    if (equipmentsResult.isErr()) {
+      final error = equipmentsResult.error;
+      _logger.warning("Failed to get equipments, error: $error");
+      emit(state.copyWith(
+        error: ErrorState(
+          type: error.type.name,
+          description: "Failed to get equipments",
+        ),
+        isLoading: false,
+      ));
+      return;
+    }
+
+    final paginatedData = equipmentsResult.value;
+    _logger.info('Equipment updated successfully');
+    emit(state.copyWith(
+      isLoading: false,
+      equipments: paginatedData.data,
+      equipmentPagination: pagination.copyWith(
+        name: pagination.name,
+        limit: pagination.limit,
+        offset: 0,
+        total: paginatedData.total,
+      ),
+      selectedEquipment: SelectedEquipment(
+        equipment: result.value,
+        relatedExercises: exercisesResult.value,
       ),
     ));
   }

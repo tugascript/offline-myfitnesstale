@@ -487,7 +487,7 @@ class ExerciseService {
         offset: offset,
         where: query.where,
         whereArgs: query.args,
-        orderBy: 'name ASC',
+        orderBy: EquipmentColumns.name.orderAsc,
       );
       final int total = await _equipmentRepository.count(
         where: query.where,
