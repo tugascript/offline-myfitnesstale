@@ -29,7 +29,7 @@ class AppPrimaryButton extends StatelessWidget {
       onPressed: isLoading ? null : onPressed,
       icon: Icon(
         icon,
-        size: sizes.fontSize,
+        size: sizes.fontSize * 1.2,
         fontWeight: FontWeight.w600,
       ),
       label: Text(

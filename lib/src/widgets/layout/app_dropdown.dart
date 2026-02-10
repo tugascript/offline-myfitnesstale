@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 class AppDropdown<T> extends StatelessWidget {
+  final bool filled;
   final T? value;
   final String label;
   final List<T> items;
@@ -12,6 +13,7 @@ class AppDropdown<T> extends StatelessWidget {
 
   const AppDropdown({
     super.key,
+    this.filled = false,
     required this.value,
     required this.label,
     required this.items,
@@ -34,6 +36,8 @@ class AppDropdown<T> extends StatelessWidget {
         color: theme.textTheme.bodyMedium?.color,
       ),
       decoration: InputDecoration(
+        filled: filled,
+        fillColor: filled ? theme.scaffoldBackgroundColor : null,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.zero,
           borderSide: BorderSide(

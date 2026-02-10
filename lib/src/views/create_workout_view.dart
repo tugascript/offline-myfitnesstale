@@ -7,7 +7,7 @@ import '../cubits/workout_cubit.dart';
 import '../models/enums.dart';
 import '../services/exercise_service.dart';
 import '../services/workout_service.dart';
-import '../widgets/exercise/exercise_selection_widget.dart';
+import '../widgets/exercises/exercise_selection_widget.dart';
 import '../widgets/layout/responsive_scaffold.dart';
 
 class CreateWorkoutView extends StatefulWidget {

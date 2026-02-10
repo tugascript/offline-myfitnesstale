@@ -261,6 +261,28 @@ class JoinRepository<T extends JoinModel, J extends Model, R extends Model> {
     return rowsAffected > 0;
   }
 
+  Future<bool> deleteAllByPk1(int pk1, [Transaction? trx]) async {
+    final (String key1, _) = primaryKeys;
+    final DatabaseExecutor db = trx ?? await databaseHelper.db;
+    final int rowsAffected = await db.delete(
+      tableName,
+      where: '$key1 = ?',
+      whereArgs: [pk1],
+    );
+    return rowsAffected > 0;
+  }
+
+  Future<bool> deleteAllByPk2(int pk2, [Transaction? trx]) async {
+    final (_, String key2) = primaryKeys;
+    final DatabaseExecutor db = trx ?? await databaseHelper.db;
+    final int rowsAffected = await db.delete(
+      tableName,
+      where: '$key2 = ?',
+      whereArgs: [pk2],
+    );
+    return rowsAffected > 0;
+  }
+
   Future<T?> selectOne(int pk1, int pk2) async {
     final WhereBuilder whereBuilder = WhereBuilder();
     final (String key1, String key2) = primaryKeys;

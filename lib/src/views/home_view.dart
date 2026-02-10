@@ -21,6 +21,7 @@ class HomeView extends StatelessWidget {
 
     return ResponsiveScaffold(
       title: "My Fitness Tale",
+      showBackButton: false,
       body: Container(
         padding: EdgeInsets.all(sizes.padding),
         child: Column(

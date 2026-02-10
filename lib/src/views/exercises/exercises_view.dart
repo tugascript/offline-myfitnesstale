@@ -2,14 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import '../cubits/exercise_cubit.dart';
-import '../cubits/states/exercise_state.dart';
-import '../models/enums.dart';
-import '../utilities/sizes/data_display_sizes.dart';
-import '../utilities/sizes/screen_size.dart';
-import '../widgets/exercise/exercise_search_form.dart';
-import '../widgets/exercise/exercises_list.dart';
-import '../widgets/layout/app_scaffold.dart';
+import '../../cubits/exercise_cubit.dart';
+import '../../cubits/states/exercise_state.dart';
+import '../../models/enums.dart';
+import '../../utilities/sizes/data_display_sizes.dart';
+import '../../utilities/sizes/screen_size.dart';
+import '../../widgets/exercises/exercise_search_form.dart';
+import '../../widgets/exercises/exercises_list.dart';
+import '../../widgets/layout/app_scaffold.dart';
+import 'exercise_creation_view.dart';
 
 class ExercisesView extends StatefulWidget {
   static const routeName = "/exercises";
@@ -135,7 +136,7 @@ class _ExercisesViewState extends State<ExercisesView> {
         child: FloatingActionButton(
           elevation: sizes.elevation,
           onPressed: () {
-            context.push("/exercises/create");
+            context.push(ExerciseCreationView.routeName);
           },
           shape: BeveledRectangleBorder(),
           child: Icon(Icons.add, size: sizes.buttonIconSize),

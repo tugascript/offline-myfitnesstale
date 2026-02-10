@@ -103,7 +103,6 @@ class _WorkoutPlanDetailViewState extends State<WorkoutPlanDetailView> {
                       context.push('/workout-plans/${plan.id}/active'),
                   startLabel: 'Start Plan',
                   onEdit: () => context.push('/workout-plans/${plan.id}/edit'),
-                  editLabel: 'Edit',
                   onHistory: () =>
                       context.push('/workout-plans/${plan.id}/history'),
                   historyLabel: 'Plan History',

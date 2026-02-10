@@ -105,6 +105,7 @@ class ExerciseService {
         offset: offset,
         where: query.where,
         whereArgs: query.args,
+        orderBy: "${ExerciseColumns.name.value} COLLATE NOCASE",
       );
       final int total = await _repository.count(
         where: query.where,
@@ -179,7 +180,7 @@ class ExerciseService {
     required String name,
     required MuscleGroup muscleGroup,
     required ExerciseMuscles muscles,
-    List<int>? equipmentIds,
+    Set<int>? equipmentIds,
     String? description,
     PictureData? picture,
     VideoData? video,
@@ -199,15 +200,14 @@ class ExerciseService {
     );
 
     try {
-      if (equipmentIds == null) {
+      if (equipmentIds == null || equipmentIds.isEmpty) {
         final id = await _repository.insert(exercise);
         return ok(ExerciseDto.fromModel(exercise.copyWith(id: id)));
       }
 
       final List<Equipment> equipments = await _equipmentRepository.selectMany(
-        where:
-            "${EquipmentColumns.id.value} IN (${List.filled(equipmentIds.length, '?').join(', ')})",
-        whereArgs: equipmentIds,
+        where: EquipmentColumns.id.inList(equipmentIds.length),
+        whereArgs: equipmentIds.toList(),
       );
       if (equipments.length != equipmentIds.length) {
         _logger.info(
@@ -313,6 +313,7 @@ class ExerciseService {
     VideoData? video,
     bool? isFavorite,
     Difficulty? difficulty,
+    Set<int>? equipmentIds,
   }) async {
     _logger.info("Updating exercise with id: $id");
     try {
@@ -336,13 +337,51 @@ class ExerciseService {
         difficulty: difficulty,
         updatedAt: DateUtilities.getNowUtcUnix(),
       );
-      await _repository.update(updatedExercise);
-      _logger.info("Updated exercise with id: $id");
 
-      final List<Equipment> equipments =
-          await _exerciseEquipmentRepository.selectJoined(id);
+      if (equipmentIds == null || equipmentIds.isEmpty) {
+        await _repository.update(updatedExercise);
+        _logger.info("Updated exercise with id: $id");
+        final List<Equipment> equipments =
+            await _exerciseEquipmentRepository.selectJoined(id);
+        return ok(
+          ExerciseDto.fromModel(updatedExercise).copyWith(
+            equipments:
+                equipments.map((e) => EquipmentDto.fromModel(e)).toList(),
+          ),
+        );
+      }
+
+      final List<Equipment> equipments = await _equipmentRepository.selectMany(
+        where: EquipmentColumns.id.inList(equipmentIds.length),
+        whereArgs: equipmentIds.toList(),
+      );
+      if (equipments.length != equipmentIds.length) {
+        _logger.info(
+          "Not all equipments were found, ${equipments.length} equipments found, ${equipmentIds.length} equipments expected",
+        );
+        return err(const ServiceError(
+          type: SingleErrorTypes.notFound,
+          description: 'Not all equipments were found',
+        ));
+      }
+
+      await _repository.startTransaction((txn) async {
+        await _repository.update(updatedExercise, txn);
+        await _exerciseEquipmentRepository.deleteAllByPk1(id, txn);
+        await _exerciseEquipmentRepository.insertMany(
+          equipmentIds
+              .map((e) => ExerciseEquipment.create(
+                    exerciseId: id,
+                    equipmentId: e,
+                  ))
+              .toList(),
+          txn,
+        );
+      });
+
       return ok(
-        ExerciseDto.fromModel(updatedExercise).copyWith(
+        ExerciseDto.fromModel(
+          updatedExercise,
           equipments: equipments.map((e) => EquipmentDto.fromModel(e)).toList(),
         ),
       );
@@ -355,95 +394,9 @@ class ExerciseService {
     }
   }
 
-  Future<Result<void, ServiceError<SingleErrorTypes>>> addExerciseEquipment(
-    int exerciseId,
-    int equipmentId,
-  ) async {
-    _logger.info(
-      "Adding exercise equipment with exerciseId: $exerciseId and equipmentId: $equipmentId",
-    );
-    try {
-      final ExerciseEquipment? exerciseEquipment =
-          await _exerciseEquipmentRepository.selectOne(
-        exerciseId,
-        equipmentId,
-      );
-      if (exerciseEquipment != null) {
-        _logger.info(
-          "Exercise equipment with exerciseId: $exerciseId and equipmentId: $equipmentId already exists",
-        );
-        return ok(null);
-      }
-
-      final Exercise? exercise = await _repository.selectOne(exerciseId);
-      if (exercise == null) {
-        _logger.info("Exercise with id: $exerciseId not found");
-        return err(const ServiceError(
-          type: SingleErrorTypes.notFound,
-          description: 'Exercise not found',
-        ));
-      }
-
-      final Equipment? equipment =
-          await _equipmentRepository.selectOne(equipmentId);
-      if (equipment == null) {
-        _logger.info("Equipment with id: $equipmentId not found");
-        return err(const ServiceError(
-          type: SingleErrorTypes.notFound,
-          description: 'Equipment not found',
-        ));
-      }
-
-      final ExerciseEquipment newExerciseEquipment = ExerciseEquipment.create(
-        exerciseId: exerciseId,
-        equipmentId: equipmentId,
-      );
-      await _exerciseEquipmentRepository.insert(newExerciseEquipment);
-      _logger.info(
-        "Added exercise equipment with exerciseId: $exerciseId and equipmentId: $equipmentId",
-      );
-      return ok(null);
-    } catch (e) {
-      _logger.severe(
-        "Failed to add exercise equipment with exerciseId: $exerciseId and equipmentId: $equipmentId",
-        e,
-      );
-      return err(const ServiceError(
-        type: SingleErrorTypes.operationFailure,
-        description: 'Failed to add exercise equipment',
-      ));
-    }
-  }
-
-  Future<Result<void, ServiceError<SingleErrorTypes>>> removeExerciseEquipment(
-    int exerciseId,
-    int equipmentId,
-  ) async {
-    _logger.info(
-      "Removing exercise equipment with exerciseId: $exerciseId and equipmentId: $equipmentId",
-    );
-    final deleted = await _exerciseEquipmentRepository.deleteOne(
-      exerciseId,
-      equipmentId,
-    );
-    if (!deleted) {
-      _logger.info(
-        "Exercise equipment with exerciseId: $exerciseId and equipmentId: $equipmentId not found",
-      );
-      return err(const ServiceError(
-        type: SingleErrorTypes.notFound,
-        description: 'Exercise equipment not found',
-      ));
-    }
-
-    _logger.info(
-      "Removed exercise equipment with exerciseId: $exerciseId and equipmentId: $equipmentId",
-    );
-    return ok(null);
-  }
-
   Future<Result<void, ServiceError<SingleErrorTypes>>> deleteExercise(
-      int id) async {
+    int id,
+  ) async {
     _logger.info("Deleting exercise with id: $id");
 
     try {
@@ -487,7 +440,7 @@ class ExerciseService {
         offset: offset,
         where: query.where,
         whereArgs: query.args,
-        orderBy: EquipmentColumns.name.orderAsc,
+        orderBy: "${EquipmentColumns.name.value} COLLATE NOCASE",
       );
       final int total = await _equipmentRepository.count(
         where: query.where,
@@ -506,6 +459,28 @@ class ExerciseService {
       return err(const ServiceError(
         type: OperationErrorTypes.operationFailure,
         description: 'Failed to get equipments',
+      ));
+    }
+  }
+
+  Future<Result<List<EquipmentDto>, ServiceError<OperationErrorTypes>>>
+      getAllEquipments() async {
+    _logger.info('Getting all equipments');
+    try {
+      final List<Equipment> equipments = await _equipmentRepository.selectMany(
+        orderBy: "${EquipmentColumns.name.value} COLLATE NOCASE",
+      );
+      _logger.info('Got ${equipments.length} equipments');
+      return ok(
+        equipments
+            .map((equipment) => EquipmentDto.fromModel(equipment))
+            .toList(),
+      );
+    } catch (e) {
+      _logger.severe("Failed to get all equipments", e);
+      return err(const ServiceError(
+        type: OperationErrorTypes.operationFailure,
+        description: 'Failed to get all equipments',
       ));
     }
   }
@@ -680,7 +655,7 @@ class ExerciseService {
       final List<Exercise> exercises =
           await _exerciseEquipmentRepository.selectReverseJoined(
         equipmentId,
-        ExerciseColumns.name.orderAsc,
+        "${ExerciseColumns.name.value} COLLATE NOCASE",
       );
       _logger.info(
           'Got ${exercises.length} exercises for equipment with id: $equipmentId');

@@ -8,10 +8,11 @@ import '../views/equipments/equipment_creation_view.dart';
 import '../views/equipments/equipment_details_view.dart';
 import '../views/equipments/equipment_update_view.dart';
 import '../views/equipments/equipments_view.dart';
-import '../views/exercise_detail_view.dart';
-import '../views/exercise_form_view.dart';
+import '../views/exercises/exercise_creation_view.dart';
+import '../views/exercises/exercise_detail_view.dart';
 import '../views/exercise_history_detail_view.dart';
-import '../views/exercises_view.dart';
+import '../views/exercises/exercise_update_view.dart';
+import '../views/exercises/exercises_view.dart';
 import '../views/main_navigation_view.dart';
 import '../views/not_found_view.dart';
 import '../views/onboarding_view.dart';
@@ -85,6 +86,10 @@ sealed class AppRouter {
       builder: (context, state) => const ExercisesView(),
     ),
     GoRoute(
+      path: ExerciseCreationView.routeName,
+      builder: (context, state) => const ExerciseCreationView(),
+    ),
+    GoRoute(
       path: ExerciseDetailView.routeName,
       builder: (context, state) {
         final id = int.tryParse(state.pathParameters['id'] ?? '');
@@ -95,17 +100,13 @@ sealed class AppRouter {
       },
     ),
     GoRoute(
-      path: ExerciseFormView.routeName,
-      builder: (context, state) => const ExerciseFormView(),
-    ),
-    GoRoute(
-      path: '/exercises/:id/edit',
+      path: ExerciseUpdateView.routeName,
       builder: (context, state) {
         final id = int.tryParse(state.pathParameters['id'] ?? '');
         if (id == null) {
           return const NotFoundView();
         }
-        return ExerciseFormView(exerciseId: id);
+        return ExerciseUpdateView(exerciseId: id);
       },
     ),
     GoRoute(

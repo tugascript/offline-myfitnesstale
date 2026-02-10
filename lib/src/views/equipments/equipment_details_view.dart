@@ -7,8 +7,9 @@ import '../../cubits/states/exercise_state.dart';
 import '../../models/enums.dart';
 import '../../utilities/sizes/data_display_sizes.dart';
 import '../../utilities/sizes/screen_size.dart';
+import '../../widgets/common/confirmation_dialog.dart';
 import '../../widgets/common/mutation_buttons.dart';
-import '../../widgets/exercise/exercises_list.dart';
+import '../../widgets/exercises/exercises_list.dart';
 import '../../widgets/layout/app_scaffold.dart';
 import '../loading_view.dart';
 import 'equipment_update_view.dart';
@@ -126,10 +127,20 @@ class _EquipmentDetailsViewState extends State<EquipmentDetailsView> {
                       );
                     },
                     onDelete: () {
-                      context
-                          .read<ExerciseCubit>()
-                          .deleteEquipment(equipment.id);
-                      context.pop();
+                      showDialog(
+                        context: context,
+                        builder: (context) => ConfirmationDialog(
+                          title: 'Delete ${equipment.name}',
+                          content:
+                              'Are you sure you want to delete this equipment? This action cannot be undone.',
+                          onConfirm: () {
+                            context
+                                .read<ExerciseCubit>()
+                                .deleteEquipment(equipment.id);
+                            context.pop();
+                          },
+                        ),
+                      );
                     },
                   ),
                 ],

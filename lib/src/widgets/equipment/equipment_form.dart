@@ -55,7 +55,8 @@ class _EquipmentFormState extends State<EquipmentForm> {
             theme: widget.theme,
             isLoading: widget.isLoading,
             controller: _nameController,
-            hintText: 'Name',
+            labelText: 'Name',
+            hintText: 'Enter equipment name',
             fontSize: widget.sizes.subtitleFontSize * 1.25,
             padding: widget.sizes.padding * 1.3,
             onChanged: (value) {

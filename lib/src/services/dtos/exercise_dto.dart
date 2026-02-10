@@ -18,6 +18,7 @@ class ExerciseDto extends Equatable implements Dto<Exercise> {
   final ExerciseMuscles muscles;
   final bool isFavorite;
   final Difficulty? difficulty;
+  final CreatedBy createdBy;
 
   // Related data
   final List<EquipmentDto>? equipments;
@@ -33,6 +34,7 @@ class ExerciseDto extends Equatable implements Dto<Exercise> {
     this.equipments,
     this.isFavorite = false,
     this.difficulty,
+    required this.createdBy,
   });
 
   @override
@@ -54,6 +56,7 @@ class ExerciseDto extends Equatable implements Dto<Exercise> {
       isFavorite: exercise.isFavorite,
       difficulty: exercise.difficulty,
       equipments: equipments,
+      createdBy: exercise.createdBy,
     );
   }
 
@@ -69,6 +72,7 @@ class ExerciseDto extends Equatable implements Dto<Exercise> {
     List<EquipmentDto>? equipments,
     bool? isFavorite,
     Difficulty? difficulty,
+    CreatedBy? createdBy,
   }) {
     return ExerciseDto(
       id: id ?? this.id,
@@ -81,6 +85,7 @@ class ExerciseDto extends Equatable implements Dto<Exercise> {
       equipments: equipments ?? this.equipments,
       isFavorite: isFavorite ?? this.isFavorite,
       difficulty: difficulty ?? this.difficulty,
+      createdBy: createdBy ?? this.createdBy,
     );
   }
 
@@ -95,5 +100,6 @@ class ExerciseDto extends Equatable implements Dto<Exercise> {
         equipments,
         isFavorite,
         difficulty,
+        createdBy,
       ];
 }
