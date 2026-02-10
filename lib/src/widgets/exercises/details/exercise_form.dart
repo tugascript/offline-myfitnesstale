@@ -99,6 +99,7 @@ class _ExerciseFormState extends State<ExerciseForm> {
           AppTextFormField(
             filled: true,
             theme: widget.theme,
+            maxLines: 1,
             isLoading: widget.isLoading,
             controller: _nameController,
             labelText: "Name",
@@ -147,12 +148,6 @@ class _ExerciseFormState extends State<ExerciseForm> {
                 });
               }
             },
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Please enter a description';
-              }
-              return null;
-            },
           ),
           SizedBox(height: widget.sizes.spacing),
           AppDropdown<MuscleGroup>(
@@ -172,6 +167,28 @@ class _ExerciseFormState extends State<ExerciseForm> {
               if (value != null) {
                 setState(() {
                   _data.muscleGroup = value;
+                });
+              }
+            },
+          ),
+          SizedBox(height: widget.sizes.spacing),
+          AppDropdown<Difficulty>(
+            value: _data.difficulty,
+            filled: true,
+            label: 'Difficulty',
+            items: Difficulty.values,
+            fontSize: widget.sizes.subtitleFontSize,
+            padding: widget.sizes.padding,
+            labelBuilder: (d) => EnumDisplayNames.getDifficultyDisplayName(d),
+            onChanged: (value) {
+              setState(() {
+                _data.difficulty = value;
+              });
+            },
+            onSaved: (value) {
+              if (value != null) {
+                setState(() {
+                  _data.difficulty = value;
                 });
               }
             },

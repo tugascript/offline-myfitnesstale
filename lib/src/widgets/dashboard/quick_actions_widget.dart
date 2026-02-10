@@ -6,7 +6,7 @@ import '../../views/equipments/equipments_view.dart';
 import '../../views/exercises/exercises_view.dart';
 import '../../views/weight_goal_view.dart';
 import '../../views/weight_log_view.dart';
-import '../../views/workouts_view.dart';
+import '../../views/workouts/workouts_view.dart';
 
 class QuickActionsWidget extends StatelessWidget {
   final HomeSizesList sizes;

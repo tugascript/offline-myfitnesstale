@@ -5,7 +5,7 @@ import '../../../models/enums.dart';
 import '../../../models/utilities.dart';
 import '../../../services/dtos/workout_plan_workout_dto.dart';
 import '../../../utilities/sizes/data_display_sizes.dart';
-import '../../../views/workout_detail_view.dart';
+import '../../../views/workouts/workout_detail_view.dart';
 
 class WorkoutPlanWorkoutCard extends StatelessWidget {
   final bool isDarkTheme;
