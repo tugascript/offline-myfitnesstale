@@ -89,7 +89,7 @@ class _EquipmentsViewState extends State<EquipmentsView> {
                   theme: theme,
                   sizes: sizes,
                   isLoading: state.isLoading,
-                  initialName: state.exercisePagination.name,
+                  initialName: state.equipmentPagination.name,
                   onSubmit: ({String? name}) {
                     context.read<ExerciseCubit>().getEquipments(
                           name: name,
