@@ -53,14 +53,6 @@ class _EquipmentUpdateViewState extends State<EquipmentUpdateView> {
             SnackBar(content: Text(state.error!.description)),
           );
         }
-
-        if (state.selectedEquipment != null) {
-          if (context.canPop()) {
-            context.pop();
-          } else {
-            context.go(EquipmentsView.routeName);
-          }
-        }
       },
       builder: (context, state) {
         final selectedEquipment = state.selectedEquipment;
