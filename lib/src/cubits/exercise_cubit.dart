@@ -115,41 +115,7 @@ class ExerciseCubit extends Cubit<ExerciseState> {
     _logger.info('Exercise retrieved successfully');
     emit(state.copyWith(
       selectedExercise: result.value,
-      relatedExercises: [], // Clear related exercises when a new exercise is selected
       isLoading: false,
-    ));
-  }
-
-  Future<void> getRelatedExercises({
-    required MuscleGroup muscleGroup,
-    int limit = 5,
-  }) async {
-    _logger.info(
-        'getRelatedExercises: getting related exercises for $muscleGroup');
-    // We don't set global loading here to avoid full screen spinner if we want partial loading,
-    // but implies UI handles it. If UI relies on isLoading, we might flicker.
-    // Assuming related exercises load quietly or with their own indicator if we added one,
-    // but for now reusing isLoading is okay if we are careful, OR just don't set isLoading=true
-    // if we don't want to block UI.
-    // Let's set isLoading=false initially or just don't emit loading.
-    // Actually, let's keep it simple: just fetch and emit.
-
-    final result = await _exerciseService.getExercises(
-      muscleGroup: muscleGroup,
-      limit: limit,
-      offset: 0,
-    );
-
-    if (result.isErr()) {
-      _logger.warning('Failed to get related exercises', result.error);
-      // We can choose to ignore error for related exercises or show snackbar.
-      // For now, let's just not update the list.
-      return;
-    }
-
-    final paginatedData = result.value;
-    emit(state.copyWith(
-      relatedExercises: paginatedData.data,
     ));
   }
 
@@ -161,7 +127,7 @@ class ExerciseCubit extends Cubit<ExerciseState> {
     VideoData? video,
     PictureData? picture,
     String? description,
-    List<int>? equipmentIds,
+    Set<int>? equipmentIds,
     Difficulty? difficulty,
     bool isFavorite = false,
   }) async {
@@ -217,12 +183,14 @@ class ExerciseCubit extends Cubit<ExerciseState> {
 
   Future<void> updateExercise({
     required int id,
+    required Set<Muscle> primaryMuscles,
+    required Set<Muscle> secondaryMuscles,
     String? name,
     String? description,
     MuscleGroup? muscleGroup,
-    ExerciseMuscles? muscles,
     VideoData? video,
     PictureData? picture,
+    Set<int>? equipmentIds,
     bool? isFavorite,
     Difficulty? difficulty,
   }) async {
@@ -233,11 +201,15 @@ class ExerciseCubit extends Cubit<ExerciseState> {
       name: name,
       description: description,
       muscleGroup: muscleGroup,
-      muscles: muscles,
+      muscles: ExerciseMuscles(
+        primaryMuscles: primaryMuscles,
+        secondaryMuscles: secondaryMuscles,
+      ),
       video: video,
       picture: picture,
       isFavorite: isFavorite,
       difficulty: difficulty,
+      equipmentIds: equipmentIds,
     );
 
     if (result.isErr()) {
@@ -279,6 +251,43 @@ class ExerciseCubit extends Cubit<ExerciseState> {
         offset: state.exercisePagination.offset,
       );
     }
+  }
+
+  Future<void> updateExerciseFavorite(int id, bool isFavorite) async {
+    _logger
+        .info('updateExerciseFavorite: updating exercise favorite by id: $id');
+    emit(state.copyWith(isLoading: true));
+    final result =
+        await _exerciseService.updateExercise(id, isFavorite: isFavorite);
+    if (result.isErr()) {
+      final error = result.error;
+      _logger.warning("Failed to update exercise favorite, error: $error");
+      switch (error.type) {
+        case SingleErrorTypes.notFound:
+        case SingleErrorTypes.invalidInput:
+          emit(state.copyWith(
+            error: ErrorState(
+              type: error.type.name,
+              description: error.description,
+            ),
+            isLoading: false,
+          ));
+          return;
+        case SingleErrorTypes.operationFailure:
+          emit(state.copyWith(
+            error: ErrorState(
+              type: error.type.name,
+              description: "Failed to update exercise favorite",
+            ),
+            isLoading: false,
+          ));
+          return;
+      }
+    }
+    emit(state.copyWith(
+      selectedExercise: result.value,
+      isLoading: false,
+    ));
   }
 
   Future<void> deleteExercise(int id) async {
@@ -607,6 +616,33 @@ class ExerciseCubit extends Cubit<ExerciseState> {
       selectedEquipment: SelectedEquipment(
         equipment: result.value,
         relatedExercises: exercisesResult.value,
+      ),
+    ));
+  }
+
+  Future<void> getSelectionEquipments() async {
+    emit(state.copyWith(isLoading: true));
+    final equipmentsResult = await _exerciseService.getAllEquipments();
+    if (equipmentsResult.isErr()) {
+      final error = equipmentsResult.error;
+      _logger.warning("Failed to get equipments, error: $error");
+      emit(state.copyWith(
+        error: ErrorState(
+          type: error.type.name,
+          description: "Failed to get equipments",
+        ),
+        isLoading: false,
+      ));
+      return;
+    }
+    emit(state.copyWith(
+      isLoading: false,
+      equipmentSelection: equipmentsResult.value.fold<Map<int, String>>(
+        {},
+        (previousValue, element) {
+          previousValue[element.id] = element.name;
+          return previousValue;
+        },
       ),
     ));
   }

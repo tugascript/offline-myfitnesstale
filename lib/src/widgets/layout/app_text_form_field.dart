@@ -3,12 +3,15 @@ import 'package:flutter/material.dart';
 class AppTextFormField extends StatelessWidget {
   final ThemeData theme;
   final TextEditingController? controller;
-  final String hintText;
+  final String? labelText;
+  final String? hintText;
   final double fontSize;
   final double padding;
   final bool isLoading;
   final Widget? prefixIcon;
   final Widget? suffixIcon;
+  final int? maxLines;
+  final bool filled;
   final void Function(String)? onChanged;
   final void Function(String?)? onSaved;
   final String? Function(String?)? validator;
@@ -17,12 +20,15 @@ class AppTextFormField extends StatelessWidget {
     super.key,
     required this.theme,
     this.controller,
-    required this.hintText,
+    this.labelText,
+    this.hintText,
     required this.fontSize,
     required this.padding,
     required this.isLoading,
     this.prefixIcon,
     this.suffixIcon,
+    this.maxLines,
+    this.filled = false,
     this.onChanged,
     this.onSaved,
     this.validator,
@@ -39,11 +45,14 @@ class AppTextFormField extends StatelessWidget {
         fontSize: fontSize,
       ),
       controller: controller,
+      maxLines: maxLines,
       onChanged: onChanged,
       onSaved: onSaved,
       validator: validator,
       decoration: InputDecoration(
+        labelText: labelText,
         hintText: hintText,
+        alignLabelWithHint: true,
         prefixIconConstraints: BoxConstraints.tightFor(
           width: fontSize * 2,
           height: fontSize * 1.5,
@@ -83,6 +92,8 @@ class AppTextFormField extends StatelessWidget {
           ),
         ),
         isDense: true,
+        filled: filled,
+        fillColor: theme.scaffoldBackgroundColor,
         contentPadding: EdgeInsets.symmetric(
           horizontal: padding / 2,
           vertical: padding * 0.65,

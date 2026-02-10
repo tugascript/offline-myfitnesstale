@@ -140,7 +140,6 @@ class _WorkoutDetailViewState extends State<WorkoutDetailView> {
                       .push('/workouts/${workout.id}/active'), // TODO: fix me
                   startLabel: 'Start Workout',
                   onEdit: () => context.push('/workouts/${workout.id}/edit'),
-                  editLabel: 'Edit',
                   onHistory: () =>
                       context.push('/workouts/${workout.id}/history'),
                   historyLabel: 'History',

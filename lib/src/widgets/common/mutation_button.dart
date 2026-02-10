@@ -27,8 +27,8 @@ class MutationButton extends StatelessWidget {
     final lightGrey = theme.brightness == Brightness.light
         ? Colors.grey[400]
         : Colors.grey[600];
-    final btnColor =
-        isLoading ? lightGrey! : (color ?? theme.colorScheme.primary);
+    final baseColor = (color ?? theme.colorScheme.primary);
+    final btnColor = isLoading ? lightGrey! : baseColor;
     return OutlinedButton.icon(
       onPressed: isLoading ? null : onPressed,
       icon: Icon(

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:myfitnesstale/src/widgets/common/mutation_buttons.dart';
 
 import '../../utilities/sizes/data_display_sizes.dart';
 import '../layout/app_primary_button.dart';
-import 'mutation_button.dart';
 
 class ActionButtons extends StatelessWidget {
   final ThemeData theme;
@@ -16,8 +16,9 @@ class ActionButtons extends StatelessWidget {
 
   // Edit Action
   final VoidCallback? onEdit;
-  final String editLabel;
-  final IconData editIcon;
+
+  // Delete Action
+  final VoidCallback? onDelete;
 
   // History Action
   final VoidCallback? onHistory;
@@ -33,8 +34,7 @@ class ActionButtons extends StatelessWidget {
     this.startLabel = 'START',
     this.startIcon = Icons.play_arrow,
     this.onEdit,
-    this.editLabel = 'EDIT',
-    this.editIcon = Icons.edit,
+    this.onDelete,
     this.onHistory,
     this.historyLabel = 'HISTORY',
     this.historyIcon = Icons.history,
@@ -56,15 +56,6 @@ class ActionButtons extends StatelessWidget {
                 icon: startIcon,
               ),
             ),
-            SizedBox(width: sizes.spacing),
-            MutationButton(
-              isLoading: isLoading,
-              theme: theme,
-              sizes: sizes,
-              onPressed: onEdit,
-              label: editLabel,
-              icon: editIcon,
-            ),
           ],
         ),
         SizedBox(height: sizes.spacing),
@@ -81,6 +72,15 @@ class ActionButtons extends StatelessWidget {
             ),
           ],
         ),
+        SizedBox(height: sizes.spacing),
+        MutationButtons(
+          theme: theme,
+          sizes: sizes,
+          isLoading: isLoading,
+          onEdit: onEdit,
+          onDelete: onDelete,
+        ),
+        SizedBox(height: sizes.spacing),
       ],
     );
   }
