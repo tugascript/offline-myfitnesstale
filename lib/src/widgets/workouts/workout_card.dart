@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../services/dtos/workout_dto.dart';
-import '../../utilities/sizes/workouts_sizes.dart';
+import '../../utilities/sizes/data_display_sizes.dart';
 import '../common/difficulty_badge.dart';
 import '../common/muscle_group_badge.dart';
 import '../common/total_numeric_string.dart';
@@ -10,7 +10,7 @@ import '../layout/list_card.dart';
 class WorkoutCard extends StatelessWidget {
   final WorkoutDto workout;
   final VoidCallback onTap;
-  final WorkoutsSizesList sizes;
+  final DataDisplaySizesList sizes;
 
   const WorkoutCard({
     super.key,
@@ -23,8 +23,8 @@ class WorkoutCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return ListCard(
-      margin: sizes.gridSpacing / 2,
-      padding: sizes.cardPadding,
+      margin: sizes.margins,
+      padding: sizes.padding,
       onTap: onTap,
       children: [
         Text(
@@ -34,14 +34,14 @@ class WorkoutCard extends StatelessWidget {
             fontWeight: FontWeight.bold,
           ),
         ),
-        SizedBox(height: sizes.cardSpacing),
+        SizedBox(height: sizes.spacing),
         Padding(
           padding: EdgeInsets.only(
             right: sizes.padding,
           ),
           child: Wrap(
-            spacing: sizes.cardSpacing,
-            runSpacing: sizes.cardSpacing,
+            spacing: sizes.spacing,
+            runSpacing: sizes.spacing,
             children: [
               TotalNumericString(
                 emoji: '🔁',
@@ -58,9 +58,9 @@ class WorkoutCard extends StatelessWidget {
             ],
           ),
         ),
-        SizedBox(height: sizes.cardSpacing),
+        SizedBox(height: sizes.spacing),
         Wrap(
-          spacing: sizes.cardSpacing / 3,
+          spacing: sizes.spacing / 3,
           children: workout.muscleGroups.map((mg) {
             return MuscleGroupBadge(
               muscleGroup: mg,
@@ -69,19 +69,19 @@ class WorkoutCard extends StatelessWidget {
             );
           }).toList(),
         ),
-        SizedBox(height: sizes.cardSpacing),
+        SizedBox(height: sizes.spacing),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             DifficultyBadge(
               difficulty: workout.difficulty,
-              spacing: sizes.cardPadding / 2,
+              spacing: sizes.padding / 2,
               fontSize: sizes.fontSize,
               fontWeight: FontWeight.w600,
             ),
             Icon(
               Icons.arrow_forward_ios,
-              size: sizes.arrowIconSize,
+              size: sizes.fontSize * 1.2,
               color: Colors.grey,
             ),
           ],

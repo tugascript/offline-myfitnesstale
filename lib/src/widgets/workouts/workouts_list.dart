@@ -3,12 +3,13 @@ import 'package:go_router/go_router.dart';
 
 import '../../cubits/states/workout_state.dart';
 import '../../services/dtos/workout_dto.dart';
-import '../../utilities/sizes/workouts_sizes.dart';
-import '../../views/workout_detail_view.dart';
+import '../../utilities/sizes/data_display_sizes.dart';
+import '../../views/workouts/workout_detail_view.dart';
+import '../common/not_found_list.dart';
 import 'workout_card.dart';
 
 class WorkoutsList extends StatelessWidget {
-  final WorkoutsSizesList sizes;
+  final DataDisplaySizesList sizes;
   final bool isLoading;
   final List<WorkoutDto> workouts;
   final WorkoutPagination pagination;
@@ -30,31 +31,7 @@ class WorkoutsList extends StatelessWidget {
     }
 
     if (workouts.isEmpty) {
-      return SizedBox(
-        height: MediaQuery.of(context).size.height / 2,
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              SizedBox(height: sizes.gridSpacing),
-              Icon(
-                Icons.fitness_center,
-                size: sizes.bigIcon,
-                color: Colors.grey[400],
-              ),
-              SizedBox(height: sizes.gridSpacing),
-              Text(
-                'No workouts found',
-                style: TextStyle(
-                  fontSize: sizes.titleFontSize,
-                  color: Colors.grey[600],
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
+      return NotFoundList(sizes: sizes, name: 'workouts');
     }
 
     return ListView.builder(

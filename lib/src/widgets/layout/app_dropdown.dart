@@ -7,6 +7,8 @@ class AppDropdown<T> extends StatelessWidget {
   final List<T> items;
   final void Function(T?) onChanged;
   final void Function(T?) onSaved;
+  final String? Function(T?)? validator;
+
   final String Function(T) labelBuilder;
   final double fontSize;
   final double padding;
@@ -22,6 +24,7 @@ class AppDropdown<T> extends StatelessWidget {
     required this.labelBuilder,
     required this.fontSize,
     required this.padding,
+    this.validator,
   });
 
   @override
@@ -92,6 +95,7 @@ class AppDropdown<T> extends StatelessWidget {
       ],
       onChanged: onChanged,
       onSaved: onSaved,
+      validator: validator,
     );
   }
 }

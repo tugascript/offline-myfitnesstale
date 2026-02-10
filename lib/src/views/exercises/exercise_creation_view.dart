@@ -28,7 +28,7 @@ class ExerciseCreationView extends StatelessWidget {
       body: Column(
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
-          SizedBox(height: breakPoint.height / 15),
+          SizedBox(height: breakPoint.height / 18),
           BlocConsumer<ExerciseCubit, ExerciseState>(
             listenWhen: (previous, current) {
               return previous.selectedExercise != current.selectedExercise;

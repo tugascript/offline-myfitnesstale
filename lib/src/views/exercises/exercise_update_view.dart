@@ -70,7 +70,7 @@ class _ExerciseUpdateViewState extends State<ExerciseUpdateView> {
           body: Column(
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
-              SizedBox(height: breakpoints.height / 15),
+              SizedBox(height: breakpoints.height / 18),
               Card(
                 margin: EdgeInsets.zero,
                 child: Padding(
@@ -117,7 +117,6 @@ class _ExerciseUpdateViewState extends State<ExerciseUpdateView> {
                           );
 
                       if (context.mounted) {
-                        final state = context.read<ExerciseCubit>().state;
                         if (state.error == null) {
                           if (context.canPop()) {
                             context.pop();

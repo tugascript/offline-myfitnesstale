@@ -2,17 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import '../cubits/states/workout_state.dart';
-import '../cubits/workout_cubit.dart';
-import '../utilities/sizes/screen_size.dart';
-import '../utilities/sizes/data_display_sizes.dart';
-import '../views/loading_view.dart';
-import '../widgets/layout/app_scaffold.dart';
-import '../widgets/layout/responsive_scaffold.dart';
-import '../widgets/workouts/details/empty_sets_card.dart';
-import '../widgets/common/action_buttons.dart';
-import '../widgets/workouts/details/workout_header_card.dart';
-import '../widgets/workouts/details/workout_set_card.dart';
+import '../../cubits/states/workout_state.dart';
+import '../../cubits/workout_cubit.dart';
+import '../../utilities/sizes/screen_size.dart';
+import '../../utilities/sizes/data_display_sizes.dart';
+import '../loading_view.dart';
+import '../../widgets/layout/app_scaffold.dart';
+import '../../widgets/layout/responsive_scaffold.dart';
+import '../../widgets/workouts/details/empty_sets_card.dart';
+import '../../widgets/common/action_buttons.dart';
+import '../../widgets/workouts/details/workout_header_card.dart';
+import '../../widgets/workouts/details/workout_set_card.dart';
 
 class WorkoutDetailView extends StatefulWidget {
   static const name = "workout-detail";
