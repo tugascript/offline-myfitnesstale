@@ -89,6 +89,16 @@ class _EquipmentUpdateViewState extends State<EquipmentUpdateView> {
                           id: widget.equipmentId,
                           name: name,
                         );
+                    if (context.mounted) {
+                      if (state.error == null) {
+                        if (context.canPop()) {
+                          context.pop();
+                          return;
+                        }
+
+                        context.go(EquipmentsView.routeName);
+                      }
+                    }
                   },
                 ),
               ],
