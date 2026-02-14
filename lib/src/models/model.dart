@@ -15,6 +15,8 @@ mixin Columns {
 
   String get orderAsc => "$value ASC";
   String get orderDesc => "$value DESC";
+  String get orderCaseInsensitiveAsc => "$value COLLATE NOCASE ASC";
+  String get orderCaseInsensitiveDesc => "$value COLLATE NOCASE DESC";
 }
 
 abstract class Model {

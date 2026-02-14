@@ -6,6 +6,7 @@ import '../models/enums.dart';
 import '../services/common/errors.dart';
 import '../services/workout_service.dart';
 import '../services/dtos/workout_dto.dart';
+import '../models/workout_set_exercise_model.dart';
 import 'states/common_state.dart';
 import 'states/workout_state.dart';
 
@@ -22,6 +23,7 @@ class WorkoutCubit extends Cubit<WorkoutState> {
     MuscleGroup? muscleGroup,
     int? limit,
     int? offset,
+    bool isFavorite = false,
   }) async {
     _logger.info('Getting workouts');
     final isLoadMore = (offset ?? state.pagination.offset) > 0;
@@ -35,6 +37,7 @@ class WorkoutCubit extends Cubit<WorkoutState> {
       name: name,
       difficulty: difficulty,
       muscleGroup: muscleGroup,
+      isFavorite: isFavorite,
       limit: limit ?? state.pagination.limit,
       offset: offset ?? state.pagination.offset,
     );
@@ -75,6 +78,7 @@ class WorkoutCubit extends Cubit<WorkoutState> {
         limit: paginatedData.limit,
         offset: paginatedData.offset,
         total: paginatedData.total,
+        isFavorite: isFavorite,
       ),
       isLoading: false,
     ));
@@ -82,6 +86,7 @@ class WorkoutCubit extends Cubit<WorkoutState> {
 
   Future<void> createWorkout({
     required String name,
+    required bool isFavorite,
     required Difficulty difficulty,
     String? description,
     PictureData? picture,
@@ -92,6 +97,7 @@ class WorkoutCubit extends Cubit<WorkoutState> {
 
     final result = await _workoutService.createWorkout(
       name: name,
+      isFavorite: isFavorite,
       difficulty: difficulty,
       description: description,
       picture: picture,
@@ -176,6 +182,7 @@ class WorkoutCubit extends Cubit<WorkoutState> {
     String? description,
     PictureData? picture,
     VideoData? video,
+    bool? isFavorite,
   }) async {
     _logger.info('Updating workout with id $id');
     emit(state.copyWith(isLoading: true));
@@ -187,6 +194,7 @@ class WorkoutCubit extends Cubit<WorkoutState> {
       description: description,
       picture: picture,
       video: video,
+      isFavorite: isFavorite,
     );
     if (result.isErr()) {
       final error = result.error;
@@ -220,7 +228,11 @@ class WorkoutCubit extends Cubit<WorkoutState> {
     }
 
     _logger.info("Workout updated successfully");
-    final workout = result.value;
+    final workout = result.value.copyWith(
+      sets: state.selectedWorkout?.id == id
+          ? state.selectedWorkout?.sets
+          : result.value.sets,
+    );
     emit(state.copyWith(
       selectedWorkout: workout,
       workouts: state.workouts.map((w) => w.id == id ? workout : w).toList(),
@@ -365,6 +377,75 @@ class WorkoutCubit extends Cubit<WorkoutState> {
     if (result.isErr()) {
       final error = result.error;
       _logger.warning("Failed to delete workout set", error);
+      emit(state.copyWith(
+        error: ErrorState(
+          type: error.type.name,
+          description: error.description,
+        ),
+        isLoading: false,
+      ));
+      return;
+    }
+
+    // Refresh workout
+    await getWorkout(workoutId);
+  }
+
+  Future<void> updateWorkoutSetPosition({
+    required int workoutSetId,
+    required int position,
+  }) async {
+    _logger.info('Updating workout set $workoutSetId position to $position');
+    emit(state.copyWith(isLoading: true));
+
+    final result = await _workoutService.updateWorkoutSetPosition(
+      workoutSetId: workoutSetId,
+      position: position,
+    );
+
+    if (result.isErr()) {
+      final error = result.error;
+      _logger.warning("Failed to update workout set position", error);
+      emit(state.copyWith(
+        error: ErrorState(
+          type: error.type.name,
+          description: error.description,
+        ),
+        isLoading: false,
+      ));
+      return;
+    }
+
+    // Refresh workout to reflect new order
+    if (state.selectedWorkout != null) {
+      await getWorkout(state.selectedWorkout!.id);
+    } else {
+      emit(state.copyWith(isLoading: false));
+    }
+  }
+
+  Future<void> updateWorkoutSetExercise({
+    required int workoutSetExerciseId,
+    required int workoutId,
+    int? minReps,
+    int? maxReps,
+    WorkoutSetExerciseDifficulty? difficulty,
+  }) async {
+    _logger.info('Updating workout set exercise $workoutSetExerciseId');
+    // We don't want to show loading indicator for this as it's a small update
+    // from a text field usually
+    // emit(state.copyWith(isLoading: true));
+
+    final result = await _workoutService.updateWorkoutSetExercise(
+      workoutSetExerciseId: workoutSetExerciseId,
+      minReps: minReps,
+      maxReps: maxReps,
+      difficulty: difficulty,
+    );
+
+    if (result.isErr()) {
+      final error = result.error;
+      _logger.warning("Failed to update workout set exercise", error);
       emit(state.copyWith(
         error: ErrorState(
           type: error.type.name,

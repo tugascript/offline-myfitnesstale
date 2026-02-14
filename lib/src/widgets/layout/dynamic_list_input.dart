@@ -28,7 +28,10 @@ class DynamicListInput<T> extends StatelessWidget {
     required this.padding,
     required this.spacing,
     required this.isLoading,
+    this.onReorder,
   });
+
+  final void Function(int oldIndex, int newIndex)? onReorder;
 
   @override
   Widget build(BuildContext context) {
@@ -49,6 +52,7 @@ class DynamicListInput<T> extends StatelessWidget {
               final item = newItems.removeAt(oldIndex);
               newItems.insert(newIndex, item);
               onChanged(newItems);
+              onReorder?.call(oldIndex, newIndex);
             },
             itemBuilder: (context, index) {
               final item = items[index];

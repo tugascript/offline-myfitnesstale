@@ -96,34 +96,56 @@ class _ExerciseFormState extends State<ExerciseForm> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          AppTextFormField(
-            filled: true,
-            theme: widget.theme,
-            maxLines: 1,
-            isLoading: widget.isLoading,
-            controller: _nameController,
-            labelText: "Name",
-            hintText: "Enter exercise name",
-            fontSize: widget.sizes.subtitleFontSize,
-            padding: widget.sizes.padding,
-            onChanged: (value) {
-              setState(() {
-                _data.name = value;
-              });
-            },
-            onSaved: (value) {
-              if (value != null) {
-                setState(() {
-                  _data.name = value;
-                });
-              }
-            },
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Please enter a name';
-              }
-              return null;
-            },
+          Row(
+            mainAxisAlignment: MainAxisAlignment.start,
+            mainAxisSize: MainAxisSize.max,
+            children: [
+              Expanded(
+                child: AppTextFormField(
+                  filled: true,
+                  theme: widget.theme,
+                  maxLines: 1,
+                  isLoading: widget.isLoading,
+                  controller: _nameController,
+                  labelText: "Name",
+                  hintText: "Enter exercise name",
+                  fontSize: widget.sizes.subtitleFontSize,
+                  padding: widget.sizes.padding,
+                  onChanged: (value) {
+                    setState(() {
+                      _data.name = value;
+                    });
+                  },
+                  onSaved: (value) {
+                    if (value != null) {
+                      setState(() {
+                        _data.name = value;
+                      });
+                    }
+                  },
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter a name';
+                    }
+                    return null;
+                  },
+                ),
+              ),
+              IconButton(
+                icon: Icon(
+                  _data.isFavorite ? Icons.favorite : Icons.favorite_border,
+                  color: widget.theme.colorScheme.secondary,
+                ),
+                onPressed: () {
+                  setState(() {
+                    _data.isFavorite = !_data.isFavorite;
+                  });
+                },
+                tooltip: _data.isFavorite
+                    ? 'Remove from favorites'
+                    : 'Add to favorites',
+              ),
+            ],
           ),
           SizedBox(height: widget.sizes.spacing),
           AppTextFormField(

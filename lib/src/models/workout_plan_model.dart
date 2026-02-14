@@ -6,24 +6,6 @@ import 'model.dart';
 import 'utilities.dart';
 
 const String _table = 'workout_plans';
-const String _tableCreate = '''
-  CREATE TABLE IF NOT EXISTS $_table (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,
-    description TEXT,
-    picture TEXT,
-    video TEXT,
-    total_weeks INTEGER NOT NULL,
-    total_days INTEGER NOT NULL,
-    total_workouts INTEGER NOT NULL,
-    difficulty INTEGER NOT NULL,
-    created_by TEXT NOT NULL,
-    created_at INTEGER NOT NULL,
-    updated_at INTEGER NOT NULL
-  );
-  
-  CREATE UNIQUE INDEX IF NOT EXISTS unique_idx_workout_plans_name ON $_table (name);
-  ''';
 
 enum WorkoutPlanColumns with Columns {
   id("id"),
@@ -35,6 +17,7 @@ enum WorkoutPlanColumns with Columns {
   totalWeeks("total_weeks"),
   totalDays("total_days"),
   totalWorkouts("total_workouts"),
+  isFavorite("is_favorite"),
   createdBy("created_by"),
   createdAt("created_at"),
   updatedAt("updated_at");
@@ -53,6 +36,7 @@ class WorkoutPlan extends Equatable implements Model {
   final int totalWeeks;
   final int totalDays;
   final int totalWorkouts;
+  final bool isFavorite;
   final PictureData? picture;
   final VideoData? video;
   final Difficulty difficulty;
@@ -69,6 +53,7 @@ class WorkoutPlan extends Equatable implements Model {
     required this.totalWeeks,
     required this.totalDays,
     required this.totalWorkouts,
+    required this.isFavorite,
     this.picture,
     this.video,
     required this.difficulty,
@@ -78,7 +63,25 @@ class WorkoutPlan extends Equatable implements Model {
   });
 
   static const String table = _table;
-  static const String tableCreate = _tableCreate;
+  static final String tableCreate = '''
+  CREATE TABLE IF NOT EXISTS $_table (
+    ${WorkoutPlanColumns.id.value} INTEGER PRIMARY KEY AUTOINCREMENT,
+    ${WorkoutPlanColumns.name.value} TEXT NOT NULL,
+    ${WorkoutPlanColumns.description.value} TEXT,
+    ${WorkoutPlanColumns.picture.value} TEXT,
+    ${WorkoutPlanColumns.video.value} TEXT,
+    ${WorkoutPlanColumns.totalWeeks.value} INTEGER NOT NULL,
+    ${WorkoutPlanColumns.totalDays.value} INTEGER NOT NULL,
+    ${WorkoutPlanColumns.totalWorkouts.value} INTEGER NOT NULL,
+    ${WorkoutPlanColumns.isFavorite.value} INTEGER NOT NULL,
+    ${WorkoutPlanColumns.difficulty.value} INTEGER NOT NULL,
+    ${WorkoutPlanColumns.createdBy.value} TEXT NOT NULL,
+    ${WorkoutPlanColumns.createdAt.value} INTEGER NOT NULL,
+    ${WorkoutPlanColumns.updatedAt.value} INTEGER NOT NULL
+  );
+  
+  CREATE UNIQUE INDEX IF NOT EXISTS unique_idx_workout_plans_name ON $_table (${WorkoutPlanColumns.name.value});
+  ''';
 
   @override
   Map<String, Object?> toMap() {
@@ -89,6 +92,7 @@ class WorkoutPlan extends Equatable implements Model {
       WorkoutPlanColumns.totalWeeks.value: totalWeeks,
       WorkoutPlanColumns.totalDays.value: totalDays,
       WorkoutPlanColumns.totalWorkouts.value: totalWorkouts,
+      WorkoutPlanColumns.isFavorite.value: isFavorite ? 1 : 0,
       WorkoutPlanColumns.picture.value: picture,
       WorkoutPlanColumns.video.value: video,
       WorkoutPlanColumns.difficulty.value: difficulty.value,
@@ -105,6 +109,9 @@ class WorkoutPlan extends Equatable implements Model {
       name: map[WorkoutPlanColumns.name.value] as String,
       description: map[WorkoutPlanColumns.description.value] as String?,
       totalWeeks: map[WorkoutPlanColumns.totalWeeks.value] as int,
+      totalDays: map[WorkoutPlanColumns.totalDays.value] as int,
+      totalWorkouts: map[WorkoutPlanColumns.totalWorkouts.value] as int,
+      isFavorite: map[WorkoutPlanColumns.isFavorite.value] as int == 1,
       picture: map[WorkoutPlanColumns.picture.value] != null
           ? PictureData.fromJson(
               map[WorkoutPlanColumns.picture.value] as String)
@@ -119,8 +126,6 @@ class WorkoutPlan extends Equatable implements Model {
       ),
       createdAt: map[WorkoutPlanColumns.createdAt.value] as int,
       updatedAt: map[WorkoutPlanColumns.updatedAt.value] as int,
-      totalDays: map[WorkoutPlanColumns.totalDays.value] as int,
-      totalWorkouts: map[WorkoutPlanColumns.totalWorkouts.value] as int,
     );
   }
 
@@ -135,6 +140,7 @@ class WorkoutPlan extends Equatable implements Model {
     int totalDays = 0,
     int totalWorkouts = 0,
     CreatedBy createdBy = CreatedBy.user,
+    bool isFavorite = false,
   }) {
     final int now = DateUtilities.getNowUtcUnix();
     return WorkoutPlan(
@@ -147,6 +153,7 @@ class WorkoutPlan extends Equatable implements Model {
       picture: picture,
       video: video,
       createdBy: createdBy,
+      isFavorite: isFavorite,
       createdAt: now,
       updatedAt: now,
     );
@@ -164,6 +171,7 @@ class WorkoutPlan extends Equatable implements Model {
     VideoData? video,
     Difficulty? difficulty,
     CreatedBy? createdBy,
+    bool? isFavorite,
     int? createdAt,
     int? updatedAt,
   }) {
@@ -178,6 +186,7 @@ class WorkoutPlan extends Equatable implements Model {
       video: video ?? this.video,
       difficulty: difficulty ?? this.difficulty,
       createdBy: createdBy ?? this.createdBy,
+      isFavorite: isFavorite ?? this.isFavorite,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -195,6 +204,7 @@ class WorkoutPlan extends Equatable implements Model {
         video,
         difficulty,
         createdBy,
+        isFavorite,
         createdAt,
         updatedAt
       ];

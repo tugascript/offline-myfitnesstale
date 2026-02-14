@@ -18,6 +18,7 @@ enum WorkoutSetExerciseColumns with Columns {
   position("position"),
   minReps("min_reps"),
   maxReps("max_reps"),
+  toMaxReps("to_max_reps"),
   difficulty("difficulty"),
   createdBy("created_by"),
   createdAt("created_at"),
@@ -79,6 +80,7 @@ final class WorkoutSetExercise extends Equatable implements Model {
   final int position;
   final int minReps;
   final int? maxReps;
+  final bool toMaxReps;
   final WorkoutSetExerciseDifficulty? difficulty;
   final CreatedBy createdBy;
   @override
@@ -94,6 +96,7 @@ final class WorkoutSetExercise extends Equatable implements Model {
     required this.position,
     required this.minReps,
     this.maxReps,
+    required this.toMaxReps,
     this.difficulty,
     required this.createdBy,
     required this.createdAt,
@@ -110,6 +113,7 @@ final class WorkoutSetExercise extends Equatable implements Model {
     ${WorkoutSetExerciseColumns.position.value} INTEGER NOT NULL,
     ${WorkoutSetExerciseColumns.minReps.value} INTEGER NOT NULL,
     ${WorkoutSetExerciseColumns.maxReps.value} INTEGER,
+    ${WorkoutSetExerciseColumns.toMaxReps.value} INTEGER NOT NULL,
     ${WorkoutSetExerciseColumns.difficulty.value} TEXT,
     ${WorkoutSetExerciseColumns.createdBy.value} TEXT NOT NULL,
     ${WorkoutSetExerciseColumns.createdAt.value} INTEGER NOT NULL,
@@ -136,6 +140,7 @@ final class WorkoutSetExercise extends Equatable implements Model {
       WorkoutSetExerciseColumns.position.value: position,
       WorkoutSetExerciseColumns.minReps.value: minReps,
       WorkoutSetExerciseColumns.maxReps.value: maxReps,
+      WorkoutSetExerciseColumns.toMaxReps.value: toMaxReps ? 1 : 0,
       WorkoutSetExerciseColumns.difficulty.value: difficulty?.toJson(),
       WorkoutSetExerciseColumns.createdBy.value: createdBy.value,
       WorkoutSetExerciseColumns.createdAt.value: createdAt,
@@ -153,6 +158,7 @@ final class WorkoutSetExercise extends Equatable implements Model {
       position: map[WorkoutSetExerciseColumns.position.value] as int,
       minReps: map[WorkoutSetExerciseColumns.minReps.value] as int,
       maxReps: map[WorkoutSetExerciseColumns.maxReps.value] as int?,
+      toMaxReps: map[WorkoutSetExerciseColumns.toMaxReps.value] as int == 1,
       difficulty: map[WorkoutSetExerciseColumns.difficulty.value] != null
           ? WorkoutSetExerciseDifficulty.fromJson(
               map[WorkoutSetExerciseColumns.difficulty.value] as String)
@@ -172,6 +178,7 @@ final class WorkoutSetExercise extends Equatable implements Model {
     required int exerciseId,
     required int minReps,
     int? maxReps,
+    bool toMaxReps = false,
     WorkoutSetExerciseDifficulty? difficulty,
     CreatedBy createdBy = CreatedBy.user,
   }) {
@@ -183,6 +190,7 @@ final class WorkoutSetExercise extends Equatable implements Model {
       position: position,
       minReps: minReps,
       maxReps: maxReps,
+      toMaxReps: toMaxReps,
       difficulty: difficulty,
       createdBy: createdBy,
       createdAt: now,
@@ -199,6 +207,7 @@ final class WorkoutSetExercise extends Equatable implements Model {
     int? position,
     int? minReps,
     int? maxReps,
+    bool? toMaxReps,
     WorkoutSetExerciseDifficulty? difficulty,
     CreatedBy? createdBy,
     int? createdAt,
@@ -212,6 +221,7 @@ final class WorkoutSetExercise extends Equatable implements Model {
       position: position ?? this.position,
       minReps: minReps ?? this.minReps,
       maxReps: maxReps ?? this.maxReps,
+      toMaxReps: toMaxReps ?? this.toMaxReps,
       difficulty: difficulty ?? this.difficulty,
       createdBy: createdBy ?? this.createdBy,
       createdAt: createdAt ?? this.createdAt,
@@ -228,6 +238,7 @@ final class WorkoutSetExercise extends Equatable implements Model {
         position,
         minReps,
         maxReps,
+        toMaxReps,
         difficulty,
         createdBy,
         createdAt,

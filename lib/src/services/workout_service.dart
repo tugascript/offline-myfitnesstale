@@ -134,6 +134,7 @@ class WorkoutService {
     String? name,
     Difficulty? difficulty,
     MuscleGroup? muscleGroup,
+    bool isFavorite = false,
     int limit = kDefaultLimit,
     int offset = kDefaultOffset,
   }) async {
@@ -152,12 +153,17 @@ class WorkoutService {
       query.and(WorkoutColumns.muscleGroups.like, '%${muscleGroup.value}%');
     }
 
+    if (isFavorite) {
+      query.and(WorkoutColumns.isFavorite.equal, 1);
+    }
+
     try {
       final List<Workout> workouts = await _repository.selectPaginated(
         limit: limit,
         offset: offset,
         where: query.where,
         whereArgs: query.args,
+        orderBy: WorkoutColumns.name.orderCaseInsensitiveAsc,
       );
       final int total = await _repository.count(
         where: query.where,
@@ -322,6 +328,7 @@ class WorkoutService {
   Future<Result<WorkoutDto, ServiceError<OperationErrorTypes>>> createWorkout({
     required String name,
     required Difficulty difficulty,
+    bool isFavorite = false,
     String? description,
     PictureData? picture,
     VideoData? video,
@@ -333,6 +340,7 @@ class WorkoutService {
         difficulty: difficulty,
         muscleGroups: <MuscleGroup>{},
         description: description,
+        isFavorite: isFavorite,
         picture: picture,
         video: video,
       );
@@ -493,6 +501,7 @@ class WorkoutService {
     String? description,
     PictureData? picture,
     VideoData? video,
+    bool? isFavorite,
   }) async {
     _logger.info('Updating workout with id $id');
     try {
@@ -511,6 +520,7 @@ class WorkoutService {
         description: description,
         picture: picture,
         video: video,
+        isFavorite: isFavorite,
         updatedAt: DateUtilities.getNowUtcUnix(),
       );
       await _repository.update(updatedWorkout);

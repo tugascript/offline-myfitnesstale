@@ -646,4 +646,33 @@ class ExerciseCubit extends Cubit<ExerciseState> {
       ),
     ));
   }
+
+  Future<void> getSelectionExercises({
+    MuscleGroup? muscleGroup,
+    String name = "",
+    bool isFavorite = false,
+  }) async {
+    emit(state.copyWith(isLoading: true));
+    final exercisesResult = await _exerciseService.getAllExercises(
+      muscleGroup: muscleGroup,
+      name: name,
+      isFavorite: isFavorite,
+    );
+    if (exercisesResult.isErr()) {
+      final error = exercisesResult.error;
+      _logger.warning("Failed to get exercises, error: $error");
+      emit(state.copyWith(
+        error: ErrorState(
+          type: error.type.name,
+          description: "Failed to get exercises",
+        ),
+        isLoading: false,
+      ));
+      return;
+    }
+    emit(state.copyWith(
+      isLoading: false,
+      exerciseSelection: exercisesResult.value,
+    ));
+  }
 }

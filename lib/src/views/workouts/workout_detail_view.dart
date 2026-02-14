@@ -104,6 +104,12 @@ class _WorkoutDetailViewState extends State<WorkoutDetailView> {
                 WorkoutHeaderCard(
                   sizes: sizes,
                   workoutDto: workout,
+                  onFavoriteToggle: () {
+                    context.read<WorkoutCubit>().updateWorkout(
+                          id: workout.id,
+                          isFavorite: !workout.isFavorite,
+                        );
+                  },
                 ),
                 SizedBox(height: sizes.spacing * 1.25),
                 // Workout Sets
@@ -116,7 +122,7 @@ class _WorkoutDetailViewState extends State<WorkoutDetailView> {
                   ),
                 ),
                 SizedBox(height: sizes.spacing),
-                if (workout.sets != null && workout.sets!.isEmpty)
+                if (workout.sets == null || workout.sets!.isEmpty)
                   EmptySetsCard(sizes: sizes)
                 else
                   ...workoutState.selectedWorkout!.sets!

@@ -7,7 +7,7 @@ import '../../cubits/states/exercise_state.dart';
 import '../../models/enums.dart';
 import '../../utilities/sizes/data_display_sizes.dart';
 import '../../utilities/sizes/screen_size.dart';
-import '../../widgets/exercises/exercise_search_form.dart';
+import '../../widgets/common/base_common_search_form.dart';
 import '../../widgets/exercises/exercises_list.dart';
 import '../../widgets/layout/app_scaffold.dart';
 import 'exercise_creation_view.dart';
@@ -92,14 +92,17 @@ class _ExercisesViewState extends State<ExercisesView> {
             return Column(
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
-                ExerciseSearchForm(
+                BaseCommonSearchForm(
                   theme: theme,
-                  sizes: sizes,
+                  nameLabel: "Exercise",
+                  padding: sizes.padding,
+                  fontSize: sizes.fontSize,
+                  spacing: sizes.inputSpacing,
                   isLoading: state.isLoading,
                   initialName: state.exercisePagination.name,
                   initialDifficulty: state.exercisePagination.difficulty,
                   initialMuscleGroup: state.exercisePagination.muscleGroup,
-                  initialIsFavourite: state.exercisePagination.isFavorite,
+                  initialIsFavorite: state.exercisePagination.isFavorite,
                   onSubmit: ({
                     String? name,
                     Difficulty? difficulty,
@@ -119,6 +122,7 @@ class _ExercisesViewState extends State<ExercisesView> {
                 SizedBox(height: sizes.inputSpacing),
                 Expanded(
                   child: ExercisesList(
+                    theme: theme,
                     sizes: sizes,
                     isLoading: state.isLoading,
                     exercises: state.exercises,

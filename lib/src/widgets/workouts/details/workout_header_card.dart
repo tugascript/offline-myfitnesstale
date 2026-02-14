@@ -12,11 +12,13 @@ import '../../common/total_numeric_string.dart';
 class WorkoutHeaderCard extends StatelessWidget {
   final DataDisplaySizesList sizes;
   final WorkoutDto workoutDto;
+  final VoidCallback onFavoriteToggle;
 
   const WorkoutHeaderCard({
     super.key,
     required this.sizes,
     required this.workoutDto,
+    required this.onFavoriteToggle,
   });
 
   @override
@@ -34,30 +36,34 @@ class WorkoutHeaderCard extends StatelessWidget {
                 fontWeight: FontWeight.w600,
               ),
             ),
-            SizedBox(
-              width: sizes.spacing,
+            IconButton(
+              icon: Icon(
+                workoutDto.isFavorite ? Icons.favorite : Icons.favorite_border,
+                color: workoutDto.isFavorite ? Colors.red : null,
+              ),
+              onPressed: onFavoriteToggle,
+              tooltip: workoutDto.isFavorite
+                  ? 'Remove from favorites'
+                  : 'Add to favorites',
             ),
+          ],
+        ),
+        Row(
+          children: [
             Expanded(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  TotalNumericString(
-                    name: 'Sets',
-                    total: workoutDto.totalSets,
-                    fontSize: sizes.fontSize,
-                  ),
-                  SizedBox(
-                    height: sizes.spacing / 2,
-                  ),
-                  TotalNumericString(
-                    name: 'Reps',
-                    total: workoutDto.totalReps,
-                    fontSize: sizes.fontSize,
-                  ),
-                ],
+              child: TotalNumericString(
+                name: 'Sets',
+                total: workoutDto.totalSets,
+                fontSize: sizes.fontSize,
               ),
             ),
+            Expanded(
+              child: TotalNumericString(
+                name: 'Reps',
+                total: workoutDto.totalReps,
+                fontSize: sizes.fontSize,
+              ),
+            )
           ],
         ),
         SizedBox(

@@ -7,6 +7,7 @@ import '../common/not_found_list.dart';
 import 'exercise_card.dart';
 
 class ExercisesList extends StatelessWidget {
+  final ThemeData theme;
   final DataDisplaySizesList sizes;
   final bool isLoading;
   final List<ExerciseDto> exercises;
@@ -14,6 +15,7 @@ class ExercisesList extends StatelessWidget {
 
   const ExercisesList({
     super.key,
+    required this.theme,
     required this.sizes,
     required this.isLoading,
     required this.exercises,
@@ -42,6 +44,7 @@ class ExercisesList extends StatelessWidget {
         }
         final exercise = exercises[index];
         return ExerciseCard(
+          theme: theme,
           exercise: exercise,
           sizes: sizes,
           onTap: () => context.push('/exercises/${exercise.id}'),

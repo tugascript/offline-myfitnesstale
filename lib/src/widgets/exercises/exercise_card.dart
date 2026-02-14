@@ -7,14 +7,17 @@ import '../common/difficulty_badge.dart';
 import '../common/muscle_badge.dart';
 import '../common/muscle_group_badge.dart';
 import '../layout/list_card.dart';
+import 'exercise_name.dart';
 
 class ExerciseCard extends StatelessWidget {
+  final ThemeData theme;
   final ExerciseDto exercise;
   final VoidCallback onTap;
   final DataDisplaySizesList sizes;
 
   const ExerciseCard({
     super.key,
+    required this.theme,
     required this.exercise,
     required this.onTap,
     required this.sizes,
@@ -22,13 +25,12 @@ class ExerciseCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return ListCard(
       margin: sizes.margins,
       padding: sizes.padding,
       onTap: onTap,
       children: [
-        _ExerciseName(
+        ExerciseName(
           name: exercise.name,
           isFavorite: exercise.isFavorite,
           fontSize: sizes.subtitleFontSize,
@@ -56,48 +58,6 @@ class ExerciseCard extends StatelessWidget {
               color: Colors.grey,
             )
           ],
-        ),
-      ],
-    );
-  }
-}
-
-class _ExerciseName extends StatelessWidget {
-  final String name;
-  final bool isFavorite;
-  final double fontSize;
-
-  const _ExerciseName({
-    required this.name,
-    required this.isFavorite,
-    required this.fontSize,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    if (!isFavorite) {
-      return Text(
-        name,
-        style: TextStyle(
-          fontSize: fontSize,
-          fontWeight: FontWeight.bold,
-        ),
-      );
-    }
-
-    return Row(
-      children: [
-        Text(
-          "$name ",
-          style: TextStyle(
-            fontSize: fontSize,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        Icon(
-          Icons.favorite,
-          color: Colors.red,
-          size: fontSize * 1.2,
         ),
       ],
     );

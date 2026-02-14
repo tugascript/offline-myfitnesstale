@@ -105,7 +105,7 @@ class ExerciseService {
         offset: offset,
         where: query.where,
         whereArgs: query.args,
-        orderBy: "${ExerciseColumns.name.value} COLLATE NOCASE",
+        orderBy: ExerciseColumns.name.orderCaseInsensitiveAsc,
       );
       final int total = await _repository.count(
         where: query.where,
@@ -124,6 +124,42 @@ class ExerciseService {
       return err(const ServiceError(
         type: OperationErrorTypes.operationFailure,
         description: 'Failed to get exercises',
+      ));
+    }
+  }
+
+  Future<Result<List<ExerciseDto>, ServiceError<OperationErrorTypes>>>
+      getAllExercises({
+    MuscleGroup? muscleGroup,
+    String name = "",
+    bool isFavorite = false,
+  }) async {
+    _logger.info("Getting all exercises...");
+    final WhereBuilder query = WhereBuilder();
+
+    if (name.isNotEmpty) {
+      query.and(ExerciseColumns.name.like, '%$name%');
+    }
+    if (muscleGroup != null) {
+      query.and(ExerciseColumns.muscleGroup.equal, muscleGroup.value);
+    }
+    if (isFavorite) {
+      query.and(ExerciseColumns.isFavorite.equal, 1);
+    }
+
+    try {
+      final List<Exercise> exercises = await _repository.selectMany(
+        where: query.where,
+        whereArgs: query.args,
+        orderBy: ExerciseColumns.name.orderCaseInsensitiveAsc,
+      );
+      _logger.info("Found ${exercises.length} exercises");
+      return ok(exercises.map((e) => ExerciseDto.fromModel(e)).toList());
+    } catch (e) {
+      _logger.severe("Failed to get all exercises", e);
+      return err(const ServiceError(
+        type: OperationErrorTypes.operationFailure,
+        description: 'Failed to get all exercises',
       ));
     }
   }
