@@ -2,7 +2,7 @@ import 'package:go_router/go_router.dart';
 
 import '../views/active_workout_view.dart';
 import '../views/create_profile_view.dart';
-import '../views/create_workout_view.dart';
+import '../views/workouts/workout_edit_view.dart';
 import '../views/current_workout_plan_view.dart';
 import '../views/equipments/equipment_creation_view.dart';
 import '../views/equipments/equipment_details_view.dart';
@@ -114,8 +114,14 @@ sealed class AppRouter {
       builder: (context, state) => const WorkoutsView(),
     ),
     GoRoute(
-      path: '/workouts/create',
-      builder: (context, state) => const CreateWorkoutView(),
+      path: WorkoutEditView.routeName,
+      builder: (context, state) {
+        final id = int.tryParse(state.pathParameters['id'] ?? '');
+        if (id == null) {
+          return const NotFoundView();
+        }
+        return WorkoutEditView(workoutId: id); // TODO: fix me
+      },
     ),
     GoRoute(
       path: '/workouts/:id/history',
@@ -125,16 +131,6 @@ sealed class AppRouter {
           return const NotFoundView();
         }
         return WorkoutHistoryDetailView(workoutRecordId: id);
-      },
-    ),
-    GoRoute(
-      path: '/workouts/:id/edit',
-      builder: (context, state) {
-        final id = int.tryParse(state.pathParameters['id'] ?? '');
-        if (id == null) {
-          return const NotFoundView();
-        }
-        return CreateWorkoutView(workoutId: id); // TODO: fix me
       },
     ),
     GoRoute(

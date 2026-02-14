@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../cubits/states/workout_state.dart';
 import '../../cubits/workout_cubit.dart';
-import '../../models/enums.dart';
 import '../../utilities/sizes/data_display_sizes.dart';
 import '../../utilities/sizes/screen_size.dart';
 import '../../widgets/common/base_common_search_form.dart';
 import '../../widgets/layout/app_scaffold.dart';
+import '../../widgets/workouts/details/create_workout_modal.dart';
 import '../../widgets/workouts/workouts_list.dart';
 
 class WorkoutsView extends StatefulWidget {
@@ -95,22 +94,24 @@ class _WorkoutsViewState extends State<WorkoutsView> {
                   padding: sizes.padding,
                   fontSize: sizes.fontSize,
                   spacing: sizes.inputSpacing,
-                  initialName: "",
-                  initialDifficulty: null,
-                  initialMuscleGroup: null,
+                  initialName: state.pagination.name,
+                  initialDifficulty: state.pagination.difficulty,
+                  initialMuscleGroup: state.pagination.muscleGroup,
+                  initialIsFavorite: state.pagination.isFavorite,
                   onSubmit: ({
-                    String? name,
-                    Difficulty? difficulty,
-                    MuscleGroup? muscleGroup,
-                  }) {
-                    context.read<WorkoutCubit>().getWorkouts(
-                          name: name,
-                          difficulty: difficulty,
-                          muscleGroup: muscleGroup,
-                          limit: 20,
-                          offset: 0,
-                        );
-                  },
+                    required difficulty,
+                    required isFavourite,
+                    required muscleGroup,
+                    required name,
+                  }) =>
+                      context.read<WorkoutCubit>().getWorkouts(
+                            name: name,
+                            difficulty: difficulty,
+                            muscleGroup: muscleGroup,
+                            limit: 20,
+                            offset: 0,
+                            isFavorite: isFavourite,
+                          ),
                 ),
                 SizedBox(height: sizes.inputSpacing),
                 Expanded(
@@ -133,7 +134,10 @@ class _WorkoutsViewState extends State<WorkoutsView> {
         child: FloatingActionButton(
           elevation: sizes.elevation,
           onPressed: () {
-            context.push("/workouts/create");
+            showDialog(
+              context: context,
+              builder: (context) => CreateWorkoutDialog(sizes: sizes),
+            );
           },
           shape: BeveledRectangleBorder(),
           child: Icon(Icons.add, size: sizes.buttonIconSize),

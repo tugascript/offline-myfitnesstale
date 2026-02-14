@@ -6,26 +6,6 @@ import 'model.dart';
 import 'utilities.dart';
 
 const String _table = 'workouts';
-const String _tableCreate = '''
-  CREATE TABLE IF NOT EXISTS $_table (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,
-    description TEXT,
-    picture TEXT,
-    video TEXT,
-    phase TEXT,
-    muscle_groups TEXT NOT NULL,
-    muscles TEXT NOT NULL,
-    difficulty INTEGER NOT NULL,
-    total_sets INTEGER NOT NULL,
-    total_reps INTEGER NOT NULL,
-    created_by TEXT NOT NULL,
-    created_at INTEGER NOT NULL,
-    updated_at INTEGER NOT NULL
-  );
-  
-  CREATE UNIQUE INDEX IF NOT EXISTS unique_idx_workouts_name ON $_table (name);
-  ''';
 
 enum WorkoutColumns with Columns {
   id("id"),
@@ -36,6 +16,7 @@ enum WorkoutColumns with Columns {
   phase("phase"),
   muscleGroups("muscle_groups"),
   muscles("muscles"),
+  isFavorite("is_favorite"),
   difficulty("difficulty"),
   totalSets("total_sets"),
   totalReps("total_reps"),
@@ -59,6 +40,7 @@ final class Workout implements Model {
   final WorkoutPhase? phase;
   final Set<MuscleGroup> muscleGroups;
   final Set<Muscle> muscles;
+  final bool isFavorite;
   final Difficulty difficulty;
   final int totalSets;
   final int totalReps;
@@ -77,6 +59,7 @@ final class Workout implements Model {
     this.phase,
     required this.muscleGroups,
     required this.muscles,
+    required this.isFavorite,
     required this.difficulty,
     required this.totalSets,
     required this.totalReps,
@@ -86,7 +69,27 @@ final class Workout implements Model {
   });
 
   static const String table = _table;
-  static const String tableCreate = _tableCreate;
+  static final String tableCreate = '''
+  CREATE TABLE IF NOT EXISTS $_table (
+    ${WorkoutColumns.id.value} INTEGER PRIMARY KEY AUTOINCREMENT,
+    ${WorkoutColumns.name.value} TEXT NOT NULL,
+    ${WorkoutColumns.description.value} TEXT,
+    ${WorkoutColumns.picture.value} TEXT,
+    ${WorkoutColumns.video.value} TEXT,
+    ${WorkoutColumns.phase.value} TEXT,
+    ${WorkoutColumns.muscleGroups.value} TEXT NOT NULL,
+    ${WorkoutColumns.muscles.value} TEXT NOT NULL,
+    ${WorkoutColumns.isFavorite.value} INTEGER NOT NULL,
+    ${WorkoutColumns.difficulty.value} INTEGER NOT NULL,
+    ${WorkoutColumns.totalSets.value} INTEGER NOT NULL,
+    ${WorkoutColumns.totalReps.value} INTEGER NOT NULL,
+    ${WorkoutColumns.createdBy.value} TEXT NOT NULL,
+    ${WorkoutColumns.createdAt.value} INTEGER NOT NULL,
+    ${WorkoutColumns.updatedAt.value} INTEGER NOT NULL
+  );
+  
+  CREATE UNIQUE INDEX IF NOT EXISTS unique_idx_workouts_name ON $_table (${WorkoutColumns.name.value});
+  ''';
 
   @override
   Map<String, Object?> toMap() {
@@ -100,6 +103,7 @@ final class Workout implements Model {
           jsonEncode(muscleGroups.map((g) => g.value).toList()),
       WorkoutColumns.muscles.value:
           jsonEncode(muscles.map((m) => m.value).toList()),
+      WorkoutColumns.isFavorite.value: isFavorite ? 1 : 0,
       WorkoutColumns.difficulty.value: difficulty.value,
       WorkoutColumns.phase.value: phase?.value,
       WorkoutColumns.totalSets.value: totalSets,
@@ -134,6 +138,7 @@ final class Workout implements Model {
               .map((m) => Muscle.fromValue(m as String))
               .toSet()
           : <Muscle>{}),
+      isFavorite: map[WorkoutColumns.isFavorite.value] == 1,
       difficulty:
           Difficulty.fromValue(map[WorkoutColumns.difficulty.value] as int),
       phase: map[WorkoutColumns.phase.value] != null
@@ -160,6 +165,7 @@ final class Workout implements Model {
     WorkoutPhase? phase,
     int totalSets = 0,
     int totalReps = 0,
+    bool isFavorite = false,
     CreatedBy createdBy = CreatedBy.user,
   }) {
     final int now = DateUtilities.getNowUtcUnix();
@@ -172,6 +178,7 @@ final class Workout implements Model {
       muscleGroups: muscleGroups,
       muscles: muscles,
       phase: phase,
+      isFavorite: isFavorite,
       totalSets: totalSets,
       totalReps: totalReps,
       createdBy: createdBy,
@@ -194,6 +201,7 @@ final class Workout implements Model {
     WorkoutPhase? phase,
     int? totalSets,
     int? totalReps,
+    bool? isFavorite,
     int? createdAt,
     int? updatedAt,
   }) {
@@ -212,11 +220,12 @@ final class Workout implements Model {
       phase: phase ?? this.phase,
       totalSets: totalSets ?? this.totalSets,
       totalReps: totalReps ?? this.totalReps,
+      isFavorite: isFavorite ?? this.isFavorite,
     );
   }
 
   @override
   String toString() {
-    return 'Workout{id: $id, name: $name, description: $description, picture: $picture, video: $video, createdBy: $createdBy, createdAt: $createdAt, updatedAt: $updatedAt, phase: $phase, totalSets: $totalSets, totalReps: $totalReps}';
+    return 'Workout{id: $id, name: $name, description: $description, picture: $picture, video: $video, createdBy: $createdBy, createdAt: $createdAt, updatedAt: $updatedAt, phase: $phase, totalSets: $totalSets, totalReps: $totalReps, isFavorite: $isFavorite}';
   }
 }

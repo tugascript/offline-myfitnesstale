@@ -4,6 +4,7 @@ import '../../models/enums.dart';
 import '../../models/utilities.dart';
 import '../layout/app_dropdown.dart';
 import '../layout/app_text_form_field.dart';
+import 'favourite_checkbox.dart';
 import 'search_form_button.dart';
 
 class BaseCommonSearchForm extends StatefulWidget {
@@ -17,10 +18,12 @@ class BaseCommonSearchForm extends StatefulWidget {
   final String initialName;
   final Difficulty? initialDifficulty;
   final MuscleGroup? initialMuscleGroup;
+  final bool initialIsFavorite;
   final void Function({
     required String name,
     required Difficulty? difficulty,
     required MuscleGroup? muscleGroup,
+    required bool isFavourite,
   }) onSubmit;
 
   const BaseCommonSearchForm({
@@ -34,6 +37,7 @@ class BaseCommonSearchForm extends StatefulWidget {
     required this.initialName,
     required this.initialDifficulty,
     required this.initialMuscleGroup,
+    required this.initialIsFavorite,
     required this.onSubmit,
   });
 
@@ -53,6 +57,7 @@ class _BaseCommonSearchFormState extends State<BaseCommonSearchForm> {
       name: widget.initialName,
       difficulty: widget.initialDifficulty,
       muscleGroup: widget.initialMuscleGroup,
+      isFavourite: widget.initialIsFavorite,
     );
     _nameController.text = _data.name;
   }
@@ -119,6 +124,15 @@ class _BaseCommonSearchFormState extends State<BaseCommonSearchForm> {
           SizedBox(height: widget.spacing),
           Row(
             children: [
+              HeartCheckbox(
+                value: _data.isFavourite,
+                onChanged: (value) {
+                  setState(() {
+                    _data.isFavourite = value;
+                  });
+                },
+              ),
+              SizedBox(width: widget.spacing),
               Expanded(
                 child: AppDropdown<Difficulty>(
                   value: _data.difficulty,
@@ -179,6 +193,7 @@ class _BaseCommonSearchFormState extends State<BaseCommonSearchForm> {
                         name: _data.name,
                         difficulty: _data.difficulty,
                         muscleGroup: _data.muscleGroup,
+                        isFavourite: _data.isFavourite,
                       );
                     }
                   }
@@ -196,10 +211,12 @@ final class _FormData {
   String name;
   Difficulty? difficulty;
   MuscleGroup? muscleGroup;
+  bool isFavourite;
 
   _FormData({
     required this.name,
     required this.difficulty,
     required this.muscleGroup,
+    required this.isFavourite,
   });
 }

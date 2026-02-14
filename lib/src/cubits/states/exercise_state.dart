@@ -129,6 +129,7 @@ final class ExerciseState extends Equatable {
   final EquipmentPagination equipmentPagination;
   final Map<int, String> equipmentSelection;
   final SelectedEquipment? selectedEquipment;
+  final List<ExerciseDto> exerciseSelection;
   final bool isLoading;
   final ErrorState? error;
 
@@ -142,6 +143,7 @@ final class ExerciseState extends Equatable {
     required this.equipmentPagination,
     this.error,
     required this.equipmentSelection,
+    required this.exerciseSelection,
   });
 
   factory ExerciseState.initial() {
@@ -152,6 +154,7 @@ final class ExerciseState extends Equatable {
       equipments: const [],
       equipmentPagination: EquipmentPagination.initial(),
       equipmentSelection: const {},
+      exerciseSelection: const [],
     );
   }
 
@@ -166,8 +169,10 @@ final class ExerciseState extends Equatable {
     EquipmentPagination? equipmentPagination,
     SelectedEquipment? selectedEquipment,
     Map<int, String>? equipmentSelection,
+    List<ExerciseDto>? exerciseSelection,
   }) {
     return ExerciseState(
+      exerciseSelection: exerciseSelection ?? this.exerciseSelection,
       exercises: exercises ?? this.exercises,
       exercisePagination: exercisePagination ?? this.exercisePagination,
       selectedExercise: selectedExercise ?? this.selectedExercise,
@@ -191,5 +196,6 @@ final class ExerciseState extends Equatable {
         selectedEquipment,
         equipmentPagination,
         equipmentSelection,
+        exerciseSelection,
       ];
 }

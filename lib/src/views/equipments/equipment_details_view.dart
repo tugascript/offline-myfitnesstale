@@ -107,6 +107,7 @@ class _EquipmentDetailsViewState extends State<EquipmentDetailsView> {
                 SizedBox(height: sizes.spacing),
                 Expanded(
                   child: ExercisesList(
+                    theme: theme,
                     sizes: sizes,
                     isLoading: state.isLoading,
                     exercises: relatedExercises,

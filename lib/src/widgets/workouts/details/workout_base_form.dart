@@ -14,11 +14,13 @@ class WorkoutBaseForm extends StatefulWidget {
   final String submitLabel;
 
   final String initialName;
+  final bool initialIsFavorite;
   final Difficulty initialDifficulty;
   final String? initialDescription;
 
   final void Function({
     required String name,
+    required bool isFavorite,
     required Difficulty difficulty,
     String? description,
   }) onSubmit;
@@ -30,6 +32,7 @@ class WorkoutBaseForm extends StatefulWidget {
     required this.isLoading,
     required this.submitLabel,
     required this.initialName,
+    required this.initialIsFavorite,
     required this.initialDifficulty,
     required this.onSubmit,
     this.initialDescription,
@@ -50,6 +53,7 @@ class _WorkoutBaseFormState extends State<WorkoutBaseForm> {
     super.initState();
     _data = _FormData(
       name: widget.initialName,
+      isFavorite: widget.initialIsFavorite,
       difficulty: widget.initialDifficulty,
       description: widget.initialDescription,
     );
@@ -69,6 +73,7 @@ class _WorkoutBaseFormState extends State<WorkoutBaseForm> {
       _formKey.currentState!.save();
       widget.onSubmit(
         name: _data.name,
+        isFavorite: _data.isFavorite,
         difficulty: _data.difficulty,
         description: _data.description,
       );
@@ -81,34 +86,56 @@ class _WorkoutBaseFormState extends State<WorkoutBaseForm> {
       key: _formKey,
       child: Column(
         children: [
-          AppTextFormField(
-            filled: true,
-            theme: widget.theme,
-            maxLines: 1,
-            isLoading: widget.isLoading,
-            controller: _nameController,
-            labelText: "Name",
-            hintText: "Enter the name of the exercise",
-            fontSize: widget.sizes.subtitleFontSize,
-            padding: widget.sizes.padding,
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return "Please enter the name of the exercise";
-              }
-              return null;
-            },
-            onChanged: (value) {
-              setState(() {
-                _data.name = value;
-              });
-            },
-            onSaved: (value) {
-              if (value != null) {
-                setState(() {
-                  _data.name = value;
-                });
-              }
-            },
+          Row(
+            mainAxisAlignment: MainAxisAlignment.start,
+            mainAxisSize: MainAxisSize.max,
+            children: [
+              Expanded(
+                child: AppTextFormField(
+                  filled: true,
+                  theme: widget.theme,
+                  maxLines: 1,
+                  isLoading: widget.isLoading,
+                  controller: _nameController,
+                  labelText: "Name",
+                  hintText: "Enter the name of the exercise",
+                  fontSize: widget.sizes.subtitleFontSize,
+                  padding: widget.sizes.padding,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return "Please enter the name of the exercise";
+                    }
+                    return null;
+                  },
+                  onChanged: (value) {
+                    setState(() {
+                      _data.name = value;
+                    });
+                  },
+                  onSaved: (value) {
+                    if (value != null) {
+                      setState(() {
+                        _data.name = value;
+                      });
+                    }
+                  },
+                ),
+              ),
+              IconButton(
+                icon: Icon(
+                  _data.isFavorite ? Icons.favorite : Icons.favorite_border,
+                  color: widget.theme.colorScheme.secondary,
+                ),
+                onPressed: () {
+                  setState(() {
+                    _data.isFavorite = !_data.isFavorite;
+                  });
+                },
+                tooltip: _data.isFavorite
+                    ? 'Remove from favorites'
+                    : 'Add to favorites',
+              ),
+            ],
           ),
           SizedBox(height: widget.sizes.spacing),
           AppTextFormField(
@@ -158,7 +185,7 @@ class _WorkoutBaseFormState extends State<WorkoutBaseForm> {
               }
             },
           ),
-          SizedBox(height: widget.sizes.padding * 2),
+          SizedBox(height: widget.sizes.padding * 1.25),
           SizedBox(
             width: double.infinity,
             child: AppPrimaryButton(
@@ -178,11 +205,13 @@ class _WorkoutBaseFormState extends State<WorkoutBaseForm> {
 
 final class _FormData {
   String name;
+  bool isFavorite;
   Difficulty difficulty;
   String? description;
 
   _FormData({
     required this.name,
+    required this.isFavorite,
     required this.difficulty,
     this.description,
   });

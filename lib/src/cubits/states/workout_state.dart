@@ -8,6 +8,7 @@ final class WorkoutPagination extends Equatable {
   final String name;
   final MuscleGroup? muscleGroup;
   final Difficulty? difficulty;
+  final bool isFavorite;
   final int limit;
   final int offset;
   final int total;
@@ -15,6 +16,7 @@ final class WorkoutPagination extends Equatable {
   const WorkoutPagination({
     this.muscleGroup,
     this.difficulty,
+    required this.isFavorite,
     required this.name,
     required this.limit,
     required this.offset,
@@ -27,6 +29,7 @@ final class WorkoutPagination extends Equatable {
       limit: 10,
       offset: 0,
       total: 0,
+      isFavorite: false,
     );
   }
 
@@ -37,6 +40,7 @@ final class WorkoutPagination extends Equatable {
     int? limit,
     int? offset,
     int? total,
+    bool? isFavorite,
   }) {
     return WorkoutPagination(
       name: name ?? this.name,
@@ -45,11 +49,12 @@ final class WorkoutPagination extends Equatable {
       limit: limit ?? this.limit,
       offset: offset ?? this.offset,
       total: total ?? this.total,
+      isFavorite: isFavorite ?? this.isFavorite,
     );
   }
 
   @override
-  List<Object?> get props => [name, limit, offset];
+  List<Object?> get props => [name, limit, offset, isFavorite];
 }
 
 final class WorkoutState extends Equatable {

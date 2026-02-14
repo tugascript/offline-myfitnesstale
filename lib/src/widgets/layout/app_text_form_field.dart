@@ -15,6 +15,9 @@ class AppTextFormField extends StatelessWidget {
   final void Function(String)? onChanged;
   final void Function(String?)? onSaved;
   final String? Function(String?)? validator;
+  final TextInputType? keyboardType;
+  final bool readOnly;
+  final VoidCallback? onTap;
 
   const AppTextFormField({
     super.key,
@@ -32,6 +35,9 @@ class AppTextFormField extends StatelessWidget {
     this.onChanged,
     this.onSaved,
     this.validator,
+    this.keyboardType,
+    this.readOnly = false,
+    this.onTap,
   });
 
   @override
@@ -40,6 +46,9 @@ class AppTextFormField extends StatelessWidget {
         ? Colors.grey[400]
         : Colors.grey[600];
     return TextFormField(
+      readOnly: readOnly,
+      onTap: onTap,
+      keyboardType: keyboardType,
       enabled: !isLoading,
       style: TextStyle(
         fontSize: fontSize,
