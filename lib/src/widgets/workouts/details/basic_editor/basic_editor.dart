@@ -9,7 +9,6 @@ import '../../../../cubits/states/workout_state.dart';
 import '../../../../cubits/workout_cubit.dart';
 import '../../../../models/enums.dart';
 import '../../../../services/dtos/workout_set_dto.dart';
-import '../../../../services/workout_service.dart';
 import '../../../../utilities/sizes/data_display_sizes.dart';
 import '../../../../utilities/sizes/screen_size.dart';
 import '../../../layout/dynamic_list_input.dart';
@@ -83,51 +82,23 @@ class _BasicEditorState extends State<BasicEditor> {
     }
 
     final workoutCubit = context.read<WorkoutCubit>();
-    for (final wSet in setsToSave) {
-      if (wSet.id == null) {
-        await workoutCubit.createWorkoutSet(
-          workoutId: widget.workoutId,
-          setType: WorkoutSetType.standard,
-          minSets: wSet.minSets,
-          recommendedRestSecs: wSet.recommendedRestSecs,
-          exercises: [
-            WorkoutSetExerciseInput(
-                exerciseId: wSet.exerciseId!, minReps: wSet.minReps),
-          ],
-          maxSets: wSet.maxSets,
-          maxRestSecs: wSet.maxRestSecs,
+    await workoutCubit.batchUpsertWorkoutSets(
+      workoutId: widget.workoutId,
+      sets: setsToSave.map((s) {
+        return StandardSetInput(
+          id: s.id,
+          minSets: s.minSets,
+          maxSets: s.maxSets,
+          minReps: s.minReps,
+          maxReps: s.maxReps,
+          toMaxReps: s.toMaxReps,
+          recommendedRestSecs: s.recommendedRestSecs,
+          maxRestSecs: s.maxRestSecs,
+          exerciseId: s.exerciseId!,
+          setExerciseId: s.setExerciseId,
         );
-        continue;
-      }
-
-      await workoutCubit.updateWorkoutSet(
-        workoutSetId: wSet.id!,
-        workoutId: widget.workoutId,
-        minSets: wSet.minSets,
-        maxSets: wSet.maxSets,
-        recommendedRestSecs: wSet.recommendedRestSecs,
-        maxRestSecs: wSet.maxRestSecs,
-      );
-
-      if (wSet.setExerciseId != null) {
-        await workoutCubit.updateWorkoutSetExercise(
-          workoutSetExerciseId: wSet.setExerciseId!,
-          workoutId: widget.workoutId,
-          exerciseId: wSet.exerciseId,
-          minReps: wSet.minReps,
-          maxReps: wSet.maxReps,
-          toMaxReps: wSet.toMaxReps,
-        );
-      }
-    }
-
-    setState(() {
-      for (final dSet in _displayedSets) {
-        if (dSet.id != null) {
-          dSet.status = SetEditorDataStatus.created;
-        }
-      }
-    });
+      }).toList(),
+    );
   }
 
   List<SetEditorData> _baseSetsFromState(WorkoutState state) {
@@ -166,7 +137,7 @@ class _BasicEditorState extends State<BasicEditor> {
 
     return BlocConsumer<WorkoutCubit, WorkoutState>(
       listenWhen: (previous, current) =>
-          previous.selectedWorkout != current.selectedWorkout &&
+          previous.selectedWorkout != current.selectedWorkout ||
           previous.isLoading != current.isLoading,
       listener: (context, state) {
         if (state.isLoading) {
