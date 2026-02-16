@@ -468,7 +468,8 @@ class WorkoutCubit extends Cubit<WorkoutState> {
     }
 
     if (state.selectedWorkout != null &&
-        state.selectedWorkout!.id == workoutId) {
+        state.selectedWorkout!.id == workoutId &&
+        exerciseId == null) {
       await refreshWorkoutSets(workoutId);
       return;
     }
@@ -499,4 +500,119 @@ class WorkoutCubit extends Cubit<WorkoutState> {
       isLoading: false,
     ));
   }
+
+  Future<void> batchUpsertWorkoutSets({
+    required int workoutId,
+    required List<StandardSetInput> sets,
+  }) async {
+    _logger.info('Batch updating workout sets for workout $workoutId');
+    emit(state.copyWith(isLoading: true));
+
+    if (sets.isEmpty) {
+      emit(state.copyWith(isLoading: false));
+      return;
+    }
+
+    for (final wSet in sets) {
+      if (wSet.id == null) {
+        final result = await _workoutService.createWorkoutSet(
+          workoutId: workoutId,
+          setType: WorkoutSetType.standard,
+          minSets: wSet.minSets,
+          recommendedRestSecs: wSet.recommendedRestSecs,
+          exercises: [
+            WorkoutSetExerciseInput(
+              exerciseId: wSet.exerciseId,
+              minReps: wSet.minReps,
+            ),
+          ],
+          maxSets: wSet.maxSets,
+          maxRestSecs: wSet.maxRestSecs,
+        );
+        if (result.isErr()) {
+          final error = result.error;
+          _logger.warning("Failed to create workout set", error);
+          emit(state.copyWith(
+            error: ErrorState(
+              type: error.type.name,
+              description: error.description,
+            ),
+          ));
+          return;
+        }
+        continue;
+      }
+
+      final result = await _workoutService.updateWorkoutSet(
+        workoutSetId: wSet.id!,
+        setType: WorkoutSetType.standard,
+        minSets: wSet.minSets,
+        recommendedRestSecs: wSet.recommendedRestSecs,
+        maxSets: wSet.maxSets > wSet.minSets ? wSet.maxSets : null,
+        maxRestSecs: wSet.maxRestSecs > wSet.recommendedRestSecs
+            ? wSet.maxRestSecs
+            : null,
+      );
+      if (result.isErr()) {
+        final error = result.error;
+        _logger.warning("Failed to update workout set", error);
+        emit(state.copyWith(
+          error: ErrorState(
+            type: error.type.name,
+            description: error.description,
+          ),
+        ));
+        return;
+      }
+
+      if (wSet.setExerciseId != null) {
+        final result = await _workoutService.updateWorkoutSetExercise(
+          workoutSetExerciseId: wSet.setExerciseId!,
+          exerciseId: wSet.exerciseId,
+          minReps: wSet.minReps,
+          maxReps: wSet.maxReps > wSet.minReps ? wSet.maxReps : null,
+          toMaxReps: wSet.toMaxReps,
+        );
+        if (result.isErr()) {
+          final error = result.error;
+          _logger.warning("Failed to update workout set exercise", error);
+          emit(state.copyWith(
+            error: ErrorState(
+              type: error.type.name,
+              description: error.description,
+            ),
+          ));
+          return;
+        }
+      }
+    }
+
+    await getWorkout(workoutId, refresh: true);
+  }
+}
+
+final class StandardSetInput {
+  final int? id;
+  final int minSets;
+  final int maxSets;
+  final int minReps;
+  final int maxReps;
+  final bool toMaxReps;
+  final int recommendedRestSecs;
+  final int maxRestSecs;
+  final int exerciseId;
+  final int? setExerciseId;
+
+  const StandardSetInput({
+    this.id,
+    required this.minSets,
+    required this.maxSets,
+    required this.minReps,
+    required this.maxReps,
+    required this.toMaxReps,
+    required this.recommendedRestSecs,
+    required this.maxRestSecs,
+    required this.exerciseId,
+    this.setExerciseId,
+  });
 }

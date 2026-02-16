@@ -611,6 +611,14 @@ class WorkoutService {
         ));
       }
 
+      final Map<int, ExerciseDto> exerciseMap = exerciseModels.fold(
+        {},
+        (map, e) {
+          map[e.id!] = ExerciseDto.fromModel(e);
+          return map;
+        },
+      );
+
       final List<WorkoutSet> workoutSets = await _setRepository.selectMany(
         where: WorkoutSetColumns.workoutId.equal,
         whereArgs: [workoutId],
@@ -658,6 +666,8 @@ class WorkoutService {
 
         final List<WorkoutSetExercise> setExercises = [];
         final Map<int, List<WorkoutSetExerciseOption>> setExerciseOptions = {};
+        final Set<MuscleGroup> muscleGroups = {};
+        final Set<Muscle> muscles = {};
         for (int i = 0; i < exercises.length; i++) {
           final input = exercises[i];
           final workoutSetExercise = WorkoutSetExercise.create(
@@ -674,6 +684,8 @@ class WorkoutService {
             txn,
           );
           setExercises.add(workoutSetExercise.copyWith(id: setExerciseId));
+          muscleGroups.add(exerciseMap[input.exerciseId]!.muscleGroup);
+          muscles.addAll(exerciseMap[input.exerciseId]!.muscles.primaryMuscles);
 
           if (input.alternativeExerciseIds != null) {
             setExerciseOptions[setExerciseId] = <WorkoutSetExerciseOption>[];
@@ -702,6 +714,8 @@ class WorkoutService {
         final updatedWorkout = workout.copyWith(
           totalSets: workout.totalSets + extraSets,
           totalReps: workout.totalReps + totalReps,
+          muscleGroups: workout.muscleGroups.union(muscleGroups),
+          muscles: workout.muscles.union(muscles),
           updatedAt: DateUtilities.getNowUtcUnix(),
         );
         await _repository.update(updatedWorkout, txn);
@@ -711,10 +725,6 @@ class WorkoutService {
           setExerciseOptions
         );
       });
-
-      final exerciseMap = Map.fromEntries(
-        exerciseModels.map((e) => MapEntry(e.id!, ExerciseDto.fromModel(e))),
-      );
 
       return ok(
         WorkoutSetDto.fromModel(
@@ -1517,6 +1527,10 @@ class WorkoutService {
 
           final updatedWorkout = workout.copyWith(
             totalReps: workout.totalReps + totalReps,
+            muscleGroups: workout.muscleGroups
+              ..add(exerciseMap[exerciseId]!.muscleGroup),
+            muscles: workout.muscles
+                .union(exerciseMap[exerciseId]!.muscles.primaryMuscles),
           );
           await _repository.update(updatedWorkout, txn);
 
@@ -1701,6 +1715,8 @@ class WorkoutService {
         );
       }
 
+      final muscleGroups = <MuscleGroup>{};
+      final muscles = <Muscle>{};
       if (exerciseId != null) {
         final exercise = await _exerciseRepository.selectOne(exerciseId);
         if (exercise == null) {
@@ -1710,6 +1726,9 @@ class WorkoutService {
             description: 'Exercise with id $exerciseId not found',
           ));
         }
+
+        muscleGroups.add(exercise.muscleGroup);
+        muscles.addAll(exercise.muscles.primaryMuscles);
       }
 
       final int oldBaseReps =
@@ -1786,6 +1805,9 @@ class WorkoutService {
         _logger.info("Txn updating workout total reps");
         final updatedWorkout = workout.copyWith(
           totalReps: workout.totalReps + addTotalReps,
+          muscleGroups: workout.muscleGroups.union(muscleGroups),
+          muscles: workout.muscles.union(muscles),
+          updatedAt: DateUtilities.getNowUtcUnix(),
         );
         final workoutUpdated = await _repository.update(updatedWorkout, txn);
         if (!workoutUpdated) {
