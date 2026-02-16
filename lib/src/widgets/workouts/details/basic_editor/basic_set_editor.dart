@@ -1,28 +1,26 @@
 import 'package:flutter/material.dart';
 
-import '../../../../services/dtos/workout_set_dto.dart';
 import '../../../../utilities/sizes/data_display_sizes.dart';
 import '../../../layout/app_text_form_field.dart';
 import '../editors/set_exercise_search_modal.dart';
+import 'set_editor_data.dart';
 
 class BasicSetEditor extends StatelessWidget {
-  final WorkoutSetDto set;
+  final SetEditorData set;
   final DataDisplaySizesList sizes;
   final bool isLoading;
-  final TextEditingController minSetsController;
-  final TextEditingController maxSetsController;
-  final TextEditingController minRepsController;
-  final TextEditingController maxRepsController;
-  final TextEditingController restController;
-  final TextEditingController maxRestController;
-  final bool isMaxReps;
-  final ValueChanged<bool> onIsMaxRepsChanged;
-  final (int, String)? exercise;
-  final ValueChanged<(int, String)> onExerciseChanged;
+  final TextEditingController? minSetsController;
+  final TextEditingController? maxSetsController;
+  final TextEditingController? minRepsController;
+  final TextEditingController? maxRepsController;
+  final TextEditingController? restController;
+  final TextEditingController? maxRestController;
+  final ValueChanged<(int, String)>? onExerciseChanged;
   final ValueChanged<String>? onMinSetsChanged;
   final ValueChanged<String>? onMaxSetsChanged;
   final ValueChanged<String>? onMinRepsChanged;
   final ValueChanged<String>? onMaxRepsChanged;
+  final ValueChanged<bool?>? onToMaxRepsChanged;
   final ValueChanged<String>? onRestChanged;
   final ValueChanged<String>? onMaxRestChanged;
 
@@ -31,16 +29,14 @@ class BasicSetEditor extends StatelessWidget {
     required this.set,
     required this.sizes,
     required this.isLoading,
-    required this.minSetsController,
-    required this.maxSetsController,
-    required this.minRepsController,
-    required this.maxRepsController,
-    required this.restController,
-    required this.maxRestController,
-    required this.isMaxReps,
-    required this.onIsMaxRepsChanged,
-    required this.exercise,
-    required this.onExerciseChanged,
+    this.minSetsController,
+    this.maxSetsController,
+    this.minRepsController,
+    this.maxRepsController,
+    this.restController,
+    this.maxRestController,
+    this.onToMaxRepsChanged,
+    this.onExerciseChanged,
     this.onMinSetsChanged,
     this.onMaxSetsChanged,
     this.onMinRepsChanged,
@@ -52,74 +48,74 @@ class BasicSetEditor extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Row(
+    return Container(
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+      ),
+      child: Padding(
+        padding: EdgeInsets.all(sizes.padding),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Expanded(
-              child: _SetsInput(
-                minSetsController: minSetsController,
-                minSetsOnChanged: onMinSetsChanged,
-                maxSetsController: maxSetsController,
-                maxSetsOnChanged: onMaxSetsChanged,
-                isLoading: isLoading,
-                sizes: sizes,
-                theme: theme,
-              ),
+            _SetsInput(
+              minSetsController: minSetsController,
+              minSetsOnChanged: onMinSetsChanged,
+              maxSetsController: maxSetsController,
+              maxSetsOnChanged: onMaxSetsChanged,
+              isLoading: isLoading,
+              sizes: sizes,
+              theme: theme,
             ),
-            SizedBox(width: sizes.spacing),
-            Expanded(
-              child: _RepsInput(
-                minRepsController: minRepsController,
-                minRepsOnChanged: onMinRepsChanged,
-                maxRepsController: maxRepsController,
-                maxRepsOnChanged: onMaxRepsChanged,
-                isLoading: isLoading,
-                sizes: sizes,
-                theme: theme,
-                isMaxReps: isMaxReps,
-                onIsMaxRepsChanged: (value) {
-                  if (value != null) {
-                    onIsMaxRepsChanged(value);
-                  }
-                },
-              ),
+            _RepsInput(
+              minRepsController: minRepsController,
+              minRepsOnChanged: onMinRepsChanged,
+              maxRepsController: maxRepsController,
+              maxRepsOnChanged: onMaxRepsChanged,
+              isLoading: isLoading,
+              sizes: sizes,
+              theme: theme,
+              toMaxReps: set.toMaxReps,
+              onToMaxRepsChanged: onToMaxRepsChanged,
             ),
-          ],
-        ),
-        SizedBox(height: sizes.spacing),
-        _ExerciseSelectionButton(
-          exerciseName: exercise?.$2,
-          sizes: sizes,
-          theme: theme,
-          onPressed: () {
-            showDialog(
-              context: context,
-              builder: (context) {
-                return SetExerciseSearchModal(
-                  sizes: sizes,
-                  onExerciseSelected: (id, name) {
-                    onExerciseChanged((id, name));
-                    Navigator.of(context).pop();
+            SizedBox(height: sizes.spacing),
+            _ExerciseSelectionButton(
+              exerciseName: set.exerciseName,
+              sizes: sizes,
+              theme: theme,
+              onPressed: () {
+                if (onExerciseChanged == null) {
+                  return;
+                }
+
+                showDialog(
+                  context: context,
+                  builder: (context) {
+                    return SetExerciseSearchModal(
+                      sizes: sizes,
+                      isLoading: isLoading,
+                      onExerciseSelected: (id, name) {
+                        onExerciseChanged!((id, name));
+                        Navigator.of(context).pop();
+                      },
+                    );
                   },
                 );
               },
-            );
-          },
+            ),
+            SizedBox(height: sizes.spacing),
+            _RestInput(
+              restController: restController,
+              restOnChanged: onRestChanged,
+              maxRestController: maxRestController,
+              maxRestOnChanged: onMaxRestChanged,
+              sizes: sizes,
+              theme: theme,
+              isLoading: isLoading,
+            ),
+          ],
         ),
-        SizedBox(height: sizes.spacing),
-        _RestInput(
-          restController: restController,
-          restOnChanged: onRestChanged,
-          maxRestController: maxRestController,
-          maxRestOnChanged: onMaxRestChanged,
-          sizes: sizes,
-          theme: theme,
-          isLoading: isLoading,
-        ),
-      ],
+      ),
     );
   }
 }
@@ -153,16 +149,16 @@ class _SetsInput extends StatelessWidget {
   final bool isLoading;
   final DataDisplaySizesList sizes;
   final ThemeData theme;
-  final TextEditingController minSetsController;
+  final TextEditingController? minSetsController;
   final ValueChanged<String>? minSetsOnChanged;
-  final TextEditingController maxSetsController;
+  final TextEditingController? maxSetsController;
   final ValueChanged<String>? maxSetsOnChanged;
 
   const _SetsInput({
-    required this.minSetsController,
-    required this.minSetsOnChanged,
-    required this.maxSetsController,
-    required this.maxSetsOnChanged,
+    this.minSetsController,
+    this.minSetsOnChanged,
+    this.maxSetsController,
+    this.maxSetsOnChanged,
     required this.isLoading,
     required this.sizes,
     required this.theme,
@@ -249,23 +245,23 @@ class _RepsInput extends StatelessWidget {
   final bool isLoading;
   final DataDisplaySizesList sizes;
   final ThemeData theme;
-  final TextEditingController minRepsController;
+  final TextEditingController? minRepsController;
   final ValueChanged<String>? minRepsOnChanged;
-  final TextEditingController maxRepsController;
+  final TextEditingController? maxRepsController;
   final ValueChanged<String>? maxRepsOnChanged;
-  final bool isMaxReps;
-  final ValueChanged<bool?> onIsMaxRepsChanged;
+  final bool toMaxReps;
+  final ValueChanged<bool?>? onToMaxRepsChanged;
 
   const _RepsInput({
-    required this.minRepsController,
-    required this.minRepsOnChanged,
-    required this.maxRepsController,
-    required this.maxRepsOnChanged,
+    this.minRepsController,
+    this.minRepsOnChanged,
+    this.maxRepsController,
+    this.maxRepsOnChanged,
     required this.isLoading,
     required this.sizes,
     required this.theme,
-    required this.isMaxReps,
-    required this.onIsMaxRepsChanged,
+    required this.toMaxReps,
+    this.onToMaxRepsChanged,
   });
 
   @override
@@ -312,7 +308,7 @@ class _RepsInput extends StatelessWidget {
         ),
         SizedBox(width: halfSpacing),
         Icon(Icons.remove, size: sizes.fontSize * 1.2),
-        if (isMaxReps) ...[
+        if (toMaxReps) ...[
           SizedBox(width: halfSpacing),
           Expanded(
             child: AppTextFormField(
@@ -346,13 +342,15 @@ class _RepsInput extends StatelessWidget {
           ),
         ],
         SizedBox(width: halfSpacing),
-        Row(
+        Column(
           mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Text("To Max"),
             Switch(
-              value: isMaxReps,
-              onChanged: (value) => onIsMaxRepsChanged(value),
+              value: toMaxReps,
+              onChanged: onToMaxRepsChanged,
             ),
           ],
         ),
@@ -362,19 +360,19 @@ class _RepsInput extends StatelessWidget {
 }
 
 class _RestInput extends StatelessWidget {
-  final TextEditingController restController;
+  final TextEditingController? restController;
   final ValueChanged<String>? restOnChanged;
-  final TextEditingController maxRestController;
+  final TextEditingController? maxRestController;
   final ValueChanged<String>? maxRestOnChanged;
   final DataDisplaySizesList sizes;
   final ThemeData theme;
   final bool isLoading;
 
   const _RestInput({
-    required this.restController,
-    required this.restOnChanged,
-    required this.maxRestController,
-    required this.maxRestOnChanged,
+    this.restController,
+    this.restOnChanged,
+    this.maxRestController,
+    this.maxRestOnChanged,
     required this.sizes,
     required this.theme,
     required this.isLoading,

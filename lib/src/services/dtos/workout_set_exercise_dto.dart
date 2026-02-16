@@ -14,6 +14,7 @@ class WorkoutSetExerciseDto extends Equatable
   final int? maxReps;
   final int exerciseId;
   final WorkoutSetExerciseDifficulty? difficulty;
+  final bool toMaxReps;
 
   // Related Data
   final ExerciseDto? exercise;
@@ -26,6 +27,7 @@ class WorkoutSetExerciseDto extends Equatable
     required this.exerciseId,
     this.maxReps,
     this.difficulty,
+    required this.toMaxReps,
     this.exercise,
     this.options,
   });
@@ -43,6 +45,7 @@ class WorkoutSetExerciseDto extends Equatable
       minReps: model.minReps,
       maxReps: model.maxReps,
       difficulty: model.difficulty,
+      toMaxReps: model.toMaxReps,
       exercise: exercise,
       options: options,
     );
@@ -56,6 +59,7 @@ class WorkoutSetExerciseDto extends Equatable
     int? maxReps,
     int? exerciseId,
     WorkoutSetExerciseDifficulty? difficulty,
+    bool? toMaxReps,
     ExerciseDto? exercise,
     List<WorkoutSetExerciseOptionDto>? options,
   }) {
@@ -66,6 +70,7 @@ class WorkoutSetExerciseDto extends Equatable
       maxReps: maxReps ?? this.maxReps,
       exerciseId: exerciseId ?? this.exerciseId,
       difficulty: difficulty ?? this.difficulty,
+      toMaxReps: toMaxReps ?? this.toMaxReps,
       exercise: exercise ?? this.exercise,
       options: options ?? this.options,
     );
@@ -78,6 +83,7 @@ class WorkoutSetExerciseDto extends Equatable
         position,
         minReps,
         maxReps,
+        toMaxReps,
         difficulty,
       ];
 }
