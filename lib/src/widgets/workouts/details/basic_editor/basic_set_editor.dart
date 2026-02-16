@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../utilities/sizes/data_display_sizes.dart';
 import '../../../layout/app_text_form_field.dart';
+import '../../../layout/sharp_switch.dart';
 import '../editors/set_exercise_search_modal.dart';
 import 'set_editor_data.dart';
 
@@ -67,6 +68,7 @@ class BasicSetEditor extends StatelessWidget {
               sizes: sizes,
               theme: theme,
             ),
+            SizedBox(height: sizes.spacing),
             _RepsInput(
               minRepsController: minRepsController,
               minRepsOnChanged: onMinRepsChanged,
@@ -212,7 +214,7 @@ class _SetsInput extends StatelessWidget {
             theme: theme,
             isLoading: isLoading,
             controller: maxSetsController,
-            labelText: "Max Sets",
+            labelText: "Max",
             hintText: "0",
             keyboardType: TextInputType.number,
             fontSize: sizes.fontSize,
@@ -308,7 +310,7 @@ class _RepsInput extends StatelessWidget {
         ),
         SizedBox(width: halfSpacing),
         Icon(Icons.remove, size: sizes.fontSize * 1.2),
-        if (toMaxReps) ...[
+        if (!toMaxReps) ...[
           SizedBox(width: halfSpacing),
           Expanded(
             child: AppTextFormField(
@@ -316,7 +318,7 @@ class _RepsInput extends StatelessWidget {
               theme: theme,
               isLoading: isLoading,
               controller: maxRepsController,
-              labelText: "Max Reps",
+              labelText: "Max",
               hintText: "0",
               keyboardType: TextInputType.number,
               fontSize: sizes.fontSize,
@@ -343,14 +345,17 @@ class _RepsInput extends StatelessWidget {
         ],
         SizedBox(width: halfSpacing),
         Column(
-          mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Text("To Max"),
-            Switch(
+            Text(
+              "To Max",
+              style: TextStyle(fontSize: sizes.fontSize),
+            ),
+            SharpSwitch(
               value: toMaxReps,
-              onChanged: onToMaxRepsChanged,
+              onChanged: (value) => onToMaxRepsChanged?.call(value),
+              thumbSize: sizes.subtitleFontSize * 1.15,
             ),
           ],
         ),

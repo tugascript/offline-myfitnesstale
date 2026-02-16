@@ -1,15 +1,17 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:myfitnesstale/src/services/dtos/workout_set_dto.dart';
 
 import '../../../../cubits/exercise_cubit.dart';
 import '../../../../cubits/states/workout_state.dart';
 import '../../../../cubits/workout_cubit.dart';
 import '../../../../models/enums.dart';
+import '../../../../services/dtos/workout_set_dto.dart';
+import '../../../../services/workout_service.dart';
 import '../../../../utilities/sizes/data_display_sizes.dart';
 import '../../../../utilities/sizes/screen_size.dart';
-import '../../../../services/workout_service.dart';
 import '../../../layout/dynamic_list_input.dart';
 import '../editors/set_exercise_search_modal.dart';
 import 'basic_set_editor.dart';
@@ -31,6 +33,7 @@ class BasicEditor extends StatefulWidget {
 
 class _BasicEditorState extends State<BasicEditor> {
   late List<SetEditorData> _displayedSets;
+  Timer? _saveDebounce;
 
   @override
   void initState() {
@@ -50,9 +53,81 @@ class _BasicEditorState extends State<BasicEditor> {
         exerciseId: exercise?.exerciseId,
         exerciseName: exercise?.exercise?.name,
         status: SetEditorDataStatus.created,
+        setExerciseId: exercise?.id,
       );
     }).toList();
     context.read<ExerciseCubit>().getSelectionExercises();
+  }
+
+  @override
+  void dispose() {
+    _saveDebounce?.cancel();
+    super.dispose();
+  }
+
+  void _scheduleSave() {
+    _saveDebounce?.cancel();
+    _saveDebounce = Timer(const Duration(milliseconds: 1000), () {
+      _saveDebounce = null;
+      if (mounted) _saveSets();
+    });
+  }
+
+  Future<void> _saveSets() async {
+    final setsToSave = _displayedSets
+        .where((s) => s.status == SetEditorDataStatus.pending)
+        .toList();
+
+    if (setsToSave.isEmpty) {
+      return;
+    }
+
+    final workoutCubit = context.read<WorkoutCubit>();
+    for (final wSet in setsToSave) {
+      if (wSet.id == null) {
+        await workoutCubit.createWorkoutSet(
+          workoutId: widget.workoutId,
+          setType: WorkoutSetType.standard,
+          minSets: wSet.minSets,
+          recommendedRestSecs: wSet.recommendedRestSecs,
+          exercises: [
+            WorkoutSetExerciseInput(
+                exerciseId: wSet.exerciseId!, minReps: wSet.minReps),
+          ],
+          maxSets: wSet.maxSets,
+          maxRestSecs: wSet.maxRestSecs,
+        );
+        continue;
+      }
+
+      await workoutCubit.updateWorkoutSet(
+        workoutSetId: wSet.id!,
+        workoutId: widget.workoutId,
+        minSets: wSet.minSets,
+        maxSets: wSet.maxSets,
+        recommendedRestSecs: wSet.recommendedRestSecs,
+        maxRestSecs: wSet.maxRestSecs,
+      );
+
+      if (wSet.setExerciseId != null) {
+        await workoutCubit.updateWorkoutSetExercise(
+          workoutSetExerciseId: wSet.setExerciseId!,
+          workoutId: widget.workoutId,
+          exerciseId: wSet.exerciseId,
+          minReps: wSet.minReps,
+          maxReps: wSet.maxReps,
+          toMaxReps: wSet.toMaxReps,
+        );
+      }
+    }
+
+    setState(() {
+      for (final dSet in _displayedSets) {
+        if (dSet.id != null) {
+          dSet.status = SetEditorDataStatus.created;
+        }
+      }
+    });
   }
 
   List<SetEditorData> _baseSetsFromState(WorkoutState state) {
@@ -78,29 +153,10 @@ class _BasicEditorState extends State<BasicEditor> {
         exerciseId: exercise?.exerciseId,
         exerciseName: exercise?.exercise?.name,
         status: SetEditorDataStatus.created,
+        setExerciseId: exercise?.id,
       );
     }).toList();
   }
-
-  // Update Set
-  // workoutCubit.updateWorkoutSet(
-  //   workoutSetId: set.id!,
-  //   workoutId: widget.workoutId,
-  //   minSets: minSets,
-  //   maxSets: maxSets,
-  //   recommendedRestSecs: recommendedRestSecs,
-  //   maxRestSecs: maxRestSecs,
-  // );
-
-  // // Update Exercise
-  // if (controller.exerciseId != null && minReps != null) {
-  //   workoutCubit.updateWorkoutSetExercise(
-  //     workoutSetExerciseId: controller.exerciseId!,
-  //     workoutId: widget.workoutId,
-  //     minReps: minReps,
-  //     maxReps: maxReps,
-  //   );
-  // }
 
   @override
   Widget build(BuildContext context) {
@@ -160,20 +216,23 @@ class _BasicEditorState extends State<BasicEditor> {
           addLabel: "Add Set",
           onAdd: () {
             setState(() {
-              _displayedSets.add(SetEditorData(
-                id: null,
-                position: _displayedSets.length + 1,
-                minSets: 0,
-                maxSets: 0,
-                minReps: 0,
-                maxReps: 0,
-                recommendedRestSecs: 0,
-                maxRestSecs: 0,
-                toMaxReps: false,
-                exerciseName: null,
-                exerciseId: null,
-                status: SetEditorDataStatus.initial,
-              ));
+              _displayedSets.add(
+                SetEditorData(
+                  id: null,
+                  position: _displayedSets.length + 1,
+                  minSets: 0,
+                  maxSets: 0,
+                  minReps: 0,
+                  maxReps: 0,
+                  recommendedRestSecs: 0,
+                  maxRestSecs: 0,
+                  toMaxReps: false,
+                  exerciseName: null,
+                  exerciseId: null,
+                  status: SetEditorDataStatus.initial,
+                  setExerciseId: null,
+                ),
+              );
             });
             showDialog<void>(
               context: context,
@@ -182,46 +241,14 @@ class _BasicEditorState extends State<BasicEditor> {
                   sizes: sizes,
                   isLoading: state.isLoading,
                   onExerciseSelected: (id, name) async {
+                    if (!dialogContext.mounted) return;
                     setState(() {
                       _displayedSets.last.exerciseId = id;
                       _displayedSets.last.exerciseName = name;
                       _displayedSets.last.status = SetEditorDataStatus.pending;
                     });
-                    final workoutCubit = context.read<WorkoutCubit>();
-                    await workoutCubit.createWorkoutSet(
-                      workoutId: widget.workoutId,
-                      setType: WorkoutSetType.standard,
-                      minSets: 0,
-                      recommendedRestSecs: 0,
-                      exercises: [
-                        WorkoutSetExerciseInput(
-                          exerciseId: id,
-                          minReps: 0,
-                        ),
-                      ],
-                    );
-                    if (!dialogContext.mounted) return;
-                    // Only close on success; listener will set _displayedSets from state
-                    final success = workoutCubit.state.error == null;
-                    if (success) {
-                      final newId = workoutCubit
-                          .state.selectedWorkout?.sets?.lastOrNull?.id;
-                      if (newId != null) {
-                        setState(() {
-                          _displayedSets.last.status =
-                              SetEditorDataStatus.created;
-                          _displayedSets.last.id = newId;
-                        });
-                      }
-                      Navigator.of(dialogContext).pop();
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                            content: Text(
-                                workoutCubit.state.error?.description ??
-                                    "Something went wrong")),
-                      );
-                    }
+                    _scheduleSave();
+                    Navigator.of(dialogContext).pop();
                   },
                 );
               },
@@ -234,9 +261,14 @@ class _BasicEditorState extends State<BasicEditor> {
               sizes: sizes,
               onExerciseChanged: (value) {
                 setState(() {
+                  if (item.status != SetEditorDataStatus.pending) {
+                    item.status = SetEditorDataStatus.pending;
+                  }
+
                   item.exerciseId = value.$1;
                   item.exerciseName = value.$2;
                 });
+                _scheduleSave();
               },
               onMinSetsChanged: (value) {
                 final intSets = int.tryParse(value);
@@ -245,8 +277,12 @@ class _BasicEditorState extends State<BasicEditor> {
                 }
 
                 setState(() {
+                  if (item.status != SetEditorDataStatus.pending) {
+                    item.status = SetEditorDataStatus.pending;
+                  }
                   item.minSets = intSets;
                 });
+                _scheduleSave();
               },
               onMaxSetsChanged: (value) {
                 final intSets = int.tryParse(value);
@@ -255,8 +291,12 @@ class _BasicEditorState extends State<BasicEditor> {
                 }
 
                 setState(() {
+                  if (item.status != SetEditorDataStatus.pending) {
+                    item.status = SetEditorDataStatus.pending;
+                  }
                   item.maxSets = intSets;
                 });
+                _scheduleSave();
               },
               onMinRepsChanged: (value) {
                 final intReps = int.tryParse(value);
@@ -265,8 +305,12 @@ class _BasicEditorState extends State<BasicEditor> {
                 }
 
                 setState(() {
+                  if (item.status != SetEditorDataStatus.pending) {
+                    item.status = SetEditorDataStatus.pending;
+                  }
                   item.minReps = intReps;
                 });
+                _scheduleSave();
               },
               onMaxRepsChanged: (value) {
                 final intReps = int.tryParse(value);
@@ -275,18 +319,26 @@ class _BasicEditorState extends State<BasicEditor> {
                 }
 
                 setState(() {
+                  if (item.status != SetEditorDataStatus.pending) {
+                    item.status = SetEditorDataStatus.pending;
+                  }
                   item.maxReps = intReps;
                 });
+                _scheduleSave();
               },
               onRestChanged: (value) {
                 final intRest = int.tryParse(value);
                 if (intRest == null) {
+                  if (item.status != SetEditorDataStatus.pending) {
+                    item.status = SetEditorDataStatus.pending;
+                  }
                   return;
                 }
 
                 setState(() {
                   item.recommendedRestSecs = intRest;
                 });
+                _scheduleSave();
               },
               onMaxRestChanged: (value) {
                 final intRest = int.tryParse(value);
@@ -297,16 +349,22 @@ class _BasicEditorState extends State<BasicEditor> {
                 setState(() {
                   item.maxRestSecs = intRest;
                 });
+                _scheduleSave();
               },
               onToMaxRepsChanged: (value) {
                 setState(() {
                   item.toMaxReps = value ?? false;
                 });
+                _scheduleSave();
               },
               isLoading: state.isLoading,
             );
           },
           onReorder: (oldIndex, newIndex) async {
+            if (oldIndex == newIndex || state.isLoading) {
+              return;
+            }
+
             final item = _displayedSets[oldIndex];
 
             setState(() {
@@ -320,6 +378,7 @@ class _BasicEditorState extends State<BasicEditor> {
                 workoutSetId: item.id!,
                 position: newIndex + 1,
               );
+              await _saveSets();
             }
           },
           onChanged: (items) async {
@@ -331,6 +390,10 @@ class _BasicEditorState extends State<BasicEditor> {
             if (items.length < _displayedSets.length) {
               final removed =
                   _displayedSets.where((e) => !items.contains(e)).toList();
+              setState(() {
+                _displayedSets = List.from(items);
+              });
+
               for (var i = 0; i < removed.length; i++) {
                 final item = removed[i];
                 if (item.id != null) {
@@ -340,10 +403,6 @@ class _BasicEditorState extends State<BasicEditor> {
                   );
                 }
               }
-
-              setState(() {
-                _displayedSets = List.from(items);
-              });
               return;
             }
 

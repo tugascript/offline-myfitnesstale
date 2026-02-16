@@ -429,7 +429,9 @@ class WorkoutCubit extends Cubit<WorkoutState> {
     required int workoutId,
     int? minReps,
     int? maxReps,
+    int? exerciseId,
     WorkoutSetExerciseDifficulty? difficulty,
+    bool? toMaxReps,
   }) async {
     _logger.info('Updating workout set exercise $workoutSetExerciseId');
     // We don't want to show loading indicator for this as it's a small update
@@ -440,7 +442,9 @@ class WorkoutCubit extends Cubit<WorkoutState> {
       workoutSetExerciseId: workoutSetExerciseId,
       minReps: minReps,
       maxReps: maxReps,
+      exerciseId: exerciseId,
       difficulty: difficulty,
+      toMaxReps: toMaxReps,
     );
 
     if (result.isErr()) {
