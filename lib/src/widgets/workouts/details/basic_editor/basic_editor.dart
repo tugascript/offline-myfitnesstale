@@ -329,13 +329,13 @@ class _BasicEditorState extends State<BasicEditor> {
               onRestChanged: (value) {
                 final intRest = int.tryParse(value);
                 if (intRest == null) {
-                  if (item.status != SetEditorDataStatus.pending) {
-                    item.status = SetEditorDataStatus.pending;
-                  }
                   return;
                 }
 
                 setState(() {
+                  if (item.status != SetEditorDataStatus.pending) {
+                    item.status = SetEditorDataStatus.pending;
+                  }
                   item.recommendedRestSecs = intRest;
                 });
                 _scheduleSave();
@@ -347,6 +347,9 @@ class _BasicEditorState extends State<BasicEditor> {
                 }
 
                 setState(() {
+                  if (item.status != SetEditorDataStatus.pending) {
+                    item.status = SetEditorDataStatus.pending;
+                  }
                   item.maxRestSecs = intRest;
                 });
                 _scheduleSave();
