@@ -356,6 +356,9 @@ class _BasicEditorState extends State<BasicEditor> {
               },
               onToMaxRepsChanged: (value) {
                 setState(() {
+                  if (item.status != SetEditorDataStatus.pending) {
+                    item.status = SetEditorDataStatus.pending;
+                  }
                   item.toMaxReps = value ?? false;
                 });
                 _scheduleSave();
