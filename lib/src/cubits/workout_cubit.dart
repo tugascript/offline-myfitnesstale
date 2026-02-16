@@ -132,9 +132,11 @@ class WorkoutCubit extends Cubit<WorkoutState> {
     ));
   }
 
-  Future<void> getWorkout(int id) async {
+  Future<void> getWorkout(int id, {bool refresh = false}) async {
     _logger.info('Getting workout with id $id');
-    emit(state.copyWith(isLoading: true));
+    if (!refresh) {
+      emit(state.copyWith(isLoading: true));
+    }
 
     final result = await _workoutService.getWorkout(id);
     if (result.isErr()) {
@@ -361,8 +363,13 @@ class WorkoutCubit extends Cubit<WorkoutState> {
       return;
     }
 
-    // Refresh workout
-    await getWorkout(workoutId);
+    if (state.selectedWorkout != null &&
+        state.selectedWorkout!.id == workoutId) {
+      await refreshWorkoutSets(workoutId);
+      return;
+    }
+
+    await getWorkout(workoutId, refresh: true);
   }
 
   Future<void> deleteWorkoutSet({
@@ -460,7 +467,36 @@ class WorkoutCubit extends Cubit<WorkoutState> {
       return;
     }
 
-    // Refresh workout
-    await getWorkout(workoutId);
+    if (state.selectedWorkout != null &&
+        state.selectedWorkout!.id == workoutId) {
+      await refreshWorkoutSets(workoutId);
+      return;
+    }
+
+    await getWorkout(workoutId, refresh: true);
+  }
+
+  Future<void> refreshWorkoutSets(int workoutId) async {
+    _logger.info('Refreshing workout sets for workout $workoutId');
+
+    final sets = await _workoutService.getWorkoutSets(workoutId);
+    if (sets.isErr()) {
+      final error = sets.error;
+      _logger.warning("Failed to get workout sets", error);
+      emit(state.copyWith(
+        error: ErrorState(
+          type: error.type.name,
+          description: error.description,
+        ),
+        isLoading: false,
+      ));
+      return;
+    }
+
+    final updatedSets = sets.value;
+    emit(state.copyWith(
+      selectedWorkout: state.selectedWorkout?.copyWith(sets: updatedSets),
+      isLoading: false,
+    ));
   }
 }
