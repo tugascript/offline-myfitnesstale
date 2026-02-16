@@ -1676,9 +1676,11 @@ class WorkoutService {
   Future<Result<WorkoutSetExerciseDto, ServiceError<SingleErrorTypes>>>
       updateWorkoutSetExercise({
     required int workoutSetExerciseId,
+    int? exerciseId,
     int? minReps,
     int? maxReps,
     WorkoutSetExerciseDifficulty? difficulty,
+    bool? toMaxReps,
   }) async {
     _logger.info('Updating workout set exercise with id $workoutSetExerciseId');
     try {
@@ -1699,6 +1701,17 @@ class WorkoutService {
         );
       }
 
+      if (exerciseId != null) {
+        final exercise = await _exerciseRepository.selectOne(exerciseId);
+        if (exercise == null) {
+          _logger.warning('Exercise with id $exerciseId not found');
+          return err(ServiceError(
+            type: SingleErrorTypes.notFound,
+            description: 'Exercise with id $exerciseId not found',
+          ));
+        }
+      }
+
       final int oldBaseReps =
           (workoutSetExercise.maxReps ?? workoutSetExercise.minReps);
       final WorkoutSetExercise updatedWorkoutSetExercise =
@@ -1706,6 +1719,8 @@ class WorkoutService {
         minReps: minReps,
         maxReps: maxReps,
         difficulty: difficulty,
+        toMaxReps: toMaxReps,
+        exerciseId: exerciseId,
         updatedAt: DateUtilities.getNowUtcUnix(),
       );
       final int newBaseReps = (updatedWorkoutSetExercise.maxReps ??

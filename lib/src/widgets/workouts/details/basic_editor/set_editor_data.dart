@@ -17,6 +17,7 @@ final class SetEditorData {
   bool toMaxReps;
   int recommendedRestSecs;
   int maxRestSecs;
+  int? setExerciseId;
   int? exerciseId;
   String? exerciseName;
   SetEditorDataStatus status;
@@ -31,6 +32,7 @@ final class SetEditorData {
     required this.toMaxReps,
     required this.recommendedRestSecs,
     required this.maxRestSecs,
+    required this.setExerciseId,
     required this.exerciseId,
     required this.exerciseName,
     required this.status,
