@@ -155,7 +155,8 @@ class _SetExerciseSearchFormState extends State<SetExerciseSearchForm> {
                 isLoading: widget.isLoading,
                 onPressed: () {
                   if (!widget.isLoading) {
-                    if (_formKey.currentState!.validate()) {
+                    if (_formKey.currentState != null &&
+                        _formKey.currentState!.validate()) {
                       _formKey.currentState!.save();
                       widget.onSubmit(
                         name: _data.name,

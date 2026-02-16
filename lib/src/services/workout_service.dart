@@ -705,7 +705,11 @@ class WorkoutService {
           updatedAt: DateUtilities.getNowUtcUnix(),
         );
         await _repository.update(updatedWorkout, txn);
-        return (workoutSet, setExercises, setExerciseOptions);
+        return (
+          workoutSet.copyWith(id: setId),
+          setExercises,
+          setExerciseOptions
+        );
       });
 
       final exerciseMap = Map.fromEntries(

@@ -84,8 +84,11 @@ class _WorkoutEditViewState extends State<WorkoutEditView> {
                 },
               ),
               Expanded(
-                child: BasicEditor(
-                  workoutId: widget.workoutId,
+                child: SingleChildScrollView(
+                  child: BasicEditor(
+                    workoutId: widget.workoutId,
+                    initialSets: workout.sets ?? [],
+                  ),
                 ),
               ),
             ],

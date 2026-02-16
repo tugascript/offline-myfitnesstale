@@ -10,11 +10,13 @@ import 'set_exercise_search_list.dart';
 
 class SetExerciseSearchModal extends StatelessWidget {
   final DataDisplaySizesList sizes;
+  final bool isLoading;
   final void Function(int id, String name) onExerciseSelected;
 
   const SetExerciseSearchModal({
     super.key,
     required this.sizes,
+    required this.isLoading,
     required this.onExerciseSelected,
   });
 
@@ -60,7 +62,7 @@ class SetExerciseSearchModal extends StatelessWidget {
                 Expanded(
                   child: SetExerciseSearchList(
                     sizes: sizes,
-                    isLoading: state.isLoading,
+                    isLoading: state.isLoading || isLoading,
                     exercises: state.exerciseSelection,
                     onExerciseSelected: onExerciseSelected,
                   ),
@@ -75,7 +77,11 @@ class SetExerciseSearchModal extends StatelessWidget {
 
             if (state.exerciseSelection.isNotEmpty && state.error != null) {
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(state.error!.description)),
+                SnackBar(
+                  content: Text(
+                    state.error?.description ?? "Something went wrong",
+                  ),
+                ),
               );
             }
           },
