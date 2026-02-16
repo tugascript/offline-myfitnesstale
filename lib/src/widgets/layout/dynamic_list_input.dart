@@ -67,7 +67,8 @@ class DynamicListInput<T> extends StatelessWidget {
                     ReorderableDragStartListener(
                       index: index,
                       child: Padding(
-                        padding: EdgeInsets.only(right: padding / 2),
+                        padding:
+                            EdgeInsets.symmetric(horizontal: padding * 1.2),
                         child: Icon(Icons.drag_indicator, size: fontSize),
                       ),
                     ),
@@ -75,7 +76,8 @@ class DynamicListInput<T> extends StatelessWidget {
                       child: itemBuilder(context, index, item),
                     ),
                     IconButton(
-                      iconSize: fontSize,
+                      padding: EdgeInsets.zero,
+                      iconSize: fontSize * 1.2,
                       icon: Icon(
                         Icons.close,
                         color: Colors.red,
@@ -87,7 +89,6 @@ class DynamicListInput<T> extends StatelessWidget {
                               newItems.removeAt(index);
                               onChanged(newItems);
                             },
-                      padding: EdgeInsets.zero,
                     ),
                   ],
                 ),
