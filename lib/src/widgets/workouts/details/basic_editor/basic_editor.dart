@@ -212,7 +212,7 @@ class _BasicEditorState extends State<BasicEditor> {
           fontSize: sizes.fontSize,
           padding: sizes.padding,
           spacing: sizes.spacing,
-          isLoading: state.isLoading,
+          isLoading: false,
           addLabel: "Add Set",
           onAdd: () {
             setState(() {
@@ -257,7 +257,7 @@ class _BasicEditorState extends State<BasicEditor> {
           keyBuilder: (item) => ValueKey(item.id ?? item.internalId),
           itemBuilder: (context, index, item) {
             return BasicSetEditor(
-              set: item,
+              setData: item,
               sizes: sizes,
               onExerciseChanged: (value) {
                 setState(() {
@@ -357,7 +357,6 @@ class _BasicEditorState extends State<BasicEditor> {
                 });
                 _scheduleSave();
               },
-              isLoading: state.isLoading,
             );
           },
           onReorder: (oldIndex, newIndex) async {

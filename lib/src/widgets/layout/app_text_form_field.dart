@@ -4,6 +4,7 @@ class AppTextFormField extends StatelessWidget {
   final ThemeData theme;
   final TextEditingController? controller;
   final String? labelText;
+  final String? initialValue;
   final String? hintText;
   final double fontSize;
   final double padding;
@@ -24,6 +25,7 @@ class AppTextFormField extends StatelessWidget {
     required this.theme,
     this.controller,
     this.labelText,
+    this.initialValue,
     this.hintText,
     required this.fontSize,
     required this.padding,
@@ -46,6 +48,7 @@ class AppTextFormField extends StatelessWidget {
         ? Colors.grey[400]
         : Colors.grey[600];
     return TextFormField(
+      initialValue: initialValue,
       readOnly: readOnly,
       onTap: onTap,
       keyboardType: keyboardType,
