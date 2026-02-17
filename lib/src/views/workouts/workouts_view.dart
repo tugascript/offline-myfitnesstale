@@ -128,20 +128,16 @@ class _WorkoutsViewState extends State<WorkoutsView> {
           },
         ),
       ),
-      floatingActionButton: SizedBox(
-        width: sizes.buttonSize,
-        height: sizes.buttonSize,
-        child: FloatingActionButton(
-          elevation: sizes.elevation,
-          onPressed: () {
-            showDialog(
-              context: context,
-              builder: (context) => CreateWorkoutDialog(sizes: sizes),
-            );
-          },
-          shape: BeveledRectangleBorder(),
-          child: Icon(Icons.add, size: sizes.buttonIconSize),
-        ),
+      floatingActionButton: FloatingActionButton(
+        elevation: sizes.elevation,
+        onPressed: () {
+          showDialog(
+            context: context,
+            builder: (context) => CreateWorkoutDialog(sizes: sizes),
+          );
+        },
+        shape: BeveledRectangleBorder(),
+        child: Icon(Icons.add, size: sizes.buttonIconSize),
       ),
     );
   }

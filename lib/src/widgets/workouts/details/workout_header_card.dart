@@ -28,6 +28,17 @@ class WorkoutHeaderCard extends StatelessWidget {
       children: [
         Row(
           children: [
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: sizes.spacing),
+              child: Icon(
+                workoutDto.createdBy == CreatedBy.user
+                    ? Icons.person
+                    : Icons.public,
+                color: workoutDto.createdBy == CreatedBy.user
+                    ? Colors.blue
+                    : Colors.grey,
+              ),
+            ),
             Expanded(
               child: DifficultyBadge(
                 spacing: sizes.spacing,
@@ -52,6 +63,7 @@ class WorkoutHeaderCard extends StatelessWidget {
           children: [
             Expanded(
               child: TotalNumericString(
+                emoji: '🔁',
                 name: 'Sets',
                 total: workoutDto.totalSets,
                 fontSize: sizes.fontSize,
@@ -59,6 +71,7 @@ class WorkoutHeaderCard extends StatelessWidget {
             ),
             Expanded(
               child: TotalNumericString(
+                emoji: '🔂',
                 name: 'Reps',
                 total: workoutDto.totalReps,
                 fontSize: sizes.fontSize,

@@ -10,6 +10,7 @@ import '../../widgets/layout/responsive_scaffold.dart';
 import '../../widgets/workouts/details/basic_editor/basic_editor.dart';
 import '../../widgets/workouts/details/workout_header_card.dart';
 
+// TODO: add edit header
 class WorkoutEditView extends StatefulWidget {
   static const name = "workout_edit";
   static const routeName = "/workouts/:id/edit";

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../cubits/states/workout_plan_state.dart';
 import '../cubits/workout_plan_cubit.dart';
+import '../models/enums.dart';
 import '../utilities/sizes/data_display_sizes.dart';
 import '../utilities/sizes/screen_size.dart';
 import '../widgets/layout/responsive_scaffold.dart';
@@ -97,6 +98,7 @@ class _WorkoutPlanDetailViewState extends State<WorkoutPlanDetailView> {
                 SizedBox(height: sizes.spacing * 2),
                 ActionButtons(
                   isLoading: state.isLoading,
+                  showMutationBtns: plan.createdBy == CreatedBy.user,
                   theme: theme,
                   sizes: sizes,
                   onStart: () =>

@@ -92,7 +92,6 @@ class WorkoutRegistrationInput {
 }
 
 // TODO: fix total sets and reps calculations
-// TODO: fix removal of muscle_groups and muscles when deleting a workout
 class WorkoutService {
   WorkoutService._();
 
@@ -1750,6 +1749,7 @@ class WorkoutService {
     }
   }
 
+  // TODO: update workout muscles and muscle_group
   Future<Result<WorkoutSetExerciseDto, ServiceError<SingleErrorTypes>>>
       updateWorkoutSetExercise({
     required int workoutSetExerciseId,

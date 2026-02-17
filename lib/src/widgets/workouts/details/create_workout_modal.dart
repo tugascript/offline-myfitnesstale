@@ -70,6 +70,7 @@ class CreateWorkoutDialog extends StatelessWidget {
                       if (context.mounted) {
                         Navigator.of(context).pop();
                         if (state.selectedWorkout != null) {
+                          // Fix getting workout
                           context.push(
                             "/workouts/${state.selectedWorkout!.id}",
                           );

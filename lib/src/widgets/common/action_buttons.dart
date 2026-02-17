@@ -8,6 +8,7 @@ class ActionButtons extends StatelessWidget {
   final ThemeData theme;
   final DataDisplaySizesList sizes;
   final bool isLoading;
+  final bool showMutationBtns;
 
   // Primary Action (e.g. Start)
   final VoidCallback? onStart;
@@ -30,6 +31,7 @@ class ActionButtons extends StatelessWidget {
     required this.theme,
     required this.sizes,
     required this.isLoading,
+    required this.showMutationBtns,
     this.onStart,
     this.startLabel = 'START',
     this.startIcon = Icons.play_arrow,
@@ -72,15 +74,16 @@ class ActionButtons extends StatelessWidget {
             ),
           ],
         ),
-        SizedBox(height: sizes.spacing),
-        MutationButtons(
-          theme: theme,
-          sizes: sizes,
-          isLoading: isLoading,
-          onEdit: onEdit,
-          onDelete: onDelete,
-        ),
-        SizedBox(height: sizes.spacing),
+        if (showMutationBtns) ...[
+          SizedBox(height: sizes.spacing),
+          MutationButtons(
+            theme: theme,
+            sizes: sizes,
+            isLoading: isLoading,
+            onEdit: onEdit,
+            onDelete: onDelete,
+          ),
+        ],
       ],
     );
   }
