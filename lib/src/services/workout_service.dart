@@ -1013,6 +1013,7 @@ class WorkoutService {
       }
 
       final int totalSets = (workoutSet.maxSets ?? workoutSet.minSets);
+
       final List<WorkoutSetExercise> setExercises =
           await _setExerciseRepository.selectMany(
         where: WorkoutSetExerciseColumns.workoutId.equal,
@@ -1049,30 +1050,47 @@ class WorkoutService {
         },
       );
 
-// TODO: fix this
       final Set<MuscleGroup> muscleGroups = {};
       final Set<Muscle> muscles = {};
+
+      final List<WorkoutSet> sets = await _setRepository.selectMany(
+        where: WorkoutSetColumns.workoutId.equal,
+        whereArgs: [workoutSet.workoutId],
+      );
+      final validSetIds =
+          sets.where((s) => s.id != workoutSetId).map((s) => s.id!).toSet();
+
       for (final setExercise in setExercises) {
         final exercise = exerciseMap[setExercise.exerciseId];
-        if (exercise != null && setExercise.workoutSetId != workoutSetId) {
+        if (exercise != null &&
+            validSetIds.contains(setExercise.workoutSetId)) {
           muscleGroups.add(exercise.muscleGroup);
           muscles.addAll(exercise.muscles.primaryMuscles);
         }
       }
 
       final position = workoutSet.position;
-      final setCount = await _setRepository.count(
-        where: WorkoutSetColumns.workoutId.equal,
-        whereArgs: [workoutSet.workoutId],
-      );
+      final isLastPosition = position == sets.length;
 
       await _setRepository.startTransaction((txn) async {
+        await txn.delete(
+          WorkoutSetExerciseOption.table,
+          where: WorkoutSetExerciseOptionColumns.workoutSetId.equal,
+          whereArgs: [workoutSetId],
+        );
+
+        await txn.delete(
+          WorkoutSetExercise.table,
+          where: WorkoutSetExerciseColumns.workoutSetId.equal,
+          whereArgs: [workoutSetId],
+        );
+
         final deleted = await _setRepository.deleteOne(workoutSetId, txn);
         if (!deleted) {
           throw Exception('Workout set failed to delete');
         }
 
-        if (position != setCount) {
+        if (!isLastPosition) {
           await txn.rawUpdate(
             """
             UPDATE ${WorkoutSet.table} SET ${WorkoutSetColumns.position.value} = ${WorkoutSetColumns.position.value} - 1
@@ -1087,6 +1105,7 @@ class WorkoutService {
           totalReps: workout.totalReps - totalReps,
           muscleGroups: muscleGroups,
           muscles: muscles,
+          updatedAt: DateUtilities.getNowUtcUnix(),
         );
         final updated = await _repository.update(updatedWorkout, txn);
         if (!updated) {
