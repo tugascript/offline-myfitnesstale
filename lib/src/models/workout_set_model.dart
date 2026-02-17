@@ -76,7 +76,7 @@ class WorkoutSet implements Model {
     ${WorkoutSetColumns.createdBy.value} TEXT NOT NULL,
     ${WorkoutSetColumns.createdAt.value} INTEGER NOT NULL,
     ${WorkoutSetColumns.updatedAt.value} INTEGER NOT NULL,
-    FOREIGN KEY (${WorkoutSetColumns.workoutId.value}) REFERENCES ${Workout.table} (id) ON DELETE CASCADE
+    FOREIGN KEY (${WorkoutSetColumns.workoutId.value}) REFERENCES ${Workout.table} (${WorkoutColumns.id.value}) ON DELETE CASCADE
   );
   
   CREATE INDEX IF NOT EXISTS idx_workout_sets_workout_id ON $_table (${WorkoutSetColumns.workoutId.value});
