@@ -6,6 +6,7 @@ import 'enums.dart';
 import 'exercise_model.dart';
 import 'model.dart';
 import 'utilities.dart';
+import 'workout_model.dart';
 import 'workout_set_model.dart';
 
 const String _table = 'workout_set_exercises';
@@ -118,6 +119,8 @@ final class WorkoutSetExercise extends Equatable implements Model {
     ${WorkoutSetExerciseColumns.createdBy.value} TEXT NOT NULL,
     ${WorkoutSetExerciseColumns.createdAt.value} INTEGER NOT NULL,
     ${WorkoutSetExerciseColumns.updatedAt.value} INTEGER NOT NULL,
+    FOREIGN KEY (${WorkoutSetExerciseColumns.workoutId.value}) REFERENCES ${Workout.table} (${WorkoutColumns.id.value})
+      ON DELETE CASCADE,
     FOREIGN KEY (${WorkoutSetExerciseColumns.workoutSetId.value}) REFERENCES ${WorkoutSet.table} (${WorkoutSetColumns.id.value})
       ON DELETE CASCADE,
     FOREIGN KEY (${WorkoutSetExerciseColumns.exerciseId.value}) REFERENCES ${Exercise.table} (${ExerciseColumns.id.value})
