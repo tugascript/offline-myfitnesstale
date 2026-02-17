@@ -50,7 +50,7 @@ class WorkoutCard extends StatelessWidget {
                 fontSize: sizes.fontSize,
               ),
               TotalNumericString(
-                emoji: '💪',
+                emoji: '🔂',
                 name: "Reps",
                 total: workout.totalReps,
                 fontSize: sizes.fontSize,
