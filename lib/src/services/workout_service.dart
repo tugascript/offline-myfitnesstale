@@ -23,6 +23,7 @@ class WorkoutSetExerciseInput {
   final int exerciseId;
   final int minReps;
   final int? maxReps;
+  final bool toMaxReps;
   final WorkoutSetExerciseDifficulty? difficulty;
   final List<int>? alternativeExerciseIds;
 
@@ -30,6 +31,7 @@ class WorkoutSetExerciseInput {
     required this.exerciseId,
     required this.minReps,
     this.maxReps,
+    this.toMaxReps = false,
     this.difficulty,
     this.alternativeExerciseIds,
   });
@@ -89,6 +91,8 @@ class WorkoutRegistrationInput {
   });
 }
 
+// TODO: fix total sets and reps calculations
+// TODO: fix removal of muscle_groups and muscles when deleting a workout
 class WorkoutService {
   WorkoutService._();
 
@@ -677,6 +681,7 @@ class WorkoutService {
             exerciseId: input.exerciseId,
             minReps: input.minReps,
             maxReps: input.maxReps,
+            toMaxReps: input.toMaxReps,
             difficulty: input.difficulty,
           );
           final setExerciseId = await _setExerciseRepository.insert(
@@ -1010,13 +1015,50 @@ class WorkoutService {
       final int totalSets = (workoutSet.maxSets ?? workoutSet.minSets);
       final List<WorkoutSetExercise> setExercises =
           await _setExerciseRepository.selectMany(
-        where: WorkoutSetExerciseColumns.workoutSetId.equal,
-        whereArgs: [workoutSetId],
+        where: WorkoutSetExerciseColumns.workoutId.equal,
+        whereArgs: [workoutSet.workoutId],
+        orderBy: [
+          WorkoutSetExerciseColumns.workoutSetId.orderAsc,
+          WorkoutSetExerciseColumns.position.orderAsc
+        ].join(", "),
       );
-      final int totalReps = setExercises.fold(
-        0,
-        (acc, e) => acc + totalSets * (e.maxReps ?? e.minReps),
+
+      final int totalReps = setExercises
+          .where(
+            (e) => e.workoutSetId == workoutSetId,
+          )
+          .fold(
+            0,
+            (acc, e) => acc + totalSets * (e.maxReps ?? e.minReps),
+          );
+
+      final Set<int> exerciseIds = setExercises
+          .map(
+            (e) => e.exerciseId,
+          )
+          .toSet();
+      final List<Exercise> exercises = await _exerciseRepository.selectMany(
+        where: ExerciseColumns.id.inList(exerciseIds.length),
+        whereArgs: exerciseIds.toList(),
       );
+      final Map<int, ExerciseDto> exerciseMap = exercises.fold(
+        {},
+        (map, e) {
+          map[e.id!] = ExerciseDto.fromModel(e);
+          return map;
+        },
+      );
+
+// TODO: fix this
+      final Set<MuscleGroup> muscleGroups = {};
+      final Set<Muscle> muscles = {};
+      for (final setExercise in setExercises) {
+        final exercise = exerciseMap[setExercise.exerciseId];
+        if (exercise != null && setExercise.workoutSetId != workoutSetId) {
+          muscleGroups.add(exercise.muscleGroup);
+          muscles.addAll(exercise.muscles.primaryMuscles);
+        }
+      }
 
       final position = workoutSet.position;
       final setCount = await _setRepository.count(
@@ -1043,6 +1085,8 @@ class WorkoutService {
         final updatedWorkout = workout.copyWith(
           totalSets: workout.totalSets - totalSets,
           totalReps: workout.totalReps - totalReps,
+          muscleGroups: muscleGroups,
+          muscles: muscles,
         );
         final updated = await _repository.update(updatedWorkout, txn);
         if (!updated) {

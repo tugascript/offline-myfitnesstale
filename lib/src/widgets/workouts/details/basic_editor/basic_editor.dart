@@ -66,7 +66,7 @@ class _BasicEditorState extends State<BasicEditor> {
 
   void _scheduleSave() {
     _saveDebounce?.cancel();
-    _saveDebounce = Timer(const Duration(milliseconds: 1000), () {
+    _saveDebounce = Timer(const Duration(seconds: 1), () {
       _saveDebounce = null;
       if (mounted) _saveSets();
     });
@@ -191,9 +191,9 @@ class _BasicEditorState extends State<BasicEditor> {
                 SetEditorData(
                   id: null,
                   position: _displayedSets.length + 1,
-                  minSets: 0,
+                  minSets: 1,
                   maxSets: 0,
-                  minReps: 0,
+                  minReps: 1,
                   maxReps: 0,
                   recommendedRestSecs: 0,
                   maxRestSecs: 0,

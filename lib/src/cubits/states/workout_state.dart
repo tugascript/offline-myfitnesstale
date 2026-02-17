@@ -92,7 +92,7 @@ final class WorkoutState extends Equatable {
       pagination: pagination ?? this.pagination,
       selectedWorkout: selectedWorkout ?? this.selectedWorkout,
       isLoading: isLoading ?? this.isLoading,
-      error: error ?? this.error,
+      error: error,
     );
   }
 

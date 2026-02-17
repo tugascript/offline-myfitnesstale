@@ -6,6 +6,7 @@ import '../../cubits/workout_cubit.dart';
 import '../../utilities/sizes/data_display_sizes.dart';
 import '../../utilities/sizes/screen_size.dart';
 import '../../widgets/layout/app_scaffold.dart';
+import '../../widgets/layout/responsive_scaffold.dart';
 import '../../widgets/workouts/details/basic_editor/basic_editor.dart';
 import '../../widgets/workouts/details/workout_header_card.dart';
 
@@ -68,7 +69,7 @@ class _WorkoutEditViewState extends State<WorkoutEditView> {
           );
         }
 
-        return AppScaffold(
+        return ResponsiveScaffold(
           title: workout.name,
           isEntity: true,
           body: Column(
@@ -83,12 +84,14 @@ class _WorkoutEditViewState extends State<WorkoutEditView> {
                       );
                 },
               ),
-              Expanded(
-                child: SingleChildScrollView(
-                  child: BasicEditor(
-                    workoutId: widget.workoutId,
-                    initialSets: workout.sets ?? [],
-                  ),
+              Padding(
+                padding: EdgeInsets.symmetric(
+                  horizontal: sizes.spacing / 2,
+                  vertical: sizes.spacing / 2,
+                ),
+                child: BasicEditor(
+                  workoutId: widget.workoutId,
+                  initialSets: workout.sets ?? [],
                 ),
               ),
             ],
