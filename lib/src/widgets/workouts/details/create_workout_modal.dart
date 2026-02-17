@@ -25,97 +25,59 @@ class CreateWorkoutDialog extends StatelessWidget {
         side: BorderSide(color: theme.colorScheme.outlineVariant, width: 0.5),
       ),
       insetPadding: EdgeInsets.all(sizes.margins),
-      child: BlocConsumer<WorkoutCubit, WorkoutState>(
-        listener: (context, state) {
-          if (state.error == null && !state.isLoading) {
-            // Assuming successful creation if no error and not loading anymore
-            // Ideally check for a specific success flag or compare list length,
-            // but checking for no error after a probable action is a common pattern.
-            // However, this listener might trigger on other state changes too.
-            // A better way is to check if the list grew or a "created" flag.
-            // But usually the Cubit might emit a specific "Success" state or we just check.
-            // Given the cubit code:
-            // emit(state.copyWith(workouts: [workout, ...], isLoading: false));
-            // We can check if `workouts` changed? Or just close it.
-            // Let's assume on success we want to close.
-            Navigator.of(context).pop();
-          }
-          if (state.error != null) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.error!.description)),
-            );
-          }
-        },
-        listenWhen: (previous, current) {
-          // trigger when loading changes from true to false
-          return previous.isLoading && !current.isLoading;
-        },
+      child: BlocBuilder<WorkoutCubit, WorkoutState>(
         builder: (context, state) {
-          return BlocListener<WorkoutCubit, WorkoutState>(
-            listener: (context, state) {
-              if (state.isLoading) {
-                return;
-              }
+          return SingleChildScrollView(
+            child: Padding(
+              padding: EdgeInsets.symmetric(
+                vertical: sizes.padding * 2,
+                horizontal: sizes.padding,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    "Create Workout".toUpperCase(),
+                    style: TextStyle(
+                      fontSize: sizes.titleFountSize,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  SizedBox(height: sizes.spacing),
+                  WorkoutBaseForm(
+                    theme: theme,
+                    sizes: sizes,
+                    isLoading: state.isLoading,
+                    submitLabel: "Start Editing",
+                    initialName: "",
+                    initialIsFavorite: false,
+                    initialDifficulty: Difficulty.beginner,
+                    onSubmit: ({
+                      required String name,
+                      required bool isFavorite,
+                      required Difficulty difficulty,
+                      String? description,
+                    }) async {
+                      await context.read<WorkoutCubit>().createWorkout(
+                            name: name,
+                            isFavorite: isFavorite,
+                            difficulty: difficulty,
+                            description: description,
+                          );
 
-              if (state.error == null && state.selectedWorkout != null) {
-                Navigator.of(context).pop();
-                context.push(
-                  "/workouts/${state.selectedWorkout!.id}/edit",
-                );
-              }
-              if (state.error != null) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(state.error!.description)),
-                );
-              }
-            },
-            listenWhen: (previous, current) {
-              // trigger when loading changes from true to false
-              return previous.isLoading && !current.isLoading;
-            },
-            child: SingleChildScrollView(
-              child: Padding(
-                padding: EdgeInsets.symmetric(
-                  vertical: sizes.padding * 2,
-                  horizontal: sizes.padding,
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Text(
-                      "Create Workout".toUpperCase(),
-                      style: TextStyle(
-                        fontSize: sizes.titleFountSize,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    SizedBox(height: sizes.spacing),
-                    WorkoutBaseForm(
-                      theme: theme,
-                      sizes: sizes,
-                      isLoading: state.isLoading,
-                      submitLabel: "Start Editing",
-                      initialName: "",
-                      initialIsFavorite: false,
-                      initialDifficulty: Difficulty.beginner,
-                      onSubmit: ({
-                        required String name,
-                        required bool isFavorite,
-                        required Difficulty difficulty,
-                        String? description,
-                      }) {
-                        context.read<WorkoutCubit>().createWorkout(
-                              name: name,
-                              isFavorite: isFavorite,
-                              difficulty: difficulty,
-                              description: description,
-                            );
-                      },
-                    ),
-                  ],
-                ),
+                      if (context.mounted) {
+                        Navigator.of(context).pop();
+                        if (state.selectedWorkout != null) {
+                          context.push(
+                            "/workouts/${state.selectedWorkout!.id}",
+                          );
+                        }
+                      }
+                    },
+                  ),
+                ],
               ),
             ),
           );

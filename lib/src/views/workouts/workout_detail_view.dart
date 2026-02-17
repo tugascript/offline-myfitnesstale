@@ -6,6 +6,7 @@ import '../../cubits/states/workout_state.dart';
 import '../../cubits/workout_cubit.dart';
 import '../../utilities/sizes/screen_size.dart';
 import '../../utilities/sizes/data_display_sizes.dart';
+import '../../widgets/common/confirmation_dialog.dart';
 import '../loading_view.dart';
 import '../../widgets/layout/app_scaffold.dart';
 import '../../widgets/layout/responsive_scaffold.dart';
@@ -46,6 +47,8 @@ class _WorkoutDetailViewState extends State<WorkoutDetailView> {
     );
 
     return BlocConsumer<WorkoutCubit, WorkoutState>(
+      listenWhen: (previous, current) =>
+          previous.selectedWorkout != current.selectedWorkout,
       listener: (context, workoutState) {
         if (workoutState.isLoading) {
           return;
@@ -139,17 +142,34 @@ class _WorkoutDetailViewState extends State<WorkoutDetailView> {
                   }),
                 SizedBox(height: sizes.spacing * 2),
                 ActionButtons(
-                  isLoading: workoutState.isLoading,
-                  theme: theme,
-                  sizes: sizes,
-                  onStart: () => context
-                      .push('/workouts/${workout.id}/active'), // TODO: fix me
-                  startLabel: 'Start Workout',
-                  onEdit: () => context.push('/workouts/${workout.id}/edit'),
-                  onHistory: () =>
-                      context.push('/workouts/${workout.id}/history'),
-                  historyLabel: 'History',
-                ),
+                    isLoading: workoutState.isLoading,
+                    theme: theme,
+                    sizes: sizes,
+                    onStart: () => context
+                        .push('/workouts/${workout.id}/active'), // TODO: fix me
+                    startLabel: 'Start Workout',
+                    onEdit: () => context.push('/workouts/${workout.id}/edit'),
+                    onHistory: () =>
+                        context.push('/workouts/${workout.id}/history'),
+                    historyLabel: 'History',
+                    onDelete: () {
+                      showDialog(
+                        context: context,
+                        builder: (context) => ConfirmationDialog(
+                          title: 'Delete Workout',
+                          content:
+                              'Are you sure you want to delete this workout? This action cannot be undone.',
+                          confirmLabel: 'Delete',
+                          isDestructive: true,
+                          onConfirm: () {
+                            context
+                                .read<WorkoutCubit>()
+                                .deleteWorkout(widget.workoutId);
+                            context.pop();
+                          },
+                        ),
+                      );
+                    }),
                 SizedBox(height: sizes.spacing),
               ],
             ),

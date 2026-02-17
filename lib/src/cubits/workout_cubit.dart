@@ -125,9 +125,11 @@ class WorkoutCubit extends Cubit<WorkoutState> {
     final workout = result.value;
     emit(state.copyWith(
       workouts: [workout, ...state.workouts],
+      selectedWorkout: workout,
       pagination: state.pagination.copyWith(
         total: state.pagination.total + 1,
       ),
+      error: null,
       isLoading: false,
     ));
   }
@@ -174,6 +176,7 @@ class WorkoutCubit extends Cubit<WorkoutState> {
     emit(state.copyWith(
       selectedWorkout: result.value,
       isLoading: false,
+      error: null,
     ));
   }
 
@@ -281,6 +284,7 @@ class WorkoutCubit extends Cubit<WorkoutState> {
     _logger.info("Workout deleted successfully");
     emit(state.copyWith(
       workouts: state.workouts.where((w) => w.id != id).toList(),
+      selectedWorkout: null,
       pagination: state.pagination.copyWith(
         total: state.pagination.total - 1,
       ),
@@ -524,6 +528,8 @@ class WorkoutCubit extends Cubit<WorkoutState> {
             WorkoutSetExerciseInput(
               exerciseId: wSet.exerciseId,
               minReps: wSet.minReps,
+              maxReps: wSet.maxReps >= wSet.minReps ? wSet.maxReps : null,
+              toMaxReps: wSet.toMaxReps,
             ),
           ],
           maxSets: wSet.maxSets,
@@ -548,8 +554,8 @@ class WorkoutCubit extends Cubit<WorkoutState> {
         setType: WorkoutSetType.standard,
         minSets: wSet.minSets,
         recommendedRestSecs: wSet.recommendedRestSecs,
-        maxSets: wSet.maxSets > wSet.minSets ? wSet.maxSets : null,
-        maxRestSecs: wSet.maxRestSecs > wSet.recommendedRestSecs
+        maxSets: wSet.maxSets >= wSet.minSets ? wSet.maxSets : null,
+        maxRestSecs: wSet.maxRestSecs >= wSet.recommendedRestSecs
             ? wSet.maxRestSecs
             : null,
       );
@@ -570,7 +576,7 @@ class WorkoutCubit extends Cubit<WorkoutState> {
           workoutSetExerciseId: wSet.setExerciseId!,
           exerciseId: wSet.exerciseId,
           minReps: wSet.minReps,
-          maxReps: wSet.maxReps > wSet.minReps ? wSet.maxReps : null,
+          maxReps: wSet.maxReps >= wSet.minReps ? wSet.maxReps : null,
           toMaxReps: wSet.toMaxReps,
         );
         if (result.isErr()) {
