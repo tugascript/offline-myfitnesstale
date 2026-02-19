@@ -37,6 +37,48 @@ class WorkoutSetExerciseInput {
   });
 }
 
+final class WorkoutSetExerciseUpsertInput {
+  final int? id;
+  final int exerciseId;
+  final int minReps;
+  final int? maxReps;
+  final bool toMaxReps;
+  final WorkoutSetExerciseDifficulty? difficulty;
+  final List<int>? alternativeExerciseIds;
+
+  const WorkoutSetExerciseUpsertInput({
+    this.id,
+    required this.exerciseId,
+    required this.minReps,
+    this.maxReps,
+    this.toMaxReps = false,
+    this.difficulty,
+    this.alternativeExerciseIds,
+  });
+}
+
+final class WorkoutSetUpsertInput {
+  final int? id;
+  final WorkoutSetType setType;
+  final int minSets;
+  final int recommendedRestSecs;
+  final List<WorkoutSetExerciseUpsertInput> exercises;
+  final int? position;
+  final int? maxSets;
+  final int? maxRestSecs;
+
+  const WorkoutSetUpsertInput({
+    this.id,
+    required this.setType,
+    required this.minSets,
+    required this.recommendedRestSecs,
+    required this.exercises,
+    this.position,
+    this.maxSets,
+    this.maxRestSecs,
+  });
+}
+
 class WorkoutSetExerciseRegistrationInput {
   final ExerciseDto exercise;
   final int minReps;
@@ -166,7 +208,7 @@ class WorkoutService {
         offset: offset,
         where: query.where,
         whereArgs: query.args,
-        orderBy: WorkoutColumns.name.orderCaseInsensitiveAsc,
+        orderBy: [WorkoutColumns.name.orderCaseInsensitiveAsc],
       );
       final int total = await _repository.count(
         where: query.where,
@@ -206,7 +248,7 @@ class WorkoutService {
       final List<WorkoutSet> sets = await _setRepository.selectMany(
         where: WorkoutSetColumns.workoutId.equal,
         whereArgs: [id],
-        orderBy: WorkoutSetColumns.position.orderAsc,
+        orderBy: [WorkoutSetColumns.position.orderAsc],
       );
       if (sets.isEmpty) {
         _logger.info('Got workout with id $id');
@@ -219,8 +261,8 @@ class WorkoutService {
         whereArgs: [id],
         orderBy: [
           WorkoutSetExerciseColumns.workoutSetId.orderAsc,
-          WorkoutSetExerciseColumns.position.orderAsc
-        ].join(", "),
+          WorkoutSetExerciseColumns.position.orderAsc,
+        ],
       );
       if (setExercises.isEmpty) {
         _logger.info('Got workout with id $id');
@@ -236,8 +278,8 @@ class WorkoutService {
         whereArgs: [id],
         orderBy: [
           WorkoutSetExerciseOptionColumns.workoutSetExerciseId.orderAsc,
-          WorkoutSetExerciseOptionColumns.position.orderAsc
-        ].join(", "),
+          WorkoutSetExerciseOptionColumns.position.orderAsc,
+        ],
       );
       final Set<int> exerciseIds = <int>{
         ...setExercises.map((s) => s.exerciseId),
@@ -627,8 +669,8 @@ class WorkoutService {
         whereArgs: [workoutId],
         orderBy: [
           WorkoutSetColumns.workoutId.orderAsc,
-          WorkoutSetColumns.position.orderAsc
-        ].join(", "),
+          WorkoutSetColumns.position.orderAsc,
+        ],
       );
       final int newPosition = workoutSets.length + 1;
       final int setPosition = position ?? newPosition;
@@ -774,8 +816,8 @@ class WorkoutService {
         whereArgs: [workoutId],
         orderBy: [
           WorkoutSetColumns.workoutId.orderAsc,
-          WorkoutSetColumns.position.orderAsc
-        ].join(", "),
+          WorkoutSetColumns.position.orderAsc,
+        ],
       );
       if (workoutSets.isEmpty) {
         _logger.info('No workout sets found for workout id $workoutId');
@@ -788,8 +830,8 @@ class WorkoutService {
         whereArgs: [workoutId],
         orderBy: [
           WorkoutSetExerciseColumns.workoutSetId.orderAsc,
-          WorkoutSetExerciseColumns.position.orderAsc
-        ].join(", "),
+          WorkoutSetExerciseColumns.position.orderAsc,
+        ],
       );
       if (setExercises.isEmpty) {
         _logger
@@ -805,8 +847,8 @@ class WorkoutService {
         whereArgs: [workoutId],
         orderBy: [
           WorkoutSetExerciseOptionColumns.workoutSetExerciseId.orderAsc,
-          WorkoutSetExerciseOptionColumns.position.orderAsc
-        ].join(", "),
+          WorkoutSetExerciseOptionColumns.position.orderAsc,
+        ],
       );
 
       final Set<int> exerciseIds = <int>{
@@ -1019,8 +1061,8 @@ class WorkoutService {
         whereArgs: [workoutSet.workoutId],
         orderBy: [
           WorkoutSetExerciseColumns.workoutSetId.orderAsc,
-          WorkoutSetExerciseColumns.position.orderAsc
-        ].join(", "),
+          WorkoutSetExerciseColumns.position.orderAsc,
+        ],
       );
 
       final int totalReps = setExercises
@@ -1315,7 +1357,7 @@ class WorkoutService {
       final workoutSetExercises = await _setExerciseRepository.selectMany(
         where: WorkoutSetExerciseColumns.workoutSetId.equal,
         whereArgs: [workoutSetId],
-        orderBy: WorkoutSetExerciseColumns.position.orderAsc,
+        orderBy: [WorkoutSetExerciseColumns.position.orderAsc],
       );
       if (workoutSetExercises.isEmpty) {
         return ok([]);
@@ -1324,7 +1366,7 @@ class WorkoutService {
       final exerciseOptions = await _setExerciseOptionRepository.selectMany(
         where: WorkoutSetExerciseOptionColumns.workoutSetId.equal,
         whereArgs: [workoutSetId],
-        orderBy: WorkoutSetExerciseOptionColumns.position.orderAsc,
+        orderBy: [WorkoutSetExerciseOptionColumns.position.orderAsc],
       );
 
       final exerciseIds = {
@@ -1427,7 +1469,7 @@ class WorkoutService {
       final exerciseOptions = await _setExerciseOptionRepository.selectMany(
         where: WorkoutSetExerciseOptionColumns.workoutSetExerciseId.equal,
         whereArgs: [workoutSetExerciseId],
-        orderBy: WorkoutSetExerciseOptionColumns.position.orderAsc,
+        orderBy: [WorkoutSetExerciseOptionColumns.position.orderAsc],
       );
       if (exerciseOptions.isEmpty) {
         final exercise = await _exerciseRepository.selectOne(
@@ -1988,7 +2030,7 @@ class WorkoutService {
       final exerciseOptions = await _setExerciseOptionRepository.selectMany(
         where: WorkoutSetExerciseOptionColumns.workoutSetExerciseId.equal,
         whereArgs: [workoutSetExerciseId],
-        orderBy: WorkoutSetExerciseOptionColumns.position.orderAsc,
+        orderBy: [WorkoutSetExerciseOptionColumns.position.orderAsc],
       );
 
       if (exerciseOptions.isEmpty) {
@@ -2318,6 +2360,87 @@ class WorkoutService {
           type: SingleErrorTypes.operationFailure,
           description:
               'Error updating workout set exercise option: ${e.toString()}',
+        ),
+      );
+    }
+  }
+
+  Future<Result<void, ServiceError<SingleErrorTypes>>> batchUpsertWorkoutSets(
+    int workoutId,
+    List<WorkoutSetUpsertInput> inputs,
+  ) async {
+    _logger.info('Batch upserting workout sets');
+    final exerciseIds = inputs.fold(<int>{}, (previousValue, element) {
+      for (final exercise in element.exercises) {
+        previousValue.add(exercise.exerciseId);
+        if (exercise.alternativeExerciseIds != null) {
+          previousValue.addAll(exercise.alternativeExerciseIds!);
+        }
+      }
+      return previousValue;
+    });
+    try {
+      final workout = await _repository.selectOne(workoutId);
+      if (workout == null) {
+        _logger.warning('Workout with id $workoutId not found');
+        return err(
+          const ServiceError(
+            type: SingleErrorTypes.notFound,
+            description: 'Workout not found',
+          ),
+        );
+      }
+
+      final exercises = await _exerciseRepository.selectMany(
+        where: ExerciseColumns.id.inList(exerciseIds.length),
+        whereArgs: exerciseIds.toList(),
+      );
+      if (exercises.length != exerciseIds.length) {
+        _logger.warning(
+          'Not all exercises found, ${exercises.length} found, ${exerciseIds.length} expected',
+        );
+        return err(
+          const ServiceError(
+            type: SingleErrorTypes.notFound,
+            description: 'Not all exercises found',
+          ),
+        );
+      }
+
+      final List<WorkoutSet> workoutSets = await _setRepository.selectMany(
+        where: WorkoutSetColumns.workoutId.equal,
+        whereArgs: [workoutId],
+        orderBy: [
+          WorkoutSetColumns.workoutId.orderAsc,
+          WorkoutSetColumns.position.orderAsc,
+        ],
+      );
+
+      final exerciseMap = exercises.fold(
+        <int, ExerciseDto>{},
+        (previousValue, element) {
+          previousValue[element.id!] = ExerciseDto.fromModel(element);
+          return previousValue;
+        },
+      );
+      await _setRepository.startTransaction((txn) async {
+        for (final input in inputs) {
+          if (input.id == null) {
+            // create
+            return;
+          }
+
+          // update
+        }
+      });
+      _logger.info('Batch upserting workout sets completed successfully');
+      return ok(null);
+    } catch (e) {
+      _logger.severe('Error batch upserting workout sets', e);
+      return err(
+        ServiceError(
+          type: SingleErrorTypes.operationFailure,
+          description: 'Error batch upserting workout sets: ${e.toString()}',
         ),
       );
     }

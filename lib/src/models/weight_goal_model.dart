@@ -15,7 +15,7 @@ const String _tableCreate = '''
   );
 ''';
 
-enum WeightGoalColumns {
+enum WeightGoalColumns with Columns {
   id("id"),
   targetWeight("target_weight"),
   startDate("start_date"),
@@ -24,6 +24,7 @@ enum WeightGoalColumns {
   createdAt("created_at"),
   updatedAt("updated_at");
 
+  @override
   final String value;
 
   const WeightGoalColumns(this.value);

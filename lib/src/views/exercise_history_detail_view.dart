@@ -62,7 +62,7 @@ class _ExerciseHistoryDetailViewState extends State<ExerciseHistoryDetailView> {
       final records = await repository.selectMany(
         where: 'exercise_id = ?',
         whereArgs: [widget.exerciseId],
-        orderBy: 'created_at DESC',
+        orderBy: [WorkoutSetExerciseRecordColumns.id.orderDesc],
       );
 
       // Sort by creation date (most recent first)

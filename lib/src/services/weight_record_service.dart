@@ -71,7 +71,10 @@ class WeightRecordService {
       final List<WeightRecord> records = await _repository.selectPaginated(
         limit: limit,
         offset: offset,
-        orderBy: 'record_date DESC, id DESC',
+        orderBy: [
+          WeightRecordColumns.recordDate.orderDesc,
+          WeightRecordColumns.id.orderDesc,
+        ],
       );
       final int total = await _repository.count();
       _logger.info('Got ${records.length} weight records');
@@ -96,7 +99,10 @@ class WeightRecordService {
     _logger.info('Getting latest weight record');
     try {
       final List<WeightRecord> records = await _repository.selectMany(
-        orderBy: 'record_date DESC, id DESC',
+        orderBy: [
+          WeightRecordColumns.recordDate.orderDesc,
+          WeightRecordColumns.id.orderDesc,
+        ],
         limit: 1,
       );
       if (records.isEmpty) {
@@ -254,7 +260,9 @@ class WeightRecordService {
           await _weightGoalRepository.selectPaginated(
         limit: limit,
         offset: offset,
-        orderBy: 'created_at DESC, id DESC',
+        orderBy: [
+          WeightGoalColumns.id.orderDesc,
+        ],
       );
       final int total = await _weightGoalRepository.count();
       _logger.info('Got ${goals.length} weight goals');
@@ -303,7 +311,7 @@ class WeightRecordService {
       final List<WeightGoal> goals = await _weightGoalRepository.selectMany(
         where: 'status = ?',
         whereArgs: [ProgressStatus.inProgress.value],
-        orderBy: 'id DESC',
+        orderBy: [WeightGoalColumns.id.orderDesc],
         limit: 1,
       );
       if (goals.isEmpty) {
@@ -408,7 +416,7 @@ class WeightRecordService {
       final List<WeightGoal> goals = await _weightGoalRepository.selectMany(
         where: 'status = ?',
         whereArgs: [status.value],
-        orderBy: 'created_at DESC',
+        orderBy: [WeightGoalColumns.id.orderDesc],
       );
       _logger.info('Got ${goals.length} weight goals with status $status');
       return ok(goals.map((g) => WeightGoalDto.fromModel(g)).toList());

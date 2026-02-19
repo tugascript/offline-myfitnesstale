@@ -21,7 +21,7 @@ const String _tableCreate = '''
   );
 ''';
 
-enum WorkoutPlanWeekRecordColumns {
+enum WorkoutPlanWeekRecordColumns with Columns {
   id("id"),
   workoutPlanRecordId("workout_plan_record_id"),
   workoutPlanWeekId("workout_plan_week_id"),
@@ -30,6 +30,7 @@ enum WorkoutPlanWeekRecordColumns {
   createdAt("created_at"),
   updatedAt("updated_at");
 
+  @override
   final String value;
 
   const WorkoutPlanWeekRecordColumns(this.value);

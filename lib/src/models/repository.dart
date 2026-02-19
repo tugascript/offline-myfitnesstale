@@ -32,7 +32,7 @@ class Repository<T extends Model> {
     required int offset,
     String? where,
     List<Object?>? whereArgs,
-    String? orderBy,
+    List<String>? orderBy,
   }) async {
     _logger
         .info("selectPaginated: $limit, $offset, $where, $whereArgs, $orderBy");
@@ -43,7 +43,7 @@ class Repository<T extends Model> {
       offset: offset,
       where: where,
       whereArgs: whereArgs,
-      orderBy: orderBy,
+      orderBy: orderBy?.join(", "),
     );
 
     _logger.info("selectPaginated: ${maps.length}");
@@ -53,16 +53,17 @@ class Repository<T extends Model> {
   Future<List<T>> selectMany({
     String? where,
     List<Object?>? whereArgs,
-    String? orderBy,
+    List<String>? orderBy,
     int? limit,
+    Transaction? trx,
   }) async {
     _logger.info("selectAll: $where, $whereArgs, $orderBy");
-    final db = await _databaseHelper.db;
+    final DatabaseExecutor db = trx ?? await _databaseHelper.db;
     final List<Map<String, dynamic>> maps = await db.query(
       _tableName,
       where: where,
       whereArgs: whereArgs,
-      orderBy: orderBy,
+      orderBy: orderBy?.join(", "),
       limit: limit,
     );
 
@@ -70,9 +71,9 @@ class Repository<T extends Model> {
     return maps.map((map) => _fromMap(map)).toList();
   }
 
-  Future<T?> selectOne(int id) async {
+  Future<T?> selectOne(int id, [Transaction? trx]) async {
     _logger.info("selectOne: $id");
-    final db = await _databaseHelper.db;
+    final DatabaseExecutor db = trx ?? await _databaseHelper.db;
     final List<Map<String, dynamic>> maps = await db.query(
       _tableName,
       where: 'id = ?',
@@ -303,7 +304,7 @@ class JoinRepository<T extends JoinModel, J extends Model, R extends Model> {
     return fromMap(maps.first);
   }
 
-  Future<List<J>> selectJoined(int pk1, [String? orderBy]) async {
+  Future<List<J>> selectJoined(int pk1, [List<String>? orderBy]) async {
     final (String key1, String key2) = primaryKeys;
 
     final DatabaseExecutor db = await databaseHelper.db;
@@ -311,7 +312,7 @@ class JoinRepository<T extends JoinModel, J extends Model, R extends Model> {
       """
       SELECT j.* FROM $tableName m
       LEFT JOIN $joinTableName j ON j.id = m.$key2
-      WHERE $key1 = ?${orderBy != null ? ' ORDER BY j.$orderBy' : ''};
+      WHERE $key1 = ?${orderBy != null ? ' ORDER BY j.${orderBy.join(", j.")}' : ''};
       """,
       [pk1],
     );
@@ -319,7 +320,7 @@ class JoinRepository<T extends JoinModel, J extends Model, R extends Model> {
     return maps.map((map) => joinFromMap(map)).toList();
   }
 
-  Future<List<R>> selectReverseJoined(int pk2, [String? orderBy]) async {
+  Future<List<R>> selectReverseJoined(int pk2, [List<String>? orderBy]) async {
     final (String key1, String key2) = primaryKeys;
 
     final DatabaseExecutor db = await databaseHelper.db;
@@ -327,7 +328,7 @@ class JoinRepository<T extends JoinModel, J extends Model, R extends Model> {
       """
       SELECT r.* FROM $tableName m
       LEFT JOIN $reverseTableName r ON r.id = m.$key1
-      WHERE $key2 = ?${orderBy != null ? ' ORDER BY r.$orderBy' : ''};
+      WHERE $key2 = ?${orderBy != null ? ' ORDER BY r.${orderBy.join(", r.")}' : ''};
       """,
       [pk2],
     );

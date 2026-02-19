@@ -54,7 +54,7 @@ class WorkoutPlanDayRecordService {
       final List<WorkoutPlanDayRecord> records = await _repository.selectMany(
         where: query.where,
         whereArgs: query.args,
-        orderBy: 'created_at ASC',
+        orderBy: [WorkoutPlanDayRecordColumns.id.orderAsc],
       );
       _logger.info('Got ${records.length} workout plan day records');
       return ok(

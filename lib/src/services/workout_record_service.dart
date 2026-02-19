@@ -76,7 +76,7 @@ class WorkoutRecordService {
         offset: offset,
         where: query.where,
         whereArgs: query.args,
-        orderBy: '${WorkoutRecordColumns.startedAt.value} DESC',
+        orderBy: [WorkoutRecordColumns.startedAt.orderDesc],
       );
       final int total = await _repository.count(
         where: query.where,
@@ -117,7 +117,10 @@ class WorkoutRecordService {
           await _setRecordRepository.selectMany(
         where: '${WorkoutSetRecordColumns.workoutRecordId.value} = ?',
         whereArgs: [id],
-        orderBy: 'workout_record_id ASC, set_number ASC',
+        orderBy: [
+          WorkoutSetRecordColumns.workoutRecordId.orderAsc,
+          WorkoutSetRecordColumns.setNumber.orderAsc,
+        ],
       );
       if (setRecords.isEmpty) {
         _logger.info('Got workout record with id $id');
@@ -128,8 +131,10 @@ class WorkoutRecordService {
           await _setExerciseRecordRepository.selectMany(
         where: '${WorkoutSetExerciseRecordColumns.workoutRecordId.value} = ?',
         whereArgs: setRecords.map((sr) => sr.id).toList(),
-        orderBy:
-            '${WorkoutSetExerciseRecordColumns.workoutSetRecordId.value} ASC, ${WorkoutSetExerciseRecordColumns.position.value} ASC',
+        orderBy: [
+          WorkoutSetExerciseRecordColumns.workoutSetRecordId.orderAsc,
+          WorkoutSetExerciseRecordColumns.position.orderAsc,
+        ],
       );
       if (setExerciseRecords.isEmpty) {
         _logger.info('Got workout record with id $id');

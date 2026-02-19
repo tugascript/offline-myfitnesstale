@@ -57,7 +57,7 @@ class WorkoutPlanWorkoutRecordService {
           await _repository.selectMany(
         where: query.where,
         whereArgs: query.args,
-        orderBy: 'created_at ASC',
+        orderBy: [WorkoutPlanWorkoutRecordColumns.id.orderAsc],
       );
       _logger.info('Got ${records.length} workout plan workout records');
       return ok(records

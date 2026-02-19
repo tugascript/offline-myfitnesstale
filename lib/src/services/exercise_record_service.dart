@@ -149,8 +149,10 @@ class ExerciseRecordService {
         offset: offset,
         where: query.where,
         whereArgs: query.args,
-        orderBy:
-            '${ExerciseRecordColumns.recordDate.value} DESC, ${ExerciseRecordColumns.id.value} DESC',
+        orderBy: [
+          ExerciseRecordColumns.recordDate.orderDesc,
+          ExerciseRecordColumns.id.orderDesc,
+        ],
       );
       final int total = await _repository.count(
         where: query.where,
@@ -215,9 +217,9 @@ class ExerciseRecordService {
     _logger.info('Getting latest record for exercise $exerciseId');
     try {
       final List<ExerciseRecord> records = await _repository.selectMany(
-        where: '${ExerciseRecordColumns.exerciseId.value} = ?',
+        where: ExerciseRecordColumns.exerciseId.equal,
         whereArgs: [exerciseId],
-        orderBy: '${ExerciseRecordColumns.id.value} DESC',
+        orderBy: [ExerciseRecordColumns.id.orderDesc],
         limit: 1,
       );
       if (records.isEmpty) {
