@@ -27,7 +27,6 @@ class WorkoutHistoryDetailView extends StatefulWidget {
 }
 
 class _WorkoutHistoryDetailViewState extends State<WorkoutHistoryDetailView> {
-
   List<WorkoutSetRecord>? _setRecords;
   Map<int, List<WorkoutSetExerciseRecord>>? _exerciseRecords;
   Map<int, Exercise>? _exercises;
@@ -47,7 +46,7 @@ class _WorkoutHistoryDetailViewState extends State<WorkoutHistoryDetailView> {
       // Store cubit references before async operations
       final workoutRecordCubit = context.read<WorkoutRecordCubit>();
       final workoutCubit = context.read<WorkoutCubit>();
-      
+
       // Get workout record
       await workoutRecordCubit.getWorkoutRecord(widget.workoutRecordId);
 
@@ -65,7 +64,7 @@ class _WorkoutHistoryDetailViewState extends State<WorkoutHistoryDetailView> {
       await workoutCubit.getWorkout(workoutRecord.workoutId);
 
       if (!mounted) return;
-      
+
       // Get set records directly from repository
       final setRecordRepository = Repository<WorkoutSetRecord>(
         databaseHelper: DatabaseHelper(),
@@ -75,7 +74,7 @@ class _WorkoutHistoryDetailViewState extends State<WorkoutHistoryDetailView> {
       final setRecords = await setRecordRepository.selectMany(
         where: 'workout_progress_id = ?',
         whereArgs: [workoutRecord.id],
-        orderBy: 'set_number ASC',
+        orderBy: [WorkoutSetRecordColumns.setNumber.orderAsc],
       );
 
       if (!mounted) return;

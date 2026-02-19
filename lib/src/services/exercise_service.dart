@@ -105,7 +105,7 @@ class ExerciseService {
         offset: offset,
         where: query.where,
         whereArgs: query.args,
-        orderBy: ExerciseColumns.name.orderCaseInsensitiveAsc,
+        orderBy: [ExerciseColumns.name.orderCaseInsensitiveAsc],
       );
       final int total = await _repository.count(
         where: query.where,
@@ -151,7 +151,7 @@ class ExerciseService {
       final List<Exercise> exercises = await _repository.selectMany(
         where: query.where,
         whereArgs: query.args,
-        orderBy: ExerciseColumns.name.orderCaseInsensitiveAsc,
+        orderBy: [ExerciseColumns.name.orderCaseInsensitiveAsc],
       );
       _logger.info("Found ${exercises.length} exercises");
       return ok(exercises.map((e) => ExerciseDto.fromModel(e)).toList());
@@ -476,7 +476,7 @@ class ExerciseService {
         offset: offset,
         where: query.where,
         whereArgs: query.args,
-        orderBy: "${EquipmentColumns.name.value} COLLATE NOCASE",
+        orderBy: [EquipmentColumns.name.orderCaseInsensitiveAsc],
       );
       final int total = await _equipmentRepository.count(
         where: query.where,
@@ -504,7 +504,7 @@ class ExerciseService {
     _logger.info('Getting all equipments');
     try {
       final List<Equipment> equipments = await _equipmentRepository.selectMany(
-        orderBy: "${EquipmentColumns.name.value} COLLATE NOCASE",
+        orderBy: [EquipmentColumns.name.orderCaseInsensitiveAsc],
       );
       _logger.info('Got ${equipments.length} equipments');
       return ok(
@@ -691,7 +691,7 @@ class ExerciseService {
       final List<Exercise> exercises =
           await _exerciseEquipmentRepository.selectReverseJoined(
         equipmentId,
-        "${ExerciseColumns.name.value} COLLATE NOCASE",
+        [ExerciseColumns.name.orderCaseInsensitiveAsc],
       );
       _logger.info(
           'Got ${exercises.length} exercises for equipment with id: $equipmentId');

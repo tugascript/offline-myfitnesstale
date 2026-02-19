@@ -150,7 +150,7 @@ class WorkoutPlanService {
         offset: offset,
         where: query.where,
         whereArgs: query.args,
-        orderBy: 'name ASC',
+        orderBy: [WorkoutPlanColumns.name.orderAsc],
       );
       final int total = await _repository.count(
         where: query.where,
@@ -189,7 +189,7 @@ class WorkoutPlanService {
       final List<WorkoutPlanWeek> weeks = await _weekRepository.selectMany(
         where: WorkoutPlanWeekColumns.workoutPlanId.equal,
         whereArgs: [plan.id],
-        orderBy: WorkoutPlanWeekColumns.startWeek.orderAsc,
+        orderBy: [WorkoutPlanWeekColumns.startWeek.orderAsc],
       );
       if (weeks.isEmpty) {
         _logger.info('No weeks found, got workout plan with id $id');
@@ -202,7 +202,7 @@ class WorkoutPlanService {
         orderBy: [
           WorkoutPlanDayColumns.workoutPlanWeekId.orderAsc,
           WorkoutPlanDayColumns.day.orderAsc,
-        ].join(", "),
+        ],
       );
       if (days.isEmpty) {
         _logger.info('No days found, got workout plan with id $id');
@@ -221,7 +221,7 @@ class WorkoutPlanService {
         orderBy: [
           WorkoutPlanWorkoutColumns.workoutPlanDayId.orderAsc,
           WorkoutPlanWorkoutColumns.position.orderAsc,
-        ].join(", "),
+        ],
       );
       if (planWorkouts.isEmpty) {
         _logger.info('No plan workouts found, got workout plan with id $id');
@@ -762,8 +762,10 @@ class WorkoutPlanService {
           await _planWorkoutRepository.selectMany(
         where: "${WorkoutPlanWorkoutColumns.workoutPlanWeekId.value} = ?",
         whereArgs: [weekId],
-        orderBy:
-            "${WorkoutPlanWorkoutColumns.workoutPlanDayId.value} ASC, ${WorkoutPlanWorkoutColumns.position.value} ASC",
+        orderBy: [
+          WorkoutPlanWorkoutColumns.workoutPlanDayId.orderAsc,
+          WorkoutPlanWorkoutColumns.position.orderAsc,
+        ],
       );
       if (planWorkouts.isEmpty) {
         _logger.info('No workouts found for workout plan week with id $weekId');
@@ -862,7 +864,7 @@ class WorkoutPlanService {
       final List<WorkoutPlanWeek> weeks = await _weekRepository.selectMany(
         where: "${WorkoutPlanWeekColumns.workoutPlanId.value} = ?",
         whereArgs: [workoutPlanId],
-        orderBy: "${WorkoutPlanWeekColumns.startWeek.value} ASC",
+        orderBy: [WorkoutPlanWeekColumns.startWeek.orderAsc],
       );
       if (weeks.isEmpty) {
         _logger.info('No weeks found for workout plan with id $workoutPlanId');
@@ -872,8 +874,10 @@ class WorkoutPlanService {
       final List<WorkoutPlanDay> days = await _dayRepository.selectMany(
         where: "${WorkoutPlanDayColumns.workoutPlanId.value} = ?",
         whereArgs: [workoutPlanId],
-        orderBy:
-            "${WorkoutPlanDayColumns.workoutPlanWeekId.value} ASC, ${WorkoutPlanDayColumns.day.value} ASC",
+        orderBy: [
+          WorkoutPlanDayColumns.workoutPlanWeekId.orderAsc,
+          WorkoutPlanDayColumns.day.orderAsc,
+        ],
       );
       if (days.isEmpty) {
         _logger.info('No days found for workout plan with id $workoutPlanId');
@@ -897,8 +901,10 @@ class WorkoutPlanService {
           await _planWorkoutRepository.selectMany(
         where: "${WorkoutPlanWorkoutColumns.workoutPlanId.value} = ?",
         whereArgs: [workoutPlanId],
-        orderBy:
-            "${WorkoutPlanWorkoutColumns.workoutPlanDayId.value} ASC, ${WorkoutPlanWorkoutColumns.position.value} ASC",
+        orderBy: [
+          WorkoutPlanWorkoutColumns.workoutPlanDayId.orderAsc,
+          WorkoutPlanWorkoutColumns.position.orderAsc,
+        ],
       );
       if (planWorkouts.isEmpty) {
         _logger
@@ -1443,7 +1449,7 @@ class WorkoutPlanService {
       final List<WorkoutPlanDay> planDays = await _dayRepository.selectMany(
         where: "${WorkoutPlanDayColumns.workoutPlanWeekId.value} = ?",
         whereArgs: [workoutPlanWeekId],
-        orderBy: '${WorkoutPlanDayColumns.day.value} ASC',
+        orderBy: [WorkoutPlanDayColumns.day.orderAsc],
       );
       if (planDays.isEmpty) {
         return ok([]);
@@ -1453,8 +1459,10 @@ class WorkoutPlanService {
           await _planWorkoutRepository.selectMany(
         where: "${WorkoutPlanWorkoutColumns.workoutPlanWeekId.value} = ?",
         whereArgs: [workoutPlanWeekId],
-        orderBy:
-            '${WorkoutPlanWorkoutColumns.workoutPlanDayId.value} ASC, ${WorkoutPlanWorkoutColumns.position} ASC',
+        orderBy: [
+          WorkoutPlanWorkoutColumns.workoutPlanDayId.orderAsc,
+          WorkoutPlanWorkoutColumns.position.orderAsc,
+        ],
       );
       final Set<int> workoutIds = planWorkouts.map((e) => e.workoutId).toSet();
       final List<Workout> workouts = await _workoutRepository.selectMany(

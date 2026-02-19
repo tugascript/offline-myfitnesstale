@@ -46,7 +46,7 @@ class WorkoutPlanWeekRecordService {
       final List<WorkoutPlanWeekRecord> records = await _repository.selectMany(
         where: query.where,
         whereArgs: query.args,
-        orderBy: 'week ASC',
+        orderBy: [WorkoutPlanWeekRecordColumns.week.orderAsc],
       );
       _logger.info('Got ${records.length} workout plan week records');
       return ok(

@@ -505,6 +505,7 @@ class WorkoutCubit extends Cubit<WorkoutState> {
     ));
   }
 
+  // TODO: move part of the logic into the service
   Future<void> batchUpsertWorkoutSets({
     required int workoutId,
     required List<StandardSetInput> sets,

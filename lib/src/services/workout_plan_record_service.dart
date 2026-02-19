@@ -63,7 +63,7 @@ class WorkoutPlanRecordService {
         offset: offset,
         where: query.where,
         whereArgs: query.args,
-        orderBy: 'created_at DESC',
+        orderBy: [WorkoutPlanRecordColumns.createdAt.orderDesc],
       );
       final int total = await _repository.count(
         where: query.where,
@@ -195,7 +195,7 @@ class WorkoutPlanRecordService {
       final List<WorkoutPlanRecord> records = await _repository.selectMany(
         where: 'workout_plan_id = ? AND status = ?',
         whereArgs: [workoutPlanId, ProgressStatus.inProgress.value],
-        orderBy: 'created_at DESC',
+        orderBy: [WorkoutPlanRecordColumns.createdAt.orderDesc],
         limit: 1,
       );
 

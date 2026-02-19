@@ -29,7 +29,7 @@ const String _tableCreate = '''
   CREATE INDEX IF NOT EXISTS idx_workout_plan_day_records_plan_day_id ON $_table (workout_plan_day_id);
   ''';
 
-enum WorkoutPlanDayRecordColumns {
+enum WorkoutPlanDayRecordColumns with Columns {
   id("id"),
   workoutPlanRecordId("workout_plan_record_id"),
   workoutPlanWeekRecordId("workout_plan_week_record_id"),
@@ -38,6 +38,7 @@ enum WorkoutPlanDayRecordColumns {
   createdAt("created_at"),
   updatedAt("updated_at");
 
+  @override
   final String value;
 
   const WorkoutPlanDayRecordColumns(this.value);

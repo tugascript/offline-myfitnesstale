@@ -14,7 +14,7 @@ const String _tableCreate = '''
   );
 ''';
 
-enum WeightRecordColumns {
+enum WeightRecordColumns with Columns {
   id("id"),
   weight("weight"),
   fatPercentage("fat_percentage"),
@@ -23,6 +23,7 @@ enum WeightRecordColumns {
   createdAt("created_at"),
   updatedAt("updated_at");
 
+  @override
   final String value;
 
   const WeightRecordColumns(this.value);
