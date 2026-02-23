@@ -1,4 +1,5 @@
 import 'package:logging/logging.dart';
+import 'package:sqflite/sqflite.dart';
 
 import '../models/common.dart';
 import '../models/db.dart';
@@ -40,6 +41,7 @@ class WorkoutSetExerciseInput {
 final class WorkoutSetExerciseUpsertInput {
   final int? id;
   final int exerciseId;
+  final int position;
   final int minReps;
   final int? maxReps;
   final bool toMaxReps;
@@ -49,6 +51,7 @@ final class WorkoutSetExerciseUpsertInput {
   const WorkoutSetExerciseUpsertInput({
     this.id,
     required this.exerciseId,
+    required this.position,
     required this.minReps,
     this.maxReps,
     this.toMaxReps = false,
@@ -63,7 +66,7 @@ final class WorkoutSetUpsertInput {
   final int minSets;
   final int recommendedRestSecs;
   final List<WorkoutSetExerciseUpsertInput> exercises;
-  final int? position;
+  final int position;
   final int? maxSets;
   final int? maxRestSecs;
 
@@ -73,7 +76,7 @@ final class WorkoutSetUpsertInput {
     required this.minSets,
     required this.recommendedRestSecs,
     required this.exercises,
-    this.position,
+    required this.position,
     this.maxSets,
     this.maxRestSecs,
   });
@@ -2232,7 +2235,8 @@ class WorkoutService {
         );
         if (!deleted) {
           _logger.warning(
-              'Workout set exercise option with id $workoutSetExerciseOptionId failed to delete');
+            'Workout set exercise option with id $workoutSetExerciseOptionId failed to delete',
+          );
           return err(const ServiceError(
             type: SingleErrorTypes.operationFailure,
             description: 'Workout set exercise option failed to delete',
@@ -2240,7 +2244,8 @@ class WorkoutService {
         }
 
         _logger.info(
-            'Workout set exercise option with id $workoutSetExerciseOptionId deleted successfully');
+          'Workout set exercise option with id $workoutSetExerciseOptionId deleted successfully',
+        );
         return ok(null);
       }
 
@@ -2407,15 +2412,6 @@ class WorkoutService {
         );
       }
 
-      final List<WorkoutSet> workoutSets = await _setRepository.selectMany(
-        where: WorkoutSetColumns.workoutId.equal,
-        whereArgs: [workoutId],
-        orderBy: [
-          WorkoutSetColumns.workoutId.orderAsc,
-          WorkoutSetColumns.position.orderAsc,
-        ],
-      );
-
       final exerciseMap = exercises.fold(
         <int, ExerciseDto>{},
         (previousValue, element) {
@@ -2423,15 +2419,170 @@ class WorkoutService {
           return previousValue;
         },
       );
+
+      final int workoutSetsCount = await _setRepository.count(
+        where: WorkoutSetColumns.workoutId.equal,
+        whereArgs: [workoutId],
+      );
+
+      int totalSetsChange = 0;
+      int totalRepsChange = 0;
+      int finalPosition = workoutSetsCount + 1;
+      final Set<MuscleGroup> muscleGroups = {};
+      final Set<Muscle> muscles = {};
+      final (
+        List<WorkoutSetUpsertInput> setsToCreate,
+        List<WorkoutSetUpsertInput> setsToUpdate
+      ) = inputs.fold(([], []), (previousValue, element) {
+        if (element.id == null) {
+          previousValue.$1.add(element);
+        } else {
+          previousValue.$2.add(element);
+        }
+        return previousValue;
+      });
+
       await _setRepository.startTransaction((txn) async {
-        for (final input in inputs) {
-          if (input.id == null) {
-            // create
-            return;
+        for (final input in setsToCreate) {
+          await _doBatchSetCreate(
+            input: input,
+            finalPosition: finalPosition,
+            txn: txn,
+            workoutId: workoutId,
+            muscleGroups: muscleGroups,
+            exerciseMap: exerciseMap,
+            muscles: muscles,
+            totalSetsChange: totalSetsChange,
+            totalRepsChange: totalRepsChange,
+          );
+        }
+
+        for (final input in setsToUpdate) {
+          final workoutSet = await _setRepository.selectOne(input.id!, txn);
+          if (workoutSet == null) {
+            _logger.warning('Workout set not found');
+            continue;
           }
 
-          // update
+          final int? oldMaxSets = workoutSet.maxSets;
+          final int oldMinSets = workoutSet.minSets;
+          final int oldTotalReps = workoutSet.totalReps;
+          final int oldPosition = workoutSet.position;
+          final updatedWorkoutSet = workoutSet.copyWith(
+            setType: input.setType,
+            minSets: input.minSets,
+            recommendedRestSecs: input.recommendedRestSecs,
+            maxSets: input.maxSets,
+            maxRestSecs: input.maxRestSecs,
+            totalExercises: input.exercises.length,
+            totalReps: input.exercises.fold<int>(0, (previousValue, element) {
+              return previousValue + (element.maxReps ?? element.minReps);
+            }),
+            position: input.position,
+          );
+
+          if (oldPosition != input.position) {
+            if (oldPosition < input.position) {
+              await txn.rawUpdate(
+                """
+                UPDATE ${WorkoutSet.table} SET position = position - 1
+                WHERE workout_id = ? AND position > ? AND position <= ?;
+                """,
+                [workoutId, oldPosition, input.position],
+              );
+            } else {
+              await txn.rawUpdate(
+                """
+                UPDATE ${WorkoutSet.table} SET position = position + 1
+                WHERE workout_id = ? AND position >= ? AND position < ?;
+                """,
+                [workoutId, input.position, oldPosition],
+              );
+            }
+          }
+
+          await _setRepository.update(updatedWorkoutSet, txn);
+          final int addTotalSets =
+              (updatedWorkoutSet.maxSets ?? updatedWorkoutSet.minSets) -
+                  (oldMaxSets ?? oldMinSets);
+          if (addTotalSets != 0) {
+            totalSetsChange += addTotalSets;
+          }
+
+          final int addTotalReps = updatedWorkoutSet.totalReps - oldTotalReps;
+          if (addTotalReps != 0) {
+            totalRepsChange += addTotalReps;
+          }
+
+          final (
+            List<WorkoutSetExerciseUpsertInput> createSetExercises,
+            List<WorkoutSetExerciseUpsertInput> updateSetExercises
+          ) = input.exercises.fold(([], []), (arrs, ex) {
+            if (ex.id == null) {
+              arrs.$1.add(ex);
+            } else {
+              arrs.$2.add(ex);
+            }
+            return arrs;
+          });
+
+          final int setCount = await _setExerciseRepository.count(
+            where: WorkoutSetExerciseColumns.workoutSetId.equal,
+            whereArgs: [workoutSet.id!],
+          );
+
+          if (createSetExercises.isNotEmpty) {
+            for (int i = 0; i < createSetExercises.length; i++) {
+              final exerciseInput = createSetExercises[i];
+              final exercise = exerciseMap[exerciseInput.exerciseId];
+              if (exercise == null) {
+                _logger.warning('Exercise not found');
+                throw Exception('Exercise not found');
+              }
+
+              muscleGroups.add(exercise.muscleGroup);
+              muscles.addAll(exercise.muscles.primaryMuscles);
+              await _batchCreateSetExercise(
+                exerciseInput: exerciseInput,
+                index: i,
+                setCount: setCount,
+                workoutId: workoutId,
+                workoutSet: workoutSet,
+                txn: txn,
+                updatedWorkoutSet: updatedWorkoutSet,
+              );
+            }
+          }
+
+          if (updateSetExercises.isNotEmpty) {
+            for (int i = 0; i < updateSetExercises.length; i++) {
+              final exerciseInput = updateSetExercises[i];
+              final exercise = exerciseMap[exerciseInput.exerciseId];
+              if (exercise == null) {
+                _logger.warning('Exercise not found');
+                throw Exception('Exercise not found');
+              }
+
+              await _batchUpdateSetExercise(
+                exerciseInput: exerciseInput,
+                txn: txn,
+                workoutId: workoutId,
+                workoutSet: workoutSet,
+                muscleGroups: muscleGroups,
+                exercise: exercise,
+                muscles: muscles,
+              );
+            }
+          }
         }
+
+        final upatedWorkout = workout.copyWith(
+          muscleGroups: muscleGroups,
+          muscles: muscles,
+          totalSets: workout.totalSets + totalSetsChange,
+          totalReps: workout.totalReps + totalRepsChange,
+        );
+        await _repository.update(upatedWorkout, txn);
       });
       _logger.info('Batch upserting workout sets completed successfully');
       return ok(null);
@@ -2444,5 +2595,232 @@ class WorkoutService {
         ),
       );
     }
+  }
+
+  Future<void> _batchUpdateSetExercise({
+    required WorkoutSetExerciseUpsertInput exerciseInput,
+    required Transaction txn,
+    required int workoutId,
+    required WorkoutSet workoutSet,
+    required Set<MuscleGroup> muscleGroups,
+    required ExerciseDto exercise,
+    required Set<Muscle> muscles,
+  }) async {
+    final setExercise = await _setExerciseRepository.selectOne(
+      exerciseInput.id!,
+      txn,
+    );
+    if (setExercise == null) {
+      _logger.warning('Set exercise not found');
+      throw Exception('Set exercise not found');
+    }
+
+    final int oldPosition = setExercise.position;
+    final updatedSetExercise = setExercise.copyWith(
+      exerciseId: exerciseInput.exerciseId,
+      position: exerciseInput.position,
+      minReps: exerciseInput.minReps,
+      maxReps: exerciseInput.maxReps,
+      toMaxReps: exerciseInput.toMaxReps,
+      difficulty: exerciseInput.difficulty,
+    );
+
+    if (oldPosition != exerciseInput.position) {
+      if (oldPosition < exerciseInput.position) {
+        await txn.rawUpdate(
+          """
+          UPDATE ${WorkoutSetExercise.table} SET position = position - 1
+          WHERE workout_id = ? AND position > ? AND position <= ?;
+          """,
+          [workoutId, oldPosition, exerciseInput.position],
+        );
+      } else {
+        await txn.rawUpdate(
+          """
+          UPDATE ${WorkoutSetExercise.table} SET position = position + 1
+          WHERE workout_id = ? AND position >= ? AND position < ?;
+          """,
+          [workoutId, exerciseInput.position, oldPosition],
+        );
+      }
+    }
+
+    if (exerciseInput.alternativeExerciseIds == null) {
+      await txn.rawDelete(
+        """
+        DELETE FROM ${WorkoutSetExerciseOption.table}
+        WHERE ${WorkoutSetExerciseOptionColumns.workoutSetExerciseId.equal};
+        """,
+        [setExercise.id!],
+      );
+    } else {
+      await txn.rawDelete(
+        """
+        DELETE FROM ${WorkoutSetExerciseOption.table}
+        WHERE ${WorkoutSetExerciseOptionColumns.workoutSetExerciseId.equal};
+        """,
+        [setExercise.id!],
+      );
+      for (int j = 0; j < exerciseInput.alternativeExerciseIds!.length; j++) {
+        final alternativeExerciseId = exerciseInput.alternativeExerciseIds![j];
+        final workoutSetExerciseOption = WorkoutSetExerciseOption.create(
+          workoutId: workoutId,
+          workoutSetId: workoutSet.id!,
+          workoutSetExerciseId: setExercise.id!,
+          exerciseId: alternativeExerciseId,
+          position: j + 1,
+        );
+        await _setExerciseOptionRepository.insert(
+          workoutSetExerciseOption,
+          txn,
+        );
+      }
+    }
+
+    await _setExerciseRepository.update(updatedSetExercise, txn);
+    muscleGroups.add(exercise.muscleGroup);
+    muscles.addAll(exercise.muscles.primaryMuscles);
+  }
+
+  Future<void> _batchCreateSetExercise({
+    required WorkoutSetExerciseUpsertInput exerciseInput,
+    required int index,
+    required int setCount,
+    required int workoutId,
+    required WorkoutSet workoutSet,
+    required Transaction txn,
+    required WorkoutSet updatedWorkoutSet,
+  }) async {
+    final newPosition = setCount + 1 + index;
+    final setExercisePosition = exerciseInput.position;
+    final workoutSetExercise = WorkoutSetExercise.create(
+      position: setExercisePosition,
+      workoutId: workoutId,
+      workoutSetId: workoutSet.id!,
+      exerciseId: exerciseInput.exerciseId,
+      minReps: exerciseInput.minReps,
+      maxReps: exerciseInput.maxReps,
+      toMaxReps: exerciseInput.toMaxReps,
+      difficulty: exerciseInput.difficulty,
+    );
+
+    if (newPosition > setExercisePosition) {
+      await txn.rawUpdate(
+        """
+        UPDATE ${WorkoutSetExercise.table} SET ${WorkoutSetExerciseColumns.position.value} = ${WorkoutSetExerciseColumns.position.value} + 1
+        WHERE ${WorkoutSetExerciseColumns.workoutSetId.equal} AND ${WorkoutSetExerciseColumns.position.greaterThanOrEqual};
+        """,
+        [updatedWorkoutSet.id!, setExercisePosition],
+      );
+    }
+    final setExerciseId =
+        await _setExerciseRepository.insert(workoutSetExercise, txn);
+
+    if (exerciseInput.alternativeExerciseIds != null) {
+      for (int j = 0; j < exerciseInput.alternativeExerciseIds!.length; j++) {
+        final alternativeExerciseId = exerciseInput.alternativeExerciseIds![j];
+        final option = WorkoutSetExerciseOption.create(
+          workoutId: workoutId,
+          workoutSetId: workoutSet.id!,
+          workoutSetExerciseId: setExerciseId,
+          exerciseId: alternativeExerciseId,
+          position: j + 1,
+        );
+        await _setExerciseOptionRepository.insert(
+          option,
+          txn,
+        );
+      }
+    }
+  }
+
+  Future<void> _doBatchSetCreate({
+    required WorkoutSetUpsertInput input,
+    required int finalPosition,
+    required Transaction txn,
+    required int workoutId,
+    required Set<MuscleGroup> muscleGroups,
+    required Map<int, ExerciseDto> exerciseMap,
+    required Set<Muscle> muscles,
+    required int totalSetsChange,
+    required int totalRepsChange,
+  }) async {
+    final int extraSets = input.maxSets ?? input.minSets;
+    final int perSetReps = input.exercises.fold(
+      0,
+      (acc, exercise) => acc + (exercise.maxReps ?? exercise.minReps),
+    );
+    final int setTotalReps = extraSets * perSetReps;
+    finalPosition += 1;
+    final int setPosition = input.position;
+
+    if (setPosition < finalPosition) {
+      await txn.rawUpdate(
+        """
+        UPDATE ${WorkoutSet.table}
+        SET ${WorkoutSetColumns.position.value} = ${WorkoutSetColumns.position.value} + 1
+        WHERE ${WorkoutSetColumns.workoutId.equal} AND ${WorkoutSetColumns.position.greaterThanOrEqual};
+        """,
+        [workoutId, setPosition],
+      );
+    }
+
+    final WorkoutSet workoutSet = WorkoutSet.create(
+      position: setPosition,
+      workoutId: workoutId,
+      setType: input.setType,
+      minSets: input.minSets,
+      maxSets: input.maxSets,
+      recommendedRestSecs: input.recommendedRestSecs,
+      maxRestSecs: input.maxRestSecs,
+      totalExercises: input.exercises.length,
+      totalReps: setTotalReps,
+    );
+    final int setId = await _setRepository.insert(workoutSet, txn);
+
+    for (int i = 0; i < input.exercises.length; i++) {
+      final exerciseInput = input.exercises[i];
+      final workoutSetExercise = WorkoutSetExercise.create(
+        position: i + 1,
+        workoutId: workoutId,
+        workoutSetId: setId,
+        exerciseId: exerciseInput.exerciseId,
+        minReps: exerciseInput.minReps,
+        maxReps: exerciseInput.maxReps,
+        toMaxReps: exerciseInput.toMaxReps,
+        difficulty: exerciseInput.difficulty,
+      );
+      final setExerciseId = await _setExerciseRepository.insert(
+        workoutSetExercise,
+        txn,
+      );
+      muscleGroups.add(
+        exerciseMap[exerciseInput.exerciseId]!.muscleGroup,
+      );
+      muscles.addAll(
+        exerciseMap[exerciseInput.exerciseId]!.muscles.primaryMuscles,
+      );
+
+      if (exerciseInput.alternativeExerciseIds != null) {
+        for (int j = 0; j < exerciseInput.alternativeExerciseIds!.length; j++) {
+          final alternativeExerciseId =
+              exerciseInput.alternativeExerciseIds![j];
+          final workoutSetExerciseOption = WorkoutSetExerciseOption.create(
+            workoutId: workoutId,
+            workoutSetId: setId,
+            workoutSetExerciseId: setExerciseId,
+            exerciseId: alternativeExerciseId,
+            position: j + 1,
+          );
+          await _setExerciseOptionRepository.insert(
+            workoutSetExerciseOption,
+            txn,
+          );
+        }
+      }
+    }
+
+    totalSetsChange += extraSets;
+    totalRepsChange += setTotalReps;
   }
 }
