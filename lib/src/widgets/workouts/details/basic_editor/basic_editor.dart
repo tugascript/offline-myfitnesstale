@@ -82,7 +82,7 @@ class _BasicEditorState extends State<BasicEditor> {
     }
 
     final workoutCubit = context.read<WorkoutCubit>();
-    await workoutCubit.batchUpsertWorkoutSets(
+    await workoutCubit.batchUpsertBasicWorkoutSets(
       workoutId: widget.workoutId,
       sets: setsToSave.map((s) {
         return StandardSetInput(

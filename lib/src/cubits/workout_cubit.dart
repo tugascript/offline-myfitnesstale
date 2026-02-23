@@ -505,8 +505,7 @@ class WorkoutCubit extends Cubit<WorkoutState> {
     ));
   }
 
-  // TODO: move part of the logic into the service
-  Future<void> batchUpsertWorkoutSets({
+  Future<void> batchUpsertBasicWorkoutSets({
     required int workoutId,
     required List<StandardSetInput> sets,
   }) async {
@@ -518,80 +517,48 @@ class WorkoutCubit extends Cubit<WorkoutState> {
       return;
     }
 
-    for (final wSet in sets) {
-      if (wSet.id == null) {
-        final result = await _workoutService.createWorkoutSet(
-          workoutId: workoutId,
+    final List<WorkoutSetUpsertInput> setsToUpsert = [];
+    for (int i = 0; i < sets.length; i++) {
+      final s = sets[i];
+      setsToUpsert.add(
+        WorkoutSetUpsertInput(
+          id: s.id,
           setType: WorkoutSetType.standard,
-          minSets: wSet.minSets,
-          recommendedRestSecs: wSet.recommendedRestSecs,
+          minSets: s.minSets,
+          maxSets: s.maxSets,
+          recommendedRestSecs: s.recommendedRestSecs,
+          maxRestSecs: s.maxRestSecs,
+          position: i + 1,
           exercises: [
-            WorkoutSetExerciseInput(
-              exerciseId: wSet.exerciseId,
-              minReps: wSet.minReps,
-              maxReps: wSet.maxReps >= wSet.minReps ? wSet.maxReps : null,
-              toMaxReps: wSet.toMaxReps,
+            WorkoutSetExerciseUpsertInput(
+              id: s.setExerciseId,
+              position: 1,
+              exerciseId: s.exerciseId,
+              minReps: s.minReps,
+              maxReps: s.maxReps >= s.minReps ? s.maxReps : null,
+              toMaxReps: s.toMaxReps,
             ),
           ],
-          maxSets: wSet.maxSets,
-          maxRestSecs: wSet.maxRestSecs,
-        );
-        if (result.isErr()) {
-          final error = result.error;
-          _logger.warning("Failed to create workout set", error);
-          emit(state.copyWith(
-            error: ErrorState(
-              type: error.type.name,
-              description: error.description,
-            ),
-          ));
-          return;
-        }
-        continue;
-      }
-
-      final result = await _workoutService.updateWorkoutSet(
-        workoutSetId: wSet.id!,
-        setType: WorkoutSetType.standard,
-        minSets: wSet.minSets,
-        recommendedRestSecs: wSet.recommendedRestSecs,
-        maxSets: wSet.maxSets >= wSet.minSets ? wSet.maxSets : null,
-        maxRestSecs: wSet.maxRestSecs >= wSet.recommendedRestSecs
-            ? wSet.maxRestSecs
-            : null,
+        ),
       );
-      if (result.isErr()) {
-        final error = result.error;
-        _logger.warning("Failed to update workout set", error);
-        emit(state.copyWith(
-          error: ErrorState(
-            type: error.type.name,
-            description: error.description,
-          ),
-        ));
-        return;
-      }
+    }
 
-      if (wSet.setExerciseId != null) {
-        final result = await _workoutService.updateWorkoutSetExercise(
-          workoutSetExerciseId: wSet.setExerciseId!,
-          exerciseId: wSet.exerciseId,
-          minReps: wSet.minReps,
-          maxReps: wSet.maxReps >= wSet.minReps ? wSet.maxReps : null,
-          toMaxReps: wSet.toMaxReps,
-        );
-        if (result.isErr()) {
-          final error = result.error;
-          _logger.warning("Failed to update workout set exercise", error);
-          emit(state.copyWith(
-            error: ErrorState(
-              type: error.type.name,
-              description: error.description,
-            ),
-          ));
-          return;
-        }
-      }
+    final result = await _workoutService.batchUpsertWorkoutSets(
+      workoutId,
+      setsToUpsert,
+    );
+
+    if (result.isErr()) {
+      final error = result.error;
+      _logger.warning("Failed to batch upsert workout sets", error);
+      emit(state.copyWith(
+        error: ErrorState(
+          type: error.type.name,
+          description: error.description,
+        ),
+        isLoading: false,
+      ));
+      return;
     }
 
     await getWorkout(workoutId, refresh: true);
