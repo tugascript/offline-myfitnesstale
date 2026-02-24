@@ -5,22 +5,6 @@ import 'utilities.dart';
 
 const String _table = 'workout_plan_week_records';
 
-const String _tableCreate = '''
-  CREATE TABLE IF NOT EXISTS $_table (
-    id INTEGER PRIMARY KEY,
-    workout_plan_record_id INTEGER NOT NULL,
-    workout_plan_week_id INTEGER NOT NULL,
-    week INTEGER NOT NULL,
-    completed_at INTEGER,
-    created_at INTEGER NOT NULL,
-    updated_at INTEGER NOT NULL,
-    FOREIGN KEY (workout_plan_week_id) REFERENCES workout_plan_weeks (id) 
-      ON DELETE CASCADE,
-    FOREIGN KEY (workout_plan_record_id) REFERENCES workout_plan_records (id)
-      ON DELETE CASCADE
-  );
-''';
-
 enum WorkoutPlanWeekRecordColumns with Columns {
   id("id"),
   workoutPlanRecordId("workout_plan_record_id"),
@@ -59,7 +43,21 @@ class WorkoutPlanWeekRecord extends Equatable implements Model {
   });
 
   static const String table = _table;
-  static const String tableCreate = _tableCreate;
+  static final String tableCreate = '''
+  CREATE TABLE IF NOT EXISTS $_table (
+    ${WorkoutPlanWeekRecordColumns.id.value} INTEGER PRIMARY KEY,
+    ${WorkoutPlanWeekRecordColumns.workoutPlanRecordId.value} INTEGER NOT NULL,
+    ${WorkoutPlanWeekRecordColumns.workoutPlanWeekId.value} INTEGER NOT NULL,
+    ${WorkoutPlanWeekRecordColumns.week.value} INTEGER NOT NULL,
+    ${WorkoutPlanWeekRecordColumns.completedAt.value} INTEGER,
+    ${WorkoutPlanWeekRecordColumns.createdAt.value} INTEGER NOT NULL,
+    ${WorkoutPlanWeekRecordColumns.updatedAt.value} INTEGER NOT NULL,
+    FOREIGN KEY (${WorkoutPlanWeekRecordColumns.workoutPlanWeekId.value}) REFERENCES workout_plan_weeks (id) 
+      ON DELETE CASCADE,
+    FOREIGN KEY (${WorkoutPlanWeekRecordColumns.workoutPlanRecordId.value}) REFERENCES workout_plan_records (id)
+      ON DELETE CASCADE
+  );
+''';
 
   @override
   Map<String, Object?> toMap() {

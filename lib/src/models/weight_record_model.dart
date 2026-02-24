@@ -2,17 +2,6 @@ import 'model.dart';
 import 'utilities.dart';
 
 const String _table = 'weight_records';
-const String _tableCreate = '''
-  CREATE TABLE $_table (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    weight INTEGER NOT NULL,
-    fat_percentage INTEGER,
-    picture_uri TEXT,
-    record_date INTEGER NOT NULL,
-    created_at INTEGER NOT NULL,
-    updated_at INTEGER NOT NULL
-  );
-''';
 
 enum WeightRecordColumns with Columns {
   id("id"),
@@ -52,7 +41,17 @@ class WeightRecord implements Model {
   });
 
   static const String table = _table;
-  static const String tableCreate = _tableCreate;
+  static final String tableCreate = '''
+  CREATE TABLE $_table (
+    ${WeightRecordColumns.id.value} INTEGER PRIMARY KEY AUTOINCREMENT,
+    ${WeightRecordColumns.weight.value} INTEGER NOT NULL,
+    ${WeightRecordColumns.fatPercentage.value} INTEGER,
+    ${WeightRecordColumns.pictureUri.value} TEXT,
+    ${WeightRecordColumns.recordDate.value} INTEGER NOT NULL,
+    ${WeightRecordColumns.createdAt.value} INTEGER NOT NULL,
+    ${WeightRecordColumns.updatedAt.value} INTEGER NOT NULL
+  );
+''';
 
   @override
   Map<String, Object?> toMap() {

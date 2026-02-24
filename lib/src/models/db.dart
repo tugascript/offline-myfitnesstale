@@ -3,6 +3,7 @@ import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
 import 'current_workout_plan_record_model.dart';
+import 'entitlement_state_model.dart';
 import 'equipment_model.dart';
 import 'exercise_equipment_model.dart';
 import 'exercise_model.dart';
@@ -29,7 +30,7 @@ import 'workout_set_model.dart';
 import 'workout_set_record_model.dart';
 
 const String _databaseName = "app.db";
-const int _databaseVersion = 1;
+const int _databaseVersion = 2;
 
 class DatabaseHelper {
   static final DatabaseHelper _instance = DatabaseHelper._();
@@ -54,6 +55,18 @@ class DatabaseHelper {
     } catch (e) {
       Logger('Database').severe('Database initialization error: $e');
       rethrow;
+    }
+  }
+
+  Future<void> resetForTesting() async {
+    if (_db == null) {
+      return;
+    }
+
+    try {
+      await _db!.close();
+    } finally {
+      _db = null;
     }
   }
 
@@ -102,9 +115,13 @@ class DatabaseHelper {
     await db.execute(WorkoutPlanDayRecord.tableCreate);
     await db.execute(WorkoutPlanWorkoutRecord.tableCreate);
     await db.execute(CurrentWorkoutPlanRecord.tableCreate);
+    await db.execute(EntitlementStateModel.tableCreate);
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      await db.execute(EntitlementStateModel.tableCreate);
+    }
     return;
   }
 }

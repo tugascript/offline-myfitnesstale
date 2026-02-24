@@ -4,18 +4,6 @@ import 'model.dart';
 import 'utilities.dart';
 
 const String _table = 'exercise_equipment';
-const String _tableCreate = '''
-  CREATE TABLE IF NOT EXISTS $_table (
-    exercise_id INTEGER NOT NULL,
-    equipment_id INTEGER NOT NULL,
-    created_at INTEGER NOT NULL,
-    PRIMARY KEY (exercise_id, equipment_id),
-    FOREIGN KEY (exercise_id) REFERENCES ${Exercise.table} (id)
-      ON DELETE CASCADE,
-    FOREIGN KEY (equipment_id) REFERENCES ${Equipment.table} (id)
-      ON DELETE CASCADE
-  );
-  ''';
 
 enum ExerciseEquipmentColumns with Columns {
   exerciseId("exercise_id"),
@@ -41,7 +29,18 @@ class ExerciseEquipment implements JoinModel {
   });
 
   static const String table = _table;
-  static const String tableCreate = _tableCreate;
+  static final String tableCreate = '''
+  CREATE TABLE IF NOT EXISTS $_table (
+    ${ExerciseEquipmentColumns.exerciseId.value} INTEGER NOT NULL,
+    ${ExerciseEquipmentColumns.equipmentId.value} INTEGER NOT NULL,
+    ${ExerciseEquipmentColumns.createdAt.value} INTEGER NOT NULL,
+    PRIMARY KEY (${ExerciseEquipmentColumns.exerciseId.value}, ${ExerciseEquipmentColumns.equipmentId.value}),
+    FOREIGN KEY (${ExerciseEquipmentColumns.exerciseId.value}) REFERENCES ${Exercise.table} (id)
+      ON DELETE CASCADE,
+    FOREIGN KEY (${ExerciseEquipmentColumns.equipmentId.value}) REFERENCES ${Equipment.table} (id)
+      ON DELETE CASCADE
+  );
+  ''';
   static final (String, String) primaryKeys = (
     ExerciseEquipmentColumns.exerciseId.value,
     ExerciseEquipmentColumns.equipmentId.value,

@@ -3,24 +3,6 @@ import 'utilities.dart';
 import 'workout_model.dart';
 
 const String _table = 'workout_records';
-const String _tableCreate = '''
-  CREATE TABLE IF NOT EXISTS $_table (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    workout_id INTEGER NOT NULL,
-    total_sets INTEGER NOT NULL,
-    total_reps INTEGER NOT NULL,
-    total_rest_secs INTEGER NOT NULL,
-    started_at INTEGER NOT NULL,
-    completed_at INTEGER,
-    dropped_at INTEGER,
-    created_at INTEGER NOT NULL,
-    updated_at INTEGER NOT NULL,
-    FOREIGN KEY (workout_id) REFERENCES ${Workout.table} (id) ON DELETE CASCADE
-  );
-  
-  CREATE INDEX IF NOT EXISTS idx_workout_records_workout_id ON $_table (workout_id);
-  CREATE INDEX IF NOT EXISTS idx_workout_records_started_at ON $_table (started_at);
-  ''';
 
 enum WorkoutRecordColumns with Columns {
   id("id"),
@@ -69,7 +51,24 @@ class WorkoutRecord implements Model {
   });
 
   static const String table = _table;
-  static const String tableCreate = _tableCreate;
+  static final String tableCreate = '''
+  CREATE TABLE IF NOT EXISTS $_table (
+    ${WorkoutRecordColumns.id.value} INTEGER PRIMARY KEY AUTOINCREMENT,
+    ${WorkoutRecordColumns.workoutId.value} INTEGER NOT NULL,
+    ${WorkoutRecordColumns.totalSets.value} INTEGER NOT NULL,
+    ${WorkoutRecordColumns.totalReps.value} INTEGER NOT NULL,
+    ${WorkoutRecordColumns.totalRestSecs.value} INTEGER NOT NULL,
+    ${WorkoutRecordColumns.startedAt.value} INTEGER NOT NULL,
+    ${WorkoutRecordColumns.completedAt.value} INTEGER,
+    ${WorkoutRecordColumns.droppedAt.value} INTEGER,
+    ${WorkoutRecordColumns.createdAt.value} INTEGER NOT NULL,
+    ${WorkoutRecordColumns.updatedAt.value} INTEGER NOT NULL,
+    FOREIGN KEY (${WorkoutRecordColumns.workoutId.value}) REFERENCES ${Workout.table} (id) ON DELETE CASCADE
+  );
+  
+  CREATE INDEX IF NOT EXISTS idx_workout_records_workout_id ON $_table (${WorkoutRecordColumns.workoutId.value});
+  CREATE INDEX IF NOT EXISTS idx_workout_records_started_at ON $_table (${WorkoutRecordColumns.startedAt.value});
+  ''';
 
   @override
   Map<String, Object?> toMap() {

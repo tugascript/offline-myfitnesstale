@@ -9,35 +9,6 @@ import 'workout_plan_workout_model.dart';
 import 'workout_record_model.dart';
 
 const String _table = 'workout_plan_workout_records';
-const String _tableCreate = '''
-  CREATE TABLE $_table (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    workout_plan_record_id INTEGER NOT NULL,
-    workout_plan_week_record_id INTEGER NOT NULL,
-    workout_plan_day_record_id INTEGER NOT NULL,
-    workout_plan_workout_id INTEGER NOT NULL,
-    workout_record_id INTEGER NOT NULL,
-    completed_at INTEGER,
-    created_at INTEGER NOT NULL,
-    updated_at INTEGER NOT NULL,
-    FOREIGN KEY (workout_plan_record_id) REFERENCES ${WorkoutPlanRecord.table} (id) 
-      ON DELETE CASCADE,
-    FOREIGN KEY (workout_plan_week_record_id) REFERENCES ${WorkoutPlanWeekRecord.table} (id)
-      ON DELETE CASCADE,
-    FOREIGN KEY (workout_plan_day_record_id) REFERENCES ${WorkoutPlanDayRecord.table} (id)
-      ON DELETE CASCADE,
-    FOREIGN KEY (workout_plan_workout_id) REFERENCES ${WorkoutPlanWorkout.table} (id)
-      ON DELETE CASCADE,
-    FOREIGN KEY (workout_record_id) REFERENCES ${WorkoutRecord.table} (id)
-      ON DELETE CASCADE
-  );
-  
-  CREATE INDEX IF NOT EXISTS idx_workout_plan_workout_records_plan_record_id ON $_table (workout_plan_record_id);
-  CREATE INDEX IF NOT EXISTS idx_workout_plan_workout_records_plan_week_record_id ON $_table (workout_plan_week_record_id);
-  CREATE INDEX IF NOT EXISTS idx_workout_plan_workout_records_plan_day_record_id ON $_table (workout_plan_day_record_id);
-  CREATE INDEX IF NOT EXISTS idx_workout_plan_workout_records_plan_workout_id ON $_table (workout_plan_workout_id);
-  CREATE INDEX IF NOT EXISTS idx_workout_plan_workout_records_workout_record_id ON $_table (workout_record_id);
-  ''';
 
 enum WorkoutPlanWorkoutRecordColumns with Columns {
   id("id"),
@@ -83,7 +54,35 @@ class WorkoutPlanWorkoutRecord extends Equatable implements Model {
   });
 
   static const String table = _table;
-  static const String tableCreate = _tableCreate;
+  static final String tableCreate = '''
+  CREATE TABLE $_table (
+    ${WorkoutPlanWorkoutRecordColumns.id.value} INTEGER PRIMARY KEY AUTOINCREMENT,
+    ${WorkoutPlanWorkoutRecordColumns.workoutPlanRecordId.value} INTEGER NOT NULL,
+    ${WorkoutPlanWorkoutRecordColumns.workoutPlanWeekRecordId.value} INTEGER NOT NULL,
+    ${WorkoutPlanWorkoutRecordColumns.workoutPlanDayRecordId.value} INTEGER NOT NULL,
+    ${WorkoutPlanWorkoutRecordColumns.workoutPlanWorkoutId.value} INTEGER NOT NULL,
+    ${WorkoutPlanWorkoutRecordColumns.workoutRecordId.value} INTEGER NOT NULL,
+    ${WorkoutPlanWorkoutRecordColumns.completedAt.value} INTEGER,
+    ${WorkoutPlanWorkoutRecordColumns.createdAt.value} INTEGER NOT NULL,
+    ${WorkoutPlanWorkoutRecordColumns.updatedAt.value} INTEGER NOT NULL,
+    FOREIGN KEY (${WorkoutPlanWorkoutRecordColumns.workoutPlanRecordId.value}) REFERENCES ${WorkoutPlanRecord.table} (id) 
+      ON DELETE CASCADE,
+    FOREIGN KEY (${WorkoutPlanWorkoutRecordColumns.workoutPlanWeekRecordId.value}) REFERENCES ${WorkoutPlanWeekRecord.table} (id)
+      ON DELETE CASCADE,
+    FOREIGN KEY (${WorkoutPlanWorkoutRecordColumns.workoutPlanDayRecordId.value}) REFERENCES ${WorkoutPlanDayRecord.table} (id)
+      ON DELETE CASCADE,
+    FOREIGN KEY (${WorkoutPlanWorkoutRecordColumns.workoutPlanWorkoutId.value}) REFERENCES ${WorkoutPlanWorkout.table} (id)
+      ON DELETE CASCADE,
+    FOREIGN KEY (${WorkoutPlanWorkoutRecordColumns.workoutRecordId.value}) REFERENCES ${WorkoutRecord.table} (id)
+      ON DELETE CASCADE
+  );
+  
+  CREATE INDEX IF NOT EXISTS idx_workout_plan_workout_records_plan_record_id ON $_table (${WorkoutPlanWorkoutRecordColumns.workoutPlanRecordId.value});
+  CREATE INDEX IF NOT EXISTS idx_workout_plan_workout_records_plan_week_record_id ON $_table (${WorkoutPlanWorkoutRecordColumns.workoutPlanWeekRecordId.value});
+  CREATE INDEX IF NOT EXISTS idx_workout_plan_workout_records_plan_day_record_id ON $_table (${WorkoutPlanWorkoutRecordColumns.workoutPlanDayRecordId.value});
+  CREATE INDEX IF NOT EXISTS idx_workout_plan_workout_records_plan_workout_id ON $_table (${WorkoutPlanWorkoutRecordColumns.workoutPlanWorkoutId.value});
+  CREATE INDEX IF NOT EXISTS idx_workout_plan_workout_records_workout_record_id ON $_table (${WorkoutPlanWorkoutRecordColumns.workoutRecordId.value});
+  ''';
 
   @override
   Map<String, Object?> toMap() {

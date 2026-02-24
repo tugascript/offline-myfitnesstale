@@ -6,35 +6,6 @@ import 'workout_set_exercise_model.dart';
 import 'workout_set_record_model.dart';
 
 const String _table = 'workout_set_exercise_records';
-const String _tableCreate = '''
-  CREATE TABLE IF NOT EXISTS $_table (
-    id INTEGER PRIMARY KEY,
-    workout_set_exercise_id INTEGER NOT NULL,
-    workout_record_id INTEGER NOT NULL,
-    workout_set_record_id INTEGER NOT NULL,
-    exercise_id INTEGER NOT NULL,
-    reps INTEGER NOT NULL,
-    weight_grams INTEGER NOT NULL,
-    difficulty INTEGER,
-    difficulty_type TEXT,
-    created_at INTEGER NOT NULL,
-    updated_at INTEGER NOT NULL,
-    FOREIGN KEY (workout_set_exercise_id) REFERENCES ${WorkoutSetExercise.table} (id)
-      ON DELETE CASCADE,
-    FOREIGN KEY (workout_set_record_id) REFERENCES ${WorkoutSetRecord.table} (id)
-      ON DELETE CASCADE,
-    FOREIGN KEY (workout_record_id) REFERENCES ${WorkoutRecord.table} (id)
-      ON DELETE CASCADE,
-    FOREIGN KEY (exercise_id) REFERENCES ${Exercise.table} (id)
-      ON DELETE CASCADE
-  );
-
-  CREATE INDEX IF NOT EXISTS idx_workout_set_exercise_records_set_exercise_id ON $_table (workout_set_exercise_id);
-  CREATE INDEX IF NOT EXISTS idx_workout_set_exercise_records_set_record_id ON $_table (workout_set_record_id);
-  CREATE INDEX IF NOT EXISTS idx_workout_set_exercise_records_workout_record_id ON $_table (workout_record_id);
-  CREATE INDEX IF NOT EXISTS idx_workout_set_exercise_records_exercise_id ON $_table (exercise_id);
-  CREATE INDEX IF NOT EXISTS idx_workout_set_exercise_records_position ON $_table (workout_set_record_id, position);
-  ''';
 
 enum WorkoutSetExerciseRecordColumns with Columns {
   id("id"),
@@ -89,7 +60,36 @@ class WorkoutSetExerciseRecord implements Model {
   });
 
   static const String table = _table;
-  static const String tableCreate = _tableCreate;
+  static final String tableCreate = '''
+  CREATE TABLE IF NOT EXISTS $_table (
+    ${WorkoutSetExerciseRecordColumns.id.value} INTEGER PRIMARY KEY,
+    ${WorkoutSetExerciseRecordColumns.workoutSetExerciseId.value} INTEGER NOT NULL,
+    ${WorkoutSetExerciseRecordColumns.workoutRecordId.value} INTEGER NOT NULL,
+    ${WorkoutSetExerciseRecordColumns.workoutSetRecordId.value} INTEGER NOT NULL,
+    ${WorkoutSetExerciseRecordColumns.exerciseId.value} INTEGER NOT NULL,
+    ${WorkoutSetExerciseRecordColumns.position.value} INTEGER NOT NULL,
+    ${WorkoutSetExerciseRecordColumns.reps.value} INTEGER NOT NULL,
+    ${WorkoutSetExerciseRecordColumns.weightGrams.value} INTEGER NOT NULL,
+    ${WorkoutSetExerciseRecordColumns.difficulty.value} INTEGER,
+    ${WorkoutSetExerciseRecordColumns.difficultyType.value} TEXT,
+    ${WorkoutSetExerciseRecordColumns.createdAt.value} INTEGER NOT NULL,
+    ${WorkoutSetExerciseRecordColumns.updatedAt.value} INTEGER NOT NULL,
+    FOREIGN KEY (${WorkoutSetExerciseRecordColumns.workoutSetExerciseId.value}) REFERENCES ${WorkoutSetExercise.table} (id)
+      ON DELETE CASCADE,
+    FOREIGN KEY (${WorkoutSetExerciseRecordColumns.workoutSetRecordId.value}) REFERENCES ${WorkoutSetRecord.table} (id)
+      ON DELETE CASCADE,
+    FOREIGN KEY (${WorkoutSetExerciseRecordColumns.workoutRecordId.value}) REFERENCES ${WorkoutRecord.table} (id)
+      ON DELETE CASCADE,
+    FOREIGN KEY (${WorkoutSetExerciseRecordColumns.exerciseId.value}) REFERENCES ${Exercise.table} (id)
+      ON DELETE CASCADE
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_workout_set_exercise_records_set_exercise_id ON $_table (${WorkoutSetExerciseRecordColumns.workoutSetExerciseId.value});
+  CREATE INDEX IF NOT EXISTS idx_workout_set_exercise_records_set_record_id ON $_table (${WorkoutSetExerciseRecordColumns.workoutSetRecordId.value});
+  CREATE INDEX IF NOT EXISTS idx_workout_set_exercise_records_workout_record_id ON $_table (${WorkoutSetExerciseRecordColumns.workoutRecordId.value});
+  CREATE INDEX IF NOT EXISTS idx_workout_set_exercise_records_exercise_id ON $_table (${WorkoutSetExerciseRecordColumns.exerciseId.value});
+  CREATE INDEX IF NOT EXISTS idx_workout_set_exercise_records_position ON $_table (${WorkoutSetExerciseRecordColumns.workoutSetRecordId.value}, ${WorkoutSetExerciseRecordColumns.position.value});
+  ''';
 
   @override
   Map<String, Object?> toMap() {
@@ -101,6 +101,7 @@ class WorkoutSetExerciseRecord implements Model {
       WorkoutSetExerciseRecordColumns.workoutSetRecordId.value:
           workoutSetRecordId,
       WorkoutSetExerciseRecordColumns.exerciseId.value: exerciseId,
+      WorkoutSetExerciseRecordColumns.position.value: position,
       WorkoutSetExerciseRecordColumns.reps.value: reps,
       WorkoutSetExerciseRecordColumns.weightGrams.value: weightGrams,
       WorkoutSetExerciseRecordColumns.difficulty.value: difficulty,

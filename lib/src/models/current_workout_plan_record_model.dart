@@ -6,22 +6,6 @@ import 'workout_plan_model.dart';
 import 'workout_plan_record_model.dart';
 
 const String _table = 'current_workout_plan_records';
-const String _tableCreate = '''
-  CREATE TABLE IF NOT EXISTS $_table (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    workout_plan_record_id INTEGER NOT NULL,
-    workout_plan_id INTEGER NOT NULL,
-    created_at INTEGER NOT NULL,
-    updated_at INTEGER NOT NULL,
-    FOREIGN KEY (workout_plan_record_id) REFERENCES ${WorkoutPlanRecord.table} (id)
-      ON DELETE CASCADE,
-    FOREIGN KEY (workout_plan_id) REFERENCES ${WorkoutPlan.table} (id)
-      ON DELETE CASCADE
-  );
-  
-  CREATE INDEX IF NOT EXISTS idx_current_workout_plan_records_plan_record_id ON $_table (workout_plan_record_id);
-  CREATE INDEX IF NOT EXISTS idx_current_workout_plan_records_plan_id ON $_table (workout_plan_id);
-  ''';
 
 enum CurrentWorkoutPlanRecordColumns {
   id("id"),
@@ -54,7 +38,22 @@ final class CurrentWorkoutPlanRecord extends Equatable implements Model {
   });
 
   static const String table = _table;
-  static const String tableCreate = _tableCreate;
+  static final String tableCreate = '''
+  CREATE TABLE IF NOT EXISTS $_table (
+    ${CurrentWorkoutPlanRecordColumns.id.value} INTEGER PRIMARY KEY AUTOINCREMENT,
+    ${CurrentWorkoutPlanRecordColumns.workoutPlanRecordId.value} INTEGER NOT NULL,
+    ${CurrentWorkoutPlanRecordColumns.workoutPlanId.value} INTEGER NOT NULL,
+    ${CurrentWorkoutPlanRecordColumns.createdAt.value} INTEGER NOT NULL,
+    ${CurrentWorkoutPlanRecordColumns.updatedAt.value} INTEGER NOT NULL,
+    FOREIGN KEY (${CurrentWorkoutPlanRecordColumns.workoutPlanRecordId.value}) REFERENCES ${WorkoutPlanRecord.table} (id)
+      ON DELETE CASCADE,
+    FOREIGN KEY (${CurrentWorkoutPlanRecordColumns.workoutPlanId.value}) REFERENCES ${WorkoutPlan.table} (id)
+      ON DELETE CASCADE
+  );
+  
+  CREATE INDEX IF NOT EXISTS idx_current_workout_plan_records_plan_record_id ON $_table (${CurrentWorkoutPlanRecordColumns.workoutPlanRecordId.value});
+  CREATE INDEX IF NOT EXISTS idx_current_workout_plan_records_plan_id ON $_table (${CurrentWorkoutPlanRecordColumns.workoutPlanId.value});
+  ''';
 
   @override
   Map<String, Object?> toMap() {

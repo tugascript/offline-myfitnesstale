@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../cubits/entitlement_cubit.dart';
 import '../cubits/profile_cubit.dart';
+import '../cubits/states/entitlement_state.dart';
 import '../cubits/states/profile_state.dart';
 import '../models/enums.dart';
+import '../services/entitlement_debug_service.dart';
 import '../services/dtos/profile_dto.dart';
 import '../services/dtos/system_dto.dart';
 import '../utilities/sizes/data_display_sizes.dart';
@@ -27,6 +31,8 @@ class ProfileView extends StatefulWidget {
 class _ProfileViewState extends State<ProfileView> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
+  final EntitlementDebugService _entitlementDebugService =
+      EntitlementDebugService();
   int _height = 0;
   Gender _selectedGender = Gender.male;
   bool _isEditing = false;
@@ -166,6 +172,11 @@ class _ProfileViewState extends State<ProfileView> {
                   system: system,
                   remindersConfig: remindersConfig,
                 ),
+
+                if (kDebugMode) ...[
+                  SizedBox(height: sizes.spacing * 2),
+                  _buildDeveloperEntitlementCard(),
+                ],
               ],
             ),
           );
@@ -262,6 +273,153 @@ class _ProfileViewState extends State<ProfileView> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildDeveloperEntitlementCard() {
+    return BlocBuilder<EntitlementCubit, EntitlementCubitState>(
+      builder: (context, entitlementState) {
+        final snapshot = entitlementState.snapshot;
+        final bool busy = entitlementState.isRefreshing ||
+            entitlementState.isPurchasing ||
+            entitlementState.isRestoring;
+
+        return Card(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  "Developer Entitlement",
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  "Current: ${snapshot?.entitlement.value ?? "unknown"} / "
+                  "${snapshot?.status.value ?? "unknown"}",
+                ),
+                Text(
+                  "Verified: ${snapshot?.lastVerifiedAt ?? 0} | "
+                  "Token: ${snapshot?.verificationToken.isNotEmpty == true ? "yes" : "no"}",
+                ),
+                const SizedBox(height: 12),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    ElevatedButton(
+                      onPressed: busy ? null : _forceRefreshEntitlement,
+                      child: const Text("Force Refresh"),
+                    ),
+                    ElevatedButton(
+                      onPressed: busy ? null : _setPremiumActive,
+                      child: const Text("Set Premium Active"),
+                    ),
+                    OutlinedButton(
+                      onPressed: busy ? null : _setFreeExpired,
+                      child: const Text("Set Free/Expired"),
+                    ),
+                    OutlinedButton(
+                      onPressed: busy ? null : _resetMockEntitlement,
+                      child: const Text("Reset Mock"),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _forceRefreshEntitlement() async {
+    await context.read<EntitlementCubit>().refreshEntitlement(force: true);
+    if (!mounted) {
+      return;
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Entitlement refreshed")),
+    );
+  }
+
+  Future<void> _setPremiumActive() async {
+    final entitlementCubit = context.read<EntitlementCubit>();
+    try {
+      final int expiresAt = DateTime.now()
+              .toUtc()
+              .add(const Duration(days: 30))
+              .millisecondsSinceEpoch ~/
+          1000;
+      await _entitlementDebugService.setMockEntitlement(
+        entitlement: EntitlementType.premium,
+        status: EntitlementStatus.active,
+        expiresAt: expiresAt,
+      );
+      await entitlementCubit.refreshEntitlement(force: true);
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Mock set to premium/active")),
+      );
+    } catch (e) {
+      _showDebugError(e);
+    }
+  }
+
+  Future<void> _setFreeExpired() async {
+    final entitlementCubit = context.read<EntitlementCubit>();
+    try {
+      final int expiresAt = DateTime.now()
+              .toUtc()
+              .subtract(const Duration(hours: 1))
+              .millisecondsSinceEpoch ~/
+          1000;
+      await _entitlementDebugService.setMockEntitlement(
+        entitlement: EntitlementType.free,
+        status: EntitlementStatus.expired,
+        expiresAt: expiresAt,
+        verificationToken: '',
+      );
+      await entitlementCubit.refreshEntitlement(force: true);
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Mock set to free/expired")),
+      );
+    } catch (e) {
+      _showDebugError(e);
+    }
+  }
+
+  Future<void> _resetMockEntitlement() async {
+    final entitlementCubit = context.read<EntitlementCubit>();
+    try {
+      await _entitlementDebugService.resetMockEntitlement();
+      await entitlementCubit.refreshEntitlement(force: true);
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Mock entitlement reset")),
+      );
+    } catch (e) {
+      _showDebugError(e);
+    }
+  }
+
+  void _showDebugError(Object error) {
+    if (!mounted) {
+      return;
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("Debug entitlement action failed: $error")),
     );
   }
 }

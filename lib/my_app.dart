@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'src/cubits/active_workout_cubit.dart';
+import 'src/cubits/entitlement_cubit.dart';
 import 'src/cubits/exercise_cubit.dart';
 import 'src/cubits/exercise_record_cubit.dart';
 import 'src/cubits/profile_cubit.dart';
@@ -23,6 +24,10 @@ class MyApp extends StatelessWidget {
       providers: [
         BlocProvider<ProfileCubit>(
           create: (BuildContext context) => ProfileCubit()..loadInitialData(),
+          lazy: false,
+        ),
+        BlocProvider<EntitlementCubit>(
+          create: (BuildContext context) => EntitlementCubit()..bootstrap(),
           lazy: false,
         ),
         BlocProvider<ExerciseCubit>(

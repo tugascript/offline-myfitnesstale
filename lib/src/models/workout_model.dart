@@ -20,6 +20,7 @@ enum WorkoutColumns with Columns {
   difficulty("difficulty"),
   totalSets("total_sets"),
   totalReps("total_reps"),
+  editorType("editor_type"),
   createdBy("created_by"),
   createdAt("created_at"),
   updatedAt("updated_at");
@@ -44,6 +45,7 @@ final class Workout implements Model {
   final Difficulty difficulty;
   final int totalSets;
   final int totalReps;
+  final EditorType editorType;
   final CreatedBy createdBy;
   @override
   final int createdAt;
@@ -63,6 +65,7 @@ final class Workout implements Model {
     required this.difficulty,
     required this.totalSets,
     required this.totalReps,
+    required this.editorType,
     required this.createdBy,
     required this.createdAt,
     required this.updatedAt,
@@ -83,6 +86,7 @@ final class Workout implements Model {
     ${WorkoutColumns.difficulty.value} INTEGER NOT NULL,
     ${WorkoutColumns.totalSets.value} INTEGER NOT NULL,
     ${WorkoutColumns.totalReps.value} INTEGER NOT NULL,
+    ${WorkoutColumns.editorType.value} TEXT NOT NULL,
     ${WorkoutColumns.createdBy.value} TEXT NOT NULL,
     ${WorkoutColumns.createdAt.value} INTEGER NOT NULL,
     ${WorkoutColumns.updatedAt.value} INTEGER NOT NULL
@@ -108,6 +112,7 @@ final class Workout implements Model {
       WorkoutColumns.phase.value: phase?.value,
       WorkoutColumns.totalSets.value: totalSets,
       WorkoutColumns.totalReps.value: totalReps,
+      WorkoutColumns.editorType.value: editorType.value,
       WorkoutColumns.createdBy.value: createdBy.value,
       WorkoutColumns.createdAt.value: createdAt,
       WorkoutColumns.updatedAt.value: updatedAt,
@@ -146,6 +151,9 @@ final class Workout implements Model {
           : null,
       totalSets: map[WorkoutColumns.totalSets.value] as int,
       totalReps: map[WorkoutColumns.totalReps.value] as int,
+      editorType: EditorType.fromValue(
+        map[WorkoutColumns.editorType.value] as String,
+      ),
       createdBy:
           CreatedBy.fromValue(map[WorkoutColumns.createdBy.value] as String),
       createdAt: map[WorkoutColumns.createdAt.value] as int,
@@ -167,6 +175,7 @@ final class Workout implements Model {
     int totalReps = 0,
     bool isFavorite = false,
     CreatedBy createdBy = CreatedBy.user,
+    EditorType editorType = EditorType.basic,
   }) {
     final int now = DateUtilities.getNowUtcUnix();
     return Workout(
@@ -182,6 +191,7 @@ final class Workout implements Model {
       totalSets: totalSets,
       totalReps: totalReps,
       createdBy: createdBy,
+      editorType: editorType,
       createdAt: now,
       updatedAt: now,
     );
@@ -204,6 +214,7 @@ final class Workout implements Model {
     bool? isFavorite,
     int? createdAt,
     int? updatedAt,
+    EditorType? editorType,
   }) {
     return Workout(
       id: id ?? this.id,
@@ -221,11 +232,12 @@ final class Workout implements Model {
       totalSets: totalSets ?? this.totalSets,
       totalReps: totalReps ?? this.totalReps,
       isFavorite: isFavorite ?? this.isFavorite,
+      editorType: editorType ?? this.editorType,
     );
   }
 
   @override
   String toString() {
-    return 'Workout{id: $id, name: $name, description: $description, picture: $picture, video: $video, createdBy: $createdBy, createdAt: $createdAt, updatedAt: $updatedAt, phase: $phase, totalSets: $totalSets, totalReps: $totalReps, isFavorite: $isFavorite}';
+    return 'Workout{id: $id, name: $name, description: $description, picture: $picture, video: $video, createdBy: $createdBy, createdAt: $createdAt, updatedAt: $updatedAt, phase: $phase, totalSets: $totalSets, totalReps: $totalReps, isFavorite: $isFavorite, editorType: $editorType}';
   }
 }

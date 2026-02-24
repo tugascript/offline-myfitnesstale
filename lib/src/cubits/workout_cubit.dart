@@ -4,6 +4,8 @@ import 'package:logging/logging.dart';
 import '../models/common.dart';
 import '../models/enums.dart';
 import '../services/common/errors.dart';
+import '../services/entitlement_guard.dart';
+import '../services/entitlement_service.dart';
 import '../services/workout_service.dart';
 import '../services/dtos/workout_dto.dart';
 import '../models/workout_set_exercise_model.dart';
@@ -12,6 +14,7 @@ import 'states/workout_state.dart';
 
 class WorkoutCubit extends Cubit<WorkoutState> {
   final WorkoutService _workoutService = WorkoutService();
+  final EntitlementService _entitlementService = EntitlementService();
 
   final Logger _logger = Logger('WorkoutCubit');
 
@@ -303,6 +306,10 @@ class WorkoutCubit extends Cubit<WorkoutState> {
     int? maxRestSecs,
   }) async {
     _logger.info('Creating workout set for workout $workoutId');
+    if (setType != WorkoutSetType.standard &&
+        !(await _ensurePremiumAccessForMutation())) {
+      return;
+    }
     emit(state.copyWith(isLoading: true));
 
     final result = await _workoutService.createWorkoutSet(
@@ -343,6 +350,11 @@ class WorkoutCubit extends Cubit<WorkoutState> {
     int? maxRestSecs,
   }) async {
     _logger.info('Updating workout set $workoutSetId');
+    if (setType != null &&
+        setType != WorkoutSetType.standard &&
+        !(await _ensurePremiumAccessForMutation())) {
+      return;
+    }
     emit(state.copyWith(isLoading: true));
 
     final result = await _workoutService.updateWorkoutSet(
@@ -508,11 +520,12 @@ class WorkoutCubit extends Cubit<WorkoutState> {
   Future<void> batchUpsertBasicWorkoutSets({
     required int workoutId,
     required List<StandardSetInput> sets,
+    required Set<int> idsToDelete,
   }) async {
     _logger.info('Batch updating workout sets for workout $workoutId');
     emit(state.copyWith(isLoading: true));
 
-    if (sets.isEmpty) {
+    if (sets.isEmpty && idsToDelete.isEmpty) {
       emit(state.copyWith(isLoading: false));
       return;
     }
@@ -525,7 +538,7 @@ class WorkoutCubit extends Cubit<WorkoutState> {
           id: s.id,
           setType: WorkoutSetType.standard,
           minSets: s.minSets,
-          maxSets: s.maxSets,
+          maxSets: s.maxSets >= s.minSets ? s.maxSets : null,
           recommendedRestSecs: s.recommendedRestSecs,
           maxRestSecs: s.maxRestSecs,
           position: i + 1,
@@ -544,8 +557,9 @@ class WorkoutCubit extends Cubit<WorkoutState> {
     }
 
     final result = await _workoutService.batchUpsertWorkoutSets(
-      workoutId,
-      setsToUpsert,
+      workoutId: workoutId,
+      inputs: setsToUpsert,
+      idsToDelete: idsToDelete,
     );
 
     if (result.isErr()) {
@@ -562,6 +576,107 @@ class WorkoutCubit extends Cubit<WorkoutState> {
     }
 
     await getWorkout(workoutId, refresh: true);
+  }
+
+  Future<void> batchUpsertComplexWorkoutSets({
+    required int workoutId,
+    required List<ComplexSetInput> sets,
+    required Set<int> idsToDelete,
+  }) async {
+    _logger.info('Batch updating complex workout sets for workout $workoutId');
+    if (!(await _ensurePremiumAccessForMutation())) {
+      return;
+    }
+    emit(state.copyWith(isLoading: true));
+
+    if (sets.isEmpty && idsToDelete.isEmpty) {
+      emit(state.copyWith(isLoading: false));
+      return;
+    }
+
+    final List<WorkoutSetUpsertInput> setsToUpsert = [];
+    for (int i = 0; i < sets.length; i++) {
+      final s = sets[i];
+      final exercises = s.exercises.map((exercise) {
+        return WorkoutSetExerciseUpsertInput(
+          id: exercise.id,
+          exerciseId: exercise.exerciseId,
+          position: exercise.position,
+          minReps: exercise.minReps,
+          maxReps:
+              exercise.maxReps != null && exercise.maxReps! >= exercise.minReps
+                  ? exercise.maxReps
+                  : null,
+          toMaxReps: exercise.toMaxReps,
+          difficulty: exercise.difficulty,
+          alternativeExerciseIds: exercise.alternativeExerciseIds.isEmpty
+              ? null
+              : exercise.alternativeExerciseIds,
+        );
+      }).toList();
+
+      setsToUpsert.add(
+        WorkoutSetUpsertInput(
+          id: s.id,
+          setType: s.setType,
+          minSets: s.minSets,
+          maxSets:
+              s.maxSets != null && s.maxSets! >= s.minSets ? s.maxSets : null,
+          recommendedRestSecs: s.recommendedRestSecs,
+          maxRestSecs: s.maxRestSecs,
+          position: s.position,
+          exercises: exercises,
+        ),
+      );
+    }
+
+    final result = await _workoutService.batchUpsertWorkoutSets(
+      workoutId: workoutId,
+      inputs: setsToUpsert,
+      idsToDelete: idsToDelete,
+    );
+
+    if (result.isErr()) {
+      final error = result.error;
+      _logger.warning("Failed to batch upsert complex workout sets", error);
+      emit(state.copyWith(
+        error: ErrorState(
+          type: error.type.name,
+          description: error.description,
+        ),
+        isLoading: false,
+      ));
+      return;
+    }
+
+    await getWorkout(workoutId, refresh: true);
+  }
+
+  Future<bool> _ensurePremiumAccessForMutation() async {
+    final snapshotResult = await _entitlementService.getEntitlementSnapshot();
+    if (snapshotResult.isErr()) {
+      emit(state.copyWith(
+        error: const ErrorState(
+          type: 'entitlement_unavailable',
+          description:
+              'Premium status unavailable. Please refresh and try again.',
+        ),
+      ));
+      return false;
+    }
+
+    if (!EntitlementGuard.canUsePremium(snapshotResult.value)) {
+      emit(state.copyWith(
+        error: const ErrorState(
+          type: 'premium_required',
+          description:
+              'Premium subscription required. Restore purchases or subscribe to continue.',
+        ),
+      ));
+      return false;
+    }
+
+    return true;
   }
 }
 
@@ -588,5 +703,49 @@ final class StandardSetInput {
     required this.maxRestSecs,
     required this.exerciseId,
     this.setExerciseId,
+  });
+}
+
+final class ComplexSetExerciseInput {
+  final int? id;
+  final int position;
+  final int exerciseId;
+  final int minReps;
+  final int? maxReps;
+  final bool toMaxReps;
+  final WorkoutSetExerciseDifficulty? difficulty;
+  final List<int> alternativeExerciseIds;
+
+  const ComplexSetExerciseInput({
+    this.id,
+    required this.position,
+    required this.exerciseId,
+    required this.minReps,
+    this.maxReps,
+    required this.toMaxReps,
+    this.difficulty,
+    this.alternativeExerciseIds = const [],
+  });
+}
+
+final class ComplexSetInput {
+  final int? id;
+  final WorkoutSetType setType;
+  final int position;
+  final int minSets;
+  final int? maxSets;
+  final int recommendedRestSecs;
+  final int? maxRestSecs;
+  final List<ComplexSetExerciseInput> exercises;
+
+  const ComplexSetInput({
+    this.id,
+    required this.setType,
+    required this.position,
+    required this.minSets,
+    this.maxSets,
+    required this.recommendedRestSecs,
+    this.maxRestSecs,
+    required this.exercises,
   });
 }

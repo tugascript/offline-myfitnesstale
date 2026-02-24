@@ -347,7 +347,7 @@ class _ActiveWorkoutViewState extends State<ActiveWorkoutView> {
                                     controller: _weightController,
                                     decoration: InputDecoration(
                                       labelText:
-                                          'Weight (${_units == Units.imperial ? 'lbs' : 'kg'})',
+                                          'Weight (${_units == Units.imperial.value ? 'lbs' : 'kg'})',
                                       border: const OutlineInputBorder(),
                                       prefixIcon:
                                           const Icon(Icons.fitness_center),

@@ -5,17 +5,6 @@ import 'model.dart';
 import 'utilities.dart';
 
 const String _table = 'profiles';
-const String _tableCreate = '''
-  CREATE TABLE IF NOT EXISTS $_table (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,
-    height INTEGER NOT NULL,
-    gender TEXT NOT NULL,
-    birthdate INTEGER NOT NULL,
-    created_at INTEGER NOT NULL,
-    updated_at INTEGER NOT NULL
-  );
-  ''';
 
 enum ProfileColumns {
   id("id"),
@@ -54,7 +43,17 @@ class Profile extends Equatable implements Model {
   });
 
   static const String table = _table;
-  static const String tableCreate = _tableCreate;
+  static final String tableCreate = '''
+  CREATE TABLE IF NOT EXISTS $_table (
+    ${ProfileColumns.id.value} INTEGER PRIMARY KEY AUTOINCREMENT,
+    ${ProfileColumns.name.value} TEXT NOT NULL,
+    ${ProfileColumns.height.value} INTEGER NOT NULL,
+    ${ProfileColumns.gender.value} TEXT NOT NULL,
+    ${ProfileColumns.birthdate.value} INTEGER NOT NULL,
+    ${ProfileColumns.createdAt.value} INTEGER NOT NULL,
+    ${ProfileColumns.updatedAt.value} INTEGER NOT NULL
+  );
+  ''';
 
   @override
   Map<String, Object?> toMap() {
