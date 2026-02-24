@@ -3,27 +3,6 @@ import 'workout_record_model.dart';
 import 'workout_set_model.dart';
 
 const String _table = 'workout_set_records';
-const String _tableCreate = '''
-  CREATE TABLE IF NOT EXISTS $_table (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    workout_set_id INTEGER NOT NULL,
-    workout_record_id INTEGER NOT NULL,
-    set_number INTEGER NOT NULL,
-    total_rest_secs INTEGER,
-    started_at INTEGER NOT NULL,
-    completed_at INTEGER,
-    created_at INTEGER NOT NULL,
-    updated_at INTEGER NOT NULL,
-    FOREIGN KEY (workout_set_id) REFERENCES ${WorkoutSet.table} (id)
-      ON DELETE CASCADE,
-    FOREIGN KEY (workout_record_id) REFERENCES ${WorkoutRecord.table} (id)
-      ON DELETE CASCADE
-  );
-  
-  CREATE INDEX IF NOT EXISTS idx_workout_set_progress_set_id ON $_table (workout_set_id);
-  CREATE INDEX IF NOT EXISTS idx_workout_set_progress_progress_id ON $_table (workout_record_id);
-  CREATE INDEX IF NOT EXISTS idx_workout_set_progress_set_id_number ON $_table (workout_set_id, set_number);
-  ''';
 
 enum WorkoutSetRecordColumns with Columns {
   id("id"),
@@ -69,7 +48,27 @@ class WorkoutSetRecord implements Model {
   });
 
   static const String table = _table;
-  static const String tableCreate = _tableCreate;
+  static final String tableCreate = '''
+  CREATE TABLE IF NOT EXISTS $_table (
+    ${WorkoutSetRecordColumns.id.value} INTEGER PRIMARY KEY AUTOINCREMENT,
+    ${WorkoutSetRecordColumns.workoutSetId.value} INTEGER NOT NULL,
+    ${WorkoutSetRecordColumns.workoutRecordId.value} INTEGER NOT NULL,
+    ${WorkoutSetRecordColumns.setNumber.value} INTEGER NOT NULL,
+    ${WorkoutSetRecordColumns.totalRestSecs.value} INTEGER,
+    ${WorkoutSetRecordColumns.startedAt.value} INTEGER NOT NULL,
+    ${WorkoutSetRecordColumns.completedAt.value} INTEGER,
+    ${WorkoutSetRecordColumns.createdAt.value} INTEGER NOT NULL,
+    ${WorkoutSetRecordColumns.updatedAt.value} INTEGER NOT NULL,
+    FOREIGN KEY (${WorkoutSetRecordColumns.workoutSetId.value}) REFERENCES ${WorkoutSet.table} (id)
+      ON DELETE CASCADE,
+    FOREIGN KEY (${WorkoutSetRecordColumns.workoutRecordId.value}) REFERENCES ${WorkoutRecord.table} (id)
+      ON DELETE CASCADE
+  );
+  
+  CREATE INDEX IF NOT EXISTS idx_workout_set_progress_set_id ON $_table (${WorkoutSetRecordColumns.workoutSetId.value});
+  CREATE INDEX IF NOT EXISTS idx_workout_set_progress_progress_id ON $_table (${WorkoutSetRecordColumns.workoutRecordId.value});
+  CREATE INDEX IF NOT EXISTS idx_workout_set_progress_set_id_number ON $_table (${WorkoutSetRecordColumns.workoutSetId.value}, ${WorkoutSetRecordColumns.setNumber.value});
+  ''';
 
   @override
   Map<String, Object?> toMap() {

@@ -2370,10 +2370,11 @@ class WorkoutService {
     }
   }
 
-  Future<Result<void, ServiceError<SingleErrorTypes>>> batchUpsertWorkoutSets(
-    int workoutId,
-    List<WorkoutSetUpsertInput> inputs,
-  ) async {
+  Future<Result<void, ServiceError<SingleErrorTypes>>> batchUpsertWorkoutSets({
+    required int workoutId,
+    required List<WorkoutSetUpsertInput> inputs,
+    required Set<int> idsToDelete,
+  }) async {
     _logger.info('Batch upserting workout sets');
     final exerciseIds = inputs.fold(<int>{}, (previousValue, element) {
       for (final exercise in element.exercises) {
@@ -2396,10 +2397,12 @@ class WorkoutService {
         );
       }
 
-      final exercises = await _exerciseRepository.selectMany(
-        where: ExerciseColumns.id.inList(exerciseIds.length),
-        whereArgs: exerciseIds.toList(),
-      );
+      final exercises = exerciseIds.isEmpty
+          ? <Exercise>[]
+          : await _exerciseRepository.selectMany(
+              where: ExerciseColumns.id.inList(exerciseIds.length),
+              whereArgs: exerciseIds.toList(),
+            );
       if (exercises.length != exerciseIds.length) {
         _logger.warning(
           'Not all exercises found, ${exercises.length} found, ${exerciseIds.length} expected',
@@ -2420,16 +2423,6 @@ class WorkoutService {
         },
       );
 
-      final int workoutSetsCount = await _setRepository.count(
-        where: WorkoutSetColumns.workoutId.equal,
-        whereArgs: [workoutId],
-      );
-
-      int totalSetsChange = 0;
-      int totalRepsChange = 0;
-      int finalPosition = workoutSetsCount + 1;
-      final Set<MuscleGroup> muscleGroups = {};
-      final Set<Muscle> muscles = {};
       final (
         List<WorkoutSetUpsertInput> setsToCreate,
         List<WorkoutSetUpsertInput> setsToUpdate
@@ -2443,17 +2436,16 @@ class WorkoutService {
       });
 
       await _setRepository.startTransaction((txn) async {
+        for (final id in idsToDelete) {
+          await _doBatchSetDelete(id, txn);
+        }
+
         for (final input in setsToCreate) {
           await _doBatchSetCreate(
             input: input,
-            finalPosition: finalPosition,
             txn: txn,
             workoutId: workoutId,
-            muscleGroups: muscleGroups,
             exerciseMap: exerciseMap,
-            muscles: muscles,
-            totalSetsChange: totalSetsChange,
-            totalRepsChange: totalRepsChange,
           );
         }
 
@@ -2464,9 +2456,6 @@ class WorkoutService {
             continue;
           }
 
-          final int? oldMaxSets = workoutSet.maxSets;
-          final int oldMinSets = workoutSet.minSets;
-          final int oldTotalReps = workoutSet.totalReps;
           final int oldPosition = workoutSet.position;
           final updatedWorkoutSet = workoutSet.copyWith(
             setType: input.setType,
@@ -2475,9 +2464,10 @@ class WorkoutService {
             maxSets: input.maxSets,
             maxRestSecs: input.maxRestSecs,
             totalExercises: input.exercises.length,
-            totalReps: input.exercises.fold<int>(0, (previousValue, element) {
-              return previousValue + (element.maxReps ?? element.minReps);
-            }),
+            totalReps: (input.maxSets ?? input.minSets) *
+                input.exercises.fold<int>(0, (previousValue, element) {
+                  return previousValue + (element.maxReps ?? element.minReps);
+                }),
             position: input.position,
           );
 
@@ -2502,17 +2492,6 @@ class WorkoutService {
           }
 
           await _setRepository.update(updatedWorkoutSet, txn);
-          final int addTotalSets =
-              (updatedWorkoutSet.maxSets ?? updatedWorkoutSet.minSets) -
-                  (oldMaxSets ?? oldMinSets);
-          if (addTotalSets != 0) {
-            totalSetsChange += addTotalSets;
-          }
-
-          final int addTotalReps = updatedWorkoutSet.totalReps - oldTotalReps;
-          if (addTotalReps != 0) {
-            totalRepsChange += addTotalReps;
-          }
 
           final (
             List<WorkoutSetExerciseUpsertInput> createSetExercises,
@@ -2529,19 +2508,17 @@ class WorkoutService {
           final int setCount = await _setExerciseRepository.count(
             where: WorkoutSetExerciseColumns.workoutSetId.equal,
             whereArgs: [workoutSet.id!],
+            trx: txn,
           );
 
           if (createSetExercises.isNotEmpty) {
             for (int i = 0; i < createSetExercises.length; i++) {
               final exerciseInput = createSetExercises[i];
-              final exercise = exerciseMap[exerciseInput.exerciseId];
-              if (exercise == null) {
+              if (!exerciseMap.containsKey(exerciseInput.exerciseId)) {
                 _logger.warning('Exercise not found');
                 throw Exception('Exercise not found');
               }
 
-              muscleGroups.add(exercise.muscleGroup);
-              muscles.addAll(exercise.muscles.primaryMuscles);
               await _batchCreateSetExercise(
                 exerciseInput: exerciseInput,
                 index: i,
@@ -2557,8 +2534,7 @@ class WorkoutService {
           if (updateSetExercises.isNotEmpty) {
             for (int i = 0; i < updateSetExercises.length; i++) {
               final exerciseInput = updateSetExercises[i];
-              final exercise = exerciseMap[exerciseInput.exerciseId];
-              if (exercise == null) {
+              if (!exerciseMap.containsKey(exerciseInput.exerciseId)) {
                 _logger.warning('Exercise not found');
                 throw Exception('Exercise not found');
               }
@@ -2566,23 +2542,67 @@ class WorkoutService {
               await _batchUpdateSetExercise(
                 exerciseInput: exerciseInput,
                 txn: txn,
-                workoutId: workoutId,
                 workoutSet: workoutSet,
-                muscleGroups: muscleGroups,
-                exercise: exercise,
-                muscles: muscles,
               );
             }
           }
         }
 
-        final upatedWorkout = workout.copyWith(
-          muscleGroups: muscleGroups,
-          muscles: muscles,
-          totalSets: workout.totalSets + totalSetsChange,
-          totalReps: workout.totalReps + totalRepsChange,
+        final List<WorkoutSet> updatedSets = await _setRepository.selectMany(
+          where: WorkoutSetColumns.workoutId.equal,
+          whereArgs: [workoutId],
+          trx: txn,
         );
-        await _repository.update(upatedWorkout, txn);
+        final int updatedTotalSets = updatedSets.fold(
+          0,
+          (acc, set) => acc + (set.maxSets ?? set.minSets),
+        );
+        final int updatedTotalReps = updatedSets.fold(
+          0,
+          (acc, set) => acc + set.totalReps,
+        );
+
+        final List<WorkoutSetExercise> updatedSetExercises =
+            await _setExerciseRepository.selectMany(
+          where: WorkoutSetExerciseColumns.workoutId.equal,
+          whereArgs: [workoutId],
+          trx: txn,
+        );
+        final Set<MuscleGroup> updatedMuscleGroups = {};
+        final Set<Muscle> updatedMuscles = {};
+        if (updatedSetExercises.isNotEmpty) {
+          final Set<int> workoutExerciseIds = updatedSetExercises
+              .map((setExercise) => setExercise.exerciseId)
+              .toSet();
+          final List<Exercise> updatedExercises =
+              await _exerciseRepository.selectMany(
+            where: ExerciseColumns.id.inList(workoutExerciseIds.length),
+            whereArgs: workoutExerciseIds.toList(),
+            trx: txn,
+          );
+          final Map<int, Exercise> updatedExerciseMap = {
+            for (final exercise in updatedExercises) exercise.id!: exercise,
+          };
+
+          for (final setExercise in updatedSetExercises) {
+            final exercise = updatedExerciseMap[setExercise.exerciseId];
+            if (exercise == null) {
+              continue;
+            }
+
+            updatedMuscleGroups.add(exercise.muscleGroup);
+            updatedMuscles.addAll(exercise.muscles.primaryMuscles);
+          }
+        }
+
+        final updatedWorkout = workout.copyWith(
+          muscleGroups: updatedMuscleGroups,
+          muscles: updatedMuscles,
+          totalSets: updatedTotalSets,
+          totalReps: updatedTotalReps,
+          updatedAt: DateUtilities.getNowUtcUnix(),
+        );
+        await _repository.update(updatedWorkout, txn);
       });
       _logger.info('Batch upserting workout sets completed successfully');
       return ok(null);
@@ -2597,14 +2617,39 @@ class WorkoutService {
     }
   }
 
+  Future<void> _doBatchSetDelete(int id, Transaction txn) async {
+    final workoutSet = await _setRepository.selectOne(id, txn);
+    if (workoutSet == null) {
+      _logger.warning('Workout set with id $id not found');
+      return;
+    }
+
+    final int oldPosition = workoutSet.position;
+    await txn.delete(
+      WorkoutSetExerciseOption.table,
+      where: WorkoutSetExerciseOptionColumns.workoutSetId.equal,
+      whereArgs: [id],
+    );
+    await txn.delete(
+      WorkoutSetExercise.table,
+      where: WorkoutSetExerciseColumns.workoutSetId.equal,
+      whereArgs: [id],
+    );
+    await _setRepository.deleteOne(id, txn);
+    await txn.rawUpdate(
+      """
+      UPDATE ${WorkoutSet.table}
+      SET ${WorkoutSetColumns.position.value} = ${WorkoutSetColumns.position.value} - 1
+      WHERE ${WorkoutSetColumns.workoutId.equal} AND ${WorkoutSetColumns.position.greaterThan};
+      """,
+      [workoutSet.workoutId, oldPosition],
+    );
+  }
+
   Future<void> _batchUpdateSetExercise({
     required WorkoutSetExerciseUpsertInput exerciseInput,
     required Transaction txn,
-    required int workoutId,
     required WorkoutSet workoutSet,
-    required Set<MuscleGroup> muscleGroups,
-    required ExerciseDto exercise,
-    required Set<Muscle> muscles,
   }) async {
     final setExercise = await _setExerciseRepository.selectOne(
       exerciseInput.id!,
@@ -2630,17 +2675,17 @@ class WorkoutService {
         await txn.rawUpdate(
           """
           UPDATE ${WorkoutSetExercise.table} SET position = position - 1
-          WHERE workout_id = ? AND position > ? AND position <= ?;
+          WHERE workout_set_id = ? AND position > ? AND position <= ?;
           """,
-          [workoutId, oldPosition, exerciseInput.position],
+          [workoutSet.id!, oldPosition, exerciseInput.position],
         );
       } else {
         await txn.rawUpdate(
           """
           UPDATE ${WorkoutSetExercise.table} SET position = position + 1
-          WHERE workout_id = ? AND position >= ? AND position < ?;
+          WHERE workout_set_id = ? AND position >= ? AND position < ?;
           """,
-          [workoutId, exerciseInput.position, oldPosition],
+          [workoutSet.id!, exerciseInput.position, oldPosition],
         );
       }
     }
@@ -2664,7 +2709,7 @@ class WorkoutService {
       for (int j = 0; j < exerciseInput.alternativeExerciseIds!.length; j++) {
         final alternativeExerciseId = exerciseInput.alternativeExerciseIds![j];
         final workoutSetExerciseOption = WorkoutSetExerciseOption.create(
-          workoutId: workoutId,
+          workoutId: workoutSet.workoutId,
           workoutSetId: workoutSet.id!,
           workoutSetExerciseId: setExercise.id!,
           exerciseId: alternativeExerciseId,
@@ -2678,8 +2723,6 @@ class WorkoutService {
     }
 
     await _setExerciseRepository.update(updatedSetExercise, txn);
-    muscleGroups.add(exercise.muscleGroup);
-    muscles.addAll(exercise.muscles.primaryMuscles);
   }
 
   Future<void> _batchCreateSetExercise({
@@ -2736,25 +2779,25 @@ class WorkoutService {
 
   Future<void> _doBatchSetCreate({
     required WorkoutSetUpsertInput input,
-    required int finalPosition,
     required Transaction txn,
     required int workoutId,
-    required Set<MuscleGroup> muscleGroups,
     required Map<int, ExerciseDto> exerciseMap,
-    required Set<Muscle> muscles,
-    required int totalSetsChange,
-    required int totalRepsChange,
   }) async {
+    final int workoutSetsCount = await _setRepository.count(
+      where: WorkoutSetColumns.workoutId.equal,
+      whereArgs: [workoutId],
+      trx: txn,
+    );
     final int extraSets = input.maxSets ?? input.minSets;
     final int perSetReps = input.exercises.fold(
       0,
       (acc, exercise) => acc + (exercise.maxReps ?? exercise.minReps),
     );
     final int setTotalReps = extraSets * perSetReps;
-    finalPosition += 1;
+    final int newPosition = workoutSetsCount + 1;
     final int setPosition = input.position;
 
-    if (setPosition < finalPosition) {
+    if (setPosition < newPosition) {
       await txn.rawUpdate(
         """
         UPDATE ${WorkoutSet.table}
@@ -2794,12 +2837,9 @@ class WorkoutService {
         workoutSetExercise,
         txn,
       );
-      muscleGroups.add(
-        exerciseMap[exerciseInput.exerciseId]!.muscleGroup,
-      );
-      muscles.addAll(
-        exerciseMap[exerciseInput.exerciseId]!.muscles.primaryMuscles,
-      );
+      if (!exerciseMap.containsKey(exerciseInput.exerciseId)) {
+        throw Exception('Exercise not found');
+      }
 
       if (exerciseInput.alternativeExerciseIds != null) {
         for (int j = 0; j < exerciseInput.alternativeExerciseIds!.length; j++) {
@@ -2819,8 +2859,5 @@ class WorkoutService {
         }
       }
     }
-
-    totalSetsChange += extraSets;
-    totalRepsChange += setTotalReps;
   }
 }

@@ -6,24 +6,6 @@ import 'model.dart';
 import 'utilities.dart';
 
 const String _table = 'exercise_records';
-const String _tableCreate = """
-  CREATE TABLE IF NOT EXISTS $_table (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    exercise_id INTEGER NOT NULL,
-    weight INTEGER NOT NULL,
-    reps INTEGER NOT NULL,
-    max_strength INTEGER NOT NULL,
-    picture TEXT,
-    video TEXT,
-    record_date INTEGER NOT NULL,
-    created_at INTEGER NOT NULL,
-    updated_at INTEGER NOT NULL,
-    FOREIGN KEY (exercise_id) REFERENCES ${Exercise.table} (id)
-      ON DELETE CASCADE
-  );
-  
-  CREATE INDEX IF NOT EXISTS idx_exercise_records_exercise_id ON $_table (exercise_id);
-  """;
 
 enum ExerciseRecordColumns with Columns {
   id("id"),
@@ -72,7 +54,24 @@ class ExerciseRecord extends Equatable implements Model {
   });
 
   static const String table = _table;
-  static const String tableCreate = _tableCreate;
+  static final String tableCreate = """
+  CREATE TABLE IF NOT EXISTS $_table (
+    ${ExerciseRecordColumns.id.value} INTEGER PRIMARY KEY AUTOINCREMENT,
+    ${ExerciseRecordColumns.exerciseId.value} INTEGER NOT NULL,
+    ${ExerciseRecordColumns.weight.value} INTEGER NOT NULL,
+    ${ExerciseRecordColumns.reps.value} INTEGER NOT NULL,
+    ${ExerciseRecordColumns.maxStrength.value} INTEGER NOT NULL,
+    ${ExerciseRecordColumns.picture.value} TEXT,
+    ${ExerciseRecordColumns.video.value} TEXT,
+    ${ExerciseRecordColumns.recordDate.value} INTEGER NOT NULL,
+    ${ExerciseRecordColumns.createdAt.value} INTEGER NOT NULL,
+    ${ExerciseRecordColumns.updatedAt.value} INTEGER NOT NULL,
+    FOREIGN KEY (${ExerciseRecordColumns.exerciseId.value}) REFERENCES ${Exercise.table} (id)
+      ON DELETE CASCADE
+  );
+  
+  CREATE INDEX IF NOT EXISTS idx_exercise_records_exercise_id ON $_table (${ExerciseRecordColumns.exerciseId.value});
+  """;
 
   @override
   Map<String, Object?> toMap() {

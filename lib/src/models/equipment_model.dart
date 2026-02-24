@@ -4,18 +4,6 @@ import 'model.dart';
 import 'utilities.dart';
 
 const String _table = 'equipment';
-const String _tableCreate = '''
-  CREATE TABLE IF NOT EXISTS $_table (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,
-    picture TEXT,
-    created_by TEXT NOT NULL,
-    created_at INTEGER NOT NULL,
-    updated_at INTEGER NOT NULL
-  );
-  
-  CREATE UNIQUE INDEX IF NOT EXISTS idx_equipment_name_id ON $_table (name);
-  ''';
 
 enum EquipmentColumns with Columns {
   id("id"),
@@ -52,7 +40,18 @@ class Equipment implements Model {
   });
 
   static const String table = _table;
-  static const String tableCreate = _tableCreate;
+  static final String tableCreate = '''
+  CREATE TABLE IF NOT EXISTS $_table (
+    ${EquipmentColumns.id.value} INTEGER PRIMARY KEY AUTOINCREMENT,
+    ${EquipmentColumns.name.value} TEXT NOT NULL,
+    ${EquipmentColumns.picture.value} TEXT,
+    ${EquipmentColumns.createdBy.value} TEXT NOT NULL,
+    ${EquipmentColumns.createdAt.value} INTEGER NOT NULL,
+    ${EquipmentColumns.updatedAt.value} INTEGER NOT NULL
+  );
+  
+  CREATE UNIQUE INDEX IF NOT EXISTS idx_equipment_name_id ON $_table (${EquipmentColumns.name.value});
+  ''';
 
   @override
   Map<String, Object?> toMap() {

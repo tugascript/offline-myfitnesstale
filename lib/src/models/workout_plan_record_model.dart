@@ -6,20 +6,6 @@ import 'utilities.dart';
 import 'workout_plan_model.dart';
 
 const String _table = 'workout_plan_records';
-const String _tableCreate = '''
-  CREATE TABLE IF NOT EXISTS $_table (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    workout_plan_id INTEGER NOT NULL,
-    status TEXT NOT NULL,
-    completed_at INTEGER,
-    created_at INTEGER NOT NULL,
-    updated_at INTEGER NOT NULL,
-    FOREIGN KEY (workout_plan_id) REFERENCES ${WorkoutPlan.table} (id)
-      ON DELETE CASCADE
-  );
-  
-  CREATE INDEX IF NOT EXISTS idx_workout_plan_records_plan_id ON $_table (workout_plan_id);
-  ''';
 
 enum WorkoutPlanRecordColumns with Columns {
   id("id"),
@@ -56,7 +42,20 @@ class WorkoutPlanRecord extends Equatable implements Model {
   });
 
   static const String table = _table;
-  static const String tableCreate = _tableCreate;
+  static final String tableCreate = '''
+  CREATE TABLE IF NOT EXISTS $_table (
+    ${WorkoutPlanRecordColumns.id.value} INTEGER PRIMARY KEY AUTOINCREMENT,
+    ${WorkoutPlanRecordColumns.workoutPlanId.value} INTEGER NOT NULL,
+    ${WorkoutPlanRecordColumns.status.value} TEXT NOT NULL,
+    ${WorkoutPlanRecordColumns.completedAt.value} INTEGER,
+    ${WorkoutPlanRecordColumns.createdAt.value} INTEGER NOT NULL,
+    ${WorkoutPlanRecordColumns.updatedAt.value} INTEGER NOT NULL,
+    FOREIGN KEY (${WorkoutPlanRecordColumns.workoutPlanId.value}) REFERENCES ${WorkoutPlan.table} (id)
+      ON DELETE CASCADE
+  );
+  
+  CREATE INDEX IF NOT EXISTS idx_workout_plan_records_plan_id ON $_table (${WorkoutPlanRecordColumns.workoutPlanId.value});
+  ''';
 
   @override
   Map<String, Object?> toMap() {

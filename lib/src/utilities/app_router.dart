@@ -16,7 +16,6 @@ import '../views/exercises/exercises_view.dart';
 import '../views/main_navigation_view.dart';
 import '../views/not_found_view.dart';
 import '../views/onboarding_view.dart';
-import '../views/settings_view.dart';
 import '../views/weight_goal_view.dart';
 import '../views/weight_log_view.dart';
 import '../views/workouts/workout_detail_view.dart';
@@ -40,10 +39,6 @@ sealed class AppRouter {
     GoRoute(
       path: OnboardingView.routeName,
       builder: (context, state) => const OnboardingView(),
-    ),
-    GoRoute(
-      path: SettingsView.routeName,
-      builder: (context, state) => const SettingsView(),
     ),
     GoRoute(
       path: WeightLogView.routeName,

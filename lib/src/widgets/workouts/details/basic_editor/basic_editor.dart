@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -11,6 +9,8 @@ import '../../../../models/enums.dart';
 import '../../../../services/dtos/workout_set_dto.dart';
 import '../../../../utilities/sizes/data_display_sizes.dart';
 import '../../../../utilities/sizes/screen_size.dart';
+import '../../../common/mutation_button.dart';
+import '../../../layout/app_primary_button.dart';
 import '../../../layout/dynamic_list_input.dart';
 import '../editors/set_exercise_search_modal.dart';
 import 'basic_set_editor.dart';
@@ -32,7 +32,8 @@ class BasicEditor extends StatefulWidget {
 
 class _BasicEditorState extends State<BasicEditor> {
   late List<SetEditorData> _displayedSets;
-  Timer? _saveDebounce;
+  final Set<int> _removedSetIds = {};
+  bool _isCompleting = false;
 
   @override
   void initState() {
@@ -58,29 +59,8 @@ class _BasicEditorState extends State<BasicEditor> {
     context.read<ExerciseCubit>().getSelectionExercises();
   }
 
-  @override
-  void dispose() {
-    _saveDebounce?.cancel();
-    super.dispose();
-  }
-
-  void _scheduleSave() {
-    _saveDebounce?.cancel();
-    _saveDebounce = Timer(const Duration(seconds: 1), () {
-      _saveDebounce = null;
-      if (mounted) _saveSets();
-    });
-  }
-
   Future<void> _saveSets() async {
-    final setsToSave = _displayedSets
-        .where((s) => s.status == SetEditorDataStatus.pending)
-        .toList();
-
-    if (setsToSave.isEmpty) {
-      return;
-    }
-
+    final setsToSave = _displayedSets;
     final workoutCubit = context.read<WorkoutCubit>();
     await workoutCubit.batchUpsertBasicWorkoutSets(
       workoutId: widget.workoutId,
@@ -98,7 +78,41 @@ class _BasicEditorState extends State<BasicEditor> {
           setExerciseId: s.setExerciseId,
         );
       }).toList(),
+      idsToDelete: _removedSetIds,
     );
+  }
+
+  Future<void> _onComplete() async {
+    if (_isCompleting) {
+      return;
+    }
+
+    if (_displayedSets.any((s) => s.exerciseId == null)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Select an exercise for all sets before completing."),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    setState(() {
+      _isCompleting = true;
+    });
+
+    final workoutCubit = context.read<WorkoutCubit>();
+    await _saveSets();
+
+    if (mounted) {
+      if (workoutCubit.state.error == null && context.canPop()) {
+        context.pop();
+      }
+
+      setState(() {
+        _isCompleting = false;
+      });
+    }
   }
 
   List<SetEditorData> _baseSetsFromState(WorkoutState state) {
@@ -158,6 +172,10 @@ class _BasicEditorState extends State<BasicEditor> {
 
         final selectedWorkout = state.selectedWorkout;
         if (selectedWorkout != null && selectedWorkout.id == widget.workoutId) {
+          if (_isCompleting) {
+            return;
+          }
+
           final sets = selectedWorkout.sets;
           if (sets == null) {
             return;
@@ -176,219 +194,233 @@ class _BasicEditorState extends State<BasicEditor> {
         }
       },
       builder: (context, state) {
-        return DynamicListInput<SetEditorData>(
-          theme: theme,
-          filled: true,
-          items: _displayedSets,
-          fontSize: sizes.fontSize,
-          padding: sizes.padding,
-          spacing: sizes.spacing,
-          isLoading: false,
-          addLabel: "Add Set",
-          onAdd: () {
-            setState(() {
-              _displayedSets.add(
-                SetEditorData(
-                  id: null,
-                  position: _displayedSets.length + 1,
-                  minSets: 1,
-                  maxSets: 0,
-                  minReps: 1,
-                  maxReps: 0,
-                  recommendedRestSecs: 0,
-                  maxRestSecs: 0,
-                  toMaxReps: false,
-                  exerciseName: null,
-                  exerciseId: null,
-                  status: SetEditorDataStatus.initial,
-                  setExerciseId: null,
-                ),
-              );
-            });
-            showDialog<void>(
-              context: context,
-              builder: (dialogContext) {
-                return SetExerciseSearchModal(
-                  sizes: sizes,
-                  isLoading: state.isLoading,
-                  onExerciseSelected: (id, name) async {
-                    if (!dialogContext.mounted) return;
-                    setState(() {
-                      _displayedSets.last.exerciseId = id;
-                      _displayedSets.last.exerciseName = name;
-                      _displayedSets.last.status = SetEditorDataStatus.pending;
-                    });
-                    _scheduleSave();
-                    Navigator.of(dialogContext).pop();
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            DynamicListInput<SetEditorData>(
+              theme: theme,
+              filled: true,
+              items: _displayedSets,
+              fontSize: sizes.fontSize,
+              padding: sizes.padding,
+              spacing: sizes.spacing,
+              isLoading: false,
+              addLabel: "Add Set",
+              onAdd: () {
+                setState(() {
+                  _displayedSets.add(
+                    SetEditorData(
+                      id: null,
+                      position: _displayedSets.length + 1,
+                      minSets: 1,
+                      maxSets: 0,
+                      minReps: 1,
+                      maxReps: 0,
+                      recommendedRestSecs: 0,
+                      maxRestSecs: 0,
+                      toMaxReps: false,
+                      exerciseName: null,
+                      exerciseId: null,
+                      status: SetEditorDataStatus.initial,
+                      setExerciseId: null,
+                    ),
+                  );
+                });
+                showDialog<void>(
+                  context: context,
+                  builder: (dialogContext) {
+                    return SetExerciseSearchModal(
+                      sizes: sizes,
+                      isLoading: state.isLoading,
+                      onExerciseSelected: (id, name) async {
+                        if (!dialogContext.mounted) return;
+                        setState(() {
+                          _displayedSets.last.exerciseId = id;
+                          _displayedSets.last.exerciseName = name;
+                          _displayedSets.last.status =
+                              SetEditorDataStatus.pending;
+                        });
+                        Navigator.of(dialogContext).pop();
+                      },
+                    );
                   },
                 );
               },
-            );
-          },
-          keyBuilder: (item) => ValueKey(item.id ?? item.internalId),
-          itemBuilder: (context, index, item) {
-            return BasicSetEditor(
-              setData: item,
-              sizes: sizes,
-              onExerciseChanged: (value) {
-                setState(() {
-                  if (item.status != SetEditorDataStatus.pending) {
-                    item.status = SetEditorDataStatus.pending;
-                  }
+              keyBuilder: (item) => ValueKey(item.id ?? item.internalId),
+              itemBuilder: (context, index, item) {
+                return BasicSetEditor(
+                  setData: item,
+                  sizes: sizes,
+                  onExerciseChanged: (value) {
+                    setState(() {
+                      if (item.status != SetEditorDataStatus.pending) {
+                        item.status = SetEditorDataStatus.pending;
+                      }
 
-                  item.exerciseId = value.$1;
-                  item.exerciseName = value.$2;
-                });
-                _scheduleSave();
+                      item.exerciseId = value.$1;
+                      item.exerciseName = value.$2;
+                    });
+                  },
+                  onMinSetsChanged: (value) {
+                    final intSets = int.tryParse(value);
+                    if (intSets == null) {
+                      return;
+                    }
+
+                    setState(() {
+                      if (item.status != SetEditorDataStatus.pending) {
+                        item.status = SetEditorDataStatus.pending;
+                      }
+                      item.minSets = intSets;
+                    });
+                  },
+                  onMaxSetsChanged: (value) {
+                    final intSets = int.tryParse(value);
+                    if (intSets == null) {
+                      return;
+                    }
+
+                    setState(() {
+                      if (item.status != SetEditorDataStatus.pending) {
+                        item.status = SetEditorDataStatus.pending;
+                      }
+                      item.maxSets = intSets;
+                    });
+                  },
+                  onMinRepsChanged: (value) {
+                    final intReps = int.tryParse(value);
+                    if (intReps == null) {
+                      return;
+                    }
+
+                    setState(() {
+                      if (item.status != SetEditorDataStatus.pending) {
+                        item.status = SetEditorDataStatus.pending;
+                      }
+                      item.minReps = intReps;
+                    });
+                  },
+                  onMaxRepsChanged: (value) {
+                    final intReps = int.tryParse(value);
+                    if (intReps == null) {
+                      return;
+                    }
+
+                    setState(() {
+                      if (item.status != SetEditorDataStatus.pending) {
+                        item.status = SetEditorDataStatus.pending;
+                      }
+                      item.maxReps = intReps;
+                    });
+                  },
+                  onRestChanged: (value) {
+                    final intRest = int.tryParse(value);
+                    if (intRest == null) {
+                      return;
+                    }
+
+                    setState(() {
+                      if (item.status != SetEditorDataStatus.pending) {
+                        item.status = SetEditorDataStatus.pending;
+                      }
+                      item.recommendedRestSecs = intRest;
+                    });
+                  },
+                  onMaxRestChanged: (value) {
+                    final intRest = int.tryParse(value);
+                    if (intRest == null) {
+                      return;
+                    }
+
+                    setState(() {
+                      if (item.status != SetEditorDataStatus.pending) {
+                        item.status = SetEditorDataStatus.pending;
+                      }
+                      item.maxRestSecs = intRest;
+                    });
+                  },
+                  onToMaxRepsChanged: (value) {
+                    setState(() {
+                      if (item.status != SetEditorDataStatus.pending) {
+                        item.status = SetEditorDataStatus.pending;
+                      }
+                      item.toMaxReps = value ?? false;
+                    });
+                  },
+                );
               },
-              onMinSetsChanged: (value) {
-                final intSets = int.tryParse(value);
-                if (intSets == null) {
+              onReorder: (oldIndex, newIndex) async {
+                if (oldIndex == newIndex || state.isLoading) {
                   return;
                 }
 
+                final item = _displayedSets[oldIndex];
                 setState(() {
-                  if (item.status != SetEditorDataStatus.pending) {
-                    item.status = SetEditorDataStatus.pending;
-                  }
-                  item.minSets = intSets;
+                  _displayedSets.removeAt(oldIndex);
+                  _displayedSets.insert(newIndex, item);
                 });
-                _scheduleSave();
               },
-              onMaxSetsChanged: (value) {
-                final intSets = int.tryParse(value);
-                if (intSets == null) {
+              onChanged: (items) async {
+                if (state.isLoading) {
                   return;
                 }
 
-                setState(() {
-                  if (item.status != SetEditorDataStatus.pending) {
-                    item.status = SetEditorDataStatus.pending;
-                  }
-                  item.maxSets = intSets;
-                });
-                _scheduleSave();
-              },
-              onMinRepsChanged: (value) {
-                final intReps = int.tryParse(value);
-                if (intReps == null) {
+                if (items.length < _displayedSets.length) {
+                  final removed =
+                      _displayedSets.where((e) => !items.contains(e)).toList();
+                  setState(() {
+                    _displayedSets = List.from(items);
+                    for (final item in removed) {
+                      if (item.id != null) {
+                        _removedSetIds.add(item.id!);
+                      }
+                    }
+                  });
                   return;
                 }
 
-                setState(() {
-                  if (item.status != SetEditorDataStatus.pending) {
-                    item.status = SetEditorDataStatus.pending;
-                  }
-                  item.minReps = intReps;
-                });
-                _scheduleSave();
-              },
-              onMaxRepsChanged: (value) {
-                final intReps = int.tryParse(value);
-                if (intReps == null) {
+                if (items.length > _displayedSets.length) {
+                  setState(() {
+                    _displayedSets = List.from(items);
+                  });
                   return;
                 }
-
-                setState(() {
-                  if (item.status != SetEditorDataStatus.pending) {
-                    item.status = SetEditorDataStatus.pending;
-                  }
-                  item.maxReps = intReps;
-                });
-                _scheduleSave();
               },
-              onRestChanged: (value) {
-                final intRest = int.tryParse(value);
-                if (intRest == null) {
-                  return;
-                }
-
-                setState(() {
-                  if (item.status != SetEditorDataStatus.pending) {
-                    item.status = SetEditorDataStatus.pending;
-                  }
-                  item.recommendedRestSecs = intRest;
-                });
-                _scheduleSave();
-              },
-              onMaxRestChanged: (value) {
-                final intRest = int.tryParse(value);
-                if (intRest == null) {
-                  return;
-                }
-
-                setState(() {
-                  if (item.status != SetEditorDataStatus.pending) {
-                    item.status = SetEditorDataStatus.pending;
-                  }
-                  item.maxRestSecs = intRest;
-                });
-                _scheduleSave();
-              },
-              onToMaxRepsChanged: (value) {
-                setState(() {
-                  if (item.status != SetEditorDataStatus.pending) {
-                    item.status = SetEditorDataStatus.pending;
-                  }
-                  item.toMaxReps = value ?? false;
-                });
-                _scheduleSave();
-              },
-            );
-          },
-          onReorder: (oldIndex, newIndex) async {
-            if (oldIndex == newIndex || state.isLoading) {
-              return;
-            }
-
-            final item = _displayedSets[oldIndex];
-
-            setState(() {
-              _displayedSets.removeAt(oldIndex);
-              _displayedSets.insert(newIndex, item);
-            });
-
-            if (item.id != null) {
-              final workoutCubit = context.read<WorkoutCubit>();
-              await workoutCubit.updateWorkoutSetPosition(
-                workoutSetId: item.id!,
-                position: newIndex + 1,
-              );
-              await _saveSets();
-            }
-          },
-          onChanged: (items) async {
-            if (state.isLoading) {
-              return;
-            }
-
-            final workoutCubit = context.read<WorkoutCubit>();
-            if (items.length < _displayedSets.length) {
-              final removed =
-                  _displayedSets.where((e) => !items.contains(e)).toList();
-              setState(() {
-                _displayedSets = List.from(items);
-              });
-
-              for (var i = 0; i < removed.length; i++) {
-                final item = removed[i];
-                if (item.id != null) {
-                  await workoutCubit.deleteWorkoutSet(
-                    workoutSetId: item.id!,
-                    workoutId: widget.workoutId,
-                  );
-                }
-              }
-              return;
-            }
-
-            if (items.length > _displayedSets.length) {
-              setState(() {
-                _displayedSets = List.from(items);
-              });
-              return;
-            }
-          },
+            ),
+            SizedBox(height: sizes.spacing / 2),
+            Row(
+              children: [
+                Expanded(
+                  child: MutationButton(
+                    onPressed: _isCompleting
+                        ? null
+                        : () {
+                            if (context.canPop()) {
+                              context.pop();
+                            }
+                          },
+                    theme: theme,
+                    isLoading: _isCompleting || state.isLoading,
+                    sizes: sizes,
+                    label: 'CANCEL',
+                    icon: Icons.cancel,
+                    color: theme.colorScheme.error,
+                  ),
+                ),
+                SizedBox(width: sizes.spacing / 2),
+                Expanded(
+                  child: AppPrimaryButton(
+                    onPressed: _isCompleting ? null : _onComplete,
+                    theme: theme,
+                    isLoading: _isCompleting || state.isLoading,
+                    sizes: sizes,
+                    label: 'SAVE',
+                    icon: Icons.check,
+                  ),
+                ),
+              ],
+            ),
+          ],
         );
       },
     );

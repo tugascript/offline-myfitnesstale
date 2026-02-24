@@ -90,9 +90,10 @@ class Repository<T extends Model> {
   Future<int> count({
     String? where,
     List<Object?>? whereArgs,
+    Transaction? trx,
   }) async {
     _logger.info("count: $where, $whereArgs");
-    final db = await _databaseHelper.db;
+    final DatabaseExecutor db = trx ?? await _databaseHelper.db;
     final String countQuery = where != null
         ? "$_baseCountQuery $_tableName WHERE $where"
         : "$_baseCountQuery $_tableName";

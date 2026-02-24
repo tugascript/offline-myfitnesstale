@@ -12,6 +12,20 @@ enum CreatedBy {
       );
 }
 
+enum EditorType {
+  basic("basic"),
+  advanced("advanced");
+
+  final String value;
+
+  const EditorType(this.value);
+
+  static EditorType fromValue(String v) => EditorType.values.firstWhere(
+        (e) => e.value == v,
+        orElse: () => EditorType.basic,
+      );
+}
+
 enum MuscleGroup {
   full("full"),
   push("push"),
@@ -384,4 +398,52 @@ enum DayOfWeek {
   final int value;
 
   const DayOfWeek(this.value);
+}
+
+enum EntitlementType {
+  free('free'),
+  premium('premium');
+
+  final String value;
+
+  const EntitlementType(this.value);
+
+  static EntitlementType fromValue(String v) =>
+      EntitlementType.values.firstWhere(
+        (t) => t.value == v,
+        orElse: () => EntitlementType.free,
+      );
+}
+
+enum EntitlementStatus {
+  active('active'),
+  grace('grace'),
+  expired('expired'),
+  billingIssue('billing_issue'),
+  unknown('unknown');
+
+  final String value;
+
+  const EntitlementStatus(this.value);
+
+  static EntitlementStatus fromValue(String v) =>
+      EntitlementStatus.values.firstWhere(
+        (s) => s.value == v,
+        orElse: () => EntitlementStatus.unknown,
+      );
+}
+
+enum EntitlementSource {
+  server('server'),
+  cache('cache');
+
+  final String value;
+
+  const EntitlementSource(this.value);
+
+  static EntitlementSource fromValue(String v) =>
+      EntitlementSource.values.firstWhere(
+        (s) => s.value == v,
+        orElse: () => EntitlementSource.cache,
+      );
 }

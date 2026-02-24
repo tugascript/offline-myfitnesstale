@@ -3,17 +3,6 @@ import 'model.dart';
 import 'utilities.dart';
 
 const String _table = 'weight_goals';
-const String _tableCreate = '''
-  CREATE TABLE IF NOT EXISTS $_table (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    target_weight INTEGER NOT NULL,
-    start_date INTEGER NOT NULL,
-    completed_at INTEGER,
-    status TEXT NOT NULL,
-    created_at INTEGER NOT NULL,
-    updated_at INTEGER NOT NULL
-  );
-''';
 
 enum WeightGoalColumns with Columns {
   id("id"),
@@ -53,7 +42,17 @@ class WeightGoal implements Model {
   });
 
   static const String table = _table;
-  static const String tableCreate = _tableCreate;
+  static final String tableCreate = '''
+  CREATE TABLE IF NOT EXISTS $_table (
+    ${WeightGoalColumns.id.value} INTEGER PRIMARY KEY AUTOINCREMENT,
+    ${WeightGoalColumns.targetWeight.value} INTEGER NOT NULL,
+    ${WeightGoalColumns.startDate.value} INTEGER NOT NULL,
+    ${WeightGoalColumns.completedAt.value} INTEGER,
+    ${WeightGoalColumns.status.value} TEXT NOT NULL,
+    ${WeightGoalColumns.createdAt.value} INTEGER NOT NULL,
+    ${WeightGoalColumns.updatedAt.value} INTEGER NOT NULL
+  );
+''';
 
   @override
   Map<String, Object?> toMap() {
