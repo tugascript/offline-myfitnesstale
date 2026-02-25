@@ -38,57 +38,42 @@ class CreateWorkoutDialog extends StatelessWidget {
                 vertical: sizes.padding * 2,
                 horizontal: sizes.padding,
               ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Text(
-                    "Create Workout".toUpperCase(),
-                    style: TextStyle(
-                      fontSize: sizes.titleFountSize,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  SizedBox(height: sizes.spacing),
-                  WorkoutBaseForm(
-                    theme: theme,
-                    sizes: sizes,
-                    isLoading: state.isLoading,
-                    submitLabel: "Start Editing",
-                    initialName: "",
-                    initialIsFavorite: false,
-                    initialDifficulty: Difficulty.beginner,
-                    initialEditorType: EditorType.basic,
-                    canUsePremiumEditor: canUsePremiumEditor,
-                    onSubmit: ({
-                      required String name,
-                      required bool isFavorite,
-                      required Difficulty difficulty,
-                      required EditorType editorType,
-                      String? description,
-                    }) async {
-                      await context.read<WorkoutCubit>().createWorkout(
-                            name: name,
-                            isFavorite: isFavorite,
-                            difficulty: difficulty,
-                            editorType: editorType,
-                            description: description,
-                          );
-                      await Future.delayed(const Duration(milliseconds: 10));
+              child: WorkoutBaseForm(
+                theme: theme,
+                sizes: sizes,
+                isLoading: state.isLoading,
+                submitLabel: "CREATE WORKOUT",
+                initialName: "",
+                initialIsFavorite: false,
+                initialDifficulty: Difficulty.beginner,
+                initialEditorType: EditorType.basic,
+                canUsePremiumEditor: canUsePremiumEditor,
+                onSubmit: ({
+                  required String name,
+                  required bool isFavorite,
+                  required Difficulty difficulty,
+                  required EditorType editorType,
+                  String? description,
+                }) async {
+                  await context.read<WorkoutCubit>().createWorkout(
+                        name: name,
+                        isFavorite: isFavorite,
+                        difficulty: difficulty,
+                        editorType: editorType,
+                        description: description,
+                      );
+                  await Future.delayed(const Duration(milliseconds: 10));
 
-                      if (context.mounted) {
-                        Navigator.of(context).pop();
-                        final cubitState = context.read<WorkoutCubit>().state;
-                        if (cubitState.selectedWorkout != null) {
-                          context.push(
-                            "/workouts/${cubitState.selectedWorkout!.id}",
-                          );
-                        }
-                      }
-                    },
-                  ),
-                ],
+                  if (context.mounted) {
+                    Navigator.of(context).pop();
+                    final cubitState = context.read<WorkoutCubit>().state;
+                    if (cubitState.selectedWorkout != null) {
+                      context.push(
+                        "/workouts/${cubitState.selectedWorkout!.id}",
+                      );
+                    }
+                  }
+                },
               ),
             ),
           );

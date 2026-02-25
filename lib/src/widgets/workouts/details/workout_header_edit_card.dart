@@ -45,7 +45,7 @@ class WorkoutHeaderEditCard extends StatelessWidget {
             Row(
               children: [
                 Text(
-                  'Edit Workout',
+                  'Details',
                   style: TextStyle(
                     fontSize: sizes.titleFountSize,
                     fontWeight: FontWeight.w600,
@@ -66,7 +66,7 @@ class WorkoutHeaderEditCard extends StatelessWidget {
               theme: theme,
               sizes: sizes,
               isLoading: isLoading,
-              submitLabel: 'Save Workout',
+              submitLabel: 'UPDATE WORKOUT',
               initialName: workout.name,
               initialIsFavorite: workout.isFavorite,
               initialDifficulty: workout.difficulty,
