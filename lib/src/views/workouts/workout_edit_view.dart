@@ -8,15 +8,17 @@ import '../../cubits/states/workout_state.dart';
 import '../../cubits/workout_cubit.dart';
 import '../../models/enums.dart';
 import '../../services/entitlement_guard.dart';
+import '../../services/dtos/workout_dto.dart';
 import '../../utilities/sizes/data_display_sizes.dart';
 import '../../utilities/sizes/screen_size.dart';
 import '../../widgets/layout/app_scaffold.dart';
 import '../../widgets/layout/responsive_scaffold.dart';
 import '../../widgets/workouts/details/basic_editor/basic_editor.dart';
 import '../../widgets/workouts/details/premium_editor/premium_editor.dart';
+import '../../widgets/workouts/details/workout_base_form.dart';
 import '../../widgets/workouts/details/workout_header_card.dart';
+import '../../widgets/workouts/details/workout_header_edit_card.dart';
 
-// TODO: add edit header
 class WorkoutEditView extends StatefulWidget {
   static const name = "workout_edit";
   static const routeName = "/workouts/:id/edit";
@@ -33,6 +35,8 @@ class WorkoutEditView extends StatefulWidget {
 }
 
 class _WorkoutEditViewState extends State<WorkoutEditView> {
+  bool _isEditingHeader = false;
+
   @override
   void initState() {
     super.initState();
@@ -116,15 +120,55 @@ class _WorkoutEditViewState extends State<WorkoutEditView> {
               body: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  WorkoutHeaderCard(
-                    actionButtonIcon: Icon(
-                      Icons.edit_outlined,
-                      color: theme.colorScheme.onSurface,
+                  if (_isEditingHeader)
+                    WorkoutHeaderEditCard(
+                      theme: theme,
+                      sizes: sizes,
+                      workout: workout,
+                      canUsePremiumEditor: canUsePremium,
+                      isLoading: state.isLoading,
+                      onCancel: () {
+                        setState(() {
+                          _isEditingHeader = false;
+                        });
+                      },
+                      onSubmit: ({
+                        required String name,
+                        required bool isFavorite,
+                        required Difficulty difficulty,
+                        required EditorType editorType,
+                        String? description,
+                      }) async {
+                        await context.read<WorkoutCubit>().updateWorkout(
+                              id: workout.id,
+                              name: name,
+                              isFavorite: isFavorite,
+                              difficulty: difficulty,
+                              editorType: editorType,
+                              description: description,
+                            );
+
+                        if (!mounted) return;
+
+                        setState(() {
+                          _isEditingHeader = false;
+                        });
+                      },
+                    )
+                  else
+                    WorkoutHeaderCard(
+                      actionButtonIcon: Icon(
+                        Icons.edit_outlined,
+                        color: theme.colorScheme.onSurface,
+                      ),
+                      actionButtonPress: () {
+                        setState(() {
+                          _isEditingHeader = true;
+                        });
+                      },
+                      sizes: sizes,
+                      workoutDto: workout,
                     ),
-                    actionButtonPress: () {},
-                    sizes: sizes,
-                    workoutDto: workout,
-                  ),
                   // Workout Sets
                   Padding(
                     padding: EdgeInsets.all(sizes.spacing / 2),
