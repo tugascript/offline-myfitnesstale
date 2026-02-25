@@ -136,7 +136,6 @@ class WorkoutRegistrationInput {
   });
 }
 
-// TODO: fix total sets and reps calculations
 class WorkoutService {
   WorkoutService._();
 
@@ -1798,7 +1797,6 @@ class WorkoutService {
     }
   }
 
-  // TODO: update workout muscles and muscle_group
   Future<Result<WorkoutSetExerciseDto, ServiceError<SingleErrorTypes>>>
       updateWorkoutSetExercise({
     required int workoutSetExerciseId,

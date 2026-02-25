@@ -75,13 +75,14 @@ class CreateWorkoutDialog extends StatelessWidget {
                             editorType: editorType,
                             description: description,
                           );
+                      await Future.delayed(const Duration(milliseconds: 10));
 
                       if (context.mounted) {
                         Navigator.of(context).pop();
-                        if (state.selectedWorkout != null) {
-                          // Fix getting workout
+                        final cubitState = context.read<WorkoutCubit>().state;
+                        if (cubitState.selectedWorkout != null) {
                           context.push(
-                            "/workouts/${state.selectedWorkout!.id}",
+                            "/workouts/${cubitState.selectedWorkout!.id}",
                           );
                         }
                       }

@@ -32,7 +32,6 @@ class WorkoutDetailView extends StatefulWidget {
 }
 
 class _WorkoutDetailViewState extends State<WorkoutDetailView> {
-  // TODO: fix always get the workout
   @override
   void initState() {
     super.initState();
@@ -50,7 +49,8 @@ class _WorkoutDetailViewState extends State<WorkoutDetailView> {
 
     return BlocConsumer<WorkoutCubit, WorkoutState>(
       listenWhen: (previous, current) =>
-          previous.selectedWorkout != current.selectedWorkout,
+          previous.selectedWorkout != current.selectedWorkout &&
+          previous.isLoading != current.isLoading,
       listener: (context, workoutState) {
         if (workoutState.isLoading) {
           return;
