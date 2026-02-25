@@ -31,7 +31,6 @@ class PremiumEditor extends StatefulWidget {
 
 class _PremiumEditorState extends State<PremiumEditor> {
   late List<ComplexSetEditorData> _displayedSets;
-  final Set<int> _removedSetIds = {};
   bool _isCompleting = false;
 
   @override
@@ -161,7 +160,6 @@ class _PremiumEditorState extends State<PremiumEditor> {
           }).toList(),
         );
       }).toList(),
-      idsToDelete: _removedSetIds,
     );
 
     if (mounted) {
@@ -244,23 +242,6 @@ class _PremiumEditorState extends State<PremiumEditor> {
                 });
               },
               onChanged: (items) {
-                if (items.length < _displayedSets.length) {
-                  final removed = _displayedSets
-                      .where((set) => !items.contains(set))
-                      .toList();
-                  setState(() {
-                    _displayedSets = _normalizeSetPositions(
-                      List<ComplexSetEditorData>.from(items),
-                    );
-                    for (final set in removed) {
-                      if (set.id != null) {
-                        _removedSetIds.add(set.id!);
-                      }
-                    }
-                  });
-                  return;
-                }
-
                 setState(() {
                   _displayedSets = _normalizeSetPositions(
                     List<ComplexSetEditorData>.from(items),

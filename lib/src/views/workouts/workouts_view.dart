@@ -58,6 +58,7 @@ class _WorkoutsViewState extends State<WorkoutsView> {
           name: pagination.name,
           difficulty: pagination.difficulty,
           muscleGroup: pagination.muscleGroup,
+          isFavorite: pagination.isFavorite,
           offset: cubit.state.workouts.length,
           limit: 20,
         );

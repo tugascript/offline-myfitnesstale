@@ -2375,7 +2375,6 @@ class WorkoutService {
   Future<Result<void, ServiceError<SingleErrorTypes>>> batchUpsertWorkoutSets({
     required int workoutId,
     required List<WorkoutSetUpsertInput> inputs,
-    required Set<int> idsToDelete,
   }) async {
     _logger.info('Batch upserting workout sets');
     final exerciseIds = inputs.fold(<int>{}, (previousValue, element) {
@@ -2425,17 +2424,36 @@ class WorkoutService {
         },
       );
 
+      final List<WorkoutSet> existingSets = await _setRepository.selectMany(
+        where: WorkoutSetColumns.workoutId.equal,
+        whereArgs: [workoutId],
+      );
+      final Set<int> existingSetIds = existingSets
+          .map(
+            (set) => set.id!,
+          )
+          .toSet();
+
       final (
         List<WorkoutSetUpsertInput> setsToCreate,
-        List<WorkoutSetUpsertInput> setsToUpdate
+        List<WorkoutSetUpsertInput> setsToUpdate,
       ) = inputs.fold(([], []), (previousValue, element) {
         if (element.id == null) {
           previousValue.$1.add(element);
-        } else {
-          previousValue.$2.add(element);
+          return previousValue;
         }
+
+        if (existingSetIds.contains(element.id)) {
+          previousValue.$2.add(element);
+          return previousValue;
+        }
+
         return previousValue;
       });
+
+      final idsToDelete = existingSetIds.difference(
+        setsToUpdate.map((e) => e.id!).toSet(),
+      );
 
       await _setRepository.startTransaction((txn) async {
         for (final id in idsToDelete) {
@@ -2596,21 +2614,8 @@ class WorkoutService {
         final Set<MuscleGroup> updatedMuscleGroups = {};
         final Set<Muscle> updatedMuscles = {};
         if (updatedSetExercises.isNotEmpty) {
-          final Set<int> workoutExerciseIds = updatedSetExercises
-              .map((setExercise) => setExercise.exerciseId)
-              .toSet();
-          final List<Exercise> updatedExercises =
-              await _exerciseRepository.selectMany(
-            where: ExerciseColumns.id.inList(workoutExerciseIds.length),
-            whereArgs: workoutExerciseIds.toList(),
-            trx: txn,
-          );
-          final Map<int, Exercise> updatedExerciseMap = {
-            for (final exercise in updatedExercises) exercise.id!: exercise,
-          };
-
           for (final setExercise in updatedSetExercises) {
-            final exercise = updatedExerciseMap[setExercise.exerciseId];
+            final exercise = exerciseMap[setExercise.exerciseId];
             if (exercise == null) {
               continue;
             }

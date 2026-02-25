@@ -4,7 +4,6 @@ import 'package:sqflite/sqflite.dart';
 
 import 'current_workout_plan_record_model.dart';
 import 'entitlement_state_model.dart';
-import 'enums.dart';
 import 'equipment_model.dart';
 import 'exercise_equipment_model.dart';
 import 'exercise_model.dart';
@@ -31,7 +30,7 @@ import 'workout_set_model.dart';
 import 'workout_set_record_model.dart';
 
 const String _databaseName = "app.db";
-const int _databaseVersion = 3;
+const int _databaseVersion = 1;
 
 class DatabaseHelper {
   static final DatabaseHelper _instance = DatabaseHelper._();
@@ -120,21 +119,6 @@ class DatabaseHelper {
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
-    if (oldVersion < 2) {
-      await db.execute(EntitlementStateModel.tableCreate);
-    }
-    if (oldVersion < 3) {
-      try {
-        await db.execute(
-          '''
-          ALTER TABLE ${Workout.table}
-          ADD COLUMN ${WorkoutColumns.editorType.value} TEXT NOT NULL DEFAULT '${EditorType.basic.name}';
-          ''',
-        );
-      } catch (_) {
-        // Ignore if the column already exists.
-      }
-    }
     return;
   }
 }

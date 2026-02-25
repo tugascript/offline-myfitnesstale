@@ -32,7 +32,6 @@ class BasicEditor extends StatefulWidget {
 
 class _BasicEditorState extends State<BasicEditor> {
   late List<SetEditorData> _displayedSets;
-  final Set<int> _removedSetIds = {};
   bool _isCompleting = false;
 
   @override
@@ -78,7 +77,6 @@ class _BasicEditorState extends State<BasicEditor> {
           setExerciseId: s.setExerciseId,
         );
       }).toList(),
-      idsToDelete: _removedSetIds,
     );
   }
 
@@ -366,26 +364,10 @@ class _BasicEditorState extends State<BasicEditor> {
                   return;
                 }
 
-                if (items.length < _displayedSets.length) {
-                  final removed =
-                      _displayedSets.where((e) => !items.contains(e)).toList();
-                  setState(() {
-                    _displayedSets = List.from(items);
-                    for (final item in removed) {
-                      if (item.id != null) {
-                        _removedSetIds.add(item.id!);
-                      }
-                    }
-                  });
-                  return;
-                }
-
-                if (items.length > _displayedSets.length) {
-                  setState(() {
-                    _displayedSets = List.from(items);
-                  });
-                  return;
-                }
+                setState(() {
+                  _displayedSets = List.from(items);
+                });
+                return;
               },
             ),
             SizedBox(height: sizes.spacing / 2),

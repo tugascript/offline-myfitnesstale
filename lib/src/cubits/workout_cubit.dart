@@ -524,15 +524,9 @@ class WorkoutCubit extends Cubit<WorkoutState> {
   Future<void> batchUpsertBasicWorkoutSets({
     required int workoutId,
     required List<StandardSetInput> sets,
-    required Set<int> idsToDelete,
   }) async {
     _logger.info('Batch updating workout sets for workout $workoutId');
     emit(state.copyWith(isLoading: true));
-
-    if (sets.isEmpty && idsToDelete.isEmpty) {
-      emit(state.copyWith(isLoading: false));
-      return;
-    }
 
     final List<WorkoutSetUpsertInput> setsToUpsert = [];
     for (int i = 0; i < sets.length; i++) {
@@ -563,7 +557,6 @@ class WorkoutCubit extends Cubit<WorkoutState> {
     final result = await _workoutService.batchUpsertWorkoutSets(
       workoutId: workoutId,
       inputs: setsToUpsert,
-      idsToDelete: idsToDelete,
     );
 
     if (result.isErr()) {
@@ -585,7 +578,6 @@ class WorkoutCubit extends Cubit<WorkoutState> {
   Future<void> batchUpsertComplexWorkoutSets({
     required int workoutId,
     required List<ComplexSetInput> sets,
-    required Set<int> idsToDelete,
   }) async {
     _logger.info('Batch updating complex workout sets for workout $workoutId');
     if (!(await _ensurePremiumAccessForMutation())) {
@@ -593,7 +585,7 @@ class WorkoutCubit extends Cubit<WorkoutState> {
     }
     emit(state.copyWith(isLoading: true));
 
-    if (sets.isEmpty && idsToDelete.isEmpty) {
+    if (sets.isEmpty) {
       emit(state.copyWith(isLoading: false));
       return;
     }
@@ -637,7 +629,6 @@ class WorkoutCubit extends Cubit<WorkoutState> {
     final result = await _workoutService.batchUpsertWorkoutSets(
       workoutId: workoutId,
       inputs: setsToUpsert,
-      idsToDelete: idsToDelete,
     );
 
     if (result.isErr()) {
