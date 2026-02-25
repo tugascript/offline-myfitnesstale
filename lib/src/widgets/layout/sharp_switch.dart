@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 class SharpSwitch extends StatelessWidget {
   final bool value;
   final ValueChanged<bool> onChanged;
+  final bool enabled;
   final double thumbSize;
   final EdgeInsetsGeometry? padding;
 
@@ -10,6 +11,7 @@ class SharpSwitch extends StatelessWidget {
     super.key,
     required this.value,
     required this.onChanged,
+    this.enabled = true,
     required this.thumbSize,
     this.padding,
   });
@@ -35,31 +37,34 @@ class SharpSwitch extends StatelessWidget {
     final trackHeight = thumbSize;
 
     return GestureDetector(
-      onTap: () => onChanged(!value),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        width: trackWidth + padding.horizontal,
-        height: trackHeight + padding.vertical,
-        padding: padding,
-        decoration: BoxDecoration(
-          color: value ? activeColor : inactiveColor,
-          // Sharp edges: no borderRadius
-        ),
-        child: Stack(
-          children: [
-            AnimatedAlign(
-              duration: const Duration(milliseconds: 200),
-              alignment: value ? Alignment.centerRight : Alignment.centerLeft,
-              child: Container(
-                width: thumbSize,
-                height: thumbSize,
-                decoration: BoxDecoration(
-                  color: thumbColor,
-                  // Sharp edges for thumb as well
+      onTap: enabled ? () => onChanged(!value) : null,
+      child: Opacity(
+        opacity: enabled ? 1.0 : 0.5,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          width: trackWidth + padding.horizontal,
+          height: trackHeight + padding.vertical,
+          padding: padding,
+          decoration: BoxDecoration(
+            color: value ? activeColor : inactiveColor,
+            // Sharp edges: no borderRadius
+          ),
+          child: Stack(
+            children: [
+              AnimatedAlign(
+                duration: const Duration(milliseconds: 200),
+                alignment: value ? Alignment.centerRight : Alignment.centerLeft,
+                child: Container(
+                  width: thumbSize,
+                  height: thumbSize,
+                  decoration: BoxDecoration(
+                    color: thumbColor,
+                    // Sharp edges for thumb as well
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

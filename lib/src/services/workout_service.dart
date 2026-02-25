@@ -376,6 +376,7 @@ class WorkoutService {
   Future<Result<WorkoutDto, ServiceError<OperationErrorTypes>>> createWorkout({
     required String name,
     required Difficulty difficulty,
+    EditorType editorType = EditorType.basic,
     bool isFavorite = false,
     String? description,
     PictureData? picture,
@@ -391,6 +392,7 @@ class WorkoutService {
         isFavorite: isFavorite,
         picture: picture,
         video: video,
+        editorType: editorType,
       );
       final int id = await _repository.insert(workout);
       _logger.info('Created workout with id $id');
@@ -546,6 +548,7 @@ class WorkoutService {
     required int id,
     String? name,
     Difficulty? difficulty,
+    EditorType? editorType,
     String? description,
     PictureData? picture,
     VideoData? video,
@@ -569,6 +572,7 @@ class WorkoutService {
         picture: picture,
         video: video,
         isFavorite: isFavorite,
+        editorType: editorType,
         updatedAt: DateUtilities.getNowUtcUnix(),
       );
       await _repository.update(updatedWorkout);
@@ -2505,6 +2509,29 @@ class WorkoutService {
             return arrs;
           });
 
+          final List<WorkoutSetExercise> existingSetExercises =
+              await _setExerciseRepository.selectMany(
+            where: WorkoutSetExerciseColumns.workoutSetId.equal,
+            whereArgs: [workoutSet.id!],
+            trx: txn,
+          );
+          final Set<int> setExerciseIdsToKeep =
+              updateSetExercises.map((setExercise) => setExercise.id!).toSet();
+          final List<int> setExerciseIdsToDelete = existingSetExercises
+              .where((setExercise) =>
+                  !setExerciseIdsToKeep.contains(setExercise.id))
+              .map((setExercise) => setExercise.id!)
+              .toList();
+
+          for (final setExerciseId in setExerciseIdsToDelete) {
+            await txn.delete(
+              WorkoutSetExerciseOption.table,
+              where: WorkoutSetExerciseOptionColumns.workoutSetExerciseId.equal,
+              whereArgs: [setExerciseId],
+            );
+            await _setExerciseRepository.deleteOne(setExerciseId, txn);
+          }
+
           final int setCount = await _setExerciseRepository.count(
             where: WorkoutSetExerciseColumns.workoutSetId.equal,
             whereArgs: [workoutSet.id!],
@@ -2658,6 +2685,10 @@ class WorkoutService {
     if (setExercise == null) {
       _logger.warning('Set exercise not found');
       throw Exception('Set exercise not found');
+    }
+    if (setExercise.workoutSetId != workoutSet.id) {
+      _logger.warning('Set exercise does not belong to workout set');
+      throw Exception('Set exercise does not belong to workout set');
     }
 
     final int oldPosition = setExercise.position;

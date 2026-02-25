@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../cubits/entitlement_cubit.dart';
 import '../../cubits/states/entitlement_state.dart';
@@ -46,6 +47,7 @@ class _WorkoutEditViewState extends State<WorkoutEditView> {
   Widget build(BuildContext context) {
     final screenSize = BreakPoint.fromContext(context).screenSize;
     final sizes = DataDisplaySizes.getDataDisplaySizes(screenSize);
+    final theme = Theme.of(context);
 
     return BlocConsumer<WorkoutCubit, WorkoutState>(
       listenWhen: (previous, current) =>
@@ -81,18 +83,20 @@ class _WorkoutEditViewState extends State<WorkoutEditView> {
                 .any((set) => set.setType != WorkoutSetType.standard);
             final bool canUsePremium =
                 EntitlementGuard.canUsePremium(entitlementState.snapshot);
+            final bool wantsPremiumEditor =
+                workout.editorType == EditorType.advanced;
 
             Widget editor = BasicEditor(
               workoutId: widget.workoutId,
               initialSets: workout.sets ?? [],
             );
 
-            if (canUsePremium) {
+            if (wantsPremiumEditor && canUsePremium) {
               editor = PremiumEditor(
                 workoutId: widget.workoutId,
                 initialSets: workout.sets ?? [],
               );
-            } else if (hasComplexSets) {
+            } else if (wantsPremiumEditor || hasComplexSets) {
               editor = _LockedPremiumEditor(
                 isPurchasing: entitlementState.isPurchasing,
                 isRestoring: entitlementState.isRestoring,
@@ -105,33 +109,47 @@ class _WorkoutEditViewState extends State<WorkoutEditView> {
               );
             }
 
-            return PopScope(
-              canPop: false,
-              child: ResponsiveScaffold(
-                title: workout.name,
-                showBackButton: false,
-                isEntity: true,
-                body: Column(
-                  children: [
-                    WorkoutHeaderCard(
-                      sizes: sizes,
-                      workoutDto: workout,
-                      onFavoriteToggle: () {
-                        context.read<WorkoutCubit>().updateWorkout(
-                              id: workout.id,
-                              isFavorite: !workout.isFavorite,
-                            );
-                      },
+            return ResponsiveScaffold(
+              title: workout.name,
+              showBackButton: false,
+              isEntity: true,
+              body: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  WorkoutHeaderCard(
+                    actionButtonIcon: Icon(
+                      Icons.edit_outlined,
+                      color: theme.colorScheme.onSurface,
                     ),
-                    Padding(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: sizes.spacing / 2,
-                        vertical: sizes.spacing / 2,
-                      ),
-                      child: editor,
+                    actionButtonPress: () {},
+                    sizes: sizes,
+                    workoutDto: workout,
+                  ),
+                  // Workout Sets
+                  Padding(
+                    padding: EdgeInsets.all(sizes.spacing / 2),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SizedBox(height: sizes.spacing / 2),
+                        Text(
+                          'Sets',
+                          style: TextStyle(
+                            fontSize: sizes.titleFountSize,
+                            fontWeight: FontWeight.bold,
+                            color:
+                                theme.colorScheme.brightness == Brightness.dark
+                                    ? Colors.grey[200]
+                                    : Colors.grey[800],
+                          ),
+                        ),
+                        SizedBox(height: sizes.spacing),
+                        editor,
+                      ],
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             );
           },
@@ -194,6 +212,17 @@ class _LockedPremiumEditor extends StatelessWidget {
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
                   : const Text('Restore Purchases'),
+            ),
+            const SizedBox(height: 8),
+            OutlinedButton(
+              onPressed: () {
+                if (context.canPop()) {
+                  context.pop();
+                }
+
+                context.push("/workouts");
+              },
+              child: const Text('Back to Workouts'),
             ),
           ],
         ),

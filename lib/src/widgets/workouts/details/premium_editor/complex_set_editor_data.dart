@@ -9,6 +9,27 @@ enum ComplexSetEditorDataStatus {
   created,
 }
 
+final class AlternativeExerciseData {
+  final int id;
+  final String name;
+
+  const AlternativeExerciseData({
+    required this.id,
+    required this.name,
+  });
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is AlternativeExerciseData &&
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          name == other.name;
+
+  @override
+  int get hashCode => id.hashCode ^ name.hashCode;
+}
+
 final class ComplexSetExerciseEditorData {
   final int internalId;
   int? id;
@@ -19,7 +40,7 @@ final class ComplexSetExerciseEditorData {
   WorkoutSetExerciseDifficulty? difficulty;
   int? exerciseId;
   String? exerciseName;
-  List<int> alternativeExerciseIds;
+  Set<AlternativeExerciseData> alternativeExercises;
   ComplexSetEditorDataStatus status;
 
   ComplexSetExerciseEditorData({
@@ -31,7 +52,7 @@ final class ComplexSetExerciseEditorData {
     this.difficulty,
     this.exerciseId,
     this.exerciseName,
-    this.alternativeExerciseIds = const [],
+    this.alternativeExercises = const {},
     this.status = ComplexSetEditorDataStatus.initial,
     int? internalId,
   }) : internalId = internalId ?? UniqueKey().hashCode;

@@ -19,6 +19,7 @@ class AppTextFormField extends StatelessWidget {
   final TextInputType? keyboardType;
   final bool readOnly;
   final VoidCallback? onTap;
+  final bool enabled;
 
   const AppTextFormField({
     super.key,
@@ -40,6 +41,7 @@ class AppTextFormField extends StatelessWidget {
     this.keyboardType,
     this.readOnly = false,
     this.onTap,
+    this.enabled = true,
   });
 
   @override
@@ -52,7 +54,7 @@ class AppTextFormField extends StatelessWidget {
       readOnly: readOnly,
       onTap: onTap,
       keyboardType: keyboardType,
-      enabled: !isLoading,
+      enabled: enabled && !isLoading,
       style: TextStyle(
         fontSize: fontSize,
       ),

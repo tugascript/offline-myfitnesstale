@@ -9,6 +9,8 @@ import '../../../../models/enums.dart';
 import '../../../../services/dtos/workout_set_dto.dart';
 import '../../../../utilities/sizes/data_display_sizes.dart';
 import '../../../../utilities/sizes/screen_size.dart';
+import '../../../common/mutation_button.dart';
+import '../../../layout/app_primary_button.dart';
 import '../../../layout/dynamic_list_input.dart';
 import 'complex_set_editor_data.dart';
 import 'premium_set_editor.dart';
@@ -60,9 +62,14 @@ class _PremiumEditorState extends State<PremiumEditor> {
             difficulty: exercise.difficulty,
             exerciseId: exercise.exerciseId,
             exerciseName: exercise.exercise?.name,
-            alternativeExerciseIds: (exercise.options ?? [])
-                .map((option) => option.exerciseId)
-                .toList(),
+            alternativeExercises: (exercise.options ?? [])
+                .map(
+                  (option) => AlternativeExerciseData(
+                    id: option.exerciseId,
+                    name: option.exercise?.name ?? "Unknown",
+                  ),
+                )
+                .toSet(),
             status: ComplexSetEditorDataStatus.created,
           );
         }).toList(),
@@ -148,7 +155,8 @@ class _PremiumEditorState extends State<PremiumEditor> {
               maxReps: exercise.maxReps,
               toMaxReps: exercise.toMaxReps,
               difficulty: exercise.difficulty,
-              alternativeExerciseIds: exercise.alternativeExerciseIds,
+              alternativeExerciseIds:
+                  exercise.alternativeExercises.map((e) => e.id).toSet(),
             );
           }).toList(),
         );
@@ -207,37 +215,8 @@ class _PremiumEditorState extends State<PremiumEditor> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: _isCompleting
-                        ? null
-                        : () {
-                            if (context.canPop()) {
-                              context.pop();
-                            }
-                          },
-                    child: const Text("Cancel"),
-                  ),
-                ),
-                SizedBox(width: sizes.spacing / 2),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: _isCompleting ? null : _onComplete,
-                    child: _isCompleting
-                        ? const SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Text("Complete"),
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(height: sizes.spacing / 2),
             DynamicListInput<ComplexSetEditorData>(
+              handlesPadding: sizes.padding / 2,
               theme: theme,
               filled: true,
               items: _displayedSets,
@@ -302,6 +281,39 @@ class _PremiumEditorState extends State<PremiumEditor> {
                 );
               },
             ),
+            SizedBox(height: sizes.spacing / 2),
+            Row(
+              children: [
+                Expanded(
+                  child: MutationButton(
+                    onPressed: _isCompleting
+                        ? null
+                        : () {
+                            if (context.canPop()) {
+                              context.pop();
+                            }
+                          },
+                    theme: theme,
+                    isLoading: _isCompleting || state.isLoading,
+                    sizes: sizes,
+                    label: 'CANCEL',
+                    icon: Icons.cancel,
+                    color: theme.colorScheme.error,
+                  ),
+                ),
+                SizedBox(width: sizes.spacing / 2),
+                Expanded(
+                  child: AppPrimaryButton(
+                    onPressed: _isCompleting ? null : _onComplete,
+                    theme: theme,
+                    isLoading: _isCompleting || state.isLoading,
+                    sizes: sizes,
+                    label: 'SAVE',
+                    icon: Icons.save,
+                  ),
+                ),
+              ],
+            )
           ],
         );
       },

@@ -12,13 +12,15 @@ import '../../common/total_numeric_string.dart';
 class WorkoutHeaderCard extends StatelessWidget {
   final DataDisplaySizesList sizes;
   final WorkoutDto workoutDto;
-  final VoidCallback onFavoriteToggle;
+  final Widget? actionButtonIcon;
+  final VoidCallback actionButtonPress;
 
   const WorkoutHeaderCard({
     super.key,
     required this.sizes,
     required this.workoutDto,
-    required this.onFavoriteToggle,
+    this.actionButtonIcon,
+    required this.actionButtonPress,
   });
 
   @override
@@ -48,11 +50,14 @@ class WorkoutHeaderCard extends StatelessWidget {
               ),
             ),
             IconButton(
-              icon: Icon(
-                workoutDto.isFavorite ? Icons.favorite : Icons.favorite_border,
-                color: workoutDto.isFavorite ? Colors.red : null,
-              ),
-              onPressed: onFavoriteToggle,
+              icon: actionButtonIcon ??
+                  Icon(
+                    workoutDto.isFavorite
+                        ? Icons.favorite
+                        : Icons.favorite_border,
+                    color: workoutDto.isFavorite ? Colors.red : null,
+                  ),
+              onPressed: actionButtonPress,
               tooltip: workoutDto.isFavorite
                   ? 'Remove from favorites'
                   : 'Add to favorites',

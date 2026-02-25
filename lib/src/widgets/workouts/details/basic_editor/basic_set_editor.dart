@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../utilities/sizes/data_display_sizes.dart';
+import '../editors/exercise_selection_button.dart';
 import '../editors/reps_input.dart';
 import '../editors/rest_input.dart';
 import '../editors/set_exercise_search_modal.dart';
@@ -91,7 +92,7 @@ class BasicSetEditor extends StatelessWidget {
               ],
             ),
             SizedBox(height: sizes.spacing),
-            _ExerciseSelectionButton(
+            ExerciseSelectionButton(
               exerciseName: setData.exerciseName,
               sizes: sizes,
               theme: theme,
@@ -129,52 +130,6 @@ class BasicSetEditor extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
-}
-
-class _ExerciseSelectionButton extends StatelessWidget {
-  final String? exerciseName;
-  final DataDisplaySizesList sizes;
-  final ThemeData theme;
-  final VoidCallback onPressed;
-
-  const _ExerciseSelectionButton({
-    required this.exerciseName,
-    required this.sizes,
-    required this.theme,
-    required this.onPressed,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Icon(Icons.fitness_center, size: sizes.fontSize * 1.2),
-        SizedBox(width: sizes.spacing),
-        Expanded(
-          child: OutlinedButton(
-            style: OutlinedButton.styleFrom(
-              backgroundColor: theme.scaffoldBackgroundColor,
-              foregroundColor: theme.colorScheme.primary,
-              side: BorderSide(
-                color: theme.colorScheme.primary,
-                width: 0.5,
-              ),
-            ),
-            onPressed: onPressed,
-            child: Text(
-              exerciseName == null ? "Select Exercise" : exerciseName!,
-              softWrap: true,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: sizes.subtitleFontSize,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-        ),
-      ],
     );
   }
 }

@@ -334,6 +334,39 @@ enum WorkoutSetExerciseDifficultyType {
         (d) => d.value == v,
         orElse: () => WorkoutSetExerciseDifficultyType.rir,
       );
+
+  int get maxValue {
+    switch (this) {
+      case WorkoutSetExerciseDifficultyType.rir:
+        return 5;
+      case WorkoutSetExerciseDifficultyType.rpe:
+        return 10;
+      case WorkoutSetExerciseDifficultyType.rmp:
+        return 100;
+    }
+  }
+
+  int get minValue {
+    switch (this) {
+      case WorkoutSetExerciseDifficultyType.rir:
+        return 0;
+      case WorkoutSetExerciseDifficultyType.rpe:
+        return 1;
+      case WorkoutSetExerciseDifficultyType.rmp:
+        return 50;
+    }
+  }
+
+  int get defaultValue {
+    switch (this) {
+      case WorkoutSetExerciseDifficultyType.rir:
+        return 2;
+      case WorkoutSetExerciseDifficultyType.rpe:
+        return 8;
+      case WorkoutSetExerciseDifficultyType.rmp:
+        return 75;
+    }
+  }
 }
 
 enum WorkoutSetType {

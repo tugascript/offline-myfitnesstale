@@ -6,6 +6,7 @@ import '../../../utilities/sizes/data_display_sizes.dart';
 import '../../layout/app_dropdown.dart';
 import '../../layout/app_primary_button.dart';
 import '../../layout/app_text_form_field.dart';
+import '../../layout/sharp_switch_title.dart';
 
 class WorkoutBaseForm extends StatefulWidget {
   final ThemeData theme;
@@ -16,12 +17,15 @@ class WorkoutBaseForm extends StatefulWidget {
   final String initialName;
   final bool initialIsFavorite;
   final Difficulty initialDifficulty;
+  final EditorType initialEditorType;
+  final bool canUsePremiumEditor;
   final String? initialDescription;
 
   final void Function({
     required String name,
     required bool isFavorite,
     required Difficulty difficulty,
+    required EditorType editorType,
     String? description,
   }) onSubmit;
 
@@ -34,6 +38,8 @@ class WorkoutBaseForm extends StatefulWidget {
     required this.initialName,
     required this.initialIsFavorite,
     required this.initialDifficulty,
+    required this.initialEditorType,
+    required this.canUsePremiumEditor,
     required this.onSubmit,
     this.initialDescription,
   });
@@ -55,6 +61,9 @@ class _WorkoutBaseFormState extends State<WorkoutBaseForm> {
       name: widget.initialName,
       isFavorite: widget.initialIsFavorite,
       difficulty: widget.initialDifficulty,
+      editorType: widget.canUsePremiumEditor
+          ? widget.initialEditorType
+          : EditorType.basic,
       description: widget.initialDescription,
     );
     _nameController.text = widget.initialName;
@@ -75,6 +84,7 @@ class _WorkoutBaseFormState extends State<WorkoutBaseForm> {
         name: _data.name,
         isFavorite: _data.isFavorite,
         difficulty: _data.difficulty,
+        editorType: _data.editorType,
         description: _data.description,
       );
     }
@@ -82,6 +92,12 @@ class _WorkoutBaseFormState extends State<WorkoutBaseForm> {
 
   @override
   Widget build(BuildContext context) {
+    final isPremiumEditorEnabled = _data.editorType == EditorType.advanced;
+    final isPremiumEditorLocked =
+        widget.initialEditorType == EditorType.advanced;
+    final canTogglePremiumEditor =
+        widget.canUsePremiumEditor && !isPremiumEditorLocked;
+
     return Form(
       key: _formKey,
       child: Column(
@@ -165,7 +181,9 @@ class _WorkoutBaseFormState extends State<WorkoutBaseForm> {
           AppDropdown<Difficulty>(
             value: _data.difficulty,
             filled: true,
-            label: 'Difficulty',
+            labelText: 'Difficulty',
+            emptyLabel: 'Difficulty',
+            showEmptyValue: false,
             items: Difficulty.values,
             fontSize: widget.sizes.subtitleFontSize,
             padding: widget.sizes.padding,
@@ -185,6 +203,49 @@ class _WorkoutBaseFormState extends State<WorkoutBaseForm> {
               }
             },
           ),
+          SizedBox(height: widget.sizes.spacing),
+          SharpSwitchTitle(
+            contentPadding: EdgeInsets.zero,
+            title: 'Advanced Editor',
+            value: isPremiumEditorEnabled,
+            enabled: canTogglePremiumEditor,
+            thumbSize: widget.sizes.subtitleFontSize * 1.5,
+            switchPadding: EdgeInsets.all(widget.sizes.padding / 2),
+            onChanged: (value) {
+              if (!canTogglePremiumEditor) return;
+
+              setState(() {
+                _data.editorType =
+                    value ? EditorType.advanced : EditorType.basic;
+              });
+            },
+          ),
+          if (!widget.canUsePremiumEditor) ...[
+            SizedBox(height: widget.sizes.spacing / 2),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                'Premium subscription required for Advanced Editor access',
+                style: TextStyle(
+                  fontSize: widget.sizes.smallFontSize,
+                  color: widget.theme.colorScheme.secondary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ] else if (isPremiumEditorLocked) ...[
+            SizedBox(height: widget.sizes.spacing / 2),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                'This workout already uses Advanced Editor and cannot be changed.',
+                style: TextStyle(
+                  fontSize: widget.sizes.smallFontSize,
+                  color: widget.theme.colorScheme.secondary,
+                ),
+              ),
+            ),
+          ],
           SizedBox(height: widget.sizes.padding * 1.25),
           SizedBox(
             width: double.infinity,
@@ -207,12 +268,14 @@ final class _FormData {
   String name;
   bool isFavorite;
   Difficulty difficulty;
+  EditorType editorType;
   String? description;
 
   _FormData({
     required this.name,
     required this.isFavorite,
     required this.difficulty,
+    required this.editorType,
     this.description,
   });
 }

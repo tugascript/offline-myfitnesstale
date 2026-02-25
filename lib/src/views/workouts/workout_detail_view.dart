@@ -109,7 +109,7 @@ class _WorkoutDetailViewState extends State<WorkoutDetailView> {
                 WorkoutHeaderCard(
                   sizes: sizes,
                   workoutDto: workout,
-                  onFavoriteToggle: () {
+                  actionButtonPress: () {
                     context.read<WorkoutCubit>().updateWorkout(
                           id: workout.id,
                           isFavorite: !workout.isFavorite,

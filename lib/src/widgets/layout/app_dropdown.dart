@@ -3,11 +3,13 @@ import 'package:flutter/material.dart';
 class AppDropdown<T> extends StatelessWidget {
   final bool filled;
   final T? value;
-  final String label;
+  final String emptyLabel;
+  final String? labelText;
   final List<T> items;
   final void Function(T?) onChanged;
   final void Function(T?) onSaved;
   final String? Function(T?)? validator;
+  final bool showEmptyValue;
 
   final String Function(T) labelBuilder;
   final double fontSize;
@@ -17,7 +19,8 @@ class AppDropdown<T> extends StatelessWidget {
     super.key,
     this.filled = false,
     required this.value,
-    required this.label,
+    required this.emptyLabel,
+    this.labelText,
     required this.items,
     required this.onChanged,
     required this.onSaved,
@@ -25,6 +28,7 @@ class AppDropdown<T> extends StatelessWidget {
     required this.fontSize,
     required this.padding,
     this.validator,
+    this.showEmptyValue = true,
   });
 
   @override
@@ -40,6 +44,7 @@ class AppDropdown<T> extends StatelessWidget {
       ),
       decoration: InputDecoration(
         filled: filled,
+        labelText: labelText,
         fillColor: filled ? theme.scaffoldBackgroundColor : null,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.zero,
@@ -70,16 +75,17 @@ class AppDropdown<T> extends StatelessWidget {
       ),
       initialValue: value,
       items: [
-        DropdownMenuItem<T?>(
-          value: null,
-          child: Text(
-            label,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontSize: fontSize,
+        if (showEmptyValue)
+          DropdownMenuItem<T?>(
+            value: null,
+            child: Text(
+              emptyLabel,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: fontSize,
+              ),
             ),
           ),
-        ),
         ...items.map(
           (i) => DropdownMenuItem<T?>(
             value: i,
