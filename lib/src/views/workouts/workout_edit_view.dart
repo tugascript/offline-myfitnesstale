@@ -8,14 +8,12 @@ import '../../cubits/states/workout_state.dart';
 import '../../cubits/workout_cubit.dart';
 import '../../models/enums.dart';
 import '../../services/entitlement_guard.dart';
-import '../../services/dtos/workout_dto.dart';
 import '../../utilities/sizes/data_display_sizes.dart';
 import '../../utilities/sizes/screen_size.dart';
 import '../../widgets/layout/app_scaffold.dart';
 import '../../widgets/layout/responsive_scaffold.dart';
 import '../../widgets/workouts/details/basic_editor/basic_editor.dart';
 import '../../widgets/workouts/details/premium_editor/premium_editor.dart';
-import '../../widgets/workouts/details/workout_base_form.dart';
 import '../../widgets/workouts/details/workout_header_card.dart';
 import '../../widgets/workouts/details/workout_header_edit_card.dart';
 
