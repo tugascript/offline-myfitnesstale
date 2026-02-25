@@ -155,7 +155,6 @@ void main() {
 
       final result = await workoutService.batchUpsertWorkoutSets(
         workoutId: workoutId,
-        idsToDelete: <int>{},
         inputs: [
           WorkoutSetUpsertInput(
             setType: WorkoutSetType.standard,
@@ -299,7 +298,6 @@ void main() {
 
     final result = await workoutService.batchUpsertWorkoutSets(
       workoutId: workoutId,
-      idsToDelete: <int>{},
       inputs: [
         WorkoutSetUpsertInput(
           id: setId,
@@ -449,7 +447,6 @@ void main() {
 
     final result = await workoutService.batchUpsertWorkoutSets(
       workoutId: workoutId,
-      idsToDelete: <int>{},
       inputs: [
         WorkoutSetUpsertInput(
           id: setId,
@@ -565,7 +562,6 @@ void main() {
 
     final result = await workoutService.batchUpsertWorkoutSets(
       workoutId: workoutId,
-      idsToDelete: {setToDelete},
       inputs: [
         WorkoutSetUpsertInput(
           id: setToKeep,
@@ -666,7 +662,6 @@ void main() {
     final result = await workoutService.batchUpsertWorkoutSets(
       workoutId: workoutId,
       inputs: const [],
-      idsToDelete: {setA, setB},
     );
 
     expect(result.isOk(), isTrue);
@@ -703,7 +698,6 @@ void main() {
   test('returns notFound when workout does not exist', () async {
     final result = await workoutService.batchUpsertWorkoutSets(
       workoutId: -1,
-      idsToDelete: <int>{},
       inputs: const <WorkoutSetUpsertInput>[],
     );
 
@@ -718,7 +712,6 @@ void main() {
 
     final result = await workoutService.batchUpsertWorkoutSets(
       workoutId: workoutId,
-      idsToDelete: <int>{},
       inputs: const [
         WorkoutSetUpsertInput(
           setType: WorkoutSetType.standard,
@@ -783,7 +776,6 @@ void main() {
 
     final result = await workoutService.batchUpsertWorkoutSets(
       workoutId: workoutId,
-      idsToDelete: <int>{},
       inputs: [
         WorkoutSetUpsertInput(
           id: setId,
