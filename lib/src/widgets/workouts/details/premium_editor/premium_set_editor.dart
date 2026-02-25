@@ -13,6 +13,8 @@ import '../editors/sets_input.dart';
 import 'complex_set_editor_data.dart';
 import 'set_exercise_editor.dart';
 
+// TODO: when I change the set type the next exercise add should match the set pattern
+// TODO: save the muscle group of the main exercise so it can automatically search on the alternatives
 class PremiumSetEditor extends StatefulWidget {
   final ComplexSetEditorData setData;
   final DataDisplaySizesList sizes;
