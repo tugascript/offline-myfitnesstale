@@ -4,7 +4,6 @@ import '../../../../models/enums.dart';
 import '../../../../models/utilities.dart';
 import '../../../../utilities/sizes/data_display_sizes.dart';
 import '../../../common/favourite_checkbox.dart';
-import '../../../common/search_form_button.dart';
 import '../../../layout/app_dropdown.dart';
 import '../../../layout/app_text_form_field.dart';
 
@@ -61,7 +60,6 @@ class _SetExerciseSearchFormState extends State<SetExerciseSearchForm> {
 
   @override
   Widget build(BuildContext context) {
-    final loadingSize = widget.sizes.smallFontSize * 2;
     final padding = widget.sizes.padding / 2;
     final spacing = widget.sizes.spacing / 2;
 
@@ -74,7 +72,7 @@ class _SetExerciseSearchFormState extends State<SetExerciseSearchForm> {
             isLoading: widget.isLoading,
             controller: _nameController,
             hintText: 'Search Exercises...',
-            fontSize: widget.sizes.smallFontSize,
+            fontSize: widget.sizes.fontSize,
             padding: padding,
             onChanged: (value) {
               setState(() {
@@ -94,7 +92,7 @@ class _SetExerciseSearchFormState extends State<SetExerciseSearchForm> {
               ),
               child: Icon(
                 Icons.search,
-                size: widget.sizes.smallFontSize,
+                size: widget.sizes.fontSize,
               ),
             ),
             suffixIcon: _data.name.isNotEmpty
@@ -119,6 +117,7 @@ class _SetExerciseSearchFormState extends State<SetExerciseSearchForm> {
             children: [
               HeartCheckbox(
                 value: _data.isFavorite,
+                size: widget.sizes.fontSize * 2,
                 onChanged: (value) {
                   setState(() {
                     _data.isFavorite = value;
@@ -131,8 +130,8 @@ class _SetExerciseSearchFormState extends State<SetExerciseSearchForm> {
                   value: _data.muscleGroup,
                   emptyLabel: 'All Muscle Groups',
                   items: MuscleGroup.values,
-                  fontSize: widget.sizes.smallFontSize,
-                  padding: padding,
+                  fontSize: widget.sizes.fontSize,
+                  padding: padding / 5,
                   labelBuilder: (d) {
                     return EnumDisplayNames.getMuscleGroupDisplayName(d);
                   },
@@ -149,27 +148,73 @@ class _SetExerciseSearchFormState extends State<SetExerciseSearchForm> {
                 ),
               ),
               SizedBox(width: spacing),
-              SearchFormButton(
-                theme: widget.theme,
-                loadingSize: loadingSize,
-                isLoading: widget.isLoading,
-                onPressed: () {
-                  if (!widget.isLoading) {
-                    if (_formKey.currentState != null &&
-                        _formKey.currentState!.validate()) {
-                      _formKey.currentState!.save();
-                      widget.onSubmit(
-                        name: _data.name,
-                        muscleGroup: _data.muscleGroup,
-                        isFavorite: _data.isFavorite,
-                      );
-                    }
-                  }
-                },
-              ),
+              _SmallSearchButton(
+                  widget: widget,
+                  formKey: _formKey,
+                  data: _data,
+                  padding: padding),
             ],
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _SmallSearchButton extends StatelessWidget {
+  const _SmallSearchButton({
+    required this.widget,
+    required GlobalKey<FormState> formKey,
+    required _FormData data,
+    required this.padding,
+  })  : _formKey = formKey,
+        _data = data;
+
+  final SetExerciseSearchForm widget;
+  final GlobalKey<FormState> _formKey;
+  final _FormData _data;
+  final double padding;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(double.infinity),
+      onTap: () {
+        if (widget.isLoading) {
+          return;
+        }
+
+        if (_formKey.currentState != null &&
+            _formKey.currentState!.validate()) {
+          _formKey.currentState!.save();
+          widget.onSubmit(
+            name: _data.name,
+            muscleGroup: _data.muscleGroup,
+            isFavorite: _data.isFavorite,
+          );
+        }
+      },
+      child: Padding(
+        padding: EdgeInsets.symmetric(
+          horizontal: padding,
+          vertical: padding / 2,
+        ),
+        child: widget.isLoading
+            ? SizedBox(
+                width: widget.sizes.fontSize * 2,
+                height: widget.sizes.fontSize * 2,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    widget.theme.primaryColor,
+                  ),
+                ),
+              )
+            : Icon(
+                Icons.search,
+                size: widget.sizes.fontSize * 2,
+                color: widget.theme.primaryColor,
+              ),
       ),
     );
   }
