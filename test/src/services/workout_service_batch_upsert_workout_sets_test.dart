@@ -386,6 +386,132 @@ void main() {
     expect(workout.muscles, {Muscle.quadriceps});
   });
 
+  test('deletes removed set exercises when updating a workout set', () async {
+    final db = await testDatabase.db;
+    final workoutId = await createWorkout(
+      db,
+      totalSets: 1,
+      totalReps: 18,
+      muscleGroups: {MuscleGroup.push},
+      muscles: {Muscle.chest},
+    );
+    final exerciseA = await createExercise(
+      db,
+      muscleGroup: MuscleGroup.push,
+      primaryMuscles: {Muscle.chest},
+    );
+    final exerciseB = await createExercise(
+      db,
+      muscleGroup: MuscleGroup.pull,
+      primaryMuscles: {Muscle.lats},
+    );
+    final alternativeExercise = await createExercise(
+      db,
+      muscleGroup: MuscleGroup.pull,
+      primaryMuscles: {Muscle.biceps},
+    );
+
+    final setId = await createWorkoutSet(
+      db,
+      workoutId: workoutId,
+      position: 1,
+      minSets: 1,
+      maxSets: 1,
+      totalExercises: 2,
+      totalReps: 18,
+    );
+    final keptSetExerciseId = await createWorkoutSetExercise(
+      db,
+      workoutId: workoutId,
+      workoutSetId: setId,
+      exerciseId: exerciseA,
+      position: 1,
+      minReps: 10,
+      maxReps: 10,
+    );
+    final removedSetExerciseId = await createWorkoutSetExercise(
+      db,
+      workoutId: workoutId,
+      workoutSetId: setId,
+      exerciseId: exerciseB,
+      position: 2,
+      minReps: 8,
+      maxReps: 8,
+    );
+    await createWorkoutSetExerciseOption(
+      db,
+      workoutId: workoutId,
+      workoutSetId: setId,
+      workoutSetExerciseId: removedSetExerciseId,
+      exerciseId: alternativeExercise,
+      position: 1,
+    );
+
+    final result = await workoutService.batchUpsertWorkoutSets(
+      workoutId: workoutId,
+      idsToDelete: <int>{},
+      inputs: [
+        WorkoutSetUpsertInput(
+          id: setId,
+          setType: WorkoutSetType.standard,
+          minSets: 1,
+          maxSets: 1,
+          recommendedRestSecs: 60,
+          position: 1,
+          exercises: [
+            WorkoutSetExerciseUpsertInput(
+              id: keptSetExerciseId,
+              exerciseId: exerciseA,
+              position: 1,
+              minReps: 10,
+              maxReps: 10,
+            ),
+          ],
+        ),
+      ],
+    );
+
+    expect(result.isOk(), isTrue);
+
+    final setExercises = (await db.query(
+      WorkoutSetExercise.table,
+      where: '${WorkoutSetExerciseColumns.workoutSetId.value} = ?',
+      whereArgs: [setId],
+      orderBy: WorkoutSetExerciseColumns.position.orderAsc,
+    ))
+        .map(WorkoutSetExercise.fromMap)
+        .toList();
+    expect(setExercises, hasLength(1));
+    expect(setExercises.single.id, keptSetExerciseId);
+
+    final deletedExercise = await db.query(
+      WorkoutSetExercise.table,
+      where: '${WorkoutSetExerciseColumns.id.value} = ?',
+      whereArgs: [removedSetExerciseId],
+    );
+    expect(deletedExercise, isEmpty);
+
+    final optionsForDeletedExercise = await db.query(
+      WorkoutSetExerciseOption.table,
+      where:
+          '${WorkoutSetExerciseOptionColumns.workoutSetExerciseId.value} = ?',
+      whereArgs: [removedSetExerciseId],
+    );
+    expect(optionsForDeletedExercise, isEmpty);
+
+    final updatedSet = WorkoutSet.fromMap(
+      (await db.query(
+        WorkoutSet.table,
+        where: '${WorkoutSetColumns.id.value} = ?',
+        whereArgs: [setId],
+        limit: 1,
+      ))
+          .single,
+    );
+    expect(updatedSet.totalExercises, 1);
+    expect(updatedSet.totalReps, 10);
+  });
+
   test('deletes set ids and compacts remaining set positions', () async {
     final db = await testDatabase.db;
     final workoutId = await createWorkout(db, totalSets: 2, totalReps: 20);

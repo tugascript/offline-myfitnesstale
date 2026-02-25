@@ -20,6 +20,7 @@ class WorkoutDto extends Equatable implements Dto<Workout> {
   final bool isFavorite;
   final int totalSets;
   final int totalReps;
+  final EditorType editorType;
   final CreatedBy createdBy;
 
   // related data
@@ -37,6 +38,7 @@ class WorkoutDto extends Equatable implements Dto<Workout> {
     required this.isFavorite,
     required this.totalSets,
     required this.totalReps,
+    required this.editorType,
     required this.createdBy,
     this.sets,
   });
@@ -56,6 +58,7 @@ class WorkoutDto extends Equatable implements Dto<Workout> {
       isFavorite: model.isFavorite,
       totalSets: model.totalSets,
       totalReps: model.totalReps,
+      editorType: model.editorType,
       createdBy: model.createdBy,
       sets: sets,
     );
@@ -75,6 +78,7 @@ class WorkoutDto extends Equatable implements Dto<Workout> {
     List<WorkoutSetDto>? sets,
     int? totalSets,
     int? totalReps,
+    EditorType? editorType,
     CreatedBy? createdBy,
   }) {
     return WorkoutDto(
@@ -89,6 +93,7 @@ class WorkoutDto extends Equatable implements Dto<Workout> {
       isFavorite: isFavorite ?? this.isFavorite,
       totalSets: totalSets ?? this.totalSets,
       totalReps: totalReps ?? this.totalReps,
+      editorType: editorType ?? this.editorType,
       createdBy: createdBy ?? this.createdBy,
       sets: sets ?? this.sets,
     );
@@ -107,6 +112,7 @@ class WorkoutDto extends Equatable implements Dto<Workout> {
         isFavorite,
         totalSets,
         totalReps,
+        editorType,
         createdBy,
         sets,
       ];

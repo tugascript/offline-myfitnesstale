@@ -12,7 +12,10 @@ class DynamicListInput<T> extends StatelessWidget {
   final double fontSize;
   final double padding;
   final double spacing;
+  final double handlesPadding;
   final bool isLoading;
+  final double? addButtonHeight;
+  final void Function(int oldIndex, int newIndex)? onReorder;
 
   const DynamicListInput({
     super.key,
@@ -27,11 +30,11 @@ class DynamicListInput<T> extends StatelessWidget {
     required this.fontSize,
     required this.padding,
     required this.spacing,
+    required this.handlesPadding,
     required this.isLoading,
+    this.addButtonHeight,
     this.onReorder,
   });
-
-  final void Function(int oldIndex, int newIndex)? onReorder;
 
   @override
   Widget build(BuildContext context) {
@@ -67,58 +70,69 @@ class DynamicListInput<T> extends StatelessWidget {
                     ReorderableDragStartListener(
                       index: index,
                       child: Padding(
-                        padding:
-                            EdgeInsets.symmetric(horizontal: padding * 1.2),
-                        child: Icon(Icons.drag_indicator, size: fontSize),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: handlesPadding,
+                        ),
+                        child: Icon(
+                          Icons.drag_indicator,
+                          size: fontSize * 1.2,
+                        ),
                       ),
                     ),
                     Expanded(
                       child: itemBuilder(context, index, item),
                     ),
-                    IconButton(
-                      padding: EdgeInsets.zero,
-                      iconSize: fontSize * 1.2,
-                      icon: Icon(
-                        Icons.close,
-                        color: Colors.red,
-                      ),
-                      onPressed: isLoading
+                    InkWell(
+                      customBorder: const CircleBorder(),
+                      onTap: isLoading
                           ? null
                           : () {
                               final List<T> newItems = List.from(items);
                               newItems.removeAt(index);
                               onChanged(newItems);
                             },
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: handlesPadding,
+                        ),
+                        child: Icon(
+                          Icons.close,
+                          color: Colors.red,
+                          size: fontSize * 1.2,
+                        ),
+                      ),
                     ),
                   ],
                 ),
               );
             },
           ),
-        FilledButton.icon(
-          onPressed: isLoading ? null : onAdd,
-          icon: Icon(
-            Icons.add,
-            size: fontSize,
-            color: theme.colorScheme.secondary,
-          ),
-          label: Text(
-            addLabel,
-            style: TextStyle(
-              fontSize: fontSize,
+        SizedBox(
+          height: addButtonHeight,
+          child: FilledButton.icon(
+            onPressed: isLoading ? null : onAdd,
+            icon: Icon(
+              Icons.add,
+              size: fontSize,
               color: theme.colorScheme.secondary,
             ),
-          ),
-          style: FilledButton.styleFrom(
-            backgroundColor: !filled
-                ? theme.colorScheme.surface
-                : theme.scaffoldBackgroundColor,
-            padding: EdgeInsets.all(padding),
-            side: BorderSide(
-              color: theme.colorScheme.secondary,
-              width: 0.5,
+            label: Text(
+              addLabel,
+              style: TextStyle(
+                fontSize: fontSize,
+                color: theme.colorScheme.secondary,
+              ),
             ),
-            shape: BeveledRectangleBorder(),
+            style: FilledButton.styleFrom(
+              backgroundColor: !filled
+                  ? theme.colorScheme.surface
+                  : theme.scaffoldBackgroundColor,
+              side: BorderSide(
+                color: theme.colorScheme.secondary,
+                width: 0.5,
+              ),
+              shape: BeveledRectangleBorder(),
+            ),
           ),
         ),
       ],

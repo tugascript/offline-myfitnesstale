@@ -91,6 +91,7 @@ class WorkoutCubit extends Cubit<WorkoutState> {
     required String name,
     required bool isFavorite,
     required Difficulty difficulty,
+    EditorType editorType = EditorType.basic,
     String? description,
     PictureData? picture,
     VideoData? video,
@@ -102,6 +103,7 @@ class WorkoutCubit extends Cubit<WorkoutState> {
       name: name,
       isFavorite: isFavorite,
       difficulty: difficulty,
+      editorType: editorType,
       description: description,
       picture: picture,
       video: video,
@@ -187,6 +189,7 @@ class WorkoutCubit extends Cubit<WorkoutState> {
     required int id,
     String? name,
     Difficulty? difficulty,
+    EditorType? editorType,
     String? description,
     PictureData? picture,
     VideoData? video,
@@ -199,6 +202,7 @@ class WorkoutCubit extends Cubit<WorkoutState> {
       id: id,
       name: name,
       difficulty: difficulty,
+      editorType: editorType,
       description: description,
       picture: picture,
       video: video,
@@ -611,7 +615,7 @@ class WorkoutCubit extends Cubit<WorkoutState> {
           difficulty: exercise.difficulty,
           alternativeExerciseIds: exercise.alternativeExerciseIds.isEmpty
               ? null
-              : exercise.alternativeExerciseIds,
+              : exercise.alternativeExerciseIds.toList(),
         );
       }).toList();
 
@@ -714,7 +718,7 @@ final class ComplexSetExerciseInput {
   final int? maxReps;
   final bool toMaxReps;
   final WorkoutSetExerciseDifficulty? difficulty;
-  final List<int> alternativeExerciseIds;
+  final Set<int> alternativeExerciseIds;
 
   const ComplexSetExerciseInput({
     this.id,
@@ -724,7 +728,7 @@ final class ComplexSetExerciseInput {
     this.maxReps,
     required this.toMaxReps,
     this.difficulty,
-    this.alternativeExerciseIds = const [],
+    this.alternativeExerciseIds = const {},
   });
 }
 

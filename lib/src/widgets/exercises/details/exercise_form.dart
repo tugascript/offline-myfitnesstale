@@ -175,7 +175,7 @@ class _ExerciseFormState extends State<ExerciseForm> {
           AppDropdown<MuscleGroup>(
             value: _data.muscleGroup,
             filled: true,
-            label: 'Muscle Group',
+            emptyLabel: 'Muscle Group',
             items: MuscleGroup.values,
             fontSize: widget.sizes.subtitleFontSize,
             padding: widget.sizes.padding,
@@ -197,7 +197,7 @@ class _ExerciseFormState extends State<ExerciseForm> {
           AppDropdown<Difficulty>(
             value: _data.difficulty,
             filled: true,
-            label: 'Difficulty',
+            emptyLabel: 'Difficulty',
             items: Difficulty.values,
             fontSize: widget.sizes.subtitleFontSize,
             padding: widget.sizes.padding,
@@ -227,12 +227,13 @@ class _ExerciseFormState extends State<ExerciseForm> {
           DynamicListInput<Muscle>(
             filled: true,
             theme: widget.theme,
+            handlesPadding: widget.sizes.padding,
             items: _data.primaryMuscles.toList(),
             itemBuilder: (context, index, item) {
               return AppDropdown<Muscle>(
                 filled: true,
                 value: item,
-                label: 'Primary Muscle',
+                emptyLabel: 'Primary Muscle',
                 items: Muscle.values
                     .where(
                       (m) => !_data.secondaryMuscles.contains(m),
@@ -295,13 +296,14 @@ class _ExerciseFormState extends State<ExerciseForm> {
           SizedBox(height: widget.sizes.spacing),
           DynamicListInput<Muscle>(
             theme: widget.theme,
+            handlesPadding: widget.sizes.padding / 3,
             items: _data.secondaryMuscles.toList(),
             filled: true,
             itemBuilder: (context, index, item) {
               return AppDropdown<Muscle>(
                 value: item,
                 filled: true,
-                label: 'Secondary Muscle',
+                emptyLabel: 'Secondary Muscle',
                 items: Muscle.values
                     .where(
                       (m) => !_data.primaryMuscles.contains(m),
@@ -382,13 +384,14 @@ class _ExerciseFormState extends State<ExerciseForm> {
 
               return DynamicListInput<int>(
                 theme: widget.theme,
+                handlesPadding: widget.sizes.padding,
                 items: _data.equipmentIds.toList(),
                 filled: true,
                 itemBuilder: (context, index, item) {
                   return AppDropdown<int>(
                     value: item,
                     filled: true,
-                    label: 'Equipment',
+                    emptyLabel: 'Equipment',
                     items: equipmentIds,
                     fontSize: widget.sizes.subtitleFontSize,
                     padding: widget.sizes.padding,

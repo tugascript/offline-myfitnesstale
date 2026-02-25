@@ -198,6 +198,7 @@ class _BasicEditorState extends State<BasicEditor> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             DynamicListInput<SetEditorData>(
+              handlesPadding: sizes.padding / 2,
               theme: theme,
               filled: true,
               items: _displayedSets,
@@ -415,7 +416,7 @@ class _BasicEditorState extends State<BasicEditor> {
                     isLoading: _isCompleting || state.isLoading,
                     sizes: sizes,
                     label: 'SAVE',
-                    icon: Icons.check,
+                    icon: Icons.save,
                   ),
                 ),
               ],

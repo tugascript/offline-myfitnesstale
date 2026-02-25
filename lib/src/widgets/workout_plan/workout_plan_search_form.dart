@@ -110,7 +110,7 @@ class _WorkoutPlanSearchFormState extends State<WorkoutPlanSearchForm> {
               Expanded(
                 child: AppDropdown<Difficulty>(
                   value: _data.difficulty,
-                  label: 'All Difficulties',
+                  emptyLabel: 'All Difficulties',
                   items: Difficulty.values,
                   fontSize: widget.fontSize,
                   padding: widget.padding / 2,

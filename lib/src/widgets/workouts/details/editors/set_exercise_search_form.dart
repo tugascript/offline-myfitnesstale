@@ -129,7 +129,7 @@ class _SetExerciseSearchFormState extends State<SetExerciseSearchForm> {
               Expanded(
                 child: AppDropdown<MuscleGroup>(
                   value: _data.muscleGroup,
-                  label: 'All Muscle Groups',
+                  emptyLabel: 'All Muscle Groups',
                   items: MuscleGroup.values,
                   fontSize: widget.sizes.smallFontSize,
                   padding: padding,

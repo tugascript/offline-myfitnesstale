@@ -136,7 +136,7 @@ class _BaseCommonSearchFormState extends State<BaseCommonSearchForm> {
               Expanded(
                 child: AppDropdown<Difficulty>(
                   value: _data.difficulty,
-                  label: 'All Difficulties',
+                  emptyLabel: 'All Difficulties',
                   items: Difficulty.values,
                   fontSize: widget.fontSize,
                   padding: widget.padding / 2,
@@ -159,7 +159,7 @@ class _BaseCommonSearchFormState extends State<BaseCommonSearchForm> {
               Expanded(
                 child: AppDropdown<MuscleGroup>(
                   value: _data.muscleGroup,
-                  label: 'All Muscle Groups',
+                  emptyLabel: 'All Muscle Groups',
                   items: MuscleGroup.values,
                   fontSize: widget.fontSize,
                   padding: widget.padding / 2,
