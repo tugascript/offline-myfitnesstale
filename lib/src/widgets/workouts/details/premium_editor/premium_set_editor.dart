@@ -13,7 +13,6 @@ import '../editors/sets_input.dart';
 import 'complex_set_editor_data.dart';
 import 'set_exercise_editor.dart';
 
-// TODO: when I change the set type the next exercise add should match the set pattern
 // TODO: save the muscle group of the main exercise so it can automatically search on the alternatives
 class PremiumSetEditor extends StatefulWidget {
   final ComplexSetEditorData setData;
@@ -61,11 +60,9 @@ class _PremiumSetEditorState extends State<PremiumSetEditor> {
               alternativeExercises: Set<AlternativeExerciseData>.from(
                 exercise.alternativeExercises,
               ),
-              status: exercise.status,
             ),
           )
           .toList(),
-      status: source.status,
     );
   }
 
@@ -119,7 +116,6 @@ class _PremiumSetEditorState extends State<PremiumSetEditor> {
       final exercise = setData.exercises[index];
       update(exercise);
       setData.exercises = _normalizeExercisePositions(setData.exercises);
-      setData.status = ComplexSetEditorDataStatus.pending;
     });
   }
 
@@ -154,7 +150,6 @@ class _PremiumSetEditorState extends State<PremiumSetEditor> {
                 }
                 _emitSetChange((setData) {
                   setData.setType = setType;
-                  setData.status = ComplexSetEditorDataStatus.pending;
                 });
               },
               onSaved: (setType) {
@@ -166,7 +161,6 @@ class _PremiumSetEditorState extends State<PremiumSetEditor> {
                 }
                 _emitSetChange((setData) {
                   setData.setType = setType;
-                  setData.status = ComplexSetEditorDataStatus.pending;
                 });
               },
               fontSize: sizes.fontSize,
@@ -187,14 +181,12 @@ class _PremiumSetEditorState extends State<PremiumSetEditor> {
                       }
                       _emitSetChange((setData) {
                         setData.minSets = parsed;
-                        setData.status = ComplexSetEditorDataStatus.pending;
                       });
                     },
                     maxSetsOnChanged: (value) {
                       final parsed = int.tryParse(value);
                       _emitSetChange((setData) {
                         setData.maxSets = value.isEmpty ? null : parsed;
-                        setData.status = ComplexSetEditorDataStatus.pending;
                       });
                     },
                     sizes: sizes,
@@ -215,14 +207,12 @@ class _PremiumSetEditorState extends State<PremiumSetEditor> {
                       }
                       _emitSetChange((setData) {
                         setData.recommendedRestSecs = parsed;
-                        setData.status = ComplexSetEditorDataStatus.pending;
                       });
                     },
                     maxRestOnChanged: (value) {
                       final parsed = int.tryParse(value);
                       _emitSetChange((setData) {
                         setData.maxRestSecs = value.isEmpty ? null : parsed;
-                        setData.status = ComplexSetEditorDataStatus.pending;
                       });
                     },
                   ),
@@ -250,48 +240,17 @@ class _PremiumSetEditorState extends State<PremiumSetEditor> {
                   padding: sizes.padding,
                   spacing: sizes.spacing,
                   isLoading: widget.isLoading,
+                  addEnabled: _addExerciseButtonEnabled(setData),
                   addLabel: "Add Exercise",
                   keyBuilder: (item) => ValueKey(item.id ?? item.internalId),
                   onAdd: () {
-                    showDialog<void>(
-                      context: context,
-                      builder: (dialogContext) {
-                        return SetExerciseSearchModal(
-                          sizes: sizes,
-                          isLoading: widget.isLoading,
-                          onExerciseSelected: (id, name) async {
-                            if (!dialogContext.mounted) return;
-
-                            _emitSetChange((setData) {
-                              setData.exercises.add(
-                                ComplexSetExerciseEditorData(
-                                  id: null,
-                                  position: setData.exercises.length + 1,
-                                  minReps: 1,
-                                  maxReps: null,
-                                  toMaxReps: false,
-                                  exerciseId: id,
-                                  exerciseName: name,
-                                  alternativeExercises: const {},
-                                  status: ComplexSetEditorDataStatus.initial,
-                                ),
-                              );
-                              setData.status =
-                                  ComplexSetEditorDataStatus.pending;
-                            });
-
-                            Navigator.of(dialogContext).pop();
-                          },
-                        );
-                      },
-                    );
+                    _addExerciseLogic(context, setData, sizes);
                   },
                   onChanged: (items) {
                     _emitSetChange((setData) {
                       setData.exercises = _normalizeExercisePositions(
                         List<ComplexSetExerciseEditorData>.from(items),
                       );
-                      setData.status = ComplexSetEditorDataStatus.pending;
                     });
                   },
                   onReorder: (oldIndex, newIndex) {},
@@ -304,7 +263,6 @@ class _PremiumSetEditorState extends State<PremiumSetEditor> {
                         _updateExerciseAtIndex(index, (exercise) {
                           exercise.exerciseId = value.$1;
                           exercise.exerciseName = value.$2;
-                          exercise.status = ComplexSetEditorDataStatus.pending;
                         });
                       },
                       onMinRepsChanged: (value) {
@@ -314,20 +272,17 @@ class _PremiumSetEditorState extends State<PremiumSetEditor> {
                         }
                         _updateExerciseAtIndex(index, (exercise) {
                           exercise.minReps = parsed;
-                          exercise.status = ComplexSetEditorDataStatus.pending;
                         });
                       },
                       onMaxRepsChanged: (value) {
                         final parsed = int.tryParse(value);
                         _updateExerciseAtIndex(index, (exercise) {
                           exercise.maxReps = value.isEmpty ? null : parsed;
-                          exercise.status = ComplexSetEditorDataStatus.pending;
                         });
                       },
                       onToMaxRepsChanged: (value) {
                         _updateExerciseAtIndex(index, (exercise) {
                           exercise.toMaxReps = value ?? false;
-                          exercise.status = ComplexSetEditorDataStatus.pending;
                         });
                       },
                       onDifficultyTypeChanged: (type) {
@@ -344,7 +299,6 @@ class _PremiumSetEditorState extends State<PremiumSetEditor> {
                             type: type,
                             value: value,
                           );
-                          exercise.status = ComplexSetEditorDataStatus.pending;
                         });
                       },
                       onDifficultyValueChanged: (value) {
@@ -355,13 +309,11 @@ class _PremiumSetEditorState extends State<PremiumSetEditor> {
                             type: type,
                             value: value.isEmpty ? null : parsed,
                           );
-                          exercise.status = ComplexSetEditorDataStatus.pending;
                         });
                       },
                       onAlternativeExercisesChanged: (value) {
                         _updateExerciseAtIndex(index, (exercise) {
                           exercise.alternativeExercises = value;
-                          exercise.status = ComplexSetEditorDataStatus.pending;
                         });
                       },
                     );
@@ -373,5 +325,338 @@ class _PremiumSetEditorState extends State<PremiumSetEditor> {
         ),
       ),
     );
+  }
+
+  bool _addExerciseButtonEnabled(ComplexSetEditorData setData) {
+    switch (setData.setType) {
+      case WorkoutSetType.standard:
+        return setData.exercises.isEmpty;
+      case WorkoutSetType.drop:
+        return setData.exercises.length < 5;
+      case WorkoutSetType.superSet:
+        return setData.exercises.length < 3;
+      case WorkoutSetType.giant:
+      case WorkoutSetType.pyramid:
+        return setData.exercises.length < 6;
+      case WorkoutSetType.circuit:
+        return setData.exercises.length < 10;
+    }
+  }
+
+  void _addExerciseLogic(
+    BuildContext context,
+    ComplexSetEditorData setData,
+    DataDisplaySizesList sizes,
+  ) {
+    final setType = setData.setType;
+    final lastExercise = setData.exercises.lastOrNull;
+    if (lastExercise == null) {
+      showDialog<void>(
+        context: context,
+        builder: (dialogContext) {
+          return SetExerciseSearchModal(
+            sizes: sizes,
+            isLoading: widget.isLoading,
+            onExerciseSelected: (id, name) async {
+              if (!dialogContext.mounted) {
+                return;
+              }
+
+              _emitSetChange((setData) {
+                setData.exercises.add(
+                  ComplexSetExerciseEditorData(
+                    id: null,
+                    position: setData.exercises.length + 1,
+                    minReps: 1,
+                    maxReps: null,
+                    toMaxReps: false,
+                    exerciseId: id,
+                    exerciseName: name,
+                    alternativeExercises: const {},
+                  ),
+                );
+              });
+
+              Navigator.of(dialogContext).pop();
+            },
+          );
+        },
+      );
+      return;
+    }
+
+    switch (setType) {
+      case WorkoutSetType.standard:
+        return;
+      case WorkoutSetType.drop:
+        if (setData.exercises.length >= 5) {
+          return;
+        }
+
+        _emitSetChange((setData) {
+          setData.exercises.add(
+            ComplexSetExerciseEditorData(
+              id: null,
+              position: setData.exercises.length + 1,
+              minReps: lastExercise.minReps + 2,
+              maxReps: lastExercise.maxReps != null
+                  ? lastExercise.maxReps! + 2
+                  : null,
+              toMaxReps:
+                  setData.exercises.length >= 2 || lastExercise.toMaxReps,
+              exerciseId: lastExercise.exerciseId,
+              exerciseName: lastExercise.exerciseName,
+              alternativeExercises: lastExercise.alternativeExercises,
+              difficulty: _calculateDifficulty(
+                setType,
+                lastExercise.difficulty,
+              ),
+            ),
+          );
+        });
+        return;
+      case WorkoutSetType.superSet:
+        if (setData.exercises.length >= 3) {
+          return;
+        }
+
+        showDialog<void>(
+          context: context,
+          builder: (dialogContext) {
+            return SetExerciseSearchModal(
+              sizes: sizes,
+              isLoading: widget.isLoading,
+              onExerciseSelected: (id, name) async {
+                if (!dialogContext.mounted) {
+                  return;
+                }
+
+                _emitSetChange((setData) {
+                  setData.exercises.add(
+                    ComplexSetExerciseEditorData(
+                      id: null,
+                      position: setData.exercises.length + 1,
+                      minReps: lastExercise.minReps,
+                      maxReps: lastExercise.maxReps,
+                      toMaxReps: lastExercise.toMaxReps,
+                      exerciseId: id,
+                      exerciseName: name,
+                      alternativeExercises: const {},
+                      difficulty: _calculateDifficulty(
+                        setType,
+                        lastExercise.difficulty,
+                      ),
+                    ),
+                  );
+                });
+
+                Navigator.of(dialogContext).pop();
+              },
+            );
+          },
+        );
+        return;
+      case WorkoutSetType.giant:
+        if (setData.exercises.length >= 6) {
+          return;
+        }
+
+        showDialog<void>(
+          context: context,
+          builder: (dialogContext) {
+            return SetExerciseSearchModal(
+              sizes: sizes,
+              isLoading: widget.isLoading,
+              onExerciseSelected: (id, name) async {
+                if (!dialogContext.mounted) {
+                  return;
+                }
+
+                _emitSetChange((setData) {
+                  setData.exercises.add(
+                    ComplexSetExerciseEditorData(
+                      id: null,
+                      position: setData.exercises.length + 1,
+                      minReps: lastExercise.minReps,
+                      maxReps: lastExercise.maxReps,
+                      toMaxReps: lastExercise.toMaxReps,
+                      exerciseId: id,
+                      exerciseName: name,
+                      alternativeExercises: const {},
+                      difficulty: _calculateDifficulty(
+                        setType,
+                        lastExercise.difficulty,
+                      ),
+                    ),
+                  );
+                });
+
+                Navigator.of(dialogContext).pop();
+              },
+            );
+          },
+        );
+        return;
+      case WorkoutSetType.pyramid:
+        if (setData.exercises.length >= 6) {
+          return;
+        }
+
+        _emitSetChange((setData) {
+          final minReps = lastExercise.minReps - 2;
+          final maxReps =
+              lastExercise.maxReps != null ? lastExercise.maxReps! - 2 : null;
+          setData.exercises.add(
+            ComplexSetExerciseEditorData(
+              id: null,
+              position: setData.exercises.length + 1,
+              minReps: minReps > 0 ? minReps : 1,
+              maxReps: maxReps != null && maxReps > 0 ? maxReps : null,
+              toMaxReps: lastExercise.toMaxReps,
+              exerciseId: lastExercise.exerciseId,
+              exerciseName: lastExercise.exerciseName,
+              alternativeExercises: lastExercise.alternativeExercises,
+              difficulty: _calculateDifficulty(
+                setType,
+                lastExercise.difficulty,
+              ),
+            ),
+          );
+        });
+        return;
+      case WorkoutSetType.circuit:
+        if (setData.exercises.length >= 10) {
+          return;
+        }
+
+        showDialog<void>(
+          context: context,
+          builder: (dialogContext) {
+            return SetExerciseSearchModal(
+              sizes: sizes,
+              isLoading: widget.isLoading,
+              onExerciseSelected: (id, name) async {
+                if (!dialogContext.mounted) {
+                  return;
+                }
+
+                _emitSetChange((setData) {
+                  setData.exercises.add(
+                    ComplexSetExerciseEditorData(
+                      id: null,
+                      position: setData.exercises.length + 1,
+                      minReps: lastExercise.minReps,
+                      maxReps: lastExercise.maxReps,
+                      toMaxReps: lastExercise.toMaxReps,
+                      exerciseId: id,
+                      exerciseName: name,
+                      alternativeExercises: const {},
+                      difficulty: _calculateDifficulty(
+                        setType,
+                        lastExercise.difficulty,
+                      ),
+                    ),
+                  );
+                });
+
+                Navigator.of(dialogContext).pop();
+              },
+            );
+          },
+        );
+        return;
+    }
+  }
+
+  WorkoutSetExerciseDifficulty? _calculateDifficulty(
+    WorkoutSetType setType,
+    WorkoutSetExerciseDifficulty? prevDifficulty,
+  ) {
+    if (prevDifficulty == null) {
+      return null;
+    }
+
+    switch (setType) {
+      case WorkoutSetType.standard:
+        return null;
+      case WorkoutSetType.drop:
+        return WorkoutSetExerciseDifficulty(
+          type: prevDifficulty.type,
+          value: _calculateDropSetDifficultyValue(
+            prevDifficulty.type,
+            prevDifficulty.value,
+          ),
+        );
+      case WorkoutSetType.pyramid:
+        return WorkoutSetExerciseDifficulty(
+          type: prevDifficulty.type,
+          value: _calculatePyramidDifficultyValue(
+            prevDifficulty.type,
+            prevDifficulty.value,
+          ),
+        );
+      case WorkoutSetType.superSet:
+      case WorkoutSetType.giant:
+      case WorkoutSetType.circuit:
+        return prevDifficulty;
+    }
+  }
+
+  int _calculateDropSetDifficultyValue(
+    WorkoutSetExerciseDifficultyType prevType,
+    int prevVal,
+  ) {
+    switch (prevType) {
+      case WorkoutSetExerciseDifficultyType.rir:
+        {
+          final val = prevVal - 1;
+          return val > WorkoutSetExerciseDifficultyType.rir.minValue
+              ? val
+              : WorkoutSetExerciseDifficultyType.rir.minValue;
+        }
+      case WorkoutSetExerciseDifficultyType.rpe:
+        {
+          final val = prevVal + 1;
+          return val > WorkoutSetExerciseDifficultyType.rpe.maxValue
+              ? WorkoutSetExerciseDifficultyType.rpe.maxValue
+              : val;
+        }
+      case WorkoutSetExerciseDifficultyType.rmp:
+        {
+          final val = prevVal - 10;
+          return val > WorkoutSetExerciseDifficultyType.rmp.minValue
+              ? val
+              : WorkoutSetExerciseDifficultyType.rmp.minValue;
+        }
+    }
+  }
+
+  int _calculatePyramidDifficultyValue(
+    WorkoutSetExerciseDifficultyType prevType,
+    int prevVal,
+  ) {
+    switch (prevType) {
+      case WorkoutSetExerciseDifficultyType.rir:
+        {
+          final val = prevVal - 1;
+          return val > WorkoutSetExerciseDifficultyType.rir.minValue
+              ? val
+              : WorkoutSetExerciseDifficultyType.rir.minValue;
+        }
+      case WorkoutSetExerciseDifficultyType.rpe:
+        {
+          final val = prevVal + 1;
+          return val > WorkoutSetExerciseDifficultyType.rpe.maxValue
+              ? WorkoutSetExerciseDifficultyType.rpe.maxValue
+              : val;
+        }
+      case WorkoutSetExerciseDifficultyType.rmp:
+        {
+          final val = prevVal + 10;
+          return val < WorkoutSetExerciseDifficultyType.rmp.maxValue
+              ? val
+              : WorkoutSetExerciseDifficultyType.rmp.maxValue;
+        }
+    }
   }
 }

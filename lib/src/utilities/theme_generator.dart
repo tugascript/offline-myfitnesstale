@@ -225,6 +225,12 @@ sealed class ThemeGenerator {
       }),
     ),
 
+    // Define the default `ExpansionTileTheme`.
+    expansionTileTheme: const ExpansionTileThemeData(
+      shape: Border(),
+      collapsedShape: Border(),
+    ),
+
     // Define the default `DialogTheme`.
     dialogTheme: const DialogThemeData(
       shape: BeveledRectangleBorder(),
@@ -383,6 +389,12 @@ sealed class ThemeGenerator {
         }
         return null;
       }),
+    ),
+
+    // Define the default `ExpansionTileTheme`.
+    expansionTileTheme: const ExpansionTileThemeData(
+      shape: Border(),
+      collapsedShape: Border(),
     ),
 
     // Define the default `DialogTheme`.

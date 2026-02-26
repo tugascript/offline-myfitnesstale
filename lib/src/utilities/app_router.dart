@@ -115,7 +115,7 @@ sealed class AppRouter {
         if (id == null) {
           return const NotFoundView();
         }
-        return WorkoutEditView(workoutId: id); // TODO: fix me
+        return WorkoutEditView(workoutId: id);
       },
     ),
     GoRoute(
