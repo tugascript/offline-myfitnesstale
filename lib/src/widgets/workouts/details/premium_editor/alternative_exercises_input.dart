@@ -35,7 +35,7 @@ class AlternativeExercisesInput extends StatelessWidget {
       titleFontWeight: FontWeight.w300,
       padding: 0,
       dense: true,
-      initiallyExpanded: exerciseData.alternativeExercises.isNotEmpty,
+      initiallyExpanded: false,
       children: [
         DynamicListInput<AlternativeExerciseData>(
           handlesPadding: sizes.padding / 4,

@@ -75,7 +75,7 @@ class SetExerciseSearchModal extends StatelessWidget {
               return;
             }
 
-            if (state.exerciseSelection.isNotEmpty && state.error != null) {
+            if (state.error != null) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text(

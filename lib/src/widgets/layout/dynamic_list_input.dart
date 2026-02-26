@@ -9,6 +9,7 @@ class DynamicListInput<T> extends StatelessWidget {
   final VoidCallback onAdd;
   final Key Function(T item)? keyBuilder;
   final String addLabel;
+  final bool addEnabled;
   final double fontSize;
   final double padding;
   final double spacing;
@@ -34,10 +35,17 @@ class DynamicListInput<T> extends StatelessWidget {
     required this.isLoading,
     this.addButtonHeight,
     this.onReorder,
+    this.addEnabled = true,
   });
 
   @override
   Widget build(BuildContext context) {
+    final disabledColor = theme.colorScheme.brightness == Brightness.dark
+        ? Colors.grey[400]!
+        : Colors.grey[600]!;
+    final addBtnColor =
+        addEnabled ? theme.colorScheme.secondary : disabledColor;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -110,17 +118,17 @@ class DynamicListInput<T> extends StatelessWidget {
         SizedBox(
           height: addButtonHeight,
           child: FilledButton.icon(
-            onPressed: isLoading ? null : onAdd,
+            onPressed: isLoading || !addEnabled ? null : onAdd,
             icon: Icon(
               Icons.add,
               size: fontSize,
-              color: theme.colorScheme.secondary,
+              color: addBtnColor,
             ),
             label: Text(
               addLabel,
               style: TextStyle(
                 fontSize: fontSize,
-                color: theme.colorScheme.secondary,
+                color: addBtnColor,
               ),
             ),
             style: FilledButton.styleFrom(
@@ -128,7 +136,7 @@ class DynamicListInput<T> extends StatelessWidget {
                   ? theme.colorScheme.surface
                   : theme.scaffoldBackgroundColor,
               side: BorderSide(
-                color: theme.colorScheme.secondary,
+                color: addBtnColor,
                 width: 0.5,
               ),
               shape: BeveledRectangleBorder(),

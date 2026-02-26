@@ -50,7 +50,6 @@ class _PremiumEditorState extends State<PremiumEditor> {
         maxSets: set.maxSets,
         recommendedRestSecs: set.recommendedRestSecs,
         maxRestSecs: set.maxRestSecs,
-        status: ComplexSetEditorDataStatus.created,
         exercises: (set.exercises ?? []).map((exercise) {
           return ComplexSetExerciseEditorData(
             id: exercise.id,
@@ -69,7 +68,6 @@ class _PremiumEditorState extends State<PremiumEditor> {
                   ),
                 )
                 .toSet(),
-            status: ComplexSetEditorDataStatus.created,
           );
         }).toList(),
       );
@@ -225,18 +223,18 @@ class _PremiumEditorState extends State<PremiumEditor> {
               addLabel: "Add Set",
               keyBuilder: (item) => ValueKey(item.id ?? item.internalId),
               onAdd: () {
+                final lastSet = _displayedSets.lastOrNull;
                 setState(() {
                   _displayedSets.add(
                     ComplexSetEditorData(
                       id: null,
-                      setType: WorkoutSetType.standard,
+                      setType: lastSet?.setType ?? WorkoutSetType.standard,
                       position: _displayedSets.length + 1,
-                      minSets: 1,
-                      maxSets: null,
-                      recommendedRestSecs: 60,
-                      maxRestSecs: null,
+                      minSets: lastSet?.minSets ?? 1,
+                      maxSets: lastSet?.maxSets,
+                      recommendedRestSecs: lastSet?.recommendedRestSecs ?? 60,
+                      maxRestSecs: lastSet?.maxRestSecs,
                       exercises: [],
-                      status: ComplexSetEditorDataStatus.initial,
                     ),
                   );
                 });

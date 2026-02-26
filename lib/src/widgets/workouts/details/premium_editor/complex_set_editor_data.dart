@@ -3,12 +3,6 @@ import 'package:flutter/foundation.dart';
 import '../../../../models/enums.dart';
 import '../../../../models/workout_set_exercise_model.dart';
 
-enum ComplexSetEditorDataStatus {
-  initial,
-  pending,
-  created,
-}
-
 final class AlternativeExerciseData {
   final int id;
   final String name;
@@ -41,7 +35,6 @@ final class ComplexSetExerciseEditorData {
   int? exerciseId;
   String? exerciseName;
   Set<AlternativeExerciseData> alternativeExercises;
-  ComplexSetEditorDataStatus status;
 
   ComplexSetExerciseEditorData({
     this.id,
@@ -53,7 +46,6 @@ final class ComplexSetExerciseEditorData {
     this.exerciseId,
     this.exerciseName,
     this.alternativeExercises = const {},
-    this.status = ComplexSetEditorDataStatus.initial,
     int? internalId,
   }) : internalId = internalId ?? UniqueKey().hashCode;
 }
@@ -68,7 +60,6 @@ final class ComplexSetEditorData {
   int recommendedRestSecs;
   int? maxRestSecs;
   List<ComplexSetExerciseEditorData> exercises;
-  ComplexSetEditorDataStatus status;
 
   ComplexSetEditorData({
     this.id,
@@ -79,7 +70,6 @@ final class ComplexSetEditorData {
     this.maxRestSecs,
     required this.setType,
     this.exercises = const [],
-    this.status = ComplexSetEditorDataStatus.initial,
     int? internalId,
   }) : internalId = internalId ?? UniqueKey().hashCode;
 }

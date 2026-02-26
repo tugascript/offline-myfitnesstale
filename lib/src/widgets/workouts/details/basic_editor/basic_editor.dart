@@ -206,18 +206,19 @@ class _BasicEditorState extends State<BasicEditor> {
               isLoading: false,
               addLabel: "Add Set",
               onAdd: () {
+                final lastSet = _displayedSets.lastOrNull;
                 setState(() {
                   _displayedSets.add(
                     SetEditorData(
                       id: null,
                       position: _displayedSets.length + 1,
-                      minSets: 1,
-                      maxSets: 0,
-                      minReps: 1,
-                      maxReps: 0,
-                      recommendedRestSecs: 0,
-                      maxRestSecs: 0,
-                      toMaxReps: false,
+                      minSets: lastSet?.minSets ?? 1,
+                      maxSets: lastSet?.maxSets ?? 0,
+                      minReps: lastSet?.minReps ?? 1,
+                      maxReps: lastSet?.maxReps ?? 0,
+                      recommendedRestSecs: lastSet?.recommendedRestSecs ?? 0,
+                      maxRestSecs: lastSet?.maxRestSecs ?? 0,
+                      toMaxReps: lastSet?.toMaxReps ?? false,
                       exerciseName: null,
                       exerciseId: null,
                       status: SetEditorDataStatus.initial,
