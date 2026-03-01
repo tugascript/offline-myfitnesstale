@@ -337,13 +337,21 @@ class _WorkoutPlanWeeksEditorState extends State<WorkoutPlanWeeksEditor> {
                   _isSaving = true;
                 });
 
-                final cubit = context.read<WorkoutPlanCubit>();
-                await cubit.createWorkoutPlanVersionWithWeeks(
-                  workoutPlanId: widget.workoutPlanId,
-                  weeks: _toBatchInputs(_weeks),
-                );
+                await context
+                    .read<WorkoutPlanCubit>()
+                    .createWorkoutPlanVersionWithWeeks(
+                      workoutPlanId: widget.workoutPlanId,
+                      weeks: _toBatchInputs(_weeks),
+                    );
 
                 if (context.mounted) {
+                  if (context.read<WorkoutPlanCubit>().state.error != null) {
+                    setState(() {
+                      _isSaving = false;
+                    });
+                    return;
+                  }
+
                   if (context.canPop()) {
                     context.pop();
                     return;
