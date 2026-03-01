@@ -98,12 +98,12 @@ class _WorkoutPlanBaseFormState extends State<WorkoutPlanBaseForm> {
                   isLoading: widget.isLoading,
                   controller: _nameController,
                   labelText: "Name",
-                  hintText: "Enter the name of the workout",
+                  hintText: "Enter the name of the workout plan",
                   fontSize: widget.sizes.subtitleFontSize,
                   padding: widget.sizes.padding,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return "Please enter the name of the workout";
+                      return "Please enter the name of the workout plan";
                     }
                     return null;
                   },
@@ -144,7 +144,7 @@ class _WorkoutPlanBaseFormState extends State<WorkoutPlanBaseForm> {
             isLoading: widget.isLoading,
             controller: _descriptionController,
             labelText: "Description",
-            hintText: "Enter workout description",
+            hintText: "Enter workout plan description",
             maxLines: 4,
             fontSize: widget.sizes.subtitleFontSize,
             padding: widget.sizes.padding,

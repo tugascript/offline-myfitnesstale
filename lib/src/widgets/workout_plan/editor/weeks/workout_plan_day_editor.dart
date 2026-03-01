@@ -7,7 +7,6 @@ import '../../../layout/sharp_switch.dart';
 import 'workout_plan_editor_data.dart';
 import 'workout_plan_workout_row_editor.dart';
 
-// TODO: update day based on the order of the days
 class WorkoutPlanDayEditor extends StatelessWidget {
   final ThemeData theme;
   final DataDisplaySizesList sizes;
@@ -61,7 +60,7 @@ class WorkoutPlanDayEditor extends StatelessWidget {
           ),
           if (!day.isRestDay)
             Padding(
-              padding: EdgeInsetsGeometry.symmetric(
+              padding: EdgeInsets.symmetric(
                 horizontal: sizes.padding / 2,
                 vertical: sizes.padding / 4,
               ),
@@ -132,7 +131,7 @@ class _RestDaySwitch extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsetsGeometry.symmetric(
+      padding: EdgeInsets.symmetric(
         horizontal: sizes.padding / 2,
         vertical: sizes.padding / 4,
       ),

@@ -98,7 +98,7 @@ class WorkoutPlanWeekEditor extends StatelessWidget {
               labelText: 'Days',
               children: [
                 Padding(
-                  padding: EdgeInsetsGeometry.all(sizes.spacing),
+                  padding: EdgeInsets.all(sizes.spacing),
                   child: DynamicListInput<WorkoutPlanDayEditorData>(
                     theme: theme,
                     filled: true,
