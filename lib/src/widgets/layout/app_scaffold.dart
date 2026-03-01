@@ -43,7 +43,6 @@ class AppScaffold extends StatelessWidget {
                   if (context.canPop()) {
                     context.pop();
                   } else {
-                    // Fallback to home if no previous route
                     context.go('/');
                   }
                 },

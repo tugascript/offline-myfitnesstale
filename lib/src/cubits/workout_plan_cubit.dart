@@ -179,6 +179,7 @@ class WorkoutPlanCubit extends Cubit<WorkoutPlanState> {
         return;
       }
 
+      emit(state.copyWith(createdWorkoutPlansCount: countResult.value));
       if (countResult.value >= 3) {
         emit(state.copyWith(
           error: const ErrorState(
@@ -295,6 +296,33 @@ class WorkoutPlanCubit extends Cubit<WorkoutPlanState> {
       pagination: state.pagination.copyWith(
         total: state.pagination.total - 1,
       ),
+      isLoading: false,
+    ));
+  }
+
+  Future<void> countCreatedWorkoutPlans() async {
+    _logger.info('Counting created workout plans');
+    emit(state.copyWith(isLoading: true));
+
+    final result = await _workoutPlanService.countWorkoutPlans(
+      createdBy: CreatedBy.user,
+    );
+    if (result.isErr()) {
+      final error = result.error;
+      _logger.warning("Failed to count created workout plans", error);
+      emit(state.copyWith(
+        error: ErrorState(
+          type: error.type.name,
+          description: error.description,
+        ),
+        isLoading: false,
+      ));
+      return;
+    }
+
+    _logger.info('Created workout plans count retrieved successfully');
+    emit(state.copyWith(
+      createdWorkoutPlansCount: result.value,
       isLoading: false,
     ));
   }
