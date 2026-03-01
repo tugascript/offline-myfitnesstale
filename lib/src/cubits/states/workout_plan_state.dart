@@ -52,6 +52,7 @@ final class WorkoutPlanState extends Equatable {
   final List<WorkoutPlanDto> workoutPlans;
   final WorkoutPlanPagination pagination;
   final WorkoutPlanDto? selectedWorkoutPlan;
+  final int createdWorkoutPlansCount;
   final bool isLoading;
   final ErrorState? error;
 
@@ -59,6 +60,7 @@ final class WorkoutPlanState extends Equatable {
     required this.workoutPlans,
     required this.pagination,
     this.selectedWorkoutPlan,
+    required this.createdWorkoutPlansCount,
     required this.isLoading,
     this.error,
   });
@@ -67,6 +69,7 @@ final class WorkoutPlanState extends Equatable {
     return WorkoutPlanState(
       workoutPlans: const [],
       pagination: WorkoutPlanPagination.initial(),
+      createdWorkoutPlansCount: 0,
       isLoading: false,
     );
   }
@@ -76,6 +79,7 @@ final class WorkoutPlanState extends Equatable {
     WorkoutPlanPagination? pagination,
     WorkoutPlanDto? selectedWorkoutPlan,
     bool? isLoading,
+    int? createdWorkoutPlansCount,
     ErrorState? error,
   }) {
     return WorkoutPlanState(
@@ -83,6 +87,8 @@ final class WorkoutPlanState extends Equatable {
       pagination: pagination ?? this.pagination,
       selectedWorkoutPlan: selectedWorkoutPlan ?? this.selectedWorkoutPlan,
       isLoading: isLoading ?? this.isLoading,
+      createdWorkoutPlansCount:
+          createdWorkoutPlansCount ?? this.createdWorkoutPlansCount,
       error: error ?? this.error,
     );
   }
@@ -92,6 +98,7 @@ final class WorkoutPlanState extends Equatable {
         workoutPlans.length,
         pagination,
         selectedWorkoutPlan,
+        createdWorkoutPlansCount,
         isLoading,
         error,
       ];

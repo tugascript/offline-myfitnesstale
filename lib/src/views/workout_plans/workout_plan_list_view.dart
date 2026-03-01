@@ -27,8 +27,9 @@ class _WorkoutPlanListViewState extends State<WorkoutPlanListView> {
   void initState() {
     super.initState();
     final cubit = context.read<WorkoutPlanCubit>();
+    final cubitState = cubit.state;
 
-    if (cubit.state.workoutPlans.isEmpty) {
+    if (cubitState.workoutPlans.isEmpty) {
       cubit.getWorkoutPlans(
         name: null,
         difficulty: null,
@@ -73,7 +74,6 @@ class _WorkoutPlanListViewState extends State<WorkoutPlanListView> {
 
     return AppScaffold(
       title: 'Workout Plans',
-      showBackButton: false,
       body: Padding(
         padding: EdgeInsets.all(sizes.padding),
         child: BlocConsumer<WorkoutPlanCubit, WorkoutPlanState>(
