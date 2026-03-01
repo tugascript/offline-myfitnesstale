@@ -17,6 +17,7 @@ enum WorkoutPlanWorkoutColumns with Columns {
   workoutPlanId("workout_plan_id"),
   workoutPlanWeekId("workout_plan_week_id"),
   workoutPlanDayId("workout_plan_day_id"),
+  planVersion("plan_version"),
   workoutId("workout_id"),
   createdBy("created_by"),
   createdAt("created_at"),
@@ -36,6 +37,7 @@ final class WorkoutPlanWorkout extends Equatable implements Model {
   final int workoutPlanId;
   final int workoutPlanWeekId;
   final int workoutPlanDayId;
+  final int planVersion;
   final int workoutId;
   final CreatedBy createdBy;
   @override
@@ -50,6 +52,7 @@ final class WorkoutPlanWorkout extends Equatable implements Model {
     required this.workoutPlanId,
     required this.workoutPlanWeekId,
     required this.workoutPlanDayId,
+    required this.planVersion,
     required this.workoutId,
     required this.createdBy,
     required this.createdAt,
@@ -65,6 +68,7 @@ final class WorkoutPlanWorkout extends Equatable implements Model {
     ${WorkoutPlanWorkoutColumns.workoutPlanId.value} INTEGER NOT NULL,
     ${WorkoutPlanWorkoutColumns.workoutPlanWeekId.value} INTEGER NOT NULL,
     ${WorkoutPlanWorkoutColumns.workoutPlanDayId.value} INTEGER NOT NULL,
+    ${WorkoutPlanWorkoutColumns.planVersion.value} INTEGER NOT NULL DEFAULT 1,
     ${WorkoutPlanWorkoutColumns.workoutId.value} INTEGER NOT NULL,
     ${WorkoutPlanWorkoutColumns.createdBy.value} TEXT NOT NULL,
     ${WorkoutPlanWorkoutColumns.createdAt.value} INTEGER NOT NULL,
@@ -84,6 +88,7 @@ final class WorkoutPlanWorkout extends Equatable implements Model {
   CREATE INDEX IF NOT EXISTS idx_workout_plan_workouts_workout_plan_day_id ON $_table (${WorkoutPlanWorkoutColumns.workoutPlanDayId.value});
   CREATE INDEX IF NOT EXISTS idx_workout_plan_workouts_workout_id ON $_table (${WorkoutPlanWorkoutColumns.workoutId.value});
   CREATE INDEX IF NOT EXISTS idx_workout_plan_workouts_day_position ON $_table (${WorkoutPlanWorkoutColumns.workoutPlanDayId.value}, ${WorkoutPlanWorkoutColumns.position.value});
+  CREATE INDEX IF NOT EXISTS idx_workout_plan_workouts_plan_version ON $_table (${WorkoutPlanWorkoutColumns.workoutPlanId.value}, ${WorkoutPlanWorkoutColumns.planVersion.value}, ${WorkoutPlanWorkoutColumns.workoutPlanDayId.value}, ${WorkoutPlanWorkoutColumns.position.value});
   ''';
 
   @override
@@ -95,6 +100,7 @@ final class WorkoutPlanWorkout extends Equatable implements Model {
       WorkoutPlanWorkoutColumns.workoutPlanId.value: workoutPlanId,
       WorkoutPlanWorkoutColumns.workoutPlanWeekId.value: workoutPlanWeekId,
       WorkoutPlanWorkoutColumns.workoutPlanDayId.value: workoutPlanDayId,
+      WorkoutPlanWorkoutColumns.planVersion.value: planVersion,
       WorkoutPlanWorkoutColumns.workoutId.value: workoutId,
       WorkoutPlanWorkoutColumns.createdBy.value: createdBy.value,
       WorkoutPlanWorkoutColumns.createdAt.value: createdAt,
@@ -117,6 +123,8 @@ final class WorkoutPlanWorkout extends Equatable implements Model {
           map[WorkoutPlanWorkoutColumns.workoutPlanWeekId.value] as int,
       workoutPlanDayId:
           map[WorkoutPlanWorkoutColumns.workoutPlanDayId.value] as int,
+      planVersion:
+          map[WorkoutPlanWorkoutColumns.planVersion.value] as int? ?? 1,
       workoutId: map[WorkoutPlanWorkoutColumns.workoutId.value] as int,
       createdBy: CreatedBy.fromValue(
         map[WorkoutPlanWorkoutColumns.createdBy.value] as String,
@@ -132,6 +140,7 @@ final class WorkoutPlanWorkout extends Equatable implements Model {
     required int workoutPlanId,
     required int workoutPlanWeekId,
     required int workoutPlanDayId,
+    int planVersion = 1,
     required int workoutId,
     WorkoutTimeOfDay? timeOfDay,
     CreatedBy createdBy = CreatedBy.user,
@@ -143,6 +152,7 @@ final class WorkoutPlanWorkout extends Equatable implements Model {
       workoutPlanId: workoutPlanId,
       workoutPlanWeekId: workoutPlanWeekId,
       workoutPlanDayId: workoutPlanDayId,
+      planVersion: planVersion,
       workoutId: workoutId,
       createdBy: createdBy,
       createdAt: now,
@@ -158,6 +168,7 @@ final class WorkoutPlanWorkout extends Equatable implements Model {
     int? workoutPlanId,
     int? workoutPlanWeekId,
     int? workoutPlanDayId,
+    int? planVersion,
     int? workoutId,
     CreatedBy? createdBy,
     int? createdAt,
@@ -170,6 +181,7 @@ final class WorkoutPlanWorkout extends Equatable implements Model {
       workoutPlanId: workoutPlanId ?? this.workoutPlanId,
       workoutPlanWeekId: workoutPlanWeekId ?? this.workoutPlanWeekId,
       workoutPlanDayId: workoutPlanDayId ?? this.workoutPlanDayId,
+      planVersion: planVersion ?? this.planVersion,
       workoutId: workoutId ?? this.workoutId,
       createdBy: createdBy ?? this.createdBy,
       createdAt: createdAt ?? this.createdAt,
@@ -185,6 +197,7 @@ final class WorkoutPlanWorkout extends Equatable implements Model {
         workoutPlanId,
         workoutPlanWeekId,
         workoutPlanDayId,
+        planVersion,
         workoutId,
         createdBy,
         createdAt,

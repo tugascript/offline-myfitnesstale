@@ -7,7 +7,7 @@ import '../common/difficulty_badge.dart';
 import '../common/muscle_badge.dart';
 import '../common/muscle_group_badge.dart';
 import '../layout/list_card.dart';
-import 'exercise_name.dart';
+import '../common/modal_search/modal_search_entity_name.dart';
 
 class ExerciseCard extends StatelessWidget {
   final ThemeData theme;
@@ -30,7 +30,7 @@ class ExerciseCard extends StatelessWidget {
       padding: sizes.padding,
       onTap: onTap,
       children: [
-        ExerciseName(
+        ModalSearchEntityName(
           name: exercise.name,
           isFavorite: exercise.isFavorite,
           fontSize: sizes.subtitleFontSize,

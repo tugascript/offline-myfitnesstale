@@ -30,6 +30,44 @@ class WeekWorkoutInput {
   });
 }
 
+class WorkoutPlanWorkoutBatchCreateInput {
+  final int workoutId;
+  final WorkoutTimeOfDay? timeOfDay;
+
+  const WorkoutPlanWorkoutBatchCreateInput({
+    required this.workoutId,
+    this.timeOfDay,
+  });
+}
+
+class WorkoutPlanDayBatchCreateInput {
+  final int day;
+  final bool isRestDay;
+  final List<WorkoutPlanWorkoutBatchCreateInput> workouts;
+
+  const WorkoutPlanDayBatchCreateInput({
+    required this.day,
+    this.isRestDay = false,
+    required this.workouts,
+  });
+}
+
+class WorkoutPlanWeekBatchCreateInput {
+  final int startWeek;
+  final int endWeek;
+  final WorkoutPhase? phase;
+  final WorkoutPlanWeekScheduleMode scheduleMode;
+  final List<WorkoutPlanDayBatchCreateInput> days;
+
+  const WorkoutPlanWeekBatchCreateInput({
+    required this.startWeek,
+    required this.endWeek,
+    this.phase,
+    this.scheduleMode = WorkoutPlanWeekScheduleMode.manual,
+    required this.days,
+  });
+}
+
 class WorkoutPlanWorkoutRegistrationInput {
   final WorkoutDto workout;
   final WorkoutTimeOfDay timeOfDay;
@@ -173,9 +211,33 @@ class WorkoutPlanService {
     }
   }
 
+  Future<Result<int, ServiceError<OperationErrorTypes>>> countWorkoutPlans({
+    CreatedBy? createdBy,
+  }) async {
+    final query = WhereBuilder();
+    if (createdBy != null) {
+      query.and(WorkoutPlanColumns.createdBy.equal, createdBy.value);
+    }
+
+    try {
+      final total = await _repository.count(
+        where: query.where,
+        whereArgs: query.args,
+      );
+      return ok(total);
+    } catch (e) {
+      _logger.severe('Failed to count workout plans', e);
+      return err(const ServiceError(
+        type: OperationErrorTypes.operationFailure,
+        description: 'Failed to count workout plans',
+      ));
+    }
+  }
+
   Future<Result<WorkoutPlanDto, ServiceError<SingleErrorTypes>>> getWorkoutPlan(
-    int id,
-  ) async {
+    int id, {
+    int? planVersion,
+  }) async {
     _logger.info('Getting workout plan with id $id');
     try {
       final WorkoutPlan? plan = await _repository.selectOne(id);
@@ -185,10 +247,12 @@ class WorkoutPlanService {
           description: 'Workout plan with id $id not found',
         ));
       }
+      final int resolvedPlanVersion = planVersion ?? plan.currentVersion;
 
       final List<WorkoutPlanWeek> weeks = await _weekRepository.selectMany(
-        where: WorkoutPlanWeekColumns.workoutPlanId.equal,
-        whereArgs: [plan.id],
+        where:
+            '${WorkoutPlanWeekColumns.workoutPlanId.equal} AND ${WorkoutPlanWeekColumns.planVersion.equal}',
+        whereArgs: [plan.id, resolvedPlanVersion],
         orderBy: [WorkoutPlanWeekColumns.startWeek.orderAsc],
       );
       if (weeks.isEmpty) {
@@ -197,8 +261,9 @@ class WorkoutPlanService {
       }
 
       final List<WorkoutPlanDay> days = await _dayRepository.selectMany(
-        where: WorkoutPlanDayColumns.workoutPlanId.equal,
-        whereArgs: [plan.id],
+        where:
+            '${WorkoutPlanDayColumns.workoutPlanId.equal} AND ${WorkoutPlanDayColumns.planVersion.equal}',
+        whereArgs: [plan.id, resolvedPlanVersion],
         orderBy: [
           WorkoutPlanDayColumns.workoutPlanWeekId.orderAsc,
           WorkoutPlanDayColumns.day.orderAsc,
@@ -216,8 +281,9 @@ class WorkoutPlanService {
 
       final List<WorkoutPlanWorkout> planWorkouts =
           await _planWorkoutRepository.selectMany(
-        where: WorkoutPlanWorkoutColumns.workoutPlanId.equal,
-        whereArgs: [plan.id],
+        where:
+            '${WorkoutPlanWorkoutColumns.workoutPlanId.equal} AND ${WorkoutPlanWorkoutColumns.planVersion.equal}',
+        whereArgs: [plan.id, resolvedPlanVersion],
         orderBy: [
           WorkoutPlanWorkoutColumns.workoutPlanDayId.orderAsc,
           WorkoutPlanWorkoutColumns.position.orderAsc,
@@ -412,11 +478,12 @@ class WorkoutPlanService {
   Future<Result<WorkoutPlanDto, ServiceError<OperationErrorTypes>>>
       createWorkoutPlan({
     required String name,
-    required int totalWeeks,
     required Difficulty difficulty,
+    required bool isFavorite,
     String? description,
     PictureData? picture,
     VideoData? video,
+    int totalWeeks = 0,
   }) async {
     _logger.info('Creating workout plan with name $name');
     try {
@@ -424,6 +491,7 @@ class WorkoutPlanService {
         name: name,
         totalWeeks: totalWeeks,
         difficulty: difficulty,
+        isFavorite: isFavorite,
         description: description,
         picture: picture,
         video: video,
@@ -436,6 +504,236 @@ class WorkoutPlanService {
       return err(const ServiceError(
         type: OperationErrorTypes.operationFailure,
         description: 'Failed to create workout plan',
+      ));
+    }
+  }
+
+  Future<Result<WorkoutPlanDto, ServiceError<SingleErrorTypes>>>
+      createWorkoutPlanVersionWithWeeks({
+    required int workoutPlanId,
+    required List<WorkoutPlanWeekBatchCreateInput> weeks,
+  }) async {
+    _logger.info(
+      'Creating workout plan version with weeks for workout plan $workoutPlanId',
+    );
+
+    if (weeks.isEmpty) {
+      return err(const ServiceError(
+        type: SingleErrorTypes.invalidInput,
+        description: 'At least one week block is required',
+      ));
+    }
+
+    final sortedWeeks = List<WorkoutPlanWeekBatchCreateInput>.from(weeks)
+      ..sort((a, b) => a.startWeek.compareTo(b.startWeek));
+    for (int i = 0; i < sortedWeeks.length; i++) {
+      final week = sortedWeeks[i];
+      if (week.startWeek < 1 ||
+          week.endWeek < week.startWeek ||
+          week.endWeek > week.startWeek + 11) {
+        return err(const ServiceError(
+          type: SingleErrorTypes.invalidInput,
+          description: 'Invalid week range. Each block must span 1 to 12 weeks',
+        ));
+      }
+      if (i > 0) {
+        final previous = sortedWeeks[i - 1];
+        if (week.startWeek != previous.endWeek + 1) {
+          return err(const ServiceError(
+            type: SingleErrorTypes.invalidInput,
+            description:
+                'Week blocks must be contiguous and cannot overlap or leave gaps',
+          ));
+        }
+      }
+      if (week.days.length > 7) {
+        return err(const ServiceError(
+          type: SingleErrorTypes.invalidInput,
+          description: 'A week can have at most 7 days',
+        ));
+      }
+
+      final seenDays = <int>{};
+      for (final day in week.days) {
+        if (day.day < 1 || day.day > 7) {
+          return err(const ServiceError(
+            type: SingleErrorTypes.invalidInput,
+            description: 'Day must be between 1 and 7',
+          ));
+        }
+        if (!seenDays.add(day.day)) {
+          return err(const ServiceError(
+            type: SingleErrorTypes.invalidInput,
+            description: 'Day numbers must be unique within a week',
+          ));
+        }
+
+        if (day.isRestDay && day.workouts.isNotEmpty) {
+          return err(const ServiceError(
+            type: SingleErrorTypes.invalidInput,
+            description: 'Rest days cannot have workouts',
+          ));
+        }
+        if (!day.isRestDay &&
+            (day.workouts.isEmpty || day.workouts.length > 3)) {
+          return err(const ServiceError(
+            type: SingleErrorTypes.invalidInput,
+            description: 'Workout days must include between 1 and 3 workouts',
+          ));
+        }
+      }
+    }
+
+    try {
+      final plan = await _repository.selectOne(workoutPlanId);
+      if (plan == null) {
+        return err(const ServiceError(
+          type: SingleErrorTypes.notFound,
+          description: 'Workout plan not found',
+        ));
+      }
+
+      final workoutIds = sortedWeeks
+          .expand((week) => week.days)
+          .expand((day) => day.workouts)
+          .map((workout) => workout.workoutId)
+          .toSet();
+      final workouts = workoutIds.isEmpty
+          ? <Workout>[]
+          : await _workoutRepository.selectMany(
+              where: WorkoutColumns.id.inList(workoutIds.length),
+              whereArgs: workoutIds.toList(),
+            );
+      if (workouts.length != workoutIds.length) {
+        return err(const ServiceError(
+          type: SingleErrorTypes.notFound,
+          description: 'Not all workouts were found',
+        ));
+      }
+
+      final workoutMap = <int, WorkoutDto>{
+        for (final workout in workouts)
+          workout.id!: WorkoutDto.fromModel(workout),
+      };
+
+      final currentVersionWeekCount = await _weekRepository.count(
+        where:
+            '${WorkoutPlanWeekColumns.workoutPlanId.equal} AND ${WorkoutPlanWeekColumns.planVersion.equal}',
+        whereArgs: [workoutPlanId, plan.currentVersion],
+      );
+      final targetVersion = currentVersionWeekCount == 0
+          ? plan.currentVersion
+          : plan.currentVersion + 1;
+
+      return await _repository.startTransaction((txn) async {
+        final List<WorkoutPlanWeekDto> createdWeeks = [];
+        int totalWeeks = 0;
+        int totalDays = 0;
+        int totalWorkouts = 0;
+
+        for (final weekInput in sortedWeeks) {
+          final sortedDays = List<WorkoutPlanDayBatchCreateInput>.from(
+            weekInput.days,
+          )..sort((a, b) => a.day.compareTo(b.day));
+
+          int totalDaysInWeek = 0;
+          int totalWorkoutsInWeek = 0;
+          for (final day in sortedDays) {
+            totalDaysInWeek += day.isRestDay ? 0 : 1;
+            totalWorkoutsInWeek += day.workouts.length;
+          }
+
+          final week = WorkoutPlanWeek.create(
+            workoutPlanId: workoutPlanId,
+            planVersion: targetVersion,
+            startWeek: weekInput.startWeek,
+            endWeek: weekInput.endWeek,
+            phase: weekInput.phase,
+            totalDays: totalDaysInWeek,
+            totalWorkouts: totalWorkoutsInWeek,
+            scheduleMode: weekInput.scheduleMode,
+            createdBy: plan.createdBy,
+          );
+          final weekId = await _weekRepository.insert(week, txn);
+          final weekModel = week.copyWith(id: weekId);
+
+          final List<WorkoutPlanDayDto> createdDays = [];
+          for (final dayInput in sortedDays) {
+            final day = WorkoutPlanDay.create(
+              workoutPlanId: workoutPlanId,
+              workoutPlanWeekId: weekId,
+              planVersion: targetVersion,
+              day: dayInput.day,
+              totalWorkouts: dayInput.workouts.length,
+              isRestDay: dayInput.isRestDay,
+              createdBy: plan.createdBy,
+            );
+            final dayId = await _dayRepository.insert(day, txn);
+            final dayModel = day.copyWith(id: dayId);
+
+            final List<WorkoutPlanWorkoutDto> createdWorkouts = [];
+            for (int i = 0; i < dayInput.workouts.length; i++) {
+              final workoutInput = dayInput.workouts[i];
+              final planWorkout = WorkoutPlanWorkout.create(
+                position: i + 1,
+                workoutPlanId: workoutPlanId,
+                workoutPlanWeekId: weekId,
+                workoutPlanDayId: dayId,
+                planVersion: targetVersion,
+                workoutId: workoutInput.workoutId,
+                timeOfDay: workoutInput.timeOfDay,
+                createdBy: plan.createdBy,
+              );
+              final planWorkoutId = await _planWorkoutRepository.insert(
+                planWorkout,
+                txn,
+              );
+
+              createdWorkouts.add(
+                WorkoutPlanWorkoutDto.fromModel(
+                  planWorkout.copyWith(id: planWorkoutId),
+                  workout: workoutMap[workoutInput.workoutId],
+                ),
+              );
+            }
+
+            createdDays.add(
+              WorkoutPlanDayDto.fromModel(
+                dayModel,
+                planWorkouts: createdWorkouts,
+              ),
+            );
+          }
+
+          createdWeeks.add(
+            WorkoutPlanWeekDto.fromModel(weekModel, days: createdDays),
+          );
+
+          totalWeeks += weekInput.endWeek - weekInput.startWeek + 1;
+          totalDays += totalDaysInWeek;
+          totalWorkouts += totalWorkoutsInWeek;
+        }
+
+        final updatedPlan = plan.copyWith(
+          currentVersion: targetVersion,
+          totalWeeks: totalWeeks,
+          totalDays: totalDays,
+          totalWorkouts: totalWorkouts,
+          updatedAt: DateUtilities.getNowUtcUnix(),
+        );
+        await _repository.update(updatedPlan, txn);
+
+        return ok(WorkoutPlanDto.fromModel(updatedPlan, weeks: createdWeeks));
+      });
+    } catch (e) {
+      _logger.severe(
+        'Failed to create workout plan version with weeks for workout plan $workoutPlanId',
+        e,
+      );
+      return err(ServiceError(
+        type: SingleErrorTypes.operationFailure,
+        description:
+            'Failed to create workout plan version with weeks: ${e.toString()}',
       ));
     }
   }
@@ -489,6 +787,7 @@ class WorkoutPlanService {
             }
             final week = WorkoutPlanWeek.create(
               workoutPlanId: planId,
+              planVersion: plan.currentVersion,
               startWeek: weekInput.startWeek,
               endWeek: weekInput.endWeek,
               phase: weekInput.phase,
@@ -505,6 +804,7 @@ class WorkoutPlanService {
               final day = WorkoutPlanDay.create(
                 workoutPlanId: planId,
                 workoutPlanWeekId: weekId,
+                planVersion: plan.currentVersion,
                 day: i + 1,
                 createdBy: createdBy,
                 totalWorkouts: dayInput.workouts.length,
@@ -522,6 +822,7 @@ class WorkoutPlanService {
                   workoutPlanId: planId,
                   workoutPlanWeekId: weekId,
                   workoutPlanDayId: dayId,
+                  planVersion: plan.currentVersion,
                   workoutId: workoutInput.workout.id,
                   timeOfDay: workoutInput.timeOfDay,
                   createdBy: createdBy,
@@ -662,6 +963,7 @@ class WorkoutPlanService {
 
       final WorkoutPlanWeek week = WorkoutPlanWeek.create(
         workoutPlanId: workoutPlanId,
+        planVersion: workoutPlan.currentVersion,
         startWeek: startWeek,
         endWeek: endWeek,
       );
@@ -736,9 +1038,7 @@ class WorkoutPlanService {
   }
 
   Future<Result<WorkoutPlanWeekDto, ServiceError<SingleErrorTypes>>>
-      getWorkoutPlanWeek(
-    int weekId,
-  ) async {
+      getWorkoutPlanWeek(int weekId, {int? planVersion}) async {
     _logger.info('Getting workout plan week with id $weekId');
     try {
       final WorkoutPlanWeek? week = await _weekRepository.selectOne(weekId);
@@ -748,10 +1048,18 @@ class WorkoutPlanService {
           description: 'Workout plan week with id $weekId not found',
         ));
       }
+      if (planVersion != null && week.planVersion != planVersion) {
+        return err(ServiceError(
+          type: SingleErrorTypes.notFound,
+          description:
+              'Workout plan week with id $weekId was not found in version $planVersion',
+        ));
+      }
 
       final List<WorkoutPlanDay> days = await _dayRepository.selectMany(
-        where: "${WorkoutPlanDayColumns.workoutPlanWeekId.value} = ?",
-        whereArgs: [weekId],
+        where:
+            '${WorkoutPlanDayColumns.workoutPlanWeekId.equal} AND ${WorkoutPlanDayColumns.planVersion.equal}',
+        whereArgs: [weekId, week.planVersion],
       );
       if (days.isEmpty) {
         _logger.info('No days found for workout plan week with id $weekId');
@@ -760,8 +1068,9 @@ class WorkoutPlanService {
 
       final List<WorkoutPlanWorkout> planWorkouts =
           await _planWorkoutRepository.selectMany(
-        where: "${WorkoutPlanWorkoutColumns.workoutPlanWeekId.value} = ?",
-        whereArgs: [weekId],
+        where:
+            '${WorkoutPlanWorkoutColumns.workoutPlanWeekId.equal} AND ${WorkoutPlanWorkoutColumns.planVersion.equal}',
+        whereArgs: [weekId, week.planVersion],
         orderBy: [
           WorkoutPlanWorkoutColumns.workoutPlanDayId.orderAsc,
           WorkoutPlanWorkoutColumns.position.orderAsc,
@@ -775,13 +1084,13 @@ class WorkoutPlanService {
         ));
       }
 
-      final workoutIds = planWorkouts.map((e) => e.workoutId).toList();
+      final workoutIds = planWorkouts.map((e) => e.workoutId).toSet();
       final workouts = await _workoutRepository.selectMany(
         where: "${WorkoutColumns.id.value} IN (${List.filled(
           workoutIds.length,
           '?',
         ).join(', ')})",
-        whereArgs: workoutIds,
+        whereArgs: workoutIds.toList(),
       );
       if (workouts.length != workoutIds.length) {
         _logger.warning(
@@ -847,9 +1156,7 @@ class WorkoutPlanService {
   }
 
   Future<Result<List<WorkoutPlanWeekDto>, ServiceError<SingleErrorTypes>>>
-      getWorkoutPlanWeeks(
-    int workoutPlanId,
-  ) async {
+      getWorkoutPlanWeeks(int workoutPlanId, {int? planVersion}) async {
     _logger.info(
         'Getting workout plan weeks for workout plan with id $workoutPlanId');
     try {
@@ -860,10 +1167,12 @@ class WorkoutPlanService {
           description: 'Workout plan with id $workoutPlanId not found',
         ));
       }
+      final int resolvedPlanVersion = planVersion ?? plan.currentVersion;
 
       final List<WorkoutPlanWeek> weeks = await _weekRepository.selectMany(
-        where: "${WorkoutPlanWeekColumns.workoutPlanId.value} = ?",
-        whereArgs: [workoutPlanId],
+        where:
+            '${WorkoutPlanWeekColumns.workoutPlanId.equal} AND ${WorkoutPlanWeekColumns.planVersion.equal}',
+        whereArgs: [workoutPlanId, resolvedPlanVersion],
         orderBy: [WorkoutPlanWeekColumns.startWeek.orderAsc],
       );
       if (weeks.isEmpty) {
@@ -872,8 +1181,9 @@ class WorkoutPlanService {
       }
 
       final List<WorkoutPlanDay> days = await _dayRepository.selectMany(
-        where: "${WorkoutPlanDayColumns.workoutPlanId.value} = ?",
-        whereArgs: [workoutPlanId],
+        where:
+            '${WorkoutPlanDayColumns.workoutPlanId.equal} AND ${WorkoutPlanDayColumns.planVersion.equal}',
+        whereArgs: [workoutPlanId, resolvedPlanVersion],
         orderBy: [
           WorkoutPlanDayColumns.workoutPlanWeekId.orderAsc,
           WorkoutPlanDayColumns.day.orderAsc,
@@ -899,8 +1209,9 @@ class WorkoutPlanService {
 
       final List<WorkoutPlanWorkout> planWorkouts =
           await _planWorkoutRepository.selectMany(
-        where: "${WorkoutPlanWorkoutColumns.workoutPlanId.value} = ?",
-        whereArgs: [workoutPlanId],
+        where:
+            '${WorkoutPlanWorkoutColumns.workoutPlanId.equal} AND ${WorkoutPlanWorkoutColumns.planVersion.equal}',
+        whereArgs: [workoutPlanId, resolvedPlanVersion],
         orderBy: [
           WorkoutPlanWorkoutColumns.workoutPlanDayId.orderAsc,
           WorkoutPlanWorkoutColumns.position.orderAsc,
@@ -921,13 +1232,13 @@ class WorkoutPlanService {
         );
       }
 
-      final workoutIds = planWorkouts.map((e) => e.workoutId).toList();
+      final workoutIds = planWorkouts.map((e) => e.workoutId).toSet();
       final workouts = await _workoutRepository.selectMany(
         where: "${WorkoutColumns.id.value} IN (${List.filled(
           workoutIds.length,
           '?',
         ).join(', ')})",
-        whereArgs: workoutIds,
+        whereArgs: workoutIds.toList(),
       );
       if (workouts.length != workoutIds.length) {
         _logger.warning(
@@ -1085,13 +1396,14 @@ class WorkoutPlanService {
       final WorkoutPlanDay planDay = WorkoutPlanDay.create(
         workoutPlanId: week.workoutPlanId,
         workoutPlanWeekId: workoutPlanWeekId,
+        planVersion: week.planVersion,
         day: dayInt > daysCount ? daysCount + 1 : dayInt,
       );
 
       final (int planDayId, List<WorkoutPlanWorkout> planWorkouts) =
           await (await _databaseHelper.db).transaction(
         (txn) async {
-          final int planDayId = await _dayRepository.insert(planDay);
+          final int planDayId = await _dayRepository.insert(planDay, txn);
           final List<WorkoutPlanWorkout> planWorkouts = [];
 
           for (int i = 0; i < workouts.length; i++) {
@@ -1101,6 +1413,7 @@ class WorkoutPlanService {
               workoutPlanId: week.workoutPlanId,
               workoutPlanWeekId: workoutPlanWeekId,
               workoutPlanDayId: planDayId,
+              planVersion: week.planVersion,
               workoutId: workout.workoutId,
               timeOfDay: workout.timeOfDay,
             );
@@ -1426,7 +1739,10 @@ class WorkoutPlanService {
   }
 
   Future<Result<List<WorkoutPlanDayDto>, ServiceError<SingleErrorTypes>>>
-      getWorkoutPlanDays(int workoutPlanWeekId) async {
+      getWorkoutPlanDays(
+    int workoutPlanWeekId, {
+    int? planVersion,
+  }) async {
     _logger.info(
         'Getting workout plan days with workout plan week id $workoutPlanWeekId');
     try {
@@ -1445,10 +1761,12 @@ class WorkoutPlanService {
           ),
         );
       }
+      final int resolvedPlanVersion = planVersion ?? planWeek.planVersion;
 
       final List<WorkoutPlanDay> planDays = await _dayRepository.selectMany(
-        where: "${WorkoutPlanDayColumns.workoutPlanWeekId.value} = ?",
-        whereArgs: [workoutPlanWeekId],
+        where:
+            '${WorkoutPlanDayColumns.workoutPlanWeekId.equal} AND ${WorkoutPlanDayColumns.planVersion.equal}',
+        whereArgs: [workoutPlanWeekId, resolvedPlanVersion],
         orderBy: [WorkoutPlanDayColumns.day.orderAsc],
       );
       if (planDays.isEmpty) {
@@ -1457,13 +1775,19 @@ class WorkoutPlanService {
 
       final List<WorkoutPlanWorkout> planWorkouts =
           await _planWorkoutRepository.selectMany(
-        where: "${WorkoutPlanWorkoutColumns.workoutPlanWeekId.value} = ?",
-        whereArgs: [workoutPlanWeekId],
+        where:
+            '${WorkoutPlanWorkoutColumns.workoutPlanWeekId.equal} AND ${WorkoutPlanWorkoutColumns.planVersion.equal}',
+        whereArgs: [workoutPlanWeekId, resolvedPlanVersion],
         orderBy: [
           WorkoutPlanWorkoutColumns.workoutPlanDayId.orderAsc,
           WorkoutPlanWorkoutColumns.position.orderAsc,
         ],
       );
+      if (planWorkouts.isEmpty) {
+        return ok(
+          planDays.map((e) => WorkoutPlanDayDto.fromModel(e)).toList(),
+        );
+      }
       final Set<int> workoutIds = planWorkouts.map((e) => e.workoutId).toSet();
       final List<Workout> workouts = await _workoutRepository.selectMany(
         where: "${WorkoutColumns.id.value} IN (${List.filled(
@@ -1644,6 +1968,7 @@ class WorkoutPlanService {
         workoutPlanId: planDay.workoutPlanId,
         workoutPlanWeekId: planDay.workoutPlanWeekId,
         workoutPlanDayId: workoutPlanDayId,
+        planVersion: planDay.planVersion,
         workoutId: workoutId,
         position: workoutPosition,
         timeOfDay: timeOfDay,

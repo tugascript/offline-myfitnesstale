@@ -51,10 +51,7 @@ class ExpandingSection extends StatelessWidget {
           : null,
       children: [
         Padding(
-          padding: EdgeInsets.symmetric(
-            horizontal: padding,
-            vertical: padding,
-          ),
+          padding: EdgeInsets.all(padding),
           child: Column(
             children: children,
           ),

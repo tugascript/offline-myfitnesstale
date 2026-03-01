@@ -7,6 +7,7 @@ import '../models/enums.dart';
 import '../models/repository.dart'
     show Repository, kDefaultLimit, kDefaultOffset;
 import '../models/utilities.dart' show WhereBuilder, DateUtilities;
+import '../models/workout_plan_model.dart';
 import '../models/workout_plan_record_model.dart';
 import '../models/workout_plan_workout_model.dart';
 import '../models/workout_plan_workout_record_model.dart';
@@ -36,6 +37,12 @@ class WorkoutPlanRecordService {
     databaseHelper: DatabaseHelper(),
     tableName: CurrentWorkoutPlanRecord.table,
     fromMap: (map) => CurrentWorkoutPlanRecord.fromMap(map),
+  );
+  final Repository<WorkoutPlan> _workoutPlanRepository =
+      Repository<WorkoutPlan>(
+    databaseHelper: DatabaseHelper(),
+    tableName: WorkoutPlan.table,
+    fromMap: (map) => WorkoutPlan.fromMap(map),
   );
 
   Future<
@@ -115,8 +122,17 @@ class WorkoutPlanRecordService {
   }) async {
     _logger.info('Creating workout plan record');
     try {
+      final workoutPlan = await _workoutPlanRepository.selectOne(workoutPlanId);
+      if (workoutPlan == null) {
+        return err(const ServiceError(
+          type: OperationErrorTypes.invalidInput,
+          description: 'Workout plan not found',
+        ));
+      }
+
       final WorkoutPlanRecord record = WorkoutPlanRecord.create(
         workoutPlanId,
+        workoutPlanVersion: workoutPlan.currentVersion,
         status: status,
       );
       final int id = await _repository.insert(record);
@@ -227,15 +243,25 @@ class WorkoutPlanRecordService {
     return Sqflite.firstIntValue(maps) ?? 0;
   }
 
-  Future<int> getTotalWorkoutsCount(int workoutPlanId) async {
+  Future<int> getTotalWorkoutsCount(
+    int workoutPlanId, {
+    int? workoutPlanVersion,
+  }) async {
     final db = await DatabaseHelper().db;
+    final String whereVersion = workoutPlanVersion != null
+        ? ' AND ${WorkoutPlanWorkoutColumns.planVersion.value} = ?'
+        : '';
+    final List<Object?> args = [
+      workoutPlanId,
+      if (workoutPlanVersion != null) workoutPlanVersion,
+    ];
     final List<Map<String, dynamic>> maps = await db.rawQuery(
       '''
       SELECT COUNT(*) as count
       FROM ${WorkoutPlanWorkout.table}
-      WHERE workout_plan_id = ?
+      WHERE ${WorkoutPlanWorkoutColumns.workoutPlanId.value} = ?$whereVersion
       ''',
-      [workoutPlanId],
+      args,
     );
 
     return Sqflite.firstIntValue(maps) ?? 0;
@@ -244,9 +270,13 @@ class WorkoutPlanRecordService {
   Future<double> getPlanProgressPercentage(
     int workoutPlanRecordId,
     int workoutPlanId,
+    int workoutPlanVersion,
   ) async {
     final int completed = await getCompletedWorkoutsCount(workoutPlanRecordId);
-    final int total = await getTotalWorkoutsCount(workoutPlanId);
+    final int total = await getTotalWorkoutsCount(
+      workoutPlanId,
+      workoutPlanVersion: workoutPlanVersion,
+    );
 
     if (total == 0) {
       return 0.0;

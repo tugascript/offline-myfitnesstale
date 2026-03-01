@@ -37,7 +37,7 @@ class WorkoutSetCard extends StatelessWidget {
           theme: theme,
           fontSize: sizes.subtitleFontSize,
         ),
-        initiallyExpanded: true,
+        initiallyExpanded: setNumber == 1,
         title: Wrap(
           alignment: WrapAlignment.spaceBetween,
           crossAxisAlignment: WrapCrossAlignment.center,

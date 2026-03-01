@@ -12,6 +12,7 @@ class WorkoutPlanDto extends Equatable implements Dto<WorkoutPlan> {
   final int id;
   final String name;
   final String? description;
+  final int currentVersion;
   final int totalWeeks;
   final int totalDays;
   final int totalWorkouts;
@@ -27,6 +28,7 @@ class WorkoutPlanDto extends Equatable implements Dto<WorkoutPlan> {
     required this.id,
     required this.name,
     this.description,
+    required this.currentVersion,
     required this.totalWeeks,
     required this.totalDays,
     required this.totalWorkouts,
@@ -46,6 +48,7 @@ class WorkoutPlanDto extends Equatable implements Dto<WorkoutPlan> {
       id: model.id!,
       name: model.name,
       description: model.description,
+      currentVersion: model.currentVersion,
       totalWeeks: model.totalWeeks,
       totalDays: model.totalDays,
       totalWorkouts: model.totalWorkouts,
@@ -63,6 +66,7 @@ class WorkoutPlanDto extends Equatable implements Dto<WorkoutPlan> {
     int? id,
     String? name,
     String? description,
+    int? currentVersion,
     int? totalWeeks,
     int? totalDays,
     int? totalWorkouts,
@@ -76,6 +80,7 @@ class WorkoutPlanDto extends Equatable implements Dto<WorkoutPlan> {
       id: id ?? this.id,
       name: name ?? this.name,
       description: description ?? this.description,
+      currentVersion: currentVersion ?? this.currentVersion,
       totalWeeks: totalWeeks ?? this.totalWeeks,
       totalDays: totalDays ?? this.totalDays,
       totalWorkouts: totalWorkouts ?? this.totalWorkouts,
@@ -92,6 +97,7 @@ class WorkoutPlanDto extends Equatable implements Dto<WorkoutPlan> {
         id,
         name,
         description,
+        currentVersion,
         totalWeeks,
         totalDays,
         totalWorkouts,

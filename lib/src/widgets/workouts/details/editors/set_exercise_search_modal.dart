@@ -5,7 +5,7 @@ import '../../../../cubits/exercise_cubit.dart';
 import '../../../../cubits/states/exercise_state.dart';
 import '../../../../models/enums.dart';
 import '../../../../utilities/sizes/data_display_sizes.dart';
-import 'set_exercise_search_form.dart';
+import '../../../common/modal_search/modal_search_form.dart';
 import 'set_exercise_search_list.dart';
 
 class SetExerciseSearchModal extends StatelessWidget {
@@ -37,7 +37,7 @@ class SetExerciseSearchModal extends StatelessWidget {
           builder: (context, state) {
             return Column(
               children: [
-                SetExerciseSearchForm(
+                ModalSearchForm(
                   theme: theme,
                   sizes: sizes,
                   isLoading: state.isLoading,

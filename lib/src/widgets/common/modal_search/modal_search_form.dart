@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 
-import '../../../../models/enums.dart';
-import '../../../../models/utilities.dart';
-import '../../../../utilities/sizes/data_display_sizes.dart';
-import '../../../common/favourite_checkbox.dart';
-import '../../../layout/app_dropdown.dart';
-import '../../../layout/app_text_form_field.dart';
+import '../../../models/enums.dart';
+import '../../../models/utilities.dart';
+import '../../../utilities/sizes/data_display_sizes.dart';
+import '../favourite_checkbox.dart';
+import '../../layout/app_dropdown.dart';
+import '../../layout/app_text_form_field.dart';
 
-class SetExerciseSearchForm extends StatefulWidget {
+class ModalSearchForm extends StatefulWidget {
   final ThemeData theme;
   final DataDisplaySizesList sizes;
 
@@ -21,7 +21,7 @@ class SetExerciseSearchForm extends StatefulWidget {
     required bool isFavorite,
   }) onSubmit;
 
-  const SetExerciseSearchForm({
+  const ModalSearchForm({
     super.key,
     required this.theme,
     required this.sizes,
@@ -33,10 +33,10 @@ class SetExerciseSearchForm extends StatefulWidget {
   });
 
   @override
-  State<SetExerciseSearchForm> createState() => _SetExerciseSearchFormState();
+  State<ModalSearchForm> createState() => _ModalSearchFormState();
 }
 
-class _SetExerciseSearchFormState extends State<SetExerciseSearchForm> {
+class _ModalSearchFormState extends State<ModalSearchForm> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   late final _FormData _data;
@@ -149,10 +149,11 @@ class _SetExerciseSearchFormState extends State<SetExerciseSearchForm> {
               ),
               SizedBox(width: spacing),
               _SmallSearchButton(
-                  widget: widget,
-                  formKey: _formKey,
-                  data: _data,
-                  padding: padding),
+                widget: widget,
+                formKey: _formKey,
+                data: _data,
+                padding: padding,
+              ),
             ],
           ),
         ],
@@ -170,7 +171,7 @@ class _SmallSearchButton extends StatelessWidget {
   })  : _formKey = formKey,
         _data = data;
 
-  final SetExerciseSearchForm widget;
+  final ModalSearchForm widget;
   final GlobalKey<FormState> _formKey;
   final _FormData _data;
   final double padding;

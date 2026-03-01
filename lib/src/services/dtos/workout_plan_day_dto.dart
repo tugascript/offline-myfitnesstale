@@ -7,6 +7,7 @@ import 'workout_plan_workout_dto.dart';
 class WorkoutPlanDayDto extends Equatable implements Dto<WorkoutPlanDay> {
   @override
   final int id;
+  final int planVersion;
   final int day;
   final int totalWorkouts;
   final bool isRestDay;
@@ -16,6 +17,7 @@ class WorkoutPlanDayDto extends Equatable implements Dto<WorkoutPlanDay> {
 
   const WorkoutPlanDayDto({
     required this.id,
+    required this.planVersion,
     required this.day,
     required this.totalWorkouts,
     required this.isRestDay,
@@ -29,6 +31,7 @@ class WorkoutPlanDayDto extends Equatable implements Dto<WorkoutPlanDay> {
   }) {
     return WorkoutPlanDayDto(
       id: model.id!,
+      planVersion: model.planVersion,
       day: model.day,
       totalWorkouts: model.totalWorkouts,
       isRestDay: model.isRestDay,
@@ -39,6 +42,7 @@ class WorkoutPlanDayDto extends Equatable implements Dto<WorkoutPlanDay> {
   @override
   WorkoutPlanDayDto copyWith({
     int? id,
+    int? planVersion,
     int? day,
     bool? isRestDay,
     int? totalWorkouts,
@@ -46,6 +50,7 @@ class WorkoutPlanDayDto extends Equatable implements Dto<WorkoutPlanDay> {
   }) {
     return WorkoutPlanDayDto(
       id: id ?? this.id,
+      planVersion: planVersion ?? this.planVersion,
       day: day ?? this.day,
       isRestDay: isRestDay ?? this.isRestDay,
       totalWorkouts: totalWorkouts ?? this.totalWorkouts,
@@ -56,6 +61,7 @@ class WorkoutPlanDayDto extends Equatable implements Dto<WorkoutPlanDay> {
   factory WorkoutPlanDayDto.autoRestDay(int day) {
     return WorkoutPlanDayDto(
       id: 0,
+      planVersion: 0,
       day: day,
       totalWorkouts: 0,
       isRestDay: true,
@@ -63,5 +69,12 @@ class WorkoutPlanDayDto extends Equatable implements Dto<WorkoutPlanDay> {
   }
 
   @override
-  List<Object?> get props => [id, day, totalWorkouts, isRestDay, planWorkouts];
+  List<Object?> get props => [
+        id,
+        planVersion,
+        day,
+        totalWorkouts,
+        isRestDay,
+        planWorkouts,
+      ];
 }
