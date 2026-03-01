@@ -9,6 +9,7 @@ class WorkoutPlanWorkoutDto extends Equatable
     implements Dto<WorkoutPlanWorkout> {
   @override
   final int id;
+  final int planVersion;
   final int position;
   final WorkoutTimeOfDay? timeOfDay;
   final int workoutId;
@@ -18,6 +19,7 @@ class WorkoutPlanWorkoutDto extends Equatable
 
   const WorkoutPlanWorkoutDto({
     required this.id,
+    required this.planVersion,
     required this.position,
     this.timeOfDay,
     required this.workoutId,
@@ -31,6 +33,7 @@ class WorkoutPlanWorkoutDto extends Equatable
   }) {
     return WorkoutPlanWorkoutDto(
       id: model.id!,
+      planVersion: model.planVersion,
       position: model.position,
       timeOfDay: model.timeOfDay,
       workoutId: model.workoutId,
@@ -41,6 +44,7 @@ class WorkoutPlanWorkoutDto extends Equatable
   @override
   WorkoutPlanWorkoutDto copyWith({
     int? id,
+    int? planVersion,
     int? position,
     WorkoutTimeOfDay? timeOfDay,
     int? workoutId,
@@ -48,6 +52,7 @@ class WorkoutPlanWorkoutDto extends Equatable
   }) {
     return WorkoutPlanWorkoutDto(
       id: id ?? this.id,
+      planVersion: planVersion ?? this.planVersion,
       position: position ?? this.position,
       timeOfDay: timeOfDay ?? this.timeOfDay,
       workoutId: workoutId ?? this.workoutId,
@@ -58,6 +63,7 @@ class WorkoutPlanWorkoutDto extends Equatable
   @override
   List<Object?> get props => [
         id,
+        planVersion,
         position,
         timeOfDay,
         workoutId,

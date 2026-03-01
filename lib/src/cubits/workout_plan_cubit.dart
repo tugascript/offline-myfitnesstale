@@ -4,12 +4,15 @@ import 'package:logging/logging.dart';
 import '../models/common.dart';
 import '../models/enums.dart';
 import '../services/common/errors.dart';
+import '../services/entitlement_guard.dart';
+import '../services/entitlement_service.dart';
 import '../services/workout_plan_service.dart';
 import 'states/common_state.dart';
 import 'states/workout_plan_state.dart';
 
 class WorkoutPlanCubit extends Cubit<WorkoutPlanState> {
   final WorkoutPlanService _workoutPlanService = WorkoutPlanService();
+  final EntitlementService _entitlementService = EntitlementService();
 
   WorkoutPlanCubit() : super(WorkoutPlanState.initial());
 
@@ -103,10 +106,46 @@ class WorkoutPlanCubit extends Cubit<WorkoutPlanState> {
     ));
   }
 
+  Future<void> createWorkoutPlanVersionWithWeeks({
+    required int workoutPlanId,
+    required List<WorkoutPlanWeekBatchCreateInput> weeks,
+  }) async {
+    _logger.info('Creating workout plan version for plan $workoutPlanId');
+    emit(state.copyWith(isLoading: true));
+
+    final result = await _workoutPlanService.createWorkoutPlanVersionWithWeeks(
+      workoutPlanId: workoutPlanId,
+      weeks: weeks,
+    );
+
+    if (result.isErr()) {
+      final error = result.error;
+      _logger.warning("Failed to create workout plan version", error);
+      emit(state.copyWith(
+        error: ErrorState(
+          type: error.type.name,
+          description: error.description,
+        ),
+        isLoading: false,
+      ));
+      return;
+    }
+
+    final updatedPlan = result.value;
+    emit(state.copyWith(
+      selectedWorkoutPlan: updatedPlan,
+      workoutPlans: state.workoutPlans
+          .map((p) => p.id == workoutPlanId ? updatedPlan : p)
+          .toList(),
+      isLoading: false,
+    ));
+  }
+
   Future<void> createWorkoutPlan({
     required String name,
-    required int totalWeeks,
     required Difficulty difficulty,
+    required bool isFavorite,
+    int totalWeeks = 0,
     String? description,
     PictureData? picture,
     VideoData? video,
@@ -114,15 +153,59 @@ class WorkoutPlanCubit extends Cubit<WorkoutPlanState> {
     _logger.info('Creating workout plan');
     emit(state.copyWith(isLoading: true));
 
+    final entitlementSnapshotResult =
+        await _entitlementService.getEntitlementSnapshot();
+    if (entitlementSnapshotResult.isErr()) {
+      emit(state.copyWith(
+        error: const ErrorState(
+          type: 'entitlement_unavailable',
+          description:
+              'Premium status unavailable. Please refresh and try again.',
+        ),
+        isLoading: false,
+      ));
+      return;
+    }
+
+    final bool isPremium =
+        EntitlementGuard.canUsePremium(entitlementSnapshotResult.value);
+    if (!isPremium) {
+      final countResult = await _workoutPlanService.countWorkoutPlans(
+        createdBy: CreatedBy.user,
+      );
+      if (countResult.isErr()) {
+        emit(state.copyWith(
+          error: ErrorState(
+            type: countResult.error.type.name,
+            description: countResult.error.description,
+          ),
+          isLoading: false,
+        ));
+        return;
+      }
+
+      if (countResult.value >= 3) {
+        emit(state.copyWith(
+          error: const ErrorState(
+            type: 'plan_limit_reached',
+            description:
+                'Free users can create up to 3 workout plans. Upgrade to premium to create more.',
+          ),
+          isLoading: false,
+        ));
+        return;
+      }
+    }
+
     final result = await _workoutPlanService.createWorkoutPlan(
       name: name,
       totalWeeks: totalWeeks,
       difficulty: difficulty,
+      isFavorite: isFavorite,
       description: description,
       picture: picture,
       video: video,
     );
-
     if (result.isErr()) {
       final error = result.error;
       _logger.warning("Failed to create workout plan", error);
@@ -143,6 +226,7 @@ class WorkoutPlanCubit extends Cubit<WorkoutPlanState> {
       pagination: state.pagination.copyWith(
         total: state.pagination.total + 1,
       ),
+      selectedWorkoutPlan: newPlan,
       isLoading: false,
     ));
   }

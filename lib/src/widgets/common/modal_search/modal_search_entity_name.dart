@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 
-class ExerciseName extends StatelessWidget {
+class ModalSearchEntityName extends StatelessWidget {
   final String name;
   final bool isFavorite;
   final double fontSize;
 
-  const ExerciseName({
+  const ModalSearchEntityName({
     super.key,
     required this.name,
     required this.isFavorite,

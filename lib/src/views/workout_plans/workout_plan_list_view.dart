@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
 
-import '../cubits/states/workout_plan_state.dart';
-import '../cubits/workout_plan_cubit.dart';
-import '../models/enums.dart';
-import '../utilities/sizes/data_display_sizes.dart';
-import '../utilities/sizes/screen_size.dart';
-import '../widgets/layout/app_scaffold.dart';
-import '../widgets/workout_plan/workout_plan_search_form.dart';
-import '../widgets/workout_plan/workout_plans_list.dart';
+import '../../cubits/states/workout_plan_state.dart';
+import '../../cubits/workout_plan_cubit.dart';
+import '../../models/enums.dart';
+import '../../utilities/sizes/data_display_sizes.dart';
+import '../../utilities/sizes/screen_size.dart';
+import '../../widgets/layout/app_scaffold.dart';
+import '../../widgets/workout_plan/editor/create_workout_plan_modal.dart';
+import '../../widgets/workout_plan/workout_plan_search_form.dart';
+import '../../widgets/workout_plan/workout_plans_list.dart';
 
 class WorkoutPlanListView extends StatefulWidget {
   static const routeName = '/workout-plans';
@@ -69,6 +69,7 @@ class _WorkoutPlanListViewState extends State<WorkoutPlanListView> {
   Widget build(BuildContext context) {
     final breakPoints = BreakPoint.fromContext(context);
     final sizes = DataDisplaySizes.getDataDisplaySizes(breakPoints.screenSize);
+    final theme = Theme.of(context);
 
     return AppScaffold(
       title: 'Workout Plans',
@@ -123,17 +124,19 @@ class _WorkoutPlanListViewState extends State<WorkoutPlanListView> {
           },
         ),
       ),
-      floatingActionButton: SizedBox(
-        width: sizes.buttonSize,
-        height: sizes.buttonSize,
-        child: FloatingActionButton(
-          elevation: sizes.elevation,
-          onPressed: () {
-            context.push("/workout-plans/create");
-          },
-          shape: BeveledRectangleBorder(),
-          child: Icon(Icons.add, size: sizes.buttonIconSize),
-        ),
+      floatingActionButton: FloatingActionButton(
+        elevation: sizes.elevation,
+        onPressed: () {
+          showDialog(
+            context: context,
+            builder: (context) => CreateWorkoutPlanModal(
+              theme: theme,
+              sizes: sizes,
+            ),
+          );
+        },
+        shape: BeveledRectangleBorder(),
+        child: Icon(Icons.add, size: sizes.buttonIconSize),
       ),
     );
   }

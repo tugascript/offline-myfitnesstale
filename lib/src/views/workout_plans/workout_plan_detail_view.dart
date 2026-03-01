@@ -2,17 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import '../cubits/states/workout_plan_state.dart';
-import '../cubits/workout_plan_cubit.dart';
-import '../models/enums.dart';
-import '../utilities/sizes/data_display_sizes.dart';
-import '../utilities/sizes/screen_size.dart';
-import '../widgets/layout/responsive_scaffold.dart';
-import '../widgets/common/action_buttons.dart';
-import '../widgets/workout_plan/details/workout_plan_header.dart';
-import '../widgets/workout_plan/details/workout_plan_week_card.dart';
-import 'error_view.dart';
-import 'loading_view.dart';
+import '../../cubits/states/workout_plan_state.dart';
+import '../../cubits/workout_plan_cubit.dart';
+import '../../models/enums.dart';
+import '../../utilities/sizes/data_display_sizes.dart';
+import '../../utilities/sizes/screen_size.dart';
+import '../../widgets/layout/responsive_scaffold.dart';
+import '../../widgets/common/action_buttons.dart';
+import '../../widgets/workout_plan/details/workout_plan_header.dart';
+import '../../widgets/workout_plan/details/workout_plan_week_card.dart';
+import '../error_view.dart';
+import '../loading_view.dart';
 
 class WorkoutPlanDetailView extends StatefulWidget {
   static const String routeName = "/workout-plans/:id";

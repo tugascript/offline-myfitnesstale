@@ -10,7 +10,7 @@ import 'loading_view.dart';
 import 'onboarding_view.dart';
 import 'profile_view.dart';
 import 'progress_view.dart';
-import 'workout_plan_list_view.dart';
+import 'workout_plans/workout_plan_list_view.dart';
 
 sealed class _PageBuilder {
   static const int pagesCount = 4;

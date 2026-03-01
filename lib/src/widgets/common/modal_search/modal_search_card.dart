@@ -1,19 +1,20 @@
 import 'package:flutter/material.dart';
 
-import '../../../exercises/exercise_name.dart';
-import '../../../layout/list_card.dart';
-import '../../../../services/dtos/exercise_dto.dart';
+import '../../layout/list_card.dart';
+import 'modal_search_entity_name.dart';
 
-class SetExerciseSearchCard extends StatelessWidget {
-  final ExerciseDto exercise;
+class ModalSearchCard extends StatelessWidget {
+  final String name;
+  final bool isFavorite;
   final double margins;
   final double padding;
   final double fontSize;
   final VoidCallback onTap;
 
-  const SetExerciseSearchCard({
+  const ModalSearchCard({
     super.key,
-    required this.exercise,
+    required this.name,
+    required this.isFavorite,
     required this.margins,
     required this.padding,
     required this.fontSize,
@@ -30,9 +31,9 @@ class SetExerciseSearchCard extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            ExerciseName(
-              name: exercise.name,
-              isFavorite: exercise.isFavorite,
+            ModalSearchEntityName(
+              name: name,
+              isFavorite: isFavorite,
               fontSize: fontSize,
             ),
             Icon(

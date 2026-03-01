@@ -10,6 +10,7 @@ const String _table = "workout_plan_weeks";
 enum WorkoutPlanWeekColumns with Columns {
   id("id"),
   workoutPlanId("workout_plan_id"),
+  planVersion("plan_version"),
   startWeek("start_week"),
   endWeek("end_week"),
   phase("phase"),
@@ -30,6 +31,7 @@ class WorkoutPlanWeek extends Equatable implements Model {
   @override
   final int? id;
   final int workoutPlanId;
+  final int planVersion;
   final int startWeek;
   final int endWeek;
   final WorkoutPhase? phase;
@@ -45,6 +47,7 @@ class WorkoutPlanWeek extends Equatable implements Model {
   const WorkoutPlanWeek({
     this.id,
     required this.workoutPlanId,
+    required this.planVersion,
     required this.startWeek,
     required this.endWeek,
     this.phase,
@@ -61,6 +64,7 @@ class WorkoutPlanWeek extends Equatable implements Model {
   CREATE TABLE IF NOT EXISTS $_table (
     ${WorkoutPlanWeekColumns.id.value} INTEGER PRIMARY KEY,
     ${WorkoutPlanWeekColumns.workoutPlanId.value} INTEGER NOT NULL,
+    ${WorkoutPlanWeekColumns.planVersion.value} INTEGER NOT NULL DEFAULT 1,
     ${WorkoutPlanWeekColumns.startWeek.value} INTEGER NOT NULL,
     ${WorkoutPlanWeekColumns.endWeek.value} INTEGER NOT NULL,
     ${WorkoutPlanWeekColumns.phase.value} TEXT,
@@ -76,6 +80,7 @@ class WorkoutPlanWeek extends Equatable implements Model {
   
   CREATE INDEX IF NOT EXISTS idx_workout_plan_weeks_workout_plan_id ON $_table (${WorkoutPlanWeekColumns.workoutPlanId.value});
   CREATE INDEX IF NOT EXISTS idx_workout_plan_weeks_start_week ON $_table (${WorkoutPlanWeekColumns.startWeek.value});
+  CREATE INDEX IF NOT EXISTS idx_workout_plan_weeks_plan_version ON $_table (${WorkoutPlanWeekColumns.workoutPlanId.value}, ${WorkoutPlanWeekColumns.planVersion.value}, ${WorkoutPlanWeekColumns.startWeek.value});
   ''';
 
   @override
@@ -83,6 +88,7 @@ class WorkoutPlanWeek extends Equatable implements Model {
     return {
       WorkoutPlanWeekColumns.id.value: id,
       WorkoutPlanWeekColumns.workoutPlanId.value: workoutPlanId,
+      WorkoutPlanWeekColumns.planVersion.value: planVersion,
       WorkoutPlanWeekColumns.startWeek.value: startWeek,
       WorkoutPlanWeekColumns.endWeek.value: endWeek,
       WorkoutPlanWeekColumns.phase.value: phase?.value,
@@ -100,6 +106,7 @@ class WorkoutPlanWeek extends Equatable implements Model {
     return WorkoutPlanWeek(
       id: map[WorkoutPlanWeekColumns.id.value] as int?,
       workoutPlanId: map[WorkoutPlanWeekColumns.workoutPlanId.value] as int,
+      planVersion: map[WorkoutPlanWeekColumns.planVersion.value] as int? ?? 1,
       startWeek: map[WorkoutPlanWeekColumns.startWeek.value] as int,
       endWeek: map[WorkoutPlanWeekColumns.endWeek.value] as int,
       createdBy: CreatedBy.fromValue(
@@ -122,6 +129,7 @@ class WorkoutPlanWeek extends Equatable implements Model {
   @override
   factory WorkoutPlanWeek.create({
     required int workoutPlanId,
+    int planVersion = 1,
     required int startWeek,
     required int endWeek,
     WorkoutPhase? phase,
@@ -134,6 +142,7 @@ class WorkoutPlanWeek extends Equatable implements Model {
     final now = DateUtilities.getNowUtcUnix();
     return WorkoutPlanWeek(
       workoutPlanId: workoutPlanId,
+      planVersion: planVersion,
       startWeek: startWeek,
       endWeek: endWeek,
       phase: phase,
@@ -150,6 +159,7 @@ class WorkoutPlanWeek extends Equatable implements Model {
   WorkoutPlanWeek copyWith({
     int? id,
     int? workoutPlanId,
+    int? planVersion,
     int? startWeek,
     int? endWeek,
     WorkoutPhase? phase,
@@ -163,6 +173,7 @@ class WorkoutPlanWeek extends Equatable implements Model {
     return WorkoutPlanWeek(
       id: id ?? this.id,
       workoutPlanId: workoutPlanId ?? this.workoutPlanId,
+      planVersion: planVersion ?? this.planVersion,
       startWeek: startWeek ?? this.startWeek,
       endWeek: endWeek ?? this.endWeek,
       createdBy: createdBy ?? this.createdBy,
@@ -179,6 +190,7 @@ class WorkoutPlanWeek extends Equatable implements Model {
   List<Object?> get props => [
         id,
         workoutPlanId,
+        planVersion,
         startWeek,
         endWeek,
         phase,
@@ -192,6 +204,6 @@ class WorkoutPlanWeek extends Equatable implements Model {
 
   @override
   String toString() {
-    return 'WorkoutPlanWeek { id: $id, workoutPlanId: $workoutPlanId, startWeek: $startWeek, endWeek: $endWeek, phase: $phase, totalDays: $totalDays, totalWorkouts: $totalWorkouts, createdBy: $createdBy, scheduleMode: $scheduleMode, createdAt: $createdAt, updatedAt: $updatedAt }';
+    return 'WorkoutPlanWeek { id: $id, workoutPlanId: $workoutPlanId, planVersion: $planVersion, startWeek: $startWeek, endWeek: $endWeek, phase: $phase, totalDays: $totalDays, totalWorkouts: $totalWorkouts, createdBy: $createdBy, scheduleMode: $scheduleMode, createdAt: $createdAt, updatedAt: $updatedAt }';
   }
 }

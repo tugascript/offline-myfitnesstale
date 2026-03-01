@@ -10,6 +10,7 @@ const String _table = 'workout_plan_records';
 enum WorkoutPlanRecordColumns with Columns {
   id("id"),
   workoutPlanId("workout_plan_id"),
+  workoutPlanVersion("workout_plan_version"),
   status("status"),
   completedAt("completed_at"),
   createdAt("created_at"),
@@ -25,6 +26,7 @@ class WorkoutPlanRecord extends Equatable implements Model {
   @override
   final int? id;
   final int workoutPlanId;
+  final int workoutPlanVersion;
   final ProgressStatus status;
   final int? completedAt;
   @override
@@ -35,6 +37,7 @@ class WorkoutPlanRecord extends Equatable implements Model {
   const WorkoutPlanRecord({
     this.id,
     required this.workoutPlanId,
+    required this.workoutPlanVersion,
     required this.status,
     this.completedAt,
     required this.createdAt,
@@ -46,6 +49,7 @@ class WorkoutPlanRecord extends Equatable implements Model {
   CREATE TABLE IF NOT EXISTS $_table (
     ${WorkoutPlanRecordColumns.id.value} INTEGER PRIMARY KEY AUTOINCREMENT,
     ${WorkoutPlanRecordColumns.workoutPlanId.value} INTEGER NOT NULL,
+    ${WorkoutPlanRecordColumns.workoutPlanVersion.value} INTEGER NOT NULL DEFAULT 1,
     ${WorkoutPlanRecordColumns.status.value} TEXT NOT NULL,
     ${WorkoutPlanRecordColumns.completedAt.value} INTEGER,
     ${WorkoutPlanRecordColumns.createdAt.value} INTEGER NOT NULL,
@@ -62,6 +66,7 @@ class WorkoutPlanRecord extends Equatable implements Model {
     return {
       WorkoutPlanRecordColumns.id.value: id,
       WorkoutPlanRecordColumns.workoutPlanId.value: workoutPlanId,
+      WorkoutPlanRecordColumns.workoutPlanVersion.value: workoutPlanVersion,
       WorkoutPlanRecordColumns.status.value: status.value,
       WorkoutPlanRecordColumns.completedAt.value: completedAt,
       WorkoutPlanRecordColumns.createdAt.value: createdAt,
@@ -74,6 +79,8 @@ class WorkoutPlanRecord extends Equatable implements Model {
     return WorkoutPlanRecord(
       id: map[WorkoutPlanRecordColumns.id.value] as int?,
       workoutPlanId: map[WorkoutPlanRecordColumns.workoutPlanId.value]! as int,
+      workoutPlanVersion:
+          map[WorkoutPlanRecordColumns.workoutPlanVersion.value] as int? ?? 1,
       status: ProgressStatus.fromValue(
           map[WorkoutPlanRecordColumns.status.value]! as String),
       completedAt: map[WorkoutPlanRecordColumns.completedAt.value] as int?,
@@ -85,12 +92,14 @@ class WorkoutPlanRecord extends Equatable implements Model {
   @override
   factory WorkoutPlanRecord.create(
     int workoutPlanId, {
+    int workoutPlanVersion = 1,
     ProgressStatus status = ProgressStatus.inProgress,
     int? completedAt,
   }) {
     final int now = DateUtilities.getNowUtcUnix();
     return WorkoutPlanRecord(
       workoutPlanId: workoutPlanId,
+      workoutPlanVersion: workoutPlanVersion,
       status: status,
       completedAt: completedAt,
       createdAt: now,
@@ -102,6 +111,7 @@ class WorkoutPlanRecord extends Equatable implements Model {
   WorkoutPlanRecord copyWith({
     int? id,
     int? workoutPlanId,
+    int? workoutPlanVersion,
     ProgressStatus? status,
     int? completedAt,
     int? createdAt,
@@ -110,6 +120,7 @@ class WorkoutPlanRecord extends Equatable implements Model {
     return WorkoutPlanRecord(
       id: id ?? this.id,
       workoutPlanId: workoutPlanId ?? this.workoutPlanId,
+      workoutPlanVersion: workoutPlanVersion ?? this.workoutPlanVersion,
       status: status ?? this.status,
       completedAt: completedAt ?? this.completedAt,
       createdAt: createdAt ?? this.createdAt,
@@ -121,6 +132,7 @@ class WorkoutPlanRecord extends Equatable implements Model {
   List<Object?> get props => [
         id,
         workoutPlanId,
+        workoutPlanVersion,
         status,
         completedAt,
         createdAt,
@@ -129,6 +141,6 @@ class WorkoutPlanRecord extends Equatable implements Model {
 
   @override
   String toString() {
-    return 'WorkoutPlanRecord { id: $id, workoutPlanId: $workoutPlanId, status: $status, completedAt: $completedAt, createdAt: $createdAt, updatedAt: $updatedAt }';
+    return 'WorkoutPlanRecord { id: $id, workoutPlanId: $workoutPlanId, workoutPlanVersion: $workoutPlanVersion, status: $status, completedAt: $completedAt, createdAt: $createdAt, updatedAt: $updatedAt }';
   }
 }

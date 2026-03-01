@@ -8,6 +8,7 @@ import 'workout_plan_day_dto.dart';
 class WorkoutPlanWeekDto extends Equatable implements Dto<WorkoutPlanWeek> {
   @override
   final int id;
+  final int planVersion;
   final int startWeek;
   final int endWeek;
   final int totalDays;
@@ -20,6 +21,7 @@ class WorkoutPlanWeekDto extends Equatable implements Dto<WorkoutPlanWeek> {
 
   const WorkoutPlanWeekDto({
     required this.id,
+    required this.planVersion,
     required this.startWeek,
     required this.endWeek,
     required this.totalDays,
@@ -36,6 +38,7 @@ class WorkoutPlanWeekDto extends Equatable implements Dto<WorkoutPlanWeek> {
   }) {
     return WorkoutPlanWeekDto(
       id: model.id!,
+      planVersion: model.planVersion,
       startWeek: model.startWeek,
       endWeek: model.endWeek,
       totalDays: model.totalDays,
@@ -49,6 +52,7 @@ class WorkoutPlanWeekDto extends Equatable implements Dto<WorkoutPlanWeek> {
   @override
   WorkoutPlanWeekDto copyWith({
     int? id,
+    int? planVersion,
     int? startWeek,
     int? endWeek,
     int? totalDays,
@@ -59,6 +63,7 @@ class WorkoutPlanWeekDto extends Equatable implements Dto<WorkoutPlanWeek> {
   }) {
     return WorkoutPlanWeekDto(
       id: id ?? this.id,
+      planVersion: planVersion ?? this.planVersion,
       startWeek: startWeek ?? this.startWeek,
       endWeek: endWeek ?? this.endWeek,
       totalDays: totalDays ?? this.totalDays,
@@ -72,6 +77,7 @@ class WorkoutPlanWeekDto extends Equatable implements Dto<WorkoutPlanWeek> {
   @override
   List<Object?> get props => [
         id,
+        planVersion,
         startWeek,
         endWeek,
         totalDays,

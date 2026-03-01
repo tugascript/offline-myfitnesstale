@@ -51,8 +51,10 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
     final record = result.value;
 
     // Fetch the plan details
-    final planResult =
-        await _workoutPlanService.getWorkoutPlan(record.workoutPlanId);
+    final planResult = await _workoutPlanService.getWorkoutPlan(
+      record.workoutPlanId,
+      planVersion: record.workoutPlanVersion,
+    );
     if (planResult.isErr()) {
       emit(state.copyWith(
         error: ErrorState(
@@ -102,24 +104,22 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
       }
 
       // Get weekday (1=Mon, 7=Sun)
-      final weekday = now.weekday;
+      final relativeDayIndex = (daysSinceStart % 7) + 1;
 
       // Find the corresponding week in the plan
-      final weeksResult =
-          await _workoutPlanService.getWorkoutPlanWeeks(plan.id);
+      final weeksResult = await _workoutPlanService.getWorkoutPlanWeeks(
+        plan.id,
+        planVersion: record.workoutPlanVersion,
+      );
       if (weeksResult.isErr()) return;
 
       final weeks = weeksResult.value;
-
-      int? weekId;
-      for (final w in weeks) {
-        if (currentWeekNum >= w.startWeek && currentWeekNum <= w.endWeek) {
-          weekId = w.id;
-          break;
-        }
-      }
-
-      if (weekId == null) {
+      final week = weeks
+          .where(
+            (w) => currentWeekNum >= w.startWeek && currentWeekNum <= w.endWeek,
+          )
+          .firstOrNull;
+      if (week == null) {
         emit(state.copyWith(
           currentPlanRecord:
               state.currentPlanRecord.copyWith(todaysWorkouts: []),
@@ -127,13 +127,18 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
         return;
       }
 
-      // Fetch days for this week
-      final daysResult = await _workoutPlanService.getWorkoutPlanWeek(weekId);
-      if (daysResult.isErr()) return;
-
-      final weekDto = daysResult.value;
-      final todaysDay =
-          weekDto.days?.where((d) => d.day == weekday).firstOrNull;
+      var todaysDay =
+          week.days?.where((d) => d.day == relativeDayIndex).firstOrNull;
+      if (todaysDay == null) {
+        final daysResult = await _workoutPlanService.getWorkoutPlanWeek(
+          week.id,
+          planVersion: record.workoutPlanVersion,
+        );
+        if (daysResult.isErr()) return;
+        todaysDay = daysResult.value.days
+            ?.where((d) => d.day == relativeDayIndex)
+            .firstOrNull;
+      }
 
       if (todaysDay == null) {
         emit(state.copyWith(
@@ -168,8 +173,10 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
     try {
       final completed =
           await _workoutPlanRecordService.getCompletedWorkoutsCount(record.id);
-      final total =
-          await _workoutPlanRecordService.getTotalWorkoutsCount(plan.id);
+      final total = await _workoutPlanRecordService.getTotalWorkoutsCount(
+        plan.id,
+        workoutPlanVersion: record.workoutPlanVersion,
+      );
 
       emit(state.copyWith(
         currentPlanRecord: state.currentPlanRecord.copyWith(

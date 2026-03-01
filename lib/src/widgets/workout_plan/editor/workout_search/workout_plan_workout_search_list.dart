@@ -1,45 +1,45 @@
 import 'package:flutter/material.dart';
 
-import '../../../../services/dtos/exercise_dto.dart';
+import '../../../../services/dtos/workout_dto.dart';
 import '../../../../utilities/sizes/data_display_sizes.dart';
 import '../../../common/modal_search/modal_search_card.dart';
 import '../../../common/not_found_list.dart';
 
-class SetExerciseSearchList extends StatelessWidget {
+class WorkoutPlanWorkoutSearchList extends StatelessWidget {
   final DataDisplaySizesList sizes;
   final bool isLoading;
-  final List<ExerciseDto> exercises;
-  final Function(int id, String name) onExerciseSelected;
+  final List<WorkoutDto> workouts;
+  final void Function(WorkoutDto workout) onWorkoutSelected;
 
-  const SetExerciseSearchList({
+  const WorkoutPlanWorkoutSearchList({
     super.key,
     required this.sizes,
     required this.isLoading,
-    required this.exercises,
-    required this.onExerciseSelected,
+    required this.workouts,
+    required this.onWorkoutSelected,
   });
 
   @override
   Widget build(BuildContext context) {
-    if (isLoading && exercises.isEmpty) {
+    if (isLoading && workouts.isEmpty) {
       return const Center(child: CircularProgressIndicator());
     }
 
-    if (exercises.isEmpty) {
-      return NotFoundList(sizes: sizes, name: 'exercises');
+    if (workouts.isEmpty) {
+      return NotFoundList(sizes: sizes, name: 'workouts');
     }
 
     return ListView.builder(
-      itemCount: exercises.length,
+      itemCount: workouts.length,
       itemBuilder: (context, index) {
-        final exercise = exercises[index];
+        final workout = workouts[index];
         return ModalSearchCard(
-          name: exercise.name,
-          isFavorite: exercise.isFavorite,
+          name: workout.name,
+          isFavorite: workout.isFavorite,
           margins: sizes.margins / 2,
           padding: sizes.padding / 2,
           fontSize: sizes.smallFontSize,
-          onTap: () => onExerciseSelected(exercise.id, exercise.name),
+          onTap: () => onWorkoutSelected(workout),
         );
       },
     );

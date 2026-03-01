@@ -21,7 +21,7 @@ class WorkoutEditView extends StatefulWidget {
   static const name = "workout_edit";
   static const routeName = "/workouts/:id/edit";
 
-  final int workoutId; // If provided, we're editing
+  final int workoutId;
 
   const WorkoutEditView({
     super.key,

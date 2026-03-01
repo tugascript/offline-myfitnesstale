@@ -8,6 +8,7 @@ class WorkoutPlanRecordDto extends Equatable implements Dto<WorkoutPlanRecord> {
   @override
   final int id;
   final int workoutPlanId;
+  final int workoutPlanVersion;
   final ProgressStatus status;
   final DateTime createdAt;
   final DateTime? completedAt;
@@ -15,6 +16,7 @@ class WorkoutPlanRecordDto extends Equatable implements Dto<WorkoutPlanRecord> {
   const WorkoutPlanRecordDto({
     required this.id,
     required this.workoutPlanId,
+    required this.workoutPlanVersion,
     required this.status,
     required this.createdAt,
     this.completedAt,
@@ -25,6 +27,7 @@ class WorkoutPlanRecordDto extends Equatable implements Dto<WorkoutPlanRecord> {
     return WorkoutPlanRecordDto(
       id: model.id!,
       workoutPlanId: model.workoutPlanId,
+      workoutPlanVersion: model.workoutPlanVersion,
       status: model.status,
       createdAt: DateTime.fromMillisecondsSinceEpoch(
         model.createdAt * 1000,
@@ -43,6 +46,7 @@ class WorkoutPlanRecordDto extends Equatable implements Dto<WorkoutPlanRecord> {
   WorkoutPlanRecordDto copyWith({
     int? id,
     int? workoutPlanId,
+    int? workoutPlanVersion,
     ProgressStatus? status,
     DateTime? createdAt,
     DateTime? completedAt,
@@ -50,6 +54,7 @@ class WorkoutPlanRecordDto extends Equatable implements Dto<WorkoutPlanRecord> {
     return WorkoutPlanRecordDto(
       id: id ?? this.id,
       workoutPlanId: workoutPlanId ?? this.workoutPlanId,
+      workoutPlanVersion: workoutPlanVersion ?? this.workoutPlanVersion,
       status: status ?? this.status,
       createdAt: createdAt ?? this.createdAt,
       completedAt: completedAt ?? this.completedAt,
@@ -60,6 +65,7 @@ class WorkoutPlanRecordDto extends Equatable implements Dto<WorkoutPlanRecord> {
   List<Object?> get props => [
         id,
         workoutPlanId,
+        workoutPlanVersion,
         status,
         completedAt,
       ];

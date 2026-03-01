@@ -21,8 +21,9 @@ import '../views/weight_log_view.dart';
 import '../views/workouts/workout_detail_view.dart';
 import '../views/workout_history_detail_view.dart';
 import '../views/workout_history_view.dart';
-import '../views/workout_plan_detail_view.dart';
-import '../views/workout_plan_list_view.dart';
+import '../views/workout_plans/workout_plan_detail_view.dart';
+import '../views/workout_plans/workout_plan_edit_view.dart';
+import '../views/workout_plans/workout_plan_list_view.dart';
 import '../views/workout_plan_progress_view.dart';
 import '../views/workouts/workouts_view.dart';
 
@@ -165,6 +166,16 @@ sealed class AppRouter {
     GoRoute(
       path: WorkoutPlanListView.routeName,
       builder: (context, state) => const WorkoutPlanListView(),
+    ),
+    GoRoute(
+      path: WorkoutPlanEditView.routeName,
+      builder: (context, state) {
+        final id = int.tryParse(state.pathParameters['id'] ?? '');
+        if (id == null) {
+          return const NotFoundView();
+        }
+        return WorkoutPlanEditView(workoutPlanId: id);
+      },
     ),
     GoRoute(
       path: '/workout-plans/:id',
