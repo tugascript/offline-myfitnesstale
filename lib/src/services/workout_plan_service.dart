@@ -881,6 +881,7 @@ class WorkoutPlanService {
     String? description,
     PictureData? picture,
     VideoData? video,
+    bool? isFavorite,
   }) async {
     _logger.info('Updating workout plan with id $id');
     try {
@@ -900,6 +901,7 @@ class WorkoutPlanService {
         description: description,
         picture: picture,
         video: video,
+        isFavorite: isFavorite,
         updatedAt: DateUtilities.getNowUtcUnix(),
       );
       await _repository.update(updatedPlan);

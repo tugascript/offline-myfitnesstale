@@ -19,6 +19,7 @@ class WorkoutPlanDto extends Equatable implements Dto<WorkoutPlan> {
   final PictureDto? picture;
   final VideoDto? video;
   final Difficulty difficulty;
+  final bool isFavorite;
   final CreatedBy createdBy;
 
   // Related data
@@ -35,6 +36,7 @@ class WorkoutPlanDto extends Equatable implements Dto<WorkoutPlan> {
     this.picture,
     this.video,
     required this.difficulty,
+    required this.isFavorite,
     required this.createdBy,
     this.weeks,
   });
@@ -56,6 +58,7 @@ class WorkoutPlanDto extends Equatable implements Dto<WorkoutPlan> {
           model.picture != null ? PictureDto.fromModel(model.picture!) : null,
       video: model.video != null ? VideoDto.fromModel(model.video!) : null,
       difficulty: model.difficulty,
+      isFavorite: model.isFavorite,
       createdBy: model.createdBy,
       weeks: weeks,
     );
@@ -74,6 +77,7 @@ class WorkoutPlanDto extends Equatable implements Dto<WorkoutPlan> {
     VideoDto? video,
     Difficulty? difficulty,
     CreatedBy? createdBy,
+    bool? isFavorite,
     List<WorkoutPlanWeekDto>? weeks,
   }) {
     return WorkoutPlanDto(
@@ -88,6 +92,7 @@ class WorkoutPlanDto extends Equatable implements Dto<WorkoutPlan> {
       video: video ?? this.video,
       difficulty: difficulty ?? this.difficulty,
       createdBy: createdBy ?? this.createdBy,
+      isFavorite: isFavorite ?? this.isFavorite,
       weeks: weeks ?? this.weeks,
     );
   }
@@ -104,6 +109,8 @@ class WorkoutPlanDto extends Equatable implements Dto<WorkoutPlan> {
         picture,
         video,
         difficulty,
+        isFavorite,
+        createdBy,
         weeks,
       ];
 }

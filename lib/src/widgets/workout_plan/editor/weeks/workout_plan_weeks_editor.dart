@@ -240,6 +240,7 @@ class _WorkoutPlanWeeksEditorState extends State<WorkoutPlanWeeksEditor> {
                     WorkoutPlanDayEditorData(
                       day: 1,
                       isRestDay: false,
+                      initiallyExpanded: true,
                       workouts: [],
                     ),
                   ],
@@ -318,15 +319,14 @@ class _WorkoutPlanWeeksEditorState extends State<WorkoutPlanWeeksEditor> {
                   return;
                 }
 
-                final router = GoRouter.of(context);
                 final currentFingerprint = _buildEditorFingerprint(_weeks);
                 if (currentFingerprint == _baselineFingerprint) {
-                  if (router.canPop()) {
-                    router.pop();
+                  if (context.canPop()) {
+                    context.pop();
                     return;
                   }
 
-                  router.go("/workout-plan/${widget.workoutPlanId}");
+                  context.go("/workout-plan/${widget.workoutPlanId}");
                   return;
                 }
 
@@ -340,13 +340,13 @@ class _WorkoutPlanWeeksEditorState extends State<WorkoutPlanWeeksEditor> {
                   weeks: _toBatchInputs(_weeks),
                 );
 
-                if (mounted) {
-                  if (router.canPop()) {
-                    router.pop();
+                if (context.mounted) {
+                  if (context.canPop()) {
+                    context.pop();
                     return;
                   }
 
-                  router.go("/workout-plan/${widget.workoutPlanId}");
+                  context.go("/workout-plan/${widget.workoutPlanId}");
                 }
               },
             ),

@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:myfitnesstale/src/widgets/workout_plan/editor/workout_plan_header_edit_card.dart';
 
 import '../../cubits/states/workout_plan_state.dart';
 import '../../cubits/workout_plan_cubit.dart';
+import '../../models/enums.dart';
+import '../../services/dtos/workout_plan_dto.dart';
 import '../../utilities/sizes/data_display_sizes.dart';
 import '../../utilities/sizes/screen_size.dart';
 import '../../widgets/layout/app_scaffold.dart';
@@ -26,6 +29,8 @@ class WorkoutPlanEditView extends StatefulWidget {
 }
 
 class _WorkoutPlanEditViewState extends State<WorkoutPlanEditView> {
+  bool _isEditingHeader = false;
+
   @override
   void initState() {
     super.initState();
@@ -62,9 +67,41 @@ class _WorkoutPlanEditViewState extends State<WorkoutPlanEditView> {
           body: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              WorkoutPlanHeader(
+              _WorkoutPlanEditHeader(
                 sizes: sizes,
                 plan: plan,
+                theme: theme,
+                onCancel: () {
+                  setState(() {
+                    _isEditingHeader = false;
+                  });
+                },
+                onSubmit: ({
+                  String? description,
+                  required Difficulty difficulty,
+                  required bool isFavorite,
+                  required String name,
+                }) async {
+                  await context.read<WorkoutPlanCubit>().updateWorkoutPlan(
+                        id: plan.id,
+                        name: name,
+                        isFavorite: isFavorite,
+                        difficulty: difficulty,
+                        description: description,
+                      );
+                  if (mounted) {
+                    setState(() {
+                      _isEditingHeader = false;
+                    });
+                  }
+                },
+                onEdit: () {
+                  setState(() {
+                    _isEditingHeader = true;
+                  });
+                },
+                isEditing: _isEditingHeader,
+                isLoading: state.isLoading,
               ),
               SizedBox(height: sizes.spacing * 1.25),
               Padding(
@@ -114,6 +151,58 @@ class _WorkoutPlanEditViewState extends State<WorkoutPlanEditView> {
       },
       listenWhen: (previous, current) =>
           previous.isLoading != current.isLoading,
+    );
+  }
+}
+
+class _WorkoutPlanEditHeader extends StatelessWidget {
+  final WorkoutPlanDto plan;
+  final DataDisplaySizesList sizes;
+  final ThemeData theme;
+  final VoidCallback onCancel;
+  final void Function({
+    required String name,
+    required bool isFavorite,
+    required Difficulty difficulty,
+    String? description,
+  }) onSubmit;
+
+  final VoidCallback onEdit;
+  final bool isEditing;
+  final bool isLoading;
+
+  const _WorkoutPlanEditHeader({
+    required this.plan,
+    required this.sizes,
+    required this.theme,
+    required this.onCancel,
+    required this.onSubmit,
+    required this.onEdit,
+    required this.isEditing,
+    required this.isLoading,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (!isEditing) {
+      return WorkoutPlanHeader(
+        actionButtonIcon: Icon(
+          Icons.edit_outlined,
+          color: theme.colorScheme.onSurface,
+        ),
+        actionButtonPress: onEdit,
+        sizes: sizes,
+        plan: plan,
+      );
+    }
+
+    return WorkoutPlanHeaderEditCard(
+      sizes: sizes,
+      theme: theme,
+      plan: plan,
+      onCancel: onCancel,
+      onSubmit: onSubmit,
+      isLoading: isLoading,
     );
   }
 }
