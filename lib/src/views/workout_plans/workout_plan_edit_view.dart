@@ -8,7 +8,7 @@ import '../../utilities/sizes/screen_size.dart';
 import '../../widgets/layout/app_scaffold.dart';
 import '../../widgets/layout/responsive_scaffold.dart';
 import '../../widgets/workout_plan/details/workout_plan_header.dart';
-import '../../widgets/workout_plan/editor/workout_plan_weeks_editor.dart';
+import '../../widgets/workout_plan/editor/weeks/workout_plan_weeks_editor.dart';
 
 class WorkoutPlanEditView extends StatefulWidget {
   static const String name = 'workout_plan_edit';

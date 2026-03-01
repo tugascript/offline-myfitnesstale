@@ -2,16 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../cubits/states/workout_plan_state.dart';
-import '../../../cubits/workout_cubit.dart';
-import '../../../cubits/workout_plan_cubit.dart';
-import '../../../models/enums.dart';
-import '../../../services/dtos/workout_plan_week_dto.dart';
-import '../../../services/workout_plan_service.dart';
-import '../../../utilities/sizes/data_display_sizes.dart';
-import '../../common/editors/save_buttons.dart';
+import '../../../../cubits/states/workout_plan_state.dart';
+import '../../../../cubits/workout_cubit.dart';
+import '../../../../cubits/workout_plan_cubit.dart';
+import '../../../../models/enums.dart';
+import '../../../../services/dtos/workout_plan_week_dto.dart';
+import '../../../../services/workout_plan_service.dart';
+import '../../../../utilities/sizes/data_display_sizes.dart';
+import '../../../common/editors/save_buttons.dart';
+import '../../../layout/dynamic_list_input.dart';
 import 'workout_plan_editor_data.dart';
-import 'workout_plan_structure_editor.dart';
+import 'workout_plan_week_editor.dart';
 
 class WorkoutPlanWeeksEditor extends StatefulWidget {
   final ThemeData theme;
@@ -217,15 +218,79 @@ class _WorkoutPlanWeeksEditorState extends State<WorkoutPlanWeeksEditor> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            WorkoutPlanStructureEditor(
+            DynamicListInput<WorkoutPlanWeekEditorData>(
               theme: widget.theme,
-              sizes: widget.sizes,
+              filled: true,
+              items: _weeks,
+              fontSize: widget.sizes.fontSize,
+              padding: widget.sizes.padding,
+              spacing: widget.sizes.spacing,
+              handlesPadding: widget.sizes.padding / 2,
               isLoading: state.isLoading || _isSaving,
-              weeks: _weeks,
-              onChanged: (updatedWeeks) {
+              addLabel: 'Add Week Block',
+              keyBuilder: (item) => ValueKey(item.internalId),
+              onAdd: () {
+                final previous = _weeks.lastOrNull;
+                final int start = previous != null ? previous.endWeek + 1 : 1;
+                final created = WorkoutPlanWeekEditorData(
+                  startWeek: start,
+                  endWeek: start,
+                  initiallyExpanded: true,
+                  days: [
+                    WorkoutPlanDayEditorData(
+                      day: 1,
+                      isRestDay: false,
+                      workouts: [],
+                    ),
+                  ],
+                );
                 setState(() {
-                  _weeks = _cloneWeeks(updatedWeeks);
+                  _weeks.add(created);
                 });
+              },
+              onChanged: (items) {
+                final reorderedWeeks = <WorkoutPlanWeekEditorData>[];
+                int currentStart = 1;
+                for (final week in items) {
+                  final span = week.endWeek - week.startWeek;
+                  final updated = week.copy()
+                    ..startWeek = currentStart
+                    ..endWeek = currentStart + span;
+                  reorderedWeeks.add(updated);
+                  currentStart = updated.endWeek + 1;
+                }
+                setState(() {
+                  _weeks = reorderedWeeks;
+                });
+              },
+              itemBuilder: (context, index, week) {
+                return WorkoutPlanWeekEditor(
+                  theme: widget.theme,
+                  sizes: widget.sizes,
+                  isLoading: state.isLoading || _isSaving,
+                  index: index,
+                  week: week,
+                  onChanged: (updatedWeek) {
+                    final updatedWeeks =
+                        List<WorkoutPlanWeekEditorData>.from(_weeks);
+                    updatedWeeks[index] = updatedWeek;
+
+                    // Cascade the week changes forward to maintain contiguous blocks
+                    int currentStart = updatedWeek.endWeek + 1;
+                    for (int i = index + 1; i < updatedWeeks.length; i++) {
+                      final nextWeek = updatedWeeks[i];
+                      final span = nextWeek.endWeek - nextWeek.startWeek;
+                      updatedWeeks[i] = nextWeek.copy()
+                        ..startWeek = currentStart
+                        ..endWeek = currentStart + span;
+                      currentStart = updatedWeeks[i].endWeek + 1;
+                    }
+
+                    setState(() {
+                      _weeks = updatedWeeks;
+                    });
+                  },
+                );
               },
             ),
             SizedBox(height: widget.sizes.spacing / 2),

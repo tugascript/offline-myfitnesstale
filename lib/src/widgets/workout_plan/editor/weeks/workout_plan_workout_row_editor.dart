@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 
-import '../../../models/enums.dart';
-import '../../../models/utilities.dart';
-import '../../../services/dtos/workout_dto.dart';
-import '../../../utilities/sizes/data_display_sizes.dart';
-import '../../layout/app_dropdown.dart';
+import '../../../../models/enums.dart';
+import '../../../../models/utilities.dart';
+import '../../../../services/dtos/workout_dto.dart';
+import '../../../../utilities/sizes/data_display_sizes.dart';
+import '../../../layout/app_dropdown.dart';
 import 'workout_plan_editor_data.dart';
-import 'workout_search/workout_plan_workout_search_modal.dart';
-import 'workout_selection_button.dart';
+import '../workout_search/workout_plan_workout_search_modal.dart';
+import '../workout_selection_button.dart';
 
 class WorkoutPlanWorkoutRowEditor extends StatefulWidget {
   final ThemeData theme;
