@@ -7,11 +7,12 @@ import '../../cubits/workout_plan_cubit.dart';
 import '../../models/enums.dart';
 import '../../utilities/sizes/data_display_sizes.dart';
 import '../../utilities/sizes/screen_size.dart';
+import '../../widgets/common/confirmation_dialog.dart';
+import '../../widgets/layout/app_scaffold.dart';
 import '../../widgets/layout/responsive_scaffold.dart';
 import '../../widgets/common/action_buttons.dart';
 import '../../widgets/workout_plan/details/workout_plan_header.dart';
 import '../../widgets/workout_plan/details/workout_plan_week_card.dart';
-import '../error_view.dart';
 import '../loading_view.dart';
 
 class WorkoutPlanDetailView extends StatefulWidget {
@@ -47,15 +48,34 @@ class _WorkoutPlanDetailViewState extends State<WorkoutPlanDetailView> {
 
     return BlocConsumer<WorkoutPlanCubit, WorkoutPlanState>(
       builder: (context, state) {
-        if (state.isLoading ||
-            (state.selectedWorkoutPlan == null && state.error == null)) {
-          return LoadingView();
+        if (state.isLoading && state.selectedWorkoutPlan == null) {
+          return LoadingView(
+            title: "Workout Plan details",
+            message: "Loading workout plan details...",
+          );
         }
 
-        if (!state.isLoading && state.error != null) {
-          return ErrorView(
-            description: state.error!.description,
-            type: state.error!.type,
+        if (state.selectedWorkoutPlan == null) {
+          return AppScaffold(
+            title: "Unknown Workout Plan",
+            body: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.error_outline, size: 64, color: Colors.grey),
+                  const SizedBox(height: 16),
+                  Text(
+                    state.error?.description ?? 'Workout plan not found',
+                    style: const TextStyle(fontSize: 16, color: Colors.grey),
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () => context.pop(),
+                    child: const Text('Go Back'),
+                  ),
+                ],
+              ),
+            ),
           );
         }
 
@@ -71,6 +91,12 @@ class _WorkoutPlanDetailViewState extends State<WorkoutPlanDetailView> {
               children: [
                 // Plan Header
                 WorkoutPlanHeader(
+                  actionButtonPress: () {
+                    context.read<WorkoutPlanCubit>().updateWorkoutPlan(
+                          id: plan.id,
+                          isFavorite: !plan.isFavorite,
+                        );
+                  },
                   sizes: sizes,
                   plan: plan,
                 ),
@@ -105,6 +131,22 @@ class _WorkoutPlanDetailViewState extends State<WorkoutPlanDetailView> {
                       context.push('/workout-plans/${plan.id}/active'),
                   startLabel: 'Start Plan',
                   onEdit: () => context.push('/workout-plans/${plan.id}/edit'),
+                  onDelete: () {
+                    showDialog(
+                      context: context,
+                      builder: (context) => ConfirmationDialog(
+                        title: 'Delete Workout Plan',
+                        content:
+                            'Are you sure you want to delete this workout plan? This action cannot be undone.',
+                        onConfirm: () {
+                          context
+                              .read<WorkoutPlanCubit>()
+                              .deleteWorkoutPlan(plan.id);
+                          context.pop();
+                        },
+                      ),
+                    );
+                  },
                   onHistory: () =>
                       context.push('/workout-plans/${plan.id}/history'),
                   historyLabel: 'Plan History',

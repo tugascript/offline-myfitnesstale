@@ -234,6 +234,7 @@ class WorkoutPlanCubit extends Cubit<WorkoutPlanState> {
     String? description,
     PictureData? picture,
     VideoData? video,
+    bool? isFavorite,
   }) async {
     _logger.info('Updating workout plan $id');
     emit(state.copyWith(isLoading: true));
@@ -246,6 +247,7 @@ class WorkoutPlanCubit extends Cubit<WorkoutPlanState> {
       description: description,
       picture: picture,
       video: video,
+      isFavorite: isFavorite,
     );
 
     if (result.isErr()) {
@@ -262,15 +264,7 @@ class WorkoutPlanCubit extends Cubit<WorkoutPlanState> {
     }
 
     _logger.info('Workout plan $id updated successfully');
-    final updatedPlan = result.value;
-    emit(state.copyWith(
-      workoutPlans:
-          state.workoutPlans.map((p) => p.id == id ? updatedPlan : p).toList(),
-      selectedWorkoutPlan: state.selectedWorkoutPlan?.id == id
-          ? updatedPlan
-          : state.selectedWorkoutPlan,
-      isLoading: false,
-    ));
+    await getWorkoutPlan(id, isRefresh: true);
   }
 
   Future<void> deleteWorkoutPlan(int id) async {
