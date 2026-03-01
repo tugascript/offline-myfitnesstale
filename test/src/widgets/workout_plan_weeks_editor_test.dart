@@ -99,7 +99,6 @@ void main() {
               workoutPlanId: workoutPlanId,
               currentVersion: currentVersion,
               initialWeeks: initialWeeks,
-              isLoading: false,
             );
           }),
         ),

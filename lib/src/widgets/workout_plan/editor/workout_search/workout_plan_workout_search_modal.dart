@@ -31,17 +31,6 @@ class _WorkoutPlanWorkoutSearchModalState
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      context.read<WorkoutCubit>().getWorkouts(
-            name: '',
-            difficulty: null,
-            muscleGroup: null,
-            limit: 20,
-            offset: 0,
-            isFavorite: false,
-          );
-    });
   }
 
   @override
@@ -83,11 +72,9 @@ class _WorkoutPlanWorkoutSearchModalState
                     required MuscleGroup? muscleGroup,
                     required bool isFavorite,
                   }) {
-                    context.read<WorkoutCubit>().getWorkouts(
+                    context.read<WorkoutCubit>().getSelectionWorkouts(
                           name: name,
                           muscleGroup: muscleGroup,
-                          limit: 20,
-                          offset: 0,
                           isFavorite: isFavorite,
                         );
                   },
@@ -97,7 +84,7 @@ class _WorkoutPlanWorkoutSearchModalState
                   child: WorkoutPlanWorkoutSearchList(
                     sizes: widget.sizes,
                     isLoading: state.isLoading || widget.isLoading,
-                    workouts: state.workouts,
+                    workouts: state.workoutSelection,
                     onWorkoutSelected: widget.onWorkoutSelected,
                   ),
                 ),

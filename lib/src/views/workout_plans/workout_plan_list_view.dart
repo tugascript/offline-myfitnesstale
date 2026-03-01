@@ -73,6 +73,7 @@ class _WorkoutPlanListViewState extends State<WorkoutPlanListView> {
 
     return AppScaffold(
       title: 'Workout Plans',
+      showBackButton: false,
       body: Padding(
         padding: EdgeInsets.all(sizes.padding),
         child: BlocConsumer<WorkoutPlanCubit, WorkoutPlanState>(

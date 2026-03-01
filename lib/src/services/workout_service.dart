@@ -233,6 +233,46 @@ class WorkoutService {
     }
   }
 
+  Future<Result<List<WorkoutDto>, ServiceError<OperationErrorTypes>>>
+      getAllWorkouts({
+    MuscleGroup? muscleGroup,
+    String name = "",
+    bool isFavorite = false,
+  }) async {
+    _logger.info('Getting all workouts');
+    final WhereBuilder query = WhereBuilder();
+
+    if (name.isNotEmpty) {
+      query.and(WorkoutColumns.name.like, '%$name%');
+    }
+
+    if (muscleGroup != null) {
+      query.and(WorkoutColumns.muscleGroups.like, '%${muscleGroup.value}%');
+    }
+
+    if (isFavorite) {
+      query.and(WorkoutColumns.isFavorite.equal, 1);
+    }
+
+    try {
+      final List<Workout> workouts = await _repository.selectMany(
+        where: query.where,
+        whereArgs: query.args,
+        orderBy: [WorkoutColumns.name.orderCaseInsensitiveAsc],
+      );
+      _logger.info('Got ${workouts.length} workouts');
+      return ok(
+        workouts.map((workout) => WorkoutDto.fromModel(workout)).toList(),
+      );
+    } catch (e) {
+      _logger.severe('Failed to get all workouts', e);
+      return err(const ServiceError(
+        type: OperationErrorTypes.operationFailure,
+        description: 'Failed to get all workouts',
+      ));
+    }
+  }
+
   Future<Result<WorkoutDto, ServiceError<SingleErrorTypes>>> getWorkout(
     int id,
   ) async {

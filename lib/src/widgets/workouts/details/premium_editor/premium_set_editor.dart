@@ -125,10 +125,8 @@ class _PremiumSetEditorState extends State<PremiumSetEditor> {
     final sizes = widget.sizes;
     final setData = widget.setData;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-      ),
+    return Card(
+      margin: EdgeInsets.zero,
       child: Padding(
         padding: EdgeInsets.all(sizes.padding),
         child: Column(

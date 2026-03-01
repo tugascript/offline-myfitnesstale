@@ -45,6 +45,7 @@ class WorkoutPlanDayEditorData {
   final int? id;
   int day;
   bool isRestDay;
+  final bool initiallyExpanded;
   List<WorkoutPlanWorkoutEditorData> workouts;
 
   WorkoutPlanDayEditorData({
@@ -53,6 +54,7 @@ class WorkoutPlanDayEditorData {
     required this.day,
     required this.isRestDay,
     required this.workouts,
+    this.initiallyExpanded = false,
   }) : internalId = internalId ?? UniqueKey().toString();
 
   factory WorkoutPlanDayEditorData.fromDto(WorkoutPlanDayDto dto) {
@@ -72,6 +74,7 @@ class WorkoutPlanDayEditorData {
       id: id,
       day: day,
       isRestDay: isRestDay,
+      initiallyExpanded: initiallyExpanded,
       workouts: workouts.map((w) => w.copy()).toList(),
     );
   }
@@ -80,6 +83,7 @@ class WorkoutPlanDayEditorData {
 class WorkoutPlanWeekEditorData {
   final String internalId;
   final int? id;
+  final bool initiallyExpanded;
   int startWeek;
   int endWeek;
   WorkoutPhase? phase;
@@ -92,6 +96,7 @@ class WorkoutPlanWeekEditorData {
     required this.endWeek,
     this.phase,
     required this.days,
+    this.initiallyExpanded = false,
   }) : internalId = internalId ?? UniqueKey().toString();
 
   factory WorkoutPlanWeekEditorData.fromDto(WorkoutPlanWeekDto dto) {
@@ -111,6 +116,7 @@ class WorkoutPlanWeekEditorData {
       startWeek: startWeek,
       endWeek: endWeek,
       phase: phase,
+      initiallyExpanded: initiallyExpanded,
       days: days.map((d) => d.copy()).toList(),
     );
   }

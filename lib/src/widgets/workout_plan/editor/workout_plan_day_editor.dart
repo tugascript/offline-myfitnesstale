@@ -32,10 +32,10 @@ class WorkoutPlanDayEditor extends StatelessWidget {
         theme: theme,
         sizes: sizes,
         isLoading: isLoading,
-        initiallyExpanded: true,
+        initiallyExpanded: day.initiallyExpanded,
         title: day.isRestDay
             ? "${day.day} - REST DAY"
-            : "${day.day} - ${day.workouts.length} Workout(s)",
+            : "${day.day} - ${day.workouts.length} Workout${day.workouts.length == 1 ? '' : 's'}",
         labelText: 'Day',
         prefixIcon: Icon(
           Icons.calendar_view_day,

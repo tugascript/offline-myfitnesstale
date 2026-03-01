@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:myfitnesstale/src/models/enums.dart';
 
+import '../../../cubits/states/workout_plan_state.dart';
+import '../../../cubits/workout_cubit.dart';
 import '../../../cubits/workout_plan_cubit.dart';
+import '../../../models/enums.dart';
 import '../../../services/dtos/workout_plan_week_dto.dart';
 import '../../../services/workout_plan_service.dart';
 import '../../../utilities/sizes/data_display_sizes.dart';
-import '../../common/mutation_button.dart';
-import '../../layout/app_primary_button.dart';
+import '../../common/editors/save_buttons.dart';
 import 'workout_plan_editor_data.dart';
 import 'workout_plan_structure_editor.dart';
 
@@ -18,7 +19,6 @@ class WorkoutPlanWeeksEditor extends StatefulWidget {
   final int workoutPlanId;
   final int currentVersion;
   final List<WorkoutPlanWeekDto> initialWeeks;
-  final bool isLoading;
 
   const WorkoutPlanWeeksEditor({
     super.key,
@@ -27,7 +27,6 @@ class WorkoutPlanWeeksEditor extends StatefulWidget {
     required this.workoutPlanId,
     required this.currentVersion,
     required this.initialWeeks,
-    required this.isLoading,
   });
 
   @override
@@ -45,6 +44,7 @@ class _WorkoutPlanWeeksEditorState extends State<WorkoutPlanWeeksEditor> {
   void initState() {
     super.initState();
     _resetFromWidget();
+    context.read<WorkoutCubit>().getSelectionWorkouts();
   }
 
   @override
@@ -101,63 +101,6 @@ class _WorkoutPlanWeeksEditorState extends State<WorkoutPlanWeeksEditor> {
     }).join('||');
 
     return weekParts;
-  }
-
-  String _buildDtoFingerprint(List<WorkoutPlanWeekDto> weeks) {
-    final sortedWeeks = [...weeks]
-      ..sort((a, b) => a.startWeek.compareTo(b.startWeek));
-
-    final weekParts = sortedWeeks.map((week) {
-      final days = (week.days ?? [])
-          .where(
-            (day) => !(day.id == 0 &&
-                day.planVersion == 0 &&
-                day.isRestDay &&
-                (day.planWorkouts?.isEmpty ?? true)),
-          )
-          .toList()
-        ..sort((a, b) => a.day.compareTo(b.day));
-
-      final dayParts = days.map((day) {
-        final workouts = [...(day.planWorkouts ?? [])]
-          ..sort((a, b) => a.position.compareTo(b.position));
-        final workoutParts = workouts
-            .map((workout) =>
-                '${workout.workoutId}:${workout.timeOfDay?.value ?? ''}')
-            .join(',');
-
-        return '${day.day}|${day.isRestDay ? 1 : 0}|$workoutParts';
-      }).join(';');
-
-      return '${week.startWeek}-${week.endWeek}|${week.phase?.value ?? ''}|${week.scheduleMode.value}|$dayParts';
-    }).join('||');
-
-    return weekParts;
-  }
-
-  ({int totalWeeks, int totalDays, int totalWorkouts}) _computeTotals(
-    List<WorkoutPlanWeekEditorData> weeks,
-  ) {
-    int totalWeeks = 0;
-    int totalDays = 0;
-    int totalWorkouts = 0;
-
-    for (final week in weeks) {
-      totalWeeks += (week.endWeek - week.startWeek + 1);
-
-      for (final day in week.days) {
-        if (!day.isRestDay) {
-          totalDays += 1;
-        }
-        totalWorkouts += day.workouts.length;
-      }
-    }
-
-    return (
-      totalWeeks: totalWeeks,
-      totalDays: totalDays,
-      totalWorkouts: totalWorkouts,
-    );
   }
 
   String? _validateWeeks(List<WorkoutPlanWeekEditorData> weeks) {
@@ -264,137 +207,96 @@ class _WorkoutPlanWeeksEditorState extends State<WorkoutPlanWeeksEditor> {
     );
   }
 
-  Future<void> _onSave() async {
-    if (_isSaving || widget.isLoading) {
-      return;
-    }
-
-    final validationError = _validateWeeks(_weeks);
-    if (validationError != null) {
-      _showSnackBar(validationError, backgroundColor: Colors.red);
-      return;
-    }
-
-    final currentFingerprint = _buildEditorFingerprint(_weeks);
-    if (currentFingerprint == _baselineFingerprint) {
-      _showSnackBar('No structural changes to save.');
-      return;
-    }
-
-    setState(() {
-      _isSaving = true;
-    });
-
-    final cubit = context.read<WorkoutPlanCubit>();
-    final expectedTotals = _computeTotals(_weeks);
-
-    await cubit.createWorkoutPlanVersionWithWeeks(
-      workoutPlanId: widget.workoutPlanId,
-      weeks: _toBatchInputs(_weeks),
-    );
-
-    await cubit.getWorkoutPlan(widget.workoutPlanId);
-
-    if (!mounted) {
-      return;
-    }
-
-    final refreshedPlan = cubit.state.selectedWorkoutPlan;
-    final refreshedFingerprint = refreshedPlan != null
-        ? _buildDtoFingerprint(refreshedPlan.weeks ?? [])
-        : '';
-
-    final bool successByFingerprint =
-        refreshedFingerprint == currentFingerprint;
-    final bool successByTotals = refreshedPlan != null &&
-        refreshedPlan.totalWeeks == expectedTotals.totalWeeks &&
-        refreshedPlan.totalDays == expectedTotals.totalDays &&
-        refreshedPlan.totalWorkouts == expectedTotals.totalWorkouts;
-
-    final bool success =
-        refreshedPlan != null && (successByFingerprint || successByTotals);
-
-    if (!success) {
-      setState(() {
-        _isSaving = false;
-      });
-      _showSnackBar(
-        cubit.state.error?.description ??
-            'Failed to save workout plan structure',
-        backgroundColor: Colors.red,
-      );
-      return;
-    }
-
-    final latestWeeks = _mapWeeks(refreshedPlan.weeks ?? []);
-    setState(() {
-      _weeks = _cloneWeeks(latestWeeks);
-      _baselineWeeks = _cloneWeeks(latestWeeks);
-      _baselineFingerprint = _buildEditorFingerprint(_baselineWeeks);
-      _baselineSeed = '${widget.workoutPlanId}:${refreshedPlan.currentVersion}';
-      _isSaving = false;
-    });
-
-    _showSnackBar('Workout plan structure saved successfully.');
-    if (context.canPop()) {
-      context.pop();
-    }
-  }
-
-  void _onCancel() {
-    if (_isSaving || widget.isLoading) {
-      return;
-    }
-
-    if (context.canPop()) {
-      context.pop();
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        WorkoutPlanStructureEditor(
-          theme: widget.theme,
-          sizes: widget.sizes,
-          isLoading: widget.isLoading || _isSaving,
-          weeks: _weeks,
-          onChanged: (updatedWeeks) {
-            setState(() {
-              _weeks = _cloneWeeks(updatedWeeks);
-            });
-          },
-        ),
-        SizedBox(height: widget.sizes.spacing / 2),
-        Row(
+    return BlocConsumer<WorkoutPlanCubit, WorkoutPlanState>(
+      listenWhen: (previous, current) =>
+          previous.selectedWorkoutPlan != current.selectedWorkoutPlan ||
+          previous.isLoading != current.isLoading,
+      builder: (context, state) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Expanded(
-              child: MutationButton(
-                onPressed: _onCancel,
-                theme: widget.theme,
-                isLoading: widget.isLoading || _isSaving,
-                sizes: widget.sizes,
-                label: 'Cancel',
-                icon: Icons.cancel,
-                color: widget.theme.colorScheme.error,
-              ),
+            WorkoutPlanStructureEditor(
+              theme: widget.theme,
+              sizes: widget.sizes,
+              isLoading: state.isLoading || _isSaving,
+              weeks: _weeks,
+              onChanged: (updatedWeeks) {
+                setState(() {
+                  _weeks = _cloneWeeks(updatedWeeks);
+                });
+              },
             ),
-            SizedBox(width: widget.sizes.spacing / 2),
-            Expanded(
-              child: AppPrimaryButton(
-                onPressed: _onSave,
-                theme: widget.theme,
-                isLoading: widget.isLoading || _isSaving,
-                sizes: widget.sizes,
-                label: 'Save',
-                icon: Icons.save,
-              ),
+            SizedBox(height: widget.sizes.spacing / 2),
+            SaveButtons(
+              theme: widget.theme,
+              sizes: widget.sizes,
+              isLoading: state.isLoading || _isSaving,
+              onCancel: () {
+                if (_isSaving || state.isLoading) {
+                  return;
+                }
+
+                if (context.canPop()) {
+                  context.pop();
+                }
+              },
+              onSave: () async {
+                if (_isSaving || state.isLoading) {
+                  return;
+                }
+
+                final validationError = _validateWeeks(_weeks);
+                if (validationError != null) {
+                  _showSnackBar(validationError, backgroundColor: Colors.red);
+                  return;
+                }
+
+                final router = GoRouter.of(context);
+                final currentFingerprint = _buildEditorFingerprint(_weeks);
+                if (currentFingerprint == _baselineFingerprint) {
+                  if (router.canPop()) {
+                    router.pop();
+                    return;
+                  }
+
+                  router.go("/workout-plan/${widget.workoutPlanId}");
+                  return;
+                }
+
+                setState(() {
+                  _isSaving = true;
+                });
+
+                final cubit = context.read<WorkoutPlanCubit>();
+                await cubit.createWorkoutPlanVersionWithWeeks(
+                  workoutPlanId: widget.workoutPlanId,
+                  weeks: _toBatchInputs(_weeks),
+                );
+
+                if (mounted) {
+                  if (router.canPop()) {
+                    router.pop();
+                    return;
+                  }
+
+                  router.go("/workout-plan/${widget.workoutPlanId}");
+                }
+              },
             ),
           ],
-        ),
-      ],
+        );
+      },
+      listener: (context, state) {
+        if (state.isLoading) {
+          return;
+        }
+
+        if (state.error != null) {
+          _showSnackBar(state.error!.description, backgroundColor: Colors.red);
+        }
+      },
     );
   }
 }

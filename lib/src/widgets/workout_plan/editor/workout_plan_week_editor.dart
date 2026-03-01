@@ -31,6 +31,7 @@ class WorkoutPlanWeekEditor extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
+      margin: EdgeInsets.zero,
       child: Padding(
         padding: EdgeInsets.all(sizes.padding),
         child: Column(
@@ -83,7 +84,7 @@ class WorkoutPlanWeekEditor extends StatelessWidget {
               theme: theme,
               sizes: sizes,
               isLoading: isLoading,
-              initiallyExpanded: index == 0,
+              initiallyExpanded: week.initiallyExpanded,
               prefixIcon: Icon(
                 Icons.calendar_today,
                 color: theme.colorScheme.onSurface,
@@ -126,6 +127,7 @@ class WorkoutPlanWeekEditor extends StatelessWidget {
                           WorkoutPlanDayEditorData(
                             day: nextDay,
                             isRestDay: false,
+                            initiallyExpanded: true,
                             workouts: [],
                           ),
                         ];

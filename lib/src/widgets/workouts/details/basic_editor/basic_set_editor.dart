@@ -49,11 +49,8 @@ class BasicSetEditor extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Container(
+    return Card(
       margin: EdgeInsets.zero,
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-      ),
       child: Padding(
         padding: EdgeInsets.all(sizes.padding),
         child: Column(
