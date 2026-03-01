@@ -5,11 +5,10 @@ import '../../cubits/states/workout_plan_state.dart';
 import '../../cubits/workout_plan_cubit.dart';
 import '../../utilities/sizes/data_display_sizes.dart';
 import '../../utilities/sizes/screen_size.dart';
+import '../../widgets/layout/app_scaffold.dart';
 import '../../widgets/layout/responsive_scaffold.dart';
 import '../../widgets/workout_plan/details/workout_plan_header.dart';
 import '../../widgets/workout_plan/editor/workout_plan_weeks_editor.dart';
-import '../error_view.dart';
-import '../loading_view.dart';
 
 class WorkoutPlanEditView extends StatefulWidget {
   static const String name = 'workout_plan_edit';
@@ -46,19 +45,15 @@ class _WorkoutPlanEditViewState extends State<WorkoutPlanEditView> {
 
     return BlocConsumer<WorkoutPlanCubit, WorkoutPlanState>(
       builder: (context, state) {
-        if (state.isLoading ||
-            (state.selectedWorkoutPlan == null && state.error == null)) {
-          return LoadingView();
-        }
+        final plan = state.selectedWorkoutPlan;
 
-        if (!state.isLoading && state.error != null) {
-          return ErrorView(
-            description: state.error!.description,
-            type: state.error!.type,
+        if (plan == null) {
+          return const AppScaffold(
+            title: "Edit Workout Plan",
+            isEntity: true,
+            body: Center(child: CircularProgressIndicator()),
           );
         }
-
-        final plan = state.selectedWorkoutPlan!;
 
         return ResponsiveScaffold(
           title: plan.name,
@@ -95,7 +90,6 @@ class _WorkoutPlanEditViewState extends State<WorkoutPlanEditView> {
                       workoutPlanId: plan.id,
                       currentVersion: plan.currentVersion,
                       initialWeeks: plan.weeks ?? const [],
-                      isLoading: state.isLoading,
                     ),
                   ],
                 ),
@@ -118,6 +112,8 @@ class _WorkoutPlanEditViewState extends State<WorkoutPlanEditView> {
           );
         }
       },
+      listenWhen: (previous, current) =>
+          previous.isLoading != current.isLoading,
     );
   }
 }

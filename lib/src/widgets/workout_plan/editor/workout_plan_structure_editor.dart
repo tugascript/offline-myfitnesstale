@@ -28,9 +28,9 @@ class WorkoutPlanStructureEditor extends StatelessWidget {
       filled: true,
       items: weeks,
       fontSize: sizes.fontSize,
-      padding: sizes.padding / 2,
+      padding: sizes.padding,
       spacing: sizes.spacing,
-      handlesPadding: sizes.padding / 4,
+      handlesPadding: sizes.padding / 2,
       isLoading: isLoading,
       addLabel: 'Add Week Block',
       keyBuilder: (item) => ValueKey(item.internalId),
@@ -40,6 +40,7 @@ class WorkoutPlanStructureEditor extends StatelessWidget {
         final created = WorkoutPlanWeekEditorData(
           startWeek: start,
           endWeek: start,
+          initiallyExpanded: true,
           days: [
             WorkoutPlanDayEditorData(
               day: 1,

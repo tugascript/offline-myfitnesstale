@@ -9,8 +9,7 @@ import '../../../../models/enums.dart';
 import '../../../../services/dtos/workout_set_dto.dart';
 import '../../../../utilities/sizes/data_display_sizes.dart';
 import '../../../../utilities/sizes/screen_size.dart';
-import '../../../common/mutation_button.dart';
-import '../../../layout/app_primary_button.dart';
+import '../../../common/editors/save_buttons.dart';
 import '../../../layout/dynamic_list_input.dart';
 import 'complex_set_editor_data.dart';
 import 'premium_set_editor.dart';
@@ -212,13 +211,13 @@ class _PremiumEditorState extends State<PremiumEditor> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             DynamicListInput<ComplexSetEditorData>(
-              handlesPadding: sizes.padding / 2,
               theme: theme,
               filled: true,
               items: _displayedSets,
               fontSize: sizes.fontSize,
               padding: sizes.padding,
               spacing: sizes.spacing,
+              handlesPadding: sizes.padding / 2,
               isLoading: state.isLoading || _isCompleting,
               addLabel: "Add Set",
               keyBuilder: (item) => ValueKey(item.id ?? item.internalId),
@@ -261,38 +260,19 @@ class _PremiumEditorState extends State<PremiumEditor> {
               },
             ),
             SizedBox(height: sizes.spacing / 2),
-            Row(
-              children: [
-                Expanded(
-                  child: MutationButton(
-                    onPressed: _isCompleting
-                        ? null
-                        : () {
-                            if (context.canPop()) {
-                              context.pop();
-                            }
-                          },
-                    theme: theme,
-                    isLoading: _isCompleting || state.isLoading,
-                    sizes: sizes,
-                    label: 'CANCEL',
-                    icon: Icons.cancel,
-                    color: theme.colorScheme.error,
-                  ),
-                ),
-                SizedBox(width: sizes.spacing / 2),
-                Expanded(
-                  child: AppPrimaryButton(
-                    onPressed: _isCompleting ? null : _onComplete,
-                    theme: theme,
-                    isLoading: _isCompleting || state.isLoading,
-                    sizes: sizes,
-                    label: 'SAVE',
-                    icon: Icons.save,
-                  ),
-                ),
-              ],
-            )
+            SaveButtons(
+              theme: theme,
+              sizes: sizes,
+              isLoading: _isCompleting || state.isLoading,
+              onCancel: _isCompleting
+                  ? null
+                  : () {
+                      if (context.canPop()) {
+                        context.pop();
+                      }
+                    },
+              onSave: _isCompleting ? null : _onComplete,
+            ),
           ],
         );
       },

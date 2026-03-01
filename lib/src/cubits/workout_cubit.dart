@@ -449,6 +449,38 @@ class WorkoutCubit extends Cubit<WorkoutState> {
     await getWorkout(workoutId, refresh: true);
   }
 
+  Future<void> getSelectionWorkouts({
+    MuscleGroup? muscleGroup,
+    String name = "",
+    bool isFavorite = false,
+  }) async {
+    emit(state.copyWith(isLoading: true));
+
+    final result = await _workoutService.getAllWorkouts(
+      muscleGroup: muscleGroup,
+      name: name,
+      isFavorite: isFavorite,
+    );
+
+    if (result.isErr()) {
+      final error = result.error;
+      _logger.warning("Failed to get selection workouts", error);
+      emit(state.copyWith(
+        error: ErrorState(
+          type: error.type.name,
+          description: error.description,
+        ),
+        isLoading: false,
+      ));
+      return;
+    }
+
+    emit(state.copyWith(
+      workoutSelection: result.value,
+      isLoading: false,
+    ));
+  }
+
   Future<bool> _ensurePremiumAccessForMutation() async {
     final snapshotResult = await _entitlementService.getEntitlementSnapshot();
     if (snapshotResult.isErr()) {

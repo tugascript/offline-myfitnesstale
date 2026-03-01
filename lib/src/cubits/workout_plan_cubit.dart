@@ -67,9 +67,11 @@ class WorkoutPlanCubit extends Cubit<WorkoutPlanState> {
     );
   }
 
-  Future<void> getWorkoutPlan(int id) async {
+  Future<void> getWorkoutPlan(int id, {bool isRefresh = false}) async {
     _logger.info('Getting workout plan $id');
-    emit(state.copyWith(isLoading: true));
+    if (!isRefresh) {
+      emit(state.copyWith(isLoading: true));
+    }
 
     final result = await _workoutPlanService.getWorkoutPlan(id);
     if (result.isErr()) {
@@ -131,14 +133,7 @@ class WorkoutPlanCubit extends Cubit<WorkoutPlanState> {
       return;
     }
 
-    final updatedPlan = result.value;
-    emit(state.copyWith(
-      selectedWorkoutPlan: updatedPlan,
-      workoutPlans: state.workoutPlans
-          .map((p) => p.id == workoutPlanId ? updatedPlan : p)
-          .toList(),
-      isLoading: false,
-    ));
+    await getWorkoutPlan(workoutPlanId, isRefresh: true);
   }
 
   Future<void> createWorkoutPlan({

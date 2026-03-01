@@ -61,6 +61,7 @@ final class WorkoutState extends Equatable {
   final List<WorkoutDto> workouts;
   final WorkoutPagination pagination;
   final WorkoutDto? selectedWorkout;
+  final List<WorkoutDto> workoutSelection;
   final bool isLoading;
   final ErrorState? error;
 
@@ -69,6 +70,7 @@ final class WorkoutState extends Equatable {
     required this.pagination,
     this.selectedWorkout,
     required this.isLoading,
+    required this.workoutSelection,
     this.error,
   });
 
@@ -77,6 +79,7 @@ final class WorkoutState extends Equatable {
       workouts: const [],
       pagination: WorkoutPagination.initial(),
       isLoading: false,
+      workoutSelection: const [],
     );
   }
 
@@ -86,12 +89,14 @@ final class WorkoutState extends Equatable {
     WorkoutDto? selectedWorkout,
     bool? isLoading,
     ErrorState? error,
+    List<WorkoutDto>? workoutSelection,
   }) {
     return WorkoutState(
       workouts: workouts ?? this.workouts,
       pagination: pagination ?? this.pagination,
       selectedWorkout: selectedWorkout ?? this.selectedWorkout,
       isLoading: isLoading ?? this.isLoading,
+      workoutSelection: workoutSelection ?? this.workoutSelection,
       error: error,
     );
   }
@@ -101,6 +106,7 @@ final class WorkoutState extends Equatable {
         workouts.length,
         pagination,
         selectedWorkout,
+        workoutSelection.length,
         isLoading,
         error,
       ];
