@@ -19,6 +19,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:logging/logging.dart';
 
 import '../models/enums.dart';
+import '../models/repository.dart';
 import '../services/common/errors.dart';
 import '../services/weight_record_service.dart';
 import 'states/common_state.dart';
@@ -202,6 +203,7 @@ class WeightRecordCubit extends Cubit<WeightRecordState> {
           .toList(),
       selectedWeightRecord: weightRecord,
       isLoading: false,
+      error: null,
     ));
   }
 
@@ -246,19 +248,48 @@ class WeightRecordCubit extends Cubit<WeightRecordState> {
           ? state.weightRecords.lastOrNull
           : state.latestWeightRecord,
       isLoading: false,
+      error: null,
+    ));
+  }
+
+  Future<void> getActiveWeightGoal() async {
+    _logger.info("Getting active weight goal");
+    emit(state.copyWith(isLoading: true));
+    final result = await _weightRecordService.getActiveWeightGoal();
+    if (result.isErr()) {
+      final error = result.error;
+      _logger.warning("Failed to get active weight goal", error);
+      emit(state.copyWith(
+        error: ErrorState(
+          type: error.type.name,
+          description: error.description,
+        ),
+        isLoading: false,
+      ));
+      return;
+    }
+
+    _logger.info("Active weight goal retrieved successfully");
+    emit(state.copyWith(
+      activeWeightGoal: result.value,
+      isLoading: false,
+      error: null,
     ));
   }
 
   Future<void> createWeightGoal({
     required int targetWeight,
-    required DateTime startDate,
+    required WeightGoalPhase phase,
+    DateTime? startDate,
     ProgressStatus status = ProgressStatus.inProgress,
   }) async {
+    _logger.info("Creating weight goal");
     emit(state.copyWith(isLoading: true));
     final result = await _weightRecordService.createWeightGoal(
       targetWeight: targetWeight,
-      startDate: startDate,
+      startDate: startDate ?? DateTime.now(),
       status: status,
+      phase: phase,
     );
     if (result.isErr()) {
       final error = result.error;
@@ -288,15 +319,36 @@ class WeightRecordCubit extends Cubit<WeightRecordState> {
     }
 
     final weightGoal = result.value;
-    final sortedWeightGoals = [weightGoal, ...state.weightGoals];
-    sortedWeightGoals.sort((a, b) => b.startDate.compareTo(a.startDate));
+    final weighGoalsResult = await _weightRecordService.getWeightGoals(
+      skipInProgress: state.goalPagination.skipInProgress,
+      limit: state.goalPagination.limit,
+      offset: 0,
+    );
+    if (weighGoalsResult.isErr()) {
+      final error = weighGoalsResult.error;
+      _logger.warning("Failed to get weight goals", error);
+      emit(state.copyWith(
+        error: ErrorState(
+          type: error.type.name,
+          description: error.description,
+        ),
+        isLoading: false,
+      ));
+      return;
+    }
+    final weighGoals = weighGoalsResult.value;
+
     emit(state.copyWith(
-      weightGoals: sortedWeightGoals,
+      weightGoals: weighGoals.data,
       selectedWeightGoal: weightGoal,
+      activeWeightGoal: weightGoal,
       goalPagination: state.goalPagination.copyWith(
-        total: state.goalPagination.total + 1,
+        total: weighGoals.total,
+        limit: weighGoals.limit,
+        offset: weighGoals.offset,
       ),
       isLoading: false,
+      error: null,
     ));
   }
 
@@ -305,6 +357,7 @@ class WeightRecordCubit extends Cubit<WeightRecordState> {
     int? targetWeight,
     DateTime? startDate,
     ProgressStatus? status,
+    WeightGoalPhase? phase,
   }) async {
     emit(state.copyWith(isLoading: true));
     final result = await _weightRecordService.updateWeightGoal(
@@ -312,6 +365,7 @@ class WeightRecordCubit extends Cubit<WeightRecordState> {
       targetWeight: targetWeight,
       startDate: startDate,
       status: status,
+      phase: phase,
     );
     if (result.isErr()) {
       final error = result.error;
@@ -342,12 +396,36 @@ class WeightRecordCubit extends Cubit<WeightRecordState> {
     }
 
     final weightGoal = result.value;
+    final weighGoalsResult = await _weightRecordService.getWeightGoals(
+      skipInProgress: state.goalPagination.skipInProgress,
+      limit: state.goalPagination.limit,
+      offset: 0,
+    );
+    if (weighGoalsResult.isErr()) {
+      final error = weighGoalsResult.error;
+      _logger.warning("Failed to get weight goals", error);
+      emit(state.copyWith(
+        error: ErrorState(
+          type: error.type.name,
+          description: error.description,
+        ),
+        isLoading: false,
+      ));
+      return;
+    }
+    final weighGoals = weighGoalsResult.value;
+
     emit(state.copyWith(
-      weightGoals: state.weightGoals
-          .map((g) => g.id == weightGoal.id ? weightGoal : g)
-          .toList(),
+      weightGoals: weighGoals.data,
       selectedWeightGoal: weightGoal,
+      activeWeightGoal: weightGoal,
+      goalPagination: state.goalPagination.copyWith(
+        total: weighGoals.total,
+        limit: weighGoals.limit,
+        offset: weighGoals.offset,
+      ),
       isLoading: false,
+      error: null,
     ));
   }
 
@@ -390,6 +468,46 @@ class WeightRecordCubit extends Cubit<WeightRecordState> {
         total: state.goalPagination.total - 1,
       ),
       isLoading: false,
+      error: null,
+    ));
+  }
+
+  Future<void> getWeightGoals({
+    bool skipInProgress = false,
+    int limit = kDefaultLimit,
+    int offset = kDefaultOffset,
+  }) async {
+    emit(state.copyWith(isLoading: true));
+    final result = await _weightRecordService.getWeightGoals(
+      skipInProgress: skipInProgress,
+      limit: limit,
+      offset: offset,
+    );
+    if (result.isErr()) {
+      final error = result.error;
+      _logger.warning("Failed to get weight goals", error);
+      emit(state.copyWith(
+        error: ErrorState(
+          type: error.type.name,
+          description: error.description,
+        ),
+        isLoading: false,
+      ));
+      return;
+    }
+
+    _logger.info("Weight goals retrieved successfully");
+    final weightPagination = result.value;
+    emit(state.copyWith(
+      weightGoals: weightPagination.data,
+      goalPagination: state.goalPagination.copyWith(
+        total: weightPagination.total,
+        limit: weightPagination.limit,
+        offset: weightPagination.offset,
+        skipInProgress: skipInProgress,
+      ),
+      isLoading: false,
+      error: null,
     ));
   }
 }

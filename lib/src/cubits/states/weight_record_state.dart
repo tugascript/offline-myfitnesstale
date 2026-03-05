@@ -4,6 +4,46 @@ import '../../services/dtos/weight_goal_dto.dart';
 import '../../services/dtos/weight_record_dto.dart';
 import 'common_state.dart';
 
+final class WeightGoalPaginationState extends Equatable {
+  final bool skipInProgress;
+  final int limit;
+  final int offset;
+  final int total;
+
+  const WeightGoalPaginationState({
+    required this.skipInProgress,
+    required this.limit,
+    required this.offset,
+    required this.total,
+  });
+
+  WeightGoalPaginationState copyWith({
+    bool? skipInProgress,
+    int? limit,
+    int? offset,
+    int? total,
+  }) {
+    return WeightGoalPaginationState(
+      skipInProgress: skipInProgress ?? this.skipInProgress,
+      limit: limit ?? this.limit,
+      offset: offset ?? this.offset,
+      total: total ?? this.total,
+    );
+  }
+
+  factory WeightGoalPaginationState.initial() {
+    return const WeightGoalPaginationState(
+      skipInProgress: false,
+      limit: 0,
+      offset: 0,
+      total: 0,
+    );
+  }
+
+  @override
+  List<Object?> get props => [skipInProgress, limit, offset, total];
+}
+
 final class WeightRecordState extends Equatable {
   final List<WeightRecordDto> weightRecords;
   final WeightRecordDto? selectedWeightRecord;
@@ -12,7 +52,7 @@ final class WeightRecordState extends Equatable {
   final List<WeightGoalDto> weightGoals;
   final WeightGoalDto? selectedWeightGoal;
   final WeightGoalDto? activeWeightGoal;
-  final PaginationState goalPagination;
+  final WeightGoalPaginationState goalPagination;
   final bool isLoading;
   final ErrorState? error;
 
@@ -34,7 +74,7 @@ final class WeightRecordState extends Equatable {
       weightRecords: [],
       recordPagination: PaginationState.initial(),
       weightGoals: [],
-      goalPagination: PaginationState.initial(),
+      goalPagination: WeightGoalPaginationState.initial(),
       isLoading: false,
     );
   }
@@ -47,7 +87,7 @@ final class WeightRecordState extends Equatable {
     List<WeightGoalDto>? weightGoals,
     WeightGoalDto? selectedWeightGoal,
     WeightGoalDto? activeWeightGoal,
-    PaginationState? goalPagination,
+    WeightGoalPaginationState? goalPagination,
     bool? isLoading,
     ErrorState? error,
   }) {
@@ -61,7 +101,7 @@ final class WeightRecordState extends Equatable {
       activeWeightGoal: activeWeightGoal ?? this.activeWeightGoal,
       goalPagination: goalPagination ?? this.goalPagination,
       isLoading: isLoading ?? this.isLoading,
-      error: error ?? this.error,
+      error: error,
     );
   }
 

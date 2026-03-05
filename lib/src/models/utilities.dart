@@ -263,4 +263,30 @@ sealed class EnumDisplayNames {
         return 'Anytime';
     }
   }
+
+  static String getWeightGoalPhaseDisplayName(WeightGoalPhase? g) {
+    switch (g) {
+      case WeightGoalPhase.cut:
+        return 'Cut';
+      case WeightGoalPhase.maintain:
+        return 'Maintain';
+      case WeightGoalPhase.bulk:
+        return 'Bulk';
+      case null:
+        return 'Unknown';
+    }
+  }
+
+  static String getProgressStatusDisplayName(ProgressStatus? s) {
+    switch (s) {
+      case ProgressStatus.inProgress:
+        return 'In Progress';
+      case ProgressStatus.abandoned:
+        return 'Abandoned';
+      case ProgressStatus.completed:
+        return 'Completed';
+      case null:
+        return 'Unknown';
+    }
+  }
 }

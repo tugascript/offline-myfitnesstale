@@ -138,11 +138,13 @@ class _WorkoutPlanDetailViewState extends State<WorkoutPlanDetailView> {
                         title: 'Delete Workout Plan',
                         content:
                             'Are you sure you want to delete this workout plan? This action cannot be undone.',
-                        onConfirm: () {
-                          context
+                        onConfirm: () async {
+                          await context
                               .read<WorkoutPlanCubit>()
                               .deleteWorkoutPlan(plan.id);
-                          context.pop();
+                          if (context.mounted) {
+                            Navigator.of(context).pop();
+                          }
                         },
                       ),
                     );
