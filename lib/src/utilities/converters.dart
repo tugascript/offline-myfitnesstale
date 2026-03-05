@@ -27,6 +27,10 @@ sealed class Converters {
     return (grams / 453.592);
   }
 
+  static int lbsToGrams(double lbs) {
+    return (lbs * 453.592).round();
+  }
+
   static String formatImperialWeight(int grams) {
     final double lbs = gramsToLbs(grams);
     return "${lbs.toStringAsFixed(1)} lbs";

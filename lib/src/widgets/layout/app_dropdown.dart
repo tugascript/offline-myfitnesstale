@@ -10,6 +10,7 @@ class AppDropdown<T> extends StatelessWidget {
   final void Function(T?) onSaved;
   final String? Function(T?)? validator;
   final bool showEmptyValue;
+  final Widget? prefixIcon;
 
   final String Function(T) labelBuilder;
   final double fontSize;
@@ -28,6 +29,7 @@ class AppDropdown<T> extends StatelessWidget {
     required this.fontSize,
     required this.padding,
     this.validator,
+    this.prefixIcon,
     this.showEmptyValue = true,
   });
 
@@ -45,6 +47,11 @@ class AppDropdown<T> extends StatelessWidget {
       decoration: InputDecoration(
         filled: filled,
         labelText: labelText,
+        prefixIcon: prefixIcon,
+        prefixIconConstraints: BoxConstraints.tightFor(
+          width: fontSize * 2,
+          height: fontSize * 1.5,
+        ),
         fillColor: filled ? theme.scaffoldBackgroundColor : null,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.zero,

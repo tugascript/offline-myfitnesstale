@@ -1,7 +1,7 @@
 import 'package:logging/logging.dart';
-import 'package:myfitnesstale/src/models/enums.dart';
 
 import '../models/db.dart';
+import '../models/enums.dart';
 import '../models/repository.dart';
 import '../models/utilities.dart';
 import '../models/weight_goal_model.dart';
@@ -227,16 +227,44 @@ class WeightRecordService {
       createWeightGoal({
     required int targetWeight,
     required DateTime startDate,
+    required WeightGoalPhase phase,
     ProgressStatus status = ProgressStatus.inProgress,
   }) async {
     _logger.info('Creating weight goal');
     try {
+      final int weightCount = await _weightGoalRepository.count(
+        where: WeightGoalColumns.status.equal,
+        whereArgs: [ProgressStatus.inProgress.value],
+      );
       final WeightGoal weightGoal = WeightGoal.create(
         targetWeight: targetWeight,
         startDate: DateUtilities.getDateUnix(startDate),
+        phase: phase,
         status: status,
       );
-      final int id = await _weightGoalRepository.insert(weightGoal);
+
+      if (weightCount == 0) {
+        final int id = await _weightGoalRepository.insert(weightGoal);
+        _logger.info('Created weight goal with id $id');
+        return ok(WeightGoalDto.fromModel(weightGoal.copyWith(id: id)));
+      }
+
+      final int id = await _weightGoalRepository.startTransaction((txn) async {
+        await txn.rawUpdate(
+          """
+          UPDATE ${WeightGoal.table} SET 
+            ${WeightGoalColumns.status.equal}, 
+            ${WeightGoalColumns.completedAt.equal}
+          WHERE ${WeightGoalColumns.status.equal};
+          """,
+          [
+            ProgressStatus.abandoned.value,
+            DateUtilities.getNowUtcUnix(),
+            ProgressStatus.inProgress.value
+          ],
+        );
+        return await _weightGoalRepository.insert(weightGoal, txn);
+      });
       _logger.info('Created weight goal with id $id');
       return ok(WeightGoalDto.fromModel(weightGoal.copyWith(id: id)));
     } catch (e) {
@@ -251,20 +279,32 @@ class WeightRecordService {
   Future<
       Result<PaginatedDto<WeightGoalDto, WeightGoal>,
           ServiceError<OperationErrorTypes>>> getWeightGoals({
+    bool skipInProgress = false,
     int limit = kDefaultLimit,
     int offset = kDefaultOffset,
   }) async {
     _logger.info('Getting weight goals');
     try {
+      final where = WhereBuilder();
+      if (skipInProgress) {
+        where.and(
+          WeightGoalColumns.status.notEqual,
+          ProgressStatus.inProgress.value,
+        );
+      }
+
       final List<WeightGoal> goals =
           await _weightGoalRepository.selectPaginated(
+        where: where.where,
+        whereArgs: where.args,
         limit: limit,
         offset: offset,
-        orderBy: [
-          WeightGoalColumns.id.orderDesc,
-        ],
+        orderBy: [WeightGoalColumns.startDate.orderDesc],
       );
-      final int total = await _weightGoalRepository.count();
+      final int total = await _weightGoalRepository.count(
+        where: where.where,
+        whereArgs: where.args,
+      );
       _logger.info('Got ${goals.length} weight goals');
       return ok(PaginatedDto<WeightGoalDto, WeightGoal>.mapData(
         data: goals,
@@ -283,7 +323,8 @@ class WeightRecordService {
   }
 
   Future<Result<WeightGoalDto, ServiceError<SingleErrorTypes>>> getWeightGoal(
-      int id) async {
+    int id,
+  ) async {
     _logger.info('Getting weight goal with id $id');
     try {
       final WeightGoal? weightGoal = await _weightGoalRepository.selectOne(id);
@@ -309,9 +350,9 @@ class WeightRecordService {
     _logger.info('Getting active weight goal');
     try {
       final List<WeightGoal> goals = await _weightGoalRepository.selectMany(
-        where: 'status = ?',
+        where: WeightGoalColumns.status.equal,
         whereArgs: [ProgressStatus.inProgress.value],
-        orderBy: [WeightGoalColumns.id.orderDesc],
+        orderBy: [WeightGoalColumns.startDate.orderDesc],
         limit: 1,
       );
       if (goals.isEmpty) {
@@ -339,6 +380,7 @@ class WeightRecordService {
     DateTime? startDate,
     ProgressStatus? status,
     DateTime? completedAt,
+    WeightGoalPhase? phase,
   }) async {
     _logger.info('Updating weight goal with id $id');
     try {
@@ -361,6 +403,7 @@ class WeightRecordService {
             ? DateUtilities.getDateUnix(completedAt)
             : weightGoal.completedAt,
         status: status,
+        phase: phase,
         updatedAt: DateUtilities.getNowUtcUnix(),
       );
       await _weightGoalRepository.update(updatedWeightGoal);
@@ -376,10 +419,11 @@ class WeightRecordService {
   }
 
   Future<Result<void, ServiceError<SingleErrorTypes>>> deleteWeightGoal(
-      int id) async {
+    int id,
+  ) async {
     _logger.info('Deleting weight goal with id $id');
     try {
-      final bool deleted = await _repository.deleteOne(id);
+      final bool deleted = await _weightGoalRepository.deleteOne(id);
       if (!deleted) {
         return err(const ServiceError(
           type: SingleErrorTypes.notFound,
@@ -414,7 +458,7 @@ class WeightRecordService {
     _logger.info('Getting weight goals by status $status');
     try {
       final List<WeightGoal> goals = await _weightGoalRepository.selectMany(
-        where: 'status = ?',
+        where: WeightGoalColumns.status.equal,
         whereArgs: [status.value],
         orderBy: [WeightGoalColumns.id.orderDesc],
       );

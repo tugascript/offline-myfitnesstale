@@ -304,6 +304,22 @@ enum ProgressStatus {
       );
 }
 
+enum WeightGoalPhase {
+  bulk("bulk"),
+  cut("cut"),
+  maintain("maintain");
+
+  final String value;
+
+  const WeightGoalPhase(this.value);
+
+  static WeightGoalPhase fromValue(String v) =>
+      WeightGoalPhase.values.firstWhere(
+        (g) => g.value == v,
+        orElse: () => WeightGoalPhase.bulk,
+      );
+}
+
 enum WorkoutPhase {
   endurance("endurance"),
   hypertrophy("hypertrophy"),

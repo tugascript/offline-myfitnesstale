@@ -5,6 +5,7 @@ import 'utilities.dart';
 
 const String _table = 'equipment';
 
+// TODO: add is favorite
 enum EquipmentColumns with Columns {
   id("id"),
   name("name"),

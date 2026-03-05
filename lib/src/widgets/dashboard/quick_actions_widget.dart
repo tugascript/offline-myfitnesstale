@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../utilities/sizes/home_sizes.dart';
 import '../../views/equipments/equipments_view.dart';
 import '../../views/exercises/exercises_view.dart';
-import '../../views/weight_goal_view.dart';
+import '../../views/weight/weight_goal_view.dart';
 import '../../views/weight_log_view.dart';
 import '../../views/workouts/workouts_view.dart';
 

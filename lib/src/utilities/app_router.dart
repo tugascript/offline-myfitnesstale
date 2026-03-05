@@ -16,7 +16,7 @@ import '../views/exercises/exercises_view.dart';
 import '../views/main_navigation_view.dart';
 import '../views/not_found_view.dart';
 import '../views/onboarding_view.dart';
-import '../views/weight_goal_view.dart';
+import '../views/weight/weight_goal_view.dart';
 import '../views/weight_log_view.dart';
 import '../views/workouts/workout_detail_view.dart';
 import '../views/workout_history_detail_view.dart';

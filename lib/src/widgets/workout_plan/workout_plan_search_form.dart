@@ -5,6 +5,7 @@ import '../../models/utilities.dart';
 import '../layout/app_dropdown.dart';
 import '../layout/app_text_form_field.dart';
 
+// TODO: add is favorite
 class WorkoutPlanSearchForm extends StatefulWidget {
   final String nameLabel;
   final double fontSize;

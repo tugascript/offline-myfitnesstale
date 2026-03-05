@@ -10,6 +10,7 @@ enum WeightGoalColumns with Columns {
   startDate("start_date"),
   completedAt("completed_at"),
   status("status"),
+  phase("phase"),
   createdAt("created_at"),
   updatedAt("updated_at");
 
@@ -26,6 +27,7 @@ class WeightGoal implements Model {
   final int startDate;
   final int? completedAt;
   final ProgressStatus status;
+  final WeightGoalPhase phase;
   @override
   final int createdAt;
   @override
@@ -37,6 +39,7 @@ class WeightGoal implements Model {
     required this.startDate,
     this.completedAt,
     required this.status,
+    required this.phase,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -49,9 +52,13 @@ class WeightGoal implements Model {
     ${WeightGoalColumns.startDate.value} INTEGER NOT NULL,
     ${WeightGoalColumns.completedAt.value} INTEGER,
     ${WeightGoalColumns.status.value} TEXT NOT NULL,
+    ${WeightGoalColumns.phase.value} TEXT NOT NULL,
     ${WeightGoalColumns.createdAt.value} INTEGER NOT NULL,
     ${WeightGoalColumns.updatedAt.value} INTEGER NOT NULL
   );
+
+  CREATE INDEX IF NOT EXISTS idx_weight_goal_start_date ON $_table (${WeightGoalColumns.startDate.value});
+  CREATE INDEX IF NOT EXISTS idx_weight_goal_status ON $_table (${WeightGoalColumns.status.value});
 ''';
 
   @override
@@ -62,6 +69,7 @@ class WeightGoal implements Model {
       WeightGoalColumns.startDate.value: startDate,
       WeightGoalColumns.completedAt.value: completedAt,
       WeightGoalColumns.status.value: status.value,
+      WeightGoalColumns.phase.value: phase.value,
       WeightGoalColumns.createdAt.value: createdAt,
       WeightGoalColumns.updatedAt.value: updatedAt,
     };
@@ -75,7 +83,11 @@ class WeightGoal implements Model {
       startDate: map[WeightGoalColumns.startDate.value] as int,
       completedAt: map[WeightGoalColumns.completedAt.value] as int?,
       status: ProgressStatus.fromValue(
-          map[WeightGoalColumns.status.value] as String),
+        map[WeightGoalColumns.status.value] as String,
+      ),
+      phase: WeightGoalPhase.fromValue(
+        map[WeightGoalColumns.phase.value] as String,
+      ),
       createdAt: map[WeightGoalColumns.createdAt.value] as int,
       updatedAt: map[WeightGoalColumns.updatedAt.value] as int,
     );
@@ -85,6 +97,7 @@ class WeightGoal implements Model {
   factory WeightGoal.create({
     required int targetWeight,
     required int startDate,
+    required WeightGoalPhase phase,
     ProgressStatus status = ProgressStatus.inProgress,
     int? completedAt,
   }) {
@@ -93,6 +106,7 @@ class WeightGoal implements Model {
       targetWeight: targetWeight,
       startDate: startDate,
       completedAt: completedAt,
+      phase: phase,
       status: status,
       createdAt: now,
       updatedAt: now,
@@ -106,6 +120,7 @@ class WeightGoal implements Model {
     int? startWeight,
     int? startDate,
     ProgressStatus? status,
+    WeightGoalPhase? phase,
     int? completedAt,
     int? createdAt,
     int? updatedAt,
@@ -116,6 +131,7 @@ class WeightGoal implements Model {
       startDate: startDate ?? this.startDate,
       status: status ?? this.status,
       completedAt: completedAt ?? this.completedAt,
+      phase: phase ?? this.phase,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );

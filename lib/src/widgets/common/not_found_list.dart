@@ -4,12 +4,18 @@ import '../../utilities/sizes/data_display_sizes.dart';
 
 class NotFoundList extends StatelessWidget {
   final DataDisplaySizesList sizes;
-  final String name;
+  final String? name;
+  final String? message;
+  final double? height;
+  final IconData? icon;
 
   const NotFoundList({
     super.key,
     required this.sizes,
-    required this.name,
+    this.message,
+    this.name,
+    this.height,
+    this.icon,
   });
 
   @override
@@ -20,7 +26,7 @@ class NotFoundList extends StatelessWidget {
     final color = isDarkTheme ? Colors.grey[400] : Colors.grey[600];
 
     return SizedBox(
-      height: MediaQuery.of(context).size.height / 2,
+      height: height ?? MediaQuery.of(context).size.height / 2,
       child: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -28,13 +34,13 @@ class NotFoundList extends StatelessWidget {
           children: [
             SizedBox(height: sizes.margins),
             Icon(
-              Icons.sentiment_neutral,
+              icon ?? Icons.sentiment_neutral,
               size: sizes.titleFountSize * 3,
               color: lightColor,
             ),
             SizedBox(height: sizes.margins),
             Text(
-              'No $name found',
+              message ?? 'No ${name ?? 'data'} found',
               style: TextStyle(
                 fontSize: sizes.titleFountSize,
                 color: color,
