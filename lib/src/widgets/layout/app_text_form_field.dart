@@ -20,6 +20,8 @@ class AppTextFormField extends StatelessWidget {
   final bool readOnly;
   final VoidCallback? onTap;
   final bool enabled;
+  final BoxConstraints? prefixIconConstraints;
+  final BoxConstraints? suffixIconConstraints;
 
   const AppTextFormField({
     super.key,
@@ -42,6 +44,8 @@ class AppTextFormField extends StatelessWidget {
     this.readOnly = false,
     this.onTap,
     this.enabled = true,
+    this.prefixIconConstraints,
+    this.suffixIconConstraints,
   });
 
   @override
@@ -67,15 +71,17 @@ class AppTextFormField extends StatelessWidget {
         labelText: labelText,
         hintText: hintText,
         alignLabelWithHint: true,
-        prefixIconConstraints: BoxConstraints.tightFor(
-          width: fontSize * 2,
-          height: fontSize * 1.5,
-        ),
+        prefixIconConstraints: prefixIconConstraints ??
+            BoxConstraints.tightFor(
+              width: fontSize * 2,
+              height: fontSize * 1.5,
+            ),
         prefixIcon: prefixIcon,
-        suffixIconConstraints: BoxConstraints.tightFor(
-          width: fontSize * 2,
-          height: fontSize * 1.5,
-        ),
+        suffixIconConstraints: suffixIconConstraints ??
+            BoxConstraints.tightFor(
+              width: fontSize * 2,
+              height: fontSize * 1.5,
+            ),
         suffixIcon: suffixIcon,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.zero,

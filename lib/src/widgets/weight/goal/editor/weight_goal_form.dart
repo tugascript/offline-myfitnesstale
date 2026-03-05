@@ -55,7 +55,7 @@ class _WeightGoalFormState extends State<WeightGoalForm> {
       weight: weight,
       phase: widget.initialPhase,
     );
-    _weightController.text = weight.toString();
+    _weightController.text = weight.toStringAsFixed(2);
   }
 
   @override
@@ -118,10 +118,23 @@ class _WeightGoalFormState extends State<WeightGoalForm> {
             hintText: "Enter the weight",
             fontSize: widget.sizes.subtitleFontSize,
             padding: widget.sizes.padding * 2,
-            suffixIcon: Text(
-              widget.units == Units.imperial ? "LBS" : "KG",
-              style: TextStyle(
-                fontSize: widget.sizes.subtitleFontSize,
+            suffixIconConstraints: BoxConstraints(
+              minWidth: widget.sizes.subtitleFontSize * 4,
+              minHeight: widget.sizes.subtitleFontSize * 1.5,
+            ),
+            suffixIcon: Padding(
+              padding: EdgeInsets.symmetric(horizontal: widget.sizes.padding),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    widget.units == Units.imperial ? "LBS" : "KG",
+                    style: TextStyle(
+                      fontSize: widget.sizes.subtitleFontSize,
+                    ),
+                  ),
+                ],
               ),
             ),
             prefixIcon: Icon(
