@@ -42,7 +42,7 @@ class WeightRecord implements Model {
 
   static const String table = _table;
   static final String tableCreate = '''
-  CREATE TABLE $_table (
+  CREATE TABLE IF NOT EXISTS $_table (
     ${WeightRecordColumns.id.value} INTEGER PRIMARY KEY AUTOINCREMENT,
     ${WeightRecordColumns.weight.value} INTEGER NOT NULL,
     ${WeightRecordColumns.fatPercentage.value} INTEGER,
@@ -51,7 +51,9 @@ class WeightRecord implements Model {
     ${WeightRecordColumns.createdAt.value} INTEGER NOT NULL,
     ${WeightRecordColumns.updatedAt.value} INTEGER NOT NULL
   );
-''';
+
+  CREATE INDEX IF NOT EXISTS idx_weight_record_date ON $_table (${WeightRecordColumns.recordDate.value});
+  ''';
 
   @override
   Map<String, Object?> toMap() {

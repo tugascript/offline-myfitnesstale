@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 
+import '../../common/nullable.dart';
 import '../../services/dtos/weight_goal_dto.dart';
 import '../../services/dtos/weight_record_dto.dart';
 import 'common_state.dart';
@@ -81,27 +82,35 @@ final class WeightRecordState extends Equatable {
 
   WeightRecordState copyWith({
     List<WeightRecordDto>? weightRecords,
-    WeightRecordDto? selectedWeightRecord,
-    WeightRecordDto? latestWeightRecord,
+    Nullable<WeightRecordDto>? selectedWeightRecord,
+    Nullable<WeightRecordDto>? latestWeightRecord,
     PaginationState? recordPagination,
     List<WeightGoalDto>? weightGoals,
-    WeightGoalDto? selectedWeightGoal,
-    WeightGoalDto? activeWeightGoal,
+    Nullable<WeightGoalDto>? selectedWeightGoal,
+    Nullable<WeightGoalDto>? activeWeightGoal,
     WeightGoalPaginationState? goalPagination,
     bool? isLoading,
-    ErrorState? error,
+    Nullable<ErrorState>? error,
   }) {
     return WeightRecordState(
       weightRecords: weightRecords ?? this.weightRecords,
-      selectedWeightRecord: selectedWeightRecord ?? this.selectedWeightRecord,
-      latestWeightRecord: latestWeightRecord ?? this.latestWeightRecord,
+      selectedWeightRecord: selectedWeightRecord != null
+          ? selectedWeightRecord.value
+          : this.selectedWeightRecord,
+      latestWeightRecord: latestWeightRecord != null
+          ? latestWeightRecord.value
+          : this.latestWeightRecord,
       recordPagination: recordPagination ?? this.recordPagination,
       weightGoals: weightGoals ?? this.weightGoals,
-      selectedWeightGoal: selectedWeightGoal ?? this.selectedWeightGoal,
-      activeWeightGoal: activeWeightGoal ?? this.activeWeightGoal,
+      selectedWeightGoal: selectedWeightGoal != null
+          ? selectedWeightGoal.value
+          : this.selectedWeightGoal,
+      activeWeightGoal: activeWeightGoal != null
+          ? activeWeightGoal.value
+          : this.activeWeightGoal,
       goalPagination: goalPagination ?? this.goalPagination,
       isLoading: isLoading ?? this.isLoading,
-      error: error,
+      error: error != null ? error.value : this.error,
     );
   }
 

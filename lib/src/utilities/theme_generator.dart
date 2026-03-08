@@ -88,12 +88,17 @@ sealed class ThemeGenerator {
     textTheme:
         GoogleFonts.robotoMonoTextTheme(ThemeData.dark().textTheme).copyWith(
       displayLarge: GoogleFonts.majorMonoDisplay(
-        fontSize: 72.0,
+        fontSize: 36.0,
         fontWeight: FontWeight.bold,
       ),
       titleLarge: GoogleFonts.majorMonoDisplay(
-        fontSize: 36.0,
-        fontStyle: FontStyle.italic,
+        fontSize: 24.0,
+        fontWeight: FontWeight.w600,
+      ),
+      bodyLarge: GoogleFonts.robotoMono(
+        fontSize: 16.0,
+        fontWeight: FontWeight.w500,
+        color: Colors.white,
       ),
       bodyMedium: GoogleFonts.robotoMono(
         fontSize: 14.0,
@@ -257,11 +262,20 @@ sealed class ThemeGenerator {
 
     // Define the default font family using Google Fonts
     textTheme:
-        GoogleFonts.robotoMonoTextTheme(ThemeData.light().textTheme).copyWith(
+        GoogleFonts.robotoMonoTextTheme(ThemeData.dark().textTheme).copyWith(
       displayLarge: GoogleFonts.majorMonoDisplay(
-          fontSize: 72.0, fontWeight: FontWeight.bold, color: Colors.black),
+        fontSize: 36.0,
+        fontWeight: FontWeight.bold,
+      ),
       titleLarge: GoogleFonts.majorMonoDisplay(
-          fontSize: 36.0, fontStyle: FontStyle.italic, color: Colors.black),
+        fontSize: 22.0,
+        fontWeight: FontWeight.w600,
+      ),
+      bodyLarge: GoogleFonts.robotoMono(
+        fontSize: 16.0,
+        fontWeight: FontWeight.w500,
+        color: Colors.black,
+      ),
       bodyMedium: GoogleFonts.robotoMono(
         fontSize: 14.0,
         color: Colors.black,

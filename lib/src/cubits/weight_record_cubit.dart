@@ -1,23 +1,7 @@
-// Copyright (C) 2026 Afonso Barracha
-//
-// This file is part of MyFitnessTale.
-//
-// MyFitnessTale is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// MyFitnessTale is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with MyFitnessTale.  If not, see <https://www.gnu.org/licenses/>.
-
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:logging/logging.dart';
 
+import '../common/nullable.dart';
 import '../models/enums.dart';
 import '../models/repository.dart';
 import '../services/common/errors.dart';
@@ -32,6 +16,7 @@ class WeightRecordCubit extends Cubit<WeightRecordState> {
   WeightRecordCubit() : super(WeightRecordState.initial());
 
   Future<void> getWeightRecords({
+    (DateTime start, DateTime end)? dateRange,
     int limit = kDefaultLimit,
     int offset = kDefaultOffset,
   }) async {
@@ -39,6 +24,7 @@ class WeightRecordCubit extends Cubit<WeightRecordState> {
     emit(state.copyWith(isLoading: true));
     _logger.info("Fetching paginated weight records");
     final result = await _weightRecordService.getWeightRecords(
+      dateRange: dateRange,
       limit: limit,
       offset: offset,
     );
@@ -49,10 +35,10 @@ class WeightRecordCubit extends Cubit<WeightRecordState> {
         case OperationErrorTypes.invalidInput:
         case OperationErrorTypes.operationFailure:
           emit(state.copyWith(
-            error: ErrorState(
+            error: Nullable(ErrorState(
               type: error.type.name,
               description: "Failed to get weight records",
-            ),
+            )),
             isLoading: false,
           ));
           return;
@@ -92,10 +78,10 @@ class WeightRecordCubit extends Cubit<WeightRecordState> {
         case SingleErrorTypes.invalidInput:
         case SingleErrorTypes.operationFailure:
           emit(state.copyWith(
-            error: ErrorState(
+            error: Nullable(ErrorState(
               type: error.type.name,
               description: "Failed to get latest weight record",
-            ),
+            )),
             isLoading: false,
           ));
           return;
@@ -103,7 +89,7 @@ class WeightRecordCubit extends Cubit<WeightRecordState> {
     }
 
     emit(state.copyWith(
-      latestWeightRecord: result.value,
+      latestWeightRecord: Nullable(result.value),
       isLoading: false,
     ));
   }
@@ -128,10 +114,10 @@ class WeightRecordCubit extends Cubit<WeightRecordState> {
         case OperationErrorTypes.invalidInput:
         case OperationErrorTypes.operationFailure:
           emit(state.copyWith(
-            error: ErrorState(
+            error: Nullable(ErrorState(
               type: error.type.name,
               description: "Failed to create weight record",
-            ),
+            )),
             isLoading: false,
           ));
           return;
@@ -146,10 +132,10 @@ class WeightRecordCubit extends Cubit<WeightRecordState> {
         case OperationErrorTypes.invalidInput:
         case OperationErrorTypes.operationFailure:
           emit(state.copyWith(
-            error: ErrorState(
+            error: Nullable(ErrorState(
               type: error.type.name,
               description: "Failed to fetch weight records",
-            ),
+            )),
             isLoading: false,
           ));
           return;
@@ -159,13 +145,13 @@ class WeightRecordCubit extends Cubit<WeightRecordState> {
     final weightRecords = weightRecordsResult.value;
     emit(state.copyWith(
       weightRecords: weightRecords.data,
-      selectedWeightRecord: result.value,
+      selectedWeightRecord: Nullable(result.value),
       recordPagination: state.recordPagination.copyWith(
         total: weightRecords.total,
         offset: weightRecords.offset,
         limit: weightRecords.limit,
       ),
-      latestWeightRecord: weightRecords.data.lastOrNull,
+      latestWeightRecord: Nullable(weightRecords.data.lastOrNull),
       isLoading: false,
     ));
   }
@@ -192,19 +178,19 @@ class WeightRecordCubit extends Cubit<WeightRecordState> {
         case SingleErrorTypes.notFound:
         case SingleErrorTypes.invalidInput:
           emit(state.copyWith(
-            error: ErrorState(
+            error: Nullable(ErrorState(
               type: error.type.name,
               description: error.description,
-            ),
+            )),
             isLoading: false,
           ));
           return;
         case SingleErrorTypes.operationFailure:
           emit(state.copyWith(
-            error: ErrorState(
+            error: Nullable(ErrorState(
               type: error.type.name,
               description: "Failed to update weight record",
-            ),
+            )),
             isLoading: false,
           ));
           return;
@@ -217,9 +203,14 @@ class WeightRecordCubit extends Cubit<WeightRecordState> {
       weightRecords: state.weightRecords
           .map((w) => w.id == weightRecord.id ? weightRecord : w)
           .toList(),
-      selectedWeightRecord: weightRecord,
+      selectedWeightRecord: Nullable(weightRecord),
+      latestWeightRecord: Nullable(
+        state.latestWeightRecord?.id == weightRecord.id
+            ? weightRecord
+            : state.latestWeightRecord,
+      ),
       isLoading: false,
-      error: null,
+      error: Nullable(null),
     ));
   }
 
@@ -233,38 +224,47 @@ class WeightRecordCubit extends Cubit<WeightRecordState> {
         case SingleErrorTypes.notFound:
         case SingleErrorTypes.invalidInput:
           emit(state.copyWith(
-            error: ErrorState(
+            error: Nullable(ErrorState(
               type: error.type.name,
               description: error.description,
-            ),
+            )),
             isLoading: false,
           ));
           return;
         case SingleErrorTypes.operationFailure:
           emit(state.copyWith(
-            error: ErrorState(
+            error: Nullable(ErrorState(
               type: error.type.name,
               description: "Failed to delete weight record",
-            ),
+            )),
             isLoading: false,
           ));
           return;
       }
     }
 
+    final updatedRecords = state.weightRecords
+        .where(
+          (w) => w.id != id,
+        )
+        .toList();
     emit(state.copyWith(
-      weightRecords: state.weightRecords.where((w) => w.id != id).toList(),
-      selectedWeightRecord: state.selectedWeightRecord?.id == id
-          ? null
-          : state.selectedWeightRecord,
+      weightRecords: updatedRecords,
+      selectedWeightRecord: Nullable(
+        state.selectedWeightRecord?.id == id
+            ? null
+            : state.selectedWeightRecord,
+      ),
       recordPagination: state.recordPagination.copyWith(
         total: state.recordPagination.total - 1,
       ),
-      latestWeightRecord: state.latestWeightRecord?.id == id
-          ? state.weightRecords.lastOrNull
-          : state.latestWeightRecord,
+      latestWeightRecord: Nullable(
+        state.latestWeightRecord?.id == id
+            ? updatedRecords.lastOrNull
+            : state.latestWeightRecord,
+      ),
       isLoading: false,
-      error: null,
+      error: Nullable(null),
     ));
   }
 
@@ -276,10 +276,10 @@ class WeightRecordCubit extends Cubit<WeightRecordState> {
       final error = result.error;
       _logger.warning("Failed to get active weight goal", error);
       emit(state.copyWith(
-        error: ErrorState(
+        error: Nullable(ErrorState(
           type: error.type.name,
           description: error.description,
-        ),
+        )),
         isLoading: false,
       ));
       return;
@@ -287,9 +287,9 @@ class WeightRecordCubit extends Cubit<WeightRecordState> {
 
     _logger.info("Active weight goal retrieved successfully");
     emit(state.copyWith(
-      activeWeightGoal: result.value,
+      activeWeightGoal: Nullable(result.value),
       isLoading: false,
-      error: null,
+      error: Nullable(null),
     ));
   }
 
@@ -314,20 +314,20 @@ class WeightRecordCubit extends Cubit<WeightRecordState> {
         case OperationErrorTypes.invalidInput:
           emit(
             state.copyWith(
-              error: ErrorState(
+              error: Nullable(ErrorState(
                 type: error.type.name,
                 description: error.description,
-              ),
+              )),
               isLoading: false,
             ),
           );
           return;
         case OperationErrorTypes.operationFailure:
           emit(state.copyWith(
-            error: ErrorState(
+            error: Nullable(ErrorState(
               type: error.type.name,
               description: "Failed to create weight goal",
-            ),
+            )),
             isLoading: false,
           ));
           return;
@@ -344,10 +344,10 @@ class WeightRecordCubit extends Cubit<WeightRecordState> {
       final error = weighGoalsResult.error;
       _logger.warning("Failed to get weight goals", error);
       emit(state.copyWith(
-        error: ErrorState(
+        error: Nullable(ErrorState(
           type: error.type.name,
           description: error.description,
-        ),
+        )),
         isLoading: false,
       ));
       return;
@@ -356,15 +356,15 @@ class WeightRecordCubit extends Cubit<WeightRecordState> {
 
     emit(state.copyWith(
       weightGoals: weighGoals.data,
-      selectedWeightGoal: weightGoal,
-      activeWeightGoal: weightGoal,
+      selectedWeightGoal: Nullable(weightGoal),
+      activeWeightGoal: Nullable(weightGoal),
       goalPagination: state.goalPagination.copyWith(
         total: weighGoals.total,
         limit: weighGoals.limit,
         offset: weighGoals.offset,
       ),
       isLoading: false,
-      error: null,
+      error: Nullable(null),
     ));
   }
 
@@ -391,20 +391,20 @@ class WeightRecordCubit extends Cubit<WeightRecordState> {
         case SingleErrorTypes.invalidInput:
           emit(
             state.copyWith(
-              error: ErrorState(
+              error: Nullable(ErrorState(
                 type: error.type.name,
                 description: error.description,
-              ),
+              )),
               isLoading: false,
             ),
           );
           return;
         case SingleErrorTypes.operationFailure:
           emit(state.copyWith(
-            error: ErrorState(
+            error: Nullable(ErrorState(
               type: error.type.name,
               description: "Failed to update weight goal",
-            ),
+            )),
             isLoading: false,
           ));
           return;
@@ -421,10 +421,10 @@ class WeightRecordCubit extends Cubit<WeightRecordState> {
       final error = weighGoalsResult.error;
       _logger.warning("Failed to get weight goals", error);
       emit(state.copyWith(
-        error: ErrorState(
+        error: Nullable(ErrorState(
           type: error.type.name,
           description: error.description,
-        ),
+        )),
         isLoading: false,
       ));
       return;
@@ -433,15 +433,15 @@ class WeightRecordCubit extends Cubit<WeightRecordState> {
 
     emit(state.copyWith(
       weightGoals: weighGoals.data,
-      selectedWeightGoal: weightGoal,
-      activeWeightGoal: weightGoal,
+      selectedWeightGoal: Nullable(weightGoal),
+      activeWeightGoal: Nullable(weightGoal),
       goalPagination: state.goalPagination.copyWith(
         total: weighGoals.total,
         limit: weighGoals.limit,
         offset: weighGoals.offset,
       ),
       isLoading: false,
-      error: null,
+      error: Nullable(null),
     ));
   }
 
@@ -456,20 +456,20 @@ class WeightRecordCubit extends Cubit<WeightRecordState> {
         case SingleErrorTypes.invalidInput:
           emit(
             state.copyWith(
-              error: ErrorState(
+              error: Nullable(ErrorState(
                 type: error.type.name,
                 description: error.description,
-              ),
+              )),
               isLoading: false,
             ),
           );
           return;
         case SingleErrorTypes.operationFailure:
           emit(state.copyWith(
-            error: ErrorState(
+            error: Nullable(ErrorState(
               type: error.type.name,
               description: "Failed to delete weight goal",
-            ),
+            )),
             isLoading: false,
           ));
           return;
@@ -478,13 +478,14 @@ class WeightRecordCubit extends Cubit<WeightRecordState> {
 
     emit(state.copyWith(
       weightGoals: state.weightGoals.where((g) => g.id != id).toList(),
-      selectedWeightGoal:
-          state.selectedWeightGoal?.id == id ? null : state.selectedWeightGoal,
+      selectedWeightGoal: Nullable(
+        state.selectedWeightGoal?.id == id ? null : state.selectedWeightGoal,
+      ),
       goalPagination: state.goalPagination.copyWith(
         total: state.goalPagination.total - 1,
       ),
       isLoading: false,
-      error: null,
+      error: Nullable(null),
     ));
   }
 
@@ -503,10 +504,10 @@ class WeightRecordCubit extends Cubit<WeightRecordState> {
       final error = result.error;
       _logger.warning("Failed to get weight goals", error);
       emit(state.copyWith(
-        error: ErrorState(
+        error: Nullable(ErrorState(
           type: error.type.name,
           description: error.description,
-        ),
+        )),
         isLoading: false,
       ));
       return;
@@ -523,7 +524,7 @@ class WeightRecordCubit extends Cubit<WeightRecordState> {
         skipInProgress: skipInProgress,
       ),
       isLoading: false,
-      error: null,
+      error: Nullable(null),
     ));
   }
 }
