@@ -178,7 +178,7 @@ class _WorkoutEditViewState extends State<WorkoutEditView> {
                         Text(
                           'Sets',
                           style: TextStyle(
-                            fontSize: sizes.titleFountSize,
+                            fontSize: sizes.titleFontSize,
                             fontWeight: FontWeight.bold,
                             color:
                                 theme.colorScheme.brightness == Brightness.dark

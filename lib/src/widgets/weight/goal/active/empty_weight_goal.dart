@@ -37,13 +37,13 @@ class EmptyWeightGoal extends StatelessWidget {
                 children: [
                   Icon(
                     Icons.scale,
-                    size: sizes.titleFountSize * 2,
+                    size: sizes.titleFontSize * 2,
                   ),
                   SizedBox(height: sizes.spacing),
                   Text(
                     'No Weight Goal',
                     style: TextStyle(
-                      fontSize: sizes.titleFountSize,
+                      fontSize: sizes.titleFontSize,
                       fontWeight: FontWeight.bold,
                       color: theme.brightness == Brightness.dark
                           ? Colors.grey[200]

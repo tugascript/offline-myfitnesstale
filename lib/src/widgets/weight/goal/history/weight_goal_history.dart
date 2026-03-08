@@ -89,7 +89,7 @@ class _WeightGoalHistoryState extends State<WeightGoalHistory> {
                 child: Text(
                   "Weight Goals History",
                   style: TextStyle(
-                    fontSize: widget.sizes.titleFountSize,
+                    fontSize: widget.sizes.titleFontSize,
                     fontWeight: FontWeight.bold,
                   ),
                   textAlign: TextAlign.start,
@@ -118,7 +118,7 @@ class _WeightGoalHistoryState extends State<WeightGoalHistory> {
               child: Text(
                 "Weight Goals History",
                 style: TextStyle(
-                  fontSize: widget.sizes.titleFountSize,
+                  fontSize: widget.sizes.titleFontSize,
                   fontWeight: FontWeight.bold,
                 ),
                 textAlign: TextAlign.start,

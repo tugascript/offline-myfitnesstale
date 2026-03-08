@@ -45,7 +45,7 @@ class WorkoutPlanHeaderEditCard extends StatelessWidget {
                 Text(
                   'Details',
                   style: TextStyle(
-                    fontSize: sizes.titleFountSize,
+                    fontSize: sizes.titleFontSize,
                     fontWeight: FontWeight.w600,
                     color: textColor,
                   ),

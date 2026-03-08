@@ -157,7 +157,7 @@ class _ExerciseDetailViewState extends State<ExerciseDetailView> {
                   Text(
                     'Video',
                     style: TextStyle(
-                      fontSize: sizes.titleFountSize,
+                      fontSize: sizes.titleFontSize,
                       fontWeight: FontWeight.bold,
                       color: isDarkTheme ? Colors.grey[200] : Colors.grey[800],
                     ),

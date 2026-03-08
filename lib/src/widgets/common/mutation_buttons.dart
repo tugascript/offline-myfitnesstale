@@ -7,6 +7,7 @@ class MutationButtons extends StatelessWidget {
   final ThemeData theme;
   final DataDisplaySizesList sizes;
   final bool isLoading;
+  final double? padding;
   final VoidCallback? onEdit;
   final VoidCallback? onDelete;
 
@@ -17,12 +18,13 @@ class MutationButtons extends StatelessWidget {
     required this.isLoading,
     required this.onEdit,
     required this.onDelete,
+    this.padding,
   });
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: sizes.padding / 3),
+      padding: EdgeInsets.symmetric(horizontal: padding ?? sizes.padding / 3),
       child: Row(
         children: [
           Expanded(

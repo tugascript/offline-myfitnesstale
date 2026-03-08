@@ -19,7 +19,7 @@ class WeightGoalView extends StatelessWidget {
     final breakpoints = BreakPoint.fromContext(context);
     final sizes = DataDisplaySizes.getDataDisplaySizes(breakpoints.screenSize);
     return AppScaffold(
-      title: "Weight Goal",
+      title: "Weight Goals",
       body: Padding(
         padding: EdgeInsets.all(sizes.padding),
         child: Column(

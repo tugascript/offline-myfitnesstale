@@ -20,7 +20,7 @@ class EmptySetsCard extends StatelessWidget {
             children: [
               Icon(
                 Icons.fitness_center,
-                size: sizes.titleFountSize,
+                size: sizes.titleFontSize,
                 color: Colors.grey[400],
               ),
               SizedBox(height: sizes.spacing),

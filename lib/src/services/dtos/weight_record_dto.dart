@@ -33,6 +33,14 @@ class WeightRecordDto extends Equatable implements Dto<WeightRecord> {
     );
   }
 
+  factory WeightRecordDto.empty() {
+    return WeightRecordDto(
+      id: 0,
+      weight: 0,
+      recordDate: DateTime.now(),
+    );
+  }
+
   @override
   WeightRecordDto copyWith({
     int? id,

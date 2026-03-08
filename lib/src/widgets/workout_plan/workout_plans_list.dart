@@ -36,14 +36,14 @@ class WorkoutPlansList extends StatelessWidget {
               SizedBox(height: sizes.margins),
               Icon(
                 Icons.calendar_today,
-                size: sizes.titleFountSize * 3,
+                size: sizes.titleFontSize * 3,
                 color: Colors.grey[400],
               ),
               SizedBox(height: sizes.margins),
               Text(
                 'No workout plans found',
                 style: TextStyle(
-                  fontSize: sizes.titleFountSize,
+                  fontSize: sizes.titleFontSize,
                   color: Colors.grey[600],
                 ),
               ),

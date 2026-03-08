@@ -108,7 +108,7 @@ class WeightGoalCard extends StatelessWidget {
                   visualDensity: VisualDensity.compact,
                   icon: Icon(
                     Icons.delete,
-                    size: sizes.titleFountSize,
+                    size: sizes.titleFontSize,
                     color: theme.colorScheme.brightness == Brightness.dark
                         ? Colors.red[400]
                         : Colors.red[600],

@@ -30,7 +30,6 @@ import '../services/dtos/weight_record_dto.dart';
 import '../utilities/converters.dart';
 import '../widgets/layout/responsive_scaffold.dart';
 import 'exercise_progress_view.dart';
-import 'weight_log_view.dart';
 import 'workout_history_view.dart';
 
 class ProgressView extends StatefulWidget {
@@ -167,13 +166,7 @@ class _ProgressViewState extends State<ProgressView>
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton.icon(
-                      onPressed: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (context) => const WeightLogView(),
-                          ),
-                        );
-                      },
+                      onPressed: () {},
                       icon: const Icon(Icons.add),
                       label: const Text('Log Weight'),
                     ),

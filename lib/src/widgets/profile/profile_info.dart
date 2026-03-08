@@ -32,7 +32,7 @@ class ProfileInfo extends StatelessWidget {
             Text(
               "Profile Information",
               style: TextStyle(
-                fontSize: sizes.titleFountSize,
+                fontSize: sizes.titleFontSize,
                 fontWeight: FontWeight.bold,
               ),
             ),

@@ -35,14 +35,14 @@ class NotFoundList extends StatelessWidget {
             SizedBox(height: sizes.margins),
             Icon(
               icon ?? Icons.sentiment_neutral,
-              size: sizes.titleFountSize * 3,
+              size: sizes.titleFontSize * 3,
               color: lightColor,
             ),
             SizedBox(height: sizes.margins),
             Text(
               message ?? 'No ${name ?? 'data'} found',
               style: TextStyle(
-                fontSize: sizes.titleFountSize,
+                fontSize: sizes.titleFontSize,
                 color: color,
               ),
             ),

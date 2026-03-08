@@ -121,7 +121,7 @@ class _WorkoutDetailViewState extends State<WorkoutDetailView> {
                 Text(
                   'Sets',
                   style: TextStyle(
-                    fontSize: sizes.titleFountSize,
+                    fontSize: sizes.titleFontSize,
                     fontWeight: FontWeight.bold,
                     color: isDarkTheme ? Colors.grey[200] : Colors.grey[800],
                   ),

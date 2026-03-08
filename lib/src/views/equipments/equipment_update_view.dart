@@ -66,7 +66,7 @@ class _EquipmentUpdateViewState extends State<EquipmentUpdateView> {
                 SizedBox(height: breakPoint.height * 0.2),
                 Icon(
                   Icons.fitness_center,
-                  size: sizes.titleFountSize * 4,
+                  size: sizes.titleFontSize * 4,
                   color: theme.primaryColor,
                 ),
                 SizedBox(height: sizes.spacing * 2),
