@@ -30,7 +30,7 @@ class AppSettingsConfig extends StatelessWidget {
     return ExpandingSection(
       icon: Icons.settings,
       title: "App Settings",
-      titleFountSize: sizes.titleFountSize,
+      titleFountSize: sizes.titleFontSize,
       subtitle: "${system.units.name} units • ${system.theme.name} theme",
       subtitleFontSize: sizes.subtitleFontSize,
       padding: sizes.padding / 2,

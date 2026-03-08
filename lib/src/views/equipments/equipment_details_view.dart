@@ -99,7 +99,7 @@ class _EquipmentDetailsViewState extends State<EquipmentDetailsView> {
                 Text(
                   'Related Exercises',
                   style: TextStyle(
-                    fontSize: sizes.titleFountSize,
+                    fontSize: sizes.titleFontSize,
                     fontWeight: FontWeight.bold,
                     color: isDarkTheme ? Colors.grey[200] : Colors.grey[800],
                   ),

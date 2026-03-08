@@ -35,7 +35,7 @@ class SettingsConfig extends StatelessWidget {
             Text(
               "Settings",
               style: TextStyle(
-                fontSize: sizes.titleFountSize,
+                fontSize: sizes.titleFontSize,
                 fontWeight: FontWeight.bold,
               ),
             ),

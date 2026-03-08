@@ -4,7 +4,7 @@ final class DataDisplaySizesList {
   final double padding;
   final double spacing;
   final double margins;
-  final double titleFountSize;
+  final double titleFontSize;
   final double subtitleFontSize;
   final double fontSize;
   final double smallFontSize;
@@ -18,7 +18,7 @@ final class DataDisplaySizesList {
     required this.padding,
     required this.spacing,
     required this.margins,
-    required this.titleFountSize,
+    required this.titleFontSize,
     required this.subtitleFontSize,
     required this.fontSize,
     required this.smallFontSize,
@@ -53,7 +53,7 @@ sealed class DataDisplaySizes {
         padding: _padding * ratio,
         spacing: _spacing * ratio,
         margins: _margins * ratio,
-        titleFountSize: _titleFontSize * ratio,
+        titleFontSize: _titleFontSize * ratio,
         subtitleFontSize: _subtitleFontSize * ratio,
         fontSize: _fontSize * ratio,
         smallFontSize: _smallFontSize * ratio,

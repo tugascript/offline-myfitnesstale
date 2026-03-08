@@ -76,7 +76,7 @@ void main() {
   }) {
     const sizes = DataDisplaySizesList(
       subtitleFontSize: 14,
-      titleFountSize: 20,
+      titleFontSize: 20,
       fontSize: 12,
       smallFontSize: 10,
       buttonIconSize: 18,

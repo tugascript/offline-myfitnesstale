@@ -33,12 +33,20 @@ sealed class Converters {
 
   static String formatImperialWeight(int grams) {
     final double lbs = gramsToLbs(grams);
-    return "${lbs.toStringAsFixed(1)} lbs";
+    return "${lbs.toStringAsFixed(2)} lbs";
   }
 
   static String formatMetricWeight(int grams) {
     final double kg = gramsToKg(grams);
     return "${kg.toStringAsFixed(2)} kg";
+  }
+
+  static int doublePercentToInt(double percent) {
+    return (percent * 100).round();
+  }
+
+  static double intPercentToDouble(int percent) {
+    return (percent / 100);
   }
 
   static String formatDuration(int seconds) {

@@ -32,8 +32,8 @@ class WeightRecordCubit extends Cubit<WeightRecordState> {
   WeightRecordCubit() : super(WeightRecordState.initial());
 
   Future<void> getWeightRecords({
-    required int limit,
-    required int offset,
+    int limit = kDefaultLimit,
+    int offset = kDefaultOffset,
   }) async {
     _logger.info("Getting weight records");
     emit(state.copyWith(isLoading: true));
@@ -67,8 +67,8 @@ class WeightRecordCubit extends Cubit<WeightRecordState> {
           ? [...state.weightRecords, ...weightRecords]
           : weightRecords,
       recordPagination: state.recordPagination.copyWith(
-        limit: limit,
-        offset: offset,
+        limit: paginatedData.limit,
+        offset: paginatedData.offset,
         total: paginatedData.total,
       ),
       isLoading: false,
@@ -138,18 +138,34 @@ class WeightRecordCubit extends Cubit<WeightRecordState> {
       }
     }
 
-    final weightRecord = result.value;
+    final weightRecordsResult = await _weightRecordService.getWeightRecords();
+    if (weightRecordsResult.isErr()) {
+      final error = result.error;
+      _logger.warning("Failed to fetch weight records", error);
+      switch (error.type) {
+        case OperationErrorTypes.invalidInput:
+        case OperationErrorTypes.operationFailure:
+          emit(state.copyWith(
+            error: ErrorState(
+              type: error.type.name,
+              description: "Failed to fetch weight records",
+            ),
+            isLoading: false,
+          ));
+          return;
+      }
+    }
+
+    final weightRecords = weightRecordsResult.value;
     emit(state.copyWith(
-      weightRecords: [weightRecord, ...state.weightRecords],
-      selectedWeightRecord: weightRecord,
+      weightRecords: weightRecords.data,
+      selectedWeightRecord: result.value,
       recordPagination: state.recordPagination.copyWith(
-        total: state.recordPagination.total + 1,
+        total: weightRecords.total,
+        offset: weightRecords.offset,
+        limit: weightRecords.limit,
       ),
-      latestWeightRecord: state.latestWeightRecord == null ||
-              weightRecord.recordDate
-                  .isAfter(state.latestWeightRecord!.recordDate)
-          ? weightRecord
-          : state.latestWeightRecord,
+      latestWeightRecord: weightRecords.data.lastOrNull,
       isLoading: false,
     ));
   }

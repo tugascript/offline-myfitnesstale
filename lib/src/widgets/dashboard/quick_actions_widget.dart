@@ -4,8 +4,8 @@ import 'package:go_router/go_router.dart';
 import '../../utilities/sizes/home_sizes.dart';
 import '../../views/equipments/equipments_view.dart';
 import '../../views/exercises/exercises_view.dart';
-import '../../views/weight/weight_goal_view.dart';
-import '../../views/weight_log_view.dart';
+import '../../views/weight/weight_goals_view.dart';
+import '../../views/weight/weight_records_view.dart';
 import '../../views/workouts/workouts_view.dart';
 
 class QuickActionsWidget extends StatelessWidget {
@@ -66,7 +66,7 @@ class QuickActionsWidget extends StatelessWidget {
               title: "Log Weight",
               subtitle: "Log your weight",
               onTap: () {
-                context.push(WeightLogView.routeName);
+                context.push(WeightRecordsView.routeName);
               },
             ),
             _ActionCard(

@@ -52,7 +52,7 @@ class UpdateWeightGoalCard extends StatelessWidget {
                   Text(
                     "Current Weight Goal",
                     style: TextStyle(
-                      fontSize: sizes.titleFountSize,
+                      fontSize: sizes.titleFontSize,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -61,7 +61,7 @@ class UpdateWeightGoalCard extends StatelessWidget {
                     visualDensity: VisualDensity.compact,
                     icon: Icon(
                       Icons.close,
-                      size: sizes.titleFountSize * 1.2,
+                      size: sizes.titleFontSize * 1.2,
                       color: theme.colorScheme.brightness == Brightness.dark
                           ? Colors.grey[400]
                           : Colors.grey[600],

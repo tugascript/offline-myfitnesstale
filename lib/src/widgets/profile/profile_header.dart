@@ -36,13 +36,13 @@ class ProfileHeader extends StatelessWidget {
           mainAxisSize: MainAxisSize.max,
           children: [
             CircleAvatar(
-              radius: sizes.titleFountSize * 1.65,
+              radius: sizes.titleFontSize * 1.65,
               backgroundColor:
                   theme.primaryColor.withValues(alpha: isDarkTheme ? 0.2 : 0.1),
               child: Text(
                 _getNameInitials(profile.name),
                 style: TextStyle(
-                  fontSize: sizes.titleFountSize,
+                  fontSize: sizes.titleFontSize,
                   fontWeight: FontWeight.bold,
                   color: theme.primaryColor,
                 ),
@@ -56,7 +56,7 @@ class ProfileHeader extends StatelessWidget {
                   Text(
                     profile.name,
                     style: TextStyle(
-                      fontSize: sizes.titleFountSize,
+                      fontSize: sizes.titleFontSize,
                       fontWeight: FontWeight.bold,
                     ),
                     softWrap: true,
@@ -101,7 +101,7 @@ class ProfileHeader extends StatelessWidget {
                 onPressed: editOnPress,
                 icon: Icon(
                   Icons.edit,
-                  size: sizes.titleFountSize,
+                  size: sizes.titleFontSize,
                 ),
                 color: theme.primaryColor,
                 tooltip: "Edit Profile",

@@ -31,7 +31,7 @@ class RemindersSettingsConfig extends StatelessWidget {
     return ExpandingSection(
       icon: Icons.notifications,
       title: "Reminders",
-      titleFountSize: sizes.titleFountSize,
+      titleFountSize: sizes.titleFontSize,
       subtitle:
           "Workouts ${_subtitleState(remindersConfig.workoutsOn)} • Weight Records ${_subtitleState(remindersConfig.weightRecordsOn)}",
       subtitleFontSize: sizes.subtitleFontSize,
