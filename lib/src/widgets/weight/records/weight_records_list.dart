@@ -87,60 +87,82 @@ class _WeightRecordCard extends StatelessWidget {
         padding: EdgeInsets.all(sizes.padding),
         child: Row(
           mainAxisSize: MainAxisSize.max,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              "${_displayWeight()} ${units == Units.imperial ? "LBS" : "KG"}",
-              style: TextStyle(
-                fontSize: sizes.fontSize,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            SizedBox(width: sizes.spacing),
-            Text(
-              _formatDate(),
-              style: TextStyle(
-                fontSize: sizes.fontSize,
-                fontWeight: FontWeight.w400,
-              ),
-            ),
-            const Spacer(),
-            IconButton(
-              onPressed: () {
-                showDialog(
-                  context: context,
-                  builder: (context) => EditWeightRecordModal(
-                    theme: theme,
-                    sizes: sizes,
-                    units: units,
-                    record: record,
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.monitor_weight,
+                  size: sizes.fontSize * 1.2,
+                ),
+                Text(
+                  " ${_displayWeight()} ${units == Units.imperial ? "LBS" : "KG"}",
+                  style: TextStyle(
+                    fontSize: sizes.fontSize,
+                    fontWeight: FontWeight.bold,
                   ),
-                );
-              },
-              icon: Icon(Icons.edit),
-              color: greyColor,
-              visualDensity: VisualDensity.compact,
+                ),
+              ],
             ),
-            IconButton(
-              onPressed: () {
-                showDialog(
-                  context: context,
-                  builder: (context) => ConfirmationDialog(
-                    title: "Delete Weight Record",
-                    content:
-                        "Are you sure you want to delete this weight record?",
-                    confirmLabel: "Delete",
-                    isDestructive: true,
-                    onConfirm: () async {
-                      await context
-                          .read<WeightRecordCubit>()
-                          .deleteWeightRecord(record.id);
-                    },
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.calendar_today,
+                  size: sizes.fontSize * 1.2,
+                ),
+                Text(
+                  " ${_formatDate()}",
+                  style: TextStyle(
+                    fontSize: sizes.fontSize,
+                    fontWeight: FontWeight.w400,
                   ),
-                );
-              },
-              icon: Icon(Icons.delete),
-              color: redColor,
-              visualDensity: VisualDensity.compact,
+                ),
+              ],
+            ),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      builder: (context) => EditWeightRecordModal(
+                        theme: theme,
+                        sizes: sizes,
+                        units: units,
+                        record: record,
+                      ),
+                    );
+                  },
+                  icon: Icon(Icons.edit),
+                  color: greyColor,
+                  visualDensity: VisualDensity.compact,
+                ),
+                IconButton(
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      builder: (context) => ConfirmationDialog(
+                        title: "Delete Weight Record",
+                        content:
+                            "Are you sure you want to delete this weight record?",
+                        confirmLabel: "Delete",
+                        isDestructive: true,
+                        onConfirm: () async {
+                          await context
+                              .read<WeightRecordCubit>()
+                              .deleteWeightRecord(record.id);
+                        },
+                      ),
+                    );
+                  },
+                  icon: Icon(Icons.delete),
+                  color: redColor,
+                  visualDensity: VisualDensity.compact,
+                )
+              ],
             ),
           ],
         ),

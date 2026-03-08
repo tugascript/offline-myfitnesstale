@@ -16,7 +16,6 @@ class WeightRecordsChart extends StatelessWidget {
 
   final Units units;
   final List<WeightRecordDto> records;
-  final double labelSize;
   final ThemeData theme;
   final DataDisplaySizesList sizes;
 
@@ -24,7 +23,6 @@ class WeightRecordsChart extends StatelessWidget {
     super.key,
     required this.units,
     required this.records,
-    required this.labelSize,
     required this.theme,
     required this.sizes,
   });
@@ -96,172 +94,186 @@ class WeightRecordsChart extends StatelessWidget {
       alpha: isLightTheme ? 0.45 : 0.60,
     );
 
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: SizedBox(
-        width: double.infinity,
-        child: AspectRatio(
-          aspectRatio: 1.7,
-          child: LineChart(
-            LineChartData(
-              minX: chartMinX,
-              maxX: chartMaxX,
-              minY: adjustedMinY,
-              maxY: adjustedMaxY,
-              gridData: FlGridData(
-                show: true,
-                drawVerticalLine: false,
-                horizontalInterval: yInterval,
-                getDrawingHorizontalLine: (value) {
-                  return FlLine(
-                    color: horizontalGuideColor,
-                    strokeWidth: 1,
-                  );
-                },
+    return SizedBox(
+      width: double.infinity,
+      child: AspectRatio(
+        aspectRatio: 1.7,
+        child: LineChart(
+          LineChartData(
+            minX: chartMinX,
+            maxX: chartMaxX,
+            minY: adjustedMinY,
+            maxY: adjustedMaxY,
+            gridData: FlGridData(
+              show: true,
+              drawVerticalLine: false,
+              horizontalInterval: yInterval,
+              getDrawingHorizontalLine: (value) {
+                return FlLine(
+                  color: horizontalGuideColor,
+                  strokeWidth: 1,
+                );
+              },
+            ),
+            titlesData: FlTitlesData(
+              topTitles: const AxisTitles(
+                sideTitles: SideTitles(showTitles: false),
               ),
-              titlesData: FlTitlesData(
-                topTitles: const AxisTitles(
-                  sideTitles: SideTitles(showTitles: false),
+              rightTitles: const AxisTitles(
+                sideTitles: SideTitles(showTitles: false),
+              ),
+              bottomTitles: AxisTitles(
+                axisNameWidget: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.calendar_today,
+                      size: sizes.fontSize * 1.2,
+                    ),
+                    Text(
+                      ' Date',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color:
+                                Theme.of(context).colorScheme.onSurfaceVariant,
+                            fontWeight: FontWeight.w600,
+                            fontSize: sizes.fontSize,
+                          ),
+                    ),
+                  ],
                 ),
-                rightTitles: const AxisTitles(
-                  sideTitles: SideTitles(showTitles: false),
-                ),
-                bottomTitles: AxisTitles(
-                  axisNameWidget: Text(
-                    'Date',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                          fontWeight: FontWeight.w600,
-                          fontSize: labelSize,
-                        ),
-                  ),
-                  axisNameSize: 28,
-                  sideTitles: SideTitles(
-                    showTitles: true,
-                    reservedSize: 30,
-                    interval: xInterval,
-                    getTitlesWidget: (value, meta) {
-                      if (value == chartMaxX || value == chartMinX) {
-                        return const SizedBox.shrink();
-                      }
-                      final date =
-                          DateTime.fromMillisecondsSinceEpoch(value.toInt());
-                      final formatted = DateFormat.MMMd().format(date);
-                      return Padding(
-                        padding: const EdgeInsets.only(top: 8.0),
-                        child: Text(
-                          formatted,
-                          style:
-                              Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .onSurfaceVariant,
-                                    fontSize: 10,
-                                  ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-                leftTitles: AxisTitles(
-                  axisNameWidget: Text(
-                    'Weight (${isMetric ? 'kg' : 'lbs'})',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                          fontWeight: FontWeight.w600,
-                          fontSize: labelSize,
-                        ),
-                  ),
-                  axisNameSize: 28,
-                  sideTitles: SideTitles(
-                    showTitles: true,
-                    reservedSize: 40,
-                    interval: yInterval,
-                    getTitlesWidget: (value, meta) {
-                      // If it's the very top or bottom value, we might want to hide it to avoid clipping
-                      if (value == adjustedMinY || value == adjustedMaxY) {
-                        return const SizedBox.shrink();
-                      }
-                      return Text(
-                        value.toStringAsFixed(1),
+                axisNameSize: 28,
+                sideTitles: SideTitles(
+                  showTitles: true,
+                  reservedSize: 30,
+                  interval: xInterval,
+                  getTitlesWidget: (value, meta) {
+                    if (value == chartMaxX || value == chartMinX) {
+                      return const SizedBox.shrink();
+                    }
+                    final date =
+                        DateTime.fromMillisecondsSinceEpoch(value.toInt());
+                    final formatted = DateFormat.MMMd().format(date);
+                    return Padding(
+                      padding: const EdgeInsets.only(top: 8.0),
+                      child: Text(
+                        formatted,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                               color: Theme.of(context)
                                   .colorScheme
                                   .onSurfaceVariant,
-                              fontSize: 10,
+                              fontSize: sizes.smallFontSize,
                             ),
-                      );
-                    },
-                  ),
+                      ),
+                    );
+                  },
                 ),
               ),
-              borderData: FlBorderData(
-                show: true,
-                border: Border(
-                  left: BorderSide(
-                    color: axisBorderColor,
-                    width: 1,
-                  ),
-                  bottom: BorderSide(
-                    color: axisBorderColor,
-                    width: 1,
-                  ),
+              leftTitles: AxisTitles(
+                axisNameWidget: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.monitor_weight,
+                      size: sizes.fontSize * 1.2,
+                    ),
+                    Text(
+                      ' Weight (${isMetric ? 'kg' : 'lbs'})',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                        fontWeight: FontWeight.w600,
+                        fontSize: sizes.fontSize,
+                      ),
+                    ),
+                  ],
+                ),
+                axisNameSize: 28,
+                sideTitles: SideTitles(
+                  showTitles: true,
+                  reservedSize: 40,
+                  interval: yInterval,
+                  getTitlesWidget: (value, meta) {
+                    // If it's the very top or bottom value, we might want to hide it to avoid clipping
+                    if (value == adjustedMinY || value == adjustedMaxY) {
+                      return const SizedBox.shrink();
+                    }
+                    return Text(
+                      value.toStringAsFixed(1),
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color:
+                                Theme.of(context).colorScheme.onSurfaceVariant,
+                            fontSize: sizes.smallFontSize,
+                          ),
+                    );
+                  },
                 ),
               ),
-              lineBarsData: [
-                LineChartBarData(
-                  spots: spots,
-                  isCurved: true,
-                  color: Theme.of(context).colorScheme.primary,
-                  barWidth: 3,
-                  isStrokeCapRound: true,
-                  dotData: FlDotData(
-                    show: true,
-                    getDotPainter: (spot, percent, barData, index) {
-                      return FlDotCirclePainter(
-                        radius: 4,
-                        color: Theme.of(context).colorScheme.primary,
-                        strokeWidth: 2,
-                        strokeColor: Theme.of(context).colorScheme.surface,
-                      );
-                    },
-                  ),
-                  belowBarData: BarAreaData(
-                    show: true,
-                    color: Theme.of(context)
-                        .colorScheme
-                        .primary
-                        .withValues(alpha: 0.1),
-                  ),
+            ),
+            borderData: FlBorderData(
+              show: true,
+              border: Border(
+                left: BorderSide(
+                  color: axisBorderColor,
+                  width: 1,
                 ),
-              ],
-              lineTouchData: LineTouchData(
-                enabled: true,
-                handleBuiltInTouches: false,
-                touchCallback: (event, touchResponse) {
-                  if (event is! FlTapUpEvent) {
-                    return;
-                  }
-                  final touchedSpots = touchResponse?.lineBarSpots;
-                  if (touchedSpots == null || touchedSpots.isEmpty) {
-                    return;
-                  }
+                bottom: BorderSide(
+                  color: axisBorderColor,
+                  width: 1,
+                ),
+              ),
+            ),
+            lineBarsData: [
+              LineChartBarData(
+                spots: spots,
+                isCurved: true,
+                color: Theme.of(context).colorScheme.primary,
+                barWidth: 3,
+                isStrokeCapRound: true,
+                dotData: FlDotData(
+                  show: true,
+                  getDotPainter: (spot, percent, barData, index) {
+                    return FlDotCirclePainter(
+                      radius: 4,
+                      color: Theme.of(context).colorScheme.primary,
+                      strokeWidth: 2,
+                      strokeColor: Theme.of(context).colorScheme.surface,
+                    );
+                  },
+                ),
+                belowBarData: BarAreaData(
+                  show: true,
+                  color: Theme.of(context)
+                      .colorScheme
+                      .primary
+                      .withValues(alpha: 0.1),
+                ),
+              ),
+            ],
+            lineTouchData: LineTouchData(
+              enabled: true,
+              handleBuiltInTouches: false,
+              touchCallback: (event, touchResponse) {
+                if (event is! FlTapUpEvent) {
+                  return;
+                }
+                final touchedSpots = touchResponse?.lineBarSpots;
+                if (touchedSpots == null || touchedSpots.isEmpty) {
+                  return;
+                }
 
-                  final spotIndex = touchedSpots.first.spotIndex;
-                  if (spotIndex < 0 || spotIndex >= chartRecords.length) {
-                    return;
-                  }
+                final spotIndex = touchedSpots.first.spotIndex;
+                if (spotIndex < 0 || spotIndex >= chartRecords.length) {
+                  return;
+                }
 
-                  final record = chartRecords[spotIndex];
-                  WeightRecordPointDetailsModal.show(
-                    context: context,
-                    theme: theme,
-                    sizes: sizes,
-                    units: units,
-                    record: record,
-                  );
-                },
-              ),
+                final record = chartRecords[spotIndex];
+                WeightRecordPointDetailsModal.show(
+                  context: context,
+                  theme: theme,
+                  sizes: sizes,
+                  units: units,
+                  record: record,
+                );
+              },
             ),
           ),
         ),

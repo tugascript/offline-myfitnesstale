@@ -2,6 +2,7 @@ import '../enums.dart';
 import '../exercise_model.dart';
 import 'equipment_constants.dart';
 
+// TODO: add difficulty
 class ExerciseData {
   final String name;
   final MuscleGroup muscleGroup;

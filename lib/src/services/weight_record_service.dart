@@ -63,20 +63,58 @@ class WeightRecordService {
   Future<
       Result<PaginatedDto<WeightRecordDto, WeightRecord>,
           ServiceError<OperationErrorTypes>>> getWeightRecords({
+    (DateTime start, DateTime end)? dateRange,
     int limit = kDefaultLimit,
     int offset = kDefaultOffset,
   }) async {
     _logger.info('Getting weight records');
+
+    final WhereBuilder query = WhereBuilder();
+    if (dateRange != null) {
+      // Start of day for the start date
+      final startOfDay = DateTime(
+        dateRange.$1.year,
+        dateRange.$1.month,
+        dateRange.$1.day,
+        0,
+        0,
+        0,
+        0,
+      );
+
+      // End of day for the end date (1 millisecond before the next day)
+      final endOfDay = DateTime(
+        dateRange.$2.year,
+        dateRange.$2.month,
+        dateRange.$2.day,
+        23,
+        59,
+        59,
+        999,
+      );
+
+      query.and(
+        WeightRecordColumns.recordDate.greaterThanOrEqual,
+        DateUtilities.getDateUnix(startOfDay),
+      );
+      query.and(
+        WeightRecordColumns.recordDate.lessThanOrEqual,
+        DateUtilities.getDateUnix(endOfDay),
+      );
+    }
+
     try {
       final List<WeightRecord> records = await _repository.selectPaginated(
         limit: limit,
         offset: offset,
-        orderBy: [
-          WeightRecordColumns.recordDate.orderDesc,
-          WeightRecordColumns.id.orderDesc,
-        ],
+        where: query.where,
+        whereArgs: query.args,
+        orderBy: [WeightRecordColumns.recordDate.orderDesc],
       );
-      final int total = await _repository.count();
+      final int total = await _repository.count(
+        where: query.where,
+        whereArgs: query.args,
+      );
       _logger.info('Got ${records.length} weight records');
       return ok(PaginatedDto<WeightRecordDto, WeightRecord>.mapData(
         data: records,

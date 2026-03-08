@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:myfitnesstale/src/widgets/weight/records/latest_weight_record.dart';
 
 import '../../cubits/profile_cubit.dart';
 import '../../cubits/states/profile_state.dart';
@@ -25,19 +26,26 @@ class WeightRecordsView extends StatelessWidget {
       title: "Weight Records",
       body: Padding(
         padding: EdgeInsets.all(sizes.padding),
-        child:
-            BlocBuilder<ProfileCubit, ProfileState>(builder: (context, state) {
-          return Column(
-            children: [
-              WeightRecordsHistory(
-                theme: theme,
-                sizes: sizes,
-                breakPoint: breakpoints,
-                units: state.system?.units ?? Units.metric,
-              )
-            ],
-          );
-        }),
+        child: BlocBuilder<ProfileCubit, ProfileState>(
+          builder: (context, state) {
+            return Column(
+              children: [
+                LatestWeightRecord(
+                  sizes: sizes,
+                  theme: theme,
+                  units: state.system?.units ?? Units.metric,
+                ),
+                SizedBox(height: sizes.spacing * 2),
+                WeightRecordsHistory(
+                  theme: theme,
+                  sizes: sizes,
+                  breakPoint: breakpoints,
+                  units: state.system?.units ?? Units.metric,
+                )
+              ],
+            );
+          },
+        ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
