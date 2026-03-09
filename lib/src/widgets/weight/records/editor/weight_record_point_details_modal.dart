@@ -63,7 +63,7 @@ class WeightRecordPointDetailsModal extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            "Weight Record",
+            "Weight Log",
             style: TextStyle(
               fontSize: sizes.titleFontSize,
               fontWeight: FontWeight.bold,
@@ -80,6 +80,21 @@ class WeightRecordPointDetailsModal extends StatelessWidget {
                   fontWeight: FontWeight.w600,
                 ),
               ),
+              if (record.fatPercentage != null) ...[
+                SizedBox(width: sizes.spacing * 2),
+                Icon(
+                  Icons.water_drop_outlined,
+                  size: sizes.subtitleFontSize * 1.2,
+                ),
+                Text(
+                  " ${Converters.intPercentToDouble(record.fatPercentage!).toStringAsFixed(2)} %",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: sizes.subtitleFontSize,
+                    fontWeight: FontWeight.w400,
+                  ),
+                ),
+              ],
             ],
           ),
           SizedBox(height: sizes.spacing),

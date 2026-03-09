@@ -5,6 +5,46 @@ import '../../services/dtos/weight_goal_dto.dart';
 import '../../services/dtos/weight_record_dto.dart';
 import 'common_state.dart';
 
+final class WeightRecordPaginationState extends Equatable {
+  final (DateTime start, DateTime end)? dateRange;
+  final int limit;
+  final int offset;
+  final int total;
+
+  const WeightRecordPaginationState({
+    required this.dateRange,
+    required this.limit,
+    required this.offset,
+    required this.total,
+  });
+
+  WeightRecordPaginationState copyWith({
+    Nullable<(DateTime start, DateTime end)>? dateRange,
+    int? limit,
+    int? offset,
+    int? total,
+  }) {
+    return WeightRecordPaginationState(
+      dateRange: dateRange != null ? dateRange.value : this.dateRange,
+      limit: limit ?? this.limit,
+      offset: offset ?? this.offset,
+      total: total ?? this.total,
+    );
+  }
+
+  factory WeightRecordPaginationState.initial() {
+    return const WeightRecordPaginationState(
+      dateRange: null,
+      limit: 0,
+      offset: 0,
+      total: 0,
+    );
+  }
+
+  @override
+  List<Object?> get props => [dateRange, limit, offset, total];
+}
+
 final class WeightGoalPaginationState extends Equatable {
   final bool skipInProgress;
   final int limit;
@@ -49,7 +89,7 @@ final class WeightRecordState extends Equatable {
   final List<WeightRecordDto> weightRecords;
   final WeightRecordDto? selectedWeightRecord;
   final WeightRecordDto? latestWeightRecord;
-  final PaginationState recordPagination;
+  final WeightRecordPaginationState recordPagination;
   final List<WeightGoalDto> weightGoals;
   final WeightGoalDto? selectedWeightGoal;
   final WeightGoalDto? activeWeightGoal;
@@ -73,7 +113,7 @@ final class WeightRecordState extends Equatable {
   factory WeightRecordState.initial() {
     return WeightRecordState(
       weightRecords: [],
-      recordPagination: PaginationState.initial(),
+      recordPagination: WeightRecordPaginationState.initial(),
       weightGoals: [],
       goalPagination: WeightGoalPaginationState.initial(),
       isLoading: false,
@@ -84,7 +124,7 @@ final class WeightRecordState extends Equatable {
     List<WeightRecordDto>? weightRecords,
     Nullable<WeightRecordDto>? selectedWeightRecord,
     Nullable<WeightRecordDto>? latestWeightRecord,
-    PaginationState? recordPagination,
+    WeightRecordPaginationState? recordPagination,
     List<WeightGoalDto>? weightGoals,
     Nullable<WeightGoalDto>? selectedWeightGoal,
     Nullable<WeightGoalDto>? activeWeightGoal,

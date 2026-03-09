@@ -38,13 +38,14 @@ class _WeightRecordsHistoryState extends State<WeightRecordsHistory> {
   @override
   void initState() {
     super.initState();
-    final now = DateTime.now();
-    _dateRange = DateTimeRange(
-      start: now.subtract(const Duration(days: 90)),
-      end: now,
-    );
 
     final cubit = context.read<WeightRecordCubit>();
+    final dateRange = cubit.state.recordPagination.dateRange;
+    final now = DateTime.now();
+    _dateRange = DateTimeRange(
+      start: dateRange?.$1 ?? now.subtract(const Duration(days: 90)),
+      end: dateRange?.$2 ?? now,
+    );
     if (cubit.state.weightRecords.isEmpty) {
       cubit.getWeightRecords(
         dateRange: (_dateRange.start, _dateRange.end),
@@ -122,12 +123,14 @@ class _WeightRecordsHistoryState extends State<WeightRecordsHistory> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                "Record History",
+                "Weight Logs History",
                 style: TextStyle(
                   fontSize: widget.sizes.titleFontSize,
                   fontWeight: FontWeight.bold,
                 ),
                 textAlign: TextAlign.start,
+                softWrap: true,
+                overflow: TextOverflow.ellipsis,
               ),
               Row(
                 mainAxisSize: MainAxisSize.min,
@@ -168,7 +171,7 @@ class _WeightRecordsHistoryState extends State<WeightRecordsHistory> {
         SizedBox(height: widget.sizes.spacing),
         Padding(
           padding: EdgeInsets.symmetric(
-            horizontal: widget.sizes.spacing / 2,
+            horizontal: widget.sizes.spacing / 3,
           ),
           child: AppTextFormField(
             theme: widget.theme,
@@ -202,7 +205,7 @@ class _WeightRecordsHistoryState extends State<WeightRecordsHistory> {
             }
 
             return SizedBox(
-              height: widget.breakPoint.height / 2.25,
+              height: widget.breakPoint.height / 2.35,
               width: double.infinity,
               child: _showList
                   ? WeightRecordsList(

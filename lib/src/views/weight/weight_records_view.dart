@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:myfitnesstale/src/widgets/weight/records/latest_weight_record.dart';
 
 import '../../cubits/profile_cubit.dart';
 import '../../cubits/states/profile_state.dart';
@@ -9,6 +8,7 @@ import '../../utilities/sizes/data_display_sizes.dart';
 import '../../utilities/sizes/screen_size.dart';
 import '../../widgets/layout/app_scaffold.dart';
 import '../../widgets/weight/records/editor/create_weight_record_modal.dart';
+import '../../widgets/weight/records/latest_weight_record.dart';
 import '../../widgets/weight/records/weight_records_history.dart';
 
 class WeightRecordsView extends StatelessWidget {
@@ -23,7 +23,7 @@ class WeightRecordsView extends StatelessWidget {
     final breakpoints = BreakPoint.fromContext(context);
     final sizes = DataDisplaySizes.getDataDisplaySizes(breakpoints.screenSize);
     return AppScaffold(
-      title: "Weight Records",
+      title: "Weight Logs",
       body: Padding(
         padding: EdgeInsets.all(sizes.padding),
         child: BlocBuilder<ProfileCubit, ProfileState>(
