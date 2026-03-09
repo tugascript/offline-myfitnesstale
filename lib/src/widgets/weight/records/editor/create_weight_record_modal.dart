@@ -32,7 +32,7 @@ class CreateWeightRecordModal extends StatelessWidget {
             theme: theme,
             sizes: sizes,
             isLoading: weightRecordState.isLoading,
-            submitLabel: "LOG WEIGHT RECORD",
+            submitLabel: "LOG WEIGHT",
             initialDate: DateTime.now(),
             initialWeight: 0,
             units: profileState.system?.units ?? Units.metric,

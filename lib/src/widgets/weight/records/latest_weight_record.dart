@@ -110,7 +110,7 @@ class _EmptyWeightRecord extends StatelessWidget {
                 ),
                 SizedBox(height: sizes.spacing),
                 Text(
-                  "No weight records",
+                  "No weight logs",
                   style: TextStyle(
                     fontSize: sizes.titleFontSize,
                     fontWeight: FontWeight.bold,
@@ -121,7 +121,7 @@ class _EmptyWeightRecord extends StatelessWidget {
                 ),
                 SizedBox(height: sizes.spacing),
                 Text(
-                  "Tap to add your first weight record",
+                  "Tap to add your first weight log",
                   style: TextStyle(
                     fontSize: sizes.subtitleFontSize,
                     fontWeight: FontWeight.w600,
@@ -174,7 +174,7 @@ class _LatestWeightRecord extends StatelessWidget {
                 Row(
                   children: [
                     Text(
-                      "Latest Record",
+                      "Latest Weight Log",
                       style: TextStyle(
                         fontSize: sizes.titleFontSize,
                         fontWeight: FontWeight.bold,
@@ -275,9 +275,9 @@ class _LatestWeightRecord extends StatelessWidget {
                             showDialog(
                               context: context,
                               builder: (context) => ConfirmationDialog(
-                                title: 'Delete Weight Record',
+                                title: 'Delete Weight Log',
                                 content:
-                                    'Are you sure you want to delete this weight record? This action cannot be undone.',
+                                    'Are you sure you want to delete this weight log? This action cannot be undone.',
                                 onConfirm: () async {
                                   if (weightRecord != null) {
                                     await context

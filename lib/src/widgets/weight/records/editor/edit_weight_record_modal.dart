@@ -34,7 +34,7 @@ class EditWeightRecordModal extends StatelessWidget {
             theme: theme,
             sizes: sizes,
             isLoading: state.isLoading,
-            submitLabel: "UPDATE WEIGHT RECORD",
+            submitLabel: "UPDATE WEIGHT LOG",
             submitIcon: Icons.save,
             initialDate: record.recordDate,
             initialWeight: record.weight,

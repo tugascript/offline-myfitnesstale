@@ -56,6 +56,7 @@ class WeightRecordCubit extends Cubit<WeightRecordState> {
         limit: paginatedData.limit,
         offset: paginatedData.offset,
         total: paginatedData.total,
+        dateRange: Nullable(dateRange),
       ),
       isLoading: false,
     ));

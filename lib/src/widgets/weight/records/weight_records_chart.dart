@@ -46,7 +46,7 @@ class WeightRecordsChart extends StatelessWidget {
     if (chartRecords.isEmpty) {
       return Center(
         child: Text(
-          "No records in the last year",
+          "No weight logs",
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
