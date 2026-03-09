@@ -46,7 +46,9 @@ class _WeightRecordsHistoryState extends State<WeightRecordsHistory> {
 
     final cubit = context.read<WeightRecordCubit>();
     if (cubit.state.weightRecords.isEmpty) {
-      cubit.getWeightRecords();
+      cubit.getWeightRecords(
+        dateRange: (_dateRange.start, _dateRange.end),
+      );
     }
   }
 
@@ -171,14 +173,18 @@ class _WeightRecordsHistoryState extends State<WeightRecordsHistory> {
           child: AppTextFormField(
             theme: widget.theme,
             fontSize: widget.sizes.subtitleFontSize,
-            padding: widget.sizes.padding * 1.25,
+            padding: widget.sizes.padding * 2,
             isLoading: false,
             readOnly: true,
             hintText: dateRangeText,
+            suffixIconConstraints: BoxConstraints(
+              minWidth: widget.sizes.subtitleFontSize * 4,
+              minHeight: widget.sizes.subtitleFontSize * 1.5,
+            ),
             suffixIcon: Icon(
               Icons.date_range,
               color: widget.theme.colorScheme.primary,
-              size: widget.sizes.subtitleFontSize * 1.2,
+              size: widget.sizes.subtitleFontSize * 2,
             ),
             onTap: _selectDateRange,
           ),
@@ -196,7 +202,7 @@ class _WeightRecordsHistoryState extends State<WeightRecordsHistory> {
             }
 
             return SizedBox(
-              height: widget.breakPoint.height / 2.5,
+              height: widget.breakPoint.height / 2.25,
               width: double.infinity,
               child: _showList
                   ? WeightRecordsList(

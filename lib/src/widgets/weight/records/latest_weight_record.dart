@@ -11,6 +11,7 @@ import '../../../utilities/converters.dart';
 import '../../../utilities/sizes/data_display_sizes.dart';
 import '../../common/confirmation_dialog.dart';
 import 'editor/create_weight_record_modal.dart';
+import 'editor/edit_weight_record_modal.dart';
 
 class LatestWeightRecord extends StatefulWidget {
   final DataDisplaySizesList sizes;
@@ -30,8 +31,6 @@ class LatestWeightRecord extends StatefulWidget {
 }
 
 class _LatestWeightRecordState extends State<LatestWeightRecord> {
-  bool _isUpdating = false;
-
   @override
   void initState() {
     super.initState();
@@ -55,7 +54,19 @@ class _LatestWeightRecordState extends State<LatestWeightRecord> {
           units: widget.units,
           isLoading: state.isLoading,
           weightRecord: state.latestWeightRecord,
-          onEdit: () {},
+          onEdit: () {
+            if (state.latestWeightRecord != null) {
+              showDialog(
+                context: context,
+                builder: (context) => EditWeightRecordModal(
+                  theme: widget.theme,
+                  sizes: widget.sizes,
+                  units: widget.units,
+                  record: state.latestWeightRecord!,
+                ),
+              );
+            }
+          },
         );
       },
     );
