@@ -131,13 +131,14 @@ class _WeightGoalHistoryState extends State<WeightGoalHistory> {
               enabled: weightState.isLoading && weightState.weightGoals.isEmpty,
               child: BlocBuilder<ProfileCubit, ProfileState>(
                 builder: (context, state) {
+                  final stateIsLoading =
+                      weightState.isLoading && weightState.weightGoals.isEmpty;
                   return ListView.builder(
+                    controller: _scrollController,
                     itemCount:
-                        weightState.isLoading && weightState.weightGoals.isEmpty
-                            ? 3
-                            : weightState.weightGoals.length,
+                        stateIsLoading ? 3 : weightState.weightGoals.length,
                     itemBuilder: (context, index) {
-                      if (weightState.isLoading) {
+                      if (stateIsLoading) {
                         return WeightGoalCard(
                           theme: widget.theme,
                           units: state.system?.units ?? Units.metric,

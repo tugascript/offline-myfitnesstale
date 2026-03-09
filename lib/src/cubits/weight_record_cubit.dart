@@ -127,7 +127,7 @@ class WeightRecordCubit extends Cubit<WeightRecordState> {
 
     final weightRecordsResult = await _weightRecordService.getWeightRecords();
     if (weightRecordsResult.isErr()) {
-      final error = result.error;
+      final error = weightRecordsResult.error;
       _logger.warning("Failed to fetch weight records", error);
       switch (error.type) {
         case OperationErrorTypes.invalidInput:
@@ -152,7 +152,7 @@ class WeightRecordCubit extends Cubit<WeightRecordState> {
         offset: weightRecords.offset,
         limit: weightRecords.limit,
       ),
-      latestWeightRecord: Nullable(weightRecords.data.lastOrNull),
+      latestWeightRecord: Nullable(weightRecords.data.firstOrNull),
       isLoading: false,
     ));
   }
@@ -261,7 +261,7 @@ class WeightRecordCubit extends Cubit<WeightRecordState> {
       ),
       latestWeightRecord: Nullable(
         state.latestWeightRecord?.id == id
-            ? updatedRecords.lastOrNull
+            ? updatedRecords.firstOrNull
             : state.latestWeightRecord,
       ),
       isLoading: false,
@@ -516,8 +516,11 @@ class WeightRecordCubit extends Cubit<WeightRecordState> {
 
     _logger.info("Weight goals retrieved successfully");
     final weightPagination = result.value;
+    final weightGoals = weightPagination.data;
     emit(state.copyWith(
-      weightGoals: weightPagination.data,
+      weightGoals: offset >= state.goalPagination.offset + limit
+          ? [...state.weightGoals, ...weightGoals]
+          : weightGoals,
       goalPagination: state.goalPagination.copyWith(
         total: weightPagination.total,
         limit: weightPagination.limit,
