@@ -119,12 +119,40 @@ class ExerciseRecordService {
   Future<
       Result<PaginatedDto<ExerciseRecordDto, ExerciseRecord>,
           ServiceError<SingleErrorTypes>>> getExerciseRecords({
+    (DateTime start, DateTime end)? dateRange,
     int? exerciseId,
     int limit = kDefaultLimit,
     int offset = kDefaultOffset,
   }) async {
     _logger.info('Getting exercise records');
     final WhereBuilder query = WhereBuilder();
+
+    if (dateRange != null) {
+      final startOfDay = DateTime(
+        dateRange.$1.year,
+        dateRange.$1.month,
+        dateRange.$1.day,
+        0,
+        0,
+        0,
+      );
+      final endOfDay = DateTime(
+        dateRange.$2.year,
+        dateRange.$2.month,
+        dateRange.$2.day,
+        23,
+        59,
+        59,
+      );
+      query.and(
+        ExerciseRecordColumns.recordDate.greaterThanOrEqual,
+        DateUtilities.getDateUnix(startOfDay),
+      );
+      query.and(
+        ExerciseRecordColumns.recordDate.lessThanOrEqual,
+        DateUtilities.getDateUnix(endOfDay),
+      );
+    }
 
     try {
       if (exerciseId != null) {
@@ -140,7 +168,7 @@ class ExerciseRecordService {
 
         query.and(
           '${ExerciseRecordColumns.exerciseId.value} = ?',
-          [exerciseId],
+          exerciseId,
         );
       }
 
@@ -264,13 +292,10 @@ class ExerciseRecordService {
 
       final int newWeight = weight ?? exerciseRecord.weight;
       final int newReps = reps ?? exerciseRecord.reps;
-      final int newMaxStrength = maxStrength ??
-          MaxStrengthCalculator.calculateMaxStrength(newReps, newWeight);
 
       final ExerciseRecord updatedExerciseRecord = exerciseRecord.copyWith(
         weight: newWeight,
         reps: newReps,
-        maxStrength: newMaxStrength,
         picture: picture,
         video: video,
         recordDate: date != null

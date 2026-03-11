@@ -399,13 +399,13 @@ class ExerciseProgressData {
 
   factory ExerciseProgressData.empty() {
     // Placeholder empty record
-    final emptyRecord = const ExerciseRecordDto(
+    final emptyRecord = ExerciseRecordDto(
       id: 0,
       exerciseId: 0,
       weight: 0,
       reps: 0,
       maxStrength: 0,
-      recordDate: 0,
+      recordDate: DateTime.now(),
     );
 
     return ExerciseProgressData(

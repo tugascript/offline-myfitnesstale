@@ -202,7 +202,6 @@ class _RepsWheelSheetContentState extends State<_RepsWheelSheetContent> {
         _createMaxController();
       }
     });
-    // widget.onToMaxRepsChanged?.call(value);
   }
 
   void _onConfirm() {

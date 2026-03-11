@@ -38,6 +38,8 @@ class AppPrimaryButton extends StatelessWidget {
           fontSize: sizes.subtitleFontSize,
           fontWeight: FontWeight.w600,
         ),
+        softWrap: true,
+        overflow: TextOverflow.ellipsis,
       ),
       style: ElevatedButton.styleFrom(
         padding: EdgeInsets.symmetric(vertical: sizes.padding),

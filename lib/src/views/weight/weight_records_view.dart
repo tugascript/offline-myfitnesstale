@@ -6,7 +6,7 @@ import '../../cubits/states/profile_state.dart';
 import '../../models/enums.dart';
 import '../../utilities/sizes/data_display_sizes.dart';
 import '../../utilities/sizes/screen_size.dart';
-import '../../widgets/layout/app_scaffold.dart';
+import '../../widgets/layout/responsive_scaffold.dart';
 import '../../widgets/weight/records/editor/create_weight_record_modal.dart';
 import '../../widgets/weight/records/latest_weight_record.dart';
 import '../../widgets/weight/records/weight_records_history.dart';
@@ -22,7 +22,7 @@ class WeightRecordsView extends StatelessWidget {
     final theme = Theme.of(context);
     final breakpoints = BreakPoint.fromContext(context);
     final sizes = DataDisplaySizes.getDataDisplaySizes(breakpoints.screenSize);
-    return AppScaffold(
+    return ResponsiveScaffold(
       title: "Weight Logs",
       body: Padding(
         padding: EdgeInsets.all(sizes.padding),

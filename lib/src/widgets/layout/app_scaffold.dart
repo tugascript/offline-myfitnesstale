@@ -34,7 +34,7 @@ class AppScaffold extends StatelessWidget {
         automaticallyImplyLeading: false, // Disable automatic back button
         leading: (showBackButton ?? context.canPop())
             ? IconButton(
-                padding: EdgeInsets.zero,
+                visualDensity: VisualDensity.compact,
                 icon: Icon(
                   Icons.arrow_back_ios, // iOS-style back button
                   size: sizes.backBtnSize,

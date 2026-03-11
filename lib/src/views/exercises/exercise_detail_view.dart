@@ -14,6 +14,7 @@ import '../../widgets/layout/app_primary_button.dart';
 import '../../widgets/layout/app_scaffold.dart';
 import '../../widgets/layout/responsive_scaffold.dart';
 import '../loading_view.dart';
+import 'exercise_records_view.dart';
 import 'exercise_update_view.dart';
 
 class ExerciseDetailView extends StatefulWidget {
@@ -208,12 +209,20 @@ class _ExerciseDetailViewState extends State<ExerciseDetailView> {
                   children: [
                     Expanded(
                       child: AppPrimaryButton(
-                          theme: theme,
-                          isLoading: exerciseState.isLoading,
-                          sizes: sizes,
-                          onPressed: () {},
-                          label: 'Log Progress',
-                          icon: Icons.history),
+                        theme: theme,
+                        isLoading: exerciseState.isLoading,
+                        sizes: sizes,
+                        onPressed: () {
+                          context.push(
+                            ExerciseRecordsView.routeName.replaceFirst(
+                              ":id",
+                              exercise.id.toString(),
+                            ),
+                          );
+                        },
+                        label: 'Log Progress',
+                        icon: Icons.history,
+                      ),
                     ),
                   ],
                 ),

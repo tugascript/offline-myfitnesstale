@@ -1,9 +1,11 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:logging/logging.dart';
 
+import '../common/nullable.dart';
+import '../models/common.dart';
+import '../models/repository.dart';
 import '../services/common/errors.dart';
 import '../services/exercise_record_service.dart';
-import '../models/common.dart';
 import 'states/common_state.dart';
 import 'states/exercise_record_state.dart';
 
@@ -14,8 +16,9 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
   ExerciseRecordCubit() : super(ExerciseRecordState.initial());
 
   Future<void> getExerciseRecords({
-    int limit = 10,
-    int offset = 0,
+    int limit = kDefaultLimit,
+    int offset = kDefaultOffset,
+    (DateTime start, DateTime end)? dateRange,
     int? exerciseId,
   }) async {
     _logger.info("Getting exercise records");
@@ -25,6 +28,7 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
       limit: limit,
       offset: offset,
       exerciseId: exerciseId,
+      dateRange: dateRange,
     );
 
     if (result.isErr()) {
@@ -35,10 +39,10 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
         case SingleErrorTypes.invalidInput:
         case SingleErrorTypes.operationFailure:
           emit(state.copyWith(
-            error: ErrorState(
+            error: Nullable(ErrorState(
               type: error.type.name,
               description: "Failed to get exercise records",
-            ),
+            )),
             isLoading: false,
           ));
           return;
@@ -47,7 +51,6 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
 
     final paginatedData = result.value;
     final exerciseRecords = paginatedData.data;
-
     emit(state.copyWith(
       exerciseRecords: offset >= state.recordPagination.offset + limit
           ? [...state.exerciseRecords, ...exerciseRecords]
@@ -73,17 +76,17 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
       switch (error.type) {
         case SingleErrorTypes.notFound:
           emit(state.copyWith(
-            latestExerciseRecord: null,
+            latestExerciseRecord: Nullable(null),
             isLoading: false,
           ));
           return;
         case SingleErrorTypes.invalidInput:
         case SingleErrorTypes.operationFailure:
           emit(state.copyWith(
-            error: ErrorState(
+            error: Nullable(ErrorState(
               type: error.type.name,
               description: "Failed to get latest exercise record",
-            ),
+            )),
             isLoading: false,
           ));
           return;
@@ -91,7 +94,7 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
     }
 
     emit(state.copyWith(
-      latestExerciseRecord: result.value,
+      latestExerciseRecord: Nullable(result.value),
       isLoading: false,
     ));
   }
@@ -123,22 +126,56 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
         case SingleErrorTypes.invalidInput:
         case SingleErrorTypes.operationFailure:
           emit(state.copyWith(
-            error: ErrorState(
+            error: Nullable(ErrorState(
               type: error.type.name,
               description: "Failed to create exercise record",
-            ),
+            )),
             isLoading: false,
           ));
           return;
       }
     }
 
-    final exerciseRecord = result.value;
+    final recordsResult = await _exerciseRecordService.getExerciseRecords(
+      exerciseId: exerciseId,
+    );
+    if (recordsResult.isErr()) {
+      final error = recordsResult.error;
+      _logger.warning("Failed to get exercise records", error);
+      switch (error.type) {
+        case SingleErrorTypes.notFound:
+        case SingleErrorTypes.invalidInput:
+        case SingleErrorTypes.operationFailure:
+          emit(
+            state.copyWith(
+              error: Nullable(ErrorState(
+                type: error.type.name,
+                description: "Failed to get exercise records",
+              )),
+              isLoading: false,
+            ),
+          );
+          return;
+      }
+    }
+
+    final record = result.value;
+    final paginatedData = recordsResult.value;
+    final records = paginatedData.data;
     emit(state.copyWith(
-      exerciseRecords: [exerciseRecord, ...state.exerciseRecords],
-      selectedExerciseRecord: exerciseRecord,
+      selectedExerciseRecord: Nullable(record),
+      exerciseRecords: records,
       recordPagination: state.recordPagination.copyWith(
-        total: state.recordPagination.total + 1,
+        exerciseId: Nullable(exerciseId),
+        limit: paginatedData.limit,
+        offset: paginatedData.offset,
+        total: paginatedData.total,
+      ),
+      latestExerciseRecord: Nullable(
+        state.latestExerciseRecord?.recordDate.isAfter(record.recordDate) ??
+                false
+            ? state.latestExerciseRecord
+            : record,
       ),
       isLoading: false,
     ));
@@ -173,10 +210,10 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
         case SingleErrorTypes.invalidInput:
         case SingleErrorTypes.operationFailure:
           emit(state.copyWith(
-            error: ErrorState(
+            error: Nullable(ErrorState(
               type: error.type.name,
               description: error.description,
-            ),
+            )),
             isLoading: false,
           ));
           return;
@@ -185,11 +222,37 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
 
     _logger.info("Exercise record updated successfully");
     final exerciseRecord = result.value;
+    final recordsResult = await _exerciseRecordService.getExerciseRecords(
+      exerciseId: exerciseRecord.exerciseId,
+    );
+    if (recordsResult.isErr()) {
+      final error = recordsResult.error;
+      _logger.warning("Failed to get exercise records", error);
+      switch (error.type) {
+        case SingleErrorTypes.notFound:
+        case SingleErrorTypes.invalidInput:
+        case SingleErrorTypes.operationFailure:
+          emit(state.copyWith(
+            error: Nullable(ErrorState(
+              type: error.type.name,
+              description: "Failed to get exercise records",
+            )),
+            isLoading: false,
+          ));
+          return;
+      }
+    }
+
+    final paginatedData = recordsResult.value;
     emit(state.copyWith(
-      exerciseRecords: state.exerciseRecords
-          .map((r) => r.id == exerciseRecord.id ? exerciseRecord : r)
-          .toList(),
-      selectedExerciseRecord: exerciseRecord,
+      exerciseRecords: paginatedData.data,
+      recordPagination: state.recordPagination.copyWith(
+        limit: paginatedData.limit,
+        offset: paginatedData.offset,
+        total: paginatedData.total,
+      ),
+      selectedExerciseRecord: Nullable(exerciseRecord),
+      latestExerciseRecord: Nullable(paginatedData.data.firstOrNull),
       isLoading: false,
     ));
   }
@@ -205,32 +268,44 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
         case SingleErrorTypes.notFound:
         case SingleErrorTypes.invalidInput:
           emit(state.copyWith(
-            error: ErrorState(
+            error: Nullable(ErrorState(
               type: error.type.name,
               description: error.description,
-            ),
+            )),
             isLoading: false,
           ));
           return;
         case SingleErrorTypes.operationFailure:
           emit(state.copyWith(
-            error: ErrorState(
+            error: Nullable(ErrorState(
               type: error.type.name,
               description: "Failed to delete exercise record",
-            ),
+            )),
             isLoading: false,
           ));
           return;
       }
     }
 
+    final updatedRecords = state.exerciseRecords
+        .where(
+          (r) => r.id != id,
+        )
+        .toList();
     emit(state.copyWith(
-      exerciseRecords: state.exerciseRecords.where((r) => r.id != id).toList(),
-      selectedExerciseRecord: state.selectedExerciseRecord?.id == id
-          ? null
-          : state.selectedExerciseRecord,
+      exerciseRecords: updatedRecords,
+      selectedExerciseRecord: Nullable(
+        state.selectedExerciseRecord?.id == id
+            ? null
+            : state.selectedExerciseRecord,
+      ),
       recordPagination: state.recordPagination.copyWith(
         total: state.recordPagination.total - 1,
+      ),
+      latestExerciseRecord: Nullable(
+        state.latestExerciseRecord?.id == id
+            ? updatedRecords.firstOrNull
+            : state.latestExerciseRecord,
       ),
       isLoading: false,
     ));
