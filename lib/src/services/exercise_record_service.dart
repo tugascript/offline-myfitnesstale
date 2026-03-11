@@ -247,7 +247,7 @@ class ExerciseRecordService {
       final List<ExerciseRecord> records = await _repository.selectMany(
         where: ExerciseRecordColumns.exerciseId.equal,
         whereArgs: [exerciseId],
-        orderBy: [ExerciseRecordColumns.id.orderDesc],
+        orderBy: [ExerciseRecordColumns.recordDate.orderDesc],
         limit: 1,
       );
       if (records.isEmpty) {

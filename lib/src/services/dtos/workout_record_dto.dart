@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 
+import '../../models/utilities.dart';
 import '../../models/workout_record_model.dart';
 import 'dto.dart';
 import 'workout_set_record_dto.dart';
@@ -39,15 +40,9 @@ class WorkoutRecordDto extends Equatable implements Dto<WorkoutRecord> {
       totalSets: model.totalSets,
       totalReps: model.totalReps,
       totalRestSecs: model.totalRestSecs,
-      startedAt: DateTime.fromMillisecondsSinceEpoch(
-        model.startedAt * 1000,
-        isUtc: true,
-      ),
+      startedAt: DateUtilities.getDateFromUnix(model.startedAt),
       completedAt: model.completedAt != null
-          ? DateTime.fromMillisecondsSinceEpoch(
-              model.completedAt! * 1000,
-              isUtc: true,
-            )
+          ? DateUtilities.getDateFromUnix(model.completedAt!)
           : null,
       setRecords: setRecords,
     );

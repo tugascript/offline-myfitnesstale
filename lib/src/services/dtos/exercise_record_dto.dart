@@ -1,7 +1,7 @@
 import 'package:equatable/equatable.dart';
-import 'package:myfitnesstale/src/models/utilities.dart';
 
 import '../../models/exercise_record_model.dart';
+import '../../models/utilities.dart';
 import 'dto.dart';
 import 'exercise_dto.dart';
 import 'picture_dto.dart';

@@ -4,11 +4,13 @@ import 'package:skeletonizer/skeletonizer.dart';
 
 import '../../../cubits/exercise_record_cubit.dart';
 import '../../../models/enums.dart';
+import '../../../services/dtos/exercise_dto.dart';
 import '../../../services/dtos/exercise_record_dto.dart';
 import '../../../utilities/converters.dart';
 import '../../../utilities/formatters.dart';
 import '../../../utilities/sizes/data_display_sizes.dart';
 import '../../common/confirmation_dialog.dart';
+import 'editors/edit_exercise_record_modal.dart';
 import 'exercise_record_reps.dart';
 
 class ExerciseRecordsList extends StatelessWidget {
@@ -16,6 +18,7 @@ class ExerciseRecordsList extends StatelessWidget {
   final DataDisplaySizesList sizes;
   final Units units;
 
+  final ExerciseDto exercise;
   final bool isLoading;
   final List<ExerciseRecordDto> records;
 
@@ -24,6 +27,7 @@ class ExerciseRecordsList extends StatelessWidget {
     required this.theme,
     required this.sizes,
     required this.units,
+    required this.exercise,
     required this.isLoading,
     required this.records,
   });
@@ -43,6 +47,7 @@ class ExerciseRecordsList extends StatelessWidget {
               theme: theme,
               sizes: sizes,
               units: units,
+              exercise: exercise,
               record: ExerciseRecordDto.empty(),
               greyColor: greyColor,
               redColor: redColor,
@@ -54,6 +59,7 @@ class ExerciseRecordsList extends StatelessWidget {
             theme: theme,
             sizes: sizes,
             units: units,
+            exercise: exercise,
             record: record,
             greyColor: greyColor,
             redColor: redColor,
@@ -68,6 +74,7 @@ class _ExerciseRecordCard extends StatelessWidget {
   final ThemeData theme;
   final DataDisplaySizesList sizes;
   final Units units;
+  final ExerciseDto exercise;
   final ExerciseRecordDto record;
 
   final Color greyColor;
@@ -77,6 +84,7 @@ class _ExerciseRecordCard extends StatelessWidget {
     required this.theme,
     required this.sizes,
     required this.units,
+    required this.exercise,
     required this.record,
     required this.greyColor,
     required this.redColor,
@@ -149,7 +157,19 @@ class _ExerciseRecordCard extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     IconButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        showDialog(
+                          context: context,
+                          builder: (context) => EditExerciseRecordModal(
+                            theme: theme,
+                            sizes: sizes,
+                            isLoading: false,
+                            exercise: exercise,
+                            units: units,
+                            record: record,
+                          ),
+                        );
+                      },
                       icon: Icon(
                         Icons.edit,
                         size: sizes.subtitleFontSize * 1.2,

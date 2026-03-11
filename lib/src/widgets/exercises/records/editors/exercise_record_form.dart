@@ -21,7 +21,6 @@ class ExerciseRecordForm extends StatefulWidget {
   final DateTime initialDate;
   final int initialWeight;
   final int initialReps;
-  final int initialMaxStrength;
 
   final void Function({
     required int exerciseId,
@@ -42,7 +41,6 @@ class ExerciseRecordForm extends StatefulWidget {
     required this.initialDate,
     required this.initialWeight,
     required this.initialReps,
-    required this.initialMaxStrength,
     required this.onSubmit,
   });
 
@@ -111,10 +109,10 @@ class _ExerciseRecordFormState extends State<ExerciseRecordForm> {
                   onTap: () {
                     showModalBottomSheet<void>(
                       context: context,
-                      builder: (sheetContext) => _RepsWheelShetContent(
+                      builder: (sheetContext) => _RepsWheelSheetContent(
                         theme: widget.theme,
                         sizes: widget.sizes,
-                        initialReps: widget.initialReps,
+                        initialReps: _data.reps,
                         onRepsChanged: (value) {
                           _repsController.text = value;
                           final parsed = int.tryParse(value);
@@ -316,13 +314,13 @@ final class _FormData {
 const int _repsMin = 1;
 const int _repsMax = 10;
 
-class _RepsWheelShetContent extends StatefulWidget {
+class _RepsWheelSheetContent extends StatefulWidget {
   final ThemeData theme;
   final DataDisplaySizesList sizes;
   final int initialReps;
   final ValueChanged<String> onRepsChanged;
 
-  const _RepsWheelShetContent({
+  const _RepsWheelSheetContent({
     required this.theme,
     required this.sizes,
     required this.initialReps,
@@ -330,10 +328,10 @@ class _RepsWheelShetContent extends StatefulWidget {
   });
 
   @override
-  State<_RepsWheelShetContent> createState() => __RepsWheelShetContentState();
+  State<_RepsWheelSheetContent> createState() => _RepsWheelSheetContentState();
 }
 
-class __RepsWheelShetContentState extends State<_RepsWheelShetContent> {
+class _RepsWheelSheetContentState extends State<_RepsWheelSheetContent> {
   late final FixedExtentScrollController _controller;
 
   @override

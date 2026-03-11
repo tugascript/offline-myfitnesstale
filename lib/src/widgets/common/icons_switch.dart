@@ -45,6 +45,7 @@ class IconsSwitch extends StatelessWidget {
           thumbSize: thumbSize,
           padding: EdgeInsets.all(switchPadding),
         ),
+        SizedBox(width: spacing),
         Icon(
           onIcon,
           size: iconSize,

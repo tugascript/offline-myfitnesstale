@@ -10,7 +10,10 @@ sealed class DateUtilities {
   }
 
   static DateTime getDateFromUnix(int unix) {
-    return DateTime.fromMillisecondsSinceEpoch(unix * 1000, isUtc: true);
+    return DateTime.fromMillisecondsSinceEpoch(
+      unix * 1000,
+      isUtc: true,
+    ).toLocal();
   }
 
   static int getNumericDate(DateTime date) {

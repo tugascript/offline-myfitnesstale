@@ -214,6 +214,7 @@ class _ExerciseRecordsHistoryState extends State<ExerciseRecordsHistory> {
                       theme: widget.theme,
                       sizes: widget.sizes,
                       units: widget.units,
+                      exercise: widget.exercise,
                       records: state.exerciseRecords,
                       isLoading: state.isLoading,
                     )
