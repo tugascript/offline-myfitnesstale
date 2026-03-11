@@ -119,7 +119,7 @@ class ExerciseRecordPointDetailsModal extends StatelessWidget {
             padding: 0,
             theme: theme,
             sizes: sizes,
-            isLoading: false,
+            isLoading: isLoading,
             onEdit: () {
               Navigator.of(context).pop();
               showDialog(

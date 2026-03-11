@@ -38,8 +38,7 @@ class CreateExerciseRecordModal extends StatelessWidget {
             submitLabel: "CREATE EXERCISE RECORD",
             initialDate: DateTime.now(),
             initialWeight: 0,
-            initialReps: 0,
-            initialMaxStrength: 0,
+            initialReps: 1,
             onSubmit: ({
               required int exerciseId,
               required int weight,

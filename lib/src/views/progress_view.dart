@@ -32,6 +32,7 @@ import '../widgets/layout/responsive_scaffold.dart';
 import 'exercise_progress_view.dart';
 import 'workout_history_view.dart';
 
+// TODO: remove this view and replace with the new activity view
 class ProgressView extends StatefulWidget {
   static const routeName = "/progress";
   static const name = "progress";

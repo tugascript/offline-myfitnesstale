@@ -83,7 +83,6 @@ class UpdateExerciseRecordCard extends StatelessWidget {
                 initialDate: record.recordDate,
                 initialWeight: record.weight,
                 initialReps: record.reps,
-                initialMaxStrength: record.maxStrength,
                 onSubmit: ({
                   required int exerciseId,
                   required int weight,

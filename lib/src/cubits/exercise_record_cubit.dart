@@ -138,6 +138,8 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
 
     final recordsResult = await _exerciseRecordService.getExerciseRecords(
       exerciseId: exerciseId,
+      limit: state.recordPagination.limit,
+      dateRange: state.recordPagination.dateRange,
     );
     if (recordsResult.isErr()) {
       final error = recordsResult.error;
@@ -222,8 +224,11 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
 
     _logger.info("Exercise record updated successfully");
     final exerciseRecord = result.value;
+    final currentPagination = state.recordPagination;
     final recordsResult = await _exerciseRecordService.getExerciseRecords(
       exerciseId: exerciseRecord.exerciseId,
+      limit: currentPagination.limit,
+      dateRange: currentPagination.dateRange,
     );
     if (recordsResult.isErr()) {
       final error = recordsResult.error;
