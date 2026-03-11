@@ -9,6 +9,10 @@ sealed class DateUtilities {
     return date.millisecondsSinceEpoch ~/ 1000;
   }
 
+  static DateTime getDateFromUnix(int unix) {
+    return DateTime.fromMillisecondsSinceEpoch(unix * 1000, isUtc: true);
+  }
+
   static int getNumericDate(DateTime date) {
     return date.year * 10000 + date.month * 100 + date.day;
   }
@@ -23,7 +27,7 @@ sealed class DateUtilities {
 
 sealed class MaxStrengthCalculator {
   static int _epley(int reps, int weight) {
-    return (weight * (1 + 30 / reps)).round();
+    return (weight * (1 + (reps / 30))).round();
   }
 
   static int _brycki(int reps, int weight) {

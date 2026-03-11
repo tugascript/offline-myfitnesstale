@@ -1,37 +1,41 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:intl/intl.dart';
 
-import '../../../cubits/states/weight_record_state.dart';
-import '../../../cubits/weight_record_cubit.dart';
+import '../../../cubits/exercise_record_cubit.dart';
+import '../../../cubits/states/exercise_record_state.dart';
 import '../../../models/enums.dart';
+import '../../../services/dtos/exercise_dto.dart';
+import '../../../utilities/formatters.dart';
 import '../../../utilities/sizes/data_display_sizes.dart';
 import '../../../utilities/sizes/screen_size.dart';
 import '../../common/icons_switch.dart';
 import '../../common/not_found_list.dart';
 import '../../layout/app_text_form_field.dart';
-import 'weight_records_chart.dart';
-import 'weight_records_list.dart';
+import 'exercise_records_chart.dart';
+import 'exercise_records_list.dart';
 
-class WeightRecordsHistory extends StatefulWidget {
+class ExerciseRecordsHistory extends StatefulWidget {
   final ThemeData theme;
   final BreakPoint breakPoint;
   final DataDisplaySizesList sizes;
   final Units units;
 
-  const WeightRecordsHistory({
+  final ExerciseDto exercise;
+
+  const ExerciseRecordsHistory({
     super.key,
     required this.theme,
     required this.breakPoint,
     required this.sizes,
     required this.units,
+    required this.exercise,
   });
 
   @override
-  State<WeightRecordsHistory> createState() => _WeightRecordsHistoryState();
+  State<ExerciseRecordsHistory> createState() => _ExerciseRecordsHistoryState();
 }
 
-class _WeightRecordsHistoryState extends State<WeightRecordsHistory> {
+class _ExerciseRecordsHistoryState extends State<ExerciseRecordsHistory> {
   bool _showList = false;
   late DateTimeRange _dateRange;
 
@@ -39,36 +43,31 @@ class _WeightRecordsHistoryState extends State<WeightRecordsHistory> {
   void initState() {
     super.initState();
 
-    final cubit = context.read<WeightRecordCubit>();
+    final cubit = context.read<ExerciseRecordCubit>();
     final dateRange = cubit.state.recordPagination.dateRange;
     final now = DateTime.now();
     _dateRange = DateTimeRange(
       start: dateRange?.$1 ?? now.subtract(const Duration(days: 90)),
       end: dateRange?.$2 ?? now,
     );
-    if (cubit.state.weightRecords.isEmpty) {
-      cubit.getWeightRecords(
-        dateRange: (_dateRange.start, _dateRange.end),
-        limit: 1000,
-        offset: 0,
-      );
-    }
-  }
-
-  String _formatDate(DateTime date) {
-    switch (widget.units) {
-      case Units.metric:
-        return DateFormat("dd/MM/yyyy").format(date);
-      case Units.imperial:
-        return DateFormat("MM/dd/yyyy").format(date);
-    }
+    cubit.getExerciseRecords(
+      dateRange: (_dateRange.start, _dateRange.end),
+      exerciseId: widget.exercise.id,
+      limit: 1000,
+      offset: 0,
+    );
   }
 
   Future<void> _selectDateRange() async {
+    final DateTime now = DateTime.now();
+    final DateTime oneYearAgo = now.subtract(const Duration(days: 365));
+    final DateTime firstDate =
+        DateTime(2025).isAfter(oneYearAgo) ? DateTime(2025) : oneYearAgo;
+
     final DateTimeRange? picked = await showDateRangePicker(
       context: context,
-      firstDate: DateTime(2025),
-      lastDate: DateTime.now(),
+      firstDate: firstDate,
+      lastDate: now,
       initialDateRange: _dateRange,
       initialEntryMode: DatePickerEntryMode.calendarOnly,
       builder: (context, child) {
@@ -95,25 +94,44 @@ class _WeightRecordsHistoryState extends State<WeightRecordsHistory> {
       },
     );
 
+    // Limit: Selected range must be <= 365 days
     if (picked != null && picked != _dateRange) {
+      final difference = picked.end.difference(picked.start).inDays;
+      if (difference > 365) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Please select a range of one year or less.'),
+              backgroundColor: widget.theme.colorScheme.error,
+            ),
+          );
+        }
+        return;
+      }
+
       setState(() {
         _dateRange = picked;
       });
       if (mounted) {
-        await context.read<WeightRecordCubit>().getWeightRecords(
-          dateRange: (_dateRange.start, _dateRange.end),
-          limit: 1000,
-          offset: 0,
-        );
+        await context.read<ExerciseRecordCubit>().getExerciseRecords(
+              exerciseId: widget.exercise.id,
+              dateRange: (_dateRange.start, _dateRange.end),
+              limit: 1000,
+              offset: 0,
+            );
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final dateRangeText =
-        "${_formatDate(_dateRange.start)} - ${_formatDate(_dateRange.end)}";
-
+    final dateRangeText = "${Formatters.formatDate(
+      widget.units,
+      _dateRange.start,
+    )} - ${Formatters.formatDate(
+      widget.units,
+      _dateRange.end,
+    )}";
     return Column(
       children: [
         Padding(
@@ -125,7 +143,7 @@ class _WeightRecordsHistoryState extends State<WeightRecordsHistory> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                "Weight Logs History",
+                "Records History",
                 style: TextStyle(
                   fontSize: widget.sizes.titleFontSize,
                   fontWeight: FontWeight.bold,
@@ -173,13 +191,13 @@ class _WeightRecordsHistoryState extends State<WeightRecordsHistory> {
               color: widget.theme.colorScheme.primary,
               size: widget.sizes.subtitleFontSize * 2,
             ),
-            onTap: _selectDateRange, // TODO: limit the range to 365 days
+            onTap: _selectDateRange,
           ),
         ),
         SizedBox(height: widget.sizes.spacing),
-        BlocBuilder<WeightRecordCubit, WeightRecordState>(
+        BlocBuilder<ExerciseRecordCubit, ExerciseRecordState>(
           builder: (context, state) {
-            if (!state.isLoading && state.weightRecords.isEmpty) {
+            if (!state.isLoading && state.exerciseRecords.isEmpty) {
               return NotFoundList(
                 height: widget.breakPoint.height / 3,
                 sizes: widget.sizes,
@@ -189,14 +207,14 @@ class _WeightRecordsHistoryState extends State<WeightRecordsHistory> {
             }
 
             return SizedBox(
-              height: widget.breakPoint.height / 2.35,
+              height: widget.breakPoint.height / 2.375,
               width: double.infinity,
               child: _showList
-                  ? WeightRecordsList(
+                  ? ExerciseRecordsList(
                       theme: widget.theme,
                       sizes: widget.sizes,
                       units: widget.units,
-                      records: state.weightRecords,
+                      records: state.exerciseRecords,
                       isLoading: state.isLoading,
                     )
                   : Card(
@@ -205,11 +223,13 @@ class _WeightRecordsHistoryState extends State<WeightRecordsHistory> {
                           horizontal: widget.sizes.padding,
                           vertical: widget.sizes.padding * 2,
                         ),
-                        child: WeightRecordsChart(
-                          records: state.weightRecords.reversed.toList(),
-                          units: widget.units,
+                        child: ExerciseRecordsChart(
+                          exercise: widget.exercise,
                           theme: widget.theme,
                           sizes: widget.sizes,
+                          records: state.exerciseRecords,
+                          units: widget.units,
+                          isLoading: state.isLoading,
                         ),
                       ),
                     ),

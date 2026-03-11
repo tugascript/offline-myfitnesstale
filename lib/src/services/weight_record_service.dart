@@ -79,7 +79,6 @@ class WeightRecordService {
         0,
         0,
         0,
-        0,
       );
 
       // End of day for the end date (1 millisecond before the next day)
@@ -90,7 +89,6 @@ class WeightRecordService {
         23,
         59,
         59,
-        999,
       );
 
       query.and(

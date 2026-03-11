@@ -173,10 +173,13 @@ class _SetsWheelSheetContentState extends State<_SetsWheelSheetContent> {
                   onPressed: () => Navigator.of(context).pop(),
                   child: const Text('Cancel'),
                 ),
-                Text('Sets',
-                    style: TextStyle(
-                        fontSize: widget.sizes.subtitleFontSize,
-                        fontWeight: FontWeight.w600)),
+                Text(
+                  'Sets',
+                  style: TextStyle(
+                    fontSize: widget.sizes.subtitleFontSize,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
                 TextButton(
                   onPressed: _onConfirm,
                   child: const Text('Confirm'),

@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:myfitnesstale/src/models/utilities.dart';
 
 import '../../models/exercise_record_model.dart';
 import 'dto.dart';
@@ -13,7 +14,7 @@ class ExerciseRecordDto extends Equatable implements Dto<ExerciseRecord> {
   final int weight;
   final int reps;
   final int maxStrength;
-  final int recordDate;
+  final DateTime recordDate;
   final PictureDto? picture;
   final VideoDto? video;
 
@@ -43,11 +44,22 @@ class ExerciseRecordDto extends Equatable implements Dto<ExerciseRecord> {
       weight: model.weight,
       reps: model.reps,
       maxStrength: model.maxStrength,
-      recordDate: model.recordDate,
+      recordDate: DateUtilities.getDateFromUnix(model.recordDate),
       picture:
           model.picture != null ? PictureDto.fromModel(model.picture!) : null,
       video: model.video != null ? VideoDto.fromModel(model.video!) : null,
       exercise: exercise,
+    );
+  }
+
+  factory ExerciseRecordDto.empty() {
+    return ExerciseRecordDto(
+      id: 0,
+      exerciseId: 0,
+      weight: 0,
+      reps: 0,
+      maxStrength: 0,
+      recordDate: DateTime.now(),
     );
   }
 
@@ -61,7 +73,7 @@ class ExerciseRecordDto extends Equatable implements Dto<ExerciseRecord> {
     PictureDto? picture,
     VideoDto? video,
     ExerciseDto? exercise,
-    int? recordDate,
+    DateTime? recordDate,
   }) {
     return ExerciseRecordDto(
       id: id ?? this.id,
