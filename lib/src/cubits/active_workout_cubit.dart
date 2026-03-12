@@ -90,6 +90,7 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
     }
 
     emit(state.copyWith(
+      workout: workoutResult.value,
       workoutRecord: workoutRecordResult.value,
       currentSetIndex: 0,
       currentExerciseIndex: 0,
@@ -189,15 +190,12 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
     _restTimer?.cancel();
     emit(state.copyWith(
       isResting: true,
-      restTimerSeconds: seconds,
+      restTimerSeconds: 0,
     ));
 
     _restTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (state.restTimerSeconds == null || state.restTimerSeconds! <= 0) {
-        stopRest();
-        return;
-      }
-      emit(state.copyWith(restTimerSeconds: state.restTimerSeconds! - 1));
+      emit(state.copyWith(
+          restTimerSeconds: (state.restTimerSeconds ?? 0) + 1));
     });
   }
 

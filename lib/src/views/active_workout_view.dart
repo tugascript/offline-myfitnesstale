@@ -7,8 +7,15 @@ import '../cubits/profile_cubit.dart';
 import '../cubits/states/active_workout_state.dart';
 import '../cubits/states/profile_state.dart';
 import '../models/enums.dart';
-import '../widgets/layout/responsive_scaffold.dart';
+import '../models/workout_set_exercise_model.dart';
+import '../utilities/sizes/data_display_sizes.dart';
+import '../utilities/sizes/screen_size.dart';
+import '../widgets/layout/app_dropdown.dart';
+import '../widgets/layout/app_number_wheel.dart';
+import '../widgets/layout/app_text_form_field.dart';
+import '../widgets/layout/app_scaffold.dart';
 import '../widgets/workouts/active/active_info_card.dart';
+import '../widgets/workouts/active/active_workout_set_card.dart';
 import 'loading_view.dart';
 import 'onboarding_view.dart';
 
@@ -27,6 +34,9 @@ class ActiveWorkoutView extends StatefulWidget {
 class _ActiveWorkoutViewState extends State<ActiveWorkoutView> {
   final TextEditingController _weightController = TextEditingController();
   final TextEditingController _repsController = TextEditingController();
+
+  WorkoutSetExerciseDifficultyType? _difficultyType;
+  int _difficultyValue = 2;
 
   String get _units => 'kg'; // Default to kg for now, or fetch from profile
 
@@ -82,16 +92,18 @@ class _ActiveWorkoutViewState extends State<ActiveWorkoutView> {
           return const LoadingView();
         }
 
-        return ResponsiveScaffold(
+        return AppScaffold(
           title: 'Active Workout',
+          isEntity: true,
           body: BlocConsumer<ActiveWorkoutCubit, ActiveWorkoutState>(
             listener: (context, state) {
+              final theme = Theme.of(context);
               if (state.error != null) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text(
                         'Error: ${state.error?.toString() ?? 'Unknown error'}'),
-                    backgroundColor: Colors.red,
+                    backgroundColor: theme.colorScheme.error,
                   ),
                 );
               }
@@ -99,9 +111,9 @@ class _ActiveWorkoutViewState extends State<ActiveWorkoutView> {
               // If workout is completed, navigate back
               if (state.workoutRecord?.completedAt != null) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Workout completed!'),
-                    backgroundColor: Colors.green,
+                  SnackBar(
+                    content: const Text('Workout completed!'),
+                    backgroundColor: theme.colorScheme.primary,
                   ),
                 );
                 final navigator = Navigator.of(context);
@@ -113,6 +125,13 @@ class _ActiveWorkoutViewState extends State<ActiveWorkoutView> {
               }
             },
             builder: (context, state) {
+              final theme = Theme.of(context);
+              final isDarkTheme = theme.brightness == Brightness.dark;
+              final breakpoints = BreakPoint.fromContext(context);
+              final sizes = DataDisplaySizes.getDataDisplaySizes(
+                breakpoints.screenSize,
+              );
+
               if (state.isLoading && state.workoutRecord == null) {
                 return const Center(child: CircularProgressIndicator());
               }
@@ -122,15 +141,17 @@ class _ActiveWorkoutViewState extends State<ActiveWorkoutView> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(Icons.error_outline,
-                          size: 64, color: Colors.grey),
-                      const SizedBox(height: 16),
+                      Icon(Icons.error_outline,
+                          size: 64, color: theme.colorScheme.outline),
+                      SizedBox(height: sizes.spacing),
                       Text(
                         state.error?.toString() ?? 'Failed to load workout',
-                        style:
-                            const TextStyle(fontSize: 16, color: Colors.grey),
+                        style: TextStyle(
+                          fontSize: sizes.subtitleFontSize,
+                          color: theme.colorScheme.outline,
+                        ),
                       ),
-                      const SizedBox(height: 16),
+                      SizedBox(height: sizes.spacing),
                       ElevatedButton(
                         onPressed: () => context.pop(),
                         child: const Text('Go Back'),
@@ -146,15 +167,18 @@ class _ActiveWorkoutViewState extends State<ActiveWorkoutView> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(Icons.check_circle,
-                          size: 64, color: Colors.green),
-                      const SizedBox(height: 16),
-                      const Text(
+                      Icon(Icons.check_circle,
+                          size: 64, color: theme.colorScheme.primary),
+                      SizedBox(height: sizes.spacing),
+                      Text(
                         'All exercises completed!',
                         style: TextStyle(
-                            fontSize: 20, fontWeight: FontWeight.bold),
+                          fontSize: sizes.titleFontSize,
+                          fontWeight: FontWeight.bold,
+                          color: theme.colorScheme.onSurface,
+                        ),
                       ),
-                      const SizedBox(height: 24),
+                      SizedBox(height: sizes.spacing * 1.5),
                       ElevatedButton(
                         onPressed: () async {
                           await context
@@ -170,16 +194,49 @@ class _ActiveWorkoutViewState extends State<ActiveWorkoutView> {
 
               final exercise = workoutSetExercise.exercise!;
               final currentSet = state.currentSet!;
+              final completedSetIds = state.workoutRecord?.setRecords
+                      ?.map((r) => r.workoutSetId)
+                      .toSet() ??
+                  <int>{};
 
-              return SingleChildScrollView(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Progress Bar
+              return ListView(
+                padding: EdgeInsets.symmetric(horizontal: sizes.padding / 2),
+                shrinkWrap: true,
+                physics: const ClampingScrollPhysics(),
+                children: [
+                  // Sets
+                  Text(
+                    'Sets',
+                    style: TextStyle(
+                      fontSize: sizes.titleFontSize,
+                      fontWeight: FontWeight.bold,
+                      color:
+                          isDarkTheme ? Colors.grey[200] : Colors.grey[800],
+                    ),
+                  ),
+                  SizedBox(height: sizes.spacing),
+                  ...state.workout!.sets!.asMap().entries.map((entry) {
+                      final setIndex = entry.key;
+                      final set = entry.value;
+                      return ActiveWorkoutSetCard(
+                        theme: theme,
+                        isDarkTheme: isDarkTheme,
+                        sizes: sizes,
+                        set: set,
+                        setNumber: setIndex + 1,
+                        isCurrentSet: setIndex == state.currentSetIndex,
+                        currentExerciseIndexInSet:
+                            setIndex == state.currentSetIndex
+                                ? state.currentExerciseIndex
+                                : null,
+                        isCompleted: completedSetIds.contains(set.id),
+                      );
+                    }),
+                    SizedBox(height: sizes.spacing * 1.25),
+                    // Progress
                     Card(
                       child: Padding(
-                        padding: const EdgeInsets.all(16.0),
+                        padding: EdgeInsets.all(sizes.padding),
                         child: Column(
                           children: [
                             Row(
@@ -188,43 +245,44 @@ class _ActiveWorkoutViewState extends State<ActiveWorkoutView> {
                                 Text(
                                   'Progress',
                                   style: TextStyle(
-                                    fontSize: 16,
+                                    fontSize: sizes.subtitleFontSize,
                                     fontWeight: FontWeight.bold,
-                                    color: Colors.grey[800],
+                                    color: theme.colorScheme.onSurface,
                                   ),
                                 ),
                                 Text(
                                   '${(state.progress * 100).toStringAsFixed(0)}%',
                                   style: TextStyle(
-                                    fontSize: 16,
+                                    fontSize: sizes.subtitleFontSize,
                                     fontWeight: FontWeight.bold,
-                                    color: Theme.of(context).primaryColor,
+                                    color: theme.colorScheme.primary,
                                   ),
                                 ),
                               ],
                             ),
-                            const SizedBox(height: 8),
+                            SizedBox(height: sizes.spacing / 2),
                             LinearProgressIndicator(
                               value: state.progress,
-                              backgroundColor: Colors.grey[300],
+                              backgroundColor:
+                                  theme.colorScheme.surfaceContainerHighest,
                               minHeight: 8,
                             ),
-                            const SizedBox(height: 8),
+                            SizedBox(height: sizes.spacing / 2),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Text(
                                   'Set ${state.currentSetIndex + 1} of ${state.totalSets}',
                                   style: TextStyle(
-                                    fontSize: 14,
-                                    color: Colors.grey[600],
+                                    fontSize: sizes.fontSize,
+                                    color: theme.colorScheme.onSurfaceVariant,
                                   ),
                                 ),
                                 Text(
                                   'Time: ${_formatDuration(DateTime.now().millisecondsSinceEpoch - (state.startedAt?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch))}',
                                   style: TextStyle(
-                                    fontSize: 14,
-                                    color: Colors.grey[600],
+                                    fontSize: sizes.fontSize,
+                                    color: theme.colorScheme.onSurfaceVariant,
                                   ),
                                 ),
                               ],
@@ -233,32 +291,51 @@ class _ActiveWorkoutViewState extends State<ActiveWorkoutView> {
                         ),
                       ),
                     ),
-                    const SizedBox(height: 16),
+                    SizedBox(height: sizes.spacing),
                     // Current Exercise
                     Card(
                       child: Padding(
-                        padding: const EdgeInsets.all(16.0),
+                        padding: EdgeInsets.all(sizes.padding),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              exercise.name,
-                              style: const TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
+                              'Set ${state.currentSetIndex + 1} of ${state.totalSets} · Exercise ${state.currentExerciseIndex + 1} of ${currentSet.exercises?.length ?? 0}',
+                              style: TextStyle(
+                                fontSize: sizes.fontSize,
+                                color: theme.colorScheme.onSurfaceVariant,
                               ),
                             ),
-                            if (exercise.description.isNotEmpty) ...[
-                              const SizedBox(height: 8),
+                            if (workoutSetExercise.difficulty != null) ...[
+                              SizedBox(height: sizes.spacing / 4),
                               Text(
-                                exercise.description,
+                                'Target: ${workoutSetExercise.difficulty!.type.value} ${workoutSetExercise.difficulty!.value}',
                                 style: TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.grey[700],
+                                  fontSize: sizes.fontSize,
+                                  color: theme.colorScheme.primary,
                                 ),
                               ),
                             ],
-                            const SizedBox(height: 16),
+                            SizedBox(height: sizes.spacing / 2),
+                            Text(
+                              exercise.name,
+                              style: TextStyle(
+                                fontSize: sizes.titleFontSize,
+                                fontWeight: FontWeight.bold,
+                                color: theme.colorScheme.onSurface,
+                              ),
+                            ),
+                            if (exercise.description.isNotEmpty) ...[
+                              SizedBox(height: sizes.spacing / 2),
+                              Text(
+                                exercise.description,
+                                style: TextStyle(
+                                  fontSize: sizes.fontSize,
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                            ],
+                            SizedBox(height: sizes.spacing),
                             Row(
                               children: [
                                 Expanded(
@@ -269,7 +346,7 @@ class _ActiveWorkoutViewState extends State<ActiveWorkoutView> {
                                     icon: Icons.repeat,
                                   ),
                                 ),
-                                const SizedBox(width: 12),
+                                SizedBox(width: sizes.inputSpacing),
                                 Expanded(
                                   child: ActiveInfoCard(
                                     label: 'Rest Time',
@@ -285,61 +362,38 @@ class _ActiveWorkoutViewState extends State<ActiveWorkoutView> {
                         ),
                       ),
                     ),
-                    const SizedBox(height: 16),
-                    // Rest Timer
-                    if (state.isResting && state.restTimerSeconds != null)
-                      Card(
-                        color: Colors.blue[50],
-                        child: Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Column(
-                            children: [
-                              Text(
-                                'Rest Time',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.blue[900],
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                _formatRestTime(state.restTimerSeconds!),
-                                style: TextStyle(
-                                  fontSize: 32,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.blue[900],
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              ElevatedButton(
-                                onPressed: () {
-                                  context.read<ActiveWorkoutCubit>().stopRest();
-                                },
-                                child: const Text('Skip Rest'),
-                              ),
-                            ],
-                          ),
-                        ),
+                    SizedBox(height: sizes.spacing),
+                    // Rest Timer (ascending, green -> yellow -> red)
+                    if (state.isResting && state.restTimerSeconds != null) ...[
+                      _RestTimerCard(
+                        elapsedSeconds: state.restTimerSeconds!,
+                        recommendedSecs: currentSet.recommendedRestSecs,
+                        maxSecs: currentSet.maxRestSecs ??
+                            currentSet.recommendedRestSecs,
+                        sizes: sizes,
+                        theme: theme,
+                        onNext: () =>
+                            context.read<ActiveWorkoutCubit>().stopRest(),
+                        formatRestTime: _formatRestTime,
                       ),
-                    if (state.isResting && state.restTimerSeconds != null)
-                      const SizedBox(height: 16),
-                    // Input Section
+                      SizedBox(height: sizes.spacing),
+                    ],
+                    // Log Set inputs
                     Card(
                       child: Padding(
-                        padding: const EdgeInsets.all(16.0),
+                        padding: EdgeInsets.all(sizes.padding),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
                               'Log Set',
                               style: TextStyle(
-                                fontSize: 18,
+                                fontSize: sizes.subtitleFontSize,
                                 fontWeight: FontWeight.bold,
-                                color: Colors.grey[800],
+                                color: theme.colorScheme.onSurface,
                               ),
                             ),
-                            const SizedBox(height: 16),
+                            SizedBox(height: sizes.spacing),
                             Row(
                               children: [
                                 Expanded(
@@ -353,9 +407,12 @@ class _ActiveWorkoutViewState extends State<ActiveWorkoutView> {
                                           const Icon(Icons.fitness_center),
                                     ),
                                     keyboardType: TextInputType.number,
+                                    style: TextStyle(
+                                      fontSize: sizes.subtitleFontSize,
+                                    ),
                                   ),
                                 ),
-                                const SizedBox(width: 12),
+                                SizedBox(width: sizes.inputSpacing),
                                 Expanded(
                                   child: TextFormField(
                                     controller: _repsController,
@@ -365,11 +422,25 @@ class _ActiveWorkoutViewState extends State<ActiveWorkoutView> {
                                       prefixIcon: Icon(Icons.repeat),
                                     ),
                                     keyboardType: TextInputType.number,
+                                    style: TextStyle(
+                                      fontSize: sizes.subtitleFontSize,
+                                    ),
                                   ),
                                 ),
                               ],
                             ),
-                            const SizedBox(height: 16),
+                            SizedBox(height: sizes.spacing),
+                            _LogSetDifficultyInput(
+                              key: ValueKey(workoutSetExercise.id),
+                              initialDifficulty: workoutSetExercise.difficulty,
+                              theme: theme,
+                              sizes: sizes,
+                              onChanged: (type, value) {
+                                _difficultyType = type;
+                                _difficultyValue = value;
+                              },
+                            ),
+                            SizedBox(height: sizes.spacing),
                             SizedBox(
                               width: double.infinity,
                               child: ElevatedButton.icon(
@@ -386,11 +457,12 @@ class _ActiveWorkoutViewState extends State<ActiveWorkoutView> {
                                       reps <= 0) {
                                     if (!mounted) return;
                                     ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text(
+                                      SnackBar(
+                                        content: const Text(
                                           'Please enter valid weight and reps',
                                         ),
-                                        backgroundColor: Colors.red,
+                                        backgroundColor:
+                                            theme.colorScheme.error,
                                       ),
                                     );
                                     return;
@@ -400,13 +472,15 @@ class _ActiveWorkoutViewState extends State<ActiveWorkoutView> {
                                     position: workoutSetExercise.position,
                                     reps: reps,
                                     weightKg: weight.toDouble(),
+                                    difficulty: _difficultyType != null
+                                        ? _difficultyValue
+                                        : null,
+                                    difficultyType: _difficultyType?.value,
                                   );
 
-                                  // Clear inputs
                                   _weightController.clear();
                                   _repsController.clear();
 
-                                  // Start rest timer
                                   if (!mounted) return;
                                   cubit.startRest(
                                     currentSet.recommendedRestSecs,
@@ -415,8 +489,9 @@ class _ActiveWorkoutViewState extends State<ActiveWorkoutView> {
                                 icon: const Icon(Icons.check),
                                 label: const Text('Log Set'),
                                 style: ElevatedButton.styleFrom(
-                                  padding:
-                                      const EdgeInsets.symmetric(vertical: 16),
+                                  padding: EdgeInsets.symmetric(
+                                    vertical: sizes.padding,
+                                  ),
                                 ),
                               ),
                             ),
@@ -424,8 +499,8 @@ class _ActiveWorkoutViewState extends State<ActiveWorkoutView> {
                         ),
                       ),
                     ),
-                    const SizedBox(height: 16),
-                    // Navigation Buttons
+                    SizedBox(height: sizes.spacing),
+                    // Navigation
                     Row(
                       children: [
                         Expanded(
@@ -442,7 +517,7 @@ class _ActiveWorkoutViewState extends State<ActiveWorkoutView> {
                             label: const Text('Previous'),
                           ),
                         ),
-                        const SizedBox(width: 12),
+                        SizedBox(width: sizes.inputSpacing),
                         Expanded(
                           child: ElevatedButton.icon(
                             onPressed: () {
@@ -456,7 +531,7 @@ class _ActiveWorkoutViewState extends State<ActiveWorkoutView> {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 16),
+                    SizedBox(height: sizes.spacing),
                     // Action Buttons
                     Row(
                       children: [
@@ -483,7 +558,8 @@ class _ActiveWorkoutViewState extends State<ActiveWorkoutView> {
                                       onPressed: () =>
                                           Navigator.pop(dialogContext, true),
                                       style: TextButton.styleFrom(
-                                        foregroundColor: Colors.red,
+                                        foregroundColor:
+                                            theme.colorScheme.error,
                                       ),
                                       child: const Text('Yes, Cancel'),
                                     ),
@@ -500,11 +576,11 @@ class _ActiveWorkoutViewState extends State<ActiveWorkoutView> {
                             icon: const Icon(Icons.cancel),
                             label: const Text('Cancel'),
                             style: OutlinedButton.styleFrom(
-                              foregroundColor: Colors.red,
+                              foregroundColor: theme.colorScheme.error,
                             ),
                           ),
                         ),
-                        const SizedBox(width: 12),
+                        SizedBox(width: sizes.inputSpacing),
                         Expanded(
                           child: ElevatedButton.icon(
                             onPressed: () async {
@@ -515,16 +591,15 @@ class _ActiveWorkoutViewState extends State<ActiveWorkoutView> {
                             icon: const Icon(Icons.check_circle),
                             label: const Text('Complete'),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.green,
-                              foregroundColor: Colors.white,
+                              backgroundColor: theme.colorScheme.primary,
+                              foregroundColor: theme.colorScheme.onPrimary,
                             ),
                           ),
                         ),
                       ],
                     ),
                   ],
-                ),
-              );
+                );
             },
           ),
         );
@@ -539,6 +614,241 @@ class _ActiveWorkoutViewState extends State<ActiveWorkoutView> {
           }
         }
       },
+    );
+  }
+}
+
+Color _restTimerColor(int elapsed, int recommended, int max) {
+  if (elapsed < recommended) return Colors.green;
+  if (elapsed < max) return Colors.amber;
+  return Colors.red;
+}
+
+class _RestTimerCard extends StatelessWidget {
+  final int elapsedSeconds;
+  final int recommendedSecs;
+  final int maxSecs;
+  final DataDisplaySizesList sizes;
+  final ThemeData theme;
+  final VoidCallback onNext;
+  final String Function(int) formatRestTime;
+
+  const _RestTimerCard({
+    required this.elapsedSeconds,
+    required this.recommendedSecs,
+    required this.maxSecs,
+    required this.sizes,
+    required this.theme,
+    required this.onNext,
+    required this.formatRestTime,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final color = _restTimerColor(
+      elapsedSeconds,
+      recommendedSecs,
+      maxSecs,
+    );
+    return Card(
+      color: color.withValues(alpha: 0.2),
+      shape: RoundedRectangleBorder(
+        side: BorderSide(color: color, width: 2),
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Padding(
+        padding: EdgeInsets.all(sizes.padding),
+        child: Column(
+          children: [
+            Text(
+              'Rest',
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: color,
+              ),
+            ),
+            SizedBox(height: sizes.spacing / 2),
+            Text(
+              formatRestTime(elapsedSeconds),
+              style: theme.textTheme.headlineMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: color,
+              ),
+            ),
+            SizedBox(height: sizes.spacing / 2),
+            ElevatedButton(
+              onPressed: onNext,
+              child: const Text('Next'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _LogSetDifficultyInput extends StatefulWidget {
+  final WorkoutSetExerciseDifficulty? initialDifficulty;
+  final ThemeData theme;
+  final DataDisplaySizesList sizes;
+  final void Function(
+    WorkoutSetExerciseDifficultyType? type,
+    int value,
+  ) onChanged;
+
+  const _LogSetDifficultyInput({
+    super.key,
+    required this.initialDifficulty,
+    required this.theme,
+    required this.sizes,
+    required this.onChanged,
+  });
+
+  @override
+  State<_LogSetDifficultyInput> createState() => _LogSetDifficultyInputState();
+}
+
+class _LogSetDifficultyInputState extends State<_LogSetDifficultyInput> {
+  late WorkoutSetExerciseDifficultyType _type;
+  late int _value;
+  late TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _type =
+        widget.initialDifficulty?.type ?? WorkoutSetExerciseDifficultyType.rir;
+    _value = widget.initialDifficulty?.value ?? _type.defaultValue;
+    _controller = TextEditingController(text: _formatValue(_value));
+    widget.onChanged(_type, _value);
+  }
+
+  @override
+  void didUpdateWidget(covariant _LogSetDifficultyInput oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.initialDifficulty != widget.initialDifficulty) {
+      _type = widget.initialDifficulty?.type ??
+          WorkoutSetExerciseDifficultyType.rir;
+      _value = widget.initialDifficulty?.value ?? _type.defaultValue;
+      _controller.text = _formatValue(_value);
+      widget.onChanged(_type, _value);
+    }
+  }
+
+  String _formatValue(int v) {
+    if (_type == WorkoutSetExerciseDifficultyType.rmp) return '$v%';
+    return '$v';
+  }
+
+  (int, int) get _range => (_type.minValue, _type.maxValue);
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _openWheel() {
+    final (minVal, maxVal) = _range;
+    int initial = _value.clamp(minVal, maxVal);
+    final controller = FixedExtentScrollController(
+      initialItem: initial - minVal,
+    );
+    showModalBottomSheet<void>(
+      context: context,
+      builder: (sheetContext) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: EdgeInsets.all(widget.sizes.padding),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  TextButton(
+                    onPressed: () => Navigator.of(sheetContext).pop(),
+                    child: const Text('Cancel'),
+                  ),
+                  Text('Difficulty (${_type.value})',
+                      style: TextStyle(
+                          fontSize: widget.sizes.subtitleFontSize,
+                          fontWeight: FontWeight.w600)),
+                  TextButton(
+                    onPressed: () {
+                      final idx = controller.selectedItem;
+                      final val = minVal + idx;
+                      setState(() {
+                        _value = val;
+                        _controller.text = _formatValue(val);
+                      });
+                      widget.onChanged(_type, val);
+                      Navigator.of(sheetContext).pop();
+                    },
+                    child: const Text('Confirm'),
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(
+              height: widget.sizes.subtitleFontSize * 3 * 5,
+              child: AppNumberWheel(
+                minValue: minVal,
+                maxValue: maxVal,
+                scrollController: controller,
+                itemExtent: widget.sizes.subtitleFontSize * 3,
+                fontSize: widget.sizes.subtitleFontSize,
+              ),
+            ),
+          ],
+        ),
+      ),
+    ).then((_) => controller.dispose());
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          flex: 5,
+          child: AppTextFormField(
+            theme: widget.theme,
+            controller: _controller,
+            readOnly: true,
+            onTap: _openWheel,
+            labelText: 'Difficulty',
+            hintText: 'Value',
+            fontSize: widget.sizes.fontSize,
+            padding: widget.sizes.padding,
+            isLoading: false,
+            filled: true,
+            prefixIcon: Icon(Icons.bolt, size: widget.sizes.fontSize * 1.2),
+          ),
+        ),
+        SizedBox(width: widget.sizes.spacing / 2),
+        Expanded(
+          flex: 3,
+          child: AppDropdown<WorkoutSetExerciseDifficultyType>(
+            value: _type,
+            emptyLabel: 'None',
+            items: WorkoutSetExerciseDifficultyType.values,
+            labelBuilder: (t) => t.value,
+            onChanged: (v) {
+              if (v == null) return;
+              setState(() {
+                _type = v;
+                _value = _value.clamp(v.minValue, v.maxValue);
+                _controller.text = _formatValue(_value);
+              });
+              widget.onChanged(_type, _value);
+            },
+            onSaved: (_) {},
+            fontSize: widget.sizes.fontSize,
+            padding: widget.sizes.padding * 0.4,
+            filled: true,
+          ),
+        ),
+      ],
     );
   }
 }
