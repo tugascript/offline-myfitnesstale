@@ -92,21 +92,23 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
     emit(state.copyWith(
       workout: workoutResult.value,
       workoutRecord: workoutRecordResult.value,
-      currentSetIndex: 0,
-      currentExerciseIndex: 0,
+      currentSetPosition: 0,
+      currentExercisePosition: 0,
+      currentSetNumber: 1,
       startedAt: startedAt,
       isLoading: false,
     ));
   }
 
   Future<void> startWorkoutSet(int position) async {
-    emit(state.copyWith(currentSetIndex: position));
+    emit(state.copyWith(currentSetPosition: position));
   }
 
   Future<void> logExerciseSet({
     required int position,
     required int reps,
     required double weightKg,
+    required int setNumber,
     int? difficulty,
     String? difficultyType,
   }) async {
@@ -118,25 +120,12 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
       return;
     }
 
+    if ((currentSet.maxSets ?? currentSet.minSets) < setNumber) {
+      _logger.warning("Set number $setNumber exceeds the number of sets");
+      return;
+    }
+
     emit(state.copyWith(isLoading: true));
-
-    // For now, we assume simple progression (1 set record per set dto)
-    // In a full app, we'd check if we need to create a new record or use existing
-    // Here we'll just create a new one every time log is pressed for simplicity/MVP
-    // Or we could count existing records to determine set number.
-    // Let's rely on setRecords in state to count.
-
-    final int setNumber = (state.workoutRecord?.setRecords
-                ?.where((s) => s.workoutSetId == currentSet.id)
-                .length ??
-            0) +
-        1;
-
-    // Create/Find Set Record
-    // Check if we already created a record for this setNumber (maybe partial log?)
-    // For simplicity, always create new if it's a new "log action" implies new set completion?
-    // Actually, usually you log once per set.
-
     final setRecordResult = await _workoutRecordService.createWorkoutSetRecord(
       workoutSetId: currentSet.id,
       workoutRecordId: state.workoutRecord!.id,
@@ -194,8 +183,7 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
     ));
 
     _restTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      emit(state.copyWith(
-          restTimerSeconds: (state.restTimerSeconds ?? 0) + 1));
+      emit(state.copyWith(restTimerSeconds: (state.restTimerSeconds ?? 0) + 1));
     });
   }
 
@@ -211,58 +199,90 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
   void nextExercise() {
     if (state.workout == null) return;
 
-    int nextSetIndex = state.currentSetIndex;
-    int nextExerciseIndex = state.currentExerciseIndex + 1;
+    int nextSetIndex = state.currentSetPosition;
+    int nextExerciseIndex = state.currentExercisePosition + 1;
+    int nextSetNumber = state.currentSetNumber;
 
-    final currentSet = state.currentSet; // Getter uses currentSetIndex
+    final currentSet = state.currentSet;
 
-    // Check if we exceeded exercises in current set
     if (currentSet != null && currentSet.exercises != null) {
       if (nextExerciseIndex >= currentSet.exercises!.length) {
-        // Move to next set
-        nextSetIndex++;
-        nextExerciseIndex = 0;
+        bool moveToNextSetBlock = false;
+        
+        if (currentSet.maxSets != null) {
+          if (nextSetNumber < currentSet.maxSets!) {
+            nextSetNumber++;
+            nextExerciseIndex = 0;
+          } else {
+            moveToNextSetBlock = true;
+          }
+        } else {
+          if (nextSetNumber < currentSet.minSets) {
+            nextSetNumber++;
+            nextExerciseIndex = 0;
+          } else {
+            moveToNextSetBlock = true;
+          }
+        }
+
+        if (moveToNextSetBlock) {
+          nextSetIndex++;
+          nextExerciseIndex = 0;
+          nextSetNumber = 1;
+        }
       }
     } else {
-      // Fallback or empty set
       nextSetIndex++;
       nextExerciseIndex = 0;
-    }
-
-    // Check if we exceeded total sets
-    if (nextSetIndex >= state.totalSets) {
-      // Finished? Stay at last or mark complete?
-      // For now just clamp or do nothing.
-      // The View handles showing "Complete" screen if currentExercise is null.
-      // Current getters return null if index out of bounds.
+      nextSetNumber = 1;
     }
 
     emit(state.copyWith(
-      currentSetIndex: nextSetIndex,
-      currentExerciseIndex: nextExerciseIndex,
+      currentSetPosition: nextSetIndex,
+      currentExercisePosition: nextExerciseIndex,
+      currentSetNumber: nextSetNumber,
     ));
   }
 
   void previousExercise() {
-    int prevSetIndex = state.currentSetIndex;
-    int prevExerciseIndex = state.currentExerciseIndex - 1;
+    if (state.workout == null || state.workout!.sets == null) return;
+
+    int prevSetIndex = state.currentSetPosition;
+    int prevExerciseIndex = state.currentExercisePosition - 1;
+    int prevSetNumber = state.currentSetNumber;
 
     if (prevExerciseIndex < 0) {
-      prevSetIndex--;
-      if (prevSetIndex >= 0) {
-        // Go to last exercise of previous set
-        final prevSet = state.workout!.sets![prevSetIndex];
-        prevExerciseIndex = (prevSet.exercises?.length ?? 1) - 1;
+      prevSetNumber--;
+      if (prevSetNumber > 0) {
+        final currentSet = state.workout!.sets![prevSetIndex];
+        prevExerciseIndex = (currentSet.exercises?.length ?? 1) - 1;
       } else {
-        // Already at start
-        prevSetIndex = 0;
-        prevExerciseIndex = 0;
+        prevSetIndex--;
+        if (prevSetIndex >= 0) {
+          final prevSet = state.workout!.sets![prevSetIndex];
+          prevSetNumber = prevSet.maxSets ?? prevSet.minSets;
+          prevExerciseIndex = (prevSet.exercises?.length ?? 1) - 1;
+        } else {
+          prevSetIndex = 0;
+          prevExerciseIndex = 0;
+          prevSetNumber = 1;
+        }
       }
     }
 
     emit(state.copyWith(
-      currentSetIndex: prevSetIndex,
-      currentExerciseIndex: prevExerciseIndex,
+      currentSetPosition: prevSetIndex,
+      currentExercisePosition: prevExerciseIndex,
+      currentSetNumber: prevSetNumber,
+    ));
+  }
+
+  void skipToNextSet() {
+    int nextSetIndex = state.currentSetPosition + 1;
+    emit(state.copyWith(
+      currentSetPosition: nextSetIndex,
+      currentExercisePosition: 0,
+      currentSetNumber: 1,
     ));
   }
 
