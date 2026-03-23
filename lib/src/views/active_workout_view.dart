@@ -14,7 +14,10 @@ import '../widgets/layout/app_dropdown.dart';
 import '../widgets/layout/app_number_wheel.dart';
 import '../widgets/layout/app_text_form_field.dart';
 import '../widgets/layout/responsive_scaffold.dart';
-import '../widgets/workouts/active/active_info_card.dart';
+import '../widgets/workouts/progress/active_exercise_card.dart';
+import '../widgets/workouts/progress/active_info_card.dart';
+import '../widgets/workouts/progress/active_progress_bar.dart';
+import '../widgets/workouts/progress/active_rest_timer.dart';
 import 'loading_view.dart';
 import 'onboarding_view.dart';
 
@@ -64,21 +67,6 @@ class _ActiveWorkoutViewState extends State<ActiveWorkoutView> {
     return '${minutes}m ${remainingSeconds}s';
   }
 
-  String _formatDuration(int milliseconds) {
-    final duration = Duration(milliseconds: milliseconds);
-    final hours = duration.inHours;
-    final minutes = duration.inMinutes.remainder(60);
-    final seconds = duration.inSeconds.remainder(60);
-
-    if (hours > 0) {
-      return '${hours}h ${minutes}m ${seconds}s';
-    } else if (minutes > 0) {
-      return '${minutes}m ${seconds}s';
-    } else {
-      return '${seconds}s';
-    }
-  }
-
   int _parseWeight(String value) {
     return int.tryParse(value) ?? 0;
   }
@@ -93,6 +81,7 @@ class _ActiveWorkoutViewState extends State<ActiveWorkoutView> {
 
         return ResponsiveScaffold(
           title: 'Active Workout',
+          showBackButton: false,
           isEntity: true,
           body: BlocConsumer<ActiveWorkoutCubit, ActiveWorkoutState>(
             listener: (context, state) {
@@ -194,336 +183,171 @@ class _ActiveWorkoutViewState extends State<ActiveWorkoutView> {
               final currentSet = state.currentSet!;
 
               return ListView(
-                padding: EdgeInsets.symmetric(horizontal: sizes.padding / 2),
+                padding: EdgeInsets.symmetric(
+                  horizontal: sizes.padding / 2,
+                  vertical: sizes.padding,
+                ),
                 shrinkWrap: true,
                 physics: const ClampingScrollPhysics(),
                 children: [
                   // Progress
-                  Card(
-                    child: Padding(
-                      padding: EdgeInsets.all(sizes.padding),
-                      child: Column(
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                'Progress',
-                                style: TextStyle(
-                                  fontSize: sizes.subtitleFontSize,
-                                  fontWeight: FontWeight.bold,
-                                  color: theme.colorScheme.onSurface,
-                                ),
-                              ),
-                              Text(
-                                '${(state.progress * 100).toStringAsFixed(0)}%',
-                                style: TextStyle(
-                                  fontSize: sizes.subtitleFontSize,
-                                  fontWeight: FontWeight.bold,
-                                  color: theme.colorScheme.primary,
-                                ),
-                              ),
-                            ],
-                          ),
-                          SizedBox(height: sizes.spacing / 2),
-                          LinearProgressIndicator(
-                            value: state.progress,
-                            backgroundColor:
-                                theme.colorScheme.surfaceContainerHighest,
-                            minHeight: 8,
-                          ),
-                          SizedBox(height: sizes.spacing / 2),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                'Exercise Block ${state.currentSetPosition + 1} of ${state.totalSets}',
-                                style: TextStyle(
-                                  fontSize: sizes.fontSize,
-                                  color: theme.colorScheme.onSurfaceVariant,
-                                ),
-                              ),
-                              Text(
-                                'Time: ${_formatDuration(DateTime.now().millisecondsSinceEpoch - (state.startedAt?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch))}',
-                                style: TextStyle(
-                                  fontSize: sizes.fontSize,
-                                  color: theme.colorScheme.onSurfaceVariant,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
+                  // TODO: fix progress calculation
+                  ActiveProgressBar(
+                    sizes: sizes,
+                    theme: theme,
+                    progress: state.progress,
+                    totalSets: state.totalSets,
+                    currentSet: state.currentSetNumber,
+                    startedAt: state.startedAt ?? DateTime.now(),
                   ),
                   SizedBox(height: sizes.spacing),
                   // Current Exercise
-                  Card(
-                    child: Padding(
-                      padding: EdgeInsets.all(sizes.padding),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(
-                                    Icons.repeat,
-                                    size: sizes.fontSize * 1.2,
-                                  ),
-                                  Text(
-                                    ' Set ${state.currentSetNumber} of ${currentSet.maxSets ?? currentSet.minSets}',
-                                    style: TextStyle(
-                                      fontSize: sizes.fontSize,
-                                      color: theme.colorScheme.onSurfaceVariant,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(
-                                    Icons.fitness_center,
-                                    size: sizes.fontSize * 1.2,
-                                  ),
-                                  Text(
-                                    ' Exercise ${state.currentExercisePosition + 1} of ${currentSet.exercises?.length ?? 0}',
-                                    style: TextStyle(
-                                      fontSize: sizes.fontSize,
-                                      color: theme.colorScheme.onSurfaceVariant,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                          if (workoutSetExercise.difficulty != null) ...[
-                            SizedBox(height: sizes.spacing / 4),
-                            Text(
-                              'Target: ${workoutSetExercise.difficulty!.type.value} ${workoutSetExercise.difficulty!.value}',
-                              style: TextStyle(
-                                fontSize: sizes.fontSize,
-                                color: theme.colorScheme.primary,
-                              ),
-                            ),
-                          ],
-                          SizedBox(height: sizes.spacing / 2),
-                          Text(
-                            exercise.name,
-                            style: TextStyle(
-                              fontSize: sizes.titleFontSize,
-                              fontWeight: FontWeight.bold,
-                              color: theme.colorScheme.onSurface,
-                            ),
-                          ),
-                          if (exercise.description.isNotEmpty) ...[
-                            SizedBox(height: sizes.spacing / 2),
-                            Text(
-                              exercise.description,
-                              style: TextStyle(
-                                fontSize: sizes.fontSize,
-                                color: theme.colorScheme.onSurfaceVariant,
-                              ),
-                            ),
-                          ],
-                          SizedBox(height: sizes.spacing),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: ActiveInfoCard(
-                                  label: 'Target Reps',
-                                  value:
-                                      '${workoutSetExercise.minReps}${workoutSetExercise.maxReps != null ? '-${workoutSetExercise.maxReps}' : '+'}',
-                                  icon: Icons.repeat,
-                                ),
-                              ),
-                              SizedBox(width: sizes.inputSpacing),
-                              Expanded(
-                                child: ActiveInfoCard(
-                                  label: 'Rest Time',
-                                  value: _formatRestTime(
-                                    currentSet.recommendedRestSecs,
-                                  ),
-                                  icon: Icons.timer,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
+                  ActiveExerciseCard(
+                    sizes: sizes,
+                    theme: theme,
+                    minSets: currentSet.minSets,
+                    maxSets: currentSet.maxSets,
+                    currentSet: state.currentSetNumber,
+                    exercises: currentSet.exercises?.length ?? 0,
+                    currentExercise: state.currentExercisePosition + 1,
+                    minReps: workoutSetExercise.minReps,
+                    maxReps: workoutSetExercise.maxReps,
+                    exerciseName: exercise.name,
+                    recommendedRestSecs: currentSet.recommendedRestSecs,
+                    maxRestSecs: currentSet.maxRestSecs,
+                    difficulty: workoutSetExercise.difficulty,
                   ),
                   SizedBox(height: sizes.spacing),
                   // Rest Timer (ascending, green -> yellow -> red)
-                  if (state.isResting && state.restTimerSeconds != null) ...[
-                    _RestTimerCard(
-                      elapsedSeconds: state.restTimerSeconds!,
-                      recommendedSecs: currentSet.recommendedRestSecs,
-                      maxSecs: currentSet.maxRestSecs ??
-                          currentSet.recommendedRestSecs,
+                  if (state.isResting)
+                    ActiveRestTimer(
+                      breakPoint: breakpoints,
                       sizes: sizes,
                       theme: theme,
-                      onNext: () =>
-                          context.read<ActiveWorkoutCubit>().stopRest(),
-                      formatRestTime: _formatRestTime,
-                    ),
-                    SizedBox(height: sizes.spacing),
-                  ],
-                  // Log Set inputs
-                  Card(
-                    child: Padding(
-                      padding: EdgeInsets.all(sizes.padding),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Log Set',
-                            style: TextStyle(
-                              fontSize: sizes.subtitleFontSize,
-                              fontWeight: FontWeight.bold,
-                              color: theme.colorScheme.onSurface,
-                            ),
-                          ),
-                          SizedBox(height: sizes.spacing),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: TextFormField(
-                                  controller: _weightController,
-                                  decoration: InputDecoration(
-                                    labelText:
-                                        'Weight (${_units == Units.imperial.value ? 'lbs' : 'kg'})',
-                                    border: const OutlineInputBorder(),
-                                    prefixIcon:
-                                        const Icon(Icons.fitness_center),
-                                  ),
-                                  keyboardType: TextInputType.number,
-                                  style: TextStyle(
-                                    fontSize: sizes.subtitleFontSize,
-                                  ),
-                                ),
-                              ),
-                              SizedBox(width: sizes.inputSpacing),
-                              Expanded(
-                                child: TextFormField(
-                                  controller: _repsController,
-                                  decoration: const InputDecoration(
-                                    labelText: 'Reps',
-                                    border: OutlineInputBorder(),
-                                    prefixIcon: Icon(Icons.repeat),
-                                  ),
-                                  keyboardType: TextInputType.number,
-                                  style: TextStyle(
-                                    fontSize: sizes.subtitleFontSize,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          SizedBox(height: sizes.spacing),
-                          _LogSetDifficultyInput(
-                            key: ValueKey(workoutSetExercise.id),
-                            initialDifficulty: workoutSetExercise.difficulty,
-                            theme: theme,
-                            sizes: sizes,
-                            onChanged: (type, value) {
-                              _difficultyType = type;
-                              _difficultyValue = value;
-                            },
-                          ),
-                          SizedBox(height: sizes.spacing),
-                          SizedBox(
-                            width: double.infinity,
-                            child: ElevatedButton.icon(
-                              onPressed: () async {
-                                final cubit =
-                                    context.read<ActiveWorkoutCubit>();
-                                final weight =
-                                    _parseWeight(_weightController.text);
-                                final reps = int.tryParse(_repsController.text);
+                      recommendedSecs: currentSet.recommendedRestSecs,
+                      maxSecs: currentSet.maxRestSecs,
+                      onNext: (int restTime) async {
+                        final cubit = context.read<ActiveWorkoutCubit>();
+                        final weight = _parseWeight(_weightController.text);
+                        final reps = int.tryParse(_repsController.text);
 
-                                if (weight <= 0 || reps == null || reps <= 0) {
-                                  if (!mounted) return;
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: const Text(
-                                        'Please enter valid weight and reps',
-                                      ),
-                                      backgroundColor: theme.colorScheme.error,
+                        if (weight <= 0 || reps == null || reps <= 0) {
+                          if (!mounted) return;
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: const Text(
+                                'Please enter valid weight and reps',
+                              ),
+                              backgroundColor: theme.colorScheme.error,
+                            ),
+                          );
+                          return;
+                        }
+
+                        await cubit.logExerciseSet(
+                          position: workoutSetExercise.position,
+                          reps: reps,
+                          weightKg: weight.toDouble(),
+                          setNumber: state.currentSetNumber,
+                          restSecs: restTime,
+                          difficulty:
+                              _difficultyType != null ? _difficultyValue : null,
+                          difficultyType: _difficultyType?.value,
+                        );
+
+                        _weightController.clear();
+                        _repsController.clear();
+
+                        if (!mounted) return;
+                        cubit.nextExercise();
+                      },
+                    )
+                  else
+                    // Log Set inputs
+                    Card(
+                      child: Padding(
+                        padding: EdgeInsets.all(sizes.padding),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Log Set',
+                              style: TextStyle(
+                                fontSize: sizes.subtitleFontSize,
+                                fontWeight: FontWeight.bold,
+                                color: theme.colorScheme.onSurface,
+                              ),
+                            ),
+                            SizedBox(height: sizes.spacing),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: TextFormField(
+                                    controller: _weightController,
+                                    decoration: InputDecoration(
+                                      labelText:
+                                          'Weight (${_units == Units.imperial.value ? 'lbs' : 'kg'})',
+                                      border: const OutlineInputBorder(),
+                                      prefixIcon:
+                                          const Icon(Icons.fitness_center),
                                     ),
-                                  );
-                                  return;
-                                }
-
-                                await cubit.logExerciseSet(
-                                  position: workoutSetExercise.position,
-                                  reps: reps,
-                                  weightKg: weight.toDouble(),
-                                  setNumber: state.currentSetNumber,
-                                  difficulty: _difficultyType != null
-                                      ? _difficultyValue
-                                      : null,
-                                  difficultyType: _difficultyType?.value,
-                                );
-
-                                _weightController.clear();
-                                _repsController.clear();
-
-                                if (!mounted) return;
-                                cubit.startRest(
-                                  currentSet.recommendedRestSecs,
-                                );
-                              },
-                              icon: const Icon(Icons.check),
-                              label: const Text('Log Set'),
-                              style: ElevatedButton.styleFrom(
-                                padding: EdgeInsets.symmetric(
-                                  vertical: sizes.padding,
+                                    keyboardType: TextInputType.number,
+                                    style: TextStyle(
+                                      fontSize: sizes.subtitleFontSize,
+                                    ),
+                                  ),
                                 ),
-                              ),
+                                SizedBox(width: sizes.inputSpacing),
+                                Expanded(
+                                  child: TextFormField(
+                                    controller: _repsController,
+                                    decoration: const InputDecoration(
+                                      labelText: 'Reps',
+                                      border: OutlineInputBorder(),
+                                      prefixIcon: Icon(Icons.repeat),
+                                    ),
+                                    keyboardType: TextInputType.number,
+                                    style: TextStyle(
+                                      fontSize: sizes.subtitleFontSize,
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  SizedBox(height: sizes.spacing),
-                  // Navigation
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton.icon(
-                          onPressed: state.currentExercisePosition > 0 ||
-                                  state.currentSetPosition > 0 ||
-                                  state.currentSetNumber > 1
-                              ? () {
+                            SizedBox(height: sizes.spacing),
+                            _LogSetDifficultyInput(
+                              key: ValueKey(workoutSetExercise.id),
+                              initialDifficulty: workoutSetExercise.difficulty,
+                              theme: theme,
+                              sizes: sizes,
+                              onChanged: (type, value) {
+                                _difficultyType = type;
+                                _difficultyValue = value;
+                              },
+                            ),
+                            SizedBox(height: sizes.spacing),
+                            SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton.icon(
+                                onPressed: () {
                                   context
                                       .read<ActiveWorkoutCubit>()
-                                      .previousExercise();
-                                }
-                              : null,
-                          icon: const Icon(Icons.arrow_back),
-                          label: const Text('Previous'),
+                                      .startRest();
+                                },
+                                icon: const Icon(Icons.check),
+                                label: const Text('Log Set'),
+                                style: ElevatedButton.styleFrom(
+                                  padding: EdgeInsets.symmetric(
+                                    vertical: sizes.padding,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                      SizedBox(width: sizes.inputSpacing),
-                      Expanded(
-                        child: ElevatedButton.icon(
-                          onPressed: () {
-                            context.read<ActiveWorkoutCubit>().nextExercise();
-                            _weightController.clear();
-                            _repsController.clear();
-                          },
-                          icon: const Icon(Icons.arrow_forward),
-                          label: const Text('Next'),
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
+                  SizedBox(height: sizes.spacing),
                   if (currentSet.maxSets != null &&
                       state.currentSetNumber > currentSet.minSets) ...[
                     SizedBox(height: sizes.spacing),
@@ -622,75 +446,6 @@ class _ActiveWorkoutViewState extends State<ActiveWorkoutView> {
           }
         }
       },
-    );
-  }
-}
-
-Color _restTimerColor(int elapsed, int recommended, int max) {
-  if (elapsed < recommended) return Colors.green;
-  if (elapsed < max) return Colors.amber;
-  return Colors.red;
-}
-
-class _RestTimerCard extends StatelessWidget {
-  final int elapsedSeconds;
-  final int recommendedSecs;
-  final int maxSecs;
-  final DataDisplaySizesList sizes;
-  final ThemeData theme;
-  final VoidCallback onNext;
-  final String Function(int) formatRestTime;
-
-  const _RestTimerCard({
-    required this.elapsedSeconds,
-    required this.recommendedSecs,
-    required this.maxSecs,
-    required this.sizes,
-    required this.theme,
-    required this.onNext,
-    required this.formatRestTime,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final color = _restTimerColor(
-      elapsedSeconds,
-      recommendedSecs,
-      maxSecs,
-    );
-    return Card(
-      color: color.withValues(alpha: 0.2),
-      shape: RoundedRectangleBorder(
-        side: BorderSide(color: color, width: 2),
-        borderRadius: BorderRadius.circular(4),
-      ),
-      child: Padding(
-        padding: EdgeInsets.all(sizes.padding),
-        child: Column(
-          children: [
-            Text(
-              'Rest',
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: color,
-              ),
-            ),
-            SizedBox(height: sizes.spacing / 2),
-            Text(
-              formatRestTime(elapsedSeconds),
-              style: theme.textTheme.headlineMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: color,
-              ),
-            ),
-            SizedBox(height: sizes.spacing / 2),
-            ElevatedButton(
-              onPressed: onNext,
-              child: const Text('Next'),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

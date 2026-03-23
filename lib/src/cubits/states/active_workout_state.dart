@@ -12,7 +12,6 @@ class ActiveWorkoutState extends Equatable {
   final int currentSetPosition;
   final int currentSetNumber;
   final int currentExercisePosition;
-  final int? restTimerSeconds;
   final bool isResting;
   final DateTime? startedAt;
   final bool isLoading;
@@ -24,7 +23,6 @@ class ActiveWorkoutState extends Equatable {
     required this.currentSetPosition,
     required this.currentSetNumber,
     required this.currentExercisePosition,
-    this.restTimerSeconds,
     required this.isResting,
     this.startedAt,
     required this.isLoading,
@@ -50,7 +48,7 @@ class ActiveWorkoutState extends Equatable {
   }
 
   int get totalSets {
-    return workout?.sets?.length ?? 0;
+    return workout?.totalSets ?? 0;
   }
 
   double get progress {
@@ -74,7 +72,6 @@ class ActiveWorkoutState extends Equatable {
     int? currentSetPosition,
     int? currentExercisePosition,
     int? currentSetNumber,
-    int? restTimerSeconds,
     bool? isResting,
     DateTime? startedAt,
     bool? isLoading,
@@ -87,7 +84,6 @@ class ActiveWorkoutState extends Equatable {
       currentExercisePosition:
           currentExercisePosition ?? this.currentExercisePosition,
       currentSetNumber: currentSetNumber ?? this.currentSetNumber,
-      restTimerSeconds: restTimerSeconds ?? this.restTimerSeconds,
       isResting: isResting ?? this.isResting,
       startedAt: startedAt ?? this.startedAt,
       isLoading: isLoading ?? this.isLoading,
@@ -102,7 +98,6 @@ class ActiveWorkoutState extends Equatable {
         currentSetPosition,
         currentExercisePosition,
         currentSetNumber,
-        restTimerSeconds,
         isResting,
         startedAt,
         isLoading,

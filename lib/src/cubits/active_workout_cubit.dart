@@ -109,6 +109,7 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
     required int reps,
     required double weightKg,
     required int setNumber,
+    required int restSecs,
     int? difficulty,
     String? difficultyType,
   }) async {
@@ -130,7 +131,8 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
       workoutSetId: currentSet.id,
       workoutRecordId: state.workoutRecord!.id,
       setNumber: setNumber,
-      startedAt: DateTime.now(), // ideally would match set start
+      totalRestSecs: restSecs,
+      startedAt: DateTime.now().subtract(Duration(seconds: restSecs)),
       completedAt: DateTime.now(),
     );
 
@@ -175,25 +177,8 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
     ));
   }
 
-  void startRest(int seconds) {
-    _restTimer?.cancel();
-    emit(state.copyWith(
-      isResting: true,
-      restTimerSeconds: 0,
-    ));
-
-    _restTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      emit(state.copyWith(restTimerSeconds: (state.restTimerSeconds ?? 0) + 1));
-    });
-  }
-
-  void stopRest() {
-    _restTimer?.cancel();
-    emit(state.copyWith(
-      isResting: false,
-      restTimerSeconds: null,
-    ));
-    nextExercise();
+  void startRest() {
+    emit(state.copyWith(isResting: true));
   }
 
   void nextExercise() {
@@ -238,6 +223,7 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
     }
 
     emit(state.copyWith(
+      isResting: false,
       currentSetPosition: nextSetIndex,
       currentExercisePosition: nextExerciseIndex,
       currentSetNumber: nextSetNumber,
