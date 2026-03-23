@@ -10,6 +10,7 @@ class MutationButton extends StatelessWidget {
   final Color? color;
   final String label;
   final IconData icon;
+  final bool isDense;
 
   const MutationButton({
     super.key,
@@ -20,6 +21,7 @@ class MutationButton extends StatelessWidget {
     this.color,
     this.label = 'EDIT',
     this.icon = Icons.edit,
+    this.isDense = false,
   });
 
   @override
@@ -45,13 +47,14 @@ class MutationButton extends StatelessWidget {
       ),
       style: OutlinedButton.styleFrom(
         padding: EdgeInsets.symmetric(vertical: sizes.padding),
+        visualDensity: isDense ? VisualDensity.compact : VisualDensity.standard,
         backgroundColor: theme.scaffoldBackgroundColor,
         foregroundColor: btnColor,
         side: BorderSide(
           color: btnColor,
           width: 1,
         ),
-        shape: BeveledRectangleBorder(),
+        shape: const BeveledRectangleBorder(),
       ),
     );
   }

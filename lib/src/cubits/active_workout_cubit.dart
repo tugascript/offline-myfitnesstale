@@ -104,6 +104,7 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
     emit(state.copyWith(currentSetPosition: position));
   }
 
+  // TODO: fix log exercise set
   Future<void> logExerciseSet({
     required int position,
     required int reps,
@@ -193,7 +194,7 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
     if (currentSet != null && currentSet.exercises != null) {
       if (nextExerciseIndex >= currentSet.exercises!.length) {
         bool moveToNextSetBlock = false;
-        
+
         if (currentSet.maxSets != null) {
           if (nextSetNumber < currentSet.maxSets!) {
             nextSetNumber++;
