@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 
+import '../../models/common.dart';
 import '../../models/enums.dart';
 import '../../models/exercise_model.dart';
 import 'dto.dart';
@@ -15,7 +16,7 @@ class ExerciseDto extends Equatable implements Dto<Exercise> {
   final PictureDto? picture;
   final VideoDto? video;
   final MuscleGroup muscleGroup;
-  final ExerciseMuscles muscles;
+  final TargetMuscles muscles;
   final bool isFavorite;
   final Difficulty? difficulty;
   final CreatedBy createdBy;
@@ -68,7 +69,7 @@ class ExerciseDto extends Equatable implements Dto<Exercise> {
     PictureDto? picture,
     VideoDto? video,
     MuscleGroup? muscleGroup,
-    ExerciseMuscles? muscles,
+    TargetMuscles? muscles,
     List<EquipmentDto>? equipments,
     bool? isFavorite,
     Difficulty? difficulty,

@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 
 class TotalNumericString extends StatelessWidget {
   final String name;
-  final String? emoji;
+  final Widget? leading;
   final int total;
   final double fontSize;
 
   const TotalNumericString({
     super.key,
     required this.name,
-    this.emoji,
+    this.leading,
     required this.total,
     required this.fontSize,
   });
@@ -22,16 +22,9 @@ class TotalNumericString extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        ...(emoji != null && emoji!.isNotEmpty
-            ? [
-                Text(
-                  "$emoji ",
-                  style: TextStyle(fontSize: fontSize * 1.2),
-                )
-              ]
-            : []),
+        ...(leading != null ? [leading!] : []),
         Text(
-          "Total $name: ",
+          "${leading != null ? " " : ""}Total $name: ",
           style: TextStyle(
             fontSize: fontSize,
             color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],

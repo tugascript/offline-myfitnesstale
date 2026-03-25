@@ -38,7 +38,7 @@ class ExerciseCard extends StatelessWidget {
         SizedBox(height: sizes.spacing),
         _ExerciseInfo(
           muscleGroup: exercise.muscleGroup,
-          primaryMuscles: exercise.muscles.primaryMuscles,
+          primaryMuscles: exercise.muscles.primary,
           sizes: sizes,
           theme: theme,
         ),

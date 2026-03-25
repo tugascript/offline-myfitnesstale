@@ -13,7 +13,7 @@ import '../services/dtos/weight_record_dto.dart';
 import '../utilities/converters.dart';
 import '../widgets/layout/responsive_scaffold.dart';
 import 'exercise_progress_view.dart';
-import 'workout_history_view.dart';
+import 'workouts/workout_history_view.dart';
 
 // TODO: remove this view and replace with the new activity view
 class ProgressView extends StatefulWidget {

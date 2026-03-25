@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:equatable/equatable.dart';
 
 import 'common.dart';
@@ -29,61 +27,6 @@ enum ExerciseColumns with Columns {
   const ExerciseColumns(this.value);
 }
 
-class ExerciseMuscles extends Equatable {
-  final Set<Muscle> primaryMuscles;
-  final Set<Muscle> secondaryMuscles;
-
-  const ExerciseMuscles({
-    required this.primaryMuscles,
-    required this.secondaryMuscles,
-  });
-
-  Map<String, List<String>> toMap() {
-    return {
-      'primary_muscles': primaryMuscles.map((m) => m.value).toList(),
-      'secondary_muscles': secondaryMuscles.map((m) => m.value).toList(),
-    };
-  }
-
-  factory ExerciseMuscles.fromJson(String json) {
-    final Map<String, dynamic> decodedJson = jsonDecode(json);
-    return ExerciseMuscles.fromMap({
-      'primary_muscles':
-          List<String>.from(decodedJson['primary_muscles'] ?? []),
-      'secondary_muscles':
-          List<String>.from(decodedJson['secondary_muscles'] ?? []),
-    });
-  }
-
-  factory ExerciseMuscles.fromMap(Map<String, List<String>> map) {
-    return ExerciseMuscles(
-      primaryMuscles:
-          map['primary_muscles']?.map((m) => Muscle.fromValue(m)).toSet() ??
-              <Muscle>{},
-      secondaryMuscles:
-          map['secondary_muscles']?.map((m) => Muscle.fromValue(m)).toSet() ??
-              <Muscle>{},
-    );
-  }
-
-  ExerciseMuscles copyWith({
-    Set<Muscle>? primaryMuscles,
-    Set<Muscle>? secondaryMuscles,
-  }) {
-    return ExerciseMuscles(
-      primaryMuscles: primaryMuscles ?? this.primaryMuscles,
-      secondaryMuscles: secondaryMuscles ?? this.secondaryMuscles,
-    );
-  }
-
-  String toJson() {
-    return jsonEncode(toMap());
-  }
-
-  @override
-  List<Object?> get props => [primaryMuscles, secondaryMuscles];
-}
-
 class Exercise extends Equatable implements Model {
   @override
   final int? id;
@@ -92,7 +35,7 @@ class Exercise extends Equatable implements Model {
   final PictureData? picture;
   final VideoData? video;
   final MuscleGroup muscleGroup;
-  final ExerciseMuscles muscles;
+  final TargetMuscles muscles;
   final bool isFavorite;
   final Difficulty? difficulty;
   final CreatedBy createdBy;
@@ -169,9 +112,9 @@ class Exercise extends Equatable implements Model {
           : null,
       muscleGroup: MuscleGroup.fromValue(
           map[ExerciseColumns.muscleGroup.value] as String),
-      muscles: ExerciseMuscles.fromJson(
+      muscles: TargetMuscles.fromJson(
           map[ExerciseColumns.muscles.value] as String? ??
-              '{"primary_muscles":[],"secondary_muscles":[]}'),
+              '{"primary":[],"secondary":[]}'),
       isFavorite: map[ExerciseColumns.isFavorite.value] as int == 1,
       difficulty: map[ExerciseColumns.difficulty.value] != null
           ? Difficulty.fromValue(map[ExerciseColumns.difficulty.value] as int)
@@ -187,7 +130,7 @@ class Exercise extends Equatable implements Model {
   factory Exercise.create({
     required String name,
     required MuscleGroup muscleGroup,
-    required ExerciseMuscles muscles,
+    required TargetMuscles muscles,
     String? description,
     PictureData? picture,
     VideoData? video,
@@ -219,7 +162,7 @@ class Exercise extends Equatable implements Model {
     PictureData? picture,
     VideoData? video,
     MuscleGroup? muscleGroup,
-    ExerciseMuscles? muscles,
+    TargetMuscles? muscles,
     bool? isFavorite,
     Difficulty? difficulty,
     CreatedBy? createdBy,

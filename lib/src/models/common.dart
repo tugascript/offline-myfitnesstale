@@ -89,3 +89,72 @@ class PictureData extends Equatable implements JsonData {
   @override
   List<Object?> get props => [storage, uri];
 }
+
+class TargetMuscles extends Equatable implements JsonData {
+  final Set<Muscle> primary;
+  final Set<Muscle> secondary;
+
+  const TargetMuscles({
+    required this.primary,
+    required this.secondary,
+  });
+
+  Map<String, List<String>> toMap() {
+    return {
+      'primary': primary.map((m) => m.value).toList(),
+      'secondary': secondary.map((m) => m.value).toList(),
+    };
+  }
+
+  factory TargetMuscles.fromJson(String json) {
+    final Map<String, dynamic> decodedJson = jsonDecode(json);
+    return TargetMuscles.fromMap({
+      'primary': List<String>.from(decodedJson['primary'] ?? []),
+      'secondary': List<String>.from(decodedJson['secondary'] ?? []),
+    });
+  }
+
+  factory TargetMuscles.fromMap(Map<String, List<String>> map) {
+    return TargetMuscles(
+      primary:
+          map['primary']?.map((m) => Muscle.fromValue(m)).toSet() ?? <Muscle>{},
+      secondary: map['secondary']?.map((m) => Muscle.fromValue(m)).toSet() ??
+          <Muscle>{},
+    );
+  }
+
+  @override
+  TargetMuscles copyWith({
+    Set<Muscle>? primary,
+    Set<Muscle>? secondary,
+  }) {
+    return TargetMuscles(
+      primary: primary ?? this.primary,
+      secondary: secondary ?? this.secondary,
+    );
+  }
+
+  TargetMuscles addOther(TargetMuscles other) {
+    final Set<Muscle> primary = this.primary.union(other.primary);
+    final Set<Muscle> secondary = this.secondary.toSet();
+
+    for (final secMuscle in other.secondary) {
+      if (!primary.contains(secMuscle)) {
+        secondary.add(secMuscle);
+      }
+    }
+
+    return TargetMuscles(
+      primary: primary,
+      secondary: secondary,
+    );
+  }
+
+  @override
+  String toJson() {
+    return jsonEncode(toMap());
+  }
+
+  @override
+  List<Object?> get props => [primary, secondary];
+}

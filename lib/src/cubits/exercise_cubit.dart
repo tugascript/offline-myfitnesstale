@@ -3,7 +3,6 @@ import 'package:logging/logging.dart';
 
 import '../models/common.dart';
 import '../models/enums.dart';
-import '../models/exercise_model.dart';
 import '../services/common/errors.dart';
 import '../services/dtos/exercise_dto.dart';
 import '../services/exercise_service.dart';
@@ -136,9 +135,9 @@ class ExerciseCubit extends Cubit<ExerciseState> {
     final result = await _exerciseService.createExercise(
       name: name,
       muscleGroup: muscleGroup,
-      muscles: ExerciseMuscles(
-        primaryMuscles: primaryMuscles,
-        secondaryMuscles: secondaryMuscles,
+      muscles: TargetMuscles(
+        primary: primaryMuscles,
+        secondary: secondaryMuscles,
       ),
       video: video,
       picture: picture,
@@ -201,9 +200,9 @@ class ExerciseCubit extends Cubit<ExerciseState> {
       name: name,
       description: description,
       muscleGroup: muscleGroup,
-      muscles: ExerciseMuscles(
-        primaryMuscles: primaryMuscles,
-        secondaryMuscles: secondaryMuscles,
+      muscles: TargetMuscles(
+        primary: primaryMuscles,
+        secondary: secondaryMuscles,
       ),
       video: video,
       picture: picture,

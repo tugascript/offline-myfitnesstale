@@ -40,19 +40,28 @@ class WorkoutPlanCard extends StatelessWidget {
             runSpacing: sizes.spacing,
             children: [
               TotalNumericString(
-                emoji: '📅',
+                leading: Text(
+                  '📅',
+                  style: TextStyle(fontSize: sizes.fontSize * 1.2),
+                ),
                 name: "Weeks",
                 total: plan.totalWeeks,
                 fontSize: sizes.fontSize,
               ),
               TotalNumericString(
-                emoji: '☀️',
+                leading: Text(
+                  '☀️',
+                  style: TextStyle(fontSize: sizes.fontSize * 1.2),
+                ),
                 name: "Days",
                 total: plan.totalDays,
                 fontSize: sizes.fontSize,
               ),
               TotalNumericString(
-                emoji: '🏋️',
+                leading: Text(
+                  '🏋️',
+                  style: TextStyle(fontSize: sizes.fontSize * 1.2),
+                ),
                 name: "Workouts",
                 total: plan.totalWorkouts,
                 fontSize: sizes.fontSize,

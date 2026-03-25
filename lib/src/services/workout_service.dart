@@ -460,7 +460,10 @@ class WorkoutService {
           int totalSets = 0;
           int totalReps = 0;
           final Set<MuscleGroup> muscleGroups = {};
-          final Set<Muscle> muscles = {};
+          final TargetMuscles muscles = TargetMuscles(
+            primary: <Muscle>{},
+            secondary: <Muscle>{},
+          );
 
           for (final set in workoutInput.sets) {
             final int setNum = (set.maxSets ?? set.minSets);
@@ -468,7 +471,13 @@ class WorkoutService {
             for (final exercise in set.exercises) {
               totalReps += setNum * (exercise.maxReps ?? exercise.minReps);
               muscleGroups.add(exercise.exercise.muscleGroup);
-              muscles.addAll(exercise.exercise.muscles.primaryMuscles);
+
+              muscles.primary.addAll(exercise.exercise.muscles.primary);
+              for (final secMuscle in exercise.exercise.muscles.secondary) {
+                if (!muscles.primary.contains(secMuscle)) {
+                  muscles.secondary.add(secMuscle);
+                }
+              }
             }
           }
 
@@ -1007,7 +1016,10 @@ class WorkoutService {
           trx: txn,
         );
         final Set<MuscleGroup> updatedMuscleGroups = {};
-        final Set<Muscle> updatedMuscles = {};
+        final TargetMuscles updatedMuscles = TargetMuscles(
+          primary: <Muscle>{},
+          secondary: <Muscle>{},
+        );
         if (updatedSetExercises.isNotEmpty) {
           for (final setExercise in updatedSetExercises) {
             final exercise = exerciseMap[setExercise.exerciseId];
@@ -1015,8 +1027,12 @@ class WorkoutService {
               continue;
             }
 
-            updatedMuscleGroups.add(exercise.muscleGroup);
-            updatedMuscles.addAll(exercise.muscles.primaryMuscles);
+            updatedMuscles.primary.addAll(exercise.muscles.primary);
+            for (final secMuscle in exercise.muscles.secondary) {
+              if (!updatedMuscles.primary.contains(secMuscle)) {
+                updatedMuscles.secondary.add(secMuscle);
+              }
+            }
           }
         }
 

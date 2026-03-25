@@ -54,12 +54,12 @@ class ExerciseHeaderCard extends StatelessWidget {
         _PrimaryData(
           sizes: sizes,
           muscleGroup: exerciseDto.muscleGroup,
-          primaryMuscles: exerciseDto.muscles.primaryMuscles,
+          primaryMuscles: exerciseDto.muscles.primary,
         ),
         _SecondaryData(
           theme: Theme.of(context),
           sizes: sizes,
-          secondaryMuscles: exerciseDto.muscles.secondaryMuscles,
+          secondaryMuscles: exerciseDto.muscles.secondary,
           equipments: exerciseDto.equipments ?? [],
         ),
         if (exerciseDto.description.isNotEmpty) ...[

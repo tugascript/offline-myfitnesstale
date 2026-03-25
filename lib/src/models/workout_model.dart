@@ -40,7 +40,7 @@ final class Workout implements Model {
   final VideoData? video;
   final WorkoutPhase? phase;
   final Set<MuscleGroup> muscleGroups;
-  final Set<Muscle> muscles;
+  final TargetMuscles muscles;
   final bool isFavorite;
   final Difficulty difficulty;
   final int totalSets;
@@ -105,8 +105,7 @@ final class Workout implements Model {
       WorkoutColumns.video.value: video?.toJson(),
       WorkoutColumns.muscleGroups.value:
           jsonEncode(muscleGroups.map((g) => g.value).toList()),
-      WorkoutColumns.muscles.value:
-          jsonEncode(muscles.map((m) => m.value).toList()),
+      WorkoutColumns.muscles.value: muscles.toJson(),
       WorkoutColumns.isFavorite.value: isFavorite ? 1 : 0,
       WorkoutColumns.difficulty.value: difficulty.value,
       WorkoutColumns.phase.value: phase?.value,
@@ -137,12 +136,10 @@ final class Workout implements Model {
               .map((g) => MuscleGroup.fromValue(g as String))
               .toSet()
           : <MuscleGroup>{}),
-      muscles: (map[WorkoutColumns.muscles.value] != null
-          ? (jsonDecode(map[WorkoutColumns.muscles.value] as String)
-                  as List<dynamic>)
-              .map((m) => Muscle.fromValue(m as String))
-              .toSet()
-          : <Muscle>{}),
+      muscles: TargetMuscles.fromJson(
+        map[WorkoutColumns.muscles.value] as String? ??
+            '{"primary":[],"secondary":[]}',
+      ),
       isFavorite: map[WorkoutColumns.isFavorite.value] == 1,
       difficulty:
           Difficulty.fromValue(map[WorkoutColumns.difficulty.value] as int),
@@ -166,7 +163,10 @@ final class Workout implements Model {
     required String name,
     required Difficulty difficulty,
     Set<MuscleGroup> muscleGroups = const <MuscleGroup>{},
-    Set<Muscle> muscles = const <Muscle>{},
+    TargetMuscles muscles = const TargetMuscles(
+      primary: <Muscle>{},
+      secondary: <Muscle>{},
+    ),
     String? description,
     PictureData? picture,
     VideoData? video,
@@ -205,7 +205,7 @@ final class Workout implements Model {
     PictureData? picture,
     VideoData? video,
     Set<MuscleGroup>? muscleGroups,
-    Set<Muscle>? muscles,
+    TargetMuscles? muscles,
     Difficulty? difficulty,
     CreatedBy? createdBy,
     WorkoutPhase? phase,

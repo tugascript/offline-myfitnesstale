@@ -1,6 +1,7 @@
 import 'package:logging/logging.dart';
 
 import '../models/db.dart';
+import '../models/exercise_model.dart';
 import '../models/repository.dart'
     show Repository, kDefaultLimit, kDefaultOffset;
 import '../models/utilities.dart' show WhereBuilder, DateUtilities;
@@ -48,6 +49,12 @@ class WorkoutRecordService {
     fromMap: Workout.fromMap,
   );
 
+  final _exerciseRepository = Repository<Exercise>(
+    databaseHelper: DatabaseHelper(),
+    tableName: Exercise.table,
+    fromMap: Exercise.fromMap,
+  );
+
   Future<
       Result<PaginatedDto<WorkoutRecordDto, WorkoutRecord>,
           ServiceError<SingleErrorTypes>>> getWorkoutRecords({
@@ -67,7 +74,7 @@ class WorkoutRecordService {
         ));
       }
 
-      query.and('${WorkoutRecordColumns.workoutId.value} = ?', workoutId);
+      query.and(WorkoutRecordColumns.workoutId.equal, workoutId);
     }
 
     try {
@@ -115,7 +122,7 @@ class WorkoutRecordService {
 
       final List<WorkoutSetRecord> setRecords =
           await _setRecordRepository.selectMany(
-        where: '${WorkoutSetRecordColumns.workoutRecordId.value} = ?',
+        where: WorkoutSetRecordColumns.workoutRecordId.equal,
         whereArgs: [id],
         orderBy: [
           WorkoutSetRecordColumns.workoutRecordId.orderAsc,
@@ -129,8 +136,8 @@ class WorkoutRecordService {
 
       final List<WorkoutSetExerciseRecord> setExerciseRecords =
           await _setExerciseRecordRepository.selectMany(
-        where: '${WorkoutSetExerciseRecordColumns.workoutRecordId.value} = ?',
-        whereArgs: setRecords.map((sr) => sr.id).toList(),
+        where: WorkoutSetExerciseRecordColumns.workoutRecordId.equal,
+        whereArgs: [id],
         orderBy: [
           WorkoutSetExerciseRecordColumns.workoutSetRecordId.orderAsc,
           WorkoutSetExerciseRecordColumns.position.orderAsc,
@@ -301,6 +308,15 @@ class WorkoutRecordService {
     whereBuild.and(WorkoutSetRecordColumns.setNumber.equal, setNumber);
 
     try {
+      final WorkoutRecord? workoutRecord =
+          await _repository.selectOne(workoutRecordId);
+      if (workoutRecord == null) {
+        return err(ServiceError(
+          type: OperationErrorTypes.invalidInput,
+          description: 'Workout record with id: $workoutRecordId not found',
+        ));
+      }
+
       final List<WorkoutSetRecord> records =
           await _setRecordRepository.selectMany(
         where: whereBuild.where,
@@ -316,7 +332,15 @@ class WorkoutRecordService {
               ? DateUtilities.getDateUnix(completedAt)
               : null,
         );
-        await _setRecordRepository.update(updatedRecord);
+        await _repository.startTransaction((trx) async {
+          await _setRecordRepository.update(updatedRecord, trx);
+          final updatedWorkoutRecord = workoutRecord.copyWith(
+            totalRestSecs:
+                workoutRecord.totalRestSecs + (record.totalRestSecs ?? 0),
+          );
+          await _repository.update(updatedWorkoutRecord, trx);
+        });
+
         _logger.info('Updated workout set record with id ${record.id}');
         return ok(WorkoutSetRecordDto.fromModel(updatedRecord));
       }
@@ -330,7 +354,18 @@ class WorkoutRecordService {
         completedAt:
             completedAt != null ? DateUtilities.getDateUnix(completedAt) : null,
       );
-      final int id = await _setRecordRepository.insert(record);
+      final int id = await _repository.startTransaction((trx) async {
+        final int id = await _setRecordRepository.insert(record, trx);
+
+        final updatedWorkoutRecord = workoutRecord.copyWith(
+          totalSets: workoutRecord.totalSets + 1,
+          totalRestSecs:
+              workoutRecord.totalRestSecs + (record.totalRestSecs ?? 0),
+        );
+        await _repository.update(updatedWorkoutRecord, trx);
+
+        return id;
+      });
       _logger.info('Created workout set record with id $id');
       return ok(WorkoutSetRecordDto.fromModel(record.copyWith(id: id)));
     } catch (e) {
@@ -343,7 +378,7 @@ class WorkoutRecordService {
   }
 
   Future<Result<WorkoutSetExerciseRecordDto, ServiceError<OperationErrorTypes>>>
-      upsertWorkoutSetExerciseRecord({
+      createWorkoutSetExerciseRecord({
     required int workoutSetExerciseId,
     required int workoutRecordId,
     required int workoutSetRecordId,
@@ -355,43 +390,33 @@ class WorkoutRecordService {
     String? difficultyType,
   }) async {
     _logger.info('Creating workout set exercise record');
-    final whereBuild = WhereBuilder();
-    whereBuild.and(
-      WorkoutSetExerciseRecordColumns.workoutSetExerciseId.equal,
-      workoutSetExerciseId,
-    );
-    whereBuild.and(
-      WorkoutSetExerciseRecordColumns.workoutSetRecordId.equal,
-      workoutSetRecordId,
-    );
-    whereBuild.and(
-      WorkoutSetExerciseRecordColumns.position.equal,
-      position,
-    );
-
     try {
-      final List<WorkoutSetExerciseRecord> records =
-          await _setExerciseRecordRepository.selectMany(
-        where: whereBuild.where,
-        whereArgs: whereBuild.args,
-        limit: 1,
-      );
+      final WorkoutRecord? workoutRecord =
+          await _repository.selectOne(workoutRecordId);
+      if (workoutRecord == null) {
+        return err(ServiceError(
+          type: OperationErrorTypes.invalidInput,
+          description: 'Workout record with id: $workoutRecordId not found',
+        ));
+      }
 
-      if (records.isNotEmpty) {
-        final WorkoutSetExerciseRecord record = records.first;
-        final WorkoutSetExerciseRecord updatedRecord = record.copyWith(
-          workoutSetRecordId: workoutSetRecordId,
-          exerciseId: exerciseId,
-          reps: reps,
-          weightGrams: weight,
-          difficulty: difficulty,
-          difficultyType: difficultyType,
-        );
-        await _setExerciseRecordRepository.update(updatedRecord);
-        _logger.info(
-          'Updated workout set exercise record with id ${record.id}',
-        );
-        return ok(WorkoutSetExerciseRecordDto.fromModel(updatedRecord));
+      final WorkoutSetRecord? workoutSetRecord =
+          await _setRecordRepository.selectOne(workoutSetRecordId);
+      if (workoutSetRecord == null) {
+        return err(ServiceError(
+          type: OperationErrorTypes.invalidInput,
+          description:
+              'Workout set record with id: $workoutSetRecordId not found',
+        ));
+      }
+
+      final Exercise? exercise =
+          await _exerciseRepository.selectOne(exerciseId);
+      if (exercise == null) {
+        return err(ServiceError(
+          type: OperationErrorTypes.invalidInput,
+          description: 'Exercise with id: $exerciseId not found',
+        ));
       }
 
       final WorkoutSetExerciseRecord record = WorkoutSetExerciseRecord.create(
@@ -405,8 +430,19 @@ class WorkoutRecordService {
         difficulty: difficulty,
         difficultyType: difficultyType,
       );
-      final int id = await _setExerciseRecordRepository.insert(record);
+      final int id = await _repository.startTransaction((trx) async {
+        final int id = await _setExerciseRecordRepository.insert(record, trx);
+        final updatedWorkoutRecord = workoutRecord.copyWith(
+          totalReps: workoutRecord.totalReps + reps,
+          totalVolume: workoutRecord.totalVolume + (reps * weight),
+          muscleGroups: workoutRecord.muscleGroups..add(exercise.muscleGroup),
+          muscles: workoutRecord.muscles.addOther(exercise.muscles),
+        );
+        await _repository.update(updatedWorkoutRecord, trx);
+        return id;
+      });
       _logger.info('Created workout set exercise record with id $id');
+
       return ok(WorkoutSetExerciseRecordDto.fromModel(record.copyWith(id: id)));
     } catch (e) {
       _logger.severe('Failed to create workout set exercise record', e);

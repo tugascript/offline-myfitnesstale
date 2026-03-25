@@ -1,12 +1,12 @@
+import '../common.dart';
 import '../enums.dart';
-import '../exercise_model.dart';
 import 'equipment_constants.dart';
 
 // TODO: add difficulty
 class ExerciseData {
   final String name;
   final MuscleGroup muscleGroup;
-  final ExerciseMuscles muscles;
+  final TargetMuscles muscles;
   final Set<String> equipments;
 
   const ExerciseData({
@@ -206,11 +206,11 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
   ExerciseData(
     name: kBarbellChestPressName,
     muscleGroup: MuscleGroup.push,
-    muscles: ExerciseMuscles(
-      primaryMuscles: {
+    muscles: TargetMuscles(
+      primary: {
         Muscle.chest,
       },
-      secondaryMuscles: {
+      secondary: {
         Muscle.triceps,
         Muscle.shoulders,
         Muscle.frontDelts,
@@ -221,12 +221,12 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
   ExerciseData(
     name: kInclineBarbellChestPressName,
     muscleGroup: MuscleGroup.push,
-    muscles: ExerciseMuscles(
-      primaryMuscles: {
+    muscles: TargetMuscles(
+      primary: {
         Muscle.upperChest,
         Muscle.chest,
       },
-      secondaryMuscles: {
+      secondary: {
         Muscle.triceps,
         Muscle.frontDelts,
       },
@@ -236,11 +236,11 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
   ExerciseData(
     name: kDumbbellChestPressName,
     muscleGroup: MuscleGroup.push,
-    muscles: ExerciseMuscles(
-      primaryMuscles: {
+    muscles: TargetMuscles(
+      primary: {
         Muscle.chest,
       },
-      secondaryMuscles: {
+      secondary: {
         Muscle.triceps,
         Muscle.frontDelts,
       },
@@ -250,12 +250,12 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
   ExerciseData(
     name: kInclineDumbbellChestPressName,
     muscleGroup: MuscleGroup.push,
-    muscles: ExerciseMuscles(
-      primaryMuscles: {
+    muscles: TargetMuscles(
+      primary: {
         Muscle.upperChest,
         Muscle.chest,
       },
-      secondaryMuscles: {
+      secondary: {
         Muscle.triceps,
         Muscle.frontDelts,
       },
@@ -265,12 +265,12 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
   ExerciseData(
     name: kInclineMachineChestPressName,
     muscleGroup: MuscleGroup.push,
-    muscles: ExerciseMuscles(
-      primaryMuscles: {
+    muscles: TargetMuscles(
+      primary: {
         Muscle.upperChest,
         Muscle.chest,
       },
-      secondaryMuscles: {
+      secondary: {
         Muscle.triceps,
         Muscle.frontDelts,
       },
@@ -280,11 +280,11 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
   ExerciseData(
     name: kMachineChestPressName,
     muscleGroup: MuscleGroup.push,
-    muscles: ExerciseMuscles(
-      primaryMuscles: {
+    muscles: TargetMuscles(
+      primary: {
         Muscle.chest,
       },
-      secondaryMuscles: {
+      secondary: {
         Muscle.triceps,
         Muscle.frontDelts,
       },
@@ -294,44 +294,44 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
   ExerciseData(
     name: kMachineChestFlysName,
     muscleGroup: MuscleGroup.push,
-    muscles: ExerciseMuscles(
-      primaryMuscles: {
+    muscles: TargetMuscles(
+      primary: {
         Muscle.chest,
       },
-      secondaryMuscles: {},
+      secondary: {},
     ),
     equipments: {kMachineName},
   ),
   ExerciseData(
     name: kCableUnderhandFlysName,
     muscleGroup: MuscleGroup.push,
-    muscles: ExerciseMuscles(
-      primaryMuscles: {
+    muscles: TargetMuscles(
+      primary: {
         Muscle.upperChest,
       },
-      secondaryMuscles: {},
+      secondary: {},
     ),
     equipments: {kCableName, kDHandleName},
   ),
   ExerciseData(
     name: kCableFlysName,
     muscleGroup: MuscleGroup.push,
-    muscles: ExerciseMuscles(
-      primaryMuscles: {
+    muscles: TargetMuscles(
+      primary: {
         Muscle.chest,
       },
-      secondaryMuscles: {},
+      secondary: {},
     ),
     equipments: {kCableName, kDHandleName},
   ),
   ExerciseData(
     name: kInclineCableFlysName,
     muscleGroup: MuscleGroup.push,
-    muscles: ExerciseMuscles(
-      primaryMuscles: {
+    muscles: TargetMuscles(
+      primary: {
         Muscle.upperChest,
       },
-      secondaryMuscles: {
+      secondary: {
         Muscle.chest,
       },
     ),
@@ -340,12 +340,12 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
   ExerciseData(
     name: kStandingBarbellShoulderPressName,
     muscleGroup: MuscleGroup.push,
-    muscles: ExerciseMuscles(
-      primaryMuscles: {
+    muscles: TargetMuscles(
+      primary: {
         Muscle.shoulders,
         Muscle.frontDelts,
       },
-      secondaryMuscles: {
+      secondary: {
         Muscle.sideDelts,
         Muscle.triceps,
       },
@@ -355,12 +355,12 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
   ExerciseData(
     name: kSeatedBarbellShoulderPressName,
     muscleGroup: MuscleGroup.push,
-    muscles: ExerciseMuscles(
-      primaryMuscles: {
+    muscles: TargetMuscles(
+      primary: {
         Muscle.shoulders,
         Muscle.frontDelts,
       },
-      secondaryMuscles: {
+      secondary: {
         Muscle.sideDelts,
         Muscle.triceps,
       },
@@ -370,12 +370,12 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
   ExerciseData(
     name: kSmithMachineShoulderPressName,
     muscleGroup: MuscleGroup.push,
-    muscles: ExerciseMuscles(
-      primaryMuscles: {
+    muscles: TargetMuscles(
+      primary: {
         Muscle.shoulders,
         Muscle.frontDelts,
       },
-      secondaryMuscles: {
+      secondary: {
         Muscle.sideDelts,
         Muscle.triceps,
       },
@@ -385,12 +385,12 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
   ExerciseData(
     name: kMachineShoulderPressName,
     muscleGroup: MuscleGroup.push,
-    muscles: ExerciseMuscles(
-      primaryMuscles: {
+    muscles: TargetMuscles(
+      primary: {
         Muscle.shoulders,
         Muscle.frontDelts,
       },
-      secondaryMuscles: {
+      secondary: {
         Muscle.sideDelts,
         Muscle.triceps,
       },
@@ -400,12 +400,12 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
   ExerciseData(
     name: kStandingDumbbellShoulderPressName,
     muscleGroup: MuscleGroup.push,
-    muscles: ExerciseMuscles(
-      primaryMuscles: {
+    muscles: TargetMuscles(
+      primary: {
         Muscle.shoulders,
         Muscle.frontDelts,
       },
-      secondaryMuscles: {
+      secondary: {
         Muscle.sideDelts,
         Muscle.triceps,
       },
@@ -415,12 +415,12 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
   ExerciseData(
     name: kSeatedDumbbellShoulderPressName,
     muscleGroup: MuscleGroup.push,
-    muscles: ExerciseMuscles(
-      primaryMuscles: {
+    muscles: TargetMuscles(
+      primary: {
         Muscle.shoulders,
         Muscle.frontDelts,
       },
-      secondaryMuscles: {
+      secondary: {
         Muscle.sideDelts,
         Muscle.triceps,
       },
@@ -430,11 +430,11 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
   ExerciseData(
     name: kDumbbellLateralRaisesName,
     muscleGroup: MuscleGroup.push,
-    muscles: ExerciseMuscles(
-      primaryMuscles: {
+    muscles: TargetMuscles(
+      primary: {
         Muscle.sideDelts,
       },
-      secondaryMuscles: {
+      secondary: {
         Muscle.shoulders,
       },
     ),
@@ -443,11 +443,11 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
   ExerciseData(
     name: kCableLateralRaisesName,
     muscleGroup: MuscleGroup.push,
-    muscles: ExerciseMuscles(
-      primaryMuscles: {
+    muscles: TargetMuscles(
+      primary: {
         Muscle.sideDelts,
       },
-      secondaryMuscles: {
+      secondary: {
         Muscle.shoulders,
       },
     ),
@@ -456,11 +456,11 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
   ExerciseData(
     name: kLeaningCableLateralRaiseName,
     muscleGroup: MuscleGroup.push,
-    muscles: ExerciseMuscles(
-      primaryMuscles: {
+    muscles: TargetMuscles(
+      primary: {
         Muscle.sideDelts,
       },
-      secondaryMuscles: {
+      secondary: {
         Muscle.shoulders,
       },
     ),
@@ -469,11 +469,11 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
   ExerciseData(
     name: kCableOverheadTricepsExtensionName,
     muscleGroup: MuscleGroup.push,
-    muscles: ExerciseMuscles(
-      primaryMuscles: {
+    muscles: TargetMuscles(
+      primary: {
         Muscle.triceps,
       },
-      secondaryMuscles: {},
+      secondary: {},
     ),
     equipments: {
       kCableName,
@@ -484,44 +484,44 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
   ExerciseData(
     name: kDumbbellOverheadTricepsExtensionName,
     muscleGroup: MuscleGroup.push,
-    muscles: ExerciseMuscles(
-      primaryMuscles: {
+    muscles: TargetMuscles(
+      primary: {
         Muscle.triceps,
       },
-      secondaryMuscles: {},
+      secondary: {},
     ),
     equipments: {kDumbbellsName},
   ),
   ExerciseData(
     name: kEZBarOverheadTricepsExtensionName,
     muscleGroup: MuscleGroup.push,
-    muscles: ExerciseMuscles(
-      primaryMuscles: {
+    muscles: TargetMuscles(
+      primary: {
         Muscle.triceps,
       },
-      secondaryMuscles: {},
+      secondary: {},
     ),
     equipments: {kEZBarName},
   ),
   ExerciseData(
     name: kSkullCrushersName,
     muscleGroup: MuscleGroup.push,
-    muscles: ExerciseMuscles(
-      primaryMuscles: {
+    muscles: TargetMuscles(
+      primary: {
         Muscle.triceps,
       },
-      secondaryMuscles: {},
+      secondary: {},
     ),
     equipments: {kBarbellName, kBenchName},
   ),
   ExerciseData(
     name: kTricepsPushdownName,
     muscleGroup: MuscleGroup.push,
-    muscles: ExerciseMuscles(
-      primaryMuscles: {
+    muscles: TargetMuscles(
+      primary: {
         Muscle.triceps,
       },
-      secondaryMuscles: {},
+      secondary: {},
     ),
     equipments: {
       kCableName,
@@ -532,11 +532,11 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
   ExerciseData(
     name: kDipsName,
     muscleGroup: MuscleGroup.push,
-    muscles: ExerciseMuscles(
-      primaryMuscles: {
+    muscles: TargetMuscles(
+      primary: {
         Muscle.chest,
       },
-      secondaryMuscles: {
+      secondary: {
         Muscle.triceps,
       },
     ),
@@ -545,22 +545,22 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
   ExerciseData(
     name: kCableTricepKickbackName,
     muscleGroup: MuscleGroup.push,
-    muscles: ExerciseMuscles(
-      primaryMuscles: {
+    muscles: TargetMuscles(
+      primary: {
         Muscle.triceps,
       },
-      secondaryMuscles: {},
+      secondary: {},
     ),
     equipments: {kCableName},
   ),
   ExerciseData(
     name: kPullUpsName,
     muscleGroup: MuscleGroup.pull,
-    muscles: ExerciseMuscles(
-      primaryMuscles: {
+    muscles: TargetMuscles(
+      primary: {
         Muscle.lats,
       },
-      secondaryMuscles: {
+      secondary: {
         Muscle.biceps,
         Muscle.forearms,
       },
@@ -570,11 +570,11 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
   ExerciseData(
     name: kChinUpsName,
     muscleGroup: MuscleGroup.pull,
-    muscles: ExerciseMuscles(
-      primaryMuscles: {
+    muscles: TargetMuscles(
+      primary: {
         Muscle.lats,
       },
-      secondaryMuscles: {
+      secondary: {
         Muscle.biceps,
         Muscle.forearms,
       },
@@ -584,11 +584,11 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
   ExerciseData(
     name: kOverhandLatPulldownName,
     muscleGroup: MuscleGroup.pull,
-    muscles: ExerciseMuscles(
-      primaryMuscles: {
+    muscles: TargetMuscles(
+      primary: {
         Muscle.lats,
       },
-      secondaryMuscles: {
+      secondary: {
         Muscle.biceps,
         Muscle.forearms,
       },
@@ -598,11 +598,11 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
   ExerciseData(
     name: kUnderhandLatPulldownName,
     muscleGroup: MuscleGroup.pull,
-    muscles: ExerciseMuscles(
-      primaryMuscles: {
+    muscles: TargetMuscles(
+      primary: {
         Muscle.lats,
       },
-      secondaryMuscles: {
+      secondary: {
         Muscle.biceps,
         Muscle.forearms,
       },
@@ -612,12 +612,12 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
   ExerciseData(
     name: kPendlayRowsName,
     muscleGroup: MuscleGroup.pull,
-    muscles: ExerciseMuscles(
-      primaryMuscles: {
+    muscles: TargetMuscles(
+      primary: {
         Muscle.rhomboids,
         Muscle.middleTrapezius,
       },
-      secondaryMuscles: {
+      secondary: {
         Muscle.trapezius,
         Muscle.biceps,
         Muscle.forearms,
@@ -630,12 +630,12 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
   ExerciseData(
     name: kBarbellBentOverRowsName,
     muscleGroup: MuscleGroup.pull,
-    muscles: ExerciseMuscles(
-      primaryMuscles: {
+    muscles: TargetMuscles(
+      primary: {
         Muscle.rhomboids,
         Muscle.middleTrapezius,
       },
-      secondaryMuscles: {
+      secondary: {
         Muscle.trapezius,
         Muscle.biceps,
         Muscle.forearms,
@@ -648,12 +648,12 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
   ExerciseData(
     name: kSingleArmSupportedDumbbellRowName,
     muscleGroup: MuscleGroup.pull,
-    muscles: ExerciseMuscles(
-      primaryMuscles: {
+    muscles: TargetMuscles(
+      primary: {
         Muscle.rhomboids,
         Muscle.lats,
       },
-      secondaryMuscles: {
+      secondary: {
         Muscle.trapezius,
         Muscle.rearDelts,
         Muscle.biceps,
@@ -665,12 +665,12 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
   ExerciseData(
     name: kInclineDumbbellRowName,
     muscleGroup: MuscleGroup.pull,
-    muscles: ExerciseMuscles(
-      primaryMuscles: {
+    muscles: TargetMuscles(
+      primary: {
         Muscle.rhomboids,
         Muscle.middleTrapezius,
       },
-      secondaryMuscles: {
+      secondary: {
         Muscle.trapezius,
         Muscle.lats,
         Muscle.rearDelts,
@@ -683,12 +683,12 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
   ExerciseData(
     name: kTBarRowName,
     muscleGroup: MuscleGroup.pull,
-    muscles: ExerciseMuscles(
-      primaryMuscles: {
+    muscles: TargetMuscles(
+      primary: {
         Muscle.rhomboids,
         Muscle.middleTrapezius,
       },
-      secondaryMuscles: {
+      secondary: {
         Muscle.trapezius,
         Muscle.rearDelts,
         Muscle.biceps,
@@ -702,12 +702,12 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
   ExerciseData(
     name: kChestSupportedTBarRowName,
     muscleGroup: MuscleGroup.pull,
-    muscles: ExerciseMuscles(
-      primaryMuscles: {
+    muscles: TargetMuscles(
+      primary: {
         Muscle.rhomboids,
         Muscle.middleTrapezius,
       },
-      secondaryMuscles: {
+      secondary: {
         Muscle.trapezius,
         Muscle.rearDelts,
         Muscle.biceps,
@@ -721,12 +721,12 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
   ExerciseData(
     name: kChestSupportedRowMachineName,
     muscleGroup: MuscleGroup.pull,
-    muscles: ExerciseMuscles(
-      primaryMuscles: {
+    muscles: TargetMuscles(
+      primary: {
         Muscle.rhomboids,
         Muscle.middleTrapezius,
       },
-      secondaryMuscles: {
+      secondary: {
         Muscle.trapezius,
         Muscle.rearDelts,
         Muscle.biceps,
@@ -739,12 +739,12 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
   ExerciseData(
     name: kSeatedCableRowName,
     muscleGroup: MuscleGroup.pull,
-    muscles: ExerciseMuscles(
-      primaryMuscles: {
+    muscles: TargetMuscles(
+      primary: {
         Muscle.rhomboids,
         Muscle.middleTrapezius,
       },
-      secondaryMuscles: {
+      secondary: {
         Muscle.trapezius,
         Muscle.rearDelts,
         Muscle.biceps,
@@ -757,12 +757,12 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
   ExerciseData(
     name: kFacePullsName,
     muscleGroup: MuscleGroup.pull,
-    muscles: ExerciseMuscles(
-      primaryMuscles: {
+    muscles: TargetMuscles(
+      primary: {
         Muscle.rearDelts,
         Muscle.upperTrapezius,
       },
-      secondaryMuscles: {
+      secondary: {
         Muscle.trapezius,
         Muscle.biceps,
         Muscle.forearms,
@@ -773,55 +773,55 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
   ExerciseData(
     name: kMachineReverseFlysName,
     muscleGroup: MuscleGroup.pull,
-    muscles: ExerciseMuscles(
-      primaryMuscles: {
+    muscles: TargetMuscles(
+      primary: {
         Muscle.rearDelts,
       },
-      secondaryMuscles: {},
+      secondary: {},
     ),
     equipments: {kMachineName},
   ),
   ExerciseData(
     name: kBentOverDumbbellReverseFlysName,
     muscleGroup: MuscleGroup.pull,
-    muscles: ExerciseMuscles(
-      primaryMuscles: {
+    muscles: TargetMuscles(
+      primary: {
         Muscle.rearDelts,
       },
-      secondaryMuscles: {},
+      secondary: {},
     ),
     equipments: {kDumbbellsName},
   ),
   ExerciseData(
     name: kInclineDumbbellReverseFlysName,
     muscleGroup: MuscleGroup.pull,
-    muscles: ExerciseMuscles(
-      primaryMuscles: {
+    muscles: TargetMuscles(
+      primary: {
         Muscle.rearDelts,
       },
-      secondaryMuscles: {},
+      secondary: {},
     ),
     equipments: {kDumbbellsName, kBenchName},
   ),
   ExerciseData(
     name: kBentOverCableReverseFlysName,
     muscleGroup: MuscleGroup.pull,
-    muscles: ExerciseMuscles(
-      primaryMuscles: {
+    muscles: TargetMuscles(
+      primary: {
         Muscle.rearDelts,
       },
-      secondaryMuscles: {},
+      secondary: {},
     ),
     equipments: {kCableName},
   ),
   ExerciseData(
     name: kBarbellBicepCurlName,
     muscleGroup: MuscleGroup.pull,
-    muscles: ExerciseMuscles(
-      primaryMuscles: {
+    muscles: TargetMuscles(
+      primary: {
         Muscle.biceps,
       },
-      secondaryMuscles: {
+      secondary: {
         Muscle.forearms,
       },
     ),
@@ -830,11 +830,11 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
   ExerciseData(
     name: kDumbbellBicepCurlName,
     muscleGroup: MuscleGroup.pull,
-    muscles: ExerciseMuscles(
-      primaryMuscles: {
+    muscles: TargetMuscles(
+      primary: {
         Muscle.biceps,
       },
-      secondaryMuscles: {
+      secondary: {
         Muscle.forearms,
       },
     ),
@@ -843,11 +843,11 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
   ExerciseData(
     name: kHammerCurlName,
     muscleGroup: MuscleGroup.pull,
-    muscles: ExerciseMuscles(
-      primaryMuscles: {
+    muscles: TargetMuscles(
+      primary: {
         Muscle.brachialis,
       },
-      secondaryMuscles: {
+      secondary: {
         Muscle.biceps,
         Muscle.forearms,
       },
@@ -857,11 +857,11 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
   ExerciseData(
     name: kBarbellPreacherCurlName,
     muscleGroup: MuscleGroup.pull,
-    muscles: ExerciseMuscles(
-      primaryMuscles: {
+    muscles: TargetMuscles(
+      primary: {
         Muscle.biceps,
       },
-      secondaryMuscles: {
+      secondary: {
         Muscle.forearms,
       },
     ),
@@ -870,11 +870,11 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
   ExerciseData(
     name: kDumbbellPreacherCurlName,
     muscleGroup: MuscleGroup.pull,
-    muscles: ExerciseMuscles(
-      primaryMuscles: {
+    muscles: TargetMuscles(
+      primary: {
         Muscle.biceps,
       },
-      secondaryMuscles: {
+      secondary: {
         Muscle.forearms,
       },
     ),
@@ -883,11 +883,11 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
   ExerciseData(
     name: kCableEZBarBicepCurlName,
     muscleGroup: MuscleGroup.pull,
-    muscles: ExerciseMuscles(
-      primaryMuscles: {
+    muscles: TargetMuscles(
+      primary: {
         Muscle.biceps,
       },
-      secondaryMuscles: {
+      secondary: {
         Muscle.forearms,
       },
     ),
@@ -899,11 +899,11 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
   ExerciseData(
     name: kCableDHandleBicepCurlName,
     muscleGroup: MuscleGroup.pull,
-    muscles: ExerciseMuscles(
-      primaryMuscles: {
+    muscles: TargetMuscles(
+      primary: {
         Muscle.biceps,
       },
-      secondaryMuscles: {
+      secondary: {
         Muscle.forearms,
       },
     ),
@@ -912,23 +912,23 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
   ExerciseData(
     name: kBayesianCableCurlName,
     muscleGroup: MuscleGroup.pull,
-    muscles: ExerciseMuscles(
-      primaryMuscles: {
+    muscles: TargetMuscles(
+      primary: {
         Muscle.biceps,
       },
-      secondaryMuscles: {},
+      secondary: {},
     ),
     equipments: {kCableName, kDHandleName},
   ),
   ExerciseData(
     name: kBarbellBackSquatName,
     muscleGroup: MuscleGroup.legs,
-    muscles: ExerciseMuscles(
-      primaryMuscles: {
+    muscles: TargetMuscles(
+      primary: {
         Muscle.quadriceps,
         Muscle.glutes,
       },
-      secondaryMuscles: {
+      secondary: {
         Muscle.adductors,
       },
     ),
@@ -937,12 +937,12 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
   ExerciseData(
     name: kBarbellFrontSquatName,
     muscleGroup: MuscleGroup.legs,
-    muscles: ExerciseMuscles(
-      primaryMuscles: {
+    muscles: TargetMuscles(
+      primary: {
         Muscle.quadriceps,
         Muscle.glutes,
       },
-      secondaryMuscles: {
+      secondary: {
         Muscle.lowerBack,
         Muscle.adductors,
       },
@@ -952,12 +952,12 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
   ExerciseData(
     name: kSmithMachineSquatName,
     muscleGroup: MuscleGroup.legs,
-    muscles: ExerciseMuscles(
-      primaryMuscles: {
+    muscles: TargetMuscles(
+      primary: {
         Muscle.quadriceps,
         Muscle.glutes,
       },
-      secondaryMuscles: {
+      secondary: {
         Muscle.adductors,
       },
     ),
@@ -966,12 +966,12 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
   ExerciseData(
     name: kHackSquatName,
     muscleGroup: MuscleGroup.legs,
-    muscles: ExerciseMuscles(
-      primaryMuscles: {
+    muscles: TargetMuscles(
+      primary: {
         Muscle.quadriceps,
         Muscle.glutes,
       },
-      secondaryMuscles: {
+      secondary: {
         Muscle.adductors,
       },
     ),
@@ -980,12 +980,12 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
   ExerciseData(
     name: kLegPressName,
     muscleGroup: MuscleGroup.legs,
-    muscles: ExerciseMuscles(
-      primaryMuscles: {
+    muscles: TargetMuscles(
+      primary: {
         Muscle.quadriceps,
         Muscle.glutes,
       },
-      secondaryMuscles: {
+      secondary: {
         Muscle.adductors,
       },
     ),
@@ -994,12 +994,12 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
   ExerciseData(
     name: kBarbellDeadliftName,
     muscleGroup: MuscleGroup.legs,
-    muscles: ExerciseMuscles(
-      primaryMuscles: {
+    muscles: TargetMuscles(
+      primary: {
         Muscle.hamstrings,
         Muscle.glutes,
       },
-      secondaryMuscles: {
+      secondary: {
         Muscle.lowerBack,
         Muscle.adductors,
         Muscle.forearms,
@@ -1010,12 +1010,12 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
   ExerciseData(
     name: kBarbellSumoDeadliftName,
     muscleGroup: MuscleGroup.legs,
-    muscles: ExerciseMuscles(
-      primaryMuscles: {
+    muscles: TargetMuscles(
+      primary: {
         Muscle.hamstrings,
         Muscle.glutes,
       },
-      secondaryMuscles: {
+      secondary: {
         Muscle.quadriceps,
         Muscle.lowerBack,
         Muscle.forearms,
@@ -1026,12 +1026,12 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
   ExerciseData(
     name: kBarbellRomanianDeadliftName,
     muscleGroup: MuscleGroup.legs,
-    muscles: ExerciseMuscles(
-      primaryMuscles: {
+    muscles: TargetMuscles(
+      primary: {
         Muscle.hamstrings,
         Muscle.glutes,
       },
-      secondaryMuscles: {
+      secondary: {
         Muscle.lowerBack,
         Muscle.forearms,
       },
@@ -1041,12 +1041,12 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
   ExerciseData(
     name: kDumbbellRomanianDeadliftName,
     muscleGroup: MuscleGroup.legs,
-    muscles: ExerciseMuscles(
-      primaryMuscles: {
+    muscles: TargetMuscles(
+      primary: {
         Muscle.hamstrings,
         Muscle.glutes,
       },
-      secondaryMuscles: {
+      secondary: {
         Muscle.lowerBack,
         Muscle.forearms,
       },
@@ -1056,12 +1056,12 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
   ExerciseData(
     name: kSmithMachineRomanianDeadliftName,
     muscleGroup: MuscleGroup.legs,
-    muscles: ExerciseMuscles(
-      primaryMuscles: {
+    muscles: TargetMuscles(
+      primary: {
         Muscle.hamstrings,
         Muscle.glutes,
       },
-      secondaryMuscles: {
+      secondary: {
         Muscle.lowerBack,
         Muscle.forearms,
       },
@@ -1071,12 +1071,12 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
   ExerciseData(
     name: kSmithMachineGoodMorningName,
     muscleGroup: MuscleGroup.legs,
-    muscles: ExerciseMuscles(
-      primaryMuscles: {
+    muscles: TargetMuscles(
+      primary: {
         Muscle.hamstrings,
         Muscle.glutes,
       },
-      secondaryMuscles: {
+      secondary: {
         Muscle.lowerBack,
       },
     ),
@@ -1085,12 +1085,12 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
   ExerciseData(
     name: kWalkingLungesName,
     muscleGroup: MuscleGroup.legs,
-    muscles: ExerciseMuscles(
-      primaryMuscles: {
+    muscles: TargetMuscles(
+      primary: {
         Muscle.quadriceps,
         Muscle.glutes,
       },
-      secondaryMuscles: {
+      secondary: {
         Muscle.adductors,
         Muscle.forearms,
       },
@@ -1100,12 +1100,12 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
   ExerciseData(
     name: kLungeName,
     muscleGroup: MuscleGroup.legs,
-    muscles: ExerciseMuscles(
-      primaryMuscles: {
+    muscles: TargetMuscles(
+      primary: {
         Muscle.quadriceps,
         Muscle.glutes,
       },
-      secondaryMuscles: {
+      secondary: {
         Muscle.adductors,
         Muscle.forearms,
       },
@@ -1115,12 +1115,12 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
   ExerciseData(
     name: kSmithMachineElevatedLungeName,
     muscleGroup: MuscleGroup.legs,
-    muscles: ExerciseMuscles(
-      primaryMuscles: {
+    muscles: TargetMuscles(
+      primary: {
         Muscle.quadriceps,
         Muscle.glutes,
       },
-      secondaryMuscles: {
+      secondary: {
         Muscle.adductors,
         Muscle.forearms,
       },
@@ -1130,90 +1130,90 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
   ExerciseData(
     name: kSeatedLegCurlName,
     muscleGroup: MuscleGroup.legs,
-    muscles: ExerciseMuscles(
-      primaryMuscles: {
+    muscles: TargetMuscles(
+      primary: {
         Muscle.hamstrings,
       },
-      secondaryMuscles: {},
+      secondary: {},
     ),
     equipments: {kMachineName},
   ),
   ExerciseData(
     name: kLyingLegCurlName,
     muscleGroup: MuscleGroup.legs,
-    muscles: ExerciseMuscles(
-      primaryMuscles: {
+    muscles: TargetMuscles(
+      primary: {
         Muscle.hamstrings,
       },
-      secondaryMuscles: {},
+      secondary: {},
     ),
     equipments: {kMachineName},
   ),
   ExerciseData(
     name: kLegExtensionName,
     muscleGroup: MuscleGroup.legs,
-    muscles: ExerciseMuscles(
-      primaryMuscles: {
+    muscles: TargetMuscles(
+      primary: {
         Muscle.quadriceps,
       },
-      secondaryMuscles: {},
+      secondary: {},
     ),
     equipments: {kMachineName},
   ),
   ExerciseData(
     name: kStandingCalfRaisesName,
     muscleGroup: MuscleGroup.legs,
-    muscles: ExerciseMuscles(
-      primaryMuscles: {
+    muscles: TargetMuscles(
+      primary: {
         Muscle.calves,
       },
-      secondaryMuscles: {},
+      secondary: {},
     ),
     equipments: {kBodyweightName, kMachineName, kStepperName},
   ),
   ExerciseData(
     name: kSeatedCalfMachineName,
     muscleGroup: MuscleGroup.legs,
-    muscles: ExerciseMuscles(
-      primaryMuscles: {
+    muscles: TargetMuscles(
+      primary: {
         Muscle.calves,
       },
-      secondaryMuscles: {},
+      secondary: {},
     ),
     equipments: {kMachineName},
   ),
   ExerciseData(
     name: kCrunchesName,
     muscleGroup: MuscleGroup.core,
-    muscles: ExerciseMuscles(
-      primaryMuscles: {
+    muscles: TargetMuscles(
+      primary: {
         Muscle.abdominals,
         Muscle.upperAbs,
       },
-      secondaryMuscles: {},
+      secondary: {},
     ),
     equipments: {kBodyweightName},
   ),
   ExerciseData(
     name: kCableCrunchesName,
     muscleGroup: MuscleGroup.core,
-    muscles: ExerciseMuscles(
-      primaryMuscles: {
+    muscles: TargetMuscles(
+      primary: {
         Muscle.abdominals,
         Muscle.upperAbs,
       },
-      secondaryMuscles: {},
+      secondary: {},
     ),
     equipments: {kCableName},
   ),
   ExerciseData(
     name: kCaptainsChairLegRaisesName,
     muscleGroup: MuscleGroup.core,
-    muscles: ExerciseMuscles(
-      primaryMuscles: {
+    muscles: TargetMuscles(
+      primary: {
         Muscle.lowerAbs,
       },
-      secondaryMuscles: {
+      secondary: {
         Muscle.abdominals,
       },
     ),
@@ -1222,11 +1222,11 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
   ExerciseData(
     name: kHangingLegRaisesName,
     muscleGroup: MuscleGroup.core,
-    muscles: ExerciseMuscles(
-      primaryMuscles: {
+    muscles: TargetMuscles(
+      primary: {
         Muscle.lowerAbs,
       },
-      secondaryMuscles: {
+      secondary: {
         Muscle.abdominals,
         Muscle.forearms,
       },
@@ -1236,11 +1236,11 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
   ExerciseData(
     name: kLyingLegRaisesName,
     muscleGroup: MuscleGroup.core,
-    muscles: ExerciseMuscles(
-      primaryMuscles: {
+    muscles: TargetMuscles(
+      primary: {
         Muscle.lowerAbs,
       },
-      secondaryMuscles: {
+      secondary: {
         Muscle.abdominals,
       },
     ),
@@ -1249,34 +1249,34 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
   ExerciseData(
     name: kCableWoodchopperName,
     muscleGroup: MuscleGroup.core,
-    muscles: ExerciseMuscles(
-      primaryMuscles: {
+    muscles: TargetMuscles(
+      primary: {
         Muscle.obliques,
       },
-      secondaryMuscles: {},
+      secondary: {},
     ),
     equipments: {kCableName},
   ),
   ExerciseData(
     name: kBackExtensionName,
     muscleGroup: MuscleGroup.core,
-    muscles: ExerciseMuscles(
-      primaryMuscles: {
+    muscles: TargetMuscles(
+      primary: {
         Muscle.lowerBack,
       },
-      secondaryMuscles: {},
+      secondary: {},
     ),
     equipments: {kMachineName},
   ),
   ExerciseData(
     name: kBurpeesName,
     muscleGroup: MuscleGroup.full,
-    muscles: ExerciseMuscles(
-      primaryMuscles: {
+    muscles: TargetMuscles(
+      primary: {
         Muscle.chest,
         Muscle.quadriceps,
       },
-      secondaryMuscles: {
+      secondary: {
         Muscle.frontDelts,
         Muscle.triceps,
         Muscle.glutes,
@@ -1287,65 +1287,65 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
   ExerciseData(
     name: kAssistedPullUpName,
     muscleGroup: MuscleGroup.pull,
-    muscles: ExerciseMuscles(
-      primaryMuscles: {Muscle.lats},
-      secondaryMuscles: {Muscle.biceps, Muscle.forearms},
+    muscles: TargetMuscles(
+      primary: {Muscle.lats},
+      secondary: {Muscle.biceps, Muscle.forearms},
     ),
     equipments: {kMachineName, kPullUpBarName},
   ),
   ExerciseData(
     name: kAssistedChinUpName,
     muscleGroup: MuscleGroup.pull,
-    muscles: ExerciseMuscles(
-      primaryMuscles: {Muscle.lats},
-      secondaryMuscles: {Muscle.biceps, Muscle.forearms},
+    muscles: TargetMuscles(
+      primary: {Muscle.lats},
+      secondary: {Muscle.biceps, Muscle.forearms},
     ),
     equipments: {kMachineName, kPullUpBarName},
   ),
   ExerciseData(
     name: kSmithMachineSkullCrushersName,
     muscleGroup: MuscleGroup.push,
-    muscles: ExerciseMuscles(
-      primaryMuscles: {Muscle.triceps},
-      secondaryMuscles: {},
+    muscles: TargetMuscles(
+      primary: {Muscle.triceps},
+      secondary: {},
     ),
     equipments: {kSmithMachineName, kBenchName},
   ),
   ExerciseData(
     name: kInclineDumbbellChestFlysName,
     muscleGroup: MuscleGroup.push,
-    muscles: ExerciseMuscles(
-      primaryMuscles: {Muscle.upperChest},
-      secondaryMuscles: {Muscle.chest},
+    muscles: TargetMuscles(
+      primary: {Muscle.upperChest},
+      secondary: {Muscle.chest},
     ),
     equipments: {kDumbbellsName, kBenchName},
   ),
   ExerciseData(
     name: kWeightedPullUpName,
     muscleGroup: MuscleGroup.pull,
-    muscles: ExerciseMuscles(
-      primaryMuscles: {Muscle.lats},
-      secondaryMuscles: {Muscle.biceps, Muscle.forearms},
+    muscles: TargetMuscles(
+      primary: {Muscle.lats},
+      secondary: {Muscle.biceps, Muscle.forearms},
     ),
     equipments: {kPullUpBarName, kWeightBeltName},
   ),
   ExerciseData(
     name: kWeightedChinUpName,
     muscleGroup: MuscleGroup.pull,
-    muscles: ExerciseMuscles(
-      primaryMuscles: {Muscle.lats},
-      secondaryMuscles: {Muscle.biceps, Muscle.forearms},
+    muscles: TargetMuscles(
+      primary: {Muscle.lats},
+      secondary: {Muscle.biceps, Muscle.forearms},
     ),
     equipments: {kPullUpBarName, kWeightBeltName},
   ),
   ExerciseData(
     name: kHipThrustName,
     muscleGroup: MuscleGroup.legs,
-    muscles: ExerciseMuscles(
-      primaryMuscles: {
+    muscles: TargetMuscles(
+      primary: {
         Muscle.glutes,
       },
-      secondaryMuscles: {
+      secondary: {
         Muscle.hamstrings,
         Muscle.quadriceps,
       },
@@ -1355,11 +1355,11 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
   ExerciseData(
     name: kCrunchMachineName,
     muscleGroup: MuscleGroup.core,
-    muscles: ExerciseMuscles(
-      primaryMuscles: {
+    muscles: TargetMuscles(
+      primary: {
         Muscle.abdominals,
       },
-      secondaryMuscles: {},
+      secondary: {},
     ),
     equipments: {kMachineName},
   ),
