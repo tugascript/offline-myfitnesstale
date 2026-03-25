@@ -12,6 +12,7 @@ class WorkoutRecordDto extends Equatable implements Dto<WorkoutRecord> {
   final int totalSets;
   final int totalReps;
   final int totalRestSecs;
+  final int totalVolume;
   final DateTime startedAt;
   final DateTime? completedAt;
 
@@ -24,6 +25,7 @@ class WorkoutRecordDto extends Equatable implements Dto<WorkoutRecord> {
     required this.totalSets,
     required this.totalReps,
     required this.totalRestSecs,
+    required this.totalVolume,
     required this.startedAt,
     this.completedAt,
     this.setRecords,
@@ -40,6 +42,7 @@ class WorkoutRecordDto extends Equatable implements Dto<WorkoutRecord> {
       totalSets: model.totalSets,
       totalReps: model.totalReps,
       totalRestSecs: model.totalRestSecs,
+      totalVolume: model.totalVolume,
       startedAt: DateUtilities.getDateFromUnix(model.startedAt),
       completedAt: model.completedAt != null
           ? DateUtilities.getDateFromUnix(model.completedAt!)
@@ -55,6 +58,7 @@ class WorkoutRecordDto extends Equatable implements Dto<WorkoutRecord> {
     int? totalSets,
     int? totalReps,
     int? totalRestSecs,
+    int? totalVolume,
     DateTime? startedAt,
     DateTime? completedAt,
     List<WorkoutSetRecordDto>? setRecords,
@@ -65,6 +69,7 @@ class WorkoutRecordDto extends Equatable implements Dto<WorkoutRecord> {
       totalSets: totalSets ?? this.totalSets,
       totalReps: totalReps ?? this.totalReps,
       totalRestSecs: totalRestSecs ?? this.totalRestSecs,
+      totalVolume: totalVolume ?? this.totalVolume,
       startedAt: startedAt ?? this.startedAt,
       completedAt: completedAt ?? this.completedAt,
       setRecords: setRecords ?? this.setRecords,
@@ -78,6 +83,7 @@ class WorkoutRecordDto extends Equatable implements Dto<WorkoutRecord> {
         totalSets,
         totalReps,
         totalRestSecs,
+        totalVolume,
         startedAt,
         setRecords?.length,
         completedAt,

@@ -17,7 +17,7 @@ import '../views/onboarding_view.dart';
 import '../views/weight/weight_goals_view.dart';
 import '../views/weight/weight_records_view.dart';
 import '../views/workout_history_detail_view.dart';
-import '../views/workout_history_view.dart';
+import '../views/workouts/workout_history_view.dart';
 import '../views/workout_plan_progress_view.dart';
 import '../views/workout_plans/workout_plan_detail_view.dart';
 import '../views/workout_plans/workout_plan_edit_view.dart';
@@ -126,6 +126,20 @@ sealed class AppRouter {
         if (id == null) {
           return const NotFoundView();
         }
+        return WorkoutHistoryView(workoutId: id);
+      },
+    ),
+    GoRoute(
+      path: WorkoutHistoryView.routeName,
+      builder: (context, state) => const WorkoutHistoryView(),
+    ),
+    GoRoute(
+      path: '/workout-records/:id',
+      builder: (context, state) {
+        final id = int.tryParse(state.pathParameters['id'] ?? '');
+        if (id == null) {
+          return const NotFoundView();
+        }
         return WorkoutHistoryDetailView(workoutRecordId: id);
       },
     ),
@@ -148,10 +162,6 @@ sealed class AppRouter {
         }
         return WorkoutDetailView(workoutId: id);
       },
-    ),
-    GoRoute(
-      path: WorkoutHistoryView.routeName,
-      builder: (context, state) => const WorkoutHistoryView(),
     ),
     GoRoute(
       path: '/exercises/:id/records',

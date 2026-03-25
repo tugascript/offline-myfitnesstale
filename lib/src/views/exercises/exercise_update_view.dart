@@ -86,10 +86,8 @@ class _ExerciseUpdateViewState extends State<ExerciseUpdateView> {
                     initialName: exercise?.name ?? '',
                     initialDescription: exercise?.description,
                     initialMuscleGroup: exercise?.muscleGroup,
-                    initialPrimaryMuscles:
-                        exercise?.muscles.primaryMuscles ?? {},
-                    initialSecondaryMuscles:
-                        exercise?.muscles.secondaryMuscles ?? {},
+                    initialPrimaryMuscles: exercise?.muscles.primary ?? {},
+                    initialSecondaryMuscles: exercise?.muscles.secondary ?? {},
                     initialEquipmentIds:
                         exercise?.equipments?.map((e) => e.id).toSet() ?? {},
                     initialDifficulty: exercise?.difficulty,

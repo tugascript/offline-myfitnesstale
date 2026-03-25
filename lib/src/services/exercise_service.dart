@@ -17,7 +17,7 @@ import 'dtos/paginated_dto.dart';
 class ExerciseInput {
   final String name;
   final MuscleGroup muscleGroup;
-  final ExerciseMuscles muscles;
+  final TargetMuscles muscles;
   final List<EquipmentDto>? equipments;
   final String? description;
   final PictureData? picture;
@@ -215,7 +215,7 @@ class ExerciseService {
   Future<Result<ExerciseDto, ServiceError<SingleErrorTypes>>> createExercise({
     required String name,
     required MuscleGroup muscleGroup,
-    required ExerciseMuscles muscles,
+    required TargetMuscles muscles,
     Set<int>? equipmentIds,
     String? description,
     PictureData? picture,
@@ -344,7 +344,7 @@ class ExerciseService {
     String? name,
     String? description,
     MuscleGroup? muscleGroup,
-    ExerciseMuscles? muscles,
+    TargetMuscles? muscles,
     PictureData? picture,
     VideoData? video,
     bool? isFavorite,

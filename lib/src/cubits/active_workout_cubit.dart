@@ -137,7 +137,7 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
     final setRecord = setRecordResult.value;
 
     final exerciseRecordResult =
-        await _workoutRecordService.upsertWorkoutSetExerciseRecord(
+        await _workoutRecordService.createWorkoutSetExerciseRecord(
       workoutSetExerciseId: currentExercise.id,
       workoutRecordId: state.workoutRecord!.id,
       workoutSetRecordId: setRecord.id,

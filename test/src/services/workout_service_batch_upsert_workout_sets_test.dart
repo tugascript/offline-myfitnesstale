@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:myfitnesstale/src/models/common.dart';
 import 'package:sqflite/sqflite.dart';
 
 import 'package:myfitnesstale/src/models/enums.dart';
@@ -24,7 +25,10 @@ void main() {
     int totalSets = 0,
     int totalReps = 0,
     Set<MuscleGroup> muscleGroups = const <MuscleGroup>{},
-    Set<Muscle> muscles = const <Muscle>{},
+    TargetMuscles muscles = const TargetMuscles(
+      primary: <Muscle>{},
+      secondary: <Muscle>{},
+    ),
   }) async {
     final workout = Workout.create(
       name: uniqueName('workout'),
@@ -45,9 +49,9 @@ void main() {
     final exercise = Exercise.create(
       name: uniqueName('exercise'),
       muscleGroup: muscleGroup,
-      muscles: ExerciseMuscles(
-        primaryMuscles: primaryMuscles,
-        secondaryMuscles: const <Muscle>{},
+      muscles: TargetMuscles(
+        primary: primaryMuscles,
+        secondary: const <Muscle>{},
       ),
       difficulty: Difficulty.beginner,
     );
@@ -246,7 +250,10 @@ void main() {
       totalSets: 2,
       totalReps: 20,
       muscleGroups: {MuscleGroup.push},
-      muscles: {Muscle.chest},
+      muscles: const TargetMuscles(
+        primary: {Muscle.chest},
+        secondary: <Muscle>{},
+      ),
     );
     final originalExercise = await createExercise(
       db,
@@ -391,7 +398,10 @@ void main() {
       totalSets: 1,
       totalReps: 18,
       muscleGroups: {MuscleGroup.push},
-      muscles: {Muscle.chest},
+      muscles: const TargetMuscles(
+        primary: {Muscle.chest},
+        secondary: <Muscle>{},
+      ),
     );
     final exerciseA = await createExercise(
       db,
@@ -614,7 +624,10 @@ void main() {
       totalSets: 3,
       totalReps: 24,
       muscleGroups: {MuscleGroup.push},
-      muscles: {Muscle.chest},
+      muscles: const TargetMuscles(
+        primary: {Muscle.chest},
+        secondary: <Muscle>{},
+      ),
     );
     final exerciseId = await createExercise(
       db,
@@ -742,7 +755,10 @@ void main() {
       totalSets: 1,
       totalReps: 10,
       muscleGroups: {MuscleGroup.push},
-      muscles: {Muscle.chest},
+      muscles: const TargetMuscles(
+        primary: {Muscle.chest},
+        secondary: <Muscle>{},
+      ),
     );
     final originalExercise = await createExercise(
       db,

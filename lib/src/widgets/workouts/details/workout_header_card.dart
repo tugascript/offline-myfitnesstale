@@ -68,7 +68,7 @@ class WorkoutHeaderCard extends StatelessWidget {
           children: [
             Expanded(
               child: TotalNumericString(
-                emoji: '🔁',
+                leading: Icon(Icons.repeat, size: sizes.fontSize * 1.2),
                 name: 'Sets',
                 total: workoutDto.totalSets,
                 fontSize: sizes.fontSize,
@@ -76,7 +76,7 @@ class WorkoutHeaderCard extends StatelessWidget {
             ),
             Expanded(
               child: TotalNumericString(
-                emoji: '🔂',
+                leading: Icon(Icons.repeat_one, size: sizes.fontSize * 1.2),
                 name: 'Reps',
                 total: workoutDto.totalReps,
                 fontSize: sizes.fontSize,
@@ -87,10 +87,11 @@ class WorkoutHeaderCard extends StatelessWidget {
         SizedBox(
           height: sizes.spacing,
         ),
+        // TODO: fix me to have secondary muscles
         _MuscleData(
           sizes: sizes,
           muscleGroups: workoutDto.muscleGroups,
-          muscles: workoutDto.muscles,
+          muscles: workoutDto.muscles.primary,
         ),
         if (workoutDto.description != null &&
             workoutDto.description!.isNotEmpty) ...[

@@ -1,3 +1,7 @@
+import 'dart:convert';
+
+import 'common.dart';
+import 'enums.dart';
 import 'model.dart';
 import 'utilities.dart';
 import 'workout_model.dart';
@@ -10,6 +14,9 @@ enum WorkoutRecordColumns with Columns {
   totalSets("total_sets"),
   totalReps("total_reps"),
   totalRestSecs("total_rest_secs"),
+  totalVolume("total_volume"),
+  muscleGroups("muscle_groups"),
+  muscles("muscles"),
   startedAt("started_at"),
   completedAt("completed_at"),
   droppedAt("dropped_at"),
@@ -29,6 +36,9 @@ class WorkoutRecord implements Model {
   final int totalSets;
   final int totalReps;
   final int totalRestSecs;
+  final int totalVolume;
+  final Set<MuscleGroup> muscleGroups;
+  final TargetMuscles muscles;
   final int startedAt;
   final int? completedAt;
   final int? droppedAt;
@@ -43,6 +53,9 @@ class WorkoutRecord implements Model {
     required this.totalSets,
     required this.totalReps,
     required this.totalRestSecs,
+    required this.totalVolume,
+    required this.muscleGroups,
+    required this.muscles,
     required this.startedAt,
     this.completedAt,
     this.droppedAt,
@@ -58,6 +71,9 @@ class WorkoutRecord implements Model {
     ${WorkoutRecordColumns.totalSets.value} INTEGER NOT NULL,
     ${WorkoutRecordColumns.totalReps.value} INTEGER NOT NULL,
     ${WorkoutRecordColumns.totalRestSecs.value} INTEGER NOT NULL,
+    ${WorkoutRecordColumns.totalVolume.value} INTEGER NOT NULL,
+    ${WorkoutRecordColumns.muscleGroups.value} TEXT NOT NULL,
+    ${WorkoutRecordColumns.muscles.value} TEXT NOT NULL,
     ${WorkoutRecordColumns.startedAt.value} INTEGER NOT NULL,
     ${WorkoutRecordColumns.completedAt.value} INTEGER,
     ${WorkoutRecordColumns.droppedAt.value} INTEGER,
@@ -78,6 +94,11 @@ class WorkoutRecord implements Model {
       WorkoutRecordColumns.totalSets.value: totalSets,
       WorkoutRecordColumns.totalReps.value: totalReps,
       WorkoutRecordColumns.totalRestSecs.value: totalRestSecs,
+      WorkoutRecordColumns.totalVolume.value: totalVolume,
+      WorkoutRecordColumns.muscleGroups.value: jsonEncode(
+        muscleGroups.map((g) => g.value).toList(),
+      ),
+      WorkoutRecordColumns.muscles.value: jsonEncode(muscles.toMap()),
       WorkoutRecordColumns.startedAt.value: startedAt,
       WorkoutRecordColumns.completedAt.value: completedAt,
       WorkoutRecordColumns.droppedAt.value: droppedAt,
@@ -94,6 +115,17 @@ class WorkoutRecord implements Model {
       totalSets: map[WorkoutRecordColumns.totalSets.value] as int,
       totalReps: map[WorkoutRecordColumns.totalReps.value] as int,
       totalRestSecs: map[WorkoutRecordColumns.totalRestSecs.value] as int,
+      totalVolume: map[WorkoutRecordColumns.totalVolume.value] as int,
+      muscleGroups: (map[WorkoutRecordColumns.muscleGroups.value] != null
+          ? (jsonDecode(map[WorkoutRecordColumns.muscleGroups.value] as String)
+                  as List<dynamic>)
+              .map((g) => MuscleGroup.fromValue(g as String))
+              .toSet()
+          : <MuscleGroup>{}),
+      muscles: TargetMuscles.fromJson(
+        map[WorkoutRecordColumns.muscles.value] as String? ??
+            '{"primary":[],"secondary":[]}',
+      ),
       startedAt: map[WorkoutRecordColumns.startedAt.value] as int,
       completedAt: map[WorkoutRecordColumns.completedAt.value] as int?,
       droppedAt: map[WorkoutRecordColumns.droppedAt.value] as int?,
@@ -109,8 +141,14 @@ class WorkoutRecord implements Model {
     int? totalSets,
     int? totalReps,
     int? totalRestSecs,
+    int? totalVolume,
     int? completedAt,
     int? droppedAt,
+    Set<MuscleGroup> muscleGroups = const <MuscleGroup>{},
+    TargetMuscles muscles = const TargetMuscles(
+      primary: <Muscle>{},
+      secondary: <Muscle>{},
+    ),
   }) {
     final int now = DateUtilities.getNowUtcUnix();
     return WorkoutRecord(
@@ -118,6 +156,9 @@ class WorkoutRecord implements Model {
       totalSets: totalSets ?? 0,
       totalReps: totalReps ?? 0,
       totalRestSecs: totalRestSecs ?? 0,
+      totalVolume: totalVolume ?? 0,
+      muscleGroups: muscleGroups,
+      muscles: muscles,
       startedAt: startedAt,
       completedAt: completedAt,
       droppedAt: droppedAt,
@@ -133,6 +174,9 @@ class WorkoutRecord implements Model {
     int? totalSets,
     int? totalReps,
     int? totalRestSecs,
+    int? totalVolume,
+    Set<MuscleGroup>? muscleGroups,
+    TargetMuscles? muscles,
     int? startedAt,
     int? completedAt,
     int? droppedAt,
@@ -145,6 +189,9 @@ class WorkoutRecord implements Model {
       totalSets: totalSets ?? this.totalSets,
       totalReps: totalReps ?? this.totalReps,
       totalRestSecs: totalRestSecs ?? this.totalRestSecs,
+      totalVolume: totalVolume ?? this.totalVolume,
+      muscleGroups: muscleGroups ?? this.muscleGroups,
+      muscles: muscles ?? this.muscles,
       startedAt: startedAt ?? this.startedAt,
       completedAt: completedAt ?? this.completedAt,
       droppedAt: droppedAt ?? this.droppedAt,
@@ -155,6 +202,6 @@ class WorkoutRecord implements Model {
 
   @override
   String toString() {
-    return 'WorkoutProgress{id: $id, workoutId: $workoutId, totalSets: $totalSets, totalReps: $totalReps, totalRestSecs: $totalRestSecs, startedAt: $startedAt, completedAt: $completedAt, droppedAt: $droppedAt, createdAt: $createdAt, updatedAt: $updatedAt}';
+    return 'WorkoutRecord{id: $id, workoutId: $workoutId, totalSets: $totalSets, totalReps: $totalReps, totalRestSecs: $totalRestSecs, totalVolume: $totalVolume, muscleGroups: $muscleGroups, muscles: $muscles, startedAt: $startedAt, completedAt: $completedAt, droppedAt: $droppedAt, createdAt: $createdAt, updatedAt: $updatedAt}';
   }
 }

@@ -44,13 +44,13 @@ class WorkoutCard extends StatelessWidget {
             runSpacing: sizes.spacing,
             children: [
               TotalNumericString(
-                emoji: '🔁',
+                leading: Icon(Icons.repeat, size: sizes.fontSize * 1.2),
                 name: "Sets",
                 total: workout.totalSets,
                 fontSize: sizes.fontSize,
               ),
               TotalNumericString(
-                emoji: '🔂',
+                leading: Icon(Icons.repeat_one, size: sizes.fontSize * 1.2),
                 name: "Reps",
                 total: workout.totalReps,
                 fontSize: sizes.fontSize,
