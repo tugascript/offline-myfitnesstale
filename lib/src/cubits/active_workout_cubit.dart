@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:logging/logging.dart';
 
+import '../common/nullable.dart';
 import '../services/common/errors.dart';
 import '../services/dtos/workout_record_dto.dart';
 import '../services/workout_record_service.dart';
@@ -15,47 +16,11 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
   final WorkoutRecordService _workoutRecordService = WorkoutRecordService();
   final Logger _logger = Logger("ActiveWorkoutCubit");
 
-  Timer? _restTimer;
-
   ActiveWorkoutCubit() : super(ActiveWorkoutState.initial());
-
-  @override
-  Future<void> close() {
-    _restTimer?.cancel();
-    return super.close();
-  }
 
   Future<void> startWorkout(int workoutId) async {
     _logger.info("Starting workout...");
-    emit(state.copyWith(isLoading: true));
-
-    final workoutResult = await _workoutService.getWorkout(workoutId);
-    if (workoutResult.isErr()) {
-      final error = workoutResult.error;
-      switch (error.type) {
-        case SingleErrorTypes.notFound:
-        case SingleErrorTypes.invalidInput:
-          _logger.info("Workout with id $workoutId ${error.type.name}");
-          emit(state.copyWith(
-            error: ErrorState(
-              type: error.type.name,
-              description: error.description,
-            ),
-            isLoading: false,
-          ));
-          return;
-        case SingleErrorTypes.operationFailure:
-          _logger.info("Failed to get workout with id $workoutId");
-          emit(state.copyWith(
-            error: ErrorState(
-              type: error.type.name,
-              description: 'Failed to get workout',
-            ),
-            isLoading: false,
-          ));
-          return;
-      }
-    }
+    emit(state.copyWith(isLoading: true, isCompleted: false));
 
     final startedAt = DateTime.now();
     final workoutRecordResult = await _workoutRecordService.createWorkoutRecord(
@@ -69,20 +34,48 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
           _logger.info(
               "Failed to create workout record for workout with id $workoutId");
           emit(state.copyWith(
-            error: ErrorState(
+            error: Nullable(ErrorState(
               type: error.type.name,
               description: 'Failed to create workout record',
-            ),
+            )),
             isLoading: false,
           ));
           return;
         case OperationErrorTypes.invalidInput:
           _logger.info("Invalid workout id $workoutId");
           emit(state.copyWith(
-            error: ErrorState(
+            error: Nullable(ErrorState(
               type: error.type.name,
               description: error.description,
-            ),
+            )),
+            isLoading: false,
+          ));
+          return;
+      }
+    }
+
+    final workoutResult = await _workoutService.getWorkout(workoutId);
+    if (workoutResult.isErr()) {
+      final error = workoutResult.error;
+      switch (error.type) {
+        case SingleErrorTypes.notFound:
+        case SingleErrorTypes.invalidInput:
+          _logger.info("Workout with id $workoutId ${error.type.name}");
+          emit(state.copyWith(
+            error: Nullable(ErrorState(
+              type: error.type.name,
+              description: error.description,
+            )),
+            isLoading: false,
+          ));
+          return;
+        case SingleErrorTypes.operationFailure:
+          _logger.info("Failed to get workout with id $workoutId");
+          emit(state.copyWith(
+            error: Nullable(ErrorState(
+              type: error.type.name,
+              description: 'Failed to get workout',
+            )),
             isLoading: false,
           ));
           return;
@@ -90,12 +83,12 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
     }
 
     emit(state.copyWith(
-      workout: workoutResult.value,
-      workoutRecord: workoutRecordResult.value,
+      workout: Nullable(workoutResult.value),
+      workoutRecord: Nullable(workoutRecordResult.value),
       currentSetPosition: 0,
       currentExercisePosition: 0,
       currentSetNumber: 1,
-      startedAt: startedAt,
+      startedAt: Nullable(startedAt),
       isLoading: false,
     ));
   }
@@ -104,13 +97,12 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
     emit(state.copyWith(currentSetPosition: position));
   }
 
-  // TODO: fix log exercise set
   Future<void> logExerciseSet({
     required int position,
     required int reps,
-    required double weightKg,
+    required int weight,
     required int setNumber,
-    required int restSecs,
+    int? restSecs,
     int? difficulty,
     String? difficultyType,
   }) async {
@@ -127,13 +119,12 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
       return;
     }
 
-    emit(state.copyWith(isLoading: true));
-    final setRecordResult = await _workoutRecordService.createWorkoutSetRecord(
+    emit(state.copyWith(isLoading: true, isCompleted: false));
+    final setRecordResult = await _workoutRecordService.upsertWorkoutSetRecord(
       workoutSetId: currentSet.id,
       workoutRecordId: state.workoutRecord!.id,
       setNumber: setNumber,
       totalRestSecs: restSecs,
-      startedAt: DateTime.now().subtract(Duration(seconds: restSecs)),
       completedAt: DateTime.now(),
     );
 
@@ -146,14 +137,14 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
     final setRecord = setRecordResult.value;
 
     final exerciseRecordResult =
-        await _workoutRecordService.createWorkoutSetExerciseRecord(
+        await _workoutRecordService.upsertWorkoutSetExerciseRecord(
       workoutSetExerciseId: currentExercise.id,
       workoutRecordId: state.workoutRecord!.id,
       workoutSetRecordId: setRecord.id,
       exerciseId: currentExercise.exerciseId,
       position: position,
       reps: reps,
-      weightKg: weightKg,
+      weight: weight,
       difficulty: difficulty,
       difficultyType: difficultyType,
     );
@@ -173,7 +164,7 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
     }
 
     emit(state.copyWith(
-      workoutRecord: updatedRecord,
+      workoutRecord: Nullable(updatedRecord),
       isLoading: false,
     ));
   }
@@ -223,6 +214,13 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
       nextSetNumber = 1;
     }
 
+    final isWorkoutCompleted =
+        nextSetIndex >= (state.workout?.sets?.length ?? 0);
+    if (isWorkoutCompleted) {
+      completeWorkout();
+      return;
+    }
+
     emit(state.copyWith(
       isResting: false,
       currentSetPosition: nextSetIndex,
@@ -266,6 +264,15 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
 
   void skipToNextSet() {
     int nextSetIndex = state.currentSetPosition + 1;
+
+    final isWorkoutCompleted =
+        nextSetIndex >= (state.workout?.sets?.length ?? 0);
+
+    if (isWorkoutCompleted) {
+      completeWorkout();
+      return;
+    }
+
     emit(state.copyWith(
       currentSetPosition: nextSetIndex,
       currentExercisePosition: 0,
@@ -283,7 +290,7 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
   Future<void> completeWorkout() async {
     if (state.workoutRecord == null) return;
 
-    emit(state.copyWith(isLoading: true));
+    emit(state.copyWith(isLoading: true, isCompleted: false));
     final result = await _workoutRecordService.updateWorkoutRecord(
       id: state.workoutRecord!.id,
       completedAt: DateTime.now(),
@@ -291,14 +298,18 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
 
     if (result.isOk()) {
       emit(state.copyWith(
-        workoutRecord: result.value,
+        workoutRecord: Nullable(result.value),
+        isCompleted: true,
         isLoading: false,
+        isResting: false,
       ));
     } else {
       emit(state.copyWith(
         isLoading: false,
-        error: ErrorState(
-            type: 'CompletionError', description: 'Failed to complete workout'),
+        error: Nullable(ErrorState(
+          type: 'CompletionError',
+          description: 'Failed to complete workout',
+        )),
       ));
     }
   }
