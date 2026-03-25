@@ -198,6 +198,14 @@ class WorkoutRecordService {
   }) async {
     _logger.info('Creating workout record');
     try {
+      final Workout? workout = await _workoutRepository.selectOne(workoutId);
+      if (workout == null) {
+        return err(ServiceError(
+          type: OperationErrorTypes.invalidInput,
+          description: 'Workout with id: $workoutId not found',
+        ));
+      }
+
       final WorkoutRecord record = WorkoutRecord.create(
         workoutId: workoutId,
         startedAt: DateUtilities.getDateUnix(startedAt),
@@ -278,21 +286,46 @@ class WorkoutRecordService {
   }
 
   Future<Result<WorkoutSetRecordDto, ServiceError<OperationErrorTypes>>>
-      createWorkoutSetRecord({
+      upsertWorkoutSetRecord({
     required int workoutSetId,
     required int workoutRecordId,
     required int setNumber,
-    required DateTime startedAt,
     int? totalRestSecs,
     DateTime? completedAt,
   }) async {
     _logger.info('Creating workout set record');
+    final whereBuild = WhereBuilder();
+    whereBuild.and(WorkoutSetRecordColumns.workoutSetId.equal, workoutSetId);
+    whereBuild.and(
+        WorkoutSetRecordColumns.workoutRecordId.equal, workoutRecordId);
+    whereBuild.and(WorkoutSetRecordColumns.setNumber.equal, setNumber);
+
     try {
+      final List<WorkoutSetRecord> records =
+          await _setRecordRepository.selectMany(
+        where: whereBuild.where,
+        whereArgs: whereBuild.args,
+        limit: 1,
+      );
+
+      if (records.isNotEmpty) {
+        final WorkoutSetRecord record = records.first;
+        final WorkoutSetRecord updatedRecord = record.copyWith(
+          totalRestSecs: totalRestSecs,
+          completedAt: completedAt != null
+              ? DateUtilities.getDateUnix(completedAt)
+              : null,
+        );
+        await _setRecordRepository.update(updatedRecord);
+        _logger.info('Updated workout set record with id ${record.id}');
+        return ok(WorkoutSetRecordDto.fromModel(updatedRecord));
+      }
+
       final WorkoutSetRecord record = WorkoutSetRecord.create(
         workoutSetId: workoutSetId,
         workoutRecordId: workoutRecordId,
         setNumber: setNumber,
-        startedAt: DateUtilities.getDateUnix(startedAt),
+        startedAt: DateUtilities.getNowUtcUnix(),
         totalRestSecs: totalRestSecs,
         completedAt:
             completedAt != null ? DateUtilities.getDateUnix(completedAt) : null,
@@ -310,19 +343,57 @@ class WorkoutRecordService {
   }
 
   Future<Result<WorkoutSetExerciseRecordDto, ServiceError<OperationErrorTypes>>>
-      createWorkoutSetExerciseRecord({
+      upsertWorkoutSetExerciseRecord({
     required int workoutSetExerciseId,
     required int workoutRecordId,
     required int workoutSetRecordId,
     required int exerciseId,
     required int position,
     required int reps,
-    required double weightKg,
+    required int weight,
     int? difficulty,
     String? difficultyType,
   }) async {
     _logger.info('Creating workout set exercise record');
+    final whereBuild = WhereBuilder();
+    whereBuild.and(
+      WorkoutSetExerciseRecordColumns.workoutSetExerciseId.equal,
+      workoutSetExerciseId,
+    );
+    whereBuild.and(
+      WorkoutSetExerciseRecordColumns.workoutSetRecordId.equal,
+      workoutSetRecordId,
+    );
+    whereBuild.and(
+      WorkoutSetExerciseRecordColumns.position.equal,
+      position,
+    );
+
     try {
+      final List<WorkoutSetExerciseRecord> records =
+          await _setExerciseRecordRepository.selectMany(
+        where: whereBuild.where,
+        whereArgs: whereBuild.args,
+        limit: 1,
+      );
+
+      if (records.isNotEmpty) {
+        final WorkoutSetExerciseRecord record = records.first;
+        final WorkoutSetExerciseRecord updatedRecord = record.copyWith(
+          workoutSetRecordId: workoutSetRecordId,
+          exerciseId: exerciseId,
+          reps: reps,
+          weightGrams: weight,
+          difficulty: difficulty,
+          difficultyType: difficultyType,
+        );
+        await _setExerciseRecordRepository.update(updatedRecord);
+        _logger.info(
+          'Updated workout set exercise record with id ${record.id}',
+        );
+        return ok(WorkoutSetExerciseRecordDto.fromModel(updatedRecord));
+      }
+
       final WorkoutSetExerciseRecord record = WorkoutSetExerciseRecord.create(
         workoutSetExerciseId: workoutSetExerciseId,
         workoutRecordId: workoutRecordId,
@@ -330,7 +401,7 @@ class WorkoutRecordService {
         exerciseId: exerciseId,
         position: position,
         reps: reps,
-        weightGrams: (weightKg * 1000).round(),
+        weightGrams: weight,
         difficulty: difficulty,
         difficultyType: difficultyType,
       );

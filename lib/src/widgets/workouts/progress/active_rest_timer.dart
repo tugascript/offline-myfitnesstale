@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../../../utilities/sizes/data_display_sizes.dart';
 import '../../../utilities/sizes/screen_size.dart';
 
+// TODO: fix the progress bar and logic to select the current work
 class ActiveRestTimer extends StatefulWidget {
   final BreakPoint breakPoint;
   final DataDisplaySizesList sizes;
@@ -60,8 +61,10 @@ class _ActiveRestTimerState extends State<ActiveRestTimer> {
 
   Color get _progressColor {
     final isDarkTheme = widget.theme.colorScheme.brightness == Brightness.dark;
-    final greenColor = isDarkTheme ? Colors.green.shade400 : Colors.green.shade600;
-    final yellowColor = isDarkTheme ? Colors.yellow.shade400 : Colors.yellow.shade600;
+    final greenColor =
+        isDarkTheme ? Colors.green.shade400 : Colors.green.shade600;
+    final yellowColor =
+        isDarkTheme ? Colors.yellow.shade400 : Colors.yellow.shade600;
     final redColor = isDarkTheme ? Colors.red.shade400 : Colors.red.shade600;
 
     if (widget.maxSecs == null) {
@@ -85,7 +88,7 @@ class _ActiveRestTimerState extends State<ActiveRestTimer> {
 
   @override
   Widget build(BuildContext context) {
-    final restSize = widget.breakPoint.height / 6;
+    final restSize = widget.breakPoint.height / 6.75;
     return Card(
       margin: EdgeInsets.zero,
       child: Padding(
@@ -102,8 +105,8 @@ class _ActiveRestTimerState extends State<ActiveRestTimer> {
                     dimension: _kProgressRingBase,
                     child: CircularProgressIndicator(
                       value: _progress,
-                      backgroundColor:
-                          widget.theme.colorScheme.surfaceContainerHighest,
+                      backgroundColor: widget.theme.colorScheme.onSurface
+                          .withValues(alpha: 0.1),
                       strokeWidth: ((widget.sizes.spacing / 2) *
                               (_kProgressRingBase / restSize))
                           .clamp(2.0, _kProgressRingBase * 0.22),
@@ -123,7 +126,7 @@ class _ActiveRestTimerState extends State<ActiveRestTimer> {
                       style: TextStyle(
                         fontSize: widget.sizes.subtitleFontSize,
                         fontWeight: FontWeight.bold,
-                        color:_progressColor,
+                        color: _progressColor,
                       ),
                     ),
                     SizedBox(height: widget.sizes.spacing / 2),
@@ -159,12 +162,9 @@ class _ActiveRestTimerState extends State<ActiveRestTimer> {
 
 String _formatRestTime(int seconds) {
   if (seconds < 60) {
-    return '${seconds}s';
+    return '00:${seconds.toString().padLeft(2, '0')}';
   }
   final minutes = seconds ~/ 60;
   final remainingSeconds = seconds % 60;
-  if (remainingSeconds == 0) {
-    return '${minutes}m';
-  }
-  return '${minutes}m ${remainingSeconds}s';
+  return '${minutes.toString().padLeft(2, '0')}:${remainingSeconds.toString().padLeft(2, '0')}';
 }

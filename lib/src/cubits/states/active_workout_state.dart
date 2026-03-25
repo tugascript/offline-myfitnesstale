@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 
+import '../../common/nullable.dart';
 import '../../services/dtos/workout_dto.dart';
 import '../../services/dtos/workout_record_dto.dart';
 import '../../services/dtos/workout_set_dto.dart';
@@ -15,6 +16,7 @@ class ActiveWorkoutState extends Equatable {
   final bool isResting;
   final DateTime? startedAt;
   final bool isLoading;
+  final bool isCompleted;
   final ErrorState? error;
 
   const ActiveWorkoutState({
@@ -26,6 +28,7 @@ class ActiveWorkoutState extends Equatable {
     required this.isResting,
     this.startedAt,
     required this.isLoading,
+    required this.isCompleted,
     this.error,
   });
 
@@ -51,9 +54,15 @@ class ActiveWorkoutState extends Equatable {
     return workout?.totalSets ?? 0;
   }
 
+  int get totalCurrentSet {
+    return currentSetNumber +
+        (currentSetPosition *
+            (currentSet?.maxSets ?? currentSet?.minSets ?? 0));
+  }
+
   double get progress {
     if (totalSets == 0) return 0.0;
-    return currentSetPosition / totalSets;
+    return totalCurrentSet / totalSets;
   }
 
   factory ActiveWorkoutState.initial() {
@@ -63,31 +72,35 @@ class ActiveWorkoutState extends Equatable {
       currentSetNumber: 1,
       isResting: false,
       isLoading: false,
+      isCompleted: false,
     );
   }
 
   ActiveWorkoutState copyWith({
-    WorkoutDto? workout,
-    WorkoutRecordDto? workoutRecord,
+    Nullable<WorkoutDto>? workout,
+    Nullable<WorkoutRecordDto>? workoutRecord,
     int? currentSetPosition,
     int? currentExercisePosition,
     int? currentSetNumber,
     bool? isResting,
-    DateTime? startedAt,
+    Nullable<DateTime>? startedAt,
     bool? isLoading,
-    ErrorState? error,
+    bool? isCompleted,
+    Nullable<ErrorState>? error,
   }) {
     return ActiveWorkoutState(
-      workout: workout ?? this.workout,
-      workoutRecord: workoutRecord ?? this.workoutRecord,
+      workout: workout != null ? workout.value : this.workout,
+      workoutRecord:
+          workoutRecord != null ? workoutRecord.value : this.workoutRecord,
       currentSetPosition: currentSetPosition ?? this.currentSetPosition,
       currentExercisePosition:
           currentExercisePosition ?? this.currentExercisePosition,
       currentSetNumber: currentSetNumber ?? this.currentSetNumber,
       isResting: isResting ?? this.isResting,
-      startedAt: startedAt ?? this.startedAt,
+      startedAt: startedAt != null ? startedAt.value : this.startedAt,
       isLoading: isLoading ?? this.isLoading,
-      error: error ?? this.error,
+      isCompleted: isCompleted ?? this.isCompleted,
+      error: error != null ? error.value : this.error,
     );
   }
 

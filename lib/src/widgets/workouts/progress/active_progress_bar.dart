@@ -1,17 +1,17 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
-import '../../../models/utilities.dart';
 import '../../../utilities/formatters.dart';
 import '../../../utilities/sizes/data_display_sizes.dart';
 
-class ActiveProgressBar extends StatelessWidget {
+class ActiveProgressBar extends StatefulWidget {
   final DataDisplaySizesList sizes;
   final ThemeData theme;
 
   final double progress;
   final int totalSets;
   final int currentSet;
-  final DateTime startedAt;
 
   const ActiveProgressBar({
     super.key,
@@ -20,19 +20,42 @@ class ActiveProgressBar extends StatelessWidget {
     required this.progress,
     required this.totalSets,
     required this.currentSet,
-    required this.startedAt,
   });
 
   @override
+  State<ActiveProgressBar> createState() => _ActiveProgressBarState();
+}
+
+class _ActiveProgressBarState extends State<ActiveProgressBar> {
+  int _elapsedSeconds = 0;
+  late final Timer? _workoutTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _workoutTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      setState(() {
+        _elapsedSeconds++;
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _workoutTimer?.cancel();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final halfSpacing = sizes.spacing / 2;
-    final greyColor = theme.colorScheme.brightness == Brightness.dark
+    final halfSpacing = widget.sizes.spacing / 2;
+    final greyColor = widget.theme.colorScheme.brightness == Brightness.dark
         ? Colors.grey.shade400
         : Colors.grey.shade600;
     return Card(
       margin: EdgeInsets.zero,
       child: Padding(
-        padding: EdgeInsets.all(sizes.padding),
+        padding: EdgeInsets.all(widget.sizes.padding),
         child: Column(
           children: [
             Row(
@@ -41,26 +64,26 @@ class ActiveProgressBar extends StatelessWidget {
                 Text(
                   'Progress',
                   style: TextStyle(
-                    fontSize: sizes.subtitleFontSize,
+                    fontSize: widget.sizes.subtitleFontSize,
                     fontWeight: FontWeight.bold,
-                    color: theme.colorScheme.onSurface,
+                    color: widget.theme.colorScheme.onSurface,
                   ),
                 ),
                 Text(
-                  '${(progress * 100).toStringAsFixed(0)}%',
+                  '${(widget.progress * 100).toStringAsFixed(0)}%',
                   style: TextStyle(
-                    fontSize: sizes.subtitleFontSize,
+                    fontSize: widget.sizes.subtitleFontSize,
                     fontWeight: FontWeight.w600,
-                    color: theme.colorScheme.primary,
+                    color: widget.theme.colorScheme.primary,
                   ),
                 ),
               ],
             ),
             SizedBox(height: halfSpacing),
             LinearProgressIndicator(
-              value: progress,
-              backgroundColor: theme.colorScheme.surfaceContainerHighest,
-              minHeight: sizes.fontSize / 2,
+              value: widget.progress,
+              backgroundColor: widget.theme.colorScheme.surfaceContainerHighest,
+              minHeight: widget.sizes.fontSize / 2,
             ),
             SizedBox(height: halfSpacing),
             Row(
@@ -71,14 +94,14 @@ class ActiveProgressBar extends StatelessWidget {
                   children: [
                     Icon(
                       Icons.repeat,
-                      size: sizes.fontSize * 1.2,
-                      color: theme.colorScheme.onSurfaceVariant,
+                      size: widget.sizes.fontSize * 1.2,
+                      color: widget.theme.colorScheme.onSurfaceVariant,
                     ),
                     Text(
-                      ' Set $currentSet of $totalSets',
+                      ' Set ${widget.currentSet} of ${widget.totalSets}',
                       style: TextStyle(
-                        fontSize: sizes.fontSize,
-                        color: theme.colorScheme.onSurfaceVariant,
+                        fontSize: widget.sizes.fontSize,
+                        color: widget.theme.colorScheme.onSurfaceVariant,
                       ),
                     ),
                   ],
@@ -87,14 +110,16 @@ class ActiveProgressBar extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(
-                      Icons.hourglass_top_outlined,
-                      size: sizes.fontSize * 1.2,
+                      _elapsedSeconds % 2 == 0
+                          ? Icons.hourglass_top_outlined
+                          : Icons.hourglass_bottom_outlined,
+                      size: widget.sizes.fontSize * 1.2,
                       color: greyColor,
                     ),
                     Text(
-                      ' ${Formatters.formatDuration(DateUtilities.getNowUtcUnix() - DateUtilities.getDateUnix(startedAt))}',
+                      ' ${Formatters.formatTimer(_elapsedSeconds)}',
                       style: TextStyle(
-                        fontSize: sizes.fontSize,
+                        fontSize: widget.sizes.fontSize,
                         color: greyColor,
                       ),
                     ),

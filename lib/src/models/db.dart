@@ -90,32 +90,45 @@ class DatabaseHelper {
   }
 
   Future<void> _onCreate(Database db, int version) async {
-    await db.execute(Profile.tableCreate);
-    await db.execute(System.tableCreate);
-    await db.execute(RemindersConfig.tableCreate);
-    await db.execute(WeightRecord.tableCreate);
-    await db.execute(WeightGoal.tableCreate);
-    await db.execute(Equipment.tableCreate);
-    await db.execute(Exercise.tableCreate);
-    await db.execute(ExerciseEquipment.tableCreate);
-    await db.execute(ExerciseRecord.tableCreate);
-    await db.execute(Workout.tableCreate);
-    await db.execute(WorkoutSet.tableCreate);
-    await db.execute(WorkoutSetExercise.tableCreate);
-    await db.execute(WorkoutSetExerciseOption.tableCreate);
-    await db.execute(WorkoutRecord.tableCreate);
-    await db.execute(WorkoutSetRecord.tableCreate);
-    await db.execute(WorkoutSetExerciseRecord.tableCreate);
-    await db.execute(WorkoutPlan.tableCreate);
-    await db.execute(WorkoutPlanWeek.tableCreate);
-    await db.execute(WorkoutPlanDay.tableCreate);
-    await db.execute(WorkoutPlanWorkout.tableCreate);
-    await db.execute(WorkoutPlanRecord.tableCreate);
-    await db.execute(WorkoutPlanWeekRecord.tableCreate);
-    await db.execute(WorkoutPlanDayRecord.tableCreate);
-    await db.execute(WorkoutPlanWorkoutRecord.tableCreate);
-    await db.execute(CurrentWorkoutPlanRecord.tableCreate);
-    await db.execute(EntitlementStateModel.tableCreate);
+    final List<String> createQueries = [
+      Profile.tableCreate,
+      System.tableCreate,
+      RemindersConfig.tableCreate,
+      WeightRecord.tableCreate,
+      WeightGoal.tableCreate,
+      Equipment.tableCreate,
+      Exercise.tableCreate,
+      ExerciseEquipment.tableCreate,
+      ExerciseRecord.tableCreate,
+      Workout.tableCreate,
+      WorkoutSet.tableCreate,
+      WorkoutSetExercise.tableCreate,
+      WorkoutSetExerciseOption.tableCreate,
+      WorkoutRecord.tableCreate,
+      WorkoutSetRecord.tableCreate,
+      WorkoutSetExerciseRecord.tableCreate,
+      WorkoutPlan.tableCreate,
+      WorkoutPlanWeek.tableCreate,
+      WorkoutPlanDay.tableCreate,
+      WorkoutPlanWorkout.tableCreate,
+      WorkoutPlanRecord.tableCreate,
+      WorkoutPlanWeekRecord.tableCreate,
+      WorkoutPlanDayRecord.tableCreate,
+      WorkoutPlanWorkoutRecord.tableCreate,
+      CurrentWorkoutPlanRecord.tableCreate,
+      EntitlementStateModel.tableCreate,
+    ];
+
+    for (final query in createQueries) {
+      for (final singleExecutable in query.split(';')) {
+        final exec = singleExecutable.trim();
+        if (exec.isEmpty) {
+          continue;
+        }
+
+        await db.execute(exec);
+      }
+    }
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {

@@ -68,6 +68,7 @@ class WorkoutSetRecord implements Model {
   CREATE INDEX IF NOT EXISTS idx_workout_set_progress_set_id ON $_table (${WorkoutSetRecordColumns.workoutSetId.value});
   CREATE INDEX IF NOT EXISTS idx_workout_set_progress_progress_id ON $_table (${WorkoutSetRecordColumns.workoutRecordId.value});
   CREATE INDEX IF NOT EXISTS idx_workout_set_progress_set_id_number ON $_table (${WorkoutSetRecordColumns.workoutSetId.value}, ${WorkoutSetRecordColumns.setNumber.value});
+  CREATE INDEX IF NOT EXISTS idx_workout_set_progress_set_id_record_id_set_number ON $_table (${WorkoutSetRecordColumns.workoutSetId.value}, ${WorkoutSetRecordColumns.workoutRecordId.value}, ${WorkoutSetRecordColumns.setNumber.value});
   ''';
 
   @override

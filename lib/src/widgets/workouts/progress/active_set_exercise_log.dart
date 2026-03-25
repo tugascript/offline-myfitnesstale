@@ -1,27 +1,31 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:myfitnesstale/src/widgets/common/mutation_button.dart';
 
 import '../../../models/enums.dart';
 import '../../../models/workout_set_exercise_model.dart';
 import '../../../utilities/sizes/data_display_sizes.dart';
+import '../../common/mutation_button.dart';
 import '../../layout/app_dropdown.dart';
 import '../../layout/app_number_wheel.dart';
 import '../../layout/app_text_form_field.dart';
 
-// TODO: fix KG to LBS input and use grams instead
 class ActiveSetExerciseLog extends StatefulWidget {
   final ThemeData theme;
   final DataDisplaySizesList sizes;
-  final String units;
+  final Units units;
+  final bool isLoading;
+
   final WorkoutSetExerciseDifficulty? initialDifficulty;
   final int workoutSetExerciseId;
+  final bool isOptional;
+
   final void Function({
     required double weight,
     required int reps,
     required WorkoutSetExerciseDifficultyType? difficultyType,
     required int? difficultyValue,
   }) onLogSet;
+  final VoidCallback onSkip;
 
   const ActiveSetExerciseLog({
     super.key,
@@ -30,7 +34,10 @@ class ActiveSetExerciseLog extends StatefulWidget {
     required this.units,
     required this.initialDifficulty,
     required this.workoutSetExerciseId,
+    required this.isLoading,
     required this.onLogSet,
+    required this.onSkip,
+    required this.isOptional,
   });
 
   @override
@@ -114,7 +121,8 @@ class _ActiveSetExerciseLogState extends State<ActiveSetExerciseLog> {
                     onPressed: () => Navigator.of(sheetContext).pop(),
                     child: const Text('Cancel'),
                   ),
-                  Text('Weight (${widget.units})',
+                  Text(
+                      'Weight (${widget.units == Units.metric ? "KG" : "LBS"})',
                       style: TextStyle(
                           fontSize: widget.sizes.subtitleFontSize,
                           fontWeight: FontWeight.w600)),
@@ -129,8 +137,9 @@ class _ActiveSetExerciseLogState extends State<ActiveSetExerciseLog> {
                         final double total = (_weightHundreds * 100) +
                             _weightTens +
                             _weightDecimals;
-                        _weightController.text =
-                            total.toString().replaceAll(RegExp(r'\.0$'), '');
+                        _weightController.text = total
+                            .toStringAsFixed(2)
+                            .replaceAll(RegExp(r'\.00$'), '');
                       });
                       Navigator.of(sheetContext).pop();
                     },
@@ -149,7 +158,7 @@ class _ActiveSetExerciseLogState extends State<ActiveSetExerciseLog> {
                       scrollController: hundredsController,
                       onSelectedItemChanged: (_) {},
                       children: List.generate(
-                        11,
+                        widget.units == Units.metric ? 6 : 11,
                         (index) => Center(
                           child: Text(
                             '$index',
@@ -250,10 +259,10 @@ class _ActiveSetExerciseLogState extends State<ActiveSetExerciseLog> {
                 scrollController: controller,
                 onSelectedItemChanged: (_) {},
                 children: List.generate(
-                  201,
+                  100,
                   (index) => Center(
                     child: Text(
-                      '$index',
+                      index.toString(),
                       style: TextStyle(fontSize: widget.sizes.subtitleFontSize),
                     ),
                   ),
@@ -283,7 +292,7 @@ class _ActiveSetExerciseLogState extends State<ActiveSetExerciseLog> {
                     controller: _weightController,
                     readOnly: true,
                     onTap: _openWeightWheel,
-                    labelText: 'Weight (${widget.units})',
+                    labelText: 'Weight',
                     hintText: '0',
                     fontSize: widget.sizes.fontSize,
                     padding: widget.sizes.padding,
@@ -312,7 +321,7 @@ class _ActiveSetExerciseLogState extends State<ActiveSetExerciseLog> {
                 ),
               ],
             ),
-            SizedBox(height: widget.sizes.spacing),
+            SizedBox(height: widget.sizes.inputSpacing),
             LogSetDifficultyInput(
               key: ValueKey(widget.workoutSetExerciseId),
               initialDifficulty: widget.initialDifficulty,
@@ -323,12 +332,12 @@ class _ActiveSetExerciseLogState extends State<ActiveSetExerciseLog> {
                 _difficultyValue = value;
               },
             ),
-            SizedBox(height: widget.sizes.spacing),
+            SizedBox(height: widget.sizes.inputSpacing),
             SizedBox(
               width: double.infinity,
               child: MutationButton(
                 theme: widget.theme,
-                isLoading: false,
+                isLoading: widget.isLoading,
                 sizes: widget.sizes,
                 isDense: true,
                 onPressed: () {
@@ -345,6 +354,22 @@ class _ActiveSetExerciseLogState extends State<ActiveSetExerciseLog> {
                 icon: Icons.add,
               ),
             ),
+            if (widget.isOptional) ...[
+              SizedBox(height: widget.sizes.inputSpacing),
+              SizedBox(
+                width: double.infinity,
+                child: MutationButton(
+                  theme: widget.theme,
+                  sizes: widget.sizes,
+                  isLoading: widget.isLoading,
+                  icon: Icons.skip_next,
+                  color: widget.theme.colorScheme.secondary,
+                  isDense: true,
+                  label: "Skip to next group",
+                  onPressed: widget.onSkip,
+                ),
+              ),
+            ],
           ],
         ),
       ),
@@ -490,7 +515,7 @@ class _LogSetDifficultyInputState extends State<LogSetDifficultyInput> {
             prefixIcon: Icon(Icons.bolt, size: widget.sizes.fontSize * 1.2),
           ),
         ),
-        SizedBox(width: widget.sizes.spacing / 2),
+        SizedBox(width: widget.sizes.inputSpacing),
         Expanded(
           flex: 3,
           child: AppDropdown<WorkoutSetExerciseDifficultyType>(
