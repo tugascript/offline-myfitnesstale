@@ -136,13 +136,8 @@ class TargetMuscles extends Equatable implements JsonData {
 
   TargetMuscles addOther(TargetMuscles other) {
     final Set<Muscle> primary = this.primary.union(other.primary);
-    final Set<Muscle> secondary = this.secondary.toSet();
-
-    for (final secMuscle in other.secondary) {
-      if (!primary.contains(secMuscle)) {
-        secondary.add(secMuscle);
-      }
-    }
+    final Set<Muscle> secondary = this.secondary.union(other.secondary);
+    secondary.removeAll(primary);
 
     return TargetMuscles(
       primary: primary,
