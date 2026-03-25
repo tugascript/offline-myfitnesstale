@@ -25,6 +25,7 @@ class WorkoutHeaderCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return BaseDetailsHeader(
       padding: sizes.padding,
       children: [
@@ -88,10 +89,18 @@ class WorkoutHeaderCard extends StatelessWidget {
           height: sizes.spacing,
         ),
         // TODO: fix me to have secondary muscles
-        _MuscleData(
+        _MuscleGroups(
           sizes: sizes,
           muscleGroups: workoutDto.muscleGroups,
-          muscles: workoutDto.muscles.primary,
+          theme: theme,
+        ),
+        SizedBox(
+          height: sizes.spacing,
+        ),
+        _MuscleData(
+          sizes: sizes,
+          primaryMuscles: workoutDto.muscles.primary,
+          secondaryMuscles: workoutDto.muscles.secondary,
         ),
         if (workoutDto.description != null &&
             workoutDto.description!.isNotEmpty) ...[
@@ -128,20 +137,20 @@ class WorkoutHeaderCard extends StatelessWidget {
 
 class _MuscleData extends StatelessWidget {
   final DataDisplaySizesList sizes;
-  final Set<MuscleGroup> muscleGroups;
-  final Set<Muscle> muscles;
+  final Set<Muscle> primaryMuscles;
+  final Set<Muscle> secondaryMuscles;
 
   const _MuscleData({
     required this.sizes,
-    required this.muscleGroups,
-    required this.muscles,
+    required this.primaryMuscles,
+    required this.secondaryMuscles,
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    if (muscleGroups.isEmpty && muscles.isEmpty) {
+    if (primaryMuscles.isEmpty) {
       return const SizedBox.shrink();
     }
 
@@ -149,25 +158,20 @@ class _MuscleData extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        if (muscleGroups.isNotEmpty) ...[
-          Expanded(
-            child: _MuscleGroups(
-              sizes: sizes,
-              muscleGroups: muscleGroups,
-              theme: theme,
-            ),
+        Expanded(
+          child: _Muscles(
+            title: '💪 Primary Muscles',
+            sizes: sizes,
+            muscles: primaryMuscles,
+            theme: theme,
           ),
-        ],
-        if (muscleGroups.isNotEmpty && muscles.isNotEmpty) ...[
-          SizedBox(
-            width: sizes.spacing,
-          ),
-        ],
-        if (muscles.isNotEmpty) ...[
+        ),
+        if (secondaryMuscles.isNotEmpty) ...[
           Expanded(
             child: _Muscles(
+              title: '🥈 Secondary Muscles',
               sizes: sizes,
-              muscles: muscles,
+              muscles: secondaryMuscles,
               theme: theme,
             ),
           ),
@@ -222,10 +226,12 @@ class _MuscleGroups extends StatelessWidget {
 
 class _Muscles extends StatelessWidget {
   final DataDisplaySizesList sizes;
+  final String title;
   final Set<Muscle> muscles;
   final ThemeData theme;
 
   const _Muscles({
+    required this.title,
     required this.sizes,
     required this.muscles,
     required this.theme,
@@ -238,7 +244,7 @@ class _Muscles extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          '💪 Muscles',
+          title,
           style: TextStyle(
             fontSize: sizes.subtitleFontSize,
             fontWeight: FontWeight.w600,

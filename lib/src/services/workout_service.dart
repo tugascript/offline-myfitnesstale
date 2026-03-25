@@ -473,11 +473,8 @@ class WorkoutService {
               muscleGroups.add(exercise.exercise.muscleGroup);
 
               muscles.primary.addAll(exercise.exercise.muscles.primary);
-              for (final secMuscle in exercise.exercise.muscles.secondary) {
-                if (!muscles.primary.contains(secMuscle)) {
-                  muscles.secondary.add(secMuscle);
-                }
-              }
+              muscles.secondary.addAll(exercise.exercise.muscles.secondary);
+              muscles.secondary.removeAll(muscles.primary);
             }
           }
 
@@ -1028,11 +1025,8 @@ class WorkoutService {
             }
 
             updatedMuscles.primary.addAll(exercise.muscles.primary);
-            for (final secMuscle in exercise.muscles.secondary) {
-              if (!updatedMuscles.primary.contains(secMuscle)) {
-                updatedMuscles.secondary.add(secMuscle);
-              }
-            }
+            updatedMuscles.secondary.addAll(exercise.muscles.secondary);
+            updatedMuscles.secondary.removeAll(updatedMuscles.primary);
           }
         }
 
