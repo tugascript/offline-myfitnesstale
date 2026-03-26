@@ -1024,6 +1024,7 @@ class WorkoutService {
               continue;
             }
 
+            updatedMuscleGroups.add(exercise.muscleGroup);
             updatedMuscles.primary.addAll(exercise.muscles.primary);
             updatedMuscles.secondary.addAll(exercise.muscles.secondary);
             updatedMuscles.secondary.removeAll(updatedMuscles.primary);

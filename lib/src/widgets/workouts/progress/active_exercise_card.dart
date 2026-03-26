@@ -15,6 +15,7 @@ class ActiveExerciseCard extends StatelessWidget {
   final int currentExercise;
   final int minReps;
   final int? maxReps;
+  final bool toMaxReps;
   final String exerciseName;
   final int recommendedRestSecs;
   final int? maxRestSecs;
@@ -31,6 +32,7 @@ class ActiveExerciseCard extends StatelessWidget {
     required this.currentExercise,
     required this.minReps,
     required this.maxReps,
+    required this.toMaxReps,
     required this.exerciseName,
     required this.recommendedRestSecs,
     required this.maxRestSecs,
@@ -85,7 +87,7 @@ class ActiveExerciseCard extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  '$minReps${maxReps != null ? '-$maxReps' : ''}x ',
+                  '$minReps${toMaxReps ? '-MAX ' : maxReps != null ? '-$maxReps ' : ' '}x ',
                   style: TextStyle(
                     fontSize: sizes.subtitleFontSize,
                     fontWeight: FontWeight.w600,
