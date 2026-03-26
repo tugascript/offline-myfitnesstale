@@ -79,6 +79,7 @@ void main() {
     required List<WorkoutPlanWeekDto> initialWeeks,
   }) {
     const sizes = DataDisplaySizesList(
+      viewPadding: 10,
       subtitleFontSize: 14,
       titleFontSize: 20,
       fontSize: 12,
