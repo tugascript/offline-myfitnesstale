@@ -12,7 +12,7 @@ import '../../utilities/converters.dart';
 import '../../utilities/sizes/data_display_sizes.dart';
 import '../../utilities/sizes/screen_size.dart';
 import '../../widgets/common/mutation_button.dart';
-import '../../widgets/layout/app_primary_button.dart';
+import '../../widgets/layout/app_elevated_button.dart';
 import '../../widgets/layout/responsive_scaffold.dart';
 import '../../widgets/workouts/progress/active_completed_workout.dart';
 import '../../widgets/workouts/progress/active_exercise_card.dart';
@@ -292,7 +292,7 @@ class _ActiveWorkoutViewState extends State<ActiveWorkoutView> {
                         ),
                         SizedBox(width: sizes.inputSpacing),
                         Expanded(
-                          child: AppPrimaryButton(
+                          child: AppElevatedButton(
                             theme: theme,
                             isLoading: activeState.isLoading,
                             sizes: sizes,

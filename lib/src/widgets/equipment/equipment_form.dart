@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../utilities/sizes/data_display_sizes.dart';
-import '../layout/app_primary_button.dart';
+import '../layout/app_elevated_button.dart';
 import '../layout/app_text_form_field.dart';
 
 class EquipmentForm extends StatefulWidget {
@@ -79,7 +79,7 @@ class _EquipmentFormState extends State<EquipmentForm> {
             },
           ),
           SizedBox(height: widget.sizes.spacing),
-          AppPrimaryButton(
+          AppElevatedButton(
             isLoading: widget.isLoading,
             onPressed: () {
               if (_formKey.currentState!.validate()) {

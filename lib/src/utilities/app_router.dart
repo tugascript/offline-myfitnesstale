@@ -120,7 +120,7 @@ sealed class AppRouter {
       },
     ),
     GoRoute(
-      path: '/workouts/:id/history',
+      path: WorkoutHistoryView.routeName,
       builder: (context, state) {
         final id = int.tryParse(state.pathParameters['id'] ?? '');
         if (id == null) {
@@ -128,10 +128,6 @@ sealed class AppRouter {
         }
         return WorkoutHistoryView(workoutId: id);
       },
-    ),
-    GoRoute(
-      path: WorkoutHistoryView.routeName,
-      builder: (context, state) => const WorkoutHistoryView(),
     ),
     GoRoute(
       path: '/workout-records/:id',

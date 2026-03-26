@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:myfitnesstale/src/widgets/common/mutation_buttons.dart';
 
 import '../../utilities/sizes/data_display_sizes.dart';
-import '../layout/app_primary_button.dart';
+import '../layout/app_elevated_button.dart';
 
 class ActionButtons extends StatelessWidget {
   final ThemeData theme;
@@ -46,33 +46,27 @@ class ActionButtons extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Row(
-          children: [
-            Expanded(
-              child: AppPrimaryButton(
-                isLoading: isLoading,
-                theme: theme,
-                sizes: sizes,
-                onPressed: onStart,
-                label: startLabel,
-                icon: startIcon,
-              ),
-            ),
-          ],
+        SizedBox(
+          width: double.infinity,
+          child: AppElevatedButton(
+            isLoading: isLoading,
+            theme: theme,
+            sizes: sizes,
+            onPressed: onStart,
+            label: startLabel,
+            icon: startIcon,
+          ),
         ),
         SizedBox(height: sizes.spacing),
-        Row(
-          children: [
-            Expanded(
-              child: _TertiaryButton(
-                theme: theme,
-                sizes: sizes,
-                onPressed: onHistory,
-                label: historyLabel,
-                icon: historyIcon,
-              ),
-            ),
-          ],
+        SizedBox(
+          width: double.infinity,
+          child: _TertiaryButton(
+            theme: theme,
+            sizes: sizes,
+            onPressed: onHistory,
+            label: historyLabel,
+            icon: historyIcon,
+          ),
         ),
         if (showMutationBtns) ...[
           SizedBox(height: sizes.spacing),

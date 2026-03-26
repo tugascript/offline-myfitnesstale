@@ -1,21 +1,79 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 
+import '../../../../cubits/states/workout_record_state.dart';
 import '../../../../models/enums.dart';
 import '../../../../services/dtos/workout_record_dto.dart';
+import '../../../../utilities/converters.dart';
 import '../../../../utilities/formatters.dart';
 import '../../../../utilities/sizes/data_display_sizes.dart';
+import '../../../common/not_found_list.dart';
 import '../../../common/total_numeric_string.dart';
 import '../../../layout/list_card.dart';
 
-class SingleWorkoutRecordCard extends StatelessWidget {
+class SingleWorkoutRecordList extends StatelessWidget {
+  final DataDisplaySizesList sizes;
+  final Units units;
+  final bool isLoading;
+
+  final List<WorkoutRecordDto> workoutRecords;
+  final WorkoutRecordPagination pagination;
+  final ScrollController? scrollController;
+
+  const SingleWorkoutRecordList({
+    super.key,
+    required this.sizes,
+    required this.units,
+    required this.isLoading,
+    required this.workoutRecords,
+    required this.pagination,
+    this.scrollController,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (!isLoading && workoutRecords.isEmpty) {
+      return NotFoundList(
+        sizes: sizes,
+        message: 'No workout records found',
+        icon: Icons.history,
+      );
+    }
+
+    return Skeletonizer(
+      enabled: isLoading && workoutRecords.isEmpty,
+      child: ListView.builder(
+        controller: scrollController,
+        itemCount:
+            isLoading && workoutRecords.isEmpty ? 2 : workoutRecords.length,
+        itemBuilder: (context, index) {
+          if (isLoading && workoutRecords.isEmpty) {
+            return _SingleWorkoutRecordCard(
+              sizes: sizes,
+              units: units,
+              workoutRecord: WorkoutRecordDto.empty(),
+            );
+          }
+
+          return _SingleWorkoutRecordCard(
+            sizes: sizes,
+            units: units,
+            workoutRecord: workoutRecords[index],
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _SingleWorkoutRecordCard extends StatelessWidget {
   final DataDisplaySizesList sizes;
   final Units units;
 
   final WorkoutRecordDto workoutRecord;
 
-  const SingleWorkoutRecordCard({
-    super.key,
+  const _SingleWorkoutRecordCard({
     required this.sizes,
     required this.units,
     required this.workoutRecord,
@@ -61,11 +119,14 @@ class SingleWorkoutRecordCard extends StatelessWidget {
         ),
         SizedBox(height: sizes.spacing),
         Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             TotalNumericString(
               leading: Icon(Icons.scale, size: sizes.fontSize * 1.2),
               name: 'Volume',
-              total: workoutRecord.totalVolume,
+              total: units == Units.metric
+                  ? Converters.gramsToKg(workoutRecord.totalVolume).round()
+                  : Converters.gramsToLbs(workoutRecord.totalVolume).round(),
               fontSize: sizes.fontSize,
             ),
             TotalNumericString(

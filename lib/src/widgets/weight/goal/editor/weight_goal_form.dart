@@ -4,7 +4,7 @@ import '../../../../models/enums.dart';
 import '../../../../utilities/converters.dart';
 import '../../../../utilities/sizes/data_display_sizes.dart';
 import '../../../layout/app_dropdown.dart';
-import '../../../layout/app_primary_button.dart';
+import '../../../layout/app_elevated_button.dart';
 import '../../../layout/app_text_form_field.dart';
 
 class WeightGoalForm extends StatefulWidget {
@@ -212,7 +212,7 @@ class _WeightGoalFormState extends State<WeightGoalForm> {
           SizedBox(height: widget.sizes.inputSpacing),
           SizedBox(
             width: double.infinity,
-            child: AppPrimaryButton(
+            child: AppElevatedButton(
               theme: widget.theme,
               isLoading: widget.isLoading,
               sizes: widget.sizes,

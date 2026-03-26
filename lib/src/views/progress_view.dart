@@ -4,7 +4,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../cubits/profile_cubit.dart';
 import '../cubits/states/profile_state.dart';
 import '../cubits/states/weight_record_state.dart';
-import '../cubits/states/workout_record_state.dart';
 import '../cubits/weight_record_cubit.dart';
 import '../cubits/workout_record_cubit.dart';
 import '../models/enums.dart';
@@ -12,8 +11,6 @@ import '../services/dtos/system_dto.dart';
 import '../services/dtos/weight_record_dto.dart';
 import '../utilities/converters.dart';
 import '../widgets/layout/responsive_scaffold.dart';
-import 'exercise_progress_view.dart';
-import 'workouts/workout_history_view.dart';
 
 // TODO: remove this view and replace with the new activity view
 class ProgressView extends StatefulWidget {
@@ -94,14 +91,6 @@ class _ProgressViewState extends State<ProgressView>
                             icon: Icon(Icons.trending_up),
                             text: 'Analytics',
                           ),
-                          Tab(
-                            icon: Icon(Icons.fitness_center),
-                            text: 'Workouts',
-                          ),
-                          Tab(
-                            icon: Icon(Icons.track_changes),
-                            text: 'Exercises',
-                          ),
                         ],
                       ),
                     ),
@@ -114,8 +103,6 @@ class _ProgressViewState extends State<ProgressView>
                           _buildWeightTab(weightState, profileState.system),
                           _buildGoalsTab(),
                           _buildAnalyticsTab(weightState, profileState.system),
-                          _buildWorkoutHistoryTab(),
-                          _buildExerciseProgressTab(),
                         ],
                       ),
                     ),
@@ -571,141 +558,5 @@ class _ProgressViewState extends State<ProgressView>
         ),
       );
     }
-  }
-
-  Widget _buildWorkoutHistoryTab() {
-    return BlocBuilder<WorkoutRecordCubit, WorkoutRecordState>(
-      builder: (context, state) {
-        if (state.isLoading && state.workoutRecords.isEmpty) {
-          return const Center(child: CircularProgressIndicator());
-        }
-
-        if (state.workoutRecords.isEmpty) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.fitness_center,
-                  size: 64,
-                  color: Colors.grey[400],
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'No Workout History',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.grey[600],
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Complete some workouts to see your history here',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey[500],
-                  ),
-                ),
-              ],
-            ),
-          );
-        }
-
-        return Column(
-          children: [
-            // Quick Stats
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: _buildWorkoutQuickStats(state.workoutRecords),
-            ),
-            // Workout History List
-            Expanded(
-              child: const WorkoutHistoryView(),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  Widget _buildWorkoutQuickStats(List<dynamic> workoutRecords) {
-    final completedCount =
-        workoutRecords.where((r) => r.completedAt != null).length;
-    final totalSets = workoutRecords.fold<int>(
-      0,
-      (sum, record) => sum + (record.totalSets as int),
-    );
-    final totalReps = workoutRecords.fold<int>(
-      0,
-      (sum, record) => sum + (record.totalReps as int),
-    );
-
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Row(
-          children: [
-            Expanded(
-              child: _buildQuickStatItem(
-                'Completed',
-                completedCount.toString(),
-                Icons.check_circle,
-                Colors.green,
-              ),
-            ),
-            Expanded(
-              child: _buildQuickStatItem(
-                'Total Sets',
-                totalSets.toString(),
-                Icons.repeat,
-                Colors.blue,
-              ),
-            ),
-            Expanded(
-              child: _buildQuickStatItem(
-                'Total Reps',
-                totalReps.toString(),
-                Icons.fitness_center,
-                Colors.orange,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildQuickStatItem(
-    String label,
-    String value,
-    IconData icon,
-    Color color,
-  ) {
-    return Column(
-      children: [
-        Icon(icon, color: color, size: 24),
-        const SizedBox(height: 4),
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: color,
-          ),
-        ),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
-            color: Colors.grey[600],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildExerciseProgressTab() {
-    return const ExerciseProgressView();
   }
 }

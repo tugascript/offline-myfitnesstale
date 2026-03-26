@@ -5,7 +5,7 @@ import '../../../../utilities/converters.dart';
 import '../../../../utilities/formatters.dart';
 import '../../../../utilities/sizes/data_display_sizes.dart';
 import '../../../layout/app_number_wheel.dart';
-import '../../../layout/app_primary_button.dart';
+import '../../../layout/app_elevated_button.dart';
 import '../../../layout/app_text_form_field.dart';
 
 class ExerciseRecordForm extends StatefulWidget {
@@ -272,7 +272,7 @@ class _ExerciseRecordFormState extends State<ExerciseRecordForm> {
           SizedBox(height: widget.sizes.inputSpacing),
           SizedBox(
             width: double.infinity,
-            child: AppPrimaryButton(
+            child: AppElevatedButton(
               theme: widget.theme,
               isLoading: widget.isLoading,
               sizes: widget.sizes,
