@@ -7,7 +7,7 @@ import '../../../models/enums.dart';
 import '../../../models/utilities.dart';
 import '../../../utilities/sizes/data_display_sizes.dart';
 import '../../layout/app_dropdown.dart';
-import '../../layout/app_primary_button.dart';
+import '../../layout/app_elevated_button.dart';
 import '../../layout/app_text_form_field.dart';
 import '../../layout/dynamic_list_input.dart';
 
@@ -443,7 +443,7 @@ class _ExerciseFormState extends State<ExerciseForm> {
             },
           ),
           SizedBox(height: widget.sizes.spacing),
-          AppPrimaryButton(
+          AppElevatedButton(
             theme: widget.theme,
             onPressed: () {
               if (_formKey.currentState!.validate() &&

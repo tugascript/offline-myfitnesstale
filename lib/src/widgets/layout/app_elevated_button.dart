@@ -2,15 +2,17 @@ import 'package:flutter/material.dart';
 
 import '../../utilities/sizes/data_display_sizes.dart';
 
-class AppPrimaryButton extends StatelessWidget {
+class AppElevatedButton extends StatelessWidget {
   final ThemeData theme;
   final bool isLoading;
   final DataDisplaySizesList sizes;
   final VoidCallback? onPressed;
   final String label;
   final IconData icon;
+  final bool isDense;
+  final bool isSecondary;
 
-  const AppPrimaryButton({
+  const AppElevatedButton({
     super.key,
     required this.theme,
     required this.isLoading,
@@ -18,10 +20,14 @@ class AppPrimaryButton extends StatelessWidget {
     required this.onPressed,
     required this.label,
     required this.icon,
+    this.isDense = false,
+    this.isSecondary = false,
   });
 
   @override
   Widget build(BuildContext context) {
+    final baseColor =
+        isSecondary ? theme.colorScheme.secondary : theme.primaryColor;
     final greyColor = theme.colorScheme.brightness == Brightness.light
         ? Colors.grey[400]
         : Colors.grey[600];
@@ -43,9 +49,10 @@ class AppPrimaryButton extends StatelessWidget {
       ),
       style: ElevatedButton.styleFrom(
         padding: EdgeInsets.symmetric(vertical: sizes.padding),
-        backgroundColor: isLoading ? greyColor : theme.primaryColor,
+        backgroundColor: isLoading ? greyColor : baseColor,
         foregroundColor: theme.scaffoldBackgroundColor,
         shape: BeveledRectangleBorder(),
+        visualDensity: isDense ? VisualDensity.compact : VisualDensity.standard,
       ),
     );
   }

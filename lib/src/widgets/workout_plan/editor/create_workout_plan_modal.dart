@@ -11,7 +11,7 @@ import '../../../services/entitlement_guard.dart';
 import '../../../utilities/sizes/data_display_sizes.dart';
 import '../../common/mutation_button.dart';
 import '../../layout/app_modal.dart';
-import '../../layout/app_primary_button.dart';
+import '../../layout/app_elevated_button.dart';
 import 'workout_plan_base_form.dart';
 
 class CreateWorkoutPlanModal extends StatefulWidget {
@@ -141,7 +141,7 @@ class _LockedPremiumEditor extends StatelessWidget {
           SizedBox(height: sizes.spacing),
           SizedBox(
             width: double.infinity,
-            child: AppPrimaryButton(
+            child: AppElevatedButton(
               theme: theme,
               isLoading: false,
               icon: Icons.star,

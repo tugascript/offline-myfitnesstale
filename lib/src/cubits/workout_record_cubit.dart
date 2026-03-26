@@ -1,6 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:logging/logging.dart';
 
+import '../common/nullable.dart';
 import '../services/common/errors.dart';
 import '../services/workout_record_service.dart';
 import 'states/common_state.dart';
@@ -34,19 +35,19 @@ class WorkoutRecordCubit extends Cubit<WorkoutRecordState> {
         case SingleErrorTypes.invalidInput:
         case SingleErrorTypes.notFound:
           emit(state.copyWith(
-            error: ErrorState(
+            error: Nullable(ErrorState(
               type: error.type.name,
               description: error.description,
-            ),
+            )),
             isLoading: false,
           ));
           return;
         case SingleErrorTypes.operationFailure:
           emit(state.copyWith(
-            error: ErrorState(
+            error: Nullable(ErrorState(
               type: error.type.name,
               description: "Failed to get workout records",
-            ),
+            )),
             isLoading: false,
           ));
           return;
@@ -68,6 +69,49 @@ class WorkoutRecordCubit extends Cubit<WorkoutRecordState> {
           offset: paginatedData.offset,
         ),
         isLoading: false,
+        error: Nullable(null),
+      ),
+    );
+  }
+
+  Future<void> getLatestWorkoutRecord(int workoutId) async {
+    _logger.info('Getting latest workout record for workout $workoutId');
+    emit(state.copyWith(isLoading: true));
+
+    final result =
+        await _workoutRecordService.getLatestWorkoutRecord(workoutId);
+    if (result.isErr()) {
+      final error = result.error;
+      _logger.warning("Failed to get latest workout record", error);
+      switch (error.type) {
+        case SingleErrorTypes.invalidInput:
+        case SingleErrorTypes.notFound:
+          emit(state.copyWith(
+            latestWorkoutRecord: Nullable(null),
+            isLoading: false,
+          ));
+          return;
+        case SingleErrorTypes.operationFailure:
+          emit(state.copyWith(
+            error: Nullable(ErrorState(
+              type: error.type.name,
+              description: "Failed to get latest workout record",
+            )),
+            latestWorkoutRecord: Nullable(null),
+            isLoading: false,
+          ));
+          return;
+      }
+    }
+
+    _logger.info(
+      'Latest workout record for workout $workoutId successfully found',
+    );
+    emit(
+      state.copyWith(
+        latestWorkoutRecord: Nullable(result.value),
+        error: Nullable(null),
+        isLoading: false,
       ),
     );
   }
@@ -85,19 +129,19 @@ class WorkoutRecordCubit extends Cubit<WorkoutRecordState> {
         case SingleErrorTypes.invalidInput:
         case SingleErrorTypes.notFound:
           emit(state.copyWith(
-            error: ErrorState(
+            error: Nullable(ErrorState(
               type: error.type.name,
               description: error.description,
-            ),
+            )),
             isLoading: false,
           ));
           return;
         case SingleErrorTypes.operationFailure:
           emit(state.copyWith(
-            error: ErrorState(
+            error: Nullable(ErrorState(
               type: error.type.name,
               description: "Failed to get workout record",
-            ),
+            )),
             isLoading: false,
           ));
           return;
@@ -106,8 +150,9 @@ class WorkoutRecordCubit extends Cubit<WorkoutRecordState> {
 
     _logger.info('Workout record with id $id successfully found');
     emit(state.copyWith(
-      selectedWorkoutRecord: result.value,
+      selectedWorkoutRecord: Nullable(result.value),
       isLoading: false,
+      error: Nullable(null),
     ));
   }
 
@@ -124,19 +169,19 @@ class WorkoutRecordCubit extends Cubit<WorkoutRecordState> {
         case SingleErrorTypes.invalidInput:
         case SingleErrorTypes.notFound:
           emit(state.copyWith(
-            error: ErrorState(
+            error: Nullable(ErrorState(
               type: error.type.name,
               description: error.description,
-            ),
+            )),
             isLoading: false,
           ));
           return;
         case SingleErrorTypes.operationFailure:
           emit(state.copyWith(
-            error: ErrorState(
+            error: Nullable(ErrorState(
               type: error.type.name,
               description: "Failed to delete workout record",
-            ),
+            )),
             isLoading: false,
           ));
           return;
@@ -149,69 +194,13 @@ class WorkoutRecordCubit extends Cubit<WorkoutRecordState> {
       pagination: state.pagination.copyWith(
         total: state.pagination.total - 1,
       ),
-      selectedWorkoutRecord: state.selectedWorkoutRecord?.id == id
-          ? null
-          : state.selectedWorkoutRecord,
+      selectedWorkoutRecord: Nullable(
+        state.selectedWorkoutRecord?.id == id
+            ? null
+            : state.selectedWorkoutRecord,
+      ),
       isLoading: false,
+      error: Nullable(null),
     ));
   }
-
-  // Future<void> startWorkoutPlan(int workoutPlanId) async {
-  //   _logger.info('Starting workout plan $workoutPlanId');
-  //   emit(state.copyWith(isLoading: true));
-
-  //   final createResult = await _workoutRecordService.createWorkoutPlanRecord(
-  //     workoutPlanId: workoutPlanId,
-  //     status: ProgressStatus.inProgress,
-  //   );
-  //   if (createResult.isErr()) {
-  //     final error = createResult.error;
-  //     _logger.warning("Failed to create workout plan record", error);
-
-  //     switch (error.type) {
-  //       case OperationErrorTypes.invalidInput:
-  //       case OperationErrorTypes.operationFailure:
-  //         emit(state.copyWith(
-  //           error: ErrorState(
-  //             type: error.type.name,
-  //             description: error.description,
-  //           ),
-  //           isLoading: false,
-  //         ));
-  //         return;
-  //     }
-  //   }
-
-  //   final planRecord = createResult.value;
-  //   final currentWorkoutResult =
-  //       await _workoutPlanRecordService.setCurrentWorkoutPlan(
-  //     planRecord.id,
-  //   );
-  //   if (currentWorkoutResult.isErr()) {
-  //     final error = currentWorkoutResult.error;
-  //     _logger.warning("Failed to set current workout plan", error);
-
-  //     switch (error.type) {
-  //       case SingleErrorTypes.invalidInput:
-  //       case SingleErrorTypes.notFound:
-  //         emit(state.copyWith(
-  //           error: ErrorState(
-  //             type: error.type.name,
-  //             description: error.description,
-  //           ),
-  //           isLoading: false,
-  //         ));
-  //         return;
-  //       case SingleErrorTypes.operationFailure:
-  //         emit(state.copyWith(
-  //           error: ErrorState(
-  //             type: error.type.name,
-  //             description: "Failed to start workout plan",
-  //           ),
-  //           isLoading: false,
-  //         ));
-  //         return;
-  //     }
-  //   }
-  // }
 }

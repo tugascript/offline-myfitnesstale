@@ -198,6 +198,41 @@ class WorkoutRecordService {
     }
   }
 
+  Future<Result<WorkoutRecordDto, ServiceError<SingleErrorTypes>>>
+      getLatestWorkoutRecord(
+    int workoutId,
+  ) async {
+    _logger.info('Getting latest workout record for workout $workoutId');
+    try {
+      final List<WorkoutRecord> records = await _repository.selectMany(
+        where: WorkoutRecordColumns.workoutId.equal,
+        whereArgs: [workoutId],
+        orderBy: [WorkoutRecordColumns.startedAt.orderDesc],
+        limit: 1,
+      );
+      if (records.isEmpty) {
+        _logger.info('No latest workout record found for workout $workoutId');
+        return err(const ServiceError(
+          type: SingleErrorTypes.notFound,
+          description: 'Latest workout record not found',
+        ));
+      }
+
+      _logger.info('Got latest workout record for workout $workoutId');
+      return ok(WorkoutRecordDto.fromModel(records.first));
+    } catch (e) {
+      _logger.severe(
+        'Failed to get latest workout record for workout $workoutId',
+        e,
+      );
+      return err(ServiceError(
+        type: SingleErrorTypes.operationFailure,
+        description:
+            'Failed to get latest workout record error: ${e.toString()}',
+      ));
+    }
+  }
+
   Future<Result<WorkoutRecordDto, ServiceError<OperationErrorTypes>>>
       createWorkoutRecord({
     required int workoutId,

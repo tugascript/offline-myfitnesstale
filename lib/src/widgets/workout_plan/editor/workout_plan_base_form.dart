@@ -4,7 +4,7 @@ import '../../../models/enums.dart';
 import '../../../models/utilities.dart';
 import '../../../utilities/sizes/data_display_sizes.dart';
 import '../../layout/app_dropdown.dart';
-import '../../layout/app_primary_button.dart';
+import '../../layout/app_elevated_button.dart';
 import '../../layout/app_text_form_field.dart';
 
 class WorkoutPlanBaseForm extends StatefulWidget {
@@ -190,7 +190,7 @@ class _WorkoutPlanBaseFormState extends State<WorkoutPlanBaseForm> {
           SizedBox(height: widget.sizes.spacing),
           SizedBox(
             width: double.infinity,
-            child: AppPrimaryButton(
+            child: AppElevatedButton(
               theme: widget.theme,
               isLoading: widget.isLoading,
               sizes: widget.sizes,

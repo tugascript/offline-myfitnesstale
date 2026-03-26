@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../utilities/sizes/data_display_sizes.dart';
-import '../../layout/app_primary_button.dart';
+import '../../layout/app_elevated_button.dart';
 import '../mutation_button.dart';
 
 class SaveButtons extends StatelessWidget {
@@ -37,7 +37,7 @@ class SaveButtons extends StatelessWidget {
         ),
         SizedBox(width: sizes.spacing / 2),
         Expanded(
-          child: AppPrimaryButton(
+          child: AppElevatedButton(
             onPressed: onSave,
             theme: theme,
             isLoading: isLoading,

@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 
+import '../../common/nullable.dart';
 import '../../services/dtos/workout_record_dto.dart';
 import 'common_state.dart';
 
@@ -49,7 +50,7 @@ final class WorkoutRecordPagination extends Equatable {
 
 final class WorkoutRecordState extends Equatable {
   final List<WorkoutRecordDto> workoutRecords;
-  final WorkoutRecordDto? currentWorkoutRecord;
+  final WorkoutRecordDto? latestWorkoutRecord;
   final WorkoutRecordDto? selectedWorkoutRecord;
   final WorkoutRecordPagination pagination;
   final bool isLoading;
@@ -57,7 +58,7 @@ final class WorkoutRecordState extends Equatable {
 
   const WorkoutRecordState({
     required this.workoutRecords,
-    this.currentWorkoutRecord,
+    this.latestWorkoutRecord,
     this.selectedWorkoutRecord,
     required this.pagination,
     required this.isLoading,
@@ -74,27 +75,30 @@ final class WorkoutRecordState extends Equatable {
 
   WorkoutRecordState copyWith({
     List<WorkoutRecordDto>? workoutRecords,
-    WorkoutRecordDto? currentWorkoutRecord,
-    WorkoutRecordDto? selectedWorkoutRecord,
+    Nullable<WorkoutRecordDto>? latestWorkoutRecord,
+    Nullable<WorkoutRecordDto>? selectedWorkoutRecord,
     WorkoutRecordPagination? pagination,
     bool? isLoading,
-    ErrorState? error,
+    Nullable<ErrorState>? error,
   }) {
     return WorkoutRecordState(
       workoutRecords: workoutRecords ?? this.workoutRecords,
-      currentWorkoutRecord: currentWorkoutRecord ?? this.currentWorkoutRecord,
-      selectedWorkoutRecord:
-          selectedWorkoutRecord ?? this.selectedWorkoutRecord,
+      latestWorkoutRecord: latestWorkoutRecord != null
+          ? latestWorkoutRecord.value
+          : this.latestWorkoutRecord,
+      selectedWorkoutRecord: selectedWorkoutRecord != null
+          ? selectedWorkoutRecord.value
+          : this.selectedWorkoutRecord,
       pagination: pagination ?? this.pagination,
       isLoading: isLoading ?? this.isLoading,
-      error: error ?? this.error,
+      error: error != null ? error.value : this.error,
     );
   }
 
   @override
   List<Object?> get props => [
         workoutRecords,
-        currentWorkoutRecord,
+        latestWorkoutRecord,
         selectedWorkoutRecord,
         pagination,
         isLoading,

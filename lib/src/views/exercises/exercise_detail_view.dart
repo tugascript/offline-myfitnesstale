@@ -10,7 +10,7 @@ import '../../utilities/sizes/screen_size.dart';
 import '../../widgets/common/confirmation_dialog.dart';
 import '../../widgets/common/mutation_button.dart';
 import '../../widgets/exercises/details/exercise_header_card.dart';
-import '../../widgets/layout/app_primary_button.dart';
+import '../../widgets/layout/app_elevated_button.dart';
 import '../../widgets/layout/app_scaffold.dart';
 import '../../widgets/layout/responsive_scaffold.dart';
 import '../loading_view.dart';
@@ -208,7 +208,7 @@ class _ExerciseDetailViewState extends State<ExerciseDetailView> {
                 Row(
                   children: [
                     Expanded(
-                      child: AppPrimaryButton(
+                      child: AppElevatedButton(
                         theme: theme,
                         isLoading: exerciseState.isLoading,
                         sizes: sizes,

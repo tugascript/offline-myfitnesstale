@@ -33,7 +33,7 @@ class WeightRecordsList extends StatelessWidget {
     return Skeletonizer(
       enabled: isLoading && records.isEmpty,
       child: ListView.builder(
-        itemCount: isLoading && records.isEmpty ? 3 : records.length,
+        itemCount: isLoading && records.isEmpty ? 2 : records.length,
         itemBuilder: (context, index) {
           if (isLoading && records.isEmpty) {
             return _WeightRecordCard(
