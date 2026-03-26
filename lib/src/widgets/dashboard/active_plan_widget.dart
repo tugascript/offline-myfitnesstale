@@ -8,11 +8,12 @@ import '../../cubits/states/workout_plan_record_state.dart';
 import '../../cubits/workout_plan_record_cubit.dart';
 import '../../models/enums.dart';
 import '../../services/dtos/profile_dto.dart';
-import '../../utilities/sizes/home_sizes.dart';
+import '../../utilities/sizes/data_display_sizes.dart';
 import 'active_plan/empty_active_plan.dart';
 
+// TODO: fix this widget layout
 class ActivePlanWidget extends StatefulWidget {
-  final HomeSizesList sizes;
+  final DataDisplaySizesList sizes;
 
   const ActivePlanWidget({
     super.key,
@@ -110,23 +111,23 @@ class _ActivePlanWidgetState extends State<ActivePlanWidget> {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
+              Text(
                 'Active Workout Plan',
                 style: TextStyle(
-                  fontSize: 20,
+                  fontSize: widget.sizes.titleFontSize,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: widget.sizes.spacing),
               Card(
-                elevation: 2,
+                elevation: widget.sizes.elevation,
+                margin: EdgeInsets.zero,
                 child: InkWell(
                   onTap: () {
                     context.push('/workout-plans/current');
                   },
-                  borderRadius: BorderRadius.circular(8),
                   child: Padding(
-                    padding: const EdgeInsets.all(16.0),
+                    padding: EdgeInsets.all(widget.sizes.padding),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -135,20 +136,19 @@ class _ActivePlanWidgetState extends State<ActivePlanWidget> {
                             Expanded(
                               child: Text(
                                 plan.name,
-                                style: const TextStyle(
-                                  fontSize: 18,
+                                style: TextStyle(
+                                  fontSize: widget.sizes.titleFontSize,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
                             ),
                             Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 4,
+                              padding: EdgeInsets.symmetric(
+                                horizontal: widget.sizes.padding,
+                                vertical: widget.sizes.padding / 2,
                               ),
                               decoration: BoxDecoration(
                                 color: difficultyColor.withValues(alpha: 0.2),
-                                borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
                                   color: difficultyColor,
                                   width: 1,

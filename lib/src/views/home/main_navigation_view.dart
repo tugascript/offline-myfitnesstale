@@ -2,15 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import '../cubits/profile_cubit.dart';
-import '../cubits/states/profile_state.dart';
-import 'create_profile_button_view.dart';
+import '../../cubits/profile_cubit.dart';
+import '../../cubits/states/profile_state.dart';
+import '../create_profile_button_view.dart';
+import '../loading_view.dart';
+import '../not_found_view.dart';
+import '../onboarding_view.dart';
+import '../workout_plans/workout_plan_list_view.dart';
 import 'home_view.dart';
-import 'loading_view.dart';
-import 'onboarding_view.dart';
 import 'profile_view.dart';
-import 'progress_view.dart';
-import 'workout_plans/workout_plan_list_view.dart';
 
 sealed class _PageBuilder {
   static const int pagesCount = 4;
@@ -18,7 +18,7 @@ sealed class _PageBuilder {
   static final List<Widget Function()> _pages = [
     () => const HomeView(),
     () => const WorkoutPlanListView(),
-    () => const ProgressView(),
+    () => const NotFoundView(),
     () => const ProfileView(),
   ];
 
@@ -105,11 +105,11 @@ class _MainNavigationViewState extends State<MainNavigationView> {
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.book),
-            label: 'Workout Plans',
+            label: 'Plans',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.trending_up),
-            label: 'Progress',
+            icon: Icon(Icons.adjust),
+            label: 'Activity',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person),

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../utilities/sizes/home_sizes.dart';
+import '../../../utilities/sizes/data_display_sizes.dart';
 
 class EmptyActivePlan extends StatelessWidget {
-  final HomeSizesList sizes;
+  final DataDisplaySizesList sizes;
 
   const EmptyActivePlan({
     super.key,
@@ -15,7 +15,7 @@ class EmptyActivePlan extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDarkTheme = theme.brightness == Brightness.dark;
-    final spacing = sizes.breaks / 3;
+    final spacing = sizes.spacing / 3;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -23,11 +23,11 @@ class EmptyActivePlan extends StatelessWidget {
         Text(
           'Active Workout Plan',
           style: TextStyle(
-            fontSize: sizes.sectionTitleFontSize,
+            fontSize: sizes.titleFontSize,
             fontWeight: FontWeight.bold,
           ),
         ),
-        SizedBox(height: sizes.breaks / 3),
+        SizedBox(height: sizes.spacing / 3),
         Card(
           color: theme.scaffoldBackgroundColor,
           child: SizedBox(

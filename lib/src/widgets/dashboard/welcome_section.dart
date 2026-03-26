@@ -3,10 +3,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../cubits/profile_cubit.dart';
 import '../../cubits/states/profile_state.dart';
-import '../../utilities/sizes/home_sizes.dart';
+import '../../utilities/sizes/data_display_sizes.dart';
 
 class WelcomeSection extends StatelessWidget {
-  final HomeSizesList sizes;
+  final DataDisplaySizesList sizes;
 
   const WelcomeSection({
     super.key,
@@ -20,7 +20,8 @@ class WelcomeSection extends StatelessWidget {
     return SizedBox(
       width: double.infinity,
       child: Card(
-        color: isDarkTheme ? theme.primaryColorDark : theme.primaryColorLight,
+        elevation: sizes.elevation,
+        margin: EdgeInsets.zero,
         child: Padding(
           padding: EdgeInsets.all(sizes.padding),
           child: Column(
@@ -28,21 +29,25 @@ class WelcomeSection extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               BlocBuilder<ProfileCubit, ProfileState>(
-                  builder: (context, state) {
-                return Text(
-                  "Welcome back ${state.profile?.name ?? "to My Fitness Tale"}!",
-                  style: TextStyle(
-                    fontSize: sizes.titleFontSize,
-                    fontWeight: FontWeight.bold,
-                  ),
-                );
-              }),
-              SizedBox(height: sizes.breaks / 3),
+                builder: (context, state) {
+                  return Text(
+                    "Welcome back ${state.profile?.name ?? "to My Fitness Tale"}!",
+                    style: TextStyle(
+                      fontSize: sizes.titleFontSize * 1.15,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    softWrap: true,
+                    overflow: TextOverflow.ellipsis,
+                  );
+                },
+              ),
+              SizedBox(height: sizes.spacing),
               Text(
                 "Let's continue your fitness tale!",
                 style: TextStyle(
-                  fontSize: sizes.subtitleFontSize,
-                  color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                  fontSize: sizes.subtitleFontSize * 1.15,
+                  color:
+                      isDarkTheme ? Colors.grey.shade400 : Colors.grey.shade600,
                 ),
               ),
             ],

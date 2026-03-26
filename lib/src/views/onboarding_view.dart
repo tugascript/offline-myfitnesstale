@@ -9,7 +9,7 @@ import '../utilities/sizes/profile/onboarding_sizes.dart';
 import '../utilities/sizes/screen_size.dart';
 import '../widgets/profile/onboarding_form.dart';
 import '../widgets/profile/onboarding_intro.dart';
-import 'home_view.dart';
+import 'home/home_view.dart';
 
 class OnboardingView extends StatelessWidget {
   static const routeName = "/onboarding";

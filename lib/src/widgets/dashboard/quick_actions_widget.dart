@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../utilities/sizes/home_sizes.dart';
+import '../../utilities/sizes/data_display_sizes.dart';
 import '../../views/equipments/equipments_view.dart';
 import '../../views/exercises/exercises_view.dart';
 import '../../views/weight/weight_goals_view.dart';
@@ -9,7 +9,7 @@ import '../../views/weight/weight_records_view.dart';
 import '../../views/workouts/workouts_view.dart';
 
 class QuickActionsWidget extends StatelessWidget {
-  final HomeSizesList sizes;
+  final DataDisplaySizesList sizes;
 
   const QuickActionsWidget({
     super.key,
@@ -20,7 +20,6 @@ class QuickActionsWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDarkTheme = theme.brightness == Brightness.dark;
-    final emojiSize = sizes.titleFontSize * 0.85;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -28,17 +27,17 @@ class QuickActionsWidget extends StatelessWidget {
         Text(
           "Quick Actions",
           style: TextStyle(
-            fontSize: sizes.sectionTitleFontSize,
+            fontSize: sizes.titleFontSize,
             fontWeight: FontWeight.bold,
           ),
         ),
-        SizedBox(height: sizes.breaks / 3),
+        SizedBox(height: sizes.spacing),
         GridView.count(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           crossAxisCount: 2,
-          crossAxisSpacing: sizes.breaks / 2,
-          mainAxisSpacing: sizes.breaks / 2,
+          crossAxisSpacing: sizes.margins,
+          mainAxisSpacing: sizes.margins,
           childAspectRatio: 1.5,
           children: [
             _ActionCard(
@@ -74,7 +73,7 @@ class QuickActionsWidget extends StatelessWidget {
               isDarkTheme: isDarkTheme,
               icon: Text(
                 '🏋️',
-                style: TextStyle(fontSize: emojiSize),
+                style: TextStyle(fontSize: sizes.titleFontSize),
               ),
               title: "Workouts",
               subtitle: "Browse workouts",
@@ -87,7 +86,7 @@ class QuickActionsWidget extends StatelessWidget {
               isDarkTheme: isDarkTheme,
               icon: Text(
                 '💪',
-                style: TextStyle(fontSize: emojiSize),
+                style: TextStyle(fontSize: sizes.titleFontSize),
               ),
               title: "Exercises",
               subtitle: "Browse exercises",
@@ -129,7 +128,7 @@ class QuickActionsWidget extends StatelessWidget {
 }
 
 class _ActionCard extends StatelessWidget {
-  final HomeSizesList sizes;
+  final DataDisplaySizesList sizes;
   final bool isDarkTheme;
   final Widget icon;
   final String title;
@@ -150,6 +149,7 @@ class _ActionCard extends StatelessWidget {
     return Card(
       elevation: 1,
       shape: BeveledRectangleBorder(),
+      margin: EdgeInsets.zero,
       child: InkWell(
         onTap: onTap,
         child: Padding(
@@ -158,21 +158,21 @@ class _ActionCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               icon,
-              SizedBox(height: sizes.breaks / 3),
+              SizedBox(height: sizes.spacing / 2),
               Text(
                 title,
                 style: TextStyle(
-                  fontSize: sizes.titleFontSize * 0.6,
+                  fontSize: sizes.subtitleFontSize,
                   fontWeight: FontWeight.w600,
                 ),
                 textAlign: TextAlign.center,
                 overflow: TextOverflow.ellipsis,
               ),
-              SizedBox(height: sizes.breaks / 6),
+              SizedBox(height: sizes.spacing / 6),
               Text(
                 subtitle,
                 style: TextStyle(
-                  fontSize: sizes.subtitleFontSize * 0.7,
+                  fontSize: sizes.fontSize,
                   color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
                 ),
                 textAlign: TextAlign.center,

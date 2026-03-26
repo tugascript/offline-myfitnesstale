@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../utilities/sizes/home_sizes.dart';
+import '../../utilities/sizes/data_display_sizes.dart';
 import '../../utilities/sizes/screen_size.dart';
 
 class CreateProfileCard extends StatelessWidget {
@@ -14,7 +14,8 @@ class CreateProfileCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final BreakPoint breakPoint = BreakPoint.fromContext(context);
-    final HomeSizesList sizes = HomeSizes.getHomeSizes(breakPoint.screenSize);
+    final DataDisplaySizesList sizes =
+        DataDisplaySizes.getDataDisplaySizes(breakPoint.screenSize);
     return Card(
       elevation: 1,
       margin: EdgeInsets.all(sizes.padding * 1.25),
@@ -34,7 +35,7 @@ class CreateProfileCard extends StatelessWidget {
                     ),
                 textAlign: TextAlign.center,
               ),
-              SizedBox(height: sizes.breaks * 0.5),
+              SizedBox(height: sizes.spacing * 0.5),
               Text(
                 "Please create your profile",
                 style: Theme.of(context).textTheme.bodyLarge?.copyWith(
@@ -42,7 +43,7 @@ class CreateProfileCard extends StatelessWidget {
                     ),
                 textAlign: TextAlign.center,
               ),
-              SizedBox(height: sizes.breaks * 0.75),
+              SizedBox(height: sizes.spacing * 0.75),
               Icon(
                 Icons.add,
                 size: sizes.subtitleFontSize * 2.5,

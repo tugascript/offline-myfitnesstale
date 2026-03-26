@@ -5,10 +5,10 @@ import 'package:go_router/go_router.dart';
 import '../cubits/profile_cubit.dart';
 import '../cubits/states/profile_state.dart';
 import '../models/enums.dart';
-import '../views/home_view.dart';
 import '../widgets/layout/responsive_scaffold.dart';
 import '../widgets/profile/profile_form.dart';
 import '../widgets/profile/system_form.dart';
+import 'home/home_view.dart';
 
 class CreateProfileView extends StatefulWidget {
   static const routeName = "/setup/create-profile";

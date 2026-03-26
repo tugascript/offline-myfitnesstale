@@ -1,23 +1,24 @@
-import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../cubits/entitlement_cubit.dart';
-import '../cubits/profile_cubit.dart';
-import '../cubits/states/entitlement_state.dart';
-import '../cubits/states/profile_state.dart';
-import '../models/enums.dart';
-import '../services/entitlement_debug_service.dart';
-import '../services/dtos/profile_dto.dart';
-import '../services/dtos/system_dto.dart';
-import '../utilities/sizes/data_display_sizes.dart';
-import '../utilities/sizes/screen_size.dart';
-import '../widgets/layout/app_scaffold.dart';
-import '../widgets/profile/height_input.dart';
-import '../widgets/profile/profile_header.dart';
-import '../widgets/profile/profile_info.dart';
-import '../widgets/profile/settings_config.dart';
+import '../../cubits/entitlement_cubit.dart';
+import '../../cubits/profile_cubit.dart';
+import '../../cubits/states/entitlement_state.dart';
+import '../../cubits/states/profile_state.dart';
+import '../../models/enums.dart';
+import '../../services/dtos/profile_dto.dart';
+import '../../services/dtos/system_dto.dart';
+import '../../services/entitlement_debug_service.dart';
+import '../../utilities/sizes/data_display_sizes.dart';
+import '../../utilities/sizes/screen_size.dart';
+import '../../widgets/layout/responsive_scaffold.dart';
+import '../../widgets/profile/height_input.dart';
+import '../../widgets/profile/profile_header.dart';
+import '../../widgets/profile/profile_info.dart';
+import '../../widgets/profile/settings_config.dart';
 
+// TODO: fix this view layout
 class ProfileView extends StatefulWidget {
   static const routeName = "/profile";
   static const name = "profile";
@@ -76,7 +77,7 @@ class _ProfileViewState extends State<ProfileView> {
     final breakPoints = BreakPoint.fromContext(context);
     final sizes = DataDisplaySizes.getDataDisplaySizes(breakPoints.screenSize);
 
-    return AppScaffold(
+    return ResponsiveScaffold(
       title: "Profile",
       body: BlocBuilder<ProfileCubit, ProfileState>(
         buildWhen: (previous, current) {
@@ -138,47 +139,44 @@ class _ProfileViewState extends State<ProfileView> {
             );
           }
 
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Profile Header
-                ProfileHeader(
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Profile Header
+              ProfileHeader(
+                profile: profile,
+                system: system,
+                sizes: sizes,
+                isEditing: _isEditing,
+                editOnPress: () => _startEditing(profile),
+              ),
+              SizedBox(height: sizes.spacing * 2),
+
+              // Profile Form
+              if (_isEditing) _buildEditForm(profile, system),
+              if (!_isEditing)
+                ProfileInfo(
+                  sizes: sizes,
                   profile: profile,
                   system: system,
-                  sizes: sizes,
-                  isEditing: _isEditing,
-                  editOnPress: () => _startEditing(profile),
-                ),
-                SizedBox(height: sizes.spacing * 2),
-
-                // Profile Form
-                if (_isEditing) _buildEditForm(profile, system),
-                if (!_isEditing)
-                  ProfileInfo(
-                    sizes: sizes,
-                    profile: profile,
-                    system: system,
-                  ),
-
-                SizedBox(height: sizes.spacing * 2),
-
-                // Settings Section
-                SettingsConfig(
-                  profileId: profile.id,
-                  isLoading: state.isLoading,
-                  sizes: sizes,
-                  system: system,
-                  remindersConfig: remindersConfig,
                 ),
 
-                if (kDebugMode) ...[
-                  SizedBox(height: sizes.spacing * 2),
-                  _buildDeveloperEntitlementCard(),
-                ],
+              SizedBox(height: sizes.spacing * 2),
+
+              // Settings Section
+              SettingsConfig(
+                profileId: profile.id,
+                isLoading: state.isLoading,
+                sizes: sizes,
+                system: system,
+                remindersConfig: remindersConfig,
+              ),
+
+              if (kDebugMode) ...[
+                SizedBox(height: sizes.spacing * 2),
+                _buildDeveloperEntitlementCard(),
               ],
-            ),
+            ],
           );
         },
       ),
