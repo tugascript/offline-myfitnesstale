@@ -85,6 +85,7 @@ class _EmptyWeightRecord extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
+      margin: EdgeInsets.zero,
       child: SizedBox(
         width: double.infinity,
         child: InkWell(
@@ -160,6 +161,7 @@ class _LatestWeightRecord extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
+      margin: EdgeInsets.zero,
       child: SizedBox(
         width: double.infinity,
         child: Padding(

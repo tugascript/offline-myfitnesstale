@@ -23,7 +23,7 @@ class WorkoutCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return ListCard(
-      margin: sizes.margins,
+      margin: sizes.margins / 2,
       padding: sizes.padding,
       onTap: onTap,
       children: [

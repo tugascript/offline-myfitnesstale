@@ -26,6 +26,9 @@ class WorkoutPlanWeekCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
+      margin: EdgeInsets.symmetric(
+        vertical: sizes.margins / 2,
+      ),
       child: ExpansionTile(
         dense: true,
         leading: DetailNumber(

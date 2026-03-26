@@ -13,6 +13,7 @@ class BaseDetailsHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
+      margin: EdgeInsets.zero,
       child: Padding(
         padding: EdgeInsets.all(padding),
         child: Column(

@@ -60,7 +60,7 @@ class _EquipmentUpdateViewState extends State<EquipmentUpdateView> {
           title: selectedEquipment?.equipment.name ?? "Update Equipment",
           isEntity: true,
           body: Padding(
-            padding: EdgeInsets.all(sizes.padding),
+            padding: EdgeInsets.all(sizes.viewPadding),
             child: Column(
               children: [
                 SizedBox(height: breakPoint.height * 0.2),

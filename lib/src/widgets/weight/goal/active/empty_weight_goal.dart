@@ -16,6 +16,7 @@ class EmptyWeightGoal extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
+      margin: EdgeInsets.zero,
       child: SizedBox(
           width: double.infinity,
           child: InkWell(

@@ -94,126 +94,120 @@ class _ActiveWorkoutViewState extends State<ActiveWorkoutView> {
               final exercise = workoutSetExercise?.exercise;
               final currentSet = activeState.currentSet;
 
-              return Skeletonizer(
-                enabled: activeState.isLoading &&
-                    (workoutSetExercise == null ||
-                        exercise == null ||
-                        currentSet == null),
-                child: ListView(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: sizes.padding / 2,
-                    vertical: sizes.padding,
-                  ),
-                  shrinkWrap: true,
-                  physics: const ClampingScrollPhysics(),
-                  children: [
-                    ActiveProgressBar(
-                      sizes: sizes,
-                      theme: theme,
-                      progress: activeState.progress,
-                      totalSets: activeState.totalSets,
-                      currentSet: activeState.totalCurrentSet,
-                    ),
-                    SizedBox(height: sizes.spacing),
-                    if (activeState.isCompleted)
-                      ActiveCompletedWorkout(
-                        breakPoint: breakpoints,
+              return Padding(
+                padding: EdgeInsets.all(sizes.viewPadding),
+                child: Skeletonizer(
+                  enabled: activeState.isLoading &&
+                      (workoutSetExercise == null ||
+                          exercise == null ||
+                          currentSet == null),
+                  child: Column(
+                    children: [
+                      ActiveProgressBar(
                         sizes: sizes,
                         theme: theme,
-                      )
-                    else if (workoutSetExercise == null ||
-                        exercise == null ||
-                        currentSet == null)
-                      NotFoundActiveWorkout(
-                        theme: theme,
-                        breakPoint: breakpoints,
-                        sizes: sizes,
-                      )
-                    else ...[
-                      ActiveExerciseCard(
-                        sizes: sizes,
-                        theme: theme,
-                        minSets: currentSet.minSets,
-                        maxSets: currentSet.maxSets,
-                        currentSet: activeState.currentSetNumber,
-                        exercises: currentSet.exercises?.length ?? 0,
-                        currentExercise:
-                            activeState.currentExercisePosition + 1,
-                        minReps: workoutSetExercise.minReps,
-                        maxReps: workoutSetExercise.maxReps,
-                        exerciseName: exercise.name,
-                        recommendedRestSecs: currentSet.recommendedRestSecs,
-                        maxRestSecs: currentSet.maxRestSecs,
-                        difficulty: workoutSetExercise.difficulty,
+                        progress: activeState.progress,
+                        totalSets: activeState.totalSets,
+                        currentSet: activeState.totalCurrentSet,
                       ),
                       SizedBox(height: sizes.spacing),
-                      if (activeState.isResting)
-                        ActiveRestTimer(
+                      if (activeState.isCompleted)
+                        ActiveCompletedWorkout(
                           breakPoint: breakpoints,
                           sizes: sizes,
                           theme: theme,
-                          recommendedSecs: currentSet.recommendedRestSecs,
-                          maxSecs: currentSet.maxRestSecs,
-                          onNext: (int restTime) async {
-                            final cubit = context.read<ActiveWorkoutCubit>();
-
-                            await cubit.logExerciseSet(
-                              position: workoutSetExercise.position,
-                              reps: _loggedReps,
-                              weight: profileState.system?.units == Units.metric
-                                  ? Converters.kgToGrams(_loggedWeight)
-                                  : Converters.lbsToGrams(_loggedWeight),
-                              setNumber: activeState.currentSetNumber,
-                              restSecs: restTime,
-                              difficulty: _loggedDifficultyType != null
-                                  ? _loggedDifficultyValue
-                                  : null,
-                              difficultyType: _loggedDifficultyType?.value,
-                            );
-
-                            if (!mounted) return;
-                            cubit.nextExercise();
-                          },
                         )
-                      else
-                        // Log Set inputs
-                        ActiveSetExerciseLog(
+                      else if (workoutSetExercise == null ||
+                          exercise == null ||
+                          currentSet == null)
+                        NotFoundActiveWorkout(
                           theme: theme,
+                          breakPoint: breakpoints,
                           sizes: sizes,
-                          units: profileState.system?.units ?? Units.metric,
-                          initialDifficulty: workoutSetExercise.difficulty,
-                          workoutSetExerciseId: workoutSetExercise.id,
-                          isLoading: activeState.isLoading,
-                          onLogSet: ({
-                            required weight,
-                            required reps,
-                            required difficultyType,
-                            required difficultyValue,
-                          }) async {
-                            if (reps <= 0) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content:
-                                      const Text('Please enter valid reps'),
-                                  backgroundColor: theme.colorScheme.error,
-                                ),
+                        )
+                      else ...[
+                        ActiveExerciseCard(
+                          sizes: sizes,
+                          theme: theme,
+                          minSets: currentSet.minSets,
+                          maxSets: currentSet.maxSets,
+                          currentSet: activeState.currentSetNumber,
+                          exercises: currentSet.exercises?.length ?? 0,
+                          currentExercise:
+                              activeState.currentExercisePosition + 1,
+                          minReps: workoutSetExercise.minReps,
+                          maxReps: workoutSetExercise.maxReps,
+                          exerciseName: exercise.name,
+                          recommendedRestSecs: currentSet.recommendedRestSecs,
+                          maxRestSecs: currentSet.maxRestSecs,
+                          difficulty: workoutSetExercise.difficulty,
+                        ),
+                        SizedBox(height: sizes.spacing),
+                        if (activeState.isResting)
+                          ActiveRestTimer(
+                            breakPoint: breakpoints,
+                            sizes: sizes,
+                            theme: theme,
+                            recommendedSecs: currentSet.recommendedRestSecs,
+                            maxSecs: currentSet.maxRestSecs,
+                            onNext: (int restTime) async {
+                              final cubit = context.read<ActiveWorkoutCubit>();
+
+                              await cubit.logExerciseSet(
+                                position: workoutSetExercise.position,
+                                reps: _loggedReps,
+                                weight:
+                                    profileState.system?.units == Units.metric
+                                        ? Converters.kgToGrams(_loggedWeight)
+                                        : Converters.lbsToGrams(_loggedWeight),
+                                setNumber: activeState.currentSetNumber,
+                                restSecs: restTime,
+                                difficulty: _loggedDifficultyType != null
+                                    ? _loggedDifficultyValue
+                                    : null,
+                                difficultyType: _loggedDifficultyType?.value,
                               );
-                              return;
-                            }
-                            setState(() {
-                              _loggedWeight = weight;
-                              _loggedReps = reps;
-                              _loggedDifficultyType = difficultyType;
-                              _loggedDifficultyValue = difficultyValue;
-                            });
 
-                            final isLastExercise =
-                                activeState.currentExercisePosition ==
-                                    (currentSet.exercises?.length ?? 1) - 1;
+                              if (!mounted) return;
+                              cubit.nextExercise();
+                            },
+                          )
+                        else
+                          // Log Set inputs
+                          ActiveSetExerciseLog(
+                            theme: theme,
+                            sizes: sizes,
+                            units: profileState.system?.units ?? Units.metric,
+                            initialDifficulty: workoutSetExercise.difficulty,
+                            workoutSetExerciseId: workoutSetExercise.id,
+                            isLoading: activeState.isLoading,
+                            onLogSet: ({
+                              required weight,
+                              required reps,
+                              required difficultyType,
+                              required difficultyValue,
+                            }) async {
+                              if (reps <= 0) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content:
+                                        const Text('Please enter valid reps'),
+                                    backgroundColor: theme.colorScheme.error,
+                                  ),
+                                );
+                                return;
+                              }
+                              setState(() {
+                                _loggedWeight = weight;
+                                _loggedReps = reps;
+                                _loggedDifficultyType = difficultyType;
+                                _loggedDifficultyValue = difficultyValue;
+                              });
 
-                            if (isLastExercise) {
-                              context.read<ActiveWorkoutCubit>().startRest();
-                            } else {
+                              final isLastExercise =
+                                  activeState.currentExercisePosition ==
+                                      (currentSet.exercises?.length ?? 1) - 1;
+
                               final cubit = context.read<ActiveWorkoutCubit>();
                               await cubit.logExerciseSet(
                                 position: workoutSetExercise.position,
@@ -230,84 +224,92 @@ class _ActiveWorkoutViewState extends State<ActiveWorkoutView> {
                               );
 
                               if (mounted) {
-                                cubit.nextExercise();
-                              }
-                            }
-                          },
-                          isOptional: currentSet.maxSets != null &&
-                              activeState.currentSetNumber > currentSet.minSets,
-                          onSkip: () {
-                            context.read<ActiveWorkoutCubit>().skipToNextSet();
-                          },
-                        ),
-                    ],
-                    SizedBox(height: sizes.spacing),
-                    // Action Buttons
-                    Row(
-                      children: [
-                        Expanded(
-                          child: MutationButton(
-                            theme: theme,
-                            sizes: sizes,
-                            label: "CANCEL",
-                            icon: Icons.close,
-                            isLoading: activeState.isLoading,
-                            onPressed: () async {
-                              if (!mounted) return;
-                              final cubit = context.read<ActiveWorkoutCubit>();
-                              final navigator = Navigator.of(context);
-                              final confirmed = await showDialog<bool>(
-                                context: context,
-                                builder: (dialogContext) => AlertDialog(
-                                  title: const Text('Cancel Workout'),
-                                  content: const Text(
-                                    'Are you sure you want to cancel this workout? All progress will be lost.',
-                                  ),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () =>
-                                          Navigator.pop(dialogContext, false),
-                                      child: const Text('No'),
-                                    ),
-                                    TextButton(
-                                      onPressed: () =>
-                                          Navigator.pop(dialogContext, true),
-                                      style: TextButton.styleFrom(
-                                        foregroundColor:
-                                            theme.colorScheme.error,
-                                      ),
-                                      child: const Text('Yes, Cancel'),
-                                    ),
-                                  ],
-                                ),
-                              );
-
-                              if (confirmed == true) {
-                                await cubit.cancelWorkout();
-                                if (!mounted) return;
-                                navigator.pop();
+                                if (isLastExercise) {
+                                  cubit.startRest();
+                                } else {
+                                  cubit.nextExercise();
+                                }
                               }
                             },
-                          ),
-                        ),
-                        SizedBox(width: sizes.inputSpacing),
-                        Expanded(
-                          child: AppElevatedButton(
-                            theme: theme,
-                            isLoading: activeState.isLoading,
-                            sizes: sizes,
-                            onPressed: () async {
-                              await context
+                            isOptional: currentSet.maxSets != null &&
+                                activeState.currentSetNumber >
+                                    currentSet.minSets,
+                            onSkip: () {
+                              context
                                   .read<ActiveWorkoutCubit>()
-                                  .completeWorkout();
+                                  .skipToNextSet();
                             },
-                            label: 'Complete',
-                            icon: Icons.check,
                           ),
-                        ),
                       ],
-                    ),
-                  ],
+                      SizedBox(height: sizes.spacing),
+                      // Action Buttons
+                      Row(
+                        children: [
+                          Expanded(
+                            child: MutationButton(
+                              theme: theme,
+                              sizes: sizes,
+                              label: "CANCEL",
+                              icon: Icons.close,
+                              isLoading: activeState.isLoading,
+                              onPressed: () async {
+                                if (!mounted) return;
+                                final cubit =
+                                    context.read<ActiveWorkoutCubit>();
+                                final navigator = Navigator.of(context);
+                                final confirmed = await showDialog<bool>(
+                                  context: context,
+                                  builder: (dialogContext) => AlertDialog(
+                                    title: const Text('Cancel Workout'),
+                                    content: const Text(
+                                      'Are you sure you want to cancel this workout? All progress will be lost.',
+                                    ),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () =>
+                                            Navigator.pop(dialogContext, false),
+                                        child: const Text('No'),
+                                      ),
+                                      TextButton(
+                                        onPressed: () =>
+                                            Navigator.pop(dialogContext, true),
+                                        style: TextButton.styleFrom(
+                                          foregroundColor:
+                                              theme.colorScheme.error,
+                                        ),
+                                        child: const Text('Yes, Cancel'),
+                                      ),
+                                    ],
+                                  ),
+                                );
+
+                                if (confirmed == true) {
+                                  await cubit.cancelWorkout();
+                                  if (!mounted) return;
+                                  navigator.pop();
+                                }
+                              },
+                            ),
+                          ),
+                          SizedBox(width: sizes.inputSpacing),
+                          Expanded(
+                            child: AppElevatedButton(
+                              theme: theme,
+                              isLoading: activeState.isLoading,
+                              sizes: sizes,
+                              onPressed: () async {
+                                await context
+                                    .read<ActiveWorkoutCubit>()
+                                    .completeWorkout();
+                              },
+                              label: 'Complete',
+                              icon: Icons.check,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               );
             },

@@ -82,7 +82,7 @@ class _WorkoutsViewState extends State<WorkoutsView> {
     return AppScaffold(
       title: 'Workouts',
       body: Padding(
-        padding: EdgeInsets.all(sizes.padding),
+        padding: EdgeInsets.all(sizes.viewPadding),
         child: BlocBuilder<WorkoutCubit, WorkoutState>(
           builder: (context, state) {
             return Column(

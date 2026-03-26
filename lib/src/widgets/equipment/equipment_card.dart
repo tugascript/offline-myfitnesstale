@@ -18,33 +18,36 @@ class EquipmentCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListCard(
-      margin: sizes.margins,
-      padding: sizes.padding,
-      onTap: onTap,
-      children: [
-        Row(
-          mainAxisSize: MainAxisSize.max,
-          children: [
-            Expanded(
-              child: Text(
-                equipment.name,
-                softWrap: true,
-                style: TextStyle(
-                  fontSize: sizes.fontSize,
-                  fontWeight: FontWeight.bold,
-                  overflow: TextOverflow.ellipsis,
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: sizes.margins / 2),
+      child: ListCard(
+        margin: sizes.margins / 2,
+        padding: sizes.padding,
+        onTap: onTap,
+        children: [
+          Row(
+            mainAxisSize: MainAxisSize.max,
+            children: [
+              Expanded(
+                child: Text(
+                  equipment.name,
+                  softWrap: true,
+                  style: TextStyle(
+                    fontSize: sizes.fontSize,
+                    fontWeight: FontWeight.bold,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
               ),
-            ),
-            Icon(
-              Icons.arrow_forward_ios,
-              size: sizes.fontSize * 1.2,
-              color: Colors.grey,
-            ),
-          ],
-        ),
-      ],
+              Icon(
+                Icons.arrow_forward_ios,
+                size: sizes.fontSize * 1.2,
+                color: Colors.grey,
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }

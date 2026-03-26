@@ -31,8 +31,7 @@ class WeightGoalCard extends StatelessWidget {
     return Card(
       clipBehavior: Clip.antiAlias,
       margin: EdgeInsets.symmetric(
-        vertical: sizes.margins,
-        horizontal: sizes.margins / 2,
+        vertical: sizes.margins / 2,
       ),
       child: Padding(
         padding: EdgeInsets.all(sizes.padding),

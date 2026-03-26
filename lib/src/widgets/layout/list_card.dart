@@ -20,7 +20,6 @@ class ListCard extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       margin: EdgeInsets.symmetric(
         vertical: margin,
-        horizontal: margin / 2,
       ),
       child: InkWell(
         onTap: onTap,

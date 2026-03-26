@@ -82,7 +82,7 @@ class _SingleWorkoutRecordCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListCard(
-      margin: sizes.margins,
+      margin: sizes.margins / 2,
       padding: sizes.padding,
       children: [
         Row(

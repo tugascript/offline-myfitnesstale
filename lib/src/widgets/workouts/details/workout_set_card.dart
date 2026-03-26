@@ -31,6 +31,9 @@ class WorkoutSetCard extends StatelessWidget {
     final iconLightGreyColor =
         isDarkTheme ? Colors.grey[400] : Colors.grey[600];
     return Card(
+      margin: EdgeInsets.symmetric(
+        vertical: sizes.margins / 2,
+      ),
       child: ExpansionTile(
         leading: DetailNumber(
           number: setNumber,

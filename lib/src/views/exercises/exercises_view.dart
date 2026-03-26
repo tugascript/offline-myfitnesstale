@@ -86,7 +86,7 @@ class _ExercisesViewState extends State<ExercisesView> {
       title: "Exercises",
       showBackButton: true,
       body: Padding(
-        padding: EdgeInsets.all(sizes.padding),
+        padding: EdgeInsets.all(sizes.viewPadding),
         child: BlocBuilder<ExerciseCubit, ExerciseState>(
           builder: (context, state) {
             return Column(

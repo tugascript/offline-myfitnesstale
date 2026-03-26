@@ -115,62 +115,62 @@ class _WorkoutEditViewState extends State<WorkoutEditView> {
               title: workout.name,
               showBackButton: false,
               isEntity: true,
-              body: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (_isEditingHeader)
-                    WorkoutHeaderEditCard(
-                      theme: theme,
-                      sizes: sizes,
-                      workout: workout,
-                      canUsePremiumEditor: canUsePremium,
-                      isLoading: state.isLoading,
-                      onCancel: () {
-                        setState(() {
-                          _isEditingHeader = false;
-                        });
-                      },
-                      onSubmit: ({
-                        required String name,
-                        required bool isFavorite,
-                        required Difficulty difficulty,
-                        required EditorType editorType,
-                        String? description,
-                      }) async {
-                        await context.read<WorkoutCubit>().updateWorkout(
-                              id: workout.id,
-                              name: name,
-                              isFavorite: isFavorite,
-                              difficulty: difficulty,
-                              editorType: editorType,
-                              description: description,
-                            );
+              body: Padding(
+                padding: EdgeInsets.all(sizes.viewPadding),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (_isEditingHeader)
+                      WorkoutHeaderEditCard(
+                        theme: theme,
+                        sizes: sizes,
+                        workout: workout,
+                        canUsePremiumEditor: canUsePremium,
+                        isLoading: state.isLoading,
+                        onCancel: () {
+                          setState(() {
+                            _isEditingHeader = false;
+                          });
+                        },
+                        onSubmit: ({
+                          required String name,
+                          required bool isFavorite,
+                          required Difficulty difficulty,
+                          required EditorType editorType,
+                          String? description,
+                        }) async {
+                          await context.read<WorkoutCubit>().updateWorkout(
+                                id: workout.id,
+                                name: name,
+                                isFavorite: isFavorite,
+                                difficulty: difficulty,
+                                editorType: editorType,
+                                description: description,
+                              );
 
-                        if (!mounted) return;
+                          if (!mounted) return;
 
-                        setState(() {
-                          _isEditingHeader = false;
-                        });
-                      },
-                    )
-                  else
-                    WorkoutHeaderCard(
-                      actionButtonIcon: Icon(
-                        Icons.edit_outlined,
-                        color: theme.colorScheme.onSurface,
+                          setState(() {
+                            _isEditingHeader = false;
+                          });
+                        },
+                      )
+                    else
+                      WorkoutHeaderCard(
+                        actionButtonIcon: Icon(
+                          Icons.edit_outlined,
+                          color: theme.colorScheme.onSurface,
+                        ),
+                        actionButtonPress: () {
+                          setState(() {
+                            _isEditingHeader = true;
+                          });
+                        },
+                        sizes: sizes,
+                        workoutDto: workout,
                       ),
-                      actionButtonPress: () {
-                        setState(() {
-                          _isEditingHeader = true;
-                        });
-                      },
-                      sizes: sizes,
-                      workoutDto: workout,
-                    ),
-                  // Workout Sets
-                  Padding(
-                    padding: EdgeInsets.all(sizes.spacing / 2),
-                    child: Column(
+                    // Workout Sets
+                    Column(
                       mainAxisAlignment: MainAxisAlignment.start,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -190,8 +190,8 @@ class _WorkoutEditViewState extends State<WorkoutEditView> {
                         editor,
                       ],
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             );
           },
