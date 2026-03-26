@@ -92,7 +92,7 @@ class _EquipmentDetailsViewState extends State<EquipmentDetailsView> {
           title: equipment.name,
           isEntity: true,
           body: Padding(
-            padding: EdgeInsets.symmetric(horizontal: sizes.padding / 2),
+            padding: EdgeInsets.all(sizes.viewPadding),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [

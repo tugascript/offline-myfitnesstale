@@ -85,6 +85,7 @@ class _LatestWorkoutRecord extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
+      margin: EdgeInsets.zero,
       child: SizedBox(
         width: double.infinity,
         child: Padding(
@@ -97,7 +98,16 @@ class _LatestWorkoutRecord extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                Text(
+                  "Latest Record",
+                  style: TextStyle(
+                    fontSize: sizes.titleFontSize,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                SizedBox(height: sizes.spacing),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.start,
                   mainAxisSize: MainAxisSize.max,
@@ -258,6 +268,7 @@ class _EmptyWorkoutRecord extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
+      margin: EdgeInsets.zero,
       child: SizedBox(
         width: double.infinity,
         child: Padding(

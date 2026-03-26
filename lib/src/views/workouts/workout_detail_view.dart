@@ -101,7 +101,7 @@ class _WorkoutDetailViewState extends State<WorkoutDetailView> {
           title: workout.name,
           isEntity: true,
           body: Padding(
-            padding: EdgeInsets.symmetric(horizontal: sizes.padding / 2),
+            padding: EdgeInsets.all(sizes.viewPadding),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -142,7 +142,7 @@ class _WorkoutDetailViewState extends State<WorkoutDetailView> {
                       setNumber: entry.key + 1,
                     );
                   }),
-                SizedBox(height: sizes.spacing * 2),
+                SizedBox(height: sizes.spacing),
                 ActionButtons(
                     isLoading: workoutState.isLoading,
                     theme: theme,

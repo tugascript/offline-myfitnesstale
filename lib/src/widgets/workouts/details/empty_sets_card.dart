@@ -13,6 +13,7 @@ class EmptySetsCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
+      margin: EdgeInsets.zero,
       child: Padding(
         padding: EdgeInsets.all(sizes.padding * 2),
         child: Center(

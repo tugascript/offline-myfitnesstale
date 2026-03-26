@@ -86,7 +86,7 @@ class _ExerciseRecordsViewState extends State<ExerciseRecordsView> {
               title: "${exerciseState.selectedExercise?.name} Records",
               isEntity: true,
               body: Padding(
-                padding: EdgeInsets.all(sizes.padding),
+                padding: EdgeInsets.all(sizes.viewPadding),
                 child: Column(
                   children: [
                     LatestExerciseRecord(

@@ -10,6 +10,7 @@ import '../../widgets/equipment/equipment_form.dart';
 import '../../widgets/layout/responsive_scaffold.dart';
 import 'equipments_view.dart';
 
+// TODO: delete this in favor of a modal
 class EquipmentCreationView extends StatelessWidget {
   static const String routeName = '/equipments/create';
   static const String name = 'equipment_creation';
@@ -25,7 +26,7 @@ class EquipmentCreationView extends StatelessWidget {
     return ResponsiveScaffold(
       title: "Create Equipment",
       body: Padding(
-        padding: EdgeInsets.all(sizes.padding),
+        padding: EdgeInsets.all(sizes.viewPadding),
         child: BlocConsumer<ExerciseCubit, ExerciseState>(
           listenWhen: (previous, current) {
             return previous.selectedEquipment != current.selectedEquipment;

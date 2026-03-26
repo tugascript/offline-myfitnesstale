@@ -2,6 +2,7 @@ import 'screen_size.dart';
 
 final class DataDisplaySizesList {
   final double padding;
+  final double viewPadding;
   final double spacing;
   final double margins;
   final double titleFontSize;
@@ -16,6 +17,7 @@ final class DataDisplaySizesList {
 
   const DataDisplaySizesList({
     required this.padding,
+    required this.viewPadding,
     required this.spacing,
     required this.margins,
     required this.titleFontSize,
@@ -31,6 +33,7 @@ final class DataDisplaySizesList {
 
 sealed class DataDisplaySizes {
   static const double _padding = 16;
+  static const double _viewPadding = 10;
   static const double _spacing = 14;
   static const double _margins = 10;
   static const double _titleFontSize = 24;
@@ -51,6 +54,7 @@ sealed class DataDisplaySizes {
   static DataDisplaySizesList _sizeByRatio(double ratio) =>
       DataDisplaySizesList(
         padding: _padding * ratio,
+        viewPadding: _viewPadding * ratio,
         spacing: _spacing * ratio,
         margins: _margins * ratio,
         titleFontSize: _titleFontSize * ratio,

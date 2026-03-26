@@ -85,7 +85,7 @@ class _WorkoutPlanDetailViewState extends State<WorkoutPlanDetailView> {
           title: plan.name,
           isEntity: true,
           body: Padding(
-            padding: EdgeInsets.symmetric(horizontal: sizes.padding / 2),
+            padding: EdgeInsets.all(sizes.viewPadding),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -121,7 +121,7 @@ class _WorkoutPlanDetailViewState extends State<WorkoutPlanDetailView> {
                           ),
                         ) ??
                     []),
-                SizedBox(height: sizes.spacing * 2),
+                SizedBox(height: sizes.spacing),
                 ActionButtons(
                   isLoading: state.isLoading,
                   showMutationBtns: plan.createdBy == CreatedBy.user,

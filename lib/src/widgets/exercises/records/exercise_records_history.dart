@@ -134,65 +134,55 @@ class _ExerciseRecordsHistoryState extends State<ExerciseRecordsHistory> {
     )}";
     return Column(
       children: [
-        Padding(
-          padding: EdgeInsets.symmetric(
-            horizontal: widget.sizes.spacing / 2,
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.max,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                "Records History",
-                style: TextStyle(
-                  fontSize: widget.sizes.titleFontSize,
-                  fontWeight: FontWeight.bold,
-                ),
-                textAlign: TextAlign.start,
-                softWrap: true,
-                overflow: TextOverflow.ellipsis,
+        Row(
+          mainAxisSize: MainAxisSize.max,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              "Records History",
+              style: TextStyle(
+                fontSize: widget.sizes.titleFontSize,
+                fontWeight: FontWeight.bold,
               ),
-              IconsSwitch(
-                theme: widget.theme,
-                offIcon: Icons.show_chart,
-                onIcon: Icons.list,
-                switchOn: _showList,
-                spacing: widget.sizes.spacing / 2,
-                switchPadding: widget.sizes.padding / 4,
-                thumbSize: widget.sizes.subtitleFontSize * 1.1,
-                iconSize: widget.sizes.titleFontSize,
-                onChanged: (bool value) {
-                  setState(() {
-                    _showList = value;
-                  });
-                },
-              ),
-            ],
-          ),
+              textAlign: TextAlign.start,
+              softWrap: true,
+              overflow: TextOverflow.ellipsis,
+            ),
+            IconsSwitch(
+              theme: widget.theme,
+              offIcon: Icons.show_chart,
+              onIcon: Icons.list,
+              switchOn: _showList,
+              spacing: widget.sizes.spacing / 2,
+              switchPadding: widget.sizes.padding / 4,
+              thumbSize: widget.sizes.subtitleFontSize * 1.1,
+              iconSize: widget.sizes.titleFontSize,
+              onChanged: (bool value) {
+                setState(() {
+                  _showList = value;
+                });
+              },
+            ),
+          ],
         ),
         SizedBox(height: widget.sizes.spacing),
-        Padding(
-          padding: EdgeInsets.symmetric(
-            horizontal: widget.sizes.spacing / 3,
+        AppTextFormField(
+          theme: widget.theme,
+          fontSize: widget.sizes.subtitleFontSize,
+          padding: widget.sizes.padding * 2,
+          isLoading: false,
+          readOnly: true,
+          hintText: dateRangeText,
+          suffixIconConstraints: BoxConstraints(
+            minWidth: widget.sizes.subtitleFontSize * 4,
+            minHeight: widget.sizes.subtitleFontSize * 1.5,
           ),
-          child: AppTextFormField(
-            theme: widget.theme,
-            fontSize: widget.sizes.subtitleFontSize,
-            padding: widget.sizes.padding * 2,
-            isLoading: false,
-            readOnly: true,
-            hintText: dateRangeText,
-            suffixIconConstraints: BoxConstraints(
-              minWidth: widget.sizes.subtitleFontSize * 4,
-              minHeight: widget.sizes.subtitleFontSize * 1.5,
-            ),
-            suffixIcon: Icon(
-              Icons.date_range,
-              color: widget.theme.colorScheme.primary,
-              size: widget.sizes.subtitleFontSize * 2,
-            ),
-            onTap: _selectDateRange,
+          suffixIcon: Icon(
+            Icons.date_range,
+            color: widget.theme.colorScheme.primary,
+            size: widget.sizes.subtitleFontSize * 2,
           ),
+          onTap: _selectDateRange,
         ),
         SizedBox(height: widget.sizes.spacing),
         BlocBuilder<ExerciseRecordCubit, ExerciseRecordState>(
@@ -219,6 +209,7 @@ class _ExerciseRecordsHistoryState extends State<ExerciseRecordsHistory> {
                       isLoading: state.isLoading,
                     )
                   : Card(
+                      margin: EdgeInsets.zero,
                       child: Padding(
                         padding: EdgeInsets.symmetric(
                           horizontal: widget.sizes.padding,

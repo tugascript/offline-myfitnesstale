@@ -67,73 +67,77 @@ class _ExerciseUpdateViewState extends State<ExerciseUpdateView> {
         return ResponsiveScaffold(
           title: exercise?.name ?? "Update Exercise",
           isEntity: true,
-          body: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              SizedBox(height: breakpoints.height / 18),
-              Card(
-                margin: EdgeInsets.zero,
-                child: Padding(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: sizes.padding,
-                    vertical: sizes.padding * 2,
-                  ),
-                  child: ExerciseForm(
-                    theme: theme,
-                    sizes: sizes,
-                    isLoading: state.isLoading,
-                    submitLabel: "UPDATE",
-                    initialName: exercise?.name ?? '',
-                    initialDescription: exercise?.description,
-                    initialMuscleGroup: exercise?.muscleGroup,
-                    initialPrimaryMuscles: exercise?.muscles.primary ?? {},
-                    initialSecondaryMuscles: exercise?.muscles.secondary ?? {},
-                    initialEquipmentIds:
-                        exercise?.equipments?.map((e) => e.id).toSet() ?? {},
-                    initialDifficulty: exercise?.difficulty,
-                    initialIsFavorite: exercise?.isFavorite ?? false,
-                    onSubmit: ({
-                      String? description,
-                      Difficulty? difficulty,
-                      required Set<int> equipmentIds,
-                      required bool isFavorite,
-                      required MuscleGroup muscleGroup,
-                      required String name,
-                      required Set<Muscle> primaryMuscles,
-                      required Set<Muscle> secondaryMuscles,
-                    }) async {
-                      await context.read<ExerciseCubit>().updateExercise(
-                            id: widget.exerciseId,
-                            name: name,
-                            description: description,
-                            muscleGroup: muscleGroup,
-                            primaryMuscles: primaryMuscles,
-                            secondaryMuscles: secondaryMuscles,
-                            equipmentIds: equipmentIds,
-                            difficulty: difficulty,
-                            isFavorite: isFavorite,
-                          );
+          body: Padding(
+            padding: EdgeInsets.all(sizes.viewPadding),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                SizedBox(height: breakpoints.height / 18),
+                Card(
+                  margin: EdgeInsets.zero,
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: sizes.padding,
+                      vertical: sizes.padding * 2,
+                    ),
+                    child: ExerciseForm(
+                      theme: theme,
+                      sizes: sizes,
+                      isLoading: state.isLoading,
+                      submitLabel: "UPDATE",
+                      initialName: exercise?.name ?? '',
+                      initialDescription: exercise?.description,
+                      initialMuscleGroup: exercise?.muscleGroup,
+                      initialPrimaryMuscles: exercise?.muscles.primary ?? {},
+                      initialSecondaryMuscles:
+                          exercise?.muscles.secondary ?? {},
+                      initialEquipmentIds:
+                          exercise?.equipments?.map((e) => e.id).toSet() ?? {},
+                      initialDifficulty: exercise?.difficulty,
+                      initialIsFavorite: exercise?.isFavorite ?? false,
+                      onSubmit: ({
+                        String? description,
+                        Difficulty? difficulty,
+                        required Set<int> equipmentIds,
+                        required bool isFavorite,
+                        required MuscleGroup muscleGroup,
+                        required String name,
+                        required Set<Muscle> primaryMuscles,
+                        required Set<Muscle> secondaryMuscles,
+                      }) async {
+                        await context.read<ExerciseCubit>().updateExercise(
+                              id: widget.exerciseId,
+                              name: name,
+                              description: description,
+                              muscleGroup: muscleGroup,
+                              primaryMuscles: primaryMuscles,
+                              secondaryMuscles: secondaryMuscles,
+                              equipmentIds: equipmentIds,
+                              difficulty: difficulty,
+                              isFavorite: isFavorite,
+                            );
 
-                      if (context.mounted) {
-                        if (state.error == null) {
-                          if (context.canPop()) {
-                            context.pop();
-                            return;
+                        if (context.mounted) {
+                          if (state.error == null) {
+                            if (context.canPop()) {
+                              context.pop();
+                              return;
+                            }
+
+                            context.go(
+                              ExerciseDetailView.routeName.replaceFirst(
+                                ":id",
+                                widget.exerciseId.toString(),
+                              ),
+                            );
                           }
-
-                          context.go(
-                            ExerciseDetailView.routeName.replaceFirst(
-                              ":id",
-                              widget.exerciseId.toString(),
-                            ),
-                          );
                         }
-                      }
-                    },
+                      },
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         );
       },

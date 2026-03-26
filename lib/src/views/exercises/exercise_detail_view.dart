@@ -139,7 +139,7 @@ class _ExerciseDetailViewState extends State<ExerciseDetailView> {
           isEntity: true,
           showBackButton: true,
           body: Padding(
-            padding: EdgeInsets.symmetric(horizontal: sizes.padding / 2),
+            padding: EdgeInsets.all(sizes.viewPadding),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [

@@ -75,7 +75,7 @@ class _WorkoutPlanListViewState extends State<WorkoutPlanListView> {
     return AppScaffold(
       title: 'Workout Plans',
       body: Padding(
-        padding: EdgeInsets.all(sizes.padding),
+        padding: EdgeInsets.all(sizes.viewPadding),
         child: BlocConsumer<WorkoutPlanCubit, WorkoutPlanState>(
           listener: (context, state) {
             if (state.error != null) {

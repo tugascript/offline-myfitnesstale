@@ -64,74 +64,77 @@ class _WorkoutPlanEditViewState extends State<WorkoutPlanEditView> {
           title: plan.name,
           isEntity: true,
           showBackButton: false,
-          body: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _WorkoutPlanEditHeader(
-                sizes: sizes,
-                plan: plan,
-                theme: theme,
-                onCancel: () {
-                  setState(() {
-                    _isEditingHeader = false;
-                  });
-                },
-                onSubmit: ({
-                  String? description,
-                  required Difficulty difficulty,
-                  required bool isFavorite,
-                  required String name,
-                }) async {
-                  await context.read<WorkoutPlanCubit>().updateWorkoutPlan(
-                        id: plan.id,
-                        name: name,
-                        isFavorite: isFavorite,
-                        difficulty: difficulty,
-                        description: description,
-                      );
-                  if (mounted) {
+          body: Padding(
+            padding: EdgeInsets.all(sizes.viewPadding),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _WorkoutPlanEditHeader(
+                  sizes: sizes,
+                  plan: plan,
+                  theme: theme,
+                  onCancel: () {
                     setState(() {
                       _isEditingHeader = false;
                     });
-                  }
-                },
-                onEdit: () {
-                  setState(() {
-                    _isEditingHeader = true;
-                  });
-                },
-                isEditing: _isEditingHeader,
-                isLoading: state.isLoading,
-              ),
-              SizedBox(height: sizes.spacing * 1.25),
-              Padding(
-                padding: EdgeInsets.all(sizes.spacing / 2),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SizedBox(height: sizes.spacing / 2),
-                    Text(
-                      'Weekly Breakdown',
-                      style: TextStyle(
-                        fontSize: sizes.titleFontSize,
-                        fontWeight: FontWeight.bold,
-                        color:
-                            isDarkTheme ? Colors.grey[200] : Colors.grey[800],
-                      ),
-                    ),
-                    SizedBox(height: sizes.spacing),
-                    WorkoutPlanWeeksEditor(
-                      theme: theme,
-                      sizes: sizes,
-                      workoutPlanId: plan.id,
-                      currentVersion: plan.currentVersion,
-                      initialWeeks: plan.weeks ?? const [],
-                    ),
-                  ],
+                  },
+                  onSubmit: ({
+                    String? description,
+                    required Difficulty difficulty,
+                    required bool isFavorite,
+                    required String name,
+                  }) async {
+                    await context.read<WorkoutPlanCubit>().updateWorkoutPlan(
+                          id: plan.id,
+                          name: name,
+                          isFavorite: isFavorite,
+                          difficulty: difficulty,
+                          description: description,
+                        );
+                    if (mounted) {
+                      setState(() {
+                        _isEditingHeader = false;
+                      });
+                    }
+                  },
+                  onEdit: () {
+                    setState(() {
+                      _isEditingHeader = true;
+                    });
+                  },
+                  isEditing: _isEditingHeader,
+                  isLoading: state.isLoading,
                 ),
-              )
-            ],
+                SizedBox(height: sizes.spacing * 1.25),
+                Padding(
+                  padding: EdgeInsets.all(sizes.spacing / 2),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SizedBox(height: sizes.spacing / 2),
+                      Text(
+                        'Weekly Breakdown',
+                        style: TextStyle(
+                          fontSize: sizes.titleFontSize,
+                          fontWeight: FontWeight.bold,
+                          color:
+                              isDarkTheme ? Colors.grey[200] : Colors.grey[800],
+                        ),
+                      ),
+                      SizedBox(height: sizes.spacing),
+                      WorkoutPlanWeeksEditor(
+                        theme: theme,
+                        sizes: sizes,
+                        workoutPlanId: plan.id,
+                        currentVersion: plan.currentVersion,
+                        initialWeeks: plan.weeks ?? const [],
+                      ),
+                    ],
+                  ),
+                )
+              ],
+            ),
           ),
         );
       },

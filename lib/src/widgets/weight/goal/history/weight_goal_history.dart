@@ -79,22 +79,15 @@ class _WeightGoalHistoryState extends State<WeightGoalHistory> {
         builder: (context, weightState) {
       if (!weightState.isLoading && weightState.weightGoals.isEmpty) {
         return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Padding(
-              padding: EdgeInsets.only(
-                left: widget.sizes.spacing / 2,
+            Text(
+              "Weight Goals History",
+              style: TextStyle(
+                fontSize: widget.sizes.titleFontSize,
+                fontWeight: FontWeight.bold,
               ),
-              child: SizedBox(
-                width: double.infinity,
-                child: Text(
-                  "Weight Goals History",
-                  style: TextStyle(
-                    fontSize: widget.sizes.titleFontSize,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  textAlign: TextAlign.start,
-                ),
-              ),
+              textAlign: TextAlign.start,
             ),
             SizedBox(height: widget.sizes.spacing),
             NotFoundList(

@@ -37,6 +37,7 @@ class WorkoutHeaderEditCard extends StatelessWidget {
         ? Colors.grey[200]
         : Colors.grey[800];
     return Card(
+      margin: EdgeInsets.zero,
       child: Padding(
         padding: EdgeInsets.all(sizes.padding),
         child: Column(

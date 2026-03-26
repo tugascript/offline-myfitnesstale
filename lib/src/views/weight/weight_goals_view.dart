@@ -21,7 +21,7 @@ class WeightGoalView extends StatelessWidget {
     return AppScaffold(
       title: "Weight Goals",
       body: Padding(
-        padding: EdgeInsets.all(sizes.padding),
+        padding: EdgeInsets.all(sizes.viewPadding),
         child: Column(
           children: [
             ActiveWeightGoal(

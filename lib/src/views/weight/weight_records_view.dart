@@ -25,7 +25,7 @@ class WeightRecordsView extends StatelessWidget {
     return ResponsiveScaffold(
       title: "Weight Logs",
       body: Padding(
-        padding: EdgeInsets.all(sizes.padding),
+        padding: EdgeInsets.all(sizes.viewPadding),
         child: BlocBuilder<ProfileCubit, ProfileState>(
           builder: (context, state) {
             return Column(

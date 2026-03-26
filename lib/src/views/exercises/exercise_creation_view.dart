@@ -25,82 +25,84 @@ class ExerciseCreationView extends StatelessWidget {
 
     return ResponsiveScaffold(
       title: "Create Exercise",
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.start,
-        children: [
-          SizedBox(height: breakPoint.height / 18),
-          BlocConsumer<ExerciseCubit, ExerciseState>(
-            listenWhen: (previous, current) {
-              return previous.selectedExercise != current.selectedExercise;
-            },
-            listener: (context, state) {
-              if (state.isLoading) {
-                return;
-              }
+      body: Padding(
+        padding: EdgeInsets.all(sizes.viewPadding),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            BlocConsumer<ExerciseCubit, ExerciseState>(
+              listenWhen: (previous, current) {
+                return previous.selectedExercise != current.selectedExercise;
+              },
+              listener: (context, state) {
+                if (state.isLoading) {
+                  return;
+                }
 
-              if (state.error != null) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(state.error!.description)),
-                );
-              }
+                if (state.error != null) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(state.error!.description)),
+                  );
+                }
 
-              if (state.selectedExercise != null) {
-                context.go(
-                  ExerciseDetailView.routeName.replaceFirst(
-                    ":id",
-                    state.selectedExercise!.id.toString(),
+                if (state.selectedExercise != null) {
+                  context.go(
+                    ExerciseDetailView.routeName.replaceFirst(
+                      ":id",
+                      state.selectedExercise!.id.toString(),
+                    ),
+                  );
+                }
+              },
+              builder: (context, state) {
+                return Card(
+                  margin: EdgeInsets.zero,
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: sizes.padding,
+                      vertical: sizes.padding * 2,
+                    ),
+                    child: ExerciseForm(
+                      theme: theme,
+                      sizes: sizes,
+                      submitLabel: "CREATE",
+                      isLoading: state.isLoading,
+                      initialName: '',
+                      initialDescription: null,
+                      initialMuscleGroup: null,
+                      initialPrimaryMuscles: {},
+                      initialSecondaryMuscles: {},
+                      initialEquipmentIds: {},
+                      initialDifficulty: null,
+                      initialIsFavorite: false,
+                      onSubmit: ({
+                        String? description,
+                        Difficulty? difficulty,
+                        required Set<int> equipmentIds,
+                        required bool isFavorite,
+                        required MuscleGroup muscleGroup,
+                        required String name,
+                        required Set<Muscle> primaryMuscles,
+                        required Set<Muscle> secondaryMuscles,
+                      }) {
+                        context.read<ExerciseCubit>().createExercise(
+                              name: name,
+                              description: description,
+                              muscleGroup: muscleGroup,
+                              primaryMuscles: primaryMuscles,
+                              secondaryMuscles: secondaryMuscles,
+                              equipmentIds: equipmentIds,
+                              difficulty: difficulty,
+                              isFavorite: isFavorite,
+                            );
+                      },
+                    ),
                   ),
                 );
-              }
-            },
-            builder: (context, state) {
-              return Card(
-                margin: EdgeInsets.zero,
-                child: Padding(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: sizes.padding,
-                    vertical: sizes.padding * 2,
-                  ),
-                  child: ExerciseForm(
-                    theme: theme,
-                    sizes: sizes,
-                    submitLabel: "CREATE",
-                    isLoading: state.isLoading,
-                    initialName: '',
-                    initialDescription: null,
-                    initialMuscleGroup: null,
-                    initialPrimaryMuscles: {},
-                    initialSecondaryMuscles: {},
-                    initialEquipmentIds: {},
-                    initialDifficulty: null,
-                    initialIsFavorite: false,
-                    onSubmit: ({
-                      String? description,
-                      Difficulty? difficulty,
-                      required Set<int> equipmentIds,
-                      required bool isFavorite,
-                      required MuscleGroup muscleGroup,
-                      required String name,
-                      required Set<Muscle> primaryMuscles,
-                      required Set<Muscle> secondaryMuscles,
-                    }) {
-                      context.read<ExerciseCubit>().createExercise(
-                            name: name,
-                            description: description,
-                            muscleGroup: muscleGroup,
-                            primaryMuscles: primaryMuscles,
-                            secondaryMuscles: secondaryMuscles,
-                            equipmentIds: equipmentIds,
-                            difficulty: difficulty,
-                            isFavorite: isFavorite,
-                          );
-                    },
-                  ),
-                ),
-              );
-            },
-          ),
-        ],
+              },
+            ),
+          ],
+        ),
       ),
     );
   }

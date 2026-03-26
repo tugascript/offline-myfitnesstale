@@ -88,7 +88,7 @@ class _ActiveRestTimerState extends State<ActiveRestTimer> {
 
   @override
   Widget build(BuildContext context) {
-    final restSize = widget.breakPoint.height / 6.75;
+    final restSize = widget.sizes.fontSize * 4 + widget.sizes.padding * 7;
     return Card(
       margin: EdgeInsets.zero,
       child: Padding(

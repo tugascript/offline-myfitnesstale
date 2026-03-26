@@ -98,7 +98,7 @@ class _WorkoutHistoryViewState extends State<WorkoutHistoryView> {
             builder: (context, profileState) {
               final units = profileState.system?.units ?? Units.metric;
               return Padding(
-                padding: EdgeInsets.all(sizes.padding),
+                padding: EdgeInsets.all(sizes.viewPadding),
                 child: BlocConsumer<WorkoutRecordCubit, WorkoutRecordState>(
                   listener: (context, state) {
                     if (state.error != null) {
@@ -113,6 +113,7 @@ class _WorkoutHistoryViewState extends State<WorkoutHistoryView> {
                   builder: (context, state) {
                     return Column(
                       mainAxisSize: MainAxisSize.max,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         LatestWorkoutRecord(
                           sizes: sizes,
@@ -120,9 +121,17 @@ class _WorkoutHistoryViewState extends State<WorkoutHistoryView> {
                           units: units,
                           workoutId: widget.workoutId,
                         ),
-                        SizedBox(height: sizes.spacing * 2),
+                        SizedBox(height: sizes.spacing),
+                        Text(
+                          'Workout Records',
+                          style: TextStyle(
+                            fontSize: sizes.titleFontSize,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        SizedBox(height: sizes.spacing),
                         SizedBox(
-                          height: breakpoints.height / 2.5,
+                          height: breakpoints.height / 2.35,
                           child: SingleWorkoutRecordList(
                             sizes: sizes,
                             units: units,
