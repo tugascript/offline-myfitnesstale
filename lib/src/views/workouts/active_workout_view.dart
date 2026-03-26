@@ -137,6 +137,7 @@ class _ActiveWorkoutViewState extends State<ActiveWorkoutView> {
                               activeState.currentExercisePosition + 1,
                           minReps: workoutSetExercise.minReps,
                           maxReps: workoutSetExercise.maxReps,
+                          toMaxReps: workoutSetExercise.toMaxReps,
                           exerciseName: exercise.name,
                           recommendedRestSecs: currentSet.recommendedRestSecs,
                           maxRestSecs: currentSet.maxRestSecs,
@@ -224,7 +225,16 @@ class _ActiveWorkoutViewState extends State<ActiveWorkoutView> {
                               );
 
                               if (mounted) {
-                                if (isLastExercise) {
+                                final isLastSetOfWorkout = activeState
+                                            .currentSetPosition ==
+                                        (activeState.workout?.sets?.length ??
+                                                0) -
+                                            1 &&
+                                    activeState.currentSetNumber ==
+                                        (currentSet.maxSets ??
+                                            currentSet.minSets);
+
+                                if (isLastExercise && !isLastSetOfWorkout) {
                                   cubit.startRest();
                                 } else {
                                   cubit.nextExercise();

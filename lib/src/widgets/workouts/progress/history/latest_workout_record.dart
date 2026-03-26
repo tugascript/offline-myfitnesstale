@@ -100,12 +100,23 @@ class _LatestWorkoutRecord extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.start,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  "Latest Record",
-                  style: TextStyle(
-                    fontSize: sizes.titleFontSize,
-                    fontWeight: FontWeight.bold,
-                  ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  mainAxisSize: MainAxisSize.max,
+                  children: [
+                    Text(
+                      "Latest Record",
+                      style: TextStyle(
+                        fontSize: sizes.titleFontSize,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Icon(
+                      Icons.arrow_forward_ios,
+                      size: sizes.titleFontSize,
+                      color: theme.colorScheme.onSurface,
+                    ),
+                  ],
                 ),
                 SizedBox(height: sizes.spacing),
                 Row(

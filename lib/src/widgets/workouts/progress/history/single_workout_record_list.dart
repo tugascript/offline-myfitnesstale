@@ -86,28 +86,16 @@ class _SingleWorkoutRecordCard extends StatelessWidget {
       padding: sizes.padding,
       children: [
         Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          mainAxisAlignment: MainAxisAlignment.start,
+          mainAxisSize: MainAxisSize.max,
           children: [
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.play_arrow, size: sizes.fontSize * 1.2),
-                Text(
-                  " ${Formatters.formatDate(units, workoutRecord.startedAt)}",
-                  style: TextStyle(
-                    fontSize: sizes.fontSize,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
-            if (workoutRecord.completedAt != null)
-              Row(
+            Expanded(
+              child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.stop, size: sizes.fontSize * 1.2),
+                  Icon(Icons.calendar_today, size: sizes.fontSize * 1.2),
                   Text(
-                    " ${Formatters.formatDate(units, workoutRecord.completedAt!)}",
+                    " ${Formatters.formatDate(units, workoutRecord.startedAt)}",
                     style: TextStyle(
                       fontSize: sizes.fontSize,
                       fontWeight: FontWeight.w600,
@@ -115,44 +103,47 @@ class _SingleWorkoutRecordCard extends StatelessWidget {
                   ),
                 ],
               ),
+            ),
+            if (workoutRecord.completedAt != null)
+              Expanded(
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.event_available, size: sizes.fontSize * 1.2),
+                    Text(
+                      " ${Formatters.formatDate(units, workoutRecord.completedAt!)}",
+                      style: TextStyle(
+                        fontSize: sizes.fontSize,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
           ],
         ),
         SizedBox(height: sizes.spacing),
         Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          mainAxisAlignment: MainAxisAlignment.start,
+          mainAxisSize: MainAxisSize.max,
           children: [
-            TotalNumericString(
-              leading: Icon(Icons.scale, size: sizes.fontSize * 1.2),
-              name: 'Volume',
-              total: units == Units.metric
-                  ? Converters.gramsToKg(workoutRecord.totalVolume).round()
-                  : Converters.gramsToLbs(workoutRecord.totalVolume).round(),
-              fontSize: sizes.fontSize,
+            Expanded(
+              child: TotalNumericString(
+                leading: Icon(Icons.repeat, size: sizes.fontSize * 1.2),
+                name: 'Sets',
+                total: workoutRecord.totalSets,
+                fontSize: sizes.fontSize,
+              ),
             ),
-            TotalNumericString(
-              leading: Icon(Icons.timer, size: sizes.fontSize * 1.2),
-              name: 'Rest',
-              total: workoutRecord.totalRestSecs,
-              fontSize: sizes.fontSize,
-            ),
-          ],
-        ),
-        SizedBox(height: sizes.spacing),
-        // Totals row
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            TotalNumericString(
-              leading: Icon(Icons.repeat, size: sizes.fontSize * 1.2),
-              name: 'Sets',
-              total: workoutRecord.totalSets,
-              fontSize: sizes.fontSize,
-            ),
-            TotalNumericString(
-              leading: Icon(Icons.repeat_one, size: sizes.fontSize * 1.2),
-              name: 'Reps',
-              total: workoutRecord.totalReps,
-              fontSize: sizes.fontSize,
+            Expanded(
+              child: TotalNumericString(
+                leading: Icon(Icons.scale, size: sizes.fontSize * 1.2),
+                name: 'Volume',
+                total: units == Units.metric
+                    ? Converters.gramsToKg(workoutRecord.totalVolume).round()
+                    : Converters.gramsToLbs(workoutRecord.totalVolume).round(),
+                fontSize: sizes.fontSize,
+              ),
             ),
           ],
         ),

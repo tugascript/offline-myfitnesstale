@@ -370,8 +370,8 @@ class WorkoutRecordService {
         await _repository.startTransaction((trx) async {
           await _setRecordRepository.update(updatedRecord, trx);
           final updatedWorkoutRecord = workoutRecord.copyWith(
-            totalRestSecs:
-                workoutRecord.totalRestSecs + (record.totalRestSecs ?? 0),
+            totalRestSecs: workoutRecord.totalRestSecs +
+                (updatedRecord.totalRestSecs ?? 0),
           );
           await _repository.update(updatedWorkoutRecord, trx);
         });

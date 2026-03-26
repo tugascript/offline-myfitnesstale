@@ -89,70 +89,73 @@ class _ActiveRestTimerState extends State<ActiveRestTimer> {
   @override
   Widget build(BuildContext context) {
     final restSize = widget.sizes.fontSize * 4 + widget.sizes.padding * 7;
-    return Card(
-      margin: EdgeInsets.zero,
-      child: Padding(
-        padding: EdgeInsets.all(widget.sizes.padding),
-        child: SizedBox.square(
-          dimension: restSize,
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              Positioned.fill(
-                child: FittedBox(
-                  fit: BoxFit.contain,
-                  child: SizedBox.square(
-                    dimension: _kProgressRingBase,
-                    child: CircularProgressIndicator(
-                      value: _progress,
-                      backgroundColor: widget.theme.colorScheme.onSurface
-                          .withValues(alpha: 0.1),
-                      strokeWidth: ((widget.sizes.spacing / 2) *
-                              (_kProgressRingBase / restSize))
-                          .clamp(2.0, _kProgressRingBase * 0.22),
-                      color: _progressColor,
+    return SizedBox(
+      width: double.infinity,
+      child: Card(
+        margin: EdgeInsets.zero,
+        child: Padding(
+          padding: EdgeInsets.all(widget.sizes.padding),
+          child: SizedBox.square(
+            dimension: restSize,
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                Positioned.fill(
+                  child: FittedBox(
+                    fit: BoxFit.contain,
+                    child: SizedBox.square(
+                      dimension: _kProgressRingBase,
+                      child: CircularProgressIndicator(
+                        value: _progress,
+                        backgroundColor: widget.theme.colorScheme.onSurface
+                            .withValues(alpha: 0.1),
+                        strokeWidth: ((widget.sizes.spacing / 2) *
+                                (_kProgressRingBase / restSize))
+                            .clamp(2.0, _kProgressRingBase * 0.22),
+                        color: _progressColor,
+                      ),
                     ),
                   ),
                 ),
-              ),
-              Padding(
-                padding: EdgeInsets.all(widget.sizes.padding),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      'Rest',
-                      style: TextStyle(
-                        fontSize: widget.sizes.subtitleFontSize,
-                        fontWeight: FontWeight.bold,
-                        color: _progressColor,
-                      ),
-                    ),
-                    SizedBox(height: widget.sizes.spacing / 2),
-                    Text(
-                      _formatRestTime(_elapsedSeconds),
-                      style: TextStyle(
-                        fontSize: widget.sizes.fontSize,
-                        fontWeight: FontWeight.w600,
-                        color: _progressColor,
-                      ),
-                    ),
-                    TextButton(
-                      onPressed: () => widget.onNext(_elapsedSeconds),
-                      child: Text(
-                        'Next',
+                Padding(
+                  padding: EdgeInsets.all(widget.sizes.padding),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        'Rest',
                         style: TextStyle(
                           fontSize: widget.sizes.subtitleFontSize,
                           fontWeight: FontWeight.bold,
                           color: _progressColor,
                         ),
                       ),
-                    ),
-                  ],
+                      SizedBox(height: widget.sizes.spacing / 2),
+                      Text(
+                        _formatRestTime(_elapsedSeconds),
+                        style: TextStyle(
+                          fontSize: widget.sizes.fontSize,
+                          fontWeight: FontWeight.w600,
+                          color: _progressColor,
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: () => widget.onNext(_elapsedSeconds),
+                        child: Text(
+                          'Next',
+                          style: TextStyle(
+                            fontSize: widget.sizes.subtitleFontSize,
+                            fontWeight: FontWeight.bold,
+                            color: _progressColor,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

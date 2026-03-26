@@ -130,6 +130,7 @@ class _WorkoutHistoryViewState extends State<WorkoutHistoryView> {
                           ),
                         ),
                         SizedBox(height: sizes.spacing),
+                        // TODO: add filter by date range
                         SizedBox(
                           height: breakpoints.height / 2.35,
                           child: SingleWorkoutRecordList(
