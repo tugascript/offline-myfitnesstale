@@ -12,7 +12,7 @@ import '../../utilities/sizes/data_display_sizes.dart';
 import '../../utilities/sizes/screen_size.dart';
 import '../../widgets/layout/responsive_scaffold.dart';
 import '../../widgets/workouts/progress/history/latest_workout_record.dart';
-import '../../widgets/workouts/progress/history/single_workout_record_list.dart';
+import '../../widgets/workouts/progress/history/workout_record_history.dart';
 
 class WorkoutHistoryView extends StatefulWidget {
   static const routeName = '/workouts/:id/history';
@@ -29,8 +29,6 @@ class WorkoutHistoryView extends StatefulWidget {
 }
 
 class _WorkoutHistoryViewState extends State<WorkoutHistoryView> {
-  final ScrollController _scrollController = ScrollController();
-
   @override
   void initState() {
     super.initState();
@@ -39,46 +37,6 @@ class _WorkoutHistoryViewState extends State<WorkoutHistoryView> {
     if (workoutCubit.state.selectedWorkout?.id != widget.workoutId) {
       workoutCubit.getWorkout(widget.workoutId);
     }
-
-    final cubit = context.read<WorkoutRecordCubit>();
-    final pagination = cubit.state.pagination;
-    if (cubit.state.workoutRecords.isEmpty ||
-        pagination.workoutId != widget.workoutId) {
-      cubit.getWorkoutRecords(
-        workoutId: widget.workoutId,
-        limit: 20,
-        offset: 0,
-      );
-    }
-
-    _scrollController.addListener(_onScroll);
-  }
-
-  @override
-  void dispose() {
-    _scrollController.dispose();
-    super.dispose();
-  }
-
-  void _onScroll() {
-    if (_isBottom) {
-      final cubit = context.read<WorkoutRecordCubit>();
-      if (!cubit.state.isLoading &&
-          cubit.state.pagination.total > cubit.state.workoutRecords.length) {
-        cubit.getWorkoutRecords(
-          workoutId: widget.workoutId,
-          limit: 20,
-          offset: cubit.state.workoutRecords.length,
-        );
-      }
-    }
-  }
-
-  bool get _isBottom {
-    if (!_scrollController.hasClients) return false;
-    final maxScroll = _scrollController.position.maxScrollExtent;
-    final currentScroll = _scrollController.offset;
-    return currentScroll >= (maxScroll * 0.9);
   }
 
   @override
@@ -122,24 +80,12 @@ class _WorkoutHistoryViewState extends State<WorkoutHistoryView> {
                           workoutId: widget.workoutId,
                         ),
                         SizedBox(height: sizes.spacing),
-                        Text(
-                          'Workout Records',
-                          style: TextStyle(
-                            fontSize: sizes.titleFontSize,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        SizedBox(height: sizes.spacing),
-                        // TODO: add filter by date range
-                        SizedBox(
-                          height: breakpoints.height / 2.35,
-                          child: SingleWorkoutRecordList(
-                            sizes: sizes,
-                            units: units,
-                            isLoading: state.isLoading,
-                            workoutRecords: state.workoutRecords,
-                            pagination: state.pagination,
-                          ),
+                        WorkoutRecordHistory(
+                          theme: theme,
+                          breakPoint: breakpoints,
+                          sizes: sizes,
+                          units: units,
+                          workoutId: widget.workoutId,
                         ),
                       ],
                     );

@@ -6,12 +6,14 @@ import 'common_state.dart';
 
 final class WorkoutRecordPagination extends Equatable {
   final int? workoutId;
+  final (DateTime, DateTime)? dateRange;
   final int limit;
   final int offset;
   final int total;
 
   const WorkoutRecordPagination({
     this.workoutId,
+    this.dateRange,
     required this.limit,
     required this.offset,
     required this.total,
@@ -27,12 +29,14 @@ final class WorkoutRecordPagination extends Equatable {
 
   WorkoutRecordPagination copyWith({
     int? workoutId,
+    (DateTime, DateTime)? dateRange,
     int? limit,
     int? offset,
     int? total,
   }) {
     return WorkoutRecordPagination(
       workoutId: workoutId ?? this.workoutId,
+      dateRange: dateRange ?? this.dateRange,
       limit: limit ?? this.limit,
       offset: offset ?? this.offset,
       total: total ?? this.total,
@@ -42,6 +46,7 @@ final class WorkoutRecordPagination extends Equatable {
   @override
   List<Object?> get props => [
         workoutId,
+        dateRange,
         limit,
         offset,
         total,
