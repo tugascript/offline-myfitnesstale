@@ -59,6 +59,7 @@ class WorkoutRecordService {
       Result<PaginatedDto<WorkoutRecordDto, WorkoutRecord>,
           ServiceError<SingleErrorTypes>>> getWorkoutRecords({
     int? workoutId,
+    (DateTime start, DateTime end)? dateRange,
     int limit = kDefaultLimit,
     int offset = kDefaultOffset,
   }) async {
@@ -75,6 +76,34 @@ class WorkoutRecordService {
       }
 
       query.and(WorkoutRecordColumns.workoutId.equal, workoutId);
+    }
+
+    if (dateRange != null) {
+      final startOfDay = DateTime(
+        dateRange.$1.year,
+        dateRange.$1.month,
+        dateRange.$1.day,
+        0,
+        0,
+        0,
+      );
+      query.and(
+        WorkoutRecordColumns.startedAt.greaterThanOrEqual,
+        DateUtilities.getDateUnix(startOfDay),
+      );
+
+      final endOfDay = DateTime(
+        dateRange.$2.year,
+        dateRange.$2.month,
+        dateRange.$2.day,
+        23,
+        59,
+        59,
+      );
+      query.and(
+        WorkoutRecordColumns.startedAt.lessThanOrEqual,
+        DateUtilities.getDateUnix(endOfDay),
+      );
     }
 
     try {

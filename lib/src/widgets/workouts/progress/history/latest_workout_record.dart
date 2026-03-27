@@ -114,7 +114,7 @@ class _LatestWorkoutRecord extends StatelessWidget {
                     Icon(
                       Icons.arrow_forward_ios,
                       size: sizes.titleFontSize,
-                      color: theme.colorScheme.onSurface,
+                      color: Colors.grey,
                     ),
                   ],
                 ),

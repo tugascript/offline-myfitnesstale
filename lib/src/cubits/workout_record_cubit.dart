@@ -16,6 +16,7 @@ class WorkoutRecordCubit extends Cubit<WorkoutRecordState> {
 
   Future<void> getWorkoutRecords({
     int? workoutId,
+    (DateTime, DateTime)? dateRange,
     int? limit,
     int? offset,
   }) async {
@@ -23,7 +24,8 @@ class WorkoutRecordCubit extends Cubit<WorkoutRecordState> {
     emit(state.copyWith(isLoading: true));
 
     final result = await _workoutRecordService.getWorkoutRecords(
-      workoutId: workoutId,
+      workoutId: workoutId ?? state.pagination.workoutId,
+      dateRange: dateRange ?? state.pagination.dateRange,
       limit: limit ?? state.pagination.limit,
       offset: offset ?? state.pagination.offset,
     );
@@ -64,6 +66,7 @@ class WorkoutRecordCubit extends Cubit<WorkoutRecordState> {
             : workoutRecords,
         pagination: state.pagination.copyWith(
           workoutId: workoutId,
+          dateRange: dateRange,
           total: paginatedData.total,
           limit: paginatedData.limit,
           offset: paginatedData.offset,
