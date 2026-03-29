@@ -132,7 +132,7 @@ class WorkoutPlanRecordService {
 
       final WorkoutPlanRecord record = WorkoutPlanRecord.create(
         workoutPlanId,
-        workoutPlanVersion: workoutPlan.currentVersion,
+        workoutPlanVersion: workoutPlan.version,
         status: status,
       );
       final int id = await _repository.insert(record);

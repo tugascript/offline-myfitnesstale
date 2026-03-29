@@ -1,3 +1,4 @@
+import 'common.dart';
 import 'exercise_model.dart';
 import 'model.dart';
 import 'utilities.dart';
@@ -17,7 +18,6 @@ enum WorkoutSetExerciseRecordColumns with Columns {
   reps("reps"),
   weightGrams("weight_grams"),
   difficulty("difficulty"),
-  difficultyType("difficulty_type"),
   createdAt("created_at"),
   updatedAt("updated_at");
 
@@ -37,8 +37,7 @@ class WorkoutSetExerciseRecord implements Model {
   final int position;
   final int reps;
   final int weightGrams;
-  final int? difficulty;
-  final String? difficultyType;
+  final WorkoutSetExerciseDifficulty difficulty;
   @override
   final int createdAt;
   @override
@@ -53,8 +52,7 @@ class WorkoutSetExerciseRecord implements Model {
     required this.position,
     required this.reps,
     required this.weightGrams,
-    this.difficulty,
-    this.difficultyType,
+    required this.difficulty,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -70,8 +68,7 @@ class WorkoutSetExerciseRecord implements Model {
     ${WorkoutSetExerciseRecordColumns.position.value} INTEGER NOT NULL,
     ${WorkoutSetExerciseRecordColumns.reps.value} INTEGER NOT NULL,
     ${WorkoutSetExerciseRecordColumns.weightGrams.value} INTEGER NOT NULL,
-    ${WorkoutSetExerciseRecordColumns.difficulty.value} INTEGER,
-    ${WorkoutSetExerciseRecordColumns.difficultyType.value} TEXT,
+    ${WorkoutSetExerciseRecordColumns.difficulty.value} TEXT NOT NULL,
     ${WorkoutSetExerciseRecordColumns.createdAt.value} INTEGER NOT NULL,
     ${WorkoutSetExerciseRecordColumns.updatedAt.value} INTEGER NOT NULL,
     FOREIGN KEY (${WorkoutSetExerciseRecordColumns.workoutSetExerciseId.value}) REFERENCES ${WorkoutSetExercise.table} (id)
@@ -105,8 +102,7 @@ class WorkoutSetExerciseRecord implements Model {
       WorkoutSetExerciseRecordColumns.position.value: position,
       WorkoutSetExerciseRecordColumns.reps.value: reps,
       WorkoutSetExerciseRecordColumns.weightGrams.value: weightGrams,
-      WorkoutSetExerciseRecordColumns.difficulty.value: difficulty,
-      WorkoutSetExerciseRecordColumns.difficultyType.value: difficultyType,
+      WorkoutSetExerciseRecordColumns.difficulty.value: difficulty.toJson(),
       WorkoutSetExerciseRecordColumns.createdAt.value: createdAt,
       WorkoutSetExerciseRecordColumns.updatedAt.value: updatedAt,
     };
@@ -128,9 +124,9 @@ class WorkoutSetExerciseRecord implements Model {
       reps: map[WorkoutSetExerciseRecordColumns.reps.value] as int,
       weightGrams:
           map[WorkoutSetExerciseRecordColumns.weightGrams.value] as int,
-      difficulty: map[WorkoutSetExerciseRecordColumns.difficulty.value] as int?,
-      difficultyType:
-          map[WorkoutSetExerciseRecordColumns.difficultyType.value] as String?,
+      difficulty: WorkoutSetExerciseDifficulty.fromJson(
+        map[WorkoutSetExerciseRecordColumns.difficulty.value] as String,
+      ),
       createdAt: map[WorkoutSetExerciseRecordColumns.createdAt.value] as int,
       updatedAt: map[WorkoutSetExerciseRecordColumns.updatedAt.value] as int,
     );
@@ -145,8 +141,7 @@ class WorkoutSetExerciseRecord implements Model {
     required int position,
     required int reps,
     required int weightGrams,
-    int? difficulty,
-    String? difficultyType,
+    required WorkoutSetExerciseDifficulty difficulty,
   }) {
     final int now = DateUtilities.getNowUtcUnix();
     return WorkoutSetExerciseRecord(
@@ -158,7 +153,6 @@ class WorkoutSetExerciseRecord implements Model {
       reps: reps,
       weightGrams: weightGrams,
       difficulty: difficulty,
-      difficultyType: difficultyType,
       createdAt: now,
       updatedAt: now,
     );
@@ -174,8 +168,7 @@ class WorkoutSetExerciseRecord implements Model {
     int? position,
     int? reps,
     int? weightGrams,
-    int? difficulty,
-    String? difficultyType,
+    WorkoutSetExerciseDifficulty? difficulty,
     int? createdAt,
     int? updatedAt,
   }) {
@@ -189,7 +182,6 @@ class WorkoutSetExerciseRecord implements Model {
       reps: reps ?? this.reps,
       weightGrams: weightGrams ?? this.weightGrams,
       difficulty: difficulty ?? this.difficulty,
-      difficultyType: difficultyType ?? this.difficultyType,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -197,6 +189,6 @@ class WorkoutSetExerciseRecord implements Model {
 
   @override
   String toString() {
-    return 'WorkoutSetExerciseRecord{id: $id, workoutSetExerciseId: $workoutSetExerciseId, workoutRecordId: $workoutRecordId, workoutSetRecordId: $workoutSetRecordId, exerciseId: $exerciseId, position: $position, reps: $reps, weightGrams: $weightGrams, difficulty: $difficulty, difficultyType: $difficultyType, createdAt: $createdAt, updatedAt: $updatedAt}';
+    return 'WorkoutSetExerciseRecord{id: $id, workoutSetExerciseId: $workoutSetExerciseId, workoutRecordId: $workoutRecordId, workoutSetRecordId: $workoutSetRecordId, exerciseId: $exerciseId, position: $position, reps: $reps, weightGrams: $weightGrams, difficulty: $difficulty, createdAt: $createdAt, updatedAt: $updatedAt}';
   }
 }

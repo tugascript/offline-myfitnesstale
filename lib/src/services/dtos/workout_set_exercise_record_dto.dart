@@ -1,7 +1,9 @@
 import 'package:equatable/equatable.dart';
 
+import '../../models/common.dart';
 import '../../models/workout_set_exercise_record_model.dart';
 import 'dto.dart';
+import 'exercise_dto.dart';
 
 class WorkoutSetExerciseRecordDto extends Equatable
     implements Dto<WorkoutSetExerciseRecord> {
@@ -11,8 +13,9 @@ class WorkoutSetExerciseRecordDto extends Equatable
   final int exerciseId;
   final int reps;
   final int weightGrams;
-  final int? difficulty;
-  final String? difficultyType;
+  final WorkoutSetExerciseDifficulty difficulty;
+
+  final ExerciseDto? exercise;
 
   const WorkoutSetExerciseRecordDto({
     required this.id,
@@ -20,13 +23,15 @@ class WorkoutSetExerciseRecordDto extends Equatable
     required this.exerciseId,
     required this.reps,
     required this.weightGrams,
-    this.difficulty,
-    this.difficultyType,
+    required this.difficulty,
+    this.exercise,
   });
 
   @override
   factory WorkoutSetExerciseRecordDto.fromModel(
-      WorkoutSetExerciseRecord model) {
+    WorkoutSetExerciseRecord model, {
+    ExerciseDto? exercise,
+  }) {
     return WorkoutSetExerciseRecordDto(
       id: model.id!,
       workoutSetExerciseId: model.workoutSetExerciseId,
@@ -34,7 +39,7 @@ class WorkoutSetExerciseRecordDto extends Equatable
       reps: model.reps,
       weightGrams: model.weightGrams,
       difficulty: model.difficulty,
-      difficultyType: model.difficultyType,
+      exercise: exercise,
     );
   }
 
@@ -45,8 +50,8 @@ class WorkoutSetExerciseRecordDto extends Equatable
     int? exerciseId,
     int? reps,
     int? weightGrams,
-    int? difficulty,
-    String? difficultyType,
+    WorkoutSetExerciseDifficulty? difficulty,
+    ExerciseDto? exercise,
   }) {
     return WorkoutSetExerciseRecordDto(
       id: id ?? this.id,
@@ -55,7 +60,7 @@ class WorkoutSetExerciseRecordDto extends Equatable
       reps: reps ?? this.reps,
       weightGrams: weightGrams ?? this.weightGrams,
       difficulty: difficulty ?? this.difficulty,
-      difficultyType: difficultyType ?? this.difficultyType,
+      exercise: exercise ?? this.exercise,
     );
   }
 
@@ -67,6 +72,6 @@ class WorkoutSetExerciseRecordDto extends Equatable
         reps,
         weightGrams,
         difficulty,
-        difficultyType,
+        exercise?.name,
       ];
 }

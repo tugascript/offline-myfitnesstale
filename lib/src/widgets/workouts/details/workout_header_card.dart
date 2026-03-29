@@ -9,6 +9,7 @@ import '../../common/muscle_group_badge.dart';
 import '../../common/muscles_wrap.dart';
 import '../../common/total_numeric_string.dart';
 
+// TODO: add versioning
 class WorkoutHeaderCard extends StatelessWidget {
   final DataDisplaySizesList sizes;
   final WorkoutDto workoutDto;

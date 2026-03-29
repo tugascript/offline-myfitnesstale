@@ -1,18 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:skeletonizer/skeletonizer.dart';
 
 import '../../../../cubits/states/workout_record_state.dart';
 import '../../../../cubits/workout_record_cubit.dart';
 import '../../../../models/enums.dart';
 import '../../../../services/dtos/workout_record_dto.dart';
-import '../../../../utilities/converters.dart';
-import '../../../../utilities/formatters.dart';
 import '../../../../utilities/sizes/data_display_sizes.dart';
-import '../../../common/muscles_wrap.dart';
-import '../../../common/total_numeric_string.dart';
 import '../../../layout/app_elevated_button.dart';
+import 'workout_record_head.dart';
 
 class LatestWorkoutRecord extends StatefulWidget {
   final ThemeData theme;
@@ -86,15 +82,23 @@ class _LatestWorkoutRecord extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       margin: EdgeInsets.zero,
-      child: SizedBox(
-        width: double.infinity,
-        child: Padding(
-          padding: EdgeInsets.symmetric(
-            horizontal: sizes.padding,
-            vertical: sizes.padding * 2,
-          ),
-          child: Skeletonizer(
-            enabled: isLoading || workoutRecord == null,
+      child: InkWell(
+        onTap: () {
+          if (workoutRecord == null) {
+            return;
+          }
+
+          context.push(
+            '/workouts/${workoutRecord?.workoutId}/history/${workoutRecord?.id}',
+          );
+        },
+        child: SizedBox(
+          width: double.infinity,
+          child: Padding(
+            padding: EdgeInsets.symmetric(
+              horizontal: sizes.padding,
+              vertical: sizes.padding * 2,
+            ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               mainAxisAlignment: MainAxisAlignment.start,
@@ -119,141 +123,13 @@ class _LatestWorkoutRecord extends StatelessWidget {
                   ],
                 ),
                 SizedBox(height: sizes.spacing),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.max,
-                  children: [
-                    Expanded(
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.calendar_today,
-                            size: sizes.fontSize * 1.2,
-                          ),
-                          Text(
-                            " ${Formatters.formatDate(
-                              units,
-                              workoutRecord?.startedAt ?? DateTime.now(),
-                            )}",
-                            style: TextStyle(
-                              fontSize: sizes.fontSize,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    if (workoutRecord?.completedAt != null)
-                      Expanded(
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.event_available,
-                              size: sizes.fontSize * 1.2,
-                            ),
-                            Text(
-                              " ${Formatters.formatDate(
-                                units,
-                                workoutRecord!.completedAt!,
-                              )}",
-                              style: TextStyle(
-                                fontSize: sizes.fontSize,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                  ],
+                WorkoutRecordHead(
+                  sizes: sizes,
+                  theme: theme,
+                  units: units,
+                  isLoading: isLoading,
+                  workoutRecord: workoutRecord,
                 ),
-                SizedBox(height: sizes.spacing),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: TotalNumericString(
-                        leading: Icon(Icons.scale, size: sizes.fontSize * 1.2),
-                        name: 'Volume',
-                        total: units == Units.metric
-                            ? Converters.gramsToKg(
-                                workoutRecord?.totalVolume ?? 0,
-                              ).round()
-                            : Converters.gramsToLbs(
-                                workoutRecord?.totalVolume ?? 0,
-                              ).round(),
-                        fontSize: sizes.fontSize,
-                      ),
-                    ),
-                    Expanded(
-                      child: TotalNumericString(
-                        leading: Icon(Icons.timer, size: sizes.fontSize * 1.2),
-                        name: 'Rest',
-                        total: workoutRecord?.totalRestSecs ?? 0,
-                        fontSize: sizes.fontSize,
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: sizes.spacing),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: TotalNumericString(
-                        leading: Icon(Icons.repeat, size: sizes.fontSize * 1.2),
-                        name: 'Sets',
-                        total: workoutRecord?.totalSets ?? 0,
-                        fontSize: sizes.fontSize,
-                      ),
-                    ),
-                    Expanded(
-                      child: TotalNumericString(
-                        leading:
-                            Icon(Icons.repeat_one, size: sizes.fontSize * 1.2),
-                        name: 'Reps',
-                        total: workoutRecord?.totalReps ?? 0,
-                        fontSize: sizes.fontSize,
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: sizes.spacing),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: MusclesWrap(
-                        leading: Text(
-                          '💪',
-                          style:
-                              TextStyle(fontSize: sizes.subtitleFontSize * 1.2),
-                        ),
-                        title: 'Primary Muscles',
-                        sizes: sizes,
-                        muscles: workoutRecord?.muscles.primary ?? {},
-                        theme: theme,
-                      ),
-                    ),
-                    if (workoutRecord?.muscles.secondary.isNotEmpty ?? false)
-                      Expanded(
-                        child: MusclesWrap(
-                          leading: Text(
-                            '🥈',
-                            style: TextStyle(
-                              fontSize: sizes.subtitleFontSize * 1.2,
-                            ),
-                          ),
-                          title: 'Secondary Muscles',
-                          sizes: sizes,
-                          muscles: workoutRecord!.muscles.secondary,
-                          theme: theme,
-                        ),
-                      ),
-                  ],
-                )
               ],
             ),
           ),

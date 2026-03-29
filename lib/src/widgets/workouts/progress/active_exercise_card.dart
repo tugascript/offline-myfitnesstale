@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../models/workout_set_exercise_model.dart';
+import '../../../models/common.dart';
 import '../../../utilities/formatters.dart';
 import '../../../utilities/sizes/data_display_sizes.dart';
 

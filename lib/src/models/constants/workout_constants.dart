@@ -1,7 +1,5 @@
 import '../common.dart';
 import '../enums.dart';
-import '../workout_set_exercise_model.dart';
-
 import 'exercise_constants.dart';
 
 final class WorkoutSetExerciseData {

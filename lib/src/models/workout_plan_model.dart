@@ -14,7 +14,7 @@ enum WorkoutPlanColumns with Columns {
   picture("picture"),
   video("video"),
   difficulty("difficulty"),
-  currentVersion("current_version"),
+  version("version"),
   totalWeeks("total_weeks"),
   totalDays("total_days"),
   totalWorkouts("total_workouts"),
@@ -34,7 +34,7 @@ class WorkoutPlan extends Equatable implements Model {
   final int? id;
   final String name;
   final String? description;
-  final int currentVersion;
+  final int version;
   final int totalWeeks;
   final int totalDays;
   final int totalWorkouts;
@@ -52,7 +52,7 @@ class WorkoutPlan extends Equatable implements Model {
     this.id,
     required this.name,
     this.description,
-    required this.currentVersion,
+    required this.version,
     required this.totalWeeks,
     required this.totalDays,
     required this.totalWorkouts,
@@ -73,7 +73,7 @@ class WorkoutPlan extends Equatable implements Model {
     ${WorkoutPlanColumns.description.value} TEXT,
     ${WorkoutPlanColumns.picture.value} TEXT,
     ${WorkoutPlanColumns.video.value} TEXT,
-    ${WorkoutPlanColumns.currentVersion.value} INTEGER NOT NULL DEFAULT 1,
+    ${WorkoutPlanColumns.version.value} INTEGER NOT NULL,
     ${WorkoutPlanColumns.totalWeeks.value} INTEGER NOT NULL,
     ${WorkoutPlanColumns.totalDays.value} INTEGER NOT NULL,
     ${WorkoutPlanColumns.totalWorkouts.value} INTEGER NOT NULL,
@@ -93,7 +93,7 @@ class WorkoutPlan extends Equatable implements Model {
       WorkoutPlanColumns.id.value: id,
       WorkoutPlanColumns.name.value: name,
       WorkoutPlanColumns.description.value: description,
-      WorkoutPlanColumns.currentVersion.value: currentVersion,
+      WorkoutPlanColumns.version.value: version,
       WorkoutPlanColumns.totalWeeks.value: totalWeeks,
       WorkoutPlanColumns.totalDays.value: totalDays,
       WorkoutPlanColumns.totalWorkouts.value: totalWorkouts,
@@ -113,7 +113,7 @@ class WorkoutPlan extends Equatable implements Model {
       id: map[WorkoutPlanColumns.id.value] as int?,
       name: map[WorkoutPlanColumns.name.value] as String,
       description: map[WorkoutPlanColumns.description.value] as String?,
-      currentVersion: map[WorkoutPlanColumns.currentVersion.value] as int? ?? 1,
+      version: map[WorkoutPlanColumns.version.value] as int? ?? 1,
       totalWeeks: map[WorkoutPlanColumns.totalWeeks.value] as int,
       totalDays: map[WorkoutPlanColumns.totalDays.value] as int,
       totalWorkouts: map[WorkoutPlanColumns.totalWorkouts.value] as int,
@@ -142,7 +142,7 @@ class WorkoutPlan extends Equatable implements Model {
     String? description,
     PictureData? picture,
     VideoData? video,
-    int currentVersion = 1,
+    int version = 1,
     int totalWeeks = 0,
     int totalDays = 0,
     int totalWorkouts = 0,
@@ -152,7 +152,7 @@ class WorkoutPlan extends Equatable implements Model {
     final int now = DateUtilities.getNowUtcUnix();
     return WorkoutPlan(
       name: name,
-      currentVersion: currentVersion,
+      version: version,
       totalWeeks: totalWeeks,
       totalDays: totalDays,
       totalWorkouts: totalWorkouts,
@@ -172,7 +172,7 @@ class WorkoutPlan extends Equatable implements Model {
     int? id,
     String? name,
     String? description,
-    int? currentVersion,
+    int? version,
     int? totalWeeks,
     int? totalDays,
     int? totalWorkouts,
@@ -188,7 +188,7 @@ class WorkoutPlan extends Equatable implements Model {
       id: id ?? this.id,
       name: name ?? this.name,
       description: description ?? this.description,
-      currentVersion: currentVersion ?? this.currentVersion,
+      version: version ?? this.version,
       totalWeeks: totalWeeks ?? this.totalWeeks,
       totalDays: totalDays ?? this.totalDays,
       totalWorkouts: totalWorkouts ?? this.totalWorkouts,
@@ -207,7 +207,7 @@ class WorkoutPlan extends Equatable implements Model {
         id,
         name,
         description,
-        currentVersion,
+        version,
         totalWeeks,
         totalDays,
         totalWorkouts,

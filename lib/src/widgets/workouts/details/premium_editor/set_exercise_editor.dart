@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../models/common.dart';
 import '../../../../models/enums.dart';
-import '../../../../models/workout_set_exercise_model.dart';
 import '../../../../utilities/sizes/data_display_sizes.dart';
 import '../../../layout/app_dropdown.dart';
 import '../../../layout/app_number_wheel.dart';

@@ -247,7 +247,7 @@ class WorkoutPlanService {
           description: 'Workout plan with id $id not found',
         ));
       }
-      final int resolvedPlanVersion = planVersion ?? plan.currentVersion;
+      final int resolvedPlanVersion = planVersion ?? plan.version;
 
       final List<WorkoutPlanWeek> weeks = await _weekRepository.selectMany(
         where:
@@ -619,11 +619,10 @@ class WorkoutPlanService {
       final currentVersionWeekCount = await _weekRepository.count(
         where:
             '${WorkoutPlanWeekColumns.workoutPlanId.equal} AND ${WorkoutPlanWeekColumns.planVersion.equal}',
-        whereArgs: [workoutPlanId, plan.currentVersion],
+        whereArgs: [workoutPlanId, plan.version],
       );
-      final targetVersion = currentVersionWeekCount == 0
-          ? plan.currentVersion
-          : plan.currentVersion + 1;
+      final targetVersion =
+          currentVersionWeekCount == 0 ? plan.version : plan.version + 1;
 
       return await _repository.startTransaction((txn) async {
         final List<WorkoutPlanWeekDto> createdWeeks = [];
@@ -715,7 +714,7 @@ class WorkoutPlanService {
         }
 
         final updatedPlan = plan.copyWith(
-          currentVersion: targetVersion,
+          version: targetVersion,
           totalWeeks: totalWeeks,
           totalDays: totalDays,
           totalWorkouts: totalWorkouts,
@@ -787,7 +786,7 @@ class WorkoutPlanService {
             }
             final week = WorkoutPlanWeek.create(
               workoutPlanId: planId,
-              planVersion: plan.currentVersion,
+              planVersion: plan.version,
               startWeek: weekInput.startWeek,
               endWeek: weekInput.endWeek,
               phase: weekInput.phase,
@@ -804,7 +803,7 @@ class WorkoutPlanService {
               final day = WorkoutPlanDay.create(
                 workoutPlanId: planId,
                 workoutPlanWeekId: weekId,
-                planVersion: plan.currentVersion,
+                planVersion: plan.version,
                 day: i + 1,
                 createdBy: createdBy,
                 totalWorkouts: dayInput.workouts.length,
@@ -822,7 +821,7 @@ class WorkoutPlanService {
                   workoutPlanId: planId,
                   workoutPlanWeekId: weekId,
                   workoutPlanDayId: dayId,
-                  planVersion: plan.currentVersion,
+                  planVersion: plan.version,
                   workoutId: workoutInput.workout.id,
                   timeOfDay: workoutInput.timeOfDay,
                   createdBy: createdBy,
@@ -965,7 +964,7 @@ class WorkoutPlanService {
 
       final WorkoutPlanWeek week = WorkoutPlanWeek.create(
         workoutPlanId: workoutPlanId,
-        planVersion: workoutPlan.currentVersion,
+        planVersion: workoutPlan.version,
         startWeek: startWeek,
         endWeek: endWeek,
       );
@@ -1169,7 +1168,7 @@ class WorkoutPlanService {
           description: 'Workout plan with id $workoutPlanId not found',
         ));
       }
-      final int resolvedPlanVersion = planVersion ?? plan.currentVersion;
+      final int resolvedPlanVersion = planVersion ?? plan.version;
 
       final List<WorkoutPlanWeek> weeks = await _weekRepository.selectMany(
         where:

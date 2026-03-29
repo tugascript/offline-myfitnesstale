@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../models/enums.dart';
-import '../../../models/utilities.dart';
 import '../../../services/dtos/workout_set_dto.dart';
 import '../../../services/dtos/workout_set_exercise_dto.dart';
-import '../../../utilities/converters.dart';
 import '../../../utilities/sizes/data_display_sizes.dart';
+import '../../common/base_set_data.dart';
 import '../../common/detail_number.dart';
 
 class WorkoutSetCard extends StatelessWidget {
@@ -27,9 +25,10 @@ class WorkoutSetCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final iconGreyColor = isDarkTheme ? Colors.grey[200] : Colors.grey[800];
+    final iconGreyColor =
+        isDarkTheme ? Colors.grey.shade200 : Colors.grey.shade800;
     final iconLightGreyColor =
-        isDarkTheme ? Colors.grey[400] : Colors.grey[600];
+        isDarkTheme ? Colors.grey.shade400 : Colors.grey.shade600;
     return Card(
       margin: EdgeInsets.symmetric(
         vertical: sizes.margins / 2,
@@ -41,64 +40,12 @@ class WorkoutSetCard extends StatelessWidget {
           fontSize: sizes.subtitleFontSize,
         ),
         initiallyExpanded: setNumber == 1,
-        title: Wrap(
-          alignment: WrapAlignment.spaceBetween,
-          crossAxisAlignment: WrapCrossAlignment.center,
-          runSpacing: sizes.padding / 2,
-          children: [
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.repeat, size: sizes.fontSize * 1.2),
-                Text(
-                  ' ${set.minSets}${set.maxSets != null ? '-${set.maxSets}' : ''}',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: sizes.fontSize,
-                  ),
-                ),
-              ],
-            ),
-            _SetTypeBadge(
-              sizes: sizes,
-              setType: set.setType,
-            ),
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.fitness_center_outlined,
-                  size: sizes.fontSize,
-                  color: iconGreyColor,
-                ),
-                Text(
-                  ' ${set.exercises?.length ?? 0} ',
-                  style: TextStyle(
-                    fontSize: sizes.fontSize,
-                    color: iconGreyColor,
-                  ),
-                )
-              ],
-            ),
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                Icon(
-                  Icons.timer_outlined,
-                  size: sizes.fontSize,
-                  color: iconLightGreyColor,
-                ),
-                Text(
-                  ' ${Converters.formatDuration(set.recommendedRestSecs)}${set.maxRestSecs != null ? '-${Converters.formatDuration(set.maxRestSecs!)}' : ''}',
-                  style: TextStyle(
-                    fontSize: sizes.fontSize,
-                    color: iconLightGreyColor,
-                  ),
-                ),
-              ],
-            ),
-          ],
+        title: BaseSetData(
+          sizes: sizes,
+          theme: theme,
+          workoutsColor: iconGreyColor,
+          restTimeColor: iconLightGreyColor,
+          workoutSet: set,
         ),
         children: [
           if (set.exercises?.isEmpty ?? true)
@@ -128,59 +75,6 @@ class WorkoutSetCard extends StatelessWidget {
   }
 }
 
-class _SetTypeBadge extends StatelessWidget {
-  final DataDisplaySizesList sizes;
-  final WorkoutSetType setType;
-
-  const _SetTypeBadge({
-    required this.sizes,
-    required this.setType,
-  });
-
-  Color _getSetTypeColor(WorkoutSetType type) {
-    switch (type) {
-      case WorkoutSetType.standard:
-        return Colors.blue;
-      case WorkoutSetType.drop:
-        return Colors.red;
-      case WorkoutSetType.superSet:
-        return Colors.purple;
-      case WorkoutSetType.giant:
-        return Colors.green;
-      case WorkoutSetType.pyramid:
-        return Colors.amber;
-      case WorkoutSetType.circuit:
-        return Colors.teal;
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final color = _getSetTypeColor(setType);
-
-    return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: sizes.padding / 4,
-        vertical: sizes.padding / 8,
-      ),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.2),
-        border: Border.all(
-          color: color,
-          width: 1,
-        ),
-      ),
-      child: Text(
-        EnumDisplayNames.getSetTypeDisplayName(setType),
-        style: TextStyle(
-          color: color,
-          fontSize: sizes.smallFontSize,
-        ),
-      ),
-    );
-  }
-}
-
 class _SetExercise extends StatelessWidget {
   final DataDisplaySizesList sizes;
   final WorkoutSetExerciseDto setExercise;
@@ -204,7 +98,7 @@ class _SetExercise extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '${setExercise.minReps}${setExercise.maxReps != null ? '-${setExercise.maxReps}' : ''}x ',
+            '${setExercise.minReps}${setExercise.maxReps != null && setExercise.maxReps! > setExercise.minReps ? '-${setExercise.maxReps}' : ''}x ',
             style: TextStyle(
               fontSize: sizes.subtitleFontSize,
               color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],

@@ -16,7 +16,6 @@ import '../views/not_found_view.dart';
 import '../views/onboarding_view.dart';
 import '../views/weight/weight_goals_view.dart';
 import '../views/weight/weight_records_view.dart';
-import '../views/workout_history_detail_view.dart';
 import '../views/workout_plan_progress_view.dart';
 import '../views/workout_plans/workout_plan_detail_view.dart';
 import '../views/workout_plans/workout_plan_edit_view.dart';
@@ -24,6 +23,7 @@ import '../views/workout_plans/workout_plan_list_view.dart';
 import '../views/workouts/active_workout_view.dart';
 import '../views/workouts/workout_detail_view.dart';
 import '../views/workouts/workout_edit_view.dart';
+import '../views/workouts/workout_history_detail_view.dart';
 import '../views/workouts/workout_history_view.dart';
 import '../views/workouts/workouts_view.dart';
 
@@ -130,13 +130,29 @@ sealed class AppRouter {
       },
     ),
     GoRoute(
-      path: '/workout-records/:id',
+      path: WorkoutHistoryDetailView.routeName,
       builder: (context, state) {
-        final id = int.tryParse(state.pathParameters['id'] ?? '');
-        if (id == null) {
+        final workoutId = int.tryParse(state.pathParameters['workoutId'] ?? '');
+        if (workoutId == null) {
           return const NotFoundView();
         }
-        return WorkoutHistoryDetailView(workoutRecordId: id);
+
+        final version = int.tryParse(state.pathParameters['version'] ?? '');
+        if (version == null) {
+          return const NotFoundView();
+        }
+
+        final workoutRecordId = int.tryParse(
+          state.pathParameters['workoutRecordId'] ?? '',
+        );
+        if (workoutRecordId == null) {
+          return const NotFoundView();
+        }
+        return WorkoutHistoryDetailView(
+          workoutId: workoutId,
+          workoutRecordId: workoutRecordId,
+          version: version,
+        );
       },
     ),
     GoRoute(

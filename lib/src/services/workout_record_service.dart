@@ -1,5 +1,6 @@
 import 'package:logging/logging.dart';
 
+import '../models/common.dart';
 import '../models/db.dart';
 import '../models/exercise_model.dart';
 import '../models/repository.dart'
@@ -11,6 +12,7 @@ import '../models/workout_set_exercise_record_model.dart';
 import '../models/workout_set_record_model.dart';
 import 'common/errors.dart';
 import 'common/result.dart';
+import 'dtos/exercise_dto.dart';
 import 'dtos/paginated_dto.dart';
 import 'dtos/workout_record_dto.dart';
 import 'dtos/workout_set_exercise_record_dto.dart';
@@ -186,6 +188,17 @@ class WorkoutRecordService {
         );
       }
 
+      final exercisesIds = setExerciseRecords.map((s) => s.exerciseId).toSet();
+      final exercises = await _exerciseRepository.selectMany(
+        where: ExerciseColumns.id.inList(exercisesIds.length),
+        whereArgs: exercisesIds.toList(),
+      );
+
+      final exercisesMap = exercises.fold<Map<int, ExerciseDto>>(
+        {},
+        (map, exercise) =>
+            map..[exercise.id!] = ExerciseDto.fromModel(exercise),
+      );
       final setExerciseRecordsMap =
           setExerciseRecords.fold<Map<int, List<WorkoutSetExerciseRecordDto>>>(
         {},
@@ -194,10 +207,16 @@ class WorkoutRecordService {
             setExerciseRecord.workoutSetRecordId,
             (list) => list
               ..add(
-                WorkoutSetExerciseRecordDto.fromModel(setExerciseRecord),
+                WorkoutSetExerciseRecordDto.fromModel(
+                  setExerciseRecord,
+                  exercise: exercisesMap[setExerciseRecord.exerciseId],
+                ),
               ),
             ifAbsent: () => [
-              WorkoutSetExerciseRecordDto.fromModel(setExerciseRecord),
+              WorkoutSetExerciseRecordDto.fromModel(
+                setExerciseRecord,
+                exercise: exercisesMap[setExerciseRecord.exerciseId],
+              ),
             ],
           );
           return map;
@@ -450,8 +469,7 @@ class WorkoutRecordService {
     required int position,
     required int reps,
     required int weight,
-    int? difficulty,
-    String? difficultyType,
+    required WorkoutSetExerciseDifficulty difficulty,
   }) async {
     _logger.info('Creating workout set exercise record');
     try {
@@ -492,7 +510,6 @@ class WorkoutRecordService {
         reps: reps,
         weightGrams: weight,
         difficulty: difficulty,
-        difficultyType: difficultyType,
       );
       final int id = await _repository.startTransaction((trx) async {
         final int id = await _setExerciseRecordRepository.insert(record, trx);

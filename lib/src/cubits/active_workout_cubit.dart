@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:logging/logging.dart';
 
 import '../common/nullable.dart';
+import '../models/common.dart';
 import '../services/common/errors.dart';
 import '../services/dtos/workout_record_dto.dart';
 import '../services/workout_record_service.dart';
@@ -102,9 +103,8 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
     required int reps,
     required int weight,
     required int setNumber,
+    required WorkoutSetExerciseDifficulty difficulty,
     int? restSecs,
-    int? difficulty,
-    String? difficultyType,
   }) async {
     final currentSet = state.currentSet;
     final currentExercise = state.currentExercise;
@@ -146,7 +146,6 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
       reps: reps,
       weight: weight,
       difficulty: difficulty,
-      difficultyType: difficultyType,
     );
 
     if (exerciseRecordResult.isErr()) {

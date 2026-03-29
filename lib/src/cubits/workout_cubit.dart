@@ -4,11 +4,10 @@ import 'package:logging/logging.dart';
 import '../models/common.dart';
 import '../models/enums.dart';
 import '../services/common/errors.dart';
+import '../services/dtos/workout_dto.dart';
 import '../services/entitlement_guard.dart';
 import '../services/entitlement_service.dart';
 import '../services/workout_service.dart';
-import '../services/dtos/workout_dto.dart';
-import '../models/workout_set_exercise_model.dart';
 import 'states/common_state.dart';
 import 'states/workout_state.dart';
 

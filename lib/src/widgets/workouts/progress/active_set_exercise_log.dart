@@ -1,8 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
+import '../../../models/common.dart';
 import '../../../models/enums.dart';
-import '../../../models/workout_set_exercise_model.dart';
 import '../../../utilities/sizes/data_display_sizes.dart';
 import '../../common/mutation_button.dart';
 import '../../layout/app_dropdown.dart';
@@ -15,15 +15,15 @@ class ActiveSetExerciseLog extends StatefulWidget {
   final Units units;
   final bool isLoading;
 
-  final WorkoutSetExerciseDifficulty? initialDifficulty;
+  final WorkoutSetExerciseDifficultyType initialDifficultyType;
+  final int initialDifficultyValue;
   final int workoutSetExerciseId;
   final bool isOptional;
 
   final void Function({
     required double weight,
     required int reps,
-    required WorkoutSetExerciseDifficultyType? difficultyType,
-    required int? difficultyValue,
+    required WorkoutSetExerciseDifficulty difficulty,
   }) onLogSet;
   final VoidCallback onSkip;
 
@@ -32,7 +32,8 @@ class ActiveSetExerciseLog extends StatefulWidget {
     required this.theme,
     required this.sizes,
     required this.units,
-    required this.initialDifficulty,
+    required this.initialDifficultyType,
+    required this.initialDifficultyValue,
     required this.workoutSetExerciseId,
     required this.isLoading,
     required this.onLogSet,
@@ -50,8 +51,8 @@ class _ActiveSetExerciseLogState extends State<ActiveSetExerciseLog> {
   double _weightDecimals = 0.0;
   int _reps = 0;
 
-  WorkoutSetExerciseDifficultyType? _difficultyType;
-  int? _difficultyValue;
+  late WorkoutSetExerciseDifficultyType _difficultyType;
+  late int _difficultyValue;
 
   late final TextEditingController _weightController;
   late final TextEditingController _repsController;
@@ -62,10 +63,8 @@ class _ActiveSetExerciseLogState extends State<ActiveSetExerciseLog> {
   @override
   void initState() {
     super.initState();
-    _difficultyType =
-        widget.initialDifficulty?.type ?? WorkoutSetExerciseDifficultyType.rir;
-    _difficultyValue =
-        widget.initialDifficulty?.value ?? _difficultyType?.defaultValue ?? 2;
+    _difficultyType = widget.initialDifficultyType;
+    _difficultyValue = widget.initialDifficultyValue;
     _weightController = TextEditingController(text: '0');
     _repsController = TextEditingController(text: '0');
   }
@@ -86,10 +85,8 @@ class _ActiveSetExerciseLogState extends State<ActiveSetExerciseLog> {
       _weightTens = 0;
       _weightDecimals = 0.0;
       _reps = 0;
-      _difficultyType = widget.initialDifficulty?.type ??
-          WorkoutSetExerciseDifficultyType.rir;
-      _difficultyValue =
-          widget.initialDifficulty?.value ?? _difficultyType?.defaultValue ?? 2;
+      _difficultyType = widget.initialDifficultyType;
+      _difficultyValue = widget.initialDifficultyValue;
       _weightController.text = '0';
       _repsController.text = '0';
     }
@@ -322,9 +319,10 @@ class _ActiveSetExerciseLogState extends State<ActiveSetExerciseLog> {
               ],
             ),
             SizedBox(height: widget.sizes.inputSpacing),
-            LogSetDifficultyInput(
+            _LogSetDifficultyInput(
               key: ValueKey(widget.workoutSetExerciseId),
-              initialDifficulty: widget.initialDifficulty,
+              initialDifficultyType: widget.initialDifficultyType,
+              initialDifficultyValue: widget.initialDifficultyValue,
               theme: widget.theme,
               sizes: widget.sizes,
               onChanged: (type, value) {
@@ -346,8 +344,10 @@ class _ActiveSetExerciseLogState extends State<ActiveSetExerciseLog> {
                   widget.onLogSet(
                     weight: weight,
                     reps: _reps,
-                    difficultyType: _difficultyType,
-                    difficultyValue: _difficultyValue,
+                    difficulty: WorkoutSetExerciseDifficulty.create(
+                      value: _difficultyValue,
+                      type: _difficultyType,
+                    ),
                   );
                 },
                 label: "Log Set",
@@ -377,28 +377,30 @@ class _ActiveSetExerciseLogState extends State<ActiveSetExerciseLog> {
   }
 }
 
-class LogSetDifficultyInput extends StatefulWidget {
-  final WorkoutSetExerciseDifficulty? initialDifficulty;
+class _LogSetDifficultyInput extends StatefulWidget {
+  final WorkoutSetExerciseDifficultyType initialDifficultyType;
+  final int initialDifficultyValue;
   final ThemeData theme;
   final DataDisplaySizesList sizes;
   final void Function(
-    WorkoutSetExerciseDifficultyType? type,
+    WorkoutSetExerciseDifficultyType type,
     int value,
   ) onChanged;
 
-  const LogSetDifficultyInput({
+  const _LogSetDifficultyInput({
     super.key,
-    required this.initialDifficulty,
+    required this.initialDifficultyType,
+    required this.initialDifficultyValue,
     required this.theme,
     required this.sizes,
     required this.onChanged,
   });
 
   @override
-  State<LogSetDifficultyInput> createState() => _LogSetDifficultyInputState();
+  State<_LogSetDifficultyInput> createState() => _LogSetDifficultyInputState();
 }
 
-class _LogSetDifficultyInputState extends State<LogSetDifficultyInput> {
+class _LogSetDifficultyInputState extends State<_LogSetDifficultyInput> {
   late WorkoutSetExerciseDifficultyType _type;
   late int _value;
   late TextEditingController _controller;
@@ -406,20 +408,19 @@ class _LogSetDifficultyInputState extends State<LogSetDifficultyInput> {
   @override
   void initState() {
     super.initState();
-    _type =
-        widget.initialDifficulty?.type ?? WorkoutSetExerciseDifficultyType.rir;
-    _value = widget.initialDifficulty?.value ?? _type.defaultValue;
+    _type = widget.initialDifficultyType;
+    _value = widget.initialDifficultyValue;
     _controller = TextEditingController(text: _formatValue(_value));
     widget.onChanged(_type, _value);
   }
 
   @override
-  void didUpdateWidget(covariant LogSetDifficultyInput oldWidget) {
+  void didUpdateWidget(covariant _LogSetDifficultyInput oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.initialDifficulty != widget.initialDifficulty) {
-      _type = widget.initialDifficulty?.type ??
-          WorkoutSetExerciseDifficultyType.rir;
-      _value = widget.initialDifficulty?.value ?? _type.defaultValue;
+    if (oldWidget.initialDifficultyType != widget.initialDifficultyType ||
+        oldWidget.initialDifficultyValue != widget.initialDifficultyValue) {
+      _type = widget.initialDifficultyType;
+      _value = widget.initialDifficultyValue;
       _controller.text = _formatValue(_value);
       widget.onChanged(_type, _value);
     }
@@ -459,10 +460,13 @@ class _LogSetDifficultyInputState extends State<LogSetDifficultyInput> {
                     onPressed: () => Navigator.of(sheetContext).pop(),
                     child: const Text('Cancel'),
                   ),
-                  Text('Difficulty (${_type.value})',
-                      style: TextStyle(
-                          fontSize: widget.sizes.subtitleFontSize,
-                          fontWeight: FontWeight.w600)),
+                  Text(
+                    'Difficulty (${_type.value})',
+                    style: TextStyle(
+                      fontSize: widget.sizes.subtitleFontSize,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                   TextButton(
                     onPressed: () {
                       final idx = controller.selectedItem;
@@ -521,6 +525,7 @@ class _LogSetDifficultyInputState extends State<LogSetDifficultyInput> {
           child: AppDropdown<WorkoutSetExerciseDifficultyType>(
             value: _type,
             emptyLabel: 'None',
+            showEmptyValue: false,
             items: WorkoutSetExerciseDifficultyType.values,
             labelBuilder: (t) => t.value,
             onChanged: (v) {
@@ -532,7 +537,15 @@ class _LogSetDifficultyInputState extends State<LogSetDifficultyInput> {
               });
               widget.onChanged(_type, _value);
             },
-            onSaved: (_) {},
+            onSaved: (v) {
+              if (v == null) return;
+              setState(() {
+                _type = v;
+                _value = _value.clamp(v.minValue, v.maxValue);
+                _controller.text = _formatValue(_value);
+              });
+              widget.onChanged(_type, _value);
+            },
             fontSize: widget.sizes.fontSize,
             padding: widget.sizes.padding * 0.4,
             filled: true,
