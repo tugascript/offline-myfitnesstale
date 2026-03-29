@@ -17,6 +17,7 @@ enum WorkoutRecordColumns with Columns {
   totalVolume("total_volume"),
   muscleGroups("muscle_groups"),
   muscles("muscles"),
+  version("version"),
   startedAt("started_at"),
   completedAt("completed_at"),
   droppedAt("dropped_at"),
@@ -39,6 +40,7 @@ class WorkoutRecord implements Model {
   final int totalVolume;
   final Set<MuscleGroup> muscleGroups;
   final TargetMuscles muscles;
+  final int version;
   final int startedAt;
   final int? completedAt;
   final int? droppedAt;
@@ -56,6 +58,7 @@ class WorkoutRecord implements Model {
     required this.totalVolume,
     required this.muscleGroups,
     required this.muscles,
+    required this.version,
     required this.startedAt,
     this.completedAt,
     this.droppedAt,
@@ -74,6 +77,7 @@ class WorkoutRecord implements Model {
     ${WorkoutRecordColumns.totalVolume.value} INTEGER NOT NULL,
     ${WorkoutRecordColumns.muscleGroups.value} TEXT NOT NULL,
     ${WorkoutRecordColumns.muscles.value} TEXT NOT NULL,
+    ${WorkoutRecordColumns.version.value} INTEGER NOT NULL,
     ${WorkoutRecordColumns.startedAt.value} INTEGER NOT NULL,
     ${WorkoutRecordColumns.completedAt.value} INTEGER,
     ${WorkoutRecordColumns.droppedAt.value} INTEGER,
@@ -99,6 +103,7 @@ class WorkoutRecord implements Model {
         muscleGroups.map((g) => g.value).toList(),
       ),
       WorkoutRecordColumns.muscles.value: jsonEncode(muscles.toMap()),
+      WorkoutRecordColumns.version.value: version,
       WorkoutRecordColumns.startedAt.value: startedAt,
       WorkoutRecordColumns.completedAt.value: completedAt,
       WorkoutRecordColumns.droppedAt.value: droppedAt,
@@ -126,6 +131,7 @@ class WorkoutRecord implements Model {
         map[WorkoutRecordColumns.muscles.value] as String? ??
             '{"primary":[],"secondary":[]}',
       ),
+      version: map[WorkoutRecordColumns.version.value] as int,
       startedAt: map[WorkoutRecordColumns.startedAt.value] as int,
       completedAt: map[WorkoutRecordColumns.completedAt.value] as int?,
       droppedAt: map[WorkoutRecordColumns.droppedAt.value] as int?,
@@ -137,6 +143,7 @@ class WorkoutRecord implements Model {
   @override
   factory WorkoutRecord.create({
     required int workoutId,
+    required int version,
     required int startedAt,
     int? totalSets,
     int? totalReps,
@@ -159,6 +166,7 @@ class WorkoutRecord implements Model {
       totalVolume: totalVolume ?? 0,
       muscleGroups: muscleGroups,
       muscles: muscles,
+      version: version,
       startedAt: startedAt,
       completedAt: completedAt,
       droppedAt: droppedAt,
@@ -177,6 +185,7 @@ class WorkoutRecord implements Model {
     int? totalVolume,
     Set<MuscleGroup>? muscleGroups,
     TargetMuscles? muscles,
+    int? version,
     int? startedAt,
     int? completedAt,
     int? droppedAt,
@@ -192,6 +201,7 @@ class WorkoutRecord implements Model {
       totalVolume: totalVolume ?? this.totalVolume,
       muscleGroups: muscleGroups ?? this.muscleGroups,
       muscles: muscles ?? this.muscles,
+      version: version ?? this.version,
       startedAt: startedAt ?? this.startedAt,
       completedAt: completedAt ?? this.completedAt,
       droppedAt: droppedAt ?? this.droppedAt,
@@ -202,6 +212,6 @@ class WorkoutRecord implements Model {
 
   @override
   String toString() {
-    return 'WorkoutRecord{id: $id, workoutId: $workoutId, totalSets: $totalSets, totalReps: $totalReps, totalRestSecs: $totalRestSecs, totalVolume: $totalVolume, muscleGroups: $muscleGroups, muscles: $muscles, startedAt: $startedAt, completedAt: $completedAt, droppedAt: $droppedAt, createdAt: $createdAt, updatedAt: $updatedAt}';
+    return 'WorkoutRecord{id: $id, workoutId: $workoutId, totalSets: $totalSets, totalReps: $totalReps, totalRestSecs: $totalRestSecs, totalVolume: $totalVolume, muscleGroups: $muscleGroups, muscles: $muscles, version: $version, startedAt: $startedAt, completedAt: $completedAt, droppedAt: $droppedAt, createdAt: $createdAt, updatedAt: $updatedAt}';
   }
 }

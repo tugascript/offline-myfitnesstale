@@ -138,13 +138,17 @@ class WorkoutCubit extends Cubit<WorkoutState> {
     ));
   }
 
-  Future<void> getWorkout(int id, {bool refresh = false}) async {
+  Future<void> getWorkout(
+    int id, {
+    int? version,
+    bool refresh = false,
+  }) async {
     _logger.info('Getting workout with id $id');
     if (!refresh) {
       emit(state.copyWith(isLoading: true));
     }
 
-    final result = await _workoutService.getWorkout(id);
+    final result = await _workoutService.getWorkout(id, version: version);
     if (result.isErr()) {
       final error = result.error;
       _logger.warning("Failed to get workout", error);

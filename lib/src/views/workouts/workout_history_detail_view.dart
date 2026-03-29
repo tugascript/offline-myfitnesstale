@@ -41,8 +41,9 @@ class _WorkoutHistoryDetailViewState extends State<WorkoutHistoryDetailView> {
     super.initState();
 
     final workoutCubit = context.read<WorkoutCubit>();
-    if (workoutCubit.state.selectedWorkout?.id != widget.workoutId) {
-      workoutCubit.getWorkout(widget.workoutId);
+    if (workoutCubit.state.selectedWorkout?.id != widget.workoutId ||
+        workoutCubit.state.selectedWorkout?.version != widget.version) {
+      workoutCubit.getWorkout(widget.workoutId, version: widget.version);
     }
 
     final workoutRecordCubit = context.read<WorkoutRecordCubit>();

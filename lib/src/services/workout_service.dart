@@ -136,6 +136,7 @@ class WorkoutRegistrationInput {
   });
 }
 
+// TODO: Add version to workout service
 class WorkoutService {
   WorkoutService._();
 
@@ -274,11 +275,26 @@ class WorkoutService {
   }
 
   Future<Result<WorkoutDto, ServiceError<SingleErrorTypes>>> getWorkout(
-    int id,
-  ) async {
+    int id, {
+    int? version,
+  }) async {
     _logger.info('Getting workout with id $id');
     try {
-      final Workout? workout = await _repository.selectOne(id);
+      late final Workout? workout;
+      if (version == null) {
+        workout = await _repository.selectOne(id);
+      } else {
+        final queryBuilder = WhereBuilder();
+        queryBuilder.and(WorkoutColumns.id.equal, id);
+        queryBuilder.and(WorkoutColumns.version.equal, version);
+        final workouts = await _repository.selectMany(
+          where: queryBuilder.where,
+          whereArgs: queryBuilder.args,
+          limit: 1,
+        );
+        workout = workouts.firstOrNull;
+      }
+
       if (workout == null) {
         _logger.warning('Workout with id $id not found');
         return err(const ServiceError(
@@ -498,6 +514,7 @@ class WorkoutService {
           for (int i = 0; i < workoutInput.sets.length; i++) {
             final setInput = workoutInput.sets[i];
             final set = WorkoutSet.create(
+              workoutVersion: workout.version,
               position: i + 1,
               workoutId: workoutId,
               setType: setInput.setType,
@@ -515,6 +532,7 @@ class WorkoutService {
               final exerciseInput = setInput.exercises[j];
 
               final setExercise = WorkoutSetExercise.create(
+                workoutVersion: workout.version,
                 position: j + 1,
                 workoutId: workoutId,
                 workoutSetId: setId,
@@ -537,6 +555,7 @@ class WorkoutService {
                 final optionDto = exerciseInput.alternativeExercises[k];
 
                 final option = WorkoutSetExerciseOption.create(
+                  workoutVersion: workout.version,
                   workoutId: workoutId,
                   workoutSetId: setId,
                   workoutSetExerciseId: setExerciseId,
@@ -863,6 +882,7 @@ class WorkoutService {
 
         for (final input in setsToCreate) {
           await _doBatchSetCreate(
+            workoutVersion: workout.version,
             input: input,
             txn: txn,
             workoutId: workoutId,
@@ -1149,6 +1169,7 @@ class WorkoutService {
       for (int j = 0; j < exerciseInput.alternativeExerciseIds!.length; j++) {
         final alternativeExerciseId = exerciseInput.alternativeExerciseIds![j];
         final workoutSetExerciseOption = WorkoutSetExerciseOption.create(
+          workoutVersion: workoutSet.workoutVersion,
           workoutId: workoutSet.workoutId,
           workoutSetId: workoutSet.id!,
           workoutSetExerciseId: setExercise.id!,
@@ -1177,6 +1198,7 @@ class WorkoutService {
     final newPosition = setCount + 1 + index;
     final setExercisePosition = exerciseInput.position;
     final workoutSetExercise = WorkoutSetExercise.create(
+      workoutVersion: workoutSet.workoutVersion,
       position: setExercisePosition,
       workoutId: workoutId,
       workoutSetId: workoutSet.id!,
@@ -1203,6 +1225,7 @@ class WorkoutService {
       for (int j = 0; j < exerciseInput.alternativeExerciseIds!.length; j++) {
         final alternativeExerciseId = exerciseInput.alternativeExerciseIds![j];
         final option = WorkoutSetExerciseOption.create(
+          workoutVersion: workoutSet.workoutVersion,
           workoutId: workoutId,
           workoutSetId: workoutSet.id!,
           workoutSetExerciseId: setExerciseId,
@@ -1221,6 +1244,7 @@ class WorkoutService {
     required WorkoutSetUpsertInput input,
     required Transaction txn,
     required int workoutId,
+    required int workoutVersion,
     required Map<int, ExerciseDto> exerciseMap,
   }) async {
     final int workoutSetsCount = await _setRepository.count(
@@ -1249,6 +1273,7 @@ class WorkoutService {
     }
 
     final WorkoutSet workoutSet = WorkoutSet.create(
+      workoutVersion: workoutVersion,
       position: setPosition,
       workoutId: workoutId,
       setType: input.setType,
@@ -1264,6 +1289,7 @@ class WorkoutService {
     for (int i = 0; i < input.exercises.length; i++) {
       final exerciseInput = input.exercises[i];
       final workoutSetExercise = WorkoutSetExercise.create(
+        workoutVersion: workoutVersion,
         position: i + 1,
         workoutId: workoutId,
         workoutSetId: setId,
@@ -1286,6 +1312,7 @@ class WorkoutService {
           final alternativeExerciseId =
               exerciseInput.alternativeExerciseIds![j];
           final workoutSetExerciseOption = WorkoutSetExerciseOption.create(
+            workoutVersion: workoutVersion,
             workoutId: workoutId,
             workoutSetId: setId,
             workoutSetExerciseId: setExerciseId,

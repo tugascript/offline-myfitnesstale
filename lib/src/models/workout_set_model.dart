@@ -16,6 +16,7 @@ enum WorkoutSetColumns with Columns {
   maxRestSecs("max_rest_secs"),
   totalExercises("total_exercises"),
   totalReps("total_reps"),
+  workoutVersion("workout_version"),
   createdBy("created_by"),
   createdAt("created_at"),
   updatedAt("updated_at");
@@ -38,6 +39,7 @@ class WorkoutSet implements Model {
   final int? maxRestSecs;
   final int totalExercises;
   final int totalReps;
+  final int workoutVersion;
   final CreatedBy createdBy;
   @override
   final int createdAt;
@@ -55,6 +57,7 @@ class WorkoutSet implements Model {
     this.maxRestSecs,
     required this.totalExercises,
     required this.totalReps,
+    required this.workoutVersion,
     required this.createdBy,
     required this.createdAt,
     required this.updatedAt,
@@ -73,6 +76,7 @@ class WorkoutSet implements Model {
     ${WorkoutSetColumns.maxRestSecs.value} INTEGER,
     ${WorkoutSetColumns.totalExercises.value} INTEGER NOT NULL,
     ${WorkoutSetColumns.totalReps.value} INTEGER NOT NULL,
+    ${WorkoutSetColumns.workoutVersion.value} INTEGER NOT NULL,
     ${WorkoutSetColumns.createdBy.value} TEXT NOT NULL,
     ${WorkoutSetColumns.createdAt.value} INTEGER NOT NULL,
     ${WorkoutSetColumns.updatedAt.value} INTEGER NOT NULL,
@@ -80,7 +84,8 @@ class WorkoutSet implements Model {
   );
   
   CREATE INDEX IF NOT EXISTS idx_workout_sets_workout_id ON $_table (${WorkoutSetColumns.workoutId.value});
-  CREATE INDEX IF NOT EXISTS idx_workout_sets_workout_id_position ON $_table (${WorkoutSetColumns.workoutId.value}, ${WorkoutSetColumns.position.value});
+  CREATE INDEX IF NOT EXISTS idx_workout_sets_workout_id_version ON $_table (${WorkoutSetColumns.workoutId.value}, ${WorkoutSetColumns.workoutVersion.value});
+  CREATE INDEX IF NOT EXISTS idx_workout_sets_workout_id_position ON $_table (${WorkoutSetColumns.workoutId.value}, ${WorkoutSetColumns.workoutVersion.value}, ${WorkoutSetColumns.position.value});
   ''';
 
   @override
@@ -96,6 +101,7 @@ class WorkoutSet implements Model {
       WorkoutSetColumns.maxRestSecs.value: maxRestSecs,
       WorkoutSetColumns.totalExercises.value: totalExercises,
       WorkoutSetColumns.totalReps.value: totalReps,
+      WorkoutSetColumns.workoutVersion.value: workoutVersion,
       WorkoutSetColumns.createdBy.value: createdBy.value,
       WorkoutSetColumns.createdAt.value: createdAt,
       WorkoutSetColumns.updatedAt.value: updatedAt,
@@ -117,6 +123,7 @@ class WorkoutSet implements Model {
       maxRestSecs: map[WorkoutSetColumns.maxRestSecs.value] as int?,
       totalExercises: map[WorkoutSetColumns.totalExercises.value] as int,
       totalReps: map[WorkoutSetColumns.totalReps.value] as int,
+      workoutVersion: map[WorkoutSetColumns.workoutVersion.value] as int,
       createdBy:
           CreatedBy.fromValue(map[WorkoutSetColumns.createdBy.value] as String),
       createdAt: map[WorkoutSetColumns.createdAt.value] as int,
@@ -131,6 +138,7 @@ class WorkoutSet implements Model {
     required WorkoutSetType setType,
     required int minSets,
     required int recommendedRestSecs,
+    required int workoutVersion,
     int totalExercises = 0,
     int totalReps = 0,
     int? maxSets,
@@ -148,6 +156,7 @@ class WorkoutSet implements Model {
       maxRestSecs: maxRestSecs,
       totalExercises: totalExercises,
       totalReps: totalReps,
+      workoutVersion: workoutVersion,
       createdBy: createdBy,
       createdAt: now,
       updatedAt: now,
@@ -166,6 +175,7 @@ class WorkoutSet implements Model {
     int? maxRestSecs,
     int? totalExercises,
     int? totalReps,
+    int? workoutVersion,
     CreatedBy? createdBy,
     int? createdAt,
     int? updatedAt,
@@ -181,14 +191,10 @@ class WorkoutSet implements Model {
       maxRestSecs: maxRestSecs ?? this.maxRestSecs,
       totalExercises: totalExercises ?? this.totalExercises,
       totalReps: totalReps ?? this.totalReps,
+      workoutVersion: workoutVersion ?? this.workoutVersion,
       createdBy: createdBy ?? this.createdBy,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
-  }
-
-  @override
-  String toString() {
-    return 'WorkoutSet{id: $id, position: $position, workoutId: $workoutId, minSets: $minSets, maxSets: $maxSets, recommendedRestSecs: $recommendedRestSecs, maxRestSecs: $maxRestSecs, totalExercises: $totalExercises, totalReps: $totalReps, createdBy: $createdBy, createdAt: $createdAt, updatedAt: $updatedAt}';
   }
 }

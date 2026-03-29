@@ -19,6 +19,7 @@ void main() {
     int planWorkoutId = 1,
     int workoutId = 1,
     String workoutName = 'Workout',
+    int workoutVersion = 1,
     int startWeek = 1,
     int endWeek = 1,
     bool isRestDay = false,
@@ -27,6 +28,7 @@ void main() {
     final workoutDto = WorkoutDto(
       id: workoutId,
       name: workoutName,
+      version: workoutVersion,
       muscleGroups: const {},
       muscles: const TargetMuscles(
         primary: <Muscle>{},

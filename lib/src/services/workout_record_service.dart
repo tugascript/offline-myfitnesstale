@@ -297,6 +297,7 @@ class WorkoutRecordService {
       }
 
       final WorkoutRecord record = WorkoutRecord.create(
+        version: workout.version,
         workoutId: workoutId,
         startedAt: DateUtilities.getDateUnix(startedAt),
       );

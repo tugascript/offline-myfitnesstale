@@ -13,6 +13,7 @@ const String _table = 'workout_set_exercises';
 enum WorkoutSetExerciseColumns with Columns {
   id("id"),
   workoutId("workout_id"),
+  workoutVersion("workout_version"),
   workoutSetId("workout_set_id"),
   exerciseId("exercise_id"),
   position("position"),
@@ -34,6 +35,7 @@ final class WorkoutSetExercise extends Equatable implements Model {
   @override
   final int? id;
   final int workoutId;
+  final int workoutVersion;
   final int workoutSetId;
   final int exerciseId;
   final int position;
@@ -50,6 +52,7 @@ final class WorkoutSetExercise extends Equatable implements Model {
   const WorkoutSetExercise({
     this.id,
     required this.workoutId,
+    required this.workoutVersion,
     required this.workoutSetId,
     required this.exerciseId,
     required this.position,
@@ -67,6 +70,7 @@ final class WorkoutSetExercise extends Equatable implements Model {
   CREATE TABLE IF NOT EXISTS $_table (
     ${WorkoutSetExerciseColumns.id.value} INTEGER PRIMARY KEY AUTOINCREMENT,
     ${WorkoutSetExerciseColumns.workoutId.value} INTEGER NOT NULL,
+    ${WorkoutSetExerciseColumns.workoutVersion.value} INTEGER NOT NULL,
     ${WorkoutSetExerciseColumns.workoutSetId.value} INTEGER NOT NULL,
     ${WorkoutSetExerciseColumns.exerciseId.value} INTEGER NOT NULL,
     ${WorkoutSetExerciseColumns.position.value} INTEGER NOT NULL,
@@ -88,7 +92,8 @@ final class WorkoutSetExercise extends Equatable implements Model {
   CREATE INDEX IF NOT EXISTS idx_set_exercise_set_id ON $_table (${WorkoutSetExerciseColumns.workoutSetId.value});
   CREATE INDEX IF NOT EXISTS idx_set_exercise_exercise_id ON $_table (${WorkoutSetExerciseColumns.exerciseId.value});
   CREATE INDEX IF NOT EXISTS idx_set_exercise_workout_id ON $_table (${WorkoutSetExerciseColumns.workoutId.value});
-  CREATE INDEX IF NOT EXISTS idx_set_exercise_position_set_id ON $_table (${WorkoutSetExerciseColumns.position.value}, ${WorkoutSetExerciseColumns.workoutSetId.value});
+  CREATE INDEX IF NOT EXISTS idx_set_exercise_position_version_set_id ON $_table (${WorkoutSetExerciseColumns.position.value}, ${WorkoutSetExerciseColumns.workoutVersion.value}, ${WorkoutSetExerciseColumns.workoutSetId.value});
+  CREATE INDEX IF NOT EXISTS idx_set_exercise_workout_id_version ON $_table (${WorkoutSetExerciseColumns.workoutId.value}, ${WorkoutSetExerciseColumns.workoutVersion.value});
   ''';
 
   @override
@@ -96,6 +101,7 @@ final class WorkoutSetExercise extends Equatable implements Model {
     return {
       WorkoutSetExerciseColumns.id.value: id,
       WorkoutSetExerciseColumns.workoutId.value: workoutId,
+      WorkoutSetExerciseColumns.workoutVersion.value: workoutVersion,
       WorkoutSetExerciseColumns.workoutSetId.value: workoutSetId,
       WorkoutSetExerciseColumns.exerciseId.value: exerciseId,
       WorkoutSetExerciseColumns.position.value: position,
@@ -114,6 +120,8 @@ final class WorkoutSetExercise extends Equatable implements Model {
     return WorkoutSetExercise(
       id: map[WorkoutSetExerciseColumns.id.value] as int?,
       workoutId: map[WorkoutSetExerciseColumns.workoutId.value] as int,
+      workoutVersion:
+          map[WorkoutSetExerciseColumns.workoutVersion.value] as int,
       workoutSetId: map[WorkoutSetExerciseColumns.workoutSetId.value] as int,
       exerciseId: map[WorkoutSetExerciseColumns.exerciseId.value] as int,
       position: map[WorkoutSetExerciseColumns.position.value] as int,
@@ -135,6 +143,7 @@ final class WorkoutSetExercise extends Equatable implements Model {
   factory WorkoutSetExercise.create({
     required int position,
     required int workoutId,
+    required int workoutVersion,
     required int workoutSetId,
     required int exerciseId,
     required int minReps,
@@ -146,6 +155,7 @@ final class WorkoutSetExercise extends Equatable implements Model {
     final int now = DateUtilities.getNowUtcUnix();
     return WorkoutSetExercise(
       workoutId: workoutId,
+      workoutVersion: workoutVersion,
       workoutSetId: workoutSetId,
       exerciseId: exerciseId,
       position: position,
@@ -163,6 +173,7 @@ final class WorkoutSetExercise extends Equatable implements Model {
   WorkoutSetExercise copyWith({
     int? id,
     int? workoutId,
+    int? workoutVersion,
     int? workoutSetId,
     int? exerciseId,
     int? position,
@@ -177,6 +188,7 @@ final class WorkoutSetExercise extends Equatable implements Model {
     return WorkoutSetExercise(
       id: id ?? this.id,
       workoutId: workoutId ?? this.workoutId,
+      workoutVersion: workoutVersion ?? this.workoutVersion,
       workoutSetId: workoutSetId ?? this.workoutSetId,
       exerciseId: exerciseId ?? this.exerciseId,
       position: position ?? this.position,
@@ -194,6 +206,7 @@ final class WorkoutSetExercise extends Equatable implements Model {
   List<Object?> get props => [
         id,
         workoutId,
+        workoutVersion,
         workoutSetId,
         exerciseId,
         position,
