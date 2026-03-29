@@ -76,7 +76,7 @@ class QuickActionsWidget extends StatelessWidget {
                 style: TextStyle(fontSize: sizes.titleFontSize),
               ),
               title: "Workouts",
-              subtitle: "Browse workouts",
+              subtitle: "Start a workout",
               onTap: () {
                 context.push(WorkoutsView.routeName);
               },
@@ -89,7 +89,7 @@ class QuickActionsWidget extends StatelessWidget {
                 style: TextStyle(fontSize: sizes.titleFontSize),
               ),
               title: "Exercises",
-              subtitle: "Browse exercises",
+              subtitle: "Explore exercises",
               onTap: () {
                 context.push(ExercisesView.routeName);
               },

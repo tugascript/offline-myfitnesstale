@@ -7,6 +7,7 @@ import '../../cubits/active_workout_cubit.dart';
 import '../../cubits/profile_cubit.dart';
 import '../../cubits/states/active_workout_state.dart';
 import '../../cubits/states/profile_state.dart';
+import '../../models/common.dart';
 import '../../models/enums.dart';
 import '../../utilities/converters.dart';
 import '../../utilities/sizes/data_display_sizes.dart';
@@ -36,8 +37,9 @@ class ActiveWorkoutView extends StatefulWidget {
 class _ActiveWorkoutViewState extends State<ActiveWorkoutView> {
   double _loggedWeight = 0.0;
   int _loggedReps = 0;
-  WorkoutSetExerciseDifficultyType? _loggedDifficultyType;
-  int? _loggedDifficultyValue;
+  WorkoutSetExerciseDifficultyType _loggedDifficultyType =
+      WorkoutSetExerciseDifficultyType.rir;
+  int _loggedDifficultyValue = 2;
 
   @override
   void initState() {
@@ -163,10 +165,10 @@ class _ActiveWorkoutViewState extends State<ActiveWorkoutView> {
                                         : Converters.lbsToGrams(_loggedWeight),
                                 setNumber: activeState.currentSetNumber,
                                 restSecs: restTime,
-                                difficulty: _loggedDifficultyType != null
-                                    ? _loggedDifficultyValue
-                                    : null,
-                                difficultyType: _loggedDifficultyType?.value,
+                                difficulty: WorkoutSetExerciseDifficulty.create(
+                                  value: _loggedDifficultyValue,
+                                  type: _loggedDifficultyType,
+                                ),
                               );
 
                               if (!mounted) return;
@@ -179,15 +181,17 @@ class _ActiveWorkoutViewState extends State<ActiveWorkoutView> {
                             theme: theme,
                             sizes: sizes,
                             units: profileState.system?.units ?? Units.metric,
-                            initialDifficulty: workoutSetExercise.difficulty,
+                            initialDifficultyType:
+                                workoutSetExercise.difficulty?.type ??
+                                    WorkoutSetExerciseDifficultyType.rir,
+                            initialDifficultyValue:
+                                workoutSetExercise.difficulty?.value ?? 2,
                             workoutSetExerciseId: workoutSetExercise.id,
                             isLoading: activeState.isLoading,
-                            onLogSet: ({
-                              required weight,
-                              required reps,
-                              required difficultyType,
-                              required difficultyValue,
-                            }) async {
+                            onLogSet: (
+                                {required weight,
+                                required reps,
+                                required difficulty}) async {
                               if (reps <= 0) {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
@@ -201,8 +205,8 @@ class _ActiveWorkoutViewState extends State<ActiveWorkoutView> {
                               setState(() {
                                 _loggedWeight = weight;
                                 _loggedReps = reps;
-                                _loggedDifficultyType = difficultyType;
-                                _loggedDifficultyValue = difficultyValue;
+                                _loggedDifficultyType = difficulty.type;
+                                _loggedDifficultyValue = difficulty.value;
                               });
 
                               final isLastExercise =
@@ -218,10 +222,10 @@ class _ActiveWorkoutViewState extends State<ActiveWorkoutView> {
                                         ? Converters.kgToGrams(weight)
                                         : Converters.lbsToGrams(weight),
                                 setNumber: activeState.currentSetNumber,
-                                difficulty: difficultyType != null
-                                    ? difficultyValue
-                                    : null,
-                                difficultyType: difficultyType?.value,
+                                difficulty: WorkoutSetExerciseDifficulty.create(
+                                  value: difficulty.value,
+                                  type: difficulty.type,
+                                ),
                               );
 
                               if (mounted) {

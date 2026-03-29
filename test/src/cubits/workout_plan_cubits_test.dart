@@ -89,7 +89,7 @@ void main() {
     final plan = WorkoutPlan.create(
       name: uniqueName('relative-plan'),
       difficulty: Difficulty.beginner,
-      currentVersion: 1,
+      version: 1,
       totalWeeks: 1,
       totalDays: 2,
       totalWorkouts: 2,

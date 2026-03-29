@@ -1,7 +1,6 @@
-import 'dart:convert';
-
 import 'package:equatable/equatable.dart';
 
+import 'common.dart';
 import 'enums.dart';
 import 'exercise_model.dart';
 import 'model.dart';
@@ -29,47 +28,6 @@ enum WorkoutSetExerciseColumns with Columns {
   final String value;
 
   const WorkoutSetExerciseColumns(this.value);
-}
-
-class WorkoutSetExerciseDifficulty extends Equatable {
-  final int value;
-  final WorkoutSetExerciseDifficultyType type;
-
-  const WorkoutSetExerciseDifficulty({
-    required this.value,
-    required this.type,
-  });
-
-  String toJson() {
-    return jsonEncode({
-      'value': value,
-      'type': type.value,
-    });
-  }
-
-  factory WorkoutSetExerciseDifficulty.create({
-    required int value,
-    required WorkoutSetExerciseDifficultyType type,
-  }) {
-    return WorkoutSetExerciseDifficulty(
-      value: value,
-      type: type,
-    );
-  }
-
-  factory WorkoutSetExerciseDifficulty.fromJson(String json) {
-    return WorkoutSetExerciseDifficulty.fromMap(jsonDecode(json));
-  }
-
-  factory WorkoutSetExerciseDifficulty.fromMap(Map<String, Object?> map) {
-    return WorkoutSetExerciseDifficulty(
-      value: map['value'] as int,
-      type: WorkoutSetExerciseDifficultyType.fromValue(map['type'] as String),
-    );
-  }
-
-  @override
-  List<Object?> get props => [value, type];
 }
 
 final class WorkoutSetExercise extends Equatable implements Model {

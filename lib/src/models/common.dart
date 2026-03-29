@@ -153,3 +153,57 @@ class TargetMuscles extends Equatable implements JsonData {
   @override
   List<Object?> get props => [primary, secondary];
 }
+
+class WorkoutSetExerciseDifficulty extends Equatable implements JsonData {
+  final int value;
+  final WorkoutSetExerciseDifficultyType type;
+
+  const WorkoutSetExerciseDifficulty({
+    required this.value,
+    required this.type,
+  });
+
+  @override
+  String toJson() {
+    return jsonEncode({
+      'value': value,
+      'type': type.value,
+    });
+  }
+
+  factory WorkoutSetExerciseDifficulty.create({
+    required int value,
+    required WorkoutSetExerciseDifficultyType type,
+  }) {
+    return WorkoutSetExerciseDifficulty(
+      value: value,
+      type: type,
+    );
+  }
+
+  factory WorkoutSetExerciseDifficulty.fromMap(Map<String, Object?> map) {
+    return WorkoutSetExerciseDifficulty(
+      value: map['value'] as int,
+      type: WorkoutSetExerciseDifficultyType.fromValue(map['type'] as String),
+    );
+  }
+
+  @override
+  factory WorkoutSetExerciseDifficulty.fromJson(String json) {
+    return WorkoutSetExerciseDifficulty.fromMap(jsonDecode(json));
+  }
+
+  @override
+  WorkoutSetExerciseDifficulty copyWith({
+    int? value,
+    WorkoutSetExerciseDifficultyType? type,
+  }) {
+    return WorkoutSetExerciseDifficulty(
+      value: value ?? this.value,
+      type: type ?? this.type,
+    );
+  }
+
+  @override
+  List<Object?> get props => [value, type];
+}

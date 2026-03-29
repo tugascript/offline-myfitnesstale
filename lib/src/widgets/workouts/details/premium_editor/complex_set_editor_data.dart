@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 
+import '../../../../models/common.dart';
 import '../../../../models/enums.dart';
-import '../../../../models/workout_set_exercise_model.dart';
 
 final class AlternativeExerciseData {
   final int id;

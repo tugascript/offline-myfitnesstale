@@ -50,7 +50,7 @@ class WorkoutPlanDto extends Equatable implements Dto<WorkoutPlan> {
       id: model.id!,
       name: model.name,
       description: model.description,
-      currentVersion: model.currentVersion,
+      currentVersion: model.version,
       totalWeeks: model.totalWeeks,
       totalDays: model.totalDays,
       totalWorkouts: model.totalWorkouts,

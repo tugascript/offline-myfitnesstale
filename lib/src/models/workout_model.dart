@@ -18,6 +18,7 @@ enum WorkoutColumns with Columns {
   muscles("muscles"),
   isFavorite("is_favorite"),
   difficulty("difficulty"),
+  version("version"),
   totalSets("total_sets"),
   totalReps("total_reps"),
   editorType("editor_type"),
@@ -43,6 +44,7 @@ final class Workout implements Model {
   final TargetMuscles muscles;
   final bool isFavorite;
   final Difficulty difficulty;
+  final int version;
   final int totalSets;
   final int totalReps;
   final EditorType editorType;
@@ -63,6 +65,7 @@ final class Workout implements Model {
     required this.muscles,
     required this.isFavorite,
     required this.difficulty,
+    required this.version,
     required this.totalSets,
     required this.totalReps,
     required this.editorType,
@@ -84,6 +87,7 @@ final class Workout implements Model {
     ${WorkoutColumns.muscles.value} TEXT NOT NULL,
     ${WorkoutColumns.isFavorite.value} INTEGER NOT NULL,
     ${WorkoutColumns.difficulty.value} INTEGER NOT NULL,
+    ${WorkoutColumns.version.value} INTEGER NOT NULL,
     ${WorkoutColumns.totalSets.value} INTEGER NOT NULL,
     ${WorkoutColumns.totalReps.value} INTEGER NOT NULL,
     ${WorkoutColumns.editorType.value} TEXT NOT NULL,
@@ -109,6 +113,7 @@ final class Workout implements Model {
       WorkoutColumns.isFavorite.value: isFavorite ? 1 : 0,
       WorkoutColumns.difficulty.value: difficulty.value,
       WorkoutColumns.phase.value: phase?.value,
+      WorkoutColumns.version.value: version,
       WorkoutColumns.totalSets.value: totalSets,
       WorkoutColumns.totalReps.value: totalReps,
       WorkoutColumns.editorType.value: editorType.value,
@@ -146,6 +151,7 @@ final class Workout implements Model {
       phase: map[WorkoutColumns.phase.value] != null
           ? WorkoutPhase.fromValue(map[WorkoutColumns.phase.value] as String)
           : null,
+      version: map[WorkoutColumns.version.value] as int,
       totalSets: map[WorkoutColumns.totalSets.value] as int,
       totalReps: map[WorkoutColumns.totalReps.value] as int,
       editorType: EditorType.fromValue(
@@ -176,6 +182,7 @@ final class Workout implements Model {
     bool isFavorite = false,
     CreatedBy createdBy = CreatedBy.user,
     EditorType editorType = EditorType.basic,
+    int version = 1,
   }) {
     final int now = DateUtilities.getNowUtcUnix();
     return Workout(
@@ -188,6 +195,7 @@ final class Workout implements Model {
       muscles: muscles,
       phase: phase,
       isFavorite: isFavorite,
+      version: version,
       totalSets: totalSets,
       totalReps: totalReps,
       createdBy: createdBy,
@@ -212,6 +220,7 @@ final class Workout implements Model {
     int? totalSets,
     int? totalReps,
     bool? isFavorite,
+    int? version,
     int? createdAt,
     int? updatedAt,
     EditorType? editorType,
@@ -233,11 +242,12 @@ final class Workout implements Model {
       totalReps: totalReps ?? this.totalReps,
       isFavorite: isFavorite ?? this.isFavorite,
       editorType: editorType ?? this.editorType,
+      version: version ?? this.version,
     );
   }
 
   @override
   String toString() {
-    return 'Workout{id: $id, name: $name, description: $description, picture: $picture, video: $video, createdBy: $createdBy, createdAt: $createdAt, updatedAt: $updatedAt, phase: $phase, totalSets: $totalSets, totalReps: $totalReps, isFavorite: $isFavorite, editorType: $editorType}';
+    return 'Workout{id: $id, name: $name, description: $description, picture: $picture, video: $video, createdBy: $createdBy, createdAt: $createdAt, updatedAt: $updatedAt, phase: $phase, totalSets: $totalSets, totalReps: $totalReps, isFavorite: $isFavorite, editorType: $editorType, version: $version  }';
   }
 }

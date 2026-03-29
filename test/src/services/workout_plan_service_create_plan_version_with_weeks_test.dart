@@ -32,13 +32,13 @@ void main() {
 
   Future<int> createWorkoutPlan(
     Database db, {
-    int currentVersion = 1,
+    int version = 1,
     CreatedBy createdBy = CreatedBy.user,
   }) async {
     final plan = WorkoutPlan.create(
       name: uniqueName('workout-plan'),
       difficulty: Difficulty.beginner,
-      currentVersion: currentVersion,
+      version: version,
       createdBy: createdBy,
     );
     return db.insert(WorkoutPlan.table, plan.toMap());
@@ -128,7 +128,7 @@ void main() {
     expect(dto.totalWorkouts, 4);
 
     final plan = await getPlan(db, workoutPlanId);
-    expect(plan.currentVersion, 1);
+    expect(plan.version, 1);
     expect(plan.totalWeeks, 6);
     expect(plan.totalDays, 3);
     expect(plan.totalWorkouts, 4);
@@ -219,7 +219,7 @@ void main() {
     expect(second.value.currentVersion, 2);
 
     final plan = await getPlan(db, workoutPlanId);
-    expect(plan.currentVersion, 2);
+    expect(plan.version, 2);
 
     final weekV1Count = Sqflite.firstIntValue(await db.rawQuery(
           'SELECT COUNT(*) AS count FROM ${WorkoutPlanWeek.table} WHERE ${WorkoutPlanWeekColumns.workoutPlanId.value} = ? AND ${WorkoutPlanWeekColumns.planVersion.value} = 1',
@@ -614,7 +614,7 @@ void main() {
     expect(result.error.type, SingleErrorTypes.operationFailure);
 
     final plan = await getPlan(db, workoutPlanId);
-    expect(plan.currentVersion, 1);
+    expect(plan.version, 1);
     expect(plan.totalWeeks, 0);
     expect(plan.totalDays, 0);
     expect(plan.totalWorkouts, 0);

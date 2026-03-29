@@ -134,7 +134,7 @@ class DatabaseHelper {
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 2) {
       await db.execute(
-        'ALTER TABLE ${WorkoutPlan.table} ADD COLUMN ${WorkoutPlanColumns.currentVersion.value} INTEGER NOT NULL DEFAULT 1',
+        'ALTER TABLE ${WorkoutPlan.table} ADD COLUMN ${WorkoutPlanColumns.version.value} INTEGER NOT NULL DEFAULT 1',
       );
       await db.execute(
         'ALTER TABLE ${WorkoutPlanWeek.table} ADD COLUMN ${WorkoutPlanWeekColumns.planVersion.value} INTEGER NOT NULL DEFAULT 1',
