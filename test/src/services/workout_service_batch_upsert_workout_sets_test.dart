@@ -61,6 +61,7 @@ void main() {
   Future<int> createWorkoutSet(
     Database db, {
     required int workoutId,
+    required int workoutVersion,
     required int position,
     required int minSets,
     required int maxSets,
@@ -72,6 +73,7 @@ void main() {
   }) async {
     final set = WorkoutSet.create(
       workoutId: workoutId,
+      workoutVersion: workoutVersion,
       position: position,
       setType: setType,
       minSets: minSets,
@@ -87,6 +89,7 @@ void main() {
   Future<int> createWorkoutSetExercise(
     Database db, {
     required int workoutId,
+    required int workoutVersion,
     required int workoutSetId,
     required int exerciseId,
     required int position,
@@ -96,6 +99,7 @@ void main() {
   }) async {
     final setExercise = WorkoutSetExercise.create(
       workoutId: workoutId,
+      workoutVersion: workoutVersion,
       workoutSetId: workoutSetId,
       exerciseId: exerciseId,
       position: position,
@@ -109,6 +113,7 @@ void main() {
   Future<int> createWorkoutSetExerciseOption(
     Database db, {
     required int workoutId,
+    required int workoutVersion,
     required int workoutSetId,
     required int workoutSetExerciseId,
     required int exerciseId,
@@ -116,6 +121,7 @@ void main() {
   }) async {
     final option = WorkoutSetExerciseOption.create(
       workoutId: workoutId,
+      workoutVersion: workoutVersion,
       workoutSetId: workoutSetId,
       workoutSetExerciseId: workoutSetExerciseId,
       exerciseId: exerciseId,
@@ -279,6 +285,7 @@ void main() {
     final setId = await createWorkoutSet(
       db,
       workoutId: workoutId,
+      workoutVersion: 1,
       position: 1,
       minSets: 2,
       maxSets: 2,
@@ -288,6 +295,7 @@ void main() {
     final setExerciseId = await createWorkoutSetExercise(
       db,
       workoutId: workoutId,
+      workoutVersion: 1,
       workoutSetId: setId,
       exerciseId: originalExercise,
       position: 1,
@@ -297,6 +305,7 @@ void main() {
     await createWorkoutSetExerciseOption(
       db,
       workoutId: workoutId,
+      workoutVersion: 1,
       workoutSetId: setId,
       workoutSetExerciseId: setExerciseId,
       exerciseId: oldAlternative,
@@ -422,6 +431,7 @@ void main() {
     final setId = await createWorkoutSet(
       db,
       workoutId: workoutId,
+      workoutVersion: 1,
       position: 1,
       minSets: 1,
       maxSets: 1,
@@ -431,6 +441,7 @@ void main() {
     final keptSetExerciseId = await createWorkoutSetExercise(
       db,
       workoutId: workoutId,
+      workoutVersion: 1,
       workoutSetId: setId,
       exerciseId: exerciseA,
       position: 1,
@@ -440,6 +451,7 @@ void main() {
     final removedSetExerciseId = await createWorkoutSetExercise(
       db,
       workoutId: workoutId,
+      workoutVersion: 1,
       workoutSetId: setId,
       exerciseId: exerciseB,
       position: 2,
@@ -449,6 +461,7 @@ void main() {
     await createWorkoutSetExerciseOption(
       db,
       workoutId: workoutId,
+      workoutVersion: 1,
       workoutSetId: setId,
       workoutSetExerciseId: removedSetExerciseId,
       exerciseId: alternativeExercise,
@@ -536,6 +549,7 @@ void main() {
     final setToDelete = await createWorkoutSet(
       db,
       workoutId: workoutId,
+      workoutVersion: 1,
       position: 1,
       minSets: 1,
       maxSets: 1,
@@ -545,6 +559,7 @@ void main() {
     final setToKeep = await createWorkoutSet(
       db,
       workoutId: workoutId,
+      workoutVersion: 1,
       position: 2,
       minSets: 1,
       maxSets: 1,
@@ -554,6 +569,7 @@ void main() {
     await createWorkoutSetExercise(
       db,
       workoutId: workoutId,
+      workoutVersion: 1,
       workoutSetId: setToDelete,
       exerciseId: exerciseA,
       position: 1,
@@ -563,6 +579,7 @@ void main() {
     final keptSetExerciseId = await createWorkoutSetExercise(
       db,
       workoutId: workoutId,
+      workoutVersion: 1,
       workoutSetId: setToKeep,
       exerciseId: exerciseB,
       position: 1,
@@ -638,6 +655,7 @@ void main() {
     final setA = await createWorkoutSet(
       db,
       workoutId: workoutId,
+      workoutVersion: 1,
       position: 1,
       minSets: 1,
       maxSets: 1,
@@ -647,6 +665,7 @@ void main() {
     final setB = await createWorkoutSet(
       db,
       workoutId: workoutId,
+      workoutVersion: 1,
       position: 2,
       minSets: 2,
       maxSets: 2,
@@ -656,6 +675,7 @@ void main() {
     await createWorkoutSetExercise(
       db,
       workoutId: workoutId,
+      workoutVersion: 1,
       workoutSetId: setA,
       exerciseId: exerciseId,
       position: 1,
@@ -665,6 +685,7 @@ void main() {
     await createWorkoutSetExercise(
       db,
       workoutId: workoutId,
+      workoutVersion: 1,
       workoutSetId: setB,
       exerciseId: exerciseId,
       position: 1,
@@ -774,6 +795,7 @@ void main() {
     final setId = await createWorkoutSet(
       db,
       workoutId: workoutId,
+      workoutVersion: 1,
       position: 1,
       minSets: 1,
       maxSets: 1,
@@ -783,6 +805,7 @@ void main() {
     final originalSetExerciseId = await createWorkoutSetExercise(
       db,
       workoutId: workoutId,
+      workoutVersion: 1,
       workoutSetId: setId,
       exerciseId: originalExercise,
       position: 1,

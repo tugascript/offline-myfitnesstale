@@ -15,6 +15,7 @@ enum WorkoutSetExerciseOptionColumns with Columns {
   workoutId("workout_id"),
   workoutSetId("workout_set_id"),
   workoutSetExerciseId("workout_set_exercise_id"),
+  workoutVersion("workout_version"),
   exerciseId("exercise_id"),
   position("position"),
   createdBy("created_by"),
@@ -33,6 +34,7 @@ final class WorkoutSetExerciseOption extends Equatable implements Model {
   final int workoutId;
   final int workoutSetId;
   final int workoutSetExerciseId;
+  final int workoutVersion;
   final int exerciseId;
   final int position;
   final CreatedBy createdBy;
@@ -46,6 +48,7 @@ final class WorkoutSetExerciseOption extends Equatable implements Model {
     required this.workoutId,
     required this.workoutSetId,
     required this.workoutSetExerciseId,
+    required this.workoutVersion,
     required this.exerciseId,
     required this.position,
     required this.createdBy,
@@ -60,6 +63,7 @@ final class WorkoutSetExerciseOption extends Equatable implements Model {
     ${WorkoutSetExerciseOptionColumns.workoutId.value} INTEGER NOT NULL,
     ${WorkoutSetExerciseOptionColumns.workoutSetId.value} INTEGER NOT NULL,
     ${WorkoutSetExerciseOptionColumns.workoutSetExerciseId.value} INTEGER NOT NULL,
+    ${WorkoutSetExerciseOptionColumns.workoutVersion.value} INTEGER NOT NULL,
     ${WorkoutSetExerciseOptionColumns.exerciseId.value} INTEGER NOT NULL,
     ${WorkoutSetExerciseOptionColumns.position.value} INTEGER NOT NULL,
     ${WorkoutSetExerciseOptionColumns.createdBy.value} TEXT NOT NULL,
@@ -76,7 +80,8 @@ final class WorkoutSetExerciseOption extends Equatable implements Model {
   
   CREATE INDEX IF NOT EXISTS idx_exercise_option_exercise_id ON $_table (${WorkoutSetExerciseOptionColumns.exerciseId.value});
   CREATE INDEX IF NOT EXISTS idx_exercise_option_set_exercise_id ON $_table (${WorkoutSetExerciseOptionColumns.workoutSetExerciseId.value});
-  CREATE INDEX IF NOT EXISTS idx_exercise_option_set_exercise_position ON $_table (${WorkoutSetExerciseOptionColumns.workoutSetExerciseId.value}, ${WorkoutSetExerciseOptionColumns.position.value});
+  CREATE INDEX IF NOT EXISTS idx_exercise_option_set_exercise_version_position ON $_table (${WorkoutSetExerciseOptionColumns.workoutSetExerciseId.value}, ${WorkoutSetExerciseOptionColumns.workoutVersion.value}, ${WorkoutSetExerciseOptionColumns.position.value});
+  CREATE INDEX IF NOT EXISTS idx_exercise_option_workout_id_version ON $_table (${WorkoutSetExerciseOptionColumns.workoutId.value}, ${WorkoutSetExerciseOptionColumns.workoutVersion.value});
   CREATE INDEX IF NOT EXISTS idx_exercise_option_position ON $_table (${WorkoutSetExerciseOptionColumns.position.value});
   ''';
 
@@ -88,6 +93,7 @@ final class WorkoutSetExerciseOption extends Equatable implements Model {
       WorkoutSetExerciseOptionColumns.workoutSetId.value: workoutSetId,
       WorkoutSetExerciseOptionColumns.workoutSetExerciseId.value:
           workoutSetExerciseId,
+      WorkoutSetExerciseOptionColumns.workoutVersion.value: workoutVersion,
       WorkoutSetExerciseOptionColumns.exerciseId.value: exerciseId,
       WorkoutSetExerciseOptionColumns.position.value: position,
       WorkoutSetExerciseOptionColumns.createdBy.value: createdBy.value,
@@ -106,6 +112,8 @@ final class WorkoutSetExerciseOption extends Equatable implements Model {
       workoutSetExerciseId:
           map[WorkoutSetExerciseOptionColumns.workoutSetExerciseId.value]
               as int,
+      workoutVersion:
+          map[WorkoutSetExerciseOptionColumns.workoutVersion.value] as int,
       exerciseId: map[WorkoutSetExerciseOptionColumns.exerciseId.value] as int,
       position: map[WorkoutSetExerciseOptionColumns.position.value] as int,
       createdBy: CreatedBy.fromValue(
@@ -121,6 +129,7 @@ final class WorkoutSetExerciseOption extends Equatable implements Model {
     required int workoutId,
     required int workoutSetId,
     required int workoutSetExerciseId,
+    required int workoutVersion,
     required int exerciseId,
     required int position,
     CreatedBy createdBy = CreatedBy.user,
@@ -130,6 +139,7 @@ final class WorkoutSetExerciseOption extends Equatable implements Model {
       workoutId: workoutId,
       workoutSetId: workoutSetId,
       workoutSetExerciseId: workoutSetExerciseId,
+      workoutVersion: workoutVersion,
       exerciseId: exerciseId,
       position: position,
       createdBy: createdBy,
@@ -144,6 +154,7 @@ final class WorkoutSetExerciseOption extends Equatable implements Model {
     int? workoutId,
     int? workoutSetId,
     int? workoutSetExerciseId,
+    int? workoutVersion,
     int? exerciseId,
     int? position,
     CreatedBy? createdBy,
@@ -155,6 +166,7 @@ final class WorkoutSetExerciseOption extends Equatable implements Model {
       workoutId: workoutId ?? this.workoutId,
       workoutSetId: workoutSetId ?? this.workoutSetId,
       workoutSetExerciseId: workoutSetExerciseId ?? this.workoutSetExerciseId,
+      workoutVersion: workoutVersion ?? this.workoutVersion,
       exerciseId: exerciseId ?? this.exerciseId,
       position: position ?? this.position,
       createdBy: createdBy ?? this.createdBy,
@@ -169,6 +181,7 @@ final class WorkoutSetExerciseOption extends Equatable implements Model {
         workoutId,
         workoutSetId,
         workoutSetExerciseId,
+        workoutVersion,
         exerciseId,
         position,
         createdBy,
