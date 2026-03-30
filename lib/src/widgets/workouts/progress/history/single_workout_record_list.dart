@@ -16,7 +16,8 @@ class SingleWorkoutRecordList extends StatelessWidget {
   final DataDisplaySizesList sizes;
   final Units units;
   final bool isLoading;
-
+  final int workoutId;
+  final int workoutVersion;
   final List<WorkoutRecordDto> workoutRecords;
   final WorkoutRecordPagination pagination;
   final ScrollController? scrollController;
@@ -26,6 +27,8 @@ class SingleWorkoutRecordList extends StatelessWidget {
     required this.sizes,
     required this.units,
     required this.isLoading,
+    required this.workoutId,
+    required this.workoutVersion,
     required this.workoutRecords,
     required this.pagination,
     this.scrollController,
@@ -53,6 +56,8 @@ class SingleWorkoutRecordList extends StatelessWidget {
               sizes: sizes,
               units: units,
               workoutRecord: WorkoutRecordDto.empty(),
+              workoutId: workoutId,
+              workoutVersion: workoutVersion,
             );
           }
 
@@ -60,6 +65,8 @@ class SingleWorkoutRecordList extends StatelessWidget {
             sizes: sizes,
             units: units,
             workoutRecord: workoutRecords[index],
+            workoutId: workoutId,
+            workoutVersion: workoutVersion,
           );
         },
       ),
@@ -72,11 +79,14 @@ class _SingleWorkoutRecordCard extends StatelessWidget {
   final Units units;
 
   final WorkoutRecordDto workoutRecord;
-
+  final int workoutId;
+  final int workoutVersion;
   const _SingleWorkoutRecordCard({
     required this.sizes,
     required this.units,
     required this.workoutRecord,
+    required this.workoutId,
+    required this.workoutVersion,
   });
 
   @override
@@ -151,7 +161,7 @@ class _SingleWorkoutRecordCard extends StatelessWidget {
       ],
       onTap: () {
         context.push(
-          '/workouts/${workoutRecord.workoutId}/history/${workoutRecord.id}',
+          '/workouts/$workoutId/history/$workoutVersion/${workoutRecord.id}',
         );
       },
     );

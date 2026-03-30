@@ -96,7 +96,7 @@ final class Workout implements Model {
     ${WorkoutColumns.updatedAt.value} INTEGER NOT NULL
   );
   
-  CREATE UNIQUE INDEX IF NOT EXISTS unique_idx_workouts_name ON $_table (${WorkoutColumns.name.value});
+  CREATE UNIQUE INDEX IF NOT EXISTS unique_idx_workouts_name_version ON $_table (${WorkoutColumns.name.value}, ${WorkoutColumns.version.value});
   ''';
 
   @override
