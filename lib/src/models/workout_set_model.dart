@@ -85,7 +85,7 @@ class WorkoutSet implements Model {
   
   CREATE INDEX IF NOT EXISTS idx_workout_sets_workout_id ON $_table (${WorkoutSetColumns.workoutId.value});
   CREATE INDEX IF NOT EXISTS idx_workout_sets_workout_id_version ON $_table (${WorkoutSetColumns.workoutId.value}, ${WorkoutSetColumns.workoutVersion.value});
-  CREATE INDEX IF NOT EXISTS idx_workout_sets_workout_id_position ON $_table (${WorkoutSetColumns.workoutId.value}, ${WorkoutSetColumns.workoutVersion.value}, ${WorkoutSetColumns.position.value});
+  CREATE INDEX IF NOT EXISTS idx_workout_sets_workout_id_position ON $_table (${WorkoutSetColumns.workoutId.value}, ${WorkoutSetColumns.position.value});
   ''';
 
   @override

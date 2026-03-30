@@ -15,6 +15,7 @@ class LatestWorkoutRecord extends StatefulWidget {
   final DataDisplaySizesList sizes;
   final Units units;
   final int workoutId;
+  final int workoutVersion;
 
   const LatestWorkoutRecord({
     super.key,
@@ -22,6 +23,7 @@ class LatestWorkoutRecord extends StatefulWidget {
     required this.theme,
     required this.units,
     required this.workoutId,
+    required this.workoutVersion,
   });
 
   @override
@@ -55,6 +57,8 @@ class _LatestWorkoutRecordState extends State<LatestWorkoutRecord> {
           theme: widget.theme,
           units: widget.units,
           isLoading: state.isLoading,
+          workoutId: widget.workoutId,
+          workoutVersion: widget.workoutVersion,
           workoutRecord: state.latestWorkoutRecord,
         );
       },
@@ -68,6 +72,8 @@ class _LatestWorkoutRecord extends StatelessWidget {
   final Units units;
 
   final bool isLoading;
+  final int workoutId;
+  final int workoutVersion;
   final WorkoutRecordDto? workoutRecord;
 
   const _LatestWorkoutRecord({
@@ -75,6 +81,8 @@ class _LatestWorkoutRecord extends StatelessWidget {
     required this.theme,
     required this.units,
     required this.isLoading,
+    required this.workoutId,
+    required this.workoutVersion,
     required this.workoutRecord,
   });
 
@@ -89,7 +97,7 @@ class _LatestWorkoutRecord extends StatelessWidget {
           }
 
           context.push(
-            '/workouts/${workoutRecord?.workoutId}/history/${workoutRecord?.id}',
+            '/workouts/$workoutId/history/$workoutVersion/${workoutRecord?.id}',
           );
         },
         child: SizedBox(

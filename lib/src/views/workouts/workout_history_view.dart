@@ -78,6 +78,8 @@ class _WorkoutHistoryViewState extends State<WorkoutHistoryView> {
                           theme: theme,
                           units: units,
                           workoutId: widget.workoutId,
+                          workoutVersion:
+                              workoutState.selectedWorkout?.version ?? 1,
                         ),
                         SizedBox(height: sizes.spacing),
                         WorkoutRecordHistory(
@@ -86,6 +88,8 @@ class _WorkoutHistoryViewState extends State<WorkoutHistoryView> {
                           sizes: sizes,
                           units: units,
                           workoutId: widget.workoutId,
+                          workoutVersion:
+                              workoutState.selectedWorkout?.version ?? 1,
                         ),
                       ],
                     );

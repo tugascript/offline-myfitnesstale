@@ -80,7 +80,7 @@ final class WorkoutSetExerciseOption extends Equatable implements Model {
   
   CREATE INDEX IF NOT EXISTS idx_exercise_option_exercise_id ON $_table (${WorkoutSetExerciseOptionColumns.exerciseId.value});
   CREATE INDEX IF NOT EXISTS idx_exercise_option_set_exercise_id ON $_table (${WorkoutSetExerciseOptionColumns.workoutSetExerciseId.value});
-  CREATE INDEX IF NOT EXISTS idx_exercise_option_set_exercise_version_position ON $_table (${WorkoutSetExerciseOptionColumns.workoutSetExerciseId.value}, ${WorkoutSetExerciseOptionColumns.workoutVersion.value}, ${WorkoutSetExerciseOptionColumns.position.value});
+  CREATE INDEX IF NOT EXISTS idx_exercise_option_set_exercise_position ON $_table (${WorkoutSetExerciseOptionColumns.workoutSetExerciseId.value}, ${WorkoutSetExerciseOptionColumns.position.value});
   CREATE INDEX IF NOT EXISTS idx_exercise_option_workout_id_version ON $_table (${WorkoutSetExerciseOptionColumns.workoutId.value}, ${WorkoutSetExerciseOptionColumns.workoutVersion.value});
   CREATE INDEX IF NOT EXISTS idx_exercise_option_position ON $_table (${WorkoutSetExerciseOptionColumns.position.value});
   ''';

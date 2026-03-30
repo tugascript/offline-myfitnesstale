@@ -17,6 +17,7 @@ class WorkoutRecordHistory extends StatefulWidget {
   final DataDisplaySizesList sizes;
   final Units units;
   final int workoutId;
+  final int workoutVersion;
 
   const WorkoutRecordHistory({
     super.key,
@@ -25,6 +26,7 @@ class WorkoutRecordHistory extends StatefulWidget {
     required this.sizes,
     required this.units,
     required this.workoutId,
+    required this.workoutVersion,
   });
 
   @override
@@ -102,11 +104,11 @@ class _WorkoutRecordHistoryState extends State<WorkoutRecordHistory> {
       });
       if (mounted) {
         await context.read<WorkoutRecordCubit>().getWorkoutRecords(
-          workoutId: widget.workoutId,
-          dateRange: (_dateRange.start, _dateRange.end),
-          limit: 20,
-          offset: 0,
-        );
+              workoutId: widget.workoutId,
+              dateRange: (_dateRange.start, _dateRange.end),
+              limit: 20,
+              offset: 0,
+            );
       }
     }
   }
@@ -165,6 +167,8 @@ class _WorkoutRecordHistoryState extends State<WorkoutRecordHistory> {
                 isLoading: state.isLoading,
                 workoutRecords: state.workoutRecords,
                 pagination: state.pagination,
+                workoutId: widget.workoutId,
+                workoutVersion: widget.workoutVersion,
               ),
             );
           },
