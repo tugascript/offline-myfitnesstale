@@ -10,11 +10,11 @@ import 'common_state.dart';
 class ActiveWorkoutState extends Equatable {
   final WorkoutDto? workout;
   final WorkoutRecordDto? workoutRecord;
+  final DateTime currentSetStartedAt;
   final int currentSetPosition;
   final int currentSetNumber;
   final int currentExercisePosition;
   final bool isResting;
-  final DateTime? startedAt;
   final bool isLoading;
   final bool isCompleted;
   final ErrorState? error;
@@ -26,7 +26,7 @@ class ActiveWorkoutState extends Equatable {
     required this.currentSetNumber,
     required this.currentExercisePosition,
     required this.isResting,
-    this.startedAt,
+    required this.currentSetStartedAt,
     required this.isLoading,
     required this.isCompleted,
     this.error,
@@ -66,13 +66,14 @@ class ActiveWorkoutState extends Equatable {
   }
 
   factory ActiveWorkoutState.initial() {
-    return const ActiveWorkoutState(
+    return ActiveWorkoutState(
       currentSetPosition: 0,
       currentExercisePosition: 0,
       currentSetNumber: 1,
       isResting: false,
       isLoading: false,
       isCompleted: false,
+      currentSetStartedAt: DateTime.now(),
     );
   }
 
@@ -83,7 +84,7 @@ class ActiveWorkoutState extends Equatable {
     int? currentExercisePosition,
     int? currentSetNumber,
     bool? isResting,
-    Nullable<DateTime>? startedAt,
+    DateTime? currentSetStartedAt,
     bool? isLoading,
     bool? isCompleted,
     Nullable<ErrorState>? error,
@@ -97,7 +98,7 @@ class ActiveWorkoutState extends Equatable {
           currentExercisePosition ?? this.currentExercisePosition,
       currentSetNumber: currentSetNumber ?? this.currentSetNumber,
       isResting: isResting ?? this.isResting,
-      startedAt: startedAt != null ? startedAt.value : this.startedAt,
+      currentSetStartedAt: currentSetStartedAt ?? this.currentSetStartedAt,
       isLoading: isLoading ?? this.isLoading,
       isCompleted: isCompleted ?? this.isCompleted,
       error: error != null ? error.value : this.error,
@@ -112,7 +113,7 @@ class ActiveWorkoutState extends Equatable {
         currentExercisePosition,
         currentSetNumber,
         isResting,
-        startedAt,
+        currentSetStartedAt,
         isLoading,
         error,
       ];
