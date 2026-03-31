@@ -34,7 +34,7 @@ class BaseSetData extends StatelessWidget {
           children: [
             Icon(Icons.repeat, size: sizes.fontSize * 1.2),
             Text(
-              ' ${workoutSet.minSets}-${workoutSet.maxSets != null && workoutSet.maxSets! > workoutSet.minSets ? '-${workoutSet.maxSets}' : ''}',
+              ' ${workoutSet.minSets}${workoutSet.maxSets != null && workoutSet.maxSets! > workoutSet.minSets ? '-${workoutSet.maxSets}' : ''}',
               style: TextStyle(fontSize: sizes.fontSize),
             ),
           ],

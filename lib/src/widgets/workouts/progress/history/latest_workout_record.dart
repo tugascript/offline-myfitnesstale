@@ -97,7 +97,7 @@ class _LatestWorkoutRecord extends StatelessWidget {
           }
 
           context.push(
-            '/workouts/$workoutId/history/$workoutVersion/${workoutRecord?.id}',
+            '/workouts/$workoutId/history/$workoutVersion/records/${workoutRecord?.id}',
           );
         },
         child: SizedBox(

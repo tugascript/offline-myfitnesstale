@@ -161,7 +161,7 @@ class _SingleWorkoutRecordCard extends StatelessWidget {
       ],
       onTap: () {
         context.push(
-          '/workouts/$workoutId/history/$workoutVersion/${workoutRecord.id}',
+          '/workouts/$workoutId/history/$workoutVersion/records/${workoutRecord.id}',
         );
       },
     );

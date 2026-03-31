@@ -89,7 +89,7 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
       currentSetPosition: 0,
       currentExercisePosition: 0,
       currentSetNumber: 1,
-      startedAt: Nullable(startedAt),
+      currentSetStartedAt: startedAt,
       isLoading: false,
     ));
   }
@@ -124,6 +124,7 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
       workoutSetId: currentSet.id,
       workoutRecordId: state.workoutRecord!.id,
       setNumber: setNumber,
+      startedAt: state.currentSetStartedAt,
       totalRestSecs: restSecs,
       completedAt: DateTime.now(),
     );
@@ -137,7 +138,7 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
     final setRecord = setRecordResult.value;
 
     final exerciseRecordResult =
-        await _workoutRecordService.createWorkoutSetExerciseRecord(
+        await _workoutRecordService.upsertWorkoutSetExerciseRecord(
       workoutSetExerciseId: currentExercise.id,
       workoutRecordId: state.workoutRecord!.id,
       workoutSetRecordId: setRecord.id,
@@ -175,6 +176,7 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
   void nextExercise() {
     if (state.workout == null) return;
 
+    final nextSetStartedAt = DateTime.now();
     int nextSetIndex = state.currentSetPosition;
     int nextExerciseIndex = state.currentExercisePosition + 1;
     int nextSetNumber = state.currentSetNumber;
@@ -225,6 +227,7 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
       currentSetPosition: nextSetIndex,
       currentExercisePosition: nextExerciseIndex,
       currentSetNumber: nextSetNumber,
+      currentSetStartedAt: nextSetStartedAt,
     ));
   }
 

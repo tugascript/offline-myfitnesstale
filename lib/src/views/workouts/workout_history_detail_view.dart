@@ -17,7 +17,7 @@ import '../../widgets/workouts/progress/history/detail/workout_record_sets.dart'
 
 class WorkoutHistoryDetailView extends StatefulWidget {
   static const routeName =
-      '/workouts/:workoutId/history/:version/:workoutRecordId';
+      '/workouts/:workoutId/history/:version/records/:workoutRecordId';
 
   final int workoutId;
   final int workoutRecordId;
@@ -69,40 +69,55 @@ class _WorkoutHistoryDetailViewState extends State<WorkoutHistoryDetailView> {
           builder: (context, workoutState) {
             return ResponsiveScaffold(
               title: workoutState.selectedWorkout?.name ?? 'Workout Details',
-              body: BlocBuilder<WorkoutRecordCubit, WorkoutRecordState>(
-                builder: (context, workoutRecordState) {
-                  final Map<int, List<WorkoutSetRecordDto>> setRecordsMap =
-                      workoutRecordState.selectedWorkoutRecord?.setRecords
-                              ?.fold<Map<int, List<WorkoutSetRecordDto>>>(
-                            {},
-                            (map, s) => map
-                              ..update(
-                                s.workoutSetId,
-                                (value) => value..add(s),
-                                ifAbsent: () => [s],
-                              ),
-                          ) ??
-                          {};
+              body: Padding(
+                padding: EdgeInsets.all(sizes.viewPadding),
+                child: BlocBuilder<WorkoutRecordCubit, WorkoutRecordState>(
+                  builder: (context, workoutRecordState) {
+                    final Map<int, List<WorkoutSetRecordDto>> setRecordsMap =
+                        workoutRecordState.selectedWorkoutRecord?.setRecords
+                                ?.fold<Map<int, List<WorkoutSetRecordDto>>>(
+                              {},
+                              (map, s) => map
+                                ..update(
+                                  s.workoutSetId,
+                                  (value) => value..add(s),
+                                  ifAbsent: () => [s],
+                                ),
+                            ) ??
+                            {};
 
-                  return Column(
-                    children: [
-                      WorkoutRecordHeadCard(
-                        sizes: sizes,
-                        theme: theme,
-                        units: profileState.system?.units ?? Units.metric,
-                        isLoading: workoutRecordState.isLoading,
-                        workoutRecord: workoutRecordState.selectedWorkoutRecord,
-                      ),
-                      SizedBox(height: sizes.spacing),
-                      WorkoutRecordSets(
-                        sizes: sizes,
-                        theme: theme,
-                        units: profileState.system?.units ?? Units.metric,
-                        data: [], // TODO: fix me
-                      ),
-                    ],
-                  );
-                },
+                    return Column(
+                      children: [
+                        WorkoutRecordHeadCard(
+                          sizes: sizes,
+                          theme: theme,
+                          units: profileState.system?.units ?? Units.metric,
+                          isLoading: workoutRecordState.isLoading,
+                          workoutRecord:
+                              workoutRecordState.selectedWorkoutRecord,
+                        ),
+                        SizedBox(height: sizes.spacing),
+                        WorkoutRecordSets(
+                          sizes: sizes,
+                          theme: theme,
+                          units: profileState.system?.units ?? Units.metric,
+                          data: workoutState.selectedWorkout?.sets
+                                  ?.where(
+                                    (set) => setRecordsMap[set.id] != null,
+                                  )
+                                  .map(
+                                    (set) => WorkoutRecordSetsData(
+                                      workoutSet: set,
+                                      setRecords: setRecordsMap[set.id]!,
+                                    ),
+                                  )
+                                  .toList() ??
+                              [],
+                        ),
+                      ],
+                    );
+                  },
+                ),
               ),
             );
           },
