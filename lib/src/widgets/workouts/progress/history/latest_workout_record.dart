@@ -49,6 +49,7 @@ class _LatestWorkoutRecordState extends State<LatestWorkoutRecord> {
             theme: widget.theme,
             isLoading: state.isLoading,
             workoutId: widget.workoutId,
+            workoutVersion: widget.workoutVersion,
           );
         }
 
@@ -152,12 +153,14 @@ class _EmptyWorkoutRecord extends StatelessWidget {
   final ThemeData theme;
   final bool isLoading;
   final int workoutId;
+  final int workoutVersion;
 
   const _EmptyWorkoutRecord({
     required this.sizes,
     required this.theme,
     required this.isLoading,
     required this.workoutId,
+    required this.workoutVersion,
   });
 
   @override
@@ -214,7 +217,7 @@ class _EmptyWorkoutRecord extends StatelessWidget {
                   isDense: true,
                   isSecondary: true,
                   onPressed: () => context.push(
-                    '/workouts/$workoutId/history/create',
+                    '/workouts/$workoutId/history/$workoutVersion/records/create',
                   ),
                   label: 'Create Record',
                   icon: Icons.add,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../cubits/profile_cubit.dart';
 import '../../cubits/states/profile_state.dart';
@@ -13,15 +14,18 @@ import '../../utilities/sizes/screen_size.dart';
 import '../../widgets/layout/responsive_scaffold.dart';
 import '../../widgets/workouts/progress/history/latest_workout_record.dart';
 import '../../widgets/workouts/progress/history/workout_record_history.dart';
+import 'create_workout_record_view.dart';
 
 class WorkoutHistoryView extends StatefulWidget {
-  static const routeName = '/workouts/:id/history';
+  static const routeName = '/workouts/:id/history/:version';
 
   final int workoutId;
+  final int version;
 
   const WorkoutHistoryView({
     super.key,
     required this.workoutId,
+    required this.version,
   });
 
   @override
@@ -34,8 +38,9 @@ class _WorkoutHistoryViewState extends State<WorkoutHistoryView> {
     super.initState();
 
     final workoutCubit = context.read<WorkoutCubit>();
-    if (workoutCubit.state.selectedWorkout?.id != widget.workoutId) {
-      workoutCubit.getWorkout(widget.workoutId);
+    if (workoutCubit.state.selectedWorkout?.id != widget.workoutId ||
+        workoutCubit.state.selectedWorkout?.version != widget.version) {
+      workoutCubit.getWorkout(widget.workoutId, version: widget.version);
     }
   }
 
@@ -97,6 +102,17 @@ class _WorkoutHistoryViewState extends State<WorkoutHistoryView> {
                 ),
               );
             },
+          ),
+          floatingActionButton: FloatingActionButton(
+            elevation: sizes.elevation,
+            onPressed: () {
+              context.push(
+                CreateWorkoutRecordView.routeName
+                    .replaceFirst(':id', widget.workoutId.toString())
+                    .replaceFirst(':version', widget.version.toString()),
+              );
+            },
+            child: const Icon(Icons.add),
           ),
         );
       },
