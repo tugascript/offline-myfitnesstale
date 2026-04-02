@@ -59,13 +59,25 @@ class _HeightInputState extends State<HeightInput> {
             ),
             keyboardType: TextInputType.number,
             onChanged: (value) {
-              if (value.isNotEmpty) {
-                widget.onChanged(int.parse(value));
+              if (value.isEmpty) {
+                widget.onChanged(0);
+                return;
               }
+
+              final int? height = int.tryParse(value);
+              if (height == null) {
+                return;
+              }
+
+              widget.onChanged(height);
             },
             onSaved: (value) {
               if (value != null && value.isNotEmpty) {
-                widget.onSaved(int.parse(value));
+                final int? height = int.tryParse(value);
+                if (height == null) {
+                  return;
+                }
+                widget.onSaved(height);
               }
             },
             validator: (value) {
