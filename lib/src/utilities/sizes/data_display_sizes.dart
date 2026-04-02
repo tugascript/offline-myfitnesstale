@@ -36,10 +36,10 @@ sealed class DataDisplaySizes {
   static const double _viewPadding = 10;
   static const double _spacing = 14;
   static const double _margins = 10;
-  static const double _titleFontSize = 24;
-  static const double _subtitleFontSize = 16;
-  static const double _fontSize = 14;
-  static const double _smallFontSize = 11;
+  static const double _titleFontSize = 26;
+  static const double _subtitleFontSize = 18;
+  static const double _fontSize = 16;
+  static const double _smallFontSize = 13;
   static const double _inputSpacing = 15;
   static const double _buttonSize = 65;
   static const double _buttonIconSize = 25;
