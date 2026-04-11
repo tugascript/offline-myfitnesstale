@@ -96,4 +96,3 @@ class TodayWorkoutWidget extends StatelessWidget {
     );
   }
 }
-

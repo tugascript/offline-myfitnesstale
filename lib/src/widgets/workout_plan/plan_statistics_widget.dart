@@ -148,4 +148,3 @@ class PlanStatisticsWidget extends StatelessWidget {
     );
   }
 }
-
