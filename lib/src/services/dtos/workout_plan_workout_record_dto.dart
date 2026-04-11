@@ -3,7 +3,8 @@ import 'package:equatable/equatable.dart';
 import '../../models/workout_plan_workout_record_model.dart';
 import 'dto.dart';
 
-class WorkoutPlanWorkoutRecordDto extends Equatable implements Dto<WorkoutPlanWorkoutRecord> {
+class WorkoutPlanWorkoutRecordDto extends Equatable
+    implements Dto<WorkoutPlanWorkoutRecord> {
   @override
   final int id;
   final int workoutPlanRecordId;
@@ -24,7 +25,8 @@ class WorkoutPlanWorkoutRecordDto extends Equatable implements Dto<WorkoutPlanWo
   });
 
   @override
-  factory WorkoutPlanWorkoutRecordDto.fromModel(WorkoutPlanWorkoutRecord model) {
+  factory WorkoutPlanWorkoutRecordDto.fromModel(
+      WorkoutPlanWorkoutRecord model) {
     return WorkoutPlanWorkoutRecordDto(
       id: model.id!,
       workoutPlanRecordId: model.workoutPlanRecordId,
@@ -33,7 +35,8 @@ class WorkoutPlanWorkoutRecordDto extends Equatable implements Dto<WorkoutPlanWo
       workoutPlanWorkoutId: model.workoutPlanWorkoutId,
       workoutRecordId: model.workoutRecordId,
       completedAt: model.completedAt != null
-          ? DateTime.fromMillisecondsSinceEpoch(model.completedAt! * 1000, isUtc: true)
+          ? DateTime.fromMillisecondsSinceEpoch(model.completedAt! * 1000,
+              isUtc: true)
           : null,
     );
   }
@@ -51,8 +54,10 @@ class WorkoutPlanWorkoutRecordDto extends Equatable implements Dto<WorkoutPlanWo
     return WorkoutPlanWorkoutRecordDto(
       id: id ?? this.id,
       workoutPlanRecordId: workoutPlanRecordId ?? this.workoutPlanRecordId,
-      workoutPlanWeekRecordId: workoutPlanWeekRecordId ?? this.workoutPlanWeekRecordId,
-      workoutPlanDayRecordId: workoutPlanDayRecordId ?? this.workoutPlanDayRecordId,
+      workoutPlanWeekRecordId:
+          workoutPlanWeekRecordId ?? this.workoutPlanWeekRecordId,
+      workoutPlanDayRecordId:
+          workoutPlanDayRecordId ?? this.workoutPlanDayRecordId,
       workoutPlanWorkoutId: workoutPlanWorkoutId ?? this.workoutPlanWorkoutId,
       workoutRecordId: workoutRecordId ?? this.workoutRecordId,
       completedAt: completedAt ?? this.completedAt,

@@ -4,47 +4,57 @@ import 'package:flutter/material.dart';
 import '../../../models/common.dart';
 import '../../../models/enums.dart';
 import '../../../utilities/sizes/data_display_sizes.dart';
-import '../../common/mutation_button.dart';
 import '../../layout/app_text_form_field.dart';
 import '../workout_set_exercise_difficulty_input.dart';
+import 'workout_rest_duration_input.dart';
 
-class ActiveSetExerciseLog extends StatefulWidget {
+const List<double> _weightDecimalValues = [0.0, 0.25, 0.5, 0.75];
+const List<String> _weightDecimalLabels = ['.00', '.25', '.50', '.75'];
+
+class WorkoutSetExerciseRecordForm extends StatefulWidget {
   final ThemeData theme;
   final DataDisplaySizesList sizes;
   final Units units;
-  final bool isLoading;
 
+  final bool isLoading;
+  final int initialWeight;
+  final int initialReps;
+  final int initialDifficulty;
   final WorkoutSetExerciseDifficultyType initialDifficultyType;
-  final int initialDifficultyValue;
-  final int workoutSetExerciseId;
-  final bool isOptional;
 
   final void Function({
     required double weight,
     required int reps,
     required WorkoutSetExerciseDifficulty difficulty,
-  }) onLogSet;
-  final VoidCallback onSkip;
+  }) onValuesChanged;
 
-  const ActiveSetExerciseLog({
+  final bool showIterationRest;
+  final int initialRestSecs;
+  final ValueChanged<int>? onRestSecsChanged;
+
+  const WorkoutSetExerciseRecordForm({
     super.key,
     required this.theme,
     required this.sizes,
     required this.units,
-    required this.initialDifficultyType,
-    required this.initialDifficultyValue,
-    required this.workoutSetExerciseId,
     required this.isLoading,
-    required this.onLogSet,
-    required this.onSkip,
-    required this.isOptional,
+    required this.initialWeight,
+    required this.initialReps,
+    required this.initialDifficulty,
+    required this.initialDifficultyType,
+    required this.onValuesChanged,
+    this.showIterationRest = false,
+    this.initialRestSecs = 0,
+    this.onRestSecsChanged,
   });
 
   @override
-  State<ActiveSetExerciseLog> createState() => _ActiveSetExerciseLogState();
+  State<WorkoutSetExerciseRecordForm> createState() =>
+      _WorkoutSetExerciseRecordFormState();
 }
 
-class _ActiveSetExerciseLogState extends State<ActiveSetExerciseLog> {
+class _WorkoutSetExerciseRecordFormState
+    extends State<WorkoutSetExerciseRecordForm> {
   int _weightHundreds = 0;
   int _weightTens = 0;
   double _weightDecimals = 0.0;
@@ -53,19 +63,38 @@ class _ActiveSetExerciseLogState extends State<ActiveSetExerciseLog> {
   late WorkoutSetExerciseDifficultyType _difficultyType;
   late int _difficultyValue;
 
+  final _formKey = GlobalKey<FormState>();
   late final TextEditingController _weightController;
   late final TextEditingController _repsController;
-
-  final List<double> _decimalValues = [0.0, 0.25, 0.5, 0.75];
-  final List<String> _decimalLabels = ['.00', '.25', '.50', '.75'];
 
   @override
   void initState() {
     super.initState();
     _difficultyType = widget.initialDifficultyType;
-    _difficultyValue = widget.initialDifficultyValue;
-    _weightController = TextEditingController(text: '0');
-    _repsController = TextEditingController(text: '0');
+    _difficultyValue = widget.initialDifficulty;
+    _applyIntegerWeight(widget.initialWeight);
+    _reps = widget.initialReps;
+    _weightController = TextEditingController(text: _formatWeightDisplay());
+    _repsController = TextEditingController(text: '$_reps');
+    WidgetsBinding.instance.addPostFrameCallback((_) => _emitValues());
+  }
+
+  @override
+  void didUpdateWidget(covariant WorkoutSetExerciseRecordForm oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.initialWeight != widget.initialWeight) {
+      _applyIntegerWeight(widget.initialWeight);
+      _weightController.text = _formatWeightDisplay();
+    }
+    if (oldWidget.initialReps != widget.initialReps) {
+      _reps = widget.initialReps;
+      _repsController.text = '$_reps';
+    }
+    if (oldWidget.initialDifficultyType != widget.initialDifficultyType ||
+        oldWidget.initialDifficulty != widget.initialDifficulty) {
+      _difficultyType = widget.initialDifficultyType;
+      _difficultyValue = widget.initialDifficulty;
+    }
   }
 
   @override
@@ -75,20 +104,31 @@ class _ActiveSetExerciseLogState extends State<ActiveSetExerciseLog> {
     super.dispose();
   }
 
-  @override
-  void didUpdateWidget(covariant ActiveSetExerciseLog oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.workoutSetExerciseId != widget.workoutSetExerciseId) {
-      // Reset values for new exercise
-      _weightHundreds = 0;
-      _weightTens = 0;
-      _weightDecimals = 0.0;
-      _reps = 0;
-      _difficultyType = widget.initialDifficultyType;
-      _difficultyValue = widget.initialDifficultyValue;
-      _weightController.text = '0';
-      _repsController.text = '0';
-    }
+  void _applyIntegerWeight(int w) {
+    _weightHundreds = w ~/ 100;
+    _weightTens = w % 100;
+    _weightDecimals = 0.0;
+  }
+
+  String _formatWeightDisplay() {
+    final double total =
+        (_weightHundreds * 100) + _weightTens + _weightDecimals;
+    return total
+        .toStringAsFixed(2)
+        .replaceAll(RegExp(r'\.00$'), '');
+  }
+
+  void _emitValues() {
+    final double weight =
+        (_weightHundreds * 100) + _weightTens + _weightDecimals;
+    widget.onValuesChanged(
+      weight: weight,
+      reps: _reps,
+      difficulty: WorkoutSetExerciseDifficulty.create(
+        value: _difficultyValue,
+        type: _difficultyType,
+      ),
+    );
   }
 
   void _openWeightWheel() {
@@ -100,7 +140,8 @@ class _ActiveSetExerciseLogState extends State<ActiveSetExerciseLog> {
         FixedExtentScrollController(initialItem: tempHundreds);
     final tensController = FixedExtentScrollController(initialItem: tempTens);
     final decimalsController = FixedExtentScrollController(
-        initialItem: _decimalValues.indexOf(tempDecimals).clamp(0, 3));
+      initialItem: _weightDecimalValues.indexOf(tempDecimals).clamp(0, 3),
+    );
 
     showModalBottomSheet<void>(
       context: context,
@@ -127,17 +168,16 @@ class _ActiveSetExerciseLogState extends State<ActiveSetExerciseLog> {
                       setState(() {
                         _weightHundreds = hundredsController.selectedItem;
                         _weightTens = tensController.selectedItem;
-                        _weightDecimals = _decimalValues[
-                            decimalsController.selectedItem.clamp(0, 3)];
+                        _weightDecimals = _weightDecimalValues[
+                            decimalsController.selectedItem.clamp(
+                          0,
+                          3,
+                        )];
 
-                        final double total = (_weightHundreds * 100) +
-                            _weightTens +
-                            _weightDecimals;
-                        _weightController.text = total
-                            .toStringAsFixed(2)
-                            .replaceAll(RegExp(r'\.00$'), '');
+                        _weightController.text = _formatWeightDisplay();
                       });
                       Navigator.of(sheetContext).pop();
+                      _emitValues();
                     },
                     child: const Text('Confirm'),
                   ),
@@ -191,7 +231,7 @@ class _ActiveSetExerciseLogState extends State<ActiveSetExerciseLog> {
                         4,
                         (index) => Center(
                           child: Text(
-                            _decimalLabels[index],
+                            _weightDecimalLabels[index],
                             style: TextStyle(
                                 fontSize: widget.sizes.subtitleFontSize),
                           ),
@@ -242,6 +282,7 @@ class _ActiveSetExerciseLogState extends State<ActiveSetExerciseLog> {
                         _repsController.text = '$_reps';
                       });
                       Navigator.of(sheetContext).pop();
+                      _emitValues();
                     },
                     child: const Text('Confirm'),
                   ),
@@ -273,108 +314,73 @@ class _ActiveSetExerciseLogState extends State<ActiveSetExerciseLog> {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      margin: EdgeInsets.zero,
-      child: Padding(
-        padding: EdgeInsets.all(widget.sizes.padding),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: AppTextFormField(
-                    theme: widget.theme,
-                    controller: _weightController,
-                    readOnly: true,
-                    onTap: _openWeightWheel,
-                    labelText: 'Weight',
-                    hintText: '0',
-                    fontSize: widget.sizes.fontSize,
-                    padding: widget.sizes.padding,
-                    isLoading: false,
-                    filled: true,
-                    prefixIcon:
-                        Icon(Icons.scale, size: widget.sizes.fontSize * 1.2),
-                  ),
-                ),
-                SizedBox(width: widget.sizes.inputSpacing),
-                Expanded(
-                  child: AppTextFormField(
-                    theme: widget.theme,
-                    controller: _repsController,
-                    readOnly: true,
-                    onTap: _openRepsWheel,
-                    labelText: 'Reps',
-                    hintText: '0',
-                    fontSize: widget.sizes.fontSize,
-                    padding: widget.sizes.padding,
-                    isLoading: false,
-                    filled: true,
-                    prefixIcon: Icon(
-                      Icons.repeat_one,
-                      size: widget.sizes.fontSize * 1.2,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(height: widget.sizes.inputSpacing),
-            WorkoutSetExerciseDifficultyInput(
-              key: ValueKey(widget.workoutSetExerciseId),
-              initialDifficultyType: widget.initialDifficultyType,
-              initialDifficultyValue: widget.initialDifficultyValue,
-              theme: widget.theme,
-              sizes: widget.sizes,
-              onChanged: (type, value) {
-                _difficultyType = type;
-                _difficultyValue = value;
-              },
-            ),
-            SizedBox(height: widget.sizes.inputSpacing),
-            SizedBox(
-              width: double.infinity,
-              child: MutationButton(
-                theme: widget.theme,
-                isLoading: widget.isLoading,
-                sizes: widget.sizes,
-                isDense: true,
-                onPressed: () {
-                  final double weight =
-                      (_weightHundreds * 100) + _weightTens + _weightDecimals;
-                  widget.onLogSet(
-                    weight: weight,
-                    reps: _reps,
-                    difficulty: WorkoutSetExerciseDifficulty.create(
-                      value: _difficultyValue,
-                      type: _difficultyType,
-                    ),
-                  );
-                },
-                label: "Log Set",
-                icon: Icons.add,
-              ),
-            ),
-            if (widget.isOptional) ...[
-              SizedBox(height: widget.sizes.inputSpacing),
-              SizedBox(
-                width: double.infinity,
-                child: MutationButton(
+    return Form(
+      key: _formKey,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: AppTextFormField(
                   theme: widget.theme,
-                  sizes: widget.sizes,
+                  controller: _weightController,
+                  readOnly: true,
+                  onTap: _openWeightWheel,
+                  labelText: 'Weight',
+                  hintText: '0',
+                  fontSize: widget.sizes.fontSize,
+                  padding: widget.sizes.padding,
                   isLoading: widget.isLoading,
-                  icon: Icons.skip_next,
-                  color: widget.theme.colorScheme.secondary,
-                  isDense: true,
-                  label: "Skip to next group",
-                  onPressed: widget.onSkip,
+                  filled: true,
+                  prefixIcon:
+                      Icon(Icons.scale, size: widget.sizes.fontSize * 1.2),
+                ),
+              ),
+              SizedBox(width: widget.sizes.inputSpacing),
+              Expanded(
+                child: AppTextFormField(
+                  theme: widget.theme,
+                  controller: _repsController,
+                  readOnly: true,
+                  onTap: _openRepsWheel,
+                  labelText: 'Reps',
+                  hintText: '0',
+                  fontSize: widget.sizes.fontSize,
+                  padding: widget.sizes.padding,
+                  isLoading: widget.isLoading,
+                  filled: true,
+                  prefixIcon: Icon(
+                    Icons.repeat_one,
+                    size: widget.sizes.fontSize * 1.2,
+                  ),
                 ),
               ),
             ],
+          ),
+          SizedBox(height: widget.sizes.inputSpacing),
+          WorkoutSetExerciseDifficultyInput(
+            initialDifficultyType: widget.initialDifficultyType,
+            initialDifficultyValue: widget.initialDifficulty,
+            theme: widget.theme,
+            sizes: widget.sizes,
+            onChanged: (type, value) {
+              _difficultyType = type;
+              _difficultyValue = value;
+              _emitValues();
+            },
+          ),
+          if (widget.showIterationRest) ...[
+            SizedBox(height: widget.sizes.inputSpacing),
+            WorkoutRestDurationInput(
+              theme: widget.theme,
+              sizes: widget.sizes,
+              initialTotalSecs: widget.initialRestSecs,
+              onChanged: widget.onRestSecsChanged ?? (_) {},
+            ),
           ],
-        ),
+        ],
       ),
     );
   }
 }
-

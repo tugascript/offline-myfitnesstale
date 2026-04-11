@@ -3,7 +3,8 @@ import 'package:equatable/equatable.dart';
 import '../../models/workout_plan_day_record_model.dart';
 import 'dto.dart';
 
-class WorkoutPlanDayRecordDto extends Equatable implements Dto<WorkoutPlanDayRecord> {
+class WorkoutPlanDayRecordDto extends Equatable
+    implements Dto<WorkoutPlanDayRecord> {
   @override
   final int id;
   final int workoutPlanRecordId;
@@ -27,7 +28,8 @@ class WorkoutPlanDayRecordDto extends Equatable implements Dto<WorkoutPlanDayRec
       workoutPlanWeekRecordId: model.workoutPlanWeekRecordId,
       workoutPlanDayId: model.workoutPlanDayId,
       completedAt: model.completedAt != null
-          ? DateTime.fromMillisecondsSinceEpoch(model.completedAt! * 1000, isUtc: true)
+          ? DateTime.fromMillisecondsSinceEpoch(model.completedAt! * 1000,
+              isUtc: true)
           : null,
     );
   }
@@ -43,7 +45,8 @@ class WorkoutPlanDayRecordDto extends Equatable implements Dto<WorkoutPlanDayRec
     return WorkoutPlanDayRecordDto(
       id: id ?? this.id,
       workoutPlanRecordId: workoutPlanRecordId ?? this.workoutPlanRecordId,
-      workoutPlanWeekRecordId: workoutPlanWeekRecordId ?? this.workoutPlanWeekRecordId,
+      workoutPlanWeekRecordId:
+          workoutPlanWeekRecordId ?? this.workoutPlanWeekRecordId,
       workoutPlanDayId: workoutPlanDayId ?? this.workoutPlanDayId,
       completedAt: completedAt ?? this.completedAt,
     );

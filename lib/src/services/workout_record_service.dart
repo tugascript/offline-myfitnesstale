@@ -2,6 +2,7 @@ import 'package:logging/logging.dart';
 
 import '../models/common.dart';
 import '../models/db.dart';
+import '../models/enums.dart';
 import '../models/exercise_model.dart';
 import '../models/repository.dart'
     show Repository, kDefaultLimit, kDefaultOffset;
@@ -12,6 +13,7 @@ import '../models/workout_set_exercise_record_model.dart';
 import '../models/workout_set_record_model.dart';
 import 'common/errors.dart';
 import 'common/result.dart';
+import 'dtos/create_workout_record_batch_dto.dart';
 import 'dtos/exercise_dto.dart';
 import 'dtos/paginated_dto.dart';
 import 'dtos/workout_record_dto.dart';
@@ -570,6 +572,150 @@ class WorkoutRecordService {
       return err(const ServiceError(
         type: OperationErrorTypes.operationFailure,
         description: 'Failed to create workout set exercise record',
+      ));
+    }
+  }
+
+  Future<Result<WorkoutRecordDto, ServiceError<OperationErrorTypes>>>
+      batchCreateWorkoutRecord({
+    required int workoutId,
+    required int version,
+    required DateTime startedAt,
+    required DateTime completedAt,
+    required List<CreateWorkoutSetRecordBatchDto> sets,
+  }) async {
+    _logger.info('Batch creating workout record');
+    try {
+      final Workout? workout = await _workoutRepository.selectOne(workoutId);
+      if (workout == null) {
+        return err(ServiceError(
+          type: OperationErrorTypes.invalidInput,
+          description: 'Workout with id: $workoutId not found',
+        ));
+      }
+
+      final int batchTotalRestSecs = sets.fold<int>(
+        0,
+        (int sum, CreateWorkoutSetRecordBatchDto s) => sum + s.totalRestSecs,
+      );
+
+      final result = await _repository.startTransaction((trx) async {
+        // 1. Create WorkoutRecord
+        final WorkoutRecord record = WorkoutRecord.create(
+          version: workout.version,
+          workoutId: workoutId,
+          startedAt: DateUtilities.getDateUnix(startedAt),
+        );
+        final int recordId = await _repository.insert(
+          record.copyWith(
+            completedAt: DateUtilities.getDateUnix(completedAt),
+            totalSets: sets.length,
+            totalRestSecs: batchTotalRestSecs,
+            // Calculate total reps and volume
+            totalReps: sets.fold<int>(
+                0,
+                (int sum, set) =>
+                    sum +
+                    set.exercises.fold<int>(0, (int sum, ex) => sum + ex.reps)),
+            totalVolume: sets.fold<int>(
+                0,
+                (int sum, set) =>
+                    sum +
+                    set.exercises.fold<int>(
+                        0, (int sum, ex) => sum + (ex.reps * ex.weight))),
+          ),
+          trx,
+        );
+
+        // Fetch all exercises to update muscles mapping
+        final Set<int> allExerciseIds =
+            sets.expand((s) => s.exercises).map((e) => e.exerciseId).toSet();
+        final List<Exercise> fetchedExercises = allExerciseIds.isNotEmpty
+            ? await _exerciseRepository.selectMany(
+                where: ExerciseColumns.id.inList(allExerciseIds.length),
+                whereArgs: allExerciseIds.toList(),
+                trx: trx,
+              )
+            : [];
+        final Set<MuscleGroup> muscleGroups = {};
+        TargetMuscles muscles =
+            const TargetMuscles(primary: <Muscle>{}, secondary: <Muscle>{});
+        for (var e in fetchedExercises) {
+          muscleGroups.add(e.muscleGroup);
+          muscles = muscles.addOther(e.muscles);
+        }
+
+        // Update record with gathered muscles
+        await _repository.update(
+          record.copyWith(
+            id: recordId,
+            completedAt: DateUtilities.getDateUnix(completedAt),
+            totalSets: sets.length,
+            totalRestSecs: batchTotalRestSecs,
+            totalReps: sets.fold<int>(
+                0,
+                (int sum, set) =>
+                    sum +
+                    set.exercises.fold<int>(0, (int sum, ex) => sum + ex.reps)),
+            totalVolume: sets.fold<int>(
+                0,
+                (int sum, set) =>
+                    sum +
+                    set.exercises.fold<int>(
+                        0, (int sum, ex) => sum + (ex.reps * ex.weight))),
+            muscleGroups: muscleGroups,
+            muscles: muscles,
+          ),
+          trx,
+        );
+
+        // 2. Insert Sets & Exercises
+        for (final setDto in sets) {
+          final WorkoutSetRecord setRecord = WorkoutSetRecord.create(
+            workoutSetId: setDto.workoutSetId,
+            workoutRecordId: recordId,
+            setNumber: setDto.setNumber,
+            startedAt: DateUtilities.getDateUnix(setDto.startedAt),
+            completedAt: setDto.completedAt != null
+                ? DateUtilities.getDateUnix(setDto.completedAt!)
+                : null,
+            totalRestSecs: setDto.totalRestSecs,
+          );
+          final int setRecordId =
+              await _setRecordRepository.insert(setRecord, trx);
+
+          for (final exDto in setDto.exercises) {
+            final WorkoutSetExerciseRecord exRecord =
+                WorkoutSetExerciseRecord.create(
+              workoutSetExerciseId: exDto.workoutSetExerciseId,
+              workoutRecordId: recordId,
+              workoutSetRecordId: setRecordId,
+              exerciseId: exDto.exerciseId,
+              position: exDto.position,
+              reps: exDto.reps,
+              weightGrams: exDto.weight,
+              difficulty: exDto.difficulty,
+            );
+            await _setExerciseRecordRepository.insert(exRecord, trx);
+          }
+        }
+        return recordId;
+      });
+      _logger.info('Batch created workout record with id $result');
+
+      final newRecordRes = await getWorkoutRecord(result);
+      if (newRecordRes.isErr()) {
+        return err(const ServiceError(
+          type: OperationErrorTypes.operationFailure,
+          description: 'Failed to retrieve batch created workout record',
+        ));
+      }
+      return ok(newRecordRes.value);
+    } catch (e) {
+      _logger.severe('Failed to batch create workout record', e);
+      return err(const ServiceError(
+        type: OperationErrorTypes.operationFailure,
+        description: 'Failed to batch create workout record',
       ));
     }
   }
