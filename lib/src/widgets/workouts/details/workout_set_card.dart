@@ -96,6 +96,7 @@ class _SetExercise extends StatelessWidget {
       title: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.max,
         children: [
           Text(
             '${setExercise.minReps}${setExercise.maxReps != null && setExercise.maxReps! > setExercise.minReps ? '-${setExercise.maxReps}' : ''}x ',
@@ -104,10 +105,14 @@ class _SetExercise extends StatelessWidget {
               color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
             ),
           ),
-          Text(
-            setExercise.exercise?.name ?? 'Unknown Exercise',
-            style: TextStyle(
-              fontSize: sizes.subtitleFontSize,
+          Flexible(
+            child: Text(
+              setExercise.exercise?.name ?? 'Unknown Exercise',
+              style: TextStyle(
+                fontSize: sizes.subtitleFontSize,
+              ),
+              softWrap: true,
+              overflow: TextOverflow.ellipsis,
             ),
           ),
         ],

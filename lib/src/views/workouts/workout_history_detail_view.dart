@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
+import 'package:myfitnesstale/src/widgets/common/confirmation_dialog.dart';
 
 import '../../cubits/profile_cubit.dart';
 import '../../cubits/states/profile_state.dart';
@@ -11,6 +13,7 @@ import '../../models/enums.dart';
 import '../../services/dtos/workout_set_record_dto.dart';
 import '../../utilities/sizes/data_display_sizes.dart';
 import '../../utilities/sizes/screen_size.dart';
+import '../../widgets/common/mutation_buttons.dart';
 import '../../widgets/layout/responsive_scaffold.dart';
 import '../../widgets/workouts/progress/history/detail/workout_record_head_card.dart';
 import '../../widgets/workouts/progress/history/detail/workout_record_sets.dart';
@@ -87,7 +90,16 @@ class _WorkoutHistoryDetailViewState extends State<WorkoutHistoryDetailView> {
                             {};
 
                     return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        Text(
+                          'Record details',
+                          style: TextStyle(
+                            fontSize: sizes.titleFontSize,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        SizedBox(height: sizes.spacing),
                         WorkoutRecordHeadCard(
                           sizes: sizes,
                           theme: theme,
@@ -114,6 +126,32 @@ class _WorkoutHistoryDetailViewState extends State<WorkoutHistoryDetailView> {
                                   .toList() ??
                               [],
                         ),
+                        SizedBox(height: sizes.spacing),
+                        MutationButtons(
+                          padding: 0,
+                          theme: theme,
+                          sizes: sizes,
+                          isLoading: workoutRecordState.isLoading,
+                          onEdit: () {},
+                          onDelete: () {
+                            showDialog(
+                              context: context,
+                              builder: (context) => ConfirmationDialog(
+                                title: 'Delete workout record',
+                                content:
+                                    'Are you sure you want to delete this workout record? This action cannot be undone.',
+                                onConfirm: () {
+                                  context
+                                      .read<WorkoutRecordCubit>()
+                                      .deleteWorkoutRecord(
+                                        widget.workoutRecordId,
+                                      );
+                                  context.pop();
+                                },
+                              ),
+                            );
+                          },
+                        )
                       ],
                     );
                   },

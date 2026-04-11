@@ -214,7 +214,8 @@ class EntitlementService {
         (debugAppUserId.isNotEmpty ? debugAppUserId : 'anonymous-local');
     final String? authToken = await _identityProvider.getAuthToken();
 
-    final HttpClient client = HttpClient();
+    final HttpClient client = HttpClient()
+      ..connectionTimeout = const Duration(seconds: 30);
     try {
       final Uri uri = Uri.parse('$baseUrl$kEntitlementSyncPath');
       final HttpClientRequest request = await client.postUrl(uri);

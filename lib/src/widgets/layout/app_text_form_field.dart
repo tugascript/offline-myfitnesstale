@@ -22,6 +22,7 @@ class AppTextFormField extends StatelessWidget {
   final bool enabled;
   final BoxConstraints? prefixIconConstraints;
   final BoxConstraints? suffixIconConstraints;
+  final TextInputAction? textInputAction;
 
   const AppTextFormField({
     super.key,
@@ -33,6 +34,7 @@ class AppTextFormField extends StatelessWidget {
     required this.fontSize,
     required this.padding,
     required this.isLoading,
+    this.textInputAction,
     this.prefixIcon,
     this.suffixIcon,
     this.maxLines,
@@ -58,6 +60,7 @@ class AppTextFormField extends StatelessWidget {
       readOnly: readOnly,
       onTap: onTap,
       keyboardType: keyboardType,
+      textInputAction: textInputAction,
       enabled: enabled && !isLoading,
       style: TextStyle(
         fontSize: fontSize,

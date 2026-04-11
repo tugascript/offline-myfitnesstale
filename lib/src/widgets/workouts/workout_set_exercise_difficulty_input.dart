@@ -57,9 +57,17 @@ class _WorkoutSetExerciseDifficultyInputState
         oldWidget.initialDifficultyValue != widget.initialDifficultyValue) {
       _type = widget.initialDifficultyType;
       _value = widget.initialDifficultyValue;
-      _controller.text = _formatValue(_value);
+      
+      final String formattedText = _formatValue(_value);
+      
+      // Updating controllers inside didUpdateWidget can synchronously trigger
+      // form validations or internal widget re-builds, throwing: 
+      // "setState() or markNeedsBuild() called during build"
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
+        if (_controller.text != formattedText) {
+          _controller.text = formattedText;
+        }
         widget.onChanged(_type, _value);
       });
     }

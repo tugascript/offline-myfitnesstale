@@ -19,7 +19,8 @@ class EntitlementDebugService {
     _ensureDebugMode();
     final String baseUrl = _getBaseUrl();
 
-    final HttpClient client = HttpClient();
+    final HttpClient client = HttpClient()
+      ..connectionTimeout = const Duration(seconds: 30);
     try {
       final Uri uri = Uri.parse('$baseUrl$_kDebugSetPath');
       final HttpClientRequest request = await client.postUrl(uri);
@@ -46,7 +47,8 @@ class EntitlementDebugService {
     _ensureDebugMode();
     final String baseUrl = _getBaseUrl();
 
-    final HttpClient client = HttpClient();
+    final HttpClient client = HttpClient()
+      ..connectionTimeout = const Duration(seconds: 30);
     try {
       final Uri uri = Uri.parse('$baseUrl$_kDebugResetPath');
       final HttpClientRequest request = await client.postUrl(uri);
