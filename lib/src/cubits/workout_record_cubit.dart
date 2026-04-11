@@ -203,6 +203,9 @@ class WorkoutRecordCubit extends Cubit<WorkoutRecordState> {
             ? null
             : state.selectedWorkoutRecord,
       ),
+      latestWorkoutRecord: Nullable(
+        state.latestWorkoutRecord?.id == id ? null : state.latestWorkoutRecord,
+      ),
       isLoading: false,
       error: Nullable(null),
     ));

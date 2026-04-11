@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../../../models/common.dart';
 import '../../../models/enums.dart';
+import '../../../utilities/converters.dart';
 import '../../../utilities/sizes/data_display_sizes.dart';
 import '../../layout/app_text_form_field.dart';
 import '../workout_set_exercise_difficulty_input.dart';
@@ -104,18 +105,38 @@ class _WorkoutSetExerciseRecordFormState
     super.dispose();
   }
 
-  void _applyIntegerWeight(int w) {
-    _weightHundreds = w ~/ 100;
-    _weightTens = w % 100;
-    _weightDecimals = 0.0;
+  void _applyIntegerWeight(int grams) {
+    final double converted = widget.units == Units.metric
+        ? Converters.gramsToKg(grams)
+        : Converters.gramsToLbs(grams);
+
+    final int intPart = converted.truncate();
+    _weightHundreds = intPart ~/ 100;
+    _weightTens = intPart % 100;
+
+    final double decimals = converted - intPart;
+    if (decimals >= 0.875) {
+      _weightTens += 1;
+      if (_weightTens == 100) {
+        _weightTens = 0;
+        _weightHundreds += 1;
+      }
+      _weightDecimals = 0.0;
+    } else if (decimals >= 0.625) {
+      _weightDecimals = 0.75;
+    } else if (decimals >= 0.375) {
+      _weightDecimals = 0.5;
+    } else if (decimals >= 0.125) {
+      _weightDecimals = 0.25;
+    } else {
+      _weightDecimals = 0.0;
+    }
   }
 
   String _formatWeightDisplay() {
     final double total =
         (_weightHundreds * 100) + _weightTens + _weightDecimals;
-    return total
-        .toStringAsFixed(2)
-        .replaceAll(RegExp(r'\.00$'), '');
+    return total.toStringAsFixed(2).replaceAll(RegExp(r'\.00$'), '');
   }
 
   void _emitValues() {
@@ -333,8 +354,17 @@ class _WorkoutSetExerciseRecordFormState
                   padding: widget.sizes.padding,
                   isLoading: widget.isLoading,
                   filled: true,
-                  prefixIcon:
-                      Icon(Icons.scale, size: widget.sizes.fontSize * 1.2),
+                  suffixIcon: Text(
+                    widget.units == Units.metric ? 'KG' : 'LB',
+                    style: TextStyle(
+                      fontSize: widget.sizes.fontSize,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  prefixIcon: Icon(
+                    Icons.scale,
+                    size: widget.sizes.fontSize * 1.2,
+                  ),
                 ),
               ),
               SizedBox(width: widget.sizes.inputSpacing),

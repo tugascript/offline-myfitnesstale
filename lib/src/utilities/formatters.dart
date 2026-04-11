@@ -12,6 +12,15 @@ sealed class Formatters {
     }
   }
 
+  static String formatDateTime(Units unit, DateTime time) {
+    switch (unit) {
+      case Units.metric:
+        return DateFormat("dd/MM/yyyy HH:mm").format(time);
+      case Units.imperial:
+        return DateFormat("MM/dd/yyyy HH:mm").format(time);
+    }
+  }
+
   static String formatDuration(int totalSecs) {
     final duration = Duration(seconds: totalSecs);
     final hours = duration.inHours;
@@ -34,5 +43,32 @@ sealed class Formatters {
     final remainingSeconds = duration.inSeconds.remainder(60);
 
     return '${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}:${remainingSeconds.toString().padLeft(2, '0')}';
+  }
+
+  static String formatReps({
+    required int minReps,
+    required bool toMax,
+    int? maxReps,
+  }) {
+    if (toMax) {
+      return '$minReps-MAX';
+    }
+
+    if (maxReps != null && maxReps > minReps) {
+      return '$minReps-$maxReps';
+    }
+
+    return '$minReps';
+  }
+
+  static String formatWeight(double weight) {
+    String formatted = weight.toStringAsFixed(2);
+    if (formatted.endsWith('.00')) {
+      return formatted.substring(0, formatted.length - 3);
+    }
+    if (formatted.endsWith('0')) {
+      return formatted.substring(0, formatted.length - 1);
+    }
+    return formatted;
   }
 }

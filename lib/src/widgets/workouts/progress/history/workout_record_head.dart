@@ -8,6 +8,7 @@ import '../../../../utilities/formatters.dart';
 import '../../../../utilities/sizes/data_display_sizes.dart';
 import '../../../common/muscles_wrap.dart';
 import '../../../common/total_numeric_string.dart';
+import '../../../common/total_string.dart';
 
 class WorkoutRecordHead extends StatelessWidget {
   final DataDisplaySizesList sizes;
@@ -48,7 +49,7 @@ class WorkoutRecordHead extends StatelessWidget {
                       size: sizes.fontSize * 1.2,
                     ),
                     Text(
-                      " ${Formatters.formatDate(
+                      " ${Formatters.formatDateTime(
                         units,
                         workoutRecord?.startedAt ?? DateTime.now(),
                       )}",
@@ -66,13 +67,16 @@ class WorkoutRecordHead extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(
-                        Icons.event_available,
+                        Icons.schedule,
                         size: sizes.fontSize * 1.2,
                       ),
                       Text(
-                        " ${Formatters.formatDate(
-                          units,
-                          workoutRecord!.completedAt!,
+                        " ${Formatters.formatDuration(
+                          workoutRecord!.completedAt!
+                              .difference(
+                                workoutRecord!.startedAt,
+                              )
+                              .inSeconds,
                         )}",
                         style: TextStyle(
                           fontSize: sizes.fontSize,
@@ -103,10 +107,11 @@ class WorkoutRecordHead extends StatelessWidget {
                 ),
               ),
               Expanded(
-                child: TotalNumericString(
+                child: TotalString(
                   leading: Icon(Icons.timer, size: sizes.fontSize * 1.2),
                   name: 'Rest',
-                  total: workoutRecord?.totalRestSecs ?? 0,
+                  total: Formatters.formatDuration(
+                      workoutRecord?.totalRestSecs ?? 0),
                   fontSize: sizes.fontSize,
                 ),
               ),

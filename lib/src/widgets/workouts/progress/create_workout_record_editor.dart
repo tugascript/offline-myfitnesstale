@@ -10,7 +10,10 @@ import '../../../models/common.dart';
 import '../../../models/enums.dart';
 import '../../../services/dtos/create_workout_record_batch_dto.dart';
 import '../../../services/dtos/workout_set_dto.dart';
+import '../../../utilities/converters.dart';
+import '../../../utilities/formatters.dart';
 import '../../../utilities/sizes/data_display_sizes.dart';
+import '../../common/detail_number.dart';
 import '../../common/mutation_button.dart';
 import 'workout_set_exercise_record_form.dart';
 
@@ -39,7 +42,7 @@ class CreateWorkoutRecordEditor extends StatefulWidget {
 }
 
 class _CreateWorkoutRecordEditorState extends State<CreateWorkoutRecordEditor> {
-  // Map of WorkoutSetId -> Map of IterationNumber -> Map of ExerciseId -> SetExerciseRecord
+  // Map of WorkoutSetId -> Map of IterationNumber -> Map of WorkoutSetExerciseId -> SetExerciseRecord
   final Map<int, Map<int, Map<int, CreateWorkoutSetExerciseRecordBatchDto>>>
       _setExercises = {};
 
@@ -167,341 +170,389 @@ class _CreateWorkoutRecordEditorState extends State<CreateWorkoutRecordEditor> {
     }
 
     return BlocBuilder<WorkoutRecordCubit, WorkoutRecordState>(
-        builder: (context, state) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Card(
-            margin: EdgeInsets.zero,
-            child: Padding(
-              padding: EdgeInsets.all(widget.sizes.padding),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  Text(
-                    'Duration',
-                    style: TextStyle(
-                      fontSize: widget.sizes.subtitleFontSize,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  SizedBox(height: widget.sizes.spacing),
-                  Form(
-                    key: _formKey,
-                    child: Column(
-                      children: [
-                        AppTextFormField(
-                          theme: widget.theme,
-                          fontSize: widget.sizes.fontSize,
-                          padding: widget.sizes.padding,
-                          labelText: "Start Time",
-                          controller: _startTimeController,
-                          readOnly: true,
-                          filled: true,
-                          isLoading: state.isLoading,
-                          onTap: () async {
-                            final now = DateTime.now();
-                            final date = await showDatePicker(
-                              context: context,
-                              initialDate: _startedAt,
-                              firstDate: DateTime(now.year - 1),
-                              lastDate: now,
-                            );
-                            if (date != null && context.mounted) {
-                              final time = await showTimePicker(
-                                context: context,
-                                initialTime: TimeOfDay.fromDateTime(_startedAt),
-                              );
-                              if (time != null) {
-                                setState(() {
-                                  _startedAt = DateTime(
-                                    date.year,
-                                    date.month,
-                                    date.day,
-                                    time.hour,
-                                    time.minute,
-                                  );
-                                  _startTimeController.text = _formatDateTime(
-                                    widget.units,
-                                    _startedAt,
-                                  );
-                                });
-                                _updateChanges();
-                              }
-                            }
-                          },
-                          prefixIcon: Icon(
-                            Icons.calendar_today,
-                            size: widget.sizes.fontSize * 1.2,
-                          ),
-                        ),
-                        SizedBox(height: widget.sizes.inputSpacing),
-                        AppTextFormField(
-                          theme: widget.theme,
-                          fontSize: widget.sizes.fontSize,
-                          padding: widget.sizes.padding,
-                          labelText: "End Time",
-                          controller: _endTimeController,
-                          filled: true,
-                          readOnly: true,
-                          isLoading: state.isLoading,
-                          onTap: () async {
-                            final now = DateTime.now();
-                            final date = await showDatePicker(
-                              context: context,
-                              initialDate: _completedAt,
-                              firstDate: DateTime(now.year - 1),
-                              lastDate: now,
-                            );
-                            if (date != null && context.mounted) {
-                              final time = await showTimePicker(
-                                context: context,
-                                initialTime:
-                                    TimeOfDay.fromDateTime(_completedAt),
-                              );
-                              if (time != null) {
-                                setState(() {
-                                  _completedAt = DateTime(
-                                    date.year,
-                                    date.month,
-                                    date.day,
-                                    time.hour,
-                                    time.minute,
-                                  );
-                                  _endTimeController.text = _formatDateTime(
-                                    widget.units,
-                                    _completedAt,
-                                  );
-                                });
-                                _updateChanges();
-                              }
-                            }
-                          },
-                          prefixIcon: Icon(
-                            Icons.event_available,
-                            size: widget.sizes.fontSize * 1.2,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          SizedBox(height: widget.sizes.spacing),
-          ...widget.sets.map<Widget>((set) {
-            final exercises = set.exercises;
-            if (exercises == null || exercises.isEmpty) {
-              return const SizedBox.shrink();
-            }
-
-            final int prevTotalSets = widget.sets
-                .take(widget.sets.indexOf(set))
-                .fold(0, (sum, set) => sum + (set.maxSets ?? set.minSets));
-            final int totalSets = (set.maxSets ?? set.minSets) * set.position;
-            final int iterations = set.maxSets ?? set.minSets;
-
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: [
-                Row(
+      builder: (context, state) {
+        final repsGrey = widget.theme.colorScheme.brightness == Brightness.dark
+            ? Colors.grey.shade400
+            : Colors.grey.shade600;
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Card(
+              margin: EdgeInsets.zero,
+              child: Padding(
+                padding: EdgeInsets.all(widget.sizes.padding),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  mainAxisAlignment: MainAxisAlignment.start,
                   children: [
-                    Icon(Icons.repeat, size: widget.sizes.fontSize * 1.2),
                     Text(
-                      ' Sets ${prevTotalSets + 1} - ${prevTotalSets + totalSets}',
+                      'Duration',
                       style: TextStyle(
                         fontSize: widget.sizes.subtitleFontSize,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
+                    SizedBox(height: widget.sizes.spacing),
+                    Form(
+                      key: _formKey,
+                      child: Column(
+                        children: [
+                          AppTextFormField(
+                            theme: widget.theme,
+                            fontSize: widget.sizes.fontSize,
+                            padding: widget.sizes.padding,
+                            labelText: "Start Time",
+                            controller: _startTimeController,
+                            readOnly: true,
+                            filled: true,
+                            isLoading: state.isLoading,
+                            onTap: () async {
+                              final now = DateTime.now();
+                              final date = await showDatePicker(
+                                context: context,
+                                initialDate: _startedAt,
+                                firstDate: DateTime(now.year - 1),
+                                lastDate: now,
+                              );
+                              if (date != null && context.mounted) {
+                                final time = await showTimePicker(
+                                  context: context,
+                                  initialTime:
+                                      TimeOfDay.fromDateTime(_startedAt),
+                                );
+                                if (time != null) {
+                                  setState(() {
+                                    _startedAt = DateTime(
+                                      date.year,
+                                      date.month,
+                                      date.day,
+                                      time.hour,
+                                      time.minute,
+                                    );
+                                    _startTimeController.text = _formatDateTime(
+                                      widget.units,
+                                      _startedAt,
+                                    );
+                                  });
+                                  _updateChanges();
+                                }
+                              }
+                            },
+                            prefixIcon: Icon(
+                              Icons.calendar_today,
+                              size: widget.sizes.fontSize * 1.2,
+                            ),
+                          ),
+                          SizedBox(height: widget.sizes.inputSpacing),
+                          AppTextFormField(
+                            theme: widget.theme,
+                            fontSize: widget.sizes.fontSize,
+                            padding: widget.sizes.padding,
+                            labelText: "End Time",
+                            controller: _endTimeController,
+                            filled: true,
+                            readOnly: true,
+                            isLoading: state.isLoading,
+                            onTap: () async {
+                              final now = DateTime.now();
+                              final date = await showDatePicker(
+                                context: context,
+                                initialDate: _completedAt,
+                                firstDate: DateTime(now.year - 1),
+                                lastDate: now,
+                              );
+                              if (date != null && context.mounted) {
+                                final time = await showTimePicker(
+                                  context: context,
+                                  initialTime:
+                                      TimeOfDay.fromDateTime(_completedAt),
+                                );
+                                if (time != null) {
+                                  setState(() {
+                                    _completedAt = DateTime(
+                                      date.year,
+                                      date.month,
+                                      date.day,
+                                      time.hour,
+                                      time.minute,
+                                    );
+                                    _endTimeController.text = _formatDateTime(
+                                      widget.units,
+                                      _completedAt,
+                                    );
+                                  });
+                                  _updateChanges();
+                                }
+                              }
+                            },
+                            prefixIcon: Icon(
+                              Icons.event_available,
+                              size: widget.sizes.fontSize * 1.2,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ],
                 ),
-                SizedBox(height: widget.sizes.spacing),
-                Card(
-                  margin: EdgeInsets.only(bottom: widget.sizes.spacing),
-                  child: Column(
-                    children: List<Widget>.generate(
-                      iterations,
-                      (iterationIndex) {
-                        final iterationNumber = iterationIndex + 1;
-                        final optional =
-                            _iterationIsOptional(set, iterationNumber);
-                        final skipped = _skippedOptionalIterations[set.id]
-                                ?.contains(iterationNumber) ??
-                            false;
+              ),
+            ),
+            SizedBox(height: widget.sizes.spacing),
+            ...widget.sets.map<Widget>((set) {
+              final exercises = set.exercises;
+              if (exercises == null || exercises.isEmpty) {
+                return const SizedBox.shrink();
+              }
 
-                        return Padding(
-                          padding: EdgeInsets.all(widget.sizes.padding),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisAlignment: MainAxisAlignment.start,
-                            children: [
-                              Row(
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  Expanded(
-                                    child: Text(
-                                      optional
-                                          ? 'Set $iterationNumber (optional)'
-                                          : 'Set $iterationNumber',
-                                      style: TextStyle(
-                                        fontSize: widget.sizes.fontSize,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
-                                  if (optional && !skipped)
-                                    TextButton(
-                                      onPressed: state.isLoading
-                                          ? null
-                                          : () => _skipOptionalIteration(
-                                                set,
-                                                iterationNumber,
-                                              ),
+              final int prevTotalSets = widget.sets
+                  .take(widget.sets.indexOf(set))
+                  .fold(0, (sum, set) => sum + (set.maxSets ?? set.minSets));
+              final int totalSets = (set.maxSets ?? set.minSets) * set.position;
+              final int iterations = set.maxSets ?? set.minSets;
+
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.repeat, size: widget.sizes.fontSize * 1.2),
+                      Text(
+                        ' Sets ${prevTotalSets + 1} - ${prevTotalSets + totalSets}',
+                        style: TextStyle(
+                          fontSize: widget.sizes.subtitleFontSize,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: widget.sizes.spacing),
+                  Card(
+                    margin: EdgeInsets.only(bottom: widget.sizes.spacing),
+                    child: Column(
+                      children: List<Widget>.generate(
+                        iterations,
+                        (iterationIndex) {
+                          final iterationNumber = iterationIndex + 1;
+                          final optional =
+                              _iterationIsOptional(set, iterationNumber);
+                          final skipped = _skippedOptionalIterations[set.id]
+                                  ?.contains(iterationNumber) ??
+                              false;
+
+                          return Padding(
+                            padding: EdgeInsets.all(widget.sizes.padding),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              children: [
+                                Row(
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    Expanded(
                                       child: Text(
-                                        'Skip',
+                                        optional
+                                            ? 'Set $iterationNumber (optional)'
+                                            : 'Set $iterationNumber',
                                         style: TextStyle(
                                           fontSize: widget.sizes.fontSize,
-                                          fontWeight: FontWeight.w600,
+                                          fontWeight: FontWeight.bold,
                                         ),
                                       ),
                                     ),
-                                  if (optional && skipped)
-                                    TextButton(
-                                      onPressed: state.isLoading
-                                          ? null
-                                          : () => _includeOptionalIteration(
-                                                set,
-                                                iterationNumber,
-                                              ),
-                                      child: Text(
-                                        'Log this set',
-                                        style: TextStyle(
-                                          fontSize: widget.sizes.fontSize,
-                                          fontWeight: FontWeight.w600,
+                                    if (optional && !skipped)
+                                      TextButton(
+                                        onPressed: state.isLoading
+                                            ? null
+                                            : () => _skipOptionalIteration(
+                                                  set,
+                                                  iterationNumber,
+                                                ),
+                                        child: Text(
+                                          'Skip',
+                                          style: TextStyle(
+                                            fontSize: widget.sizes.fontSize,
+                                            fontWeight: FontWeight.w600,
+                                          ),
                                         ),
                                       ),
-                                    ),
-                                ],
-                              ),
-                              SizedBox(height: widget.sizes.spacing),
-                              if (optional && skipped) ...[
-                                Text(
-                                  'This set will not be saved.',
-                                  style: TextStyle(
-                                    fontSize: widget.sizes.fontSize * 0.95,
-                                    color: widget
-                                        .theme.colorScheme.onSurfaceVariant,
-                                  ),
+                                    if (optional && skipped)
+                                      TextButton(
+                                        onPressed: state.isLoading
+                                            ? null
+                                            : () => _includeOptionalIteration(
+                                                  set,
+                                                  iterationNumber,
+                                                ),
+                                        child: Text(
+                                          'Log this set',
+                                          style: TextStyle(
+                                            fontSize: widget.sizes.fontSize,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                      ),
+                                  ],
                                 ),
-                              ] else
-                                ...exercises.asMap().entries.map((entry) {
-                                  final index = entry.key;
-                                  final exercise = entry.value;
+                                SizedBox(height: widget.sizes.spacing),
+                                if (optional && skipped) ...[
+                                  Text(
+                                    'This set will not be saved.',
+                                    style: TextStyle(
+                                      fontSize: widget.sizes.fontSize * 0.95,
+                                      color: widget
+                                          .theme.colorScheme.onSurfaceVariant,
+                                    ),
+                                  ),
+                                ] else
+                                  ...exercises.asMap().entries.map((entry) {
+                                    final index = entry.key;
+                                    final exercise = entry.value;
 
-                                  final loggedEx = _setExercises[set.id]
-                                      ?[iterationNumber]?[exercise.exerciseId];
+                                    final loggedEx = _setExercises[set.id]
+                                        ?[iterationNumber]?[exercise.id];
 
-                                  return Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        exercise.exercise?.name ??
-                                            'Unknown Exercise',
-                                        style: TextStyle(
-                                          fontSize: widget.sizes.fontSize,
-                                          fontWeight: FontWeight.w600,
+                                    return Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Row(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.center,
+                                          children: [
+                                            DetailNumber(
+                                              number: index + 1,
+                                              theme: widget.theme,
+                                              fontSize: widget.sizes.fontSize,
+                                            ),
+                                            SizedBox(
+                                              width: widget.sizes.spacing,
+                                            ),
+                                            Text(
+                                              Formatters.formatReps(
+                                                minReps: exercise.minReps,
+                                                toMax: exercise.toMaxReps,
+                                                maxReps: exercise.maxReps,
+                                              ),
+                                              style: TextStyle(
+                                                fontSize: widget.sizes.fontSize,
+                                                color: repsGrey,
+                                              ),
+                                            ),
+                                            Icon(
+                                              Icons.close,
+                                              size: widget.sizes.fontSize * 0.9,
+                                              color: repsGrey,
+                                            ),
+                                            Flexible(
+                                              child: Text(
+                                                ' ${exercise.exercise?.name ?? 'Unknown Exercise'}',
+                                                style: TextStyle(
+                                                  fontSize:
+                                                      widget.sizes.fontSize,
+                                                  fontWeight: FontWeight.w600,
+                                                ),
+                                                softWrap: true,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                          ],
                                         ),
-                                      ),
-                                      SizedBox(
-                                          height: widget.sizes.inputSpacing),
-                                      WorkoutSetExerciseRecordForm(
-                                        key: ValueKey(
-                                          '${set.id}_${iterationNumber}_${exercise.id}',
-                                        ),
-                                        theme: widget.theme,
-                                        sizes: widget.sizes,
-                                        units: widget.units,
-                                        isLoading: state.isLoading,
-                                        initialWeight: loggedEx?.weight ?? 0,
-                                        initialReps: loggedEx?.reps ?? 0,
-                                        initialDifficulty:
-                                            loggedEx?.difficulty.value ?? 8,
-                                        initialDifficultyType:
-                                            loggedEx?.difficulty.type ??
-                                                WorkoutSetExerciseDifficultyType
-                                                    .rpe,
-                                        showIterationRest:
-                                            index == exercises.length - 1,
-                                        initialRestSecs:
-                                            _iterationRestSecs[set.id]
-                                                    ?[iterationNumber] ??
-                                                set.recommendedRestSecs,
-                                        onRestSecsChanged: index ==
-                                                exercises.length - 1
-                                            ? (secs) {
-                                                setState(() {
-                                                  _iterationRestSecs[set.id]![
-                                                      iterationNumber] = secs;
-                                                });
-                                                _updateChanges();
-                                              }
-                                            : null,
-                                        onValuesChanged: ({
-                                          required double weight,
-                                          required int reps,
-                                          required WorkoutSetExerciseDifficulty
-                                              difficulty,
-                                        }) {
-                                          setState(() {
-                                            _setExercises[set.id]![
-                                                        iterationNumber]![
-                                                    exercise.exerciseId] =
-                                                CreateWorkoutSetExerciseRecordBatchDto(
-                                              workoutSetExerciseId: exercise.id,
-                                              exerciseId: exercise.exerciseId,
-                                              position: exercise.position,
-                                              weight: weight.toInt(),
-                                              reps: reps,
-                                              difficulty: difficulty,
-                                            );
-                                          });
-                                          _updateChanges();
-                                        },
-                                      ),
-                                      if (index < exercises.length - 1)
                                         SizedBox(
-                                          height: widget.sizes.spacing,
+                                            height: widget.sizes.inputSpacing),
+                                        WorkoutSetExerciseRecordForm(
+                                          key: ValueKey(
+                                            '${set.id}_${iterationNumber}_${exercise.id}',
+                                          ),
+                                          theme: widget.theme,
+                                          sizes: widget.sizes,
+                                          units: widget.units,
+                                          isLoading: state.isLoading,
+                                          initialWeight: loggedEx?.weight ?? 0,
+                                          initialReps: loggedEx?.reps ?? 0,
+                                          initialDifficulty:
+                                              loggedEx?.difficulty.value ?? 8,
+                                          initialDifficultyType: loggedEx
+                                                  ?.difficulty.type ??
+                                              WorkoutSetExerciseDifficultyType
+                                                  .rpe,
+                                          showIterationRest:
+                                              index == exercises.length - 1 &&
+                                                  iterationNumber != iterations,
+                                          initialRestSecs:
+                                              _iterationRestSecs[set.id]
+                                                      ?[iterationNumber] ??
+                                                  set.recommendedRestSecs,
+                                          onRestSecsChanged: index ==
+                                                  exercises.length - 1
+                                              ? (secs) {
+                                                  setState(() {
+                                                    _iterationRestSecs[set.id]![
+                                                        iterationNumber] = secs;
+                                                  });
+                                                  _updateChanges();
+                                                }
+                                              : null,
+                                          onValuesChanged: ({
+                                            required double weight,
+                                            required int reps,
+                                            required WorkoutSetExerciseDifficulty
+                                                difficulty,
+                                          }) {
+                                            setState(() {
+                                              _setExercises[set.id]![
+                                                          iterationNumber]![
+                                                      exercise.id] =
+                                                  CreateWorkoutSetExerciseRecordBatchDto(
+                                                workoutSetExerciseId:
+                                                    exercise.id,
+                                                exerciseId: exercise.exerciseId,
+                                                position: exercise.position,
+                                                weight:
+                                                    widget.units == Units.metric
+                                                        ? Converters.kgToGrams(
+                                                            weight,
+                                                          )
+                                                        : Converters.lbsToGrams(
+                                                            weight,
+                                                          ),
+                                                reps: reps,
+                                                difficulty: difficulty,
+                                              );
+                                            });
+                                            _updateChanges();
+                                          },
                                         ),
-                                    ],
-                                  );
-                                }),
-                            ],
-                          ),
-                        );
-                      },
+                                        if (index < exercises.length - 1)
+                                          SizedBox(
+                                            height: widget.sizes.spacing,
+                                          ),
+                                      ],
+                                    );
+                                  }),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
                     ),
                   ),
-                ),
-              ],
-            );
-          }),
-          SizedBox(height: widget.sizes.spacing),
-          MutationButton(
-            theme: widget.theme,
-            sizes: widget.sizes,
-            isLoading: state.isLoading,
-            onPressed: _onSave,
-            label: 'Save workout record',
-            icon: Icons.save,
-          ),
-        ],
-      );
-    });
+                ],
+              );
+            }),
+            SizedBox(height: widget.sizes.spacing),
+            MutationButton(
+              theme: widget.theme,
+              sizes: widget.sizes,
+              isLoading: state.isLoading,
+              onPressed: _onSave,
+              label: 'Save workout record',
+              icon: Icons.save,
+            ),
+          ],
+        );
+      },
+    );
   }
 }
 

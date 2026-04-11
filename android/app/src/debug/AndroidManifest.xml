@@ -4,4 +4,6 @@
          to allow setting breakpoints, to provide hot reload, etc.
     -->
     <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- Allow HTTP to host LAN IP / 10.0.2.2 (emulator) for local entitlement mock. -->
+    <application android:usesCleartextTraffic="true" />
 </manifest>

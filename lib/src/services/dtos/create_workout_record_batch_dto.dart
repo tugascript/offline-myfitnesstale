@@ -34,4 +34,22 @@ final class CreateWorkoutSetExerciseRecordBatchDto {
     required this.reps,
     required this.difficulty,
   });
+
+  CreateWorkoutSetExerciseRecordBatchDto copyWith({
+    int? workoutSetExerciseId,
+    int? exerciseId,
+    int? position,
+    int? weight,
+    int? reps,
+    WorkoutSetExerciseDifficulty? difficulty,
+  }) {
+    return CreateWorkoutSetExerciseRecordBatchDto(
+      workoutSetExerciseId: workoutSetExerciseId ?? this.workoutSetExerciseId,
+      exerciseId: exerciseId ?? this.exerciseId,
+      position: position ?? this.position,
+      weight: weight ?? this.weight,
+      reps: reps ?? this.reps,
+      difficulty: difficulty ?? this.difficulty,
+    );
+  }
 }

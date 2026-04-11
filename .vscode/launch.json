@@ -3,13 +3,35 @@
     // Hover to view descriptions of existing attributes.
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
+    // Entitlement mock URL: 10.0.2.2 is Android emulator → host only.
+    // Physical phone: run "adb reverse tcp:8080 tcp:8080" and use the USB config,
+    // or put your PC's LAN IP in "Android phone, same LAN" (edit the address).
+    // PC can use Ethernet and phone Wi‑Fi — same router/subnet is what matters.
     "configurations": [
         {
             "name": "myfitnesstale",
             "request": "launch",
             "type": "dart",
             "toolArgs": [
-                "--dart-define=ENTITLEMENT_API_BASE_URL=http://localhost:8080",
+                "--dart-define=ENTITLEMENT_API_BASE_URL=http://127.0.0.1:8080",
+                "--dart-define=ENTITLEMENT_DEBUG_APP_USER_ID=dev-user"
+            ]
+        },
+        {
+            "name": "myfitnesstale (Android phone, USB adb reverse)",
+            "request": "launch",
+            "type": "dart",
+            "toolArgs": [
+                "--dart-define=ENTITLEMENT_API_BASE_URL=http://127.0.0.1:8080",
+                "--dart-define=ENTITLEMENT_DEBUG_APP_USER_ID=dev-user"
+            ]
+        },
+        {
+            "name": "myfitnesstale (Android phone, same LAN)",
+            "request": "launch",
+            "type": "dart",
+            "toolArgs": [
+                "--dart-define=ENTITLEMENT_API_BASE_URL=http://192.168.1.64:8080",
                 "--dart-define=ENTITLEMENT_DEBUG_APP_USER_ID=dev-user"
             ]
         },
