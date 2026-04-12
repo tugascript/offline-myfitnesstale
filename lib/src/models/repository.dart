@@ -161,6 +161,22 @@ class Repository<T extends Model> {
     return rowsAffected > 0;
   }
 
+  Future<int> deleteMany({
+    required String where,
+    required List<Object?> whereArgs,
+    Transaction? trx,
+  }) async {
+    _logger.info("deleteMany: $where, $whereArgs");
+    final DatabaseExecutor db = trx ?? await _databaseHelper.db;
+    final int rowsAffected = await db.delete(
+      _tableName,
+      where: where,
+      whereArgs: whereArgs,
+    );
+    _logger.info("deleteMany: $rowsAffected");
+    return rowsAffected;
+  }
+
   Future<T?> selectLatest() async {
     _logger.info("selectLatest");
     final db = await _databaseHelper.db;
