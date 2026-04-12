@@ -116,5 +116,6 @@ class ActiveWorkoutState extends Equatable {
         currentSetStartedAt,
         isLoading,
         error,
+        isCompleted,
       ];
 }

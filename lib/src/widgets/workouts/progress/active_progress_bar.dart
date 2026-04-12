@@ -34,9 +34,11 @@ class _ActiveProgressBarState extends State<ActiveProgressBar> {
   void initState() {
     super.initState();
     _workoutTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      setState(() {
-        _elapsedSeconds++;
-      });
+      if (context.mounted) {
+        setState(() {
+          _elapsedSeconds++;
+        });
+      }
     });
   }
 
