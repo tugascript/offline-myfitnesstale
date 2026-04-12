@@ -413,6 +413,7 @@ class WorkoutRecordService {
 
       if (records.isNotEmpty) {
         final WorkoutSetRecord record = records.first;
+        final int? oldRest = record.totalRestSecs;
         final WorkoutSetRecord updatedRecord = record.copyWith(
           totalRestSecs: totalRestSecs,
           completedAt: completedAt != null
@@ -423,7 +424,8 @@ class WorkoutRecordService {
           await _setRecordRepository.update(updatedRecord, trx);
           final updatedWorkoutRecord = workoutRecord.copyWith(
             totalRestSecs: workoutRecord.totalRestSecs +
-                (updatedRecord.totalRestSecs ?? 0),
+                (updatedRecord.totalRestSecs ?? 0) -
+                (oldRest ?? 0),
           );
           await _repository.update(updatedWorkoutRecord, trx);
         });
