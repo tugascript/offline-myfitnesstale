@@ -47,15 +47,12 @@ class _WorkoutRecordHistoryState extends State<WorkoutRecordHistory> {
       start: dateRange?.$1 ?? now.subtract(const Duration(days: 90)),
       end: dateRange?.$2 ?? now,
     );
-    if (cubit.state.workoutRecords.isEmpty ||
-        cubit.state.pagination.workoutId != widget.workoutId) {
-      cubit.getWorkoutRecords(
-        workoutId: widget.workoutId,
-        dateRange: (_dateRange.start, _dateRange.end),
-        limit: 20,
-        offset: 0,
-      );
-    }
+    cubit.getWorkoutRecords(
+      workoutId: widget.workoutId,
+      dateRange: (_dateRange.start, _dateRange.end),
+      limit: 20,
+      offset: 0,
+    );
   }
 
   String _formatDate(DateTime date) {

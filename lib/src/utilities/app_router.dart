@@ -22,6 +22,7 @@ import '../views/workout_plans/workout_plan_edit_view.dart';
 import '../views/workout_plans/workout_plan_list_view.dart';
 import '../views/workouts/active_workout_view.dart';
 import '../views/workouts/create_workout_record_view.dart';
+import '../views/workouts/update_workout_record_view.dart';
 import '../views/workouts/workout_detail_view.dart';
 import '../views/workouts/workout_edit_view.dart';
 import '../views/workouts/workout_history_detail_view.dart';
@@ -174,6 +175,33 @@ sealed class AppRouter {
           return const NotFoundView();
         }
         return WorkoutHistoryDetailView(
+          workoutId: workoutId,
+          workoutRecordId: workoutRecordId,
+          version: version,
+        );
+      },
+    ),
+    GoRoute(
+      path: UpdateWorkoutRecordView.routeName,
+      builder: (context, state) {
+        final workoutId = int.tryParse(state.pathParameters['workoutId'] ?? '');
+        if (workoutId == null) {
+          return const NotFoundView();
+        }
+
+        final version = int.tryParse(state.pathParameters['version'] ?? '');
+        if (version == null) {
+          return const NotFoundView();
+        }
+
+        final workoutRecordId = int.tryParse(
+          state.pathParameters['workoutRecordId'] ?? '',
+        );
+        if (workoutRecordId == null) {
+          return const NotFoundView();
+        }
+
+        return UpdateWorkoutRecordView(
           workoutId: workoutId,
           workoutRecordId: workoutRecordId,
           version: version,

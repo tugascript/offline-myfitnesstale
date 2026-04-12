@@ -719,4 +719,133 @@ class WorkoutRecordService {
       ));
     }
   }
+
+  Future<Result<WorkoutRecordDto, ServiceError<OperationErrorTypes>>>
+      batchUpdateWorkoutRecord({
+    required int workoutRecordId,
+    required DateTime startedAt,
+    required DateTime completedAt,
+    required List<CreateWorkoutSetRecordBatchDto> sets,
+  }) async {
+    _logger.info('Batch updating workout record with id $workoutRecordId');
+    try {
+      final WorkoutRecord? record =
+          await _repository.selectOne(workoutRecordId);
+      if (record == null) {
+        return err(ServiceError(
+          type: OperationErrorTypes.invalidInput,
+          description: 'Workout record with id: $workoutRecordId not found',
+        ));
+      }
+
+      final int batchTotalRestSecs = sets.fold<int>(
+        0,
+        (int sum, CreateWorkoutSetRecordBatchDto s) => sum + s.totalRestSecs,
+      );
+
+      await _repository.startTransaction((trx) async {
+        // Delete existing sets and exercises
+        await _setExerciseRecordRepository.deleteMany(
+          where: '${WorkoutSetExerciseRecordColumns.workoutRecordId.value} = ?',
+          whereArgs: [workoutRecordId],
+          trx: trx,
+        );
+        await _setRecordRepository.deleteMany(
+          where: '${WorkoutSetRecordColumns.workoutRecordId.value} = ?',
+          whereArgs: [workoutRecordId],
+          trx: trx,
+        );
+
+        // Fetch all exercises to update muscles mapping
+        final Set<int> allExerciseIds =
+            sets.expand((s) => s.exercises).map((e) => e.exerciseId).toSet();
+        final List<Exercise> fetchedExercises = allExerciseIds.isNotEmpty
+            ? await _exerciseRepository.selectMany(
+                where: ExerciseColumns.id.inList(allExerciseIds.length),
+                whereArgs: allExerciseIds.toList(),
+                trx: trx,
+              )
+            : [];
+        final Set<MuscleGroup> muscleGroups = {};
+        TargetMuscles muscles =
+            const TargetMuscles(primary: <Muscle>{}, secondary: <Muscle>{});
+        for (var e in fetchedExercises) {
+          muscleGroups.add(e.muscleGroup);
+          muscles = muscles.addOther(e.muscles);
+        }
+
+        // Update record
+        await _repository.update(
+          record.copyWith(
+            startedAt: DateUtilities.getDateUnix(startedAt),
+            completedAt: DateUtilities.getDateUnix(completedAt),
+            totalSets: sets.length,
+            totalRestSecs: batchTotalRestSecs,
+            totalReps: sets.fold<int>(
+                0,
+                (int sum, set) =>
+                    sum +
+                    set.exercises.fold<int>(0, (int sum, ex) => sum + ex.reps)),
+            totalVolume: sets.fold<int>(
+                0,
+                (int sum, set) =>
+                    sum +
+                    set.exercises.fold<int>(
+                        0, (int sum, ex) => sum + (ex.reps * ex.weight))),
+            muscleGroups: muscleGroups,
+            muscles: muscles,
+            updatedAt: DateUtilities.getNowUtcUnix(),
+          ),
+          trx,
+        );
+
+        // Insert Sets & Exercises
+        for (final setDto in sets) {
+          final WorkoutSetRecord setRecord = WorkoutSetRecord.create(
+            workoutSetId: setDto.workoutSetId,
+            workoutRecordId: workoutRecordId,
+            setNumber: setDto.setNumber,
+            startedAt: DateUtilities.getDateUnix(setDto.startedAt),
+            completedAt: setDto.completedAt != null
+                ? DateUtilities.getDateUnix(setDto.completedAt!)
+                : null,
+            totalRestSecs: setDto.totalRestSecs,
+          );
+          final int setRecordId =
+              await _setRecordRepository.insert(setRecord, trx);
+
+          for (final exDto in setDto.exercises) {
+            final WorkoutSetExerciseRecord exRecord =
+                WorkoutSetExerciseRecord.create(
+              workoutSetExerciseId: exDto.workoutSetExerciseId,
+              workoutRecordId: workoutRecordId,
+              workoutSetRecordId: setRecordId,
+              exerciseId: exDto.exerciseId,
+              position: exDto.position,
+              reps: exDto.reps,
+              weightGrams: exDto.weight,
+              difficulty: exDto.difficulty,
+            );
+            await _setExerciseRecordRepository.insert(exRecord, trx);
+          }
+        }
+      });
+      _logger.info('Batch updated workout record with id $workoutRecordId');
+
+      final newRecordRes = await getWorkoutRecord(workoutRecordId);
+      if (newRecordRes.isErr()) {
+        return err(const ServiceError(
+          type: OperationErrorTypes.operationFailure,
+          description: 'Failed to retrieve batch updated workout record',
+        ));
+      }
+      return ok(newRecordRes.value);
+    } catch (e) {
+      _logger.severe('Failed to batch update workout record', e);
+      return err(const ServiceError(
+        type: OperationErrorTypes.operationFailure,
+        description: 'Failed to batch update workout record',
+      ));
+    }
+  }
 }

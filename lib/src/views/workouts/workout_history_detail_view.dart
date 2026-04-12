@@ -17,6 +17,7 @@ import '../../widgets/common/mutation_buttons.dart';
 import '../../widgets/layout/responsive_scaffold.dart';
 import '../../widgets/workouts/progress/history/detail/workout_record_head_card.dart';
 import '../../widgets/workouts/progress/history/detail/workout_record_sets.dart';
+import 'update_workout_record_view.dart';
 
 class WorkoutHistoryDetailView extends StatefulWidget {
   static const routeName =
@@ -132,7 +133,23 @@ class _WorkoutHistoryDetailViewState extends State<WorkoutHistoryDetailView> {
                           theme: theme,
                           sizes: sizes,
                           isLoading: workoutRecordState.isLoading,
-                          onEdit: () {},
+                          onEdit: () {
+                            context.push(
+                              UpdateWorkoutRecordView.routeName
+                                  .replaceFirst(
+                                    ':workoutId',
+                                    widget.workoutId.toString(),
+                                  )
+                                  .replaceFirst(
+                                    ':version',
+                                    widget.version.toString(),
+                                  )
+                                  .replaceFirst(
+                                    ':workoutRecordId',
+                                    widget.workoutRecordId.toString(),
+                                  ),
+                            );
+                          },
                           onDelete: () {
                             showDialog(
                               context: context,

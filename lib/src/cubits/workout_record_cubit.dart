@@ -264,4 +264,65 @@ class WorkoutRecordCubit extends Cubit<WorkoutRecordState> {
       error: Nullable(null),
     ));
   }
+  Future<void> batchUpdateWorkoutRecord({
+    required int workoutRecordId,
+    required DateTime startedAt,
+    required DateTime completedAt,
+    required List<CreateWorkoutSetRecordBatchDto> sets,
+  }) async {
+    _logger.info('Batch updating workout record $workoutRecordId');
+    emit(state.copyWith(isLoading: true));
+
+    final result = await _workoutRecordService.batchUpdateWorkoutRecord(
+      workoutRecordId: workoutRecordId,
+      startedAt: startedAt,
+      completedAt: completedAt,
+      sets: sets,
+    );
+    if (result.isErr()) {
+      final error = result.error;
+      _logger.warning("Failed to batch update workout record", error);
+
+      switch (error.type) {
+        case OperationErrorTypes.invalidInput:
+          emit(state.copyWith(
+            error: Nullable(ErrorState(
+              type: error.type.name,
+              description: error.description,
+            )),
+            isLoading: false,
+          ));
+          return;
+        case OperationErrorTypes.operationFailure:
+          emit(state.copyWith(
+            error: Nullable(ErrorState(
+              type: error.type.name,
+              description: "Failed to batch update workout record",
+            )),
+            isLoading: false,
+          ));
+          return;
+      }
+    }
+
+    _logger.info('Workout record successfully batch updated');
+    final updatedRecord = result.value;
+    emit(state.copyWith(
+      workoutRecords: state.workoutRecords
+          .map((w) => w.id == updatedRecord.id ? updatedRecord : w)
+          .toList(),
+      selectedWorkoutRecord: Nullable(
+        state.selectedWorkoutRecord?.id == updatedRecord.id
+            ? updatedRecord
+            : state.selectedWorkoutRecord,
+      ),
+      latestWorkoutRecord: Nullable(
+        state.latestWorkoutRecord?.id == updatedRecord.id
+            ? updatedRecord
+            : state.latestWorkoutRecord,
+      ),
+      isLoading: false,
+      error: Nullable(null),
+    ));
+  }
 }
