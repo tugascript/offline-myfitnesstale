@@ -279,6 +279,7 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
       currentSetPosition: nextSetIndex,
       currentExercisePosition: 0,
       currentSetNumber: 1,
+      currentSetStartedAt: DateTime.now(),
     ));
   }
 

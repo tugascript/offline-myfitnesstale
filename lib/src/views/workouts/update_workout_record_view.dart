@@ -11,6 +11,7 @@ import '../../utilities/sizes/data_display_sizes.dart';
 import '../../utilities/sizes/screen_size.dart';
 import '../../widgets/layout/responsive_scaffold.dart';
 import '../../widgets/workouts/progress/update_workout_record_editor.dart';
+import '../not_found_view.dart';
 
 class UpdateWorkoutRecordView extends StatefulWidget {
   static const routeName =
@@ -56,6 +57,10 @@ class _UpdateWorkoutRecordViewState extends State<UpdateWorkoutRecordView> {
 
     return BlocBuilder<WorkoutCubit, WorkoutState>(
       builder: (context, workoutState) {
+        if (workoutState.selectedWorkout == null) {
+          return NotFoundView();
+        }
+
         final workout = workoutState.selectedWorkout!;
         if (workout.sets == null || workout.sets!.isEmpty) {
           return const Center(child: Text('This workout has no sets to log.'));
