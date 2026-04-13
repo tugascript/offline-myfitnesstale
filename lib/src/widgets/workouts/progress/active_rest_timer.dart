@@ -56,7 +56,8 @@ class _ActiveRestTimerState extends State<ActiveRestTimer> {
   }
 
   double get _progress {
-    return _elapsedSeconds / (widget.maxSecs ?? widget.recommendedSecs);
+    final value = _elapsedSeconds / (widget.maxSecs ?? widget.recommendedSecs);
+    return value > 1.0 ? 1.0 : value;
   }
 
   Color get _progressColor {

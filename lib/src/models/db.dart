@@ -132,33 +132,6 @@ class DatabaseHelper {
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
-    if (oldVersion < 2) {
-      await db.execute(
-        'ALTER TABLE ${WorkoutPlan.table} ADD COLUMN ${WorkoutPlanColumns.version.value} INTEGER NOT NULL DEFAULT 1',
-      );
-      await db.execute(
-        'ALTER TABLE ${WorkoutPlanWeek.table} ADD COLUMN ${WorkoutPlanWeekColumns.planVersion.value} INTEGER NOT NULL DEFAULT 1',
-      );
-      await db.execute(
-        'ALTER TABLE ${WorkoutPlanDay.table} ADD COLUMN ${WorkoutPlanDayColumns.planVersion.value} INTEGER NOT NULL DEFAULT 1',
-      );
-      await db.execute(
-        'ALTER TABLE ${WorkoutPlanWorkout.table} ADD COLUMN ${WorkoutPlanWorkoutColumns.planVersion.value} INTEGER NOT NULL DEFAULT 1',
-      );
-      await db.execute(
-        'ALTER TABLE ${WorkoutPlanRecord.table} ADD COLUMN ${WorkoutPlanRecordColumns.workoutPlanVersion.value} INTEGER NOT NULL DEFAULT 1',
-      );
-      await db.execute(
-        'CREATE INDEX IF NOT EXISTS idx_workout_plan_weeks_plan_version ON ${WorkoutPlanWeek.table} (${WorkoutPlanWeekColumns.workoutPlanId.value}, ${WorkoutPlanWeekColumns.planVersion.value}, ${WorkoutPlanWeekColumns.startWeek.value})',
-      );
-      await db.execute(
-        'CREATE INDEX IF NOT EXISTS idx_workout_plan_days_plan_version ON ${WorkoutPlanDay.table} (${WorkoutPlanDayColumns.workoutPlanId.value}, ${WorkoutPlanDayColumns.planVersion.value}, ${WorkoutPlanDayColumns.workoutPlanWeekId.value}, ${WorkoutPlanDayColumns.day.value})',
-      );
-      await db.execute(
-        'CREATE INDEX IF NOT EXISTS idx_workout_plan_workouts_plan_version ON ${WorkoutPlanWorkout.table} (${WorkoutPlanWorkoutColumns.workoutPlanId.value}, ${WorkoutPlanWorkoutColumns.planVersion.value}, ${WorkoutPlanWorkoutColumns.workoutPlanDayId.value}, ${WorkoutPlanWorkoutColumns.position.value})',
-      );
-    }
-
     return;
   }
 }
