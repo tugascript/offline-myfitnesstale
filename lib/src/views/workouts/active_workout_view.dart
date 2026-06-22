@@ -23,11 +23,15 @@ import '../../widgets/workouts/progress/active_set_exercise_log.dart';
 import '../../widgets/workouts/progress/not_found_active_workout.dart';
 
 class ActiveWorkoutView extends StatefulWidget {
+  static const routeName = '/workouts/:id/active';
+
   final int workoutId;
+  final int? workoutPlanId;
 
   const ActiveWorkoutView({
     super.key,
     required this.workoutId,
+    this.workoutPlanId,
   });
 
   @override

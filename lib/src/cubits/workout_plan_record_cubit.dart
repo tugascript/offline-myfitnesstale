@@ -1,9 +1,10 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:logging/logging.dart';
 
+import '../models/enums.dart';
 import '../services/common/errors.dart';
-import '../services/workout_plan_service.dart';
 import '../services/workout_plan_record_service.dart';
+import '../services/workout_plan_service.dart';
 import 'states/common_state.dart';
 import 'states/workout_plan_record_state.dart';
 
@@ -16,12 +17,12 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
 
   final Logger _logger = Logger('WorkoutPlanRecordCubit');
 
-  Future<void> getActivePlanRecord() async {
+  Future<void> getOrCreateActivePlanRecord(int workoutPlanId) async {
     _logger.info('Getting active plan record');
     emit(state.copyWith(isLoading: true));
 
-    final result =
-        await _workoutPlanRecordService.getCurrentWorkoutPlanRecord();
+    final result = await _workoutPlanRecordService
+        .getOrCreateCurrentWorkoutPlanRecord(workoutPlanId);
     if (result.isErr()) {
       final error = result.error;
       _logger.info("No active plan or failed to get it", error);
@@ -79,6 +80,63 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
     await getTodaysWorkout();
   }
 
+  Future<void> getLatestActivePlanRecord() async {
+    _logger.info('Getting latest active plan record');
+    emit(state.copyWith(isLoading: true));
+
+    final result = await _workoutPlanRecordService.getLatestActivePlanRecord();
+    if (result.isErr()) {
+      final error = result.error;
+      switch (error.type) {
+        case SingleErrorTypes.notFound:
+          emit(
+            state.copyWith(
+              isLoading: false,
+              currentPlanRecord: CurrentWorkoutPlanRecordState.initial(),
+            ),
+          );
+          return;
+        case SingleErrorTypes.invalidInput:
+        case SingleErrorTypes.operationFailure:
+          emit(state.copyWith(
+            error: ErrorState(
+              type: error.type.name,
+              description: 'Failed to get latest active plan record',
+            ),
+          ));
+          return;
+      }
+    }
+
+    final record = result.value;
+    final planResult = await _workoutPlanService.getWorkoutPlan(
+      record.workoutPlanId,
+      planVersion: record.workoutPlanVersion,
+    );
+    if (planResult.isErr()) {
+      emit(state.copyWith(
+        error: ErrorState(
+          type: planResult.error.type.name,
+          description: 'Failed to load workout plan details',
+        ),
+        isLoading: false,
+      ));
+      return;
+    }
+
+    emit(state.copyWith(
+      currentPlanRecord: state.currentPlanRecord.copyWith(
+        currentPlanRecord: record,
+        workoutPlan: planResult.value,
+      ),
+      isLoading: false,
+    ));
+
+    // Refresh progress and today's workouts after loading plan
+    await refreshProgress();
+    await getTodaysWorkout();
+  }
+
   Future<void> getTodaysWorkout() async {
     _logger.info('Getting today\'s workout');
     final record = state.currentPlanRecord.currentPlanRecord;
@@ -90,8 +148,8 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
 
     try {
       final now = DateTime.now();
-      final createdAt = record.createdAt;
-      final difference = now.difference(createdAt);
+      final startedAt = record.startedAt;
+      final difference = now.difference(startedAt);
 
       // Calculate current week (1-based)
       final daysSinceStart = difference.inDays;
@@ -128,7 +186,7 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
       }
 
       var todaysDay =
-          week.days?.where((d) => d.day == relativeDayIndex).firstOrNull;
+          week.days.where((d) => d.day == relativeDayIndex).firstOrNull;
       if (todaysDay == null) {
         final daysResult = await _workoutPlanService.getWorkoutPlanWeek(
           week.id,
@@ -136,7 +194,7 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
         );
         if (daysResult.isErr()) return;
         todaysDay = daysResult.value.days
-            ?.where((d) => d.day == relativeDayIndex)
+            .where((d) => d.day == relativeDayIndex)
             .firstOrNull;
       }
 
@@ -206,23 +264,74 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
       return;
     }
 
-    final currentResult = await _workoutPlanRecordService.setCurrentWorkoutPlan(
-      result.value.id,
-    );
-    if (currentResult.isErr()) {
+    emit(state.copyWith(
+      currentPlanRecord: state.currentPlanRecord.copyWith(
+        currentPlanRecord: result.value,
+      ),
+      isLoading: false,
+    ));
+  }
+
+  Future<void> addOrGetWorkoutPlanDayRecord({
+    required ProgressStatus status,
+    int? week,
+    int? weekDay,
+  }) async {
+    _logger.info('Adding or getting workout plan day record');
+    emit(state.copyWith(isLoading: true));
+
+    final workoutPlanRecordId = state.currentPlanRecord.currentPlanRecord?.id;
+    if (workoutPlanRecordId == null) {
+      _logger.info('No active workout plan record set');
       emit(state.copyWith(
         error: ErrorState(
-          type: currentResult.error.type.name,
-          description: currentResult.error.description,
+          type: SingleErrorTypes.invalidInput.name,
+          description: 'No active workout plan record set',
         ),
         isLoading: false,
       ));
       return;
     }
 
+    final result = await _workoutPlanRecordService.upsertWorkoutPlanDayRecord(
+      workoutPlanRecordId: workoutPlanRecordId,
+      status: status,
+      week: week,
+      weekDay: weekDay,
+    );
+    if (result.isErr()) {
+      emit(state.copyWith(
+        error: ErrorState(
+          type: result.error.type.name,
+          description: result.error.description,
+        ),
+        isLoading: false,
+      ));
+      return;
+    }
+
+    final dayRecord = result.value;
+    final weeksResult = await _workoutPlanRecordService
+        .getWorkoutPlanRecordWeeksDaysAndWorkouts(
+      workoutPlanRecordId,
+    );
+    if (weeksResult.isErr()) {
+      emit(state.copyWith(
+        error: ErrorState(
+          type: weeksResult.error.type.name,
+          description: weeksResult.error.description,
+        ),
+      ));
+    }
+
+    final weeks = weeksResult.value;
     emit(state.copyWith(
       currentPlanRecord: state.currentPlanRecord.copyWith(
-        currentPlanRecord: result.value,
+        currentPlanRecord: state.currentPlanRecord.currentPlanRecord?.copyWith(
+          weeks: weeks,
+        ),
+        currentWeek: dayRecord.week,
+        currentDay: dayRecord.day,
       ),
       isLoading: false,
     ));

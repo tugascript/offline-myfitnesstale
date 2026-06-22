@@ -51,6 +51,8 @@ final class CurrentWorkoutPlanRecordState extends Equatable {
   final WorkoutPlanRecordDto? currentPlanRecord;
   final WorkoutPlanDto? workoutPlan;
   final List<WorkoutDto> todaysWorkouts;
+  final int currentWeek;
+  final int currentDay;
   final int workoutIndex;
   final int completedWorkouts;
   final int totalWorkouts;
@@ -59,6 +61,8 @@ final class CurrentWorkoutPlanRecordState extends Equatable {
     this.currentPlanRecord,
     this.workoutPlan,
     required this.todaysWorkouts,
+    required this.currentWeek,
+    required this.currentDay,
     required this.workoutIndex,
     required this.completedWorkouts,
     required this.totalWorkouts,
@@ -67,6 +71,8 @@ final class CurrentWorkoutPlanRecordState extends Equatable {
   factory CurrentWorkoutPlanRecordState.initial() {
     return const CurrentWorkoutPlanRecordState(
       todaysWorkouts: [],
+      currentWeek: 0,
+      currentDay: 0,
       workoutIndex: 0,
       completedWorkouts: 0,
       totalWorkouts: 0,
@@ -77,6 +83,8 @@ final class CurrentWorkoutPlanRecordState extends Equatable {
     WorkoutPlanRecordDto? currentPlanRecord,
     WorkoutPlanDto? workoutPlan,
     List<WorkoutDto>? todaysWorkouts,
+    int? currentWeek,
+    int? currentDay,
     int? workoutIndex,
     int? completedWorkouts,
     int? totalWorkouts,
@@ -85,6 +93,8 @@ final class CurrentWorkoutPlanRecordState extends Equatable {
       currentPlanRecord: currentPlanRecord ?? this.currentPlanRecord,
       workoutPlan: workoutPlan ?? this.workoutPlan,
       todaysWorkouts: todaysWorkouts ?? this.todaysWorkouts,
+      currentWeek: currentWeek ?? this.currentWeek,
+      currentDay: currentDay ?? this.currentDay,
       workoutIndex: workoutIndex ?? this.workoutIndex,
       completedWorkouts: completedWorkouts ?? this.completedWorkouts,
       totalWorkouts: totalWorkouts ?? this.totalWorkouts,
@@ -96,6 +106,8 @@ final class CurrentWorkoutPlanRecordState extends Equatable {
         currentPlanRecord,
         workoutPlan,
         todaysWorkouts,
+        currentWeek,
+        currentDay,
         workoutIndex,
         completedWorkouts,
         totalWorkouts,

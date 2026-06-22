@@ -148,8 +148,9 @@ class _WorkoutDetailViewState extends State<WorkoutDetailView> {
                     theme: theme,
                     sizes: sizes,
                     showMutationBtns: workout.createdBy == CreatedBy.user,
-                    onStart: () => context
-                        .push('/workouts/${workout.id}/active'), // TODO: fix me
+                    onStart: () => context.push(
+                          "/workouts/${workout.id}/active",
+                        ),
                     startLabel: 'Start Workout',
                     onEdit: () => context.push('/workouts/${workout.id}/edit'),
                     onHistory: () => context.push(

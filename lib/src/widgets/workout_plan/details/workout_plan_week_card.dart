@@ -99,16 +99,15 @@ class WorkoutPlanWeekCard extends StatelessWidget {
           ],
         ),
         children: week.days
-                ?.map(
-                  (day) => WorkoutPlanDayCard(
-                    day: day,
-                    sizes: sizes,
-                    theme: theme,
-                    isDarkTheme: isDarkTheme,
-                  ),
-                )
-                .toList() ??
-            [],
+            .map(
+              (day) => WorkoutPlanDayCard(
+                day: day,
+                sizes: sizes,
+                theme: theme,
+                isDarkTheme: isDarkTheme,
+              ),
+            )
+            .toList(),
       ),
     );
   }

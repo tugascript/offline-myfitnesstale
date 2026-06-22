@@ -284,7 +284,7 @@ class WorkoutRecordService {
   }
 
   Future<Result<WorkoutRecordDto, ServiceError<OperationErrorTypes>>>
-      createWorkoutRecord({
+      getOrCreateWorkoutRecord({
     required int workoutId,
     required DateTime startedAt,
   }) async {
@@ -298,10 +298,27 @@ class WorkoutRecordService {
         ));
       }
 
+      final where = WhereBuilder();
+      where.and(WorkoutRecordColumns.workoutId.equal, workoutId);
+      where.and(
+        WorkoutRecordColumns.status.equal,
+        ProgressStatus.inProgress.value,
+      );
+      final List<WorkoutRecord> records = await _repository.selectMany(
+        where: where.where,
+        whereArgs: where.args,
+        limit: 1,
+      );
+      if (records.isNotEmpty) {
+        _logger.info('Found existing workout record for workout $workoutId');
+        return ok(WorkoutRecordDto.fromModel(records.first));
+      }
+
       final WorkoutRecord record = WorkoutRecord.create(
         version: workout.version,
         workoutId: workoutId,
         startedAt: DateUtilities.getDateUnix(startedAt),
+        status: ProgressStatus.inProgress,
       );
       final int id = await _repository.insert(record);
       _logger.info('Created workout record with id $id');

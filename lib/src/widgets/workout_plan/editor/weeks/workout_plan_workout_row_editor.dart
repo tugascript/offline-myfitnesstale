@@ -37,7 +37,7 @@ class _WorkoutPlanWorkoutRowEditorState
     super.initState();
     if (widget.workout.workoutName == null && !widget.isLoading) {
       WidgetsBinding.instance.addPostFrameCallback((_) async {
-        await Future.delayed(const Duration(milliseconds: 100));
+        await Future.delayed(const Duration(milliseconds: 50));
         if (mounted) {
           await _openWorkoutPicker(context);
         }

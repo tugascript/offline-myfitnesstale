@@ -77,12 +77,14 @@ class WhereBuilder {
     if (_where.isEmpty) {
       return null;
     }
+
+    final String firstCondition = "(${_where.first.condition})";
     if (_where.length == 1) {
-      return _where.first.condition;
+      return firstCondition;
     }
 
     return [
-      _where.first.condition,
+      firstCondition,
       ..._where.skip(1).map((e) => '${e.union.value} (${e.condition})')
     ].join(' ');
   }
@@ -292,6 +294,8 @@ sealed class EnumDisplayNames {
         return 'Abandoned';
       case ProgressStatus.completed:
         return 'Completed';
+      case ProgressStatus.skipped:
+        return 'Skipped';
       case null:
         return 'Unknown';
     }

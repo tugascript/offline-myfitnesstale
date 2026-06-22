@@ -1,20 +1,26 @@
 import 'package:logging/logging.dart';
+import 'package:myfitnesstale/src/services/dtos/workout_plan_workout_record_dto.dart';
 import 'package:sqflite/sqflite.dart';
 
-import '../models/current_workout_plan_record_model.dart';
 import '../models/db.dart';
 import '../models/enums.dart';
 import '../models/repository.dart'
     show Repository, kDefaultLimit, kDefaultOffset;
 import '../models/utilities.dart' show WhereBuilder, DateUtilities;
+import '../models/workout_plan_day_model.dart';
+import '../models/workout_plan_day_record_model.dart';
 import '../models/workout_plan_model.dart';
 import '../models/workout_plan_record_model.dart';
+import '../models/workout_plan_week_model.dart';
+import '../models/workout_plan_week_record_model.dart';
 import '../models/workout_plan_workout_model.dart';
 import '../models/workout_plan_workout_record_model.dart';
 import 'common/errors.dart';
 import 'common/result.dart';
 import 'dtos/paginated_dto.dart';
+import 'dtos/workout_plan_day_record_dto.dart';
 import 'dtos/workout_plan_record_dto.dart';
+import 'dtos/workout_plan_week_record_dto.dart';
 
 class WorkoutPlanRecordService {
   WorkoutPlanRecordService._();
@@ -25,24 +31,48 @@ class WorkoutPlanRecordService {
 
   final Logger _logger = Logger('Workout Plan Record Service');
 
-  final Repository<WorkoutPlanRecord> _repository =
-      Repository<WorkoutPlanRecord>(
+  final _repository = Repository<WorkoutPlanRecord>(
     databaseHelper: DatabaseHelper(),
     tableName: WorkoutPlanRecord.table,
     fromMap: (map) => WorkoutPlanRecord.fromMap(map),
   );
 
-  final Repository<CurrentWorkoutPlanRecord> _currentRepository =
-      Repository<CurrentWorkoutPlanRecord>(
+  final _workoutPlanWeekRecordRepository = Repository<WorkoutPlanWeekRecord>(
     databaseHelper: DatabaseHelper(),
-    tableName: CurrentWorkoutPlanRecord.table,
-    fromMap: (map) => CurrentWorkoutPlanRecord.fromMap(map),
+    tableName: WorkoutPlanWeekRecord.table,
+    fromMap: (map) => WorkoutPlanWeekRecord.fromMap(map),
   );
-  final Repository<WorkoutPlan> _workoutPlanRepository =
-      Repository<WorkoutPlan>(
+  final _workoutPlanDayRecordRepository = Repository<WorkoutPlanDayRecord>(
+    databaseHelper: DatabaseHelper(),
+    tableName: WorkoutPlanDayRecord.table,
+    fromMap: (map) => WorkoutPlanDayRecord.fromMap(map),
+  );
+  final _workoutPlanWorkoutRecordRepository =
+      Repository<WorkoutPlanWorkoutRecord>(
+    databaseHelper: DatabaseHelper(),
+    tableName: WorkoutPlanWorkoutRecord.table,
+    fromMap: (map) => WorkoutPlanWorkoutRecord.fromMap(map),
+  );
+
+  final _workoutPlanRepository = Repository<WorkoutPlan>(
     databaseHelper: DatabaseHelper(),
     tableName: WorkoutPlan.table,
     fromMap: (map) => WorkoutPlan.fromMap(map),
+  );
+  final _workoutPlanWeekRepository = Repository<WorkoutPlanWeek>(
+    databaseHelper: DatabaseHelper(),
+    tableName: WorkoutPlanWeek.table,
+    fromMap: (map) => WorkoutPlanWeek.fromMap(map),
+  );
+  final _workoutPlanDayRepository = Repository<WorkoutPlanDay>(
+    databaseHelper: DatabaseHelper(),
+    tableName: WorkoutPlanDay.table,
+    fromMap: (map) => WorkoutPlanDay.fromMap(map),
+  );
+  final _workoutPlanWorkoutRepository = Repository<WorkoutPlanWorkout>(
+    databaseHelper: DatabaseHelper(),
+    tableName: WorkoutPlanWorkout.table,
+    fromMap: (map) => WorkoutPlanWorkout.fromMap(map),
   );
 
   Future<
@@ -115,18 +145,38 @@ class WorkoutPlanRecordService {
     }
   }
 
-  Future<Result<WorkoutPlanRecordDto, ServiceError<OperationErrorTypes>>>
+  Future<Result<WorkoutPlanRecordDto, ServiceError<SingleErrorTypes>>>
       createWorkoutPlanRecord({
     required int workoutPlanId,
     ProgressStatus status = ProgressStatus.inProgress,
+    DateTime? startedAt,
   }) async {
     _logger.info('Creating workout plan record');
     try {
       final workoutPlan = await _workoutPlanRepository.selectOne(workoutPlanId);
       if (workoutPlan == null) {
         return err(const ServiceError(
-          type: OperationErrorTypes.invalidInput,
+          type: SingleErrorTypes.notFound,
           description: 'Workout plan not found',
+        ));
+      }
+
+      final weekWhere = WhereBuilder();
+      weekWhere.and(WorkoutPlanWeekColumns.workoutPlanId.equal, workoutPlanId);
+      weekWhere.and(
+          WorkoutPlanWeekColumns.planVersion.equal, workoutPlan.version);
+      final List<WorkoutPlanWeek> weeks =
+          await _workoutPlanWeekRepository.selectMany(
+        where: weekWhere.where,
+        whereArgs: weekWhere.args,
+        orderBy: [WorkoutPlanWeekColumns.startWeek.orderAsc],
+        limit: 1,
+      );
+      if (weeks.isEmpty) {
+        _logger.info('No weeks found for workout plan $workoutPlanId');
+        return err(const ServiceError(
+          type: SingleErrorTypes.notFound,
+          description: 'No weeks found for workout plan',
         ));
       }
 
@@ -134,14 +184,50 @@ class WorkoutPlanRecordService {
         workoutPlanId,
         workoutPlanVersion: workoutPlan.version,
         status: status,
+        startedAt: startedAt != null
+            ? DateUtilities.getDateUnix(startedAt)
+            : DateUtilities.getNowUtcUnix(),
+        currentWeek: 1,
+        currentWeekDay: 1,
       );
-      final int id = await _repository.insert(record);
+      if (status != ProgressStatus.inProgress) {
+        final int id = await _repository.insert(record);
+        _logger.info('Created workout plan record with id $id');
+        return ok(WorkoutPlanRecordDto.fromModel(record.copyWith(id: id)));
+      }
+
+      final List<WorkoutPlanRecord> records = await _repository.selectMany(
+        where: WorkoutPlanRecordColumns.status.equal,
+        whereArgs: [ProgressStatus.inProgress.value],
+      );
+      if (records.isEmpty) {
+        final int id = await _repository.insert(record);
+        _logger.info('Created workout plan record with id $id');
+        return ok(WorkoutPlanRecordDto.fromModel(record.copyWith(id: id)));
+      }
+
+      final int id = await _repository.startTransaction((txn) async {
+        await txn.rawUpdate(
+          '''
+          UPDATE ${WorkoutPlanRecord.table} SET 
+          ${WorkoutPlanRecordColumns.status.equal} AND
+          ${WorkoutPlanRecordColumns.completedAt.equal}
+          WHERE ${WorkoutPlanRecordColumns.status.equal};
+          ''',
+          [
+            ProgressStatus.abandoned.value,
+            DateUtilities.getNowUtcUnix(),
+            ProgressStatus.inProgress.value,
+          ],
+        );
+        return await _repository.insert(record, txn);
+      });
       _logger.info('Created workout plan record with id $id');
       return ok(WorkoutPlanRecordDto.fromModel(record.copyWith(id: id)));
     } catch (e) {
       _logger.severe('Failed to create workout plan record', e);
       return err(const ServiceError(
-        type: OperationErrorTypes.operationFailure,
+        type: SingleErrorTypes.operationFailure,
         description: 'Failed to create workout plan record',
       ));
     }
@@ -286,120 +372,639 @@ class WorkoutPlanRecordService {
   }
 
   Future<Result<WorkoutPlanRecordDto, ServiceError<SingleErrorTypes>>>
-      getCurrentWorkoutPlanRecord() async {
-    _logger.info('Getting current workout plan record');
+      getOrCreateCurrentWorkoutPlanRecord(
+    int workoutPlanId,
+  ) async {
+    _logger.info(
+      'Getting or creating current workout plan record for workout plan $workoutPlanId',
+    );
+    final WhereBuilder query = WhereBuilder();
+    query.and(WorkoutPlanRecordColumns.workoutPlanId.equal, workoutPlanId);
+    query.and(
+      WorkoutPlanRecordColumns.status.equal,
+      ProgressStatus.inProgress.value,
+    );
     try {
-      final CurrentWorkoutPlanRecord? current =
-          await _currentRepository.selectLatest();
-      if (current == null) {
-        _logger.info('No current workout plan record found');
-        return err(const ServiceError(
-          type: SingleErrorTypes.notFound,
-          description: 'No current workout plan record found',
-        ));
-      }
-
-      final WorkoutPlanRecord? record = await _repository.selectOne(
-        current.workoutPlanRecordId,
+      final List<WorkoutPlanRecord> records = await _repository.selectMany(
+        where: query.where,
+        whereArgs: query.args,
+        orderBy: [WorkoutPlanRecordColumns.id.orderDesc],
+        limit: 1,
       );
-
-      if (record == null) {
+      if (records.isNotEmpty) {
         _logger.info(
-          'No workout plan record found with id: ${current.workoutPlanRecordId}',
+          'Found existing workout plan record for workout plan $workoutPlanId',
         );
-        return err(const ServiceError(
-          type: SingleErrorTypes.notFound,
-          description: 'No workout plan record found',
-        ));
+        return ok(WorkoutPlanRecordDto.fromModel(records.first));
       }
 
-      _logger.info('Current workout plan record found with id ${current.id}');
-      return ok(WorkoutPlanRecordDto.fromModel(record));
+      return await createWorkoutPlanRecord(workoutPlanId: workoutPlanId);
     } catch (e) {
-      _logger.severe('Failed to get current workout plan record', e);
+      _logger.severe('Failed to get or create current workout plan record', e);
       return err(const ServiceError(
         type: SingleErrorTypes.operationFailure,
-        description: 'Failed to get current workout plan record',
-      ));
-    }
-  }
-
-  Future<Result<void, ServiceError<SingleErrorTypes>>>
-      clearCurrentWorkoutPlanRecord() async {
-    _logger.info('Clearing current workout plan record');
-    try {
-      final CurrentWorkoutPlanRecord? current =
-          await _currentRepository.selectLatest();
-      if (current == null) {
-        _logger.info('No current workout plan record found');
-        return err(const ServiceError(
-          type: SingleErrorTypes.notFound,
-          description: 'No current workout plan record found',
-        ));
-      }
-
-      final bool deleted = await _currentRepository.deleteOne(current.id!);
-      if (!deleted) {
-        _logger.info('Failed to delete current workout plan record');
-        return err(const ServiceError(
-          type: SingleErrorTypes.operationFailure,
-          description: 'Failed to delete current workout plan record',
-        ));
-      }
-
-      _logger.info('Cleared current workout plan record with id ${current.id}');
-      return ok(null);
-    } catch (e) {
-      _logger.severe('Failed to clear current workout plan record', e);
-      return err(const ServiceError(
-        type: SingleErrorTypes.operationFailure,
-        description: 'Failed to clear current workout plan record',
+        description: 'Failed to get or create current workout plan record',
       ));
     }
   }
 
   Future<Result<WorkoutPlanRecordDto, ServiceError<SingleErrorTypes>>>
-      setCurrentWorkoutPlan(
-    int workoutPlanRecordId,
-  ) async {
-    _logger.info(
-        'Setting current workout plan record with id $workoutPlanRecordId');
+      getLatestActivePlanRecord() async {
+    _logger.info('Getting latest active plan record');
     try {
-      final WorkoutPlanRecord? existing =
-          await _repository.selectOne(workoutPlanRecordId);
-      if (existing == null) {
-        return err(ServiceError(
+      final List<WorkoutPlanRecord> records = await _repository.selectMany(
+        where: WorkoutPlanRecordColumns.status.equal,
+        whereArgs: [ProgressStatus.inProgress.value],
+        orderBy: [WorkoutPlanRecordColumns.id.orderDesc],
+        limit: 1,
+      );
+      if (records.isEmpty) {
+        _logger.info('No active plan record found');
+        return err(const ServiceError(
           type: SingleErrorTypes.notFound,
-          description:
-              'Workout plan record with id $workoutPlanRecordId not found',
+          description: 'No active plan record found',
+        ));
+      }
+      _logger.info('Got latest active plan record');
+      return ok(WorkoutPlanRecordDto.fromModel(records.first));
+    } catch (e) {
+      _logger.severe('Failed to get latest active plan record', e);
+      return err(const ServiceError(
+        type: SingleErrorTypes.operationFailure,
+        description: 'Failed to get latest active plan record',
+      ));
+    }
+  }
+
+  Future<Result<List<WorkoutPlanWeekRecordDto>, ServiceError<SingleErrorTypes>>>
+      getWorkoutPlanRecordWeeksDaysAndWorkouts(int workoutPlanRecordId) async {
+    _logger.info(
+        'Getting workout plan record weeks and days for workout plan record $workoutPlanRecordId');
+    try {
+      final WorkoutPlanRecord? record =
+          await _repository.selectOne(workoutPlanRecordId);
+      if (record == null) {
+        _logger
+            .info('Workout plan record with id $workoutPlanRecordId not found');
+        return err(const ServiceError(
+          type: SingleErrorTypes.notFound,
+          description: 'Workout plan record not found',
+        ));
+      }
+      final List<WorkoutPlanWeekRecord> weeks =
+          await _workoutPlanWeekRecordRepository.selectMany(
+        where: WorkoutPlanWeekRecordColumns.workoutPlanRecordId.equal,
+        whereArgs: [workoutPlanRecordId],
+        orderBy: [WorkoutPlanWeekRecordColumns.week.orderAsc],
+      );
+      final List<WorkoutPlanDayRecord> days =
+          await _workoutPlanDayRecordRepository.selectMany(
+        where: WorkoutPlanDayRecordColumns.workoutPlanRecordId.equal,
+        whereArgs: [workoutPlanRecordId],
+        orderBy: [
+          WorkoutPlanWeekRecordColumns.week.orderAsc,
+          WorkoutPlanDayRecordColumns.day.orderAsc,
+        ],
+      );
+      final List<WorkoutPlanWorkoutRecord> workouts =
+          await _workoutPlanWorkoutRecordRepository.selectMany(
+        where: WorkoutPlanWorkoutRecordColumns.workoutPlanRecordId.equal,
+        whereArgs: [workoutPlanRecordId],
+        orderBy: [WorkoutPlanWorkoutRecordColumns.position.orderAsc],
+      );
+      final Map<int, List<WorkoutPlanWorkoutRecordDto>> workoutsMap =
+          workouts.fold(
+        {},
+        (map, workout) {
+          map.update(
+            workout.workoutPlanDayRecordId,
+            (list) => list..add(WorkoutPlanWorkoutRecordDto.fromModel(workout)),
+            ifAbsent: () => [WorkoutPlanWorkoutRecordDto.fromModel(workout)],
+          );
+          return map;
+        },
+      );
+
+      final Map<int, List<WorkoutPlanDayRecordDto>> daysMap = days.fold(
+        {},
+        (map, day) {
+          map.update(
+            day.workoutPlanWeekRecordId,
+            (list) => list
+              ..add(
+                WorkoutPlanDayRecordDto.fromModel(
+                  day,
+                  workouts: workoutsMap[day.id],
+                ),
+              ),
+            ifAbsent: () => [
+              WorkoutPlanDayRecordDto.fromModel(
+                day,
+                workouts: workoutsMap[day.id],
+              ),
+            ],
+          );
+          return map;
+        },
+      );
+
+      return ok(
+        weeks
+            .map((week) => WorkoutPlanWeekRecordDto.fromModel(
+                  week,
+                  days: daysMap[week.id],
+                ))
+            .toList(),
+      );
+    } catch (e) {
+      _logger.severe(
+          'Failed to get workout plan record weeks and days for workout plan record $workoutPlanRecordId',
+          e);
+      return err(const ServiceError(
+        type: SingleErrorTypes.operationFailure,
+        description: 'Failed to get workout plan record weeks and days',
+      ));
+    }
+  }
+
+  Future<Result<WorkoutPlanDayRecordDto, ServiceError<SingleErrorTypes>>>
+      upsertWorkoutPlanDayRecord({
+    required int workoutPlanRecordId,
+    required ProgressStatus status,
+    int? week,
+    int? weekDay,
+  }) async {
+    _logger.info(
+      'Getting or creating workout plan day record for workout plan record $workoutPlanRecordId',
+    );
+    try {
+      final WorkoutPlanRecord? record = await _repository.selectOne(
+        workoutPlanRecordId,
+      );
+      if (record == null) {
+        _logger.info(
+          'Workout plan record with id $workoutPlanRecordId not found',
+        );
+        return err(const ServiceError(
+          type: SingleErrorTypes.notFound,
+          description: 'Workout plan record not found',
         ));
       }
 
-      final CurrentWorkoutPlanRecord? current =
-          await _currentRepository.selectLatest();
-      if (current != null) {
-        final CurrentWorkoutPlanRecord updated = current.copyWith(
-          workoutPlanRecordId: workoutPlanRecordId,
-          workoutPlanId: existing.workoutPlanId,
-          updatedAt: DateUtilities.getNowUtcUnix(),
+      final currentWeek = week ?? record.currentWeek;
+      final currentWeekDay = weekDay ?? record.currentWeekDay;
+      final weekWhere = WhereBuilder();
+      weekWhere.and(
+        WorkoutPlanWeekRecordColumns.workoutPlanRecordId.equal,
+        workoutPlanRecordId,
+      );
+      weekWhere.and(
+        WorkoutPlanWeekRecordColumns.week.equal,
+        currentWeek,
+      );
+      final List<WorkoutPlanWeekRecord> weekRecord =
+          await _workoutPlanWeekRecordRepository.selectMany(
+        where: weekWhere.where,
+        whereArgs: weekWhere.args,
+        limit: 1,
+      );
+      if (weekRecord.isEmpty) {
+        _logger.info(
+          'No workout plan week record found for workout plan record $workoutPlanRecordId',
         );
-        await _currentRepository.update(updated);
-        _logger.info('Updated current workout plan record');
-        return ok(WorkoutPlanRecordDto.fromModel(existing));
+        return await _createWorkoutPlanWeekAndDayRecords(
+          workoutPlanRecord: record,
+          week: currentWeek,
+          weekDay: currentWeekDay,
+          status: status,
+        );
       }
 
-      final CurrentWorkoutPlanRecord created = CurrentWorkoutPlanRecord.create(
-        workoutPlanRecordId: workoutPlanRecordId,
-        workoutPlanId: existing.workoutPlanId,
+      final WorkoutPlanWeekRecord weekRecordData = weekRecord.first;
+      final WhereBuilder dayWhere = WhereBuilder();
+      dayWhere.and(
+        WorkoutPlanDayRecordColumns.workoutPlanWeekRecordId.equal,
+        weekRecordData.id!,
       );
-      final int id = await _currentRepository.insert(created);
-      _logger.info('Created current workout plan record with id $id');
-      return ok(WorkoutPlanRecordDto.fromModel(existing));
+      dayWhere.and(
+        WorkoutPlanDayRecordColumns.day.equal,
+        currentWeekDay,
+      );
+      final List<WorkoutPlanDayRecord> dayRecords =
+          await _workoutPlanDayRecordRepository.selectMany(
+        where: dayWhere.where,
+        whereArgs: dayWhere.args,
+        limit: 1,
+      );
+      if (dayRecords.isEmpty) {
+        _logger.info(
+          'No workout plan day record found for workout plan week record ${weekRecordData.id} and day $currentWeekDay',
+        );
+        return await _createWorkoutPlanDayRecord(
+          workoutPlanRecord: record,
+          weekRecord: weekRecordData,
+          weekDay: currentWeekDay,
+          status: status,
+        );
+      }
+
+      _logger.info(
+        'Found existing workout plan day record for workout plan record $workoutPlanRecordId, week record ${weekRecordData.id} and day $currentWeekDay',
+      );
+      return ok(WorkoutPlanDayRecordDto.fromModel(dayRecords.first));
     } catch (e) {
-      _logger.severe('Failed to set current workout plan record', e);
+      _logger.severe(
+        'Failed to get current workout plan day record for workout plan record $workoutPlanRecordId',
+        e,
+      );
       return err(const ServiceError(
         type: SingleErrorTypes.operationFailure,
-        description: 'Failed to set current workout plan record',
+        description: 'Failed to get current workout plan day record',
+      ));
+    }
+  }
+
+  Future<Result<WorkoutPlanWorkoutRecordDto, ServiceError<SingleErrorTypes>>>
+      upsertWorkoutPlanWorkoutRecord({
+    required int workoutPlanRecordId,
+    required ProgressStatus status,
+    int? week,
+    int? weekDay,
+    int? workoutPosition,
+  }) async {
+    _logger.info(
+      'Upserting workout plan workout record for workout plan record $workoutPlanRecordId',
+    );
+    try {
+      final WorkoutPlanRecord? record = await _repository.selectOne(
+        workoutPlanRecordId,
+      );
+      if (record == null) {
+        _logger.info(
+          'Workout plan record with id $workoutPlanRecordId not found',
+        );
+        return err(const ServiceError(
+          type: SingleErrorTypes.notFound,
+          description: 'Workout plan record not found',
+        ));
+      }
+
+      final currentWeek = week ?? record.currentWeek;
+      final currentWeekDay = weekDay ?? record.currentWeekDay;
+      final currentWorkoutPosition =
+          workoutPosition ?? record.currentWorkoutPosition;
+      final weekWhere = WhereBuilder();
+      weekWhere.and(
+        WorkoutPlanWeekRecordColumns.workoutPlanRecordId.equal,
+        workoutPlanRecordId,
+      );
+      weekWhere.and(
+        WorkoutPlanWeekRecordColumns.week.equal,
+        currentWeek,
+      );
+      final List<WorkoutPlanWeekRecord> weekRecord =
+          await _workoutPlanWeekRecordRepository.selectMany(
+        where: weekWhere.where,
+        whereArgs: weekWhere.args,
+        limit: 1,
+      );
+      if (weekRecord.isEmpty) {
+        _logger.info(
+          'No workout plan week record found for workout plan record $workoutPlanRecordId and week $currentWeek',
+        );
+        return err(const ServiceError(
+          type: SingleErrorTypes.notFound,
+          description:
+              'No workout plan week record found for workout plan record and week',
+        ));
+      }
+
+      final WorkoutPlanWeekRecord weekRecordData = weekRecord.first;
+      final WhereBuilder dayWhere = WhereBuilder();
+      dayWhere.and(
+        WorkoutPlanDayRecordColumns.workoutPlanWeekRecordId.equal,
+        weekRecordData.id!,
+      );
+      dayWhere.and(
+        WorkoutPlanDayRecordColumns.day.equal,
+        currentWeekDay,
+      );
+      final List<WorkoutPlanDayRecord> dayRecords =
+          await _workoutPlanDayRecordRepository.selectMany(
+        where: dayWhere.where,
+        whereArgs: dayWhere.args,
+        limit: 1,
+      );
+      if (dayRecords.isEmpty) {
+        _logger.info(
+          'No workout plan day record found for workout plan record $workoutPlanRecordId and week $currentWeek and day $currentWeekDay',
+        );
+        return err(const ServiceError(
+          type: SingleErrorTypes.notFound,
+          description:
+              'No workout plan day record found for workout plan record and week and day',
+        ));
+      }
+
+      final WorkoutPlanDayRecord dayRecordData = dayRecords.first;
+      final WhereBuilder workoutWhere = WhereBuilder();
+      workoutWhere.and(
+        WorkoutPlanWorkoutRecordColumns.workoutPlanDayRecordId.equal,
+        dayRecordData.id!,
+      );
+      workoutWhere.and(
+        WorkoutPlanWorkoutRecordColumns.position.equal,
+        currentWorkoutPosition,
+      );
+      final List<WorkoutPlanWorkoutRecord> workoutRecords =
+          await _workoutPlanWorkoutRecordRepository.selectMany(
+        where: workoutWhere.where,
+        whereArgs: workoutWhere.args,
+        limit: 1,
+      );
+      if (workoutRecords.isEmpty) {
+        _logger.info(
+          'No workout plan workout record found for workout plan record $workoutPlanRecordId and week $currentWeek and day $currentWeekDay and position $currentWorkoutPosition',
+        );
+        return await _createWorkoutPlanWorkoutRecord(
+          dayRecord: dayRecordData,
+          workoutPosition: currentWorkoutPosition,
+        );
+      }
+
+      final WorkoutPlanWorkoutRecord workoutRecordData = workoutRecords.first;
+      return ok(WorkoutPlanWorkoutRecordDto.fromModel(workoutRecordData));
+    } catch (e) {
+      _logger.severe(
+        'Failed to upsert workout plan workout record for workout plan record $workoutPlanRecordId',
+        e,
+      );
+      return err(const ServiceError(
+        type: SingleErrorTypes.operationFailure,
+        description: 'Failed to upsert workout plan workout record',
+      ));
+    }
+  }
+
+  Future<Result<WorkoutPlanDayRecordDto, ServiceError<SingleErrorTypes>>>
+      _createWorkoutPlanWeekAndDayRecords({
+    required WorkoutPlanRecord workoutPlanRecord,
+    required int week,
+    required int weekDay,
+    required ProgressStatus status,
+  }) async {
+    final int workoutPlanRecordId = workoutPlanRecord.id!;
+    final int workoutPlanId = workoutPlanRecord.workoutPlanId;
+    _logger.info(
+      'Creating workout plan week and day records for workout plan record $workoutPlanRecordId and workout plan $workoutPlanId for week $week and day $weekDay',
+    );
+
+    final WhereBuilder mainWhere = WhereBuilder();
+    mainWhere.and(WorkoutPlanWeekColumns.workoutPlanId.equal, workoutPlanId);
+
+    final WhereBuilder onlyStartWeekWhere = WhereBuilder();
+    mainWhere.and(WorkoutPlanWeekColumns.startWeek.equal, week);
+    mainWhere.and(WorkoutPlanWeekColumns.endWeek.isNull);
+
+    final WhereBuilder betweenWeekWhere = WhereBuilder();
+    mainWhere.and(WorkoutPlanWeekColumns.startWeek.greaterThanOrEqual, week);
+    mainWhere.and(WorkoutPlanWeekColumns.endWeek.notNull);
+    mainWhere.and(WorkoutPlanWeekColumns.endWeek.lessThanOrEqual, week);
+
+    final WhereBuilder weekWhere = WhereBuilder();
+    weekWhere.or(onlyStartWeekWhere.where!);
+    weekWhere.or(betweenWeekWhere.where!);
+    mainWhere.and(weekWhere.where!);
+
+    final List<Object?> args = [
+      ...mainWhere.args!,
+      ...onlyStartWeekWhere.args!,
+      ...betweenWeekWhere.args!,
+    ];
+
+    final List<WorkoutPlanWeek> weeks =
+        await _workoutPlanWeekRepository.selectMany(
+      where: mainWhere.where,
+      whereArgs: args,
+      orderBy: [WorkoutPlanWeekColumns.startWeek.orderAsc],
+      limit: 1,
+    );
+    if (weeks.isEmpty) {
+      _logger.info(
+        'No workout plan week found for workout plan $workoutPlanId and week $week',
+      );
+      return err(const ServiceError(
+        type: SingleErrorTypes.notFound,
+        description: 'No workout plan week found for workout plan and week',
+      ));
+    }
+
+    final WorkoutPlanWeekRecord weekRecord = WorkoutPlanWeekRecord.create(
+      workoutPlanRecordId: workoutPlanId,
+      workoutPlanWeekId: weeks.first.id!,
+      week: week,
+      status: status,
+      currentDay: weekDay,
+    );
+    try {
+      final (int weekRecordId, WorkoutPlanDayRecord dayRecord) =
+          await _repository.startTransaction((txn) async {
+        final int weekRecordId = await _workoutPlanWeekRecordRepository.insert(
+          weekRecord,
+          txn,
+        );
+
+        final WorkoutPlanDayRecord dayRecord = WorkoutPlanDayRecord.create(
+          workoutPlanRecordId: workoutPlanRecordId,
+          workoutPlanWeekRecordId: weekRecordId,
+          workoutPlanDayId: weekDay,
+        );
+        final int dayRecordId =
+            await _workoutPlanDayRecordRepository.insert(dayRecord, txn);
+
+        final WorkoutPlanRecord updatedRecord = workoutPlanRecord.copyWith(
+          currentWeek: week,
+          currentWeekDay: weekDay,
+          updatedAt: DateUtilities.getNowUtcUnix(),
+        );
+        await _repository.update(updatedRecord, txn);
+        return (weekRecordId, dayRecord.copyWith(id: dayRecordId));
+      });
+      _logger.info(
+        'Created workout plan week record with id $weekRecordId and day record with id ${dayRecord.id} for workout plan record $workoutPlanRecordId',
+      );
+      return ok(WorkoutPlanDayRecordDto.fromModel(dayRecord));
+    } catch (e) {
+      _logger.severe(
+        'Failed to create workout plan week record for workout plan record $workoutPlanRecordId',
+        e,
+      );
+      return err(const ServiceError(
+        type: SingleErrorTypes.operationFailure,
+        description: 'Failed to create workout plan week record',
+      ));
+    }
+  }
+
+  Future<Result<WorkoutPlanDayRecordDto, ServiceError<SingleErrorTypes>>>
+      _createWorkoutPlanDayRecord({
+    required WorkoutPlanRecord workoutPlanRecord,
+    required WorkoutPlanWeekRecord weekRecord,
+    required int weekDay,
+    required ProgressStatus status,
+  }) async {
+    final int workoutPlanRecordId = workoutPlanRecord.id!;
+    final int workoutPlanWeekRecordId = weekRecord.id!;
+    _logger.info(
+      'Creating workout plan day record for workout plan record $workoutPlanRecordId, week record $workoutPlanWeekRecordId and week day $weekDay',
+    );
+
+    final WhereBuilder dayWhere = WhereBuilder();
+    dayWhere.and(
+      WorkoutPlanDayColumns.workoutPlanWeekId.equal,
+      weekRecord.workoutPlanWeekId,
+    );
+    dayWhere.and(
+      WorkoutPlanDayColumns.day.equal,
+      weekDay,
+    );
+    try {
+      final List<WorkoutPlanDay> dayData =
+          await _workoutPlanDayRepository.selectMany(
+        where: dayWhere.where,
+        whereArgs: dayWhere.args,
+        limit: 1,
+      );
+      if (dayData.isEmpty) {
+        _logger.info(
+          'No workout plan day found for workout plan week ${weekRecord.workoutPlanWeekId} and day $weekDay',
+        );
+        return err(const ServiceError(
+          type: SingleErrorTypes.notFound,
+          description:
+              'No workout plan day found for workout plan week and day',
+        ));
+      }
+
+      final int workoutPlanDayId = dayData.first.id!;
+      final WorkoutPlanDayRecord dayRecord = WorkoutPlanDayRecord.create(
+        workoutPlanRecordId: workoutPlanRecordId,
+        workoutPlanWeekRecordId: workoutPlanWeekRecordId,
+        workoutPlanDayId: workoutPlanDayId,
+        day: weekDay,
+        status: status,
+      );
+
+      final int dayRecordId =
+          await _workoutPlanDayRecordRepository.startTransaction(
+        (txn) async {
+          final int dayRecordId = await _workoutPlanDayRecordRepository.insert(
+            dayRecord,
+            txn,
+          );
+
+          final WorkoutPlanRecord updatedRecord = workoutPlanRecord.copyWith(
+            currentWeek: weekRecord.week,
+            currentWeekDay: weekDay,
+            updatedAt: DateUtilities.getNowUtcUnix(),
+          );
+          await _repository.update(updatedRecord, txn);
+
+          final WorkoutPlanWeekRecord updatedWeekRecord = weekRecord.copyWith(
+            currentDay: weekDay,
+            updatedAt: DateUtilities.getNowUtcUnix(),
+          );
+          await _workoutPlanWeekRecordRepository.update(updatedWeekRecord, txn);
+
+          return dayRecordId;
+        },
+      );
+
+      _logger.info(
+        'Created workout plan day record with id $dayRecordId for workout plan record $workoutPlanRecordId',
+      );
+      return ok(
+        WorkoutPlanDayRecordDto.fromModel(dayRecord.copyWith(id: dayRecordId)),
+      );
+    } catch (e) {
+      _logger.severe(
+        'Failed to create workout plan day record for workout plan record $workoutPlanRecordId',
+        e,
+      );
+      return err(const ServiceError(
+        type: SingleErrorTypes.operationFailure,
+        description: 'Failed to create workout plan day record',
+      ));
+    }
+  }
+
+  Future<Result<WorkoutPlanWorkoutRecordDto, ServiceError<SingleErrorTypes>>>
+      _createWorkoutPlanWorkoutRecord({
+    required WorkoutPlanDayRecord dayRecord,
+    required int workoutPosition,
+  }) async {
+    final int workoutPlanRecordId = dayRecord.workoutPlanRecordId;
+    final int workoutPlanDayRecordId = dayRecord.id!;
+    final int workoutPlanWeekRecordId = dayRecord.workoutPlanWeekRecordId;
+    final int workoutPlanDayId = dayRecord.workoutPlanDayId;
+    try {
+      final WhereBuilder workoutWhere = WhereBuilder();
+      workoutWhere.and(
+        WorkoutPlanWorkoutColumns.workoutPlanDayId.equal,
+        workoutPlanDayId,
+      );
+      workoutWhere.and(
+        WorkoutPlanWorkoutColumns.position.equal,
+        workoutPosition,
+      );
+      final workoutPlansWorkouts =
+          await _workoutPlanWorkoutRepository.selectMany(
+        where: workoutWhere.where,
+        whereArgs: workoutWhere.args,
+        limit: 1,
+      );
+      if (workoutPlansWorkouts.isEmpty) {
+        _logger.info(
+          'No workout plan workout found for workout plan day $workoutPlanDayId and position $workoutPosition',
+        );
+        return err(const ServiceError(
+          type: SingleErrorTypes.notFound,
+          description: 'Workout plan workout not found',
+        ));
+      }
+
+      final WorkoutPlanWorkout workoutPlanWorkout = workoutPlansWorkouts.first;
+      final WorkoutPlanWorkoutRecord workoutPlanWorkoutRecord =
+          WorkoutPlanWorkoutRecord.create(
+        workoutPlanRecordId: workoutPlanRecordId,
+        workoutPlanWeekRecordId: workoutPlanWeekRecordId,
+        workoutPlanDayRecordId: workoutPlanDayRecordId,
+        workoutPlanWorkoutId: workoutPlanWorkout.id!,
+        workoutRecordId: workoutPlanWorkout.workoutId,
+        position: workoutPosition,
+      );
+      final int workoutPlanWorkoutRecordId =
+          await _workoutPlanWorkoutRecordRepository.insert(
+        workoutPlanWorkoutRecord,
+      );
+      _logger.info(
+        'Created workout plan workout record with id $workoutPlanWorkoutRecordId for workout plan record $workoutPlanRecordId, week record $workoutPlanWeekRecordId, day record $workoutPlanDayRecordId',
+      );
+      return ok(
+        WorkoutPlanWorkoutRecordDto.fromModel(
+          workoutPlanWorkoutRecord.copyWith(
+            id: workoutPlanWorkoutRecordId,
+          ),
+        ),
+      );
+    } catch (e) {
+      _logger.severe(
+        'Failed to create workout plan workout record for workout plan record $workoutPlanRecordId, week record $workoutPlanWeekRecordId, day record $workoutPlanDayRecordId, position $workoutPosition',
+        e,
+      );
+      return err(const ServiceError(
+        type: SingleErrorTypes.operationFailure,
+        description: 'Failed to create workout plan workout record',
       ));
     }
   }

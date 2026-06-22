@@ -80,7 +80,9 @@ class StartWorkoutPlan extends StatelessWidget {
         }
 
         if (state.currentPlanRecord.workoutPlan == null) {
-          context.read<WorkoutPlanRecordCubit>().getActivePlanRecord();
+          context.read<WorkoutPlanRecordCubit>().getOrCreateActivePlanRecord(
+                workoutPlanId,
+              );
         }
       },
     );

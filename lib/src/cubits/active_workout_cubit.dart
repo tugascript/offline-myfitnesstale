@@ -19,12 +19,14 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
 
   ActiveWorkoutCubit() : super(ActiveWorkoutState.initial());
 
-  Future<void> startWorkout(int workoutId) async {
+  Future<void> startWorkout(int workoutId, [int? workoutPlanId]) async {
     _logger.info("Starting workout...");
     emit(state.copyWith(isLoading: true, isCompleted: false));
 
     final startedAt = DateTime.now();
-    final workoutRecordResult = await _workoutRecordService.createWorkoutRecord(
+
+    final workoutRecordResult =
+        await _workoutRecordService.getOrCreateWorkoutRecord(
       workoutId: workoutId,
       startedAt: startedAt,
     );
@@ -33,7 +35,8 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
       switch (error.type) {
         case OperationErrorTypes.operationFailure:
           _logger.info(
-              "Failed to create workout record for workout with id $workoutId");
+            "Failed to create workout record for workout with id $workoutId",
+          );
           emit(state.copyWith(
             error: Nullable(ErrorState(
               type: error.type.name,
@@ -83,9 +86,10 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
       }
     }
 
+    final workoutRecord = workoutRecordResult.value;
     emit(state.copyWith(
       workout: Nullable(workoutResult.value),
-      workoutRecord: Nullable(workoutRecordResult.value),
+      workoutRecord: Nullable(workoutRecord),
       currentSetPosition: 0,
       currentExercisePosition: 0,
       currentSetNumber: 1,

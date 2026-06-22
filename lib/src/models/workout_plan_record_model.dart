@@ -12,6 +12,10 @@ enum WorkoutPlanRecordColumns with Columns {
   workoutPlanId("workout_plan_id"),
   workoutPlanVersion("workout_plan_version"),
   status("status"),
+  startedAt("started_at"),
+  currentWeek("current_week"),
+  currentDay("current_day"),
+  currentWorkoutPosition("current_workout_position"),
   completedAt("completed_at"),
   createdAt("created_at"),
   updatedAt("updated_at");
@@ -28,6 +32,10 @@ class WorkoutPlanRecord extends Equatable implements Model {
   final int workoutPlanId;
   final int workoutPlanVersion;
   final ProgressStatus status;
+  final int startedAt;
+  final int currentWeek;
+  final int currentWeekDay;
+  final int currentWorkoutPosition;
   final int? completedAt;
   @override
   final int createdAt;
@@ -39,6 +47,10 @@ class WorkoutPlanRecord extends Equatable implements Model {
     required this.workoutPlanId,
     required this.workoutPlanVersion,
     required this.status,
+    required this.startedAt,
+    required this.currentWeek,
+    required this.currentWeekDay,
+    required this.currentWorkoutPosition,
     this.completedAt,
     required this.createdAt,
     required this.updatedAt,
@@ -51,6 +63,10 @@ class WorkoutPlanRecord extends Equatable implements Model {
     ${WorkoutPlanRecordColumns.workoutPlanId.value} INTEGER NOT NULL,
     ${WorkoutPlanRecordColumns.workoutPlanVersion.value} INTEGER NOT NULL DEFAULT 1,
     ${WorkoutPlanRecordColumns.status.value} TEXT NOT NULL,
+    ${WorkoutPlanRecordColumns.startedAt.value} INTEGER NOT NULL,
+    ${WorkoutPlanRecordColumns.currentWeek.value} INTEGER NOT NULL,
+    ${WorkoutPlanRecordColumns.currentDay.value} INTEGER NOT NULL,
+    ${WorkoutPlanRecordColumns.currentWorkoutPosition.value} INTEGER NOT NULL,
     ${WorkoutPlanRecordColumns.completedAt.value} INTEGER,
     ${WorkoutPlanRecordColumns.createdAt.value} INTEGER NOT NULL,
     ${WorkoutPlanRecordColumns.updatedAt.value} INTEGER NOT NULL,
@@ -68,6 +84,11 @@ class WorkoutPlanRecord extends Equatable implements Model {
       WorkoutPlanRecordColumns.workoutPlanId.value: workoutPlanId,
       WorkoutPlanRecordColumns.workoutPlanVersion.value: workoutPlanVersion,
       WorkoutPlanRecordColumns.status.value: status.value,
+      WorkoutPlanRecordColumns.startedAt.value: startedAt,
+      WorkoutPlanRecordColumns.currentWeek.value: currentWeek,
+      WorkoutPlanRecordColumns.currentDay.value: currentWeekDay,
+      WorkoutPlanRecordColumns.currentWorkoutPosition.value:
+          currentWorkoutPosition,
       WorkoutPlanRecordColumns.completedAt.value: completedAt,
       WorkoutPlanRecordColumns.createdAt.value: createdAt,
       WorkoutPlanRecordColumns.updatedAt.value: updatedAt,
@@ -83,6 +104,11 @@ class WorkoutPlanRecord extends Equatable implements Model {
           map[WorkoutPlanRecordColumns.workoutPlanVersion.value] as int? ?? 1,
       status: ProgressStatus.fromValue(
           map[WorkoutPlanRecordColumns.status.value]! as String),
+      startedAt: map[WorkoutPlanRecordColumns.startedAt.value]! as int,
+      currentWeek: map[WorkoutPlanRecordColumns.currentWeek.value]! as int,
+      currentWeekDay: map[WorkoutPlanRecordColumns.currentDay.value]! as int,
+      currentWorkoutPosition:
+          map[WorkoutPlanRecordColumns.currentWorkoutPosition.value]! as int,
       completedAt: map[WorkoutPlanRecordColumns.completedAt.value] as int?,
       createdAt: map[WorkoutPlanRecordColumns.createdAt.value]! as int,
       updatedAt: map[WorkoutPlanRecordColumns.updatedAt.value]! as int,
@@ -94,6 +120,10 @@ class WorkoutPlanRecord extends Equatable implements Model {
     int workoutPlanId, {
     int workoutPlanVersion = 1,
     ProgressStatus status = ProgressStatus.inProgress,
+    int currentWeek = 1,
+    int currentWeekDay = 1,
+    int currentWorkoutPosition = 1,
+    int? startedAt,
     int? completedAt,
   }) {
     final int now = DateUtilities.getNowUtcUnix();
@@ -101,6 +131,10 @@ class WorkoutPlanRecord extends Equatable implements Model {
       workoutPlanId: workoutPlanId,
       workoutPlanVersion: workoutPlanVersion,
       status: status,
+      startedAt: startedAt ?? now,
+      currentWeek: currentWeek,
+      currentWeekDay: currentWeekDay,
+      currentWorkoutPosition: currentWorkoutPosition,
       completedAt: completedAt,
       createdAt: now,
       updatedAt: now,
@@ -113,6 +147,10 @@ class WorkoutPlanRecord extends Equatable implements Model {
     int? workoutPlanId,
     int? workoutPlanVersion,
     ProgressStatus? status,
+    int? startedAt,
+    int? currentWeek,
+    int? currentWeekDay,
+    int? currentWorkoutPosition,
     int? completedAt,
     int? createdAt,
     int? updatedAt,
@@ -122,6 +160,11 @@ class WorkoutPlanRecord extends Equatable implements Model {
       workoutPlanId: workoutPlanId ?? this.workoutPlanId,
       workoutPlanVersion: workoutPlanVersion ?? this.workoutPlanVersion,
       status: status ?? this.status,
+      startedAt: startedAt ?? this.startedAt,
+      currentWeek: currentWeek ?? this.currentWeek,
+      currentWeekDay: currentWeekDay ?? this.currentWeekDay,
+      currentWorkoutPosition:
+          currentWorkoutPosition ?? this.currentWorkoutPosition,
       completedAt: completedAt ?? this.completedAt,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -134,13 +177,12 @@ class WorkoutPlanRecord extends Equatable implements Model {
         workoutPlanId,
         workoutPlanVersion,
         status,
+        startedAt,
+        currentWeek,
+        currentWeekDay,
+        currentWorkoutPosition,
         completedAt,
         createdAt,
         updatedAt,
       ];
-
-  @override
-  String toString() {
-    return 'WorkoutPlanRecord { id: $id, workoutPlanId: $workoutPlanId, workoutPlanVersion: $workoutPlanVersion, status: $status, completedAt: $completedAt, createdAt: $createdAt, updatedAt: $updatedAt }';
-  }
 }

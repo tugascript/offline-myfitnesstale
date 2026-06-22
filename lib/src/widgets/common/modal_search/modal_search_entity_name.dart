@@ -21,6 +21,8 @@ class ModalSearchEntityName extends StatelessWidget {
           fontSize: fontSize,
           fontWeight: FontWeight.bold,
         ),
+        softWrap: true,
+        overflow: TextOverflow.ellipsis,
       );
     }
 

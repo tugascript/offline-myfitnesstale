@@ -2,7 +2,6 @@ import 'package:logging/logging.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
-import 'current_workout_plan_record_model.dart';
 import 'entitlement_state_model.dart';
 import 'equipment_model.dart';
 import 'exercise_equipment_model.dart';
@@ -115,7 +114,6 @@ class DatabaseHelper {
       WorkoutPlanWeekRecord.tableCreate,
       WorkoutPlanDayRecord.tableCreate,
       WorkoutPlanWorkoutRecord.tableCreate,
-      CurrentWorkoutPlanRecord.tableCreate,
       EntitlementStateModel.tableCreate,
     ];
 

@@ -1,35 +1,42 @@
 import 'package:flutter/material.dart';
 
+import '../../utilities/sizes/data_display_sizes.dart';
+
 class PlanStatisticsWidget extends StatelessWidget {
+  final DataDisplaySizesList sizes;
   final int completedWorkouts;
   final int totalWorkouts;
   final double progressPercentage;
   final int completedWeeks;
   final int totalWeeks;
+  final bool isDarkTheme;
 
   const PlanStatisticsWidget({
     super.key,
+    required this.sizes,
     required this.completedWorkouts,
     required this.totalWorkouts,
     required this.progressPercentage,
     required this.completedWeeks,
     required this.totalWeeks,
+    required this.isDarkTheme,
   });
 
   @override
   Widget build(BuildContext context) {
+    final halfSpacing = sizes.spacing / 2;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           'Statistics',
           style: TextStyle(
-            fontSize: 20,
+            fontSize: sizes.subtitleFontSize,
             fontWeight: FontWeight.bold,
-            color: Colors.grey[800],
+            color: isDarkTheme ? Colors.grey.shade200 : Colors.grey.shade800,
           ),
         ),
-        const SizedBox(height: 16),
+        SizedBox(height: sizes.spacing),
         Row(
           children: [
             Expanded(
@@ -41,7 +48,7 @@ class PlanStatisticsWidget extends StatelessWidget {
                 Colors.green,
               ),
             ),
-            const SizedBox(width: 12),
+            SizedBox(width: halfSpacing),
             Expanded(
               child: _buildStatCard(
                 context,
@@ -53,7 +60,7 @@ class PlanStatisticsWidget extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 12),
+        SizedBox(height: halfSpacing),
         Row(
           children: [
             Expanded(
@@ -65,7 +72,7 @@ class PlanStatisticsWidget extends StatelessWidget {
                 Colors.orange,
               ),
             ),
-            const SizedBox(width: 12),
+            SizedBox(width: halfSpacing),
             Expanded(
               child: _buildStatCard(
                 context,
@@ -77,7 +84,7 @@ class PlanStatisticsWidget extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 16),
+        SizedBox(height: halfSpacing),
         Row(
           children: [
             Expanded(
@@ -85,11 +92,11 @@ class PlanStatisticsWidget extends StatelessWidget {
                 context,
                 'Weeks Completed',
                 '$completedWeeks',
-                Icons.calendar_today,
+                Icons.date_range,
                 Colors.purple,
               ),
             ),
-            const SizedBox(width: 12),
+            SizedBox(width: halfSpacing),
             Expanded(
               child: _buildStatCard(
                 context,
@@ -112,32 +119,35 @@ class PlanStatisticsWidget extends StatelessWidget {
     IconData icon,
     Color color,
   ) {
+    final halfSpacing = sizes.spacing / 2;
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: EdgeInsets.all(sizes.padding),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                Icon(icon, color: color, size: 24),
-                const SizedBox(width: 8),
+                Icon(icon, color: color, size: sizes.fontSize * 2),
+                SizedBox(width: halfSpacing),
                 Expanded(
                   child: Text(
                     label,
                     style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey[600],
+                      fontSize: sizes.fontSize,
+                      color: isDarkTheme
+                          ? Colors.grey.shade300
+                          : Colors.grey.shade600,
                     ),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: halfSpacing),
             Text(
               value,
               style: TextStyle(
-                fontSize: 24,
+                fontSize: sizes.titleFontSize,
                 fontWeight: FontWeight.bold,
                 color: color,
               ),

@@ -105,7 +105,7 @@ class WorkoutPlanWeekEditorData {
       startWeek: dto.startWeek,
       endWeek: dto.endWeek,
       phase: dto.phase,
-      days: (dto.days ?? []).map(WorkoutPlanDayEditorData.fromDto).toList(),
+      days: dto.days.map(WorkoutPlanDayEditorData.fromDto).toList(),
     );
   }
 
