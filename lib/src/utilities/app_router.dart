@@ -1,7 +1,6 @@
 import 'package:go_router/go_router.dart';
 
 import '../views/create_profile_view.dart';
-import '../views/current_workout_plan_view.dart';
 import '../views/equipments/equipment_creation_view.dart';
 import '../views/equipments/equipment_details_view.dart';
 import '../views/equipments/equipment_update_view.dart';
@@ -16,7 +15,7 @@ import '../views/not_found_view.dart';
 import '../views/onboarding_view.dart';
 import '../views/weight/weight_goals_view.dart';
 import '../views/weight/weight_records_view.dart';
-import '../views/workout_plan_progress_view.dart';
+import '../views/workout_plans/active_workout_plan_view.dart';
 import '../views/workout_plans/workout_plan_detail_view.dart';
 import '../views/workout_plans/workout_plan_edit_view.dart';
 import '../views/workout_plans/workout_plan_list_view.dart';
@@ -209,7 +208,7 @@ sealed class AppRouter {
       },
     ),
     GoRoute(
-      path: '/workouts/:id/active',
+      path: ActiveWorkoutView.routeName,
       builder: (context, state) {
         final id = int.tryParse(state.pathParameters['id'] ?? '');
         if (id == null) {
@@ -253,7 +252,17 @@ sealed class AppRouter {
       },
     ),
     GoRoute(
-      path: '/workout-plans/:id',
+      path: ActiveWorkoutPlanView.routeName,
+      builder: (context, state) {
+        final id = int.tryParse(state.pathParameters['id'] ?? '');
+        if (id == null) {
+          return const NotFoundView();
+        }
+        return ActiveWorkoutPlanView(workoutPlanId: id);
+      },
+    ),
+    GoRoute(
+      path: WorkoutPlanDetailView.routeName,
       builder: (context, state) {
         final id = int.tryParse(state.pathParameters['id'] ?? '');
         if (id == null) {
@@ -261,14 +270,6 @@ sealed class AppRouter {
         }
         return WorkoutPlanDetailView(workoutPlanId: id);
       },
-    ),
-    GoRoute(
-      path: CurrentWorkoutPlanView.routeName,
-      builder: (context, state) => const CurrentWorkoutPlanView(),
-    ),
-    GoRoute(
-      path: WorkoutPlanProgressView.routeName,
-      builder: (context, state) => const WorkoutPlanProgressView(),
     ),
   ];
 

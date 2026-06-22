@@ -129,7 +129,8 @@ class _WorkoutPlanDetailViewState extends State<WorkoutPlanDetailView> {
                   sizes: sizes,
                   onStart: () =>
                       context.push('/workout-plans/${plan.id}/active'),
-                  startLabel: 'Start Plan',
+                  startLabel:
+                      'Start Plan', // TODO: change to continue if the plan is already active
                   onEdit: () => context.push('/workout-plans/${plan.id}/edit'),
                   onDelete: () {
                     showDialog(

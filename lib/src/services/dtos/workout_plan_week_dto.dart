@@ -17,7 +17,7 @@ class WorkoutPlanWeekDto extends Equatable implements Dto<WorkoutPlanWeek> {
   final WorkoutPhase? phase;
 
   // Related data
-  final List<WorkoutPlanDayDto>? days;
+  final List<WorkoutPlanDayDto> days;
 
   const WorkoutPlanWeekDto({
     required this.id,
@@ -28,7 +28,7 @@ class WorkoutPlanWeekDto extends Equatable implements Dto<WorkoutPlanWeek> {
     required this.totalWorkouts,
     required this.scheduleMode,
     this.phase,
-    this.days,
+    this.days = const [],
   });
 
   @override
@@ -45,7 +45,7 @@ class WorkoutPlanWeekDto extends Equatable implements Dto<WorkoutPlanWeek> {
       totalWorkouts: model.totalWorkouts,
       scheduleMode: model.scheduleMode,
       phase: model.phase,
-      days: days,
+      days: days ?? const [],
     );
   }
 
@@ -84,6 +84,6 @@ class WorkoutPlanWeekDto extends Equatable implements Dto<WorkoutPlanWeek> {
         totalWorkouts,
         scheduleMode,
         phase,
-        days?.length,
+        days.length,
       ];
 }

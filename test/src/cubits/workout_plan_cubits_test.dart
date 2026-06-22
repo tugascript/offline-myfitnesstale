@@ -3,7 +3,6 @@ import 'package:sqflite/sqflite.dart';
 
 import 'package:myfitnesstale/src/cubits/workout_plan_cubit.dart';
 import 'package:myfitnesstale/src/cubits/workout_plan_record_cubit.dart';
-import 'package:myfitnesstale/src/models/current_workout_plan_record_model.dart';
 import 'package:myfitnesstale/src/models/enums.dart';
 import 'package:myfitnesstale/src/models/utilities.dart';
 import 'package:myfitnesstale/src/models/workout_model.dart';
@@ -157,19 +156,17 @@ void main() {
       workoutPlanId: planId,
       workoutPlanVersion: 1,
       status: ProgressStatus.inProgress,
+      startedAt: createdAt,
+      currentWeek: 1,
+      currentWeekDay: expectedRelativeDay,
+      currentWorkoutPosition: 1,
       createdAt: createdAt,
       updatedAt: createdAt,
     );
-    final recordId = await db.insert(WorkoutPlanRecord.table, record.toMap());
-
-    final current = CurrentWorkoutPlanRecord.create(
-      workoutPlanRecordId: recordId,
-      workoutPlanId: planId,
-    );
-    await db.insert(CurrentWorkoutPlanRecord.table, current.toMap());
+    await db.insert(WorkoutPlanRecord.table, record.toMap());
 
     final cubit = WorkoutPlanRecordCubit();
-    await cubit.getActivePlanRecord();
+    await cubit.getOrCreateActivePlanRecord(planId);
 
     final todaysWorkouts = cubit.state.currentPlanRecord.todaysWorkouts;
     expect(todaysWorkouts, isNotEmpty);

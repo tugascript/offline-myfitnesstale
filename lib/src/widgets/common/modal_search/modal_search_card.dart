@@ -29,12 +29,13 @@ class ModalSearchCard extends StatelessWidget {
       onTap: onTap,
       children: [
         Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            ModalSearchEntityName(
-              name: name,
-              isFavorite: isFavorite,
-              fontSize: fontSize,
+            Expanded(
+              child: ModalSearchEntityName(
+                name: name,
+                isFavorite: isFavorite,
+                fontSize: fontSize,
+              ),
             ),
             Icon(
               Icons.add,

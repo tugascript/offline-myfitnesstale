@@ -15,6 +15,9 @@ class WorkoutRecordDto extends Equatable implements Dto<WorkoutRecord> {
   final int totalRestSecs;
   final int totalVolume;
   final TargetMuscles muscles;
+  final int currentSetPosition;
+  final int currentSetNumber;
+  final int currentExercisePosition;
   final DateTime startedAt;
   final DateTime? completedAt;
 
@@ -24,6 +27,9 @@ class WorkoutRecordDto extends Equatable implements Dto<WorkoutRecord> {
   const WorkoutRecordDto({
     required this.id,
     required this.workoutId,
+    required this.currentSetPosition,
+    required this.currentSetNumber,
+    required this.currentExercisePosition,
     required this.totalSets,
     required this.totalReps,
     required this.totalRestSecs,
@@ -42,6 +48,9 @@ class WorkoutRecordDto extends Equatable implements Dto<WorkoutRecord> {
     return WorkoutRecordDto(
       id: model.id!,
       workoutId: model.workoutId,
+      currentSetPosition: model.currentSetPosition,
+      currentSetNumber: model.currentSetNumber,
+      currentExercisePosition: model.currentExercisePosition,
       totalSets: model.totalSets,
       totalReps: model.totalReps,
       totalRestSecs: model.totalRestSecs,
@@ -59,6 +68,9 @@ class WorkoutRecordDto extends Equatable implements Dto<WorkoutRecord> {
     return WorkoutRecordDto(
       id: 0,
       workoutId: 0,
+      currentSetPosition: 0,
+      currentSetNumber: 1,
+      currentExercisePosition: 0,
       totalSets: 0,
       totalReps: 0,
       totalRestSecs: 0,
@@ -77,6 +89,9 @@ class WorkoutRecordDto extends Equatable implements Dto<WorkoutRecord> {
     int? totalRestSecs,
     int? totalVolume,
     TargetMuscles? muscles,
+    int? currentSetPosition,
+    int? currentSetNumber,
+    int? currentExercisePosition,
     DateTime? startedAt,
     DateTime? completedAt,
     List<WorkoutSetRecordDto>? setRecords,
@@ -84,6 +99,10 @@ class WorkoutRecordDto extends Equatable implements Dto<WorkoutRecord> {
     return WorkoutRecordDto(
       id: id ?? this.id,
       workoutId: workoutId ?? this.workoutId,
+      currentSetPosition: currentSetPosition ?? this.currentSetPosition,
+      currentSetNumber: currentSetNumber ?? this.currentSetNumber,
+      currentExercisePosition:
+          currentExercisePosition ?? this.currentExercisePosition,
       totalSets: totalSets ?? this.totalSets,
       totalReps: totalReps ?? this.totalReps,
       totalRestSecs: totalRestSecs ?? this.totalRestSecs,
@@ -104,6 +123,9 @@ class WorkoutRecordDto extends Equatable implements Dto<WorkoutRecord> {
         totalRestSecs,
         totalVolume,
         muscles,
+        currentSetPosition,
+        currentSetNumber,
+        currentExercisePosition,
         startedAt,
         setRecords?.length,
         completedAt,

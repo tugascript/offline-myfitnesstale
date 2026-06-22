@@ -3,6 +3,7 @@ import 'package:equatable/equatable.dart';
 import '../../models/enums.dart';
 import '../../models/workout_plan_record_model.dart';
 import 'dto.dart';
+import 'workout_plan_week_record_dto.dart';
 
 class WorkoutPlanRecordDto extends Equatable implements Dto<WorkoutPlanRecord> {
   @override
@@ -10,27 +11,39 @@ class WorkoutPlanRecordDto extends Equatable implements Dto<WorkoutPlanRecord> {
   final int workoutPlanId;
   final int workoutPlanVersion;
   final ProgressStatus status;
-  final DateTime createdAt;
+  final int currentWeek;
+  final int currentWeekDay;
+  final DateTime startedAt;
   final DateTime? completedAt;
+
+  final List<WorkoutPlanWeekRecordDto> weeks;
 
   const WorkoutPlanRecordDto({
     required this.id,
     required this.workoutPlanId,
     required this.workoutPlanVersion,
     required this.status,
-    required this.createdAt,
+    required this.currentWeek,
+    required this.currentWeekDay,
+    required this.startedAt,
     this.completedAt,
+    this.weeks = const [],
   });
 
   @override
-  factory WorkoutPlanRecordDto.fromModel(WorkoutPlanRecord model) {
+  factory WorkoutPlanRecordDto.fromModel(
+    WorkoutPlanRecord model, {
+    List<WorkoutPlanWeekRecordDto>? weeks,
+  }) {
     return WorkoutPlanRecordDto(
       id: model.id!,
       workoutPlanId: model.workoutPlanId,
       workoutPlanVersion: model.workoutPlanVersion,
       status: model.status,
-      createdAt: DateTime.fromMillisecondsSinceEpoch(
-        model.createdAt * 1000,
+      currentWeek: model.currentWeek,
+      currentWeekDay: model.currentWeekDay,
+      startedAt: DateTime.fromMillisecondsSinceEpoch(
+        model.startedAt * 1000,
         isUtc: true,
       ),
       completedAt: model.completedAt != null
@@ -39,6 +52,7 @@ class WorkoutPlanRecordDto extends Equatable implements Dto<WorkoutPlanRecord> {
               isUtc: true,
             )
           : null,
+      weeks: weeks ?? const [],
     );
   }
 
@@ -48,16 +62,22 @@ class WorkoutPlanRecordDto extends Equatable implements Dto<WorkoutPlanRecord> {
     int? workoutPlanId,
     int? workoutPlanVersion,
     ProgressStatus? status,
-    DateTime? createdAt,
+    DateTime? startedAt,
     DateTime? completedAt,
+    int? currentWeek,
+    int? currentWeekDay,
+    List<WorkoutPlanWeekRecordDto>? weeks,
   }) {
     return WorkoutPlanRecordDto(
       id: id ?? this.id,
       workoutPlanId: workoutPlanId ?? this.workoutPlanId,
       workoutPlanVersion: workoutPlanVersion ?? this.workoutPlanVersion,
       status: status ?? this.status,
-      createdAt: createdAt ?? this.createdAt,
+      startedAt: startedAt ?? this.startedAt,
       completedAt: completedAt ?? this.completedAt,
+      currentWeek: currentWeek ?? this.currentWeek,
+      currentWeekDay: currentWeekDay ?? this.currentWeekDay,
+      weeks: weeks ?? this.weeks,
     );
   }
 
@@ -67,6 +87,10 @@ class WorkoutPlanRecordDto extends Equatable implements Dto<WorkoutPlanRecord> {
         workoutPlanId,
         workoutPlanVersion,
         status,
+        startedAt,
         completedAt,
+        currentWeek,
+        currentWeekDay,
+        weeks.length,
       ];
 }

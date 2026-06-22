@@ -392,14 +392,16 @@ class _PremiumSetEditorState extends State<PremiumSetEditor> {
         }
 
         _emitSetChange((setData) {
+          final minReps = lastExercise.minReps - 2;
+          final maxReps =
+              lastExercise.maxReps != null ? lastExercise.maxReps! - 2 : null;
+
           setData.exercises.add(
             ComplexSetExerciseEditorData(
               id: null,
               position: setData.exercises.length + 1,
-              minReps: lastExercise.minReps + 2,
-              maxReps: lastExercise.maxReps != null
-                  ? lastExercise.maxReps! + 2
-                  : null,
+              minReps: minReps > 0 ? minReps : 1,
+              maxReps: maxReps != null && maxReps > 0 ? maxReps : null,
               toMaxReps:
                   setData.exercises.length >= 2 || lastExercise.toMaxReps,
               exerciseId: lastExercise.exerciseId,
@@ -501,15 +503,15 @@ class _PremiumSetEditorState extends State<PremiumSetEditor> {
         }
 
         _emitSetChange((setData) {
-          final minReps = lastExercise.minReps - 2;
+          final minReps = lastExercise.minReps + 2;
           final maxReps =
-              lastExercise.maxReps != null ? lastExercise.maxReps! - 2 : null;
+              lastExercise.maxReps != null ? lastExercise.maxReps! + 2 : null;
           setData.exercises.add(
             ComplexSetExerciseEditorData(
               id: null,
               position: setData.exercises.length + 1,
-              minReps: minReps > 0 ? minReps : 1,
-              maxReps: maxReps != null && maxReps > 0 ? maxReps : null,
+              minReps: minReps,
+              maxReps: maxReps,
               toMaxReps: lastExercise.toMaxReps,
               exerciseId: lastExercise.exerciseId,
               exerciseName: lastExercise.exerciseName,

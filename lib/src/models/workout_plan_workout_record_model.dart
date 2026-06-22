@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 
+import 'enums.dart';
 import 'model.dart';
 import 'utilities.dart';
 import 'workout_plan_day_record_model.dart';
@@ -17,6 +18,9 @@ enum WorkoutPlanWorkoutRecordColumns with Columns {
   workoutPlanDayRecordId("workout_plan_day_record_id"),
   workoutPlanWorkoutId("workout_plan_workout_id"),
   workoutRecordId("workout_record_id"),
+  position("position"),
+  startedAt("started_at"),
+  status("status"),
   completedAt("completed_at"),
   createdAt("created_at"),
   updatedAt("updated_at");
@@ -35,6 +39,9 @@ class WorkoutPlanWorkoutRecord extends Equatable implements Model {
   final int workoutPlanDayRecordId;
   final int workoutPlanWorkoutId;
   final int workoutRecordId;
+  final int position;
+  final int startedAt;
+  final ProgressStatus status;
   final int? completedAt;
   @override
   final int createdAt;
@@ -48,6 +55,9 @@ class WorkoutPlanWorkoutRecord extends Equatable implements Model {
     required this.workoutPlanDayRecordId,
     required this.workoutPlanWorkoutId,
     required this.workoutRecordId,
+    required this.position,
+    required this.startedAt,
+    required this.status,
     this.completedAt,
     required this.createdAt,
     required this.updatedAt,
@@ -62,6 +72,9 @@ class WorkoutPlanWorkoutRecord extends Equatable implements Model {
     ${WorkoutPlanWorkoutRecordColumns.workoutPlanDayRecordId.value} INTEGER NOT NULL,
     ${WorkoutPlanWorkoutRecordColumns.workoutPlanWorkoutId.value} INTEGER NOT NULL,
     ${WorkoutPlanWorkoutRecordColumns.workoutRecordId.value} INTEGER NOT NULL,
+    ${WorkoutPlanWorkoutRecordColumns.position.value} INTEGER NOT NULL,
+    ${WorkoutPlanWorkoutRecordColumns.startedAt.value} INTEGER NOT NULL,
+    ${WorkoutPlanWorkoutRecordColumns.status.value} TEXT NOT NULL,
     ${WorkoutPlanWorkoutRecordColumns.completedAt.value} INTEGER,
     ${WorkoutPlanWorkoutRecordColumns.createdAt.value} INTEGER NOT NULL,
     ${WorkoutPlanWorkoutRecordColumns.updatedAt.value} INTEGER NOT NULL,
@@ -82,6 +95,7 @@ class WorkoutPlanWorkoutRecord extends Equatable implements Model {
   CREATE INDEX IF NOT EXISTS idx_workout_plan_workout_records_plan_day_record_id ON $_table (${WorkoutPlanWorkoutRecordColumns.workoutPlanDayRecordId.value});
   CREATE INDEX IF NOT EXISTS idx_workout_plan_workout_records_plan_workout_id ON $_table (${WorkoutPlanWorkoutRecordColumns.workoutPlanWorkoutId.value});
   CREATE INDEX IF NOT EXISTS idx_workout_plan_workout_records_workout_record_id ON $_table (${WorkoutPlanWorkoutRecordColumns.workoutRecordId.value});
+  CREATE INDEX IF NOT EXISTS idx_workout_plan_workout_records_plan_record_id_position ON $_table (${WorkoutPlanWorkoutRecordColumns.workoutPlanRecordId.value}, ${WorkoutPlanWorkoutRecordColumns.position.value});
   ''';
 
   @override
@@ -97,6 +111,9 @@ class WorkoutPlanWorkoutRecord extends Equatable implements Model {
       WorkoutPlanWorkoutRecordColumns.workoutPlanWorkoutId.value:
           workoutPlanWorkoutId,
       WorkoutPlanWorkoutRecordColumns.workoutRecordId.value: workoutRecordId,
+      WorkoutPlanWorkoutRecordColumns.position.value: position,
+      WorkoutPlanWorkoutRecordColumns.startedAt.value: startedAt,
+      WorkoutPlanWorkoutRecordColumns.status.value: status.value,
       WorkoutPlanWorkoutRecordColumns.completedAt.value: completedAt,
       WorkoutPlanWorkoutRecordColumns.createdAt.value: createdAt,
       WorkoutPlanWorkoutRecordColumns.updatedAt.value: updatedAt,
@@ -121,6 +138,11 @@ class WorkoutPlanWorkoutRecord extends Equatable implements Model {
               as int,
       workoutRecordId:
           map[WorkoutPlanWorkoutRecordColumns.workoutRecordId.value]! as int,
+      position: map[WorkoutPlanWorkoutRecordColumns.position.value]! as int,
+      startedAt: map[WorkoutPlanWorkoutRecordColumns.startedAt.value]! as int,
+      status: ProgressStatus.fromValue(
+        map[WorkoutPlanWorkoutRecordColumns.status.value] as String,
+      ),
       completedAt:
           map[WorkoutPlanWorkoutRecordColumns.completedAt.value] as int?,
       createdAt: map[WorkoutPlanWorkoutRecordColumns.createdAt.value]! as int,
@@ -129,13 +151,16 @@ class WorkoutPlanWorkoutRecord extends Equatable implements Model {
   }
 
   @override
-  factory WorkoutPlanWorkoutRecord.create(
-    int workoutPlanRecordId,
-    int workoutPlanWeekRecordId,
-    int workoutPlanDayRecordId,
-    int workoutPlanWorkoutId,
-    int workoutRecordId,
-  ) {
+  factory WorkoutPlanWorkoutRecord.create({
+    required int workoutPlanRecordId,
+    required int workoutPlanWeekRecordId,
+    required int workoutPlanDayRecordId,
+    required int workoutPlanWorkoutId,
+    required int workoutRecordId,
+    required int position,
+    int? startedAt,
+    ProgressStatus status = ProgressStatus.inProgress,
+  }) {
     final int now = DateUtilities.getNowUtcUnix();
     return WorkoutPlanWorkoutRecord(
       workoutPlanRecordId: workoutPlanRecordId,
@@ -143,6 +168,9 @@ class WorkoutPlanWorkoutRecord extends Equatable implements Model {
       workoutPlanDayRecordId: workoutPlanDayRecordId,
       workoutPlanWorkoutId: workoutPlanWorkoutId,
       workoutRecordId: workoutRecordId,
+      position: position,
+      startedAt: startedAt ?? now,
+      status: status,
       createdAt: now,
       updatedAt: now,
     );
@@ -156,6 +184,9 @@ class WorkoutPlanWorkoutRecord extends Equatable implements Model {
     int? workoutPlanDayRecordId,
     int? workoutPlanWorkoutId,
     int? workoutRecordId,
+    int? position,
+    int? startedAt,
+    ProgressStatus? status,
     int? completedAt,
     int? createdAt,
     int? updatedAt,
@@ -169,6 +200,9 @@ class WorkoutPlanWorkoutRecord extends Equatable implements Model {
           workoutPlanDayRecordId ?? this.workoutPlanDayRecordId,
       workoutPlanWorkoutId: workoutPlanWorkoutId ?? this.workoutPlanWorkoutId,
       workoutRecordId: workoutRecordId ?? this.workoutRecordId,
+      position: position ?? this.position,
+      startedAt: startedAt ?? this.startedAt,
+      status: status ?? this.status,
       completedAt: completedAt ?? this.completedAt,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -183,6 +217,9 @@ class WorkoutPlanWorkoutRecord extends Equatable implements Model {
         workoutPlanDayRecordId,
         workoutPlanWorkoutId,
         workoutRecordId,
+        position,
+        startedAt,
+        status,
         completedAt,
         createdAt,
         updatedAt,

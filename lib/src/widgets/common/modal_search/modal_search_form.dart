@@ -71,7 +71,7 @@ class _ModalSearchFormState extends State<ModalSearchForm> {
             theme: widget.theme,
             isLoading: widget.isLoading,
             controller: _nameController,
-            hintText: 'Search Exercises...',
+            hintText: 'Search Workouts...',
             fontSize: widget.sizes.fontSize,
             maxLines: 1,
             keyboardType: TextInputType.text,

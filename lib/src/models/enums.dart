@@ -292,6 +292,7 @@ enum SetUpStatus {
 enum ProgressStatus {
   inProgress("in_progress"),
   completed("completed"),
+  skipped("skipped"),
   abandoned("abandoned");
 
   final String value;

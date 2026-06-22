@@ -17,8 +17,12 @@ enum WorkoutRecordColumns with Columns {
   totalVolume("total_volume"),
   muscleGroups("muscle_groups"),
   muscles("muscles"),
+  currentSetPosition("current_set_position"),
+  currentSetNumber("current_set_number"),
+  currentExercisePosition("current_exercise_position"),
   version("version"),
   startedAt("started_at"),
+  status("status"),
   completedAt("completed_at"),
   droppedAt("dropped_at"),
   createdAt("created_at"),
@@ -42,6 +46,10 @@ class WorkoutRecord implements Model {
   final TargetMuscles muscles;
   final int version;
   final int startedAt;
+  final ProgressStatus status;
+  final int currentSetPosition;
+  final int currentSetNumber;
+  final int currentExercisePosition;
   final int? completedAt;
   final int? droppedAt;
   @override
@@ -58,8 +66,12 @@ class WorkoutRecord implements Model {
     required this.totalVolume,
     required this.muscleGroups,
     required this.muscles,
+    required this.currentSetPosition,
+    required this.currentSetNumber,
+    required this.currentExercisePosition,
     required this.version,
     required this.startedAt,
+    required this.status,
     this.completedAt,
     this.droppedAt,
     required this.createdAt,
@@ -77,8 +89,12 @@ class WorkoutRecord implements Model {
     ${WorkoutRecordColumns.totalVolume.value} INTEGER NOT NULL,
     ${WorkoutRecordColumns.muscleGroups.value} TEXT NOT NULL,
     ${WorkoutRecordColumns.muscles.value} TEXT NOT NULL,
+    ${WorkoutRecordColumns.currentSetPosition.value} INTEGER NOT NULL,
+    ${WorkoutRecordColumns.currentSetNumber.value} INTEGER NOT NULL,
+    ${WorkoutRecordColumns.currentExercisePosition.value} INTEGER NOT NULL,
     ${WorkoutRecordColumns.version.value} INTEGER NOT NULL,
     ${WorkoutRecordColumns.startedAt.value} INTEGER NOT NULL,
+    ${WorkoutRecordColumns.status.value} TEXT NOT NULL,
     ${WorkoutRecordColumns.completedAt.value} INTEGER,
     ${WorkoutRecordColumns.droppedAt.value} INTEGER,
     ${WorkoutRecordColumns.createdAt.value} INTEGER NOT NULL,
@@ -103,8 +119,13 @@ class WorkoutRecord implements Model {
         muscleGroups.map((g) => g.value).toList(),
       ),
       WorkoutRecordColumns.muscles.value: jsonEncode(muscles.toMap()),
+      WorkoutRecordColumns.currentSetPosition.value: currentSetPosition,
+      WorkoutRecordColumns.currentSetNumber.value: currentSetNumber,
+      WorkoutRecordColumns.currentExercisePosition.value:
+          currentExercisePosition,
       WorkoutRecordColumns.version.value: version,
       WorkoutRecordColumns.startedAt.value: startedAt,
+      WorkoutRecordColumns.status.value: status.value,
       WorkoutRecordColumns.completedAt.value: completedAt,
       WorkoutRecordColumns.droppedAt.value: droppedAt,
       WorkoutRecordColumns.createdAt.value: createdAt,
@@ -131,8 +152,16 @@ class WorkoutRecord implements Model {
         map[WorkoutRecordColumns.muscles.value] as String? ??
             '{"primary":[],"secondary":[]}',
       ),
+      currentSetPosition:
+          map[WorkoutRecordColumns.currentSetPosition.value] as int,
+      currentSetNumber: map[WorkoutRecordColumns.currentSetNumber.value] as int,
+      currentExercisePosition:
+          map[WorkoutRecordColumns.currentExercisePosition.value] as int,
       version: map[WorkoutRecordColumns.version.value] as int,
       startedAt: map[WorkoutRecordColumns.startedAt.value] as int,
+      status: ProgressStatus.fromValue(
+        map[WorkoutRecordColumns.status.value] as String,
+      ),
       completedAt: map[WorkoutRecordColumns.completedAt.value] as int?,
       droppedAt: map[WorkoutRecordColumns.droppedAt.value] as int?,
       createdAt: map[WorkoutRecordColumns.createdAt.value] as int,
@@ -145,12 +174,16 @@ class WorkoutRecord implements Model {
     required int workoutId,
     required int version,
     required int startedAt,
+    int currentSetPosition = 0,
+    int currentSetNumber = 1,
+    int currentExercisePosition = 0,
     int? totalSets,
     int? totalReps,
     int? totalRestSecs,
     int? totalVolume,
     int? completedAt,
     int? droppedAt,
+    ProgressStatus status = ProgressStatus.inProgress,
     Set<MuscleGroup> muscleGroups = const <MuscleGroup>{},
     TargetMuscles muscles = const TargetMuscles(
       primary: <Muscle>{},
@@ -166,8 +199,12 @@ class WorkoutRecord implements Model {
       totalVolume: totalVolume ?? 0,
       muscleGroups: muscleGroups,
       muscles: muscles,
+      currentSetPosition: currentSetPosition,
+      currentSetNumber: currentSetNumber,
+      currentExercisePosition: currentExercisePosition,
       version: version,
       startedAt: startedAt,
+      status: status,
       completedAt: completedAt,
       droppedAt: droppedAt,
       createdAt: now,
@@ -185,10 +222,14 @@ class WorkoutRecord implements Model {
     int? totalVolume,
     Set<MuscleGroup>? muscleGroups,
     TargetMuscles? muscles,
+    int? currentSetPosition,
+    int? currentSetNumber,
+    int? currentExercisePosition,
     int? version,
     int? startedAt,
     int? completedAt,
     int? droppedAt,
+    ProgressStatus? status,
     int? createdAt,
     int? updatedAt,
   }) {
@@ -201,8 +242,13 @@ class WorkoutRecord implements Model {
       totalVolume: totalVolume ?? this.totalVolume,
       muscleGroups: muscleGroups ?? this.muscleGroups,
       muscles: muscles ?? this.muscles,
+      currentSetPosition: currentSetPosition ?? this.currentSetPosition,
+      currentSetNumber: currentSetNumber ?? this.currentSetNumber,
+      currentExercisePosition:
+          currentExercisePosition ?? this.currentExercisePosition,
       version: version ?? this.version,
       startedAt: startedAt ?? this.startedAt,
+      status: status ?? this.status,
       completedAt: completedAt ?? this.completedAt,
       droppedAt: droppedAt ?? this.droppedAt,
       createdAt: createdAt ?? this.createdAt,
@@ -212,6 +258,6 @@ class WorkoutRecord implements Model {
 
   @override
   String toString() {
-    return 'WorkoutRecord{id: $id, workoutId: $workoutId, totalSets: $totalSets, totalReps: $totalReps, totalRestSecs: $totalRestSecs, totalVolume: $totalVolume, muscleGroups: $muscleGroups, muscles: $muscles, version: $version, startedAt: $startedAt, completedAt: $completedAt, droppedAt: $droppedAt, createdAt: $createdAt, updatedAt: $updatedAt}';
+    return 'WorkoutRecord{id: $id, workoutId: $workoutId, totalSets: $totalSets, totalReps: $totalReps, totalRestSecs: $totalRestSecs, totalVolume: $totalVolume, muscleGroups: $muscleGroups, muscles: $muscles, version: $version, startedAt: $startedAt, status: $status, completedAt: $completedAt, droppedAt: $droppedAt, createdAt: $createdAt, updatedAt: $updatedAt}';
   }
 }
