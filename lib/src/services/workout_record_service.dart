@@ -467,6 +467,8 @@ class WorkoutRecordService {
           totalSets: workoutRecord.totalSets + 1,
           totalRestSecs:
               workoutRecord.totalRestSecs + (record.totalRestSecs ?? 0),
+          currentSetPosition: workoutRecord.currentSetPosition + 1,
+          currentSetNumber: workoutRecord.currentSetNumber + 1,
         );
         await _repository.update(updatedWorkoutRecord, trx);
 
@@ -579,6 +581,7 @@ class WorkoutRecordService {
           totalVolume: workoutRecord.totalVolume + (reps * weight),
           muscleGroups: workoutRecord.muscleGroups..add(exercise.muscleGroup),
           muscles: workoutRecord.muscles.addOther(exercise.muscles),
+          currentExercisePosition: workoutRecord.currentExercisePosition + 1,
         );
         await _repository.update(updatedWorkoutRecord, trx);
         return id;
