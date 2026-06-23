@@ -80,6 +80,66 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
     await getTodaysWorkout();
   }
 
+  Future<void> startPlanWorkout(int workoutId) async {
+    _logger.info('Starting plan workout $workoutId');
+    emit(state.copyWith(isLoading: true));
+
+    final currentPlanRecord = state.currentPlanRecord.currentPlanRecord;
+    if (currentPlanRecord == null) {
+      emit(
+        state.copyWith(
+          error: ErrorState(
+              type: SingleErrorTypes.invalidInput.name,
+              description: 'No active workout plan record set'),
+          isLoading: false,
+        ),
+      );
+      return;
+    }
+
+    final result = await _workoutPlanRecordService.upsertWorkoutPlanDayRecord(
+      workoutPlanRecordId: currentPlanRecord.id,
+      status: ProgressStatus.inProgress,
+    );
+    if (result.isErr()) {
+      final error = result.error;
+      switch (error.type) {
+        case SingleErrorTypes.operationFailure:
+          emit(state.copyWith(
+            error: ErrorState(
+              type: error.type.name,
+              description: 'Failed to start workout plan record',
+            ),
+            isLoading: false,
+          ));
+          break;
+        default:
+          emit(state.copyWith(
+            error: ErrorState(
+              type: error.type.name,
+              description: 'Unknown error occurred',
+            ),
+            isLoading: false,
+          ));
+      }
+      return;
+    }
+
+    final updatedPlanRecord = result.value;
+    emit(
+      state.copyWith(
+        isLoading: false,
+        currentPlanRecord: CurrentWorkoutPlanRecordState(
+          id: updatedPlanRecord.id,
+          workoutId: updatedPlanRecord.workoutId,
+          status: updatedPlanRecord.status,
+          startTime: updatedPlanRecord.startTime,
+          endTime: updatedPlanRecord.endTime,
+        ),
+      ),
+    );
+  }
+
   Future<void> getLatestActivePlanRecord() async {
     _logger.info('Getting latest active plan record');
     emit(state.copyWith(isLoading: true));

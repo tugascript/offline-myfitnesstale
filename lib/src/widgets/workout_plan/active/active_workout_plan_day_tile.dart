@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../cubits/workout_plan_record_cubit.dart';
 import '../../../services/dtos/workout_plan_day_dto.dart';
 import '../../../services/dtos/workout_plan_workout_dto.dart';
 import '../../../utilities/sizes/data_display_sizes.dart';
@@ -186,8 +188,11 @@ class ActiveWorkoutPlanDayTile extends StatelessWidget {
           ),
           if (isCurrent)
             ElevatedButton.icon(
-              onPressed: () {
-                context.push('/workouts/${workout.id}/active');
+              onPressed: () async {
+                // TODO
+                if (context.mounted) {
+                  context.push('/workouts/${workout.id}/active');
+                }
               },
               icon: Icon(Icons.play_arrow, size: sizes.fontSize * 1.5),
               label: Text(
