@@ -11,7 +11,9 @@ import 'package:myfitnesstale/src/models/workout_plan_model.dart';
 import 'package:myfitnesstale/src/models/workout_plan_record_model.dart';
 import 'package:myfitnesstale/src/models/workout_plan_week_model.dart';
 import 'package:myfitnesstale/src/models/workout_plan_workout_model.dart';
+import 'package:myfitnesstale/src/models/workout_plan_workout_record_model.dart';
 import 'package:myfitnesstale/src/services/workout_plan_service.dart';
+import 'package:myfitnesstale/src/services/workout_plan_record_service.dart';
 
 import '../../support/test_database.dart';
 
@@ -175,5 +177,98 @@ void main() {
     expect(todaysWorkouts.first.name.startsWith(expectedName), isTrue);
 
     await cubit.close();
+  });
+
+  test('completing a workout plan workout record updates status and completedAt', () async {
+    final db = await testDatabase.db;
+    final workoutAId = await createWorkout(db, uniqueName('workout-a'));
+
+    final plan = WorkoutPlan.create(
+      name: uniqueName('plan'),
+      difficulty: Difficulty.beginner,
+      version: 1,
+      totalWeeks: 1,
+      totalDays: 1,
+      totalWorkouts: 1,
+    );
+    final planId = await db.insert(WorkoutPlan.table, plan.toMap());
+
+    final week = WorkoutPlanWeek.create(
+      workoutPlanId: planId,
+      planVersion: 1,
+      startWeek: 1,
+      endWeek: 1,
+      scheduleMode: WorkoutPlanWeekScheduleMode.manual,
+      totalDays: 1,
+      totalWorkouts: 1,
+    );
+    final weekId = await db.insert(WorkoutPlanWeek.table, week.toMap());
+
+    final day = WorkoutPlanDay.create(
+      workoutPlanId: planId,
+      workoutPlanWeekId: weekId,
+      planVersion: 1,
+      day: 1,
+      totalWorkouts: 1,
+      isRestDay: false,
+    );
+    final dayId = await db.insert(WorkoutPlanDay.table, day.toMap());
+
+    final dayWorkout = WorkoutPlanWorkout.create(
+      position: 1,
+      workoutPlanId: planId,
+      workoutPlanWeekId: weekId,
+      workoutPlanDayId: dayId,
+      planVersion: 1,
+      workoutId: workoutAId,
+    );
+    await db.insert(WorkoutPlanWorkout.table, dayWorkout.toMap());
+
+    final recordService = WorkoutPlanRecordService();
+    final recordResult = await recordService.createWorkoutPlanRecord(workoutPlanId: planId);
+    expect(recordResult.isOk(), isTrue);
+    final recordId = recordResult.value.id;
+
+    // Start workout (requires day record to exist first)
+    final dayRecordResult = await recordService.upsertWorkoutPlanDayRecord(
+      workoutPlanRecordId: recordId,
+      status: ProgressStatus.inProgress,
+      week: 1,
+      weekDay: 1,
+    );
+    expect(dayRecordResult.isOk(), isTrue);
+
+    final startResult = await recordService.upsertWorkoutPlanWorkoutRecord(
+      workoutPlanRecordId: recordId,
+      status: ProgressStatus.inProgress,
+      week: 1,
+      weekDay: 1,
+      workoutPosition: 1,
+    );
+    expect(startResult.isOk(), isTrue);
+
+    // Complete workout
+    final completeResult = await recordService.completeWorkoutPlanWorkoutRecord(
+      workoutPlanRecordId: recordId,
+      week: 1,
+      weekDay: 1,
+      workoutPosition: 1,
+    );
+    expect(completeResult.isOk(), isTrue);
+
+    final updatedPlanRecord = completeResult.value;
+    // Verify progress propagation
+    expect(updatedPlanRecord.status, ProgressStatus.completed); // The whole plan is completed because there is only 1 week/day/workout!
+    
+    // Verify workout record status in DB
+    final List<Map<String, dynamic>> workoutRecords = await db.query(
+      WorkoutPlanWorkoutRecord.table,
+      where: 'workout_plan_record_id = ?',
+      whereArgs: [recordId],
+    );
+    expect(workoutRecords, isNotEmpty);
+    final wRecord = WorkoutPlanWorkoutRecord.fromMap(workoutRecords.first);
+    expect(wRecord.status, ProgressStatus.completed);
+    expect(wRecord.completedAt, isNotNull);
   });
 }

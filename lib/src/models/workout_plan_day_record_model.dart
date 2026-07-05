@@ -118,7 +118,7 @@ class WorkoutPlanDayRecord extends Equatable implements Model {
           map[WorkoutPlanDayRecordColumns.workoutPlanDayId.value]! as int,
       day: map[WorkoutPlanDayRecordColumns.day.value]! as int,
       week: map[WorkoutPlanDayRecordColumns.week.value]! as int,
-      status: ProgressStatus.values.byName(
+      status: ProgressStatus.fromValue(
         map[WorkoutPlanDayRecordColumns.status.value]! as String,
       ),
       currentWorkoutPosition:
