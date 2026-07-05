@@ -248,11 +248,12 @@ void main() {
     expect(startResult.isOk(), isTrue);
 
     // Complete workout
-    final completeResult = await recordService.completeWorkoutPlanWorkoutRecord(
+    final completeResult = await recordService.updateWorkoutPlanWorkoutRecordStatus(
       workoutPlanRecordId: recordId,
       week: 1,
       weekDay: 1,
       workoutPosition: 1,
+      status: ProgressStatus.completed,
     );
     expect(completeResult.isOk(), isTrue);
 
@@ -270,5 +271,99 @@ void main() {
     final wRecord = WorkoutPlanWorkoutRecord.fromMap(workoutRecords.first);
     expect(wRecord.status, ProgressStatus.completed);
     expect(wRecord.completedAt, isNotNull);
+  });
+
+  test('skipping a workout plan workout record updates status to skipped and completedAt remains null', () async {
+    final db = await testDatabase.db;
+    final workoutAId = await createWorkout(db, uniqueName('workout-a'));
+
+    final plan = WorkoutPlan.create(
+      name: uniqueName('plan'),
+      difficulty: Difficulty.beginner,
+      version: 1,
+      totalWeeks: 1,
+      totalDays: 1,
+      totalWorkouts: 1,
+    );
+    final planId = await db.insert(WorkoutPlan.table, plan.toMap());
+
+    final week = WorkoutPlanWeek.create(
+      workoutPlanId: planId,
+      planVersion: 1,
+      startWeek: 1,
+      endWeek: 1,
+      scheduleMode: WorkoutPlanWeekScheduleMode.manual,
+      totalDays: 1,
+      totalWorkouts: 1,
+    );
+    final weekId = await db.insert(WorkoutPlanWeek.table, week.toMap());
+
+    final day = WorkoutPlanDay.create(
+      workoutPlanId: planId,
+      workoutPlanWeekId: weekId,
+      planVersion: 1,
+      day: 1,
+      totalWorkouts: 1,
+      isRestDay: false,
+    );
+    final dayId = await db.insert(WorkoutPlanDay.table, day.toMap());
+
+    final dayWorkout = WorkoutPlanWorkout.create(
+      position: 1,
+      workoutPlanId: planId,
+      workoutPlanWeekId: weekId,
+      workoutPlanDayId: dayId,
+      planVersion: 1,
+      workoutId: workoutAId,
+    );
+    await db.insert(WorkoutPlanWorkout.table, dayWorkout.toMap());
+
+    final recordService = WorkoutPlanRecordService();
+    final recordResult = await recordService.createWorkoutPlanRecord(workoutPlanId: planId);
+    expect(recordResult.isOk(), isTrue);
+    final recordId = recordResult.value.id;
+
+    // Start workout (requires day record to exist first)
+    final dayRecordResult = await recordService.upsertWorkoutPlanDayRecord(
+      workoutPlanRecordId: recordId,
+      status: ProgressStatus.inProgress,
+      week: 1,
+      weekDay: 1,
+    );
+    expect(dayRecordResult.isOk(), isTrue);
+
+    final startResult = await recordService.upsertWorkoutPlanWorkoutRecord(
+      workoutPlanRecordId: recordId,
+      status: ProgressStatus.inProgress,
+      week: 1,
+      weekDay: 1,
+      workoutPosition: 1,
+    );
+    expect(startResult.isOk(), isTrue);
+
+    // Skip workout
+    final skipResult = await recordService.updateWorkoutPlanWorkoutRecordStatus(
+      workoutPlanRecordId: recordId,
+      week: 1,
+      weekDay: 1,
+      workoutPosition: 1,
+      status: ProgressStatus.skipped,
+    );
+    expect(skipResult.isOk(), isTrue);
+
+    final updatedPlanRecord = skipResult.value;
+    // Verify progress propagation (skipped workouts also allow parent day/week/record to be completed)
+    expect(updatedPlanRecord.status, ProgressStatus.completed);
+    
+    // Verify workout record status is skipped and completedAt is null
+    final List<Map<String, dynamic>> workoutRecords = await db.query(
+      WorkoutPlanWorkoutRecord.table,
+      where: 'workout_plan_record_id = ?',
+      whereArgs: [recordId],
+    );
+    expect(workoutRecords, isNotEmpty);
+    final wRecord = WorkoutPlanWorkoutRecord.fromMap(workoutRecords.first);
+    expect(wRecord.status, ProgressStatus.skipped);
+    expect(wRecord.completedAt, isNull);
   });
 }
