@@ -13,6 +13,7 @@ class WorkoutPlanDayRecordDto extends Equatable
   final int workoutPlanDayId;
   final int week;
   final int day;
+  final int currentWorkoutPosition;
   final DateTime? completedAt;
 
   final List<WorkoutPlanWorkoutRecordDto> workouts;
@@ -24,6 +25,7 @@ class WorkoutPlanDayRecordDto extends Equatable
     required this.workoutPlanDayId,
     required this.week,
     required this.day,
+    required this.currentWorkoutPosition,
     this.completedAt,
     this.workouts = const [],
   });
@@ -40,6 +42,7 @@ class WorkoutPlanDayRecordDto extends Equatable
       workoutPlanDayId: model.workoutPlanDayId,
       week: model.week,
       day: model.day,
+      currentWorkoutPosition: model.currentWorkoutPosition,
       completedAt: model.completedAt != null
           ? DateTime.fromMillisecondsSinceEpoch(model.completedAt! * 1000,
               isUtc: true)
@@ -54,6 +57,7 @@ class WorkoutPlanDayRecordDto extends Equatable
     int? workoutPlanRecordId,
     int? workoutPlanWeekRecordId,
     int? workoutPlanDayId,
+    int? currentWorkoutPosition,
     DateTime? completedAt,
     int? week,
     int? day,
@@ -67,6 +71,8 @@ class WorkoutPlanDayRecordDto extends Equatable
       workoutPlanDayId: workoutPlanDayId ?? this.workoutPlanDayId,
       week: week ?? this.week,
       day: day ?? this.day,
+      currentWorkoutPosition:
+          currentWorkoutPosition ?? this.currentWorkoutPosition,
       completedAt: completedAt ?? this.completedAt,
       workouts: workouts ?? this.workouts,
     );
@@ -80,6 +86,7 @@ class WorkoutPlanDayRecordDto extends Equatable
         workoutPlanDayId,
         week,
         day,
+        currentWorkoutPosition,
         completedAt,
         workouts.length,
       ];

@@ -80,8 +80,12 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
     await getTodaysWorkout();
   }
 
-  Future<void> startPlanWorkout(int workoutId) async {
-    _logger.info('Starting plan workout $workoutId');
+  Future<void> startPlanWorkout({
+    int? week,
+    int? day,
+    int? workoutPosition,
+  }) async {
+    _logger.info('Starting plan workout');
     emit(state.copyWith(isLoading: true));
 
     final currentPlanRecord = state.currentPlanRecord.currentPlanRecord;
@@ -97,12 +101,20 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
       return;
     }
 
-    final result = await _workoutPlanRecordService.upsertWorkoutPlanDayRecord(
+    final useWeek = week ?? currentPlanRecord.currentWeek;
+    final useDay = day ?? currentPlanRecord.currentDay;
+    final useWorkoutPosition =
+        workoutPosition ?? currentPlanRecord.currentWorkoutPosition;
+
+    final dayResult =
+        await _workoutPlanRecordService.upsertWorkoutPlanDayRecord(
       workoutPlanRecordId: currentPlanRecord.id,
       status: ProgressStatus.inProgress,
+      week: useWeek,
+      weekDay: useDay,
     );
-    if (result.isErr()) {
-      final error = result.error;
+    if (dayResult.isErr()) {
+      final error = dayResult.error;
       switch (error.type) {
         case SingleErrorTypes.operationFailure:
           emit(state.copyWith(
@@ -125,19 +137,34 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
       return;
     }
 
-    final updatedPlanRecord = result.value;
-    emit(
-      state.copyWith(
-        isLoading: false,
-        currentPlanRecord: CurrentWorkoutPlanRecordState(
-          id: updatedPlanRecord.id,
-          workoutId: updatedPlanRecord.workoutId,
-          status: updatedPlanRecord.status,
-          startTime: updatedPlanRecord.startTime,
-          endTime: updatedPlanRecord.endTime,
-        ),
-      ),
+    final workoutResult =
+        await _workoutPlanRecordService.upsertWorkoutPlanWorkoutRecord(
+      workoutPlanRecordId: currentPlanRecord.id,
+      status: ProgressStatus.inProgress,
+      week: useWeek,
+      weekDay: useDay,
+      workoutPosition: useWorkoutPosition,
     );
+    if (workoutResult.isErr()) {
+      final error = workoutResult.error;
+      emit(state.copyWith(
+        error: ErrorState(
+          type: error.type.name,
+          description: 'Failed to start workout plan record',
+        ),
+        isLoading: false,
+      ));
+      return;
+    }
+
+    final updatedRecord = workoutResult.value;
+    emit(state.copyWith(
+      currentPlanRecord: state.currentPlanRecord.copyWith(
+        currentPlanRecord: updatedRecord,
+      ),
+      isLoading: false,
+    ));
+    return;
   }
 
   Future<void> getLatestActivePlanRecord() async {
@@ -370,28 +397,12 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
       return;
     }
 
-    final dayRecord = result.value;
-    final weeksResult = await _workoutPlanRecordService
-        .getWorkoutPlanRecordWeeksDaysAndWorkouts(
-      workoutPlanRecordId,
-    );
-    if (weeksResult.isErr()) {
-      emit(state.copyWith(
-        error: ErrorState(
-          type: weeksResult.error.type.name,
-          description: weeksResult.error.description,
-        ),
-      ));
-    }
-
-    final weeks = weeksResult.value;
+    final updatedPlanRecord = result.value;
     emit(state.copyWith(
       currentPlanRecord: state.currentPlanRecord.copyWith(
-        currentPlanRecord: state.currentPlanRecord.currentPlanRecord?.copyWith(
-          weeks: weeks,
-        ),
-        currentWeek: dayRecord.week,
-        currentDay: dayRecord.day,
+        currentPlanRecord: updatedPlanRecord,
+        currentWeek: updatedPlanRecord.currentWeek,
+        currentDay: updatedPlanRecord.currentDay,
       ),
       isLoading: false,
     ));

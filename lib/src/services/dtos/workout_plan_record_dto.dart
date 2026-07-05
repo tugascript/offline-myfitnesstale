@@ -12,7 +12,8 @@ class WorkoutPlanRecordDto extends Equatable implements Dto<WorkoutPlanRecord> {
   final int workoutPlanVersion;
   final ProgressStatus status;
   final int currentWeek;
-  final int currentWeekDay;
+  final int currentDay;
+  final int currentWorkoutPosition;
   final DateTime startedAt;
   final DateTime? completedAt;
 
@@ -24,7 +25,8 @@ class WorkoutPlanRecordDto extends Equatable implements Dto<WorkoutPlanRecord> {
     required this.workoutPlanVersion,
     required this.status,
     required this.currentWeek,
-    required this.currentWeekDay,
+    required this.currentDay,
+    required this.currentWorkoutPosition,
     required this.startedAt,
     this.completedAt,
     this.weeks = const [],
@@ -41,7 +43,8 @@ class WorkoutPlanRecordDto extends Equatable implements Dto<WorkoutPlanRecord> {
       workoutPlanVersion: model.workoutPlanVersion,
       status: model.status,
       currentWeek: model.currentWeek,
-      currentWeekDay: model.currentWeekDay,
+      currentDay: model.currentDay,
+      currentWorkoutPosition: model.currentWorkoutPosition,
       startedAt: DateTime.fromMillisecondsSinceEpoch(
         model.startedAt * 1000,
         isUtc: true,
@@ -65,7 +68,8 @@ class WorkoutPlanRecordDto extends Equatable implements Dto<WorkoutPlanRecord> {
     DateTime? startedAt,
     DateTime? completedAt,
     int? currentWeek,
-    int? currentWeekDay,
+    int? currentDay,
+    int? currentWorkoutPosition,
     List<WorkoutPlanWeekRecordDto>? weeks,
   }) {
     return WorkoutPlanRecordDto(
@@ -76,7 +80,9 @@ class WorkoutPlanRecordDto extends Equatable implements Dto<WorkoutPlanRecord> {
       startedAt: startedAt ?? this.startedAt,
       completedAt: completedAt ?? this.completedAt,
       currentWeek: currentWeek ?? this.currentWeek,
-      currentWeekDay: currentWeekDay ?? this.currentWeekDay,
+      currentDay: currentDay ?? this.currentDay,
+      currentWorkoutPosition:
+          currentWorkoutPosition ?? this.currentWorkoutPosition,
       weeks: weeks ?? this.weeks,
     );
   }
@@ -90,7 +96,8 @@ class WorkoutPlanRecordDto extends Equatable implements Dto<WorkoutPlanRecord> {
         startedAt,
         completedAt,
         currentWeek,
-        currentWeekDay,
+        currentDay,
+        currentWorkoutPosition,
         weeks.length,
       ];
 }

@@ -158,7 +158,7 @@ void main() {
       status: ProgressStatus.inProgress,
       startedAt: createdAt,
       currentWeek: 1,
-      currentWeekDay: expectedRelativeDay,
+      currentDay: expectedRelativeDay,
       currentWorkoutPosition: 1,
       createdAt: createdAt,
       updatedAt: createdAt,

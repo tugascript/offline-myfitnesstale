@@ -84,7 +84,8 @@ class ActiveWorkoutPlanDummyData {
       status: ProgressStatus.inProgress,
       startedAt: now.subtract(const Duration(days: 2)), // 2 days ago
       currentWeek: 1,
-      currentWeekDay: 1,
+      currentDay: 1,
+      currentWorkoutPosition: 1,
     );
 
     return CurrentWorkoutPlanRecordState(
