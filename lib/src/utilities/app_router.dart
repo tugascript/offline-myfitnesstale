@@ -214,7 +214,17 @@ sealed class AppRouter {
         if (id == null) {
           return const NotFoundView();
         }
-        return ActiveWorkoutView(workoutId: id);
+        final workoutPlanRecordId = int.tryParse(state.uri.queryParameters['workoutPlanRecordId'] ?? '');
+        final week = int.tryParse(state.uri.queryParameters['week'] ?? '');
+        final day = int.tryParse(state.uri.queryParameters['day'] ?? '');
+        final workoutPosition = int.tryParse(state.uri.queryParameters['workoutPosition'] ?? '');
+        return ActiveWorkoutView(
+          workoutId: id,
+          workoutPlanRecordId: workoutPlanRecordId,
+          week: week,
+          day: day,
+          workoutPosition: workoutPosition,
+        );
       },
     ),
     GoRoute(
