@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../cubits/workout_plan_record_cubit.dart';
 import '../../../services/dtos/workout_plan_day_dto.dart';
 import '../../../services/dtos/workout_plan_workout_dto.dart';
 import '../../../utilities/sizes/data_display_sizes.dart';
@@ -61,14 +59,8 @@ class ActiveWorkoutPlanDayTile extends StatelessWidget {
                 Icon(
                   isPast
                       ? Icons.check_circle
-                      : isCurrent
-                          ? Icons.calendar_today
-                          : Icons.calendar_today,
-                  color: isPast
-                      ? Colors.green
-                      : isCurrent
-                          ? theme.primaryColor
-                          : Colors.grey,
+                      : Icons.calendar_today,
+                  color: iconColor,
                   size: sizes.subtitleFontSize,
                 ),
                 SizedBox(width: sizes.padding / 2),
