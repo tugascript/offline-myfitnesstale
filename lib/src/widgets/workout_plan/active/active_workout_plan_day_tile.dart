@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../cubits/workout_plan_record_cubit.dart';
 import '../../../services/dtos/workout_plan_day_dto.dart';
 import '../../../services/dtos/workout_plan_workout_dto.dart';
 import '../../../utilities/sizes/data_display_sizes.dart';
@@ -13,6 +15,7 @@ class ActiveWorkoutPlanDayTile extends StatelessWidget {
   final bool isDarkTheme;
   final WorkoutPlanDayDto day;
   final DayProgressStatus status;
+  final int week;
 
   const ActiveWorkoutPlanDayTile({
     super.key,
@@ -21,6 +24,7 @@ class ActiveWorkoutPlanDayTile extends StatelessWidget {
     required this.isDarkTheme,
     required this.day,
     required this.status,
+    required this.week,
   });
 
   @override
@@ -181,9 +185,23 @@ class ActiveWorkoutPlanDayTile extends StatelessWidget {
           if (isCurrent)
             ElevatedButton.icon(
               onPressed: () async {
-                // TODO
+                final cubit = context.read<WorkoutPlanRecordCubit>();
+                final recordId = cubit.state.currentPlanRecord.currentPlanRecord?.id;
+
+                await cubit.startPlanWorkout(
+                  week: week,
+                  day: day.day,
+                  workoutPosition: planWorkout.position,
+                );
+
                 if (context.mounted) {
-                  context.push('/workouts/${workout.id}/active');
+                  context.push(
+                    '/workouts/${workout.id}/active'
+                    '?workoutPlanRecordId=$recordId'
+                    '&week=$week'
+                    '&day=${day.day}'
+                    '&workoutPosition=${planWorkout.position}',
+                  );
                 }
               },
               icon: Icon(Icons.play_arrow, size: sizes.fontSize * 1.5),

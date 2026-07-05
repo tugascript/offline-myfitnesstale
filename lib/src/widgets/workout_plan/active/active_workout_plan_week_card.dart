@@ -131,6 +131,7 @@ class _ActiveWorkoutPlanWeekCardState extends State<ActiveWorkoutPlanWeekCard> {
                     theme: widget.theme,
                     isDarkTheme: widget.isDarkTheme,
                     status: status,
+                    week: widget.week.startWeek,
                   );
                 }).toList(),
               ),

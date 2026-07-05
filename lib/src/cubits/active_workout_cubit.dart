@@ -9,6 +9,8 @@ import '../services/common/errors.dart';
 import '../services/dtos/workout_record_dto.dart';
 import '../services/workout_record_service.dart';
 import '../services/workout_service.dart';
+import '../services/workout_plan_record_service.dart';
+import '../models/enums.dart';
 import 'states/active_workout_state.dart';
 import 'states/common_state.dart';
 
@@ -294,7 +296,12 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
     emit(ActiveWorkoutState.initial());
   }
 
-  Future<void> completeWorkout() async {
+  Future<void> completeWorkout({
+    int? workoutPlanRecordId,
+    int? week,
+    int? day,
+    int? workoutPosition,
+  }) async {
     if (state.workoutRecord == null) return;
 
     emit(state.copyWith(isLoading: true, isCompleted: false));
@@ -304,6 +311,20 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
     );
 
     if (result.isOk()) {
+      if (workoutPlanRecordId != null &&
+          week != null &&
+          day != null &&
+          workoutPosition != null) {
+        final planRecordService = WorkoutPlanRecordService();
+        await planRecordService.updateWorkoutPlanWorkoutRecordStatus(
+          workoutPlanRecordId: workoutPlanRecordId,
+          week: week,
+          weekDay: day,
+          workoutPosition: workoutPosition,
+          status: ProgressStatus.completed,
+        );
+      }
+
       emit(state.copyWith(
         workoutRecord: Nullable(result.value),
         isCompleted: true,

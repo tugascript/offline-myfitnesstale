@@ -161,9 +161,13 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
     emit(state.copyWith(
       currentPlanRecord: state.currentPlanRecord.copyWith(
         currentPlanRecord: updatedRecord,
+        currentWeek: updatedRecord.currentWeek,
+        currentDay: updatedRecord.currentDay,
       ),
       isLoading: false,
     ));
+    await refreshProgress();
+    await getTodaysWorkout();
     return;
   }
 

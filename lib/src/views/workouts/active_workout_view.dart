@@ -26,12 +26,18 @@ class ActiveWorkoutView extends StatefulWidget {
   static const routeName = '/workouts/:id/active';
 
   final int workoutId;
-  final int? workoutPlanId;
+  final int? workoutPlanRecordId;
+  final int? week;
+  final int? day;
+  final int? workoutPosition;
 
   const ActiveWorkoutView({
     super.key,
     required this.workoutId,
-    this.workoutPlanId,
+    this.workoutPlanRecordId,
+    this.week,
+    this.day,
+    this.workoutPosition,
   });
 
   @override
@@ -318,7 +324,12 @@ class _ActiveWorkoutViewState extends State<ActiveWorkoutView> {
                               onPressed: () async {
                                 await context
                                     .read<ActiveWorkoutCubit>()
-                                    .completeWorkout();
+                                    .completeWorkout(
+                                      workoutPlanRecordId: widget.workoutPlanRecordId,
+                                      week: widget.week,
+                                      day: widget.day,
+                                      workoutPosition: widget.workoutPosition,
+                                    );
                               },
                               label: 'Complete',
                               icon: Icons.check,
