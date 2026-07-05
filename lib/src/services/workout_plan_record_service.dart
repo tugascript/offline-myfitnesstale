@@ -1001,14 +1001,14 @@ class WorkoutPlanRecordService {
   }
 
   Future<Result<WorkoutPlanRecordDto, ServiceError<SingleErrorTypes>>>
-      completeWorkoutPlanWorkoutRecord({
+      updateWorkoutPlanWorkoutRecordStatus({
     required int workoutPlanRecordId,
     required int week,
     required int weekDay,
     required int workoutPosition,
-    ProgressStatus status = ProgressStatus.completed,
+    required ProgressStatus status,
   }) async {
-    _logger.info('Completing workout plan workout record');
+    _logger.info('Updating workout plan workout record status to $status');
     try {
       final dayResult = await upsertWorkoutPlanDayRecord(
         workoutPlanRecordId: workoutPlanRecordId,
