@@ -18,6 +18,10 @@ class ActiveWorkoutState extends Equatable {
   final bool isLoading;
   final bool isCompleted;
   final ErrorState? error;
+  final int? workoutPlanRecordId;
+  final int? week;
+  final int? day;
+  final int? workoutPosition;
 
   const ActiveWorkoutState({
     this.workout,
@@ -30,6 +34,10 @@ class ActiveWorkoutState extends Equatable {
     required this.isLoading,
     required this.isCompleted,
     this.error,
+    this.workoutPlanRecordId,
+    this.week,
+    this.day,
+    this.workoutPosition,
   });
 
   WorkoutSetDto? get currentSet {
@@ -88,6 +96,10 @@ class ActiveWorkoutState extends Equatable {
     bool? isLoading,
     bool? isCompleted,
     Nullable<ErrorState>? error,
+    int? workoutPlanRecordId,
+    int? week,
+    int? day,
+    int? workoutPosition,
   }) {
     return ActiveWorkoutState(
       workout: workout != null ? workout.value : this.workout,
@@ -102,6 +114,10 @@ class ActiveWorkoutState extends Equatable {
       isLoading: isLoading ?? this.isLoading,
       isCompleted: isCompleted ?? this.isCompleted,
       error: error != null ? error.value : this.error,
+      workoutPlanRecordId: workoutPlanRecordId ?? this.workoutPlanRecordId,
+      week: week ?? this.week,
+      day: day ?? this.day,
+      workoutPosition: workoutPosition ?? this.workoutPosition,
     );
   }
 
@@ -117,5 +133,9 @@ class ActiveWorkoutState extends Equatable {
         isLoading,
         error,
         isCompleted,
+        workoutPlanRecordId,
+        week,
+        day,
+        workoutPosition,
       ];
 }

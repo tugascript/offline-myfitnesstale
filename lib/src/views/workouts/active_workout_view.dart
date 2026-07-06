@@ -54,7 +54,13 @@ class _ActiveWorkoutViewState extends State<ActiveWorkoutView> {
   @override
   void initState() {
     super.initState();
-    context.read<ActiveWorkoutCubit>().startWorkout(widget.workoutId);
+    context.read<ActiveWorkoutCubit>().startWorkout(
+          widget.workoutId,
+          workoutPlanRecordId: widget.workoutPlanRecordId,
+          week: widget.week,
+          day: widget.day,
+          workoutPosition: widget.workoutPosition,
+        );
   }
 
   @override
@@ -324,12 +330,7 @@ class _ActiveWorkoutViewState extends State<ActiveWorkoutView> {
                               onPressed: () async {
                                 await context
                                     .read<ActiveWorkoutCubit>()
-                                    .completeWorkout(
-                                      workoutPlanRecordId: widget.workoutPlanRecordId,
-                                      week: widget.week,
-                                      day: widget.day,
-                                      workoutPosition: widget.workoutPosition,
-                                    );
+                                    .completeWorkout();
                               },
                               label: 'Complete',
                               icon: Icons.check,

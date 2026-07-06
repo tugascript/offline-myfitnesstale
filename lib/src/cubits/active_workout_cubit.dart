@@ -21,9 +21,22 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
 
   ActiveWorkoutCubit() : super(ActiveWorkoutState.initial());
 
-  Future<void> startWorkout(int workoutId, [int? workoutPlanId]) async {
+  Future<void> startWorkout(
+    int workoutId, {
+    int? workoutPlanRecordId,
+    int? week,
+    int? day,
+    int? workoutPosition,
+  }) async {
     _logger.info("Starting workout...");
-    emit(state.copyWith(isLoading: true, isCompleted: false));
+    emit(state.copyWith(
+      isLoading: true,
+      isCompleted: false,
+      workoutPlanRecordId: workoutPlanRecordId,
+      week: week,
+      day: day,
+      workoutPosition: workoutPosition,
+    ));
 
     final startedAt = DateTime.now();
 
@@ -296,12 +309,7 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
     emit(ActiveWorkoutState.initial());
   }
 
-  Future<void> completeWorkout({
-    int? workoutPlanRecordId,
-    int? week,
-    int? day,
-    int? workoutPosition,
-  }) async {
+  Future<void> completeWorkout() async {
     if (state.workoutRecord == null) return;
 
     emit(state.copyWith(isLoading: true, isCompleted: false));
@@ -311,16 +319,21 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
     );
 
     if (result.isOk()) {
-      if (workoutPlanRecordId != null &&
+      final planRecordId = state.workoutPlanRecordId;
+      final week = state.week;
+      final day = state.day;
+      final position = state.workoutPosition;
+
+      if (planRecordId != null &&
           week != null &&
           day != null &&
-          workoutPosition != null) {
+          position != null) {
         final planRecordService = WorkoutPlanRecordService();
         await planRecordService.updateWorkoutPlanWorkoutRecordStatus(
-          workoutPlanRecordId: workoutPlanRecordId,
+          workoutPlanRecordId: planRecordId,
           week: week,
           weekDay: day,
-          workoutPosition: workoutPosition,
+          workoutPosition: position,
           status: ProgressStatus.completed,
         );
       }
