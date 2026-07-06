@@ -184,25 +184,23 @@ class ActiveWorkoutPlanDayTile extends StatelessWidget {
           ),
           if (isCurrent)
             ElevatedButton.icon(
-              onPressed: () async {
+              onPressed: () {
                 final cubit = context.read<WorkoutPlanRecordCubit>();
                 final recordId = cubit.state.currentPlanRecord.currentPlanRecord?.id;
 
-                await cubit.startPlanWorkout(
+                context.push(
+                  '/workouts/${workout.id}/active'
+                  '?workoutPlanRecordId=$recordId'
+                  '&week=$week'
+                  '&day=${day.day}'
+                  '&workoutPosition=${planWorkout.position}',
+                );
+
+                cubit.startPlanWorkout(
                   week: week,
                   day: day.day,
                   workoutPosition: planWorkout.position,
                 );
-
-                if (context.mounted) {
-                  context.push(
-                    '/workouts/${workout.id}/active'
-                    '?workoutPlanRecordId=$recordId'
-                    '&week=$week'
-                    '&day=${day.day}'
-                    '&workoutPosition=${planWorkout.position}',
-                  );
-                }
               },
               icon: Icon(Icons.play_arrow, size: sizes.fontSize * 1.5),
               label: Text(
