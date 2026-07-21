@@ -1,16 +1,20 @@
-# myfitnesstale
+# My Fitness Tale
 
-A new Flutter project.
+My Fitness Tale is a local-first Flutter fitness tracker for profiles, exercises,
+workouts, workout history, weight tracking, and multi-week workout plans. Data is
+stored on-device in SQLite and UI state is managed with Cubits.
 
-## Getting Started
+The code-grounded project status, architecture, known gaps, and development
+workflow are documented in [PROJECT_STATE.md](PROJECT_STATE.md).
 
-This project is a starting point for a Flutter application.
+## Development
 
-A few resources to get you started if this is your first Flutter project:
+```sh
+flutter pub get
+flutter run
+dart analyze
+flutter test
+```
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+The project currently targets Flutter with Dart `^3.5.4`. No cloud account or
+backend is required for the mobile app's implemented flows.

@@ -1,5 +1,10 @@
 # My Fitness Tale - Project Plan
 
+> Historical roadmap: this file contains old generated planning notes and
+> completion estimates. It is not the current source of truth. See
+> [PROJECT_STATE.md](PROJECT_STATE.md) for the code-grounded project state,
+> architecture, known limitations, and verification workflow.
+
 ## 📋 Project Overview
 
 **My Fitness Tale** is a comprehensive Flutter fitness tracking application with a solid backend architecture but incomplete UI implementation. The project has a robust data layer with SQLite database, BLoC state management, and extensive exercise database, but needs significant UI development to become a fully functional app.

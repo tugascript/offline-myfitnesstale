@@ -7,6 +7,7 @@ import '../../cubits/active_workout_cubit.dart';
 import '../../cubits/profile_cubit.dart';
 import '../../cubits/states/active_workout_state.dart';
 import '../../cubits/states/profile_state.dart';
+import '../../cubits/workout_plan_record_cubit.dart';
 import '../../models/common.dart';
 import '../../models/enums.dart';
 import '../../utilities/converters.dart';
@@ -82,7 +83,7 @@ class _ActiveWorkoutViewState extends State<ActiveWorkoutView> {
             previous.error != current.error ||
             previous.isCompleted != current.isCompleted;
       },
-      listener: (context, state) {
+      listener: (context, state) async {
         if (!state.isLoading) {
           if (state.error != null) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -95,6 +96,12 @@ class _ActiveWorkoutViewState extends State<ActiveWorkoutView> {
             );
           }
           if (state.isCompleted) {
+            if (widget.workoutPlanRecordId != null) {
+              await context
+                  .read<WorkoutPlanRecordCubit>()
+                  .getLatestActivePlanRecord();
+              if (!context.mounted) return;
+            }
             context.pop();
           }
         }
@@ -315,7 +322,13 @@ class _ActiveWorkoutViewState extends State<ActiveWorkoutView> {
 
                                 if (confirmed == true) {
                                   await cubit.cancelWorkout();
-                                  if (!mounted) return;
+                                  if (!context.mounted) return;
+                                  if (widget.workoutPlanRecordId != null) {
+                                    await context
+                                        .read<WorkoutPlanRecordCubit>()
+                                        .getLatestActivePlanRecord();
+                                    if (!context.mounted) return;
+                                  }
                                   navigator.pop();
                                 }
                               },

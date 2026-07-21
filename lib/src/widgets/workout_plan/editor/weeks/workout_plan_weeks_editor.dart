@@ -309,7 +309,7 @@ class _WorkoutPlanWeeksEditorState extends State<WorkoutPlanWeeksEditor> {
                   return;
                 }
 
-                context.go("/workout-plan/${widget.workoutPlanId}");
+                context.go("/workout-plans/${widget.workoutPlanId}");
               },
               onSave: () async {
                 if (_isSaving || state.isLoading) {

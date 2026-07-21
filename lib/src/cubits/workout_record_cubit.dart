@@ -4,6 +4,7 @@ import 'package:logging/logging.dart';
 import '../common/nullable.dart';
 import '../services/common/errors.dart';
 import '../services/dtos/create_workout_record_batch_dto.dart';
+import '../services/dtos/workout_record_dto.dart';
 import '../services/workout_record_service.dart';
 import 'states/common_state.dart';
 import 'states/workout_record_state.dart';
@@ -211,7 +212,7 @@ class WorkoutRecordCubit extends Cubit<WorkoutRecordState> {
     ));
   }
 
-  Future<void> batchCreateWorkoutRecord({
+  Future<WorkoutRecordDto?> batchCreateWorkoutRecord({
     required int workoutId,
     required int version,
     required DateTime startedAt,
@@ -241,7 +242,7 @@ class WorkoutRecordCubit extends Cubit<WorkoutRecordState> {
             )),
             isLoading: false,
           ));
-          return;
+          return null;
         case OperationErrorTypes.operationFailure:
           emit(state.copyWith(
             error: Nullable(ErrorState(
@@ -250,7 +251,7 @@ class WorkoutRecordCubit extends Cubit<WorkoutRecordState> {
             )),
             isLoading: false,
           ));
-          return;
+          return null;
       }
     }
 
@@ -263,7 +264,9 @@ class WorkoutRecordCubit extends Cubit<WorkoutRecordState> {
       isLoading: false,
       error: Nullable(null),
     ));
+    return result.value;
   }
+
   Future<void> batchUpdateWorkoutRecord({
     required int workoutRecordId,
     required DateTime startedAt,

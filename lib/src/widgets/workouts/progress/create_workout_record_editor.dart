@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:myfitnesstale/src/widgets/layout/app_text_form_field.dart';
 
 import '../../../cubits/states/workout_record_state.dart';
+import '../../../cubits/workout_plan_record_cubit.dart';
 import '../../../cubits/workout_record_cubit.dart';
 import '../../../models/common.dart';
 import '../../../models/enums.dart';
@@ -25,6 +26,10 @@ class CreateWorkoutRecordEditor extends StatefulWidget {
   final int workoutId;
   final int version;
   final List<WorkoutSetDto> sets;
+  final int? workoutPlanRecordId;
+  final int? week;
+  final int? day;
+  final int? workoutPosition;
 
   const CreateWorkoutRecordEditor({
     super.key,
@@ -34,6 +39,10 @@ class CreateWorkoutRecordEditor extends StatefulWidget {
     required this.workoutId,
     required this.version,
     required this.sets,
+    this.workoutPlanRecordId,
+    this.week,
+    this.day,
+    this.workoutPosition,
   });
 
   @override
@@ -84,6 +93,12 @@ class _CreateWorkoutRecordEditorState extends State<CreateWorkoutRecordEditor> {
   }
 
   Future<void> _onSave() async {
+    if (_completedAt.isBefore(_startedAt)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('End time must be after start time.')),
+      );
+      return;
+    }
     if (_sets.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please log at least one set.')),
@@ -91,13 +106,14 @@ class _CreateWorkoutRecordEditorState extends State<CreateWorkoutRecordEditor> {
       return;
     }
 
-    await context.read<WorkoutRecordCubit>().batchCreateWorkoutRecord(
-          workoutId: widget.workoutId,
-          version: widget.version,
-          startedAt: _startedAt,
-          completedAt: _completedAt,
-          sets: _sets,
-        );
+    final record =
+        await context.read<WorkoutRecordCubit>().batchCreateWorkoutRecord(
+              workoutId: widget.workoutId,
+              version: widget.version,
+              startedAt: _startedAt,
+              completedAt: _completedAt,
+              sets: _sets,
+            );
     if (!mounted) return;
     final err = context.read<WorkoutRecordCubit>().state.error;
     if (err != null) {
@@ -106,8 +122,49 @@ class _CreateWorkoutRecordEditorState extends State<CreateWorkoutRecordEditor> {
       );
       return;
     }
+
+    final planRecordId = widget.workoutPlanRecordId;
+    final week = widget.week;
+    final day = widget.day;
+    final workoutPosition = widget.workoutPosition;
+    if (record != null &&
+        planRecordId != null &&
+        week != null &&
+        day != null &&
+        workoutPosition != null) {
+      final linked =
+          await context.read<WorkoutPlanRecordCubit>().completePlanWorkout(
+                workoutPlanRecordId: planRecordId,
+                workoutRecordId: record.id,
+                week: week,
+                day: day,
+                workoutPosition: workoutPosition,
+                startedAt: _startedAt,
+              );
+      if (!mounted) return;
+      if (!linked) {
+        final planError =
+            context.read<WorkoutPlanRecordCubit>().state.error?.description;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              planError ??
+                  'Workout saved, but it could not be added to the plan.',
+            ),
+          ),
+        );
+        context.pop();
+        return;
+      }
+    }
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Workout record saved.')),
+      SnackBar(
+        content: Text(
+          planRecordId == null
+              ? 'Workout record saved.'
+              : 'Workout record saved and added to the plan.',
+        ),
+      ),
     );
     context.pop();
   }

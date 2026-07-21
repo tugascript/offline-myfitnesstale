@@ -359,6 +359,12 @@ class WorkoutRecordService {
         droppedAt: droppedAt != null
             ? DateUtilities.getDateUnix(droppedAt)
             : record.droppedAt,
+        status: completedAt != null
+            ? ProgressStatus.completed
+            : droppedAt != null
+                ? ProgressStatus.abandoned
+                : record.status,
+        updatedAt: DateUtilities.getNowUtcUnix(),
       );
       await _repository.update(updatedRecord);
       _logger.info('Updated workout record with id $id');
@@ -631,6 +637,7 @@ class WorkoutRecordService {
         final int recordId = await _repository.insert(
           record.copyWith(
             completedAt: DateUtilities.getDateUnix(completedAt),
+            status: ProgressStatus.completed,
             totalSets: sets.length,
             totalRestSecs: batchTotalRestSecs,
             // Calculate total reps and volume
@@ -672,6 +679,7 @@ class WorkoutRecordService {
           record.copyWith(
             id: recordId,
             completedAt: DateUtilities.getDateUnix(completedAt),
+            status: ProgressStatus.completed,
             totalSets: sets.length,
             totalRestSecs: batchTotalRestSecs,
             totalReps: sets.fold<int>(
@@ -801,6 +809,7 @@ class WorkoutRecordService {
           record.copyWith(
             startedAt: DateUtilities.getDateUnix(startedAt),
             completedAt: DateUtilities.getDateUnix(completedAt),
+            status: ProgressStatus.completed,
             totalSets: sets.length,
             totalRestSecs: batchTotalRestSecs,
             totalReps: sets.fold<int>(

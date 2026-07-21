@@ -77,6 +77,7 @@ class DatabaseHelper {
       final db = await openDatabase(
         path,
         version: _databaseVersion,
+        onConfigure: _onConfigure,
         onCreate: _onCreate,
         onUpgrade: _onUpgrade,
       );
@@ -86,6 +87,10 @@ class DatabaseHelper {
       Logger('Database').severe('Failed to open database: $e');
       rethrow;
     }
+  }
+
+  Future<void> _onConfigure(Database db) async {
+    await db.execute('PRAGMA foreign_keys = ON');
   }
 
   Future<void> _onCreate(Database db, int version) async {

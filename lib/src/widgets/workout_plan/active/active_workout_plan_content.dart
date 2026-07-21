@@ -47,6 +47,16 @@ class ActiveWorkoutPlanContent extends StatelessWidget {
       relativeDayIndex = (daysSinceStart % 7) + 1;
     }
 
+    final scheduleWeeks = plan.weeks
+            ?.expand(
+              (week) => List.generate(
+                week.endWeek - week.startWeek + 1,
+                (index) => (week: week, number: week.startWeek + index),
+              ),
+            )
+            .toList() ??
+        const [];
+
     // Calculate progress percentage
     double progressPercentage = 0;
     if (displayState.totalWorkouts > 0) {
@@ -108,21 +118,23 @@ class ActiveWorkoutPlanContent extends StatelessWidget {
               ],
             ),
           ),
-          if (plan.weeks != null)
+          if (scheduleWeeks.isNotEmpty)
             SliverList(
               delegate: SliverChildBuilderDelegate(
                 (context, index) {
-                  final week = plan.weeks![index];
+                  final scheduleWeek = scheduleWeeks[index];
                   return ActiveWorkoutPlanWeekCard(
                     sizes: sizes,
                     theme: theme,
                     isDarkTheme: isDarkTheme,
-                    week: week,
+                    week: scheduleWeek.week,
+                    weekNumber: scheduleWeek.number,
                     currentWeekNum: currentWeekNum,
                     relativeDayIndex: relativeDayIndex,
+                    workoutPlanRecord: record,
                   );
                 },
-                childCount: plan.weeks!.length,
+                childCount: scheduleWeeks.length,
               ),
             ),
           SliverPadding(

@@ -73,6 +73,7 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
         workoutPlan: planResult.value,
       ),
       isLoading: false,
+      clearError: true,
     ));
 
     // Refresh progress and today's workouts after loading plan
@@ -81,6 +82,7 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
   }
 
   Future<void> startPlanWorkout({
+    required int workoutRecordId,
     int? week,
     int? day,
     int? workoutPosition,
@@ -140,6 +142,7 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
     final workoutResult =
         await _workoutPlanRecordService.upsertWorkoutPlanWorkoutRecord(
       workoutPlanRecordId: currentPlanRecord.id,
+      workoutRecordId: workoutRecordId,
       status: ProgressStatus.inProgress,
       week: useWeek,
       weekDay: useDay,
@@ -171,6 +174,63 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
     return;
   }
 
+  Future<bool> completePlanWorkout({
+    required int workoutPlanRecordId,
+    required int workoutRecordId,
+    required int week,
+    required int day,
+    required int workoutPosition,
+    DateTime? startedAt,
+  }) async {
+    var planRecord = state.currentPlanRecord.currentPlanRecord;
+    if (planRecord == null || planRecord.id != workoutPlanRecordId) {
+      final lookup = await _workoutPlanRecordService
+          .getWorkoutPlanRecord(workoutPlanRecordId);
+      if (lookup.isErr() || lookup.value.status != ProgressStatus.inProgress) {
+        emit(state.copyWith(
+          error: ErrorState(
+            type: SingleErrorTypes.invalidInput.name,
+            description: 'The selected workout plan is no longer active',
+          ),
+        ));
+        return false;
+      }
+      planRecord = lookup.value;
+    }
+
+    emit(state.copyWith(isLoading: true));
+    final result =
+        await _workoutPlanRecordService.updateWorkoutPlanWorkoutRecordStatus(
+      workoutPlanRecordId: planRecord.id,
+      workoutRecordId: workoutRecordId,
+      week: week,
+      weekDay: day,
+      workoutPosition: workoutPosition,
+      status: ProgressStatus.completed,
+      startedAt: startedAt,
+    );
+    if (result.isErr()) {
+      emit(state.copyWith(
+        isLoading: false,
+        error: ErrorState(
+          type: result.error.type.name,
+          description: result.error.description,
+        ),
+      ));
+      return false;
+    }
+
+    emit(state.copyWith(
+      isLoading: false,
+      clearError: true,
+      currentPlanRecord: state.currentPlanRecord.copyWith(
+        currentPlanRecord: result.value,
+      ),
+    ));
+    await refreshProgress();
+    return true;
+  }
+
   Future<void> getLatestActivePlanRecord() async {
     _logger.info('Getting latest active plan record');
     emit(state.copyWith(isLoading: true));
@@ -184,6 +244,7 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
             state.copyWith(
               isLoading: false,
               currentPlanRecord: CurrentWorkoutPlanRecordState.initial(),
+              clearError: true,
             ),
           );
           return;
@@ -194,6 +255,7 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
               type: error.type.name,
               description: 'Failed to get latest active plan record',
             ),
+            isLoading: false,
           ));
           return;
       }
@@ -221,6 +283,7 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
         workoutPlan: planResult.value,
       ),
       isLoading: false,
+      clearError: true,
     ));
 
     // Refresh progress and today's workouts after loading plan
@@ -360,6 +423,7 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
         currentPlanRecord: result.value,
       ),
       isLoading: false,
+      clearError: true,
     ));
   }
 
@@ -409,6 +473,7 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
         currentDay: updatedPlanRecord.currentDay,
       ),
       isLoading: false,
+      clearError: true,
     ));
   }
 }

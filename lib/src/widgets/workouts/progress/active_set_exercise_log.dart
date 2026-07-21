@@ -377,4 +377,3 @@ class _ActiveSetExerciseLogState extends State<ActiveSetExerciseLog> {
     );
   }
 }
-
