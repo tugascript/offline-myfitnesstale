@@ -17,6 +17,9 @@ class ActiveSetExerciseLog extends StatefulWidget {
   final WorkoutSetExerciseDifficultyType initialDifficultyType;
   final int initialDifficultyValue;
   final int workoutSetExerciseId;
+  final int setNumber;
+  final double initialWeight;
+  final int initialReps;
   final bool isOptional;
 
   final void Function({
@@ -34,6 +37,9 @@ class ActiveSetExerciseLog extends StatefulWidget {
     required this.initialDifficultyType,
     required this.initialDifficultyValue,
     required this.workoutSetExerciseId,
+    this.setNumber = 1,
+    this.initialWeight = 0,
+    this.initialReps = 0,
     required this.isLoading,
     required this.onLogSet,
     required this.onSkip,
@@ -64,8 +70,9 @@ class _ActiveSetExerciseLogState extends State<ActiveSetExerciseLog> {
     super.initState();
     _difficultyType = widget.initialDifficultyType;
     _difficultyValue = widget.initialDifficultyValue;
-    _weightController = TextEditingController(text: '0');
-    _repsController = TextEditingController(text: '0');
+    _applyInitialValues();
+    _weightController = TextEditingController(text: _formatWeight());
+    _repsController = TextEditingController(text: '$_reps');
   }
 
   @override
@@ -78,17 +85,30 @@ class _ActiveSetExerciseLogState extends State<ActiveSetExerciseLog> {
   @override
   void didUpdateWidget(covariant ActiveSetExerciseLog oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.workoutSetExerciseId != widget.workoutSetExerciseId) {
-      // Reset values for new exercise
-      _weightHundreds = 0;
-      _weightTens = 0;
-      _weightDecimals = 0.0;
-      _reps = 0;
+    if (oldWidget.workoutSetExerciseId != widget.workoutSetExerciseId ||
+        oldWidget.setNumber != widget.setNumber ||
+        oldWidget.initialWeight != widget.initialWeight ||
+        oldWidget.initialReps != widget.initialReps) {
+      _applyInitialValues();
       _difficultyType = widget.initialDifficultyType;
       _difficultyValue = widget.initialDifficultyValue;
-      _weightController.text = '0';
-      _repsController.text = '0';
+      _weightController.text = _formatWeight();
+      _repsController.text = '$_reps';
     }
+  }
+
+  void _applyInitialValues() {
+    final roundedWeight = (widget.initialWeight * 4).round() / 4;
+    final integerWeight = roundedWeight.truncate();
+    _weightHundreds = integerWeight ~/ 100;
+    _weightTens = integerWeight % 100;
+    _weightDecimals = roundedWeight - integerWeight;
+    _reps = widget.initialReps;
+  }
+
+  String _formatWeight() {
+    final total = (_weightHundreds * 100) + _weightTens + _weightDecimals;
+    return total.toStringAsFixed(2).replaceAll(RegExp(r'\.00$'), '');
   }
 
   void _openWeightWheel() {
@@ -130,12 +150,7 @@ class _ActiveSetExerciseLogState extends State<ActiveSetExerciseLog> {
                         _weightDecimals = _decimalValues[
                             decimalsController.selectedItem.clamp(0, 3)];
 
-                        final double total = (_weightHundreds * 100) +
-                            _weightTens +
-                            _weightDecimals;
-                        _weightController.text = total
-                            .toStringAsFixed(2)
-                            .replaceAll(RegExp(r'\.00$'), '');
+                        _weightController.text = _formatWeight();
                       });
                       Navigator.of(sheetContext).pop();
                     },
@@ -321,7 +336,9 @@ class _ActiveSetExerciseLogState extends State<ActiveSetExerciseLog> {
             ),
             SizedBox(height: widget.sizes.inputSpacing),
             WorkoutSetExerciseDifficultyInput(
-              key: ValueKey(widget.workoutSetExerciseId),
+              key: ValueKey(
+                (widget.workoutSetExerciseId, widget.setNumber),
+              ),
               initialDifficultyType: widget.initialDifficultyType,
               initialDifficultyValue: widget.initialDifficultyValue,
               theme: widget.theme,

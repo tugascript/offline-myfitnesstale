@@ -118,6 +118,7 @@ class _ActiveWorkoutViewState extends State<ActiveWorkoutView> {
               final workoutSetExercise = activeState.currentExercise;
               final exercise = workoutSetExercise?.exercise;
               final currentSet = activeState.currentSet;
+              final previousRecord = activeState.latestMatchingExerciseRecord;
 
               return Padding(
                 padding: EdgeInsets.all(sizes.viewPadding),
@@ -210,6 +211,16 @@ class _ActiveWorkoutViewState extends State<ActiveWorkoutView> {
                             initialDifficultyValue:
                                 workoutSetExercise.difficulty?.value ?? 2,
                             workoutSetExerciseId: workoutSetExercise.id,
+                            setNumber: activeState.currentSetNumber,
+                            initialWeight:
+                                profileState.system?.units == Units.imperial
+                                    ? Converters.gramsToLbs(
+                                        previousRecord?.weightGrams ?? 0,
+                                      )
+                                    : Converters.gramsToKg(
+                                        previousRecord?.weightGrams ?? 0,
+                                      ),
+                            initialReps: previousRecord?.reps ?? 0,
                             isLoading: activeState.isLoading,
                             onLogSet: (
                                 {required weight,
