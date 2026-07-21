@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 
 import 'package:myfitnesstale/src/cubits/workout_plan_cubit.dart';
+import 'package:myfitnesstale/src/cubits/workout_cubit.dart';
 import 'package:myfitnesstale/src/models/common.dart';
 import 'package:myfitnesstale/src/models/enums.dart';
 import 'package:myfitnesstale/src/services/dtos/workout_dto.dart';
@@ -11,6 +13,8 @@ import 'package:myfitnesstale/src/services/dtos/workout_plan_week_dto.dart';
 import 'package:myfitnesstale/src/services/dtos/workout_plan_workout_dto.dart';
 import 'package:myfitnesstale/src/utilities/sizes/data_display_sizes.dart';
 import 'package:myfitnesstale/src/widgets/workout_plan/editor/weeks/workout_plan_weeks_editor.dart';
+import 'package:myfitnesstale/src/widgets/workout_plan/editor/weeks/workout_plan_week_editor.dart';
+import 'package:myfitnesstale/src/widgets/workout_plan/editor/weeks/workout_plan_day_editor.dart';
 
 void main() {
   Future<WorkoutPlanWeekDto> createWeekDto({
@@ -95,22 +99,39 @@ void main() {
       elevation: 1,
     );
 
-    return MaterialApp(
-      home: Scaffold(
-        body: BlocProvider.value(
-          value: cubit,
-          child: Builder(builder: (context) {
-            return WorkoutPlanWeeksEditor(
-              theme: Theme.of(context),
-              sizes: sizes,
-              workoutPlanId: workoutPlanId,
-              currentVersion: currentVersion,
-              initialWeeks: initialWeeks,
-            );
-          }),
+    final router = GoRouter(
+      initialLocation: '/editor',
+      routes: [
+        GoRoute(
+          path: '/editor',
+          builder: (context, state) => Scaffold(
+            body: MultiBlocProvider(
+              providers: [
+                BlocProvider.value(value: cubit),
+                BlocProvider(create: (_) => WorkoutCubit()),
+              ],
+              child: Builder(builder: (context) {
+                return WorkoutPlanWeeksEditor(
+                  theme: Theme.of(context),
+                  sizes: sizes,
+                  workoutPlanId: workoutPlanId,
+                  currentVersion: currentVersion,
+                  initialWeeks: initialWeeks,
+                );
+              }),
+            ),
+          ),
         ),
-      ),
+        GoRoute(
+          path: '/workout-plans/:id',
+          builder: (context, state) => const Scaffold(
+            body: Text('Plan details'),
+          ),
+        ),
+      ],
     );
+
+    return MaterialApp.router(routerConfig: router);
   }
 
   testWidgets('renders initial structure from initialWeeks', (tester) async {
@@ -124,8 +145,8 @@ void main() {
       initialWeeks: [week],
     ));
 
-    expect(find.text('Week Block 1'), findsOneWidget);
-    expect(find.text('Day 1'), findsOneWidget);
+    expect(find.byType(WorkoutPlanWeekEditor), findsOneWidget);
+    expect(find.byType(WorkoutPlanDayEditor), findsOneWidget);
 
     await cubit.close();
   });
@@ -156,7 +177,7 @@ void main() {
     await cubit.close();
   });
 
-  testWidgets('no-op save shows no structural changes message', (tester) async {
+  testWidgets('no-op save returns to plan details', (tester) async {
     final cubit = WorkoutPlanCubit();
     final week = await createWeekDto();
 
@@ -170,12 +191,12 @@ void main() {
     await tester.tap(find.text('SAVE'));
     await tester.pumpAndSettle();
 
-    expect(find.text('No structural changes to save.'), findsOneWidget);
+    expect(find.text('Plan details'), findsOneWidget);
 
     await cubit.close();
   });
 
-  testWidgets('cancel resets local edits to baseline', (tester) async {
+  testWidgets('cancel returns without saving', (tester) async {
     final cubit = WorkoutPlanCubit();
     final week = await createWeekDto();
 
@@ -186,18 +207,10 @@ void main() {
       initialWeeks: [week],
     ));
 
-    final endWeekField = find.byType(TextFormField).at(1);
-
-    await tester.enterText(endWeekField, '2');
-    await tester.pump();
-
     await tester.tap(find.text('CANCEL'));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('SAVE'));
-    await tester.pumpAndSettle();
-
-    expect(find.text('No structural changes to save.'), findsOneWidget);
+    expect(find.text('Plan details'), findsOneWidget);
 
     await cubit.close();
   });

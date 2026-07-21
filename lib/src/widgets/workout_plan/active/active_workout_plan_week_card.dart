@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../services/dtos/workout_plan_week_dto.dart';
+import '../../../services/dtos/workout_plan_record_dto.dart';
 import '../../../utilities/sizes/data_display_sizes.dart';
 import 'active_workout_plan_day_tile.dart';
 
@@ -9,8 +10,10 @@ class ActiveWorkoutPlanWeekCard extends StatefulWidget {
   final ThemeData theme;
   final bool isDarkTheme;
   final WorkoutPlanWeekDto week;
+  final int weekNumber;
   final int currentWeekNum;
   final int relativeDayIndex;
+  final WorkoutPlanRecordDto? workoutPlanRecord;
 
   const ActiveWorkoutPlanWeekCard({
     super.key,
@@ -18,8 +21,10 @@ class ActiveWorkoutPlanWeekCard extends StatefulWidget {
     required this.theme,
     required this.isDarkTheme,
     required this.week,
+    required this.weekNumber,
     required this.currentWeekNum,
     required this.relativeDayIndex,
+    required this.workoutPlanRecord,
   });
 
   @override
@@ -34,25 +39,28 @@ class _ActiveWorkoutPlanWeekCardState extends State<ActiveWorkoutPlanWeekCard> {
   void initState() {
     super.initState();
     // Auto-expand the current week, collapse past and future weeks
-    _isExpanded = widget.currentWeekNum >= widget.week.startWeek &&
-        widget.currentWeekNum <= widget.week.endWeek;
+    _isExpanded = widget.currentWeekNum == widget.weekNumber;
   }
 
   @override
   Widget build(BuildContext context) {
-    final weekText = widget.week.startWeek == widget.week.endWeek
-        ? 'Week ${widget.week.startWeek}'
-        : 'Weeks ${widget.week.startWeek}-${widget.week.endWeek}';
+    final weekText = 'Week ${widget.weekNumber}';
 
-    final isPastWeek = widget.currentWeekNum > widget.week.endWeek;
-    final isCurrentWeek = widget.currentWeekNum >= widget.week.startWeek &&
-        widget.currentWeekNum <= widget.week.endWeek;
-    final isFutureWeek = widget.currentWeekNum < widget.week.startWeek;
+    final isPastWeek = widget.currentWeekNum > widget.weekNumber;
+    final isCurrentWeek = widget.currentWeekNum == widget.weekNumber;
+    final isFutureWeek = widget.currentWeekNum < widget.weekNumber;
+    final isWeekCompleted = widget.workoutPlanRecord?.weeks
+            .where((recordWeek) => recordWeek.week == widget.weekNumber)
+            .any((recordWeek) => recordWeek.completedAt != null) ??
+        false;
 
     Color headerColor;
     if (isPastWeek) {
-      headerColor =
-          widget.isDarkTheme ? Colors.grey.shade700 : Colors.grey.shade200;
+      headerColor = isWeekCompleted
+          ? Colors.green
+          : widget.isDarkTheme
+              ? Colors.orange.shade300
+              : Colors.orange.shade700;
     } else if (isCurrentWeek) {
       headerColor = widget.theme.primaryColor;
     } else {
@@ -83,7 +91,7 @@ class _ActiveWorkoutPlanWeekCardState extends State<ActiveWorkoutPlanWeekCard> {
               child: Row(
                 children: [
                   Icon(
-                    isPastWeek ? Icons.check_circle : Icons.date_range,
+                    isWeekCompleted ? Icons.check_circle : Icons.date_range,
                     color: headerColor,
                   ),
                   SizedBox(width: widget.sizes.spacing / 2),
@@ -131,7 +139,16 @@ class _ActiveWorkoutPlanWeekCardState extends State<ActiveWorkoutPlanWeekCard> {
                     theme: widget.theme,
                     isDarkTheme: widget.isDarkTheme,
                     status: status,
-                    week: widget.week.startWeek,
+                    week: widget.weekNumber,
+                    workoutPlanRecordId: widget.workoutPlanRecord?.id ?? 0,
+                    workoutRecords: widget.workoutPlanRecord?.weeks
+                            .where((recordWeek) =>
+                                recordWeek.week == widget.weekNumber)
+                            .expand((recordWeek) => recordWeek.days)
+                            .where((recordDay) => recordDay.day == day.day)
+                            .expand((recordDay) => recordDay.workouts)
+                            .toList() ??
+                        const [],
                   );
                 }).toList(),
               ),

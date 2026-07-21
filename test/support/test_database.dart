@@ -18,6 +18,7 @@ import 'package:myfitnesstale/src/models/workout_plan_workout_record_model.dart'
 import 'package:myfitnesstale/src/models/workout_set_exercise_model.dart';
 import 'package:myfitnesstale/src/models/workout_set_exercise_option_model.dart';
 import 'package:myfitnesstale/src/models/workout_set_model.dart';
+import 'package:myfitnesstale/src/models/workout_record_model.dart';
 
 class TestDatabase {
   String? _originalDatabasesPath;
@@ -65,6 +66,7 @@ class TestDatabase {
       await txn.delete(WorkoutPlanDay.table);
       await txn.delete(WorkoutPlanWeek.table);
       await txn.delete(WorkoutPlan.table);
+      await txn.delete(WorkoutRecord.table);
       await txn.delete(Workout.table);
       await txn.delete(Exercise.table);
     });

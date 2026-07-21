@@ -135,7 +135,7 @@ class WorkoutPlanRecordService {
         ));
       }
       _logger.info('Got workout plan record with id $id');
-      return ok(WorkoutPlanRecordDto.fromModel(record));
+      return ok(await _toRecordDtoWithTree(record));
     } catch (e) {
       _logger.severe('Failed to get workout plan record with id $id', e);
       return err(const ServiceError(
@@ -211,12 +211,14 @@ class WorkoutPlanRecordService {
         await txn.rawUpdate(
           '''
           UPDATE ${WorkoutPlanRecord.table} SET 
-          ${WorkoutPlanRecordColumns.status.equal} AND
-          ${WorkoutPlanRecordColumns.completedAt.equal}
-          WHERE ${WorkoutPlanRecordColumns.status.equal};
+          ${WorkoutPlanRecordColumns.status.value} = ?,
+          ${WorkoutPlanRecordColumns.completedAt.value} = ?,
+          ${WorkoutPlanRecordColumns.updatedAt.value} = ?
+          WHERE ${WorkoutPlanRecordColumns.status.value} = ?;
           ''',
           [
             ProgressStatus.abandoned.value,
+            DateUtilities.getNowUtcUnix(),
             DateUtilities.getNowUtcUnix(),
             ProgressStatus.inProgress.value,
           ],
@@ -336,7 +338,7 @@ class WorkoutPlanRecordService {
   }) async {
     final db = await DatabaseHelper().db;
     final String whereVersion = workoutPlanVersion != null
-        ? ' AND ${WorkoutPlanWorkoutColumns.planVersion.value} = ?'
+        ? ' AND ${WorkoutPlanWeekColumns.planVersion.value} = ?'
         : '';
     final List<Object?> args = [
       workoutPlanId,
@@ -344,9 +346,13 @@ class WorkoutPlanRecordService {
     ];
     final List<Map<String, dynamic>> maps = await db.rawQuery(
       '''
-      SELECT COUNT(*) as count
-      FROM ${WorkoutPlanWorkout.table}
-      WHERE ${WorkoutPlanWorkoutColumns.workoutPlanId.value} = ?$whereVersion
+      SELECT COALESCE(SUM(
+        ${WorkoutPlanWeekColumns.totalWorkouts.value} *
+        (${WorkoutPlanWeekColumns.endWeek.value} -
+          ${WorkoutPlanWeekColumns.startWeek.value} + 1)
+      ), 0) as count
+      FROM ${WorkoutPlanWeek.table}
+      WHERE ${WorkoutPlanWeekColumns.workoutPlanId.value} = ?$whereVersion
       ''',
       args,
     );
@@ -396,7 +402,7 @@ class WorkoutPlanRecordService {
         _logger.info(
           'Found existing workout plan record for workout plan $workoutPlanId',
         );
-        return ok(WorkoutPlanRecordDto.fromModel(records.first));
+        return ok(await _toRecordDtoWithTree(records.first));
       }
 
       return await createWorkoutPlanRecord(workoutPlanId: workoutPlanId);
@@ -427,7 +433,7 @@ class WorkoutPlanRecordService {
         ));
       }
       _logger.info('Got latest active plan record');
-      return ok(WorkoutPlanRecordDto.fromModel(records.first));
+      return ok(await _toRecordDtoWithTree(records.first));
     } catch (e) {
       _logger.severe('Failed to get latest active plan record', e);
       return err(const ServiceError(
@@ -579,10 +585,12 @@ class WorkoutPlanRecordService {
   Future<Result<WorkoutPlanRecordDto, ServiceError<SingleErrorTypes>>>
       upsertWorkoutPlanWorkoutRecord({
     required int workoutPlanRecordId,
+    required int workoutRecordId,
     required ProgressStatus status,
     int? week,
     int? weekDay,
     int? workoutPosition,
+    DateTime? startedAt,
   }) async {
     _logger.info(
       'Upserting workout plan workout record for workout plan record $workoutPlanRecordId',
@@ -681,9 +689,30 @@ class WorkoutPlanRecordService {
         final createResult = await _createWorkoutPlanWorkoutRecord(
           dayRecord: dayRecordData,
           workoutPosition: currentWorkoutPosition,
+          workoutRecordId: workoutRecordId,
+          status: status,
+          startedAt: startedAt,
         );
         if (createResult.isErr()) {
           return err(createResult.error);
+        }
+      } else {
+        final existingRecord = workoutRecords.first;
+        final updatedRecord = existingRecord.copyWith(
+          workoutRecordId: workoutRecordId,
+          status: status,
+          startedAt: startedAt != null
+              ? DateUtilities.getDateUnix(startedAt)
+              : existingRecord.startedAt,
+          updatedAt: DateUtilities.getNowUtcUnix(),
+        );
+        final updated =
+            await _workoutPlanWorkoutRecordRepository.update(updatedRecord);
+        if (!updated) {
+          return err(const ServiceError(
+            type: SingleErrorTypes.operationFailure,
+            description: 'Failed to update workout plan workout record',
+          ));
         }
       }
 
@@ -728,9 +757,11 @@ class WorkoutPlanRecordService {
     onlyStartWeekWhere.and(WorkoutPlanWeekColumns.endWeek.isNull);
 
     final WhereBuilder betweenWeekWhere = WhereBuilder();
-    betweenWeekWhere.and(WorkoutPlanWeekColumns.startWeek.lessThanOrEqual, week);
+    betweenWeekWhere.and(
+        WorkoutPlanWeekColumns.startWeek.lessThanOrEqual, week);
     betweenWeekWhere.and(WorkoutPlanWeekColumns.endWeek.notNull);
-    betweenWeekWhere.and(WorkoutPlanWeekColumns.endWeek.greaterThanOrEqual, week);
+    betweenWeekWhere.and(
+        WorkoutPlanWeekColumns.endWeek.greaterThanOrEqual, week);
 
     final WhereBuilder weekWhere = WhereBuilder();
     weekWhere.or(onlyStartWeekWhere.where!);
@@ -790,7 +821,8 @@ class WorkoutPlanRecordService {
         );
         return err(const ServiceError(
           type: SingleErrorTypes.notFound,
-          description: 'No workout plan day found for workout plan week and day',
+          description:
+              'No workout plan day found for workout plan week and day',
         ));
       }
       final int workoutPlanDayId = dayData.first.id!;
@@ -933,6 +965,9 @@ class WorkoutPlanRecordService {
       _createWorkoutPlanWorkoutRecord({
     required WorkoutPlanDayRecord dayRecord,
     required int workoutPosition,
+    required int workoutRecordId,
+    required ProgressStatus status,
+    DateTime? startedAt,
   }) async {
     final int workoutPlanRecordId = dayRecord.workoutPlanRecordId;
     final int workoutPlanDayRecordId = dayRecord.id!;
@@ -971,8 +1006,11 @@ class WorkoutPlanRecordService {
         workoutPlanWeekRecordId: workoutPlanWeekRecordId,
         workoutPlanDayRecordId: workoutPlanDayRecordId,
         workoutPlanWorkoutId: workoutPlanWorkout.id!,
-        workoutRecordId: workoutPlanWorkout.workoutId,
+        workoutRecordId: workoutRecordId,
         position: workoutPosition,
+        startedAt:
+            startedAt != null ? DateUtilities.getDateUnix(startedAt) : null,
+        status: status,
       );
       final int workoutPlanWorkoutRecordId =
           await _workoutPlanWorkoutRecordRepository.insert(
@@ -1007,6 +1045,8 @@ class WorkoutPlanRecordService {
     required int weekDay,
     required int workoutPosition,
     required ProgressStatus status,
+    required int workoutRecordId,
+    DateTime? startedAt,
   }) async {
     _logger.info('Updating workout plan workout record status to $status');
     try {
@@ -1022,10 +1062,12 @@ class WorkoutPlanRecordService {
 
       final upsertResult = await upsertWorkoutPlanWorkoutRecord(
         workoutPlanRecordId: workoutPlanRecordId,
+        workoutRecordId: workoutRecordId,
         status: ProgressStatus.inProgress,
         week: week,
         weekDay: weekDay,
         workoutPosition: workoutPosition,
+        startedAt: startedAt,
       );
       if (upsertResult.isErr()) {
         return err(upsertResult.error);
@@ -1131,13 +1173,21 @@ class WorkoutPlanRecordService {
           trx: txn,
         );
         final allWorkouts = siblingWorkouts
-            .map((w) => w.id == updatedWorkoutRecord.id ? updatedWorkoutRecord : w)
+            .map((w) =>
+                w.id == updatedWorkoutRecord.id ? updatedWorkoutRecord : w)
             .toList();
-        final bool allCompletedOrSkipped = allWorkouts.every(
-          (w) =>
-              w.status == ProgressStatus.completed ||
-              w.status == ProgressStatus.skipped,
+        final scheduledDay = await _workoutPlanDayRepository.selectOne(
+          dayRecord.workoutPlanDayId,
+          txn,
         );
+        final int scheduledDayWorkouts = scheduledDay?.totalWorkouts ?? 0;
+        final bool allCompletedOrSkipped = scheduledDayWorkouts > 0 &&
+            allWorkouts.length >= scheduledDayWorkouts &&
+            allWorkouts.every(
+              (w) =>
+                  w.status == ProgressStatus.completed ||
+                  w.status == ProgressStatus.skipped,
+            );
 
         if (allCompletedOrSkipped) {
           final updatedDayRecord = dayRecord.copyWith(
@@ -1150,24 +1200,30 @@ class WorkoutPlanRecordService {
             txn,
           );
 
-          final siblingDays = await _workoutPlanDayRecordRepository.selectMany(
+          final weekWorkouts =
+              await _workoutPlanWorkoutRecordRepository.selectMany(
             where:
-                '${WorkoutPlanDayRecordColumns.workoutPlanWeekRecordId.value} = ?',
+                '${WorkoutPlanWorkoutRecordColumns.workoutPlanWeekRecordId.value} = ?',
             whereArgs: [weekRecord.id!],
             trx: txn,
           );
-          final allDays = siblingDays
-              .map((d) => d.id == updatedDayRecord.id ? updatedDayRecord : d)
-              .toList();
-          final bool allDaysCompleted = allDays.every(
-            (d) =>
-                d.status == ProgressStatus.completed ||
-                d.status == ProgressStatus.skipped,
+          final scheduledWeek = await _workoutPlanWeekRepository.selectOne(
+            weekRecord.workoutPlanWeekId,
+            txn,
           );
+          final int scheduledWeekWorkouts = scheduledWeek?.totalWorkouts ?? 0;
+          final bool allWeekWorkoutsCompleted = scheduledWeekWorkouts > 0 &&
+              weekWorkouts.length >= scheduledWeekWorkouts &&
+              weekWorkouts.every(
+                (workout) =>
+                    workout.status == ProgressStatus.completed ||
+                    workout.status == ProgressStatus.skipped,
+              );
 
-          if (allDaysCompleted) {
+          if (allWeekWorkoutsCompleted) {
             final updatedWeekRecord = weekRecord.copyWith(
               status: ProgressStatus.completed,
+              completedAt: now,
               updatedAt: now,
             );
             await _workoutPlanWeekRecordRepository.update(
@@ -1175,25 +1231,25 @@ class WorkoutPlanRecordService {
               txn,
             );
 
-            final plan =
-                await _workoutPlanRepository.selectOne(record.workoutPlanId, txn);
+            final plan = await _workoutPlanRepository.selectOne(
+                record.workoutPlanId, txn);
             if (plan != null) {
-              final siblingWeeks =
-                  await _workoutPlanWeekRecordRepository.selectMany(
+              final planWorkouts =
+                  await _workoutPlanWorkoutRecordRepository.selectMany(
                 where:
-                    '${WorkoutPlanWeekRecordColumns.workoutPlanRecordId.value} = ?',
+                    '${WorkoutPlanWorkoutRecordColumns.workoutPlanRecordId.value} = ?',
                 whereArgs: [workoutPlanRecordId],
                 trx: txn,
               );
-              final allWeeks = siblingWeeks
-                  .map((w) =>
-                      w.id == updatedWeekRecord.id ? updatedWeekRecord : w)
-                  .toList();
-              final bool allWeeksCompleted = allWeeks.length ==
-                      plan.totalWeeks &&
-                  allWeeks.every((w) => w.status == ProgressStatus.completed);
+              final bool allPlanWorkoutsCompleted = plan.totalWorkouts > 0 &&
+                  planWorkouts.length >= plan.totalWorkouts &&
+                  planWorkouts.every(
+                    (workout) =>
+                        workout.status == ProgressStatus.completed ||
+                        workout.status == ProgressStatus.skipped,
+                  );
 
-              if (allWeeksCompleted) {
+              if (allPlanWorkoutsCompleted) {
                 final updatedRecord = record.copyWith(
                   status: ProgressStatus.completed,
                   completedAt: now,
@@ -1219,6 +1275,29 @@ class WorkoutPlanRecordService {
       return err(const ServiceError(
         type: SingleErrorTypes.operationFailure,
         description: 'Failed to complete workout plan workout record',
+      ));
+    }
+  }
+
+  Future<Result<void, ServiceError<SingleErrorTypes>>>
+      removeWorkoutPlanWorkoutRecord({
+    required int workoutPlanRecordId,
+    required int workoutRecordId,
+  }) async {
+    try {
+      await _workoutPlanWorkoutRecordRepository.deleteMany(
+        where:
+            '${WorkoutPlanWorkoutRecordColumns.workoutPlanRecordId.value} = ? AND '
+            '${WorkoutPlanWorkoutRecordColumns.workoutRecordId.value} = ?',
+        whereArgs: [workoutPlanRecordId, workoutRecordId],
+      );
+      return ok(null);
+    } catch (error) {
+      _logger.severe(
+          'Failed to remove workout from workout plan record', error);
+      return err(const ServiceError(
+        type: SingleErrorTypes.operationFailure,
+        description: 'Failed to remove workout from workout plan',
       ));
     }
   }

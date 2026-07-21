@@ -206,7 +206,7 @@ void main() {
       expect(workout.totalSets, 3);
       expect(workout.totalReps, 48);
       expect(workout.muscleGroups, {MuscleGroup.push, MuscleGroup.pull});
-      expect(workout.muscles, {Muscle.chest, Muscle.lats});
+      expect(workout.muscles.primary, {Muscle.chest, Muscle.lats});
 
       final createdSets = (await db.query(
         WorkoutSet.table,
@@ -397,7 +397,7 @@ void main() {
     expect(workout.totalSets, 4);
     expect(workout.totalReps, 36);
     expect(workout.muscleGroups, {MuscleGroup.legs});
-    expect(workout.muscles, {Muscle.quadriceps});
+    expect(workout.muscles.primary, {Muscle.quadriceps});
   });
 
   test('deletes removed set exercises when updating a workout set', () async {
@@ -726,7 +726,8 @@ void main() {
     expect(workout.totalSets, 0);
     expect(workout.totalReps, 0);
     expect(workout.muscleGroups, isEmpty);
-    expect(workout.muscles, isEmpty);
+    expect(workout.muscles.primary, isEmpty);
+    expect(workout.muscles.secondary, isEmpty);
   });
 
   test('returns notFound when workout does not exist', () async {
@@ -879,6 +880,6 @@ void main() {
     expect(workoutAfterFailure.totalSets, 1);
     expect(workoutAfterFailure.totalReps, 10);
     expect(workoutAfterFailure.muscleGroups, {MuscleGroup.push});
-    expect(workoutAfterFailure.muscles, {Muscle.chest});
+    expect(workoutAfterFailure.muscles.primary, {Muscle.chest});
   });
 }

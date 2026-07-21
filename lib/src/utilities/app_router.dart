@@ -152,6 +152,14 @@ sealed class AppRouter {
           return CreateWorkoutRecordView(
             workoutId: workoutId,
             version: version,
+            workoutPlanRecordId: int.tryParse(
+              state.uri.queryParameters['workoutPlanRecordId'] ?? '',
+            ),
+            week: int.tryParse(state.uri.queryParameters['week'] ?? ''),
+            day: int.tryParse(state.uri.queryParameters['day'] ?? ''),
+            workoutPosition: int.tryParse(
+              state.uri.queryParameters['workoutPosition'] ?? '',
+            ),
           );
         }),
     GoRoute(
@@ -214,10 +222,12 @@ sealed class AppRouter {
         if (id == null) {
           return const NotFoundView();
         }
-        final workoutPlanRecordId = int.tryParse(state.uri.queryParameters['workoutPlanRecordId'] ?? '');
+        final workoutPlanRecordId = int.tryParse(
+            state.uri.queryParameters['workoutPlanRecordId'] ?? '');
         final week = int.tryParse(state.uri.queryParameters['week'] ?? '');
         final day = int.tryParse(state.uri.queryParameters['day'] ?? '');
-        final workoutPosition = int.tryParse(state.uri.queryParameters['workoutPosition'] ?? '');
+        final workoutPosition =
+            int.tryParse(state.uri.queryParameters['workoutPosition'] ?? '');
         return ActiveWorkoutView(
           workoutId: id,
           workoutPlanRecordId: workoutPlanRecordId,

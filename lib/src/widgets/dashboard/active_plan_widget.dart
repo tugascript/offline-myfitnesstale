@@ -74,8 +74,10 @@ class _ActivePlanWidgetState extends State<ActivePlanWidget> {
           }
 
           final plan = currentPlanRecord.workoutPlan!;
-          final progressPercentange = currentPlanRecord.completedWorkouts /
-              currentPlanRecord.totalWorkouts;
+          final progressFraction = currentPlanRecord.totalWorkouts == 0
+              ? 0.0
+              : currentPlanRecord.completedWorkouts /
+                  currentPlanRecord.totalWorkouts;
 
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -136,7 +138,7 @@ class _ActivePlanWidgetState extends State<ActivePlanWidget> {
                                   ),
                                 ),
                                 Text(
-                                  '${progressPercentange.toStringAsFixed(1)}%',
+                                  '${(progressFraction * 100).toStringAsFixed(0)}%',
                                   style: TextStyle(
                                     fontSize: widget.sizes.fontSize,
                                     fontWeight: FontWeight.w600,
@@ -147,7 +149,7 @@ class _ActivePlanWidgetState extends State<ActivePlanWidget> {
                             ),
                             SizedBox(height: widget.sizes.spacing / 2),
                             LinearProgressIndicator(
-                              value: progressPercentange / 100,
+                              value: progressFraction,
                               minHeight: 6,
                               backgroundColor: Colors.grey[200],
                               valueColor: AlwaysStoppedAnimation<Color>(
@@ -213,8 +215,7 @@ class _ActivePlanWidgetState extends State<ActivePlanWidget> {
                                   ),
                                   onPressed: () {
                                     context.push(
-                                      '/workouts/${currentPlanRecord.todaysWorkouts.first.id}/active?workoutPlanId=${plan.id}&workoutPlanVersion=${plan.currentVersion}',
-                                    );
+                                        '/workout-plans/${plan.id}/active');
                                   },
                                   tooltip: 'Start Workout',
                                 ),

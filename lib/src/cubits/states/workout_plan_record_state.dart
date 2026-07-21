@@ -144,13 +144,14 @@ final class WorkoutPlanRecordState extends Equatable {
     WorkoutPlanRecordPagination? pagination,
     bool? isLoading,
     ErrorState? error,
+    bool clearError = false,
   }) {
     return WorkoutPlanRecordState(
       currentPlanRecord: currentPlanRecord ?? this.currentPlanRecord,
       planRecords: planRecords ?? this.planRecords,
       pagination: pagination ?? this.pagination,
       isLoading: isLoading ?? this.isLoading,
-      error: error ?? this.error,
+      error: clearError ? null : error ?? this.error,
     );
   }
 

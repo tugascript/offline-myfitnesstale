@@ -16,11 +16,19 @@ class CreateWorkoutRecordView extends StatefulWidget {
 
   final int workoutId;
   final int version;
+  final int? workoutPlanRecordId;
+  final int? week;
+  final int? day;
+  final int? workoutPosition;
 
   const CreateWorkoutRecordView({
     super.key,
     required this.workoutId,
     required this.version,
+    this.workoutPlanRecordId,
+    this.week,
+    this.day,
+    this.workoutPosition,
   });
 
   @override
@@ -81,6 +89,10 @@ class _CreateWorkoutRecordViewState extends State<CreateWorkoutRecordView> {
                       workoutId: widget.workoutId,
                       version: widget.version,
                       sets: workout.sets!,
+                      workoutPlanRecordId: widget.workoutPlanRecordId,
+                      week: widget.week,
+                      day: widget.day,
+                      workoutPosition: widget.workoutPosition,
                     );
                   },
                 ),
