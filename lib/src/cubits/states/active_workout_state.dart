@@ -5,6 +5,7 @@ import '../../services/dtos/workout_dto.dart';
 import '../../services/dtos/workout_record_dto.dart';
 import '../../services/dtos/workout_set_dto.dart';
 import '../../services/dtos/workout_set_exercise_dto.dart';
+import '../../services/dtos/workout_set_exercise_record_dto.dart';
 import 'common_state.dart';
 
 class ActiveWorkoutState extends Equatable {
@@ -56,6 +57,45 @@ class ActiveWorkoutState extends Equatable {
       return null;
     }
     return set.exercises![currentExercisePosition];
+  }
+
+  /// The current entry when resuming, or the most recently logged occurrence
+  /// of the same exercise in this set group.
+  WorkoutSetExerciseRecordDto? get latestMatchingExerciseRecord {
+    final set = currentSet;
+    final exercise = currentExercise;
+    final records = workoutRecord?.setRecords;
+    if (set == null || exercise == null || records == null) return null;
+
+    final relevantSetRecords = records
+        .where(
+          (record) =>
+              record.workoutSetId == set.id &&
+              record.setNumber <= currentSetNumber,
+        )
+        .toList()
+      ..sort((a, b) => b.setNumber.compareTo(a.setNumber));
+
+    // Prefer the exact current entry when returning to or resuming an
+    // exercise, even if this set group contains the same exercise twice.
+    for (final setRecord in relevantSetRecords.where(
+      (record) => record.setNumber == currentSetNumber,
+    )) {
+      for (final record in setRecord.setExerciseRecords ?? const []) {
+        if (record.workoutSetExerciseId == exercise.id) return record;
+      }
+    }
+
+    for (final setRecord in relevantSetRecords) {
+      final exerciseRecords = setRecord.setExerciseRecords?.reversed;
+      if (exerciseRecords == null) continue;
+
+      for (final record in exerciseRecords) {
+        if (record.exerciseId != exercise.exerciseId) continue;
+        return record;
+      }
+    }
+    return null;
   }
 
   int get totalSets {

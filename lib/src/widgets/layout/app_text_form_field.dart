@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class AppTextFormField extends StatelessWidget {
   final ThemeData theme;
@@ -23,6 +24,7 @@ class AppTextFormField extends StatelessWidget {
   final BoxConstraints? prefixIconConstraints;
   final BoxConstraints? suffixIconConstraints;
   final TextInputAction? textInputAction;
+  final List<TextInputFormatter>? inputFormatters;
 
   const AppTextFormField({
     super.key,
@@ -48,6 +50,7 @@ class AppTextFormField extends StatelessWidget {
     this.enabled = true,
     this.prefixIconConstraints,
     this.suffixIconConstraints,
+    this.inputFormatters,
   });
 
   @override
@@ -61,6 +64,7 @@ class AppTextFormField extends StatelessWidget {
       onTap: onTap,
       keyboardType: keyboardType,
       textInputAction: textInputAction,
+      inputFormatters: inputFormatters,
       enabled: enabled && !isLoading,
       style: TextStyle(
         fontSize: fontSize,
