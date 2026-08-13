@@ -16,11 +16,23 @@ import 'package:myfitnesstale/src/views/exercise_progress_view.dart';
 import 'package:myfitnesstale/src/views/exercises/exercise_records_view.dart';
 
 class _ExerciseRecordCubit extends ExerciseRecordCubit {
-  _ExerciseRecordCubit(ExerciseRecordState initialState) {
+  _ExerciseRecordCubit(
+    ExerciseRecordState initialState,
+    this.aggregateRecords,
+  ) {
     emit(initialState);
   }
 
+  final List<ExerciseRecordDto> aggregateRecords;
   int loadCalls = 0;
+
+  void showOnlyExercise(int exerciseId) {
+    emit(state.copyWith(
+      exerciseRecords: aggregateRecords
+          .where((record) => record.exerciseId == exerciseId)
+          .toList(),
+    ));
+  }
 
   @override
   Future<void> getExerciseRecords({
@@ -30,6 +42,9 @@ class _ExerciseRecordCubit extends ExerciseRecordCubit {
     int? exerciseId,
   }) async {
     loadCalls++;
+    if (exerciseId == null) {
+      emit(state.copyWith(exerciseRecords: aggregateRecords));
+    }
   }
 }
 
@@ -111,6 +126,7 @@ void main() {
   Widget buildHarness({Units units = Units.metric}) {
     exerciseRecordCubit = _ExerciseRecordCubit(
       ExerciseRecordState.initial().copyWith(exerciseRecords: records),
+      records,
     );
     profileCubit = _ProfileCubit(units);
 
@@ -124,6 +140,7 @@ void main() {
         GoRoute(
           path: ExerciseRecordsView.routeName,
           builder: (context, state) => Scaffold(
+            appBar: AppBar(),
             body: Text('Records for ${state.pathParameters['id']}'),
           ),
         ),
@@ -177,5 +194,22 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Records for 1'), findsOneWidget);
+  });
+
+  testWidgets('reloads aggregate records after returning from exercise details',
+      (tester) async {
+    await tester.pumpWidget(buildHarness());
+    expect(find.text(zulu.name), findsOneWidget);
+
+    await tester.tap(find.text(alpha.name));
+    await tester.pumpAndSettle();
+    exerciseRecordCubit.showOnlyExercise(alpha.id);
+
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+
+    expect(find.text(alpha.name), findsOneWidget);
+    expect(find.text(zulu.name), findsOneWidget);
+    expect(exerciseRecordCubit.loadCalls, 2);
   });
 }

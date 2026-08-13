@@ -13,11 +13,14 @@ import '../../support/test_database.dart';
 void main() {
   final testDatabase = TestDatabase();
 
-  Future<int> seedPlan(Database database) {
+  Future<int> seedPlan(
+    Database database, {
+    String name = 'History Plan',
+  }) {
     return database.insert(
       WorkoutPlan.table,
       WorkoutPlan.create(
-        name: 'History Plan',
+        name: name,
         difficulty: Difficulty.beginner,
         version: 1,
         totalWeeks: 1,
@@ -138,5 +141,33 @@ void main() {
     );
     expect(cleared.workoutPlanId, isNull);
     expect(cleared.progressStatus, isNull);
+  });
+
+  test('switching plan filters clears cached records before loading', () async {
+    final database = await testDatabase.db;
+    final firstPlanId = await seedPlan(database, name: 'First History Plan');
+    final secondPlanId = await seedPlan(database, name: 'Second History Plan');
+    await seedRecord(
+      database,
+      planId: firstPlanId,
+      status: ProgressStatus.completed,
+      timestamp: 100,
+    );
+    final cubit = WorkoutPlanRecordCubit();
+    addTearDown(cubit.close);
+
+    await cubit.getWorkoutPlanRecords(workoutPlanId: firstPlanId);
+    expect(cubit.state.planRecords, isNotEmpty);
+
+    final secondPlanLoad =
+        cubit.getWorkoutPlanRecords(workoutPlanId: secondPlanId);
+
+    expect(cubit.state.isLoading, isTrue);
+    expect(cubit.state.planRecords, isEmpty);
+    expect(cubit.state.pagination.workoutPlanId, secondPlanId);
+    expect(cubit.state.pagination.total, 0);
+
+    await secondPlanLoad;
+    expect(cubit.state.planRecords, isEmpty);
   });
 }

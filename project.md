@@ -1,6 +1,6 @@
 # My Fitness Tale: Delivery Plan
 
-Last updated: 13 August 2026 on `codex/navigation-dead-ends` (base commit
+Last updated: 14 August 2026 on `codex/navigation-dead-ends` (base commit
 `b05bf59`). See [PROJECT_STATE.md](PROJECT_STATE.md) for the code-grounded
 snapshot, architecture, and verification results.
 
@@ -146,20 +146,23 @@ flutter test
 git diff --check
 ```
 
-Navigation-dead-ends verification on 13 August 2026:
+Navigation-dead-ends verification on 14 August 2026:
 
 ```text
 dart analyze
   No issues found
 
 flutter test
-  63 tests passed
+  66 tests passed
 ```
 
 The slice adds coverage for Activity destinations, router precedence and ID
 validation, Exercise Progress layout/units/personal-best navigation, plan
 history pagination and states, Reminder Preferences persistence wiring, and
-premium unavailable states.
+premium unavailable states. Review follow-ups also cover aggregate Exercise
+Progress reloading after detail navigation, plan-history cache isolation when
+filters change, and visible refresh/pagination errors for an already-loaded
+history list.
 
 Add these suites next:
 

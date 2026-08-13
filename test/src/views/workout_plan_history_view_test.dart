@@ -17,6 +17,15 @@ class _WorkoutPlanRecordCubit extends WorkoutPlanRecordCubit {
 
   int loadCalls = 0;
 
+  void failWithLoadedRecords(String description) {
+    emit(state.copyWith(
+      error: ErrorState(
+        type: 'operationFailure',
+        description: description,
+      ),
+    ));
+  }
+
   @override
   Future<void> getWorkoutPlanRecords({
     int? workoutPlanId,
@@ -138,5 +147,28 @@ void main() {
     );
     expect(find.textContaining('Completed:'), findsOneWidget);
     expect(find.byType(InkWell), findsNothing);
+  });
+
+  testWidgets('reports refresh errors while retaining loaded history',
+      (tester) async {
+    final cubit = await pumpView(
+      tester,
+      WorkoutPlanRecordState.initial().copyWith(
+        planRecords: [record(1, ProgressStatus.inProgress)],
+        pagination: const WorkoutPlanRecordPagination(
+          workoutPlanId: 9,
+          limit: 20,
+          offset: 0,
+          total: 1,
+        ),
+      ),
+    );
+
+    cubit.failWithLoadedRecords('Refresh failed');
+    await tester.pump();
+
+    expect(find.text('In Progress'), findsOneWidget);
+    expect(find.text('Refresh failed'), findsOneWidget);
+    expect(find.byType(SnackBar), findsOneWidget);
   });
 }
