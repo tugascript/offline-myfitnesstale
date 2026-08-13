@@ -1,7 +1,7 @@
 # My Fitness Tale: Current Project State
 
 Last reviewed on `codex/navigation-dead-ends` (base commit `b05bf59`) on
-13 August 2026.
+14 August 2026.
 
 This is the code-grounded source of truth for what exists now. The forward plan
 and test priorities are in [project.md](project.md).
@@ -22,7 +22,7 @@ Repository facts at this review:
 - 25 SQLite tables in the current create schema;
 - 86 seeded exercises and 25 seeded equipment entries;
 - 16 optional seeded workouts and one 16-week seeded workout plan;
-- 16 automated test files with 63 passing tests;
+- 16 automated test files with 66 passing tests;
 - no repository CI configuration.
 
 ## What is implemented
@@ -177,7 +177,7 @@ foreign-key validation.
 
 ## Automated verification at this review
 
-The following checks were run from the repository root on 13 August 2026:
+The following checks were run from the repository root on 14 August 2026:
 
 ```text
 dart format --output=none --set-exit-if-changed lib test
@@ -187,7 +187,7 @@ dart analyze
   No issues found
 
 flutter test
-  63 tests passed
+  66 tests passed
 
 git diff --check
   No whitespace errors
@@ -201,9 +201,10 @@ Coverage now includes:
 - Activity cards and destinations;
 - router precedence, new routes, invalid plan-history IDs, and unknown paths;
 - Exercise Progress bounded layout, sorting, kg/lb output, coherent personal
-  best, and record navigation;
+  best, record navigation, and aggregate reload after returning from details;
 - plan-history replacement/append pagination, retained filters, newest-first
-  order, loading/empty/error states, and all progress statuses;
+  order, cross-plan cache isolation, loading/empty/error states, visible
+  background request failures, and all progress statuses;
 - reminder disclosure, expanded toggles, persistence calls, and dashboard
   navigation;
 - premium-locked flows with no upgrade, subscribe, or restore controls.

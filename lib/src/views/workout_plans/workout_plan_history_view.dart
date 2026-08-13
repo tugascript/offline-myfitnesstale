@@ -80,7 +80,16 @@ class _WorkoutPlanHistoryViewState extends State<WorkoutPlanHistoryView> {
 
     return AppScaffold(
       title: 'Plan History',
-      body: BlocBuilder<WorkoutPlanRecordCubit, WorkoutPlanRecordState>(
+      body: BlocConsumer<WorkoutPlanRecordCubit, WorkoutPlanRecordState>(
+        listenWhen: (previous, current) =>
+            previous.error != current.error &&
+            current.error != null &&
+            current.planRecords.isNotEmpty,
+        listener: (context, state) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(state.error!.description)),
+          );
+        },
         builder: (context, state) {
           if (state.isLoading && state.planRecords.isEmpty) {
             return const Center(child: CircularProgressIndicator());

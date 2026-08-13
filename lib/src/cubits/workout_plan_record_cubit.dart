@@ -17,6 +17,7 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
   WorkoutPlanRecordCubit() : super(WorkoutPlanRecordState.initial());
 
   final Logger _logger = Logger('WorkoutPlanRecordCubit');
+  int _historyRequestId = 0;
 
   Future<void> getWorkoutPlanRecords({
     int? workoutPlanId,
@@ -25,7 +26,25 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
     int offset = 0,
   }) async {
     _logger.info('Getting workout plan record history');
-    emit(state.copyWith(isLoading: true, clearError: true));
+    final requestId = ++_historyRequestId;
+    final filtersChanged = state.pagination.workoutPlanId != workoutPlanId ||
+        state.pagination.progressStatus != progressStatus;
+    final clearStaleRecords = offset == 0 && filtersChanged;
+
+    emit(state.copyWith(
+      planRecords: clearStaleRecords ? const [] : null,
+      pagination: clearStaleRecords
+          ? state.pagination.copyWith(
+              workoutPlanId: Nullable(workoutPlanId),
+              progressStatus: Nullable(progressStatus),
+              limit: limit,
+              offset: 0,
+              total: 0,
+            )
+          : null,
+      isLoading: true,
+      clearError: true,
+    ));
 
     final result = await _workoutPlanRecordService.getWorkoutPlanRecords(
       workoutPlanId: workoutPlanId,
@@ -33,6 +52,10 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
       limit: limit,
       offset: offset,
     );
+    if (requestId != _historyRequestId) {
+      return;
+    }
+
     if (result.isErr()) {
       emit(state.copyWith(
         isLoading: false,

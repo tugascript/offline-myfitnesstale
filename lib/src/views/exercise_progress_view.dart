@@ -96,6 +96,15 @@ class _ExerciseProgressViewState extends State<ExerciseProgressView> {
     return exerciseList;
   }
 
+  Future<void> _openExerciseRecords(int exerciseId) async {
+    await context.push<void>(ExerciseRecordsView.location(exerciseId));
+    if (!mounted) {
+      return;
+    }
+
+    await context.read<ExerciseRecordCubit>().getExerciseRecords(limit: 1000);
+  }
+
   @override
   Widget build(BuildContext context) {
     return AppScaffold(
@@ -234,14 +243,12 @@ class _ExerciseProgressViewState extends State<ExerciseProgressView> {
                           final exercise = filteredExercises[index];
                           final records = groupedRecords[exercise.id] ?? [];
                           final progress = _calculateProgressData(records);
-                          final destination =
-                              ExerciseRecordsView.location(exercise.id);
 
                           return Card(
                             key: ValueKey('exercise-progress-${exercise.id}'),
                             margin: const EdgeInsets.only(bottom: 12),
                             child: InkWell(
-                              onTap: () => context.push(destination),
+                              onTap: () => _openExerciseRecords(exercise.id),
                               child: Padding(
                                 padding: const EdgeInsets.all(16),
                                 child: Column(
@@ -265,7 +272,7 @@ class _ExerciseProgressViewState extends State<ExerciseProgressView> {
                                             size: 16,
                                           ),
                                           onPressed: () =>
-                                              context.push(destination),
+                                              _openExerciseRecords(exercise.id),
                                         ),
                                       ],
                                     ),
