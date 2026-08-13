@@ -1,4 +1,5 @@
 import 'package:logging/logging.dart';
+import 'package:sqflite/sqflite.dart';
 
 import '../models/common.dart';
 import '../models/db.dart';
@@ -741,12 +742,12 @@ class WorkoutPlanService {
       createWorkoutPlans(
     List<WorkoutPlanRegistrationInput> plans, {
     CreatedBy createdBy = CreatedBy.user,
+    Transaction? transaction,
   }) async {
     _logger.info('Creating ${plans.length} workout plans...');
 
     try {
-      final List<WorkoutPlanDto> createdPlans =
-          await (await _databaseHelper.db).transaction((txn) async {
+      Future<List<WorkoutPlanDto>> create(Transaction txn) async {
         final List<WorkoutPlanDto> createdPlans = [];
 
         for (final planInput in plans) {
@@ -857,7 +858,11 @@ class WorkoutPlanService {
         }
 
         return createdPlans;
-      });
+      }
+
+      final List<WorkoutPlanDto> createdPlans = transaction != null
+          ? await create(transaction)
+          : await (await _databaseHelper.db).transaction(create);
 
       _logger.info('Created ${createdPlans.length} workout plans');
       return ok(createdPlans);

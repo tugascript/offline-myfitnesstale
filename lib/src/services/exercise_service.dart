@@ -1,4 +1,5 @@
 import 'package:logging/logging.dart';
+import 'package:sqflite/sqflite.dart';
 
 import '../models/common.dart';
 import '../models/db.dart';
@@ -287,47 +288,49 @@ class ExerciseService {
       createExercises(
     List<ExerciseInput> exerciseInputs, {
     CreatedBy createdBy = CreatedBy.user,
+    Transaction? transaction,
   }) async {
     _logger.info("Creating ${exerciseInputs.length} exercises...");
     try {
-      final List<ExerciseDto> exercises =
-          await (await _databaseHelper.db).transaction(
-        (txn) async {
-          final List<ExerciseDto> exercises = [];
+      Future<List<ExerciseDto>> create(Transaction txn) async {
+        final List<ExerciseDto> exercises = [];
 
-          for (final exerciseInput in exerciseInputs) {
-            final exercise = Exercise.create(
-              name: exerciseInput.name,
-              muscleGroup: exerciseInput.muscleGroup,
-              muscles: exerciseInput.muscles,
-              createdBy: createdBy,
-            );
-            final id = await _repository.insert(exercise, txn);
+        for (final exerciseInput in exerciseInputs) {
+          final exercise = Exercise.create(
+            name: exerciseInput.name,
+            muscleGroup: exerciseInput.muscleGroup,
+            muscles: exerciseInput.muscles,
+            createdBy: createdBy,
+          );
+          final id = await _repository.insert(exercise, txn);
 
-            if (exerciseInput.equipments == null) {
-              exercises.add(ExerciseDto.fromModel(exercise.copyWith(id: id)));
-              continue;
-            }
-
-            final List<EquipmentDto> equipments = [];
-            for (final equipment in exerciseInput.equipments!) {
-              final exerciseEquipment = ExerciseEquipment.create(
-                equipmentId: equipment.id,
-                exerciseId: id,
-              );
-              await _exerciseEquipmentRepository.insert(exerciseEquipment, txn);
-              equipments.add(equipment);
-            }
-
-            exercises.add(ExerciseDto.fromModel(
-              exercise.copyWith(id: id),
-              equipments: equipments,
-            ));
+          if (exerciseInput.equipments == null) {
+            exercises.add(ExerciseDto.fromModel(exercise.copyWith(id: id)));
+            continue;
           }
 
-          return exercises;
-        },
-      );
+          final List<EquipmentDto> equipments = [];
+          for (final equipment in exerciseInput.equipments!) {
+            final exerciseEquipment = ExerciseEquipment.create(
+              equipmentId: equipment.id,
+              exerciseId: id,
+            );
+            await _exerciseEquipmentRepository.insert(exerciseEquipment, txn);
+            equipments.add(equipment);
+          }
+
+          exercises.add(ExerciseDto.fromModel(
+            exercise.copyWith(id: id),
+            equipments: equipments,
+          ));
+        }
+
+        return exercises;
+      }
+
+      final List<ExerciseDto> exercises = transaction != null
+          ? await create(transaction)
+          : await (await _databaseHelper.db).transaction(create);
 
       return ok(exercises);
     } catch (e) {
@@ -588,11 +591,11 @@ class ExerciseService {
       createEquipments(
     List<String> names, {
     CreatedBy createdBy = CreatedBy.user,
+    Transaction? transaction,
   }) async {
     _logger.info('Creating ${names.length} equipments...');
     try {
-      final List<Equipment> equipments =
-          await (await _databaseHelper.db).transaction((txn) async {
+      Future<List<Equipment>> create(Transaction txn) async {
         final List<Equipment> equipments = [];
 
         for (final name in names) {
@@ -602,7 +605,11 @@ class ExerciseService {
         }
 
         return equipments;
-      });
+      }
+
+      final List<Equipment> equipments = transaction != null
+          ? await create(transaction)
+          : await (await _databaseHelper.db).transaction(create);
 
       _logger.info('Created ${equipments.length} equipments');
       return ok(equipments.map((e) => EquipmentDto.fromModel(e)).toList());

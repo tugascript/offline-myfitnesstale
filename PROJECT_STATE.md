@@ -1,6 +1,6 @@
 # My Fitness Tale: Current Project State
 
-Last reviewed on `codex/navigation-dead-ends` (base commit `b05bf59`) on
+Last reviewed on `codex/onboarding-atomic-recovery` (base commit `8d1c1a7`) on
 14 August 2026.
 
 This is the code-grounded source of truth for what exists now. The forward plan
@@ -11,26 +11,27 @@ and test priorities are in [project.md](project.md).
 My Fitness Tale is a local-first Flutter fitness tracker for Android and iOS.
 It has substantial profile, exercise, workout, history, weight, workout-plan,
 and plan-execution functionality backed by SQLite. The known navigation dead
-ends have been repaired. It is suitable for continued development and manual
-testing, but is not release-ready because onboarding is not atomic, automated
-coverage remains uneven outside the repaired paths, local backup is absent,
-and subscriptions are intentionally unavailable.
+ends have been repaired and onboarding is atomic and retry-safe. It is suitable
+for continued development and manual testing, but is not release-ready because
+device-level journeys remain unverified, automated coverage is uneven outside
+the repaired paths, local backup is absent, and subscriptions are intentionally
+unavailable.
 
 Repository facts at this review:
 
-- 310 Dart source files under `lib`;
+- 311 Dart source files under `lib`;
 - 25 SQLite tables in the current create schema;
 - 86 seeded exercises and 25 seeded equipment entries;
 - 16 optional seeded workouts and one 16-week seeded workout plan;
-- 16 automated test files with 66 passing tests;
+- 20 automated test files with 83 passing tests;
 - no repository CI configuration.
 
 ## What is implemented
 
 | Area | Current behavior | Important caveat |
 | --- | --- | --- |
-| Onboarding and profile | Creates one local profile; persists height, gender, birthday, units, theme, notification preference, and reminder toggles | Bootstrap spans multiple service calls and is not atomic or covered by failure/retry tests |
-| Seed data | Always seeds equipment and exercises; optionally seeds workouts and the standard plan | Failure recovery and duplicate-safe retry are not defined |
+| Onboarding and profile | Creates one local profile and persists settings/reminders in the same SQLite transaction as bootstrap data; marks setup complete last | Partial databases from older development builds are rejected with clear-app-data guidance rather than repaired |
+| Seed data | Atomically seeds 25 equipment and 86 exercises; optionally seeds 16 workouts and the standard 16-week plan | A completed snapshot is idempotent; destructive reset remains the pre-beta policy for inconsistent legacy data |
 | Activity | Provides entry cards for workout history, aggregate exercise progress, weight history, and workout-plan history | Workout and plan history require selecting their parent entity; there is no unified chronological timeline |
 | Exercises | Paginated browse/search; muscle-group, difficulty, and favorite filters; create/edit/delete; equipment relationships; favorite state | Equipment filtering is still TODO; media values have no picker/upload workflow |
 | Exercise records/progress | Create/edit/delete records; latest/history views; date filtering; estimated-max chart; aggregate progress sorted by exercise with kg/lb summaries | Aggregate progress intentionally reads only the most recent 1,000 records |
@@ -96,10 +97,12 @@ The usual feature flow is:
 4. A Cubit exposes operation state and feature DTOs.
 5. Views load route data; widgets render forms, lists, charts, and actions.
 
-This is a convention rather than a strict dependency boundary. Services are
-singletons and Cubits construct them directly, so dependency replacement in
-tests is difficult. `WorkoutPlanService` and `WorkoutPlanRecordService` remain
-large orchestration services.
+This is a convention rather than a strict dependency boundary. Most services
+are singletons and Cubits construct them directly, so dependency replacement
+in tests is often difficult. `ProfileCubit` now accepts an optional
+`OnboardingService` for deterministic orchestration tests.
+`WorkoutPlanService` and `WorkoutPlanRecordService` remain large orchestration
+services.
 
 ### Data conventions
 
@@ -114,6 +117,32 @@ large orchestration services.
 - SQLite foreign-key enforcement is enabled in `onConfigure`.
 - Several models use `value ?? oldValue` in `copyWith`, so nullable values may
   not be intentionally clearable unless that model uses an explicit sentinel.
+
+## Onboarding invariants
+
+`OnboardingService` owns one SQLite transaction with these ordered stages:
+
+1. equipment;
+2. exercises and equipment links;
+3. profile;
+4. system settings;
+5. reminder preferences;
+6. optional workouts;
+7. optional standard plan;
+8. `System.initialSetup = completed`.
+
+The bulk seed and profile operations accept an optional shared transaction but
+retain their standalone transaction behavior for existing callers. A failed
+service `Result` or injected stage failure throws inside the outer transaction,
+so SQLite rolls back the complete attempt. `ProfileCubit` exposes only loading
+and error state until commit succeeds, then publishes the committed profile,
+system, and reminders together.
+
+A complete snapshot is idempotent: later onboarding calls return its existing
+DTOs without changing settings or reseeding. Any partial profile or seed data
+from older unpublished builds is treated as inconsistent and requires clearing
+app data. The onboarding form remains populated after a failure and displays a
+persistent explanation that the attempt saved no data.
 
 ## Workout-plan and history invariants
 
@@ -181,13 +210,13 @@ The following checks were run from the repository root on 14 August 2026:
 
 ```text
 dart format --output=none --set-exit-if-changed lib test
-  327 files formatted with no pending changes
+  331 files formatted with no pending changes
 
 dart analyze
   No issues found
 
 flutter test
-  66 tests passed
+  83 tests passed
 
 git diff --check
   No whitespace errors
@@ -195,6 +224,12 @@ git diff --check
 
 Coverage now includes:
 
+- onboarding with and without optional workouts;
+- all eight onboarding failure points, complete rollback, retry without
+  duplicates, completed-snapshot idempotency, foreign-key validation, and
+  legacy partial-data reset guidance;
+- onboarding Cubit loading/error coordination, stale-error clearing,
+  unchanged-form retry, optional-workout choices, and post-commit navigation;
 - entitlement guard TTL/grace decisions;
 - workout-set batch mutation and rollback;
 - workout-plan structure/versioning and execution lifecycle;
@@ -211,7 +246,6 @@ Coverage now includes:
 
 Important untested areas:
 
-- onboarding success, rollback, retry, and duplicate seeding;
 - complete full-app bottom-navigation/dashboard journeys;
 - profile, general exercise/equipment, weight-record, and weight-goal CRUD;
 - complete live-workout and active-plan routed interactions;
@@ -263,6 +297,7 @@ device can use `127.0.0.1` after `adb reverse tcp:8080 tcp:8080`.
 
 ## Next work
 
-Make onboarding atomic and retry-safe, then run the complete beta journey on
-Android and iOS. Add local backup/restore before treating device data as
-durable. The ordered implementation and test plan is in [project.md](project.md).
+Run the complete beta journey on Android and iOS, including fresh onboarding
+with optional workouts both off and on. Add local backup/restore before
+treating device data as durable. The ordered implementation and test plan is in
+[project.md](project.md).

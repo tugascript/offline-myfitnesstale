@@ -496,11 +496,11 @@ class WorkoutService {
       createWorkouts(
     List<WorkoutRegistrationInput> workouts, {
     CreatedBy createdBy = CreatedBy.user,
+    Transaction? transaction,
   }) async {
     _logger.info("Creating ${workouts.length} workouts...");
     try {
-      final List<WorkoutDto> createdWorkouts =
-          await _repository.startTransaction((txn) async {
+      Future<List<WorkoutDto>> create(Transaction txn) async {
         final List<WorkoutDto> createdWorkouts = [];
 
         for (final workoutInput in workouts) {
@@ -626,7 +626,11 @@ class WorkoutService {
         }
 
         return createdWorkouts;
-      });
+      }
+
+      final List<WorkoutDto> createdWorkouts = transaction != null
+          ? await create(transaction)
+          : await _repository.startTransaction(create);
 
       _logger.info("Created ${createdWorkouts.length} workouts");
       return ok(createdWorkouts);

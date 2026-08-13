@@ -37,6 +37,7 @@ final class ProfileState extends Equatable {
     bool? isRemindersLoading,
     bool? isInitiated,
     ErrorState? error,
+    bool clearError = false,
     ErrorState? remindersError,
   }) {
     return ProfileState(
@@ -45,7 +46,7 @@ final class ProfileState extends Equatable {
       remindersConfig: remindersConfig ?? this.remindersConfig,
       isLoading: isLoading ?? this.isLoading,
       isInitiated: isInitiated ?? this.isInitiated,
-      error: error ?? this.error,
+      error: clearError ? null : error ?? this.error,
     );
   }
 
@@ -56,5 +57,6 @@ final class ProfileState extends Equatable {
         profile,
         system,
         remindersConfig,
+        isInitiated,
       ];
 }

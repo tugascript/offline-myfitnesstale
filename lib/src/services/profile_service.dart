@@ -1,4 +1,5 @@
 import 'package:logging/logging.dart';
+import 'package:sqflite/sqflite.dart';
 
 import '../models/db.dart';
 import '../models/enums.dart';
@@ -45,10 +46,12 @@ class ProfileService {
     required int height,
     required Gender gender,
     required DateTime birthday,
+    Transaction? transaction,
   }) async {
     _logger.info("Upserting profile...");
     try {
-      final Profile? existingProfile = await _repository.selectLatest();
+      final Profile? existingProfile =
+          await _repository.selectLatest(transaction);
 
       if (existingProfile != null) {
         _logger.info('Profile already exists, updating...');
@@ -58,7 +61,7 @@ class ProfileService {
           gender: gender,
           updatedAt: DateUtilities.getNowUtcUnix(),
         );
-        await _repository.update(updatedProfile);
+        await _repository.update(updatedProfile, transaction);
         _logger.info('Updated profile with id ${updatedProfile.id}');
         return ok(ProfileDto.fromModel(updatedProfile));
       }
@@ -69,7 +72,7 @@ class ProfileService {
         gender,
         birthday,
       );
-      final int id = await _repository.insert(profile);
+      final int id = await _repository.insert(profile, transaction);
       _logger.info('Created profile with id $id');
       return ok(ProfileDto.fromModel(profile.copyWith(id: id)));
     } catch (e) {
@@ -116,11 +119,12 @@ class ProfileService {
     }
   }
 
-  Future<Result<ProfileDto, ServiceError<SingleErrorTypes>>>
-      selectProfile() async {
+  Future<Result<ProfileDto, ServiceError<SingleErrorTypes>>> selectProfile({
+    Transaction? transaction,
+  }) async {
     _logger.info("Getting latest profile...");
     try {
-      final Profile? profile = await _repository.selectLatest();
+      final Profile? profile = await _repository.selectLatest(transaction);
       if (profile == null) {
         _logger.info("Profile does not exist");
         return err(const ServiceError(
@@ -145,19 +149,22 @@ class ProfileService {
     required Units units,
     required int profileId,
     required bool notificationsOn,
+    Transaction? transaction,
   }) async {
     _logger.info('Upserting system...');
     try {
-      final System? existingSystem = await _systemRepository.selectLatest();
+      final System? existingSystem =
+          await _systemRepository.selectLatest(transaction);
 
       if (existingSystem != null) {
         _logger.info('System already exists, updating...');
         final System updatedSystem = existingSystem.copyWith(
           theme: theme,
           units: units,
+          notificationsOn: notificationsOn,
           updatedAt: DateUtilities.getNowUtcUnix(),
         );
-        await _systemRepository.update(updatedSystem);
+        await _systemRepository.update(updatedSystem, transaction);
         _logger.info('System updated successfully');
         return ok(SystemDto.fromModel(updatedSystem));
       }
@@ -168,7 +175,7 @@ class ProfileService {
         units: units,
         notificationsOn: notificationsOn,
       );
-      final int id = await _systemRepository.insert(system);
+      final int id = await _systemRepository.insert(system, transaction);
       _logger.info('System created successfully');
       return ok(SystemDto.fromModel(system.copyWith(id: id)));
     } catch (e) {
@@ -180,11 +187,12 @@ class ProfileService {
     }
   }
 
-  Future<Result<SystemDto, ServiceError<SingleErrorTypes>>>
-      selectSystem() async {
+  Future<Result<SystemDto, ServiceError<SingleErrorTypes>>> selectSystem({
+    Transaction? transaction,
+  }) async {
     _logger.info('Selecting latest system...');
     try {
-      final System? system = await _systemRepository.selectLatest();
+      final System? system = await _systemRepository.selectLatest(transaction);
       if (system == null) {
         _logger.info('No system found');
         return err(const ServiceError(
@@ -209,11 +217,12 @@ class ProfileService {
     required int profileId,
     required bool workoutsOn,
     required bool weightRecordsOn,
+    Transaction? transaction,
   }) async {
     _logger.info('Upserting reminders config...');
     try {
       final RemindersConfig? existingConfig =
-          await _remindersRepository.selectLatest();
+          await _remindersRepository.selectLatest(transaction);
 
       if (existingConfig != null) {
         _logger.info('Reminders config exists, updating...');
@@ -222,7 +231,7 @@ class ProfileService {
           weightRecordsOn: weightRecordsOn,
           updatedAt: DateUtilities.getNowUtcUnix(),
         );
-        await _remindersRepository.update(updatedConfig);
+        await _remindersRepository.update(updatedConfig, transaction);
         _logger.info('Updated reminders config with id ${updatedConfig.id}');
         return ok(RemindersConfigDto.fromModel(updatedConfig));
       }
@@ -232,7 +241,8 @@ class ProfileService {
         weightRecordsOn: weightRecordsOn,
         profileId: profileId,
       );
-      final int id = await _remindersRepository.insert(remindersConfig);
+      final int id =
+          await _remindersRepository.insert(remindersConfig, transaction);
       _logger.info('Created reminders config with id $id');
       return ok(
         RemindersConfigDto.fromModel(remindersConfig.copyWith(id: id)),
@@ -247,11 +257,11 @@ class ProfileService {
   }
 
   Future<Result<RemindersConfigDto, ServiceError<SingleErrorTypes>>>
-      selectRemindersConfig() async {
+      selectRemindersConfig({Transaction? transaction}) async {
     _logger.info('Selecting reminders config...');
     try {
       final RemindersConfig? remindersConfig =
-          await _remindersRepository.selectLatest();
+          await _remindersRepository.selectLatest(transaction);
       if (remindersConfig == null) {
         _logger.info('Reminders config not found');
         return err(const ServiceError(
@@ -312,10 +322,12 @@ class ProfileService {
     SetUpStatus? workoutSetup,
     SetUpStatus? workoutPlanSetup,
     SetUpStatus? initialSetup,
+    Transaction? transaction,
   }) async {
     _logger.info('Upgrading system...');
     try {
-      final System? existingSystem = await _systemRepository.selectLatest();
+      final System? existingSystem =
+          await _systemRepository.selectLatest(transaction);
       if (existingSystem == null) {
         _logger.info('System does not exist');
         return err(const ServiceError(
@@ -330,7 +342,7 @@ class ProfileService {
         initialSetup: initialSetup,
         updatedAt: DateUtilities.getNowUtcUnix(),
       );
-      await _systemRepository.update(updatedSystem);
+      await _systemRepository.update(updatedSystem, transaction);
       _logger.info('System upgraded successfully');
       return ok(SystemDto.fromModel(updatedSystem));
     } catch (e) {
