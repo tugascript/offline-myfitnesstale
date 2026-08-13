@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 
+import '../../common/nullable.dart';
 import '../../models/enums.dart';
 import '../../services/dtos/workout_dto.dart';
 import '../../services/dtos/workout_plan_dto.dart';
@@ -30,13 +31,17 @@ final class WorkoutPlanRecordPagination extends Equatable {
   }
 
   WorkoutPlanRecordPagination copyWith({
-    int? workoutPlanId,
-    ProgressStatus? progressStatus,
+    Nullable<int>? workoutPlanId,
+    Nullable<ProgressStatus>? progressStatus,
     int? limit,
     int? offset,
     int? total,
   }) {
     return WorkoutPlanRecordPagination(
+      workoutPlanId:
+          workoutPlanId != null ? workoutPlanId.value : this.workoutPlanId,
+      progressStatus:
+          progressStatus != null ? progressStatus.value : this.progressStatus,
       limit: limit ?? this.limit,
       offset: offset ?? this.offset,
       total: total ?? this.total,
@@ -44,7 +49,13 @@ final class WorkoutPlanRecordPagination extends Equatable {
   }
 
   @override
-  List<Object?> get props => [limit, offset, total];
+  List<Object?> get props => [
+        workoutPlanId,
+        progressStatus,
+        limit,
+        offset,
+        total,
+      ];
 }
 
 final class CurrentWorkoutPlanRecordState extends Equatable {

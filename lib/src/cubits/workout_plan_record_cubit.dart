@@ -1,6 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:logging/logging.dart';
 
+import '../common/nullable.dart';
 import '../models/enums.dart';
 import '../services/common/errors.dart';
 import '../services/workout_plan_record_service.dart';
@@ -16,6 +17,48 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
   WorkoutPlanRecordCubit() : super(WorkoutPlanRecordState.initial());
 
   final Logger _logger = Logger('WorkoutPlanRecordCubit');
+
+  Future<void> getWorkoutPlanRecords({
+    int? workoutPlanId,
+    ProgressStatus? progressStatus,
+    int limit = 20,
+    int offset = 0,
+  }) async {
+    _logger.info('Getting workout plan record history');
+    emit(state.copyWith(isLoading: true, clearError: true));
+
+    final result = await _workoutPlanRecordService.getWorkoutPlanRecords(
+      workoutPlanId: workoutPlanId,
+      status: progressStatus,
+      limit: limit,
+      offset: offset,
+    );
+    if (result.isErr()) {
+      emit(state.copyWith(
+        isLoading: false,
+        error: ErrorState(
+          type: result.error.type.name,
+          description: result.error.description,
+        ),
+      ));
+      return;
+    }
+
+    final page = result.value;
+    emit(state.copyWith(
+      planRecords:
+          offset == 0 ? page.data : [...state.planRecords, ...page.data],
+      pagination: state.pagination.copyWith(
+        workoutPlanId: Nullable(workoutPlanId),
+        progressStatus: Nullable(progressStatus),
+        limit: page.limit,
+        offset: page.offset,
+        total: page.total,
+      ),
+      isLoading: false,
+      clearError: true,
+    ));
+  }
 
   Future<void> getOrCreateActivePlanRecord(int workoutPlanId) async {
     _logger.info('Getting active plan record');

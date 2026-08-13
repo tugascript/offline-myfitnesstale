@@ -9,7 +9,6 @@ import '../../../cubits/workout_plan_cubit.dart';
 import '../../../models/enums.dart';
 import '../../../services/entitlement_guard.dart';
 import '../../../utilities/sizes/data_display_sizes.dart';
-import '../../common/mutation_button.dart';
 import '../../layout/app_modal.dart';
 import '../../layout/app_elevated_button.dart';
 import 'workout_plan_base_form.dart';
@@ -133,7 +132,7 @@ class _LockedPremiumEditor extends StatelessWidget {
           ),
           SizedBox(height: sizes.spacing),
           Text(
-            "Upgrade to premium to create unlimited workout plans",
+            "Premium upgrades are unavailable in this build. You can continue using your existing plans.",
             style: TextStyle(
               fontSize: sizes.fontSize,
             ),
@@ -144,23 +143,8 @@ class _LockedPremiumEditor extends StatelessWidget {
             child: AppElevatedButton(
               theme: theme,
               isLoading: false,
-              icon: Icons.star,
-              label: "UPGRADE TO PREMIUM",
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              sizes: sizes,
-            ),
-          ),
-          SizedBox(height: sizes.spacing),
-          SizedBox(
-            width: double.infinity,
-            child: MutationButton(
-              theme: theme,
-              isLoading: false,
               icon: Icons.close,
-              label: "NO THANKS",
-              color: theme.colorScheme.onSurface,
+              label: "CLOSE",
               onPressed: () {
                 Navigator.of(context).pop();
               },

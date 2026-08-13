@@ -14,6 +14,7 @@ import '../../widgets/common/action_buttons.dart';
 import '../../widgets/workout_plan/details/workout_plan_header.dart';
 import '../../widgets/workout_plan/details/workout_plan_week_card.dart';
 import '../loading_view.dart';
+import 'workout_plan_history_view.dart';
 
 class WorkoutPlanDetailView extends StatefulWidget {
   static const String routeName = "/workout-plans/:id";
@@ -151,7 +152,7 @@ class _WorkoutPlanDetailViewState extends State<WorkoutPlanDetailView> {
                     );
                   },
                   onHistory: () =>
-                      context.push('/workout-plans/${plan.id}/history'),
+                      context.push(WorkoutPlanHistoryView.location(plan.id)),
                   historyLabel: 'Plan History',
                 ),
               ],

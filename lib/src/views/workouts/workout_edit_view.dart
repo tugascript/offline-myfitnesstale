@@ -16,6 +16,7 @@ import '../../widgets/workouts/details/basic_editor/basic_editor.dart';
 import '../../widgets/workouts/details/premium_editor/premium_editor.dart';
 import '../../widgets/workouts/details/workout_header_card.dart';
 import '../../widgets/workouts/details/workout_header_edit_card.dart';
+import 'workouts_view.dart';
 
 class WorkoutEditView extends StatefulWidget {
   static const name = "workout_edit";
@@ -99,16 +100,7 @@ class _WorkoutEditViewState extends State<WorkoutEditView> {
                 initialSets: workout.sets ?? [],
               );
             } else if (wantsPremiumEditor || hasComplexSets) {
-              editor = _LockedPremiumEditor(
-                isPurchasing: entitlementState.isPurchasing,
-                isRestoring: entitlementState.isRestoring,
-                onPurchase: () {
-                  context.read<EntitlementCubit>().purchasePremium();
-                },
-                onRestore: () {
-                  context.read<EntitlementCubit>().restorePurchases();
-                },
-              );
+              editor = const _LockedPremiumEditor();
             }
 
             return ResponsiveScaffold(
@@ -202,17 +194,7 @@ class _WorkoutEditViewState extends State<WorkoutEditView> {
 }
 
 class _LockedPremiumEditor extends StatelessWidget {
-  final bool isPurchasing;
-  final bool isRestoring;
-  final VoidCallback onPurchase;
-  final VoidCallback onRestore;
-
-  const _LockedPremiumEditor({
-    required this.isPurchasing,
-    required this.isRestoring,
-    required this.onPurchase,
-    required this.onRestore,
-  });
+  const _LockedPremiumEditor();
 
   @override
   Widget build(BuildContext context) {
@@ -231,38 +213,12 @@ class _LockedPremiumEditor extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             const Text(
-              'This workout uses premium set types. Subscribe or restore your purchases to edit it.',
+              'This workout uses advanced set types. Premium editing is unavailable in this build.',
             ),
             const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: isPurchasing ? null : onPurchase,
-              child: isPurchasing
-                  ? const SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Text('Subscribe to Premium'),
-            ),
-            const SizedBox(height: 8),
-            OutlinedButton(
-              onPressed: isRestoring ? null : onRestore,
-              child: isRestoring
-                  ? const SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Text('Restore Purchases'),
-            ),
-            const SizedBox(height: 8),
             OutlinedButton(
               onPressed: () {
-                if (context.canPop()) {
-                  context.pop();
-                }
-
-                context.push("/workouts");
+                context.go(WorkoutsView.routeName);
               },
               child: const Text('Back to Workouts'),
             ),

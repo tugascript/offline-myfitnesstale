@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../utilities/sizes/data_display_sizes.dart';
 import '../../views/equipments/equipments_view.dart';
 import '../../views/exercises/exercises_view.dart';
+import '../../views/profile/reminder_preferences_view.dart';
 import '../../views/weight/weight_goals_view.dart';
 import '../../views/weight/weight_records_view.dart';
 import '../../views/workouts/workouts_view.dart';
@@ -117,8 +118,10 @@ class QuickActionsWidget extends StatelessWidget {
                 color: Colors.deepPurple,
               ),
               title: "Reminders",
-              subtitle: "Set or update reminders",
-              onTap: () {},
+              subtitle: "Manage reminder preferences",
+              onTap: () {
+                context.push(ReminderPreferencesView.routeName);
+              },
             ),
           ],
         ),
