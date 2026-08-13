@@ -1,32 +1,23 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:logging/logging.dart';
 
-import '../models/constants/equipment_constants.dart';
-import '../models/constants/exercise_constants.dart';
-import '../models/constants/workout_constants.dart';
-import '../models/constants/workout_plan_constants.dart';
 import '../models/enums.dart';
 import '../services/common/errors.dart';
-import '../services/dtos/equipment_dto.dart';
-import '../services/dtos/exercise_dto.dart';
 import '../services/dtos/system_dto.dart';
-import '../services/dtos/workout_dto.dart';
-import '../services/exercise_service.dart';
+import '../services/onboarding_service.dart';
 import '../services/profile_service.dart';
-import '../services/workout_plan_service.dart';
-import '../services/workout_service.dart';
 import 'states/common_state.dart';
 import 'states/profile_state.dart';
 
 class ProfileCubit extends Cubit<ProfileState> {
   final ProfileService _profileService = ProfileService();
-  final ExerciseService _exerciseService = ExerciseService();
-  final WorkoutService _workoutService = WorkoutService();
-  final WorkoutPlanService _workoutPlanService = WorkoutPlanService();
+  final OnboardingService _onboardingService;
 
   final Logger _logger = Logger("Profile Cubit");
 
-  ProfileCubit() : super(ProfileState.initial());
+  ProfileCubit({OnboardingService? onboardingService})
+      : _onboardingService = onboardingService ?? OnboardingService(),
+        super(ProfileState.initial());
 
   Future<void> loadInitialData() async {
     _logger.info("Loading initial data");
@@ -125,6 +116,20 @@ class ProfileCubit extends Cubit<ProfileState> {
       }
     }
 
+    if (systemResult.value.initialSetup != SetUpStatus.completed) {
+      _logger.warning('Existing onboarding data is incomplete');
+      emit(state.copyWith(
+        error: ErrorState(
+          type: SingleErrorTypes.operationFailure.name,
+          description:
+              'Existing development setup is incomplete. Clear app data and try again.',
+        ),
+        isInitiated: true,
+        isLoading: false,
+      ));
+      return;
+    }
+
     _logger.info("Loading initial data completed");
     emit(state.copyWith(
       profile: profileResult.value,
@@ -132,7 +137,7 @@ class ProfileCubit extends Cubit<ProfileState> {
       remindersConfig: remindersConfigResult.value,
       isInitiated: true,
       isLoading: false,
-      error: null,
+      clearError: true,
     ));
   }
 
@@ -288,273 +293,41 @@ class ProfileCubit extends Cubit<ProfileState> {
       return;
     }
 
-    emit(state.copyWith(isLoading: true));
-    // TODO: handle creation more gracefully
-    final equipmentResult = await _exerciseService.createEquipments(
-      kEquipmentNames.toList(),
-      createdBy: CreatedBy.system,
+    emit(state.copyWith(isLoading: true, clearError: true));
+    final result = await _onboardingService.onboard(
+      OnboardingRequest(
+        units: units,
+        theme: theme,
+        name: name,
+        height: height,
+        gender: gender,
+        birthday: birthday,
+        createWorkouts: createWorkouts,
+        notificationsOn: notificationsOn,
+      ),
     );
-    if (equipmentResult.isErr()) {
-      _logger.severe("Failed to create equipments", equipmentResult.error);
+
+    if (result.isErr()) {
+      _logger.severe("Failed to onboard profile", result.error);
       emit(state.copyWith(
         error: ErrorState(
-          type: SingleErrorTypes.operationFailure.name,
-          description: 'Failed to create equipments',
+          type: result.error.type.name,
+          description: result.error.description,
         ),
         isLoading: false,
       ));
       return;
     }
 
-    _logger.info("Equipments created successfully");
-    final Map<String, EquipmentDto> equipmentsMap = equipmentResult.value.fold(
-      <String, EquipmentDto>{},
-      (map, equipment) {
-        map[equipment.name] = equipment;
-        return map;
-      },
-    );
-
-    _logger.info("Creating exercises");
-    final exerciseResult = await _exerciseService.createExercises(
-      kInitialExercises
-          .map(
-            (e) => ExerciseInput(
-              name: e.name,
-              muscleGroup: e.muscleGroup,
-              muscles: e.muscles,
-              equipments: e.equipments
-                  .map(
-                    (e) => equipmentsMap[e],
-                  )
-                  .nonNulls
-                  .toList(),
-            ),
-          )
-          .toList(),
-      createdBy: CreatedBy.system,
-    );
-    if (exerciseResult.isErr()) {
-      _logger.severe("Failed to create exercises", exerciseResult.error);
-      emit(state.copyWith(
-        error: ErrorState(
-          type: SingleErrorTypes.operationFailure.name,
-          description: 'Failed to create exercises',
-        ),
-        isLoading: false,
-      ));
-      return;
-    }
-
-    _logger.info("Onboarding profile");
-    _logger.info("Creating profile");
-    final profileResult = await _profileService.upsertProfile(
-      name: name,
-      height: height,
-      gender: gender,
-      birthday: birthday,
-    );
-
-    if (profileResult.isErr()) {
-      _logger.severe("Failed to create profile", profileResult.error);
-      emit(state.copyWith(
-        error: ErrorState(
-          type: SingleErrorTypes.operationFailure.name,
-          description: 'Failed to create profile',
-        ),
-        isLoading: false,
-      ));
-      return;
-    }
-
-    final profile = profileResult.value;
-    _logger.info("Profile created successfully");
-
-    _logger.info("Creating system");
-    final systemResult = await _profileService.upsertSystem(
-      theme: theme,
-      units: units,
-      profileId: profile.id,
-      notificationsOn: notificationsOn,
-    );
-
-    if (systemResult.isErr()) {
-      _logger.severe("Failed to create system", systemResult.error);
-      emit(state.copyWith(
-        error: ErrorState(
-          type: SingleErrorTypes.operationFailure.name,
-          description: 'Failed to create system',
-        ),
-        isLoading: false,
-      ));
-      return;
-    }
-
-    _logger.info("Creating reminders config");
-    final remindersConfigResult = await _profileService.upsertRemindersConfig(
-      profileId: profile.id,
-      workoutsOn: notificationsOn,
-      weightRecordsOn: notificationsOn,
-    );
-    if (remindersConfigResult.isErr()) {
-      _logger.severe(
-        "Failed to create reminders config",
-        remindersConfigResult.error,
-      );
-      emit(state.copyWith(
-        error: ErrorState(
-          type: SingleErrorTypes.operationFailure.name,
-          description: 'Failed to create reminders config',
-        ),
-        isLoading: false,
-      ));
-      return;
-    }
-
-    if (!createWorkouts) {
-      _logger.info("Workouts not created");
-      emit(state.copyWith(
-        profile: profile,
-        system: systemResult.value,
-        remindersConfig: remindersConfigResult.value,
-        isLoading: false,
-        isInitiated: true,
-        error: null,
-      ));
-      return;
-    }
-
-    _logger.info("Exercises created successfully");
-    final Map<String, ExerciseDto> exerciseNameToDto =
-        exerciseResult.value.fold(
-      <String, ExerciseDto>{},
-      (map, exercise) {
-        map[exercise.name] = exercise;
-        return map;
-      },
-    );
-
-    _logger.info("Creating workouts");
-    final workoutResult = await _workoutService.createWorkouts(
-      kStandardWorkouts
-          .map(
-            (e) => WorkoutRegistrationInput(
-              name: e.name,
-              description: e.description,
-              difficulty: e.difficulty,
-              phase: e.phase,
-              sets: e.sets
-                  .map(
-                    (s) => WorkoutSetRegistrationInput(
-                      setType: s.setType,
-                      minSets: s.minSets,
-                      maxSets: s.maxSets,
-                      recommendedRestSecs: s.recommendedRestSecs,
-                      maxRestSecs: s.maxRestSecs,
-                      exercises: s.exercises
-                          .map(
-                            (ex) => WorkoutSetExerciseRegistrationInput(
-                              exercise: exerciseNameToDto[ex.exerciseName]!,
-                              minReps: ex.minReps,
-                              maxReps: ex.maxReps,
-                              difficulty: ex.difficulty,
-                              alternativeExercises: ex.exerciseOptionsNames
-                                  .map((eon) => exerciseNameToDto[eon]!)
-                                  .toList(),
-                            ),
-                          )
-                          .toList(),
-                    ),
-                  )
-                  .toList(),
-            ),
-          )
-          .toList(),
-      createdBy: CreatedBy.system,
-    );
-    if (workoutResult.isErr()) {
-      _logger.severe("Failed to create workouts", workoutResult.error);
-      emit(state.copyWith(
-        profile: profileResult.value,
-        system: systemResult.value,
-        remindersConfig: remindersConfigResult.value,
-        error: ErrorState(
-          type: SingleErrorTypes.operationFailure.name,
-          description: 'Failed to create workouts',
-        ),
-        isLoading: false,
-        isInitiated: true,
-      ));
-      return;
-    }
-
-    _logger.info("Workouts created successfully");
-    final Map<String, WorkoutDto> workoutNameToDto = workoutResult.value.fold(
-      <String, WorkoutDto>{},
-      (map, workout) {
-        map[workout.name] = workout;
-        return map;
-      },
-    );
-    final workoutPlansResult = await _workoutPlanService.createWorkoutPlans(
-      [
-        WorkoutPlanRegistrationInput(
-          name: kWorkoutPlanData.name,
-          description: kWorkoutPlanData.description,
-          difficulty: kWorkoutPlanData.difficulty,
-          weeks: kWorkoutPlanData.weeks
-              .map(
-                (w) => WorkoutPlanWeekRegistrationInput(
-                  startWeek: w.startWeek,
-                  endWeek: w.endWeek,
-                  phase: w.phase,
-                  days: w.days
-                      .map(
-                        (d) => WorkoutPlanDayRegistrationInput(
-                          workouts: d.workouts
-                              .map(
-                                (wo) => WorkoutPlanWorkoutRegistrationInput(
-                                  workout: workoutNameToDto[wo.workoutName]!,
-                                  timeOfDay: wo.timeOfDay,
-                                ),
-                              )
-                              .toList(),
-                        ),
-                      )
-                      .toList(),
-                ),
-              )
-              .toList(),
-        ),
-      ],
-      createdBy: CreatedBy.system,
-    );
-
-    if (workoutPlansResult.isErr()) {
-      _logger.severe(
-          "Failed to create workout plans", workoutPlansResult.error);
-      emit(state.copyWith(
-        profile: profileResult.value,
-        system: systemResult.value,
-        remindersConfig: remindersConfigResult.value,
-        error: ErrorState(
-          type: SingleErrorTypes.operationFailure.name,
-          description: 'Failed to create workout plans',
-        ),
-        isLoading: false,
-        isInitiated: true,
-      ));
-      return;
-    }
-
-    _logger.info("Workout plans created successfully");
+    final onboarding = result.value;
+    _logger.info("Onboarding profile completed");
     emit(state.copyWith(
-      profile: profile,
-      system: systemResult.value,
-      remindersConfig: remindersConfigResult.value,
+      profile: onboarding.profile,
+      system: onboarding.system,
+      remindersConfig: onboarding.remindersConfig,
       isLoading: false,
       isInitiated: true,
-      error: null,
+      clearError: true,
     ));
   }
 

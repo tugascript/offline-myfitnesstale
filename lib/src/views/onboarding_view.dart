@@ -53,41 +53,78 @@ class OnboardingView extends StatelessWidget {
                 },
                 child: BlocBuilder<ProfileCubit, ProfileState>(
                   builder: (context, state) {
-                    return OnboardingForm(
-                      sizes: sizes,
-                      initialUnits: Units.metric,
-                      initialThemeMode: ThemeType.system,
-                      initialName: "",
-                      initialHeight: 176, // average height for a male in oz
-                      initialGender: Gender.male,
-                      initialBirthday: DateTime.now().subtract(
-                        Duration(days: (365.25 * 25).floor()),
-                      ),
-                      submitButtonLabel: "Create & get started",
-                      isLoading: state.isLoading,
-                      onSubmit: ({
-                        required Units units,
-                        required ThemeType theme,
-                        required String name,
-                        required int height,
-                        required Gender gender,
-                        required DateTime birthday,
-                        required bool preLoadWorkouts,
-                        required bool notificationsOn,
-                      }) async {
-                        await context.read<ProfileCubit>().onboardProfile(
-                              units: units,
-                              theme: theme,
-                              name: name,
-                              height: height,
-                              gender: gender,
-                              birthday: birthday,
-                              createWorkouts: preLoadWorkouts,
-                              notificationsOn: notificationsOn,
-                            );
-                      },
-                      initialPreLoadWorkouts: true,
-                      initialNotificationsOn: false,
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        if (state.error != null) ...[
+                          Card(
+                            key: const ValueKey('onboarding-error'),
+                            color: Theme.of(context).colorScheme.errorContainer,
+                            child: Padding(
+                              padding: EdgeInsets.all(sizes.padding),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Icon(
+                                    Icons.error_outline,
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onErrorContainer,
+                                  ),
+                                  SizedBox(width: sizes.padding),
+                                  Expanded(
+                                    child: Text(
+                                      state.error!.description,
+                                      style: TextStyle(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onErrorContainer,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          SizedBox(height: sizes.breaks),
+                        ],
+                        OnboardingForm(
+                          sizes: sizes,
+                          initialUnits: Units.metric,
+                          initialThemeMode: ThemeType.system,
+                          initialName: "",
+                          initialHeight: 176, // average height for a male in oz
+                          initialGender: Gender.male,
+                          initialBirthday: DateTime.now().subtract(
+                            Duration(days: (365.25 * 25).floor()),
+                          ),
+                          submitButtonLabel: "Create & get started",
+                          isLoading: state.isLoading,
+                          onSubmit: ({
+                            required Units units,
+                            required ThemeType theme,
+                            required String name,
+                            required int height,
+                            required Gender gender,
+                            required DateTime birthday,
+                            required bool preLoadWorkouts,
+                            required bool notificationsOn,
+                          }) async {
+                            await context.read<ProfileCubit>().onboardProfile(
+                                  units: units,
+                                  theme: theme,
+                                  name: name,
+                                  height: height,
+                                  gender: gender,
+                                  birthday: birthday,
+                                  createWorkouts: preLoadWorkouts,
+                                  notificationsOn: notificationsOn,
+                                );
+                          },
+                          initialPreLoadWorkouts: true,
+                          initialNotificationsOn: false,
+                        ),
+                      ],
                     );
                   },
                 ),

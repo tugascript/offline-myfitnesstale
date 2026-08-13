@@ -177,9 +177,9 @@ class Repository<T extends Model> {
     return rowsAffected;
   }
 
-  Future<T?> selectLatest() async {
+  Future<T?> selectLatest([Transaction? trx]) async {
     _logger.info("selectLatest");
-    final db = await _databaseHelper.db;
+    final DatabaseExecutor db = trx ?? await _databaseHelper.db;
     final List<Map<String, dynamic>> maps = await db.query(
       _tableName,
       orderBy: 'id DESC',
@@ -192,9 +192,9 @@ class Repository<T extends Model> {
     return null;
   }
 
-  Future<T?> selectFirst() async {
+  Future<T?> selectFirst([Transaction? trx]) async {
     _logger.info("selectFirst");
-    final db = await _databaseHelper.db;
+    final DatabaseExecutor db = trx ?? await _databaseHelper.db;
     final List<Map<String, dynamic>> maps = await db.query(
       _tableName,
       orderBy: 'id ASC',

@@ -1,15 +1,15 @@
 # My Fitness Tale: Delivery Plan
 
-Last updated: 14 August 2026 on `codex/navigation-dead-ends` (base commit
-`b05bf59`). See [PROJECT_STATE.md](PROJECT_STATE.md) for the code-grounded
+Last updated: 14 August 2026 on `codex/onboarding-atomic-recovery` (base commit
+`8d1c1a7`). See [PROJECT_STATE.md](PROJECT_STATE.md) for the code-grounded
 snapshot, architecture, and verification results.
 
 ## Product direction
 
 The next target is a reliable local-first beta for one user on Android and
-iOS. The main fitness flows exist, and the visible navigation dead ends have
-now been removed. The remaining beta work is onboarding recovery, device-level
-journey testing, local data recovery, and release configuration.
+iOS. The main fitness flows exist, visible navigation dead ends have been
+removed, and onboarding now commits atomically. The remaining beta work is
+device-level journey testing, local data recovery, and release configuration.
 
 Cloud fitness-data sync, social features, broad analytics, and production
 subscriptions should wait until the local lifecycle is reliable and the main
@@ -53,32 +53,24 @@ RevenueCat/native bridge. Existing entitlement services, Cubits, guards, plan
 limits, and debug controls remain in the repository for later development, but
 the beta must describe premium purchasing as unavailable.
 
+### Atomic onboarding
+
+The onboarding-atomic-recovery slice is complete:
+
+- equipment, exercises, profile, settings, reminders, optional workouts, and
+  the standard plan are created in one SQLite transaction;
+- setup is marked completed only as the final database write;
+- a failed stage rolls back every row from that attempt and the unchanged form
+  can be submitted again;
+- a completed snapshot is returned idempotently without changing its IDs,
+  settings, or seed counts;
+- inconsistent databases from older unpublished builds show clear-app-data
+  guidance under the pre-release reset policy.
+
 ## Update now
 
 Work in this order. Each item should ship with the tests in its acceptance
 criteria.
-
-### P0. Make onboarding atomic and recoverable
-
-Onboarding currently performs equipment, exercise, profile, settings,
-reminder, optional workout, and plan creation across several service calls. A
-midway failure can leave partially seeded data and no explicit resume or retry
-strategy.
-
-- Move bootstrap orchestration behind one transactional or explicitly
-  idempotent service operation.
-- Define recovery for a failure before and after profile creation.
-- Make repeated onboarding attempts safe.
-- Keep the optional seed behavior: 25 equipment entries, 86 exercises, and,
-  when selected, 16 workouts plus one 16-week plan.
-
-Acceptance criteria:
-
-- injected failures at each bootstrap stage do not leave an unusable profile;
-- retrying produces no duplicates and completes the missing work;
-- tests cover onboarding with and without optional workouts;
-- a fresh install can be cleared and onboarded again during pre-release
-  development.
 
 ### P0. Verify complete beta journeys on devices
 
@@ -146,27 +138,25 @@ flutter test
 git diff --check
 ```
 
-Navigation-dead-ends verification on 14 August 2026:
+Onboarding-atomic-recovery verification on 14 August 2026:
 
 ```text
 dart analyze
   No issues found
 
 flutter test
-  66 tests passed
+  83 tests passed
 ```
 
-The slice adds coverage for Activity destinations, router precedence and ID
-validation, Exercise Progress layout/units/personal-best navigation, plan
-history pagination and states, Reminder Preferences persistence wiring, and
-premium unavailable states. Review follow-ups also cover aggregate Exercise
-Progress reloading after detail navigation, plan-history cache isolation when
-filters change, and visible refresh/pagination errors for an already-loaded
-history list.
+The slice adds coverage for core-only and optional-workout onboarding,
+foreign-key-valid seed structure, rollback and retry after all eight stages,
+duplicate-free idempotency, legacy partial-data guidance, Cubit loading/error
+coordination, unchanged-form retry, and successful navigation after commit.
+The previous Activity, routing, history, reminders, and premium-unavailable
+coverage remains green.
 
 Add these suites next:
 
-- onboarding success, failure, rollback/retry, and duplicate-seed tests;
 - complete routed workout-plan tests for Start/Resume, Complete, Cancel, and
   manual Log;
 - profile, exercise/equipment, weight-record, and weight-goal CRUD tests;

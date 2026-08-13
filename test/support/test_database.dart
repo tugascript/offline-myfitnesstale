@@ -5,7 +5,12 @@ import 'package:path/path.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 import 'package:myfitnesstale/src/models/db.dart';
+import 'package:myfitnesstale/src/models/equipment_model.dart';
+import 'package:myfitnesstale/src/models/exercise_equipment_model.dart';
 import 'package:myfitnesstale/src/models/exercise_model.dart';
+import 'package:myfitnesstale/src/models/profile_model.dart';
+import 'package:myfitnesstale/src/models/reminders_config_model.dart';
+import 'package:myfitnesstale/src/models/system_model.dart';
 import 'package:myfitnesstale/src/models/workout_model.dart';
 import 'package:myfitnesstale/src/models/workout_plan_day_model.dart';
 import 'package:myfitnesstale/src/models/workout_plan_day_record_model.dart';
@@ -69,6 +74,26 @@ class TestDatabase {
       await txn.delete(WorkoutRecord.table);
       await txn.delete(Workout.table);
       await txn.delete(Exercise.table);
+    });
+  }
+
+  Future<void> clearOnboardingTables() async {
+    final database = await db;
+    await database.transaction((txn) async {
+      await txn.delete(WorkoutPlanWorkout.table);
+      await txn.delete(WorkoutPlanDay.table);
+      await txn.delete(WorkoutPlanWeek.table);
+      await txn.delete(WorkoutPlan.table);
+      await txn.delete(WorkoutSetExerciseOption.table);
+      await txn.delete(WorkoutSetExercise.table);
+      await txn.delete(WorkoutSet.table);
+      await txn.delete(Workout.table);
+      await txn.delete(ExerciseEquipment.table);
+      await txn.delete(Exercise.table);
+      await txn.delete(Equipment.table);
+      await txn.delete(RemindersConfig.table);
+      await txn.delete(System.table);
+      await txn.delete(Profile.table);
     });
   }
 
