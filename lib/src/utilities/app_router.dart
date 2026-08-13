@@ -5,6 +5,7 @@ import '../views/equipments/equipment_creation_view.dart';
 import '../views/equipments/equipment_details_view.dart';
 import '../views/equipments/equipment_update_view.dart';
 import '../views/equipments/equipments_view.dart';
+import '../views/exercise_progress_view.dart';
 import '../views/exercises/exercise_creation_view.dart';
 import '../views/exercises/exercise_detail_view.dart';
 import '../views/exercises/exercise_records_view.dart';
@@ -13,11 +14,13 @@ import '../views/exercises/exercises_view.dart';
 import '../views/home/main_navigation_view.dart';
 import '../views/not_found_view.dart';
 import '../views/onboarding_view.dart';
+import '../views/profile/reminder_preferences_view.dart';
 import '../views/weight/weight_goals_view.dart';
 import '../views/weight/weight_records_view.dart';
 import '../views/workout_plans/active_workout_plan_view.dart';
 import '../views/workout_plans/workout_plan_detail_view.dart';
 import '../views/workout_plans/workout_plan_edit_view.dart';
+import '../views/workout_plans/workout_plan_history_view.dart';
 import '../views/workout_plans/workout_plan_list_view.dart';
 import '../views/workouts/active_workout_view.dart';
 import '../views/workouts/create_workout_record_view.dart';
@@ -85,6 +88,10 @@ sealed class AppRouter {
     GoRoute(
       path: ExerciseCreationView.routeName,
       builder: (context, state) => const ExerciseCreationView(),
+    ),
+    GoRoute(
+      path: ExerciseProgressView.routeName,
+      builder: (context, state) => const ExerciseProgressView(),
     ),
     GoRoute(
       path: ExerciseDetailView.routeName,
@@ -248,7 +255,7 @@ sealed class AppRouter {
       },
     ),
     GoRoute(
-      path: '/exercises/:id/records',
+      path: ExerciseRecordsView.routeName,
       builder: (context, state) {
         final id = int.tryParse(state.pathParameters['id'] ?? '');
         if (id == null) {
@@ -260,6 +267,16 @@ sealed class AppRouter {
     GoRoute(
       path: WorkoutPlanListView.routeName,
       builder: (context, state) => const WorkoutPlanListView(),
+    ),
+    GoRoute(
+      path: WorkoutPlanHistoryView.routeName,
+      builder: (context, state) {
+        final id = int.tryParse(state.pathParameters['id'] ?? '');
+        if (id == null) {
+          return const NotFoundView();
+        }
+        return WorkoutPlanHistoryView(workoutPlanId: id);
+      },
     ),
     GoRoute(
       path: WorkoutPlanEditView.routeName,
@@ -291,13 +308,23 @@ sealed class AppRouter {
         return WorkoutPlanDetailView(workoutPlanId: id);
       },
     ),
+    GoRoute(
+      path: ReminderPreferencesView.routeName,
+      builder: (context, state) => const ReminderPreferencesView(),
+    ),
   ];
 
-  static final GoRouter _router = GoRouter(
-    routes: _routes,
-    initialLocation: MainNavigationView.routeName,
-    errorBuilder: (context, state) => const NotFoundView(),
-  );
+  static GoRouter createRouter({
+    String initialLocation = MainNavigationView.routeName,
+  }) {
+    return GoRouter(
+      routes: _routes,
+      initialLocation: initialLocation,
+      errorBuilder: (context, state) => const NotFoundView(),
+    );
+  }
+
+  static final GoRouter _router = createRouter();
 
   static GoRouter get router => _router;
 }

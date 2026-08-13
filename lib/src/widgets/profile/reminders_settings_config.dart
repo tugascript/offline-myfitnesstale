@@ -13,6 +13,7 @@ class RemindersSettingsConfig extends StatelessWidget {
   final DataDisplaySizesList sizes;
   final ThemeData theme;
   final bool isDarkTheme;
+  final bool initiallyExpanded;
 
   const RemindersSettingsConfig({
     super.key,
@@ -22,6 +23,7 @@ class RemindersSettingsConfig extends StatelessWidget {
     required this.sizes,
     required this.theme,
     required this.isDarkTheme,
+    this.initiallyExpanded = false,
   });
 
   @override
@@ -36,6 +38,7 @@ class RemindersSettingsConfig extends StatelessWidget {
           "Workouts ${_subtitleState(remindersConfig.workoutsOn)} • Weight Records ${_subtitleState(remindersConfig.weightRecordsOn)}",
       subtitleFontSize: sizes.subtitleFontSize,
       padding: sizes.padding / 2,
+      initiallyExpanded: initiallyExpanded,
       children: [
         _ReminderToggle(
           value: remindersConfig.workoutsOn,

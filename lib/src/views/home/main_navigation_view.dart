@@ -6,9 +6,9 @@ import '../../cubits/profile_cubit.dart';
 import '../../cubits/states/profile_state.dart';
 import '../create_profile_button_view.dart';
 import '../loading_view.dart';
-import '../not_found_view.dart';
 import '../onboarding_view.dart';
 import '../workout_plans/workout_plan_list_view.dart';
+import 'activity_view.dart';
 import 'home_view.dart';
 import 'profile_view.dart';
 
@@ -18,7 +18,7 @@ sealed class _PageBuilder {
   static final List<Widget Function()> _pages = [
     () => const HomeView(),
     () => const WorkoutPlanListView(),
-    () => const NotFoundView(),
+    () => const ActivityView(),
     () => const ProfileView(),
   ];
 

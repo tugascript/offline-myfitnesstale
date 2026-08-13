@@ -27,6 +27,9 @@ class ExerciseRecordsView extends StatefulWidget {
     required this.exerciseId,
   });
 
+  static String location(int exerciseId) =>
+      routeName.replaceFirst(':id', exerciseId.toString());
+
   @override
   State<ExerciseRecordsView> createState() => _ExerciseRecordsViewState();
 }

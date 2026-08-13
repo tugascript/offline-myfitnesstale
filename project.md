@@ -1,104 +1,62 @@
 # My Fitness Tale: Delivery Plan
 
-Last updated: 13 August 2026. This plan is based on repository commit
-`e816027`. See [PROJECT_STATE.md](PROJECT_STATE.md) for the code-grounded
+Last updated: 13 August 2026 on `codex/navigation-dead-ends` (base commit
+`b05bf59`). See [PROJECT_STATE.md](PROJECT_STATE.md) for the code-grounded
 snapshot, architecture, and verification results.
 
 ## Product direction
 
-The clearest next target is a reliable local-first beta for one user on Android
-and iOS. The core fitness flows already exist; the project now needs data
-safety, removal of dead ends, end-to-end verification, and an explicit decision
-about whether subscriptions belong in the first beta.
+The next target is a reliable local-first beta for one user on Android and
+iOS. The main fitness flows exist, and the visible navigation dead ends have
+now been removed. The remaining beta work is onboarding recovery, device-level
+journey testing, local data recovery, and release configuration.
 
-Cloud fitness-data sync, social features, and broad analytics should wait until
-the local data lifecycle is safe and the main user journeys are covered by
-tests.
+Cloud fitness-data sync, social features, broad analytics, and production
+subscriptions should wait until the local lifecycle is reliable and the main
+journeys are covered end to end.
+
+## Decisions already made
+
+### Pre-release database policy
+
+The app has not been published, so schema version 2 is the development
+baseline. Existing development databases may be cleared and recreated after a
+schema change. A version-1-to-version-2 migration is intentionally not planned
+or tested.
+
+Before the first external beta:
+
+- verify a fresh install creates the expected schema and seed data;
+- declare that build's schema as the first user-data compatibility baseline;
+- require an ordered migration and upgrade fixture for every later schema
+  version;
+- stop using destructive resets for tester or user databases.
+
+### Navigation dead ends
+
+The navigation-dead-ends slice is complete:
+
+- Activity is a hub for workout history, exercise progress, weight history,
+  and plan history;
+- Exercise Progress is routed, bounded, unit-aware, alphabetized, and opens the
+  implemented exercise-record route;
+- workout-plan execution history has a read-only paginated summary screen;
+- dashboard Reminders opens persisted preferences and discloses that delivery
+  is not scheduled;
+- premium-locked flows explain that purchases are unavailable and expose only
+  working exit actions.
+
+### Subscription behavior for the beta
+
+Subscriptions are deferred. No visible action should call the missing
+RevenueCat/native bridge. Existing entitlement services, Cubits, guards, plan
+limits, and debug controls remain in the repository for later development, but
+the beta must describe premium purchasing as unavailable.
 
 ## Update now
 
-Work in this order. Each item should ship with the tests listed in its
-acceptance criteria.
-
-### P0. Protect existing data with a real database migration
-
-The database declares schema version 2, but `DatabaseHelper._onUpgrade` is a
-no-op. A user upgrading a version-1 database does not receive the current
-schema, including the entitlement table.
-
-- Reconstruct and document the version-1 to version-2 schema delta.
-- Implement the migration as an ordered, transactional step.
-- Keep future migrations additive and version-specific rather than rerunning
-  the complete create script.
-- Add a version-1 fixture containing representative profile, exercise,
-  workout, history, weight, and plan data.
-
-Acceptance criteria:
-
-- opening the version-1 fixture upgrades it to version 2 without data loss;
-- all expected tables, columns, indexes, and foreign keys exist afterward;
-- `PRAGMA foreign_key_check` returns no violations;
-- running the current app against a fresh database still creates the same
-  schema;
-- a failed migration rolls back cleanly.
-
-### P0. Remove user-facing navigation dead ends
-
-Several visible actions currently lead nowhere or to `NotFoundView`.
-
-- Replace the Activity tab placeholder with a small history hub, or temporarily
-  remove the tab until that hub exists.
-- Either implement workout-plan history or hide its button. The current
-  `/workout-plans/:id/history` destination is not registered.
-- Point exercise-progress navigation at the existing
-  `/exercises/:id/records` route. The standalone `ExerciseProgressView` is not
-  registered and currently pushes a nonexistent `/exercises/:id/history`
-  route.
-- Make the dashboard Reminders action open the relevant profile settings, or
-  remove it; its callback is currently empty.
-- Make the workout-plan upgrade action perform a real action or label the
-  entitlement feature as unavailable in this build.
-
-Acceptance criteria:
-
-- every visible navigation/action control either performs its labelled action
-  or is intentionally disabled with an explanation;
-- route-level widget tests cover every registered route and all dynamic ID
-  parsing failures;
-- an integration test taps through each bottom-navigation item and dashboard
-  quick action without reaching an unexpected Not Found screen.
-
-### P0. Decide the entitlement scope
-
-The entitlement code is a development prototype, not a production purchase
-path. Purchase and restore call an unimplemented native method channel, the
-default identity is anonymous, and the Firebase Functions prototype does not
-enforce authentication or App Check in code. Its “verification token” is an
-unsigned base64 placeholder, while the mobile guard checks only that it is
-non-empty and recent.
-
-Choose one path before expanding premium behavior:
-
-1. **Defer subscriptions for the beta.** Put premium UI behind a build flag,
-   remove non-working purchase calls, and define which advanced features remain
-   available during the beta.
-2. **Finish subscriptions.** Integrate the RevenueCat SDK/native bridge, use a
-   stable authenticated user identity, deploy a protected sync service, define
-   signed/verified entitlement evidence, configure release environments, and
-   add store sandbox tests for purchase, restore, expiry, billing issue, and
-   offline grace.
-
-Whichever path is chosen, keep mutation checks in the Cubit/service boundary so
-UI-only gating cannot grant premium writes.
-
-Acceptance criteria:
-
-- no production-visible button calls a missing platform plugin;
-- free plan limits and advanced-workout mutations behave consistently after an
-  app restart and while offline;
-- entitlement cache, refresh, expiry, grace, purchase, and restore behavior are
-  covered at service/Cubit level;
-- no locally editable, unsigned value is treated as production purchase proof.
+Work in this order. Each item should ship with the tests in its acceptance
+criteria.
 
 ### P0. Make onboarding atomic and recoverable
 
@@ -118,28 +76,61 @@ Acceptance criteria:
 
 - injected failures at each bootstrap stage do not leave an unusable profile;
 - retrying produces no duplicates and completes the missing work;
-- tests cover onboarding with and without the optional workouts.
+- tests cover onboarding with and without optional workouts;
+- a fresh install can be cleared and onboarded again during pre-release
+  development.
 
-## Complete the beta experience
+### P0. Verify complete beta journeys on devices
 
-After P0 is stable:
+The repository now has focused route and widget coverage, but the full
+application lifecycle still needs device-level verification.
 
-1. Build Activity as a unified entry point for workout history, exercise
-   records, and weight history. Reuse the existing feature views rather than
-   duplicating queries.
-2. Clarify reminders. The app currently saves preferences and requests initial
-   permission but schedules no notifications. Either implement local
-   scheduling/rescheduling/cancellation or rename the controls so they do not
-   promise delivery.
-3. Consolidate workout-plan date mapping and progress calculations into a
-   tested domain helper shared by the dashboard and active-plan views.
-4. Add local export/import and a documented backup/restore format before any
-   cloud sync work.
-5. Finish exercise/equipment discovery gaps, especially equipment filtering,
-   only after the main journeys above are reliable.
-6. Break up the largest orchestration services (`WorkoutPlanService` and
-   `WorkoutPlanRecordService`) as touched, keeping transactions and invariants
-   close to the operations they protect.
+- Add an integration test that completes onboarding and visits every bottom
+  navigation destination.
+- Tap all dashboard quick actions and all four Activity cards.
+- Exercise create/edit/history, workout live/manual history, weight, goals,
+  and plan start/progress/history from their real routed screens.
+- Run the smoke matrix on at least one Android emulator/device and one iOS
+  simulator/device.
+
+Acceptance criteria:
+
+- no labelled control reaches an unexpected Not Found screen;
+- app restart preserves profile, units, reminders, history, and active-plan
+  state;
+- narrow-screen and text-scaling smoke tests have no layout exceptions;
+- Android and iOS results are recorded with any platform differences.
+
+### P1. Add local backup and restore
+
+The app is local-first and stores irreplaceable history, but has no export or
+recovery path.
+
+- Define a versioned export format.
+- Export/import profile, settings, exercises, workouts, records, weights,
+  goals, plans, and plan execution records.
+- Validate imported data before replacing live data and make failure
+  recoverable.
+
+Acceptance criteria:
+
+- a round trip preserves representative user data and relationships;
+- invalid or incompatible files leave the current database unchanged;
+- the export format and compatibility policy are documented.
+
+### P1. Decide whether reminders should deliver notifications
+
+Reminder toggles now honestly represent saved preferences only. If delivery is
+required for beta, implement local scheduling, rescheduling, cancellation,
+permission recovery, time-zone behavior, and restart persistence. Otherwise,
+keep the current wording and defer notification delivery.
+
+### P1. Consolidate plan date/progress logic
+
+Move duplicated workout-plan date mapping and progress calculations into a
+tested domain helper shared by dashboard and active-plan views. Break up
+`WorkoutPlanService` and `WorkoutPlanRecordService` only where this work makes
+the relevant transactions and invariants clearer.
 
 ## Test now
 
@@ -155,53 +146,76 @@ flutter test
 git diff --check
 ```
 
+Navigation-dead-ends verification on 13 August 2026:
+
+```text
+dart analyze
+  No issues found
+
+flutter test
+  63 tests passed
+```
+
+The slice adds coverage for Activity destinations, router precedence and ID
+validation, Exercise Progress layout/units/personal-best navigation, plan
+history pagination and states, Reminder Preferences persistence wiring, and
+premium unavailable states.
+
 Add these suites next:
 
-- database creation and version-1 to version-2 migration tests;
-- router/navigation tests for Activity, plan history, reminders, exercise
-  records, invalid IDs, and unknown paths;
 - onboarding success, failure, rollback/retry, and duplicate-seed tests;
-- entitlement service/Cubit tests with fake HTTP, fake identity, and fake
-  RevenueCat gateways;
-- route-level workout-plan tests that exercise Start/Resume, Complete, Cancel,
-  and manual Log from the active-plan screen;
+- complete routed workout-plan tests for Start/Resume, Complete, Cancel, and
+  manual Log;
 - profile, exercise/equipment, weight-record, and weight-goal CRUD tests;
-- accessibility smoke tests for text scaling, semantics, and narrow screens.
+- full-app bottom-navigation and dashboard integration tests;
+- import/export round-trip and invalid-input tests when backup work begins;
+- accessibility smoke tests for text scaling, semantics, and narrow screens;
+- entitlement HTTP/cache/Cubit tests before subscription work resumes.
+
+Database upgrade fixtures begin only after the first external beta baseline is
+declared.
 
 ### Manual smoke matrix
 
 Run on at least one Android device/emulator and one iOS simulator/device:
 
-1. Fresh install: onboard with seed workouts off, then repeat after clearing
-   app data with seed workouts on.
-2. Profile/settings: edit profile, switch units and theme, restart, and verify
-   persistence.
-3. Weight: create, edit, delete, filter, inspect chart points, and manage a goal.
-4. Exercises/equipment: search/filter, favorite, create, edit, delete, and log
-   exercise records.
-5. Workouts: create/edit a basic workout; start, log decimal weight and reps,
+1. Fresh install: onboard with seed workouts off, clear app data, then onboard
+   with seed workouts on.
+2. Bottom navigation: visit Home, Plans, Activity, and Profile; open all four
+   Activity destinations and return safely.
+3. Dashboard: open every quick action; verify Reminders opens saved preferences
+   and shows the no-delivery disclosure.
+4. Profile/settings: edit profile, switch units and theme, change both reminder
+   toggles, restart, and verify persistence.
+5. Weight: create, edit, delete, filter, inspect chart points, and manage a goal.
+6. Exercises/equipment: search/filter, favorite, create, edit, delete, log
+   exercise records, and verify Exercise Progress in both kg and lb.
+7. Workouts: create/edit a basic workout; start, log decimal weight and reps,
    complete, cancel, resume, and edit manual history.
-6. Plans: create/edit a schedule, start it, launch and manually log scheduled
-   workouts, verify missed days, and confirm day/week/plan progress boundaries.
-7. Entitlements: verify the selected beta policy; if enabled, test free,
-   premium, expired, billing-issue, grace, offline, purchase, and restore states.
-8. Upgrade: install a build with a version-1 database, upgrade in place, and
-   repeat the core read/write flows without clearing data.
+8. Plans: create/edit a schedule, start it, launch and manually log scheduled
+   workouts, verify missed days and progress boundaries, and inspect completed,
+   abandoned, and in-progress history summaries.
+9. Premium-unavailable states: reach the free plan limit and open an advanced
+   workout as a free user; verify there is no purchase/restore action and every
+   exit works.
 
-### Release readiness after the beta flows pass
+## Release readiness
 
-- Add CI for formatting, analysis, Flutter tests, and the backend TypeScript
-  build if the backend remains in scope.
-- Replace `com.example.myfitnesstale`, configure real Android/iOS signing, and
-  verify release builds.
-- Add crash reporting, a privacy policy/data-retention statement, store assets,
-  accessibility review, and a small external beta.
-- Treat import/export recovery as a launch requirement for irreplaceable local
-  history.
+Before the first external beta:
+
+- complete the P0 items above;
+- establish the first non-destructive database migration baseline;
+- add CI for formatting, analysis, Flutter tests, and the backend TypeScript
+  build only if the backend remains in scope;
+- replace `com.example.myfitnesstale`, configure real Android/iOS signing, and
+  verify release builds;
+- add crash reporting, a privacy/data-retention statement, store assets, and an
+  accessibility review;
+- provide local export/import, or explicitly limit the beta to disposable data.
 
 ## Definition of done for each change
 
-A change is complete when behavior is implemented, failure and empty states are
-handled, automated tests cover the new invariant, the Android/iOS smoke path is
-recorded where platform behavior differs, `PROJECT_STATE.md` is updated if the
-capability or risk changed, and all baseline checks pass.
+A change is complete when behavior is implemented, failure and empty states
+are handled, automated tests cover the new invariant, Android/iOS smoke results
+are recorded where platform behavior differs, `PROJECT_STATE.md` is updated if
+the capability or risk changed, and all baseline checks pass.
