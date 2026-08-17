@@ -2,18 +2,19 @@ import '../common.dart';
 import '../enums.dart';
 import 'equipment_constants.dart';
 
-// TODO: add difficulty
 class ExerciseData {
   final String name;
   final MuscleGroup muscleGroup;
   final TargetMuscles muscles;
   final Set<String> equipments;
+  final Difficulty difficulty;
 
   const ExerciseData({
     required this.name,
     required this.muscleGroup,
     required this.muscles,
     required this.equipments,
+    required this.difficulty,
   });
 }
 
@@ -106,11 +107,16 @@ const String kBurpeesName = "Burpees";
 const String kHipThrustName = "Hip Thrust";
 const String kCrunchMachineName = "Crunch Machine";
 const String kAssistedPullUpName = "Assisted Pull-up";
-const String kAssistedChinUpName = "Assisted Chin Up";
+const String kAssistedChinUpName = "Assisted Chin-up";
 const String kSmithMachineSkullCrushersName = "Smith Machine Skull Crusher";
 const String kInclineDumbbellChestFlysName = "Incline Dumbbell Chest Flys";
+const String kPullUpName = "Pull-up";
+const String kChinUpName = "Chin-up";
 const String kWeightedPullUpName = "Weighted Pull-up";
-const String kWeightedChinUpName = "Weighted Chin Up";
+const String kWeightedChinUpName = "Weighted Chin-up";
+const String kMuscleUpName = "Muscle-up";
+const String kDragonflyName = "Dragonfly";
+const String kPlankName = "Plank";
 const String kPendlayRowsName = "Pendlay Rows";
 
 const Set<String> kExerciseNames = {
@@ -217,6 +223,7 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
       },
     ),
     equipments: {kBarbellName, kBenchName},
+    difficulty: Difficulty.beginnerIntermediate,
   ),
   ExerciseData(
     name: kInclineBarbellChestPressName,
@@ -232,6 +239,7 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
       },
     ),
     equipments: {kBarbellName, kBenchName},
+    difficulty: Difficulty.intermediate,
   ),
   ExerciseData(
     name: kDumbbellChestPressName,
@@ -246,6 +254,7 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
       },
     ),
     equipments: {kDumbbellsName, kBenchName},
+    difficulty: Difficulty.intermediate,
   ),
   ExerciseData(
     name: kInclineDumbbellChestPressName,
@@ -261,6 +270,7 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
       },
     ),
     equipments: {kDumbbellsName, kBenchName},
+    difficulty: Difficulty.beginnerIntermediate,
   ),
   ExerciseData(
     name: kInclineMachineChestPressName,
@@ -276,6 +286,7 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
       },
     ),
     equipments: {kMachineName},
+    difficulty: Difficulty.beginner,
   ),
   ExerciseData(
     name: kMachineChestPressName,
@@ -290,6 +301,7 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
       },
     ),
     equipments: {kMachineName},
+    difficulty: Difficulty.beginner,
   ),
   ExerciseData(
     name: kMachineChestFlysName,
@@ -301,6 +313,7 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
       secondary: {},
     ),
     equipments: {kMachineName},
+    difficulty: Difficulty.beginner,
   ),
   ExerciseData(
     name: kCableUnderhandFlysName,
@@ -312,6 +325,7 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
       secondary: {},
     ),
     equipments: {kCableName, kDHandleName},
+    difficulty: Difficulty.beginnerIntermediate,
   ),
   ExerciseData(
     name: kCableFlysName,
@@ -323,6 +337,7 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
       secondary: {},
     ),
     equipments: {kCableName, kDHandleName},
+    difficulty: Difficulty.beginnerIntermediate,
   ),
   ExerciseData(
     name: kInclineCableFlysName,
@@ -336,6 +351,7 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
       },
     ),
     equipments: {kCableName, kDHandleName},
+    difficulty: Difficulty.beginnerIntermediate,
   ),
   ExerciseData(
     name: kStandingBarbellShoulderPressName,
@@ -351,6 +367,7 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
       },
     ),
     equipments: {kBarbellName, kPowerRackName},
+    difficulty: Difficulty.intermediate,
   ),
   ExerciseData(
     name: kSeatedBarbellShoulderPressName,
@@ -366,6 +383,7 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
       },
     ),
     equipments: {kBarbellName, kPowerRackName, kBenchName},
+    difficulty: Difficulty.intermediate,
   ),
   ExerciseData(
     name: kSmithMachineShoulderPressName,
@@ -381,6 +399,7 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
       },
     ),
     equipments: {kSmithMachineName, kBenchName},
+    difficulty: Difficulty.beginnerIntermediate,
   ),
   ExerciseData(
     name: kMachineShoulderPressName,
@@ -396,6 +415,7 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
       },
     ),
     equipments: {kMachineName},
+    difficulty: Difficulty.beginner,
   ),
   ExerciseData(
     name: kStandingDumbbellShoulderPressName,
@@ -411,6 +431,7 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
       },
     ),
     equipments: {kDumbbellsName},
+    difficulty: Difficulty.beginnerIntermediate,
   ),
   ExerciseData(
     name: kSeatedDumbbellShoulderPressName,
@@ -426,6 +447,7 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
       },
     ),
     equipments: {kDumbbellsName, kBenchName},
+    difficulty: Difficulty.beginnerIntermediate,
   ),
   ExerciseData(
     name: kDumbbellLateralRaisesName,
@@ -439,6 +461,7 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
       },
     ),
     equipments: {kDumbbellsName},
+    difficulty: Difficulty.beginner,
   ),
   ExerciseData(
     name: kCableLateralRaisesName,
@@ -452,6 +475,7 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
       },
     ),
     equipments: {kCableName, kDHandleName},
+    difficulty: Difficulty.beginner,
   ),
   ExerciseData(
     name: kLeaningCableLateralRaiseName,
@@ -465,6 +489,7 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
       },
     ),
     equipments: {kCableName, kDHandleName},
+    difficulty: Difficulty.beginnerIntermediate,
   ),
   ExerciseData(
     name: kCableOverheadTricepsExtensionName,
@@ -480,6 +505,7 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
       kEZBarAttachmentName,
       kTricepsRopeAttachmentName,
     },
+    difficulty: Difficulty.beginnerIntermediate,
   ),
   ExerciseData(
     name: kDumbbellOverheadTricepsExtensionName,
@@ -491,6 +517,7 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
       secondary: {},
     ),
     equipments: {kDumbbellsName},
+    difficulty: Difficulty.intermediate,
   ),
   ExerciseData(
     name: kEZBarOverheadTricepsExtensionName,
@@ -502,6 +529,7 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
       secondary: {},
     ),
     equipments: {kEZBarName},
+    difficulty: Difficulty.beginnerIntermediate,
   ),
   ExerciseData(
     name: kSkullCrushersName,
@@ -513,6 +541,7 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
       secondary: {},
     ),
     equipments: {kBarbellName, kBenchName},
+    difficulty: Difficulty.intermediate,
   ),
   ExerciseData(
     name: kTricepsPushdownName,
@@ -528,6 +557,7 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
       kEZBarAttachmentName,
       kTricepsRopeAttachmentName,
     },
+    difficulty: Difficulty.beginnerIntermediate,
   ),
   ExerciseData(
     name: kDipsName,
@@ -541,6 +571,7 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
       },
     ),
     equipments: {kDipStationName, kBodyweightName, kWeightBeltName},
+    difficulty: Difficulty.intermediate,
   ),
   ExerciseData(
     name: kCableTricepKickbackName,
@@ -552,6 +583,7 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
       secondary: {},
     ),
     equipments: {kCableName},
+    difficulty: Difficulty.beginner,
   ),
   ExerciseData(
     name: kPullUpsName,
@@ -566,6 +598,7 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
       },
     ),
     equipments: {kPullUpBarName, kBodyweightName},
+    difficulty: Difficulty.intermediateAdvanced,
   ),
   ExerciseData(
     name: kChinUpsName,
@@ -580,6 +613,7 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
       },
     ),
     equipments: {kPullUpBarName, kBodyweightName, kWeightBeltName},
+    difficulty: Difficulty.intermediate,
   ),
   ExerciseData(
     name: kOverhandLatPulldownName,
@@ -594,6 +628,7 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
       },
     ),
     equipments: {kCableName, kLatPulldownBarName},
+    difficulty: Difficulty.beginner,
   ),
   ExerciseData(
     name: kUnderhandLatPulldownName,
@@ -608,6 +643,7 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
       },
     ),
     equipments: {kCableName, kLatPulldownBarName},
+    difficulty: Difficulty.beginner,
   ),
   ExerciseData(
     name: kPendlayRowsName,
@@ -626,6 +662,7 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
       },
     ),
     equipments: {kBarbellName},
+    difficulty: Difficulty.intermediateAdvanced,
   ),
   ExerciseData(
     name: kBarbellBentOverRowsName,
@@ -644,6 +681,7 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
       },
     ),
     equipments: {kBarbellName},
+    difficulty: Difficulty.intermediate,
   ),
   ExerciseData(
     name: kSingleArmSupportedDumbbellRowName,
@@ -661,6 +699,7 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
       },
     ),
     equipments: {kDumbbellsName, kBenchName},
+    difficulty: Difficulty.beginnerIntermediate,
   ),
   ExerciseData(
     name: kInclineDumbbellRowName,
@@ -679,6 +718,7 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
       },
     ),
     equipments: {kDumbbellsName, kBenchName},
+    difficulty: Difficulty.beginnerIntermediate,
   ),
   ExerciseData(
     name: kTBarRowName,
@@ -698,6 +738,7 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
       },
     ),
     equipments: {kBarbellName, kDoubleDHandleName},
+    difficulty: Difficulty.beginnerIntermediate,
   ),
   ExerciseData(
     name: kChestSupportedTBarRowName,
@@ -717,6 +758,7 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
       },
     ),
     equipments: {kMachineName},
+    difficulty: Difficulty.beginnerIntermediate,
   ),
   ExerciseData(
     name: kChestSupportedRowMachineName,
@@ -735,6 +777,7 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
       },
     ),
     equipments: {kMachineName},
+    difficulty: Difficulty.beginner,
   ),
   ExerciseData(
     name: kSeatedCableRowName,
@@ -753,6 +796,7 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
       },
     ),
     equipments: {kCableName, kDoubleDHandleName, kWideLatBarName},
+    difficulty: Difficulty.beginner,
   ),
   ExerciseData(
     name: kFacePullsName,
@@ -769,6 +813,7 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
       },
     ),
     equipments: {kCableName, kTricepsRopeAttachmentName},
+    difficulty: Difficulty.beginnerIntermediate,
   ),
   ExerciseData(
     name: kMachineReverseFlysName,
@@ -780,6 +825,7 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
       secondary: {},
     ),
     equipments: {kMachineName},
+    difficulty: Difficulty.beginner,
   ),
   ExerciseData(
     name: kBentOverDumbbellReverseFlysName,
@@ -791,6 +837,7 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
       secondary: {},
     ),
     equipments: {kDumbbellsName},
+    difficulty: Difficulty.beginner,
   ),
   ExerciseData(
     name: kInclineDumbbellReverseFlysName,
@@ -802,6 +849,7 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
       secondary: {},
     ),
     equipments: {kDumbbellsName, kBenchName},
+    difficulty: Difficulty.beginnerIntermediate,
   ),
   ExerciseData(
     name: kBentOverCableReverseFlysName,
@@ -813,6 +861,7 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
       secondary: {},
     ),
     equipments: {kCableName},
+    difficulty: Difficulty.beginner,
   ),
   ExerciseData(
     name: kBarbellBicepCurlName,
@@ -826,6 +875,7 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
       },
     ),
     equipments: {kBarbellName, kEZBarName},
+    difficulty: Difficulty.beginnerIntermediate,
   ),
   ExerciseData(
     name: kDumbbellBicepCurlName,
@@ -839,6 +889,7 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
       },
     ),
     equipments: {kDumbbellsName},
+    difficulty: Difficulty.beginner,
   ),
   ExerciseData(
     name: kHammerCurlName,
@@ -853,6 +904,7 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
       },
     ),
     equipments: {kDumbbellsName},
+    difficulty: Difficulty.beginner,
   ),
   ExerciseData(
     name: kBarbellPreacherCurlName,
@@ -866,6 +918,7 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
       },
     ),
     equipments: {kBarbellName, kBenchName},
+    difficulty: Difficulty.intermediate,
   ),
   ExerciseData(
     name: kDumbbellPreacherCurlName,
@@ -879,6 +932,7 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
       },
     ),
     equipments: {kDumbbellsName, kBenchName},
+    difficulty: Difficulty.intermediate,
   ),
   ExerciseData(
     name: kCableEZBarBicepCurlName,
@@ -895,6 +949,7 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
       kCableName,
       kEZBarAttachmentName,
     },
+    difficulty: Difficulty.beginner,
   ),
   ExerciseData(
     name: kCableDHandleBicepCurlName,
@@ -908,6 +963,7 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
       },
     ),
     equipments: {kCableName, kDHandleName},
+    difficulty: Difficulty.beginner,
   ),
   ExerciseData(
     name: kBayesianCableCurlName,
@@ -919,6 +975,7 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
       secondary: {},
     ),
     equipments: {kCableName, kDHandleName},
+    difficulty: Difficulty.beginnerIntermediate,
   ),
   ExerciseData(
     name: kBarbellBackSquatName,
@@ -933,6 +990,7 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
       },
     ),
     equipments: {kBarbellName, kPowerRackName},
+    difficulty: Difficulty.intermediate,
   ),
   ExerciseData(
     name: kBarbellFrontSquatName,
@@ -948,6 +1006,7 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
       },
     ),
     equipments: {kBarbellName, kPowerRackName},
+    difficulty: Difficulty.intermediateAdvanced,
   ),
   ExerciseData(
     name: kSmithMachineSquatName,
@@ -962,6 +1021,7 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
       },
     ),
     equipments: {kSmithMachineName},
+    difficulty: Difficulty.beginnerIntermediate,
   ),
   ExerciseData(
     name: kHackSquatName,
@@ -976,6 +1036,7 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
       },
     ),
     equipments: {kMachineName},
+    difficulty: Difficulty.beginner,
   ),
   ExerciseData(
     name: kLegPressName,
@@ -990,6 +1051,7 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
       },
     ),
     equipments: {kMachineName},
+    difficulty: Difficulty.beginner,
   ),
   ExerciseData(
     name: kBarbellDeadliftName,
@@ -1006,6 +1068,7 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
       },
     ),
     equipments: {kBarbellName},
+    difficulty: Difficulty.intermediate,
   ),
   ExerciseData(
     name: kBarbellSumoDeadliftName,
@@ -1022,6 +1085,7 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
       },
     ),
     equipments: {kBarbellName},
+    difficulty: Difficulty.intermediate,
   ),
   ExerciseData(
     name: kBarbellRomanianDeadliftName,
@@ -1037,6 +1101,7 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
       },
     ),
     equipments: {kBarbellName},
+    difficulty: Difficulty.intermediate,
   ),
   ExerciseData(
     name: kDumbbellRomanianDeadliftName,
@@ -1052,6 +1117,7 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
       },
     ),
     equipments: {kDumbbellsName},
+    difficulty: Difficulty.beginnerIntermediate,
   ),
   ExerciseData(
     name: kSmithMachineRomanianDeadliftName,
@@ -1067,6 +1133,7 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
       },
     ),
     equipments: {kSmithMachineName},
+    difficulty: Difficulty.beginnerIntermediate,
   ),
   ExerciseData(
     name: kSmithMachineGoodMorningName,
@@ -1081,6 +1148,7 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
       },
     ),
     equipments: {kSmithMachineName},
+    difficulty: Difficulty.beginnerIntermediate,
   ),
   ExerciseData(
     name: kWalkingLungesName,
@@ -1096,6 +1164,7 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
       },
     ),
     equipments: {kBodyweightName, kDumbbellsName},
+    difficulty: Difficulty.beginner,
   ),
   ExerciseData(
     name: kLungeName,
@@ -1111,6 +1180,7 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
       },
     ),
     equipments: {kBodyweightName, kDumbbellsName},
+    difficulty: Difficulty.beginner,
   ),
   ExerciseData(
     name: kSmithMachineElevatedLungeName,
@@ -1126,6 +1196,7 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
       },
     ),
     equipments: {kSmithMachineName, kStepperName},
+    difficulty: Difficulty.beginnerIntermediate,
   ),
   ExerciseData(
     name: kSeatedLegCurlName,
@@ -1137,6 +1208,7 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
       secondary: {},
     ),
     equipments: {kMachineName},
+    difficulty: Difficulty.beginner,
   ),
   ExerciseData(
     name: kLyingLegCurlName,
@@ -1148,6 +1220,7 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
       secondary: {},
     ),
     equipments: {kMachineName},
+    difficulty: Difficulty.beginner,
   ),
   ExerciseData(
     name: kLegExtensionName,
@@ -1159,6 +1232,7 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
       secondary: {},
     ),
     equipments: {kMachineName},
+    difficulty: Difficulty.beginner,
   ),
   ExerciseData(
     name: kStandingCalfRaisesName,
@@ -1170,6 +1244,7 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
       secondary: {},
     ),
     equipments: {kBodyweightName, kMachineName, kStepperName},
+    difficulty: Difficulty.beginnerIntermediate,
   ),
   ExerciseData(
     name: kSeatedCalfMachineName,
@@ -1181,6 +1256,7 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
       secondary: {},
     ),
     equipments: {kMachineName},
+    difficulty: Difficulty.beginner,
   ),
   ExerciseData(
     name: kCrunchesName,
@@ -1193,6 +1269,7 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
       secondary: {},
     ),
     equipments: {kBodyweightName},
+    difficulty: Difficulty.beginner,
   ),
   ExerciseData(
     name: kCableCrunchesName,
@@ -1205,6 +1282,7 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
       secondary: {},
     ),
     equipments: {kCableName},
+    difficulty: Difficulty.beginnerIntermediate,
   ),
   ExerciseData(
     name: kCaptainsChairLegRaisesName,
@@ -1218,6 +1296,7 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
       },
     ),
     equipments: {kBodyweightName, kMachineName, kDumbbellsName},
+    difficulty: Difficulty.beginner,
   ),
   ExerciseData(
     name: kHangingLegRaisesName,
@@ -1232,6 +1311,7 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
       },
     ),
     equipments: {kBodyweightName, kMachineName, kDumbbellsName},
+    difficulty: Difficulty.beginnerIntermediate,
   ),
   ExerciseData(
     name: kLyingLegRaisesName,
@@ -1245,6 +1325,7 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
       },
     ),
     equipments: {kBodyweightName, kMachineName, kDumbbellsName},
+    difficulty: Difficulty.beginner,
   ),
   ExerciseData(
     name: kCableWoodchopperName,
@@ -1256,6 +1337,7 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
       secondary: {},
     ),
     equipments: {kCableName},
+    difficulty: Difficulty.beginnerIntermediate,
   ),
   ExerciseData(
     name: kBackExtensionName,
@@ -1267,6 +1349,7 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
       secondary: {},
     ),
     equipments: {kMachineName},
+    difficulty: Difficulty.beginner,
   ),
   ExerciseData(
     name: kBurpeesName,
@@ -1283,6 +1366,7 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
       },
     ),
     equipments: {kBodyweightName},
+    difficulty: Difficulty.beginnerIntermediate,
   ),
   ExerciseData(
     name: kAssistedPullUpName,
@@ -1292,6 +1376,7 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
       secondary: {Muscle.biceps, Muscle.forearms},
     ),
     equipments: {kMachineName, kPullUpBarName},
+    difficulty: Difficulty.beginnerIntermediate,
   ),
   ExerciseData(
     name: kAssistedChinUpName,
@@ -1301,6 +1386,7 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
       secondary: {Muscle.biceps, Muscle.forearms},
     ),
     equipments: {kMachineName, kPullUpBarName},
+    difficulty: Difficulty.beginnerIntermediate,
   ),
   ExerciseData(
     name: kSmithMachineSkullCrushersName,
@@ -1310,6 +1396,7 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
       secondary: {},
     ),
     equipments: {kSmithMachineName, kBenchName},
+    difficulty: Difficulty.beginnerIntermediate,
   ),
   ExerciseData(
     name: kInclineDumbbellChestFlysName,
@@ -1319,6 +1406,7 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
       secondary: {Muscle.chest},
     ),
     equipments: {kDumbbellsName, kBenchName},
+    difficulty: Difficulty.beginner,
   ),
   ExerciseData(
     name: kWeightedPullUpName,
@@ -1328,6 +1416,7 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
       secondary: {Muscle.biceps, Muscle.forearms},
     ),
     equipments: {kPullUpBarName, kWeightBeltName},
+    difficulty: Difficulty.intermediateAdvanced,
   ),
   ExerciseData(
     name: kWeightedChinUpName,
@@ -1337,6 +1426,7 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
       secondary: {Muscle.biceps, Muscle.forearms},
     ),
     equipments: {kPullUpBarName, kWeightBeltName},
+    difficulty: Difficulty.intermediateAdvanced,
   ),
   ExerciseData(
     name: kHipThrustName,
@@ -1351,6 +1441,7 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
       },
     ),
     equipments: {kBarbellName, kBenchName},
+    difficulty: Difficulty.beginnerIntermediate,
   ),
   ExerciseData(
     name: kCrunchMachineName,
@@ -1362,5 +1453,63 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
       secondary: {},
     ),
     equipments: {kMachineName},
+    difficulty: Difficulty.beginner,
+  ),
+  ExerciseData(
+    name: kPlankName,
+    muscleGroup: MuscleGroup.core,
+    muscles: TargetMuscles(
+      primary: {Muscle.abdominals},
+      secondary: {},
+    ),
+    equipments: {kBodyweightName},
+    difficulty: Difficulty.beginner,
+  ),
+  ExerciseData(
+    name: kMuscleUpName,
+    muscleGroup: MuscleGroup.full,
+    muscles: TargetMuscles(
+      primary: {
+        Muscle.lats,
+        Muscle.chest,
+      },
+      secondary: {
+        Muscle.forearms,
+        Muscle.biceps,
+        Muscle.triceps,
+      },
+    ),
+    equipments: {kBodyweightName},
+    difficulty: Difficulty.advanced,
+  ),
+  ExerciseData(
+    name: kPullUpName,
+    muscleGroup: MuscleGroup.pull,
+    muscles: TargetMuscles(
+      primary: {Muscle.lats},
+      secondary: {Muscle.biceps, Muscle.forearms},
+    ),
+    equipments: {kPullUpBarName},
+    difficulty: Difficulty.beginnerIntermediate,
+  ),
+  ExerciseData(
+    name: kChinUpName,
+    muscleGroup: MuscleGroup.pull,
+    muscles: TargetMuscles(
+      primary: {Muscle.lats},
+      secondary: {Muscle.biceps, Muscle.forearms},
+    ),
+    equipments: {kPullUpBarName},
+    difficulty: Difficulty.beginnerIntermediate,
+  ),
+  ExerciseData(
+    name: kDragonflyName,
+    muscleGroup: MuscleGroup.full,
+    muscles: TargetMuscles(
+      primary: {Muscle.obliques},
+      secondary: {Muscle.abdominals},
+    ),
+    equipments: {kBodyweightName},
+    difficulty: Difficulty.beginnerIntermediate,
   ),
 };
