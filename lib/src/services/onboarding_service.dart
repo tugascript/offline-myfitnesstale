@@ -160,6 +160,7 @@ class OnboardingService {
                   .map((name) => equipmentByName[name])
                   .nonNulls
                   .toList(),
+              difficulty: exercise.difficulty.value,
             ),
           )
           .toList(),
