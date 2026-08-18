@@ -93,7 +93,7 @@ class OnboardingView extends StatelessWidget {
                           initialUnits: Units.metric,
                           initialThemeMode: ThemeType.system,
                           initialName: "",
-                          initialHeight: 176, // average height for a male in oz
+                          initialHeight: 176, // average height for a male in cm
                           initialGender: Gender.male,
                           initialBirthday: DateTime.now().subtract(
                             Duration(days: (365.25 * 25).floor()),
