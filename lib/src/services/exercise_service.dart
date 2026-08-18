@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:logging/logging.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -23,7 +25,7 @@ class ExerciseInput {
   final String? description;
   final PictureData? picture;
   final VideoData? video;
-  final int? difficulty;
+  final Difficulty? difficulty;
   final bool isFavorite;
 
   const ExerciseInput({
@@ -300,6 +302,7 @@ class ExerciseService {
             name: exerciseInput.name,
             muscleGroup: exerciseInput.muscleGroup,
             muscles: exerciseInput.muscles,
+            difficulty: exerciseInput.difficulty,
             createdBy: createdBy,
           );
           final id = await _repository.insert(exercise, txn);
