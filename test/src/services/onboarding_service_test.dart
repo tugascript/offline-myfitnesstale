@@ -91,7 +91,7 @@ void main() {
     expect(await count(System.table), 1);
     expect(await count(RemindersConfig.table), 1);
     expect(await count(Equipment.table), 25);
-    expect(await count(Exercise.table), 86);
+    expect(await count(Exercise.table), 91);
     expect(
       await count(ExerciseEquipment.table),
       kInitialExercises.fold<int>(
