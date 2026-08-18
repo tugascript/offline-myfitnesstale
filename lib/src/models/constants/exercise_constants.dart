@@ -50,8 +50,6 @@ const String kSkullCrushersName = "Skull Crushers";
 const String kTricepsPushdownName = "Triceps Pushdown";
 const String kCableTricepKickbackName = "Cable Tricep Kickback";
 const String kDipsName = "Dips";
-const String kPullUpsName = "Pull ups";
-const String kChinUpsName = "Chin ups";
 const String kOverhandLatPulldownName = "Overhand Lat Pulldown";
 const String kUnderhandLatPulldownName = "Underhand Lat Pulldown";
 const String kBarbellBentOverRowsName = "Barbell Bent Over Rows";
@@ -146,8 +144,6 @@ const Set<String> kExerciseNames = {
   kTricepsPushdownName,
   kCableTricepKickbackName,
   kDipsName,
-  kPullUpsName,
-  kChinUpsName,
   kOverhandLatPulldownName,
   kUnderhandLatPulldownName,
   kPendlayRowsName,
@@ -206,6 +202,11 @@ const Set<String> kExerciseNames = {
   kInclineDumbbellChestFlysName,
   kWeightedPullUpName,
   kWeightedChinUpName,
+  kMuscleUpName,
+  kDragonflyName,
+  kPlankName,
+  kChinUpName,
+  kPullUpName,
 };
 
 const Set<ExerciseData> kInitialExercises = <ExerciseData>{
@@ -584,36 +585,6 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
     ),
     equipments: {kCableName},
     difficulty: Difficulty.beginner,
-  ),
-  ExerciseData(
-    name: kPullUpsName,
-    muscleGroup: MuscleGroup.pull,
-    muscles: TargetMuscles(
-      primary: {
-        Muscle.lats,
-      },
-      secondary: {
-        Muscle.biceps,
-        Muscle.forearms,
-      },
-    ),
-    equipments: {kPullUpBarName, kBodyweightName},
-    difficulty: Difficulty.intermediateAdvanced,
-  ),
-  ExerciseData(
-    name: kChinUpsName,
-    muscleGroup: MuscleGroup.pull,
-    muscles: TargetMuscles(
-      primary: {
-        Muscle.lats,
-      },
-      secondary: {
-        Muscle.biceps,
-        Muscle.forearms,
-      },
-    ),
-    equipments: {kPullUpBarName, kBodyweightName, kWeightBeltName},
-    difficulty: Difficulty.intermediate,
   ),
   ExerciseData(
     name: kOverhandLatPulldownName,
