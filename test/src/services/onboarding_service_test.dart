@@ -91,7 +91,7 @@ void main() {
     expect(await count(System.table), 1);
     expect(await count(RemindersConfig.table), 1);
     expect(await count(Equipment.table), 25);
-    expect(await count(Exercise.table), 91);
+    expect(await count(Exercise.table), 89);
     expect(
       await count(ExerciseEquipment.table),
       kInitialExercises.fold<int>(
@@ -108,7 +108,7 @@ void main() {
   tearDownAll(testDatabase.destroy);
 
   test('commits core onboarding without optional workouts', () async {
-    expect(kInitialExercises, hasLength(86));
+    expect(kInitialExercises, hasLength(89));
     final result = await OnboardingService().onboard(requestWithoutWorkouts);
 
     expect(result.isOk(), isTrue);
