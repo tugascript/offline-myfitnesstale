@@ -98,6 +98,7 @@ class ProfileHeader extends StatelessWidget {
             ),
             if (!isEditing)
               IconButton(
+                key: const ValueKey('profile-edit'),
                 onPressed: editOnPress,
                 icon: Icon(
                   Icons.edit,

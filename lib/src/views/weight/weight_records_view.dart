@@ -48,6 +48,7 @@ class WeightRecordsView extends StatelessWidget {
         ),
       ),
       floatingActionButton: FloatingActionButton(
+        key: const ValueKey('weight-record-add'),
         onPressed: () {
           showDialog(
             context: context,

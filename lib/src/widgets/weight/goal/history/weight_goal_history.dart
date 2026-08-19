@@ -90,11 +90,12 @@ class _WeightGoalHistoryState extends State<WeightGoalHistory> {
               textAlign: TextAlign.start,
             ),
             SizedBox(height: widget.sizes.spacing),
-            NotFoundList(
-              height: MediaQuery.of(context).size.height / 2.5,
-              sizes: widget.sizes,
-              message: "Empty history",
-              icon: Icons.history,
+            Expanded(
+              child: NotFoundList(
+                sizes: widget.sizes,
+                message: "Empty history",
+                icon: Icons.history,
+              ),
             ),
           ],
         );

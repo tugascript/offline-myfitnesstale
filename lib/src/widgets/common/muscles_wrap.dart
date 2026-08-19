@@ -27,16 +27,17 @@ class MusclesWrap extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
-          mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.start,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             if (leading != null) leading!,
-            Text(
-              leading != null ? " $title" : title,
-              style: TextStyle(
-                fontSize: sizes.subtitleFontSize,
-                fontWeight: FontWeight.w600,
+            Flexible(
+              child: Text(
+                leading != null ? " $title" : title,
+                style: TextStyle(
+                  fontSize: sizes.subtitleFontSize,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             )
           ],

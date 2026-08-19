@@ -41,6 +41,7 @@ class RemindersSettingsConfig extends StatelessWidget {
       initiallyExpanded: initiallyExpanded,
       children: [
         _ReminderToggle(
+          switchKey: const ValueKey('reminder-workouts'),
           value: remindersConfig.workoutsOn,
           label: "Workouts",
           labelWidth: labelWidth,
@@ -57,6 +58,7 @@ class RemindersSettingsConfig extends StatelessWidget {
           },
         ),
         _ReminderToggle(
+          switchKey: const ValueKey('reminder-weight-records'),
           value: remindersConfig.weightRecordsOn,
           label: "Weight Records",
           labelWidth: labelWidth,
@@ -89,8 +91,10 @@ class _ReminderToggle extends StatelessWidget {
   final double padding;
   final bool isDarkTheme;
   final ValueChanged<bool> onChanged;
+  final Key switchKey;
 
   const _ReminderToggle({
+    required this.switchKey,
     required this.value,
     required this.label,
     required this.labelWidth,
@@ -120,6 +124,7 @@ class _ReminderToggle extends StatelessWidget {
             ),
           ),
           Switch(
+            key: switchKey,
             value: value,
             onChanged: onChanged,
           ),

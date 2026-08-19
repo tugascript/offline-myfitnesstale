@@ -126,6 +126,7 @@ class _WorkoutPlanListViewState extends State<WorkoutPlanListView> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
+        key: const ValueKey('workout-plan-add'),
         elevation: sizes.elevation,
         onPressed: () {
           showDialog(

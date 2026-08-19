@@ -104,6 +104,7 @@ class _WorkoutHistoryViewState extends State<WorkoutHistoryView> {
             },
           ),
           floatingActionButton: FloatingActionButton(
+            key: const ValueKey('workout-record-add'),
             elevation: sizes.elevation,
             onPressed: () {
               context.push(

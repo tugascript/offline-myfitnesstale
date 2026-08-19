@@ -88,6 +88,7 @@ class _MainNavigationViewState extends State<MainNavigationView> {
         },
       ),
       bottomNavigationBar: BottomNavigationBar(
+        key: const ValueKey('main-bottom-navigation'),
         type: BottomNavigationBarType.fixed,
         currentIndex: _currentIndex,
         onTap: (index) {

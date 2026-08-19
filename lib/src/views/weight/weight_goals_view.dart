@@ -39,6 +39,7 @@ class WeightGoalView extends StatelessWidget {
         ),
       ),
       floatingActionButton: FloatingActionButton(
+        key: const ValueKey('weight-goal-add'),
         onPressed: () {
           showDialog(
             context: context,

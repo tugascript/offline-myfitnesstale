@@ -482,6 +482,9 @@ class WeightRecordCubit extends Cubit<WeightRecordState> {
       selectedWeightGoal: Nullable(
         state.selectedWeightGoal?.id == id ? null : state.selectedWeightGoal,
       ),
+      activeWeightGoal: Nullable(
+        state.activeWeightGoal?.id == id ? null : state.activeWeightGoal,
+      ),
       goalPagination: state.goalPagination.copyWith(
         total: state.goalPagination.total - 1,
       ),

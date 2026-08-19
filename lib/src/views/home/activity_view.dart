@@ -28,24 +28,28 @@ class ActivityView extends StatelessWidget {
           ),
           SizedBox(height: sizes.spacing),
           _ActivityCard(
+            key: const ValueKey('activity-workout-history'),
             icon: Icons.history,
             title: 'Workout History',
             subtitle: 'Select a workout to review its history.',
             onTap: () => context.push(WorkoutsView.routeName),
           ),
           _ActivityCard(
+            key: const ValueKey('activity-exercise-progress'),
             icon: Icons.trending_up,
             title: 'Exercise Progress',
             subtitle: 'Compare your records for every logged exercise.',
             onTap: () => context.push(ExerciseProgressView.routeName),
           ),
           _ActivityCard(
+            key: const ValueKey('activity-weight-history'),
             icon: Icons.monitor_weight_outlined,
             title: 'Weight History',
             subtitle: 'Review weight records and trends.',
             onTap: () => context.push(WeightRecordsView.routeName),
           ),
           _ActivityCard(
+            key: const ValueKey('activity-plan-history'),
             icon: Icons.event_note_outlined,
             title: 'Plan History',
             subtitle: 'Select a workout plan to review its history.',
@@ -64,6 +68,7 @@ class _ActivityCard extends StatelessWidget {
   final VoidCallback onTap;
 
   const _ActivityCard({
+    super.key,
     required this.icon,
     required this.title,
     required this.subtitle,

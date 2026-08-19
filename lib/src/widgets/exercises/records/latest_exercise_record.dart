@@ -219,6 +219,7 @@ class _LatestExerciseRecord extends StatelessWidget {
                       ),
                     ),
                     IconButton(
+                      key: const ValueKey('latest-exercise-record-edit'),
                       visualDensity: VisualDensity.compact,
                       icon: Icon(
                         Icons.edit_outlined,
@@ -297,6 +298,7 @@ class _LatestExerciseRecord extends StatelessWidget {
                           ),
                         ),
                         IconButton(
+                          key: const ValueKey('latest-exercise-record-delete'),
                           visualDensity: VisualDensity.compact,
                           icon: Icon(
                             Icons.delete,

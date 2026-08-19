@@ -184,6 +184,7 @@ class _LatestWeightRecord extends StatelessWidget {
                     ),
                     const Spacer(),
                     IconButton(
+                      key: const ValueKey('latest-weight-record-edit'),
                       visualDensity: VisualDensity.compact,
                       icon: Icon(
                         Icons.edit_outlined,
@@ -264,6 +265,7 @@ class _LatestWeightRecord extends StatelessWidget {
                           ),
                         ),
                         IconButton(
+                          key: const ValueKey('latest-weight-record-delete'),
                           visualDensity: VisualDensity.compact,
                           icon: Icon(
                             Icons.delete,
