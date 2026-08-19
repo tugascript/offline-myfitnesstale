@@ -110,6 +110,7 @@ class _ExerciseRecordsViewState extends State<ExerciseRecordsView> {
                 ),
               ),
               floatingActionButton: FloatingActionButton(
+                key: const ValueKey('exercise-record-add'),
                 onPressed: () {
                   showDialog(
                     context: context,

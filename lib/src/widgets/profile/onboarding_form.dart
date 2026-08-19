@@ -340,6 +340,7 @@ class _OnboardingFormState extends State<OnboardingForm> {
             icon: Icons.fitness_center,
             children: [
               CheckboxListTile(
+                key: const ValueKey('onboarding-preload-workouts'),
                 value: _data.preLoadWorkouts,
                 onChanged: (checked) {
                   if (checked != null) {
@@ -354,6 +355,7 @@ class _OnboardingFormState extends State<OnboardingForm> {
           ),
           SizedBox(height: widget.sizes.breaks * 2),
           ElevatedButton(
+            key: const ValueKey('onboarding-submit'),
             onPressed: () {
               if (!widget.isLoading) {
                 if (_formKey.currentState!.validate()) {

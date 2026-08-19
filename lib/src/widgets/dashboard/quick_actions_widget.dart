@@ -42,6 +42,7 @@ class QuickActionsWidget extends StatelessWidget {
           childAspectRatio: 1.5,
           children: [
             _ActionCard(
+              key: const ValueKey('quick-action-weight-goal'),
               sizes: sizes,
               isDarkTheme: isDarkTheme,
               icon: Icon(
@@ -56,6 +57,7 @@ class QuickActionsWidget extends StatelessWidget {
               },
             ),
             _ActionCard(
+              key: const ValueKey('quick-action-weight-records'),
               sizes: sizes,
               isDarkTheme: isDarkTheme,
               icon: Icon(
@@ -70,6 +72,7 @@ class QuickActionsWidget extends StatelessWidget {
               },
             ),
             _ActionCard(
+              key: const ValueKey('quick-action-workouts'),
               sizes: sizes,
               isDarkTheme: isDarkTheme,
               icon: Text(
@@ -83,6 +86,7 @@ class QuickActionsWidget extends StatelessWidget {
               },
             ),
             _ActionCard(
+              key: const ValueKey('quick-action-exercises'),
               sizes: sizes,
               isDarkTheme: isDarkTheme,
               icon: Text(
@@ -96,6 +100,7 @@ class QuickActionsWidget extends StatelessWidget {
               },
             ),
             _ActionCard(
+              key: const ValueKey('quick-action-equipments'),
               sizes: sizes,
               isDarkTheme: isDarkTheme,
               icon: Icon(
@@ -110,6 +115,7 @@ class QuickActionsWidget extends StatelessWidget {
               },
             ),
             _ActionCard(
+              key: const ValueKey('quick-action-reminders'),
               sizes: sizes,
               isDarkTheme: isDarkTheme,
               icon: Icon(
@@ -139,6 +145,7 @@ class _ActionCard extends StatelessWidget {
   final VoidCallback onTap;
 
   const _ActionCard({
+    super.key,
     required this.sizes,
     required this.isDarkTheme,
     required this.icon,

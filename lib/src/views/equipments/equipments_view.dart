@@ -117,6 +117,7 @@ class _EquipmentsViewState extends State<EquipmentsView> {
         width: sizes.buttonSize,
         height: sizes.buttonSize,
         child: FloatingActionButton(
+          key: const ValueKey('equipment-add'),
           elevation: sizes.elevation,
           onPressed: () {
             context.push("/equipments/create");

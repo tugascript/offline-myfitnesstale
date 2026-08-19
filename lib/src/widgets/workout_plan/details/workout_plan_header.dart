@@ -46,6 +46,11 @@ class WorkoutPlanHeader extends StatelessWidget {
               ),
             ),
             IconButton(
+              key: ValueKey(
+                actionButtonIcon == null
+                    ? 'workout-plan-favorite'
+                    : 'workout-plan-header-edit',
+              ),
               icon: actionButtonIcon ??
                   Icon(
                     plan.isFavorite ? Icons.favorite : Icons.favorite_border,

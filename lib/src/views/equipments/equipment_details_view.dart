@@ -13,6 +13,7 @@ import '../../widgets/exercises/exercises_list.dart';
 import '../../widgets/layout/app_scaffold.dart';
 import '../loading_view.dart';
 import 'equipment_update_view.dart';
+import 'equipments_view.dart';
 
 class EquipmentDetailsView extends StatefulWidget {
   static const routeName = '/equipments/:id';
@@ -138,7 +139,11 @@ class _EquipmentDetailsViewState extends State<EquipmentDetailsView> {
                             context
                                 .read<ExerciseCubit>()
                                 .deleteEquipment(equipment.id);
-                            context.pop();
+                            if (context.canPop()) {
+                              context.pop();
+                            } else {
+                              context.go(EquipmentsView.routeName);
+                            }
                           },
                         ),
                       );

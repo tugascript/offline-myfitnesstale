@@ -130,6 +130,7 @@ class _WorkoutsViewState extends State<WorkoutsView> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
+        key: const ValueKey('workout-add'),
         elevation: sizes.elevation,
         onPressed: () {
           showDialog(

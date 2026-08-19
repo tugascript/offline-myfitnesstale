@@ -59,6 +59,7 @@ class CurrentWeightGoal extends StatelessWidget {
                       ),
                       const Spacer(),
                       IconButton(
+                        key: const ValueKey('active-weight-goal-edit'),
                         visualDensity: VisualDensity.compact,
                         icon: Icon(
                           Icons.edit_outlined,
@@ -132,6 +133,7 @@ class CurrentWeightGoal extends StatelessWidget {
                       ],
                       SizedBox(width: sizes.spacing),
                       IconButton(
+                        key: const ValueKey('active-weight-goal-delete'),
                         visualDensity: VisualDensity.compact,
                         icon: Icon(
                           Icons.delete,

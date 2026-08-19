@@ -138,6 +138,7 @@ class _ExercisesViewState extends State<ExercisesView> {
         width: sizes.buttonSize,
         height: sizes.buttonSize,
         child: FloatingActionButton(
+          key: const ValueKey('exercise-add'),
           elevation: sizes.elevation,
           onPressed: () {
             context.push(ExerciseCreationView.routeName);

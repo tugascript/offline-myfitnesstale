@@ -28,6 +28,7 @@ class AppSettingsConfig extends StatelessWidget {
     final cubit = context.read<ProfileCubit>();
     final labelWidth = sizes.subtitleFontSize * 7;
     return ExpandingSection(
+      key: const ValueKey('profile-app-settings'),
       icon: Icons.settings,
       title: "App Settings",
       titleFountSize: sizes.titleFontSize,
@@ -36,6 +37,7 @@ class AppSettingsConfig extends StatelessWidget {
       padding: sizes.padding / 2,
       children: [
         _SettingsSelector<Units>(
+          key: const ValueKey('profile-units-selector'),
           value: system.units,
           values: Units.values,
           label: "Units",
@@ -55,6 +57,7 @@ class AppSettingsConfig extends StatelessWidget {
           iconColor: theme.iconTheme.color,
         ),
         _SettingsSelector<ThemeType>(
+          key: const ValueKey('profile-theme-selector'),
           value: system.theme,
           values: ThemeType.values,
           label: "Theme",

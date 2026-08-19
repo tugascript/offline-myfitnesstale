@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import 'src/cubits/active_workout_cubit.dart';
 import 'src/cubits/entitlement_cubit.dart';
@@ -16,10 +17,16 @@ import 'src/utilities/app_router.dart';
 import 'src/utilities/theme_generator.dart';
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final RouterConfig<Object>? routerConfig;
+
+  const MyApp({
+    super.key,
+    this.routerConfig,
+  });
 
   @override
   Widget build(BuildContext context) {
+    GoogleFonts.config.allowRuntimeFetching = false;
     return MultiBlocProvider(
       providers: [
         BlocProvider<ProfileCubit>(
@@ -66,7 +73,7 @@ class MyApp extends StatelessWidget {
               context,
               themeOverride: state.system?.theme,
             ),
-            routerConfig: AppRouter.router,
+            routerConfig: routerConfig ?? AppRouter.router,
           );
         },
       ),

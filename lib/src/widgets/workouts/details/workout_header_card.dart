@@ -52,6 +52,11 @@ class WorkoutHeaderCard extends StatelessWidget {
               ),
             ),
             IconButton(
+              key: ValueKey(
+                actionButtonIcon == null
+                    ? 'workout-favorite'
+                    : 'workout-header-edit',
+              ),
               icon: actionButtonIcon ??
                   Icon(
                     workoutDto.isFavorite

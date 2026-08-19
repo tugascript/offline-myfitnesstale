@@ -83,11 +83,16 @@ class _ProfileViewState extends State<ProfileView> {
         buildWhen: (previous, current) {
           // Only rebuild when the profile data changes, not on minor UI updates.
           return previous.profile != current.profile ||
+              previous.system != current.system ||
+              previous.remindersConfig != current.remindersConfig ||
               previous.isLoading != current.isLoading ||
               previous.error != current.error;
         },
         builder: (context, state) {
-          if (state.isLoading) {
+          if (state.isLoading &&
+              (state.profile == null ||
+                  state.system == null ||
+                  state.remindersConfig == null)) {
             return const Center(child: CircularProgressIndicator());
           }
 

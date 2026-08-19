@@ -22,6 +22,7 @@ import '../../widgets/workouts/progress/active_progress_bar.dart';
 import '../../widgets/workouts/progress/active_rest_timer.dart';
 import '../../widgets/workouts/progress/active_set_exercise_log.dart';
 import '../../widgets/workouts/progress/not_found_active_workout.dart';
+import 'workout_detail_view.dart';
 
 class ActiveWorkoutView extends StatefulWidget {
   static const routeName = '/workouts/:id/active';
@@ -51,6 +52,19 @@ class _ActiveWorkoutViewState extends State<ActiveWorkoutView> {
   WorkoutSetExerciseDifficultyType _loggedDifficultyType =
       WorkoutSetExerciseDifficultyType.rir;
   int _loggedDifficultyValue = 2;
+
+  void _leaveActiveWorkout() {
+    if (context.canPop()) {
+      context.pop();
+    } else {
+      context.go(
+        WorkoutDetailView.routeName.replaceFirst(
+          ':id',
+          widget.workoutId.toString(),
+        ),
+      );
+    }
+  }
 
   @override
   void initState() {
@@ -102,7 +116,7 @@ class _ActiveWorkoutViewState extends State<ActiveWorkoutView> {
                   .getLatestActivePlanRecord();
               if (!context.mounted) return;
             }
-            context.pop();
+            _leaveActiveWorkout();
           }
         }
       },
@@ -304,7 +318,6 @@ class _ActiveWorkoutViewState extends State<ActiveWorkoutView> {
                                 if (!mounted) return;
                                 final cubit =
                                     context.read<ActiveWorkoutCubit>();
-                                final navigator = Navigator.of(context);
                                 final confirmed = await showDialog<bool>(
                                   context: context,
                                   builder: (dialogContext) => AlertDialog(
@@ -340,7 +353,7 @@ class _ActiveWorkoutViewState extends State<ActiveWorkoutView> {
                                         .getLatestActivePlanRecord();
                                     if (!context.mounted) return;
                                   }
-                                  navigator.pop();
+                                  _leaveActiveWorkout();
                                 }
                               },
                             ),

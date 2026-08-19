@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:logging/logging.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
@@ -67,6 +68,13 @@ class DatabaseHelper {
     } finally {
       _db = null;
     }
+  }
+
+  @visibleForTesting
+  Future<void> deleteForTesting() async {
+    await resetForTesting();
+    final path = join(await getDatabasesPath(), _databaseName);
+    await deleteDatabase(path);
   }
 
   Future<Database> _initDb() async {

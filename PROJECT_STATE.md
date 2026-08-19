@@ -1,7 +1,7 @@
 # My Fitness Tale: Current Project State
 
-Last reviewed on `codex/onboarding-atomic-recovery` (base commit `8d1c1a7`) on
-14 August 2026.
+Last reviewed on `codex/beta-device-journeys` (base commit `5334650`) on
+19 August 2026.
 
 This is the code-grounded source of truth for what exists now. The forward plan
 and test priorities are in [project.md](project.md).
@@ -12,10 +12,10 @@ My Fitness Tale is a local-first Flutter fitness tracker for Android and iOS.
 It has substantial profile, exercise, workout, history, weight, workout-plan,
 and plan-execution functionality backed by SQLite. The known navigation dead
 ends have been repaired and onboarding is atomic and retry-safe. It is suitable
-for continued development and manual testing, but is not release-ready because
-device-level journeys remain unverified, automated coverage is uneven outside
-the repaired paths, local backup is absent, and subscriptions are intentionally
-unavailable.
+for continued development and simulator beta testing. It is not release-ready
+because local backup is absent, release identifiers/signing are placeholders,
+physical-device checks remain, notification delivery is not implemented, and
+subscriptions are intentionally unavailable.
 
 Repository facts at this review:
 
@@ -23,7 +23,9 @@ Repository facts at this review:
 - 25 SQLite tables in the current create schema;
 - 89 seeded exercises and 25 seeded equipment entries;
 - 16 optional seeded workouts and one 16-week seeded workout plan;
-- 20 automated test files with 83 passing tests;
+- 20 host test files with 86 passing tests;
+- five integration-test files with seven passing journeys on both Android and
+  iOS simulators;
 - no repository CI configuration.
 
 ## What is implemented
@@ -36,10 +38,10 @@ Repository facts at this review:
 | Exercises | Paginated browse/search; muscle-group, difficulty, and favorite filters; create/edit/delete; equipment relationships; favorite state | Equipment filtering is still TODO; media values have no picker/upload workflow |
 | Exercise records/progress | Create/edit/delete records; latest/history views; date filtering; estimated-max chart; aggregate progress sorted by exercise with kg/lb summaries | Aggregate progress intentionally reads only the most recent 1,000 records |
 | Workouts | Reusable, versioned workouts; basic and advanced editors; alternatives, rep ranges, rest, and difficulty; create/edit/delete | Advanced mutations remain entitlement-gated; free users see an unavailable-in-this-build state rather than purchase actions |
-| Live workout | Starts a workout record, logs numeric weight/reps, carries prior values within a set group, handles rest/progress, complete and cancel | Full screen-level lifecycle is not covered by integration tests |
+| Live workout | Starts a workout record, logs numeric weight/reps, carries prior values within a set group, handles rest/progress, complete and cancel | Device coverage includes start, process-local resume, cancellation cleanup, completion, and history; OS interruption during an active timer remains a later physical-device case |
 | Workout history | Lists/details records; manual completed-record creation; record editing and deletion | Activity opens the workout list because history is versioned per workout |
 | Weight | Create/edit/delete records; latest value; date-range list/chart; metric/imperial conversion; tappable chart points | No import/export, backup, or broader analytics |
-| Weight goals | Create/edit/delete; active goal and history; phase/status/date display | Goal flows have no automated coverage |
+| Weight goals | Create/edit/delete; active goal and history; phase/status/date display | CRUD and restart persistence now have device coverage; broader analytics remain absent |
 | Workout plans | Create/edit/delete schedules; start one active execution; map dates; show missed days/progress; start/resume or manually log scheduled workouts | Date/progress logic remains duplicated across UI and service layers |
 | Plan history | Paginated read-only summaries filtered by plan, newest first, with status, local dates, version, and last reached position | Historical child-workout detail is intentionally outside the current scope |
 | Settings/reminders | Saves both reminder toggles; dashboard opens a dedicated preferences route with the section expanded | No notification scheduling, delivery, rescheduling, or cancellation exists; the UI explicitly discloses this |
@@ -67,7 +69,7 @@ The repaired public routes are:
 integer validation behavior as other entity routes. Unknown locations and
 invalid IDs still render `NotFoundView`.
 
-Visible actions changed in this slice:
+Visible repaired actions remain:
 
 - Exercise Progress cards open `/exercises/:id/records`;
 - plan details use the registered plan-history route;
@@ -87,6 +89,12 @@ Visible actions changed in this slice:
 | Platforms | Android and iOS project folders only; the app forces portrait at runtime |
 | Entitlement development | Dart HTTP client, local cache/guard, Go mock server, and debug profile controls |
 | Entitlement backend prototype | Firebase Functions/Firestore source under `backend/functions` |
+
+`MyApp` accepts an optional router configuration so integration tests can
+launch isolated app instances. The production fallback remains
+`AppRouter.router`. Google Fonts runtime fetching is disabled and the used
+Roboto Mono and Major Mono Display fonts are bundled under `assets/fonts`, so
+startup and rendering do not depend on font-network access.
 
 The usual feature flow is:
 
@@ -143,6 +151,62 @@ DTOs without changing settings or reseeding. Any partial profile or seed data
 from older unpublished builds is treated as inconsistent and requires clearing
 app data. The onboarding form remains populated after a failure and displays a
 persistent explanation that the attempt saved no data.
+
+## Device-journey harness and results
+
+`integration_test/support/device_test_harness.dart` launches a fresh
+`GoRouter`, deletes the development database for fresh-install scenarios, and
+can close/reopen the database with a new widget tree while preserving data.
+The delete operation is test-only; the existing non-destructive reset remains
+available. Stable widget keys were added only where repeated labels or
+icon-only controls made text interaction ambiguous.
+
+The five device files contain seven journeys that cover:
+
+- onboarding with optional workouts disabled and enabled;
+- Home, Plans, Activity, and Profile plus all six dashboard actions and four
+  Activity cards;
+- profile editing and units, theme, and reminder persistence after restart;
+- weight-record and weight-goal create/edit/delete/restart behavior;
+- equipment, exercise, and exercise-record create/edit/delete/restart behavior;
+- workout creation/editing, active-workout resume and cancellation, live
+  completion, manual history, and restart persistence;
+- plan creation/editing, schedule structure, start/progress, in-progress
+  active-plan restart, scheduled live and manual workout completion, completed
+  history, and restart persistence.
+
+Responsive host tests cover a 320-by-568 logical viewport, 200% text scaling,
+and the 180.2-pixel workout column that exposed an iPhone overflow.
+
+Device results on 19 August 2026:
+
+| Platform | Target | Result | Notes |
+| --- | --- | --- | --- |
+| Android | `Medium_Phone_API_35`, Android 15/API 35, arm64 | 7/7 passed in 3m56s | One emulator guest/ADB freeze occurred before a test handshake; a cold boot recovered it and the final full run passed |
+| iOS | iPhone 16 Pro simulator, iOS 18.5 | 7/7 passed in 3m41s | Longer Cupertino transitions exposed route-settling and settings-subtree bugs that are now fixed |
+
+The plan journey was then strengthened with an in-progress restart assertion
+and passed again in 32 seconds on Android and 24 seconds on iOS.
+
+Normal production-entry debug builds were also terminated and relaunched on
+both simulators. Android onboarded interactively and cold-launched back to
+Home. Because standard `simctl` cannot tap/type, iOS received that verified
+onboarding database as a test snapshot before a terminate/relaunch; it also
+returned to persisted Home. Interactive iOS integration journeys independently
+verified its profile/settings and fitness-data persistence.
+
+Reproducible defects fixed during these journeys:
+
+- deleting equipment or an exercise from a root-routed detail screen now
+  navigates to its list instead of popping an empty navigator;
+- live completion and cancellation safely return to workout details even when
+  the active-workout route is the root;
+- deleting a weight goal clears the cached active goal;
+- the empty weight-goal history has bounded layout on phone screens;
+- profile settings stay mounted while an update is being persisted, retaining
+  the expanded Settings section on iOS;
+- muscle headings flex within narrow workout columns;
+- device tests wait for Cupertino routes to become fully interactive.
 
 ## Workout-plan and history invariants
 
@@ -206,17 +270,24 @@ foreign-key validation.
 
 ## Automated verification at this review
 
-The following checks were run from the repository root on 14 August 2026:
+The following checks were run from the repository root on 19 August 2026:
 
 ```text
-dart format --output=none --set-exit-if-changed lib test
-  331 files formatted with no pending changes
+dart format --output=none --set-exit-if-changed lib test integration_test
+  338 files formatted with no pending changes
 
 dart analyze
   No issues found
 
 flutter test
-  83 tests passed
+  86 tests passed
+
+flutter test integration_test -d emulator-5554
+  7 journeys passed in 3m56s
+
+flutter test integration_test \
+  -d CB4D3190-72FB-4D34-A136-1352A1EB507B
+  7 journeys passed in 3m41s
 
 git diff --check
   No whitespace errors
@@ -242,17 +313,20 @@ Coverage now includes:
   background request failures, and all progress statuses;
 - reminder disclosure, expanded toggles, persistence calls, and dashboard
   navigation;
-- premium-locked flows with no upgrade, subscribe, or restore controls.
+- premium-locked flows with no upgrade, subscribe, or restore controls;
+- complete bottom-navigation, dashboard, and Activity routed journeys;
+- profile/settings/reminders, weight/goal, equipment/exercise/record,
+  workout/live/manual-history, and plan/execution/history device journeys;
+- narrow viewport, 200% text scaling, and narrow workout-column layout.
 
 Important untested areas:
 
-- complete full-app bottom-navigation/dashboard journeys;
-- profile, general exercise/equipment, weight-record, and weight-goal CRUD;
-- complete live-workout and active-plan routed interactions;
 - import/export because the feature does not exist;
 - entitlement HTTP/cache behavior and future store integration;
-- Android/iOS device behavior, accessibility, release builds, and backend
-  TypeScript build.
+- physical Android/iOS hardware, release builds/signing, screen-reader
+  semantics, and backend TypeScript build;
+- notification delivery, scheduled timezone changes, and permission recovery;
+- OS termination while an active workout timer or plan workout is in progress.
 
 ## Other release blockers and limitations
 
@@ -274,7 +348,7 @@ Baseline checks:
 
 ```sh
 flutter pub get
-dart format --output=none --set-exit-if-changed lib test
+dart format --output=none --set-exit-if-changed lib test integration_test
 dart analyze
 flutter test
 git diff --check
@@ -297,7 +371,9 @@ device can use `127.0.0.1` after `adb reverse tcp:8080 tcp:8080`.
 
 ## Next work
 
-Run the complete beta journey on Android and iOS, including fresh onboarding
-with optional workouts both off and on. Add local backup/restore before
-treating device data as durable. The ordered implementation and test plan is in
+Create `codex/local-backup-restore` from clean `master` and implement a
+versioned, validated, transactional export/import path before treating device
+data as durable. Reminder delivery and plan date/progress consolidation remain
+subsequent P1 decisions. Physical-device, identifier/signing, and release-build
+verification remain release checks. The ordered plan is in
 [project.md](project.md).

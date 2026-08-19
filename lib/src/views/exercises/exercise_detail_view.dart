@@ -16,6 +16,7 @@ import '../../widgets/layout/responsive_scaffold.dart';
 import '../loading_view.dart';
 import 'exercise_records_view.dart';
 import 'exercise_update_view.dart';
+import 'exercises_view.dart';
 
 class ExerciseDetailView extends StatefulWidget {
   static const routeName = "/exercises/:id";
@@ -57,7 +58,11 @@ class _ExerciseDetailViewState extends State<ExerciseDetailView> {
         isDestructive: true,
         onConfirm: () {
           context.read<ExerciseCubit>().deleteExercise(widget.exerciseId);
-          context.pop();
+          if (context.canPop()) {
+            context.pop();
+          } else {
+            context.go(ExercisesView.routeName);
+          }
         },
       ),
     );
