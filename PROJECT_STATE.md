@@ -21,7 +21,7 @@ Repository facts at this review:
 
 - 311 Dart source files under `lib`;
 - 25 SQLite tables in the current create schema;
-- 86 seeded exercises and 25 seeded equipment entries;
+- 89 seeded exercises and 25 seeded equipment entries;
 - 16 optional seeded workouts and one 16-week seeded workout plan;
 - 20 automated test files with 83 passing tests;
 - no repository CI configuration.
@@ -31,7 +31,7 @@ Repository facts at this review:
 | Area | Current behavior | Important caveat |
 | --- | --- | --- |
 | Onboarding and profile | Creates one local profile and persists settings/reminders in the same SQLite transaction as bootstrap data; marks setup complete last | Partial databases from older development builds are rejected with clear-app-data guidance rather than repaired |
-| Seed data | Atomically seeds 25 equipment and 86 exercises; optionally seeds 16 workouts and the standard 16-week plan | A completed snapshot is idempotent; destructive reset remains the pre-beta policy for inconsistent legacy data |
+| Seed data | Atomically seeds 25 equipment and 89 exercises; optionally seeds 16 workouts and the standard 16-week plan | A completed snapshot is idempotent; destructive reset remains the pre-beta policy for inconsistent legacy data |
 | Activity | Provides entry cards for workout history, aggregate exercise progress, weight history, and workout-plan history | Workout and plan history require selecting their parent entity; there is no unified chronological timeline |
 | Exercises | Paginated browse/search; muscle-group, difficulty, and favorite filters; create/edit/delete; equipment relationships; favorite state | Equipment filtering is still TODO; media values have no picker/upload workflow |
 | Exercise records/progress | Create/edit/delete records; latest/history views; date filtering; estimated-max chart; aggregate progress sorted by exercise with kg/lb summaries | Aggregate progress intentionally reads only the most recent 1,000 records |
