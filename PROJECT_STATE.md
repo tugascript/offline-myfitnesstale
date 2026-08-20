@@ -1,7 +1,7 @@
 # My Fitness Tale: Current Project State
 
 Last reviewed on `codex/beta-device-journeys` (base commit `5334650`) on
-19 August 2026.
+21 August 2026.
 
 This is the code-grounded source of truth for what exists now. The forward plan
 and test priorities are in [project.md](project.md).
@@ -23,7 +23,7 @@ Repository facts at this review:
 - 25 SQLite tables in the current create schema;
 - 89 seeded exercises and 25 seeded equipment entries;
 - 16 optional seeded workouts and one 16-week seeded workout plan;
-- 20 host test files with 86 passing tests;
+- 21 host test files with 88 passing tests;
 - five integration-test files with seven passing journeys on both Android and
   iOS simulators;
 - no repository CI configuration.
@@ -155,9 +155,12 @@ persistent explanation that the attempt saved no data.
 ## Device-journey harness and results
 
 `integration_test/support/device_test_harness.dart` launches a fresh
-`GoRouter`, deletes the development database for fresh-install scenarios, and
-can close/reopen the database with a new widget tree while preserving data.
-The delete operation is test-only; the existing non-destructive reset remains
+`GoRouter` and selects `integration_test.db` before any app Cubit or service is
+created. Fresh-install scenarios delete only that dedicated file; restart
+scenarios close and reopen it with a new widget tree. Teardown deletes fixture
+data and restores production database configuration. The deletion API throws
+unless the integration database is selected, so the production `app.db` cannot
+be erased through this test path. The existing non-destructive reset remains
 available. Stable widget keys were added only where repeated labels or
 icon-only controls made text interaction ambiguous.
 
@@ -206,7 +209,9 @@ Reproducible defects fixed during these journeys:
 - profile settings stay mounted while an update is being persisted, retaining
   the expanded Settings section on iOS;
 - muscle headings flex within narrow workout columns;
-- device tests wait for Cupertino routes to become fully interactive.
+- device tests wait for Cupertino routes to become fully interactive;
+- integration resets use an isolated database and clean up their fixtures
+  without touching or replacing production `app.db` data.
 
 ## Workout-plan and history invariants
 
@@ -270,17 +275,18 @@ foreign-key validation.
 
 ## Automated verification at this review
 
-The following checks were run from the repository root on 19 August 2026:
+The following checks were last refreshed from the repository root on
+21 August 2026. Device-suite results remain from 19 August 2026:
 
 ```text
 dart format --output=none --set-exit-if-changed lib test integration_test
-  338 files formatted with no pending changes
+  339 files formatted with no pending changes
 
 dart analyze
   No issues found
 
 flutter test
-  86 tests passed
+  88 tests passed
 
 flutter test integration_test -d emulator-5554
   7 journeys passed in 3m56s
@@ -318,6 +324,8 @@ Coverage now includes:
 - profile/settings/reminders, weight/goal, equipment/exercise/record,
   workout/live/manual-history, and plan/execution/history device journeys;
 - narrow viewport, 200% text scaling, and narrow workout-column layout.
+- production/integration database isolation, fixture cleanup, and a guarded
+  refusal to delete while production configuration is selected.
 
 Important untested areas:
 

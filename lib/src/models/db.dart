@@ -29,7 +29,8 @@ import 'workout_set_exercise_record_model.dart';
 import 'workout_set_model.dart';
 import 'workout_set_record_model.dart';
 
-const String _databaseName = "app.db";
+const String _productionDatabaseName = "app.db";
+const String _integrationTestDatabaseName = "integration_test.db";
 const int _databaseVersion = 2;
 
 class DatabaseHelper {
@@ -37,6 +38,7 @@ class DatabaseHelper {
 
   factory DatabaseHelper() => _instance;
   static Database? _db;
+  String _databaseName = _productionDatabaseName;
 
   DatabaseHelper._();
 
@@ -71,9 +73,30 @@ class DatabaseHelper {
   }
 
   @visibleForTesting
-  Future<void> deleteForTesting() async {
+  Future<void> useIntegrationTestDatabaseForTesting() async {
     await resetForTesting();
-    final path = join(await getDatabasesPath(), _databaseName);
+    _databaseName = _integrationTestDatabaseName;
+  }
+
+  @visibleForTesting
+  Future<void> useProductionDatabaseForTesting() async {
+    await resetForTesting();
+    _databaseName = _productionDatabaseName;
+  }
+
+  @visibleForTesting
+  Future<void> deleteIntegrationTestDatabaseForTesting() async {
+    if (_databaseName != _integrationTestDatabaseName) {
+      throw StateError(
+        'Refusing to delete a database unless the integration-test database '
+        'is selected.',
+      );
+    }
+    await resetForTesting();
+    final path = join(
+      await getDatabasesPath(),
+      _integrationTestDatabaseName,
+    );
     await deleteDatabase(path);
   }
 

@@ -1,6 +1,6 @@
 # My Fitness Tale: Delivery Plan
 
-Last updated: 19 August 2026 on `codex/beta-device-journeys` (base commit
+Last updated: 21 August 2026 on `codex/beta-device-journeys` (base commit
 `5334650`). See [PROJECT_STATE.md](PROJECT_STATE.md) for the code-grounded
 snapshot, architecture, and verification results.
 
@@ -76,8 +76,11 @@ The beta-device-journeys slice is complete on the current simulator matrix:
 - five `integration_test` files cover seven fresh-install, navigation,
   persistence, CRUD, workout, and plan journeys;
 - `MyApp` accepts an optional router so each journey uses an isolated router;
-- tests can delete the development database for a fresh install or reopen it
-  without deletion to verify persistence;
+- journeys use a dedicated `integration_test.db`; fresh-install scenarios
+  delete only that file, restart scenarios reopen it, and teardown removes it
+  before restoring production database configuration;
+- the deletion API refuses to run while the production `app.db` is selected,
+  preventing device tests from erasing an installed user's local history;
 - all six dashboard actions, all four bottom destinations, and all four
   Activity cards reach their intended screens;
 - narrow-phone, enlarged-text, and narrow workout-column smoke tests pass;
@@ -141,17 +144,17 @@ flutter test
 git diff --check
 ```
 
-Beta-device-journeys verification on 19 August 2026:
+Beta-device-journeys verification, last refreshed on 21 August 2026:
 
 ```text
 dart format --output=none --set-exit-if-changed lib test integration_test
-  338 files formatted with no pending changes
+  339 files formatted with no pending changes
 
 dart analyze
   No issues found
 
 flutter test
-  86 tests passed
+  88 tests passed
 
 flutter test integration_test -d emulator-5554
   7 journeys passed in 3m56s
@@ -171,6 +174,11 @@ completion/cancellation/resume, and manual history; and plan
 creation/editing/start/progress, in-progress active-plan restart, scheduled
 live/manual workouts, and history. The harness recreates the router and
 database connection for restart checks.
+
+The host suite also creates a sentinel production `app.db`, selects and deletes
+the integration database, and verifies the sentinel file and row are unchanged.
+It separately verifies that integration deletion throws while production is
+selected.
 
 After the full-suite runs, the strengthened active-plan restart journey was
 rerun on both targets and passed in 32 seconds on Android and 24 seconds on
