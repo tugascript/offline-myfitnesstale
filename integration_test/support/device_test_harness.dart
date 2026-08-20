@@ -13,8 +13,10 @@ final class DeviceTestHarness {
 
   Future<void> launchFresh(WidgetTester tester) async {
     await _disposeWidgetTree(tester);
-    await DatabaseHelper().deleteForTesting();
-    await DatabaseHelper().initialize();
+    final databaseHelper = DatabaseHelper();
+    await databaseHelper.useIntegrationTestDatabaseForTesting();
+    await databaseHelper.deleteIntegrationTestDatabaseForTesting();
+    await databaseHelper.initialize();
     await _launch(tester);
   }
 
@@ -27,7 +29,13 @@ final class DeviceTestHarness {
 
   Future<void> dispose(WidgetTester tester) async {
     await _disposeWidgetTree(tester);
-    await DatabaseHelper().resetForTesting();
+    final databaseHelper = DatabaseHelper();
+    await databaseHelper.useIntegrationTestDatabaseForTesting();
+    try {
+      await databaseHelper.deleteIntegrationTestDatabaseForTesting();
+    } finally {
+      await databaseHelper.useProductionDatabaseForTesting();
+    }
   }
 
   Future<void> onboard(
