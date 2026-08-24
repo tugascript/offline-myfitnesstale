@@ -506,7 +506,7 @@ class ExerciseService {
         offset: offset,
       ));
     } catch (e) {
-      _logger.severe("Failed to get equipments", e);
+      _logger.severe("Failed to get equipments", e.toString());
       return err(const ServiceError(
         type: OperationErrorTypes.operationFailure,
         description: 'Failed to get equipments',

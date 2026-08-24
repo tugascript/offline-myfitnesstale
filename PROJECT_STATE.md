@@ -23,7 +23,7 @@ Repository facts at this review:
 - 25 SQLite tables in the current create schema;
 - 89 seeded exercises and 25 seeded equipment entries;
 - 16 optional seeded workouts and one 16-week seeded workout plan;
-- 25 host test files with 95 passing tests;
+- 27 host test files with 97 passing tests;
 - five integration-test files with seven passing journeys on both Android and
   iOS simulators;
 - no repository CI configuration.
@@ -286,7 +286,7 @@ dart analyze
   No issues found
 
 flutter test
-  95 tests passed
+  97 tests passed
 
 flutter test integration_test -d emulator-5554
   7 journeys passed in 3m56s
