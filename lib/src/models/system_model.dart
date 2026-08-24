@@ -79,7 +79,6 @@ class System extends Equatable implements Model {
     };
   }
 
-  @override
   factory System.fromMap(Map<String, Object?> map) {
     return System(
       id: map[SystemColumns.id.value] as int?,
@@ -95,7 +94,6 @@ class System extends Equatable implements Model {
     );
   }
 
-  @override
   factory System.create({
     required ThemeType theme,
     required Units units,

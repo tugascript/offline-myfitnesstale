@@ -23,7 +23,7 @@ Repository facts at this review:
 - 25 SQLite tables in the current create schema;
 - 89 seeded exercises and 25 seeded equipment entries;
 - 16 optional seeded workouts and one 16-week seeded workout plan;
-- 21 host test files with 88 passing tests;
+- 27 host test files with 97 passing tests;
 - five integration-test files with seven passing journeys on both Android and
   iOS simulators;
 - no repository CI configuration.
@@ -35,7 +35,7 @@ Repository facts at this review:
 | Onboarding and profile | Creates one local profile and persists settings/reminders in the same SQLite transaction as bootstrap data; marks setup complete last | Partial databases from older development builds are rejected with clear-app-data guidance rather than repaired |
 | Seed data | Atomically seeds 25 equipment and 89 exercises; optionally seeds 16 workouts and the standard 16-week plan | A completed snapshot is idempotent; destructive reset remains the pre-beta policy for inconsistent legacy data |
 | Activity | Provides entry cards for workout history, aggregate exercise progress, weight history, and workout-plan history | Workout and plan history require selecting their parent entity; there is no unified chronological timeline |
-| Exercises | Paginated browse/search; muscle-group, difficulty, and favorite filters; create/edit/delete; equipment relationships; favorite state | Equipment filtering is still TODO; media values have no picker/upload workflow |
+| Exercises | Paginated browse/search; muscle-group, difficulty, equipment, and favorite filters; create/edit/delete; equipment relationships; favorite state | Media values have no picker/upload workflow |
 | Exercise records/progress | Create/edit/delete records; latest/history views; date filtering; estimated-max chart; aggregate progress sorted by exercise with kg/lb summaries | Aggregate progress intentionally reads only the most recent 1,000 records |
 | Workouts | Reusable, versioned workouts; basic and advanced editors; alternatives, rep ranges, rest, and difficulty; create/edit/delete | Advanced mutations remain entitlement-gated; free users see an unavailable-in-this-build state rather than purchase actions |
 | Live workout | Starts a workout record, logs numeric weight/reps, carries prior values within a set group, handles rest/progress, complete and cancel | Device coverage includes start, process-local resume, cancellation cleanup, completion, and history; OS interruption during an active timer remains a later physical-device case |
@@ -286,7 +286,7 @@ dart analyze
   No issues found
 
 flutter test
-  88 tests passed
+  97 tests passed
 
 flutter test integration_test -d emulator-5554
   7 journeys passed in 3m56s

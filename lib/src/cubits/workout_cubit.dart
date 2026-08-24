@@ -305,7 +305,10 @@ class WorkoutCubit extends Cubit<WorkoutState> {
   Future<void> refreshWorkoutSets(int workoutId) async {
     _logger.info('Refreshing workout sets for workout $workoutId');
 
-    final sets = await _workoutService.getWorkoutSets(workoutId);
+    final sets = await _workoutService.getWorkoutSets(
+      workoutId,
+      version: state.selectedWorkout?.version,
+    );
     if (sets.isErr()) {
       final error = sets.error;
       _logger.warning("Failed to get workout sets", error);

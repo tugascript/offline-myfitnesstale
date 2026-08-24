@@ -68,7 +68,6 @@ class WeightRecord implements Model {
     };
   }
 
-  @override
   factory WeightRecord.fromMap(Map<String, Object?> map) {
     return WeightRecord(
       id: map[WeightRecordColumns.id.value] as int?,
@@ -81,7 +80,6 @@ class WeightRecord implements Model {
     );
   }
 
-  @override
   factory WeightRecord.create(
     int weight,
     int recordDate,

@@ -28,7 +28,6 @@ class VideoData extends Equatable implements JsonData {
     return '{"platform":"${platform.value}","uri":"$uri"}';
   }
 
-  @override
   factory VideoData.fromJson(String json) {
     final Map<String, String> map = jsonDecode(json);
     return VideoData(
@@ -66,7 +65,6 @@ class PictureData extends Equatable implements JsonData {
     return '{"storage":"${storage.value}","uri":"$uri"}';
   }
 
-  @override
   factory PictureData.fromJson(String json) {
     final Map<String, String> map = jsonDecode(json);
     return PictureData(
@@ -188,7 +186,6 @@ class WorkoutSetExerciseDifficulty extends Equatable implements JsonData {
     );
   }
 
-  @override
   factory WorkoutSetExerciseDifficulty.fromJson(String json) {
     return WorkoutSetExerciseDifficulty.fromMap(jsonDecode(json));
   }

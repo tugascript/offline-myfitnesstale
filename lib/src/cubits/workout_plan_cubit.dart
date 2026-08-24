@@ -21,17 +21,21 @@ class WorkoutPlanCubit extends Cubit<WorkoutPlanState> {
   Future<void> getWorkoutPlans({
     String? name,
     Difficulty? difficulty,
+    bool isFavorite = false,
     int? limit,
     int? offset,
   }) async {
     _logger.info('Getting workout plans');
+    final resolvedOffset = offset ?? state.pagination.offset;
+    final isLoadMore = resolvedOffset > 0;
     emit(state.copyWith(isLoading: true));
 
     final result = await _workoutPlanService.getWorkoutPlans(
       name: name,
       difficulty: difficulty,
+      isFavorite: isFavorite,
       limit: limit ?? state.pagination.limit,
-      offset: offset ?? state.pagination.offset,
+      offset: resolvedOffset,
     );
     if (result.isErr()) {
       final error = result.error;
@@ -54,10 +58,13 @@ class WorkoutPlanCubit extends Cubit<WorkoutPlanState> {
     final paginatedData = result.value;
     emit(
       state.copyWith(
-        workoutPlans: paginatedData.data,
+        workoutPlans: isLoadMore
+            ? [...state.workoutPlans, ...paginatedData.data]
+            : paginatedData.data,
         pagination: state.pagination.copyWith(
           name: name,
           difficulty: difficulty,
+          isFavorite: isFavorite,
           limit: paginatedData.limit,
           offset: paginatedData.offset,
           total: paginatedData.total,

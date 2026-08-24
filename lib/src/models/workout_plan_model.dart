@@ -107,7 +107,6 @@ class WorkoutPlan extends Equatable implements Model {
     };
   }
 
-  @override
   factory WorkoutPlan.fromMap(Map<String, Object?> map) {
     return WorkoutPlan(
       id: map[WorkoutPlanColumns.id.value] as int?,
@@ -135,7 +134,6 @@ class WorkoutPlan extends Equatable implements Model {
     );
   }
 
-  @override
   factory WorkoutPlan.create({
     required String name,
     required Difficulty difficulty,

@@ -115,7 +115,6 @@ final class WorkoutSetExercise extends Equatable implements Model {
     };
   }
 
-  @override
   factory WorkoutSetExercise.fromMap(Map<String, Object?> map) {
     return WorkoutSetExercise(
       id: map[WorkoutSetExerciseColumns.id.value] as int?,
@@ -139,7 +138,6 @@ final class WorkoutSetExercise extends Equatable implements Model {
     );
   }
 
-  @override
   factory WorkoutSetExercise.create({
     required int position,
     required int workoutId,

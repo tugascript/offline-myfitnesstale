@@ -18,11 +18,14 @@ class BaseCommonSearchForm extends StatefulWidget {
   final String initialName;
   final Difficulty? initialDifficulty;
   final MuscleGroup? initialMuscleGroup;
+  final int? initialEquipmentId;
+  final Map<int, String>? equipmentSelection;
   final bool initialIsFavorite;
   final void Function({
     required String name,
     required Difficulty? difficulty,
     required MuscleGroup? muscleGroup,
+    required int? equipmentId,
     required bool isFavourite,
   }) onSubmit;
 
@@ -37,6 +40,8 @@ class BaseCommonSearchForm extends StatefulWidget {
     required this.initialName,
     required this.initialDifficulty,
     required this.initialMuscleGroup,
+    this.initialEquipmentId,
+    this.equipmentSelection,
     required this.initialIsFavorite,
     required this.onSubmit,
   });
@@ -57,6 +62,7 @@ class _BaseCommonSearchFormState extends State<BaseCommonSearchForm> {
       name: widget.initialName,
       difficulty: widget.initialDifficulty,
       muscleGroup: widget.initialMuscleGroup,
+      equipmentId: widget.initialEquipmentId,
       isFavourite: widget.initialIsFavorite,
     );
     _nameController.text = _data.name;
@@ -181,28 +187,63 @@ class _BaseCommonSearchFormState extends State<BaseCommonSearchForm> {
                 ),
               ),
               SizedBox(width: widget.spacing),
-              SearchFormButton(
-                theme: widget.theme,
-                loadingSize: loadingSize,
-                isLoading: widget.isLoading,
-                onPressed: () {
-                  if (!widget.isLoading) {
-                    if (_formKey.currentState!.validate()) {
-                      _formKey.currentState!.save();
-                      widget.onSubmit(
-                        name: _data.name,
-                        difficulty: _data.difficulty,
-                        muscleGroup: _data.muscleGroup,
-                        isFavourite: _data.isFavourite,
-                      );
-                    }
-                  }
-                },
-              ),
+              if (widget.equipmentSelection == null)
+                SearchFormButton(
+                  theme: widget.theme,
+                  loadingSize: loadingSize,
+                  isLoading: widget.isLoading,
+                  onPressed: _submit,
+                ),
             ],
           ),
+          if (widget.equipmentSelection != null) ...[
+            SizedBox(height: widget.spacing),
+            Row(
+              children: [
+                Expanded(
+                  child: AppDropdown<int>(
+                    value: _data.equipmentId,
+                    emptyLabel: 'All Equipment',
+                    items: widget.equipmentSelection!.keys.toList(),
+                    fontSize: widget.fontSize,
+                    padding: widget.padding / 2,
+                    labelBuilder: (id) => widget.equipmentSelection![id]!,
+                    onChanged: (value) {
+                      setState(() {
+                        _data.equipmentId = value;
+                      });
+                    },
+                    onSaved: (value) {
+                      _data.equipmentId = value;
+                    },
+                  ),
+                ),
+                SizedBox(width: widget.spacing),
+                SearchFormButton(
+                  theme: widget.theme,
+                  loadingSize: loadingSize,
+                  isLoading: widget.isLoading,
+                  onPressed: _submit,
+                ),
+              ],
+            ),
+          ],
         ],
       ),
+    );
+  }
+
+  void _submit() {
+    if (widget.isLoading || !_formKey.currentState!.validate()) {
+      return;
+    }
+    _formKey.currentState!.save();
+    widget.onSubmit(
+      name: _data.name,
+      difficulty: _data.difficulty,
+      muscleGroup: _data.muscleGroup,
+      equipmentId: _data.equipmentId,
+      isFavourite: _data.isFavourite,
     );
   }
 }
@@ -211,12 +252,14 @@ final class _FormData {
   String name;
   Difficulty? difficulty;
   MuscleGroup? muscleGroup;
+  int? equipmentId;
   bool isFavourite;
 
   _FormData({
     required this.name,
     required this.difficulty,
     required this.muscleGroup,
+    required this.equipmentId,
     required this.isFavourite,
   });
 }

@@ -33,7 +33,6 @@ class ExerciseRecordDto extends Equatable implements Dto<ExerciseRecord> {
     this.exercise,
   });
 
-  @override
   factory ExerciseRecordDto.fromModel(
     ExerciseRecord model, {
     ExerciseDto? exercise,

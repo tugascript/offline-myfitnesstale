@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import 'app_scaffold.dart';
 
-// TODO: allow to pass custom back action
 class ResponsiveScaffold extends StatelessWidget {
   final String title;
   final Widget body;

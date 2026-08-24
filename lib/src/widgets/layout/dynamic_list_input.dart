@@ -55,10 +55,11 @@ class DynamicListInput<T> extends StatelessWidget {
             buildDefaultDragHandles: false,
             physics: const NeverScrollableScrollPhysics(),
             itemCount: items.length,
-            onReorder: (oldIndex, newIndex) {
+            onReorderItem: (oldIndex, newIndex) {
               if (oldIndex < newIndex) {
                 newIndex -= 1;
               }
+
               final List<T> newItems = List.from(items);
               final item = newItems.removeAt(oldIndex);
               newItems.insert(newIndex, item);

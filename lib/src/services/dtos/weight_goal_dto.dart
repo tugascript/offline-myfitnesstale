@@ -22,7 +22,6 @@ class WeightGoalDto extends Equatable implements Dto<WeightGoal> {
     required this.phase,
   });
 
-  @override
   factory WeightGoalDto.fromModel(WeightGoal model) {
     return WeightGoalDto(
       id: model.id!,

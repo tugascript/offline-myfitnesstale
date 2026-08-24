@@ -3,7 +3,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../cubits/states/workout_plan_state.dart';
+import '../../cubits/states/workout_plan_record_state.dart';
 import '../../cubits/workout_plan_cubit.dart';
+import '../../cubits/workout_plan_record_cubit.dart';
 import '../../models/enums.dart';
 import '../../utilities/sizes/data_display_sizes.dart';
 import '../../utilities/sizes/screen_size.dart';
@@ -36,6 +38,11 @@ class _WorkoutPlanDetailViewState extends State<WorkoutPlanDetailView> {
   void initState() {
     super.initState();
     context.read<WorkoutPlanCubit>().getWorkoutPlan(widget.workoutPlanId);
+    final recordCubit = context.read<WorkoutPlanRecordCubit>();
+    if (!recordCubit.state.isLoading &&
+        recordCubit.state.currentPlanRecord.workoutPlan == null) {
+      recordCubit.getLatestActivePlanRecord();
+    }
   }
 
   @override
@@ -123,37 +130,45 @@ class _WorkoutPlanDetailViewState extends State<WorkoutPlanDetailView> {
                         ) ??
                     []),
                 SizedBox(height: sizes.spacing),
-                ActionButtons(
-                  isLoading: state.isLoading,
-                  showMutationBtns: plan.createdBy == CreatedBy.user,
-                  theme: theme,
-                  sizes: sizes,
-                  onStart: () =>
-                      context.push('/workout-plans/${plan.id}/active'),
-                  startLabel:
-                      'Start Plan', // TODO: change to continue if the plan is already active
-                  onEdit: () => context.push('/workout-plans/${plan.id}/edit'),
-                  onDelete: () {
-                    showDialog(
-                      context: context,
-                      builder: (context) => ConfirmationDialog(
-                        title: 'Delete Workout Plan',
-                        content:
-                            'Are you sure you want to delete this workout plan? This action cannot be undone.',
-                        onConfirm: () async {
-                          await context
-                              .read<WorkoutPlanCubit>()
-                              .deleteWorkoutPlan(plan.id);
-                          if (context.mounted) {
-                            Navigator.of(context).pop();
-                          }
-                        },
+                BlocBuilder<WorkoutPlanRecordCubit, WorkoutPlanRecordState>(
+                  builder: (context, recordState) {
+                    final isActive =
+                        recordState.currentPlanRecord.workoutPlan?.id ==
+                            plan.id;
+                    return ActionButtons(
+                      isLoading: state.isLoading || recordState.isLoading,
+                      showMutationBtns: plan.createdBy == CreatedBy.user,
+                      theme: theme,
+                      sizes: sizes,
+                      onStart: () =>
+                          context.push('/workout-plans/${plan.id}/active'),
+                      startLabel: isActive ? 'Continue Plan' : 'Start Plan',
+                      onEdit: () =>
+                          context.push('/workout-plans/${plan.id}/edit'),
+                      onDelete: () {
+                        showDialog(
+                          context: context,
+                          builder: (context) => ConfirmationDialog(
+                            title: 'Delete Workout Plan',
+                            content:
+                                'Are you sure you want to delete this workout plan? This action cannot be undone.',
+                            onConfirm: () async {
+                              await context
+                                  .read<WorkoutPlanCubit>()
+                                  .deleteWorkoutPlan(plan.id);
+                              if (context.mounted) {
+                                Navigator.of(context).pop();
+                              }
+                            },
+                          ),
+                        );
+                      },
+                      onHistory: () => context.push(
+                        WorkoutPlanHistoryView.location(plan.id),
                       ),
+                      historyLabel: 'Plan History',
                     );
                   },
-                  onHistory: () =>
-                      context.push(WorkoutPlanHistoryView.location(plan.id)),
-                  historyLabel: 'Plan History',
                 ),
               ],
             ),

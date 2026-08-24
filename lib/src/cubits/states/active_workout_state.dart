@@ -103,14 +103,22 @@ class ActiveWorkoutState extends Equatable {
   }
 
   int get totalCurrentSet {
-    return currentSetNumber +
-        (currentSetPosition *
-            (currentSet?.maxSets ?? currentSet?.minSets ?? 0));
+    final sets = workout?.sets;
+    if (sets == null || sets.isEmpty) return currentSetNumber;
+    final boundedPosition = currentSetPosition < 0
+        ? 0
+        : currentSetPosition > sets.length
+            ? sets.length
+            : currentSetPosition;
+    final precedingSetCount = sets
+        .take(boundedPosition)
+        .fold<int>(0, (total, set) => total + (set.maxSets ?? set.minSets));
+    return precedingSetCount + currentSetNumber;
   }
 
   double get progress {
     if (totalSets == 0) return 0.0;
-    return totalCurrentSet / totalSets;
+    return (totalCurrentSet / totalSets).clamp(0.0, 1.0).toDouble();
   }
 
   factory ActiveWorkoutState.initial() {

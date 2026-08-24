@@ -61,35 +61,46 @@ class ProfileHeader extends StatelessWidget {
                     ),
                     softWrap: true,
                     overflow: TextOverflow.ellipsis,
+                    maxLines: 2,
                   ),
                   SizedBox(height: sizes.spacing / 4),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
+                  Wrap(
+                    spacing: sizes.spacing,
+                    runSpacing: sizes.spacing / 3,
                     children: [
-                      Icon(
-                        Icons.height,
-                        size: sizes.subtitleFontSize,
-                        color: grey,
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.height,
+                            size: sizes.subtitleFontSize,
+                            color: grey,
+                          ),
+                          Text(
+                            " ${system.units == Units.metric ? "${profile.height}cm" : Converters.formatImperialHeight(profile.height)}",
+                            style: TextStyle(
+                              fontSize: sizes.subtitleFontSize,
+                              color: grey,
+                            ),
+                          ),
+                        ],
                       ),
-                      Text(
-                        " ${system.units == Units.metric ? "${profile.height}cm" : Converters.formatImperialHeight(profile.height)} • ",
-                        style: TextStyle(
-                          fontSize: sizes.subtitleFontSize,
-                          color: grey,
-                        ),
-                      ),
-                      Icon(
-                        _getGenderIcon(profile.gender),
-                        size: sizes.subtitleFontSize,
-                        color: grey,
-                      ),
-                      Text(
-                        " ${EnumDisplayNames.getGenderDisplayName(profile.gender)}",
-                        style: TextStyle(
-                          fontSize: sizes.subtitleFontSize,
-                          color: grey,
-                        ),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            _getGenderIcon(profile.gender),
+                            size: sizes.subtitleFontSize,
+                            color: grey,
+                          ),
+                          Text(
+                            " ${EnumDisplayNames.getGenderDisplayName(profile.gender)}",
+                            style: TextStyle(
+                              fontSize: sizes.subtitleFontSize,
+                              color: grey,
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),

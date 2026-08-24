@@ -28,19 +28,26 @@ class _ExercisesViewState extends State<ExercisesView> {
   @override
   void initState() {
     super.initState();
+    _loadInitialData();
+    _scrollController.addListener(_onScroll);
+  }
+
+  Future<void> _loadInitialData() async {
     final cubit = context.read<ExerciseCubit>();
+    await cubit.getSelectionEquipments();
+    if (!mounted) return;
     if (cubit.state.exercises.isEmpty) {
       final pagination = cubit.state.exercisePagination;
-      cubit.getExercises(
+      await cubit.getExercises(
         name: pagination.name,
         difficulty: pagination.difficulty,
         muscleGroup: pagination.muscleGroup,
+        equipmentId: pagination.equipmentId,
         isFavourite: pagination.isFavorite,
         limit: 20,
         offset: 0,
       );
     }
-    _scrollController.addListener(_onScroll);
   }
 
   @override
@@ -59,6 +66,7 @@ class _ExercisesViewState extends State<ExercisesView> {
           name: pagination.name,
           difficulty: pagination.difficulty,
           muscleGroup: pagination.muscleGroup,
+          equipmentId: pagination.equipmentId,
           isFavourite: pagination.isFavorite,
           offset: cubit.state.exercises.length,
           limit: 20,
@@ -102,17 +110,21 @@ class _ExercisesViewState extends State<ExercisesView> {
                   initialName: state.exercisePagination.name,
                   initialDifficulty: state.exercisePagination.difficulty,
                   initialMuscleGroup: state.exercisePagination.muscleGroup,
+                  initialEquipmentId: state.exercisePagination.equipmentId,
+                  equipmentSelection: state.equipmentSelection,
                   initialIsFavorite: state.exercisePagination.isFavorite,
                   onSubmit: ({
                     String? name,
                     Difficulty? difficulty,
                     MuscleGroup? muscleGroup,
+                    int? equipmentId,
                     bool isFavourite = false,
                   }) {
                     context.read<ExerciseCubit>().getExercises(
                           name: name,
                           difficulty: difficulty,
                           muscleGroup: muscleGroup,
+                          equipmentId: equipmentId,
                           isFavourite: isFavourite,
                           limit: 20,
                           offset: 0,

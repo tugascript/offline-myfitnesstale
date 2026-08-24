@@ -13,7 +13,6 @@ import '../editors/sets_input.dart';
 import 'complex_set_editor_data.dart';
 import 'set_exercise_editor.dart';
 
-// TODO: save the muscle group of the main exercise so it can automatically search on the alternatives
 class PremiumSetEditor extends StatefulWidget {
   final ComplexSetEditorData setData;
   final DataDisplaySizesList sizes;
@@ -57,6 +56,7 @@ class _PremiumSetEditorState extends State<PremiumSetEditor> {
               difficulty: exercise.difficulty,
               exerciseId: exercise.exerciseId,
               exerciseName: exercise.exerciseName,
+              exerciseMuscleGroup: exercise.exerciseMuscleGroup,
               alternativeExercises: Set<AlternativeExerciseData>.from(
                 exercise.alternativeExercises,
               ),
@@ -259,8 +259,9 @@ class _PremiumSetEditorState extends State<PremiumSetEditor> {
                       isLoading: widget.isLoading,
                       onExerciseChanged: (value) {
                         _updateExerciseAtIndex(index, (exercise) {
-                          exercise.exerciseId = value.$1;
-                          exercise.exerciseName = value.$2;
+                          exercise.exerciseId = value.id;
+                          exercise.exerciseName = value.name;
+                          exercise.exerciseMuscleGroup = value.muscleGroup;
                         });
                       },
                       onMinRepsChanged: (value) {
@@ -355,7 +356,7 @@ class _PremiumSetEditorState extends State<PremiumSetEditor> {
           return SetExerciseSearchModal(
             sizes: sizes,
             isLoading: widget.isLoading,
-            onExerciseSelected: (id, name) async {
+            onExerciseSelected: (exercise) async {
               if (!dialogContext.mounted) {
                 return;
               }
@@ -368,8 +369,9 @@ class _PremiumSetEditorState extends State<PremiumSetEditor> {
                     minReps: 1,
                     maxReps: null,
                     toMaxReps: false,
-                    exerciseId: id,
-                    exerciseName: name,
+                    exerciseId: exercise.id,
+                    exerciseName: exercise.name,
+                    exerciseMuscleGroup: exercise.muscleGroup,
                     alternativeExercises: const {},
                   ),
                 );
@@ -406,6 +408,7 @@ class _PremiumSetEditorState extends State<PremiumSetEditor> {
                   setData.exercises.length >= 2 || lastExercise.toMaxReps,
               exerciseId: lastExercise.exerciseId,
               exerciseName: lastExercise.exerciseName,
+              exerciseMuscleGroup: lastExercise.exerciseMuscleGroup,
               alternativeExercises: lastExercise.alternativeExercises,
               difficulty: _calculateDifficulty(
                 setType,
@@ -426,7 +429,7 @@ class _PremiumSetEditorState extends State<PremiumSetEditor> {
             return SetExerciseSearchModal(
               sizes: sizes,
               isLoading: widget.isLoading,
-              onExerciseSelected: (id, name) async {
+              onExerciseSelected: (exercise) async {
                 if (!dialogContext.mounted) {
                   return;
                 }
@@ -439,8 +442,9 @@ class _PremiumSetEditorState extends State<PremiumSetEditor> {
                       minReps: lastExercise.minReps,
                       maxReps: lastExercise.maxReps,
                       toMaxReps: lastExercise.toMaxReps,
-                      exerciseId: id,
-                      exerciseName: name,
+                      exerciseId: exercise.id,
+                      exerciseName: exercise.name,
+                      exerciseMuscleGroup: exercise.muscleGroup,
                       alternativeExercises: const {},
                       difficulty: _calculateDifficulty(
                         setType,
@@ -467,7 +471,7 @@ class _PremiumSetEditorState extends State<PremiumSetEditor> {
             return SetExerciseSearchModal(
               sizes: sizes,
               isLoading: widget.isLoading,
-              onExerciseSelected: (id, name) async {
+              onExerciseSelected: (exercise) async {
                 if (!dialogContext.mounted) {
                   return;
                 }
@@ -480,8 +484,9 @@ class _PremiumSetEditorState extends State<PremiumSetEditor> {
                       minReps: lastExercise.minReps,
                       maxReps: lastExercise.maxReps,
                       toMaxReps: lastExercise.toMaxReps,
-                      exerciseId: id,
-                      exerciseName: name,
+                      exerciseId: exercise.id,
+                      exerciseName: exercise.name,
+                      exerciseMuscleGroup: exercise.muscleGroup,
                       alternativeExercises: const {},
                       difficulty: _calculateDifficulty(
                         setType,
@@ -515,6 +520,7 @@ class _PremiumSetEditorState extends State<PremiumSetEditor> {
               toMaxReps: lastExercise.toMaxReps,
               exerciseId: lastExercise.exerciseId,
               exerciseName: lastExercise.exerciseName,
+              exerciseMuscleGroup: lastExercise.exerciseMuscleGroup,
               alternativeExercises: lastExercise.alternativeExercises,
               difficulty: _calculateDifficulty(
                 setType,
@@ -535,7 +541,7 @@ class _PremiumSetEditorState extends State<PremiumSetEditor> {
             return SetExerciseSearchModal(
               sizes: sizes,
               isLoading: widget.isLoading,
-              onExerciseSelected: (id, name) async {
+              onExerciseSelected: (exercise) async {
                 if (!dialogContext.mounted) {
                   return;
                 }
@@ -548,8 +554,9 @@ class _PremiumSetEditorState extends State<PremiumSetEditor> {
                       minReps: lastExercise.minReps,
                       maxReps: lastExercise.maxReps,
                       toMaxReps: lastExercise.toMaxReps,
-                      exerciseId: id,
-                      exerciseName: name,
+                      exerciseId: exercise.id,
+                      exerciseName: exercise.name,
+                      exerciseMuscleGroup: exercise.muscleGroup,
                       alternativeExercises: const {},
                       difficulty: _calculateDifficulty(
                         setType,

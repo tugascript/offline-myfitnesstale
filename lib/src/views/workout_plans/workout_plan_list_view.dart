@@ -31,8 +31,9 @@ class _WorkoutPlanListViewState extends State<WorkoutPlanListView> {
 
     if (cubitState.workoutPlans.isEmpty) {
       cubit.getWorkoutPlans(
-        name: null,
-        difficulty: null,
+        name: cubitState.pagination.name,
+        difficulty: cubitState.pagination.difficulty,
+        isFavorite: cubitState.pagination.isFavorite,
         limit: 20,
         offset: 0,
       );
@@ -52,7 +53,11 @@ class _WorkoutPlanListViewState extends State<WorkoutPlanListView> {
       final cubit = context.read<WorkoutPlanCubit>();
       if (!cubit.state.isLoading &&
           cubit.state.pagination.total > cubit.state.workoutPlans.length) {
+        final pagination = cubit.state.pagination;
         cubit.getWorkoutPlans(
+          name: pagination.name,
+          difficulty: pagination.difficulty,
+          isFavorite: pagination.isFavorite,
           offset: cubit.state.workoutPlans.length,
         );
       }
@@ -97,15 +102,18 @@ class _WorkoutPlanListViewState extends State<WorkoutPlanListView> {
                   fontSize: sizes.fontSize,
                   spacing: sizes.inputSpacing,
                   isLoading: state.isLoading,
-                  initialName: "",
-                  initialDifficulty: null,
+                  initialName: state.pagination.name,
+                  initialDifficulty: state.pagination.difficulty,
+                  initialIsFavorite: state.pagination.isFavorite,
                   onSubmit: ({
                     required String name,
                     required Difficulty? difficulty,
+                    required bool isFavorite,
                   }) {
                     context.read<WorkoutPlanCubit>().getWorkoutPlans(
                           name: name,
                           difficulty: difficulty,
+                          isFavorite: isFavorite,
                           limit: 20,
                           offset: 0,
                         );

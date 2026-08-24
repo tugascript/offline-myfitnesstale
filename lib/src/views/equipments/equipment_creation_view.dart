@@ -10,7 +10,6 @@ import '../../widgets/equipment/equipment_form.dart';
 import '../../widgets/layout/responsive_scaffold.dart';
 import 'equipments_view.dart';
 
-// TODO: delete this in favor of a modal
 class EquipmentCreationView extends StatelessWidget {
   static const String routeName = '/equipments/create';
   static const String name = 'equipment_creation';

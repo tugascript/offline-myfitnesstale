@@ -154,7 +154,7 @@ dart analyze
   No issues found
 
 flutter test
-  88 tests passed
+  97 tests passed
 
 flutter test integration_test -d emulator-5554
   7 journeys passed in 3m56s

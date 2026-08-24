@@ -11,7 +11,6 @@ import '../../utilities/sizes/data_display_sizes.dart';
 import '../common/difficulty_badge.dart';
 import 'active_plan/empty_active_plan.dart';
 
-// TODO: fix this widget layout
 class ActivePlanWidget extends StatefulWidget {
   final DataDisplaySizesList sizes;
 
@@ -67,6 +66,8 @@ class _ActivePlanWidgetState extends State<ActivePlanWidget> {
       },
       child: BlocBuilder<WorkoutPlanRecordCubit, WorkoutPlanRecordState>(
         builder: (context, state) {
+          final theme = Theme.of(context);
+          final colors = theme.colorScheme;
           final currentPlanRecord = state.currentPlanRecord;
 
           if (currentPlanRecord.workoutPlan == null) {
@@ -74,10 +75,11 @@ class _ActivePlanWidgetState extends State<ActivePlanWidget> {
           }
 
           final plan = currentPlanRecord.workoutPlan!;
-          final progressFraction = currentPlanRecord.totalWorkouts == 0
+          final rawProgress = currentPlanRecord.totalWorkouts == 0
               ? 0.0
               : currentPlanRecord.completedWorkouts /
                   currentPlanRecord.totalWorkouts;
+          final progressFraction = rawProgress.clamp(0.0, 1.0).toDouble();
 
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -102,24 +104,41 @@ class _ActivePlanWidgetState extends State<ActivePlanWidget> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                plan.name,
-                                style: TextStyle(
-                                  fontSize: widget.sizes.subtitleFontSize,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                        LayoutBuilder(
+                          builder: (context, constraints) {
+                            final title = Text(
+                              plan.name,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: widget.sizes.subtitleFontSize,
+                                fontWeight: FontWeight.bold,
                               ),
-                            ),
-                            DifficultyBadge(
+                            );
+                            final difficulty = DifficultyBadge(
                               difficulty: plan.difficulty,
                               spacing: widget.sizes.spacing,
                               fontSize: widget.sizes.fontSize,
                               fontWeight: FontWeight.w600,
-                            ),
-                          ],
+                            );
+                            if (constraints.maxWidth < 400) {
+                              return Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  title,
+                                  SizedBox(height: widget.sizes.spacing / 2),
+                                  difficulty,
+                                ],
+                              );
+                            }
+                            return Row(
+                              children: [
+                                Expanded(child: title),
+                                SizedBox(width: widget.sizes.spacing),
+                                difficulty,
+                              ],
+                            );
+                          },
                         ),
                         SizedBox(height: widget.sizes.spacing),
                         // Progress Bar
@@ -134,7 +153,7 @@ class _ActivePlanWidgetState extends State<ActivePlanWidget> {
                                   style: TextStyle(
                                     fontSize: widget.sizes.fontSize,
                                     fontWeight: FontWeight.w600,
-                                    color: Colors.grey[800],
+                                    color: colors.onSurfaceVariant,
                                   ),
                                 ),
                                 Text(
@@ -142,7 +161,7 @@ class _ActivePlanWidgetState extends State<ActivePlanWidget> {
                                   style: TextStyle(
                                     fontSize: widget.sizes.fontSize,
                                     fontWeight: FontWeight.w600,
-                                    color: Colors.grey[800],
+                                    color: colors.onSurfaceVariant,
                                   ),
                                 ),
                               ],
@@ -151,17 +170,17 @@ class _ActivePlanWidgetState extends State<ActivePlanWidget> {
                             LinearProgressIndicator(
                               value: progressFraction,
                               minHeight: 6,
-                              backgroundColor: Colors.grey[200],
+                              backgroundColor: colors.surfaceContainerHighest,
                               valueColor: AlwaysStoppedAnimation<Color>(
-                                Theme.of(context).primaryColor,
+                                colors.primary,
                               ),
                             ),
                             SizedBox(height: widget.sizes.spacing / 2),
                             Text(
                               '${currentPlanRecord.completedWorkouts} of ${currentPlanRecord.totalWorkouts} workouts',
                               style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey[600],
+                                fontSize: widget.sizes.smallFontSize,
+                                color: colors.onSurfaceVariant,
                               ),
                             ),
                           ],
@@ -171,15 +190,13 @@ class _ActivePlanWidgetState extends State<ActivePlanWidget> {
                           Container(
                             padding: EdgeInsets.all(widget.sizes.padding),
                             decoration: BoxDecoration(
-                              color: Theme.of(context)
-                                  .primaryColor
-                                  .withValues(alpha: 0.1),
+                              color: colors.primaryContainer,
                             ),
                             child: Row(
                               children: [
                                 Icon(
                                   Icons.fitness_center,
-                                  color: Theme.of(context).primaryColor,
+                                  color: colors.onPrimaryContainer,
                                   size: widget.sizes.fontSize * 2,
                                 ),
                                 SizedBox(width: widget.sizes.spacing),
@@ -192,7 +209,7 @@ class _ActivePlanWidgetState extends State<ActivePlanWidget> {
                                         "Today's Workout",
                                         style: TextStyle(
                                           fontSize: widget.sizes.smallFontSize,
-                                          color: Colors.grey[600],
+                                          color: colors.onPrimaryContainer,
                                         ),
                                       ),
                                       Text(
@@ -201,8 +218,10 @@ class _ActivePlanWidgetState extends State<ActivePlanWidget> {
                                         style: TextStyle(
                                           fontSize: widget.sizes.fontSize,
                                           fontWeight: FontWeight.w600,
-                                          color: Colors.grey[800],
+                                          color: colors.onPrimaryContainer,
                                         ),
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
                                       ),
                                     ],
                                   ),
@@ -210,7 +229,7 @@ class _ActivePlanWidgetState extends State<ActivePlanWidget> {
                                 IconButton(
                                   icon: Icon(
                                     Icons.play_arrow,
-                                    color: Theme.of(context).primaryColor,
+                                    color: colors.onPrimaryContainer,
                                     size: widget.sizes.fontSize * 2,
                                   ),
                                   onPressed: () {

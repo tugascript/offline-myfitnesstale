@@ -89,7 +89,6 @@ class ExerciseRecord extends Equatable implements Model {
     };
   }
 
-  @override
   factory ExerciseRecord.fromMap(Map<String, Object?> map) {
     return ExerciseRecord(
       id: map[ExerciseRecordColumns.id.value] as int?,
