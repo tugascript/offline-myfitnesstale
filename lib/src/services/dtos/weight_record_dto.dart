@@ -19,7 +19,6 @@ class WeightRecordDto extends Equatable implements Dto<WeightRecord> {
     required this.recordDate,
   });
 
-  @override
   factory WeightRecordDto.fromModel(WeightRecord model) {
     return WeightRecordDto(
       id: model.id!,

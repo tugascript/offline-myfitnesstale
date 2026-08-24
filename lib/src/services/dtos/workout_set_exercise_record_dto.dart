@@ -27,7 +27,6 @@ class WorkoutSetExerciseRecordDto extends Equatable
     this.exercise,
   });
 
-  @override
   factory WorkoutSetExerciseRecordDto.fromModel(
     WorkoutSetExerciseRecord model, {
     ExerciseDto? exercise,

@@ -94,7 +94,6 @@ class EntitlementStateModel extends Equatable implements Model {
     };
   }
 
-  @override
   factory EntitlementStateModel.fromMap(Map<String, Object?> map) {
     return EntitlementStateModel(
       id: map[EntitlementStateColumns.id.value] as int?,

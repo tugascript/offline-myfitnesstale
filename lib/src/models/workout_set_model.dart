@@ -108,7 +108,6 @@ class WorkoutSet implements Model {
     };
   }
 
-  @override
   factory WorkoutSet.fromMap(Map<String, Object?> map) {
     return WorkoutSet(
       id: map[WorkoutSetColumns.id.value] as int?,
@@ -131,7 +130,6 @@ class WorkoutSet implements Model {
     );
   }
 
-  @override
   factory WorkoutSet.create({
     required int position,
     required int workoutId,

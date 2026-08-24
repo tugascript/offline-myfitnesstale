@@ -18,7 +18,6 @@ import '../../widgets/profile/profile_header.dart';
 import '../../widgets/profile/profile_info.dart';
 import '../../widgets/profile/settings_config.dart';
 
-// TODO: fix this view layout
 class ProfileView extends StatefulWidget {
   static const routeName = "/profile";
   static const name = "profile";
@@ -79,132 +78,139 @@ class _ProfileViewState extends State<ProfileView> {
 
     return ResponsiveScaffold(
       title: "Profile",
-      body: BlocBuilder<ProfileCubit, ProfileState>(
-        buildWhen: (previous, current) {
-          // Only rebuild when the profile data changes, not on minor UI updates.
-          return previous.profile != current.profile ||
-              previous.system != current.system ||
-              previous.remindersConfig != current.remindersConfig ||
-              previous.isLoading != current.isLoading ||
-              previous.error != current.error;
-        },
-        builder: (context, state) {
-          if (state.isLoading &&
-              (state.profile == null ||
-                  state.system == null ||
-                  state.remindersConfig == null)) {
-            return const Center(child: CircularProgressIndicator());
-          }
+      body: Padding(
+        padding: EdgeInsets.all(sizes.viewPadding),
+        child: BlocBuilder<ProfileCubit, ProfileState>(
+          buildWhen: (previous, current) {
+            // Only rebuild when the profile data changes, not on minor UI updates.
+            return previous.profile != current.profile ||
+                previous.system != current.system ||
+                previous.remindersConfig != current.remindersConfig ||
+                previous.isLoading != current.isLoading ||
+                previous.error != current.error;
+          },
+          builder: (context, state) {
+            if (state.isLoading &&
+                (state.profile == null ||
+                    state.system == null ||
+                    state.remindersConfig == null)) {
+              return const Center(child: CircularProgressIndicator());
+            }
 
-          if (state.error != null) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.error, size: 64, color: Colors.red),
-                  const SizedBox(height: 16),
-                  Text(
-                    "Error: ${state.error}",
-                    style: const TextStyle(color: Colors.red),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
-              ),
-            );
-          }
-
-          final profile = state.profile;
-          final system = state.system;
-          final remindersConfig = state.remindersConfig;
-          if (profile == null || system == null || remindersConfig == null) {
-            return const Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.person_add, size: 64, color: Colors.grey),
-                  SizedBox(height: 16),
-                  Text(
-                    "No Profile Found",
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.grey,
+            if (state.error != null) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.error, size: 64, color: Colors.red),
+                    const SizedBox(height: 16),
+                    Text(
+                      "Error: ${state.error}",
+                      style: const TextStyle(color: Colors.red),
+                      textAlign: TextAlign.center,
                     ),
-                  ),
-                  SizedBox(height: 8),
-                  Text(
-                    "Create a profile to get started",
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey,
+                  ],
+                ),
+              );
+            }
+
+            final profile = state.profile;
+            final system = state.system;
+            final remindersConfig = state.remindersConfig;
+            if (profile == null || system == null || remindersConfig == null) {
+              return const Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.person_add, size: 64, color: Colors.grey),
+                    SizedBox(height: 16),
+                    Text(
+                      "No Profile Found",
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.grey,
+                      ),
                     ),
-                  ),
-                ],
-              ),
-            );
-          }
+                    SizedBox(height: 8),
+                    Text(
+                      "Create a profile to get started",
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }
 
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Profile Header
-              ProfileHeader(
-                profile: profile,
-                system: system,
-                sizes: sizes,
-                isEditing: _isEditing,
-                editOnPress: () => _startEditing(profile),
-              ),
-              SizedBox(height: sizes.spacing * 2),
-
-              // Profile Form
-              if (_isEditing) _buildEditForm(profile, system),
-              if (!_isEditing)
-                ProfileInfo(
-                  sizes: sizes,
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Profile Header
+                ProfileHeader(
                   profile: profile,
                   system: system,
+                  sizes: sizes,
+                  isEditing: _isEditing,
+                  editOnPress: () => _startEditing(profile),
+                ),
+                SizedBox(height: sizes.spacing * 2),
+
+                // Profile Form
+                if (_isEditing) _buildEditForm(profile, system, sizes),
+                if (!_isEditing)
+                  ProfileInfo(
+                    sizes: sizes,
+                    profile: profile,
+                    system: system,
+                  ),
+
+                SizedBox(height: sizes.spacing * 2),
+
+                // Settings Section
+                SettingsConfig(
+                  profileId: profile.id,
+                  isLoading: state.isLoading,
+                  sizes: sizes,
+                  system: system,
+                  remindersConfig: remindersConfig,
                 ),
 
-              SizedBox(height: sizes.spacing * 2),
-
-              // Settings Section
-              SettingsConfig(
-                profileId: profile.id,
-                isLoading: state.isLoading,
-                sizes: sizes,
-                system: system,
-                remindersConfig: remindersConfig,
-              ),
-
-              if (kDebugMode) ...[
-                SizedBox(height: sizes.spacing * 2),
-                _buildDeveloperEntitlementCard(),
+                if (kDebugMode) ...[
+                  SizedBox(height: sizes.spacing * 2),
+                  _buildDeveloperEntitlementCard(),
+                ],
               ],
-            ],
-          );
-        },
+            );
+          },
+        ),
       ),
     );
   }
 
-  Widget _buildEditForm(ProfileDto profile, SystemDto? system) {
+  Widget _buildEditForm(
+    ProfileDto profile,
+    SystemDto? system,
+    DataDisplaySizesList sizes,
+  ) {
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: EdgeInsets.all(sizes.padding),
         child: Form(
           key: _formKey,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
+              Text(
                 "Edit Profile",
                 style: TextStyle(
-                  fontSize: 18,
+                  fontSize: sizes.subtitleFontSize,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: sizes.spacing),
               TextFormField(
                 controller: _nameController,
                 decoration: const InputDecoration(
@@ -218,7 +224,7 @@ class _ProfileViewState extends State<ProfileView> {
                   return null;
                 },
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: sizes.spacing),
               HeightInput(
                 initialHeight: profile.height,
                 isMetric: system?.units == Units.metric,
@@ -233,7 +239,7 @@ class _ProfileViewState extends State<ProfileView> {
                   });
                 },
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: sizes.spacing),
               DropdownButtonFormField<Gender>(
                 initialValue: _selectedGender,
                 decoration: const InputDecoration(
@@ -254,23 +260,35 @@ class _ProfileViewState extends State<ProfileView> {
                   }
                 },
               ),
-              const SizedBox(height: 24),
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: _cancelEditing,
-                      child: const Text("Cancel"),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: _saveProfile,
-                      child: const Text("Save"),
-                    ),
-                  ),
-                ],
+              SizedBox(height: sizes.spacing * 1.5),
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final cancel = OutlinedButton(
+                    onPressed: _cancelEditing,
+                    child: const Text("Cancel"),
+                  );
+                  final save = ElevatedButton(
+                    onPressed: _saveProfile,
+                    child: const Text("Save"),
+                  );
+                  if (constraints.maxWidth < 360) {
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        cancel,
+                        SizedBox(height: sizes.spacing / 2),
+                        save,
+                      ],
+                    );
+                  }
+                  return Row(
+                    children: [
+                      Expanded(child: cancel),
+                      SizedBox(width: sizes.spacing),
+                      Expanded(child: save),
+                    ],
+                  );
+                },
               ),
             ],
           ),

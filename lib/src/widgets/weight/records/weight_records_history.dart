@@ -13,6 +13,18 @@ import '../../layout/app_text_form_field.dart';
 import 'weight_records_chart.dart';
 import 'weight_records_list.dart';
 
+const int maxWeightHistoryRangeDays = 365;
+
+bool isWeightHistoryRangeDaySelectable(
+  DateTime day,
+  DateTime? selectedStartDay,
+  DateTime? selectedEndDay,
+) {
+  final anchor = selectedStartDay ?? selectedEndDay;
+  if (anchor == null) return true;
+  return day.difference(anchor).inDays.abs() <= maxWeightHistoryRangeDays;
+}
+
 class WeightRecordsHistory extends StatefulWidget {
   final ThemeData theme;
   final BreakPoint breakPoint;
@@ -42,10 +54,18 @@ class _WeightRecordsHistoryState extends State<WeightRecordsHistory> {
     final cubit = context.read<WeightRecordCubit>();
     final dateRange = cubit.state.recordPagination.dateRange;
     final now = DateTime.now();
-    _dateRange = DateTimeRange(
+    final initialRange = DateTimeRange(
       start: dateRange?.$1 ?? now.subtract(const Duration(days: 90)),
       end: dateRange?.$2 ?? now,
     );
+    _dateRange = initialRange.duration.inDays <= maxWeightHistoryRangeDays
+        ? initialRange
+        : DateTimeRange(
+            start: initialRange.end.subtract(
+              const Duration(days: maxWeightHistoryRangeDays),
+            ),
+            end: initialRange.end,
+          );
     if (cubit.state.weightRecords.isEmpty) {
       cubit.getWeightRecords(
         dateRange: (_dateRange.start, _dateRange.end),
@@ -71,6 +91,7 @@ class _WeightRecordsHistoryState extends State<WeightRecordsHistory> {
       lastDate: DateTime.now(),
       initialDateRange: _dateRange,
       initialEntryMode: DatePickerEntryMode.calendarOnly,
+      selectableDayPredicate: isWeightHistoryRangeDaySelectable,
       builder: (context, child) {
         final bodyLarge = widget.theme.textTheme.bodyLarge;
         return Theme(
@@ -164,7 +185,7 @@ class _WeightRecordsHistoryState extends State<WeightRecordsHistory> {
             color: widget.theme.colorScheme.primary,
             size: widget.sizes.subtitleFontSize * 2,
           ),
-          onTap: _selectDateRange, // TODO: limit the range to 365 days
+          onTap: _selectDateRange,
         ),
         SizedBox(height: widget.sizes.spacing),
         BlocBuilder<WeightRecordCubit, WeightRecordState>(

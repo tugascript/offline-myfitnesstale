@@ -30,7 +30,6 @@ class WorkoutPlanDayRecordDto extends Equatable
     this.workouts = const [],
   });
 
-  @override
   factory WorkoutPlanDayRecordDto.fromModel(
     WorkoutPlanDayRecord model, {
     List<WorkoutPlanWorkoutRecordDto>? workouts,

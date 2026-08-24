@@ -123,7 +123,6 @@ final class Workout implements Model {
     };
   }
 
-  @override
   factory Workout.fromMap(Map<String, Object?> map) {
     return Workout(
       id: map[WorkoutColumns.id.value] as int?,
@@ -164,7 +163,6 @@ final class Workout implements Model {
     );
   }
 
-  @override
   factory Workout.create({
     required String name,
     required Difficulty difficulty,

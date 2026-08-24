@@ -84,7 +84,6 @@ class WorkoutPlanWeekRecord extends Equatable implements Model {
     };
   }
 
-  @override
   factory WorkoutPlanWeekRecord.fromMap(Map<String, Object?> map) {
     return WorkoutPlanWeekRecord(
       id: map[WorkoutPlanWeekRecordColumns.id.value] as int?,
@@ -102,7 +101,6 @@ class WorkoutPlanWeekRecord extends Equatable implements Model {
     );
   }
 
-  @override
   factory WorkoutPlanWeekRecord.create({
     required int workoutPlanRecordId,
     required int workoutPlanWeekId,

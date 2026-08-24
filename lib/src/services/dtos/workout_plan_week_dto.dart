@@ -31,7 +31,6 @@ class WorkoutPlanWeekDto extends Equatable implements Dto<WorkoutPlanWeek> {
     this.days = const [],
   });
 
-  @override
   factory WorkoutPlanWeekDto.fromModel(
     WorkoutPlanWeek model, {
     List<WorkoutPlanDayDto>? days,

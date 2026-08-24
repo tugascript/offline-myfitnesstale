@@ -21,7 +21,6 @@ class ProfileDto extends Equatable implements Dto<Profile> {
     required this.birthdate,
   });
 
-  @override
   factory ProfileDto.fromModel(Profile model) {
     return ProfileDto(
       id: model.id!,

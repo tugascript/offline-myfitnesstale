@@ -29,7 +29,6 @@ class EntitlementStateDto extends Equatable
     required this.updatedAt,
   });
 
-  @override
   factory EntitlementStateDto.fromModel(EntitlementStateModel model) {
     return EntitlementStateDto(
       id: model.id!,

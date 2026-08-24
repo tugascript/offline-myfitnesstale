@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:logging/logging.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -82,6 +80,7 @@ class ExerciseService {
     String? name,
     MuscleGroup? muscleGroup,
     Difficulty? difficulty,
+    int? equipmentId,
     bool isFavorite = false,
     int limit = kDefaultLimit,
     int offset = kDefaultOffset,
@@ -100,6 +99,16 @@ class ExerciseService {
     }
     if (difficulty != null) {
       query.and(ExerciseColumns.difficulty.equal, difficulty.value);
+    }
+    if (equipmentId != null) {
+      query.and(
+        '${ExerciseColumns.id.value} IN ('
+        'SELECT ${ExerciseEquipmentColumns.exerciseId.value} '
+        'FROM ${ExerciseEquipment.table} '
+        'WHERE ${ExerciseEquipmentColumns.equipmentId.equal}'
+        ')',
+        equipmentId,
+      );
     }
 
     try {

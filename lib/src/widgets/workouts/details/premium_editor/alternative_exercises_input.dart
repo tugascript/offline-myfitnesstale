@@ -56,11 +56,15 @@ class AlternativeExercisesInput extends StatelessWidget {
                 return SetExerciseSearchModal(
                   sizes: sizes,
                   isLoading: isLoading,
-                  onExerciseSelected: (id, name) {
+                  initialMuscleGroup: exerciseData.exerciseMuscleGroup,
+                  onExerciseSelected: (exercise) {
                     if (onAlternativesChanged != null) {
                       final newAlternatives = Set<AlternativeExerciseData>.from(
                         exerciseData.alternativeExercises,
-                      )..add(AlternativeExerciseData(id: id, name: name));
+                      )..add(AlternativeExerciseData(
+                          id: exercise.id,
+                          name: exercise.name,
+                        ));
                       onAlternativesChanged!(newAlternatives);
                     }
                     Navigator.of(dialogContext).pop();
@@ -87,14 +91,17 @@ class AlternativeExercisesInput extends StatelessWidget {
                         return SetExerciseSearchModal(
                           sizes: sizes,
                           isLoading: isLoading,
-                          onExerciseSelected: (id, name) {
+                          initialMuscleGroup: exerciseData.exerciseMuscleGroup,
+                          onExerciseSelected: (exercise) {
                             if (onAlternativesChanged != null) {
                               final newAlternatives =
                                   List<AlternativeExerciseData>.from(
                                 exerciseData.alternativeExercises,
                               );
-                              newAlternatives[index] =
-                                  AlternativeExerciseData(id: id, name: name);
+                              newAlternatives[index] = AlternativeExerciseData(
+                                id: exercise.id,
+                                name: exercise.name,
+                              );
                               onAlternativesChanged!(newAlternatives.toSet());
                             }
                             Navigator.of(dialogContext).pop();

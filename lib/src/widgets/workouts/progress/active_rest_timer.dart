@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import '../../../utilities/sizes/data_display_sizes.dart';
 import '../../../utilities/sizes/screen_size.dart';
 
-// TODO: fix the progress bar and logic to select the current work
 class ActiveRestTimer extends StatefulWidget {
   final BreakPoint breakPoint;
   final DataDisplaySizesList sizes;

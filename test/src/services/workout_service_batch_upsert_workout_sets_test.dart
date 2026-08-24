@@ -5,6 +5,7 @@ import 'package:sqflite/sqflite.dart';
 import 'package:myfitnesstale/src/models/enums.dart';
 import 'package:myfitnesstale/src/models/exercise_model.dart';
 import 'package:myfitnesstale/src/models/workout_model.dart';
+import 'package:myfitnesstale/src/models/workout_record_model.dart';
 import 'package:myfitnesstale/src/models/workout_set_exercise_model.dart';
 import 'package:myfitnesstale/src/models/workout_set_exercise_option_model.dart';
 import 'package:myfitnesstale/src/models/workout_set_model.dart';
@@ -881,5 +882,114 @@ void main() {
     expect(workoutAfterFailure.totalReps, 10);
     expect(workoutAfterFailure.muscleGroups, {MuscleGroup.push});
     expect(workoutAfterFailure.muscles.primary, {Muscle.chest});
+  });
+
+  test('creates an isolated version after a workout has records', () async {
+    final db = await testDatabase.db;
+    final workoutId = await createWorkout(db);
+    final originalExercise = await createExercise(
+      db,
+      muscleGroup: MuscleGroup.push,
+      primaryMuscles: {Muscle.chest},
+    );
+    final replacementExercise = await createExercise(
+      db,
+      muscleGroup: MuscleGroup.pull,
+      primaryMuscles: {Muscle.lats},
+    );
+    final originalSetId = await createWorkoutSet(
+      db,
+      workoutId: workoutId,
+      workoutVersion: 1,
+      position: 1,
+      minSets: 1,
+      maxSets: 1,
+      totalExercises: 1,
+      totalReps: 10,
+    );
+    final originalSetExerciseId = await createWorkoutSetExercise(
+      db,
+      workoutId: workoutId,
+      workoutVersion: 1,
+      workoutSetId: originalSetId,
+      exerciseId: originalExercise,
+      position: 1,
+      minReps: 10,
+      maxReps: 10,
+    );
+    await db.insert(
+      WorkoutRecord.table,
+      WorkoutRecord.create(
+        workoutId: workoutId,
+        version: 1,
+        startedAt: 1,
+      ).toMap(),
+    );
+
+    final result = await workoutService.batchUpsertWorkoutSets(
+      workoutId: workoutId,
+      inputs: [
+        WorkoutSetUpsertInput(
+          id: originalSetId,
+          setType: WorkoutSetType.standard,
+          minSets: 3,
+          maxSets: 3,
+          recommendedRestSecs: 60,
+          position: 1,
+          exercises: [
+            WorkoutSetExerciseUpsertInput(
+              id: originalSetExerciseId,
+              exerciseId: replacementExercise,
+              position: 1,
+              minReps: 5,
+              maxReps: 5,
+            ),
+          ],
+        ),
+      ],
+    );
+
+    expect(result.isOk(), isTrue);
+    final storedWorkout = Workout.fromMap(
+      (await db.query(
+        Workout.table,
+        where: '${WorkoutColumns.id.value} = ?',
+        whereArgs: [workoutId],
+      ))
+          .single,
+    );
+    expect(storedWorkout.version, 2);
+    expect(storedWorkout.totalSets, 3);
+    expect(storedWorkout.totalReps, 15);
+
+    final versionOne = await workoutService.getWorkout(workoutId, version: 1);
+    final versionTwo = await workoutService.getWorkout(workoutId, version: 2);
+    expect(versionOne.isOk(), isTrue);
+    expect(versionOne.value.version, 1);
+    expect(versionOne.value.totalSets, 1);
+    expect(versionOne.value.totalReps, 10);
+    expect(versionOne.value.muscleGroups, {MuscleGroup.push});
+    expect(versionOne.value.sets!.single.id, originalSetId);
+    expect(versionOne.value.sets!.single.exercises!.single.exerciseId,
+        originalExercise);
+    expect(versionTwo.isOk(), isTrue);
+    expect(versionTwo.value.version, 2);
+    expect(versionTwo.value.totalSets, 3);
+    expect(versionTwo.value.totalReps, 15);
+    expect(versionTwo.value.muscleGroups, {MuscleGroup.pull});
+    expect(versionTwo.value.sets!.single.id, isNot(originalSetId));
+
+    final rowsByVersion = await db.rawQuery(
+      'SELECT ${WorkoutSetColumns.workoutVersion.value}, COUNT(*) AS count '
+      'FROM ${WorkoutSet.table} '
+      'WHERE ${WorkoutSetColumns.workoutId.value} = ? '
+      'GROUP BY ${WorkoutSetColumns.workoutVersion.value}',
+      [workoutId],
+    );
+    expect(rowsByVersion, hasLength(2));
+    expect(
+      rowsByVersion.map((row) => row['count']),
+      everyElement(1),
+    );
   });
 }

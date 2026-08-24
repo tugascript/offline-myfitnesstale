@@ -103,6 +103,7 @@ class _WorkoutsViewState extends State<WorkoutsView> {
                     required difficulty,
                     required isFavourite,
                     required muscleGroup,
+                    required equipmentId,
                     required name,
                   }) =>
                       context.read<WorkoutCubit>().getWorkouts(

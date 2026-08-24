@@ -55,7 +55,6 @@ class ExerciseEquipment implements JoinModel {
     };
   }
 
-  @override
   factory ExerciseEquipment.fromMap(Map<String, Object?> map) {
     return ExerciseEquipment(
       exerciseId: map[ExerciseEquipmentColumns.exerciseId.value] as int,
@@ -64,7 +63,6 @@ class ExerciseEquipment implements JoinModel {
     );
   }
 
-  @override
   factory ExerciseEquipment.create({
     required int exerciseId,
     required int equipmentId,

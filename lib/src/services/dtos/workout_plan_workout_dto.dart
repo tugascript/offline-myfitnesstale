@@ -26,7 +26,6 @@ class WorkoutPlanWorkoutDto extends Equatable
     this.workout,
   });
 
-  @override
   factory WorkoutPlanWorkoutDto.fromModel(
     WorkoutPlanWorkout model, {
     WorkoutDto? workout,

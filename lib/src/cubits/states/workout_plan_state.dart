@@ -7,12 +7,14 @@ import 'common_state.dart';
 final class WorkoutPlanPagination extends Equatable {
   final String name;
   final Difficulty? difficulty;
+  final bool isFavorite;
   final int limit;
   final int offset;
   final int total;
 
   const WorkoutPlanPagination({
     this.difficulty,
+    required this.isFavorite,
     required this.name,
     required this.limit,
     required this.offset,
@@ -25,12 +27,14 @@ final class WorkoutPlanPagination extends Equatable {
       limit: 20,
       offset: 0,
       total: 0,
+      isFavorite: false,
     );
   }
 
   WorkoutPlanPagination copyWith({
     String? name,
     Difficulty? difficulty,
+    bool? isFavorite,
     int? limit,
     int? offset,
     int? total,
@@ -38,6 +42,7 @@ final class WorkoutPlanPagination extends Equatable {
     return WorkoutPlanPagination(
       name: name ?? this.name,
       difficulty: difficulty, // if the user passes null
+      isFavorite: isFavorite ?? this.isFavorite,
       limit: limit ?? this.limit,
       offset: offset ?? this.offset,
       total: total ?? this.total,
@@ -45,7 +50,14 @@ final class WorkoutPlanPagination extends Equatable {
   }
 
   @override
-  List<Object?> get props => [name, difficulty, limit, offset, total];
+  List<Object?> get props => [
+        name,
+        difficulty,
+        isFavorite,
+        limit,
+        offset,
+        total,
+      ];
 }
 
 final class WorkoutPlanState extends Equatable {
