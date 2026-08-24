@@ -5,11 +5,11 @@ import 'utilities.dart';
 
 const String _table = 'equipment';
 
-// TODO: add is favorite
 enum EquipmentColumns with Columns {
   id("id"),
   name("name"),
   picture("picture"),
+  isFavorite("is_favorite"),
   createdBy("created_by"),
   createdAt("created_at"),
   updatedAt("updated_at");
@@ -25,6 +25,7 @@ class Equipment implements Model {
   final int? id;
   final String name;
   final PictureData? picture;
+  final bool isFavorite;
   final CreatedBy createdBy;
   @override
   final int createdAt;
@@ -35,6 +36,7 @@ class Equipment implements Model {
     this.id,
     required this.name,
     this.picture,
+    required this.isFavorite,
     required this.createdBy,
     required this.createdAt,
     required this.updatedAt,
@@ -46,6 +48,7 @@ class Equipment implements Model {
     ${EquipmentColumns.id.value} INTEGER PRIMARY KEY AUTOINCREMENT,
     ${EquipmentColumns.name.value} TEXT NOT NULL,
     ${EquipmentColumns.picture.value} TEXT,
+    ${EquipmentColumns.isFavorite.value} INTEGER NOT NULL,
     ${EquipmentColumns.createdBy.value} TEXT NOT NULL,
     ${EquipmentColumns.createdAt.value} INTEGER NOT NULL,
     ${EquipmentColumns.updatedAt.value} INTEGER NOT NULL
@@ -60,13 +63,13 @@ class Equipment implements Model {
       EquipmentColumns.id.value: id,
       EquipmentColumns.name.value: name,
       EquipmentColumns.picture.value: picture?.toJson(),
+      EquipmentColumns.isFavorite.value: isFavorite ? 1 : 0,
       EquipmentColumns.createdBy.value: createdBy.value,
       EquipmentColumns.createdAt.value: createdAt,
       EquipmentColumns.updatedAt.value: updatedAt,
     };
   }
 
-  @override
   factory Equipment.fromMap(Map<String, Object?> map) {
     return Equipment(
       id: map[EquipmentColumns.id.value] as int?,
@@ -74,6 +77,7 @@ class Equipment implements Model {
       picture: map[EquipmentColumns.picture.value] != null
           ? PictureData.fromJson(map[EquipmentColumns.picture.value] as String)
           : null,
+      isFavorite: map[EquipmentColumns.isFavorite.value] as bool,
       createdBy:
           CreatedBy.fromValue(map[EquipmentColumns.createdBy.value] as String),
       createdAt: map[EquipmentColumns.createdAt.value] as int,
@@ -81,16 +85,17 @@ class Equipment implements Model {
     );
   }
 
-  @override
   factory Equipment.create({
     required String name,
     PictureData? picture,
+    bool isFavorite = false,
     CreatedBy createdBy = CreatedBy.user,
   }) {
     final int now = DateUtilities.getNowUtcUnix();
     return Equipment(
       name: name,
       picture: picture,
+      isFavorite: isFavorite,
       createdBy: createdBy,
       createdAt: now,
       updatedAt: now,
@@ -102,6 +107,7 @@ class Equipment implements Model {
     int? id,
     String? name,
     PictureData? picture,
+    bool? isFavorite,
     CreatedBy? createdBy,
     int? createdAt,
     int? updatedAt,
@@ -110,6 +116,7 @@ class Equipment implements Model {
       id: id ?? this.id,
       name: name ?? this.name,
       picture: picture ?? this.picture,
+      isFavorite: isFavorite ?? this.isFavorite,
       createdBy: createdBy ?? this.createdBy,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -118,6 +125,6 @@ class Equipment implements Model {
 
   @override
   String toString() {
-    return 'Equipment{id: $id, name: $name, picture: $picture, createdBy: $createdBy, createdAt: $createdAt, updatedAt: $updatedAt}';
+    return 'Equipment{id: $id, name: $name, picture: $picture, isFavorite: $isFavorite, createdBy: $createdBy, createdAt: $createdAt, updatedAt: $updatedAt}';
   }
 }

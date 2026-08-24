@@ -169,6 +169,7 @@ class WorkoutPlanService {
           ServiceError<OperationErrorTypes>>> getWorkoutPlans({
     String? name,
     Difficulty? difficulty,
+    bool isFavorite = false,
     int limit = kDefaultLimit,
     int offset = kDefaultOffset,
   }) async {
@@ -181,6 +182,10 @@ class WorkoutPlanService {
 
     if (difficulty != null) {
       query.and(WorkoutPlanColumns.difficulty.equal, difficulty.value);
+    }
+
+    if (isFavorite) {
+      query.and(WorkoutPlanColumns.isFavorite.equal, 1);
     }
 
     try {
@@ -814,7 +819,6 @@ class WorkoutPlanService {
               final int dayId = await _dayRepository.insert(day, txn);
               final List<WorkoutPlanWorkoutDto> createdWorkouts = [];
 
-              // TODO: fix this, create workout plan workout fails
               for (int j = 0; j < dayInput.workouts.length; j++) {
                 final workoutInput = dayInput.workouts[j];
                 final workout = WorkoutPlanWorkout.create(

@@ -31,7 +31,6 @@ class WorkoutPlanWorkoutRecordDto extends Equatable
     this.completedAt,
   });
 
-  @override
   factory WorkoutPlanWorkoutRecordDto.fromModel(
       WorkoutPlanWorkoutRecord model) {
     return WorkoutPlanWorkoutRecordDto(

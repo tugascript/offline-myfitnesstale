@@ -68,7 +68,6 @@ class Profile extends Equatable implements Model {
     };
   }
 
-  @override
   factory Profile.fromMap(Map<String, Object?> map) {
     return Profile(
       id: map[ProfileColumns.id.value] as int?,
@@ -81,7 +80,6 @@ class Profile extends Equatable implements Model {
     );
   }
 
-  @override
   factory Profile.create(
     String name,
     int height,

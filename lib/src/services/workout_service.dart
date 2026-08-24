@@ -137,7 +137,6 @@ class WorkoutRegistrationInput {
   });
 }
 
-// TODO: Add version to workout service
 class WorkoutService {
   WorkoutService._();
 
@@ -287,21 +286,7 @@ class WorkoutService {
   }) async {
     _logger.info('Getting workout with id $id');
     try {
-      late final Workout? workout;
-      if (version == null) {
-        workout = await _repository.selectOne(id);
-      } else {
-        final queryBuilder = WhereBuilder();
-        queryBuilder.and(WorkoutColumns.id.equal, id);
-        queryBuilder.and(WorkoutColumns.version.equal, version);
-        final workouts = await _repository.selectMany(
-          where: queryBuilder.where,
-          whereArgs: queryBuilder.args,
-          limit: 1,
-        );
-        workout = workouts.firstOrNull;
-      }
-
+      final Workout? workout = await _repository.selectOne(id);
       if (workout == null) {
         _logger.warning('Workout with id $id not found');
         return err(const ServiceError(
@@ -310,146 +295,52 @@ class WorkoutService {
         ));
       }
 
-      final setQueryBuilder = WhereBuilder();
-      setQueryBuilder.and(WorkoutSetColumns.workoutId.equal, id);
-      setQueryBuilder.and(
-        WorkoutSetColumns.workoutVersion.equal,
-        workout.version,
-      );
-      final List<WorkoutSet> sets = await _setRepository.selectMany(
-        where: setQueryBuilder.where,
-        whereArgs: setQueryBuilder.args,
-        orderBy: [WorkoutSetColumns.position.orderAsc],
-      );
-      if (sets.isEmpty) {
-        _logger.info('Got workout with id $id');
-        return ok(WorkoutDto.fromModel(workout));
-      }
-
-      final setExerciseQueryBuilder = WhereBuilder();
-      setExerciseQueryBuilder.and(
-        WorkoutSetExerciseColumns.workoutId.equal,
-        id,
-      );
-      setExerciseQueryBuilder.and(
-        WorkoutSetExerciseColumns.workoutVersion.equal,
-        workout.version,
-      );
-      final List<WorkoutSetExercise> setExercises =
-          await _setExerciseRepository.selectMany(
-        where: setExerciseQueryBuilder.where,
-        whereArgs: setExerciseQueryBuilder.args,
-        orderBy: [
-          WorkoutSetExerciseColumns.workoutSetId.orderAsc,
-          WorkoutSetExerciseColumns.position.orderAsc,
-        ],
-      );
-      if (setExercises.isEmpty) {
-        _logger.info('Got workout with id $id');
-        return ok(WorkoutDto.fromModel(
-          workout,
-          sets: sets.map((s) => WorkoutSetDto.fromModel(s)).toList(),
+      final int resolvedVersion = version ?? workout.version;
+      if (resolvedVersion < 1 || resolvedVersion > workout.version) {
+        return err(ServiceError(
+          type: SingleErrorTypes.notFound,
+          description: 'Workout version $resolvedVersion not found',
         ));
       }
 
-      final setExerciseOptionQueryBuilder = WhereBuilder();
-      setExerciseOptionQueryBuilder.and(
-        WorkoutSetExerciseOptionColumns.workoutId.equal,
+      final setsResult = await getWorkoutSets(
         id,
+        version: resolvedVersion,
       );
-      setExerciseOptionQueryBuilder.and(
-        WorkoutSetExerciseOptionColumns.workoutVersion.equal,
-        workout.version,
-      );
-      final List<WorkoutSetExerciseOption> setExerciseOptions =
-          await _setExerciseOptionRepository.selectMany(
-        where: setExerciseOptionQueryBuilder.where,
-        whereArgs: setExerciseOptionQueryBuilder.args,
-        orderBy: [
-          WorkoutSetExerciseOptionColumns.workoutSetExerciseId.orderAsc,
-          WorkoutSetExerciseOptionColumns.position.orderAsc,
-        ],
-      );
-      final Set<int> exerciseIds = <int>{
-        ...setExercises.map((s) => s.exerciseId),
-        ...setExerciseOptions.map((s) => s.exerciseId),
-      };
-      final List<Exercise> exercises = await _exerciseRepository.selectMany(
-        where: ExerciseColumns.id.inList(exerciseIds.length),
-        whereArgs: exerciseIds.toList(),
-      );
-      if (exerciseIds.length != exercises.length) {
-        _logger.severe('Failed to get exercises for workout with id $id');
-        return err(const ServiceError(
+      if (setsResult.isErr()) {
+        return err(ServiceError(
           type: SingleErrorTypes.operationFailure,
-          description: 'Failed to get exercises for workout',
+          description: setsResult.error.description,
         ));
       }
-      final Map<int, ExerciseDto> exercisesMap = exercises.fold({}, (map, e) {
-        map[e.id!] = ExerciseDto.fromModel(e);
-        return map;
-      });
 
-      final Map<int, List<WorkoutSetExerciseOptionDto>> optionsMap =
-          setExerciseOptions.isEmpty
-              ? {}
-              : setExerciseOptions.fold(
-                  {},
-                  (map, s) => map
-                    ..update(
-                      s.workoutSetExerciseId,
-                      (value) => value
-                        ..add(
-                          WorkoutSetExerciseOptionDto.fromModel(
-                            s,
-                            exercise: exercisesMap[s.exerciseId],
-                          ),
-                        ),
-                      ifAbsent: () => [
-                        WorkoutSetExerciseOptionDto.fromModel(
-                          s,
-                          exercise: exercisesMap[s.exerciseId],
-                        ),
-                      ],
-                    ),
-                );
-
-      final Map<int, List<WorkoutSetExerciseDto>> setExercisesMap =
-          setExercises.fold(
-        {},
-        (map, s) => map
-          ..update(
-            s.workoutSetId,
-            (value) => value
-              ..add(
-                WorkoutSetExerciseDto.fromModel(
-                  s,
-                  exercise: exercisesMap[s.exerciseId],
-                  options: optionsMap[s.id],
-                ),
-              ),
-            ifAbsent: () => [
-              WorkoutSetExerciseDto.fromModel(
-                s,
-                exercise: exercisesMap[s.exerciseId],
-                options: optionsMap[s.id],
-              ),
-            ],
-          ),
-      );
-      return ok(
-        WorkoutDto.fromModel(
-          workout,
-          sets: sets
-              .map(
-                (s) => WorkoutSetDto.fromModel(
-                  s,
-                  exercises: setExercisesMap[s.id!],
-                ),
-              )
-              .toList(),
+      final sets = setsResult.value;
+      final Set<MuscleGroup> muscleGroups = {};
+      final muscles = TargetMuscles(primary: <Muscle>{}, secondary: <Muscle>{});
+      for (final set in sets) {
+        for (final setExercise in set.exercises ?? const []) {
+          final exercise = setExercise.exercise;
+          if (exercise == null) continue;
+          muscleGroups.add(exercise.muscleGroup);
+          muscles.primary.addAll(exercise.muscles.primary);
+          muscles.secondary.addAll(exercise.muscles.secondary);
+          muscles.secondary.removeAll(muscles.primary);
+        }
+      }
+      final versionedWorkout = workout.copyWith(
+        version: resolvedVersion,
+        totalSets: sets.fold<int>(
+          0,
+          (total, set) => total + (set.maxSets ?? set.minSets),
         ),
+        totalReps: sets.fold<int>(
+          0,
+          (total, set) => total + set.totalReps,
+        ),
+        muscleGroups: muscleGroups,
+        muscles: muscles,
       );
+      return ok(WorkoutDto.fromModel(versionedWorkout, sets: sets));
     } catch (e) {
       _logger.severe('Failed to get workout with id $id', e);
       return err(ServiceError(
@@ -710,13 +601,32 @@ class WorkoutService {
 
   Future<Result<List<WorkoutSetDto>, ServiceError<OperationErrorTypes>>>
       getWorkoutSets(
-    int workoutId,
-  ) async {
+    int workoutId, {
+    int? version,
+  }) async {
     _logger.info('Getting workout sets with workout id $workoutId');
     try {
+      final workout = await _repository.selectOne(workoutId);
+      if (workout == null) {
+        return err(const ServiceError(
+          type: OperationErrorTypes.invalidInput,
+          description: 'Workout not found',
+        ));
+      }
+      final resolvedVersion = version ?? workout.version;
+      if (resolvedVersion < 1 || resolvedVersion > workout.version) {
+        return err(ServiceError(
+          type: OperationErrorTypes.invalidInput,
+          description: 'Workout version $resolvedVersion not found',
+        ));
+      }
+
+      final setQuery = WhereBuilder()
+        ..and(WorkoutSetColumns.workoutId.equal, workoutId)
+        ..and(WorkoutSetColumns.workoutVersion.equal, resolvedVersion);
       final List<WorkoutSet> workoutSets = await _setRepository.selectMany(
-        where: WorkoutSetColumns.workoutId.equal,
-        whereArgs: [workoutId],
+        where: setQuery.where,
+        whereArgs: setQuery.args,
         orderBy: [
           WorkoutSetColumns.workoutId.orderAsc,
           WorkoutSetColumns.position.orderAsc,
@@ -727,10 +637,16 @@ class WorkoutService {
         return ok([]);
       }
 
+      final setExerciseQuery = WhereBuilder()
+        ..and(WorkoutSetExerciseColumns.workoutId.equal, workoutId)
+        ..and(
+          WorkoutSetExerciseColumns.workoutVersion.equal,
+          resolvedVersion,
+        );
       final List<WorkoutSetExercise> setExercises =
           await _setExerciseRepository.selectMany(
-        where: WorkoutSetExerciseColumns.workoutId.equal,
-        whereArgs: [workoutId],
+        where: setExerciseQuery.where,
+        whereArgs: setExerciseQuery.args,
         orderBy: [
           WorkoutSetExerciseColumns.workoutSetId.orderAsc,
           WorkoutSetExerciseColumns.position.orderAsc,
@@ -744,10 +660,16 @@ class WorkoutService {
         );
       }
 
+      final optionQuery = WhereBuilder()
+        ..and(WorkoutSetExerciseOptionColumns.workoutId.equal, workoutId)
+        ..and(
+          WorkoutSetExerciseOptionColumns.workoutVersion.equal,
+          resolvedVersion,
+        );
       final List<WorkoutSetExerciseOption> setExerciseOptions =
           await _setExerciseOptionRepository.selectMany(
-        where: WorkoutSetExerciseOptionColumns.workoutId.equal,
-        whereArgs: [workoutId],
+        where: optionQuery.where,
+        whereArgs: optionQuery.args,
         orderBy: [
           WorkoutSetExerciseOptionColumns.workoutSetExerciseId.orderAsc,
           WorkoutSetExerciseOptionColumns.position.orderAsc,
@@ -885,9 +807,12 @@ class WorkoutService {
         },
       );
 
+      final existingSetQuery = WhereBuilder()
+        ..and(WorkoutSetColumns.workoutId.equal, workoutId)
+        ..and(WorkoutSetColumns.workoutVersion.equal, workout.version);
       final List<WorkoutSet> existingSets = await _setRepository.selectMany(
-        where: WorkoutSetColumns.workoutId.equal,
-        whereArgs: [workoutId],
+        where: existingSetQuery.where,
+        whereArgs: existingSetQuery.args,
       );
       final Set<int> existingSetIds = existingSets
           .map(
@@ -962,17 +887,19 @@ class WorkoutService {
               await txn.rawUpdate(
                 """
                 UPDATE ${WorkoutSet.table} SET position = position - 1
-                WHERE workout_id = ? AND position > ? AND position <= ?;
+                WHERE workout_id = ? AND workout_version = ?
+                  AND position > ? AND position <= ?;
                 """,
-                [workoutId, oldPosition, input.position],
+                [workoutId, workoutVersion, oldPosition, input.position],
               );
             } else {
               await txn.rawUpdate(
                 """
                 UPDATE ${WorkoutSet.table} SET position = position + 1
-                WHERE workout_id = ? AND position >= ? AND position < ?;
+                WHERE workout_id = ? AND workout_version = ?
+                  AND position >= ? AND position < ?;
                 """,
-                [workoutId, input.position, oldPosition],
+                [workoutId, workoutVersion, input.position, oldPosition],
               );
             }
           }
@@ -1057,9 +984,12 @@ class WorkoutService {
           }
         }
 
+        final updatedSetQuery = WhereBuilder()
+          ..and(WorkoutSetColumns.workoutId.equal, workoutId)
+          ..and(WorkoutSetColumns.workoutVersion.equal, workoutVersion);
         final List<WorkoutSet> updatedSets = await _setRepository.selectMany(
-          where: WorkoutSetColumns.workoutId.equal,
-          whereArgs: [workoutId],
+          where: updatedSetQuery.where,
+          whereArgs: updatedSetQuery.args,
           trx: txn,
         );
         final int updatedTotalSets = updatedSets.fold(
@@ -1071,10 +1001,16 @@ class WorkoutService {
           (acc, set) => acc + set.totalReps,
         );
 
+        final updatedSetExerciseQuery = WhereBuilder()
+          ..and(WorkoutSetExerciseColumns.workoutId.equal, workoutId)
+          ..and(
+            WorkoutSetExerciseColumns.workoutVersion.equal,
+            workoutVersion,
+          );
         final List<WorkoutSetExercise> updatedSetExercises =
             await _setExerciseRepository.selectMany(
-          where: WorkoutSetExerciseColumns.workoutId.equal,
-          whereArgs: [workoutId],
+          where: updatedSetExerciseQuery.where,
+          whereArgs: updatedSetExerciseQuery.args,
           trx: txn,
         );
         final Set<MuscleGroup> updatedMuscleGroups = {};
@@ -1142,9 +1078,11 @@ class WorkoutService {
       """
       UPDATE ${WorkoutSet.table}
       SET ${WorkoutSetColumns.position.value} = ${WorkoutSetColumns.position.value} - 1
-      WHERE ${WorkoutSetColumns.workoutId.equal} AND ${WorkoutSetColumns.position.greaterThan};
+      WHERE ${WorkoutSetColumns.workoutId.equal}
+        AND ${WorkoutSetColumns.workoutVersion.equal}
+        AND ${WorkoutSetColumns.position.greaterThan};
       """,
-      [workoutSet.workoutId, oldPosition],
+      [workoutSet.workoutId, workoutSet.workoutVersion, oldPosition],
     );
   }
 
@@ -1293,9 +1231,12 @@ class WorkoutService {
     required int workoutVersion,
     required Map<int, ExerciseDto> exerciseMap,
   }) async {
+    final countQuery = WhereBuilder()
+      ..and(WorkoutSetColumns.workoutId.equal, workoutId)
+      ..and(WorkoutSetColumns.workoutVersion.equal, workoutVersion);
     final int workoutSetsCount = await _setRepository.count(
-      where: WorkoutSetColumns.workoutId.equal,
-      whereArgs: [workoutId],
+      where: countQuery.where,
+      whereArgs: countQuery.args,
       trx: txn,
     );
     final int extraSets = input.maxSets ?? input.minSets;
@@ -1312,9 +1253,11 @@ class WorkoutService {
         """
         UPDATE ${WorkoutSet.table}
         SET ${WorkoutSetColumns.position.value} = ${WorkoutSetColumns.position.value} + 1
-        WHERE ${WorkoutSetColumns.workoutId.equal} AND ${WorkoutSetColumns.position.greaterThanOrEqual};
+        WHERE ${WorkoutSetColumns.workoutId.equal}
+          AND ${WorkoutSetColumns.workoutVersion.equal}
+          AND ${WorkoutSetColumns.position.greaterThanOrEqual};
         """,
-        [workoutId, setPosition],
+        [workoutId, workoutVersion, setPosition],
       );
     }
 

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-// TODO: make it responsive
 class ConfirmationDialog extends StatelessWidget {
   final String title;
   final String content;
@@ -23,6 +22,8 @@ class ConfirmationDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return AlertDialog(
+      scrollable: true,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
       shape: BeveledRectangleBorder(
         side: BorderSide(color: theme.colorScheme.outlineVariant, width: 0.5),
       ),
@@ -30,7 +31,11 @@ class ConfirmationDialog extends StatelessWidget {
         title.toUpperCase(),
         style: const TextStyle(fontWeight: FontWeight.bold),
       ),
-      content: Text(content),
+      content: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 560),
+        child: Text(content),
+      ),
+      actionsOverflowButtonSpacing: 8,
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),

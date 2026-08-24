@@ -75,7 +75,6 @@ class WeightGoal implements Model {
     };
   }
 
-  @override
   factory WeightGoal.fromMap(Map<String, Object?> map) {
     return WeightGoal(
       id: map[WeightGoalColumns.id.value] as int?,
@@ -93,7 +92,6 @@ class WeightGoal implements Model {
     );
   }
 
-  @override
   factory WeightGoal.create({
     required int targetWeight,
     required int startDate,

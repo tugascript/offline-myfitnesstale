@@ -67,7 +67,6 @@ class RemindersConfig extends Equatable implements Model {
     };
   }
 
-  @override
   factory RemindersConfig.fromMap(Map<String, Object?> map) {
     return RemindersConfig(
       id: map[RemindersConfigColumns.id.value] as int?,
@@ -99,7 +98,6 @@ class RemindersConfig extends Equatable implements Model {
     );
   }
 
-  @override
   factory RemindersConfig.create({
     required int profileId,
     required bool workoutsOn,

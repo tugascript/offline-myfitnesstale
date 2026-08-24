@@ -20,6 +20,7 @@ class ExerciseCubit extends Cubit<ExerciseState> {
     String? name,
     MuscleGroup? muscleGroup,
     Difficulty? difficulty,
+    int? equipmentId,
     int? limit,
     int? offset,
     bool isFavourite = false,
@@ -34,6 +35,7 @@ class ExerciseCubit extends Cubit<ExerciseState> {
       muscleGroup: muscleGroup,
       isFavorite: isFavourite,
       difficulty: difficulty,
+      equipmentId: equipmentId,
       limit: limit ?? state.exercisePagination.limit,
       offset: offset ?? state.exercisePagination.offset,
     );
@@ -71,6 +73,7 @@ class ExerciseCubit extends Cubit<ExerciseState> {
         name: name,
         muscleGroup: muscleGroup,
         difficulty: difficulty,
+        equipmentId: equipmentId,
         isFavorite: isFavourite,
         total: paginatedData.total,
         limit: paginatedData.limit,
@@ -246,6 +249,9 @@ class ExerciseCubit extends Cubit<ExerciseState> {
       await getExercises(
         name: state.exercisePagination.name,
         muscleGroup: state.exercisePagination.muscleGroup,
+        difficulty: state.exercisePagination.difficulty,
+        equipmentId: state.exercisePagination.equipmentId,
+        isFavourite: state.exercisePagination.isFavorite,
         limit: state.exercisePagination.limit,
         offset: state.exercisePagination.offset,
       );

@@ -15,7 +15,6 @@ class RemindersConfigDto extends Equatable implements Dto<RemindersConfig> {
     required this.weightRecordsOn,
   });
 
-  @override
   factory RemindersConfigDto.fromModel(RemindersConfig model) {
     return RemindersConfigDto(
       id: model.id!,

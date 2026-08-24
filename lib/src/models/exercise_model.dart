@@ -98,7 +98,6 @@ class Exercise extends Equatable implements Model {
     };
   }
 
-  @override
   factory Exercise.fromMap(Map<String, Object?> map) {
     return Exercise(
       id: map[ExerciseColumns.id.value] as int?,
@@ -126,7 +125,6 @@ class Exercise extends Equatable implements Model {
     );
   }
 
-  @override
   factory Exercise.create({
     required String name,
     required MuscleGroup muscleGroup,

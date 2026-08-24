@@ -59,6 +59,7 @@ class _PremiumEditorState extends State<PremiumEditor> {
             difficulty: exercise.difficulty,
             exerciseId: exercise.exerciseId,
             exerciseName: exercise.exercise?.name,
+            exerciseMuscleGroup: exercise.exercise?.muscleGroup,
             alternativeExercises: (exercise.options ?? [])
                 .map(
                   (option) => AlternativeExerciseData(

@@ -31,7 +31,7 @@ class HomeView extends StatelessWidget {
             SizedBox(height: sizes.spacing),
 
             // Active Plan
-            ActivePlanWidget(sizes: sizes), // TODO: fix this widget
+            ActivePlanWidget(sizes: sizes),
             SizedBox(height: sizes.spacing),
 
             // Quick Actions

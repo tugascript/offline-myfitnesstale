@@ -231,11 +231,11 @@ class _BasicEditorState extends State<BasicEditor> {
                     return SetExerciseSearchModal(
                       sizes: sizes,
                       isLoading: state.isLoading,
-                      onExerciseSelected: (id, name) async {
+                      onExerciseSelected: (exercise) async {
                         if (!dialogContext.mounted) return;
                         setState(() {
-                          _displayedSets.last.exerciseId = id;
-                          _displayedSets.last.exerciseName = name;
+                          _displayedSets.last.exerciseId = exercise.id;
+                          _displayedSets.last.exerciseName = exercise.name;
                           _displayedSets.last.status =
                               SetEditorDataStatus.pending;
                         });

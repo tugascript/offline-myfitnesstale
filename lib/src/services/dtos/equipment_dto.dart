@@ -19,7 +19,6 @@ class EquipmentDto extends Equatable implements Dto<Equipment> {
     required this.createdBy,
   });
 
-  @override
   factory EquipmentDto.fromModel(Equipment equipment) {
     return EquipmentDto(
       id: equipment.id!,

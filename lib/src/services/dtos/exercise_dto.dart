@@ -38,7 +38,6 @@ class ExerciseDto extends Equatable implements Dto<Exercise> {
     required this.createdBy,
   });
 
-  @override
   factory ExerciseDto.fromModel(
     Exercise exercise, {
     List<EquipmentDto>? equipments,

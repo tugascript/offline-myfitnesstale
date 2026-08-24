@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../models/common.dart';
 import '../../../../models/enums.dart';
+import '../../../../services/dtos/exercise_dto.dart';
 import '../../../../utilities/sizes/data_display_sizes.dart';
 import '../../../layout/app_dropdown.dart';
 import '../../../layout/app_number_wheel.dart';
@@ -16,7 +17,7 @@ class SetExerciseEditor extends StatelessWidget {
   final ComplexSetExerciseEditorData exerciseData;
   final DataDisplaySizesList sizes;
   final bool isLoading;
-  final ValueChanged<(int, String)>? onExerciseChanged;
+  final ValueChanged<ExerciseDto>? onExerciseChanged;
   final ValueChanged<String>? onMinRepsChanged;
   final ValueChanged<String>? onMaxRepsChanged;
   final ValueChanged<bool?>? onToMaxRepsChanged;
@@ -80,8 +81,8 @@ class SetExerciseEditor extends StatelessWidget {
                     return SetExerciseSearchModal(
                       sizes: sizes,
                       isLoading: isLoading,
-                      onExerciseSelected: (id, name) {
-                        onExerciseChanged!((id, name));
+                      onExerciseSelected: (exercise) {
+                        onExerciseChanged!(exercise);
                         Navigator.of(dialogContext).pop();
                       },
                     );

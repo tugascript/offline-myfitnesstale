@@ -9,7 +9,7 @@ class SetExerciseSearchList extends StatelessWidget {
   final DataDisplaySizesList sizes;
   final bool isLoading;
   final List<ExerciseDto> exercises;
-  final Function(int id, String name) onExerciseSelected;
+  final ValueChanged<ExerciseDto> onExerciseSelected;
 
   const SetExerciseSearchList({
     super.key,
@@ -39,7 +39,7 @@ class SetExerciseSearchList extends StatelessWidget {
           margins: sizes.margins / 2,
           padding: sizes.padding / 2,
           fontSize: sizes.smallFontSize,
-          onTap: () => onExerciseSelected(exercise.id, exercise.name),
+          onTap: () => onExerciseSelected(exercise),
         );
       },
     );

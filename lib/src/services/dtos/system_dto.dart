@@ -20,7 +20,6 @@ class SystemDto extends Equatable implements Dto<System> {
     required this.notificationsOn,
   });
 
-  @override
   factory SystemDto.fromModel(System model) {
     return SystemDto(
       id: model.id!,

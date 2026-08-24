@@ -4,8 +4,8 @@ import '../../models/enums.dart';
 import '../../models/utilities.dart';
 import '../layout/app_dropdown.dart';
 import '../layout/app_text_form_field.dart';
+import '../common/favourite_checkbox.dart';
 
-// TODO: add is favorite
 class WorkoutPlanSearchForm extends StatefulWidget {
   final String nameLabel;
   final double fontSize;
@@ -15,9 +15,11 @@ class WorkoutPlanSearchForm extends StatefulWidget {
   final bool isLoading;
   final String initialName;
   final Difficulty? initialDifficulty;
+  final bool initialIsFavorite;
   final void Function({
     required String name,
     required Difficulty? difficulty,
+    required bool isFavorite,
   }) onSubmit;
 
   const WorkoutPlanSearchForm({
@@ -29,6 +31,7 @@ class WorkoutPlanSearchForm extends StatefulWidget {
     required this.isLoading,
     required this.initialName,
     required this.initialDifficulty,
+    required this.initialIsFavorite,
     required this.onSubmit,
   });
 
@@ -47,6 +50,7 @@ class _WorkoutPlanSearchFormState extends State<WorkoutPlanSearchForm> {
     _data = _FormData(
       name: widget.initialName,
       difficulty: widget.initialDifficulty,
+      isFavorite: widget.initialIsFavorite,
     );
     _nameController.text = widget.initialName;
   }
@@ -108,6 +112,15 @@ class _WorkoutPlanSearchFormState extends State<WorkoutPlanSearchForm> {
           SizedBox(height: widget.spacing),
           Row(
             children: [
+              HeartCheckbox(
+                value: _data.isFavorite,
+                onChanged: (value) {
+                  setState(() {
+                    _data.isFavorite = value;
+                  });
+                },
+              ),
+              SizedBox(width: widget.spacing),
               Expanded(
                 child: AppDropdown<Difficulty>(
                   value: _data.difficulty,
@@ -156,6 +169,7 @@ class _WorkoutPlanSearchFormState extends State<WorkoutPlanSearchForm> {
                         widget.onSubmit(
                           name: _data.name,
                           difficulty: _data.difficulty,
+                          isFavorite: _data.isFavorite,
                         );
                       }
                     }
@@ -173,9 +187,11 @@ class _WorkoutPlanSearchFormState extends State<WorkoutPlanSearchForm> {
 final class _FormData {
   String name;
   Difficulty? difficulty;
+  bool isFavorite;
 
   _FormData({
     required this.name,
     required this.difficulty,
+    required this.isFavorite,
   });
 }

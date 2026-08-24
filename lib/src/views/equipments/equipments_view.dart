@@ -10,7 +10,6 @@ import '../../widgets/equipment/equipments_grid.dart';
 import '../../widgets/equipment/equipments_search_form.dart';
 import '../../widgets/layout/app_scaffold.dart';
 
-// TODO: delete this in favor of a modal
 class EquipmentsView extends StatefulWidget {
   static const routeName = '/equipments';
   static const name = 'equipments';

@@ -104,8 +104,8 @@ class BasicSetEditor extends StatelessWidget {
                     return SetExerciseSearchModal(
                       sizes: sizes,
                       isLoading: false,
-                      onExerciseSelected: (id, name) {
-                        onExerciseChanged!((id, name));
+                      onExerciseSelected: (exercise) {
+                        onExerciseChanged!((exercise.id, exercise.name));
                         Navigator.of(context).pop();
                       },
                     );

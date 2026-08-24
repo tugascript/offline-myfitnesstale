@@ -34,6 +34,7 @@ final class ComplexSetExerciseEditorData {
   WorkoutSetExerciseDifficulty? difficulty;
   int? exerciseId;
   String? exerciseName;
+  MuscleGroup? exerciseMuscleGroup;
   Set<AlternativeExerciseData> alternativeExercises;
 
   ComplexSetExerciseEditorData({
@@ -45,6 +46,7 @@ final class ComplexSetExerciseEditorData {
     this.difficulty,
     this.exerciseId,
     this.exerciseName,
+    this.exerciseMuscleGroup,
     this.alternativeExercises = const {},
     int? internalId,
   }) : internalId = internalId ?? UniqueKey().hashCode;

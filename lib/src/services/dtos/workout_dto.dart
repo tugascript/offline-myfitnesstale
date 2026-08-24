@@ -46,7 +46,6 @@ class WorkoutDto extends Equatable implements Dto<Workout> {
     this.sets,
   });
 
-  @override
   factory WorkoutDto.fromModel(Workout model, {List<WorkoutSetDto>? sets}) {
     return WorkoutDto(
       id: model.id!,

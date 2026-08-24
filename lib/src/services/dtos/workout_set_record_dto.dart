@@ -26,7 +26,6 @@ class WorkoutSetRecordDto extends Equatable implements Dto<WorkoutSetRecord> {
     this.setExerciseRecords,
   });
 
-  @override
   factory WorkoutSetRecordDto.fromModel(
     WorkoutSetRecord model, {
     List<WorkoutSetExerciseRecordDto>? setExerciseRecords,

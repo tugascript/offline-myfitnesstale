@@ -134,4 +134,42 @@ void main() {
 
     expect(state.latestMatchingExerciseRecord, isNull);
   });
+
+  test('sums heterogeneous preceding set blocks and clamps progress', () {
+    const secondSet = WorkoutSetDto(
+      id: 12,
+      position: 1,
+      setType: WorkoutSetType.drop,
+      minSets: 4,
+      recommendedRestSecs: 60,
+      totalExercises: 1,
+      totalReps: 32,
+      exercises: [squat],
+    );
+    const heterogeneousWorkout = WorkoutDto(
+      id: 2,
+      name: 'Mixed sets',
+      muscleGroups: {MuscleGroup.legs},
+      muscles: TargetMuscles(primary: {Muscle.quadriceps}, secondary: {}),
+      difficulty: Difficulty.beginner,
+      version: 1,
+      isFavorite: false,
+      totalSets: 6,
+      totalReps: 48,
+      editorType: EditorType.advanced,
+      createdBy: CreatedBy.user,
+      sets: [set, secondSet],
+    );
+
+    final state = ActiveWorkoutState.initial().copyWith(
+      workout: const Nullable(heterogeneousWorkout),
+      currentSetPosition: 1,
+      currentSetNumber: 2,
+    );
+    expect(state.totalCurrentSet, 4);
+    expect(state.progress, closeTo(4 / 6, 0.0001));
+
+    final beyondEnd = state.copyWith(currentSetNumber: 99);
+    expect(beyondEnd.progress, 1.0);
+  });
 }

@@ -52,6 +52,7 @@ class TestDatabase {
   Future<void> clearWorkoutTables() async {
     final database = await db;
     await database.transaction((txn) async {
+      await txn.delete(WorkoutRecord.table);
       await txn.delete(WorkoutSetExerciseOption.table);
       await txn.delete(WorkoutSetExercise.table);
       await txn.delete(WorkoutSet.table);

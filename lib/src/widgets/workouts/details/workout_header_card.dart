@@ -9,7 +9,6 @@ import '../../common/muscle_group_badge.dart';
 import '../../common/muscles_wrap.dart';
 import '../../common/total_numeric_string.dart';
 
-// TODO: add versioning
 class WorkoutHeaderCard extends StatelessWidget {
   final DataDisplaySizesList sizes;
   final WorkoutDto workoutDto;
@@ -44,11 +43,26 @@ class WorkoutHeaderCard extends StatelessWidget {
               ),
             ),
             Expanded(
-              child: DifficultyBadge(
+              child: Wrap(
                 spacing: sizes.spacing,
-                difficulty: workoutDto.difficulty,
-                fontSize: sizes.smallFontSize,
-                fontWeight: FontWeight.w600,
+                runSpacing: sizes.spacing / 2,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  DifficultyBadge(
+                    spacing: sizes.spacing,
+                    difficulty: workoutDto.difficulty,
+                    fontSize: sizes.smallFontSize,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  Text(
+                    'Version ${workoutDto.version}',
+                    style: TextStyle(
+                      fontSize: sizes.smallFontSize,
+                      color: theme.colorScheme.onSurfaceVariant,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
               ),
             ),
             IconButton(
