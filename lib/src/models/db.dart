@@ -3,7 +3,10 @@ import 'package:logging/logging.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
+import 'constants/equipment_constants.dart';
+import 'constants/exercise_constants.dart';
 import 'entitlement_state_model.dart';
+import 'enums.dart';
 import 'equipment_model.dart';
 import 'exercise_equipment_model.dart';
 import 'exercise_model.dart';
@@ -31,7 +34,7 @@ import 'workout_set_record_model.dart';
 
 const String _productionDatabaseName = "app.db";
 const String _integrationTestDatabaseName = "integration_test.db";
-const int _databaseVersion = 2;
+const int _databaseVersion = 3;
 
 class DatabaseHelper {
   static final DatabaseHelper _instance = DatabaseHelper._();
@@ -166,6 +169,81 @@ class DatabaseHelper {
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
-    return;
+    if (oldVersion < 3) {
+      await _backfillLegacyEquipmentSeed(db);
+    }
+  }
+
+  Future<void> _backfillLegacyEquipmentSeed(Database db) async {
+    final completedSystems = await db.query(
+      System.table,
+      columns: [SystemColumns.id.value],
+      where: '${SystemColumns.initialSetup.value} = ?',
+      whereArgs: [SetUpStatus.completed.value],
+      limit: 1,
+    );
+    if (completedSystems.isEmpty) {
+      return;
+    }
+
+    for (final name in kEquipmentNames) {
+      await db.insert(
+        Equipment.table,
+        Equipment.create(
+          name: name,
+          createdBy: CreatedBy.system,
+        ).toMap(),
+        conflictAlgorithm: ConflictAlgorithm.ignore,
+      );
+    }
+
+    final equipmentRows = await db.query(
+      Equipment.table,
+      columns: [
+        EquipmentColumns.id.value,
+        EquipmentColumns.name.value,
+      ],
+    );
+    final equipmentIdByName = <String, int>{
+      for (final row in equipmentRows)
+        row[EquipmentColumns.name.value]! as String:
+            row[EquipmentColumns.id.value]! as int,
+    };
+
+    final exerciseRows = await db.query(
+      Exercise.table,
+      columns: [
+        ExerciseColumns.id.value,
+        ExerciseColumns.name.value,
+      ],
+      where: '${ExerciseColumns.createdBy.value} = ?',
+      whereArgs: [CreatedBy.system.value],
+    );
+    final exerciseIdByName = <String, int>{
+      for (final row in exerciseRows)
+        row[ExerciseColumns.name.value]! as String:
+            row[ExerciseColumns.id.value]! as int,
+    };
+
+    for (final exercise in kInitialExercises) {
+      final exerciseId = exerciseIdByName[exercise.name];
+      if (exerciseId == null) {
+        continue;
+      }
+      for (final equipmentName in exercise.equipments) {
+        final equipmentId = equipmentIdByName[equipmentName];
+        if (equipmentId == null) {
+          continue;
+        }
+        await db.insert(
+          ExerciseEquipment.table,
+          ExerciseEquipment.create(
+            exerciseId: exerciseId,
+            equipmentId: equipmentId,
+          ).toMap(),
+          conflictAlgorithm: ConflictAlgorithm.ignore,
+        );
+      }
+    }
   }
 }

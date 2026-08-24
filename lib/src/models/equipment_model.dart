@@ -77,7 +77,7 @@ class Equipment implements Model {
       picture: map[EquipmentColumns.picture.value] != null
           ? PictureData.fromJson(map[EquipmentColumns.picture.value] as String)
           : null,
-      isFavorite: map[EquipmentColumns.isFavorite.value] as bool,
+      isFavorite: map[EquipmentColumns.isFavorite.value] as int == 1,
       createdBy:
           CreatedBy.fromValue(map[EquipmentColumns.createdBy.value] as String),
       createdAt: map[EquipmentColumns.createdAt.value] as int,

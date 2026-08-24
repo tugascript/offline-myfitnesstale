@@ -34,9 +34,7 @@ class _ExercisesViewState extends State<ExercisesView> {
 
   Future<void> _loadInitialData() async {
     final cubit = context.read<ExerciseCubit>();
-    if (cubit.state.equipmentSelection.isEmpty) {
-      await cubit.getSelectionEquipments();
-    }
+    await cubit.getSelectionEquipments();
     if (!mounted) return;
     if (cubit.state.exercises.isEmpty) {
       final pagination = cubit.state.exercisePagination;
