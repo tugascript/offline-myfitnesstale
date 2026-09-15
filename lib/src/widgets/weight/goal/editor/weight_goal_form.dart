@@ -17,10 +17,12 @@ class WeightGoalForm extends StatefulWidget {
 
   final WeightGoalPhase initialPhase;
   final int initialWeight;
+  final int? initialFatPercentage;
 
   final void Function({
     required int weight,
     required WeightGoalPhase phase,
+    int? fatPercentage,
   }) onSubmit;
 
   const WeightGoalForm({
@@ -33,6 +35,7 @@ class WeightGoalForm extends StatefulWidget {
     required this.initialWeight,
     required this.initialPhase,
     required this.onSubmit,
+    this.initialFatPercentage,
     this.submitIcon,
   });
 
@@ -43,6 +46,7 @@ class WeightGoalForm extends StatefulWidget {
 class _WeightGoalFormState extends State<WeightGoalForm> {
   final _formKey = GlobalKey<FormState>();
   final _weightController = TextEditingController();
+  final _fatPercentageController = TextEditingController();
   late final _FormData _data;
 
   @override
@@ -51,16 +55,22 @@ class _WeightGoalFormState extends State<WeightGoalForm> {
     final double weight = widget.units == Units.imperial
         ? Converters.gramsToLbs(widget.initialWeight)
         : Converters.gramsToKg(widget.initialWeight);
+    final double? fatPercentage = widget.initialFatPercentage != null
+        ? Converters.intPercentToDouble(widget.initialFatPercentage!)
+        : null;
     _data = _FormData(
       weight: weight,
       phase: widget.initialPhase,
+      fatPercentage: fatPercentage,
     );
     _weightController.text = weight.toStringAsFixed(2);
+    _fatPercentageController.text = fatPercentage?.toStringAsFixed(2) ?? "";
   }
 
   @override
   void dispose() {
     _weightController.dispose();
+    _fatPercentageController.dispose();
     super.dispose();
   }
 
@@ -210,6 +220,88 @@ class _WeightGoalFormState extends State<WeightGoalForm> {
             },
           ),
           SizedBox(height: widget.sizes.inputSpacing),
+          AppTextFormField(
+            filled: true,
+            theme: widget.theme,
+            maxLines: 1,
+            isLoading: widget.isLoading,
+            controller: _fatPercentageController,
+            labelText: "Body Fat Percentage",
+            hintText: "Enter the body fat percentage",
+            fontSize: widget.sizes.subtitleFontSize,
+            padding: widget.sizes.padding * 2,
+            suffixIconConstraints: BoxConstraints(
+              minWidth: widget.sizes.subtitleFontSize * 4,
+              minHeight: widget.sizes.subtitleFontSize * 1.5,
+            ),
+            prefixIcon: Icon(
+              Icons.water_drop_outlined,
+              size: widget.sizes.subtitleFontSize * 1.2,
+            ),
+            suffixIcon: Icon(
+              Icons.percent,
+              size: widget.sizes.subtitleFontSize * 1.2,
+            ),
+            keyboardType: TextInputType.numberWithOptions(decimal: true),
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return null;
+              }
+
+              final bodyFatPercentage = double.tryParse(value);
+              if (bodyFatPercentage == null) {
+                return "Please enter a valid body fat percentage";
+              }
+
+              if (bodyFatPercentage < 3 || bodyFatPercentage > 50) {
+                return "Body fat percentage needs to be between 3 and 50";
+              }
+
+              return null;
+            },
+            onChanged: (value) {
+              if (value == "") {
+                _fatPercentageController.text = "";
+                setState(() {
+                  _data.fatPercentage = null;
+                });
+                return;
+              }
+
+              final parsed = double.tryParse(value);
+              if (parsed == null) {
+                _fatPercentageController.text =
+                    _data.fatPercentage?.toString() ?? "";
+                return;
+              }
+
+              setState(() {
+                _data.fatPercentage = parsed;
+              });
+            },
+            onSaved: (value) {
+              if (value == null) {
+                return;
+              }
+              if (value == "") {
+                _fatPercentageController.text = "";
+                setState(() {
+                  _data.fatPercentage = null;
+                });
+                return;
+              }
+
+              final parsed = double.tryParse(value);
+              if (parsed == null) {
+                return;
+              }
+
+              setState(() {
+                _data.fatPercentage = parsed;
+              });
+            },
+          ),
+          SizedBox(height: widget.sizes.inputSpacing),
           SizedBox(
             width: double.infinity,
             child: AppElevatedButton(
@@ -224,6 +316,9 @@ class _WeightGoalFormState extends State<WeightGoalForm> {
                         ? Converters.lbsToGrams(_data.weight)
                         : Converters.kgToGrams(_data.weight),
                     phase: _data.phase,
+                    fatPercentage: _data.fatPercentage != null
+                        ? Converters.doublePercentToInt(_data.fatPercentage!)
+                        : null,
                   );
                 }
               },
@@ -251,9 +346,11 @@ class _WeightGoalFormState extends State<WeightGoalForm> {
 final class _FormData {
   WeightGoalPhase phase;
   double weight;
+  double? fatPercentage;
 
   _FormData({
     required this.phase,
     required this.weight,
+    this.fatPercentage,
   });
 }

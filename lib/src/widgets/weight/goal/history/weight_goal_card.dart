@@ -42,7 +42,7 @@ class WeightGoalCard extends StatelessWidget {
               children: [
                 Expanded(
                   child: Text(
-                    "${_displayWeight()} ${units == Units.imperial ? 'LBS' : 'KG'}",
+                    _displayWeight(),
                     style: TextStyle(
                       fontSize: sizes.subtitleFontSize,
                       fontWeight: FontWeight.bold,
@@ -137,10 +137,11 @@ class WeightGoalCard extends StatelessWidget {
   }
 
   String _displayWeight() {
-    if (units == Units.imperial) {
-      return Converters.gramsToLbs(weightGoal.targetWeight).toStringAsFixed(2);
+    switch (units) {
+      case Units.metric:
+        return "${Converters.gramsToKg(weightGoal.targetWeight).toStringAsFixed(2)}KG";
+      case Units.imperial:
+        return "${Converters.gramsToLbs(weightGoal.targetWeight).toStringAsFixed(2)}LBS";
     }
-
-    return Converters.gramsToKg(weightGoal.targetWeight).toStringAsFixed(2);
   }
 }

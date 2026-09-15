@@ -200,6 +200,10 @@ class _WeightRecordFormState extends State<WeightRecordForm> {
               minHeight: widget.sizes.subtitleFontSize * 1.5,
             ),
             prefixIcon: Icon(
+              Icons.water_drop_outlined,
+              size: widget.sizes.subtitleFontSize * 1.2,
+            ),
+            suffixIcon: Icon(
               Icons.percent,
               size: widget.sizes.subtitleFontSize * 1.2,
             ),

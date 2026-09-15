@@ -210,13 +210,7 @@ class _LatestWeightRecord extends StatelessWidget {
                           size: sizes.subtitleFontSize * 1.2,
                         ),
                         Text(
-                          units == Units.imperial
-                              ? " ${Converters.gramsToLbs(
-                                  weightRecord?.weight ?? 0,
-                                ).toStringAsFixed(2)} LBS"
-                              : " ${Converters.gramsToKg(
-                                  weightRecord?.weight ?? 0,
-                                ).toStringAsFixed(2)} KG",
+                          _displayWeight(),
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             fontSize: sizes.subtitleFontSize,
@@ -231,11 +225,11 @@ class _LatestWeightRecord extends StatelessWidget {
                             size: sizes.subtitleFontSize * 1.2,
                           ),
                           Text(
-                            " ${Converters.intPercentToDouble(weightRecord!.fatPercentage!).toStringAsFixed(2)} %",
+                            " ${Converters.intPercentToDouble(weightRecord!.fatPercentage!).toStringAsFixed(2)}%",
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               fontSize: sizes.subtitleFontSize,
-                              fontWeight: FontWeight.w400,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
                         ],
@@ -313,6 +307,16 @@ class _LatestWeightRecord extends StatelessWidget {
         return DateFormat("dd/MM/yyyy").format(date);
       case Units.imperial:
         return DateFormat("MM/dd/yyyy").format(date);
+    }
+  }
+
+  String _displayWeight() {
+    final int weight = weightRecord?.weight ?? 0;
+    switch (units) {
+      case Units.metric:
+        return "${Converters.gramsToKg(weight).toStringAsFixed(2)}KG";
+      case Units.imperial:
+        return "${Converters.gramsToLbs(weight).toStringAsFixed(2)}LBS";
     }
   }
 }

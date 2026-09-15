@@ -7,6 +7,7 @@ const String _table = 'weight_goals';
 enum WeightGoalColumns with Columns {
   id("id"),
   targetWeight("target_weight"),
+  targetFatPercentage("target_fat_percentage"),
   startDate("start_date"),
   completedAt("completed_at"),
   status("status"),
@@ -24,6 +25,7 @@ class WeightGoal implements Model {
   @override
   final int? id;
   final int targetWeight;
+  final int? targetFatPercentage;
   final int startDate;
   final int? completedAt;
   final ProgressStatus status;
@@ -36,6 +38,7 @@ class WeightGoal implements Model {
   const WeightGoal({
     this.id,
     required this.targetWeight,
+    this.targetFatPercentage,
     required this.startDate,
     this.completedAt,
     required this.status,
@@ -49,6 +52,7 @@ class WeightGoal implements Model {
   CREATE TABLE IF NOT EXISTS $_table (
     ${WeightGoalColumns.id.value} INTEGER PRIMARY KEY AUTOINCREMENT,
     ${WeightGoalColumns.targetWeight.value} INTEGER NOT NULL,
+    ${WeightGoalColumns.targetFatPercentage.value} INTEGER,
     ${WeightGoalColumns.startDate.value} INTEGER NOT NULL,
     ${WeightGoalColumns.completedAt.value} INTEGER,
     ${WeightGoalColumns.status.value} TEXT NOT NULL,
@@ -66,6 +70,7 @@ class WeightGoal implements Model {
     return {
       WeightGoalColumns.id.value: id,
       WeightGoalColumns.targetWeight.value: targetWeight,
+      WeightGoalColumns.targetFatPercentage.value: targetFatPercentage,
       WeightGoalColumns.startDate.value: startDate,
       WeightGoalColumns.completedAt.value: completedAt,
       WeightGoalColumns.status.value: status.value,
@@ -79,6 +84,8 @@ class WeightGoal implements Model {
     return WeightGoal(
       id: map[WeightGoalColumns.id.value] as int?,
       targetWeight: map[WeightGoalColumns.targetWeight.value] as int,
+      targetFatPercentage:
+          map[WeightGoalColumns.targetFatPercentage.value] as int?,
       startDate: map[WeightGoalColumns.startDate.value] as int,
       completedAt: map[WeightGoalColumns.completedAt.value] as int?,
       status: ProgressStatus.fromValue(
@@ -94,6 +101,7 @@ class WeightGoal implements Model {
 
   factory WeightGoal.create({
     required int targetWeight,
+    int? targetFatPercentage,
     required int startDate,
     required WeightGoalPhase phase,
     ProgressStatus status = ProgressStatus.inProgress,
@@ -102,6 +110,7 @@ class WeightGoal implements Model {
     final int now = DateUtilities.getNowUtcUnix();
     return WeightGoal(
       targetWeight: targetWeight,
+      targetFatPercentage: targetFatPercentage,
       startDate: startDate,
       completedAt: completedAt,
       phase: phase,
@@ -116,6 +125,7 @@ class WeightGoal implements Model {
     int? id,
     int? targetWeight,
     int? startWeight,
+    int? targetFatPercentage,
     int? startDate,
     ProgressStatus? status,
     WeightGoalPhase? phase,
@@ -126,6 +136,7 @@ class WeightGoal implements Model {
     return WeightGoal(
       id: id ?? this.id,
       targetWeight: targetWeight ?? this.targetWeight,
+      targetFatPercentage: targetFatPercentage ?? this.targetFatPercentage,
       startDate: startDate ?? this.startDate,
       status: status ?? this.status,
       completedAt: completedAt ?? this.completedAt,

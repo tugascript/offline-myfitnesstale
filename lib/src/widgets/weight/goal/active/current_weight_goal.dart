@@ -44,6 +44,24 @@ class CurrentWeightGoal extends StatelessWidget {
           ),
           child: BlocBuilder<ProfileCubit, ProfileState>(
               builder: (context, state) {
+            String displayWeight() {
+              switch (state.system?.units) {
+                case Units.imperial:
+                  return "${Converters.gramsToLbs(weightGoal?.targetWeight ?? 0).toStringAsFixed(2)} LBS";
+                case Units.metric:
+                case null:
+                  return "${Converters.gramsToKg(weightGoal?.targetWeight ?? 0).toStringAsFixed(2)} KG";
+              }
+            }
+
+            String displayBodyFatPercentage() {
+              if (weightGoal?.targetFatPercentage == null) {
+                return "";
+              }
+
+              return " - ${Converters.intPercentToDouble(weightGoal!.targetFatPercentage!).toStringAsFixed(2)}%";
+            }
+
             return Skeletonizer(
               enabled: isLoading || weightGoal == null,
               child: Column(
@@ -74,13 +92,7 @@ class CurrentWeightGoal extends StatelessWidget {
                   ),
                   SizedBox(height: sizes.spacing),
                   Text(
-                    state.system?.units == Units.imperial
-                        ? "${Converters.gramsToLbs(
-                            weightGoal?.targetWeight ?? 0,
-                          ).toStringAsFixed(2)} LBS"
-                        : "${Converters.gramsToKg(
-                            weightGoal?.targetWeight ?? 0,
-                          ).toStringAsFixed(2)} KG",
+                    displayWeight() + displayBodyFatPercentage(),
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: sizes.subtitleFontSize,
