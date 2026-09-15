@@ -33,6 +33,260 @@ class WeightRecordService {
     fromMap: (map) => WeightGoal.fromMap(map),
   );
 
+  Future<Result<WeightGoalDto, ServiceError<OperationErrorTypes>>>
+      createWeightGoal({
+    required int targetWeight,
+    required DateTime startDate,
+    required WeightGoalPhase phase,
+    int? targetFatPercentage,
+    ProgressStatus status = ProgressStatus.inProgress,
+  }) async {
+    _logger.info('Creating weight goal');
+    try {
+      final int weightCount = await _weightGoalRepository.count(
+        where: WeightGoalColumns.status.equal,
+        whereArgs: [ProgressStatus.inProgress.value],
+      );
+      final WeightGoal weightGoal = WeightGoal.create(
+        targetWeight: targetWeight,
+        startDate: DateUtilities.getDateUnix(startDate),
+        phase: phase,
+        status: status,
+        targetFatPercentage: targetFatPercentage,
+      );
+
+      if (weightCount == 0) {
+        final int id = await _weightGoalRepository.insert(weightGoal);
+        _logger.info('Created weight goal with id $id');
+        return ok(WeightGoalDto.fromModel(weightGoal.copyWith(id: id)));
+      }
+
+      final int id = await _weightGoalRepository.startTransaction((txn) async {
+        await txn.rawUpdate(
+          """
+          UPDATE ${WeightGoal.table} SET 
+            ${WeightGoalColumns.status.equal}, 
+            ${WeightGoalColumns.completedAt.equal}
+          WHERE ${WeightGoalColumns.status.equal};
+          """,
+          [
+            ProgressStatus.abandoned.value,
+            DateUtilities.getNowUtcUnix(),
+            ProgressStatus.inProgress.value
+          ],
+        );
+        return await _weightGoalRepository.insert(weightGoal, txn);
+      });
+      _logger.info('Created weight goal with id $id');
+      return ok(WeightGoalDto.fromModel(weightGoal.copyWith(id: id)));
+    } catch (e) {
+      _logger.severe('Failed to create weight goal', e);
+      return err(const ServiceError(
+        type: OperationErrorTypes.operationFailure,
+        description: 'Failed to create weight goal',
+      ));
+    }
+  }
+
+  Future<
+      Result<PaginatedDto<WeightGoalDto, WeightGoal>,
+          ServiceError<OperationErrorTypes>>> getWeightGoals({
+    bool skipInProgress = false,
+    int limit = kDefaultLimit,
+    int offset = kDefaultOffset,
+  }) async {
+    _logger.info('Getting weight goals');
+    try {
+      final where = WhereBuilder();
+      if (skipInProgress) {
+        where.and(
+          WeightGoalColumns.status.notEqual,
+          ProgressStatus.inProgress.value,
+        );
+      }
+
+      final List<WeightGoal> goals =
+          await _weightGoalRepository.selectPaginated(
+        where: where.where,
+        whereArgs: where.args,
+        limit: limit,
+        offset: offset,
+        orderBy: [WeightGoalColumns.startDate.orderDesc],
+      );
+      final int total = await _weightGoalRepository.count(
+        where: where.where,
+        whereArgs: where.args,
+      );
+      _logger.info('Got ${goals.length} weight goals');
+      return ok(PaginatedDto<WeightGoalDto, WeightGoal>.mapData(
+        data: goals,
+        mapper: (goal) => WeightGoalDto.fromModel(goal),
+        total: total,
+        limit: limit,
+        offset: offset,
+      ));
+    } catch (e) {
+      _logger.severe('Failed to get weight goals', e);
+      return err(const ServiceError(
+        type: OperationErrorTypes.operationFailure,
+        description: 'Failed to get weight goals',
+      ));
+    }
+  }
+
+  Future<Result<WeightGoalDto, ServiceError<SingleErrorTypes>>> getWeightGoal(
+    int id,
+  ) async {
+    _logger.info('Getting weight goal with id $id');
+    try {
+      final WeightGoal? weightGoal = await _weightGoalRepository.selectOne(id);
+      if (weightGoal == null) {
+        return err(const ServiceError(
+          type: SingleErrorTypes.notFound,
+          description: 'Weight goal not found',
+        ));
+      }
+      _logger.info('Got weight goal with id $id');
+      return ok(WeightGoalDto.fromModel(weightGoal));
+    } catch (e) {
+      _logger.severe('Failed to get weight goal with id $id', e);
+      return err(const ServiceError(
+        type: SingleErrorTypes.operationFailure,
+        description: 'Failed to get weight goal',
+      ));
+    }
+  }
+
+  Future<Result<WeightGoalDto, ServiceError<SingleErrorTypes>>>
+      getActiveWeightGoal() async {
+    _logger.info('Getting active weight goal');
+    try {
+      final List<WeightGoal> goals = await _weightGoalRepository.selectMany(
+        where: WeightGoalColumns.status.equal,
+        whereArgs: [ProgressStatus.inProgress.value],
+        orderBy: [WeightGoalColumns.startDate.orderDesc],
+        limit: 1,
+      );
+      if (goals.isEmpty) {
+        _logger.info('No active weight goal found');
+        return err(const ServiceError(
+          type: SingleErrorTypes.notFound,
+          description: 'No active weight goal found',
+        ));
+      }
+      _logger.info('Got active weight goal ${goals.first.id}');
+      return ok(WeightGoalDto.fromModel(goals.first));
+    } catch (e) {
+      _logger.severe('Failed to get active weight goal', e);
+      return err(const ServiceError(
+        type: SingleErrorTypes.operationFailure,
+        description: 'Failed to get active weight goal',
+      ));
+    }
+  }
+
+  Future<Result<WeightGoalDto, ServiceError<SingleErrorTypes>>>
+      updateWeightGoal({
+    required int id,
+    int? targetWeight,
+    int? targetFatPercentage,
+    DateTime? startDate,
+    ProgressStatus? status,
+    DateTime? completedAt,
+    WeightGoalPhase? phase,
+  }) async {
+    _logger.info('Updating weight goal with id $id');
+    try {
+      final WeightGoal? weightGoal = await _weightGoalRepository.selectOne(id);
+
+      if (weightGoal == null) {
+        _logger.info('Weight goal with id $id not found');
+        return err(const ServiceError(
+          type: SingleErrorTypes.notFound,
+          description: 'Weight goal not found',
+        ));
+      }
+
+      final WeightGoal updatedWeightGoal = weightGoal.copyWith(
+        targetWeight: targetWeight,
+        targetFatPercentage: targetFatPercentage,
+        startDate: startDate != null
+            ? DateUtilities.getDateUnix(startDate)
+            : weightGoal.startDate,
+        completedAt: completedAt != null
+            ? DateUtilities.getDateUnix(completedAt)
+            : weightGoal.completedAt,
+        status: status,
+        phase: phase,
+        updatedAt: DateUtilities.getNowUtcUnix(),
+      );
+      await _weightGoalRepository.update(updatedWeightGoal);
+      _logger.info('Updated weight goal with id $id');
+      return ok(WeightGoalDto.fromModel(updatedWeightGoal));
+    } catch (e) {
+      _logger.severe('Failed to update weight goal with id $id', e);
+      return err(const ServiceError(
+        type: SingleErrorTypes.operationFailure,
+        description: 'Failed to update weight goal',
+      ));
+    }
+  }
+
+  Future<Result<void, ServiceError<SingleErrorTypes>>> deleteWeightGoal(
+    int id,
+  ) async {
+    _logger.info('Deleting weight goal with id $id');
+    try {
+      final bool deleted = await _weightGoalRepository.deleteOne(id);
+      if (!deleted) {
+        return err(const ServiceError(
+          type: SingleErrorTypes.notFound,
+          description: 'Weight goal not found',
+        ));
+      }
+      _logger.info('Deleted weight goal with id $id');
+      return ok(null);
+    } catch (e) {
+      _logger.severe('Failed to delete weight goal with id $id', e);
+      return err(const ServiceError(
+        type: SingleErrorTypes.operationFailure,
+        description: 'Failed to delete weight goal',
+      ));
+    }
+  }
+
+  Future<Result<WeightGoalDto, ServiceError<SingleErrorTypes>>>
+      completeWeightGoal(
+    int id,
+    DateTime completedAt,
+  ) async {
+    return await updateWeightGoal(
+      id: id,
+      status: ProgressStatus.completed,
+      completedAt: completedAt,
+    );
+  }
+
+  Future<Result<List<WeightGoalDto>, ServiceError<OperationErrorTypes>>>
+      getWeightGoalsByStatus(ProgressStatus status) async {
+    _logger.info('Getting weight goals by status $status');
+    try {
+      final List<WeightGoal> goals = await _weightGoalRepository.selectMany(
+        where: WeightGoalColumns.status.equal,
+        whereArgs: [status.value],
+        orderBy: [WeightGoalColumns.id.orderDesc],
+      );
+      _logger.info('Got ${goals.length} weight goals with status $status');
+      return ok(goals.map((g) => WeightGoalDto.fromModel(g)).toList());
+    } catch (e) {
+      _logger.severe('Failed to get weight goals by status', e);
+      return err(const ServiceError(
+        type: OperationErrorTypes.operationFailure,
+        description: 'Failed to get weight goals by status',
+      ));
+    }
+  }
+
   Future<Result<WeightRecordDto, ServiceError<OperationErrorTypes>>>
       createWeightRecord({
     required int weight,
@@ -43,10 +297,10 @@ class WeightRecordService {
     _logger.info('Creating weight record');
     try {
       final WeightRecord weightRecord = WeightRecord.create(
-        weight,
-        DateUtilities.getDateUnix(date),
-        fatPercentage,
-        pictureUri,
+        weight: weight,
+        recordDate: DateUtilities.getDateUnix(date),
+        fatPercentage: fatPercentage,
+        pictureUri: pictureUri,
       );
       final int id = await _repository.insert(weightRecord);
       _logger.info('Created weight record with id $id');
@@ -255,256 +509,6 @@ class WeightRecordService {
       return err(const ServiceError(
         type: SingleErrorTypes.operationFailure,
         description: 'Failed to delete weight record',
-      ));
-    }
-  }
-
-  Future<Result<WeightGoalDto, ServiceError<OperationErrorTypes>>>
-      createWeightGoal({
-    required int targetWeight,
-    required DateTime startDate,
-    required WeightGoalPhase phase,
-    ProgressStatus status = ProgressStatus.inProgress,
-  }) async {
-    _logger.info('Creating weight goal');
-    try {
-      final int weightCount = await _weightGoalRepository.count(
-        where: WeightGoalColumns.status.equal,
-        whereArgs: [ProgressStatus.inProgress.value],
-      );
-      final WeightGoal weightGoal = WeightGoal.create(
-        targetWeight: targetWeight,
-        startDate: DateUtilities.getDateUnix(startDate),
-        phase: phase,
-        status: status,
-      );
-
-      if (weightCount == 0) {
-        final int id = await _weightGoalRepository.insert(weightGoal);
-        _logger.info('Created weight goal with id $id');
-        return ok(WeightGoalDto.fromModel(weightGoal.copyWith(id: id)));
-      }
-
-      final int id = await _weightGoalRepository.startTransaction((txn) async {
-        await txn.rawUpdate(
-          """
-          UPDATE ${WeightGoal.table} SET 
-            ${WeightGoalColumns.status.equal}, 
-            ${WeightGoalColumns.completedAt.equal}
-          WHERE ${WeightGoalColumns.status.equal};
-          """,
-          [
-            ProgressStatus.abandoned.value,
-            DateUtilities.getNowUtcUnix(),
-            ProgressStatus.inProgress.value
-          ],
-        );
-        return await _weightGoalRepository.insert(weightGoal, txn);
-      });
-      _logger.info('Created weight goal with id $id');
-      return ok(WeightGoalDto.fromModel(weightGoal.copyWith(id: id)));
-    } catch (e) {
-      _logger.severe('Failed to create weight goal', e);
-      return err(const ServiceError(
-        type: OperationErrorTypes.operationFailure,
-        description: 'Failed to create weight goal',
-      ));
-    }
-  }
-
-  Future<
-      Result<PaginatedDto<WeightGoalDto, WeightGoal>,
-          ServiceError<OperationErrorTypes>>> getWeightGoals({
-    bool skipInProgress = false,
-    int limit = kDefaultLimit,
-    int offset = kDefaultOffset,
-  }) async {
-    _logger.info('Getting weight goals');
-    try {
-      final where = WhereBuilder();
-      if (skipInProgress) {
-        where.and(
-          WeightGoalColumns.status.notEqual,
-          ProgressStatus.inProgress.value,
-        );
-      }
-
-      final List<WeightGoal> goals =
-          await _weightGoalRepository.selectPaginated(
-        where: where.where,
-        whereArgs: where.args,
-        limit: limit,
-        offset: offset,
-        orderBy: [WeightGoalColumns.startDate.orderDesc],
-      );
-      final int total = await _weightGoalRepository.count(
-        where: where.where,
-        whereArgs: where.args,
-      );
-      _logger.info('Got ${goals.length} weight goals');
-      return ok(PaginatedDto<WeightGoalDto, WeightGoal>.mapData(
-        data: goals,
-        mapper: (goal) => WeightGoalDto.fromModel(goal),
-        total: total,
-        limit: limit,
-        offset: offset,
-      ));
-    } catch (e) {
-      _logger.severe('Failed to get weight goals', e);
-      return err(const ServiceError(
-        type: OperationErrorTypes.operationFailure,
-        description: 'Failed to get weight goals',
-      ));
-    }
-  }
-
-  Future<Result<WeightGoalDto, ServiceError<SingleErrorTypes>>> getWeightGoal(
-    int id,
-  ) async {
-    _logger.info('Getting weight goal with id $id');
-    try {
-      final WeightGoal? weightGoal = await _weightGoalRepository.selectOne(id);
-      if (weightGoal == null) {
-        return err(const ServiceError(
-          type: SingleErrorTypes.notFound,
-          description: 'Weight goal not found',
-        ));
-      }
-      _logger.info('Got weight goal with id $id');
-      return ok(WeightGoalDto.fromModel(weightGoal));
-    } catch (e) {
-      _logger.severe('Failed to get weight goal with id $id', e);
-      return err(const ServiceError(
-        type: SingleErrorTypes.operationFailure,
-        description: 'Failed to get weight goal',
-      ));
-    }
-  }
-
-  Future<Result<WeightGoalDto, ServiceError<SingleErrorTypes>>>
-      getActiveWeightGoal() async {
-    _logger.info('Getting active weight goal');
-    try {
-      final List<WeightGoal> goals = await _weightGoalRepository.selectMany(
-        where: WeightGoalColumns.status.equal,
-        whereArgs: [ProgressStatus.inProgress.value],
-        orderBy: [WeightGoalColumns.startDate.orderDesc],
-        limit: 1,
-      );
-      if (goals.isEmpty) {
-        _logger.info('No active weight goal found');
-        return err(const ServiceError(
-          type: SingleErrorTypes.notFound,
-          description: 'No active weight goal found',
-        ));
-      }
-      _logger.info('Got active weight goal ${goals.first.id}');
-      return ok(WeightGoalDto.fromModel(goals.first));
-    } catch (e) {
-      _logger.severe('Failed to get active weight goal', e);
-      return err(const ServiceError(
-        type: SingleErrorTypes.operationFailure,
-        description: 'Failed to get active weight goal',
-      ));
-    }
-  }
-
-  Future<Result<WeightGoalDto, ServiceError<SingleErrorTypes>>>
-      updateWeightGoal({
-    required int id,
-    int? targetWeight,
-    DateTime? startDate,
-    ProgressStatus? status,
-    DateTime? completedAt,
-    WeightGoalPhase? phase,
-  }) async {
-    _logger.info('Updating weight goal with id $id');
-    try {
-      final WeightGoal? weightGoal = await _weightGoalRepository.selectOne(id);
-
-      if (weightGoal == null) {
-        _logger.info('Weight goal with id $id not found');
-        return err(const ServiceError(
-          type: SingleErrorTypes.notFound,
-          description: 'Weight goal not found',
-        ));
-      }
-
-      final WeightGoal updatedWeightGoal = weightGoal.copyWith(
-        targetWeight: targetWeight,
-        startDate: startDate != null
-            ? DateUtilities.getDateUnix(startDate)
-            : weightGoal.startDate,
-        completedAt: completedAt != null
-            ? DateUtilities.getDateUnix(completedAt)
-            : weightGoal.completedAt,
-        status: status,
-        phase: phase,
-        updatedAt: DateUtilities.getNowUtcUnix(),
-      );
-      await _weightGoalRepository.update(updatedWeightGoal);
-      _logger.info('Updated weight goal with id $id');
-      return ok(WeightGoalDto.fromModel(updatedWeightGoal));
-    } catch (e) {
-      _logger.severe('Failed to update weight goal with id $id', e);
-      return err(const ServiceError(
-        type: SingleErrorTypes.operationFailure,
-        description: 'Failed to update weight goal',
-      ));
-    }
-  }
-
-  Future<Result<void, ServiceError<SingleErrorTypes>>> deleteWeightGoal(
-    int id,
-  ) async {
-    _logger.info('Deleting weight goal with id $id');
-    try {
-      final bool deleted = await _weightGoalRepository.deleteOne(id);
-      if (!deleted) {
-        return err(const ServiceError(
-          type: SingleErrorTypes.notFound,
-          description: 'Weight goal not found',
-        ));
-      }
-      _logger.info('Deleted weight goal with id $id');
-      return ok(null);
-    } catch (e) {
-      _logger.severe('Failed to delete weight goal with id $id', e);
-      return err(const ServiceError(
-        type: SingleErrorTypes.operationFailure,
-        description: 'Failed to delete weight goal',
-      ));
-    }
-  }
-
-  Future<Result<WeightGoalDto, ServiceError<SingleErrorTypes>>>
-      completeWeightGoal(
-    int id,
-    DateTime completedAt,
-  ) async {
-    return await updateWeightGoal(
-      id: id,
-      status: ProgressStatus.completed,
-      completedAt: completedAt,
-    );
-  }
-
-  Future<Result<List<WeightGoalDto>, ServiceError<OperationErrorTypes>>>
-      getWeightGoalsByStatus(ProgressStatus status) async {
-    _logger.info('Getting weight goals by status $status');
-    try {
-      final List<WeightGoal> goals = await _weightGoalRepository.selectMany(
-        where: WeightGoalColumns.status.equal,
-        whereArgs: [status.value],
-        orderBy: [WeightGoalColumns.id.orderDesc],
-      );
-      _logger.info('Got ${goals.length} weight goals with status $status');
-      return ok(goals.map((g) => WeightGoalDto.fromModel(g)).toList());
-    } catch (e) {
-      _logger.severe('Failed to get weight goals by status', e);
-      return err(const ServiceError(
-        type: OperationErrorTypes.operationFailure,
-        description: 'Failed to get weight goals by status',
       ));
     }
   }

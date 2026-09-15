@@ -1,5 +1,6 @@
 import 'model.dart';
 import 'utilities.dart';
+import 'weight_goal_model.dart';
 
 const String _table = 'weight_records';
 
@@ -9,6 +10,7 @@ enum WeightRecordColumns with Columns {
   fatPercentage("fat_percentage"),
   pictureUri("picture_uri"),
   recordDate("record_date"),
+  weightGoalId("weight_goal_id"),
   createdAt("created_at"),
   updatedAt("updated_at");
 
@@ -25,6 +27,7 @@ class WeightRecord implements Model {
   final int? fatPercentage;
   final int recordDate;
   final String? pictureUri;
+  final int? weightGoalId;
   @override
   final int createdAt;
   @override
@@ -36,6 +39,7 @@ class WeightRecord implements Model {
     this.fatPercentage,
     this.pictureUri,
     required this.recordDate,
+    this.weightGoalId,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -48,11 +52,15 @@ class WeightRecord implements Model {
     ${WeightRecordColumns.fatPercentage.value} INTEGER,
     ${WeightRecordColumns.pictureUri.value} TEXT,
     ${WeightRecordColumns.recordDate.value} INTEGER NOT NULL,
+    ${WeightRecordColumns.weightGoalId.value} INTEGER,
     ${WeightRecordColumns.createdAt.value} INTEGER NOT NULL,
-    ${WeightRecordColumns.updatedAt.value} INTEGER NOT NULL
+    ${WeightRecordColumns.updatedAt.value} INTEGER NOT NULL,
+    FOREIGN KEY (${WeightRecordColumns.weightGoalId.value}) REFERENCES ${WeightGoal.table} (${WeightGoalColumns.id.value})
+      ON DELETE SET NULL
   );
 
   CREATE INDEX IF NOT EXISTS idx_weight_record_date ON $_table (${WeightRecordColumns.recordDate.value});
+  CREATE INDEX IF NOT EXISTS idx_weight_record_weight_goal_id ON $_table (${WeightRecordColumns.weightGoalId.value});
   ''';
 
   @override
@@ -63,6 +71,7 @@ class WeightRecord implements Model {
       WeightRecordColumns.fatPercentage.value: fatPercentage,
       WeightRecordColumns.pictureUri.value: pictureUri,
       WeightRecordColumns.recordDate.value: recordDate,
+      WeightRecordColumns.weightGoalId.value: weightGoalId,
       WeightRecordColumns.createdAt.value: createdAt,
       WeightRecordColumns.updatedAt.value: updatedAt,
     };
@@ -75,23 +84,26 @@ class WeightRecord implements Model {
       fatPercentage: map[WeightRecordColumns.fatPercentage.value] as int?,
       pictureUri: map[WeightRecordColumns.pictureUri.value] as String?,
       recordDate: map[WeightRecordColumns.recordDate.value] as int,
+      weightGoalId: map[WeightRecordColumns.weightGoalId.value] as int?,
       createdAt: map[WeightRecordColumns.createdAt.value] as int,
       updatedAt: map[WeightRecordColumns.updatedAt.value] as int,
     );
   }
 
-  factory WeightRecord.create(
-    int weight,
-    int recordDate,
+  factory WeightRecord.create({
+    required int weight,
+    required int recordDate,
     int? fatPercentage,
     String? pictureUri,
-  ) {
+    int? weightGoalId,
+  }) {
     final int now = DateUtilities.getNowUtcUnix();
     return WeightRecord(
       weight: weight,
       fatPercentage: fatPercentage,
       recordDate: recordDate,
       pictureUri: pictureUri,
+      weightGoalId: weightGoalId,
       createdAt: now,
       updatedAt: now,
     );
@@ -104,6 +116,7 @@ class WeightRecord implements Model {
     int? fatPercentage,
     int? recordDate,
     String? pictureUri,
+    int? weightGoalId,
     int? createdAt,
     int? updatedAt,
   }) {
@@ -113,6 +126,7 @@ class WeightRecord implements Model {
       fatPercentage: fatPercentage ?? this.fatPercentage,
       recordDate: recordDate ?? this.recordDate,
       pictureUri: pictureUri ?? this.pictureUri,
+      weightGoalId: weightGoalId ?? this.weightGoalId,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );

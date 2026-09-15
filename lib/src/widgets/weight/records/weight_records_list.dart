@@ -102,6 +102,20 @@ class _WeightRecordCard extends StatelessWidget {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
+                if (record.fatPercentage != null) ...[
+                  SizedBox(width: sizes.spacing),
+                  Icon(
+                    Icons.water_drop_outlined,
+                    size: sizes.fontSize * 1.2,
+                  ),
+                  Text(
+                    _displayBodyFatPercentage(),
+                    style: TextStyle(
+                      fontSize: sizes.fontSize,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
               ],
             ),
             Row(
@@ -184,5 +198,13 @@ class _WeightRecordCard extends StatelessWidget {
       case Units.imperial:
         return DateFormat("MM/dd/yyyy").format(record.recordDate);
     }
+  }
+
+  String _displayBodyFatPercentage() {
+    if (record.fatPercentage == null) {
+      return "";
+    }
+
+    return "${Converters.intPercentToDouble(record.fatPercentage!).toStringAsFixed(2)}%";
   }
 }

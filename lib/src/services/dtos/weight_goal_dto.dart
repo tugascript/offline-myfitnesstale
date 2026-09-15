@@ -8,6 +8,7 @@ class WeightGoalDto extends Equatable implements Dto<WeightGoal> {
   @override
   final int id;
   final int targetWeight;
+  final int? targetFatPercentage;
   final DateTime startDate;
   final DateTime? completedAt;
   final WeightGoalPhase phase;
@@ -16,6 +17,7 @@ class WeightGoalDto extends Equatable implements Dto<WeightGoal> {
   const WeightGoalDto({
     required this.id,
     required this.targetWeight,
+    this.targetFatPercentage,
     required this.startDate,
     this.completedAt,
     required this.status,
@@ -26,6 +28,7 @@ class WeightGoalDto extends Equatable implements Dto<WeightGoal> {
     return WeightGoalDto(
       id: model.id!,
       targetWeight: model.targetWeight,
+      targetFatPercentage: model.targetFatPercentage,
       startDate: DateTime.fromMillisecondsSinceEpoch(model.startDate * 1000,
           isUtc: true),
       completedAt: model.completedAt != null
@@ -55,6 +58,7 @@ class WeightGoalDto extends Equatable implements Dto<WeightGoal> {
     DateTime? startDate,
     DateTime? completedAt,
     ProgressStatus? status,
+    int? targetFatPercentage,
     WeightGoalPhase? phase,
   }) {
     return WeightGoalDto(
@@ -63,6 +67,7 @@ class WeightGoalDto extends Equatable implements Dto<WeightGoal> {
       startDate: startDate ?? this.startDate,
       completedAt: completedAt ?? this.completedAt,
       status: status ?? this.status,
+      targetFatPercentage: targetFatPercentage ?? this.targetFatPercentage,
       phase: phase ?? this.phase,
     );
   }
@@ -71,6 +76,7 @@ class WeightGoalDto extends Equatable implements Dto<WeightGoal> {
   List<Object?> get props => [
         id,
         targetWeight,
+        targetFatPercentage,
         startDate,
         completedAt,
         status,

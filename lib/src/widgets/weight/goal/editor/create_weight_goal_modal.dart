@@ -36,9 +36,14 @@ class CreateWeightGoalModal extends StatelessWidget {
                 submitLabel: "CREATE WEIGHT GOAL",
                 initialWeight: 0,
                 initialPhase: WeightGoalPhase.cut,
-                onSubmit: ({required phase, required weight}) async {
+                onSubmit: ({
+                  required phase,
+                  required weight,
+                  fatPercentage,
+                }) async {
                   await context.read<WeightRecordCubit>().createWeightGoal(
                         targetWeight: weight,
+                        targetFatPercentage: fatPercentage,
                         phase: phase,
                       );
                   if (context.mounted) {

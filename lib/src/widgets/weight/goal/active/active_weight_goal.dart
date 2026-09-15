@@ -51,11 +51,17 @@ class _ActiveWeightGoalState extends State<ActiveWeightGoal> {
             submitLabel: "Update",
             initialWeight: state.activeWeightGoal!.targetWeight,
             initialPhase: state.activeWeightGoal!.phase,
-            onSubmit: ({required weight, required phase}) {
+            initialFatPercentage: state.activeWeightGoal!.targetFatPercentage,
+            onSubmit: ({
+              required weight,
+              required phase,
+              fatPercentage,
+            }) {
               context.read<WeightRecordCubit>().updateWeightGoal(
                     id: state.activeWeightGoal!.id,
                     targetWeight: weight,
                     phase: phase,
+                    targetFatPercentage: fatPercentage,
                   );
               setState(() {
                 _isUpdating = false;

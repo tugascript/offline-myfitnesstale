@@ -16,9 +16,11 @@ class UpdateWeightGoalCard extends StatelessWidget {
   final String submitLabel;
   final int initialWeight;
   final WeightGoalPhase initialPhase;
+  final int? initialFatPercentage;
   final void Function({
     required int weight,
     required WeightGoalPhase phase,
+    int? fatPercentage,
   }) onSubmit;
   final VoidCallback onClose;
 
@@ -31,6 +33,7 @@ class UpdateWeightGoalCard extends StatelessWidget {
     required this.submitLabel,
     required this.initialWeight,
     required this.initialPhase,
+    this.initialFatPercentage,
     required this.onSubmit,
     required this.onClose,
   });
@@ -82,6 +85,7 @@ class UpdateWeightGoalCard extends StatelessWidget {
                     submitLabel: submitLabel,
                     initialWeight: initialWeight,
                     initialPhase: initialPhase,
+                    initialFatPercentage: initialFatPercentage,
                     onSubmit: onSubmit,
                     submitIcon: Icons.save,
                   );
