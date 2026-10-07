@@ -1,6 +1,6 @@
 # My Fitness Tale: Delivery Plan
 
-Last aligned with [README.md](README.md) on 15 September 2026. For the
+Last aligned with [README.md](README.md) on 7 October 2026. For the
 code-grounded implementation snapshot, see [PROJECT_STATE.md](PROJECT_STATE.md).
 
 ## Product objective
@@ -14,28 +14,27 @@ Gamification and social networking are outside the first major release.
 
 ## Delivery sequence
 
-### Phase 1: make the current mobile app beta-safe
+### Phase 1: complete and consolidate the mobile fitness features
 
 The current exercise, workout, plan, and weight flows are substantial and have
-simulator journey coverage. The next milestone is a beta that does not put
-local data at unnecessary risk.
+simulator journey coverage. The immediate goal is to complete the core mobile feature
+set—including meal and macro tracking—and consolidate domain helpers before freezing
+the SQLite schema for backup and release.
 
-#### P1 — Add local backup and restore
+#### P1 — Add meal and macro tracking
 
-The app stores irreplaceable history but has no recovery path.
+Complete the core offline fitness experience by adding nutrition, meal, and macro
+tracking alongside exercises, workouts, and weight:
 
-- Define a documented, versioned export format.
-- Export and import profile/settings, equipment, exercises, workouts, records,
-  weights, goals, plans, and plan-execution history.
-- Validate the complete import before replacing live data.
-- Make failed imports recoverable and leave the current database unchanged.
+- Design and implement the local SQLite schema for foods, meals, and macro targets.
+- Provide meal logging, daily macro progress, and target tracking.
+- Ensure onboarding and offline data operations remain local-first and atomic.
 
-Acceptance criteria:
+#### P1 — Consolidate workout-plan calculations
 
-- a round trip preserves representative data and relationships;
-- malformed and incompatible files do not modify the live database;
-- rollback, foreign-key, and format-version behavior is tested;
-- the compatibility policy is documented.
+Move duplicated date mapping and progress calculations into a tested domain
+helper shared by the dashboard and active-plan views. Split the large plan
+services only where doing so makes transactions and invariants clearer.
 
 #### P1 — Decide reminder scope
 
@@ -44,13 +43,33 @@ Either keep that honest wording for the beta or implement scheduling,
 rescheduling, cancellation, permissions, time-zone handling, and restart
 persistence with device coverage.
 
-#### P1 — Consolidate workout-plan calculations
+### Phase 2: beta-safety, backup, and release hardening
 
-Move duplicated date mapping and progress calculations into a tested domain
-helper shared by the dashboard and active-plan views. Split the large plan
-services only where doing so makes transactions and invariants clearer.
+Once the full mobile feature set and SQLite data model are implemented, establish
+data preservation and release readiness:
 
-#### P1 — Complete release configuration
+#### P2 — Add local backup and restore
+
+Deferred to P2 so the complete mobile schema (including meals and macros) is
+stabilized before defining the serialization format, avoiding migration churn on
+disposable pre-beta schemas.
+
+The app stores irreplaceable history; implement the recovery path before release:
+
+- Define a documented, versioned export format covering profile/settings, equipment,
+  exercises, workouts, records, weights, goals, plans, plan-execution history, and
+  meals/macros.
+- Validate the complete import before replacing live data.
+- Make failed imports recoverable and leave the current database unchanged.
+
+Acceptance criteria:
+
+- a round trip preserves representative data and relationships across all feature domains;
+- malformed and incompatible files do not modify the live database;
+- rollback, foreign-key, and format-version behavior is tested;
+- the compatibility policy is documented.
+
+#### P2 — Complete release configuration
 
 - replace placeholder Android/iOS identifiers and configure signing;
 - verify release builds on both platforms;
@@ -60,15 +79,12 @@ services only where doing so makes transactions and invariants clearer.
 - add crash reporting and store assets;
 - add CI for formatting, analysis, and host tests.
 
-### Phase 2: complete the mobile fitness feature set
+#### Additional Phase 2 features
 
-Start this phase after the local data lifecycle and release baseline are safe.
-
-1. Add meal and macro tracking.
-2. Design a privacy-preserving local AI trainer with explicit model, hardware,
+1. Design a privacy-preserving local AI trainer with explicit model, hardware,
    safety, and update constraints.
-3. Expand analytics only where they support actionable training decisions.
-4. Resume production subscription work only when there are premium features to
+2. Expand analytics only where they support actionable training decisions.
+3. Resume production subscription work only when there are premium features to
    sell and server-side verification is ready.
 
 ### Phase 3: extend the product ecosystem
