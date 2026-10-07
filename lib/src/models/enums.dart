@@ -497,3 +497,60 @@ enum EntitlementSource {
         orElse: () => EntitlementSource.cache,
       );
 }
+
+enum FoodCategory {
+  meatAndPoultry("meat_and_poultry"),
+  fishAndSeafood("fish_and_seafood"),
+  dairyAndEggs("dairy_and_eggs"),
+  grainsAndCereals("grains_and_cereals"),
+  fruits("fruits"),
+  vegetables("vegetables"),
+  legumes("legumes"),
+  nutsAndSeeds("nuts_and_seeds"),
+  fatsAndOils("fats_and_oils"),
+  supplements("supplements"),
+  beverages("beverages"),
+  snacksAndSweets("snacks_and_sweets"),
+  preparedMeals("prepared_meals"),
+  other("other");
+
+  final String value;
+
+  const FoodCategory(this.value);
+
+  static FoodCategory fromValue(String v) => FoodCategory.values.firstWhere(
+        (c) => c.value == v,
+        orElse: () => FoodCategory.other,
+      );
+}
+
+enum MealType {
+  breakfast("breakfast"),
+  lunch("lunch"),
+  dinner("dinner"),
+  snack("snack");
+
+  final String value;
+
+  const MealType(this.value);
+
+  static MealType fromValue(String v) => MealType.values.firstWhere(
+        (m) => m.value == v,
+        orElse: () => MealType.snack,
+      );
+}
+
+enum MealPlanPhase {
+  cut("cut"),
+  maintain("maintain"),
+  bulk("bulk");
+
+  final String value;
+
+  const MealPlanPhase(this.value);
+
+  static MealPlanPhase fromValue(String v) => MealPlanPhase.values.firstWhere(
+        (p) => p.value == v,
+        orElse: () => MealPlanPhase.maintain,
+      );
+}
