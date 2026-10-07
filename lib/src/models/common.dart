@@ -204,3 +204,129 @@ class WorkoutSetExerciseDifficulty extends Equatable implements JsonData {
   @override
   List<Object?> get props => [value, type];
 }
+
+class Micronutrients extends Equatable implements JsonData {
+  final int? sodiumMg;
+  final int? potassiumMg;
+  final int? magnesiumMg;
+  final int? calciumMg;
+  final int? ironMg;
+  final int? zincMg;
+  final int? vitaminAMcg;
+  final int? vitaminCMg;
+  final int? vitaminDIu;
+  final int? vitaminEMg;
+  final int? vitaminKMcg;
+  final int? vitaminB6Mg;
+  final int? vitaminB12Mcg;
+
+  const Micronutrients({
+    this.sodiumMg,
+    this.potassiumMg,
+    this.magnesiumMg,
+    this.calciumMg,
+    this.ironMg,
+    this.zincMg,
+    this.vitaminAMcg,
+    this.vitaminCMg,
+    this.vitaminDIu,
+    this.vitaminEMg,
+    this.vitaminKMcg,
+    this.vitaminB6Mg,
+    this.vitaminB12Mcg,
+  });
+
+  Map<String, dynamic> toMap() {
+    return {
+      if (sodiumMg != null) 'sodium_mg': sodiumMg,
+      if (potassiumMg != null) 'potassium_mg': potassiumMg,
+      if (magnesiumMg != null) 'magnesium_mg': magnesiumMg,
+      if (calciumMg != null) 'calcium_mg': calciumMg,
+      if (ironMg != null) 'iron_mg': ironMg,
+      if (zincMg != null) 'zinc_mg': zincMg,
+      if (vitaminAMcg != null) 'vitamin_a_mcg': vitaminAMcg,
+      if (vitaminCMg != null) 'vitamin_c_mg': vitaminCMg,
+      if (vitaminDIu != null) 'vitamin_d_iu': vitaminDIu,
+      if (vitaminEMg != null) 'vitamin_e_mg': vitaminEMg,
+      if (vitaminKMcg != null) 'vitamin_k_mcg': vitaminKMcg,
+      if (vitaminB6Mg != null) 'vitamin_b6_mg': vitaminB6Mg,
+      if (vitaminB12Mcg != null) 'vitamin_b12_mcg': vitaminB12Mcg,
+    };
+  }
+
+  factory Micronutrients.fromJson(String json) {
+    final Map<String, dynamic> decoded = jsonDecode(json);
+    return Micronutrients.fromMap(decoded);
+  }
+
+  factory Micronutrients.fromMap(Map<String, dynamic> map) {
+    return Micronutrients(
+      sodiumMg: map['sodium_mg'] as int?,
+      potassiumMg: map['potassium_mg'] as int?,
+      magnesiumMg: map['magnesium_mg'] as int?,
+      calciumMg: map['calcium_mg'] as int?,
+      ironMg: map['iron_mg'] as int?,
+      zincMg: map['zinc_mg'] as int?,
+      vitaminAMcg: map['vitamin_a_mcg'] as int?,
+      vitaminCMg: map['vitamin_c_mg'] as int?,
+      vitaminDIu: map['vitamin_d_iu'] as int?,
+      vitaminEMg: map['vitamin_e_mg'] as int?,
+      vitaminKMcg: map['vitamin_k_mcg'] as int?,
+      vitaminB6Mg: map['vitamin_b6_mg'] as int?,
+      vitaminB12Mcg: map['vitamin_b12_mcg'] as int?,
+    );
+  }
+
+  @override
+  Micronutrients copyWith({
+    int? sodiumMg,
+    int? potassiumMg,
+    int? magnesiumMg,
+    int? calciumMg,
+    int? ironMg,
+    int? zincMg,
+    int? vitaminAMcg,
+    int? vitaminCMg,
+    int? vitaminDIu,
+    int? vitaminEMg,
+    int? vitaminKMcg,
+    int? vitaminB6Mg,
+    int? vitaminB12Mcg,
+  }) {
+    return Micronutrients(
+      sodiumMg: sodiumMg ?? this.sodiumMg,
+      potassiumMg: potassiumMg ?? this.potassiumMg,
+      magnesiumMg: magnesiumMg ?? this.magnesiumMg,
+      calciumMg: calciumMg ?? this.calciumMg,
+      ironMg: ironMg ?? this.ironMg,
+      zincMg: zincMg ?? this.zincMg,
+      vitaminAMcg: vitaminAMcg ?? this.vitaminAMcg,
+      vitaminCMg: vitaminCMg ?? this.vitaminCMg,
+      vitaminDIu: vitaminDIu ?? this.vitaminDIu,
+      vitaminEMg: vitaminEMg ?? this.vitaminEMg,
+      vitaminKMcg: vitaminKMcg ?? this.vitaminKMcg,
+      vitaminB6Mg: vitaminB6Mg ?? this.vitaminB6Mg,
+      vitaminB12Mcg: vitaminB12Mcg ?? this.vitaminB12Mcg,
+    );
+  }
+
+  @override
+  String toJson() => jsonEncode(toMap());
+
+  @override
+  List<Object?> get props => [
+        sodiumMg,
+        potassiumMg,
+        magnesiumMg,
+        calciumMg,
+        ironMg,
+        zincMg,
+        vitaminAMcg,
+        vitaminCMg,
+        vitaminDIu,
+        vitaminEMg,
+        vitaminKMcg,
+        vitaminB6Mg,
+        vitaminB12Mcg,
+      ];
+}
