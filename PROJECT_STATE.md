@@ -268,8 +268,9 @@ validation.
 
 ## Next work
 
-The immediate priority is a versioned, validated, transactional local backup
-and restore flow. Reminder delivery and plan date/progress consolidation follow,
-then physical-device and release preparation. Meals/macros and the AI trainer
-belong to later mobile phases; watch and cloud components come after the mobile
-foundation is reliable. See [project.md](project.md) for the ordered plan.
+The immediate priority is completing the core mobile fitness features (starting with
+meal and macro tracking) and consolidating plan date/progress calculations. Local backup
+and restore is deferred to P2 so that the full SQLite data schema is finalized before
+freezing the export format. Reminder delivery, physical-device testing, and release
+configuration follow, ahead of advanced AI and ecosystem components. See [project.md](project.md)
+for the ordered plan.

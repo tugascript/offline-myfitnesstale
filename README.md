@@ -36,7 +36,7 @@ into one single mobile APP:
 4. Meals and macros;
 5. Local-first AI personal trainer.
 
-The goal is for it to be divided in 4 components:
+The goal is for it to be divided into four parts:
 
 1. the Flutter mobile app;
 2. an Apple Watch and Wear OS companion focused on workouts;
