@@ -11,7 +11,8 @@ enum MealLogColumns with Columns {
   id("id"),
   dailyLogId("daily_log_id"),
   mealType("meal_type"),
-  displayOrder("display_order"),
+  mealId("meal_id"),
+  logTime("log_time"),
   createdAt("created_at"),
   updatedAt("updated_at");
 
@@ -26,7 +27,7 @@ class MealLog extends Equatable implements Model {
   final int? id;
   final int dailyLogId;
   final MealType mealType;
-  final int displayOrder;
+  final int logTime;
   @override
   final int createdAt;
   @override
@@ -36,7 +37,7 @@ class MealLog extends Equatable implements Model {
     this.id,
     required this.dailyLogId,
     required this.mealType,
-    this.displayOrder = 0,
+    required this.logTime,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -48,7 +49,7 @@ class MealLog extends Equatable implements Model {
     ${MealLogColumns.id.value} INTEGER PRIMARY KEY AUTOINCREMENT,
     ${MealLogColumns.dailyLogId.value} INTEGER NOT NULL,
     ${MealLogColumns.mealType.value} TEXT NOT NULL,
-    ${MealLogColumns.displayOrder.value} INTEGER NOT NULL DEFAULT 0,
+    ${MealLogColumns.logTime.value} INTEGER NOT NULL,
     ${MealLogColumns.createdAt.value} INTEGER NOT NULL,
     ${MealLogColumns.updatedAt.value} INTEGER NOT NULL,
     FOREIGN KEY (${MealLogColumns.dailyLogId.value}) REFERENCES ${DailyNutritionLog.table} (${DailyNutritionLogColumns.id.value})
@@ -64,7 +65,7 @@ class MealLog extends Equatable implements Model {
       MealLogColumns.id.value: id,
       MealLogColumns.dailyLogId.value: dailyLogId,
       MealLogColumns.mealType.value: mealType.value,
-      MealLogColumns.displayOrder.value: displayOrder,
+      MealLogColumns.logTime.value: logTime,
       MealLogColumns.createdAt.value: createdAt,
       MealLogColumns.updatedAt.value: updatedAt,
     };
@@ -76,7 +77,7 @@ class MealLog extends Equatable implements Model {
       dailyLogId: map[MealLogColumns.dailyLogId.value] as int,
       mealType:
           MealType.fromValue(map[MealLogColumns.mealType.value] as String),
-      displayOrder: map[MealLogColumns.displayOrder.value] as int? ?? 0,
+      logTime: map[MealLogColumns.logTime.value] as int,
       createdAt: map[MealLogColumns.createdAt.value] as int,
       updatedAt: map[MealLogColumns.updatedAt.value] as int,
     );
@@ -85,13 +86,13 @@ class MealLog extends Equatable implements Model {
   factory MealLog.create({
     required int dailyLogId,
     required MealType mealType,
-    int displayOrder = 0,
+    required int logTime,
   }) {
     final int now = DateUtilities.getNowUtcUnix();
     return MealLog(
       dailyLogId: dailyLogId,
       mealType: mealType,
-      displayOrder: displayOrder,
+      logTime: logTime,
       createdAt: now,
       updatedAt: now,
     );
@@ -102,7 +103,7 @@ class MealLog extends Equatable implements Model {
     int? id,
     int? dailyLogId,
     MealType? mealType,
-    int? displayOrder,
+    int? logTime,
     int? createdAt,
     int? updatedAt,
   }) {
@@ -110,7 +111,7 @@ class MealLog extends Equatable implements Model {
       id: id ?? this.id,
       dailyLogId: dailyLogId ?? this.dailyLogId,
       mealType: mealType ?? this.mealType,
-      displayOrder: displayOrder ?? this.displayOrder,
+      logTime: logTime ?? this.logTime,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -121,7 +122,7 @@ class MealLog extends Equatable implements Model {
         id,
         dailyLogId,
         mealType,
-        displayOrder,
+        logTime,
         createdAt,
         updatedAt,
       ];

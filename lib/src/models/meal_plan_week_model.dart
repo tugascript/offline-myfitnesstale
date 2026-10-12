@@ -17,6 +17,7 @@ enum MealPlanWeekColumns with Columns {
   targetProtein("target_protein"),
   targetCarbs("target_carbs"),
   targetFat("target_fat"),
+  targetFiber("target_fiber"),
   totalDays("total_days"),
   totalMeals("total_meals"),
   createdBy("created_by"),
@@ -36,10 +37,11 @@ class MealPlanWeek extends Equatable implements Model {
   final int planVersion;
   final int weekNumber;
   final MealPlanPhase phase;
-  final int? targetCalories;
-  final int? targetProtein;
-  final int? targetCarbs;
-  final int? targetFat;
+  final int targetCalories;
+  final int targetProtein;
+  final int targetCarbs;
+  final int targetFat;
+  final int? targetFiber;
   final int totalDays;
   final int totalMeals;
   final CreatedBy createdBy;
@@ -54,10 +56,11 @@ class MealPlanWeek extends Equatable implements Model {
     this.planVersion = 1,
     required this.weekNumber,
     required this.phase,
-    this.targetCalories,
-    this.targetProtein,
-    this.targetCarbs,
-    this.targetFat,
+    required this.targetCalories,
+    required this.targetProtein,
+    required this.targetCarbs,
+    required this.targetFat,
+    this.targetFiber,
     this.totalDays = 7,
     this.totalMeals = 0,
     required this.createdBy,
@@ -77,10 +80,11 @@ class MealPlanWeek extends Equatable implements Model {
     ${MealPlanWeekColumns.planVersion.value} INTEGER NOT NULL DEFAULT 1,
     ${MealPlanWeekColumns.weekNumber.value} INTEGER NOT NULL CHECK (${MealPlanWeekColumns.weekNumber.value} >= 1 AND ${MealPlanWeekColumns.weekNumber.value} <= 52),
     ${MealPlanWeekColumns.phase.value} TEXT NOT NULL,
-    ${MealPlanWeekColumns.targetCalories.value} INTEGER,
-    ${MealPlanWeekColumns.targetProtein.value} INTEGER,
-    ${MealPlanWeekColumns.targetCarbs.value} INTEGER,
-    ${MealPlanWeekColumns.targetFat.value} INTEGER,
+    ${MealPlanWeekColumns.targetCalories.value} INTEGER NOT NULL,
+    ${MealPlanWeekColumns.targetProtein.value} INTEGER NOT NULL,
+    ${MealPlanWeekColumns.targetCarbs.value} INTEGER NOT NULL,
+    ${MealPlanWeekColumns.targetFat.value} INTEGER NOT NULL,
+    ${MealPlanWeekColumns.targetFiber.value} INTEGER,
     ${MealPlanWeekColumns.totalDays.value} INTEGER NOT NULL DEFAULT 7,
     ${MealPlanWeekColumns.totalMeals.value} INTEGER NOT NULL DEFAULT 0,
     ${MealPlanWeekColumns.createdBy.value} TEXT NOT NULL,
@@ -123,10 +127,11 @@ class MealPlanWeek extends Equatable implements Model {
       phase: MealPlanPhase.fromValue(
         map[MealPlanWeekColumns.phase.value] as String,
       ),
-      targetCalories: map[MealPlanWeekColumns.targetCalories.value] as int?,
-      targetProtein: map[MealPlanWeekColumns.targetProtein.value] as int?,
-      targetCarbs: map[MealPlanWeekColumns.targetCarbs.value] as int?,
-      targetFat: map[MealPlanWeekColumns.targetFat.value] as int?,
+      targetCalories: map[MealPlanWeekColumns.targetCalories.value] as int,
+      targetProtein: map[MealPlanWeekColumns.targetProtein.value] as int,
+      targetCarbs: map[MealPlanWeekColumns.targetCarbs.value] as int,
+      targetFat: map[MealPlanWeekColumns.targetFat.value] as int,
+      targetFiber: map[MealPlanWeekColumns.targetFiber.value] as int?,
       totalDays: map[MealPlanWeekColumns.totalDays.value] as int? ?? 7,
       totalMeals: map[MealPlanWeekColumns.totalMeals.value] as int? ?? 0,
       createdBy: CreatedBy.fromValue(
@@ -142,10 +147,11 @@ class MealPlanWeek extends Equatable implements Model {
     int planVersion = 1,
     required int weekNumber,
     required MealPlanPhase phase,
-    int? targetCalories,
-    int? targetProtein,
-    int? targetCarbs,
-    int? targetFat,
+    required int targetCalories,
+    required int targetProtein,
+    required int targetCarbs,
+    required int targetFat,
+    int? targetFiber,
     int totalDays = 7,
     int totalMeals = 0,
     CreatedBy createdBy = CreatedBy.user,
@@ -160,6 +166,7 @@ class MealPlanWeek extends Equatable implements Model {
       targetProtein: targetProtein,
       targetCarbs: targetCarbs,
       targetFat: targetFat,
+      targetFiber: targetFiber,
       totalDays: totalDays,
       totalMeals: totalMeals,
       createdBy: createdBy,
@@ -181,6 +188,7 @@ class MealPlanWeek extends Equatable implements Model {
     int? targetFat,
     int? totalDays,
     int? totalMeals,
+    int? targetFiber,
     CreatedBy? createdBy,
     int? createdAt,
     int? updatedAt,
@@ -197,6 +205,7 @@ class MealPlanWeek extends Equatable implements Model {
       targetFat: targetFat ?? this.targetFat,
       totalDays: totalDays ?? this.totalDays,
       totalMeals: totalMeals ?? this.totalMeals,
+      targetFiber: targetFiber ?? this.targetFiber,
       createdBy: createdBy ?? this.createdBy,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -214,6 +223,7 @@ class MealPlanWeek extends Equatable implements Model {
         targetProtein,
         targetCarbs,
         targetFat,
+        targetFiber,
         totalDays,
         totalMeals,
         createdBy,
