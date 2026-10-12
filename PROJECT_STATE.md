@@ -20,12 +20,12 @@ preferences do not schedule notifications, and purchases are unavailable.
 
 Repository facts at this review:
 
-- 310 Dart source files under `lib/`;
+- 327 Dart source files under `lib/`;
 - 41 SQLite tables in the create schema;
 - database schema version 1;
 - 89 seeded exercises and 25 seeded equipment entries;
 - 16 optional starter workouts and one 16-week starter plan;
-- 27 host test files and five integration-test files;
+- 29 host test files and five integration-test files;
 - no repository CI configuration;
 - no backend implementation in the current working tree.
 
@@ -92,6 +92,28 @@ There is no import/export, local backup, or broader weight analytics.
 Date and progress calculations are still duplicated across UI and service
 layers. Historical plan summaries do not expose child-workout detail.
 
+### Strength goals
+
+- Creates, updates, completes, and deletes strength goals per exercise.
+- Tracks in-progress active goal per exercise separately from historical goals.
+- Completing a goal sets status to completed and sets completion timestamp.
+- Stores weights in grams and calculates target progress.
+- Starting a new strength goal abandons prior in-progress goals for that exercise.
+
+### Foods, recipes, and meal plans
+
+- Foods & portions: Full CRUD for user-authored foods and portions in a single transaction; filters by name, category, and favorite; prevents mutation/deletion of machine-authored foods (`CreatedBy.system`).
+- Recipes & items: Aggregates recipe items (pointing to foods and portions); calculates serving totals for calories, protein, carbs, fat, and micronutrients inside the transaction; prevents mutation/deletion of system-authored recipes.
+- Meal plans: Multi-week meal schedule aggregates (weeks, days, meals, items) created and versioned with transactions and denormalized total updates; supports favorites and system authoring protection.
+- Meal-plan records: Tracks execution of meal plans with week and day records; enforces single active meal-plan invariant; allows starting and advancing/completing days.
+
+### Macro tracking and daily nutrition
+
+- Macro goals: Creates, updates, activates, and deletes macro targets (calories, protein, carbs, fat, water); enforces single active goal invariant with automatic deactivation of prior goals.
+- Daily nutrition logs: Get-or-create per numeric local date (`YYYYMMDD`); meal logs by `MealType` (breakfast, lunch, dinner, snack); logs immutable item snapshots of food names and macros; recalculates meal and daily totals.
+- Water intake: Updates daily water consumption with quick adjust controls.
+- UI: Day, Week, and Month tracker views; meal logging modal with portion calculator; responsive layouts supporting 320px narrow screens and 200% font scaling.
+
 ## Navigation
 
 `GoRouter` is configured in `lib/src/utilities/app_router.dart`. An
@@ -99,15 +121,22 @@ layers. Historical plan summaries do not expose child-workout detail.
 
 1. Home;
 2. Plans;
-3. Activity;
+3. Meals;
 4. Profile.
 
-Activity links to workout history, aggregate exercise progress, weight history,
-and workout-plan history. Other notable routes include:
+Activity links are now housed in a dedicated `ProgressSection` on the Home screen
+(Workout History, Exercise Progress, Weight History, Plan History).
+Other notable routes include:
 
 - `/exercises/progress`;
 - `/exercises/:id/records`;
+- `/exercises/:id/strength-goals`;
 - `/workout-plans/:id/history`;
+- `/foods`;
+- `/recipes`;
+- `/meal-plans`;
+- `/macros/tracker`;
+- `/macros/goals`;
 - `/settings/reminders`.
 
 The static progress route is registered before the dynamic exercise-ID route.
@@ -215,34 +244,26 @@ rollback/idempotency, route precedence, entitlement guards, workout mutation
 rollback, plan lifecycle and pagination, reminder disclosure, and database
 isolation.
 
-The latest recorded full run is historical evidence from 19–21 August 2026:
+The latest full verification run on 12 October 2026:
 
 ```text
 dart format --output=none --set-exit-if-changed lib test integration_test
-  339 files formatted with no pending changes
+  410 files formatted with no pending changes
 
 dart analyze
   No issues found
 
 flutter test
-  97 tests passed
-
-Android 15 / API 35 emulator
-  7/7 device journeys passed in 3m56s
-
-iPhone 16 Pro / iOS 18.5 simulator
-  7/7 device journeys passed in 3m41s
+  111 tests passed
 
 git diff --check
   No whitespace errors
 ```
 
-These results have not been refreshed for the current working tree.
-
 ## Known gaps and release blockers
 
 - No fitness-data import/export, backup/restore, cloud sync, or account system.
-- Meal and macro tables are in the create schema, including meal-plan week and day records. A day record tracks a meal-plan day and references that calendar date's daily nutrition log. Logging and plan-execution flows are not implemented. No local AI trainer.
+- Meal, macro, food, recipe, and meal-plan tracking and execution flows are fully implemented offline. No local AI trainer.
 - No Apple Watch or Wear OS app.
 - Reminder preferences do not deliver notifications.
 - Purchases and production subscription verification are unavailable.

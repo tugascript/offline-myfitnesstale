@@ -4,7 +4,11 @@ import 'package:go_router/go_router.dart';
 import '../../utilities/sizes/data_display_sizes.dart';
 import '../../views/equipments/equipments_view.dart';
 import '../../views/exercises/exercises_view.dart';
+import '../../views/exercises/strength_goals_view.dart';
+import '../../views/foods/foods_view.dart';
+import '../../views/macro_goals/macro_goals_view.dart';
 import '../../views/profile/reminder_preferences_view.dart';
+import '../../views/recipes/recipes_view.dart';
 import '../../views/weight/weight_goals_view.dart';
 import '../../views/weight/weight_records_view.dart';
 import '../../views/workouts/workouts_view.dart';
@@ -127,6 +131,66 @@ class QuickActionsWidget extends StatelessWidget {
               subtitle: "Manage reminder preferences",
               onTap: () {
                 context.push(ReminderPreferencesView.routeName);
+              },
+            ),
+            _ActionCard(
+              key: const ValueKey('quick-action-strength-goals'),
+              sizes: sizes,
+              isDarkTheme: isDarkTheme,
+              icon: Icon(
+                Icons.fitness_center,
+                size: sizes.titleFontSize,
+                color: Colors.redAccent,
+              ),
+              title: "Strength Goals",
+              subtitle: "Set strength goals",
+              onTap: () {
+                context.push(StrengthGoalsView.routeName);
+              },
+            ),
+            _ActionCard(
+              key: const ValueKey('quick-action-food'),
+              sizes: sizes,
+              isDarkTheme: isDarkTheme,
+              icon: Icon(
+                Icons.apple,
+                size: sizes.titleFontSize,
+                color: Colors.green,
+              ),
+              title: "Food",
+              subtitle: "Browse foods & portions",
+              onTap: () {
+                context.push(FoodsView.routeName);
+              },
+            ),
+            _ActionCard(
+              key: const ValueKey('quick-action-recipe'),
+              sizes: sizes,
+              isDarkTheme: isDarkTheme,
+              icon: Icon(
+                Icons.menu_book,
+                size: sizes.titleFontSize,
+                color: Colors.purple,
+              ),
+              title: "Recipe",
+              subtitle: "Cook healthy meals",
+              onTap: () {
+                context.push(RecipesView.routeName);
+              },
+            ),
+            _ActionCard(
+              key: const ValueKey('quick-action-macro-goals'),
+              sizes: sizes,
+              isDarkTheme: isDarkTheme,
+              icon: Icon(
+                Icons.pie_chart,
+                size: sizes.titleFontSize,
+                color: Colors.teal,
+              ),
+              title: "Macro Goals",
+              subtitle: "Daily calorie & macro targets",
+              onTap: () {
+                context.push(MacroGoalsView.routeName);
               },
             ),
           ],

@@ -2,6 +2,7 @@ import 'package:equatable/equatable.dart';
 
 import '../../common/nullable.dart';
 import '../../services/dtos/exercise_record_dto.dart';
+import '../../services/dtos/strength_goal_dto.dart';
 import 'common_state.dart';
 
 final class ExerciseRecordPagination extends Equatable {
@@ -52,6 +53,10 @@ final class ExerciseRecordState extends Equatable {
   final ExerciseRecordDto? selectedExerciseRecord;
   final ExerciseRecordDto? latestExerciseRecord;
   final ExerciseRecordPagination recordPagination;
+  final StrengthGoalDto? activeStrengthGoal;
+  final List<StrengthGoalDto> strengthGoals;
+  final int strengthGoalsTotal;
+  final StrengthGoalDto? selectedStrengthGoal;
   final bool isLoading;
   final ErrorState? error;
 
@@ -60,6 +65,10 @@ final class ExerciseRecordState extends Equatable {
     this.selectedExerciseRecord,
     this.latestExerciseRecord,
     required this.recordPagination,
+    this.activeStrengthGoal,
+    this.strengthGoals = const [],
+    this.strengthGoalsTotal = 0,
+    this.selectedStrengthGoal,
     required this.isLoading,
     this.error,
   });
@@ -68,6 +77,8 @@ final class ExerciseRecordState extends Equatable {
     return ExerciseRecordState(
       exerciseRecords: [],
       recordPagination: ExerciseRecordPagination.initial(),
+      strengthGoals: const [],
+      strengthGoalsTotal: 0,
       isLoading: false,
     );
   }
@@ -77,6 +88,10 @@ final class ExerciseRecordState extends Equatable {
     Nullable<ExerciseRecordDto>? selectedExerciseRecord,
     Nullable<ExerciseRecordDto>? latestExerciseRecord,
     ExerciseRecordPagination? recordPagination,
+    Nullable<StrengthGoalDto>? activeStrengthGoal,
+    List<StrengthGoalDto>? strengthGoals,
+    int? strengthGoalsTotal,
+    Nullable<StrengthGoalDto>? selectedStrengthGoal,
     bool? isLoading,
     Nullable<ErrorState>? error,
   }) {
@@ -89,6 +104,14 @@ final class ExerciseRecordState extends Equatable {
           ? latestExerciseRecord.value
           : this.latestExerciseRecord,
       recordPagination: recordPagination ?? this.recordPagination,
+      activeStrengthGoal: activeStrengthGoal != null
+          ? activeStrengthGoal.value
+          : this.activeStrengthGoal,
+      strengthGoals: strengthGoals ?? this.strengthGoals,
+      strengthGoalsTotal: strengthGoalsTotal ?? this.strengthGoalsTotal,
+      selectedStrengthGoal: selectedStrengthGoal != null
+          ? selectedStrengthGoal.value
+          : this.selectedStrengthGoal,
       isLoading: isLoading ?? this.isLoading,
       error: error != null ? error.value : this.error,
     );
@@ -100,6 +123,10 @@ final class ExerciseRecordState extends Equatable {
         selectedExerciseRecord,
         latestExerciseRecord,
         recordPagination,
+        activeStrengthGoal,
+        strengthGoals,
+        strengthGoalsTotal,
+        selectedStrengthGoal,
         isLoading,
         error,
       ];

@@ -6,7 +6,12 @@ import 'src/cubits/active_workout_cubit.dart';
 import 'src/cubits/entitlement_cubit.dart';
 import 'src/cubits/exercise_cubit.dart';
 import 'src/cubits/exercise_record_cubit.dart';
+import 'src/cubits/food_cubit.dart';
+import 'src/cubits/macro_tracking_cubit.dart';
+import 'src/cubits/meal_plan_cubit.dart';
+import 'src/cubits/meal_plan_record_cubit.dart';
 import 'src/cubits/profile_cubit.dart';
+import 'src/cubits/recipe_cubit.dart';
 import 'src/cubits/states/profile_state.dart';
 import 'src/cubits/weight_record_cubit.dart';
 import 'src/cubits/workout_cubit.dart';
@@ -60,6 +65,21 @@ class MyApp extends StatelessWidget {
         ),
         BlocProvider<ActiveWorkoutCubit>(
           create: (BuildContext context) => ActiveWorkoutCubit(),
+        ),
+        BlocProvider<FoodCubit>(
+          create: (BuildContext context) => FoodCubit(),
+        ),
+        BlocProvider<RecipeCubit>(
+          create: (BuildContext context) => RecipeCubit(),
+        ),
+        BlocProvider<MacroTrackingCubit>(
+          create: (BuildContext context) => MacroTrackingCubit(),
+        ),
+        BlocProvider<MealPlanCubit>(
+          create: (BuildContext context) => MealPlanCubit(),
+        ),
+        BlocProvider<MealPlanRecordCubit>(
+          create: (BuildContext context) => MealPlanRecordCubit(),
         ),
       ],
       child: BlocBuilder<ProfileCubit, ProfileState>(

@@ -3,6 +3,7 @@ import 'package:logging/logging.dart';
 
 import '../common/nullable.dart';
 import '../models/common.dart';
+import '../models/enums.dart';
 import '../models/repository.dart';
 import '../services/common/errors.dart';
 import '../services/exercise_record_service.dart';
@@ -315,5 +316,182 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
       ),
       isLoading: false,
     ));
+  }
+
+  Future<void> getActiveStrengthGoal({int? exerciseId}) async {
+    _logger.info("Getting active strength goal");
+    emit(state.copyWith(isLoading: true));
+    final result = await _exerciseRecordService.getActiveStrengthGoal(
+      exerciseId: exerciseId,
+    );
+    if (result.isErr()) {
+      _logger.info("No active strength goal or failed to get it");
+      emit(state.copyWith(
+        activeStrengthGoal: const Nullable(null),
+        isLoading: false,
+      ));
+      return;
+    }
+    emit(state.copyWith(
+      activeStrengthGoal: Nullable(result.value),
+      isLoading: false,
+      error: const Nullable(null),
+    ));
+  }
+
+  Future<void> getStrengthGoals({
+    int? exerciseId,
+    bool skipInProgress = false,
+    int limit = 20,
+    int offset = 0,
+  }) async {
+    _logger.info("Getting strength goals");
+    emit(state.copyWith(isLoading: true));
+    final result = await _exerciseRecordService.getStrengthGoals(
+      exerciseId: exerciseId,
+      skipInProgress: skipInProgress,
+      limit: limit,
+      offset: offset,
+    );
+    if (result.isErr()) {
+      final error = result.error;
+      _logger.warning("Failed to get strength goals", error);
+      emit(state.copyWith(
+        error: Nullable(ErrorState(
+          type: error.type.name,
+          description: error.description,
+        )),
+        isLoading: false,
+      ));
+      return;
+    }
+    emit(state.copyWith(
+      strengthGoals: result.value.data,
+      strengthGoalsTotal: result.value.total,
+      isLoading: false,
+      error: const Nullable(null),
+    ));
+  }
+
+  Future<bool> createStrengthGoal({
+    required int exerciseId,
+    required String name,
+    required int targetReps,
+    required int targetWeight,
+    required int targetMaxStrength,
+    required DateTime startDate,
+    ProgressStatus status = ProgressStatus.inProgress,
+  }) async {
+    _logger.info("Creating strength goal");
+    emit(state.copyWith(isLoading: true));
+    final result = await _exerciseRecordService.createStrengthGoal(
+      exerciseId: exerciseId,
+      name: name,
+      targetReps: targetReps,
+      targetWeight: targetWeight,
+      targetMaxStrength: targetMaxStrength,
+      startDate: startDate,
+      status: status,
+    );
+    if (result.isErr()) {
+      final error = result.error;
+      _logger.warning("Failed to create strength goal", error);
+      emit(state.copyWith(
+        error: Nullable(ErrorState(
+          type: error.type.name,
+          description: error.description,
+        )),
+        isLoading: false,
+      ));
+      return false;
+    }
+
+    await getActiveStrengthGoal();
+    await getStrengthGoals();
+    return true;
+  }
+
+  Future<bool> updateStrengthGoal({
+    required int id,
+    String? name,
+    int? targetReps,
+    int? targetWeight,
+    int? targetMaxStrength,
+    DateTime? startDate,
+    ProgressStatus? status,
+    DateTime? completedAt,
+  }) async {
+    _logger.info("Updating strength goal");
+    emit(state.copyWith(isLoading: true));
+    final result = await _exerciseRecordService.updateStrengthGoal(
+      id: id,
+      name: name,
+      targetReps: targetReps,
+      targetWeight: targetWeight,
+      targetMaxStrength: targetMaxStrength,
+      startDate: startDate,
+      status: status,
+      completedAt: completedAt,
+    );
+    if (result.isErr()) {
+      final error = result.error;
+      _logger.warning("Failed to update strength goal", error);
+      emit(state.copyWith(
+        error: Nullable(ErrorState(
+          type: error.type.name,
+          description: error.description,
+        )),
+        isLoading: false,
+      ));
+      return false;
+    }
+
+    await getActiveStrengthGoal();
+    await getStrengthGoals();
+    return true;
+  }
+
+  Future<bool> completeStrengthGoal(int id) async {
+    _logger.info("Completing strength goal");
+    emit(state.copyWith(isLoading: true));
+    final result = await _exerciseRecordService.completeStrengthGoal(id);
+    if (result.isErr()) {
+      final error = result.error;
+      _logger.warning("Failed to complete strength goal", error);
+      emit(state.copyWith(
+        error: Nullable(ErrorState(
+          type: error.type.name,
+          description: error.description,
+        )),
+        isLoading: false,
+      ));
+      return false;
+    }
+
+    await getActiveStrengthGoal();
+    await getStrengthGoals();
+    return true;
+  }
+
+  Future<bool> deleteStrengthGoal(int id) async {
+    _logger.info("Deleting strength goal");
+    emit(state.copyWith(isLoading: true));
+    final result = await _exerciseRecordService.deleteStrengthGoal(id);
+    if (result.isErr()) {
+      final error = result.error;
+      _logger.warning("Failed to delete strength goal", error);
+      emit(state.copyWith(
+        error: Nullable(ErrorState(
+          type: error.type.name,
+          description: error.description,
+        )),
+        isLoading: false,
+      ));
+      return false;
+    }
+
+    await getActiveStrengthGoal();
+    await getStrengthGoals();
+    return true;
   }
 }

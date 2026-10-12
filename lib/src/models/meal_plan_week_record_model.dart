@@ -149,10 +149,10 @@ class MealPlanWeekRecord extends Equatable implements Model {
     ProgressStatus status = ProgressStatus.inProgress,
     int currentDay = 1,
     int? completedAt,
-    required int totalCalories,
-    required int totalProtein,
-    required int totalCarbs,
-    required int totalFat,
+    int totalCalories = 0,
+    int totalProtein = 0,
+    int totalCarbs = 0,
+    int totalFat = 0,
     int? totalFiber,
   }) {
     final int now = DateUtilities.getNowUtcUnix();

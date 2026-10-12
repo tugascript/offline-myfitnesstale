@@ -11,10 +11,25 @@ import '../views/exercises/exercise_detail_view.dart';
 import '../views/exercises/exercise_records_view.dart';
 import '../views/exercises/exercise_update_view.dart';
 import '../views/exercises/exercises_view.dart';
+import '../views/exercises/strength_goals_view.dart';
+import '../views/foods/food_creation_view.dart';
+import '../views/foods/food_details_view.dart';
+import '../views/foods/food_update_view.dart';
+import '../views/foods/foods_view.dart';
 import '../views/home/main_navigation_view.dart';
+import '../views/macro_goals/macro_goals_view.dart';
+import '../views/macros/macro_tracker_view.dart';
+import '../views/meal_plans/meal_plan_creation_view.dart';
+import '../views/meal_plans/meal_plan_details_view.dart';
+import '../views/meal_plans/meal_plan_list_view.dart';
+import '../views/meal_plans/meal_plan_update_view.dart';
 import '../views/not_found_view.dart';
 import '../views/onboarding_view.dart';
 import '../views/profile/reminder_preferences_view.dart';
+import '../views/recipes/recipe_creation_view.dart';
+import '../views/recipes/recipe_details_view.dart';
+import '../views/recipes/recipe_update_view.dart';
+import '../views/recipes/recipes_view.dart';
 import '../views/weight/weight_goals_view.dart';
 import '../views/weight/weight_records_view.dart';
 import '../views/workout_plans/active_workout_plan_view.dart';
@@ -311,6 +326,107 @@ sealed class AppRouter {
     GoRoute(
       path: ReminderPreferencesView.routeName,
       builder: (context, state) => const ReminderPreferencesView(),
+    ),
+    // Strength Goals
+    GoRoute(
+      path: StrengthGoalsView.routeName,
+      builder: (context, state) => const StrengthGoalsView(),
+    ),
+    // Foods (static before dynamic)
+    GoRoute(
+      path: FoodsView.routeName,
+      builder: (context, state) => const FoodsView(),
+    ),
+    GoRoute(
+      path: FoodCreationView.routeName,
+      builder: (context, state) => const FoodCreationView(),
+    ),
+    GoRoute(
+      path: FoodUpdateView.routeName,
+      builder: (context, state) {
+        final id = int.tryParse(state.pathParameters['id'] ?? '');
+        if (id == null) {
+          return const NotFoundView();
+        }
+        return FoodUpdateView(foodId: id);
+      },
+    ),
+    GoRoute(
+      path: FoodDetailsView.routeName,
+      builder: (context, state) {
+        final id = int.tryParse(state.pathParameters['id'] ?? '');
+        if (id == null) {
+          return const NotFoundView();
+        }
+        return FoodDetailsView(foodId: id);
+      },
+    ),
+    // Recipes (static before dynamic)
+    GoRoute(
+      path: RecipesView.routeName,
+      builder: (context, state) => const RecipesView(),
+    ),
+    GoRoute(
+      path: RecipeCreationView.routeName,
+      builder: (context, state) => const RecipeCreationView(),
+    ),
+    GoRoute(
+      path: RecipeUpdateView.routeName,
+      builder: (context, state) {
+        final id = int.tryParse(state.pathParameters['id'] ?? '');
+        if (id == null) {
+          return const NotFoundView();
+        }
+        return RecipeUpdateView(recipeId: id);
+      },
+    ),
+    GoRoute(
+      path: RecipeDetailsView.routeName,
+      builder: (context, state) {
+        final id = int.tryParse(state.pathParameters['id'] ?? '');
+        if (id == null) {
+          return const NotFoundView();
+        }
+        return RecipeDetailsView(recipeId: id);
+      },
+    ),
+    // Macro Goals & Tracker
+    GoRoute(
+      path: MacroGoalsView.routeName,
+      builder: (context, state) => const MacroGoalsView(),
+    ),
+    GoRoute(
+      path: MacroTrackerView.routeName,
+      builder: (context, state) => const MacroTrackerView(),
+    ),
+    // Meal Plans (static before dynamic)
+    GoRoute(
+      path: MealPlanListView.routeName,
+      builder: (context, state) => const MealPlanListView(),
+    ),
+    GoRoute(
+      path: MealPlanCreationView.routeName,
+      builder: (context, state) => const MealPlanCreationView(),
+    ),
+    GoRoute(
+      path: MealPlanUpdateView.routeName,
+      builder: (context, state) {
+        final id = int.tryParse(state.pathParameters['id'] ?? '');
+        if (id == null) {
+          return const NotFoundView();
+        }
+        return MealPlanUpdateView(mealPlanId: id);
+      },
+    ),
+    GoRoute(
+      path: MealPlanDetailsView.routeName,
+      builder: (context, state) {
+        final id = int.tryParse(state.pathParameters['id'] ?? '');
+        if (id == null) {
+          return const NotFoundView();
+        }
+        return MealPlanDetailsView(mealPlanId: id);
+      },
     ),
   ];
 

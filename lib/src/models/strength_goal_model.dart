@@ -103,8 +103,9 @@ class StrengthGoal extends Equatable implements Model {
       targetMaxStrength:
           map[StrengthGoalColumns.targetMaxStrength.value] as int,
       exerciseId: map[StrengthGoalColumns.exerciseId.value] as int,
-      status: ProgressStatus.values
-          .byName(map[StrengthGoalColumns.status.value] as String),
+      status: ProgressStatus.fromValue(
+        map[StrengthGoalColumns.status.value] as String,
+      ),
       startDate: map[StrengthGoalColumns.startDate.value] as int,
       completedAt: map[StrengthGoalColumns.completedAt.value] as int?,
       createdAt: map[StrengthGoalColumns.createdAt.value] as int,
