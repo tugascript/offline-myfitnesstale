@@ -7,8 +7,8 @@ import '../../cubits/states/profile_state.dart';
 import '../create_profile_button_view.dart';
 import '../loading_view.dart';
 import '../onboarding_view.dart';
+import '../meal_plans/meal_plan_list_view.dart';
 import '../workout_plans/workout_plan_list_view.dart';
-import 'activity_view.dart';
 import 'home_view.dart';
 import 'profile_view.dart';
 
@@ -18,7 +18,7 @@ sealed class _PageBuilder {
   static final List<Widget Function()> _pages = [
     () => const HomeView(),
     () => const WorkoutPlanListView(),
-    () => const ActivityView(),
+    () => const MealPlanListView(),
     () => const ProfileView(),
   ];
 
@@ -109,8 +109,8 @@ class _MainNavigationViewState extends State<MainNavigationView> {
             label: 'Plans',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.adjust),
-            label: 'Activity',
+            icon: Icon(Icons.restaurant_menu),
+            label: 'Meals',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person),

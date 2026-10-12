@@ -108,7 +108,11 @@ class Recipe extends Equatable implements Model {
       servingProtein: map[RecipeColumns.servingProtein.value] as int,
       servingCarbs: map[RecipeColumns.servingCarbs.value] as int,
       servingFat: map[RecipeColumns.servingFat.value] as int,
-      servingMicros: map[RecipeColumns.servingMicros.value] as Micronutrients?,
+      servingMicros: map[RecipeColumns.servingMicros.value] != null
+          ? Micronutrients.fromJson(
+              map[RecipeColumns.servingMicros.value] as String,
+            )
+          : null,
       createdBy:
           CreatedBy.fromValue(map[RecipeColumns.createdBy.value] as String),
       createdAt: map[RecipeColumns.createdAt.value] as int,
