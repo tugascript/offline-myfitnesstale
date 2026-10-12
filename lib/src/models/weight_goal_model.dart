@@ -1,3 +1,5 @@
+import 'package:equatable/equatable.dart';
+
 import 'enums.dart';
 import 'model.dart';
 import 'utilities.dart';
@@ -21,7 +23,7 @@ enum WeightGoalColumns with Columns {
   const WeightGoalColumns(this.value);
 }
 
-class WeightGoal implements Model {
+class WeightGoal extends Equatable implements Model {
   @override
   final int? id;
   final int targetWeight;
@@ -145,4 +147,17 @@ class WeightGoal implements Model {
       updatedAt: updatedAt ?? this.updatedAt,
     );
   }
+
+  @override
+  List<Object?> get props => [
+        id,
+        targetWeight,
+        targetFatPercentage,
+        startDate,
+        completedAt,
+        status,
+        phase,
+        createdAt,
+        updatedAt
+      ];
 }
