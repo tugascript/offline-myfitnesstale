@@ -94,6 +94,7 @@ class MealPlanDay extends Equatable implements Model {
       ON DELETE CASCADE
   );
 
+  CREATE INDEX IF NOT EXISTS idx_meal_plan_days_plan_id ON $_table (${MealPlanDayColumns.mealPlanId.value});
   CREATE INDEX IF NOT EXISTS idx_meal_plan_days_week_id ON $_table (${MealPlanDayColumns.mealPlanWeekId.value});
   CREATE UNIQUE INDEX IF NOT EXISTS unique_idx_meal_plan_days ON $_table (${MealPlanDayColumns.mealPlanWeekId.value}, ${MealPlanDayColumns.planVersion.value}, ${MealPlanDayColumns.day.value});
   ''';

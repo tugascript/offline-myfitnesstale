@@ -46,7 +46,7 @@ class DailyNutritionLog extends Equatable implements Model {
   static final String tableCreate = '''
   CREATE TABLE IF NOT EXISTS $_table (
     ${DailyNutritionLogColumns.id.value} INTEGER PRIMARY KEY AUTOINCREMENT,
-    ${DailyNutritionLogColumns.date.value} INTEGER NOT NULL UNIQUE,
+    ${DailyNutritionLogColumns.date.value} INTEGER NOT NULL,
     ${DailyNutritionLogColumns.waterIntakeMl.value} INTEGER NOT NULL DEFAULT 0,
     ${DailyNutritionLogColumns.notes.value} TEXT,
     ${DailyNutritionLogColumns.createdAt.value} INTEGER NOT NULL,
