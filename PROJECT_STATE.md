@@ -112,7 +112,7 @@ layers. Historical plan summaries do not expose child-workout detail.
 - Macro goals: Creates, updates, activates, and deletes macro targets (calories, protein, carbs, fat, water); enforces single active goal invariant with automatic deactivation of prior goals.
 - Daily nutrition logs: Get-or-create per numeric local date (`YYYYMMDD`); meal logs by `MealType` (breakfast, lunch, dinner, snack); logs immutable item snapshots of food names and macros; recalculates meal and daily totals.
 - Water intake: Updates daily water consumption with quick adjust controls.
-- UI: Day, Week, and Month tracker views; meal logging modal with portion calculator; responsive layouts supporting 320px narrow screens and 200% font scaling.
+- UI: Day, Week, and Month tracker views; meal logging modal with portion calculator; the active plan's meals appear on their scheduled dates and can be logged into the diary; responsive layouts supporting 320px narrow screens and 200% font scaling.
 
 ## Navigation
 
