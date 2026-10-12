@@ -21,7 +21,7 @@ preferences do not schedule notifications, and purchases are unavailable.
 Repository facts at this review:
 
 - 310 Dart source files under `lib/`;
-- 25 SQLite tables in the create schema;
+- 41 SQLite tables in the create schema;
 - database schema version 1;
 - 89 seeded exercises and 25 seeded equipment entries;
 - 16 optional starter workouts and one 16-week starter plan;
@@ -242,7 +242,7 @@ These results have not been refreshed for the current working tree.
 ## Known gaps and release blockers
 
 - No fitness-data import/export, backup/restore, cloud sync, or account system.
-- No meal/macro tracking or local AI trainer.
+- Meal and macro tables are in the create schema, including meal-plan week and day records. A day record tracks a meal-plan day and references that calendar date's daily nutrition log. Logging and plan-execution flows are not implemented. No local AI trainer.
 - No Apple Watch or Wear OS app.
 - Reminder preferences do not deliver notifications.
 - Purchases and production subscription verification are unavailable.

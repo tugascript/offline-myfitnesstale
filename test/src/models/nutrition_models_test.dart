@@ -11,11 +11,13 @@ import 'package:myfitnesstale/src/models/macro_goal_model.dart';
 import 'package:myfitnesstale/src/models/meal_log_item_model.dart';
 import 'package:myfitnesstale/src/models/meal_log_model.dart';
 import 'package:myfitnesstale/src/models/meal_plan_day_model.dart';
+import 'package:myfitnesstale/src/models/meal_plan_day_record_model.dart';
 import 'package:myfitnesstale/src/models/meal_plan_meal_item_model.dart';
 import 'package:myfitnesstale/src/models/meal_plan_meal_model.dart';
 import 'package:myfitnesstale/src/models/meal_plan_model.dart';
 import 'package:myfitnesstale/src/models/meal_plan_record_model.dart';
 import 'package:myfitnesstale/src/models/meal_plan_week_model.dart';
+import 'package:myfitnesstale/src/models/meal_plan_week_record_model.dart';
 import 'package:myfitnesstale/src/models/profile_model.dart';
 import 'package:myfitnesstale/src/models/recipe_item_model.dart';
 import 'package:myfitnesstale/src/models/recipe_model.dart';
@@ -74,6 +76,7 @@ void main() {
       targetProtein: 200,
       targetCarbs: 200,
       targetFat: 60,
+      phase: WeightGoalPhase.cut,
     );
     final macroGoalId = await db.insert(MacroGoal.table, macroGoal.toMap());
     expect(macroGoalId, isPositive);
@@ -134,7 +137,11 @@ void main() {
     final mealLog = MealLog.create(
       dailyLogId: dailyLogId,
       mealType: MealType.lunch,
-      displayOrder: 1,
+      logTime: DateUtilities.getNowUtcUnix(),
+      totalCalories: 248,
+      totalProtein: 47,
+      totalCarbs: 0,
+      totalFat: 6,
     );
     final mealLogId = await db.insert(MealLog.table, mealLog.toMap());
     expect(mealLogId, isPositive);
@@ -190,6 +197,10 @@ void main() {
     final recipe = Recipe.create(
       name: 'Chicken Rice Bowl',
       servingsYield: 2,
+      servingCalories: 400,
+      servingProtein: 40,
+      servingCarbs: 30,
+      servingFat: 10,
     );
     final recipeId = await db.insert(Recipe.table, recipe.toMap());
     final recipeItem = RecipeItem.create(
@@ -197,6 +208,10 @@ void main() {
       foodId: foodId,
       portionId: portionId,
       amount: 1,
+      totalCalories: 248,
+      totalProtein: 47,
+      totalCarbs: 0,
+      totalFat: 6,
     );
     final recipeItemId = await db.insert(RecipeItem.table, recipeItem.toMap());
     expect(recipeItemId, isPositive);
@@ -285,6 +300,10 @@ void main() {
       mealPlanWeekId: week1Id,
       day: 1,
       name: 'High Protein Monday',
+      targetCalories: 2100,
+      targetProtein: 210,
+      targetCarbs: 180,
+      targetFat: 55,
     );
     final day1Id = await db.insert(MealPlanDay.table, day1.toMap());
     expect(day1Id, isPositive);
@@ -298,6 +317,10 @@ void main() {
       timeOfDay: '08:00',
       mealType: MealType.breakfast,
       name: 'Power Breakfast',
+      totalCalories: 300,
+      totalProtein: 12,
+      totalCarbs: 50,
+      totalFat: 6,
     );
     final meal1Id = await db.insert(MealPlanMeal.table, meal1.toMap());
     expect(meal1Id, isPositive);
@@ -317,6 +340,10 @@ void main() {
       mealPlanMealId: meal1Id,
       foodId: foodId,
       amount: 80,
+      totalCalories: 311,
+      totalProtein: 14,
+      totalCarbs: 53,
+      totalFat: 6,
     );
     final mealItemId =
         await db.insert(MealPlanMealItem.table, mealItem.toMap());
@@ -331,6 +358,44 @@ void main() {
     );
     final recordId = await db.insert(MealPlanRecord.table, record.toMap());
     expect(recordId, isPositive);
+
+    final dailyLog = DailyNutritionLog.create(date: 20261012);
+    final dailyLogId =
+        await db.insert(DailyNutritionLog.table, dailyLog.toMap());
+    expect(dailyLogId, isPositive);
+
+    final weekRecord = MealPlanWeekRecord.create(
+      mealPlanRecordId: recordId,
+      mealPlanWeekId: week1Id,
+      week: 1,
+    );
+    final weekRecordId =
+        await db.insert(MealPlanWeekRecord.table, weekRecord.toMap());
+    expect(weekRecordId, isPositive);
+
+    final dayRecord = MealPlanDayRecord.create(
+      mealPlanRecordId: recordId,
+      mealPlanWeekRecordId: weekRecordId,
+      mealPlanDayId: day1Id,
+      dailyLogId: dailyLogId,
+      week: 1,
+      day: 1,
+    );
+    final dayRecordId =
+        await db.insert(MealPlanDayRecord.table, dayRecord.toMap());
+    expect(dayRecordId, isPositive);
+
+    final dayRecordRows = await db.query(
+      MealPlanDayRecord.table,
+      where: '${MealPlanDayRecordColumns.id.value} = ?',
+      whereArgs: [dayRecordId],
+    );
+    final fetchedDayRecord = MealPlanDayRecord.fromMap(dayRecordRows.first);
+    expect(fetchedDayRecord.mealPlanDayId, day1Id);
+    expect(fetchedDayRecord.dailyLogId, dailyLogId);
+    expect(fetchedDayRecord.week, 1);
+    expect(fetchedDayRecord.day, 1);
+    expect(fetchedDayRecord.status, ProgressStatus.inProgress);
 
     // 7. Verify PRAGMA foreign_key_check passes
     final fkCheck = await db.rawQuery('PRAGMA foreign_key_check');
@@ -400,6 +465,30 @@ void main() {
         whereArgs: [planId],
       ),
       isEmpty,
+    );
+    expect(
+      await db.query(
+        MealPlanWeekRecord.table,
+        where: '${MealPlanWeekRecordColumns.mealPlanRecordId.value} = ?',
+        whereArgs: [recordId],
+      ),
+      isEmpty,
+    );
+    expect(
+      await db.query(
+        MealPlanDayRecord.table,
+        where: '${MealPlanDayRecordColumns.id.value} = ?',
+        whereArgs: [dayRecordId],
+      ),
+      isEmpty,
+    );
+    expect(
+      await db.query(
+        DailyNutritionLog.table,
+        where: '${DailyNutritionLogColumns.id.value} = ?',
+        whereArgs: [dailyLogId],
+      ),
+      isNotEmpty,
     );
   });
 }

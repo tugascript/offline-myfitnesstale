@@ -15,11 +15,13 @@ import 'macro_goal_model.dart';
 import 'meal_log_item_model.dart';
 import 'meal_log_model.dart';
 import 'meal_plan_day_model.dart';
+import 'meal_plan_day_record_model.dart';
 import 'meal_plan_meal_item_model.dart';
 import 'meal_plan_meal_model.dart';
 import 'meal_plan_model.dart';
 import 'meal_plan_record_model.dart';
 import 'meal_plan_week_model.dart';
+import 'meal_plan_week_record_model.dart';
 import 'profile_model.dart';
 import 'recipe_item_model.dart';
 import 'recipe_model.dart';
@@ -179,6 +181,8 @@ class DatabaseHelper {
       MealPlanMeal.tableCreate,
       MealPlanMealItem.tableCreate,
       MealPlanRecord.tableCreate,
+      MealPlanWeekRecord.tableCreate,
+      MealPlanDayRecord.tableCreate,
     ];
 
     for (final query in createQueries) {
