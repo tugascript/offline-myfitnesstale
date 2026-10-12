@@ -13,6 +13,11 @@ enum MealPlanMealItemColumns with Columns {
   mealPlanMealId("meal_plan_meal_id"),
   foodId("food_id"),
   portionId("portion_id"),
+  totalCalories("total_calories"),
+  totalProtein("total_protein"),
+  totalCarbs("total_carbs"),
+  totalFat("total_fat"),
+  totalFiber("total_fiber"),
   amount("amount"),
   createdAt("created_at"),
   updatedAt("updated_at");
@@ -30,6 +35,11 @@ class MealPlanMealItem extends Equatable implements Model {
   final int foodId;
   final int? portionId;
   final int amount;
+  final int totalCalories;
+  final int totalProtein;
+  final int totalCarbs;
+  final int totalFat;
+  final int? totalFiber;
   @override
   final int createdAt;
   @override
@@ -41,6 +51,11 @@ class MealPlanMealItem extends Equatable implements Model {
     required this.foodId,
     this.portionId,
     required this.amount,
+    required this.totalCalories,
+    required this.totalProtein,
+    required this.totalCarbs,
+    required this.totalFat,
+    this.totalFiber,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -54,6 +69,11 @@ class MealPlanMealItem extends Equatable implements Model {
     ${MealPlanMealItemColumns.foodId.value} INTEGER NOT NULL,
     ${MealPlanMealItemColumns.portionId.value} INTEGER,
     ${MealPlanMealItemColumns.amount.value} INTEGER NOT NULL,
+    ${MealPlanMealItemColumns.totalCalories.value} INTEGER NOT NULL,
+    ${MealPlanMealItemColumns.totalProtein.value} INTEGER NOT NULL,
+    ${MealPlanMealItemColumns.totalCarbs.value} INTEGER NOT NULL,
+    ${MealPlanMealItemColumns.totalFat.value} INTEGER NOT NULL,
+    ${MealPlanMealItemColumns.totalFiber.value} INTEGER,
     ${MealPlanMealItemColumns.createdAt.value} INTEGER NOT NULL,
     ${MealPlanMealItemColumns.updatedAt.value} INTEGER NOT NULL,
     FOREIGN KEY (${MealPlanMealItemColumns.mealPlanMealId.value}) REFERENCES ${MealPlanMeal.table} (${MealPlanMealColumns.id.value})
@@ -78,6 +98,11 @@ class MealPlanMealItem extends Equatable implements Model {
       MealPlanMealItemColumns.amount.value: amount,
       MealPlanMealItemColumns.createdAt.value: createdAt,
       MealPlanMealItemColumns.updatedAt.value: updatedAt,
+      MealPlanMealItemColumns.totalCalories.value: totalCalories,
+      MealPlanMealItemColumns.totalProtein.value: totalProtein,
+      MealPlanMealItemColumns.totalCarbs.value: totalCarbs,
+      MealPlanMealItemColumns.totalFat.value: totalFat,
+      MealPlanMealItemColumns.totalFiber.value: totalFiber,
     };
   }
 
@@ -88,6 +113,11 @@ class MealPlanMealItem extends Equatable implements Model {
       foodId: map[MealPlanMealItemColumns.foodId.value] as int,
       portionId: map[MealPlanMealItemColumns.portionId.value] as int?,
       amount: map[MealPlanMealItemColumns.amount.value] as int,
+      totalCalories: map[MealPlanMealItemColumns.totalCalories.value] as int,
+      totalProtein: map[MealPlanMealItemColumns.totalProtein.value] as int,
+      totalCarbs: map[MealPlanMealItemColumns.totalCarbs.value] as int,
+      totalFat: map[MealPlanMealItemColumns.totalFat.value] as int,
+      totalFiber: map[MealPlanMealItemColumns.totalFiber.value] as int?,
       createdAt: map[MealPlanMealItemColumns.createdAt.value] as int,
       updatedAt: map[MealPlanMealItemColumns.updatedAt.value] as int,
     );
@@ -98,6 +128,11 @@ class MealPlanMealItem extends Equatable implements Model {
     required int foodId,
     int? portionId,
     required int amount,
+    required int totalCalories,
+    required int totalProtein,
+    required int totalCarbs,
+    required int totalFat,
+    int? totalFiber,
   }) {
     final int now = DateUtilities.getNowUtcUnix();
     return MealPlanMealItem(
@@ -105,6 +140,11 @@ class MealPlanMealItem extends Equatable implements Model {
       foodId: foodId,
       portionId: portionId,
       amount: amount,
+      totalCalories: totalCalories,
+      totalProtein: totalProtein,
+      totalCarbs: totalCarbs,
+      totalFat: totalFat,
+      totalFiber: totalFiber,
       createdAt: now,
       updatedAt: now,
     );
@@ -117,6 +157,11 @@ class MealPlanMealItem extends Equatable implements Model {
     int? foodId,
     int? portionId,
     int? amount,
+    int? totalCalories,
+    int? totalProtein,
+    int? totalCarbs,
+    int? totalFat,
+    int? totalFiber,
     int? createdAt,
     int? updatedAt,
   }) {
@@ -126,6 +171,11 @@ class MealPlanMealItem extends Equatable implements Model {
       foodId: foodId ?? this.foodId,
       portionId: portionId ?? this.portionId,
       amount: amount ?? this.amount,
+      totalCalories: totalCalories ?? this.totalCalories,
+      totalProtein: totalProtein ?? this.totalProtein,
+      totalCarbs: totalCarbs ?? this.totalCarbs,
+      totalFat: totalFat ?? this.totalFat,
+      totalFiber: totalFiber ?? this.totalFiber,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -138,6 +188,11 @@ class MealPlanMealItem extends Equatable implements Model {
         foodId,
         portionId,
         amount,
+        totalCalories,
+        totalProtein,
+        totalCarbs,
+        totalFat,
+        totalFiber,
         createdAt,
         updatedAt,
       ];
