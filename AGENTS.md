@@ -51,7 +51,7 @@ Follow the strict flow: `SQLite Model -> Repository -> Service -> Cubit -> View/
 
 - **Reminders**: Switches persist preferences only; no background notification scheduling engine exists yet. Do not assume notifications fire or add external notification services without being tasked.
 - **Purchases & Entitlements**: Premium states are gated with an "unavailable in this build" explanation. Never wire unfinished purchase SDKs or assume server verification.
-- **Meals & Macros**: Active feature work (Phase 1, P1). Models exist in `lib/src/models/`; services and UI are in development.
+- **Meals & Macros**: Food, recipe, meal-plan, meal-plan execution, macro-goal, and daily nutrition tracking flows are implemented for offline use. Keep cloud and AI capabilities deferred to Phase 2/3, and describe any remaining roadmap work as incomplete.
 - **Cloud & AI**: Strictly deferred to Phase 2/3. Core flows must remain fully offline.
 - Do not present roadmap items as working features.
 
