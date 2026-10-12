@@ -16,6 +16,11 @@ enum MealPlanWeekRecordColumns with Columns {
   status("status"),
   currentDay("current_day"),
   completedAt("completed_at"),
+  totalCalories("total_calories"),
+  totalProtein("total_protein"),
+  totalCarbs("total_carbs"),
+  totalFat("total_fat"),
+  totalFiber("total_fiber"),
   createdAt("created_at"),
   updatedAt("updated_at");
 
@@ -34,6 +39,11 @@ class MealPlanWeekRecord extends Equatable implements Model {
   final ProgressStatus status;
   final int currentDay;
   final int? completedAt;
+  final int totalCalories;
+  final int totalProtein;
+  final int totalCarbs;
+  final int totalFat;
+  final int? totalFiber;
   @override
   final int createdAt;
   @override
@@ -47,6 +57,11 @@ class MealPlanWeekRecord extends Equatable implements Model {
     required this.status,
     this.currentDay = 1,
     this.completedAt,
+    required this.totalCalories,
+    required this.totalProtein,
+    required this.totalCarbs,
+    required this.totalFat,
+    this.totalFiber,
     required this.createdAt,
     required this.updatedAt,
   })  : assert(week >= 1 && week <= 52, 'week must be between 1 and 52'),
@@ -66,6 +81,11 @@ class MealPlanWeekRecord extends Equatable implements Model {
     ${MealPlanWeekRecordColumns.status.value} TEXT NOT NULL,
     ${MealPlanWeekRecordColumns.currentDay.value} INTEGER NOT NULL DEFAULT 1 CHECK (${MealPlanWeekRecordColumns.currentDay.value} >= 1 AND ${MealPlanWeekRecordColumns.currentDay.value} <= 7),
     ${MealPlanWeekRecordColumns.completedAt.value} INTEGER,
+    ${MealPlanWeekRecordColumns.totalCalories.value} INTEGER NOT NULL,
+    ${MealPlanWeekRecordColumns.totalProtein.value} INTEGER NOT NULL,
+    ${MealPlanWeekRecordColumns.totalCarbs.value} INTEGER NOT NULL,
+    ${MealPlanWeekRecordColumns.totalFat.value} INTEGER NOT NULL,
+    ${MealPlanWeekRecordColumns.totalFiber.value} INTEGER,
     ${MealPlanWeekRecordColumns.createdAt.value} INTEGER NOT NULL,
     ${MealPlanWeekRecordColumns.updatedAt.value} INTEGER NOT NULL,
     FOREIGN KEY (${MealPlanWeekRecordColumns.mealPlanRecordId.value}) REFERENCES ${MealPlanRecord.table} (${MealPlanRecordColumns.id.value})
@@ -89,6 +109,11 @@ class MealPlanWeekRecord extends Equatable implements Model {
       MealPlanWeekRecordColumns.status.value: status.value,
       MealPlanWeekRecordColumns.currentDay.value: currentDay,
       MealPlanWeekRecordColumns.completedAt.value: completedAt,
+      MealPlanWeekRecordColumns.totalCalories.value: totalCalories,
+      MealPlanWeekRecordColumns.totalProtein.value: totalProtein,
+      MealPlanWeekRecordColumns.totalCarbs.value: totalCarbs,
+      MealPlanWeekRecordColumns.totalFat.value: totalFat,
+      MealPlanWeekRecordColumns.totalFiber.value: totalFiber,
       MealPlanWeekRecordColumns.createdAt.value: createdAt,
       MealPlanWeekRecordColumns.updatedAt.value: updatedAt,
     };
@@ -107,6 +132,11 @@ class MealPlanWeekRecord extends Equatable implements Model {
       ),
       currentDay: map[MealPlanWeekRecordColumns.currentDay.value] as int? ?? 1,
       completedAt: map[MealPlanWeekRecordColumns.completedAt.value] as int?,
+      totalCalories: map[MealPlanWeekRecordColumns.totalCalories.value] as int,
+      totalProtein: map[MealPlanWeekRecordColumns.totalProtein.value] as int,
+      totalCarbs: map[MealPlanWeekRecordColumns.totalCarbs.value] as int,
+      totalFat: map[MealPlanWeekRecordColumns.totalFat.value] as int,
+      totalFiber: map[MealPlanWeekRecordColumns.totalFiber.value] as int?,
       createdAt: map[MealPlanWeekRecordColumns.createdAt.value] as int,
       updatedAt: map[MealPlanWeekRecordColumns.updatedAt.value] as int,
     );
@@ -119,6 +149,11 @@ class MealPlanWeekRecord extends Equatable implements Model {
     ProgressStatus status = ProgressStatus.inProgress,
     int currentDay = 1,
     int? completedAt,
+    required int totalCalories,
+    required int totalProtein,
+    required int totalCarbs,
+    required int totalFat,
+    int? totalFiber,
   }) {
     final int now = DateUtilities.getNowUtcUnix();
     return MealPlanWeekRecord(
@@ -128,6 +163,11 @@ class MealPlanWeekRecord extends Equatable implements Model {
       status: status,
       currentDay: currentDay,
       completedAt: completedAt,
+      totalCalories: totalCalories,
+      totalProtein: totalProtein,
+      totalCarbs: totalCarbs,
+      totalFat: totalFat,
+      totalFiber: totalFiber,
       createdAt: now,
       updatedAt: now,
     );
@@ -142,6 +182,11 @@ class MealPlanWeekRecord extends Equatable implements Model {
     ProgressStatus? status,
     int? currentDay,
     int? completedAt,
+    int? totalCalories,
+    int? totalProtein,
+    int? totalCarbs,
+    int? totalFat,
+    int? totalFiber,
     int? createdAt,
     int? updatedAt,
   }) {
@@ -153,6 +198,11 @@ class MealPlanWeekRecord extends Equatable implements Model {
       status: status ?? this.status,
       currentDay: currentDay ?? this.currentDay,
       completedAt: completedAt ?? this.completedAt,
+      totalCalories: totalCalories ?? this.totalCalories,
+      totalProtein: totalProtein ?? this.totalProtein,
+      totalCarbs: totalCarbs ?? this.totalCarbs,
+      totalFat: totalFat ?? this.totalFat,
+      totalFiber: totalFiber ?? this.totalFiber,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -167,6 +217,11 @@ class MealPlanWeekRecord extends Equatable implements Model {
         status,
         currentDay,
         completedAt,
+        totalCalories,
+        totalProtein,
+        totalCarbs,
+        totalFat,
+        totalFiber,
         createdAt,
         updatedAt,
       ];
