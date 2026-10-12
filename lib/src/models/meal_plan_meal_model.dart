@@ -112,6 +112,8 @@ final class MealPlanMeal extends Equatable implements Model {
       ON DELETE SET NULL
   );
 
+  CREATE INDEX IF NOT EXISTS idx_meal_plan_meals_plan_id ON $_table (${MealPlanMealColumns.mealPlanId.value});
+  CREATE INDEX IF NOT EXISTS idx_meal_plan_meals_week_id ON $_table (${MealPlanMealColumns.mealPlanWeekId.value});
   CREATE INDEX IF NOT EXISTS idx_meal_plan_meals_day_id ON $_table (${MealPlanMealColumns.mealPlanDayId.value});
   CREATE INDEX IF NOT EXISTS idx_meal_plan_meals_recipe_id ON $_table (${MealPlanMealColumns.recipeId.value});
   ''';
