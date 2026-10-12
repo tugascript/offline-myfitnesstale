@@ -10,16 +10,12 @@ class FoodPortionDto extends Equatable {
   final int foodId;
   final String portionName;
   final int gramWeight;
-  final int createdAt;
-  final int updatedAt;
 
   const FoodPortionDto({
     required this.id,
     required this.foodId,
     required this.portionName,
     required this.gramWeight,
-    required this.createdAt,
-    required this.updatedAt,
   });
 
   factory FoodPortionDto.fromModel(FoodPortion model) {
@@ -28,8 +24,6 @@ class FoodPortionDto extends Equatable {
       foodId: model.foodId,
       portionName: model.portionName,
       gramWeight: model.gramWeight,
-      createdAt: model.createdAt,
-      updatedAt: model.updatedAt,
     );
   }
 
@@ -38,16 +32,12 @@ class FoodPortionDto extends Equatable {
     int? foodId,
     String? portionName,
     int? gramWeight,
-    int? createdAt,
-    int? updatedAt,
   }) {
     return FoodPortionDto(
       id: id ?? this.id,
       foodId: foodId ?? this.foodId,
       portionName: portionName ?? this.portionName,
       gramWeight: gramWeight ?? this.gramWeight,
-      createdAt: createdAt ?? this.createdAt,
-      updatedAt: updatedAt ?? this.updatedAt,
     );
   }
 
@@ -57,8 +47,6 @@ class FoodPortionDto extends Equatable {
         foodId,
         portionName,
         gramWeight,
-        createdAt,
-        updatedAt,
       ];
 }
 
@@ -83,8 +71,7 @@ class FoodDto extends Equatable {
   final FoodCategory category;
   final String? brand;
   final String? barcode;
-  final int servingSizeBase;
-  final String servingUnitBase;
+  final int servingSizeBaseGrams;
   final int caloriesBase;
   final int proteinBase;
   final int carbsBase;
@@ -93,8 +80,6 @@ class FoodDto extends Equatable {
   final Micronutrients? micros;
   final bool isFavorite;
   final CreatedBy createdBy;
-  final int createdAt;
-  final int updatedAt;
   final List<FoodPortionDto> portions;
 
   const FoodDto({
@@ -103,8 +88,7 @@ class FoodDto extends Equatable {
     required this.category,
     this.brand,
     this.barcode,
-    required this.servingSizeBase,
-    required this.servingUnitBase,
+    required this.servingSizeBaseGrams,
     required this.caloriesBase,
     required this.proteinBase,
     required this.carbsBase,
@@ -113,8 +97,6 @@ class FoodDto extends Equatable {
     this.micros,
     required this.isFavorite,
     required this.createdBy,
-    required this.createdAt,
-    required this.updatedAt,
     this.portions = const [],
   });
 
@@ -128,8 +110,7 @@ class FoodDto extends Equatable {
       category: model.category,
       brand: model.brand,
       barcode: model.barcode,
-      servingSizeBase: model.servingSizeBase,
-      servingUnitBase: model.servingUnitBase,
+      servingSizeBaseGrams: model.servingSizeBaseGrams,
       caloriesBase: model.caloriesBase,
       proteinBase: model.proteinBase,
       carbsBase: model.carbsBase,
@@ -138,8 +119,6 @@ class FoodDto extends Equatable {
       micros: model.micros,
       isFavorite: model.isFavorite,
       createdBy: model.createdBy,
-      createdAt: model.createdAt,
-      updatedAt: model.updatedAt,
       portions: portions,
     );
   }
@@ -150,7 +129,7 @@ class FoodDto extends Equatable {
     FoodCategory? category,
     String? brand,
     String? barcode,
-    int? servingSizeBase,
+    int? servingSizeBaseGrams,
     String? servingUnitBase,
     int? caloriesBase,
     int? proteinBase,
@@ -170,8 +149,7 @@ class FoodDto extends Equatable {
       category: category ?? this.category,
       brand: brand ?? this.brand,
       barcode: barcode ?? this.barcode,
-      servingSizeBase: servingSizeBase ?? this.servingSizeBase,
-      servingUnitBase: servingUnitBase ?? this.servingUnitBase,
+      servingSizeBaseGrams: servingSizeBaseGrams ?? this.servingSizeBaseGrams,
       caloriesBase: caloriesBase ?? this.caloriesBase,
       proteinBase: proteinBase ?? this.proteinBase,
       carbsBase: carbsBase ?? this.carbsBase,
@@ -180,8 +158,6 @@ class FoodDto extends Equatable {
       micros: micros ?? this.micros,
       isFavorite: isFavorite ?? this.isFavorite,
       createdBy: createdBy ?? this.createdBy,
-      createdAt: createdAt ?? this.createdAt,
-      updatedAt: updatedAt ?? this.updatedAt,
       portions: portions ?? this.portions,
     );
   }
@@ -193,8 +169,7 @@ class FoodDto extends Equatable {
         category,
         brand,
         barcode,
-        servingSizeBase,
-        servingUnitBase,
+        servingSizeBaseGrams,
         caloriesBase,
         proteinBase,
         carbsBase,
@@ -203,8 +178,6 @@ class FoodDto extends Equatable {
         micros,
         isFavorite,
         createdBy,
-        createdAt,
-        updatedAt,
         portions,
       ];
 }
