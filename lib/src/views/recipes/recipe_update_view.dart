@@ -76,19 +76,10 @@ class _RecipeUpdateViewState extends State<RecipeUpdateView> {
               sizes: sizes,
               initialRecipe: recipe,
               isLoading: state.isLoading,
-              onSubmit: ({
-                required name,
-                description,
-                required servingsYield,
-                required items,
-              }) async {
-                final success = await context.read<RecipeCubit>().updateRecipe(
-                      id: recipe.id,
-                      name: name,
-                      description: description,
-                      servingsYield: servingsYield,
-                      items: items,
-                    );
+              onSubmit: (input) async {
+                final success = await context
+                    .read<RecipeCubit>()
+                    .updateRecipe(recipe.id, input);
                 if (success && context.mounted) {
                   context.pop();
                 }

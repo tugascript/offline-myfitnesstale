@@ -6,21 +6,6 @@ import '../../models/enums.dart';
 import '../../models/recipe_item_model.dart';
 import '../../models/recipe_model.dart';
 
-class RecipeItemInput extends Equatable {
-  final int foodId;
-  final int? portionId;
-  final int amount;
-
-  const RecipeItemInput({
-    required this.foodId,
-    this.portionId,
-    required this.amount,
-  });
-
-  @override
-  List<Object?> get props => [foodId, portionId, amount];
-}
-
 class RecipeItemDto extends Equatable {
   final int id;
   final int recipeId;
@@ -34,8 +19,6 @@ class RecipeItemDto extends Equatable {
   final int? totalFiber;
   final String? foodName;
   final String? portionName;
-  final int createdAt;
-  final int updatedAt;
 
   const RecipeItemDto({
     required this.id,
@@ -50,8 +33,6 @@ class RecipeItemDto extends Equatable {
     this.totalFiber,
     this.foodName,
     this.portionName,
-    required this.createdAt,
-    required this.updatedAt,
   });
 
   factory RecipeItemDto.fromModel(
@@ -72,8 +53,6 @@ class RecipeItemDto extends Equatable {
       totalFiber: model.totalFiber,
       foodName: foodName,
       portionName: portionName,
-      createdAt: model.createdAt,
-      updatedAt: model.updatedAt,
     );
   }
 
@@ -90,8 +69,6 @@ class RecipeItemDto extends Equatable {
     Nullable<int>? totalFiber,
     Nullable<String>? foodName,
     Nullable<String>? portionName,
-    int? createdAt,
-    int? updatedAt,
   }) {
     return RecipeItemDto(
       id: id ?? this.id,
@@ -106,8 +83,6 @@ class RecipeItemDto extends Equatable {
       totalFiber: totalFiber != null ? totalFiber.value : this.totalFiber,
       foodName: foodName != null ? foodName.value : this.foodName,
       portionName: portionName != null ? portionName.value : this.portionName,
-      createdAt: createdAt ?? this.createdAt,
-      updatedAt: updatedAt ?? this.updatedAt,
     );
   }
 
@@ -125,8 +100,6 @@ class RecipeItemDto extends Equatable {
         totalFiber,
         foodName,
         portionName,
-        createdAt,
-        updatedAt,
       ];
 }
 
@@ -141,8 +114,7 @@ class RecipeDto extends Equatable {
   final int servingFat;
   final Micronutrients? servingMicros;
   final CreatedBy createdBy;
-  final int createdAt;
-  final int updatedAt;
+
   final List<RecipeItemDto> items;
 
   const RecipeDto({
@@ -156,8 +128,6 @@ class RecipeDto extends Equatable {
     required this.servingFat,
     this.servingMicros,
     required this.createdBy,
-    required this.createdAt,
-    required this.updatedAt,
     this.items = const [],
   });
 
@@ -176,8 +146,6 @@ class RecipeDto extends Equatable {
       servingFat: model.servingFat,
       servingMicros: model.servingMicros,
       createdBy: model.createdBy,
-      createdAt: model.createdAt,
-      updatedAt: model.updatedAt,
       items: items,
     );
   }
@@ -193,8 +161,6 @@ class RecipeDto extends Equatable {
     int? servingFat,
     Nullable<Micronutrients>? servingMicros,
     CreatedBy? createdBy,
-    int? createdAt,
-    int? updatedAt,
     List<RecipeItemDto>? items,
   }) {
     return RecipeDto(
@@ -209,8 +175,6 @@ class RecipeDto extends Equatable {
       servingMicros:
           servingMicros != null ? servingMicros.value : this.servingMicros,
       createdBy: createdBy ?? this.createdBy,
-      createdAt: createdAt ?? this.createdAt,
-      updatedAt: updatedAt ?? this.updatedAt,
       items: items ?? this.items,
     );
   }
@@ -227,8 +191,6 @@ class RecipeDto extends Equatable {
         servingFat,
         servingMicros,
         createdBy,
-        createdAt,
-        updatedAt,
         items,
       ];
 }

@@ -38,18 +38,9 @@ class RecipeCreationView extends StatelessWidget {
               theme: theme,
               sizes: sizes,
               isLoading: state.isLoading,
-              onSubmit: ({
-                required name,
-                description,
-                required servingsYield,
-                required items,
-              }) async {
-                final success = await context.read<RecipeCubit>().createRecipe(
-                      name: name,
-                      description: description,
-                      servingsYield: servingsYield,
-                      items: items,
-                    );
+              onSubmit: (input) async {
+                final success =
+                    await context.read<RecipeCubit>().createRecipe(input);
                 if (success && context.mounted) {
                   context.pop();
                 }

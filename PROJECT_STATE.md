@@ -21,7 +21,7 @@ preferences do not schedule notifications, and purchases are unavailable.
 Repository facts at this review:
 
 - 327 Dart source files under `lib/`;
-- 41 SQLite tables in the create schema;
+- 42 SQLite tables in the create schema, including strength goals;
 - database schema version 1;
 - 89 seeded exercises and 25 seeded equipment entries;
 - 16 optional starter workouts and one 16-week starter plan;
@@ -106,6 +106,27 @@ layers. Historical plan summaries do not expose child-workout detail.
 - Recipes & items: Aggregates recipe items (pointing to foods and portions); calculates serving totals for calories, protein, carbs, fat, and micronutrients inside the transaction; prevents mutation/deletion of system-authored recipes.
 - Meal plans: Multi-week meal schedule aggregates (weeks, days, meals, items) created and versioned with transactions and denormalized total updates; supports favorites and system authoring protection.
 - Meal-plan records: Tracks execution of meal plans with week and day records; enforces single active meal-plan invariant; allows starting and advancing/completing days.
+
+The 13 October 2026 refactor applies the food-service conventions across the
+PR's new nutrition and strength-goal flows. Create and update share complete
+inputs in `services/inputs/`; omitted nullable input fields clear their stored
+values. DTOs omit persistence timestamps, while execution dates and originating
+template versions remain domain data. Entity states contain their own pagination
+objects, including query filters, limits, offsets, and totals. Services use the
+existing repository API; the generic repository is unchanged.
+
+Recipe replacement rolls back on invalid ingredient references. Meal-plan
+replacement creates a new schedule version and retains previous weeks, days,
+and meals for execution records. Meal-week fiber totals now round-trip through
+SQLite, and the existing strength-goal table is registered in the create schema.
+Schema version remains 1 under the pre-beta reset policy.
+
+Food and recipe details and list items, meal-plan schedules and list items,
+macro-goal content, and tracker day/week/month and planned-meal sections live
+in their entity widget folders. Views compose these widgets and dispatch Cubit
+actions. Regression tests cover complete updates, nullable clearing, rollback,
+originating meal-plan versions, pagination/filter preservation, and populated
+entity widgets at 320px with 200% text scaling.
 
 ### Macro tracking and daily nutrition
 
@@ -244,17 +265,17 @@ rollback/idempotency, route precedence, entitlement guards, workout mutation
 rollback, plan lifecycle and pagination, reminder disclosure, and database
 isolation.
 
-The latest full verification run on 12 October 2026:
+The latest full verification run on 13 October 2026:
 
 ```text
 dart format --output=none --set-exit-if-changed lib test integration_test
-  410 files formatted with no pending changes
+  433 files formatted with no pending changes
 
 dart analyze
   No issues found
 
 flutter test
-  111 tests passed
+  126 tests passed, one skipped
 
 git diff --check
   No whitespace errors

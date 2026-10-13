@@ -1,3 +1,4 @@
+import '../../widgets/foods/food_list_item_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -55,7 +56,7 @@ class _FoodsViewState extends State<FoodsView> {
     if (currentScroll >= (maxScroll * 0.9)) {
       final cubit = context.read<FoodCubit>();
       if (!cubit.state.isLoading &&
-          cubit.state.total > cubit.state.foods.length) {
+          cubit.state.foodPagination.total > cubit.state.foods.length) {
         _loadFoods();
       }
     }
@@ -175,54 +176,19 @@ class _FoodsViewState extends State<FoodsView> {
                       }
 
                       final food = state.foods[index];
-                      return Card(
-                        key: ValueKey('food-item-${food.id}'),
-                        margin: EdgeInsets.zero,
-                        child: ListTile(
-                          title: Text(
-                            food.name,
-                            style: TextStyle(
-                              fontSize: sizes.fontSize,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          subtitle: Text(
-                            '${food.caloriesBase} kcal • P: ${food.proteinBase}g C: ${food.carbsBase}g F: ${food.fatBase}g'
-                            '${food.brand != null ? ' • ${food.brand}' : ''}',
-                            style: TextStyle(
-                              fontSize: sizes.fontSize * 0.9,
-                              color: Colors.grey[600],
-                            ),
-                          ),
-                          trailing: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              IconButton(
-                                icon: Icon(
-                                  food.isFavorite
-                                      ? Icons.favorite
-                                      : Icons.favorite_border,
-                                  color: food.isFavorite
-                                      ? Colors.red
-                                      : Colors.grey,
-                                ),
-                                onPressed: () {
-                                  context
-                                      .read<FoodCubit>()
-                                      .toggleFavorite(food.id);
-                                },
-                              ),
-                              const Icon(Icons.chevron_right),
-                            ],
-                          ),
+                      return FoodListItemWidget(
+                          key: ValueKey('food-item-${food.id}'),
+                          food: food,
+                          sizes: sizes,
                           onTap: () {
                             context.push(
                               FoodDetailsView.routeName
                                   .replaceFirst(':id', food.id.toString()),
                             );
                           },
-                        ),
-                      );
+                          onToggleFavorite: () {
+                            context.read<FoodCubit>().toggleFavorite(food.id);
+                          });
                     },
                   );
                 },

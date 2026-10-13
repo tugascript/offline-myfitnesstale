@@ -111,6 +111,7 @@ class MealPlanWeek extends Equatable implements Model {
       MealPlanWeekColumns.targetProtein.value: targetProtein,
       MealPlanWeekColumns.targetCarbs.value: targetCarbs,
       MealPlanWeekColumns.targetFat.value: targetFat,
+      MealPlanWeekColumns.targetFiber.value: targetFiber,
       MealPlanWeekColumns.totalDays.value: totalDays,
       MealPlanWeekColumns.totalMeals.value: totalMeals,
       MealPlanWeekColumns.createdBy.value: createdBy.value,

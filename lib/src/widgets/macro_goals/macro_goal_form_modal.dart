@@ -1,3 +1,5 @@
+import '../../common/nullable.dart';
+import '../../services/inputs/macro_goal_input.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -75,26 +77,28 @@ class _MacroGoalFormModalState extends State<MacroGoalFormModal> {
     final cubit = context.read<MacroTrackingCubit>();
     if (widget.existingGoal != null) {
       cubit.updateMacroGoal(
-        id: widget.existingGoal!.id,
-        name: name,
-        targetCalories: calories,
-        targetProtein: protein,
-        targetCarbs: carbs,
-        targetFat: fat,
-        targetWaterIntakeMl: water,
-        isActive: widget.existingGoal!.isActive,
-      );
+          widget.existingGoal!.id,
+          MacroGoalInput(
+            name: name,
+            targetCalories: calories,
+            targetProtein: protein,
+            targetCarbs: carbs,
+            targetFat: fat,
+            targetWaterIntakeMl: Nullable(water),
+            isActive: widget.existingGoal!.isActive,
+            phase: widget.existingGoal!.phase,
+          ));
     } else {
-      cubit.createMacroGoal(
+      cubit.createMacroGoal(MacroGoalInput(
         name: name,
         targetCalories: calories,
         targetProtein: protein,
         targetCarbs: carbs,
         targetFat: fat,
-        targetWaterIntakeMl: water,
+        targetWaterIntakeMl: Nullable(water),
         phase: WeightGoalPhase.maintain,
         isActive: true,
-      );
+      ));
     }
 
     Navigator.of(context).pop();

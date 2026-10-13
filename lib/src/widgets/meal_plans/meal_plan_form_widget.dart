@@ -1,3 +1,5 @@
+import '../../common/nullable.dart';
+import '../../services/inputs/meal_plan_input.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -12,12 +14,7 @@ class MealPlanFormWidget extends StatefulWidget {
   final DataDisplaySizesList sizes;
   final MealPlanDto? initialPlan;
   final bool isLoading;
-  final void Function({
-    required String name,
-    String? description,
-    required int durationWeeks,
-    required List<MealPlanWeekInput> weeks,
-  }) onSubmit;
+  final ValueChanged<MealPlanInput> onSubmit;
 
   const MealPlanFormWidget({
     super.key,
@@ -295,15 +292,13 @@ class _MealPlanFormWidgetState extends State<MealPlanFormWidget> {
       ));
     }
 
-    widget.onSubmit(
+    widget.onSubmit(MealPlanInput(
       name: _nameController.text.trim(),
-      description: _descriptionController.text.trim().isEmpty
+      description: Nullable(_descriptionController.text.trim().isEmpty
           ? null
-          : _descriptionController.text.trim(),
-      durationWeeks:
-          int.tryParse(_durationWeeksController.text) ?? _weeks.length,
+          : _descriptionController.text.trim()),
       weeks: weekInputs,
-    );
+    ));
   }
 
   @override

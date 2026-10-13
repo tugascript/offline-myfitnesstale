@@ -1,3 +1,8 @@
+import 'package:myfitnesstale/src/services/inputs/macro_goal_input.dart';
+import 'package:myfitnesstale/src/services/inputs/food_input.dart';
+import 'package:myfitnesstale/src/common/nullable.dart';
+import 'package:myfitnesstale/src/services/inputs/meal_plan_input.dart';
+import 'package:myfitnesstale/src/services/inputs/recipe_input.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:myfitnesstale/src/models/enums.dart';
@@ -6,9 +11,6 @@ import 'package:myfitnesstale/src/models/food_portion_model.dart';
 import 'package:myfitnesstale/src/models/macro_goal_model.dart';
 import 'package:myfitnesstale/src/models/meal_plan_record_model.dart';
 import 'package:myfitnesstale/src/services/common/errors.dart';
-import 'package:myfitnesstale/src/services/dtos/food_dto.dart';
-import 'package:myfitnesstale/src/services/dtos/meal_plan_dto.dart';
-import 'package:myfitnesstale/src/services/dtos/recipe_dto.dart';
 import 'package:myfitnesstale/src/services/food_service.dart';
 import 'package:myfitnesstale/src/services/macro_tracking_service.dart';
 import 'package:myfitnesstale/src/services/meal_plan_record_service.dart';
@@ -38,7 +40,7 @@ void main() {
         'food create, search, and delete, including rejection of CreatedBy.system',
         () async {
       // 1. Create food with portion
-      final createResult = await foodService.createFood(
+      final createResult = await foodService.createFood(FoodInput(
         name: 'Greek Yogurt 0%',
         category: FoodCategory.dairyAndEggs,
         caloriesBase: 59,
@@ -48,7 +50,8 @@ void main() {
         portions: const [
           FoodPortionInput(portionName: '1 cup (170g)', gramWeight: 170),
         ],
-      );
+        servingSizeBaseGrams: 100,
+      ));
       expect(createResult.isOk(), isTrue);
       final foodDto = createResult.value;
       expect(foodDto.name, 'Greek Yogurt 0%');
@@ -56,7 +59,7 @@ void main() {
       expect(foodDto.portions.first.gramWeight, 170);
 
       // 2. Search food
-      final searchResult = await foodService.getFoods(search: 'Greek Yogurt');
+      final searchResult = await foodService.getFoods(name: 'Greek Yogurt');
       expect(searchResult.isOk(), isTrue);
       expect(searchResult.value.data.any((f) => f.id == foodDto.id), isTrue);
 
@@ -64,6 +67,7 @@ void main() {
       final db = await testDatabase.db;
       final systemFood = Food.create(
         name: 'System Apple',
+        servingSizeBaseGrams: 100,
         category: FoodCategory.fruits,
         caloriesBase: 52,
         proteinBase: 0,
@@ -75,9 +79,17 @@ void main() {
 
       // Try update system food
       final updateSysResult = await foodService.updateFood(
-        id: systemFoodId,
-        name: 'Hacked Apple',
-      );
+          systemFoodId,
+          FoodInput(
+            name: 'Hacked Apple',
+            category: FoodCategory.fruits,
+            caloriesBase: 52,
+            proteinBase: 0,
+            carbsBase: 14,
+            fatBase: 0,
+            servingSizeBaseGrams: 100,
+            portions: const [],
+          ));
       expect(updateSysResult.isErr(), isTrue);
       expect(updateSysResult.error.type, SingleErrorTypes.invalidInput);
 
@@ -103,27 +115,29 @@ void main() {
   group('RecipeService', () {
     test('recipe create with items and recomputed serving macros', () async {
       // Create ingredients
-      final food1Result = await foodService.createFood(
+      final food1Result = await foodService.createFood(FoodInput(
         name: 'Rolled Oats',
         category: FoodCategory.grainsAndCereals,
-        servingSizeBase: 100,
+        servingSizeBaseGrams: 100,
         caloriesBase: 380,
         proteinBase: 13,
         carbsBase: 68,
         fatBase: 7,
-      );
+        portions: const [],
+      ));
       expect(food1Result.isOk(), isTrue);
       final oats = food1Result.value;
 
-      final food2Result = await foodService.createFood(
+      final food2Result = await foodService.createFood(FoodInput(
         name: 'Whey Protein Powder',
         category: FoodCategory.supplements,
-        servingSizeBase: 100,
+        servingSizeBaseGrams: 100,
         caloriesBase: 400,
         proteinBase: 80,
         carbsBase: 5,
         fatBase: 3,
-      );
+        portions: const [],
+      ));
       expect(food2Result.isOk(), isTrue);
       final whey = food2Result.value;
 
@@ -134,14 +148,14 @@ void main() {
       // Total protein: 53 -> per serving: 27g
       // Total carbs: 71 -> per serving: 36g
       // Total fat: 9 -> per serving: 5g
-      final recipeResult = await recipeService.createRecipe(
+      final recipeResult = await recipeService.createRecipe(RecipeInput(
         name: 'Proats',
         servingsYield: 2,
         items: [
           RecipeItemInput(foodId: oats.id, amount: 100),
           RecipeItemInput(foodId: whey.id, amount: 50),
         ],
-      );
+      ));
       expect(recipeResult.isOk(), isTrue);
       final recipe = recipeResult.value;
 
@@ -160,7 +174,7 @@ void main() {
         'one active macro goal, and a meal log that get-or-creates the daily log and rolls totals up',
         () async {
       // 1. Create first goal (active)
-      final goal1 = await macroTrackingService.createMacroGoal(
+      final goal1 = await macroTrackingService.createMacroGoal(MacroGoalInput(
         name: 'Bulk Goal',
         targetCalories: 3000,
         targetProtein: 200,
@@ -168,12 +182,12 @@ void main() {
         targetFat: 80,
         phase: WeightGoalPhase.bulk,
         isActive: true,
-      );
+      ));
       expect(goal1.isOk(), isTrue);
       expect(goal1.value.isActive, isTrue);
 
       // Create second goal (active) -> clears first goal
-      final goal2 = await macroTrackingService.createMacroGoal(
+      final goal2 = await macroTrackingService.createMacroGoal(MacroGoalInput(
         name: 'Cut Goal',
         targetCalories: 2000,
         targetProtein: 180,
@@ -181,7 +195,7 @@ void main() {
         targetFat: 50,
         phase: WeightGoalPhase.cut,
         isActive: true,
-      );
+      ));
       expect(goal2.isOk(), isTrue);
       expect(goal2.value.isActive, isTrue);
 
@@ -200,15 +214,16 @@ void main() {
 
       // 2. Log food item for a specific date
       final date = DateTime(2026, 10, 12, 12, 30);
-      final foodResult = await foodService.createFood(
+      final foodResult = await foodService.createFood(FoodInput(
         name: 'Chicken Breast Raw',
         category: FoodCategory.meatAndPoultry,
         caloriesBase: 165,
         proteinBase: 31,
         carbsBase: 0,
         fatBase: 4,
-        servingSizeBase: 100,
-      );
+        servingSizeBaseGrams: 100,
+        portions: const [],
+      ));
       final chicken = foodResult.value;
 
       final mealResult = await macroTrackingService.logFoodItem(
@@ -236,20 +251,21 @@ void main() {
 
   group('MealPlanService', () {
     test('meal-plan save of a week with a day, meal, and item', () async {
-      final eggResult = await foodService.createFood(
+      final eggResult = await foodService.createFood(FoodInput(
         name: 'Whole Egg',
         category: FoodCategory.dairyAndEggs,
         caloriesBase: 143,
         proteinBase: 13,
         carbsBase: 1,
         fatBase: 10,
-        servingSizeBase: 100,
-      );
+        servingSizeBaseGrams: 100,
+        portions: const [],
+      ));
       final egg = eggResult.value;
 
-      final planResult = await mealPlanService.createMealPlan(
+      final planResult = await mealPlanService.createMealPlan(MealPlanInput(
         name: 'Simple 1-Week Cut',
-        description: 'Single week test plan',
+        description: Nullable('Single week test plan'),
         weeks: [
           MealPlanWeekInput(
             weekNumber: 1,
@@ -273,7 +289,7 @@ void main() {
             ],
           ),
         ],
-      );
+      ));
       expect(planResult.isOk(), isTrue);
       final plan = planResult.value;
       expect(plan.name, 'Simple 1-Week Cut');
@@ -299,17 +315,19 @@ void main() {
   group('MealPlanRecordService', () {
     test('starting a second meal plan abandons the previous in-progress record',
         () async {
-      final eggResult = await foodService.createFood(
+      final eggResult = await foodService.createFood(FoodInput(
         name: 'Egg White',
         category: FoodCategory.dairyAndEggs,
         caloriesBase: 52,
         proteinBase: 11,
         carbsBase: 1,
         fatBase: 0,
-      );
+        servingSizeBaseGrams: 100,
+        portions: const [],
+      ));
       final egg = eggResult.value;
 
-      final plan1Result = await mealPlanService.createMealPlan(
+      final plan1Result = await mealPlanService.createMealPlan(MealPlanInput(
         name: 'Plan 1',
         weeks: [
           MealPlanWeekInput(
@@ -330,10 +348,10 @@ void main() {
             ],
           ),
         ],
-      );
+      ));
       final plan1 = plan1Result.value;
 
-      final plan2Result = await mealPlanService.createMealPlan(
+      final plan2Result = await mealPlanService.createMealPlan(MealPlanInput(
         name: 'Plan 2',
         weeks: [
           MealPlanWeekInput(
@@ -354,7 +372,7 @@ void main() {
             ],
           ),
         ],
-      );
+      ));
       final plan2 = plan2Result.value;
 
       // Start plan 1

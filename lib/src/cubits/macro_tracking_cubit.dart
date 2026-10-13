@@ -1,3 +1,5 @@
+import '../services/common/errors.dart';
+import '../services/inputs/macro_goal_input.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:logging/logging.dart';
 
@@ -19,11 +21,19 @@ class MacroTrackingCubit extends Cubit<MacroTrackingState> {
 
     final result = await _macroService.getActiveMacroGoal();
     if (result.isErr()) {
-      _logger.info('No active macro goal found');
-      emit(state.copyWith(
-        activeGoal: const Nullable(null),
-        isLoading: false,
-      ));
+      final error = result.error;
+      if (error.type == SingleErrorTypes.notFound) {
+        emit(state.copyWith(
+            activeGoal: const Nullable(null),
+            isLoading: false,
+            error: const Nullable(null)));
+      } else {
+        _logger.warning('Failed to load active entity', error);
+        emit(state.copyWith(
+            isLoading: false,
+            error: Nullable(ErrorState(
+                type: error.type.name, description: error.description))));
+      }
       return;
     }
 
@@ -54,36 +64,21 @@ class MacroTrackingCubit extends Cubit<MacroTrackingState> {
     }
 
     emit(state.copyWith(
-      goalHistory: result.value.data,
-      goalsTotal: result.value.total,
+      goalHistory: offset > 0
+          ? [...state.goalHistory, ...result.value.data]
+          : result.value.data,
+      goalPagination: MacroGoalPagination(
+          total: result.value.total, limit: limit, offset: offset),
       isLoading: false,
       error: const Nullable(null),
     ));
   }
 
-  Future<bool> createMacroGoal({
-    required String name,
-    required int targetCalories,
-    required int targetProtein,
-    required int targetCarbs,
-    required int targetFat,
-    int? targetWaterIntakeMl,
-    required WeightGoalPhase phase,
-    bool isActive = true,
-  }) async {
-    _logger.info('Creating macro goal: $name');
+  Future<bool> createMacroGoal(MacroGoalInput input) async {
+    _logger.info('Creating macro goal: ${input.name}');
     emit(state.copyWith(isLoading: true));
 
-    final result = await _macroService.createMacroGoal(
-      name: name,
-      targetCalories: targetCalories,
-      targetProtein: targetProtein,
-      targetCarbs: targetCarbs,
-      targetFat: targetFat,
-      targetWaterIntakeMl: targetWaterIntakeMl,
-      phase: phase,
-      isActive: isActive,
-    );
+    final result = await _macroService.createMacroGoal(input);
 
     if (result.isErr()) {
       final error = result.error;
@@ -99,35 +94,15 @@ class MacroTrackingCubit extends Cubit<MacroTrackingState> {
     }
 
     await getActiveMacroGoal();
-    await getMacroGoals();
+    await getMacroGoals(limit: state.goalPagination.limit);
     return true;
   }
 
-  Future<bool> updateMacroGoal({
-    required int id,
-    String? name,
-    int? targetCalories,
-    int? targetProtein,
-    int? targetCarbs,
-    int? targetFat,
-    int? targetWaterIntakeMl,
-    WeightGoalPhase? phase,
-    bool? isActive,
-  }) async {
+  Future<bool> updateMacroGoal(int id, MacroGoalInput input) async {
     _logger.info('Updating macro goal $id');
     emit(state.copyWith(isLoading: true));
 
-    final result = await _macroService.updateMacroGoal(
-      id: id,
-      name: name,
-      targetCalories: targetCalories,
-      targetProtein: targetProtein,
-      targetCarbs: targetCarbs,
-      targetFat: targetFat,
-      targetWaterIntakeMl: targetWaterIntakeMl,
-      phase: phase,
-      isActive: isActive,
-    );
+    final result = await _macroService.updateMacroGoal(id, input);
 
     if (result.isErr()) {
       final error = result.error;
@@ -143,7 +118,7 @@ class MacroTrackingCubit extends Cubit<MacroTrackingState> {
     }
 
     await getActiveMacroGoal();
-    await getMacroGoals();
+    await getMacroGoals(limit: state.goalPagination.limit);
     return true;
   }
 
@@ -166,7 +141,7 @@ class MacroTrackingCubit extends Cubit<MacroTrackingState> {
     }
 
     await getActiveMacroGoal();
-    await getMacroGoals();
+    await getMacroGoals(limit: state.goalPagination.limit);
     return true;
   }
 
@@ -189,7 +164,7 @@ class MacroTrackingCubit extends Cubit<MacroTrackingState> {
     }
 
     await getActiveMacroGoal();
-    await getMacroGoals();
+    await getMacroGoals(limit: state.goalPagination.limit);
     return true;
   }
 

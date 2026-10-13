@@ -2,10 +2,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:logging/logging.dart';
 
 import '../common/nullable.dart';
-import '../models/common.dart';
 import '../models/enums.dart';
 import '../services/dtos/food_dto.dart';
 import '../services/food_service.dart';
+import '../services/inputs/food_input.dart';
 import 'states/common_state.dart';
 import 'states/food_state.dart';
 
@@ -24,18 +24,20 @@ class FoodCubit extends Cubit<FoodState> {
   }) async {
     _logger.info('Getting foods');
     emit(state.copyWith(
+      foodPagination: state.foodPagination.copyWith(
+        limit: limit,
+        offset: offset,
+        name: search ?? '',
+        category: Nullable(category),
+        isFavorite: isFavorite ?? false,
+      ),
       isLoading: true,
-      search: Nullable(search),
-      category: Nullable(category),
-      isFavorite: Nullable(isFavorite),
-      limit: limit,
-      offset: offset,
     ));
 
     final result = await _foodService.getFoods(
-      search: search,
+      name: search,
       category: category,
-      isFavorite: isFavorite,
+      isFavorite: isFavorite ?? false,
       limit: limit,
       offset: offset,
     );
@@ -58,8 +60,10 @@ class FoodCubit extends Cubit<FoodState> {
         offset > 0 ? [...state.foods, ...paginated.data] : paginated.data;
 
     emit(state.copyWith(
+      foodPagination: state.foodPagination.copyWith(
+        total: paginated.total,
+      ),
       foods: foods,
-      total: paginated.total,
       isLoading: false,
       error: const Nullable(null),
     ));
@@ -90,43 +94,14 @@ class FoodCubit extends Cubit<FoodState> {
     ));
   }
 
-  Future<bool> createFood({
-    required String name,
-    required FoodCategory category,
-    String? brand,
-    String? barcode,
-    int servingSizeBase = 100,
-    String servingUnitBase = 'g',
-    required int caloriesBase,
-    required int proteinBase,
-    required int carbsBase,
-    required int fatBase,
-    int? fiberBase,
-    Micronutrients? micros,
-    bool isFavorite = false,
+  Future<bool> createFood(
+    FoodInput input, [
     CreatedBy createdBy = CreatedBy.user,
-    List<FoodPortionInput> portions = const [],
-  }) async {
-    _logger.info('Creating food $name');
+  ]) async {
+    _logger.info('Creating food ${input.name}');
     emit(state.copyWith(isLoading: true));
 
-    final result = await _foodService.createFood(
-      name: name,
-      category: category,
-      brand: brand,
-      barcode: barcode,
-      servingSizeBase: servingSizeBase,
-      servingUnitBase: servingUnitBase,
-      caloriesBase: caloriesBase,
-      proteinBase: proteinBase,
-      carbsBase: carbsBase,
-      fatBase: fatBase,
-      fiberBase: fiberBase,
-      micros: micros,
-      isFavorite: isFavorite,
-      createdBy: createdBy,
-      portions: portions,
-    );
+    final result = await _foodService.createFood(input, createdBy);
 
     if (result.isErr()) {
       final error = result.error;
@@ -147,52 +122,20 @@ class FoodCubit extends Cubit<FoodState> {
       error: const Nullable(null),
     ));
     await getFoods(
-      search: state.search,
-      category: state.category,
-      isFavorite: state.isFavorite,
-      limit: state.limit,
+      search: state.foodPagination.name,
+      category: state.foodPagination.category,
+      isFavorite: state.foodPagination.isFavorite,
+      limit: state.foodPagination.limit,
       offset: 0,
     );
     return true;
   }
 
-  Future<bool> updateFood({
-    required int id,
-    String? name,
-    FoodCategory? category,
-    String? brand,
-    String? barcode,
-    int? servingSizeBase,
-    String? servingUnitBase,
-    int? caloriesBase,
-    int? proteinBase,
-    int? carbsBase,
-    int? fatBase,
-    int? fiberBase,
-    Micronutrients? micros,
-    bool? isFavorite,
-    List<FoodPortionInput>? portions,
-  }) async {
+  Future<bool> updateFood(int id, FoodInput input) async {
     _logger.info('Updating food $id');
     emit(state.copyWith(isLoading: true));
 
-    final result = await _foodService.updateFood(
-      id: id,
-      name: name,
-      category: category,
-      brand: brand,
-      barcode: barcode,
-      servingSizeBase: servingSizeBase,
-      servingUnitBase: servingUnitBase,
-      caloriesBase: caloriesBase,
-      proteinBase: proteinBase,
-      carbsBase: carbsBase,
-      fatBase: fatBase,
-      fiberBase: fiberBase,
-      micros: micros,
-      isFavorite: isFavorite,
-      portions: portions,
-    );
+    final result = await _foodService.updateFood(id, input);
 
     if (result.isErr()) {
       final error = result.error;
@@ -213,10 +156,10 @@ class FoodCubit extends Cubit<FoodState> {
       error: const Nullable(null),
     ));
     await getFoods(
-      search: state.search,
-      category: state.category,
-      isFavorite: state.isFavorite,
-      limit: state.limit,
+      search: state.foodPagination.name,
+      category: state.foodPagination.category,
+      isFavorite: state.foodPagination.isFavorite,
+      limit: state.foodPagination.limit,
       offset: 0,
     );
     return true;
@@ -268,8 +211,11 @@ class FoodCubit extends Cubit<FoodState> {
 
     final updatedList = state.foods.where((f) => f.id != id).toList();
     emit(state.copyWith(
+      foodPagination: state.foodPagination.copyWith(
+        total:
+            state.foodPagination.total > 0 ? state.foodPagination.total - 1 : 0,
+      ),
       foods: updatedList,
-      total: state.total > 0 ? state.total - 1 : 0,
       selectedFood: state.selectedFood?.id == id ? const Nullable(null) : null,
       isLoading: false,
       error: const Nullable(null),

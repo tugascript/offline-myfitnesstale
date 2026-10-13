@@ -1,3 +1,4 @@
+import '../../widgets/meal_plans/meal_plan_schedule_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -143,101 +144,7 @@ class _MealPlanDetailsViewState extends State<MealPlanDetailsView> {
                   ),
                 ),
                 SizedBox(height: sizes.spacing),
-                ...plan.weeks.map((week) {
-                  return Card(
-                    margin: const EdgeInsets.only(bottom: 12),
-                    child: ExpansionTile(
-                      initiallyExpanded: true,
-                      title: Text(
-                        'Week ${week.weekNumber} (${week.phase.value})',
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      subtitle: Text(
-                        'Target: ${week.targetCalories} kcal • P: ${week.targetProtein}g C: ${week.targetCarbs}g F: ${week.targetFat}g',
-                        style: TextStyle(
-                          fontSize: sizes.fontSize * 0.85,
-                          color: Colors.grey[600],
-                        ),
-                      ),
-                      children: week.days.map((day) {
-                        return Padding(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 8),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                '${day.name ?? "Day ${day.day}"} (Day ${day.day}) - ${day.targetCalories} kcal (P: ${day.targetProtein}g C: ${day.targetCarbs}g F: ${day.targetFat}g)',
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.w600),
-                              ),
-                              const SizedBox(height: 6),
-                              ...day.meals.map((meal) {
-                                return Container(
-                                  margin: const EdgeInsets.only(bottom: 6),
-                                  padding: const EdgeInsets.all(8),
-                                  decoration: BoxDecoration(
-                                    color: Theme.of(context)
-                                        .cardColor
-                                        .withValues(alpha: 0.5),
-                                    borderRadius: BorderRadius.circular(6),
-                                    border: Border.all(
-                                        color:
-                                            Colors.grey.withValues(alpha: 0.2)),
-                                  ),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          Text(
-                                            '${meal.name} (${meal.mealType.value})',
-                                            style: const TextStyle(
-                                                fontWeight: FontWeight.w500),
-                                          ),
-                                          Text(
-                                            '${meal.totalCalories} kcal (P: ${meal.totalProtein}g C: ${meal.totalCarbs}g F: ${meal.totalFat}g)',
-                                            style: TextStyle(
-                                              fontSize: sizes.fontSize * 0.85,
-                                              color: Colors.grey[700],
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      if (meal.items.isNotEmpty) ...[
-                                        const SizedBox(height: 4),
-                                        ...meal.items.map((it) {
-                                          final portionText = it.portionName !=
-                                                  null
-                                              ? '${it.amount} × ${it.portionName}'
-                                              : '${it.amount}g';
-                                          return Padding(
-                                            padding: const EdgeInsets.only(
-                                                left: 8, top: 2),
-                                            child: Text(
-                                              '• ${it.foodName ?? 'Food #${it.foodId}'} ($portionText)',
-                                              style: TextStyle(
-                                                fontSize: sizes.fontSize * 0.85,
-                                                color: Colors.grey[600],
-                                              ),
-                                            ),
-                                          );
-                                        }),
-                                      ],
-                                    ],
-                                  ),
-                                );
-                              }),
-                            ],
-                          ),
-                        );
-                      }).toList(),
-                    ),
-                  );
-                }),
+                MealPlanScheduleWidget(plan: plan, sizes: sizes),
                 SizedBox(height: sizes.spacing * 1.5),
                 if (!isUserAuthored)
                   Card(

@@ -89,10 +89,9 @@ void main() {
       proteinBase: 31,
       carbsBase: 0,
       fatBase: 4,
-      servingSizeBase: 100,
-      servingUnitBase: 'g',
+      servingSizeBaseGrams: 100,
+      sodiumBase: 74,
       micros: const Micronutrients(
-        sodiumMg: 74,
         potassiumMg: 256,
         ironMg: 1,
       ),
@@ -106,7 +105,7 @@ void main() {
       whereArgs: [foodId],
     );
     final fetchedFood = Food.fromMap(foodRows.first);
-    expect(fetchedFood.micros?.sodiumMg, 74);
+    expect(fetchedFood.sodiumBase, 74);
     expect(fetchedFood.micros?.potassiumMg, 256);
     expect(fetchedFood.micros?.ironMg, 1);
 
@@ -158,7 +157,6 @@ void main() {
       loggedCarbs: 0,
       loggedFat: 6,
       loggedMicros: const Micronutrients(
-        sodiumMg: 111,
         potassiumMg: 384,
         ironMg: 2,
       ),
@@ -189,7 +187,6 @@ void main() {
     final fetchedItem = MealLogItem.fromMap(items.first);
     expect(fetchedItem.loggedFoodName, 'Chicken Breast');
     expect(fetchedItem.loggedProtein, 47);
-    expect(fetchedItem.loggedMicros?.sodiumMg, 111);
     expect(fetchedItem.loggedMicros?.potassiumMg, 384);
     expect(fetchedItem.loggedMicros?.ironMg, 2);
 
@@ -328,6 +325,7 @@ void main() {
     // 5. Insert Food & MealPlanMealItem
     final food = Food.create(
       name: 'Oatmeal',
+      servingSizeBaseGrams: 100,
       category: FoodCategory.grainsAndCereals,
       caloriesBase: 389,
       proteinBase: 17,

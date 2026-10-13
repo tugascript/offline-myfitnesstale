@@ -19,8 +19,6 @@ class MacroGoalDto extends Equatable {
   final int? targetWaterIntakeMl;
   final bool isActive;
   final WeightGoalPhase phase;
-  final int createdAt;
-  final int updatedAt;
 
   const MacroGoalDto({
     required this.id,
@@ -32,8 +30,6 @@ class MacroGoalDto extends Equatable {
     this.targetWaterIntakeMl,
     required this.isActive,
     required this.phase,
-    required this.createdAt,
-    required this.updatedAt,
   });
 
   factory MacroGoalDto.fromModel(MacroGoal model) {
@@ -47,8 +43,6 @@ class MacroGoalDto extends Equatable {
       targetWaterIntakeMl: model.targetWaterIntakeMl,
       isActive: model.isActive,
       phase: model.phase,
-      createdAt: model.createdAt,
-      updatedAt: model.updatedAt,
     );
   }
 
@@ -62,8 +56,6 @@ class MacroGoalDto extends Equatable {
     Nullable<int>? targetWaterIntakeMl,
     bool? isActive,
     WeightGoalPhase? phase,
-    int? createdAt,
-    int? updatedAt,
   }) {
     return MacroGoalDto(
       id: id ?? this.id,
@@ -77,8 +69,6 @@ class MacroGoalDto extends Equatable {
           : this.targetWaterIntakeMl,
       isActive: isActive ?? this.isActive,
       phase: phase ?? this.phase,
-      createdAt: createdAt ?? this.createdAt,
-      updatedAt: updatedAt ?? this.updatedAt,
     );
   }
 
@@ -93,8 +83,6 @@ class MacroGoalDto extends Equatable {
         targetWaterIntakeMl,
         isActive,
         phase,
-        createdAt,
-        updatedAt,
       ];
 }
 
@@ -111,8 +99,6 @@ class MealLogItemDto extends Equatable {
   final int loggedFat;
   final Micronutrients? loggedMicros;
   final String? portionName;
-  final int createdAt;
-  final int updatedAt;
 
   const MealLogItemDto({
     required this.id,
@@ -127,8 +113,6 @@ class MealLogItemDto extends Equatable {
     required this.loggedFat,
     this.loggedMicros,
     this.portionName,
-    required this.createdAt,
-    required this.updatedAt,
   });
 
   factory MealLogItemDto.fromModel(
@@ -148,8 +132,6 @@ class MealLogItemDto extends Equatable {
       loggedFat: model.loggedFat,
       loggedMicros: model.loggedMicros,
       portionName: portionName,
-      createdAt: model.createdAt,
-      updatedAt: model.updatedAt,
     );
   }
 
@@ -167,8 +149,6 @@ class MealLogItemDto extends Equatable {
         loggedFat,
         loggedMicros,
         portionName,
-        createdAt,
-        updatedAt,
       ];
 }
 
@@ -184,8 +164,6 @@ class MealLogDto extends Equatable {
   final int totalFat;
   final int? totalFiber;
   final List<MealLogItemDto> items;
-  final int createdAt;
-  final int updatedAt;
 
   const MealLogDto({
     required this.id,
@@ -199,8 +177,6 @@ class MealLogDto extends Equatable {
     required this.totalFat,
     this.totalFiber,
     this.items = const [],
-    required this.createdAt,
-    required this.updatedAt,
   });
 
   factory MealLogDto.fromModel(
@@ -219,8 +195,6 @@ class MealLogDto extends Equatable {
       totalFat: model.totalFat,
       totalFiber: model.totalFiber,
       items: items,
-      createdAt: model.createdAt,
-      updatedAt: model.updatedAt,
     );
   }
 
@@ -237,8 +211,6 @@ class MealLogDto extends Equatable {
         totalFat,
         totalFiber,
         items,
-        createdAt,
-        updatedAt,
       ];
 }
 
@@ -253,8 +225,6 @@ class DailyNutritionLogDto extends Equatable {
   final int totalCarbs;
   final int totalFat;
   final int totalFiber;
-  final int createdAt;
-  final int updatedAt;
 
   const DailyNutritionLogDto({
     required this.id,
@@ -267,8 +237,6 @@ class DailyNutritionLogDto extends Equatable {
     required this.totalCarbs,
     required this.totalFat,
     required this.totalFiber,
-    required this.createdAt,
-    required this.updatedAt,
   });
 
   factory DailyNutritionLogDto.fromModel(
@@ -300,8 +268,6 @@ class DailyNutritionLogDto extends Equatable {
       totalCarbs: carbs,
       totalFat: fat,
       totalFiber: fiber,
-      createdAt: model.createdAt,
-      updatedAt: model.updatedAt,
     );
   }
 
@@ -317,7 +283,5 @@ class DailyNutritionLogDto extends Equatable {
         totalCarbs,
         totalFat,
         totalFiber,
-        createdAt,
-        updatedAt,
       ];
 }

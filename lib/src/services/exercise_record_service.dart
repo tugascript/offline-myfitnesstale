@@ -1,3 +1,4 @@
+import 'inputs/strength_goal_input.dart';
 import 'package:logging/logging.dart';
 
 import '../common/nullable.dart';
@@ -351,50 +352,33 @@ class ExerciseRecordService {
   }
 
   Future<Result<StrengthGoalDto, ServiceError<SingleErrorTypes>>>
-      createStrengthGoal({
-    required int exerciseId,
-    required String name,
-    required int targetReps,
-    required int targetWeight,
-    required int targetMaxStrength,
-    required DateTime startDate,
-    ProgressStatus status = ProgressStatus.inProgress,
-  }) async {
-    _logger.info('Creating strength goal for exercise $exerciseId');
+      createStrengthGoal(StrengthGoalInput input) async {
+    _logger.info('Creating strength goal for exercise ${input.exerciseId}');
     try {
       final Exercise? exercise =
-          await _exerciseRepository.selectOne(exerciseId);
+          await _exerciseRepository.selectOne(input.exerciseId);
       if (exercise == null) {
-        _logger.warning('Exercise with id $exerciseId not found');
+        _logger.warning('Exercise with id ${input.exerciseId} not found');
         return err(ServiceError(
           type: SingleErrorTypes.notFound,
-          description: 'Exercise with id $exerciseId not found',
+          description: 'Exercise with id ${input.exerciseId} not found',
         ));
       }
 
       final StrengthGoal goal = StrengthGoal.create(
-        exerciseId: exerciseId,
-        name: name,
-        targetReps: targetReps,
-        targetWeight: targetWeight,
-        targetMaxStrength: targetMaxStrength,
-        startDate: DateUtilities.getDateUnix(startDate),
-        status: status,
+        exerciseId: input.exerciseId,
+        name: input.name,
+        targetReps: input.targetReps,
+        targetWeight: input.targetWeight,
+        targetMaxStrength: input.targetMaxStrength,
+        startDate: DateUtilities.getDateUnix(input.startDate),
+        status: input.status,
+        completedAt: input.completedAt.value != null
+            ? DateUtilities.getDateUnix(input.completedAt.value!)
+            : null,
       );
 
-      if (status != ProgressStatus.inProgress) {
-        final int id = await _strengthGoalRepository.insert(goal);
-        _logger.info('Created strength goal with id $id');
-        return ok(StrengthGoalDto.fromModel(goal.copyWith(id: Nullable(id))));
-      }
-
-      final int activeCount = await _strengthGoalRepository.count(
-        where:
-            '${StrengthGoalColumns.exerciseId.value} = ? AND ${StrengthGoalColumns.status.value} = ?',
-        whereArgs: [exerciseId, ProgressStatus.inProgress.value],
-      );
-
-      if (activeCount == 0) {
+      if (input.status != ProgressStatus.inProgress) {
         final int id = await _strengthGoalRepository.insert(goal);
         _logger.info('Created strength goal with id $id');
         return ok(StrengthGoalDto.fromModel(goal.copyWith(id: Nullable(id))));
@@ -402,20 +386,21 @@ class ExerciseRecordService {
 
       final int id =
           await _strengthGoalRepository.startTransaction((txn) async {
-        await txn.rawUpdate(
-          '''
-          UPDATE ${StrengthGoal.table} SET
-            ${StrengthGoalColumns.status.equal},
-            ${StrengthGoalColumns.completedAt.equal}
-          WHERE ${StrengthGoalColumns.exerciseId.equal} AND ${StrengthGoalColumns.status.equal};
-          ''',
-          [
-            ProgressStatus.abandoned.value,
-            DateUtilities.getNowUtcUnix(),
-            exerciseId,
-            ProgressStatus.inProgress.value,
-          ],
+        final activeGoals = await _strengthGoalRepository.selectMany(
+          where:
+              '${StrengthGoalColumns.exerciseId.equal} AND ${StrengthGoalColumns.status.equal}',
+          whereArgs: [input.exerciseId, ProgressStatus.inProgress.value],
+          trx: txn,
         );
+        final now = DateUtilities.getNowUtcUnix();
+        for (final activeGoal in activeGoals) {
+          await _strengthGoalRepository.update(
+              activeGoal.copyWith(
+                  status: ProgressStatus.abandoned,
+                  completedAt: Nullable(now),
+                  updatedAt: now),
+              txn);
+        }
         return await _strengthGoalRepository.insert(goal, txn);
       });
       _logger.info('Created strength goal with id $id');
@@ -545,16 +530,7 @@ class ExerciseRecordService {
   }
 
   Future<Result<StrengthGoalDto, ServiceError<SingleErrorTypes>>>
-      updateStrengthGoal({
-    required int id,
-    String? name,
-    int? targetReps,
-    int? targetWeight,
-    int? targetMaxStrength,
-    DateTime? startDate,
-    ProgressStatus? status,
-    DateTime? completedAt,
-  }) async {
+      updateStrengthGoal(int id, StrengthGoalInput input) async {
     _logger.info('Updating strength goal with id $id');
     try {
       final StrengthGoal? goal = await _strengthGoalRepository.selectOne(id);
@@ -565,23 +541,47 @@ class ExerciseRecordService {
         ));
       }
 
+      final exercise = await _exerciseRepository.selectOne(input.exerciseId);
+      if (exercise == null) {
+        return err(const ServiceError(
+            type: SingleErrorTypes.notFound,
+            description: 'Exercise not found'));
+      }
       final StrengthGoal updated = goal.copyWith(
-        name: name,
-        targetReps: targetReps,
-        targetWeight: targetWeight,
-        targetMaxStrength: targetMaxStrength,
-        startDate: startDate != null
-            ? DateUtilities.getDateUnix(startDate)
-            : goal.startDate,
-        status: status,
+        exerciseId: input.exerciseId,
+        name: input.name,
+        targetReps: input.targetReps,
+        targetWeight: input.targetWeight,
+        targetMaxStrength: input.targetMaxStrength,
+        startDate: DateUtilities.getDateUnix(input.startDate),
+        status: input.status,
         completedAt: Nullable(
-          completedAt != null
-              ? DateUtilities.getDateUnix(completedAt)
-              : goal.completedAt,
+          input.completedAt.value != null
+              ? DateUtilities.getDateUnix(input.completedAt.value!)
+              : null,
         ),
         updatedAt: DateUtilities.getNowUtcUnix(),
       );
-      await _strengthGoalRepository.update(updated);
+      await _strengthGoalRepository.startTransaction((txn) async {
+        if (input.status == ProgressStatus.inProgress) {
+          final activeGoals = await _strengthGoalRepository.selectMany(
+            where:
+                '${StrengthGoalColumns.exerciseId.equal} AND ${StrengthGoalColumns.status.equal} AND ${StrengthGoalColumns.id.value} != ?',
+            whereArgs: [input.exerciseId, ProgressStatus.inProgress.value, id],
+            trx: txn,
+          );
+          final now = DateUtilities.getNowUtcUnix();
+          for (final activeGoal in activeGoals) {
+            await _strengthGoalRepository.update(
+                activeGoal.copyWith(
+                    status: ProgressStatus.abandoned,
+                    completedAt: Nullable(now),
+                    updatedAt: now),
+                txn);
+          }
+        }
+        await _strengthGoalRepository.update(updated, txn);
+      });
       _logger.info('Updated strength goal with id $id');
       return ok(StrengthGoalDto.fromModel(updated));
     } catch (e) {

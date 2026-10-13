@@ -1,83 +1,77 @@
 import 'package:equatable/equatable.dart';
-
 import '../../common/nullable.dart';
 import '../../models/enums.dart';
 import '../../services/dtos/food_dto.dart';
 import 'common_state.dart';
 
-final class FoodState extends Equatable {
-  final List<FoodDto> foods;
-  final FoodDto? selectedFood;
+final class FoodPagination extends Equatable {
+  final String name;
+  final FoodCategory? category;
+  final bool isFavorite;
   final int total;
   final int limit;
   final int offset;
-  final String? search;
-  final FoodCategory? category;
-  final bool? isFavorite;
-  final bool isLoading;
-  final ErrorState? error;
 
-  const FoodState({
-    required this.foods,
-    this.selectedFood,
-    required this.total,
-    required this.limit,
-    required this.offset,
-    this.search,
+  const FoodPagination({
+    this.name = '',
     this.category,
-    this.isFavorite,
-    required this.isLoading,
-    this.error,
+    this.isFavorite = false,
+    this.total = 0,
+    this.limit = 20,
+    this.offset = 0,
   });
 
-  factory FoodState.initial() {
-    return const FoodState(
-      foods: [],
-      total: 0,
-      limit: 20,
-      offset: 0,
-      isLoading: false,
-    );
-  }
+  factory FoodPagination.initial() => const FoodPagination();
 
-  FoodState copyWith({
-    List<FoodDto>? foods,
-    Nullable<FoodDto>? selectedFood,
+  FoodPagination copyWith({
+    String? name,
+    Nullable<FoodCategory>? category,
+    bool? isFavorite,
     int? total,
     int? limit,
     int? offset,
-    Nullable<String>? search,
-    Nullable<FoodCategory>? category,
-    Nullable<bool>? isFavorite,
-    bool? isLoading,
-    Nullable<ErrorState>? error,
   }) {
-    return FoodState(
-      foods: foods ?? this.foods,
-      selectedFood:
-          selectedFood != null ? selectedFood.value : this.selectedFood,
+    return FoodPagination(
+      name: name ?? this.name,
+      category: category != null ? category.value : this.category,
+      isFavorite: isFavorite ?? this.isFavorite,
       total: total ?? this.total,
       limit: limit ?? this.limit,
       offset: offset ?? this.offset,
-      search: search != null ? search.value : this.search,
-      category: category != null ? category.value : this.category,
-      isFavorite: isFavorite != null ? isFavorite.value : this.isFavorite,
-      isLoading: isLoading ?? this.isLoading,
-      error: error != null ? error.value : this.error,
     );
   }
 
   @override
-  List<Object?> get props => [
-        foods,
-        selectedFood,
-        total,
-        limit,
-        offset,
-        search,
-        category,
-        isFavorite,
-        isLoading,
-        error,
-      ];
+  List<Object?> get props => [name, category, isFavorite, total, limit, offset];
+}
+
+final class FoodState extends Equatable {
+  final List<FoodDto> foods;
+  final FoodDto? selectedFood;
+  final FoodPagination foodPagination;
+  final bool isLoading;
+  final ErrorState? error;
+  const FoodState(
+      {this.foods = const [],
+      this.selectedFood,
+      this.foodPagination = const FoodPagination(),
+      this.isLoading = false,
+      this.error});
+  factory FoodState.initial() => const FoodState();
+  FoodState copyWith(
+          {List<FoodDto>? foods,
+          Nullable<FoodDto>? selectedFood,
+          FoodPagination? foodPagination,
+          bool? isLoading,
+          Nullable<ErrorState>? error}) =>
+      FoodState(
+          foods: foods ?? this.foods,
+          selectedFood:
+              selectedFood != null ? selectedFood.value : this.selectedFood,
+          foodPagination: foodPagination ?? this.foodPagination,
+          isLoading: isLoading ?? this.isLoading,
+          error: error != null ? error.value : this.error);
+  @override
+  List<Object?> get props =>
+      [foods, selectedFood, foodPagination, isLoading, error];
 }

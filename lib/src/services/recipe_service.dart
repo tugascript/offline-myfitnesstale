@@ -1,3 +1,4 @@
+import 'inputs/recipe_input.dart';
 import 'package:logging/logging.dart';
 
 import '../common/nullable.dart';
@@ -48,20 +49,20 @@ class RecipeService {
     fromMap: FoodPortion.fromMap,
   );
 
-  Future<Result<RecipeDto, ServiceError<SingleErrorTypes>>> createRecipe({
-    required String name,
-    String? description,
-    required int servingsYield,
-    CreatedBy createdBy = CreatedBy.user,
-    List<RecipeItemInput> items = const [],
-  }) async {
+  Future<Result<RecipeDto, ServiceError<SingleErrorTypes>>> createRecipe(
+      RecipeInput input,
+      [CreatedBy createdBy = CreatedBy.user]) async {
+    final name = input.name;
+    final description = input.description.value;
+    final servingsYield = input.servingsYield;
+    final items = input.items;
+
     _logger.info('Creating recipe $name');
     final actualYield = servingsYield < 1 ? 1 : servingsYield;
 
     try {
-      final db = await DatabaseHelper().db;
-      return await db
-          .transaction<Result<RecipeDto, ServiceError<SingleErrorTypes>>>(
+      return await _recipeRepository
+          .startTransaction<Result<RecipeDto, ServiceError<SingleErrorTypes>>>(
         (txn) async {
           // Calculate item totals and recipe totals
           int totalCals = 0;
@@ -75,44 +76,44 @@ class RecipeService {
           final Map<int, String> portionNames = {};
 
           for (final input in items) {
-            final foodRows = await txn.query(
-              Food.table,
+            final foodRows = await _foodRepository.selectMany(
               where: '${FoodColumns.id.value} = ?',
               whereArgs: [input.foodId],
               limit: 1,
+              trx: txn,
             );
             if (foodRows.isEmpty) {
-              return err(ServiceError(
+              throw ServiceError(
                 type: SingleErrorTypes.notFound,
                 description: 'Food with id ${input.foodId} not found',
-              ));
+              );
             }
-            final food = Food.fromMap(foodRows.first);
+            final food = foodRows.first;
             foodNames[food.id!] = food.name;
 
             double effectiveGrams = input.amount.toDouble();
             if (input.portionId != null) {
-              final portionRows = await txn.query(
-                FoodPortion.table,
+              final portionRows = await _portionRepository.selectMany(
                 where:
                     '${FoodPortionColumns.id.value} = ? AND ${FoodPortionColumns.foodId.value} = ?',
                 whereArgs: [input.portionId, input.foodId],
                 limit: 1,
+                trx: txn,
               );
               if (portionRows.isEmpty) {
-                return err(ServiceError(
+                throw ServiceError(
                   type: SingleErrorTypes.notFound,
                   description:
                       'Portion with id ${input.portionId} not found for food ${food.id}',
-                ));
+                );
               }
-              final portion = FoodPortion.fromMap(portionRows.first);
+              final portion = portionRows.first;
               portionNames[portion.id!] = portion.portionName;
               effectiveGrams = (input.amount * portion.gramWeight).toDouble();
             }
 
-            final double scale = food.servingSizeBase > 0
-                ? effectiveGrams / food.servingSizeBase
+            final double scale = food.servingSizeBaseGrams > 0
+                ? effectiveGrams / food.servingSizeBaseGrams
                 : 1.0;
 
             final int itemCals = (food.caloriesBase * scale).round();
@@ -198,6 +199,8 @@ class RecipeService {
           ));
         },
       );
+    } on ServiceError<SingleErrorTypes> catch (error) {
+      return err(error);
     } catch (e) {
       _logger.severe('Failed to create recipe', e);
       return err(const ServiceError(
@@ -241,6 +244,8 @@ class RecipeService {
       }
 
       return ok(RecipeDto.fromModel(recipe, items: itemDtos));
+    } on ServiceError<SingleErrorTypes> catch (error) {
+      return err(error);
     } catch (e) {
       _logger.severe('Failed to get recipe with id $id', e);
       return err(const ServiceError(
@@ -296,13 +301,12 @@ class RecipeService {
     }
   }
 
-  Future<Result<RecipeDto, ServiceError<SingleErrorTypes>>> updateRecipe({
-    required int id,
-    String? name,
-    String? description,
-    int? servingsYield,
-    List<RecipeItemInput>? items,
-  }) async {
+  Future<Result<RecipeDto, ServiceError<SingleErrorTypes>>> updateRecipe(
+      int id, RecipeInput input) async {
+    final name = input.name;
+    final servingsYield = input.servingsYield;
+    final items = input.items;
+
     _logger.info('Updating recipe with id $id');
     try {
       final Recipe? existing = await _recipeRepository.selectOne(id);
@@ -321,13 +325,10 @@ class RecipeService {
         ));
       }
 
-      final db = await DatabaseHelper().db;
-      return await db
-          .transaction<Result<RecipeDto, ServiceError<SingleErrorTypes>>>(
+      return await _recipeRepository
+          .startTransaction<Result<RecipeDto, ServiceError<SingleErrorTypes>>>(
         (txn) async {
-          final actualYield = (servingsYield ?? existing.servingsYield) < 1
-              ? 1
-              : (servingsYield ?? existing.servingsYield);
+          final actualYield = servingsYield < 1 ? 1 : servingsYield;
 
           // If items provided, re-calculate and re-insert
           List<RecipeItemDto> itemDtos = [];
@@ -337,159 +338,133 @@ class RecipeService {
           int servingF = existing.servingFat;
           Micronutrients? servingMicros = existing.servingMicros;
 
-          if (items != null) {
-            await txn.delete(
-              RecipeItem.table,
-              where: '${RecipeItemColumns.recipeId.value} = ?',
-              whereArgs: [id],
-            );
+          await _itemRepository.deleteMany(
+            where: '${RecipeItemColumns.recipeId.value} = ?',
+            whereArgs: [id],
+            trx: txn,
+          );
 
-            int totalCals = 0;
-            int totalProtein = 0;
-            int totalCarbs = 0;
-            int totalFat = 0;
-            Map<String, double> microsAcc = {};
+          int totalCals = 0;
+          int totalProtein = 0;
+          int totalCarbs = 0;
+          int totalFat = 0;
+          Map<String, double> microsAcc = {};
 
-            final List<RecipeItem> calculatedItems = [];
-            final Map<int, String> foodNames = {};
-            final Map<int, String> portionNames = {};
+          final List<RecipeItem> calculatedItems = [];
+          final Map<int, String> foodNames = {};
+          final Map<int, String> portionNames = {};
 
-            for (final input in items) {
-              final foodRows = await txn.query(
-                Food.table,
-                where: '${FoodColumns.id.value} = ?',
-                whereArgs: [input.foodId],
-                limit: 1,
-              );
-              if (foodRows.isEmpty) {
-                return err(ServiceError(
-                  type: SingleErrorTypes.notFound,
-                  description: 'Food with id ${input.foodId} not found',
-                ));
-              }
-              final food = Food.fromMap(foodRows.first);
-              foodNames[food.id!] = food.name;
-
-              double effectiveGrams = input.amount.toDouble();
-              if (input.portionId != null) {
-                final portionRows = await txn.query(
-                  FoodPortion.table,
-                  where:
-                      '${FoodPortionColumns.id.value} = ? AND ${FoodPortionColumns.foodId.value} = ?',
-                  whereArgs: [input.portionId, input.foodId],
-                  limit: 1,
-                );
-                if (portionRows.isEmpty) {
-                  return err(ServiceError(
-                    type: SingleErrorTypes.notFound,
-                    description:
-                        'Portion with id ${input.portionId} not found for food ${food.id}',
-                  ));
-                }
-                final portion = FoodPortion.fromMap(portionRows.first);
-                portionNames[portion.id!] = portion.portionName;
-                effectiveGrams = (input.amount * portion.gramWeight).toDouble();
-              }
-
-              final double scale = food.servingSizeBase > 0
-                  ? effectiveGrams / food.servingSizeBase
-                  : 1.0;
-
-              final int itemCals = (food.caloriesBase * scale).round();
-              final int itemProtein = (food.proteinBase * scale).round();
-              final int itemCarbs = (food.carbsBase * scale).round();
-              final int itemFat = (food.fatBase * scale).round();
-              final int? itemFiber = food.fiberBase != null
-                  ? (food.fiberBase! * scale).round()
-                  : null;
-
-              totalCals += itemCals;
-              totalProtein += itemProtein;
-              totalCarbs += itemCarbs;
-              totalFat += itemFat;
-
-              if (food.micros != null) {
-                final m = food.micros!.toMap();
-                for (final entry in m.entries) {
-                  if (entry.value is num) {
-                    microsAcc[entry.key] = (microsAcc[entry.key] ?? 0.0) +
-                        ((entry.value as num) * scale);
-                  }
-                }
-              }
-
-              calculatedItems.add(RecipeItem.create(
-                recipeId: id,
-                foodId: input.foodId,
-                portionId: input.portionId,
-                amount: input.amount,
-                totalCalories: itemCals,
-                totalProtein: itemProtein,
-                totalCarbs: itemCarbs,
-                totalFat: itemFat,
-                totalFiber: itemFiber,
-              ));
-            }
-
-            servingCals = (totalCals / actualYield).round();
-            servingProt = (totalProtein / actualYield).round();
-            servingCarb = (totalCarbs / actualYield).round();
-            servingF = (totalFat / actualYield).round();
-
-            if (microsAcc.isNotEmpty) {
-              final Map<String, dynamic> servingMicrosMap = {};
-              for (final entry in microsAcc.entries) {
-                servingMicrosMap[entry.key] =
-                    (entry.value / actualYield).round();
-              }
-              servingMicros = Micronutrients.fromMap(servingMicrosMap);
-            } else {
-              servingMicros = null;
-            }
-
-            for (final item in calculatedItems) {
-              final int itemId = await _itemRepository.insert(item, txn);
-              itemDtos.add(RecipeItemDto.fromModel(
-                item.copyWith(id: Nullable(itemId)),
-                foodName: foodNames[item.foodId],
-                portionName: item.portionId != null
-                    ? portionNames[item.portionId]
-                    : null,
-              ));
-            }
-          } else {
-            // Load existing items
-            final existingItems = await _itemRepository.selectMany(
-              where: RecipeItemColumns.recipeId.equal,
-              whereArgs: [id],
+          for (final input in items) {
+            final foodRows = await _foodRepository.selectMany(
+              where: '${FoodColumns.id.value} = ?',
+              whereArgs: [input.foodId],
+              limit: 1,
               trx: txn,
             );
-            for (final item in existingItems) {
-              final food = await _foodRepository.selectOne(item.foodId, txn);
-              String? portionName;
-              if (item.portionId != null) {
-                final portion =
-                    await _portionRepository.selectOne(item.portionId!, txn);
-                portionName = portion?.portionName;
-              }
-              itemDtos.add(RecipeItemDto.fromModel(
-                item,
-                foodName: food?.name,
-                portionName: portionName,
-              ));
+            if (foodRows.isEmpty) {
+              throw ServiceError(
+                type: SingleErrorTypes.notFound,
+                description: 'Food with id ${input.foodId} not found',
+              );
             }
+            final food = foodRows.first;
+            foodNames[food.id!] = food.name;
+
+            double effectiveGrams = input.amount.toDouble();
+            if (input.portionId != null) {
+              final portionRows = await _portionRepository.selectMany(
+                where:
+                    '${FoodPortionColumns.id.value} = ? AND ${FoodPortionColumns.foodId.value} = ?',
+                whereArgs: [input.portionId, input.foodId],
+                limit: 1,
+                trx: txn,
+              );
+              if (portionRows.isEmpty) {
+                throw ServiceError(
+                  type: SingleErrorTypes.notFound,
+                  description:
+                      'Portion with id ${input.portionId} not found for food ${food.id}',
+                );
+              }
+              final portion = portionRows.first;
+              portionNames[portion.id!] = portion.portionName;
+              effectiveGrams = (input.amount * portion.gramWeight).toDouble();
+            }
+
+            final double scale = food.servingSizeBaseGrams > 0
+                ? effectiveGrams / food.servingSizeBaseGrams
+                : 1.0;
+
+            final int itemCals = (food.caloriesBase * scale).round();
+            final int itemProtein = (food.proteinBase * scale).round();
+            final int itemCarbs = (food.carbsBase * scale).round();
+            final int itemFat = (food.fatBase * scale).round();
+            final int? itemFiber = food.fiberBase != null
+                ? (food.fiberBase! * scale).round()
+                : null;
+
+            totalCals += itemCals;
+            totalProtein += itemProtein;
+            totalCarbs += itemCarbs;
+            totalFat += itemFat;
+
+            if (food.micros != null) {
+              final m = food.micros!.toMap();
+              for (final entry in m.entries) {
+                if (entry.value is num) {
+                  microsAcc[entry.key] = (microsAcc[entry.key] ?? 0.0) +
+                      ((entry.value as num) * scale);
+                }
+              }
+            }
+
+            calculatedItems.add(RecipeItem.create(
+              recipeId: id,
+              foodId: input.foodId,
+              portionId: input.portionId,
+              amount: input.amount,
+              totalCalories: itemCals,
+              totalProtein: itemProtein,
+              totalCarbs: itemCarbs,
+              totalFat: itemFat,
+              totalFiber: itemFiber,
+            ));
+          }
+
+          servingCals = (totalCals / actualYield).round();
+          servingProt = (totalProtein / actualYield).round();
+          servingCarb = (totalCarbs / actualYield).round();
+          servingF = (totalFat / actualYield).round();
+
+          if (microsAcc.isNotEmpty) {
+            final Map<String, dynamic> servingMicrosMap = {};
+            for (final entry in microsAcc.entries) {
+              servingMicrosMap[entry.key] = (entry.value / actualYield).round();
+            }
+            servingMicros = Micronutrients.fromMap(servingMicrosMap);
+          } else {
+            servingMicros = null;
+          }
+
+          for (final item in calculatedItems) {
+            final int itemId = await _itemRepository.insert(item, txn);
+            itemDtos.add(RecipeItemDto.fromModel(
+              item.copyWith(id: Nullable(itemId)),
+              foodName: foodNames[item.foodId],
+              portionName:
+                  item.portionId != null ? portionNames[item.portionId] : null,
+            ));
           }
 
           final updated = existing.copyWith(
             name: name,
-            description: description != null ? Nullable(description) : null,
+            description: input.description,
             servingsYield: actualYield,
             servingCalories: servingCals,
             servingProtein: servingProt,
             servingCarbs: servingCarb,
             servingFat: servingF,
-            servingMicros:
-                servingMicros != null ? Nullable(servingMicros) : null,
+            servingMicros: Nullable(servingMicros),
             updatedAt: DateUtilities.getNowUtcUnix(),
           );
 
@@ -498,6 +473,8 @@ class RecipeService {
           return ok(RecipeDto.fromModel(updated, items: itemDtos));
         },
       );
+    } on ServiceError<SingleErrorTypes> catch (error) {
+      return err(error);
     } catch (e) {
       _logger.severe('Failed to update recipe with id $id', e);
       return err(const ServiceError(
@@ -537,6 +514,8 @@ class RecipeService {
 
       _logger.info('Deleted recipe with id $id');
       return ok(null);
+    } on ServiceError<SingleErrorTypes> catch (error) {
+      return err(error);
     } catch (e) {
       _logger.severe('Failed to delete recipe with id $id', e);
       return err(const ServiceError(

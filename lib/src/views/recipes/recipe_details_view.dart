@@ -1,3 +1,4 @@
+import '../../widgets/recipes/recipe_details_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -86,113 +87,7 @@ class _RecipeDetailsViewState extends State<RecipeDetailsView> {
             padding: EdgeInsets.all(sizes.viewPadding),
             child: ListView(
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Servings: ${recipe.servingsYield}',
-                      style: TextStyle(
-                        fontSize: sizes.subtitleFontSize,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-                if (recipe.description != null &&
-                    recipe.description!.isNotEmpty) ...[
-                  SizedBox(height: sizes.spacing / 2),
-                  Text(
-                    recipe.description!,
-                    style: TextStyle(
-                      fontSize: sizes.fontSize,
-                      color: Colors.grey[700],
-                    ),
-                  ),
-                ],
-                SizedBox(height: sizes.spacing),
-                // Nutrition Card (Per Serving)
-                Card(
-                  margin: EdgeInsets.zero,
-                  child: Padding(
-                    padding: EdgeInsets.all(sizes.padding),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Nutrition Per Serving',
-                          style: TextStyle(
-                            fontSize: sizes.subtitleFontSize,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        SizedBox(height: sizes.spacing),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceAround,
-                          children: [
-                            _MacroItem(
-                              label: 'Calories',
-                              value: '${recipe.servingCalories} kcal',
-                              color: Colors.orange,
-                              sizes: sizes,
-                            ),
-                            _MacroItem(
-                              label: 'Protein',
-                              value: '${recipe.servingProtein}g',
-                              color: Colors.blue,
-                              sizes: sizes,
-                            ),
-                            _MacroItem(
-                              label: 'Carbs',
-                              value: '${recipe.servingCarbs}g',
-                              color: Colors.amber,
-                              sizes: sizes,
-                            ),
-                            _MacroItem(
-                              label: 'Fat',
-                              value: '${recipe.servingFat}g',
-                              color: Colors.red,
-                              sizes: sizes,
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                SizedBox(height: sizes.spacing),
-                // Ingredients List
-                Text(
-                  'Ingredients (${recipe.items.length})',
-                  style: TextStyle(
-                    fontSize: sizes.subtitleFontSize,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                SizedBox(height: sizes.spacing / 2),
-                if (recipe.items.isEmpty)
-                  Text(
-                    'No ingredients listed.',
-                    style: TextStyle(
-                      fontSize: sizes.fontSize,
-                      color: Colors.grey,
-                    ),
-                  )
-                else
-                  ...recipe.items.map((item) {
-                    final portionLabel = item.portionName != null
-                        ? '${item.amount} × ${item.portionName}'
-                        : '${item.amount}g';
-                    return Card(
-                      margin: const EdgeInsets.only(bottom: 6),
-                      child: ListTile(
-                        leading:
-                            const Icon(Icons.restaurant, color: Colors.teal),
-                        title: Text(item.foodName ?? 'Food #${item.foodId}'),
-                        subtitle: Text(portionLabel),
-                      ),
-                    );
-                  }),
-                SizedBox(height: sizes.spacing * 1.5),
+                RecipeDetailsWidget(recipe: recipe, sizes: sizes),
                 // Screen check: Machine-authored vs User-authored
                 if (!isUserAuthored)
                   Card(
@@ -251,44 +146,6 @@ class _RecipeDetailsViewState extends State<RecipeDetailsView> {
           ),
         );
       },
-    );
-  }
-}
-
-class _MacroItem extends StatelessWidget {
-  final String label;
-  final String value;
-  final Color color;
-  final DataDisplaySizesList sizes;
-
-  const _MacroItem({
-    required this.label,
-    required this.value,
-    required this.color,
-    required this.sizes,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: sizes.subtitleFontSize,
-            fontWeight: FontWeight.bold,
-            color: color,
-          ),
-        ),
-        const SizedBox(height: 2),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: sizes.fontSize * 0.8,
-            color: Colors.grey,
-          ),
-        ),
-      ],
     );
   }
 }

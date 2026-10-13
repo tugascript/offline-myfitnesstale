@@ -7,79 +7,6 @@ import '../../models/meal_plan_meal_model.dart';
 import '../../models/meal_plan_model.dart';
 import '../../models/meal_plan_week_model.dart';
 
-class MealPlanMealItemInput extends Equatable {
-  final int foodId;
-  final int? portionId;
-  final int amount;
-
-  const MealPlanMealItemInput({
-    required this.foodId,
-    this.portionId,
-    required this.amount,
-  });
-
-  @override
-  List<Object?> get props => [foodId, portionId, amount];
-}
-
-class MealPlanMealInput extends Equatable {
-  final int position;
-  final String? timeOfDay;
-  final MealType mealType;
-  final String name;
-  final int? recipeId;
-  final List<MealPlanMealItemInput> items;
-
-  const MealPlanMealInput({
-    required this.position,
-    this.timeOfDay,
-    required this.mealType,
-    required this.name,
-    this.recipeId,
-    this.items = const [],
-  });
-
-  @override
-  List<Object?> get props => [
-        position,
-        timeOfDay,
-        mealType,
-        name,
-        recipeId,
-        items,
-      ];
-}
-
-class MealPlanDayInput extends Equatable {
-  final int day;
-  final String? name;
-  final List<MealPlanMealInput> meals;
-
-  const MealPlanDayInput({
-    required this.day,
-    this.name,
-    this.meals = const [],
-  });
-
-  @override
-  List<Object?> get props => [day, name, meals];
-}
-
-class MealPlanWeekInput extends Equatable {
-  final int weekNumber;
-  final MealPlanPhase phase;
-  final List<MealPlanDayInput> days;
-
-  const MealPlanWeekInput({
-    required this.weekNumber,
-    required this.phase,
-    this.days = const [],
-  });
-
-  @override
-  List<Object?> get props => [weekNumber, phase, days];
-}
-
 class MealPlanMealItemDto extends Equatable {
   final int id;
   final int mealPlanMealId;
@@ -93,8 +20,6 @@ class MealPlanMealItemDto extends Equatable {
   final int? totalFiber;
   final String? foodName;
   final String? portionName;
-  final int createdAt;
-  final int updatedAt;
 
   const MealPlanMealItemDto({
     required this.id,
@@ -109,8 +34,6 @@ class MealPlanMealItemDto extends Equatable {
     this.totalFiber,
     this.foodName,
     this.portionName,
-    required this.createdAt,
-    required this.updatedAt,
   });
 
   factory MealPlanMealItemDto.fromModel(
@@ -131,8 +54,6 @@ class MealPlanMealItemDto extends Equatable {
       totalFiber: model.totalFiber,
       foodName: foodName,
       portionName: portionName,
-      createdAt: model.createdAt,
-      updatedAt: model.updatedAt,
     );
   }
 
@@ -150,8 +71,6 @@ class MealPlanMealItemDto extends Equatable {
         totalFiber,
         foodName,
         portionName,
-        createdAt,
-        updatedAt,
       ];
 }
 
@@ -174,8 +93,6 @@ class MealPlanMealDto extends Equatable {
   final String? recipeName;
   final CreatedBy createdBy;
   final List<MealPlanMealItemDto> items;
-  final int createdAt;
-  final int updatedAt;
 
   const MealPlanMealDto({
     required this.id,
@@ -196,8 +113,6 @@ class MealPlanMealDto extends Equatable {
     this.recipeName,
     required this.createdBy,
     this.items = const [],
-    required this.createdAt,
-    required this.updatedAt,
   });
 
   factory MealPlanMealDto.fromModel(
@@ -224,8 +139,6 @@ class MealPlanMealDto extends Equatable {
       recipeName: recipeName,
       createdBy: model.createdBy,
       items: items,
-      createdAt: model.createdAt,
-      updatedAt: model.updatedAt,
     );
   }
 
@@ -249,8 +162,6 @@ class MealPlanMealDto extends Equatable {
         recipeName,
         createdBy,
         items,
-        createdAt,
-        updatedAt,
       ];
 }
 
@@ -269,8 +180,6 @@ class MealPlanDayDto extends Equatable {
   final int totalMeals;
   final CreatedBy createdBy;
   final List<MealPlanMealDto> meals;
-  final int createdAt;
-  final int updatedAt;
 
   const MealPlanDayDto({
     required this.id,
@@ -287,8 +196,6 @@ class MealPlanDayDto extends Equatable {
     required this.totalMeals,
     required this.createdBy,
     this.meals = const [],
-    required this.createdAt,
-    required this.updatedAt,
   });
 
   factory MealPlanDayDto.fromModel(
@@ -310,8 +217,6 @@ class MealPlanDayDto extends Equatable {
       totalMeals: model.totalMeals,
       createdBy: model.createdBy,
       meals: meals,
-      createdAt: model.createdAt,
-      updatedAt: model.updatedAt,
     );
   }
 
@@ -331,8 +236,6 @@ class MealPlanDayDto extends Equatable {
         totalMeals,
         createdBy,
         meals,
-        createdAt,
-        updatedAt,
       ];
 }
 
@@ -351,8 +254,6 @@ class MealPlanWeekDto extends Equatable {
   final int totalMeals;
   final CreatedBy createdBy;
   final List<MealPlanDayDto> days;
-  final int createdAt;
-  final int updatedAt;
 
   const MealPlanWeekDto({
     required this.id,
@@ -369,8 +270,6 @@ class MealPlanWeekDto extends Equatable {
     required this.totalMeals,
     required this.createdBy,
     this.days = const [],
-    required this.createdAt,
-    required this.updatedAt,
   });
 
   factory MealPlanWeekDto.fromModel(
@@ -392,8 +291,6 @@ class MealPlanWeekDto extends Equatable {
       totalMeals: model.totalMeals,
       createdBy: model.createdBy,
       days: days,
-      createdAt: model.createdAt,
-      updatedAt: model.updatedAt,
     );
   }
 
@@ -413,8 +310,6 @@ class MealPlanWeekDto extends Equatable {
         totalMeals,
         createdBy,
         days,
-        createdAt,
-        updatedAt,
       ];
 }
 
@@ -429,8 +324,6 @@ class MealPlanDto extends Equatable {
   final bool isFavorite;
   final CreatedBy createdBy;
   final List<MealPlanWeekDto> weeks;
-  final int createdAt;
-  final int updatedAt;
 
   const MealPlanDto({
     required this.id,
@@ -443,8 +336,6 @@ class MealPlanDto extends Equatable {
     required this.isFavorite,
     required this.createdBy,
     this.weeks = const [],
-    required this.createdAt,
-    required this.updatedAt,
   });
 
   factory MealPlanDto.fromModel(
@@ -462,8 +353,6 @@ class MealPlanDto extends Equatable {
       isFavorite: model.isFavorite,
       createdBy: model.createdBy,
       weeks: weeks,
-      createdAt: model.createdAt,
-      updatedAt: model.updatedAt,
     );
   }
 
@@ -479,7 +368,5 @@ class MealPlanDto extends Equatable {
         isFavorite,
         createdBy,
         weeks,
-        createdAt,
-        updatedAt,
       ];
 }

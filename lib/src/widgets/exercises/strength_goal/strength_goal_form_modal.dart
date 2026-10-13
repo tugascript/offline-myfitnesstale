@@ -1,3 +1,5 @@
+import '../../../common/nullable.dart';
+import '../../../services/inputs/strength_goal_input.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -99,15 +101,19 @@ class _StrengthGoalFormModalState extends State<StrengthGoalFormModal> {
     final cubit = context.read<ExerciseRecordCubit>();
     if (widget.existingGoal != null) {
       cubit.updateStrengthGoal(
-        id: widget.existingGoal!.id,
-        name: name,
-        targetWeight: targetWeightGrams,
-        targetReps: targetReps,
-        targetMaxStrength: targetMaxStrength,
-        status: widget.existingGoal!.status,
-      );
+          widget.existingGoal!.id,
+          StrengthGoalInput(
+            name: name,
+            targetWeight: targetWeightGrams,
+            targetReps: targetReps,
+            targetMaxStrength: targetMaxStrength,
+            status: widget.existingGoal!.status,
+            exerciseId: widget.existingGoal!.exerciseId,
+            startDate: widget.existingGoal!.startDate,
+            completedAt: Nullable(widget.existingGoal!.completedAt),
+          ));
     } else {
-      cubit.createStrengthGoal(
+      cubit.createStrengthGoal(StrengthGoalInput(
         exerciseId: _selectedExerciseId!,
         name: name,
         targetWeight: targetWeightGrams,
@@ -115,7 +121,7 @@ class _StrengthGoalFormModalState extends State<StrengthGoalFormModal> {
         targetMaxStrength: targetMaxStrength,
         startDate: DateTime.now(),
         status: ProgressStatus.inProgress,
-      );
+      ));
     }
 
     Navigator.of(context).pop();

@@ -56,6 +56,7 @@ class FoodPortion extends Equatable implements Model {
   );
 
   CREATE INDEX IF NOT EXISTS idx_food_portions_food_id ON $_table (${FoodPortionColumns.foodId.value});
+  CREATE INDEX IF NOT EXISTS idx_food_portions_food_id_portion_name ON $_table (${FoodPortionColumns.foodId.value}, ${FoodPortionColumns.portionName.value});
   ''';
 
   @override

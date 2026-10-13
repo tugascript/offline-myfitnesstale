@@ -1,3 +1,4 @@
+import '../services/inputs/meal_plan_input.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:logging/logging.dart';
 
@@ -22,11 +23,13 @@ class MealPlanCubit extends Cubit<MealPlanState> {
   }) async {
     _logger.info('Getting meal plans');
     emit(state.copyWith(
+      mealPlanPagination: state.mealPlanPagination.copyWith(
+        limit: limit,
+        offset: offset,
+        search: Nullable(search),
+        isFavorite: Nullable(isFavorite),
+      ),
       isLoading: true,
-      search: Nullable(search),
-      isFavorite: Nullable(isFavorite),
-      limit: limit,
-      offset: offset,
     ));
 
     final result = await _mealPlanService.getMealPlans(
@@ -54,8 +57,10 @@ class MealPlanCubit extends Cubit<MealPlanState> {
         offset > 0 ? [...state.mealPlans, ...paginated.data] : paginated.data;
 
     emit(state.copyWith(
+      mealPlanPagination: state.mealPlanPagination.copyWith(
+        total: paginated.total,
+      ),
       mealPlans: plans,
-      total: paginated.total,
       isLoading: false,
       error: const Nullable(null),
     ));
@@ -86,21 +91,12 @@ class MealPlanCubit extends Cubit<MealPlanState> {
     ));
   }
 
-  Future<bool> createMealPlan({
-    required String name,
-    String? description,
-    CreatedBy createdBy = CreatedBy.user,
-    List<MealPlanWeekInput> weeks = const [],
-  }) async {
-    _logger.info('Creating meal plan $name');
+  Future<bool> createMealPlan(MealPlanInput input,
+      [CreatedBy createdBy = CreatedBy.user]) async {
+    _logger.info('Creating meal plan ${input.name}');
     emit(state.copyWith(isLoading: true));
 
-    final result = await _mealPlanService.createMealPlan(
-      name: name,
-      description: description,
-      createdBy: createdBy,
-      weeks: weeks,
-    );
+    final result = await _mealPlanService.createMealPlan(input, createdBy);
 
     if (result.isErr()) {
       final error = result.error;
@@ -120,25 +116,19 @@ class MealPlanCubit extends Cubit<MealPlanState> {
       isLoading: false,
       error: const Nullable(null),
     ));
-    await getMealPlans(search: state.search, limit: state.limit, offset: 0);
+    await getMealPlans(
+        search: state.mealPlanPagination.search,
+        isFavorite: state.mealPlanPagination.isFavorite,
+        limit: state.mealPlanPagination.limit,
+        offset: 0);
     return true;
   }
 
-  Future<bool> updateMealPlan({
-    required int id,
-    String? name,
-    String? description,
-    List<MealPlanWeekInput>? weeks,
-  }) async {
+  Future<bool> updateMealPlan(int id, MealPlanInput input) async {
     _logger.info('Updating meal plan $id');
     emit(state.copyWith(isLoading: true));
 
-    final result = await _mealPlanService.updateMealPlan(
-      id: id,
-      name: name,
-      description: description,
-      weeks: weeks,
-    );
+    final result = await _mealPlanService.updateMealPlan(id, input);
 
     if (result.isErr()) {
       final error = result.error;
@@ -158,7 +148,11 @@ class MealPlanCubit extends Cubit<MealPlanState> {
       isLoading: false,
       error: const Nullable(null),
     ));
-    await getMealPlans(search: state.search, limit: state.limit, offset: 0);
+    await getMealPlans(
+        search: state.mealPlanPagination.search,
+        isFavorite: state.mealPlanPagination.isFavorite,
+        limit: state.mealPlanPagination.limit,
+        offset: 0);
     return true;
   }
 
@@ -209,8 +203,12 @@ class MealPlanCubit extends Cubit<MealPlanState> {
 
     final updated = state.mealPlans.where((p) => p.id != id).toList();
     emit(state.copyWith(
+      mealPlanPagination: state.mealPlanPagination.copyWith(
+        total: state.mealPlanPagination.total > 0
+            ? state.mealPlanPagination.total - 1
+            : 0,
+      ),
       mealPlans: updated,
-      total: state.total > 0 ? state.total - 1 : 0,
       selectedMealPlan:
           state.selectedMealPlan?.id == id ? const Nullable(null) : null,
       isLoading: false,
