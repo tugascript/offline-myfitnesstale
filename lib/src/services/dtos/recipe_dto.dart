@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 
+import '../../common/nullable.dart';
 import '../../models/common.dart';
 import '../../models/enums.dart';
 import '../../models/recipe_item_model.dart';
@@ -80,15 +81,15 @@ class RecipeItemDto extends Equatable {
     int? id,
     int? recipeId,
     int? foodId,
-    int? portionId,
+    Nullable<int>? portionId,
     int? amount,
     int? totalCalories,
     int? totalProtein,
     int? totalCarbs,
     int? totalFat,
-    int? totalFiber,
-    String? foodName,
-    String? portionName,
+    Nullable<int>? totalFiber,
+    Nullable<String>? foodName,
+    Nullable<String>? portionName,
     int? createdAt,
     int? updatedAt,
   }) {
@@ -96,15 +97,15 @@ class RecipeItemDto extends Equatable {
       id: id ?? this.id,
       recipeId: recipeId ?? this.recipeId,
       foodId: foodId ?? this.foodId,
-      portionId: portionId ?? this.portionId,
+      portionId: portionId != null ? portionId.value : this.portionId,
       amount: amount ?? this.amount,
       totalCalories: totalCalories ?? this.totalCalories,
       totalProtein: totalProtein ?? this.totalProtein,
       totalCarbs: totalCarbs ?? this.totalCarbs,
       totalFat: totalFat ?? this.totalFat,
-      totalFiber: totalFiber ?? this.totalFiber,
-      foodName: foodName ?? this.foodName,
-      portionName: portionName ?? this.portionName,
+      totalFiber: totalFiber != null ? totalFiber.value : this.totalFiber,
+      foodName: foodName != null ? foodName.value : this.foodName,
+      portionName: portionName != null ? portionName.value : this.portionName,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -184,13 +185,13 @@ class RecipeDto extends Equatable {
   RecipeDto copyWith({
     int? id,
     String? name,
-    String? description,
+    Nullable<String>? description,
     int? servingsYield,
     int? servingCalories,
     int? servingProtein,
     int? servingCarbs,
     int? servingFat,
-    Micronutrients? servingMicros,
+    Nullable<Micronutrients>? servingMicros,
     CreatedBy? createdBy,
     int? createdAt,
     int? updatedAt,
@@ -199,13 +200,14 @@ class RecipeDto extends Equatable {
     return RecipeDto(
       id: id ?? this.id,
       name: name ?? this.name,
-      description: description ?? this.description,
+      description: description != null ? description.value : this.description,
       servingsYield: servingsYield ?? this.servingsYield,
       servingCalories: servingCalories ?? this.servingCalories,
       servingProtein: servingProtein ?? this.servingProtein,
       servingCarbs: servingCarbs ?? this.servingCarbs,
       servingFat: servingFat ?? this.servingFat,
-      servingMicros: servingMicros ?? this.servingMicros,
+      servingMicros:
+          servingMicros != null ? servingMicros.value : this.servingMicros,
       createdBy: createdBy ?? this.createdBy,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,

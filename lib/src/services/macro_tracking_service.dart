@@ -1,6 +1,7 @@
 import 'package:logging/logging.dart';
 import 'package:sqflite/sqflite.dart';
 
+import '../common/nullable.dart';
 import '../models/common.dart';
 import '../models/daily_nutrition_log_model.dart';
 import '../models/db.dart';
@@ -93,7 +94,7 @@ class MacroTrackingService {
       });
 
       _logger.info('Created macro goal with id: $id');
-      return ok(MacroGoalDto.fromModel(goal.copyWith(id: id)));
+      return ok(MacroGoalDto.fromModel(goal.copyWith(id: Nullable(id))));
     } catch (e) {
       _logger.severe('Failed to create macro goal', e);
       return err(const ServiceError(
@@ -143,7 +144,9 @@ class MacroTrackingService {
             targetProtein: targetProtein,
             targetCarbs: targetCarbs,
             targetFat: targetFat,
-            targetWaterIntakeMl: targetWaterIntakeMl,
+            targetWaterIntakeMl: targetWaterIntakeMl != null
+                ? Nullable(targetWaterIntakeMl)
+                : null,
             phase: phase,
             isActive: isActive,
             updatedAt: DateUtilities.getNowUtcUnix(),
@@ -267,7 +270,7 @@ class MacroTrackingService {
 
     final newLog = DailyNutritionLog.create(date: numericDate);
     final id = await _dailyLogRepository.insert(newLog, txn);
-    return newLog.copyWith(id: id);
+    return newLog.copyWith(id: Nullable(id));
   }
 
   Future<Result<DailyNutritionLogDto, ServiceError<SingleErrorTypes>>>
@@ -506,7 +509,7 @@ class MacroTrackingService {
               totalFat: 0,
             );
             mealLogId = await _mealLogRepository.insert(newMeal, txn);
-            mealLog = newMeal.copyWith(id: mealLogId);
+            mealLog = newMeal.copyWith(id: Nullable(mealLogId));
           } else {
             mealLog = MealLog.fromMap(existingMealRows.first);
             mealLogId = mealLog.id!;
@@ -645,7 +648,7 @@ class MacroTrackingService {
               totalFat: 0,
             );
             mealLogId = await _mealLogRepository.insert(newMeal, txn);
-            mealLog = newMeal.copyWith(id: mealLogId);
+            mealLog = newMeal.copyWith(id: Nullable(mealLogId));
           } else {
             mealLog = MealLog.fromMap(existingMealRows.first);
             mealLogId = mealLog.id!;
@@ -682,7 +685,7 @@ class MacroTrackingService {
           }
 
           final updatedMeal = mealLog.copyWith(
-            recipeId: recipeId,
+            recipeId: Nullable(recipeId),
             totalCalories: sumCals,
             totalProtein: sumProtein,
             totalCarbs: sumCarbs,

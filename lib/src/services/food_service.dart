@@ -1,6 +1,23 @@
+// Copyright (C) 2026 Afonso Barracha
+//
+// This file is part of My Fitness Tale.
+//
+// My Fitness Tale is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// My Fitness Tale is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with My Fitness Tale.  If not, see <https://www.gnu.org/licenses/>.
+
 import 'package:logging/logging.dart';
 
-import '../models/common.dart';
+import '../common/nullable.dart';
 import '../models/db.dart';
 import '../models/enums.dart';
 import '../models/food_model.dart';
@@ -11,6 +28,7 @@ import 'common/errors.dart';
 import 'common/result.dart';
 import 'dtos/food_dto.dart';
 import 'dtos/paginated_dto.dart';
+import 'inputs/food_input.dart';
 
 class FoodService {
   FoodService._();
@@ -33,59 +51,59 @@ class FoodService {
     fromMap: FoodPortion.fromMap,
   );
 
-  Future<Result<FoodDto, ServiceError<SingleErrorTypes>>> createFood({
-    required String name,
-    required FoodCategory category,
-    String? brand,
-    String? barcode,
-    required int servingSizeBaseGrams,
-    required int caloriesBase,
-    required int proteinBase,
-    required int carbsBase,
-    required int fatBase,
-    int? fiberBase,
-    Micronutrients? micros,
-    bool isFavorite = false,
+  Future<Result<FoodDto, ServiceError<SingleErrorTypes>>> createFood(
+    FoodInput input, [
     CreatedBy createdBy = CreatedBy.user,
-    List<FoodPortionInput> portions = const [],
-  }) async {
-    _logger.info('Creating food $name');
+  ]) async {
+    _logger.info('Creating food ${input.name}');
     try {
-      final Food food = Food.create(
-        name: name,
-        category: category,
-        brand: brand,
-        barcode: barcode,
-        servingSizeBaseGrams: servingSizeBaseGrams,
-        caloriesBase: caloriesBase,
-        proteinBase: proteinBase,
-        carbsBase: carbsBase,
-        fatBase: fatBase,
-        fiberBase: fiberBase,
-        micros: micros,
-        isFavorite: isFavorite,
+      final food = Food.create(
+        name: input.name,
+        category: input.category,
+        brand: input.brand.value,
+        barcode: input.barcode.value,
+        servingSizeBaseGrams: input.servingSizeBaseGrams,
+        caloriesBase: input.caloriesBase,
+        proteinBase: input.proteinBase,
+        carbsBase: input.carbsBase,
+        fatBase: input.fatBase,
+        fiberBase: input.fiberBase.value,
+        sodiumBase: input.sodiumBase.value,
+        micros: input.micros.value,
+        isFavorite: input.isFavorite,
         createdBy: createdBy,
       );
 
-      final FoodDto createdDto =
-          await _foodRepository.startTransaction((txn) async {
-        final int foodId = await _foodRepository.insert(food, txn);
-        final List<FoodPortionDto> portionDtos = [];
+      if (input.portions.isEmpty) {
+        _logger.info("No portions provided, creating food without portions");
+        final int foodId = await _foodRepository.insert(food);
+        return ok(FoodDto.fromModel(food.copyWith(id: Nullable(foodId))));
+      }
 
-        for (final portionInput in portions) {
-          final portion = FoodPortion.create(
-            foodId: foodId,
-            portionName: portionInput.portionName,
-            gramWeight: portionInput.gramWeight,
+      final FoodDto createdDto = await _foodRepository.startTransaction(
+        (txn) async {
+          final int foodId = await _foodRepository.insert(food, txn);
+          final List<FoodPortionDto> portionDtos = [];
+
+          for (final portionInput in input.portions) {
+            final portion = FoodPortion.create(
+              foodId: foodId,
+              portionName: portionInput.portionName,
+              gramWeight: portionInput.gramWeight,
+            );
+            final int portionId = await _portionRepository.insert(portion, txn);
+            portionDtos.add(
+              FoodPortionDto.fromModel(
+                  portion.copyWith(id: Nullable(portionId))),
+            );
+          }
+
+          return FoodDto.fromModel(
+            food.copyWith(id: Nullable(foodId)),
+            portions: portionDtos,
           );
-          final int portionId = await _portionRepository.insert(portion, txn);
-          portionDtos
-              .add(FoodPortionDto.fromModel(portion.copyWith(id: portionId)));
-        }
-
-        return FoodDto.fromModel(food.copyWith(id: foodId),
-            portions: portionDtos);
-      });
+        },
+      );
 
       _logger.info('Created food with id ${createdDto.id}');
       return ok(createdDto);
@@ -99,15 +117,19 @@ class FoodService {
   }
 
   Future<Result<FoodDto, ServiceError<SingleErrorTypes>>> getFood(
-      int id) async {
+    int id,
+  ) async {
     _logger.info('Getting food with id $id');
     try {
       final Food? food = await _foodRepository.selectOne(id);
       if (food == null) {
-        return err(const ServiceError(
-          type: SingleErrorTypes.notFound,
-          description: 'Food not found',
-        ));
+        _logger.warning('Food not found with id $id');
+        return err(
+          const ServiceError(
+            type: SingleErrorTypes.notFound,
+            description: 'Food not found',
+          ),
+        );
       }
 
       final List<FoodPortion> portions = await _portionRepository.selectMany(
@@ -115,11 +137,16 @@ class FoodService {
         whereArgs: [id],
         orderBy: [FoodPortionColumns.portionName.orderAsc],
       );
+      final List<FoodPortionDto> portionDtos = portions
+          .map(
+            (p) => FoodPortionDto.fromModel(p),
+          )
+          .toList();
 
-      final List<FoodPortionDto> portionDtos =
-          portions.map((p) => FoodPortionDto.fromModel(p)).toList();
-
-      return ok(FoodDto.fromModel(food, portions: portionDtos));
+      return ok(FoodDto.fromModel(
+        food,
+        portions: portionDtos,
+      ));
     } catch (e) {
       _logger.severe('Failed to get food with id $id', e);
       return err(const ServiceError(
@@ -131,23 +158,23 @@ class FoodService {
 
   Future<Result<PaginatedDto<FoodDto, Food>, ServiceError<OperationErrorTypes>>>
       getFoods({
-    String? search,
+    String? name,
     FoodCategory? category,
-    bool? isFavorite,
+    bool isFavorite = false,
     int limit = kDefaultLimit,
     int offset = kDefaultOffset,
   }) async {
-    _logger.info('Getting foods with search: $search, category: $category');
+    _logger.info('Getting foods with name: $name, category: $category');
     try {
       final where = WhereBuilder();
-      if (search != null && search.trim().isNotEmpty) {
-        where.and('${FoodColumns.name.value} LIKE ?', '%${search.trim()}%');
+      if (name != null && name.trim().isNotEmpty) {
+        where.and(FoodColumns.name.like, '%$name%');
       }
       if (category != null) {
         where.and(FoodColumns.category.equal, category.value);
       }
-      if (isFavorite != null) {
-        where.and(FoodColumns.isFavorite.equal, isFavorite ? 1 : 0);
+      if (isFavorite) {
+        where.and(FoodColumns.isFavorite.equal, 1);
       }
 
       final List<Food> foods = await _foodRepository.selectPaginated(
@@ -162,36 +189,9 @@ class FoodService {
         whereArgs: where.args,
       );
 
-      // Load portions for the returned foods
-      final List<FoodDto> foodDtos = [];
-      if (foods.isNotEmpty) {
-        final List<int> foodIds = foods.map((f) => f.id!).toList();
-        final placeholders = List.filled(foodIds.length, '?').join(', ');
-        final List<FoodPortion> allPortions =
-            await _portionRepository.selectMany(
-          where: '${FoodPortionColumns.foodId.value} IN ($placeholders)',
-          whereArgs: foodIds,
-          orderBy: [FoodPortionColumns.portionName.orderAsc],
-        );
-
-        final Map<int, List<FoodPortionDto>> portionsByFoodId = {};
-        for (final p in allPortions) {
-          portionsByFoodId
-              .putIfAbsent(p.foodId, () => [])
-              .add(FoodPortionDto.fromModel(p));
-        }
-
-        for (final food in foods) {
-          foodDtos.add(FoodDto.fromModel(
-            food,
-            portions: portionsByFoodId[food.id!] ?? const [],
-          ));
-        }
-      }
-
-      _logger.info('Retrieved ${foodDtos.length} foods');
+      _logger.info('Retrieved ${foods.length} foods');
       return ok(PaginatedDto<FoodDto, Food>(
-        data: foodDtos,
+        data: foods.map((f) => FoodDto.fromModel(f)).toList(),
         total: total,
         limit: limit,
         offset: offset,
@@ -205,26 +205,15 @@ class FoodService {
     }
   }
 
-  Future<Result<FoodDto, ServiceError<SingleErrorTypes>>> updateFood({
-    required int id,
-    String? name,
-    FoodCategory? category,
-    String? brand,
-    String? barcode,
-    int? servingSizeBaseGrams,
-    int? caloriesBase,
-    int? proteinBase,
-    int? carbsBase,
-    int? fatBase,
-    int? fiberBase,
-    Micronutrients? micros,
-    bool? isFavorite,
-    List<FoodPortionInput>? portions,
-  }) async {
+  Future<Result<FoodDto, ServiceError<SingleErrorTypes>>> updateFood(
+    int id,
+    FoodInput input,
+  ) async {
     _logger.info('Updating food with id $id');
     try {
       final Food? existing = await _foodRepository.selectOne(id);
       if (existing == null) {
+        _logger.warning('Food not found with id $id');
         return err(const ServiceError(
           type: SingleErrorTypes.notFound,
           description: 'Food not found',
@@ -239,52 +228,64 @@ class FoodService {
         ));
       }
 
+      final List<FoodPortion> currentPortions =
+          await _portionRepository.selectMany(
+        where: FoodPortionColumns.foodId.equal,
+        whereArgs: [id],
+        orderBy: [FoodPortionColumns.portionName.orderAsc],
+      );
       final Food updated = existing.copyWith(
-        name: name,
-        category: category,
-        brand: brand,
-        barcode: barcode,
-        servingSizeBaseGrams: servingSizeBaseGrams,
-        caloriesBase: caloriesBase,
-        proteinBase: proteinBase,
-        carbsBase: carbsBase,
-        fatBase: fatBase,
-        fiberBase: fiberBase,
-        micros: micros,
-        isFavorite: isFavorite,
+        name: input.name,
+        category: input.category,
+        brand: input.brand,
+        barcode: input.barcode,
+        servingSizeBaseGrams: input.servingSizeBaseGrams,
+        caloriesBase: input.caloriesBase,
+        proteinBase: input.proteinBase,
+        carbsBase: input.carbsBase,
+        fatBase: input.fatBase,
+        fiberBase: input.fiberBase,
+        sodiumBase: input.sodiumBase,
+        micros: input.micros,
+        isFavorite: input.isFavorite,
         updatedAt: DateUtilities.getNowUtcUnix(),
       );
+
+      if (_arePortionsEqual(currentPortions, input.portions)) {
+        _logger.info('Portions are the same, only updating food');
+        await _foodRepository.update(updated);
+        return ok(FoodDto.fromModel(
+          updated,
+          portions: currentPortions
+              .map(
+                (p) => FoodPortionDto.fromModel(p),
+              )
+              .toList(),
+        ));
+      }
 
       final FoodDto updatedDto =
           await _foodRepository.startTransaction((txn) async {
         await _foodRepository.update(updated, txn);
+        await txn.delete(
+          FoodPortion.table,
+          where: FoodPortionColumns.foodId.equal,
+          whereArgs: [id],
+        );
 
-        List<FoodPortionDto> portionDtos = [];
-        if (portions != null) {
-          await txn.delete(
-            FoodPortion.table,
-            where: '${FoodPortionColumns.foodId.value} = ?',
-            whereArgs: [id],
-          );
-
-          for (final portionInput in portions) {
+        final List<FoodPortionDto> portionDtos = [];
+        if (input.portions.isNotEmpty) {
+          for (final portionInput in input.portions) {
             final portion = FoodPortion.create(
               foodId: id,
               portionName: portionInput.portionName,
               gramWeight: portionInput.gramWeight,
             );
             final int portionId = await _portionRepository.insert(portion, txn);
-            portionDtos
-                .add(FoodPortionDto.fromModel(portion.copyWith(id: portionId)));
+            portionDtos.add(FoodPortionDto.fromModel(
+              portion.copyWith(id: Nullable(portionId)),
+            ));
           }
-        } else {
-          final existingPortions = await _portionRepository.selectMany(
-            where: FoodPortionColumns.foodId.equal,
-            whereArgs: [id],
-            trx: txn,
-          );
-          portionDtos =
-              existingPortions.map((p) => FoodPortionDto.fromModel(p)).toList();
         }
 
         return FoodDto.fromModel(updated, portions: portionDtos);
@@ -299,6 +300,25 @@ class FoodService {
         description: 'Failed to update food',
       ));
     }
+  }
+
+  bool _arePortionsEqual(
+    List<FoodPortion> currentPortions,
+    List<FoodPortionInput> newPortions,
+  ) {
+    if (currentPortions.length != newPortions.length) {
+      return false;
+    }
+
+    newPortions.sort((a, b) => a.portionName.compareTo(b.portionName));
+    for (int i = 0; i < currentPortions.length; i++) {
+      if (currentPortions[i].portionName != newPortions[i].portionName ||
+          currentPortions[i].gramWeight != newPortions[i].gramWeight) {
+        return false;
+      }
+    }
+
+    return true;
   }
 
   Future<Result<FoodDto, ServiceError<SingleErrorTypes>>> toggleFavorite(
@@ -339,11 +359,13 @@ class FoodService {
   }
 
   Future<Result<void, ServiceError<SingleErrorTypes>>> deleteFood(
-      int id) async {
+    int id,
+  ) async {
     _logger.info('Deleting food with id $id');
     try {
       final Food? food = await _foodRepository.selectOne(id);
       if (food == null) {
+        _logger.warning('Food not found with id $id');
         return err(const ServiceError(
           type: SingleErrorTypes.notFound,
           description: 'Food not found',

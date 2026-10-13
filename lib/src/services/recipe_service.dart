@@ -1,5 +1,6 @@
 import 'package:logging/logging.dart';
 
+import '../common/nullable.dart';
 import '../models/common.dart';
 import '../models/db.dart';
 import '../models/enums.dart';
@@ -183,7 +184,7 @@ class RecipeService {
             final withRecipeId = item.copyWith(recipeId: recipeId);
             final int itemId = await _itemRepository.insert(withRecipeId, txn);
             itemDtos.add(RecipeItemDto.fromModel(
-              withRecipeId.copyWith(id: itemId),
+              withRecipeId.copyWith(id: Nullable(itemId)),
               foodName: foodNames[item.foodId],
               portionName:
                   item.portionId != null ? portionNames[item.portionId] : null,
@@ -192,7 +193,7 @@ class RecipeService {
 
           _logger.info('Created recipe with id $recipeId');
           return ok(RecipeDto.fromModel(
-            recipe.copyWith(id: recipeId),
+            recipe.copyWith(id: Nullable(recipeId)),
             items: itemDtos,
           ));
         },
@@ -449,7 +450,7 @@ class RecipeService {
             for (final item in calculatedItems) {
               final int itemId = await _itemRepository.insert(item, txn);
               itemDtos.add(RecipeItemDto.fromModel(
-                item.copyWith(id: itemId),
+                item.copyWith(id: Nullable(itemId)),
                 foodName: foodNames[item.foodId],
                 portionName: item.portionId != null
                     ? portionNames[item.portionId]
@@ -481,13 +482,14 @@ class RecipeService {
 
           final updated = existing.copyWith(
             name: name,
-            description: description,
+            description: description != null ? Nullable(description) : null,
             servingsYield: actualYield,
             servingCalories: servingCals,
             servingProtein: servingProt,
             servingCarbs: servingCarb,
             servingFat: servingF,
-            servingMicros: servingMicros,
+            servingMicros:
+                servingMicros != null ? Nullable(servingMicros) : null,
             updatedAt: DateUtilities.getNowUtcUnix(),
           );
 
