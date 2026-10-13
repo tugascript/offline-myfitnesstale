@@ -26,12 +26,14 @@ Follow the strict flow: `SQLite Model -> Repository -> Service -> Cubit -> View/
         - DTOs are immutable, stripping metadata and implementing `Equatable` for value equality in the Bloc.
     - Returns functional `Result<T, ServiceError<E>>` objects (`lib/src/services/common/result.dart`) instead of
       throwing unhandled exceptions or leaking database details.
+    - Preference for CRUD where the UPDATE uses the same input as CREATE making a "PUT" system.
 - **Cubit (`lib/src/cubits/`)**:
     - Feature and application state management (`flutter_bloc`).
     - Invokes services, unpackages `Result` objects, and emits immutable states (`lib/src/cubits/states/`).
     - Uses `Nullable<T?>` wrappers (`lib/src/common/nullable.dart`) in state `copyWith` to differentiate between
       omitting an argument and deliberately setting a field to `null`.
     - Never interacts directly with `sqflite` or raw database models.
+    - Has a pagination state inside each type of entity state.
 - **View & Widget (`lib/src/views/`, `lib/src/widgets/`)**:
     - UI layer rendering routed screens and components.
     - Consumes Cubit states via `BlocBuilder` / `BlocConsumer` / `context.watch`.
