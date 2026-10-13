@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 
+import '../common/nullable.dart';
 import 'common.dart';
 import 'enums.dart';
 import 'model.dart';
@@ -19,6 +20,7 @@ enum FoodColumns with Columns {
   carbsBase("carbs_base"),
   fatBase("fat_base"),
   fiberBase("fiber_base"),
+  sodiumBase("sodium_base"),
   micros("micros"),
   isFavorite("is_favorite"),
   createdBy("created_by"),
@@ -44,6 +46,7 @@ class Food extends Equatable implements Model {
   final int carbsBase;
   final int fatBase;
   final int? fiberBase;
+  final int? sodiumBase;
   final Micronutrients? micros;
   final bool isFavorite;
   final CreatedBy createdBy;
@@ -64,6 +67,7 @@ class Food extends Equatable implements Model {
     required this.carbsBase,
     required this.fatBase,
     this.fiberBase,
+    this.sodiumBase,
     this.micros,
     this.isFavorite = false,
     required this.createdBy,
@@ -86,6 +90,7 @@ class Food extends Equatable implements Model {
     ${FoodColumns.carbsBase.value} INTEGER NOT NULL,
     ${FoodColumns.fatBase.value} INTEGER NOT NULL,
     ${FoodColumns.fiberBase.value} INTEGER,
+    ${FoodColumns.sodiumBase.value} INTEGER,
     ${FoodColumns.micros.value} TEXT,
     ${FoodColumns.isFavorite.value} INTEGER NOT NULL DEFAULT 0,
     ${FoodColumns.createdBy.value} TEXT NOT NULL,
@@ -113,6 +118,7 @@ class Food extends Equatable implements Model {
       FoodColumns.carbsBase.value: carbsBase,
       FoodColumns.fatBase.value: fatBase,
       FoodColumns.fiberBase.value: fiberBase,
+      FoodColumns.sodiumBase.value: sodiumBase,
       FoodColumns.micros.value: micros?.toJson(),
       FoodColumns.isFavorite.value: isFavorite ? 1 : 0,
       FoodColumns.createdBy.value: createdBy.value,
@@ -135,6 +141,7 @@ class Food extends Equatable implements Model {
       carbsBase: map[FoodColumns.carbsBase.value] as int,
       fatBase: map[FoodColumns.fatBase.value] as int,
       fiberBase: map[FoodColumns.fiberBase.value] as int?,
+      sodiumBase: map[FoodColumns.sodiumBase.value] as int?,
       micros: map[FoodColumns.micros.value] != null
           ? Micronutrients.fromJson(map[FoodColumns.micros.value] as String)
           : null,
@@ -157,6 +164,7 @@ class Food extends Equatable implements Model {
     required int carbsBase,
     required int fatBase,
     int? fiberBase,
+    int? sodiumBase,
     Micronutrients? micros,
     bool isFavorite = false,
     CreatedBy createdBy = CreatedBy.user,
@@ -173,6 +181,7 @@ class Food extends Equatable implements Model {
       carbsBase: carbsBase,
       fatBase: fatBase,
       fiberBase: fiberBase,
+      sodiumBase: sodiumBase,
       micros: micros,
       isFavorite: isFavorite,
       createdBy: createdBy,
@@ -183,36 +192,38 @@ class Food extends Equatable implements Model {
 
   @override
   Food copyWith({
-    int? id,
+    Nullable<int>? id,
     String? name,
     FoodCategory? category,
-    String? brand,
-    String? barcode,
+    Nullable<String>? brand,
+    Nullable<String>? barcode,
     int? servingSizeBaseGrams,
     int? caloriesBase,
     int? proteinBase,
     int? carbsBase,
     int? fatBase,
-    int? fiberBase,
-    Micronutrients? micros,
+    Nullable<int>? fiberBase,
+    Nullable<int>? sodiumBase,
+    Nullable<Micronutrients>? micros,
     bool? isFavorite,
     CreatedBy? createdBy,
     int? createdAt,
     int? updatedAt,
   }) {
     return Food(
-      id: id ?? this.id,
+      id: id != null ? id.value : this.id,
       name: name ?? this.name,
       category: category ?? this.category,
-      brand: brand ?? this.brand,
-      barcode: barcode ?? this.barcode,
+      brand: brand != null ? brand.value : this.brand,
+      barcode: barcode != null ? barcode.value : this.barcode,
       servingSizeBaseGrams: servingSizeBaseGrams ?? this.servingSizeBaseGrams,
       caloriesBase: caloriesBase ?? this.caloriesBase,
       proteinBase: proteinBase ?? this.proteinBase,
       carbsBase: carbsBase ?? this.carbsBase,
       fatBase: fatBase ?? this.fatBase,
-      fiberBase: fiberBase ?? this.fiberBase,
-      micros: micros ?? this.micros,
+      fiberBase: fiberBase != null ? fiberBase.value : this.fiberBase,
+      sodiumBase: sodiumBase != null ? sodiumBase.value : this.sodiumBase,
+      micros: micros != null ? micros.value : this.micros,
       isFavorite: isFavorite ?? this.isFavorite,
       createdBy: createdBy ?? this.createdBy,
       createdAt: createdAt ?? this.createdAt,
@@ -233,6 +244,7 @@ class Food extends Equatable implements Model {
         carbsBase,
         fatBase,
         fiberBase,
+        sodiumBase,
         micros,
         isFavorite,
         createdBy,

@@ -1,3 +1,4 @@
+import '../common/nullable.dart';
 import 'package:equatable/equatable.dart';
 
 import 'food_model.dart';
@@ -152,30 +153,30 @@ class MealPlanMealItem extends Equatable implements Model {
 
   @override
   MealPlanMealItem copyWith({
-    int? id,
+    Nullable<int>? id,
     int? mealPlanMealId,
     int? foodId,
-    int? portionId,
+    Nullable<int>? portionId,
     int? amount,
     int? totalCalories,
     int? totalProtein,
     int? totalCarbs,
     int? totalFat,
-    int? totalFiber,
+    Nullable<int>? totalFiber,
     int? createdAt,
     int? updatedAt,
   }) {
     return MealPlanMealItem(
-      id: id ?? this.id,
+      id: id != null ? id.value : this.id,
       mealPlanMealId: mealPlanMealId ?? this.mealPlanMealId,
       foodId: foodId ?? this.foodId,
-      portionId: portionId ?? this.portionId,
+      portionId: portionId != null ? portionId.value : this.portionId,
       amount: amount ?? this.amount,
       totalCalories: totalCalories ?? this.totalCalories,
       totalProtein: totalProtein ?? this.totalProtein,
       totalCarbs: totalCarbs ?? this.totalCarbs,
       totalFat: totalFat ?? this.totalFat,
-      totalFiber: totalFiber ?? this.totalFiber,
+      totalFiber: totalFiber != null ? totalFiber.value : this.totalFiber,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );

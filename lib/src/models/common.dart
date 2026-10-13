@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:equatable/equatable.dart';
 
+import '../common/nullable.dart';
 import 'enums.dart';
 
 abstract class JsonData {
@@ -206,7 +207,6 @@ class WorkoutSetExerciseDifficulty extends Equatable implements JsonData {
 }
 
 class Micronutrients extends Equatable implements JsonData {
-  final int? sodiumMg;
   final int? potassiumMg;
   final int? magnesiumMg;
   final int? calciumMg;
@@ -221,7 +221,6 @@ class Micronutrients extends Equatable implements JsonData {
   final int? vitaminB12Mcg;
 
   const Micronutrients({
-    this.sodiumMg,
     this.potassiumMg,
     this.magnesiumMg,
     this.calciumMg,
@@ -236,9 +235,8 @@ class Micronutrients extends Equatable implements JsonData {
     this.vitaminB12Mcg,
   });
 
-  Map<String, dynamic> toMap() {
+  Map<String, Object?> toMap() {
     return {
-      if (sodiumMg != null) 'sodium_mg': sodiumMg,
       if (potassiumMg != null) 'potassium_mg': potassiumMg,
       if (magnesiumMg != null) 'magnesium_mg': magnesiumMg,
       if (calciumMg != null) 'calcium_mg': calciumMg,
@@ -259,9 +257,8 @@ class Micronutrients extends Equatable implements JsonData {
     return Micronutrients.fromMap(decoded);
   }
 
-  factory Micronutrients.fromMap(Map<String, dynamic> map) {
+  factory Micronutrients.fromMap(Map<String, Object?> map) {
     return Micronutrients(
-      sodiumMg: map['sodium_mg'] as int?,
       potassiumMg: map['potassium_mg'] as int?,
       magnesiumMg: map['magnesium_mg'] as int?,
       calciumMg: map['calcium_mg'] as int?,
@@ -280,33 +277,33 @@ class Micronutrients extends Equatable implements JsonData {
   @override
   Micronutrients copyWith({
     int? sodiumMg,
-    int? potassiumMg,
-    int? magnesiumMg,
-    int? calciumMg,
-    int? ironMg,
-    int? zincMg,
-    int? vitaminAMcg,
-    int? vitaminCMg,
-    int? vitaminDIu,
-    int? vitaminEMg,
-    int? vitaminKMcg,
-    int? vitaminB6Mg,
-    int? vitaminB12Mcg,
+    Nullable<int>? potassiumMg,
+    Nullable<int>? magnesiumMg,
+    Nullable<int>? calciumMg,
+    Nullable<int>? ironMg,
+    Nullable<int>? zincMg,
+    Nullable<int>? vitaminAMcg,
+    Nullable<int>? vitaminCMg,
+    Nullable<int>? vitaminDIu,
+    Nullable<int>? vitaminEMg,
+    Nullable<int>? vitaminKMcg,
+    Nullable<int>? vitaminB6Mg,
+    Nullable<int>? vitaminB12Mcg,
   }) {
     return Micronutrients(
-      sodiumMg: sodiumMg ?? this.sodiumMg,
-      potassiumMg: potassiumMg ?? this.potassiumMg,
-      magnesiumMg: magnesiumMg ?? this.magnesiumMg,
-      calciumMg: calciumMg ?? this.calciumMg,
-      ironMg: ironMg ?? this.ironMg,
-      zincMg: zincMg ?? this.zincMg,
-      vitaminAMcg: vitaminAMcg ?? this.vitaminAMcg,
-      vitaminCMg: vitaminCMg ?? this.vitaminCMg,
-      vitaminDIu: vitaminDIu ?? this.vitaminDIu,
-      vitaminEMg: vitaminEMg ?? this.vitaminEMg,
-      vitaminKMcg: vitaminKMcg ?? this.vitaminKMcg,
-      vitaminB6Mg: vitaminB6Mg ?? this.vitaminB6Mg,
-      vitaminB12Mcg: vitaminB12Mcg ?? this.vitaminB12Mcg,
+      potassiumMg: potassiumMg != null ? potassiumMg.value : this.potassiumMg,
+      magnesiumMg: magnesiumMg != null ? magnesiumMg.value : this.magnesiumMg,
+      calciumMg: calciumMg != null ? calciumMg.value : this.calciumMg,
+      ironMg: ironMg != null ? ironMg.value : this.ironMg,
+      zincMg: zincMg != null ? zincMg.value : this.zincMg,
+      vitaminAMcg: vitaminAMcg != null ? vitaminAMcg.value : this.vitaminAMcg,
+      vitaminCMg: vitaminCMg != null ? vitaminCMg.value : this.vitaminCMg,
+      vitaminDIu: vitaminDIu != null ? vitaminDIu.value : this.vitaminDIu,
+      vitaminEMg: vitaminEMg != null ? vitaminEMg.value : this.vitaminEMg,
+      vitaminKMcg: vitaminKMcg != null ? vitaminKMcg.value : this.vitaminKMcg,
+      vitaminB6Mg: vitaminB6Mg != null ? vitaminB6Mg.value : this.vitaminB6Mg,
+      vitaminB12Mcg:
+          vitaminB12Mcg != null ? vitaminB12Mcg.value : this.vitaminB12Mcg,
     );
   }
 
@@ -315,7 +312,6 @@ class Micronutrients extends Equatable implements JsonData {
 
   @override
   List<Object?> get props => [
-        sodiumMg,
         potassiumMg,
         magnesiumMg,
         calciumMg,

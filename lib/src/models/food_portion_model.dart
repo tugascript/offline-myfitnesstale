@@ -1,3 +1,4 @@
+import '../common/nullable.dart';
 import 'package:equatable/equatable.dart';
 
 import 'food_model.dart';
@@ -97,7 +98,7 @@ class FoodPortion extends Equatable implements Model {
 
   @override
   FoodPortion copyWith({
-    int? id,
+    Nullable<int>? id,
     int? foodId,
     String? portionName,
     int? gramWeight,
@@ -105,7 +106,7 @@ class FoodPortion extends Equatable implements Model {
     int? updatedAt,
   }) {
     return FoodPortion(
-      id: id ?? this.id,
+      id: id != null ? id.value : this.id,
       foodId: foodId ?? this.foodId,
       portionName: portionName ?? this.portionName,
       gramWeight: gramWeight ?? this.gramWeight,

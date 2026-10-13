@@ -1,3 +1,4 @@
+import '../common/nullable.dart';
 import 'package:equatable/equatable.dart';
 
 import 'model.dart';
@@ -97,18 +98,18 @@ class DailyNutritionLog extends Equatable implements Model {
 
   @override
   DailyNutritionLog copyWith({
-    int? id,
+    Nullable<int>? id,
     int? date,
     int? waterIntakeMl,
-    String? notes,
+    Nullable<String>? notes,
     int? createdAt,
     int? updatedAt,
   }) {
     return DailyNutritionLog(
-      id: id ?? this.id,
+      id: id != null ? id.value : this.id,
       date: date ?? this.date,
       waterIntakeMl: waterIntakeMl ?? this.waterIntakeMl,
-      notes: notes ?? this.notes,
+      notes: notes != null ? notes.value : this.notes,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );

@@ -1,3 +1,4 @@
+import '../common/nullable.dart';
 import 'package:equatable/equatable.dart';
 
 import 'common.dart';
@@ -165,32 +166,33 @@ class MealLogItem extends Equatable implements Model {
 
   @override
   MealLogItem copyWith({
-    int? id,
+    Nullable<int>? id,
     int? mealLogId,
-    int? foodId,
-    int? portionId,
+    Nullable<int>? foodId,
+    Nullable<int>? portionId,
     int? amount,
     String? loggedFoodName,
     int? loggedCalories,
     int? loggedProtein,
     int? loggedCarbs,
     int? loggedFat,
-    Micronutrients? loggedMicros,
+    Nullable<Micronutrients>? loggedMicros,
     int? createdAt,
     int? updatedAt,
   }) {
     return MealLogItem(
-      id: id ?? this.id,
+      id: id != null ? id.value : this.id,
       mealLogId: mealLogId ?? this.mealLogId,
-      foodId: foodId ?? this.foodId,
-      portionId: portionId ?? this.portionId,
+      foodId: foodId != null ? foodId.value : this.foodId,
+      portionId: portionId != null ? portionId.value : this.portionId,
       amount: amount ?? this.amount,
       loggedFoodName: loggedFoodName ?? this.loggedFoodName,
       loggedCalories: loggedCalories ?? this.loggedCalories,
       loggedProtein: loggedProtein ?? this.loggedProtein,
       loggedCarbs: loggedCarbs ?? this.loggedCarbs,
       loggedFat: loggedFat ?? this.loggedFat,
-      loggedMicros: loggedMicros ?? this.loggedMicros,
+      loggedMicros:
+          loggedMicros != null ? loggedMicros.value : this.loggedMicros,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );

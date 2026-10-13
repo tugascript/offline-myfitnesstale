@@ -1,3 +1,4 @@
+import '../common/nullable.dart';
 import 'package:equatable/equatable.dart';
 
 import 'enums.dart';
@@ -208,9 +209,9 @@ final class MealPlanMeal extends Equatable implements Model {
 
   @override
   MealPlanMeal copyWith({
-    int? id,
+    Nullable<int>? id,
     int? position,
-    String? timeOfDay,
+    Nullable<String>? timeOfDay,
     int? mealPlanId,
     int? mealPlanWeekId,
     int? mealPlanDayId,
@@ -220,17 +221,17 @@ final class MealPlanMeal extends Equatable implements Model {
     int? totalProtein,
     int? totalCarbs,
     int? totalFat,
-    int? totalFiber,
+    Nullable<int>? totalFiber,
     String? name,
-    int? recipeId,
+    Nullable<int>? recipeId,
     CreatedBy? createdBy,
     int? createdAt,
     int? updatedAt,
   }) {
     return MealPlanMeal(
-      id: id ?? this.id,
+      id: id != null ? id.value : this.id,
       position: position ?? this.position,
-      timeOfDay: timeOfDay ?? this.timeOfDay,
+      timeOfDay: timeOfDay != null ? timeOfDay.value : this.timeOfDay,
       mealPlanId: mealPlanId ?? this.mealPlanId,
       mealPlanWeekId: mealPlanWeekId ?? this.mealPlanWeekId,
       mealPlanDayId: mealPlanDayId ?? this.mealPlanDayId,
@@ -240,9 +241,9 @@ final class MealPlanMeal extends Equatable implements Model {
       totalProtein: totalProtein ?? this.totalProtein,
       totalCarbs: totalCarbs ?? this.totalCarbs,
       totalFat: totalFat ?? this.totalFat,
-      totalFiber: totalFiber ?? this.totalFiber,
+      totalFiber: totalFiber != null ? totalFiber.value : this.totalFiber,
       name: name ?? this.name,
-      recipeId: recipeId ?? this.recipeId,
+      recipeId: recipeId != null ? recipeId.value : this.recipeId,
       createdBy: createdBy ?? this.createdBy,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
