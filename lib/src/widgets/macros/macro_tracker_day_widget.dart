@@ -1,3 +1,4 @@
+import '../layout/responsive_fields.dart';
 import '../../widgets/macros/macro_progress_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -13,12 +14,15 @@ import 'planned_meals_widget.dart';
 
 class MacroTrackerDayWidget extends StatelessWidget {
   final DataDisplaySizesList sizes;
+  final ThemeData theme;
   final DateTime selectedDate;
   const MacroTrackerDayWidget(
-      {super.key, required this.sizes, required this.selectedDate});
+      {required this.theme,
+      super.key,
+      required this.sizes,
+      required this.selectedDate});
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return BlocBuilder<MacroTrackingCubit, MacroTrackingState>(
       builder: (context, state) {
         final dailyLog = state.selectedDailyLog;
@@ -55,7 +59,7 @@ class MacroTrackerDayWidget extends StatelessWidget {
                     Wrap(
                       alignment: WrapAlignment.spaceBetween,
                       crossAxisAlignment: WrapCrossAlignment.center,
-                      runSpacing: 4,
+                      runSpacing: sizes.spacing / 2,
                       children: [
                         Text(
                           'Calories: $currentCal / $targetCal kcal',
@@ -68,11 +72,12 @@ class MacroTrackerDayWidget extends StatelessWidget {
                           TextButton(
                             onPressed: () =>
                                 context.push(MacroGoalsView.routeName),
-                            child: const Text('Set Goal'),
+                            child: Text('Set Goal',
+                                style: TextStyle(fontSize: sizes.fontSize)),
                           ),
                       ],
                     ),
-                    const SizedBox(height: 8),
+                    SizedBox(height: sizes.spacing),
                     LinearProgressIndicator(
                       value: calProgress,
                       minHeight: 10,
@@ -82,36 +87,32 @@ class MacroTrackerDayWidget extends StatelessWidget {
                           AlwaysStoppedAnimation<Color>(theme.primaryColor),
                     ),
                     SizedBox(height: sizes.spacing),
-                    Row(
-                      children: [
-                        MacroProgressBar(
-                          label: 'Protein',
-                          current: currentProtein,
-                          target: targetProtein,
-                          unit: 'g',
-                          color: Colors.blue,
-                          sizes: sizes,
-                        ),
-                        SizedBox(width: sizes.spacing),
-                        MacroProgressBar(
-                          label: 'Carbs',
-                          current: currentCarbs,
-                          target: targetCarbs,
-                          unit: 'g',
-                          color: Colors.amber,
-                          sizes: sizes,
-                        ),
-                        SizedBox(width: sizes.spacing),
-                        MacroProgressBar(
-                          label: 'Fat',
-                          current: currentFat,
-                          target: targetFat,
-                          unit: 'g',
-                          color: Colors.red,
-                          sizes: sizes,
-                        ),
-                      ],
-                    ),
+                    ResponsiveFields(sizes: sizes, children: [
+                      MacroProgressBar(
+                        label: 'Protein',
+                        current: currentProtein,
+                        target: targetProtein,
+                        unit: 'g',
+                        color: Colors.blue,
+                        sizes: sizes,
+                      ),
+                      MacroProgressBar(
+                        label: 'Carbs',
+                        current: currentCarbs,
+                        target: targetCarbs,
+                        unit: 'g',
+                        color: Colors.amber,
+                        sizes: sizes,
+                      ),
+                      MacroProgressBar(
+                        label: 'Fat',
+                        current: currentFat,
+                        target: targetFat,
+                        unit: 'g',
+                        color: Colors.red,
+                        sizes: sizes,
+                      ),
+                    ]),
                   ],
                 ),
               ),
@@ -127,9 +128,9 @@ class MacroTrackerDayWidget extends StatelessWidget {
                   children: [
                     Row(
                       children: [
-                        const Icon(Icons.water_drop,
-                            color: Colors.cyan, size: 28),
-                        const SizedBox(width: 8),
+                        Icon(Icons.water_drop,
+                            color: Colors.cyan, size: sizes.buttonIconSize),
+                        SizedBox(width: sizes.spacing),
                         Expanded(
                           child: Text(
                             'Water: $currentWater / $targetWater ml',
@@ -141,7 +142,7 @@ class MacroTrackerDayWidget extends StatelessWidget {
                         ),
                         IconButton(
                           visualDensity: VisualDensity.compact,
-                          icon: const Icon(Icons.remove, size: 20),
+                          icon: Icon(Icons.remove, size: sizes.compactIconSize),
                           onPressed: () {
                             final newWater =
                                 (currentWater - 250).clamp(0, 100000);
@@ -152,7 +153,7 @@ class MacroTrackerDayWidget extends StatelessWidget {
                         ),
                         IconButton(
                           visualDensity: VisualDensity.compact,
-                          icon: const Icon(Icons.add, size: 20),
+                          icon: Icon(Icons.add, size: sizes.compactIconSize),
                           onPressed: () {
                             context
                                 .read<MacroTrackingCubit>()
@@ -161,7 +162,7 @@ class MacroTrackerDayWidget extends StatelessWidget {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 6),
+                    SizedBox(height: sizes.spacing / 2),
                     LinearProgressIndicator(
                       value: (currentWater / targetWater).clamp(0.0, 1.0),
                       color: Colors.cyan,
@@ -180,7 +181,7 @@ class MacroTrackerDayWidget extends StatelessWidget {
               final meal = hasLog ? mealLog.first : null;
 
               return Card(
-                margin: const EdgeInsets.only(bottom: 12),
+                margin: EdgeInsets.only(bottom: sizes.padding),
                 child: Padding(
                   padding: EdgeInsets.all(sizes.padding),
                   child: Column(
@@ -200,7 +201,11 @@ class MacroTrackerDayWidget extends StatelessWidget {
                               fontWeight: FontWeight.bold,
                             ),
                           ),
-                          Row(
+                          Wrap(
+                            alignment: WrapAlignment.start,
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            spacing: sizes.spacing / 2,
+                            runSpacing: sizes.spacing / 2,
                             children: [
                               if (meal != null)
                                 Text(
@@ -212,8 +217,8 @@ class MacroTrackerDayWidget extends StatelessWidget {
                                   ),
                                 ),
                               IconButton(
-                                icon: const Icon(Icons.add_circle_outline,
-                                    size: 20),
+                                icon: Icon(Icons.add_circle_outline,
+                                    size: sizes.compactIconSize),
                                 onPressed: () {
                                   showDialog(
                                     context: context,
@@ -231,13 +236,14 @@ class MacroTrackerDayWidget extends StatelessWidget {
                         ],
                       ),
                       if (meal != null && meal.items.isNotEmpty) ...[
-                        const Divider(height: 16),
+                        Divider(height: sizes.spacing),
                         ...meal.items.map((item) {
                           final portionText = item.portionName != null
                               ? '${item.amount} × ${item.portionName}'
                               : '${item.amount}g';
                           return Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 4),
+                            padding: EdgeInsets.symmetric(
+                                vertical: sizes.padding / 2),
                             child: Row(
                               children: [
                                 Expanded(
@@ -263,8 +269,9 @@ class MacroTrackerDayWidget extends StatelessWidget {
                                   ),
                                 ),
                                 IconButton(
-                                  icon: const Icon(Icons.delete_outline,
-                                      size: 18, color: Colors.grey),
+                                  icon: Icon(Icons.delete_outline,
+                                      size: sizes.compactIconSize,
+                                      color: Colors.grey),
                                   onPressed: () {
                                     showDialog(
                                       context: context,

@@ -37,9 +37,11 @@ class MealPlanListItemWidget extends StatelessWidget {
                   ),
                   IconButton(
                     icon: Icon(
-                      plan.isFavorite ? Icons.favorite : Icons.favorite_border,
-                      color: plan.isFavorite ? Colors.red : Colors.grey,
-                    ),
+                        plan.isFavorite
+                            ? Icons.favorite
+                            : Icons.favorite_border,
+                        color: plan.isFavorite ? Colors.red : Colors.grey,
+                        size: sizes.buttonIconSize),
                     onPressed: onToggleFavorite,
                   ),
                 ],
@@ -71,12 +73,14 @@ class MealPlanListItemWidget extends StatelessWidget {
                   OutlinedButton(
                     key: ValueKey('meal-plan-view-btn-${plan.id}'),
                     onPressed: onView,
-                    child: const Text('View Plan'),
+                    child: Text('View Plan',
+                        style: TextStyle(fontSize: sizes.fontSize)),
                   ),
                   ElevatedButton.icon(
                     key: ValueKey('meal-plan-start-btn-${plan.id}'),
-                    icon: const Icon(Icons.play_arrow),
-                    label: const Text('Start Plan'),
+                    icon: Icon(Icons.play_arrow, size: sizes.buttonIconSize),
+                    label: Text('Start Plan',
+                        style: TextStyle(fontSize: sizes.fontSize)),
                     onPressed: onStart,
                   ),
                 ],

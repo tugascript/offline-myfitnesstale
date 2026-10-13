@@ -12,10 +12,12 @@ import '../../common/confirmation_dialog.dart';
 
 class StrengthGoalHistoryList extends StatelessWidget {
   final ThemeData theme;
+  final bool shrinkWrap;
   final DataDisplaySizesList sizes;
 
   const StrengthGoalHistoryList({
     super.key,
+    this.shrinkWrap = false,
     required this.theme,
     required this.sizes,
   });
@@ -47,6 +49,8 @@ class StrengthGoalHistoryList extends StatelessWidget {
         }
 
         return ListView.separated(
+          shrinkWrap: shrinkWrap,
+          physics: shrinkWrap ? const NeverScrollableScrollPhysics() : null,
           itemCount: history.length,
           separatorBuilder: (_, __) => SizedBox(height: sizes.spacing / 2),
           itemBuilder: (context, index) {
@@ -64,11 +68,11 @@ class StrengthGoalHistoryList extends StatelessWidget {
               margin: EdgeInsets.zero,
               child: ListTile(
                 leading: Icon(
-                  isCompleted
-                      ? Icons.check_circle
-                      : Icons.radio_button_unchecked,
-                  color: isCompleted ? Colors.green : Colors.grey,
-                ),
+                    isCompleted
+                        ? Icons.check_circle
+                        : Icons.radio_button_unchecked,
+                    color: isCompleted ? Colors.green : Colors.grey,
+                    size: sizes.buttonIconSize),
                 title: Text(
                   goal.name,
                   style: TextStyle(
@@ -85,7 +89,8 @@ class StrengthGoalHistoryList extends StatelessWidget {
                   ),
                 ),
                 trailing: IconButton(
-                  icon: const Icon(Icons.delete_outline, color: Colors.grey),
+                  icon: Icon(Icons.delete_outline,
+                      color: Colors.grey, size: sizes.buttonIconSize),
                   onPressed: () {
                     showDialog(
                       context: context,

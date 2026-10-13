@@ -128,6 +128,18 @@ actions. Regression tests cover complete updates, nullable clearing, rollback,
 originating meal-plan versions, pagination/filter preservation, and populated
 entity widgets at 320px with 200% text scaling.
 
+The PR's nutrition and strength-goal screens resolve `DataDisplaySizesList`
+from their view breakpoints and pass it to child widgets. Padding, spacing,
+icons, and typography use those size tokens. Editors reuse `AppTextFormField`;
+field groups and dashboard actions reflow according to available width and
+text scaling. Strength-goal content scrolls as a whole, and the meal-log dialog
+uses naturally sized tab content instead of a fixed-height viewport.
+
+`pr_responsive_widgets_test.dart` covers 150 populated screen/widget scenarios
+at 320px, 600px, and 1200px with 100% and 200% text. Dialog checks also cover
+long food selections, both food/recipe tabs, and reaching the confirm action
+above a keyboard inset.
+
 ### Macro tracking and daily nutrition
 
 - Macro goals: Creates, updates, activates, and deletes macro targets (calories, protein, carbs, fat, water); enforces single active goal invariant with automatic deactivation of prior goals.
@@ -269,13 +281,13 @@ The latest full verification run on 13 October 2026:
 
 ```text
 dart format --output=none --set-exit-if-changed lib test integration_test
-  433 files formatted with no pending changes
+  435 files formatted with no pending changes
 
 dart analyze
   No issues found
 
 flutter test
-  126 tests passed, one skipped
+  276 tests passed, one skipped
 
 git diff --check
   No whitespace errors

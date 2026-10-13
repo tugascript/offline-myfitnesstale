@@ -46,7 +46,9 @@ class _MealPlanDetailsViewState extends State<MealPlanDetailsView> {
       listener: (context, state) {
         if (!state.isLoading && state.error != null) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(state.error!.description)),
+            SnackBar(
+                content: Text(state.error!.description,
+                    style: TextStyle(fontSize: sizes.fontSize))),
           );
         }
       },
@@ -65,7 +67,8 @@ class _MealPlanDetailsViewState extends State<MealPlanDetailsView> {
             body: Center(
               child: ElevatedButton(
                 onPressed: () => context.pop(),
-                child: const Text('Go Back'),
+                child:
+                    Text('Go Back', style: TextStyle(fontSize: sizes.fontSize)),
               ),
             ),
           );
@@ -80,8 +83,11 @@ class _MealPlanDetailsViewState extends State<MealPlanDetailsView> {
             padding: EdgeInsets.all(sizes.viewPadding),
             child: ListView(
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                Wrap(
+                  alignment: WrapAlignment.spaceBetween,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: sizes.spacing,
+                  runSpacing: sizes.spacing,
                   children: [
                     Text(
                       '${plan.totalWeeks} Weeks Plan (v${plan.version})',
@@ -92,11 +98,11 @@ class _MealPlanDetailsViewState extends State<MealPlanDetailsView> {
                     ),
                     IconButton(
                       icon: Icon(
-                        plan.isFavorite
-                            ? Icons.favorite
-                            : Icons.favorite_border,
-                        color: plan.isFavorite ? Colors.red : Colors.grey,
-                      ),
+                          plan.isFavorite
+                              ? Icons.favorite
+                              : Icons.favorite_border,
+                          color: plan.isFavorite ? Colors.red : Colors.grey,
+                          size: sizes.buttonIconSize),
                       onPressed: () {
                         context.read<MealPlanCubit>().toggleFavorite(plan.id);
                       },
@@ -114,8 +120,9 @@ class _MealPlanDetailsViewState extends State<MealPlanDetailsView> {
                 SizedBox(height: sizes.spacing),
                 ElevatedButton.icon(
                   key: const ValueKey('start-meal-plan-button'),
-                  icon: const Icon(Icons.play_arrow),
-                  label: const Text('Start This Meal Plan'),
+                  icon: Icon(Icons.play_arrow, size: sizes.buttonIconSize),
+                  label: Text('Start This Meal Plan',
+                      style: TextStyle(fontSize: sizes.fontSize)),
                   onPressed: () async {
                     final success = await context
                         .read<MealPlanRecordCubit>()
@@ -123,7 +130,8 @@ class _MealPlanDetailsViewState extends State<MealPlanDetailsView> {
                     if (success && context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: Text('Started meal plan: ${plan.name}'),
+                          content: Text('Started meal plan: ${plan.name}',
+                              style: TextStyle(fontSize: sizes.fontSize)),
                           action: SnackBarAction(
                             label: 'Open Tracker',
                             onPressed: () {
@@ -144,7 +152,7 @@ class _MealPlanDetailsViewState extends State<MealPlanDetailsView> {
                   ),
                 ),
                 SizedBox(height: sizes.spacing),
-                MealPlanScheduleWidget(plan: plan, sizes: sizes),
+                MealPlanScheduleWidget(theme: theme, plan: plan, sizes: sizes),
                 SizedBox(height: sizes.spacing * 1.5),
                 if (!isUserAuthored)
                   Card(
@@ -153,8 +161,9 @@ class _MealPlanDetailsViewState extends State<MealPlanDetailsView> {
                       padding: EdgeInsets.all(sizes.padding),
                       child: Row(
                         children: [
-                          const Icon(Icons.lock_outline, color: Colors.blue),
-                          const SizedBox(width: 8),
+                          Icon(Icons.lock_outline,
+                              color: Colors.blue, size: sizes.buttonIconSize),
+                          SizedBox(width: sizes.spacing),
                           Expanded(
                             child: Text(
                               'This is a system meal plan. It cannot be edited or deleted.',

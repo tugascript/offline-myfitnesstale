@@ -8,16 +8,17 @@ import '../../utilities/sizes/data_display_sizes.dart';
 
 class MacroTrackerMonthWidget extends StatelessWidget {
   final DataDisplaySizesList sizes;
+  final ThemeData theme;
   final DateTime selectedDate;
   final ValueChanged<DateTime> onSelectDate;
   const MacroTrackerMonthWidget(
-      {super.key,
+      {required this.theme,
+      super.key,
       required this.sizes,
       required this.selectedDate,
       required this.onSelectDate});
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return BlocBuilder<MacroTrackingCubit, MacroTrackingState>(
       builder: (context, state) {
         final logs = state.rangeLogs;

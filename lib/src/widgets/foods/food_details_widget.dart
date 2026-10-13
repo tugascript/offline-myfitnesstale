@@ -24,15 +24,15 @@ class FoodDetailsWidget extends StatelessWidget {
           children: [
             Chip(
               label: Text(
-                food.category.value[0].toUpperCase() +
-                    food.category.value.substring(1),
-              ),
+                  food.category.value[0].toUpperCase() +
+                      food.category.value.substring(1),
+                  style: TextStyle(fontSize: sizes.fontSize)),
             ),
             IconButton(
               icon: Icon(
-                food.isFavorite ? Icons.favorite : Icons.favorite_border,
-                color: food.isFavorite ? Colors.red : Colors.grey,
-              ),
+                  food.isFavorite ? Icons.favorite : Icons.favorite_border,
+                  color: food.isFavorite ? Colors.red : Colors.grey,
+                  size: sizes.buttonIconSize),
               onPressed: onToggleFavorite,
             ),
           ],
@@ -100,10 +100,10 @@ class FoodDetailsWidget extends StatelessWidget {
                   ],
                 ),
                 if (food.fiberBase != null || food.sodiumBase != null) ...[
-                  const Divider(height: 24),
+                  Divider(height: sizes.spacing * 2),
                   Wrap(
-                    spacing: 16,
-                    runSpacing: 8,
+                    spacing: sizes.spacing,
+                    runSpacing: sizes.spacing,
                     children: [
                       if (food.fiberBase != null)
                         Text('Fiber: ${food.fiberBase}g',
@@ -136,10 +136,12 @@ class FoodDetailsWidget extends StatelessWidget {
         else
           ...food.portions.map((p) {
             return Card(
-              margin: const EdgeInsets.only(bottom: 6),
+              margin: EdgeInsets.only(bottom: sizes.padding / 2),
               child: ListTile(
-                title: Text(p.portionName),
-                subtitle: Text('${p.gramWeight}g'),
+                title: Text(p.portionName,
+                    style: TextStyle(fontSize: sizes.fontSize)),
+                subtitle: Text('${p.gramWeight}g',
+                    style: TextStyle(fontSize: sizes.fontSize)),
               ),
             );
           }),

@@ -25,7 +25,9 @@ class RecipeCreationView extends StatelessWidget {
       listener: (context, state) {
         if (!state.isLoading && state.error != null) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(state.error!.description)),
+            SnackBar(
+                content: Text(state.error!.description,
+                    style: TextStyle(fontSize: sizes.fontSize))),
           );
         }
       },

@@ -1,3 +1,5 @@
+import '../layout/responsive_fields.dart';
+import '../layout/app_text_form_field.dart';
 import '../../common/nullable.dart';
 import '../../services/inputs/macro_goal_input.dart';
 import 'package:flutter/material.dart';
@@ -108,7 +110,7 @@ class _MacroGoalFormModalState extends State<MacroGoalFormModal> {
   Widget build(BuildContext context) {
     return Dialog(
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 500),
+        constraints: BoxConstraints(maxWidth: widget.sizes.modalMaxWidth),
         child: Padding(
           padding: EdgeInsets.all(widget.sizes.padding * 1.5),
           child: Form(
@@ -128,104 +130,101 @@ class _MacroGoalFormModalState extends State<MacroGoalFormModal> {
                     ),
                   ),
                   SizedBox(height: widget.sizes.spacing),
-                  TextFormField(
+                  AppTextFormField(
+                    theme: widget.theme,
+                    fontSize: widget.sizes.fontSize,
+                    padding: widget.sizes.padding,
+                    isLoading: false,
                     key: const ValueKey('macro-goal-name-input'),
                     controller: _nameController,
-                    decoration: const InputDecoration(
-                      labelText: 'Goal Name *',
-                      border: OutlineInputBorder(),
-                    ),
+                    labelText: 'Goal Name *',
                     validator: (v) =>
                         v == null || v.trim().isEmpty ? 'Required' : null,
                   ),
                   SizedBox(height: widget.sizes.spacing),
-                  TextFormField(
+                  AppTextFormField(
+                    theme: widget.theme,
+                    fontSize: widget.sizes.fontSize,
+                    padding: widget.sizes.padding,
+                    isLoading: false,
                     key: const ValueKey('macro-goal-calories-input'),
                     controller: _caloriesController,
                     keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(
-                      labelText: 'Daily Calories (kcal) *',
-                      border: OutlineInputBorder(),
-                    ),
+                    labelText: 'Daily Calories (kcal) *',
                     validator: (v) =>
                         v == null || v.isEmpty ? 'Required' : null,
                   ),
                   SizedBox(height: widget.sizes.spacing),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextFormField(
-                          key: const ValueKey('macro-goal-protein-input'),
-                          controller: _proteinController,
-                          keyboardType: TextInputType.number,
-                          decoration: const InputDecoration(
-                            labelText: 'Protein (g) *',
-                            border: OutlineInputBorder(),
-                          ),
-                          validator: (v) =>
-                              v == null || v.isEmpty ? 'Required' : null,
-                        ),
-                      ),
-                      SizedBox(width: widget.sizes.spacing),
-                      Expanded(
-                        child: TextFormField(
-                          key: const ValueKey('macro-goal-carbs-input'),
-                          controller: _carbsController,
-                          keyboardType: TextInputType.number,
-                          decoration: const InputDecoration(
-                            labelText: 'Carbs (g) *',
-                            border: OutlineInputBorder(),
-                          ),
-                          validator: (v) =>
-                              v == null || v.isEmpty ? 'Required' : null,
-                        ),
-                      ),
-                    ],
-                  ),
+                  ResponsiveFields(sizes: widget.sizes, children: [
+                    AppTextFormField(
+                      theme: widget.theme,
+                      fontSize: widget.sizes.fontSize,
+                      padding: widget.sizes.padding,
+                      isLoading: false,
+                      key: const ValueKey('macro-goal-protein-input'),
+                      controller: _proteinController,
+                      keyboardType: TextInputType.number,
+                      labelText: 'Protein (g) *',
+                      validator: (v) =>
+                          v == null || v.isEmpty ? 'Required' : null,
+                    ),
+                    AppTextFormField(
+                      theme: widget.theme,
+                      fontSize: widget.sizes.fontSize,
+                      padding: widget.sizes.padding,
+                      isLoading: false,
+                      key: const ValueKey('macro-goal-carbs-input'),
+                      controller: _carbsController,
+                      keyboardType: TextInputType.number,
+                      labelText: 'Carbs (g) *',
+                      validator: (v) =>
+                          v == null || v.isEmpty ? 'Required' : null,
+                    ),
+                  ]),
                   SizedBox(height: widget.sizes.spacing),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextFormField(
-                          key: const ValueKey('macro-goal-fat-input'),
-                          controller: _fatController,
-                          keyboardType: TextInputType.number,
-                          decoration: const InputDecoration(
-                            labelText: 'Fat (g) *',
-                            border: OutlineInputBorder(),
-                          ),
-                          validator: (v) =>
-                              v == null || v.isEmpty ? 'Required' : null,
-                        ),
-                      ),
-                      SizedBox(width: widget.sizes.spacing),
-                      Expanded(
-                        child: TextFormField(
-                          key: const ValueKey('macro-goal-water-input'),
-                          controller: _waterController,
-                          keyboardType: TextInputType.number,
-                          decoration: const InputDecoration(
-                            labelText: 'Water (ml)',
-                            border: OutlineInputBorder(),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+                  ResponsiveFields(sizes: widget.sizes, children: [
+                    AppTextFormField(
+                      theme: widget.theme,
+                      fontSize: widget.sizes.fontSize,
+                      padding: widget.sizes.padding,
+                      isLoading: false,
+                      key: const ValueKey('macro-goal-fat-input'),
+                      controller: _fatController,
+                      keyboardType: TextInputType.number,
+                      labelText: 'Fat (g) *',
+                      validator: (v) =>
+                          v == null || v.isEmpty ? 'Required' : null,
+                    ),
+                    AppTextFormField(
+                      theme: widget.theme,
+                      fontSize: widget.sizes.fontSize,
+                      padding: widget.sizes.padding,
+                      isLoading: false,
+                      key: const ValueKey('macro-goal-water-input'),
+                      controller: _waterController,
+                      keyboardType: TextInputType.number,
+                      labelText: 'Water (ml)',
+                    ),
+                  ]),
                   SizedBox(height: widget.sizes.spacing * 1.5),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
+                  Wrap(
+                    alignment: WrapAlignment.end,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    spacing: widget.sizes.spacing / 2,
+                    runSpacing: widget.sizes.spacing / 2,
                     children: [
                       TextButton(
                         onPressed: () => Navigator.of(context).pop(),
-                        child: const Text('Cancel'),
+                        child: Text('Cancel',
+                            style: TextStyle(fontSize: widget.sizes.fontSize)),
                       ),
                       SizedBox(width: widget.sizes.spacing),
                       ElevatedButton(
                         key: const ValueKey('macro-goal-submit-button'),
                         onPressed: _submit,
                         child: Text(
-                            widget.existingGoal != null ? 'Update' : 'Create'),
+                            widget.existingGoal != null ? 'Update' : 'Create',
+                            style: TextStyle(fontSize: widget.sizes.fontSize)),
                       ),
                     ],
                   ),

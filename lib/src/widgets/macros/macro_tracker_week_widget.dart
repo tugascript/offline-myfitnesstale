@@ -8,16 +8,17 @@ import '../../utilities/sizes/data_display_sizes.dart';
 
 class MacroTrackerWeekWidget extends StatelessWidget {
   final DataDisplaySizesList sizes;
+  final ThemeData theme;
   final DateTime selectedDate;
   final ValueChanged<DateTime> onSelectDate;
   const MacroTrackerWeekWidget(
-      {super.key,
+      {required this.theme,
+      super.key,
       required this.sizes,
       required this.selectedDate,
       required this.onSelectDate});
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return BlocBuilder<MacroTrackingCubit, MacroTrackingState>(
       builder: (context, state) {
         final logs = state.rangeLogs;
@@ -59,7 +60,7 @@ class MacroTrackerWeekWidget extends StatelessWidget {
                     color: Colors.grey[600],
                   ),
                 ),
-                trailing: const Icon(Icons.chevron_right),
+                trailing: Icon(Icons.chevron_right, size: sizes.buttonIconSize),
                 onTap: () {
                   onSelectDate(dayDate);
                 },

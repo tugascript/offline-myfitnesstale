@@ -1,12 +1,14 @@
-import '../../common/nullable.dart';
-import '../../services/inputs/recipe_input.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../common/nullable.dart';
 import '../../cubits/food_cubit.dart';
 import '../../services/dtos/food_dto.dart';
 import '../../services/dtos/recipe_dto.dart';
+import '../../services/inputs/recipe_input.dart';
 import '../../utilities/sizes/data_display_sizes.dart';
+import '../layout/app_text_form_field.dart';
+import '../layout/responsive_fields.dart';
 
 class RecipeFormWidget extends StatefulWidget {
   final ThemeData theme;
@@ -111,7 +113,9 @@ class _RecipeFormWidgetState extends State<RecipeFormWidget> {
     if (!_formKey.currentState!.validate()) return;
     if (_itemRows.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please add at least one ingredient')),
+        SnackBar(
+            content: Text('Please add at least one ingredient',
+                style: TextStyle(fontSize: widget.sizes.fontSize))),
       );
       return;
     }
@@ -120,8 +124,9 @@ class _RecipeFormWidgetState extends State<RecipeFormWidget> {
     for (final row in _itemRows) {
       if (row.foodId == null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content: Text('All ingredients must have a selected food')),
+          SnackBar(
+              content: Text('All ingredients must have a selected food',
+                  style: TextStyle(fontSize: widget.sizes.fontSize))),
         );
         return;
       }
@@ -153,35 +158,38 @@ class _RecipeFormWidgetState extends State<RecipeFormWidget> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            TextFormField(
+            AppTextFormField(
+              theme: widget.theme,
+              fontSize: widget.sizes.fontSize,
+              padding: widget.sizes.padding,
+              isLoading: widget.isLoading,
               key: const ValueKey('recipe-form-name-input'),
               controller: _nameController,
-              decoration: const InputDecoration(
-                labelText: 'Recipe Name *',
-                border: OutlineInputBorder(),
-              ),
+              labelText: 'Recipe Name *',
               validator: (v) =>
                   v == null || v.trim().isEmpty ? 'Required' : null,
             ),
             SizedBox(height: widget.sizes.spacing),
-            TextFormField(
+            AppTextFormField(
+              theme: widget.theme,
+              fontSize: widget.sizes.fontSize,
+              padding: widget.sizes.padding,
+              isLoading: widget.isLoading,
               key: const ValueKey('recipe-form-desc-input'),
               controller: _descriptionController,
               maxLines: 2,
-              decoration: const InputDecoration(
-                labelText: 'Description (optional)',
-                border: OutlineInputBorder(),
-              ),
+              labelText: 'Description (optional)',
             ),
             SizedBox(height: widget.sizes.spacing),
-            TextFormField(
+            AppTextFormField(
+              theme: widget.theme,
+              fontSize: widget.sizes.fontSize,
+              padding: widget.sizes.padding,
+              isLoading: widget.isLoading,
               key: const ValueKey('recipe-form-servings-input'),
               controller: _servingsYieldController,
               keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                labelText: 'Servings Yield *',
-                border: OutlineInputBorder(),
-              ),
+              labelText: 'Servings Yield *',
               validator: (v) {
                 if (v == null || v.isEmpty) return 'Required';
                 final n = int.tryParse(v);
@@ -190,8 +198,11 @@ class _RecipeFormWidgetState extends State<RecipeFormWidget> {
               },
             ),
             SizedBox(height: widget.sizes.spacing * 1.5),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            Wrap(
+              alignment: WrapAlignment.spaceBetween,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              spacing: widget.sizes.spacing / 2,
+              runSpacing: widget.sizes.spacing / 2,
               children: [
                 Text(
                   'Ingredients',
@@ -202,8 +213,9 @@ class _RecipeFormWidgetState extends State<RecipeFormWidget> {
                 ),
                 TextButton.icon(
                   key: const ValueKey('recipe-form-add-item-btn'),
-                  icon: const Icon(Icons.add),
-                  label: const Text('Add Ingredient'),
+                  icon: Icon(Icons.add, size: widget.sizes.buttonIconSize),
+                  label: Text('Add Ingredient',
+                      style: TextStyle(fontSize: widget.sizes.fontSize)),
                   onPressed: _addItem,
                 ),
               ],
@@ -230,94 +242,99 @@ class _RecipeFormWidgetState extends State<RecipeFormWidget> {
               }
 
               return Card(
-                margin: const EdgeInsets.only(bottom: 8),
+                margin: EdgeInsets.only(bottom: widget.sizes.padding / 2),
                 child: Padding(
-                  padding: const EdgeInsets.all(8),
+                  padding: EdgeInsets.all(widget.sizes.padding / 2),
                   child: Column(
                     children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            flex: 3,
-                            child: DropdownButtonFormField<int>(
-                              initialValue: row.foodId,
-                              decoration: const InputDecoration(
-                                labelText: 'Food',
-                                isDense: true,
+                      ResponsiveFields(sizes: widget.sizes, children: [
+                        DropdownButtonFormField<int>(
+                          isExpanded: true,
+                          itemHeight: null,
+                          iconSize: widget.sizes.buttonIconSize,
+                          style: TextStyle(
+                              fontSize: widget.sizes.fontSize,
+                              color: widget.theme.textTheme.bodyMedium?.color),
+                          initialValue: row.foodId,
+                          decoration: const InputDecoration(
+                            labelText: 'Food',
+                            isDense: true,
+                          ),
+                          items: foods.map((f) {
+                            return DropdownMenuItem<int>(
+                              value: f.id,
+                              child: Text(f.name,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                      fontSize: widget.sizes.fontSize)),
+                            );
+                          }).toList(),
+                          onChanged: (val) {
+                            setState(() {
+                              row.foodId = val;
+                              row.portionId = null;
+                            });
+                          },
+                        ),
+                        IconButton(
+                          icon: Icon(Icons.remove_circle_outline,
+                              color: Colors.red,
+                              size: widget.sizes.buttonIconSize),
+                          onPressed: () => _removeItem(idx),
+                        ),
+                      ]),
+                      SizedBox(height: widget.sizes.spacing),
+                      ResponsiveFields(sizes: widget.sizes, children: [
+                        if (currentFood != null &&
+                            currentFood.portions.isNotEmpty) ...[
+                          DropdownButtonFormField<int?>(
+                            isExpanded: true,
+                            itemHeight: null,
+                            iconSize: widget.sizes.buttonIconSize,
+                            style: TextStyle(
+                                fontSize: widget.sizes.fontSize,
+                                color:
+                                    widget.theme.textTheme.bodyMedium?.color),
+                            initialValue: row.portionId,
+                            decoration: const InputDecoration(
+                              labelText: 'Portion',
+                              isDense: true,
+                            ),
+                            items: [
+                              DropdownMenuItem<int?>(
+                                value: null,
+                                child: Text('Grams',
+                                    style: TextStyle(
+                                        fontSize: widget.sizes.fontSize)),
                               ),
-                              items: foods.map((f) {
-                                return DropdownMenuItem<int>(
-                                  value: f.id,
-                                  child: Text(
-                                    f.name,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
+                              ...currentFood.portions.map((p) {
+                                return DropdownMenuItem<int?>(
+                                  value: p.id,
+                                  child: Text(p.portionName,
+                                      style: TextStyle(
+                                          fontSize: widget.sizes.fontSize)),
                                 );
-                              }).toList(),
-                              onChanged: (val) {
-                                setState(() {
-                                  row.foodId = val;
-                                  row.portionId = null;
-                                });
-                              },
-                            ),
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.remove_circle_outline,
-                                color: Colors.red),
-                            onPressed: () => _removeItem(idx),
+                              }),
+                            ],
+                            onChanged: (val) {
+                              setState(() {
+                                row.portionId = val;
+                              });
+                            },
                           ),
                         ],
-                      ),
-                      const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          if (currentFood != null &&
-                              currentFood.portions.isNotEmpty) ...[
-                            Expanded(
-                              flex: 2,
-                              child: DropdownButtonFormField<int?>(
-                                initialValue: row.portionId,
-                                decoration: const InputDecoration(
-                                  labelText: 'Portion',
-                                  isDense: true,
-                                ),
-                                items: [
-                                  const DropdownMenuItem<int?>(
-                                    value: null,
-                                    child: Text('Grams'),
-                                  ),
-                                  ...currentFood.portions.map((p) {
-                                    return DropdownMenuItem<int?>(
-                                      value: p.id,
-                                      child: Text(p.portionName),
-                                    );
-                                  }),
-                                ],
-                                onChanged: (val) {
-                                  setState(() {
-                                    row.portionId = val;
-                                  });
-                                },
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                          ],
-                          Expanded(
-                            flex: 2,
-                            child: TextFormField(
-                              controller: row.amountController,
-                              keyboardType: TextInputType.number,
-                              decoration: InputDecoration(
-                                labelText: row.portionId == null
-                                    ? 'Amount (g)'
-                                    : 'Portion Count',
-                                isDense: true,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
+                        AppTextFormField(
+                          theme: widget.theme,
+                          fontSize: widget.sizes.fontSize,
+                          padding: widget.sizes.padding,
+                          isLoading: widget.isLoading,
+                          controller: row.amountController,
+                          keyboardType: TextInputType.number,
+                          labelText: row.portionId == null
+                              ? 'Amount (g)'
+                              : 'Portion Count',
+                        ),
+                      ]),
                     ],
                   ),
                 ),
@@ -329,9 +346,11 @@ class _RecipeFormWidgetState extends State<RecipeFormWidget> {
               onPressed: widget.isLoading ? null : _submit,
               child: widget.isLoading
                   ? const CircularProgressIndicator.adaptive()
-                  : Text(widget.initialRecipe != null
-                      ? 'Update Recipe'
-                      : 'Create Recipe'),
+                  : Text(
+                      widget.initialRecipe != null
+                          ? 'Update Recipe'
+                          : 'Create Recipe',
+                      style: TextStyle(fontSize: widget.sizes.fontSize)),
             ),
           ],
         ),

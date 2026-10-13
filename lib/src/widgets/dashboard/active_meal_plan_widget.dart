@@ -13,8 +13,10 @@ import '../../views/meal_plans/meal_plan_list_view.dart';
 
 class ActiveMealPlanWidget extends StatefulWidget {
   final DataDisplaySizesList sizes;
+  final ThemeData theme;
 
   const ActiveMealPlanWidget({
+    required this.theme,
     super.key,
     required this.sizes,
   });
@@ -33,8 +35,6 @@ class _ActiveMealPlanWidgetState extends State<ActiveMealPlanWidget> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return BlocBuilder<MealPlanRecordCubit, MealPlanRecordState>(
       builder: (context, planRecordState) {
         final activeRecord = planRecordState.activeRecord;
@@ -46,8 +46,11 @@ class _ActiveMealPlanWidgetState extends State<ActiveMealPlanWidget> {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                Wrap(
+                  alignment: WrapAlignment.spaceBetween,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: widget.sizes.spacing / 2,
+                  runSpacing: widget.sizes.spacing / 2,
                   children: [
                     Text(
                       'Active Meal Plan',
@@ -61,7 +64,8 @@ class _ActiveMealPlanWidgetState extends State<ActiveMealPlanWidget> {
                       onPressed: () {
                         context.push(MacroTrackerView.routeName);
                       },
-                      child: const Text('Open Tracker'),
+                      child: Text('Open Tracker',
+                          style: TextStyle(fontSize: widget.sizes.fontSize)),
                     ),
                   ],
                 ),
@@ -80,21 +84,23 @@ class _ActiveMealPlanWidgetState extends State<ActiveMealPlanWidget> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            Wrap(
+                              alignment: WrapAlignment.spaceBetween,
+                              crossAxisAlignment: WrapCrossAlignment.center,
+                              spacing: widget.sizes.spacing,
+                              runSpacing: widget.sizes.spacing,
                               children: [
-                                Expanded(
-                                  child: Text(
-                                    activeRecord.planName ?? 'Active Plan',
-                                    style: TextStyle(
-                                      fontSize: widget.sizes.subtitleFontSize,
-                                      fontWeight: FontWeight.bold,
-                                    ),
+                                Text(
+                                  activeRecord.planName ?? 'Active Plan',
+                                  style: TextStyle(
+                                    fontSize: widget.sizes.subtitleFontSize,
+                                    fontWeight: FontWeight.bold,
                                   ),
                                 ),
                                 Container(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 8, vertical: 4),
+                                  padding: EdgeInsets.symmetric(
+                                      horizontal: widget.sizes.padding / 2,
+                                      vertical: widget.sizes.padding / 2),
                                   decoration: BoxDecoration(
                                     color: Colors.green.withValues(alpha: 0.1),
                                     borderRadius: BorderRadius.circular(12),
@@ -137,8 +143,11 @@ class _ActiveMealPlanWidgetState extends State<ActiveMealPlanWidget> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            Wrap(
+                              alignment: WrapAlignment.spaceBetween,
+                              crossAxisAlignment: WrapCrossAlignment.center,
+                              spacing: widget.sizes.spacing / 2,
+                              runSpacing: widget.sizes.spacing / 2,
                               children: [
                                 Text(
                                   'Daily Macro Target',
@@ -152,7 +161,7 @@ class _ActiveMealPlanWidgetState extends State<ActiveMealPlanWidget> {
                                   style: TextStyle(
                                     fontSize: widget.sizes.subtitleFontSize,
                                     fontWeight: FontWeight.bold,
-                                    color: theme.primaryColor,
+                                    color: widget.theme.primaryColor,
                                   ),
                                 ),
                               ],
@@ -188,20 +197,29 @@ class _ActiveMealPlanWidgetState extends State<ActiveMealPlanWidget> {
                             ),
                           ),
                           SizedBox(height: widget.sizes.spacing / 2),
-                          Row(
+                          Wrap(
+                            alignment: WrapAlignment.start,
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            spacing: widget.sizes.spacing / 2,
+                            runSpacing: widget.sizes.spacing / 2,
                             children: [
                               TextButton.icon(
-                                icon:
-                                    const Icon(Icons.restaurant_menu, size: 16),
-                                label: const Text('Browse Plans'),
+                                icon: Icon(Icons.restaurant_menu,
+                                    size: widget.sizes.compactIconSize),
+                                label: Text('Browse Plans',
+                                    style: TextStyle(
+                                        fontSize: widget.sizes.fontSize)),
                                 onPressed: () {
                                   context.push(MealPlanListView.routeName);
                                 },
                               ),
-                              const SizedBox(width: 8),
+                              SizedBox(width: widget.sizes.spacing),
                               TextButton.icon(
-                                icon: const Icon(Icons.flag_outlined, size: 16),
-                                label: const Text('Set Macro Goal'),
+                                icon: Icon(Icons.flag_outlined,
+                                    size: widget.sizes.compactIconSize),
+                                label: Text('Set Macro Goal',
+                                    style: TextStyle(
+                                        fontSize: widget.sizes.fontSize)),
                                 onPressed: () {
                                   context.push(MacroGoalsView.routeName);
                                 },

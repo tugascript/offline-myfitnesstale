@@ -1,4 +1,3 @@
-import '../../widgets/foods/food_details_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -10,6 +9,7 @@ import '../../utilities/sizes/data_display_sizes.dart';
 import '../../utilities/sizes/screen_size.dart';
 import '../../widgets/common/confirmation_dialog.dart';
 import '../../widgets/common/mutation_buttons.dart';
+import '../../widgets/foods/food_details_widget.dart';
 import '../../widgets/layout/app_scaffold.dart';
 import '../loading_view.dart';
 import 'food_update_view.dart';
@@ -44,7 +44,9 @@ class _FoodDetailsViewState extends State<FoodDetailsView> {
       listener: (context, state) {
         if (!state.isLoading && state.error != null) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(state.error!.description)),
+            SnackBar(
+                content: Text(state.error!.description,
+                    style: TextStyle(fontSize: sizes.fontSize))),
           );
         }
       },
@@ -64,13 +66,16 @@ class _FoodDetailsViewState extends State<FoodDetailsView> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.error_outline, size: 64, color: Colors.grey),
-                  const SizedBox(height: 16),
-                  Text(state.error?.description ?? 'Food not found'),
-                  const SizedBox(height: 16),
+                  Icon(Icons.error_outline,
+                      size: sizes.largeIconSize, color: Colors.grey),
+                  SizedBox(height: sizes.spacing),
+                  Text(state.error?.description ?? 'Food not found',
+                      style: TextStyle(fontSize: sizes.fontSize)),
+                  SizedBox(height: sizes.spacing),
                   ElevatedButton(
                     onPressed: () => context.pop(),
-                    child: const Text('Go Back'),
+                    child: Text('Go Back',
+                        style: TextStyle(fontSize: sizes.fontSize)),
                   ),
                 ],
               ),
@@ -100,8 +105,9 @@ class _FoodDetailsViewState extends State<FoodDetailsView> {
                       padding: EdgeInsets.all(sizes.padding),
                       child: Row(
                         children: [
-                          const Icon(Icons.lock_outline, color: Colors.blue),
-                          const SizedBox(width: 8),
+                          Icon(Icons.lock_outline,
+                              color: Colors.blue, size: sizes.buttonIconSize),
+                          SizedBox(width: sizes.spacing),
                           Expanded(
                             child: Text(
                               'This is a system-provided food. It cannot be edited or deleted.',

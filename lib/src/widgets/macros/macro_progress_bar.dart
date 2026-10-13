@@ -23,38 +23,32 @@ class MacroProgressBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final progress = (current / target).clamp(0.0, 1.0);
 
-    return Expanded(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontSize: sizes.fontSize * 0.8,
-              fontWeight: FontWeight.w600,
-              color: color,
-            ),
-          ),
-          Text(
-            '$current/$target$unit',
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontSize: sizes.fontSize * 0.75,
-              color: Colors.grey[600],
-            ),
-          ),
-          const SizedBox(height: 4),
-          LinearProgressIndicator(
-            value: progress,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: sizes.fontSize * 0.8,
+            fontWeight: FontWeight.w600,
             color: color,
-            backgroundColor: color.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(4),
           ),
-        ],
-      ),
+        ),
+        Text(
+          '$current/$target$unit',
+          style: TextStyle(
+            fontSize: sizes.fontSize * 0.75,
+            color: Colors.grey[600],
+          ),
+        ),
+        SizedBox(height: sizes.spacing / 2),
+        LinearProgressIndicator(
+          value: progress,
+          color: color,
+          backgroundColor: color.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(4),
+        ),
+      ],
     );
   }
 }

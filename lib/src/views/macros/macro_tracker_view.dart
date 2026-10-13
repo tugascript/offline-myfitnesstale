@@ -134,16 +134,23 @@ class _MacroTrackerViewState extends State<MacroTrackerView> {
             Wrap(
               alignment: WrapAlignment.spaceBetween,
               crossAxisAlignment: WrapCrossAlignment.center,
-              runSpacing: 4,
+              runSpacing: sizes.spacing / 2,
               children: [
                 SegmentedButton<TrackerScope>(
                   key: const ValueKey('macro-tracker-scope-selector'),
-                  segments: const [
-                    ButtonSegment(value: TrackerScope.day, label: Text('Day')),
+                  segments: [
                     ButtonSegment(
-                        value: TrackerScope.week, label: Text('Week')),
+                        value: TrackerScope.day,
+                        label: Text('Day',
+                            style: TextStyle(fontSize: sizes.fontSize))),
                     ButtonSegment(
-                        value: TrackerScope.month, label: Text('Month')),
+                        value: TrackerScope.week,
+                        label: Text('Week',
+                            style: TextStyle(fontSize: sizes.fontSize))),
+                    ButtonSegment(
+                        value: TrackerScope.month,
+                        label: Text('Month',
+                            style: TextStyle(fontSize: sizes.fontSize))),
                   ],
                   selected: {_scope},
                   onSelectionChanged: (val) {
@@ -153,7 +160,8 @@ class _MacroTrackerViewState extends State<MacroTrackerView> {
                 TextButton(
                   key: const ValueKey('macro-tracker-today-btn'),
                   onPressed: _goToToday,
-                  child: const Text('Today'),
+                  child:
+                      Text('Today', style: TextStyle(fontSize: sizes.fontSize)),
                 ),
               ],
             ),
@@ -163,7 +171,7 @@ class _MacroTrackerViewState extends State<MacroTrackerView> {
               children: [
                 IconButton(
                   key: const ValueKey('macro-tracker-prev-btn'),
-                  icon: const Icon(Icons.chevron_left),
+                  icon: Icon(Icons.chevron_left, size: sizes.buttonIconSize),
                   onPressed: _prevPeriod,
                 ),
                 Expanded(
@@ -197,7 +205,7 @@ class _MacroTrackerViewState extends State<MacroTrackerView> {
                 ),
                 IconButton(
                   key: const ValueKey('macro-tracker-next-btn'),
-                  icon: const Icon(Icons.chevron_right),
+                  icon: Icon(Icons.chevron_right, size: sizes.buttonIconSize),
                   onPressed: _nextPeriod,
                 ),
               ],
@@ -212,8 +220,8 @@ class _MacroTrackerViewState extends State<MacroTrackerView> {
       ),
       floatingActionButton: FloatingActionButton.extended(
         key: const ValueKey('macro-tracker-log-food-fab'),
-        icon: const Icon(Icons.add),
-        label: const Text('Log Food'),
+        icon: Icon(Icons.add, size: sizes.buttonIconSize),
+        label: Text('Log Food', style: TextStyle(fontSize: sizes.fontSize)),
         onPressed: () {
           showDialog(
             context: context,
@@ -253,14 +261,17 @@ class _MacroTrackerViewState extends State<MacroTrackerView> {
   Widget _buildScopeBody(ThemeData theme, DataDisplaySizesList sizes) {
     switch (_scope) {
       case TrackerScope.day:
-        return MacroTrackerDayWidget(sizes: sizes, selectedDate: _selectedDate);
+        return MacroTrackerDayWidget(
+            theme: theme, sizes: sizes, selectedDate: _selectedDate);
       case TrackerScope.week:
         return MacroTrackerWeekWidget(
+            theme: theme,
             sizes: sizes,
             selectedDate: _selectedDate,
             onSelectDate: _selectDay);
       case TrackerScope.month:
         return MacroTrackerMonthWidget(
+            theme: theme,
             sizes: sizes,
             selectedDate: _selectedDate,
             onSelectDate: _selectDay);

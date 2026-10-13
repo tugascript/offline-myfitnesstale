@@ -45,14 +45,15 @@ class PlannedMealsWidget extends StatelessWidget {
                     Wrap(
                       alignment: WrapAlignment.spaceBetween,
                       crossAxisAlignment: WrapCrossAlignment.center,
-                      spacing: 8,
-                      runSpacing: 4,
+                      spacing: sizes.spacing,
+                      runSpacing: sizes.spacing / 2,
                       children: [
                         Row(
                           children: [
-                            const Icon(Icons.restaurant_menu,
-                                color: Colors.green, size: 20),
-                            const SizedBox(width: 8),
+                            Icon(Icons.restaurant_menu,
+                                color: Colors.green,
+                                size: sizes.compactIconSize),
+                            SizedBox(width: sizes.spacing),
                             Expanded(
                                 child: Text(
                               'Active Meal Plan: ${activeRecord.planName ?? 'Plan'}',
@@ -87,30 +88,34 @@ class PlannedMealsWidget extends StatelessWidget {
                       ...plannedMeals.map((meal) => ListTile(
                             key: ValueKey('planned-meal-${meal.id}'),
                             contentPadding: EdgeInsets.zero,
-                            title: Text(meal.name),
+                            title: Text(meal.name,
+                                style: TextStyle(fontSize: sizes.fontSize)),
                             subtitle: Text(
-                              '${meal.totalCalories} kcal · '
-                              'P ${meal.totalProtein}g · '
-                              'C ${meal.totalCarbs}g · F ${meal.totalFat}g',
-                            ),
+                                '${meal.totalCalories} kcal · '
+                                'P ${meal.totalProtein}g · '
+                                'C ${meal.totalCarbs}g · F ${meal.totalFat}g',
+                                style: TextStyle(fontSize: sizes.fontSize)),
                             trailing: TextButton(
                               key: ValueKey('log-planned-meal-${meal.id}'),
                               onPressed: () => _logPlannedMeal(context, meal),
-                              child: const Text('Log'),
+                              child: Text('Log',
+                                  style: TextStyle(fontSize: sizes.fontSize)),
                             ),
                           )),
                     ] else if (plan != null &&
                         plan.id == activeRecord.mealPlanId &&
                         plan.version == activeRecord.mealPlanVersion &&
                         !_activeRecordCoversSelectedDate(activeRecord)) ...[
-                      const Text('No planned meals for this date.'),
+                      Text('No planned meals for this date.',
+                          style: TextStyle(fontSize: sizes.fontSize)),
                     ],
                     Wrap(
                       alignment: WrapAlignment.end,
                       children: [
                         TextButton.icon(
-                          icon: const Icon(Icons.check, size: 16),
-                          label: const Text('Complete Day Record'),
+                          icon: Icon(Icons.check, size: sizes.compactIconSize),
+                          label: Text('Complete Day Record',
+                              style: TextStyle(fontSize: sizes.fontSize)),
                           onPressed: () {
                             context
                                 .read<MealPlanRecordCubit>()

@@ -17,6 +17,7 @@ class HomeView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final breakPoint = BreakPoint.fromContext(context);
     final sizes = DataDisplaySizes.getDataDisplaySizes(breakPoint.screenSize);
 
@@ -37,11 +38,11 @@ class HomeView extends StatelessWidget {
             SizedBox(height: sizes.spacing),
 
             // Active (Meal) Plan
-            ActiveMealPlanWidget(sizes: sizes),
+            ActiveMealPlanWidget(theme: theme, sizes: sizes),
             SizedBox(height: sizes.spacing),
 
             // Quick Actions
-            QuickActionsWidget(sizes: sizes),
+            QuickActionsWidget(theme: theme, sizes: sizes),
             SizedBox(height: sizes.spacing),
 
             // Progress & Activity Section

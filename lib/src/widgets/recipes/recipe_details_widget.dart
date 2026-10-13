@@ -113,11 +113,14 @@ class RecipeDetailsWidget extends StatelessWidget {
                 ? '${item.amount} × ${item.portionName}'
                 : '${item.amount}g';
             return Card(
-              margin: const EdgeInsets.only(bottom: 6),
+              margin: EdgeInsets.only(bottom: sizes.padding / 2),
               child: ListTile(
-                leading: const Icon(Icons.restaurant, color: Colors.teal),
-                title: Text(item.foodName ?? 'Food #${item.foodId}'),
-                subtitle: Text(portionLabel),
+                leading: Icon(Icons.restaurant,
+                    color: Colors.teal, size: sizes.buttonIconSize),
+                title: Text(item.foodName ?? 'Food #${item.foodId}',
+                    style: TextStyle(fontSize: sizes.fontSize)),
+                subtitle: Text(portionLabel,
+                    style: TextStyle(fontSize: sizes.fontSize)),
               ),
             );
           }),

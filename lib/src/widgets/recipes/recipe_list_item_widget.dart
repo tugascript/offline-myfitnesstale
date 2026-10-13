@@ -31,7 +31,7 @@ class RecipeListItemWidget extends StatelessWidget {
               color: Colors.grey[600],
             ),
           ),
-          trailing: const Icon(Icons.chevron_right),
+          trailing: Icon(Icons.chevron_right, size: sizes.buttonIconSize),
           onTap: onTap,
         ),
       );

@@ -44,7 +44,9 @@ class _RecipeDetailsViewState extends State<RecipeDetailsView> {
       listener: (context, state) {
         if (!state.isLoading && state.error != null) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(state.error!.description)),
+            SnackBar(
+                content: Text(state.error!.description,
+                    style: TextStyle(fontSize: sizes.fontSize))),
           );
         }
       },
@@ -64,13 +66,16 @@ class _RecipeDetailsViewState extends State<RecipeDetailsView> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.error_outline, size: 64, color: Colors.grey),
-                  const SizedBox(height: 16),
-                  Text(state.error?.description ?? 'Recipe not found'),
-                  const SizedBox(height: 16),
+                  Icon(Icons.error_outline,
+                      size: sizes.largeIconSize, color: Colors.grey),
+                  SizedBox(height: sizes.spacing),
+                  Text(state.error?.description ?? 'Recipe not found',
+                      style: TextStyle(fontSize: sizes.fontSize)),
+                  SizedBox(height: sizes.spacing),
                   ElevatedButton(
                     onPressed: () => context.pop(),
-                    child: const Text('Go Back'),
+                    child: Text('Go Back',
+                        style: TextStyle(fontSize: sizes.fontSize)),
                   ),
                 ],
               ),
@@ -96,8 +101,9 @@ class _RecipeDetailsViewState extends State<RecipeDetailsView> {
                       padding: EdgeInsets.all(sizes.padding),
                       child: Row(
                         children: [
-                          const Icon(Icons.lock_outline, color: Colors.blue),
-                          const SizedBox(width: 8),
+                          Icon(Icons.lock_outline,
+                              color: Colors.blue, size: sizes.buttonIconSize),
+                          SizedBox(width: sizes.spacing),
                           Expanded(
                             child: Text(
                               'This is a system-provided recipe. It cannot be edited or deleted.',

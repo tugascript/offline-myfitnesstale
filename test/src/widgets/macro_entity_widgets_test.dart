@@ -148,6 +148,7 @@ void main() {
     await pumpNarrow(
         tester,
         MealPlanScheduleWidget(
+          theme: ThemeData(),
           sizes: sizes,
           plan: const MealPlanDto(
             id: 1,
