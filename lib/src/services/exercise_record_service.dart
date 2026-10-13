@@ -1,5 +1,6 @@
 import 'package:logging/logging.dart';
 
+import '../common/nullable.dart';
 import '../models/common.dart';
 import '../models/db.dart';
 import '../models/enums.dart';
@@ -384,7 +385,7 @@ class ExerciseRecordService {
       if (status != ProgressStatus.inProgress) {
         final int id = await _strengthGoalRepository.insert(goal);
         _logger.info('Created strength goal with id $id');
-        return ok(StrengthGoalDto.fromModel(goal.copyWith(id: id)));
+        return ok(StrengthGoalDto.fromModel(goal.copyWith(id: Nullable(id))));
       }
 
       final int activeCount = await _strengthGoalRepository.count(
@@ -396,7 +397,7 @@ class ExerciseRecordService {
       if (activeCount == 0) {
         final int id = await _strengthGoalRepository.insert(goal);
         _logger.info('Created strength goal with id $id');
-        return ok(StrengthGoalDto.fromModel(goal.copyWith(id: id)));
+        return ok(StrengthGoalDto.fromModel(goal.copyWith(id: Nullable(id))));
       }
 
       final int id =
@@ -418,7 +419,7 @@ class ExerciseRecordService {
         return await _strengthGoalRepository.insert(goal, txn);
       });
       _logger.info('Created strength goal with id $id');
-      return ok(StrengthGoalDto.fromModel(goal.copyWith(id: id)));
+      return ok(StrengthGoalDto.fromModel(goal.copyWith(id: Nullable(id))));
     } catch (e) {
       _logger.severe('Failed to create strength goal', e);
       return err(const ServiceError(
@@ -573,9 +574,11 @@ class ExerciseRecordService {
             ? DateUtilities.getDateUnix(startDate)
             : goal.startDate,
         status: status,
-        completedAt: completedAt != null
-            ? DateUtilities.getDateUnix(completedAt)
-            : goal.completedAt,
+        completedAt: Nullable(
+          completedAt != null
+              ? DateUtilities.getDateUnix(completedAt)
+              : goal.completedAt,
+        ),
         updatedAt: DateUtilities.getNowUtcUnix(),
       );
       await _strengthGoalRepository.update(updated);
@@ -604,7 +607,7 @@ class ExerciseRecordService {
 
       final StrengthGoal updated = goal.copyWith(
         status: ProgressStatus.completed,
-        completedAt: DateUtilities.getNowUtcUnix(),
+        completedAt: Nullable(DateUtilities.getNowUtcUnix()),
         updatedAt: DateUtilities.getNowUtcUnix(),
       );
       await _strengthGoalRepository.update(updated);

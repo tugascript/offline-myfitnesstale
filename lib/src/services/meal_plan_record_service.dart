@@ -1,5 +1,6 @@
 import 'package:logging/logging.dart';
 
+import '../common/nullable.dart';
 import '../models/daily_nutrition_log_model.dart';
 import '../models/db.dart';
 import '../models/enums.dart';
@@ -191,18 +192,18 @@ class MealPlanRecordService {
                   await _dayRecordRepository.insert(dayRecord, txn);
 
               dayRecordDtos.add(MealPlanDayRecordDto.fromModel(
-                dayRecord.copyWith(id: dayRecordId),
+                dayRecord.copyWith(id: Nullable(dayRecordId)),
               ));
             }
 
             weekRecordDtos.add(MealPlanWeekRecordDto.fromModel(
-              weekRecord.copyWith(id: weekRecordId),
+              weekRecord.copyWith(id: Nullable(weekRecordId)),
               days: dayRecordDtos,
             ));
           }
 
           final createdDto = MealPlanRecordDto.fromModel(
-            record.copyWith(id: recordId),
+            record.copyWith(id: Nullable(recordId)),
             planName: plan.name,
             totalWeeks: plan.totalWeeks,
             totalDays: plan.totalDays,
@@ -367,12 +368,12 @@ class MealPlanRecordService {
           // Mark current day completed
           final updatedDay = currentDayRec.copyWith(
             status: ProgressStatus.completed,
-            completedAt: now,
+            completedAt: Nullable(now),
             totalCalories: dayCals,
             totalProtein: dayProtein,
             totalCarbs: dayCarbs,
             totalFat: dayFat,
-            totalFiber: dayFiber,
+            totalFiber: Nullable(dayFiber),
             updatedAt: now,
           );
           await txn.update(
@@ -636,7 +637,7 @@ class MealPlanRecordService {
       final now = DateUtilities.getNowUtcUnix();
       final updated = record.copyWith(
         status: ProgressStatus.abandoned,
-        completedAt: now,
+        completedAt: Nullable(now),
         updatedAt: now,
       );
       await _recordRepository.update(updated);

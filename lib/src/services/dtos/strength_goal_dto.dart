@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 
+import '../../common/nullable.dart';
 import '../../models/enums.dart';
 import '../../models/strength_goal_model.dart';
 import '../../models/utilities.dart';
@@ -58,7 +59,7 @@ class StrengthGoalDto extends Equatable {
     int? exerciseId,
     ProgressStatus? status,
     DateTime? startDate,
-    DateTime? completedAt,
+    Nullable<DateTime>? completedAt,
     int? createdAt,
     int? updatedAt,
   }) {
@@ -71,7 +72,7 @@ class StrengthGoalDto extends Equatable {
       exerciseId: exerciseId ?? this.exerciseId,
       status: status ?? this.status,
       startDate: startDate ?? this.startDate,
-      completedAt: completedAt ?? this.completedAt,
+      completedAt: completedAt != null ? completedAt.value : this.completedAt,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );

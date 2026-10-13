@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 
+import '../../common/nullable.dart';
 import '../../models/common.dart';
 import '../../models/daily_nutrition_log_model.dart';
 import '../../models/enums.dart';
@@ -58,7 +59,7 @@ class MacroGoalDto extends Equatable {
     int? targetProtein,
     int? targetCarbs,
     int? targetFat,
-    int? targetWaterIntakeMl,
+    Nullable<int>? targetWaterIntakeMl,
     bool? isActive,
     WeightGoalPhase? phase,
     int? createdAt,
@@ -71,7 +72,9 @@ class MacroGoalDto extends Equatable {
       targetProtein: targetProtein ?? this.targetProtein,
       targetCarbs: targetCarbs ?? this.targetCarbs,
       targetFat: targetFat ?? this.targetFat,
-      targetWaterIntakeMl: targetWaterIntakeMl ?? this.targetWaterIntakeMl,
+      targetWaterIntakeMl: targetWaterIntakeMl != null
+          ? targetWaterIntakeMl.value
+          : this.targetWaterIntakeMl,
       isActive: isActive ?? this.isActive,
       phase: phase ?? this.phase,
       createdAt: createdAt ?? this.createdAt,

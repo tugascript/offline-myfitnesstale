@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 
+import '../../common/nullable.dart';
 import '../../models/common.dart';
 import '../../models/enums.dart';
 import '../../models/food_model.dart';
@@ -48,21 +49,6 @@ class FoodPortionDto extends Equatable {
         portionName,
         gramWeight,
       ];
-}
-
-class FoodPortionInput extends Equatable {
-  final int? id;
-  final String portionName;
-  final int gramWeight;
-
-  const FoodPortionInput({
-    this.id,
-    required this.portionName,
-    required this.gramWeight,
-  });
-
-  @override
-  List<Object?> get props => [id, portionName, gramWeight];
 }
 
 class FoodDto extends Equatable {
@@ -127,16 +113,16 @@ class FoodDto extends Equatable {
     int? id,
     String? name,
     FoodCategory? category,
-    String? brand,
-    String? barcode,
+    Nullable<String>? brand,
+    Nullable<String>? barcode,
     int? servingSizeBaseGrams,
     String? servingUnitBase,
     int? caloriesBase,
     int? proteinBase,
     int? carbsBase,
     int? fatBase,
-    int? fiberBase,
-    Micronutrients? micros,
+    Nullable<int>? fiberBase,
+    Nullable<Micronutrients>? micros,
     bool? isFavorite,
     CreatedBy? createdBy,
     int? createdAt,
@@ -147,15 +133,15 @@ class FoodDto extends Equatable {
       id: id ?? this.id,
       name: name ?? this.name,
       category: category ?? this.category,
-      brand: brand ?? this.brand,
-      barcode: barcode ?? this.barcode,
+      brand: brand != null ? brand.value : this.brand,
+      barcode: barcode != null ? barcode.value : this.barcode,
       servingSizeBaseGrams: servingSizeBaseGrams ?? this.servingSizeBaseGrams,
       caloriesBase: caloriesBase ?? this.caloriesBase,
       proteinBase: proteinBase ?? this.proteinBase,
       carbsBase: carbsBase ?? this.carbsBase,
       fatBase: fatBase ?? this.fatBase,
-      fiberBase: fiberBase ?? this.fiberBase,
-      micros: micros ?? this.micros,
+      fiberBase: fiberBase != null ? fiberBase.value : this.fiberBase,
+      micros: micros != null ? micros.value : this.micros,
       isFavorite: isFavorite ?? this.isFavorite,
       createdBy: createdBy ?? this.createdBy,
       portions: portions ?? this.portions,

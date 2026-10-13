@@ -1,5 +1,6 @@
 import 'package:logging/logging.dart';
 
+import '../common/nullable.dart';
 import '../models/db.dart';
 import '../models/enums.dart';
 import '../models/food_model.dart';
@@ -298,7 +299,7 @@ class MealPlanService {
                   final int itemId =
                       await _itemRepository.insert(mealItem, txn);
                   itemDtos.add(MealPlanMealItemDto.fromModel(
-                    mealItem.copyWith(id: itemId),
+                    mealItem.copyWith(id: Nullable(itemId)),
                     foodName: food.name,
                     portionName: portionName,
                   ));
@@ -306,12 +307,12 @@ class MealPlanService {
 
                 // Update Meal totals
                 final updatedMeal = tempMeal.copyWith(
-                  id: mealId,
+                  id: Nullable(mealId),
                   totalCalories: mealCalories,
                   totalProtein: mealProtein,
                   totalCarbs: mealCarbs,
                   totalFat: mealFat,
-                  totalFiber: mealFiber,
+                  totalFiber: Nullable(mealFiber),
                   updatedAt: DateUtilities.getNowUtcUnix(),
                 );
                 await _mealRepository.update(updatedMeal, txn);
@@ -330,12 +331,12 @@ class MealPlanService {
 
               // Update Day totals
               final updatedDay = tempDay.copyWith(
-                id: dayId,
+                id: Nullable(dayId),
                 targetCalories: dayTotalCalories,
                 targetProtein: dayTotalProtein,
                 targetCarbs: dayTotalCarbs,
                 targetFat: dayTotalFat,
-                targetFiber: dayTotalFiber,
+                targetFiber: Nullable(dayTotalFiber),
                 totalMeals: dInput.meals.length,
                 updatedAt: DateUtilities.getNowUtcUnix(),
               );
@@ -353,12 +354,12 @@ class MealPlanService {
 
             final dayCount = wInput.days.isNotEmpty ? wInput.days.length : 1;
             final updatedWeek = tempWeek.copyWith(
-              id: weekId,
+              id: Nullable(weekId),
               targetCalories: (weekTotalCalories / dayCount).round(),
               targetProtein: (weekTotalProtein / dayCount).round(),
               targetCarbs: (weekTotalCarbs / dayCount).round(),
               targetFat: (weekTotalFat / dayCount).round(),
-              targetFiber: (weekTotalFiber / dayCount).round(),
+              targetFiber: Nullable((weekTotalFiber / dayCount).round()),
               totalDays: wInput.days.length,
               totalMeals: weekTotalMeals,
               updatedAt: DateUtilities.getNowUtcUnix(),
@@ -368,7 +369,7 @@ class MealPlanService {
           }
 
           final createdDto = MealPlanDto.fromModel(
-            mealPlan.copyWith(id: planId),
+            mealPlan.copyWith(id: Nullable(planId)),
             weeks: weekDtos,
           );
           _logger.info('Created meal plan with id $planId');
@@ -796,19 +797,19 @@ class MealPlanService {
                     final int itemId =
                         await _itemRepository.insert(mealItem, txn);
                     itemDtos.add(MealPlanMealItemDto.fromModel(
-                      mealItem.copyWith(id: itemId),
+                      mealItem.copyWith(id: Nullable(itemId)),
                       foodName: food.name,
                       portionName: portionName,
                     ));
                   }
 
                   final updatedMeal = tempMeal.copyWith(
-                    id: mealId,
+                    id: Nullable(mealId),
                     totalCalories: mealCalories,
                     totalProtein: mealProtein,
                     totalCarbs: mealCarbs,
                     totalFat: mealFat,
-                    totalFiber: mealFiber,
+                    totalFiber: Nullable(mealFiber),
                     updatedAt: DateUtilities.getNowUtcUnix(),
                   );
                   await _mealRepository.update(updatedMeal, txn);
@@ -826,12 +827,12 @@ class MealPlanService {
                 }
 
                 final updatedDay = tempDay.copyWith(
-                  id: dayId,
+                  id: Nullable(dayId),
                   targetCalories: dayTotalCalories,
                   targetProtein: dayTotalProtein,
                   targetCarbs: dayTotalCarbs,
                   targetFat: dayTotalFat,
-                  targetFiber: dayTotalFiber,
+                  targetFiber: Nullable(dayTotalFiber),
                   totalMeals: dInput.meals.length,
                   updatedAt: DateUtilities.getNowUtcUnix(),
                 );
@@ -849,12 +850,12 @@ class MealPlanService {
 
               final dayCount = wInput.days.isNotEmpty ? wInput.days.length : 1;
               final updatedWeek = tempWeek.copyWith(
-                id: weekId,
+                id: Nullable(weekId),
                 targetCalories: (weekTotalCalories / dayCount).round(),
                 targetProtein: (weekTotalProtein / dayCount).round(),
                 targetCarbs: (weekTotalCarbs / dayCount).round(),
                 targetFat: (weekTotalFat / dayCount).round(),
-                targetFiber: (weekTotalFiber / dayCount).round(),
+                targetFiber: Nullable((weekTotalFiber / dayCount).round()),
                 totalDays: wInput.days.length,
                 totalMeals: weekTotalMeals,
                 updatedAt: DateUtilities.getNowUtcUnix(),
@@ -867,7 +868,7 @@ class MealPlanService {
 
           final updated = existing.copyWith(
             name: name,
-            description: description,
+            description: description != null ? Nullable(description) : null,
             totalWeeks: planTotalWeeks,
             totalDays: planTotalDays,
             totalMeals: planTotalMeals,
