@@ -76,19 +76,10 @@ class _MealPlanUpdateViewState extends State<MealPlanUpdateView> {
               sizes: sizes,
               initialPlan: plan,
               isLoading: state.isLoading,
-              onSubmit: ({
-                required name,
-                description,
-                required durationWeeks,
-                required weeks,
-              }) async {
-                final success =
-                    await context.read<MealPlanCubit>().updateMealPlan(
-                          id: plan.id,
-                          name: name,
-                          description: description,
-                          weeks: weeks,
-                        );
+              onSubmit: (input) async {
+                final success = await context
+                    .read<MealPlanCubit>()
+                    .updateMealPlan(plan.id, input);
                 if (success && context.mounted) {
                   context.pop();
                 }

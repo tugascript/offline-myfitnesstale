@@ -1,3 +1,5 @@
+import '../../common/nullable.dart';
+import '../../services/inputs/food_input.dart';
 import 'package:flutter/material.dart';
 
 import '../../models/enums.dart';
@@ -9,20 +11,7 @@ class FoodFormWidget extends StatefulWidget {
   final DataDisplaySizesList sizes;
   final FoodDto? initialFood;
   final bool isLoading;
-  final void Function({
-    required String name,
-    String? brand,
-    String? barcode,
-    required FoodCategory category,
-    required int servingSizeBase,
-    required int caloriesBase,
-    required int proteinBase,
-    required int carbsBase,
-    required int fatBase,
-    int? fiberBase,
-    int? sodiumMg,
-    required List<FoodPortionInput> portions,
-  }) onSubmit;
+  final ValueChanged<FoodInput> onSubmit;
 
   const FoodFormWidget({
     super.key,
@@ -75,8 +64,8 @@ class _FoodFormWidgetState extends State<FoodFormWidget> {
     final f = widget.initialFood;
     _nameController = TextEditingController(text: f?.name ?? '');
     _brandController = TextEditingController(text: f?.brand ?? '');
-    _servingSizeController =
-        TextEditingController(text: f?.servingSizeBase.toString() ?? '100');
+    _servingSizeController = TextEditingController(
+        text: f?.servingSizeBaseGrams.toString() ?? '100');
     _caloriesController =
         TextEditingController(text: f?.caloriesBase.toString() ?? '0');
     _proteinController =
@@ -87,7 +76,7 @@ class _FoodFormWidgetState extends State<FoodFormWidget> {
     _fiberController =
         TextEditingController(text: f?.fiberBase?.toString() ?? '');
     _sodiumController =
-        TextEditingController(text: f?.micros?.sodiumMg?.toString() ?? '');
+        TextEditingController(text: f?.sodiumBase?.toString() ?? '');
     _selectedCategory = f?.category ?? FoodCategory.other;
 
     if (f != null && f.portions.isNotEmpty) {
@@ -150,21 +139,24 @@ class _FoodFormWidgetState extends State<FoodFormWidget> {
       }
     }
 
-    widget.onSubmit(
+    widget.onSubmit(FoodInput(
       name: _nameController.text.trim(),
-      brand: _brandController.text.trim().isEmpty
+      brand: Nullable(_brandController.text.trim().isEmpty
           ? null
-          : _brandController.text.trim(),
+          : _brandController.text.trim()),
       category: _selectedCategory,
-      servingSizeBase: int.tryParse(_servingSizeController.text) ?? 100,
+      servingSizeBaseGrams: int.tryParse(_servingSizeController.text) ?? 100,
       caloriesBase: int.tryParse(_caloriesController.text) ?? 0,
       proteinBase: int.tryParse(_proteinController.text) ?? 0,
       carbsBase: int.tryParse(_carbsController.text) ?? 0,
       fatBase: int.tryParse(_fatController.text) ?? 0,
-      fiberBase: int.tryParse(_fiberController.text),
-      sodiumMg: int.tryParse(_sodiumController.text),
+      fiberBase: Nullable(int.tryParse(_fiberController.text)),
       portions: portions,
-    );
+      sodiumBase: Nullable(int.tryParse(_sodiumController.text)),
+      barcode: Nullable(widget.initialFood?.barcode),
+      micros: Nullable(widget.initialFood?.micros),
+      isFavorite: widget.initialFood?.isFavorite ?? false,
+    ));
   }
 
   @override

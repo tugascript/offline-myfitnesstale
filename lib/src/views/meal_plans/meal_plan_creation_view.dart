@@ -38,18 +38,9 @@ class MealPlanCreationView extends StatelessWidget {
               theme: theme,
               sizes: sizes,
               isLoading: state.isLoading,
-              onSubmit: ({
-                required name,
-                description,
-                required durationWeeks,
-                required weeks,
-              }) async {
+              onSubmit: (input) async {
                 final success =
-                    await context.read<MealPlanCubit>().createMealPlan(
-                          name: name,
-                          description: description,
-                          weeks: weeks,
-                        );
+                    await context.read<MealPlanCubit>().createMealPlan(input);
                 if (success && context.mounted) {
                   context.pop();
                 }

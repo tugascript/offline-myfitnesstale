@@ -1,3 +1,4 @@
+import 'inputs/food_input.dart';
 // Copyright (C) 2026 Afonso Barracha
 //
 // This file is part of My Fitness Tale.
@@ -28,7 +29,6 @@ import 'common/errors.dart';
 import 'common/result.dart';
 import 'dtos/food_dto.dart';
 import 'dtos/paginated_dto.dart';
-import 'inputs/food_input.dart';
 
 class FoodService {
   FoodService._();
@@ -267,10 +267,10 @@ class FoodService {
       final FoodDto updatedDto =
           await _foodRepository.startTransaction((txn) async {
         await _foodRepository.update(updated, txn);
-        await txn.delete(
-          FoodPortion.table,
+        await _portionRepository.deleteMany(
           where: FoodPortionColumns.foodId.equal,
           whereArgs: [id],
+          trx: txn,
         );
 
         final List<FoodPortionDto> portionDtos = [];
@@ -310,10 +310,11 @@ class FoodService {
       return false;
     }
 
-    newPortions.sort((a, b) => a.portionName.compareTo(b.portionName));
+    final sortedPortions = [...newPortions]
+      ..sort((a, b) => a.portionName.compareTo(b.portionName));
     for (int i = 0; i < currentPortions.length; i++) {
-      if (currentPortions[i].portionName != newPortions[i].portionName ||
-          currentPortions[i].gramWeight != newPortions[i].gramWeight) {
+      if (currentPortions[i].portionName != sortedPortions[i].portionName ||
+          currentPortions[i].gramWeight != sortedPortions[i].gramWeight) {
         return false;
       }
     }

@@ -24,6 +24,7 @@ import 'meal_plan_week_model.dart';
 import 'meal_plan_week_record_model.dart';
 import 'profile_model.dart';
 import 'recipe_item_model.dart';
+import 'strength_goal_model.dart';
 import 'recipe_model.dart';
 import 'reminders_config_model.dart';
 import 'system_model.dart';
@@ -172,6 +173,7 @@ class DatabaseHelper {
       Recipe.tableCreate,
       RecipeItem.tableCreate,
       MacroGoal.tableCreate,
+      StrengthGoal.tableCreate,
       DailyNutritionLog.tableCreate,
       MealLog.tableCreate,
       MealLogItem.tableCreate,

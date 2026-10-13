@@ -48,6 +48,34 @@ final class ExerciseRecordPagination extends Equatable {
   List<Object?> get props => [exerciseId, dateRange, limit, offset, total];
 }
 
+final class StrengthGoalPagination extends Equatable {
+  final int? exerciseId;
+  final bool skipInProgress;
+  final int total;
+  final int limit;
+  final int offset;
+  const StrengthGoalPagination(
+      {this.exerciseId,
+      this.skipInProgress = false,
+      this.total = 0,
+      this.limit = 20,
+      this.offset = 0});
+  StrengthGoalPagination copyWith(
+          {Nullable<int>? exerciseId,
+          bool? skipInProgress,
+          int? total,
+          int? limit,
+          int? offset}) =>
+      StrengthGoalPagination(
+          exerciseId: exerciseId != null ? exerciseId.value : this.exerciseId,
+          skipInProgress: skipInProgress ?? this.skipInProgress,
+          total: total ?? this.total,
+          limit: limit ?? this.limit,
+          offset: offset ?? this.offset);
+  @override
+  List<Object?> get props => [exerciseId, skipInProgress, total, limit, offset];
+}
+
 final class ExerciseRecordState extends Equatable {
   final List<ExerciseRecordDto> exerciseRecords;
   final ExerciseRecordDto? selectedExerciseRecord;
@@ -55,7 +83,7 @@ final class ExerciseRecordState extends Equatable {
   final ExerciseRecordPagination recordPagination;
   final StrengthGoalDto? activeStrengthGoal;
   final List<StrengthGoalDto> strengthGoals;
-  final int strengthGoalsTotal;
+  final StrengthGoalPagination strengthGoalPagination;
   final StrengthGoalDto? selectedStrengthGoal;
   final bool isLoading;
   final ErrorState? error;
@@ -67,7 +95,7 @@ final class ExerciseRecordState extends Equatable {
     required this.recordPagination,
     this.activeStrengthGoal,
     this.strengthGoals = const [],
-    this.strengthGoalsTotal = 0,
+    this.strengthGoalPagination = const StrengthGoalPagination(),
     this.selectedStrengthGoal,
     required this.isLoading,
     this.error,
@@ -78,7 +106,7 @@ final class ExerciseRecordState extends Equatable {
       exerciseRecords: [],
       recordPagination: ExerciseRecordPagination.initial(),
       strengthGoals: const [],
-      strengthGoalsTotal: 0,
+      strengthGoalPagination: const StrengthGoalPagination(),
       isLoading: false,
     );
   }
@@ -90,7 +118,7 @@ final class ExerciseRecordState extends Equatable {
     ExerciseRecordPagination? recordPagination,
     Nullable<StrengthGoalDto>? activeStrengthGoal,
     List<StrengthGoalDto>? strengthGoals,
-    int? strengthGoalsTotal,
+    StrengthGoalPagination? strengthGoalPagination,
     Nullable<StrengthGoalDto>? selectedStrengthGoal,
     bool? isLoading,
     Nullable<ErrorState>? error,
@@ -108,7 +136,8 @@ final class ExerciseRecordState extends Equatable {
           ? activeStrengthGoal.value
           : this.activeStrengthGoal,
       strengthGoals: strengthGoals ?? this.strengthGoals,
-      strengthGoalsTotal: strengthGoalsTotal ?? this.strengthGoalsTotal,
+      strengthGoalPagination:
+          strengthGoalPagination ?? this.strengthGoalPagination,
       selectedStrengthGoal: selectedStrengthGoal != null
           ? selectedStrengthGoal.value
           : this.selectedStrengthGoal,
@@ -125,7 +154,7 @@ final class ExerciseRecordState extends Equatable {
         recordPagination,
         activeStrengthGoal,
         strengthGoals,
-        strengthGoalsTotal,
+        strengthGoalPagination,
         selectedStrengthGoal,
         isLoading,
         error,

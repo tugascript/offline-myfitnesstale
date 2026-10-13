@@ -1,3 +1,5 @@
+import '../../common/nullable.dart';
+import '../../services/inputs/recipe_input.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -11,12 +13,7 @@ class RecipeFormWidget extends StatefulWidget {
   final DataDisplaySizesList sizes;
   final RecipeDto? initialRecipe;
   final bool isLoading;
-  final void Function({
-    required String name,
-    String? description,
-    required int servingsYield,
-    required List<RecipeItemInput> items,
-  }) onSubmit;
+  final ValueChanged<RecipeInput> onSubmit;
 
   const RecipeFormWidget({
     super.key,
@@ -136,14 +133,14 @@ class _RecipeFormWidgetState extends State<RecipeFormWidget> {
       ));
     }
 
-    widget.onSubmit(
+    widget.onSubmit(RecipeInput(
       name: _nameController.text.trim(),
-      description: _descriptionController.text.trim().isEmpty
+      description: Nullable(_descriptionController.text.trim().isEmpty
           ? null
-          : _descriptionController.text.trim(),
+          : _descriptionController.text.trim()),
       servingsYield: int.tryParse(_servingsYieldController.text) ?? 1,
       items: items,
-    );
+    ));
   }
 
   @override

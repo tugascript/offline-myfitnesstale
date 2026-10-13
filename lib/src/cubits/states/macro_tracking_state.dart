@@ -4,10 +4,24 @@ import '../../common/nullable.dart';
 import '../../services/dtos/macro_tracking_dto.dart';
 import 'common_state.dart';
 
+final class MacroGoalPagination extends Equatable {
+  final int total;
+  final int limit;
+  final int offset;
+  const MacroGoalPagination({this.total = 0, this.limit = 20, this.offset = 0});
+  MacroGoalPagination copyWith({int? total, int? limit, int? offset}) =>
+      MacroGoalPagination(
+          total: total ?? this.total,
+          limit: limit ?? this.limit,
+          offset: offset ?? this.offset);
+  @override
+  List<Object?> get props => [total, limit, offset];
+}
+
 final class MacroTrackingState extends Equatable {
   final MacroGoalDto? activeGoal;
   final List<MacroGoalDto> goalHistory;
-  final int goalsTotal;
+  final MacroGoalPagination goalPagination;
   final DailyNutritionLogDto? selectedDailyLog;
   final DateTime selectedDate;
   final List<DailyNutritionLogDto> rangeLogs;
@@ -17,7 +31,7 @@ final class MacroTrackingState extends Equatable {
   const MacroTrackingState({
     this.activeGoal,
     this.goalHistory = const [],
-    this.goalsTotal = 0,
+    this.goalPagination = const MacroGoalPagination(),
     this.selectedDailyLog,
     required this.selectedDate,
     this.rangeLogs = const [],
@@ -29,7 +43,7 @@ final class MacroTrackingState extends Equatable {
     final now = DateTime.now();
     return MacroTrackingState(
       goalHistory: const [],
-      goalsTotal: 0,
+      goalPagination: const MacroGoalPagination(),
       selectedDate: DateTime(now.year, now.month, now.day),
       rangeLogs: const [],
       isLoading: false,
@@ -39,7 +53,7 @@ final class MacroTrackingState extends Equatable {
   MacroTrackingState copyWith({
     Nullable<MacroGoalDto>? activeGoal,
     List<MacroGoalDto>? goalHistory,
-    int? goalsTotal,
+    MacroGoalPagination? goalPagination,
     Nullable<DailyNutritionLogDto>? selectedDailyLog,
     DateTime? selectedDate,
     List<DailyNutritionLogDto>? rangeLogs,
@@ -49,7 +63,7 @@ final class MacroTrackingState extends Equatable {
     return MacroTrackingState(
       activeGoal: activeGoal != null ? activeGoal.value : this.activeGoal,
       goalHistory: goalHistory ?? this.goalHistory,
-      goalsTotal: goalsTotal ?? this.goalsTotal,
+      goalPagination: goalPagination ?? this.goalPagination,
       selectedDailyLog: selectedDailyLog != null
           ? selectedDailyLog.value
           : this.selectedDailyLog,
@@ -64,7 +78,7 @@ final class MacroTrackingState extends Equatable {
   List<Object?> get props => [
         activeGoal,
         goalHistory,
-        goalsTotal,
+        goalPagination,
         selectedDailyLog,
         selectedDate,
         rangeLogs,

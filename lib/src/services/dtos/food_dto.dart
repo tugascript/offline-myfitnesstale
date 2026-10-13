@@ -63,6 +63,7 @@ class FoodDto extends Equatable {
   final int carbsBase;
   final int fatBase;
   final int? fiberBase;
+  final int? sodiumBase;
   final Micronutrients? micros;
   final bool isFavorite;
   final CreatedBy createdBy;
@@ -80,6 +81,7 @@ class FoodDto extends Equatable {
     required this.carbsBase,
     required this.fatBase,
     this.fiberBase,
+    this.sodiumBase,
     this.micros,
     required this.isFavorite,
     required this.createdBy,
@@ -102,6 +104,7 @@ class FoodDto extends Equatable {
       carbsBase: model.carbsBase,
       fatBase: model.fatBase,
       fiberBase: model.fiberBase,
+      sodiumBase: model.sodiumBase,
       micros: model.micros,
       isFavorite: model.isFavorite,
       createdBy: model.createdBy,
@@ -116,17 +119,15 @@ class FoodDto extends Equatable {
     Nullable<String>? brand,
     Nullable<String>? barcode,
     int? servingSizeBaseGrams,
-    String? servingUnitBase,
     int? caloriesBase,
     int? proteinBase,
     int? carbsBase,
     int? fatBase,
     Nullable<int>? fiberBase,
+    Nullable<int>? sodiumBase,
     Nullable<Micronutrients>? micros,
     bool? isFavorite,
     CreatedBy? createdBy,
-    int? createdAt,
-    int? updatedAt,
     List<FoodPortionDto>? portions,
   }) {
     return FoodDto(
@@ -141,6 +142,7 @@ class FoodDto extends Equatable {
       carbsBase: carbsBase ?? this.carbsBase,
       fatBase: fatBase ?? this.fatBase,
       fiberBase: fiberBase != null ? fiberBase.value : this.fiberBase,
+      sodiumBase: sodiumBase != null ? sodiumBase.value : this.sodiumBase,
       micros: micros != null ? micros.value : this.micros,
       isFavorite: isFavorite ?? this.isFavorite,
       createdBy: createdBy ?? this.createdBy,
@@ -161,6 +163,7 @@ class FoodDto extends Equatable {
         carbsBase,
         fatBase,
         fiberBase,
+        sodiumBase,
         micros,
         isFavorite,
         createdBy,

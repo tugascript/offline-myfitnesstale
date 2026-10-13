@@ -1,3 +1,4 @@
+import '../services/inputs/recipe_input.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:logging/logging.dart';
 
@@ -21,10 +22,12 @@ class RecipeCubit extends Cubit<RecipeState> {
   }) async {
     _logger.info('Getting recipes');
     emit(state.copyWith(
+      recipePagination: state.recipePagination.copyWith(
+        limit: limit,
+        offset: offset,
+        search: Nullable(search),
+      ),
       isLoading: true,
-      search: Nullable(search),
-      limit: limit,
-      offset: offset,
     ));
 
     final result = await _recipeService.getRecipes(
@@ -51,8 +54,10 @@ class RecipeCubit extends Cubit<RecipeState> {
         offset > 0 ? [...state.recipes, ...paginated.data] : paginated.data;
 
     emit(state.copyWith(
+      recipePagination: state.recipePagination.copyWith(
+        total: paginated.total,
+      ),
       recipes: recipes,
-      total: paginated.total,
       isLoading: false,
       error: const Nullable(null),
     ));
@@ -83,23 +88,12 @@ class RecipeCubit extends Cubit<RecipeState> {
     ));
   }
 
-  Future<bool> createRecipe({
-    required String name,
-    String? description,
-    required int servingsYield,
-    CreatedBy createdBy = CreatedBy.user,
-    List<RecipeItemInput> items = const [],
-  }) async {
-    _logger.info('Creating recipe $name');
+  Future<bool> createRecipe(RecipeInput input,
+      [CreatedBy createdBy = CreatedBy.user]) async {
+    _logger.info('Creating recipe ${input.name}');
     emit(state.copyWith(isLoading: true));
 
-    final result = await _recipeService.createRecipe(
-      name: name,
-      description: description,
-      servingsYield: servingsYield,
-      createdBy: createdBy,
-      items: items,
-    );
+    final result = await _recipeService.createRecipe(input, createdBy);
 
     if (result.isErr()) {
       final error = result.error;
@@ -119,27 +113,18 @@ class RecipeCubit extends Cubit<RecipeState> {
       isLoading: false,
       error: const Nullable(null),
     ));
-    await getRecipes(search: state.search, limit: state.limit, offset: 0);
+    await getRecipes(
+        search: state.recipePagination.search,
+        limit: state.recipePagination.limit,
+        offset: 0);
     return true;
   }
 
-  Future<bool> updateRecipe({
-    required int id,
-    String? name,
-    String? description,
-    int? servingsYield,
-    List<RecipeItemInput>? items,
-  }) async {
+  Future<bool> updateRecipe(int id, RecipeInput input) async {
     _logger.info('Updating recipe $id');
     emit(state.copyWith(isLoading: true));
 
-    final result = await _recipeService.updateRecipe(
-      id: id,
-      name: name,
-      description: description,
-      servingsYield: servingsYield,
-      items: items,
-    );
+    final result = await _recipeService.updateRecipe(id, input);
 
     if (result.isErr()) {
       final error = result.error;
@@ -159,7 +144,10 @@ class RecipeCubit extends Cubit<RecipeState> {
       isLoading: false,
       error: const Nullable(null),
     ));
-    await getRecipes(search: state.search, limit: state.limit, offset: 0);
+    await getRecipes(
+        search: state.recipePagination.search,
+        limit: state.recipePagination.limit,
+        offset: 0);
     return true;
   }
 
@@ -183,8 +171,12 @@ class RecipeCubit extends Cubit<RecipeState> {
 
     final updated = state.recipes.where((r) => r.id != id).toList();
     emit(state.copyWith(
+      recipePagination: state.recipePagination.copyWith(
+        total: state.recipePagination.total > 0
+            ? state.recipePagination.total - 1
+            : 0,
+      ),
       recipes: updated,
-      total: state.total > 0 ? state.total - 1 : 0,
       selectedRecipe:
           state.selectedRecipe?.id == id ? const Nullable(null) : null,
       isLoading: false,

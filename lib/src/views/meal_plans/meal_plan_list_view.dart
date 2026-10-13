@@ -1,3 +1,4 @@
+import '../../widgets/meal_plans/meal_plan_list_item_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -129,111 +130,40 @@ class _MealPlanListViewState extends State<MealPlanListView> {
                     itemBuilder: (context, index) {
                       final plan = state.mealPlans[index];
 
-                      return Card(
-                        key: ValueKey('meal-plan-card-${plan.id}'),
-                        margin: EdgeInsets.zero,
-                        child: Padding(
-                          padding: EdgeInsets.all(sizes.padding),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: Text(
-                                      plan.name,
-                                      style: TextStyle(
-                                        fontSize: sizes.subtitleFontSize,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
-                                  IconButton(
-                                    icon: Icon(
-                                      plan.isFavorite
-                                          ? Icons.favorite
-                                          : Icons.favorite_border,
-                                      color: plan.isFavorite
-                                          ? Colors.red
-                                          : Colors.grey,
-                                    ),
+                      return MealPlanListItemWidget(
+                          key: ValueKey('meal-plan-card-${plan.id}'),
+                          plan: plan,
+                          sizes: sizes,
+                          onStart: () async {
+                            final success = await context
+                                .read<MealPlanRecordCubit>()
+                                .startMealPlan(mealPlanId: plan.id);
+                            if (success && context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content:
+                                      Text('Started meal plan: ${plan.name}'),
+                                  action: SnackBarAction(
+                                    label: 'Tracker',
                                     onPressed: () {
-                                      context
-                                          .read<MealPlanCubit>()
-                                          .toggleFavorite(plan.id);
+                                      context.push(MacroTrackerView.routeName);
                                     },
-                                  ),
-                                ],
-                              ),
-                              if (plan.description != null &&
-                                  plan.description!.isNotEmpty) ...[
-                                SizedBox(height: sizes.spacing / 4),
-                                Text(
-                                  plan.description!,
-                                  style: TextStyle(
-                                    fontSize: sizes.fontSize * 0.9,
-                                    color: Colors.grey[600],
                                   ),
                                 ),
-                              ],
-                              SizedBox(height: sizes.spacing / 2),
-                              Text(
-                                '${plan.totalWeeks} weeks • ${plan.totalDays} days • ${plan.totalMeals} meals',
-                                style: TextStyle(
-                                  fontSize: sizes.fontSize * 0.85,
-                                  color: Colors.grey[700],
-                                ),
-                              ),
-                              SizedBox(height: sizes.spacing),
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  OutlinedButton(
-                                    key: ValueKey(
-                                        'meal-plan-view-btn-${plan.id}'),
-                                    onPressed: () {
-                                      context.push(
-                                        MealPlanDetailsView.routeName
-                                            .replaceFirst(
-                                                ':id', plan.id.toString()),
-                                      );
-                                    },
-                                    child: const Text('View Plan'),
-                                  ),
-                                  ElevatedButton.icon(
-                                    key: ValueKey(
-                                        'meal-plan-start-btn-${plan.id}'),
-                                    icon: const Icon(Icons.play_arrow),
-                                    label: const Text('Start Plan'),
-                                    onPressed: () async {
-                                      final success = await context
-                                          .read<MealPlanRecordCubit>()
-                                          .startMealPlan(mealPlanId: plan.id);
-                                      if (success && context.mounted) {
-                                        ScaffoldMessenger.of(context)
-                                            .showSnackBar(
-                                          SnackBar(
-                                            content: Text(
-                                                'Started meal plan: ${plan.name}'),
-                                            action: SnackBarAction(
-                                              label: 'Tracker',
-                                              onPressed: () {
-                                                context.push(
-                                                    MacroTrackerView.routeName);
-                                              },
-                                            ),
-                                          ),
-                                        );
-                                      }
-                                    },
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
+                              );
+                            }
+                          },
+                          onView: () {
+                            context.push(
+                              MealPlanDetailsView.routeName
+                                  .replaceFirst(':id', plan.id.toString()),
+                            );
+                          },
+                          onToggleFavorite: () {
+                            context
+                                .read<MealPlanCubit>()
+                                .toggleFavorite(plan.id);
+                          });
                     },
                   );
                 },

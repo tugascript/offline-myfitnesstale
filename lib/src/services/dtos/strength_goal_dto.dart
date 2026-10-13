@@ -15,8 +15,6 @@ class StrengthGoalDto extends Equatable {
   final ProgressStatus status;
   final DateTime startDate;
   final DateTime? completedAt;
-  final int createdAt;
-  final int updatedAt;
 
   const StrengthGoalDto({
     required this.id,
@@ -28,8 +26,6 @@ class StrengthGoalDto extends Equatable {
     required this.status,
     required this.startDate,
     this.completedAt,
-    required this.createdAt,
-    required this.updatedAt,
   });
 
   factory StrengthGoalDto.fromModel(StrengthGoal model) {
@@ -45,8 +41,6 @@ class StrengthGoalDto extends Equatable {
       completedAt: model.completedAt != null
           ? DateUtilities.getDateFromUnix(model.completedAt!)
           : null,
-      createdAt: model.createdAt,
-      updatedAt: model.updatedAt,
     );
   }
 
@@ -60,8 +54,6 @@ class StrengthGoalDto extends Equatable {
     ProgressStatus? status,
     DateTime? startDate,
     Nullable<DateTime>? completedAt,
-    int? createdAt,
-    int? updatedAt,
   }) {
     return StrengthGoalDto(
       id: id ?? this.id,
@@ -73,8 +65,6 @@ class StrengthGoalDto extends Equatable {
       status: status ?? this.status,
       startDate: startDate ?? this.startDate,
       completedAt: completedAt != null ? completedAt.value : this.completedAt,
-      createdAt: createdAt ?? this.createdAt,
-      updatedAt: updatedAt ?? this.updatedAt,
     );
   }
 
@@ -89,7 +79,5 @@ class StrengthGoalDto extends Equatable {
         status,
         startDate,
         completedAt,
-        createdAt,
-        updatedAt,
       ];
 }

@@ -1,3 +1,4 @@
+import '../services/common/errors.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:logging/logging.dart';
 
@@ -20,11 +21,19 @@ class MealPlanRecordCubit extends Cubit<MealPlanRecordState> {
 
     final result = await _recordService.getActiveMealPlanRecord();
     if (result.isErr()) {
-      _logger.info('No active meal plan record found');
-      emit(state.copyWith(
-        activeRecord: const Nullable(null),
-        isLoading: false,
-      ));
+      final error = result.error;
+      if (error.type == SingleErrorTypes.notFound) {
+        emit(state.copyWith(
+            activeRecord: const Nullable(null),
+            isLoading: false,
+            error: const Nullable(null)));
+      } else {
+        _logger.warning('Failed to load active entity', error);
+        emit(state.copyWith(
+            isLoading: false,
+            error: Nullable(ErrorState(
+                type: error.type.name, description: error.description))));
+      }
       return;
     }
 
@@ -43,9 +52,13 @@ class MealPlanRecordCubit extends Cubit<MealPlanRecordState> {
   }) async {
     _logger.info('Getting meal plan records');
     emit(state.copyWith(
+      mealPlanRecordPagination: state.mealPlanRecordPagination.copyWith(
+        limit: limit,
+        offset: offset,
+        mealPlanId: Nullable(mealPlanId),
+        status: Nullable(status),
+      ),
       isLoading: true,
-      limit: limit,
-      offset: offset,
     ));
 
     final result = await _recordService.getMealPlanRecords(
@@ -73,8 +86,10 @@ class MealPlanRecordCubit extends Cubit<MealPlanRecordState> {
         offset > 0 ? [...state.records, ...paginated.data] : paginated.data;
 
     emit(state.copyWith(
+      mealPlanRecordPagination: state.mealPlanRecordPagination.copyWith(
+        total: paginated.total,
+      ),
       records: records,
-      total: paginated.total,
       isLoading: false,
       error: const Nullable(null),
     ));
@@ -112,7 +127,8 @@ class MealPlanRecordCubit extends Cubit<MealPlanRecordState> {
       isLoading: false,
       error: const Nullable(null),
     ));
-    await getMealPlanRecords(limit: state.limit, offset: 0);
+    await getMealPlanRecords(
+        limit: state.mealPlanRecordPagination.limit, offset: 0);
     return true;
   }
 
@@ -135,7 +151,8 @@ class MealPlanRecordCubit extends Cubit<MealPlanRecordState> {
     }
 
     await getActiveMealPlanRecord();
-    await getMealPlanRecords(limit: state.limit, offset: 0);
+    await getMealPlanRecords(
+        limit: state.mealPlanRecordPagination.limit, offset: 0);
     return true;
   }
 
@@ -158,7 +175,8 @@ class MealPlanRecordCubit extends Cubit<MealPlanRecordState> {
     }
 
     await getActiveMealPlanRecord();
-    await getMealPlanRecords(limit: state.limit, offset: 0);
+    await getMealPlanRecords(
+        limit: state.mealPlanRecordPagination.limit, offset: 0);
     return true;
   }
 }

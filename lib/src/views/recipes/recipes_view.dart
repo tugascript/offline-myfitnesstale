@@ -1,3 +1,4 @@
+import '../../widgets/recipes/recipe_list_item_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -50,7 +51,7 @@ class _RecipesViewState extends State<RecipesView> {
     if (currentScroll >= (maxScroll * 0.9)) {
       final cubit = context.read<RecipeCubit>();
       if (!cubit.state.isLoading &&
-          cubit.state.total > cubit.state.recipes.length) {
+          cubit.state.recipePagination.total > cubit.state.recipes.length) {
         _loadRecipes();
       }
     }
@@ -130,34 +131,16 @@ class _RecipesViewState extends State<RecipesView> {
                       }
 
                       final recipe = state.recipes[index];
-                      return Card(
-                        key: ValueKey('recipe-item-${recipe.id}'),
-                        margin: EdgeInsets.zero,
-                        child: ListTile(
-                          title: Text(
-                            recipe.name,
-                            style: TextStyle(
-                              fontSize: sizes.fontSize,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          subtitle: Text(
-                            'Serving: ${recipe.servingCalories} kcal • P: ${recipe.servingProtein}g C: ${recipe.servingCarbs}g F: ${recipe.servingFat}g'
-                            '\nServings: ${recipe.servingsYield}',
-                            style: TextStyle(
-                              fontSize: sizes.fontSize * 0.9,
-                              color: Colors.grey[600],
-                            ),
-                          ),
-                          trailing: const Icon(Icons.chevron_right),
+                      return RecipeListItemWidget(
+                          key: ValueKey('recipe-item-${recipe.id}'),
+                          recipe: recipe,
+                          sizes: sizes,
                           onTap: () {
                             context.push(
                               RecipeDetailsView.routeName
                                   .replaceFirst(':id', recipe.id.toString()),
                             );
-                          },
-                        ),
-                      );
+                          });
                     },
                   );
                 },
