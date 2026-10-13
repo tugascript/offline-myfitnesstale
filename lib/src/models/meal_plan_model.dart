@@ -1,3 +1,4 @@
+import '../common/nullable.dart';
 import 'package:equatable/equatable.dart';
 
 import 'common.dart';
@@ -158,11 +159,11 @@ class MealPlan extends Equatable implements Model {
 
   @override
   MealPlan copyWith({
-    int? id,
+    Nullable<int>? id,
     String? name,
-    String? description,
-    PictureData? picture,
-    VideoData? video,
+    Nullable<String>? description,
+    Nullable<PictureData>? picture,
+    Nullable<VideoData>? video,
     int? version,
     int? totalWeeks,
     int? totalDays,
@@ -173,11 +174,11 @@ class MealPlan extends Equatable implements Model {
     int? updatedAt,
   }) {
     return MealPlan(
-      id: id ?? this.id,
+      id: id != null ? id.value : this.id,
       name: name ?? this.name,
-      description: description ?? this.description,
-      picture: picture ?? this.picture,
-      video: video ?? this.video,
+      description: description != null ? description.value : this.description,
+      picture: picture != null ? picture.value : this.picture,
+      video: video != null ? video.value : this.video,
       version: version ?? this.version,
       totalWeeks: totalWeeks ?? this.totalWeeks,
       totalDays: totalDays ?? this.totalDays,

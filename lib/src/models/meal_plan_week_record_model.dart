@@ -1,3 +1,4 @@
+import '../common/nullable.dart';
 import 'package:equatable/equatable.dart';
 
 import 'enums.dart';
@@ -175,34 +176,34 @@ class MealPlanWeekRecord extends Equatable implements Model {
 
   @override
   MealPlanWeekRecord copyWith({
-    int? id,
+    Nullable<int>? id,
     int? mealPlanRecordId,
     int? mealPlanWeekId,
     int? week,
     ProgressStatus? status,
     int? currentDay,
-    int? completedAt,
+    Nullable<int>? completedAt,
     int? totalCalories,
     int? totalProtein,
     int? totalCarbs,
     int? totalFat,
-    int? totalFiber,
+    Nullable<int>? totalFiber,
     int? createdAt,
     int? updatedAt,
   }) {
     return MealPlanWeekRecord(
-      id: id ?? this.id,
+      id: id != null ? id.value : this.id,
       mealPlanRecordId: mealPlanRecordId ?? this.mealPlanRecordId,
       mealPlanWeekId: mealPlanWeekId ?? this.mealPlanWeekId,
       week: week ?? this.week,
       status: status ?? this.status,
       currentDay: currentDay ?? this.currentDay,
-      completedAt: completedAt ?? this.completedAt,
+      completedAt: completedAt != null ? completedAt.value : this.completedAt,
       totalCalories: totalCalories ?? this.totalCalories,
       totalProtein: totalProtein ?? this.totalProtein,
       totalCarbs: totalCarbs ?? this.totalCarbs,
       totalFat: totalFat ?? this.totalFat,
-      totalFiber: totalFiber ?? this.totalFiber,
+      totalFiber: totalFiber != null ? totalFiber.value : this.totalFiber,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );

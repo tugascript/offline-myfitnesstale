@@ -1,3 +1,4 @@
+import '../common/nullable.dart';
 import 'package:equatable/equatable.dart';
 
 import 'daily_nutrition_log_model.dart';
@@ -147,30 +148,30 @@ class MealLog extends Equatable implements Model {
 
   @override
   MealLog copyWith({
-    int? id,
+    Nullable<int>? id,
     int? dailyLogId,
     MealType? mealType,
-    int? recipeId,
+    Nullable<int>? recipeId,
     int? logTime,
     int? totalCalories,
     int? totalProtein,
     int? totalCarbs,
     int? totalFat,
-    int? totalFiber,
+    Nullable<int>? totalFiber,
     int? createdAt,
     int? updatedAt,
   }) {
     return MealLog(
-      id: id ?? this.id,
+      id: id != null ? id.value : this.id,
       dailyLogId: dailyLogId ?? this.dailyLogId,
       mealType: mealType ?? this.mealType,
-      recipeId: recipeId ?? this.recipeId,
+      recipeId: recipeId != null ? recipeId.value : this.recipeId,
       logTime: logTime ?? this.logTime,
       totalCalories: totalCalories ?? this.totalCalories,
       totalProtein: totalProtein ?? this.totalProtein,
       totalCarbs: totalCarbs ?? this.totalCarbs,
       totalFat: totalFat ?? this.totalFat,
-      totalFiber: totalFiber ?? this.totalFiber,
+      totalFiber: totalFiber != null ? totalFiber.value : this.totalFiber,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );

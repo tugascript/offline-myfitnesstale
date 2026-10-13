@@ -1,3 +1,4 @@
+import '../common/nullable.dart';
 import 'package:equatable/equatable.dart';
 
 import 'daily_nutrition_log_model.dart';
@@ -196,7 +197,7 @@ class MealPlanDayRecord extends Equatable implements Model {
 
   @override
   MealPlanDayRecord copyWith({
-    int? id,
+    Nullable<int>? id,
     int? mealPlanRecordId,
     int? mealPlanWeekRecordId,
     int? mealPlanDayId,
@@ -204,17 +205,17 @@ class MealPlanDayRecord extends Equatable implements Model {
     int? week,
     int? day,
     ProgressStatus? status,
-    int? completedAt,
+    Nullable<int>? completedAt,
     int? totalCalories,
     int? totalProtein,
     int? totalCarbs,
     int? totalFat,
-    int? totalFiber,
+    Nullable<int>? totalFiber,
     int? createdAt,
     int? updatedAt,
   }) {
     return MealPlanDayRecord(
-      id: id ?? this.id,
+      id: id != null ? id.value : this.id,
       mealPlanRecordId: mealPlanRecordId ?? this.mealPlanRecordId,
       mealPlanWeekRecordId: mealPlanWeekRecordId ?? this.mealPlanWeekRecordId,
       mealPlanDayId: mealPlanDayId ?? this.mealPlanDayId,
@@ -222,12 +223,12 @@ class MealPlanDayRecord extends Equatable implements Model {
       week: week ?? this.week,
       day: day ?? this.day,
       status: status ?? this.status,
-      completedAt: completedAt ?? this.completedAt,
+      completedAt: completedAt != null ? completedAt.value : this.completedAt,
       totalCalories: totalCalories ?? this.totalCalories,
       totalProtein: totalProtein ?? this.totalProtein,
       totalCarbs: totalCarbs ?? this.totalCarbs,
       totalFat: totalFat ?? this.totalFat,
-      totalFiber: totalFiber ?? this.totalFiber,
+      totalFiber: totalFiber != null ? totalFiber.value : this.totalFiber,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );

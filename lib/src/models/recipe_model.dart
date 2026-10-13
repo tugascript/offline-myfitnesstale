@@ -1,3 +1,4 @@
+import '../common/nullable.dart';
 import 'package:equatable/equatable.dart';
 
 import 'common.dart';
@@ -149,29 +150,30 @@ class Recipe extends Equatable implements Model {
 
   @override
   Recipe copyWith({
-    int? id,
+    Nullable<int>? id,
     String? name,
-    String? description,
+    Nullable<String>? description,
     int? servingsYield,
     int? servingCalories,
     int? servingProtein,
     int? servingCarbs,
     int? servingFat,
-    Micronutrients? servingMicros,
+    Nullable<Micronutrients>? servingMicros,
     CreatedBy? createdBy,
     int? createdAt,
     int? updatedAt,
   }) {
     return Recipe(
-      id: id ?? this.id,
+      id: id != null ? id.value : this.id,
       name: name ?? this.name,
-      description: description ?? this.description,
+      description: description != null ? description.value : this.description,
       servingsYield: servingsYield ?? this.servingsYield,
       servingCalories: servingCalories ?? this.servingCalories,
       servingProtein: servingProtein ?? this.servingProtein,
       servingCarbs: servingCarbs ?? this.servingCarbs,
       servingFat: servingFat ?? this.servingFat,
-      servingMicros: servingMicros ?? this.servingMicros,
+      servingMicros:
+          servingMicros != null ? servingMicros.value : this.servingMicros,
       createdBy: createdBy ?? this.createdBy,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,

@@ -1,3 +1,4 @@
+import '../common/nullable.dart';
 import 'package:equatable/equatable.dart';
 
 import 'enums.dart';
@@ -141,7 +142,7 @@ class StrengthGoal extends Equatable implements Model {
 
   @override
   StrengthGoal copyWith({
-    int? id,
+    Nullable<int>? id,
     String? name,
     int? targetReps,
     int? targetWeight,
@@ -149,12 +150,12 @@ class StrengthGoal extends Equatable implements Model {
     int? exerciseId,
     ProgressStatus? status,
     int? startDate,
-    int? completedAt,
+    Nullable<int>? completedAt,
     int? createdAt,
     int? updatedAt,
   }) {
     return StrengthGoal(
-      id: id ?? this.id,
+      id: id != null ? id.value : this.id,
       name: name ?? this.name,
       targetReps: targetReps ?? this.targetReps,
       targetWeight: targetWeight ?? this.targetWeight,
@@ -162,7 +163,7 @@ class StrengthGoal extends Equatable implements Model {
       exerciseId: exerciseId ?? this.exerciseId,
       status: status ?? this.status,
       startDate: startDate ?? this.startDate,
-      completedAt: completedAt ?? this.completedAt,
+      completedAt: completedAt != null ? completedAt.value : this.completedAt,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
