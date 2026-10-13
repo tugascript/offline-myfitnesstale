@@ -1,3 +1,5 @@
+import '../layout/responsive_fields.dart';
+import '../layout/app_text_form_field.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
@@ -81,7 +83,9 @@ class _LogFoodModalState extends State<LogFoodModal>
   void _logFood() async {
     if (_selectedFoodId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a food')),
+        SnackBar(
+            content: Text('Please select a food',
+                style: TextStyle(fontSize: widget.sizes.fontSize))),
       );
       return;
     }
@@ -105,7 +109,9 @@ class _LogFoodModalState extends State<LogFoodModal>
   void _logRecipe() async {
     if (_selectedRecipeId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a recipe')),
+        SnackBar(
+            content: Text('Please select a recipe',
+                style: TextStyle(fontSize: widget.sizes.fontSize))),
       );
       return;
     }
@@ -138,7 +144,7 @@ class _LogFoodModalState extends State<LogFoodModal>
 
     return Dialog(
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 500),
+        constraints: BoxConstraints(maxWidth: widget.sizes.modalMaxWidth),
         child: Padding(
           padding: EdgeInsets.all(widget.sizes.padding * 1.5),
           child: SingleChildScrollView(
@@ -146,8 +152,11 @@ class _LogFoodModalState extends State<LogFoodModal>
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                Wrap(
+                  alignment: WrapAlignment.spaceBetween,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: widget.sizes.spacing / 2,
+                  runSpacing: widget.sizes.spacing / 2,
                   children: [
                     Text(
                       'Log Nutrition',
@@ -157,60 +166,63 @@ class _LogFoodModalState extends State<LogFoodModal>
                       ),
                     ),
                     IconButton(
-                      icon: const Icon(Icons.close),
+                      icon:
+                          Icon(Icons.close, size: widget.sizes.buttonIconSize),
                       onPressed: () => Navigator.of(context).pop(),
                     ),
                   ],
                 ),
                 SizedBox(height: widget.sizes.spacing),
-                Row(
-                  children: [
-                    Expanded(
-                      child: DropdownButtonFormField<MealType>(
-                        key: const ValueKey('log-food-meal-type-dropdown'),
-                        initialValue: _mealType,
-                        decoration: const InputDecoration(
-                          labelText: 'Meal',
-                          border: OutlineInputBorder(),
-                        ),
-                        items: MealType.values.map((t) {
-                          return DropdownMenuItem<MealType>(
-                            value: t,
-                            child: Text(t.value[0].toUpperCase() +
-                                t.value.substring(1)),
-                          );
-                        }).toList(),
-                        onChanged: (val) {
-                          if (val != null) setState(() => _mealType = val);
-                        },
-                      ),
+                ResponsiveFields(sizes: widget.sizes, children: [
+                  DropdownButtonFormField<MealType>(
+                    isExpanded: true,
+                    itemHeight: null,
+                    iconSize: widget.sizes.buttonIconSize,
+                    style: TextStyle(
+                        fontSize: widget.sizes.fontSize,
+                        color: widget.theme.textTheme.bodyMedium?.color),
+                    key: const ValueKey('log-food-meal-type-dropdown'),
+                    initialValue: _mealType,
+                    decoration: const InputDecoration(
+                      labelText: 'Meal',
+                      border: OutlineInputBorder(),
                     ),
-                    SizedBox(width: widget.sizes.spacing),
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        icon: const Icon(Icons.access_time),
-                        label: Text(DateFormat('HH:mm').format(_logDateTime)),
-                        onPressed: () async {
-                          final time = await showTimePicker(
-                            context: context,
-                            initialTime: TimeOfDay.fromDateTime(_logDateTime),
+                    items: MealType.values.map((t) {
+                      return DropdownMenuItem<MealType>(
+                        value: t,
+                        child: Text(
+                            t.value[0].toUpperCase() + t.value.substring(1),
+                            style: TextStyle(fontSize: widget.sizes.fontSize)),
+                      );
+                    }).toList(),
+                    onChanged: (val) {
+                      if (val != null) setState(() => _mealType = val);
+                    },
+                  ),
+                  OutlinedButton.icon(
+                    icon: Icon(Icons.access_time,
+                        size: widget.sizes.buttonIconSize),
+                    label: Text(DateFormat('HH:mm').format(_logDateTime),
+                        style: TextStyle(fontSize: widget.sizes.fontSize)),
+                    onPressed: () async {
+                      final time = await showTimePicker(
+                        context: context,
+                        initialTime: TimeOfDay.fromDateTime(_logDateTime),
+                      );
+                      if (time != null) {
+                        setState(() {
+                          _logDateTime = DateTime(
+                            _logDateTime.year,
+                            _logDateTime.month,
+                            _logDateTime.day,
+                            time.hour,
+                            time.minute,
                           );
-                          if (time != null) {
-                            setState(() {
-                              _logDateTime = DateTime(
-                                _logDateTime.year,
-                                _logDateTime.month,
-                                _logDateTime.day,
-                                time.hour,
-                                time.minute,
-                              );
-                            });
-                          }
-                        },
-                      ),
-                    ),
-                  ],
-                ),
+                        });
+                      }
+                    },
+                  ),
+                ]),
                 SizedBox(height: widget.sizes.spacing),
                 TabBar(
                   controller: _tabController,
@@ -220,136 +232,168 @@ class _LogFoodModalState extends State<LogFoodModal>
                   ],
                 ),
                 SizedBox(height: widget.sizes.spacing),
-                SizedBox(
-                  height: 250,
-                  child: TabBarView(
-                    controller: _tabController,
-                    children: [
-                      // Food Tab
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          DropdownButtonFormField<int>(
-                            key: const ValueKey('log-food-select-dropdown'),
-                            initialValue: _selectedFoodId,
-                            decoration: const InputDecoration(
-                              labelText: 'Select Food',
-                              border: OutlineInputBorder(),
-                            ),
-                            items: foods.map((f) {
-                              return DropdownMenuItem<int>(
-                                value: f.id,
-                                child: Text(
-                                  f.name,
-                                  overflow: TextOverflow.ellipsis,
+                AnimatedBuilder(
+                    animation: _tabController,
+                    builder: (context, _) => _tabController.index == 0
+                        ? // Food Tab
+                        Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              DropdownButtonFormField<int>(
+                                isExpanded: true,
+                                itemHeight: null,
+                                iconSize: widget.sizes.buttonIconSize,
+                                style: TextStyle(
+                                    fontSize: widget.sizes.fontSize,
+                                    color: widget
+                                        .theme.textTheme.bodyMedium?.color),
+                                key: const ValueKey('log-food-select-dropdown'),
+                                initialValue: _selectedFoodId,
+                                decoration: const InputDecoration(
+                                  labelText: 'Select Food',
+                                  border: OutlineInputBorder(),
                                 ),
-                              );
-                            }).toList(),
-                            onChanged: (val) {
-                              setState(() {
-                                _selectedFoodId = val;
-                                _selectedPortionId = null;
-                              });
-                            },
-                          ),
-                          SizedBox(height: widget.sizes.spacing),
-                          if (currentFood != null &&
-                              currentFood.portions.isNotEmpty) ...[
-                            DropdownButtonFormField<int?>(
-                              initialValue: _selectedPortionId,
-                              decoration: const InputDecoration(
-                                labelText: 'Portion',
-                                border: OutlineInputBorder(),
-                              ),
-                              items: [
-                                const DropdownMenuItem<int?>(
-                                  value: null,
-                                  child: Text('Grams'),
-                                ),
-                                ...currentFood.portions.map((p) {
-                                  return DropdownMenuItem<int?>(
-                                    value: p.id,
-                                    child: Text(
-                                        '${p.portionName} (${p.gramWeight}g)'),
+                                items: foods.map((f) {
+                                  return DropdownMenuItem<int>(
+                                    value: f.id,
+                                    child: Text(f.name,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: TextStyle(
+                                            fontSize: widget.sizes.fontSize)),
                                   );
-                                }),
-                              ],
-                              onChanged: (val) {
-                                setState(() {
-                                  _selectedPortionId = val;
-                                });
-                              },
-                            ),
-                            SizedBox(height: widget.sizes.spacing),
-                          ],
-                          TextFormField(
-                            key: const ValueKey('log-food-amount-input'),
-                            controller: _amountController,
-                            keyboardType: const TextInputType.numberWithOptions(
-                                decimal: true),
-                            decoration: InputDecoration(
-                              labelText: _selectedPortionId == null
-                                  ? 'Amount (grams)'
-                                  : 'Portion Count',
-                              border: const OutlineInputBorder(),
-                            ),
-                          ),
-                          const Spacer(),
-                          ElevatedButton(
-                            key: const ValueKey('log-food-confirm-btn'),
-                            onPressed: _logFood,
-                            child: const Text('Log Food'),
-                          ),
-                        ],
-                      ),
-                      // Recipe Tab
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          DropdownButtonFormField<int>(
-                            key: const ValueKey('log-recipe-select-dropdown'),
-                            initialValue: _selectedRecipeId,
-                            decoration: const InputDecoration(
-                              labelText: 'Select Recipe',
-                              border: OutlineInputBorder(),
-                            ),
-                            items: recipes.map((r) {
-                              return DropdownMenuItem<int>(
-                                value: r.id,
-                                child: Text(
-                                  '${r.name} (${r.servingCalories} kcal/serv)',
-                                  overflow: TextOverflow.ellipsis,
+                                }).toList(),
+                                onChanged: (val) {
+                                  setState(() {
+                                    _selectedFoodId = val;
+                                    _selectedPortionId = null;
+                                  });
+                                },
+                              ),
+                              SizedBox(height: widget.sizes.spacing),
+                              if (currentFood != null &&
+                                  currentFood.portions.isNotEmpty) ...[
+                                DropdownButtonFormField<int?>(
+                                  isExpanded: true,
+                                  itemHeight: null,
+                                  iconSize: widget.sizes.buttonIconSize,
+                                  style: TextStyle(
+                                      fontSize: widget.sizes.fontSize,
+                                      color: widget
+                                          .theme.textTheme.bodyMedium?.color),
+                                  initialValue: _selectedPortionId,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Portion',
+                                    border: OutlineInputBorder(),
+                                  ),
+                                  items: [
+                                    DropdownMenuItem<int?>(
+                                      value: null,
+                                      child: Text('Grams',
+                                          style: TextStyle(
+                                              fontSize: widget.sizes.fontSize)),
+                                    ),
+                                    ...currentFood.portions.map((p) {
+                                      return DropdownMenuItem<int?>(
+                                        value: p.id,
+                                        child: Text(
+                                            '${p.portionName} (${p.gramWeight}g)',
+                                            style: TextStyle(
+                                                fontSize:
+                                                    widget.sizes.fontSize)),
+                                      );
+                                    }),
+                                  ],
+                                  onChanged: (val) {
+                                    setState(() {
+                                      _selectedPortionId = val;
+                                    });
+                                  },
                                 ),
-                              );
-                            }).toList(),
-                            onChanged: (val) {
-                              setState(() {
-                                _selectedRecipeId = val;
-                              });
-                            },
-                          ),
-                          SizedBox(height: widget.sizes.spacing),
-                          TextFormField(
-                            key: const ValueKey('log-recipe-servings-input'),
-                            controller: _servingsController,
-                            keyboardType: const TextInputType.numberWithOptions(
-                                decimal: true),
-                            decoration: const InputDecoration(
-                              labelText: 'Number of Servings',
-                              border: OutlineInputBorder(),
-                            ),
-                          ),
-                          const Spacer(),
-                          ElevatedButton(
-                            key: const ValueKey('log-recipe-confirm-btn'),
-                            onPressed: _logRecipe,
-                            child: const Text('Log Recipe'),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
+                                SizedBox(height: widget.sizes.spacing),
+                              ],
+                              AppTextFormField(
+                                theme: widget.theme,
+                                fontSize: widget.sizes.fontSize,
+                                padding: widget.sizes.padding,
+                                isLoading: false,
+                                key: const ValueKey('log-food-amount-input'),
+                                controller: _amountController,
+                                keyboardType:
+                                    const TextInputType.numberWithOptions(
+                                        decimal: true),
+                                labelText: _selectedPortionId == null
+                                    ? 'Amount (grams)'
+                                    : 'Portion Count',
+                              ),
+                              SizedBox(height: widget.sizes.spacing),
+                              ElevatedButton(
+                                key: const ValueKey('log-food-confirm-btn'),
+                                onPressed: _logFood,
+                                child: Text('Log Food',
+                                    style: TextStyle(
+                                        fontSize: widget.sizes.fontSize)),
+                              ),
+                            ],
+                          )
+                        : // Recipe Tab
+                        Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              DropdownButtonFormField<int>(
+                                isExpanded: true,
+                                itemHeight: null,
+                                iconSize: widget.sizes.buttonIconSize,
+                                style: TextStyle(
+                                    fontSize: widget.sizes.fontSize,
+                                    color: widget
+                                        .theme.textTheme.bodyMedium?.color),
+                                key: const ValueKey(
+                                    'log-recipe-select-dropdown'),
+                                initialValue: _selectedRecipeId,
+                                decoration: const InputDecoration(
+                                  labelText: 'Select Recipe',
+                                  border: OutlineInputBorder(),
+                                ),
+                                items: recipes.map((r) {
+                                  return DropdownMenuItem<int>(
+                                    value: r.id,
+                                    child: Text(
+                                        '${r.name} (${r.servingCalories} kcal/serv)',
+                                        overflow: TextOverflow.ellipsis,
+                                        style: TextStyle(
+                                            fontSize: widget.sizes.fontSize)),
+                                  );
+                                }).toList(),
+                                onChanged: (val) {
+                                  setState(() {
+                                    _selectedRecipeId = val;
+                                  });
+                                },
+                              ),
+                              SizedBox(height: widget.sizes.spacing),
+                              AppTextFormField(
+                                theme: widget.theme,
+                                fontSize: widget.sizes.fontSize,
+                                padding: widget.sizes.padding,
+                                isLoading: false,
+                                key:
+                                    const ValueKey('log-recipe-servings-input'),
+                                controller: _servingsController,
+                                keyboardType:
+                                    const TextInputType.numberWithOptions(
+                                        decimal: true),
+                                labelText: 'Number of Servings',
+                              ),
+                              SizedBox(height: widget.sizes.spacing),
+                              ElevatedButton(
+                                key: const ValueKey('log-recipe-confirm-btn'),
+                                onPressed: _logRecipe,
+                                child: Text('Log Recipe',
+                                    style: TextStyle(
+                                        fontSize: widget.sizes.fontSize)),
+                              ),
+                            ],
+                          )),
               ],
             ),
           ),

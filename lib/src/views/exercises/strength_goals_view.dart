@@ -38,7 +38,8 @@ class _StrengthGoalsViewState extends State<StrengthGoalsView> {
       title: 'Strength Goals',
       body: Padding(
         padding: EdgeInsets.all(sizes.viewPadding),
-        child: Column(
+        child: SingleChildScrollView(
+            child: Column(
           children: [
             ActiveStrengthGoalCard(
               sizes: sizes,
@@ -56,14 +57,13 @@ class _StrengthGoalsViewState extends State<StrengthGoalsView> {
               ),
             ),
             SizedBox(height: sizes.spacing),
-            Expanded(
-              child: StrengthGoalHistoryList(
-                sizes: sizes,
-                theme: theme,
-              ),
+            StrengthGoalHistoryList(
+              shrinkWrap: true,
+              sizes: sizes,
+              theme: theme,
             ),
           ],
-        ),
+        )),
       ),
       floatingActionButton: FloatingActionButton(
         key: const ValueKey('strength-goal-add-fab'),

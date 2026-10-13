@@ -115,9 +115,9 @@ void main() {
       routes: [
         GoRoute(
           path: '/',
-          builder: (context, state) => const Scaffold(
+          builder: (context, state) => Scaffold(
             body: SingleChildScrollView(
-              child: QuickActionsWidget(sizes: sizes),
+              child: QuickActionsWidget(theme: ThemeData(), sizes: sizes),
             ),
           ),
         ),

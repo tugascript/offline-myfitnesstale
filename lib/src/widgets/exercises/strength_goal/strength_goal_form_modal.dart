@@ -1,3 +1,4 @@
+import '../../layout/app_text_form_field.dart';
 import '../../../common/nullable.dart';
 import '../../../services/inputs/strength_goal_input.dart';
 import 'package:flutter/material.dart';
@@ -81,7 +82,9 @@ class _StrengthGoalFormModalState extends State<StrengthGoalFormModal> {
     if (!_formKey.currentState!.validate()) return;
     if (_selectedExerciseId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select an exercise')),
+        SnackBar(
+            content: Text('Please select an exercise',
+                style: TextStyle(fontSize: widget.sizes.fontSize))),
       );
       return;
     }
@@ -136,7 +139,7 @@ class _StrengthGoalFormModalState extends State<StrengthGoalFormModal> {
 
     return Dialog(
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 500),
+        constraints: BoxConstraints(maxWidth: widget.sizes.modalMaxWidth),
         child: Padding(
           padding: EdgeInsets.all(widget.sizes.padding * 1.5),
           child: Form(
@@ -157,6 +160,12 @@ class _StrengthGoalFormModalState extends State<StrengthGoalFormModal> {
                   ),
                   SizedBox(height: widget.sizes.spacing),
                   DropdownButtonFormField<int>(
+                    isExpanded: true,
+                    itemHeight: null,
+                    iconSize: widget.sizes.buttonIconSize,
+                    style: TextStyle(
+                        fontSize: widget.sizes.fontSize,
+                        color: widget.theme.textTheme.bodyMedium?.color),
                     key: const ValueKey('strength-goal-exercise-dropdown'),
                     initialValue: _selectedExerciseId,
                     decoration: const InputDecoration(
@@ -166,7 +175,8 @@ class _StrengthGoalFormModalState extends State<StrengthGoalFormModal> {
                     items: exercises.map((e) {
                       return DropdownMenuItem<int>(
                         value: e.id,
-                        child: Text(e.name),
+                        child: Text(e.name,
+                            style: TextStyle(fontSize: widget.sizes.fontSize)),
                       );
                     }).toList(),
                     onChanged: (val) {
@@ -178,15 +188,16 @@ class _StrengthGoalFormModalState extends State<StrengthGoalFormModal> {
                         val == null ? 'Please select an exercise' : null,
                   ),
                   SizedBox(height: widget.sizes.spacing),
-                  TextFormField(
+                  AppTextFormField(
+                    theme: widget.theme,
+                    fontSize: widget.sizes.fontSize,
+                    padding: widget.sizes.padding,
+                    isLoading: false,
                     key: const ValueKey('strength-goal-weight-input'),
                     controller: _weightController,
                     keyboardType:
                         const TextInputType.numberWithOptions(decimal: true),
-                    decoration: InputDecoration(
-                      labelText: 'Target Weight ($weightUnitLabel)',
-                      border: const OutlineInputBorder(),
-                    ),
+                    labelText: 'Target Weight ($weightUnitLabel)',
                     validator: (val) {
                       if (val == null || val.isEmpty) return 'Required';
                       final num = double.tryParse(val);
@@ -195,14 +206,15 @@ class _StrengthGoalFormModalState extends State<StrengthGoalFormModal> {
                     },
                   ),
                   SizedBox(height: widget.sizes.spacing),
-                  TextFormField(
+                  AppTextFormField(
+                    theme: widget.theme,
+                    fontSize: widget.sizes.fontSize,
+                    padding: widget.sizes.padding,
+                    isLoading: false,
                     key: const ValueKey('strength-goal-reps-input'),
                     controller: _repsController,
                     keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(
-                      labelText: 'Target Reps',
-                      border: OutlineInputBorder(),
-                    ),
+                    labelText: 'Target Reps',
                     validator: (val) {
                       if (val == null || val.isEmpty) return 'Required';
                       final num = int.tryParse(val);
@@ -211,14 +223,15 @@ class _StrengthGoalFormModalState extends State<StrengthGoalFormModal> {
                     },
                   ),
                   SizedBox(height: widget.sizes.spacing),
-                  TextFormField(
+                  AppTextFormField(
+                    theme: widget.theme,
+                    fontSize: widget.sizes.fontSize,
+                    padding: widget.sizes.padding,
+                    isLoading: false,
                     key: const ValueKey('strength-goal-max-strength-input'),
                     controller: _maxStrengthController,
                     keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(
-                      labelText: 'Target 1RM / Max Strength',
-                      border: OutlineInputBorder(),
-                    ),
+                    labelText: 'Target 1RM / Max Strength',
                     validator: (val) {
                       if (val == null || val.isEmpty) return 'Required';
                       final num = int.tryParse(val);
@@ -227,30 +240,36 @@ class _StrengthGoalFormModalState extends State<StrengthGoalFormModal> {
                     },
                   ),
                   SizedBox(height: widget.sizes.spacing),
-                  TextFormField(
+                  AppTextFormField(
+                    theme: widget.theme,
+                    fontSize: widget.sizes.fontSize,
+                    padding: widget.sizes.padding,
+                    isLoading: false,
                     key: const ValueKey('strength-goal-name-input'),
                     controller: _nameController,
-                    decoration: const InputDecoration(
-                      labelText: 'Goal Name *',
-                      border: OutlineInputBorder(),
-                    ),
+                    labelText: 'Goal Name *',
                     validator: (val) =>
                         val == null || val.trim().isEmpty ? 'Required' : null,
                   ),
                   SizedBox(height: widget.sizes.spacing * 1.5),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
+                  Wrap(
+                    alignment: WrapAlignment.end,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    spacing: widget.sizes.spacing / 2,
+                    runSpacing: widget.sizes.spacing / 2,
                     children: [
                       TextButton(
                         onPressed: () => Navigator.of(context).pop(),
-                        child: const Text('Cancel'),
+                        child: Text('Cancel',
+                            style: TextStyle(fontSize: widget.sizes.fontSize)),
                       ),
                       SizedBox(width: widget.sizes.spacing),
                       ElevatedButton(
                         key: const ValueKey('strength-goal-submit-button'),
                         onPressed: _submit,
                         child: Text(
-                            widget.existingGoal != null ? 'Update' : 'Create'),
+                            widget.existingGoal != null ? 'Update' : 'Create',
+                            style: TextStyle(fontSize: widget.sizes.fontSize)),
                       ),
                     ],
                   ),

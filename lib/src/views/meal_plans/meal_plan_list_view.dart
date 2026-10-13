@@ -66,10 +66,10 @@ class _MealPlanListViewState extends State<MealPlanListView> {
               controller: _searchController,
               decoration: InputDecoration(
                 hintText: 'Search meal plans...',
-                prefixIcon: const Icon(Icons.search),
+                prefixIcon: Icon(Icons.search, size: sizes.buttonIconSize),
                 suffixIcon: _searchController.text.isNotEmpty
                     ? IconButton(
-                        icon: const Icon(Icons.clear),
+                        icon: Icon(Icons.clear, size: sizes.buttonIconSize),
                         onPressed: () {
                           _searchController.clear();
                           _loadPlans();
@@ -85,7 +85,8 @@ class _MealPlanListViewState extends State<MealPlanListView> {
               alignment: Alignment.centerLeft,
               child: FilterChip(
                 key: const ValueKey('meal-plans-filter-favorites'),
-                label: const Text('Favorites Only'),
+                label: Text('Favorites Only',
+                    style: TextStyle(fontSize: sizes.fontSize)),
                 selected: _onlyFavorites,
                 onSelected: (val) {
                   setState(() {
@@ -101,7 +102,9 @@ class _MealPlanListViewState extends State<MealPlanListView> {
                 listener: (context, state) {
                   if (!state.isLoading && state.error != null) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(state.error!.description)),
+                      SnackBar(
+                          content: Text(state.error!.description,
+                              style: TextStyle(fontSize: sizes.fontSize))),
                     );
                   }
                 },
@@ -141,8 +144,10 @@ class _MealPlanListViewState extends State<MealPlanListView> {
                             if (success && context.mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
-                                  content:
-                                      Text('Started meal plan: ${plan.name}'),
+                                  content: Text(
+                                      'Started meal plan: ${plan.name}',
+                                      style:
+                                          TextStyle(fontSize: sizes.fontSize)),
                                   action: SnackBarAction(
                                     label: 'Tracker',
                                     onPressed: () {

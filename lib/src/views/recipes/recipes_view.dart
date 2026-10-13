@@ -80,10 +80,10 @@ class _RecipesViewState extends State<RecipesView> {
               controller: _searchController,
               decoration: InputDecoration(
                 hintText: 'Search recipes...',
-                prefixIcon: const Icon(Icons.search),
+                prefixIcon: Icon(Icons.search, size: sizes.buttonIconSize),
                 suffixIcon: _searchController.text.isNotEmpty
                     ? IconButton(
-                        icon: const Icon(Icons.clear),
+                        icon: Icon(Icons.clear, size: sizes.buttonIconSize),
                         onPressed: () {
                           _searchController.clear();
                           _loadRecipes(reset: true);
@@ -122,9 +122,9 @@ class _RecipesViewState extends State<RecipesView> {
                         SizedBox(height: sizes.spacing / 2),
                     itemBuilder: (context, index) {
                       if (index >= state.recipes.length) {
-                        return const Center(
+                        return Center(
                           child: Padding(
-                            padding: EdgeInsets.all(8),
+                            padding: EdgeInsets.all(sizes.padding / 2),
                             child: CircularProgressIndicator.adaptive(),
                           ),
                         );

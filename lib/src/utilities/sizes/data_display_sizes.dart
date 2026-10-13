@@ -15,6 +15,11 @@ final class DataDisplaySizesList {
   final double buttonIconSize;
   final double elevation;
 
+  double get compactIconSize => buttonIconSize * 0.75;
+  double get largeIconSize => buttonIconSize * 2.5;
+  double get formFieldMinWidth => fontSize * 12;
+  double get modalMaxWidth => buttonSize * 8;
+
   const DataDisplaySizesList({
     required this.padding,
     required this.viewPadding,

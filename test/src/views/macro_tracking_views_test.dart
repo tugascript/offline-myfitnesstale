@@ -187,6 +187,7 @@ void main() {
           child: Scaffold(
             body: SingleChildScrollView(
               child: QuickActionsWidget(
+                theme: ThemeData(),
                 sizes: DataDisplaySizes.getDataDisplaySizes(ScreenSize.md),
               ),
             ),

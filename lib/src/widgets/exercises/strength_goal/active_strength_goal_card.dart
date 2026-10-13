@@ -1,3 +1,4 @@
+import '../../layout/responsive_fields.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
@@ -62,8 +63,9 @@ class ActiveStrengthGoalCard extends StatelessWidget {
                   SizedBox(height: sizes.spacing),
                   ElevatedButton.icon(
                     key: const ValueKey('strength-goal-set-active-button'),
-                    icon: const Icon(Icons.add),
-                    label: const Text('Set Goal'),
+                    icon: Icon(Icons.add, size: sizes.buttonIconSize),
+                    label: Text('Set Goal',
+                        style: TextStyle(fontSize: sizes.fontSize)),
                     onPressed: () {
                       showDialog(
                         context: context,
@@ -107,7 +109,8 @@ class ActiveStrengthGoalCard extends StatelessWidget {
                     ),
                     IconButton(
                       key: const ValueKey('active-strength-goal-edit-btn'),
-                      icon: const Icon(Icons.edit_outlined),
+                      icon:
+                          Icon(Icons.edit_outlined, size: sizes.buttonIconSize),
                       onPressed: () {
                         showDialog(
                           context: context,
@@ -130,27 +133,26 @@ class ActiveStrengthGoalCard extends StatelessWidget {
                   ),
                 ),
                 SizedBox(height: sizes.spacing),
-                Row(
-                  children: [
-                    _MetricChip(
-                      label: 'Target Weight',
-                      value: weightString,
-                      sizes: sizes,
-                    ),
-                    SizedBox(width: sizes.spacing),
-                    _MetricChip(
-                      label: 'Reps',
-                      value: '${goal.targetReps}',
-                      sizes: sizes,
-                    ),
-                    SizedBox(width: sizes.spacing),
-                    _MetricChip(
-                      label: 'Target 1RM',
-                      value: '${goal.targetMaxStrength}',
-                      sizes: sizes,
-                    ),
-                  ],
-                ),
+                ResponsiveFields(sizes: sizes, children: [
+                  _MetricChip(
+                    theme: theme,
+                    label: 'Target Weight',
+                    value: weightString,
+                    sizes: sizes,
+                  ),
+                  _MetricChip(
+                    theme: theme,
+                    label: 'Reps',
+                    value: '${goal.targetReps}',
+                    sizes: sizes,
+                  ),
+                  _MetricChip(
+                    theme: theme,
+                    label: 'Target 1RM',
+                    value: '${goal.targetMaxStrength}',
+                    sizes: sizes,
+                  ),
+                ]),
                 SizedBox(height: sizes.spacing),
                 Text(
                   'Started: ${DateFormat('MMM d, yyyy').format(goal.startDate)}',
@@ -160,15 +162,20 @@ class ActiveStrengthGoalCard extends StatelessWidget {
                   ),
                 ),
                 SizedBox(height: sizes.spacing * 1.5),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
+                Wrap(
+                  alignment: WrapAlignment.end,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: sizes.spacing / 2,
+                  runSpacing: sizes.spacing / 2,
                   children: [
                     TextButton.icon(
                       key: const ValueKey('active-strength-goal-delete-btn'),
-                      icon: const Icon(Icons.delete_outline, color: Colors.red),
-                      label: const Text(
+                      icon: Icon(Icons.delete_outline,
+                          color: Colors.red, size: sizes.buttonIconSize),
+                      label: Text(
                         'Delete',
-                        style: TextStyle(color: Colors.red),
+                        style: TextStyle(
+                            color: Colors.red, fontSize: sizes.fontSize),
                       ),
                       onPressed: () {
                         showDialog(
@@ -189,8 +196,9 @@ class ActiveStrengthGoalCard extends StatelessWidget {
                     SizedBox(width: sizes.spacing),
                     ElevatedButton.icon(
                       key: const ValueKey('active-strength-goal-complete-btn'),
-                      icon: const Icon(Icons.check),
-                      label: const Text('Complete Goal'),
+                      icon: Icon(Icons.check, size: sizes.buttonIconSize),
+                      label: Text('Complete Goal',
+                          style: TextStyle(fontSize: sizes.fontSize)),
                       onPressed: () {
                         context
                             .read<ExerciseRecordCubit>()
@@ -212,47 +220,45 @@ class _MetricChip extends StatelessWidget {
   final String label;
   final String value;
   final DataDisplaySizesList sizes;
+  final ThemeData theme;
 
   const _MetricChip({
     required this.label,
     required this.value,
     required this.sizes,
+    required this.theme,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
-      child: Container(
-        padding: EdgeInsets.symmetric(
-          vertical: sizes.padding / 2,
-          horizontal: sizes.padding / 2,
-        ),
-        decoration: BoxDecoration(
-          color: Theme.of(context).cardColor,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
-        ),
-        child: Column(
-          children: [
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: sizes.fontSize * 0.8,
-                color: Colors.grey,
-              ),
-              overflow: TextOverflow.ellipsis,
+    return Container(
+      padding: EdgeInsets.symmetric(
+        vertical: sizes.padding / 2,
+        horizontal: sizes.padding / 2,
+      ),
+      decoration: BoxDecoration(
+        color: theme.cardColor,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
+      ),
+      child: Column(
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: sizes.fontSize * 0.8,
+              color: Colors.grey,
             ),
-            const SizedBox(height: 2),
-            Text(
-              value,
-              style: TextStyle(
-                fontSize: sizes.subtitleFontSize,
-                fontWeight: FontWeight.bold,
-              ),
-              overflow: TextOverflow.ellipsis,
+          ),
+          SizedBox(height: sizes.spacing / 2),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: sizes.subtitleFontSize,
+              fontWeight: FontWeight.bold,
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

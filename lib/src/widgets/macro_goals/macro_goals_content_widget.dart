@@ -60,8 +60,9 @@ class MacroGoalsContentWidget extends StatelessWidget {
                   SizedBox(height: sizes.spacing),
                   ElevatedButton.icon(
                     key: const ValueKey('macro-goal-set-button'),
-                    icon: const Icon(Icons.add),
-                    label: const Text('Set Goal'),
+                    icon: Icon(Icons.add, size: sizes.buttonIconSize),
+                    label: Text('Set Goal',
+                        style: TextStyle(fontSize: sizes.fontSize)),
                     onPressed: () {
                       showDialog(
                         context: context,
@@ -101,7 +102,8 @@ class MacroGoalsContentWidget extends StatelessWidget {
                       ),
                       IconButton(
                         key: const ValueKey('macro-goal-edit-btn'),
-                        icon: const Icon(Icons.edit_outlined),
+                        icon: Icon(Icons.edit_outlined,
+                            size: sizes.buttonIconSize),
                         onPressed: () {
                           showDialog(
                             context: context,
@@ -124,7 +126,11 @@ class MacroGoalsContentWidget extends StatelessWidget {
                     ),
                   ),
                   SizedBox(height: sizes.spacing),
-                  Row(
+                  Wrap(
+                    alignment: WrapAlignment.start,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    spacing: sizes.spacing / 2,
+                    runSpacing: sizes.spacing / 2,
                     children: [
                       MacroGoalChip(
                         label: 'Protein',
@@ -165,10 +171,12 @@ class MacroGoalsContentWidget extends StatelessWidget {
                     children: [
                       TextButton.icon(
                         key: const ValueKey('macro-goal-deactivate-btn'),
-                        icon: const Icon(Icons.stop_circle_outlined,
-                            color: Colors.orange),
-                        label: const Text('Deactivate',
-                            style: TextStyle(color: Colors.orange)),
+                        icon: Icon(Icons.stop_circle_outlined,
+                            color: Colors.orange, size: sizes.buttonIconSize),
+                        label: Text('Deactivate',
+                            style: TextStyle(
+                                color: Colors.orange,
+                                fontSize: sizes.fontSize)),
                         onPressed: () {
                           context
                               .read<MacroTrackingCubit>()
@@ -178,10 +186,11 @@ class MacroGoalsContentWidget extends StatelessWidget {
                       SizedBox(width: sizes.spacing),
                       TextButton.icon(
                         key: const ValueKey('macro-goal-delete-btn'),
-                        icon:
-                            const Icon(Icons.delete_outline, color: Colors.red),
-                        label: const Text('Delete',
-                            style: TextStyle(color: Colors.red)),
+                        icon: Icon(Icons.delete_outline,
+                            color: Colors.red, size: sizes.buttonIconSize),
+                        label: Text('Delete',
+                            style: TextStyle(
+                                color: Colors.red, fontSize: sizes.fontSize)),
                         onPressed: () {
                           showDialog(
                             context: context,
@@ -250,8 +259,8 @@ class MacroGoalsContentWidget extends StatelessWidget {
                         ),
                       ),
                       trailing: IconButton(
-                        icon: const Icon(Icons.delete_outline,
-                            color: Colors.grey),
+                        icon: Icon(Icons.delete_outline,
+                            color: Colors.grey, size: sizes.buttonIconSize),
                         onPressed: () {
                           showDialog(
                             context: context,

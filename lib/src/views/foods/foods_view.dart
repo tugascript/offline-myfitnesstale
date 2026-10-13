@@ -86,10 +86,10 @@ class _FoodsViewState extends State<FoodsView> {
               controller: _searchController,
               decoration: InputDecoration(
                 hintText: 'Search foods...',
-                prefixIcon: const Icon(Icons.search),
+                prefixIcon: Icon(Icons.search, size: sizes.buttonIconSize),
                 suffixIcon: _searchController.text.isNotEmpty
                     ? IconButton(
-                        icon: const Icon(Icons.clear),
+                        icon: Icon(Icons.clear, size: sizes.buttonIconSize),
                         onPressed: () {
                           _searchController.clear();
                           _loadFoods(reset: true);
@@ -108,7 +108,8 @@ class _FoodsViewState extends State<FoodsView> {
                 children: [
                   FilterChip(
                     key: const ValueKey('foods-filter-favorites'),
-                    label: const Text('Favorites'),
+                    label: Text('Favorites',
+                        style: TextStyle(fontSize: sizes.fontSize)),
                     selected: _onlyFavorites,
                     onSelected: (val) {
                       setState(() {
@@ -121,10 +122,11 @@ class _FoodsViewState extends State<FoodsView> {
                   ...FoodCategory.values.map((cat) {
                     final isSelected = _selectedCategory == cat;
                     return Padding(
-                      padding: const EdgeInsets.only(right: 6),
+                      padding: EdgeInsets.only(right: sizes.padding / 2),
                       child: FilterChip(
-                        label: Text(cat.value[0].toUpperCase() +
-                            cat.value.substring(1)),
+                        label: Text(
+                            cat.value[0].toUpperCase() + cat.value.substring(1),
+                            style: TextStyle(fontSize: sizes.fontSize)),
                         selected: isSelected,
                         onSelected: (val) {
                           setState(() {
@@ -167,9 +169,9 @@ class _FoodsViewState extends State<FoodsView> {
                         SizedBox(height: sizes.spacing / 2),
                     itemBuilder: (context, index) {
                       if (index >= state.foods.length) {
-                        return const Center(
+                        return Center(
                           child: Padding(
-                            padding: EdgeInsets.all(8),
+                            padding: EdgeInsets.all(sizes.padding / 2),
                             child: CircularProgressIndicator.adaptive(),
                           ),
                         );

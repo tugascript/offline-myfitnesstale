@@ -27,7 +27,7 @@ class FoodMacroColumn extends StatelessWidget {
             color: color,
           ),
         ),
-        const SizedBox(height: 2),
+        SizedBox(height: sizes.spacing / 2),
         Text(
           label,
           style: TextStyle(

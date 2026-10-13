@@ -1,3 +1,5 @@
+import '../layout/responsive_fields.dart';
+import '../layout/app_text_form_field.dart';
 import '../../common/nullable.dart';
 import '../../services/inputs/meal_plan_input.dart';
 import 'package:flutter/material.dart';
@@ -245,8 +247,9 @@ class _MealPlanFormWidgetState extends State<MealPlanFormWidget> {
     if (!_formKey.currentState!.validate()) return;
     if (_weeks.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('Meal plan must contain at least one week')),
+        SnackBar(
+            content: Text('Meal plan must contain at least one week',
+                style: TextStyle(fontSize: widget.sizes.fontSize))),
       );
       return;
     }
@@ -311,35 +314,38 @@ class _MealPlanFormWidgetState extends State<MealPlanFormWidget> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            TextFormField(
+            AppTextFormField(
+              theme: widget.theme,
+              fontSize: widget.sizes.fontSize,
+              padding: widget.sizes.padding,
+              isLoading: widget.isLoading,
               key: const ValueKey('meal-plan-form-name-input'),
               controller: _nameController,
-              decoration: const InputDecoration(
-                labelText: 'Meal Plan Name *',
-                border: OutlineInputBorder(),
-              ),
+              labelText: 'Meal Plan Name *',
               validator: (v) =>
                   v == null || v.trim().isEmpty ? 'Required' : null,
             ),
             SizedBox(height: widget.sizes.spacing),
-            TextFormField(
+            AppTextFormField(
+              theme: widget.theme,
+              fontSize: widget.sizes.fontSize,
+              padding: widget.sizes.padding,
+              isLoading: widget.isLoading,
               key: const ValueKey('meal-plan-form-desc-input'),
               controller: _descriptionController,
               maxLines: 2,
-              decoration: const InputDecoration(
-                labelText: 'Description (optional)',
-                border: OutlineInputBorder(),
-              ),
+              labelText: 'Description (optional)',
             ),
             SizedBox(height: widget.sizes.spacing),
-            TextFormField(
+            AppTextFormField(
+              theme: widget.theme,
+              fontSize: widget.sizes.fontSize,
+              padding: widget.sizes.padding,
+              isLoading: widget.isLoading,
               key: const ValueKey('meal-plan-form-duration-input'),
               controller: _durationWeeksController,
               keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                labelText: 'Duration in Weeks *',
-                border: OutlineInputBorder(),
-              ),
+              labelText: 'Duration in Weeks *',
               validator: (v) {
                 if (v == null || v.isEmpty) return 'Required';
                 final n = int.tryParse(v);
@@ -348,8 +354,11 @@ class _MealPlanFormWidgetState extends State<MealPlanFormWidget> {
               },
             ),
             SizedBox(height: widget.sizes.spacing * 1.5),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            Wrap(
+              alignment: WrapAlignment.spaceBetween,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              spacing: widget.sizes.spacing / 2,
+              runSpacing: widget.sizes.spacing / 2,
               children: [
                 Text(
                   'Plan Schedule',
@@ -360,8 +369,9 @@ class _MealPlanFormWidgetState extends State<MealPlanFormWidget> {
                 ),
                 TextButton.icon(
                   key: const ValueKey('meal-plan-form-add-week-btn'),
-                  icon: const Icon(Icons.add),
-                  label: const Text('Add Week'),
+                  icon: Icon(Icons.add, size: widget.sizes.buttonIconSize),
+                  label: Text('Add Week',
+                      style: TextStyle(fontSize: widget.sizes.fontSize)),
                   onPressed: _addWeek,
                 ),
               ],
@@ -371,47 +381,53 @@ class _MealPlanFormWidgetState extends State<MealPlanFormWidget> {
               final week = wEntry.value;
 
               return Card(
-                margin: const EdgeInsets.only(bottom: 16),
+                margin: EdgeInsets.only(bottom: widget.sizes.padding),
                 child: Padding(
-                  padding: const EdgeInsets.all(12),
+                  padding: EdgeInsets.all(widget.sizes.padding),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: TextFormField(
-                              controller: week.nameController,
-                              decoration: InputDecoration(
-                                labelText: 'Week ${week.weekNumber} Name',
-                                isDense: true,
-                              ),
-                            ),
+                      ResponsiveFields(sizes: widget.sizes, children: [
+                        AppTextFormField(
+                          theme: widget.theme,
+                          fontSize: widget.sizes.fontSize,
+                          padding: widget.sizes.padding,
+                          isLoading: widget.isLoading,
+                          controller: week.nameController,
+                          labelText: 'Week ${week.weekNumber} Name',
+                        ),
+                        if (_weeks.length > 1)
+                          IconButton(
+                            icon: Icon(Icons.delete_outline,
+                                color: Colors.red,
+                                size: widget.sizes.buttonIconSize),
+                            onPressed: () {
+                              setState(() {
+                                final rem = _weeks.removeAt(wIdx);
+                                rem.dispose();
+                              });
+                            },
                           ),
-                          if (_weeks.length > 1)
-                            IconButton(
-                              icon: const Icon(Icons.delete_outline,
-                                  color: Colors.red),
-                              onPressed: () {
-                                setState(() {
-                                  final rem = _weeks.removeAt(wIdx);
-                                  rem.dispose();
-                                });
-                              },
-                            ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      ]),
+                      SizedBox(height: widget.sizes.spacing),
+                      Wrap(
+                        alignment: WrapAlignment.spaceBetween,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        spacing: widget.sizes.spacing / 2,
+                        runSpacing: widget.sizes.spacing / 2,
                         children: [
                           Text(
                             'Days (${week.days.length})',
-                            style: const TextStyle(fontWeight: FontWeight.w600),
+                            style: TextStyle(
+                                fontWeight: FontWeight.w600,
+                                fontSize: widget.sizes.fontSize),
                           ),
                           TextButton.icon(
-                            icon: const Icon(Icons.add, size: 18),
-                            label: const Text('Add Day'),
+                            icon: Icon(Icons.add,
+                                size: widget.sizes.compactIconSize),
+                            label: Text('Add Day',
+                                style:
+                                    TextStyle(fontSize: widget.sizes.fontSize)),
                             onPressed: () => _addDay(week),
                           ),
                         ],
@@ -421,12 +437,12 @@ class _MealPlanFormWidgetState extends State<MealPlanFormWidget> {
                         final day = dEntry.value;
 
                         return Container(
-                          margin: const EdgeInsets.only(bottom: 8),
-                          padding: const EdgeInsets.all(8),
+                          margin:
+                              EdgeInsets.only(bottom: widget.sizes.padding / 2),
+                          padding: EdgeInsets.all(widget.sizes.padding / 2),
                           decoration: BoxDecoration(
-                            color: Theme.of(context)
-                                .cardColor
-                                .withValues(alpha: 0.5),
+                            color:
+                                widget.theme.cardColor.withValues(alpha: 0.5),
                             borderRadius: BorderRadius.circular(8),
                             border: Border.all(
                                 color: Colors.grey.withValues(alpha: 0.2)),
@@ -434,34 +450,34 @@ class _MealPlanFormWidgetState extends State<MealPlanFormWidget> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: TextFormField(
-                                      controller: day.nameController,
-                                      decoration: InputDecoration(
-                                        labelText: 'Day ${day.dayNumber} Name',
-                                        isDense: true,
-                                      ),
-                                    ),
+                              ResponsiveFields(sizes: widget.sizes, children: [
+                                AppTextFormField(
+                                  theme: widget.theme,
+                                  fontSize: widget.sizes.fontSize,
+                                  padding: widget.sizes.padding,
+                                  isLoading: widget.isLoading,
+                                  controller: day.nameController,
+                                  labelText: 'Day ${day.dayNumber} Name',
+                                ),
+                                if (week.days.length > 1)
+                                  IconButton(
+                                    icon: Icon(Icons.close,
+                                        size: widget.sizes.compactIconSize,
+                                        color: Colors.grey),
+                                    onPressed: () {
+                                      setState(() {
+                                        final rem = week.days.removeAt(dIdx);
+                                        rem.dispose();
+                                      });
+                                    },
                                   ),
-                                  if (week.days.length > 1)
-                                    IconButton(
-                                      icon: const Icon(Icons.close,
-                                          size: 18, color: Colors.grey),
-                                      onPressed: () {
-                                        setState(() {
-                                          final rem = week.days.removeAt(dIdx);
-                                          rem.dispose();
-                                        });
-                                      },
-                                    ),
-                                ],
-                              ),
-                              const SizedBox(height: 8),
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
+                              ]),
+                              SizedBox(height: widget.sizes.spacing),
+                              Wrap(
+                                alignment: WrapAlignment.spaceBetween,
+                                crossAxisAlignment: WrapCrossAlignment.center,
+                                spacing: widget.sizes.spacing / 2,
+                                runSpacing: widget.sizes.spacing / 2,
                                 children: [
                                   Text(
                                     'Meals (${day.meals.length})',
@@ -471,8 +487,11 @@ class _MealPlanFormWidgetState extends State<MealPlanFormWidget> {
                                     ),
                                   ),
                                   TextButton.icon(
-                                    icon: const Icon(Icons.add, size: 16),
-                                    label: const Text('Add Meal'),
+                                    icon: Icon(Icons.add,
+                                        size: widget.sizes.compactIconSize),
+                                    label: Text('Add Meal',
+                                        style: TextStyle(
+                                            fontSize: widget.sizes.fontSize)),
                                     onPressed: () => _addMeal(day),
                                   ),
                                 ],
@@ -482,23 +501,31 @@ class _MealPlanFormWidgetState extends State<MealPlanFormWidget> {
                                 final meal = mEntry.value;
 
                                 return Container(
-                                  margin: const EdgeInsets.only(bottom: 6),
-                                  padding: const EdgeInsets.all(8),
+                                  margin: EdgeInsets.only(
+                                      bottom: widget.sizes.padding / 2),
+                                  padding:
+                                      EdgeInsets.all(widget.sizes.padding / 2),
                                   decoration: BoxDecoration(
-                                    color: Theme.of(context)
-                                        .scaffoldBackgroundColor,
+                                    color: widget.theme.scaffoldBackgroundColor,
                                     borderRadius: BorderRadius.circular(6),
                                   ),
                                   child: Column(
                                     crossAxisAlignment:
                                         CrossAxisAlignment.stretch,
                                     children: [
-                                      Row(
-                                        children: [
-                                          Expanded(
-                                            flex: 2,
-                                            child: DropdownButtonFormField<
-                                                MealType>(
+                                      ResponsiveFields(
+                                          sizes: widget.sizes,
+                                          children: [
+                                            DropdownButtonFormField<MealType>(
+                                              isExpanded: true,
+                                              itemHeight: null,
+                                              iconSize:
+                                                  widget.sizes.buttonIconSize,
+                                              style: TextStyle(
+                                                  fontSize:
+                                                      widget.sizes.fontSize,
+                                                  color: widget.theme.textTheme
+                                                      .bodyMedium?.color),
                                               initialValue: meal.mealType,
                                               decoration: const InputDecoration(
                                                 isDense: true,
@@ -508,7 +535,10 @@ class _MealPlanFormWidgetState extends State<MealPlanFormWidget> {
                                                 return DropdownMenuItem<
                                                     MealType>(
                                                   value: t,
-                                                  child: Text(t.value),
+                                                  child: Text(t.value,
+                                                      style: TextStyle(
+                                                          fontSize: widget
+                                                              .sizes.fontSize)),
                                                 );
                                               }).toList(),
                                               onChanged: (val) {
@@ -519,37 +549,37 @@ class _MealPlanFormWidgetState extends State<MealPlanFormWidget> {
                                                 }
                                               },
                                             ),
-                                          ),
-                                          const SizedBox(width: 8),
-                                          Expanded(
-                                            flex: 3,
-                                            child: TextFormField(
+                                            AppTextFormField(
+                                              theme: widget.theme,
+                                              fontSize: widget.sizes.fontSize,
+                                              padding: widget.sizes.padding,
+                                              isLoading: widget.isLoading,
                                               controller: meal.nameController,
-                                              decoration: const InputDecoration(
-                                                labelText: 'Meal Name',
-                                                isDense: true,
-                                              ),
+                                              labelText: 'Meal Name',
                                             ),
-                                          ),
-                                          IconButton(
-                                            icon: const Icon(
-                                                Icons.remove_circle_outline,
-                                                size: 18,
-                                                color: Colors.red),
-                                            onPressed: () {
-                                              setState(() {
-                                                final rem =
-                                                    day.meals.removeAt(mIdx);
-                                                rem.dispose();
-                                              });
-                                            },
-                                          ),
-                                        ],
-                                      ),
-                                      const SizedBox(height: 6),
-                                      Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceBetween,
+                                            IconButton(
+                                              icon: Icon(
+                                                  Icons.remove_circle_outline,
+                                                  size: widget
+                                                      .sizes.compactIconSize,
+                                                  color: Colors.red),
+                                              onPressed: () {
+                                                setState(() {
+                                                  final rem =
+                                                      day.meals.removeAt(mIdx);
+                                                  rem.dispose();
+                                                });
+                                              },
+                                            ),
+                                          ]),
+                                      SizedBox(
+                                          height: widget.sizes.spacing / 2),
+                                      Wrap(
+                                        alignment: WrapAlignment.spaceBetween,
+                                        crossAxisAlignment:
+                                            WrapCrossAlignment.center,
+                                        spacing: widget.sizes.spacing / 2,
+                                        runSpacing: widget.sizes.spacing / 2,
                                         children: [
                                           Text(
                                             'Items (${meal.items.length})',
@@ -559,9 +589,13 @@ class _MealPlanFormWidgetState extends State<MealPlanFormWidget> {
                                                         0.8),
                                           ),
                                           TextButton.icon(
-                                            icon:
-                                                const Icon(Icons.add, size: 14),
-                                            label: const Text('Add Food'),
+                                            icon: Icon(Icons.add,
+                                                size: widget
+                                                    .sizes.compactIconSize),
+                                            label: Text('Add Food',
+                                                style: TextStyle(
+                                                    fontSize:
+                                                        widget.sizes.fontSize)),
                                             onPressed: () => _addItem(meal),
                                           ),
                                         ],
@@ -583,14 +617,24 @@ class _MealPlanFormWidgetState extends State<MealPlanFormWidget> {
                                         }
 
                                         return Padding(
-                                          padding:
-                                              const EdgeInsets.only(bottom: 4),
-                                          child: Row(
-                                            children: [
-                                              Expanded(
-                                                flex: 3,
-                                                child: DropdownButtonFormField<
-                                                    int>(
+                                          padding: EdgeInsets.only(
+                                              bottom: widget.sizes.padding / 2),
+                                          child: ResponsiveFields(
+                                              sizes: widget.sizes,
+                                              children: [
+                                                DropdownButtonFormField<int>(
+                                                  isExpanded: true,
+                                                  itemHeight: null,
+                                                  iconSize: widget
+                                                      .sizes.buttonIconSize,
+                                                  style: TextStyle(
+                                                      fontSize:
+                                                          widget.sizes.fontSize,
+                                                      color: widget
+                                                          .theme
+                                                          .textTheme
+                                                          .bodyMedium
+                                                          ?.color),
                                                   initialValue: item.foodId,
                                                   decoration:
                                                       const InputDecoration(
@@ -600,11 +644,13 @@ class _MealPlanFormWidgetState extends State<MealPlanFormWidget> {
                                                     return DropdownMenuItem<
                                                         int>(
                                                       value: f.id,
-                                                      child: Text(
-                                                        f.name,
-                                                        overflow: TextOverflow
-                                                            .ellipsis,
-                                                      ),
+                                                      child: Text(f.name,
+                                                          overflow: TextOverflow
+                                                              .ellipsis,
+                                                          style: TextStyle(
+                                                              fontSize: widget
+                                                                  .sizes
+                                                                  .fontSize)),
                                                     );
                                                   }).toList(),
                                                   onChanged: (val) {
@@ -614,16 +660,22 @@ class _MealPlanFormWidgetState extends State<MealPlanFormWidget> {
                                                     });
                                                   },
                                                 ),
-                                              ),
-                                              const SizedBox(width: 6),
-                                              if (currentFood != null &&
-                                                  currentFood
-                                                      .portions.isNotEmpty) ...[
-                                                Expanded(
-                                                  flex: 2,
-                                                  child:
-                                                      DropdownButtonFormField<
-                                                          int?>(
+                                                if (currentFood != null &&
+                                                    currentFood.portions
+                                                        .isNotEmpty) ...[
+                                                  DropdownButtonFormField<int?>(
+                                                    isExpanded: true,
+                                                    itemHeight: null,
+                                                    iconSize: widget
+                                                        .sizes.buttonIconSize,
+                                                    style: TextStyle(
+                                                        fontSize: widget
+                                                            .sizes.fontSize,
+                                                        color: widget
+                                                            .theme
+                                                            .textTheme
+                                                            .bodyMedium
+                                                            ?.color),
                                                     initialValue:
                                                         item.portionId,
                                                     decoration:
@@ -631,10 +683,13 @@ class _MealPlanFormWidgetState extends State<MealPlanFormWidget> {
                                                       isDense: true,
                                                     ),
                                                     items: [
-                                                      const DropdownMenuItem<
-                                                          int?>(
+                                                      DropdownMenuItem<int?>(
                                                         value: null,
-                                                        child: Text('Grams'),
+                                                        child: Text('Grams',
+                                                            style: TextStyle(
+                                                                fontSize: widget
+                                                                    .sizes
+                                                                    .fontSize)),
                                                       ),
                                                       ...currentFood.portions
                                                           .map((p) {
@@ -642,7 +697,11 @@ class _MealPlanFormWidgetState extends State<MealPlanFormWidget> {
                                                             int?>(
                                                           value: p.id,
                                                           child: Text(
-                                                              p.portionName),
+                                                              p.portionName,
+                                                              style: TextStyle(
+                                                                  fontSize: widget
+                                                                      .sizes
+                                                                      .fontSize)),
                                                         );
                                                       }),
                                                     ],
@@ -652,40 +711,41 @@ class _MealPlanFormWidgetState extends State<MealPlanFormWidget> {
                                                       });
                                                     },
                                                   ),
-                                                ),
-                                                const SizedBox(width: 6),
-                                              ],
-                                              Expanded(
-                                                flex: 2,
-                                                child: TextFormField(
+                                                  SizedBox(
+                                                      width:
+                                                          widget.sizes.spacing /
+                                                              2),
+                                                ],
+                                                AppTextFormField(
+                                                  theme: widget.theme,
+                                                  fontSize:
+                                                      widget.sizes.fontSize,
+                                                  padding: widget.sizes.padding,
+                                                  isLoading: widget.isLoading,
                                                   controller:
                                                       item.amountController,
                                                   keyboardType:
                                                       const TextInputType
                                                           .numberWithOptions(
                                                           decimal: true),
-                                                  decoration:
-                                                      const InputDecoration(
-                                                    isDense: true,
-                                                    labelText: 'Amt',
-                                                  ),
+                                                  labelText: 'Amt',
                                                 ),
-                                              ),
-                                              IconButton(
-                                                icon: const Icon(
-                                                    Icons.remove_circle_outline,
-                                                    size: 16,
-                                                    color: Colors.red),
-                                                onPressed: () {
-                                                  setState(() {
-                                                    final rem = meal.items
-                                                        .removeAt(itIdx);
-                                                    rem.dispose();
-                                                  });
-                                                },
-                                              ),
-                                            ],
-                                          ),
+                                                IconButton(
+                                                  icon: Icon(
+                                                      Icons
+                                                          .remove_circle_outline,
+                                                      size: widget.sizes
+                                                          .compactIconSize,
+                                                      color: Colors.red),
+                                                  onPressed: () {
+                                                    setState(() {
+                                                      final rem = meal.items
+                                                          .removeAt(itIdx);
+                                                      rem.dispose();
+                                                    });
+                                                  },
+                                                ),
+                                              ]),
                                         );
                                       }),
                                     ],
@@ -707,9 +767,11 @@ class _MealPlanFormWidgetState extends State<MealPlanFormWidget> {
               onPressed: widget.isLoading ? null : _submit,
               child: widget.isLoading
                   ? const CircularProgressIndicator.adaptive()
-                  : Text(widget.initialPlan != null
-                      ? 'Update Meal Plan'
-                      : 'Create Meal Plan'),
+                  : Text(
+                      widget.initialPlan != null
+                          ? 'Update Meal Plan'
+                          : 'Create Meal Plan',
+                      style: TextStyle(fontSize: widget.sizes.fontSize)),
             ),
           ],
         ),

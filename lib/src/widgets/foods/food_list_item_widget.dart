@@ -33,17 +33,20 @@ class FoodListItemWidget extends StatelessWidget {
               color: Colors.grey[600],
             ),
           ),
-          trailing: Row(
-            mainAxisSize: MainAxisSize.min,
+          trailing: Wrap(
+            alignment: WrapAlignment.start,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: sizes.spacing / 2,
+            runSpacing: sizes.spacing / 2,
             children: [
               IconButton(
                 icon: Icon(
-                  food.isFavorite ? Icons.favorite : Icons.favorite_border,
-                  color: food.isFavorite ? Colors.red : Colors.grey,
-                ),
+                    food.isFavorite ? Icons.favorite : Icons.favorite_border,
+                    color: food.isFavorite ? Colors.red : Colors.grey,
+                    size: sizes.buttonIconSize),
                 onPressed: onToggleFavorite,
               ),
-              const Icon(Icons.chevron_right),
+              Icon(Icons.chevron_right, size: sizes.buttonIconSize),
             ],
           ),
           onTap: onTap,
