@@ -42,6 +42,9 @@ Follow the strict flow: `SQLite Model -> Repository -> Service -> Cubit -> View/
     - When generating a view, reuse widgets in `lib/src/widgets/` (`common/`, `layout/`, and the matching feature
       folder) and extract new UI there before writing the view. Keep the view a compact composition of those
       widgets plus Cubit wiring.
+    - Resolve layout sizes in the view with `BreakPoint.fromContext(context)` and the matching class in
+      `lib/src/utilities/sizes/` (usually `DataDisplaySizes.getDataDisplaySizes`). Pass that size list, and `ThemeData`
+      when needed, into child widgets. Do not hardcode padding, spacing, icon sizes, or font sizes in views or widgets.
 - **Application Root & Wiring (`lib/my_app.dart`)**:
     - Registers app-scoped Cubits using `MultiBlocProvider` and wires the router.
 
