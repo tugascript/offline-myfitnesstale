@@ -37,6 +37,9 @@ Follow the strict flow: `SQLite Model -> Repository -> Service -> Cubit -> View/
     - Consumes Cubit states via `BlocBuilder` / `BlocConsumer` / `context.watch`.
     - Dispatches user intents to Cubit methods.
     - Never calls services or repositories directly.
+    - When generating a view, reuse widgets in `lib/src/widgets/` (`common/`, `layout/`, and the matching feature
+      folder) and extract new UI there before writing the view. Keep the view a compact composition of those
+      widgets plus Cubit wiring.
 - **Application Root & Wiring (`lib/my_app.dart`)**:
     - Registers app-scoped Cubits using `MultiBlocProvider` and wires the router.
 
