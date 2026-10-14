@@ -33,9 +33,13 @@ void main() {
       var db = await DatabaseHelper().db;
       final workoutNames = await _firstWorkoutNames(db, 2);
 
-      await harness.selectBottomNavigation(tester, 'Plans');
+      await harness.selectBottomNavigation(tester, 'Plan');
+      await harness.pumpUntilFound(tester, find.text('No Active Workout Plan'));
+      await tester.tap(find.byKey(const ValueKey('current-plan-browse-plans')));
       await harness.pumpUntilFound(
-          tester, find.textContaining('Workout Plans'));
+        tester,
+        find.textContaining('Workout Plans'),
+      );
       await tester.tap(find.byKey(const ValueKey('workout-plan-add')));
       await harness.pumpUntilFound(tester, find.text('CREATE WORKOUT PLAN'));
       await _enterField(tester, 'Name', 'Journey Plan');
@@ -45,9 +49,7 @@ void main() {
       await tester.ensureVisible(find.text('EDIT'));
       await tester.tap(find.text('EDIT'));
       await harness.pumpUntilFound(tester, find.text('Add Week Block'));
-      await tester.tap(
-        find.byKey(const ValueKey('workout-plan-header-edit')),
-      );
+      await tester.tap(find.byKey(const ValueKey('workout-plan-header-edit')));
       await harness.pumpUntilFound(tester, find.text('UPDATE WORKOUT PLAN'));
       await _enterField(tester, 'Name', 'Journey Plan Updated');
       await tester.ensureVisible(find.text('UPDATE WORKOUT PLAN'));
@@ -121,11 +123,8 @@ void main() {
 
       await harness.restartPreservingData(tester);
       db = await DatabaseHelper().db;
-      await harness.goAndWait(
-        tester,
-        location: '/workout-plans/$planId/active',
-        destination: find.text(workoutNames[0]),
-      );
+      await harness.selectBottomNavigation(tester, 'Plan');
+      await harness.pumpUntilFound(tester, find.text(workoutNames[0]));
       await harness.pumpUntilFound(tester, find.text('Start'));
       expect(
         await _countWhere(
@@ -154,7 +153,11 @@ void main() {
       );
 
       final logWorkout = find.text('Log');
-      await tester.ensureVisible(logWorkout);
+      await Scrollable.ensureVisible(
+        tester.element(logWorkout),
+        alignment: 0.5,
+      );
+      await tester.pump(const Duration(milliseconds: 300));
       await tester.tap(logWorkout);
       await harness.pumpUntilFound(tester, find.text('Create Workout Record'));
       await tester.pump(const Duration(milliseconds: 500));
@@ -185,13 +188,11 @@ void main() {
         ),
         1,
       );
-      await tester.fling(
-        find.byType(CustomScrollView),
-        const Offset(0, 2000),
-        3000,
+      await harness.pumpUntilFound(tester, find.text('No Active Workout Plan'));
+      expect(
+        find.byKey(const ValueKey('current-plan-browse-plans')),
+        findsOneWidget,
       );
-      await tester.pump(const Duration(milliseconds: 450));
-      await harness.pumpUntilFound(tester, find.text('100.0%'));
 
       await harness.goAndWait(
         tester,

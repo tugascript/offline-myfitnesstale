@@ -1,253 +1,224 @@
-import '../layout/responsive_fields.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../utilities/sizes/data_display_sizes.dart';
 import '../../views/equipments/equipments_view.dart';
+import '../../views/exercise_progress_view.dart';
 import '../../views/exercises/exercises_view.dart';
 import '../../views/exercises/strength_goals_view.dart';
 import '../../views/foods/foods_view.dart';
 import '../../views/macro_goals/macro_goals_view.dart';
-import '../../views/profile/reminder_preferences_view.dart';
+import '../../views/meal_plans/meal_plan_list_view.dart';
 import '../../views/recipes/recipes_view.dart';
 import '../../views/weight/weight_goals_view.dart';
 import '../../views/weight/weight_records_view.dart';
+import '../../views/workout_plans/workout_plan_list_view.dart';
 import '../../views/workouts/workouts_view.dart';
+import 'quick_action_category.dart';
+import 'quick_action_category_card.dart';
+import 'quick_action_destination_sheet.dart';
 
 class QuickActionsWidget extends StatelessWidget {
   final DataDisplaySizesList sizes;
   final ThemeData theme;
 
   const QuickActionsWidget({
+    super.key,
     required this.theme,
-    super.key,
     required this.sizes,
   });
 
-  @override
-  Widget build(BuildContext context) {
-    final isDarkTheme = theme.brightness == Brightness.dark;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          "Quick Actions",
-          style: TextStyle(
-            fontSize: sizes.titleFontSize,
-            fontWeight: FontWeight.bold,
-          ),
+  static const categories = [
+    QuickActionCategory(
+      id: 'training',
+      title: 'Workout Plans',
+      subtitle: 'Train and organise your workouts',
+      emoji: '🏋️',
+      destinations: [
+        QuickActionDestination(
+          'workouts',
+          'Workouts',
+          Icons.fitness_center,
+          WorkoutsView.routeName,
         ),
-        SizedBox(height: sizes.spacing),
-        ResponsiveFields(sizes: sizes, children: [
-          _ActionCard(
-            key: const ValueKey('quick-action-weight-goal'),
-            sizes: sizes,
-            isDarkTheme: isDarkTheme,
-            icon: Icon(
-              Icons.flag,
-              size: sizes.titleFontSize,
-              color: Colors.orange,
-            ),
-            title: "Set Goal",
-            subtitle: "Create weight goal",
-            onTap: () {
-              context.push(WeightGoalView.routeName);
-            },
-          ),
-          _ActionCard(
-            key: const ValueKey('quick-action-weight-records'),
-            sizes: sizes,
-            isDarkTheme: isDarkTheme,
-            icon: Icon(
-              Icons.monitor_weight,
-              size: sizes.titleFontSize,
-              color: Colors.blue,
-            ),
-            title: "Log Weight",
-            subtitle: "Log your weight",
-            onTap: () {
-              context.push(WeightRecordsView.routeName);
-            },
-          ),
-          _ActionCard(
-            key: const ValueKey('quick-action-workouts'),
-            sizes: sizes,
-            isDarkTheme: isDarkTheme,
-            icon: Text(
-              '🏋️',
-              style: TextStyle(fontSize: sizes.titleFontSize),
-            ),
-            title: "Workouts",
-            subtitle: "Start a workout",
-            onTap: () {
-              context.push(WorkoutsView.routeName);
-            },
-          ),
-          _ActionCard(
-            key: const ValueKey('quick-action-exercises'),
-            sizes: sizes,
-            isDarkTheme: isDarkTheme,
-            icon: Text(
-              '💪',
-              style: TextStyle(fontSize: sizes.titleFontSize),
-            ),
-            title: "Exercises",
-            subtitle: "Explore exercises",
-            onTap: () {
-              context.push(ExercisesView.routeName);
-            },
-          ),
-          _ActionCard(
-            key: const ValueKey('quick-action-equipments'),
-            sizes: sizes,
-            isDarkTheme: isDarkTheme,
-            icon: Icon(
-              Icons.fitness_center,
-              size: sizes.titleFontSize,
-              color: Colors.green,
-            ),
-            title: "Equipments",
-            subtitle: "Browse equipments",
-            onTap: () {
-              context.push(EquipmentsView.routeName);
-            },
-          ),
-          _ActionCard(
-            key: const ValueKey('quick-action-reminders'),
-            sizes: sizes,
-            isDarkTheme: isDarkTheme,
-            icon: Icon(
-              Icons.notifications,
-              size: sizes.titleFontSize,
-              color: Colors.deepPurple,
-            ),
-            title: "Reminders",
-            subtitle: "Manage reminder preferences",
-            onTap: () {
-              context.push(ReminderPreferencesView.routeName);
-            },
-          ),
-          _ActionCard(
-            key: const ValueKey('quick-action-strength-goals'),
-            sizes: sizes,
-            isDarkTheme: isDarkTheme,
-            icon: Icon(
-              Icons.fitness_center,
-              size: sizes.titleFontSize,
-              color: Colors.redAccent,
-            ),
-            title: "Strength Goals",
-            subtitle: "Set strength goals",
-            onTap: () {
-              context.push(StrengthGoalsView.routeName);
-            },
-          ),
-          _ActionCard(
-            key: const ValueKey('quick-action-food'),
-            sizes: sizes,
-            isDarkTheme: isDarkTheme,
-            icon: Icon(
-              Icons.apple,
-              size: sizes.titleFontSize,
-              color: Colors.green,
-            ),
-            title: "Food",
-            subtitle: "Browse foods & portions",
-            onTap: () {
-              context.push(FoodsView.routeName);
-            },
-          ),
-          _ActionCard(
-            key: const ValueKey('quick-action-recipe'),
-            sizes: sizes,
-            isDarkTheme: isDarkTheme,
-            icon: Icon(
-              Icons.menu_book,
-              size: sizes.titleFontSize,
-              color: Colors.purple,
-            ),
-            title: "Recipe",
-            subtitle: "Cook healthy meals",
-            onTap: () {
-              context.push(RecipesView.routeName);
-            },
-          ),
-          _ActionCard(
-            key: const ValueKey('quick-action-macro-goals'),
-            sizes: sizes,
-            isDarkTheme: isDarkTheme,
-            icon: Icon(
-              Icons.pie_chart,
-              size: sizes.titleFontSize,
-              color: Colors.teal,
-            ),
-            title: "Macro Goals",
-            subtitle: "Daily calorie & macro targets",
-            onTap: () {
-              context.push(MacroGoalsView.routeName);
-            },
-          ),
-        ]),
+        QuickActionDestination(
+          'workout-plans',
+          'Workout Plans',
+          Icons.event_note,
+          WorkoutPlanListView.routeName,
+        ),
       ],
-    );
-  }
-}
-
-class _ActionCard extends StatelessWidget {
-  final DataDisplaySizesList sizes;
-  final bool isDarkTheme;
-  final Widget icon;
-  final String title;
-  final String subtitle;
-  final VoidCallback onTap;
-
-  const _ActionCard({
-    super.key,
-    required this.sizes,
-    required this.isDarkTheme,
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      elevation: 1,
-      shape: BeveledRectangleBorder(),
-      margin: EdgeInsets.zero,
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: EdgeInsets.all(sizes.padding),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              icon,
-              SizedBox(height: sizes.spacing / 2),
-              Text(
-                title,
-                style: TextStyle(
-                  fontSize: sizes.subtitleFontSize,
-                  fontWeight: FontWeight.w600,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              SizedBox(height: sizes.spacing / 6),
-              Text(
-                subtitle,
-                style: TextStyle(
-                  fontSize: sizes.fontSize,
-                  color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
+    ),
+    QuickActionCategory(
+      id: 'weight',
+      title: 'Weight Goals',
+      subtitle: 'Track your weight and targets',
+      emoji: '⚖️',
+      destinations: [
+        QuickActionDestination(
+          'weight-records',
+          'Weight Records',
+          Icons.monitor_weight_outlined,
+          WeightRecordsView.routeName,
         ),
+        QuickActionDestination(
+          'weight-goal',
+          'Weight Goals',
+          Icons.flag_outlined,
+          WeightGoalView.routeName,
+        ),
+      ],
+    ),
+    QuickActionCategory(
+      id: 'exercises',
+      title: 'Exercises',
+      subtitle: 'Explore exercises and track progress',
+      emoji: '💪',
+      destinations: [
+        QuickActionDestination(
+          'exercises',
+          'Exercises',
+          Icons.sports_gymnastics,
+          ExercisesView.routeName,
+        ),
+        QuickActionDestination(
+          'exercise-progress',
+          'Exercise Progress',
+          Icons.trending_up,
+          ExerciseProgressView.routeName,
+        ),
+        QuickActionDestination(
+          'strength-goals',
+          'Strength Goals',
+          Icons.emoji_events_outlined,
+          StrengthGoalsView.routeName,
+        ),
+        QuickActionDestination(
+          'equipments',
+          'Equipment',
+          Icons.build_outlined,
+          EquipmentsView.routeName,
+        ),
+      ],
+    ),
+    QuickActionCategory(
+      id: 'nutrition',
+      title: 'Nutrition',
+      subtitle: 'Plan meals and manage your food',
+      emoji: '🍽️',
+      destinations: [
+        QuickActionDestination(
+          'macro-goals',
+          'Macro Goals',
+          Icons.pie_chart_outline,
+          MacroGoalsView.routeName,
+        ),
+        QuickActionDestination(
+          'meal-plans',
+          'Meal Plans',
+          Icons.restaurant_menu,
+          MealPlanListView.routeName,
+        ),
+        QuickActionDestination(
+          'recipe',
+          'Recipes',
+          Icons.menu_book,
+          RecipesView.routeName,
+        ),
+        QuickActionDestination(
+          'food',
+          'Foods',
+          Icons.lunch_dining_outlined,
+          FoodsView.routeName,
+        ),
+      ],
+    ),
+  ];
+
+  Future<void> _openCategory(
+    BuildContext context,
+    QuickActionCategory category,
+  ) async {
+    final navigator = Navigator.of(context, rootNavigator: true);
+    final sheet = ModalBottomSheetRoute<String>(
+      capturedThemes: InheritedTheme.capture(
+        from: context,
+        to: navigator.context,
+      ),
+      barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
+      useSafeArea: true,
+      isScrollControlled: true,
+      showDragHandle: true,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+      builder: (context) => QuickActionDestinationSheet(
+        category: category,
+        sizes: sizes,
+        theme: theme,
       ),
     );
+    final route = await navigator.push(sheet);
+    await sheet.completed;
+    if (route != null && context.mounted) {
+      // The sheet is fully dismissed, so Back returns straight to Home.
+      await context.push(route);
+    }
   }
+
+  @override
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(
+        'Quick Actions',
+        style: TextStyle(
+          fontSize: sizes.titleFontSize,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+      SizedBox(height: sizes.spacing),
+      LayoutBuilder(
+        builder: (context, constraints) {
+          final minimumWidth = MediaQuery.textScalerOf(context)
+              .scale(sizes.formFieldMinWidth);
+          final columns =
+              constraints.maxWidth >= minimumWidth * 2 + sizes.spacing ? 2 : 1;
+          return Column(
+            children: [
+              for (
+                var start = 0;
+                start < categories.length;
+                start += columns
+              ) ...[
+                if (start > 0) SizedBox(height: sizes.inputSpacing),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    for (
+                      var index = start;
+                      index < start + columns;
+                      index++
+                    ) ...[
+                      if (index > start) SizedBox(width: sizes.spacing),
+                      Expanded(
+                        child: QuickActionCategoryCard(
+                          key: ValueKey(
+                            'quick-action-category-${categories[index].id}',
+                          ),
+                          category: categories[index],
+                          sizes: sizes,
+                          theme: theme,
+                          onTap: () =>
+                              _openCategory(context, categories[index]),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ],
+            ],
+          );
+        },
+      ),
+    ],
+  );
 }

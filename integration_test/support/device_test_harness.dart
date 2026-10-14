@@ -44,13 +44,11 @@ final class DeviceTestHarness {
     required bool preloadWorkouts,
   }) async {
     await pumpUntilFound(tester, find.text('Welcome'));
-    await tester.enterText(
-      find.widgetWithText(TextFormField, 'Name'),
-      name,
-    );
+    await tester.enterText(find.widgetWithText(TextFormField, 'Name'), name);
 
-    final checkboxFinder =
-        find.byKey(const ValueKey('onboarding-preload-workouts'));
+    final checkboxFinder = find.byKey(
+      const ValueKey('onboarding-preload-workouts'),
+    );
     final checkbox = tester.widget<CheckboxListTile>(checkboxFinder);
     if (checkbox.value != preloadWorkouts) {
       await tester.ensureVisible(checkboxFinder);
@@ -84,6 +82,29 @@ final class DeviceTestHarness {
     expect(find.textContaining('Not Found'), findsNothing);
   }
 
+  Future<void> openQuickAction(
+    WidgetTester tester, {
+    required String category,
+    required String destination,
+    required Finder page,
+  }) async {
+    final card = find.byKey(ValueKey('quick-action-category-$category'));
+    await tester.ensureVisible(card);
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.tap(card);
+    final row = find.byKey(ValueKey('quick-action-$destination'));
+    await pumpUntilFound(tester, row);
+    await tester.ensureVisible(row);
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.tap(row);
+    await pumpUntilFound(tester, page);
+    await pumpUntilAbsent(
+      tester,
+      find.byKey(const ValueKey('quick-action-sheet-close')),
+    );
+    expect(find.textContaining('Not Found'), findsNothing);
+  }
+
   Future<void> goAndWait(
     WidgetTester tester, {
     required String location,
@@ -94,16 +115,8 @@ final class DeviceTestHarness {
     expect(find.textContaining('Not Found'), findsNothing);
   }
 
-  Future<void> selectBottomNavigation(
-    WidgetTester tester,
-    String label,
-  ) async {
-    const indices = {
-      'Home': 0,
-      'Plans': 1,
-      'Activity': 2,
-      'Profile': 3,
-    };
+  Future<void> selectBottomNavigation(WidgetTester tester, String label) async {
+    const indices = {'Home': 0, 'Plan': 1, 'Macros': 2, 'Profile': 3};
     final index = indices[label];
     if (index == null) {
       throw ArgumentError.value(label, 'label', 'Unknown bottom destination');
@@ -112,15 +125,14 @@ final class DeviceTestHarness {
     final navigation = find.byKey(const ValueKey('main-bottom-navigation'));
     expect(navigation, findsOneWidget);
     final rect = tester.getRect(navigation);
-    await tester.tapAt(Offset(
-      rect.left + (rect.width * (index + 0.5) / indices.length),
-      rect.center.dy,
-    ));
-    await tester.pump(const Duration(milliseconds: 300));
-    expect(
-      tester.widget<BottomNavigationBar>(navigation).currentIndex,
-      index,
+    await tester.tapAt(
+      Offset(
+        rect.left + (rect.width * (index + 0.5) / indices.length),
+        rect.center.dy,
+      ),
     );
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(tester.widget<BottomNavigationBar>(navigation).currentIndex, index);
   }
 
   Future<void> pageBack(WidgetTester tester, Finder destination) async {

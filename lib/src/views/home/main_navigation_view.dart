@@ -7,24 +7,28 @@ import '../../cubits/states/profile_state.dart';
 import '../create_profile_button_view.dart';
 import '../loading_view.dart';
 import '../onboarding_view.dart';
-import '../meal_plans/meal_plan_list_view.dart';
-import '../workout_plans/workout_plan_list_view.dart';
+import '../macros/macro_tracker_view.dart';
+import '../workout_plans/current_workout_plan_view.dart';
 import 'home_view.dart';
 import 'profile_view.dart';
 
 sealed class _PageBuilder {
-  static const int pagesCount = 4;
+  static int get pagesCount => _pages.length;
 
   static final List<Widget Function()> _pages = [
     () => const HomeView(),
-    () => const WorkoutPlanListView(),
-    () => const MealPlanListView(),
+    () => const CurrentWorkoutPlanView(),
+    () => const MacroTrackerView(),
     () => const ProfileView(),
   ];
 
   static final Map<int, Widget> _builtPages = {};
 
-  static Widget getPage(int index) {
+  static Widget getPage(int index, {required bool isVisible}) {
+    // Rebuild this configuration so its cached State sees tab activation.
+    if (index == 1) {
+      return CurrentWorkoutPlanView(isVisible: isVisible);
+    }
     if (_builtPages.containsKey(index)) {
       return _builtPages[index]!;
     }
@@ -75,7 +79,10 @@ class _MainNavigationViewState extends State<MainNavigationView> {
             index: _currentIndex,
             children: List.generate(_PageBuilder.pagesCount, (index) {
               if (_visitedIndices.contains(index)) {
-                return _PageBuilder.getPage(index);
+                return _PageBuilder.getPage(
+                  index,
+                  isVisible: _currentIndex == index,
+                );
               }
               return const LoadingView();
             }),
@@ -101,19 +108,19 @@ class _MainNavigationViewState extends State<MainNavigationView> {
         unselectedItemColor: Colors.grey,
         items: const [
           BottomNavigationBarItem(
-            icon: Icon(Icons.home),
+            icon: Text('🏠', style: TextStyle(fontSize: 20)),
             label: 'Home',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.book),
-            label: 'Plans',
+            icon: Text('🏋️', style: TextStyle(fontSize: 20)),
+            label: 'Plan',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.restaurant_menu),
-            label: 'Meals',
+            icon: Text('🍎', style: TextStyle(fontSize: 20)),
+            label: 'Macros',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.person),
+            icon: Text('👤', style: TextStyle(fontSize: 20)),
             label: 'Profile',
           ),
         ],

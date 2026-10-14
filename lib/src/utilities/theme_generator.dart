@@ -22,6 +22,26 @@ const int _orangePrimaryValue =
     0xFFDB7B5B; // Choose the primary orange you'll use
 
 sealed class ThemeGenerator {
+  // google_fonts 9 types its TextTheme against material_ui. Apply individual
+  // font styles to Flutter's TextTheme while preserving its colors and metrics.
+  static TextTheme _robotoMonoTextTheme(TextTheme base) => base.copyWith(
+    displayLarge: GoogleFonts.robotoMono(textStyle: base.displayLarge),
+    displayMedium: GoogleFonts.robotoMono(textStyle: base.displayMedium),
+    displaySmall: GoogleFonts.robotoMono(textStyle: base.displaySmall),
+    headlineLarge: GoogleFonts.robotoMono(textStyle: base.headlineLarge),
+    headlineMedium: GoogleFonts.robotoMono(textStyle: base.headlineMedium),
+    headlineSmall: GoogleFonts.robotoMono(textStyle: base.headlineSmall),
+    titleLarge: GoogleFonts.robotoMono(textStyle: base.titleLarge),
+    titleMedium: GoogleFonts.robotoMono(textStyle: base.titleMedium),
+    titleSmall: GoogleFonts.robotoMono(textStyle: base.titleSmall),
+    bodyLarge: GoogleFonts.robotoMono(textStyle: base.bodyLarge),
+    bodyMedium: GoogleFonts.robotoMono(textStyle: base.bodyMedium),
+    bodySmall: GoogleFonts.robotoMono(textStyle: base.bodySmall),
+    labelLarge: GoogleFonts.robotoMono(textStyle: base.labelLarge),
+    labelMedium: GoogleFonts.robotoMono(textStyle: base.labelMedium),
+    labelSmall: GoogleFonts.robotoMono(textStyle: base.labelSmall),
+  );
+
   static ThemeData themeFromContext(
     BuildContext context, {
     ThemeType? themeOverride,
@@ -73,20 +93,20 @@ sealed class ThemeGenerator {
     primarySwatch: _orangeSwatch,
     primaryColorDark: Colors.black,
     primaryColor: const Color(_orangePrimaryValue),
-    colorScheme: ColorScheme.fromSwatch(
-      primarySwatch: _orangeSwatch,
-      accentColor: Colors.orangeAccent,
-      brightness: Brightness.dark,
-      backgroundColor: Colors.black,
-      cardColor: Colors.black, // Dark grey card background
-    ).copyWith(
-      secondary:
-          Colors.orangeAccent, // Use for UI elements that need to stand out
-    ),
+    colorScheme:
+        ColorScheme.fromSwatch(
+          primarySwatch: _orangeSwatch,
+          accentColor: Colors.orangeAccent,
+          brightness: Brightness.dark,
+          backgroundColor: Colors.black,
+          cardColor: Colors.black, // Dark grey card background
+        ).copyWith(
+          secondary:
+              Colors.orangeAccent, // Use for UI elements that need to stand out
+        ),
 
     // Define the default font family using Google Fonts
-    textTheme:
-        GoogleFonts.robotoMonoTextTheme(ThemeData.dark().textTheme).copyWith(
+    textTheme: _robotoMonoTextTheme(ThemeData.dark().textTheme).copyWith(
       displayLarge: GoogleFonts.majorMonoDisplay(
         fontSize: 36.0,
         fontWeight: FontWeight.bold,
@@ -99,19 +119,14 @@ sealed class ThemeGenerator {
         fontSize: 16.0,
         fontWeight: FontWeight.w500,
       ),
-      bodyMedium: GoogleFonts.robotoMono(
-        fontSize: 14.0,
-      ),
+      bodyMedium: GoogleFonts.robotoMono(fontSize: 14.0),
     ),
 
     // Define the default `InputDecorationTheme`.
     inputDecorationTheme: InputDecorationTheme(
       border: OutlineInputBorder(
         borderRadius: BorderRadius.zero,
-        borderSide: BorderSide(
-          color: Colors.orange,
-          width: 1.0,
-        ),
+        borderSide: BorderSide(color: Colors.orange, width: 1.0),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.zero,
@@ -134,19 +149,13 @@ sealed class ThemeGenerator {
 
     // Define new button themes for Material 3
     elevatedButtonTheme: ElevatedButtonThemeData(
-      style: ElevatedButton.styleFrom(
-        shape: const BeveledRectangleBorder(),
-      ),
+      style: ElevatedButton.styleFrom(shape: const BeveledRectangleBorder()),
     ),
     outlinedButtonTheme: OutlinedButtonThemeData(
-      style: OutlinedButton.styleFrom(
-        shape: const BeveledRectangleBorder(),
-      ),
+      style: OutlinedButton.styleFrom(shape: const BeveledRectangleBorder()),
     ),
     textButtonTheme: TextButtonThemeData(
-      style: TextButton.styleFrom(
-        shape: const BeveledRectangleBorder(),
-      ),
+      style: TextButton.styleFrom(shape: const BeveledRectangleBorder()),
     ),
 
     // Define other custom defaults.
@@ -168,9 +177,7 @@ sealed class ThemeGenerator {
     ),
 
     // Define the default `IconTheme`.
-    iconTheme: const IconThemeData(
-      color: Colors.orangeAccent,
-    ),
+    iconTheme: const IconThemeData(color: Colors.orangeAccent),
 
     // Define the default `BottomNavigationBarTheme`.
     bottomNavigationBarTheme: const BottomNavigationBarThemeData(
@@ -189,35 +196,32 @@ sealed class ThemeGenerator {
 
     // Define the default `SwitchTheme`.
     switchTheme: SwitchThemeData(
-      trackColor: WidgetStateProperty.resolveWith(
-        (states) {
-          if (states.contains(WidgetState.selected)) {
-            return const Color(_orangePrimaryValue);
-          }
-          return Colors.grey.withValues(alpha: 0.2);
-        },
-      ),
+      trackColor: WidgetStateProperty.resolveWith((states) {
+        if (states.contains(WidgetState.selected)) {
+          return const Color(_orangePrimaryValue);
+        }
+        return Colors.grey.withValues(alpha: 0.2);
+      }),
       thumbColor: WidgetStateProperty.resolveWith((states) {
         if (states.contains(WidgetState.selected)) {
           return Colors.white;
         }
         return Colors.grey;
       }),
-      trackOutlineColor: WidgetStateProperty.resolveWith(
-        (states) {
-          if (states.contains(WidgetState.selected)) {
-            return null;
-          }
-          return Colors.grey.withValues(alpha: 0.5);
-        },
-      ),
+      trackOutlineColor: WidgetStateProperty.resolveWith((states) {
+        if (states.contains(WidgetState.selected)) {
+          return null;
+        }
+        return Colors.grey.withValues(alpha: 0.5);
+      }),
     ),
 
     // Define the default `CheckboxTheme` (Rectangular/Sharp).
     checkboxTheme: CheckboxThemeData(
       shape: const BeveledRectangleBorder(),
-      fillColor:
-          WidgetStateProperty.resolveWith<Color?>((Set<WidgetState> states) {
+      fillColor: WidgetStateProperty.resolveWith<Color?>((
+        Set<WidgetState> states,
+      ) {
         if (states.contains(WidgetState.disabled)) {
           return null;
         }
@@ -235,9 +239,7 @@ sealed class ThemeGenerator {
     ),
 
     // Define the default `DialogTheme`.
-    dialogTheme: const DialogThemeData(
-      shape: BeveledRectangleBorder(),
-    ),
+    dialogTheme: const DialogThemeData(shape: BeveledRectangleBorder()),
   );
 
   static final ThemeData _lightTheme = ThemeData(
@@ -247,20 +249,20 @@ sealed class ThemeGenerator {
     brightness: Brightness.light,
     primarySwatch: _orangeSwatch,
     primaryColor: const Color(_orangePrimaryValue),
-    colorScheme: ColorScheme.fromSwatch(
-      primarySwatch: _orangeSwatch,
-      accentColor: Colors.orangeAccent,
-      brightness: Brightness.light,
-      backgroundColor: Colors.white,
-      cardColor: Colors.white, // Light grey card background
-    ).copyWith(
-      secondary:
-          Colors.orangeAccent, // Use for UI elements that need to stand out
-    ),
+    colorScheme:
+        ColorScheme.fromSwatch(
+          primarySwatch: _orangeSwatch,
+          accentColor: Colors.orangeAccent,
+          brightness: Brightness.light,
+          backgroundColor: Colors.white,
+          cardColor: Colors.white, // Light grey card background
+        ).copyWith(
+          secondary:
+              Colors.orangeAccent, // Use for UI elements that need to stand out
+        ),
 
     // Define the default font family using Google Fonts
-    textTheme:
-        GoogleFonts.robotoMonoTextTheme(ThemeData.light().textTheme).copyWith(
+    textTheme: _robotoMonoTextTheme(ThemeData.light().textTheme).copyWith(
       displayLarge: GoogleFonts.majorMonoDisplay(
         fontSize: 36.0,
         fontWeight: FontWeight.bold,
@@ -273,9 +275,7 @@ sealed class ThemeGenerator {
         fontSize: 16.0,
         fontWeight: FontWeight.w500,
       ),
-      bodyMedium: GoogleFonts.robotoMono(
-        fontSize: 14.0,
-      ),
+      bodyMedium: GoogleFonts.robotoMono(fontSize: 14.0),
     ),
 
     // Define the default `InputDecorationTheme`.
@@ -305,19 +305,13 @@ sealed class ThemeGenerator {
 
     // Define new button themes for Material 3
     elevatedButtonTheme: ElevatedButtonThemeData(
-      style: ElevatedButton.styleFrom(
-        shape: const BeveledRectangleBorder(),
-      ),
+      style: ElevatedButton.styleFrom(shape: const BeveledRectangleBorder()),
     ),
     outlinedButtonTheme: OutlinedButtonThemeData(
-      style: OutlinedButton.styleFrom(
-        shape: const BeveledRectangleBorder(),
-      ),
+      style: OutlinedButton.styleFrom(shape: const BeveledRectangleBorder()),
     ),
     textButtonTheme: TextButtonThemeData(
-      style: TextButton.styleFrom(
-        shape: const BeveledRectangleBorder(),
-      ),
+      style: TextButton.styleFrom(shape: const BeveledRectangleBorder()),
     ),
 
     // Define other custom defaults.
@@ -341,9 +335,7 @@ sealed class ThemeGenerator {
     ),
 
     // Define the default `IconTheme`.
-    iconTheme: const IconThemeData(
-      color: Colors.black,
-    ),
+    iconTheme: const IconThemeData(color: Colors.black),
 
     // Define the default `BottomNavigationBarTheme`.
     bottomNavigationBarTheme: const BottomNavigationBarThemeData(
@@ -362,35 +354,32 @@ sealed class ThemeGenerator {
 
     // Define the default `SwitchTheme`.
     switchTheme: SwitchThemeData(
-      trackColor: WidgetStateProperty.resolveWith(
-        (states) {
-          if (states.contains(WidgetState.selected)) {
-            return const Color(_orangePrimaryValue);
-          }
-          return Colors.grey.withValues(alpha: 0.2);
-        },
-      ),
+      trackColor: WidgetStateProperty.resolveWith((states) {
+        if (states.contains(WidgetState.selected)) {
+          return const Color(_orangePrimaryValue);
+        }
+        return Colors.grey.withValues(alpha: 0.2);
+      }),
       thumbColor: WidgetStateProperty.resolveWith((states) {
         if (states.contains(WidgetState.selected)) {
           return Colors.white;
         }
         return Colors.grey;
       }),
-      trackOutlineColor: WidgetStateProperty.resolveWith(
-        (states) {
-          if (states.contains(WidgetState.selected)) {
-            return null;
-          }
-          return Colors.grey.withValues(alpha: 0.5);
-        },
-      ),
+      trackOutlineColor: WidgetStateProperty.resolveWith((states) {
+        if (states.contains(WidgetState.selected)) {
+          return null;
+        }
+        return Colors.grey.withValues(alpha: 0.5);
+      }),
     ),
 
     // Define the default `CheckboxTheme` (Rectangular/Sharp).
     checkboxTheme: CheckboxThemeData(
       shape: const BeveledRectangleBorder(),
-      fillColor:
-          WidgetStateProperty.resolveWith<Color?>((Set<WidgetState> states) {
+      fillColor: WidgetStateProperty.resolveWith<Color?>((
+        Set<WidgetState> states,
+      ) {
         if (states.contains(WidgetState.disabled)) {
           return null;
         }
@@ -408,8 +397,6 @@ sealed class ThemeGenerator {
     ),
 
     // Define the default `DialogTheme`.
-    dialogTheme: const DialogThemeData(
-      shape: BeveledRectangleBorder(),
-    ),
+    dialogTheme: const DialogThemeData(shape: BeveledRectangleBorder()),
   );
 }
