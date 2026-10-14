@@ -27,21 +27,26 @@ void main() {
         preloadWorkouts: false,
       );
 
-      await harness.tapAndWait(
+      await harness.openQuickAction(
         tester,
-        control: find.byKey(const ValueKey('quick-action-equipments')),
-        destination: find.textContaining('Equipments'),
+        category: 'exercises',
+        destination: 'equipments',
+        page: find.textContaining('Equipments'),
       );
       await tester.tap(find.byKey(const ValueKey('equipment-add')));
       await harness.pumpUntilFound(
-          tester, find.textContaining('Create Equipment'));
+        tester,
+        find.textContaining('Create Equipment'),
+      );
       await _enterField(tester, 'Name', 'Journey Machine');
       await tester.tap(find.text('CREATE'));
       await harness.pumpUntilAbsent(tester, find.text('CREATE'));
       await harness.pumpUntilFound(tester, find.text('Journey Machine'));
       await tester.tap(find.text('Journey Machine').first);
       await harness.pumpUntilFound(
-          tester, find.textContaining('JOURNEY MACHINE'));
+        tester,
+        find.textContaining('JOURNEY MACHINE'),
+      );
       await tester.tap(find.text('EDIT'));
       await harness.pumpUntilFound(tester, find.text('UPDATE'));
       await _enterField(tester, 'Name', 'Journey Cable Machine');
@@ -62,12 +67,9 @@ void main() {
       await harness.restartPreservingData(tester);
       db = await DatabaseHelper().db;
       expect(
-        await _countWhere(
-          db,
-          Equipment.table,
-          'name = ?',
-          ['Journey Cable Machine'],
-        ),
+        await _countWhere(db, Equipment.table, 'name = ?', [
+          'Journey Cable Machine',
+        ]),
         1,
       );
 
@@ -82,7 +84,9 @@ void main() {
       await tester.ensureVisible(createExercise);
       await tester.tap(createExercise);
       await harness.pumpUntilFound(
-          tester, find.textContaining('JOURNEY PRESS'));
+        tester,
+        find.textContaining('JOURNEY PRESS'),
+      );
 
       await tester.ensureVisible(find.text('EDIT'));
       await tester.tap(find.text('EDIT'));
@@ -106,10 +110,7 @@ void main() {
         find.textContaining('JOURNEY CHEST PRESS RECORDS'),
       );
       await tester.tap(find.byKey(const ValueKey('exercise-record-add')));
-      await harness.pumpUntilFound(
-        tester,
-        find.text('CREATE EXERCISE RECORD'),
-      );
+      await harness.pumpUntilFound(tester, find.text('CREATE EXERCISE RECORD'));
       await _enterField(tester, 'Weight', '20.00');
       final createRecord = find.text('CREATE EXERCISE RECORD');
       await tester.ensureVisible(createRecord);
@@ -129,12 +130,9 @@ void main() {
       await harness.restartPreservingData(tester);
       db = await DatabaseHelper().db;
       expect(
-        await _countWhere(
-          db,
-          ExerciseRecord.table,
-          'exercise_id = ?',
-          [exerciseId],
-        ),
+        await _countWhere(db, ExerciseRecord.table, 'exercise_id = ?', [
+          exerciseId,
+        ]),
         1,
       );
       await harness.goAndWait(
@@ -153,12 +151,9 @@ void main() {
         find.text('No Journey Chest Press records'),
       );
       expect(
-        await _countWhere(
-          db,
-          ExerciseRecord.table,
-          'exercise_id = ?',
-          [exerciseId],
-        ),
+        await _countWhere(db, ExerciseRecord.table, 'exercise_id = ?', [
+          exerciseId,
+        ]),
         0,
       );
 
@@ -175,15 +170,7 @@ void main() {
         tester,
         find.textContaining('JOURNEY CHEST PRESS'),
       );
-      expect(
-        await _countWhere(
-          db,
-          Exercise.table,
-          'id = ?',
-          [exerciseId],
-        ),
-        0,
-      );
+      expect(await _countWhere(db, Exercise.table, 'id = ?', [exerciseId]), 0);
 
       await harness.goAndWait(
         tester,
@@ -192,7 +179,9 @@ void main() {
       );
       await tester.tap(find.text('DELETE'));
       await harness.pumpUntilFound(
-          tester, find.text('DELETE JOURNEY CABLE MACHINE'));
+        tester,
+        find.text('DELETE JOURNEY CABLE MACHINE'),
+      );
       await tester.tap(find.text('CONFIRM'));
       await harness.pumpUntilAbsent(
         tester,

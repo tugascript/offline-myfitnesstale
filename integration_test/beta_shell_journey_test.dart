@@ -7,6 +7,7 @@ import 'package:myfitnesstale/src/models/constants/workout_plan_constants.dart';
 import 'package:myfitnesstale/src/models/db.dart';
 import 'package:myfitnesstale/src/models/workout_model.dart';
 import 'package:myfitnesstale/src/models/workout_plan_model.dart';
+import 'package:myfitnesstale/src/models/workout_plan_record_model.dart';
 
 import 'support/device_test_harness.dart';
 
@@ -58,14 +59,28 @@ void main() {
         1,
       );
 
-      await harness.selectBottomNavigation(tester, 'Plans');
-      await harness.pumpUntilFound(tester, find.text(kWorkoutPlanData.name));
-
-      await harness.selectBottomNavigation(tester, 'Home');
+      await harness.selectBottomNavigation(tester, 'Plan');
+      await harness.pumpUntilFound(tester, find.text('No Active Workout Plan'));
+      expect(
+        Sqflite.firstIntValue(
+          await db.rawQuery('SELECT COUNT(*) FROM ${WorkoutPlanRecord.table}'),
+        ),
+        0,
+      );
       await harness.tapAndWait(
         tester,
-        control: find.byKey(const ValueKey('quick-action-workouts')),
-        destination: find.textContaining('Workouts'),
+        control: find.byKey(const ValueKey('current-plan-browse-plans')),
+        destination: find.textContaining('Workout Plans'),
+      );
+      await harness.pumpUntilFound(tester, find.text(kWorkoutPlanData.name));
+      await harness.pageBack(tester, find.text('No Active Workout Plan'));
+
+      await harness.selectBottomNavigation(tester, 'Home');
+      await harness.openQuickAction(
+        tester,
+        category: 'training',
+        destination: 'workouts',
+        page: find.textContaining('Workouts'),
       );
 
       await harness.restartPreservingData(tester);
@@ -87,8 +102,8 @@ Future<void> _visitBottomNavigation(
   DeviceTestHarness harness,
 ) async {
   const destinations = {
-    'Plans': 'Workout Plans',
-    'Activity': 'Activity',
+    'Plan': 'Current Plan',
+    'Macros': 'Macro Tracker',
     'Profile': 'Profile',
     'Home': 'My Fitness Tale',
   };
@@ -105,20 +120,27 @@ Future<void> _visitQuickActions(
   DeviceTestHarness harness,
 ) async {
   const destinations = {
-    'quick-action-weight-goal': 'Weight Goals',
-    'quick-action-weight-records': 'Weight Logs',
-    'quick-action-workouts': 'Workouts',
-    'quick-action-exercises': 'Exercises',
-    'quick-action-equipments': 'Equipments',
-    'quick-action-reminders': 'Reminder Preferences',
+    'workouts': ('training', 'Workouts'),
+    'workout-plans': ('training', 'Workout Plans'),
+    'weight-records': ('weight', 'Weight Logs'),
+    'weight-goal': ('weight', 'Weight Goals'),
+    'exercises': ('exercises', 'Exercises'),
+    'exercise-progress': ('exercises', 'Exercise Progress'),
+    'strength-goals': ('exercises', 'Strength Goals'),
+    'equipments': ('exercises', 'Equipments'),
+    'macro-goals': ('nutrition', 'Macro Goals'),
+    'meal-plans': ('nutrition', 'Meal Plans'),
+    'recipe': ('nutrition', 'Recipes'),
+    'food': ('nutrition', 'Foods'),
   };
 
   for (final entry in destinations.entries) {
     await harness.selectBottomNavigation(tester, 'Home');
-    await harness.tapAndWait(
+    await harness.openQuickAction(
       tester,
-      control: find.byKey(ValueKey(entry.key)),
-      destination: find.textContaining(entry.value),
+      category: entry.value.$1,
+      destination: entry.key,
+      page: find.textContaining(entry.value.$2),
     );
     await harness.pageBack(
       tester,
@@ -139,7 +161,7 @@ Future<void> _visitActivityDestinations(
   };
 
   for (final entry in destinations.entries) {
-    await harness.selectBottomNavigation(tester, 'Activity');
+    await harness.selectBottomNavigation(tester, 'Home');
     await harness.tapAndWait(
       tester,
       control: find.byKey(ValueKey(entry.key)),

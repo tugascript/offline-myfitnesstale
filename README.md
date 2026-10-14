@@ -52,8 +52,9 @@ roadmap is in [project.md](project.md).
 
 ### Requirements
 
-- a Flutter SDK compatible with Dart `^3.5.4`;
+- a Flutter SDK compatible with Dart `^3.13.5` (verified with Flutter 3.47.7);
 - Android Studio or Xcode for the target platform;
+- Android SDK Platform 37.0 for Android builds;
 - an Android emulator/device or iOS simulator/device.
 
 Install dependencies and run the app from the repository root:
@@ -99,7 +100,7 @@ SQLite model -> repository/service -> Cubit -> view/widget
   transactions.
 - **Cubits** expose feature state to the UI.
 - **Views and widgets** render routed screens and reusable interface elements.
-- **GoRouter** connects the four main areas: Home, Plans, Activity, and Profile.
+- **GoRouter** connects the four main areas: Home, Plans, Tracker, and Profile.
 
 ```text
 .

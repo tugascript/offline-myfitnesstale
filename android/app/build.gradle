@@ -6,7 +6,9 @@ plugins {
 
 android {
     namespace = "com.example.myfitnesstale"
-    compileSdk = flutter.compileSdkVersion
+    // API 37 is published as android-37.0 and needs an explicit minor level.
+    compileSdk = 37
+    compileSdkMinor = 0
     ndkVersion = flutter.ndkVersion
 
     compileOptions {

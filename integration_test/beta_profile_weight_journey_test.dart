@@ -59,17 +59,13 @@ void main() {
       );
 
       await harness.selectBottomNavigation(tester, 'Home');
-      await harness.tapAndWait(
+      await harness.goAndWait(
         tester,
-        control: find.byKey(const ValueKey('quick-action-reminders')),
+        location: '/settings/reminders',
         destination: find.textContaining('Reminder Preferences'),
       );
       await _setSwitch(tester, const ValueKey('reminder-workouts'), true);
-      await _setSwitch(
-        tester,
-        const ValueKey('reminder-weight-records'),
-        true,
-      );
+      await _setSwitch(tester, const ValueKey('reminder-weight-records'), true);
 
       await harness.restartPreservingData(tester);
       await harness.pumpUntilFound(
@@ -87,16 +83,14 @@ void main() {
       );
 
       await harness.selectBottomNavigation(tester, 'Home');
-      await harness.tapAndWait(
+      await harness.goAndWait(
         tester,
-        control: find.byKey(const ValueKey('quick-action-reminders')),
+        location: '/settings/reminders',
         destination: find.textContaining('Reminder Preferences'),
       );
       expect(
         tester
-            .widget<Switch>(
-              find.byKey(const ValueKey('reminder-workouts')),
-            )
+            .widget<Switch>(find.byKey(const ValueKey('reminder-workouts')))
             .value,
         isTrue,
       );
@@ -123,36 +117,36 @@ void main() {
         preloadWorkouts: false,
       );
 
-      await harness.tapAndWait(
+      await harness.openQuickAction(
         tester,
-        control: find.byKey(const ValueKey('quick-action-weight-records')),
-        destination: find.textContaining('Weight Logs'),
+        category: 'weight',
+        destination: 'weight-records',
+        page: find.textContaining('Weight Logs'),
       );
       await tester.tap(find.byKey(const ValueKey('weight-record-add')));
       await harness.pumpUntilFound(tester, find.text('LOG WEIGHT'));
       await _enterField(tester, 'Weight', '82.50');
       await _enterField(tester, 'Body Fat Percentage', '18.50');
       await tester.tap(find.text('LOG WEIGHT'));
-      await harness.pumpUntilFound(tester, find.textContaining('82.50 KG'));
+      await harness.pumpUntilFound(tester, find.textContaining('82.50KG'));
 
-      await tester.tap(
-        find.byKey(const ValueKey('latest-weight-record-edit')),
-      );
+      await tester.tap(find.byKey(const ValueKey('latest-weight-record-edit')));
       await harness.pumpUntilFound(tester, find.text('UPDATE WEIGHT LOG'));
       await _enterField(tester, 'Weight', '81.25');
       await _enterField(tester, 'Body Fat Percentage', '17.50');
       await tester.tap(find.text('UPDATE WEIGHT LOG'));
-      await harness.pumpUntilFound(tester, find.textContaining('81.25 KG'));
+      await harness.pumpUntilFound(tester, find.textContaining('81.25KG'));
 
       await harness.pageBack(
         tester,
         find.byKey(const ValueKey('main-bottom-navigation')),
       );
       await harness.selectBottomNavigation(tester, 'Home');
-      await harness.tapAndWait(
+      await harness.openQuickAction(
         tester,
-        control: find.byKey(const ValueKey('quick-action-weight-goal')),
-        destination: find.textContaining('Weight Goals'),
+        category: 'weight',
+        destination: 'weight-goal',
+        page: find.textContaining('Weight Goals'),
       );
       await tester.tap(find.byKey(const ValueKey('weight-goal-add')));
       await harness.pumpUntilFound(tester, find.text('CREATE WEIGHT GOAL'));
@@ -175,12 +169,13 @@ void main() {
       expect(await _count(db, WeightRecord.table), 1);
       expect(await _count(db, WeightGoal.table), 1);
 
-      await harness.tapAndWait(
+      await harness.openQuickAction(
         tester,
-        control: find.byKey(const ValueKey('quick-action-weight-records')),
-        destination: find.textContaining('Weight Logs'),
+        category: 'weight',
+        destination: 'weight-records',
+        page: find.textContaining('Weight Logs'),
       );
-      await harness.pumpUntilFound(tester, find.textContaining('81.25 KG'));
+      await harness.pumpUntilFound(tester, find.textContaining('81.25KG'));
       await tester.tap(
         find.byKey(const ValueKey('latest-weight-record-delete')),
       );
@@ -193,10 +188,11 @@ void main() {
         find.byKey(const ValueKey('main-bottom-navigation')),
       );
       await harness.selectBottomNavigation(tester, 'Home');
-      await harness.tapAndWait(
+      await harness.openQuickAction(
         tester,
-        control: find.byKey(const ValueKey('quick-action-weight-goal')),
-        destination: find.textContaining('Weight Goals'),
+        category: 'weight',
+        destination: 'weight-goal',
+        page: find.textContaining('Weight Goals'),
       );
       await harness.pumpUntilFound(tester, find.textContaining('76.00 KG'));
       await tester.tap(find.byKey(const ValueKey('active-weight-goal-delete')));
@@ -231,11 +227,7 @@ Future<void> _chooseDropdownValue<T>(
   await tester.pump(const Duration(milliseconds: 500));
 }
 
-Future<void> _setSwitch(
-  WidgetTester tester,
-  Key key,
-  bool value,
-) async {
+Future<void> _setSwitch(WidgetTester tester, Key key, bool value) async {
   final finder = find.byKey(key);
   final current = tester.widget<Switch>(finder);
   if (current.value != value) {

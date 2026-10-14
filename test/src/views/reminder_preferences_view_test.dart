@@ -15,29 +15,31 @@ import 'package:myfitnesstale/src/widgets/dashboard/quick_actions_widget.dart';
 
 class _ProfileCubit extends ProfileCubit {
   _ProfileCubit() {
-    emit(ProfileState(
-      profile: ProfileDto(
-        id: 1,
-        name: 'Tester',
-        height: 175,
-        gender: Gender.other,
-        birthdate: DateTime(1990),
+    emit(
+      ProfileState(
+        profile: ProfileDto(
+          id: 1,
+          name: 'Tester',
+          height: 175,
+          gender: Gender.other,
+          birthdate: DateTime(1990),
+        ),
+        system: const SystemDto(
+          id: 1,
+          units: Units.metric,
+          theme: ThemeType.system,
+          initialSetup: SetUpStatus.completed,
+          notificationsOn: false,
+        ),
+        remindersConfig: const RemindersConfigDto(
+          id: 1,
+          workoutsOn: false,
+          weightRecordsOn: false,
+        ),
+        isLoading: false,
+        isInitiated: true,
       ),
-      system: const SystemDto(
-        id: 1,
-        units: Units.metric,
-        theme: ThemeType.system,
-        initialSetup: SetUpStatus.completed,
-        notificationsOn: false,
-      ),
-      remindersConfig: const RemindersConfigDto(
-        id: 1,
-        workoutsOn: false,
-        weightRecordsOn: false,
-      ),
-      isLoading: false,
-      isInitiated: true,
-    ));
+    );
   }
 
   bool? updatedWorkoutsOn;
@@ -50,12 +52,14 @@ class _ProfileCubit extends ProfileCubit {
   }) async {
     updatedWorkoutsOn = workoutsOn;
     updatedWeightRecordsOn = weightRecordsOn;
-    emit(state.copyWith(
-      remindersConfig: state.remindersConfig!.copyWith(
-        workoutsOn: workoutsOn,
-        weightRecordsOn: weightRecordsOn,
+    emit(
+      state.copyWith(
+        remindersConfig: state.remindersConfig!.copyWith(
+          workoutsOn: workoutsOn,
+          weightRecordsOn: weightRecordsOn,
+        ),
       ),
-    ));
+    );
   }
 }
 
@@ -75,8 +79,9 @@ void main() {
     elevation: 1,
   );
 
-  testWidgets('saved reminder toggles are expanded with delivery disclosure',
-      (tester) async {
+  testWidgets('saved reminder toggles are expanded with delivery disclosure', (
+    tester,
+  ) async {
     final cubit = _ProfileCubit();
     addTearDown(cubit.close);
     final router = GoRouter(
@@ -110,32 +115,40 @@ void main() {
     expect(cubit.updatedWeightRecordsOn, isFalse);
   });
 
-  testWidgets('dashboard Reminders opens reminder preferences', (tester) async {
-    final router = GoRouter(
-      routes: [
-        GoRoute(
-          path: '/',
-          builder: (context, state) => Scaffold(
-            body: SingleChildScrollView(
-              child: QuickActionsWidget(theme: ThemeData(), sizes: sizes),
+  testWidgets(
+    'grouped dashboard keeps reminders outside the four feature menus',
+    (tester) async {
+      final router = GoRouter(
+        routes: [
+          GoRoute(
+            path: '/',
+            builder: (context, state) => Scaffold(
+              body: SingleChildScrollView(
+                child: QuickActionsWidget(theme: ThemeData(), sizes: sizes),
+              ),
             ),
           ),
-        ),
-        GoRoute(
-          path: ReminderPreferencesView.routeName,
-          builder: (context, state) =>
-              const Scaffold(body: Text('Reminder preferences destination')),
-        ),
-      ],
-    );
+          GoRoute(
+            path: ReminderPreferencesView.routeName,
+            builder: (context, state) =>
+                const Scaffold(body: Text('Reminder preferences destination')),
+          ),
+        ],
+      );
 
-    await tester.pumpWidget(MaterialApp.router(routerConfig: router));
-    await tester.ensureVisible(find.text('Reminders'));
-
-    expect(find.text('Manage reminder preferences'), findsOneWidget);
-    await tester.tap(find.text('Reminders'));
-    await tester.pumpAndSettle();
-
-    expect(find.text('Reminder preferences destination'), findsOneWidget);
-  });
+      await tester.pumpWidget(MaterialApp.router(routerConfig: router));
+      for (final category in ['training', 'weight', 'exercises', 'nutrition']) {
+        final card = find.byKey(ValueKey('quick-action-category-$category'));
+        await tester.ensureVisible(card);
+        await tester.pumpAndSettle();
+        await tester.tap(card);
+        await tester.pumpAndSettle();
+        expect(find.text('Reminders'), findsNothing);
+        await tester.tap(
+          find.byKey(const ValueKey('quick-action-sheet-close')),
+        );
+        await tester.pumpAndSettle();
+      }
+    },
+  );
 }

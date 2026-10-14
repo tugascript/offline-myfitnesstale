@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../utilities/sizes/data_display_sizes.dart';
 import '../../utilities/sizes/screen_size.dart';
-import '../../widgets/dashboard/active_meal_plan_widget.dart';
-import '../../widgets/dashboard/active_plan_widget.dart';
+import '../../widgets/dashboard/active/active_plans_carousel.dart';
 import '../../widgets/dashboard/progress_section.dart';
 import '../../widgets/dashboard/quick_actions_widget.dart';
 import '../../widgets/dashboard/welcome_section.dart';
@@ -33,12 +32,8 @@ class HomeView extends StatelessWidget {
             WelcomeSection(sizes: sizes),
             SizedBox(height: sizes.spacing),
 
-            // Active (Workout) Plan
-            ActivePlanWidget(sizes: sizes),
-            SizedBox(height: sizes.spacing),
-
-            // Active (Meal) Plan
-            ActiveMealPlanWidget(theme: theme, sizes: sizes),
+            // Active workout and meal plans
+            ActivePlansCarousel(theme: theme, sizes: sizes),
             SizedBox(height: sizes.spacing),
 
             // Quick Actions

@@ -31,10 +31,11 @@ void main() {
       var db = await DatabaseHelper().db;
       final exerciseName = await _firstExerciseName(db);
 
-      await harness.tapAndWait(
+      await harness.openQuickAction(
         tester,
-        control: find.byKey(const ValueKey('quick-action-workouts')),
-        destination: find.textContaining('Workouts'),
+        category: 'training',
+        destination: 'workouts',
+        page: find.textContaining('Workouts'),
       );
       await tester.tap(find.byKey(const ValueKey('workout-add')));
       await harness.pumpUntilFound(tester, find.text('CREATE WORKOUT'));
@@ -113,12 +114,9 @@ void main() {
       await tester.tap(find.text('Yes, Cancel'));
       await harness.pumpUntilFound(tester, find.text('START WORKOUT'));
       expect(
-        await _countWhere(
-          db,
-          WorkoutRecord.table,
-          'workout_id = ?',
-          [workoutId],
-        ),
+        await _countWhere(db, WorkoutRecord.table, 'workout_id = ?', [
+          workoutId,
+        ]),
         0,
       );
 
@@ -147,11 +145,7 @@ void main() {
         const ValueKey('manual-weight-input'),
         '30',
       );
-      await _enterKeyedField(
-        tester,
-        const ValueKey('manual-reps-input'),
-        '8',
-      );
+      await _enterKeyedField(tester, const ValueKey('manual-reps-input'), '8');
       final saveRecord = find.text('SAVE WORKOUT RECORD');
       await tester.ensureVisible(saveRecord);
       await tester.tap(saveRecord);

@@ -9,6 +9,20 @@ rootProject.buildDir = "../build"
 subprojects {
     project.buildDir = "${rootProject.buildDir}/${project.name}"
 }
+
+// permission_handler_android 14.1.0 declares compileSdk 37 without its minor
+// level. Resolve the published android-37.0 platform without editing Pub cache.
+subprojects {
+    if (project.name == "permission_handler_android") {
+        project.plugins.withId("com.android.library") {
+            project.androidComponents.finalizeDsl { androidDsl ->
+                if (androidDsl.compileSdk == 37 && androidDsl.compileSdkMinor == null) {
+                    androidDsl.compileSdkMinor = 0
+                }
+            }
+        }
+    }
+}
 subprojects {
     project.evaluationDependsOn(":app")
 }

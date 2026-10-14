@@ -31,6 +31,37 @@ Repository facts at this review:
 
 ## Implemented capabilities
 
+### Home active plans
+
+- Workout and meal plan cards share a horizontally swipeable carousel with
+  tappable line indicators above Workout and Meal labels and one static “Active plans” heading;
+  both empty slides remain available.
+- The selector spans the plan-card width, with equal-width Workout and Meal
+  buttons and full-width line indicators. Both empty cards offer Browse Plans
+  buttons linking to their respective plan libraries.
+- Feature Cubits remain independent. Both cards stay mounted and the carousel
+  stretches both cards to the taller card's natural height, including at large
+  text scales.
+- Meal cards use the workout card's spacing, themed highlight, and
+  empty-state styling, with links to plan details. Tapping an active meal or
+  macro card still opens the tracker; the separate Open Tracker button is removed.
+
+### Home shortcuts
+
+- Quick Actions has four categories: Workout Plans, Weight Goals,
+  Exercises, and Nutrition. Their modal bottom sheets expose all
+  twelve destinations, including Exercise Progress as the entry to records.
+- Menus have a title, close button, destination icons and chevrons. They support
+  swipe, outside-tap, and system Back dismissal; selecting a destination closes
+  the sheet completely before opening the existing routed page.
+- Quick-action sheets have square corners; Foods uses a generic food icon.
+- Home category cards use emojis; submenu destinations retain Material icons.
+- Back returns directly to Home with its scroll position retained. Category
+  cards use at most two columns, falling back to one on narrow screens or with
+  large text. Sheets size to content and scroll when necessary.
+- Progress & Activity remains a separate Home section. Reminder preferences
+  remain outside these four feature groups.
+
 ### Onboarding and settings
 
 - Creates a single local profile, system settings, reminder preferences, and
@@ -81,6 +112,12 @@ There is no import/export, local backup, or broader weight analytics.
 
 ### Workout plans and plan history
 
+- The Current Plan navigation tab displays the ongoing execution's progress
+  and schedule without creating a record. It refreshes on tab activation and
+  return from Browse Plans, with separate loading, empty, and retry states.
+- Browse Plans appears only in the successful empty state. Active, loading,
+  and failed lookup states have no plan-library shortcut; Workout Plans is
+  available through Home's Workout Plans menu.
 - Creates and versions multi-week schedules.
 - Allows one active plan execution and abandons the previous active execution
   when another begins.
@@ -154,8 +191,10 @@ above a keyboard inset.
 
 1. Home;
 2. Plans;
-3. Meals;
+3. Tracker (daily nutrition, with day/week/month scopes);
 4. Profile.
+
+Meal plans remain accessible from Home quick actions and the meal card.
 
 Activity links are now housed in a dedicated `ProgressSection` on the Home screen
 (Workout History, Exercise Progress, Weight History, Plan History).
@@ -279,19 +318,55 @@ isolation.
 
 The latest full verification run on 13 October 2026:
 
+After upgrading to Flutter 3.47.7 / Dart 3.13.5, Android builds use AGP 9.1.1
+and compile SDK 37 with minor API level 0. A scoped Gradle override supplies
+the missing minor level in `permission_handler_android` 14.1.0 so it resolves
+the installed `android-37.0` platform. Google Fonts 9 styles are applied to
+individual Flutter text styles to preserve the existing Material themes.
+
 ```text
 dart format --output=none --set-exit-if-changed lib test integration_test
-  435 files formatted with no pending changes
+  The new Dart formatter reports pending changes in 377 of 435 files
 
 dart analyze
-  No issues found
+  No errors or warnings; 30 informational lints remain after the SDK upgrade
 
 flutter test
   276 tests passed, one skipped
 
+flutter build apk --debug
+  Debug APK built successfully
+
+flutter run -d emulator-5554 --no-resident
+  Installed and launched successfully on the Android emulator
+
 git diff --check
   No whitespace errors
 ```
+
+Grouped navigation and Current Plan verification on 14 October 2026:
+
+- `flutter pub get` completed successfully.
+- Full host suite: 310 tests passed, one skipped, including current-plan
+  loading, empty/error/retry, library return, cached-tab activation, completed
+  execution filtering, and narrow layouts at 200% text scaling.
+- Grouped-menu tests cover all twelve destinations, four dismissal methods,
+  direct Back navigation with preserved Home scroll position, one/two-column
+  layouts, and scrolling on a short screen while keeping Close accessible.
+- `dart analyze` completed with no errors or warnings; the existing 30
+  informational lints remain.
+- Scoped formatting checks pass. The repository-wide check still reports
+  pending formatter changes in 364 of 444 files; unrelated files were not
+  reformatted.
+- Both shell journeys pass on Android emulator `emulator-5554`, including
+  checking that opening Current Plan creates no execution records.
+- The plan journey also passes through Current Plan after restart, completes
+  live and manual scheduled workouts, returns to the empty state after plan
+  completion, and restores completed history after another restart.
+- All seven Android journeys are verified: six passed in the full integration
+  run; the weight lifecycle passed on a targeted rerun after correcting stale
+  assertions to match the existing latest-weight display's unit spacing.
+- `git diff --check` reports no whitespace errors.
 
 ## Known gaps and release blockers
 
