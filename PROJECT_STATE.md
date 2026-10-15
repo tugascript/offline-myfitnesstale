@@ -59,7 +59,7 @@ Repository facts at this review:
 - Back returns directly to Home with its scroll position retained. Category
   cards use at most two columns, falling back to one on narrow screens or with
   large text. Sheets size to content and scroll when necessary.
-- Progress & Activity remains a separate Home section. Reminder preferences
+- History remains a separate Home section. Reminder preferences
   remain outside these four feature groups.
 
 ### Onboarding and settings
@@ -113,8 +113,13 @@ There is no import/export, local backup, or broader weight analytics.
 ### Workout plans and plan history
 
 - The Current Plan navigation tab displays the ongoing execution's progress
-  and schedule without creating a record. It refreshes on tab activation and
-  return from Browse Plans, with separate loading, empty, and retry states.
+  and schedule without creating a record. It loads once on first opening and
+  refreshes on return from Browse Plans or Retry. Tab switches retain cached
+  state without reloading; shared Cubit updates keep progress current.
+- Starting a plan reloads its matching template and progress in the Cubit,
+  so switching plans also updates cached screens without a tab-triggered fetch.
+- Initial loading and refresh use the existing Skeletonizer plan content,
+  with placeholder data before a plan is available and disabled pointer input.
 - Browse Plans appears only in the successful empty state. Active, loading,
   and failed lookup states have no plan-library shortcut; Workout Plans is
   available through Home's Workout Plans menu.
@@ -180,8 +185,17 @@ above a keyboard inset.
 ### Macro tracking and daily nutrition
 
 - Macro goals: Creates, updates, activates, and deletes macro targets (calories, protein, carbs, fat, water); enforces single active goal invariant with automatic deactivation of prior goals.
-- Daily nutrition logs: Get-or-create per numeric local date (`YYYYMMDD`); meal logs by `MealType` (breakfast, lunch, dinner, snack); logs immutable item snapshots of food names and macros; recalculates meal and daily totals.
+- Macro-goal forms default to a checked "Calculate calories from macros" checkbox. Calories are initially calculated from the form's macros, remain read-only, and update live using `Converters.macrosToCalories` (protein/carbs 4 kcal per gram, fat 9). Unchecking restores manual editing. The checkbox state is local to the form; existing goals are recalculated in the form and persisted only on Update.
+- Macro-goal calculation verification on 15 October 2026: 318 host tests passed, one skipped, including default/live calculation, create/update submission, manual override, invalid input, and existing responsive coverage. Dependency resolution, changed-file formatting, and `git diff --check` passed; analysis has no errors/warnings and one unrelated informational lint. The repository-wide format check still flags 340 other files.
+- Daily nutrition logs: Get-or-create per numeric local date (`YYYYMMDD`); each food or recipe submission retains its own timestamp and immutable nutrition snapshot, including submissions at identical times; recalculates meal and daily totals. Meal categories remain metadata for meal plans rather than diary grouping.
+- Daily diary: A square-edged 24-hour timeline groups all entries by local hour, orders entries by time, and offers an add action per hour. Logging prefills the selected date/hour, allows time adjustment, and requires no meal-category selection. Calories/macros, water controls, and scheduled plan meals remain above the timeline. Week/month views and date navigation remain available.
+- Existing diary entries retain their stored timestamps; older entries previously merged by category share the original meal timestamp because individual item times were never stored. No schema change or data reset is required.
+- Quick Add: The logging modal includes a third tab for a one-time name and total protein/carbs/fat, with calories calculated by default or entered manually. Standalone snapshots are saved atomically to the selected date/time without adding foods or recipes to the library. They appear in the hourly timeline, contribute to daily totals, and can be deleted like other entries. Drafts survive tab changes; invalid totals are rejected and failed saves leave the form available for retry. Uses existing schema version 1.
+- Quick Add verification on 15 October 2026: full host suite passed (324 tests, one skipped), including persistence/Cubit refresh, library isolation, validation, transaction rollback, deletion, manual calorie totals, selected times, draft retention, failed-save retry, successful dismissal, and 320px/200% text with keyboard coverage. Dependency resolution, changed-file formatting, and `git diff --check` passed. Analysis reports one unrelated informational lint and no errors/warnings. The repository-wide format check flags 339 other files; no device journey was run.
 - Water intake: Updates daily water consumption with quick adjust controls.
+- Logging modal tabs (Food, Recipe, Quick Add) each occupy one third of the content width, with centered labels that wrap at large text scales. The selected underline spans the full tab width with square ends.
+- The Day/Week/Month selector has square corners and indicates selection through its themed fill without a tick icon.
+- Validation on 15 October 2026: full host suite passed (315 tests, one skipped), including new persistence and timeline interaction coverage for same-hour/identical-time entries, midnight, historical dates, food/recipe logging, time adjustment, deletion, totals, and 320px/200% text. Dependency resolution and `git diff --check` passed. Analysis reported only 30 existing informational lints; changed nutrition files have no analysis issues and pass formatting. The repository-wide format check still flags 357 other files under the current SDK; those files were left unchanged. No device nutrition journey was run.
 - UI: Day, Week, and Month tracker views; meal logging modal with portion calculator; the active plan's meals appear on their scheduled dates and can be logged into the diary; responsive layouts supporting 320px narrow screens and 200% font scaling.
 
 ## Navigation
@@ -348,7 +362,7 @@ Grouped navigation and Current Plan verification on 14 October 2026:
 
 - `flutter pub get` completed successfully.
 - Full host suite: 310 tests passed, one skipped, including current-plan
-  loading, empty/error/retry, library return, cached-tab activation, completed
+  loading, empty/error/retry, library return, cached-tab revisits, completed
   execution filtering, and narrow layouts at 200% text scaling.
 - Grouped-menu tests cover all twelve destinations, four dismissal methods,
   direct Back navigation with preserved Home scroll position, one/two-column
@@ -356,7 +370,7 @@ Grouped navigation and Current Plan verification on 14 October 2026:
 - `dart analyze` completed with no errors or warnings; the existing 30
   informational lints remain.
 - Scoped formatting checks pass. The repository-wide check still reports
-  pending formatter changes in 364 of 444 files; unrelated files were not
+  pending formatter changes in 361 of 444 files; unrelated files were not
   reformatted.
 - Both shell journeys pass on Android emulator `emulator-5554`, including
   checking that opening Current Plan creates no execution records.
@@ -367,6 +381,12 @@ Grouped navigation and Current Plan verification on 14 October 2026:
   run; the weight lifecycle passed on a targeted rerun after correcting stale
   assertions to match the existing latest-weight display's unit spacing.
 - `git diff --check` reports no whitespace errors.
+
+The cached-tab refresh fix also passes all 310 host tests (one skipped),
+including switching between plan executions with matching cached template data.
+The subsequent Android plan-journey rerun built successfully but stalled during
+native app startup before Flutter connected; it was stopped. The Android journey
+results above remain evidence from the earlier run.
 
 ## Known gaps and release blockers
 

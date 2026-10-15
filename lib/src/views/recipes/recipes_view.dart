@@ -1,4 +1,5 @@
 import '../../widgets/recipes/recipe_list_item_widget.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -100,7 +101,8 @@ class _RecipesViewState extends State<RecipesView> {
                 builder: (context, state) {
                   if (state.isLoading && state.recipes.isEmpty) {
                     return const Center(
-                        child: CircularProgressIndicator.adaptive());
+                      child: CircularProgressIndicator.adaptive(),
+                    );
                   }
 
                   if (state.recipes.isEmpty) {
@@ -118,7 +120,7 @@ class _RecipesViewState extends State<RecipesView> {
                   return ListView.separated(
                     controller: _scrollController,
                     itemCount: state.recipes.length + (state.isLoading ? 1 : 0),
-                    separatorBuilder: (_, __) =>
+                    separatorBuilder: (_, _) =>
                         SizedBox(height: sizes.spacing / 2),
                     itemBuilder: (context, index) {
                       if (index >= state.recipes.length) {
@@ -132,15 +134,18 @@ class _RecipesViewState extends State<RecipesView> {
 
                       final recipe = state.recipes[index];
                       return RecipeListItemWidget(
-                          key: ValueKey('recipe-item-${recipe.id}'),
-                          recipe: recipe,
-                          sizes: sizes,
-                          onTap: () {
-                            context.push(
-                              RecipeDetailsView.routeName
-                                  .replaceFirst(':id', recipe.id.toString()),
-                            );
-                          });
+                        key: ValueKey('recipe-item-${recipe.id}'),
+                        recipe: recipe,
+                        sizes: sizes,
+                        onTap: () {
+                          context.push(
+                            RecipeDetailsView.routeName.replaceFirst(
+                              ':id',
+                              recipe.id.toString(),
+                            ),
+                          );
+                        },
+                      );
                     },
                   );
                 },

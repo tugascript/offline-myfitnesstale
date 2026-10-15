@@ -360,9 +360,9 @@ void main() {
 
       expect(find.byType(ActiveMealPlanWidget), findsOneWidget);
       expect(find.byType(ProgressSection), findsOneWidget);
-      expect(find.text('Progress & Activity'), findsOneWidget);
+      expect(find.text('History'), findsOneWidget);
       expect(find.text('Workout History'), findsOneWidget);
-      expect(find.text('Exercise Progress'), findsOneWidget);
+      expect(find.text('Exercise History'), findsOneWidget);
       expect(find.text('Weight History'), findsOneWidget);
       expect(find.text('Plan History'), findsOneWidget);
     });
@@ -370,7 +370,7 @@ void main() {
 
   group('Main Navigation View', () {
     testWidgets(
-      'current plan tab refreshes when its cached page is revisited',
+      'current plan tab keeps its cached page without reloading on revisits',
       (tester) async {
         await tester.pumpWidget(
           buildAppHarness(child: const MainNavigationView()),
@@ -401,7 +401,7 @@ void main() {
         );
         await tester.pump();
         await tester.pump(const Duration(milliseconds: 300));
-        expect(cubit.loadCalls, initialLoads + 2);
+        expect(cubit.loadCalls, initialLoads + 1);
       },
     );
 

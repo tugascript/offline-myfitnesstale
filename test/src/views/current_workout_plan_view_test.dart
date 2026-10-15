@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 import 'package:myfitnesstale/src/cubits/states/common_state.dart';
 import 'package:myfitnesstale/src/cubits/states/workout_plan_record_state.dart';
 import 'package:myfitnesstale/src/cubits/workout_plan_record_cubit.dart';
@@ -100,7 +101,14 @@ void main() {
     final cubit = _Cubit()..pending = Completer<void>();
     await pumpView(tester, cubit);
     expect(cubit.loads, 1);
-    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    expect(find.byType(CircularProgressIndicator), findsNothing);
+    expect(
+      find.byWidgetPredicate(
+        (widget) =>
+            widget is Skeletonizer && widget.enabled && widget.ignorePointers,
+      ),
+      findsOneWidget,
+    );
     expect(find.text('No Active Workout Plan'), findsNothing);
     expect(find.text('BROWSE PLANS'), findsNothing);
     cubit.pending!.complete();
@@ -121,6 +129,16 @@ void main() {
     expect(find.byType(ActiveWorkoutPlanContent), findsOneWidget);
     expect(find.text('My current plan'), findsOneWidget);
     expect(find.text('BROWSE PLANS'), findsNothing);
+    cubit.publish(cubit.state.copyWith(isLoading: true));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 16));
+    expect(
+      find.byWidgetPredicate(
+        (widget) => widget is Skeletonizer && widget.enabled,
+      ),
+      findsOneWidget,
+    );
+    expect(find.byType(CircularProgressIndicator), findsNothing);
     cubit.publish(WorkoutPlanRecordState.initial());
     await tester.pumpAndSettle();
     expect(find.text('No Active Workout Plan'), findsOneWidget);
@@ -148,29 +166,43 @@ void main() {
     expect(find.text('My current plan'), findsOneWidget);
   });
 
-  testWidgets('refreshes on activation and return from Browse Plans', (
-    tester,
-  ) async {
-    final visible = ValueNotifier(true);
-    addTearDown(visible.dispose);
-    final cubit = _Cubit();
-    await pumpView(tester, cubit, visible: visible);
-    await tester.pumpAndSettle();
-    visible.value = false;
-    await tester.pumpAndSettle();
-    visible.value = true;
-    await tester.pumpAndSettle();
-    expect(cubit.loads, 2);
-    expect(find.text('No Active Workout Plan'), findsOneWidget);
-    await tester.tap(find.byKey(const ValueKey('current-plan-browse-plans')));
-    await tester.pumpAndSettle();
-    cubit.nextState = activeState();
-    await tester.tap(find.text('Return from library'));
-    await tester.pumpAndSettle();
-    expect(cubit.loads, 3);
-    expect(find.text('My current plan'), findsOneWidget);
-    expect(find.text('BROWSE PLANS'), findsNothing);
-  });
+  testWidgets(
+    'keeps cached state on activation and refreshes after Browse Plans',
+    (tester) async {
+      final visible = ValueNotifier(false);
+      addTearDown(visible.dispose);
+      final cubit = _Cubit();
+      await pumpView(tester, cubit, visible: visible);
+      expect(cubit.loads, 0);
+      visible.value = true;
+      await tester.pumpAndSettle();
+      visible.value = false;
+      await tester.pumpAndSettle();
+      visible.value = true;
+      await tester.pumpAndSettle();
+      expect(cubit.loads, 1);
+      expect(find.text('No Active Workout Plan'), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('current-plan-browse-plans')));
+      await tester.pumpAndSettle();
+      cubit.nextState = activeState();
+      await tester.tap(find.text('Return from library'));
+      await tester.pumpAndSettle();
+      expect(cubit.loads, 2);
+      expect(find.text('My current plan'), findsOneWidget);
+      expect(find.text('BROWSE PLANS'), findsNothing);
+      visible.value = false;
+      await tester.pumpAndSettle();
+      visible.value = true;
+      await tester.pumpAndSettle();
+      expect(cubit.loads, 2);
+      expect(
+        find.byWidgetPredicate(
+          (widget) => widget is Skeletonizer && widget.enabled,
+        ),
+        findsNothing,
+      );
+    },
+  );
 
   testWidgets('does not display completed or abandoned executions', (
     tester,
@@ -212,8 +244,11 @@ void main() {
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
-    final cubit = _Cubit();
+    final cubit = _Cubit()..pending = Completer<void>();
     await pumpView(tester, cubit, textScale: 2);
+    await tester.pump(const Duration(milliseconds: 150));
+    expect(tester.takeException(), isNull);
+    cubit.pending!.complete();
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
     cubit.publish(activeState());

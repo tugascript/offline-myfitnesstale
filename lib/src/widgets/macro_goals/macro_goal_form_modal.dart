@@ -2,6 +2,7 @@ import '../layout/responsive_fields.dart';
 import '../layout/app_text_form_field.dart';
 import '../../common/nullable.dart';
 import '../../services/inputs/macro_goal_input.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -9,6 +10,7 @@ import '../../cubits/macro_tracking_cubit.dart';
 import '../../models/enums.dart';
 import '../../services/dtos/macro_tracking_dto.dart';
 import '../../utilities/sizes/data_display_sizes.dart';
+import '../../utilities/converters.dart';
 
 class MacroGoalFormModal extends StatefulWidget {
   final ThemeData theme;
@@ -28,6 +30,7 @@ class MacroGoalFormModal extends StatefulWidget {
 
 class _MacroGoalFormModalState extends State<MacroGoalFormModal> {
   final _formKey = GlobalKey<FormState>();
+  bool _calculateCaloriesFromMacros = true;
 
   late TextEditingController _nameController;
   late TextEditingController _caloriesController;
@@ -41,16 +44,58 @@ class _MacroGoalFormModalState extends State<MacroGoalFormModal> {
     super.initState();
     final g = widget.existingGoal;
     _nameController = TextEditingController(text: g?.name ?? 'Daily Target');
-    _caloriesController =
-        TextEditingController(text: g?.targetCalories.toString() ?? '2000');
-    _proteinController =
-        TextEditingController(text: g?.targetProtein.toString() ?? '150');
-    _carbsController =
-        TextEditingController(text: g?.targetCarbs.toString() ?? '200');
-    _fatController =
-        TextEditingController(text: g?.targetFat.toString() ?? '65');
+    _caloriesController = TextEditingController(
+      text: g?.targetCalories.toString() ?? '2000',
+    );
+    _proteinController = TextEditingController(
+      text: g?.targetProtein.toString() ?? '150',
+    );
+    _carbsController = TextEditingController(
+      text: g?.targetCarbs.toString() ?? '200',
+    );
+    _fatController = TextEditingController(
+      text: g?.targetFat.toString() ?? '65',
+    );
     _waterController = TextEditingController(
-        text: g?.targetWaterIntakeMl?.toString() ?? '2500');
+      text: g?.targetWaterIntakeMl?.toString() ?? '2500',
+    );
+    for (final controller in [
+      _proteinController,
+      _carbsController,
+      _fatController,
+    ]) {
+      controller.addListener(_updateCalculatedCalories);
+    }
+    _updateCalculatedCalories();
+  }
+
+  void _updateCalculatedCalories() {
+    if (!_calculateCaloriesFromMacros) return;
+    final protein = int.tryParse(_proteinController.text);
+    final carbs = int.tryParse(_carbsController.text);
+    final fat = int.tryParse(_fatController.text);
+    if (protein == null ||
+        carbs == null ||
+        fat == null ||
+        protein < 0 ||
+        carbs < 0 ||
+        fat < 0) {
+      _caloriesController.clear();
+      return;
+    }
+    _caloriesController.text = Converters.macrosToCalories(
+      protein: protein,
+      carbs: carbs,
+      fats: fat,
+    ).toString();
+  }
+
+  String? _validateMacro(String? value) {
+    if (value == null || value.isEmpty) return 'Required';
+    final grams = int.tryParse(value);
+    return grams == null || grams < 0
+        ? 'Enter a non-negative whole number'
+        : null;
   }
 
   @override
@@ -79,28 +124,31 @@ class _MacroGoalFormModalState extends State<MacroGoalFormModal> {
     final cubit = context.read<MacroTrackingCubit>();
     if (widget.existingGoal != null) {
       cubit.updateMacroGoal(
-          widget.existingGoal!.id,
-          MacroGoalInput(
-            name: name,
-            targetCalories: calories,
-            targetProtein: protein,
-            targetCarbs: carbs,
-            targetFat: fat,
-            targetWaterIntakeMl: Nullable(water),
-            isActive: widget.existingGoal!.isActive,
-            phase: widget.existingGoal!.phase,
-          ));
+        widget.existingGoal!.id,
+        MacroGoalInput(
+          name: name,
+          targetCalories: calories,
+          targetProtein: protein,
+          targetCarbs: carbs,
+          targetFat: fat,
+          targetWaterIntakeMl: Nullable(water),
+          isActive: widget.existingGoal!.isActive,
+          phase: widget.existingGoal!.phase,
+        ),
+      );
     } else {
-      cubit.createMacroGoal(MacroGoalInput(
-        name: name,
-        targetCalories: calories,
-        targetProtein: protein,
-        targetCarbs: carbs,
-        targetFat: fat,
-        targetWaterIntakeMl: Nullable(water),
-        phase: WeightGoalPhase.maintain,
-        isActive: true,
-      ));
+      cubit.createMacroGoal(
+        MacroGoalInput(
+          name: name,
+          targetCalories: calories,
+          targetProtein: protein,
+          targetCarbs: carbs,
+          targetFat: fat,
+          targetWaterIntakeMl: Nullable(water),
+          phase: WeightGoalPhase.maintain,
+          isActive: true,
+        ),
+      );
     }
 
     Navigator.of(context).pop();
@@ -149,63 +197,86 @@ class _MacroGoalFormModalState extends State<MacroGoalFormModal> {
                     isLoading: false,
                     key: const ValueKey('macro-goal-calories-input'),
                     controller: _caloriesController,
+                    readOnly: _calculateCaloriesFromMacros,
                     keyboardType: TextInputType.number,
                     labelText: 'Daily Calories (kcal) *',
                     validator: (v) =>
                         v == null || v.isEmpty ? 'Required' : null,
                   ),
                   SizedBox(height: widget.sizes.spacing),
-                  ResponsiveFields(sizes: widget.sizes, children: [
-                    AppTextFormField(
-                      theme: widget.theme,
-                      fontSize: widget.sizes.fontSize,
-                      padding: widget.sizes.padding,
-                      isLoading: false,
-                      key: const ValueKey('macro-goal-protein-input'),
-                      controller: _proteinController,
-                      keyboardType: TextInputType.number,
-                      labelText: 'Protein (g) *',
-                      validator: (v) =>
-                          v == null || v.isEmpty ? 'Required' : null,
+                  CheckboxListTile(
+                    key: const ValueKey(
+                      'macro-goal-calculate-calories-checkbox',
                     ),
-                    AppTextFormField(
-                      theme: widget.theme,
-                      fontSize: widget.sizes.fontSize,
-                      padding: widget.sizes.padding,
-                      isLoading: false,
-                      key: const ValueKey('macro-goal-carbs-input'),
-                      controller: _carbsController,
-                      keyboardType: TextInputType.number,
-                      labelText: 'Carbs (g) *',
-                      validator: (v) =>
-                          v == null || v.isEmpty ? 'Required' : null,
+                    value: _calculateCaloriesFromMacros,
+                    contentPadding: EdgeInsets.zero,
+                    controlAffinity: ListTileControlAffinity.leading,
+                    title: Text(
+                      'Calculate calories from macros',
+                      style: TextStyle(fontSize: widget.sizes.fontSize),
                     ),
-                  ]),
+                    onChanged: (value) {
+                      setState(() {
+                        _calculateCaloriesFromMacros = value ?? false;
+                        _updateCalculatedCalories();
+                      });
+                    },
+                  ),
                   SizedBox(height: widget.sizes.spacing),
-                  ResponsiveFields(sizes: widget.sizes, children: [
-                    AppTextFormField(
-                      theme: widget.theme,
-                      fontSize: widget.sizes.fontSize,
-                      padding: widget.sizes.padding,
-                      isLoading: false,
-                      key: const ValueKey('macro-goal-fat-input'),
-                      controller: _fatController,
-                      keyboardType: TextInputType.number,
-                      labelText: 'Fat (g) *',
-                      validator: (v) =>
-                          v == null || v.isEmpty ? 'Required' : null,
-                    ),
-                    AppTextFormField(
-                      theme: widget.theme,
-                      fontSize: widget.sizes.fontSize,
-                      padding: widget.sizes.padding,
-                      isLoading: false,
-                      key: const ValueKey('macro-goal-water-input'),
-                      controller: _waterController,
-                      keyboardType: TextInputType.number,
-                      labelText: 'Water (ml)',
-                    ),
-                  ]),
+                  ResponsiveFields(
+                    sizes: widget.sizes,
+                    children: [
+                      AppTextFormField(
+                        theme: widget.theme,
+                        fontSize: widget.sizes.fontSize,
+                        padding: widget.sizes.padding,
+                        isLoading: false,
+                        key: const ValueKey('macro-goal-protein-input'),
+                        controller: _proteinController,
+                        keyboardType: TextInputType.number,
+                        labelText: 'Protein (g) *',
+                        validator: _validateMacro,
+                      ),
+                      AppTextFormField(
+                        theme: widget.theme,
+                        fontSize: widget.sizes.fontSize,
+                        padding: widget.sizes.padding,
+                        isLoading: false,
+                        key: const ValueKey('macro-goal-carbs-input'),
+                        controller: _carbsController,
+                        keyboardType: TextInputType.number,
+                        labelText: 'Carbs (g) *',
+                        validator: _validateMacro,
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: widget.sizes.spacing),
+                  ResponsiveFields(
+                    sizes: widget.sizes,
+                    children: [
+                      AppTextFormField(
+                        theme: widget.theme,
+                        fontSize: widget.sizes.fontSize,
+                        padding: widget.sizes.padding,
+                        isLoading: false,
+                        key: const ValueKey('macro-goal-fat-input'),
+                        controller: _fatController,
+                        keyboardType: TextInputType.number,
+                        labelText: 'Fat (g) *',
+                        validator: _validateMacro,
+                      ),
+                      AppTextFormField(
+                        theme: widget.theme,
+                        fontSize: widget.sizes.fontSize,
+                        padding: widget.sizes.padding,
+                        isLoading: false,
+                        key: const ValueKey('macro-goal-water-input'),
+                        controller: _waterController,
+                        keyboardType: TextInputType.number,
+                        labelText: 'Water (ml)',
+                      ),
+                    ],
+                  ),
                   SizedBox(height: widget.sizes.spacing * 1.5),
                   Wrap(
                     alignment: WrapAlignment.end,
@@ -215,16 +286,19 @@ class _MacroGoalFormModalState extends State<MacroGoalFormModal> {
                     children: [
                       TextButton(
                         onPressed: () => Navigator.of(context).pop(),
-                        child: Text('Cancel',
-                            style: TextStyle(fontSize: widget.sizes.fontSize)),
+                        child: Text(
+                          'Cancel',
+                          style: TextStyle(fontSize: widget.sizes.fontSize),
+                        ),
                       ),
                       SizedBox(width: widget.sizes.spacing),
                       ElevatedButton(
                         key: const ValueKey('macro-goal-submit-button'),
                         onPressed: _submit,
                         child: Text(
-                            widget.existingGoal != null ? 'Update' : 'Create',
-                            style: TextStyle(fontSize: widget.sizes.fontSize)),
+                          widget.existingGoal != null ? 'Update' : 'Create',
+                          style: TextStyle(fontSize: widget.sizes.fontSize),
+                        ),
                       ),
                     ],
                   ),

@@ -139,6 +139,7 @@ void main() {
       await tester.tap(find.text('Start').first);
       await harness.pumpUntilFound(tester, find.text('COMPLETE'));
       await tester.ensureVisible(find.text('COMPLETE'));
+      await harness.pumpUntilFound(tester, find.text('COMPLETE').hitTestable());
       await tester.tap(find.text('COMPLETE'));
       await harness.pumpUntilFound(tester, find.text('Completed'));
       await harness.pumpUntilFound(tester, find.text('Log'));

@@ -1,10 +1,10 @@
-import '../../widgets/macros/macro_tracker_day_widget.dart';
-import '../../widgets/macros/macro_tracker_week_widget.dart';
-import '../../widgets/macros/macro_tracker_month_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 
+import '../../widgets/macros/macro_tracker_day_widget.dart';
+import '../../widgets/macros/macro_tracker_week_widget.dart';
+import '../../widgets/macros/macro_tracker_month_widget.dart';
 import '../../cubits/macro_tracking_cubit.dart';
 import '../../cubits/meal_plan_cubit.dart';
 import '../../cubits/meal_plan_record_cubit.dart';
@@ -49,16 +49,18 @@ class _MacroTrackerViewState extends State<MacroTrackerView> {
       if (record != null &&
           (plan?.id != record.mealPlanId ||
               plan?.version != record.mealPlanVersion)) {
-        context
-            .read<MealPlanCubit>()
-            .getMealPlan(record.mealPlanId, version: record.mealPlanVersion);
+        context.read<MealPlanCubit>().getMealPlan(
+          record.mealPlanId,
+          version: record.mealPlanVersion,
+        );
       }
     });
 
     // If week or month, load date range
     if (_scope == TrackerScope.week) {
-      final start =
-          _selectedDate.subtract(Duration(days: _selectedDate.weekday - 1));
+      final start = _selectedDate.subtract(
+        Duration(days: _selectedDate.weekday - 1),
+      );
       final end = start.add(const Duration(days: 6));
       macroCubit.getDailyLogsForRange(start: start, end: end);
     } else if (_scope == TrackerScope.month) {
@@ -85,8 +87,11 @@ class _MacroTrackerViewState extends State<MacroTrackerView> {
           _selectedDate = _selectedDate.subtract(const Duration(days: 7));
           break;
         case TrackerScope.month:
-          _selectedDate =
-              DateTime(_selectedDate.year, _selectedDate.month - 1, 1);
+          _selectedDate = DateTime(
+            _selectedDate.year,
+            _selectedDate.month - 1,
+            1,
+          );
           break;
       }
     });
@@ -103,8 +108,11 @@ class _MacroTrackerViewState extends State<MacroTrackerView> {
           _selectedDate = _selectedDate.add(const Duration(days: 7));
           break;
         case TrackerScope.month:
-          _selectedDate =
-              DateTime(_selectedDate.year, _selectedDate.month + 1, 1);
+          _selectedDate = DateTime(
+            _selectedDate.year,
+            _selectedDate.month + 1,
+            1,
+          );
           break;
       }
     });
@@ -138,19 +146,32 @@ class _MacroTrackerViewState extends State<MacroTrackerView> {
               children: [
                 SegmentedButton<TrackerScope>(
                   key: const ValueKey('macro-tracker-scope-selector'),
+                  showSelectedIcon: false,
+                  style: const ButtonStyle(
+                    shape: WidgetStatePropertyAll(RoundedRectangleBorder()),
+                  ),
                   segments: [
                     ButtonSegment(
-                        value: TrackerScope.day,
-                        label: Text('Day',
-                            style: TextStyle(fontSize: sizes.fontSize))),
+                      value: TrackerScope.day,
+                      label: Text(
+                        'Day',
+                        style: TextStyle(fontSize: sizes.fontSize),
+                      ),
+                    ),
                     ButtonSegment(
-                        value: TrackerScope.week,
-                        label: Text('Week',
-                            style: TextStyle(fontSize: sizes.fontSize))),
+                      value: TrackerScope.week,
+                      label: Text(
+                        'Week',
+                        style: TextStyle(fontSize: sizes.fontSize),
+                      ),
+                    ),
                     ButtonSegment(
-                        value: TrackerScope.month,
-                        label: Text('Month',
-                            style: TextStyle(fontSize: sizes.fontSize))),
+                      value: TrackerScope.month,
+                      label: Text(
+                        'Month',
+                        style: TextStyle(fontSize: sizes.fontSize),
+                      ),
+                    ),
                   ],
                   selected: {_scope},
                   onSelectionChanged: (val) {
@@ -160,8 +181,10 @@ class _MacroTrackerViewState extends State<MacroTrackerView> {
                 TextButton(
                   key: const ValueKey('macro-tracker-today-btn'),
                   onPressed: _goToToday,
-                  child:
-                      Text('Today', style: TextStyle(fontSize: sizes.fontSize)),
+                  child: Text(
+                    'Today',
+                    style: TextStyle(fontSize: sizes.fontSize),
+                  ),
                 ),
               ],
             ),
@@ -212,9 +235,7 @@ class _MacroTrackerViewState extends State<MacroTrackerView> {
             ),
             SizedBox(height: sizes.spacing),
             // Scope Body
-            Expanded(
-              child: _buildScopeBody(theme, sizes),
-            ),
+            Expanded(child: _buildScopeBody(theme, sizes)),
           ],
         ),
       ),
@@ -241,8 +262,9 @@ class _MacroTrackerViewState extends State<MacroTrackerView> {
       case TrackerScope.day:
         return DateFormat('EEE, MMM d, yyyy').format(_selectedDate);
       case TrackerScope.week:
-        final start =
-            _selectedDate.subtract(Duration(days: _selectedDate.weekday - 1));
+        final start = _selectedDate.subtract(
+          Duration(days: _selectedDate.weekday - 1),
+        );
         final end = start.add(const Duration(days: 6));
         return '${DateFormat('MMM d').format(start)} - ${DateFormat('MMM d').format(end)}';
       case TrackerScope.month:
@@ -262,19 +284,24 @@ class _MacroTrackerViewState extends State<MacroTrackerView> {
     switch (_scope) {
       case TrackerScope.day:
         return MacroTrackerDayWidget(
-            theme: theme, sizes: sizes, selectedDate: _selectedDate);
+          theme: theme,
+          sizes: sizes,
+          selectedDate: _selectedDate,
+        );
       case TrackerScope.week:
         return MacroTrackerWeekWidget(
-            theme: theme,
-            sizes: sizes,
-            selectedDate: _selectedDate,
-            onSelectDate: _selectDay);
+          theme: theme,
+          sizes: sizes,
+          selectedDate: _selectedDate,
+          onSelectDate: _selectDay,
+        );
       case TrackerScope.month:
         return MacroTrackerMonthWidget(
-            theme: theme,
-            sizes: sizes,
-            selectedDate: _selectedDate,
-            onSelectDate: _selectDay);
+          theme: theme,
+          sizes: sizes,
+          selectedDate: _selectedDate,
+          onSelectDate: _selectDay,
+        );
     }
   }
 }

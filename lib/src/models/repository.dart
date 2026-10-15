@@ -19,13 +19,11 @@ class Repository<T extends Model> {
   static const String _baseCountQuery = "SELECT COUNT(*) as count FROM";
 
   Repository({
-    required DatabaseHelper databaseHelper,
+    required this._databaseHelper,
     required String tableName,
-    required T Function(Map<String, Object?>) fromMap,
-  })  : _fromMap = fromMap,
-        _tableName = tableName,
-        _databaseHelper = databaseHelper,
-        _logger = Logger("$tableName Repository");
+    required this._fromMap,
+  }) : _tableName = tableName,
+       _logger = Logger("$tableName Repository");
 
   Future<List<T>> selectPaginated({
     required int limit,
@@ -34,8 +32,9 @@ class Repository<T extends Model> {
     List<Object?>? whereArgs,
     List<String>? orderBy,
   }) async {
-    _logger
-        .info("selectPaginated: $limit, $offset, $where, $whereArgs, $orderBy");
+    _logger.info(
+      "selectPaginated: $limit, $offset, $where, $whereArgs, $orderBy",
+    );
     final db = await _databaseHelper.db;
     final List<Map<String, dynamic>> maps = await db.query(
       _tableName,
@@ -97,8 +96,10 @@ class Repository<T extends Model> {
     final String countQuery = where != null
         ? "$_baseCountQuery $_tableName WHERE $where"
         : "$_baseCountQuery $_tableName";
-    final List<Map<String, dynamic>> maps =
-        await db.rawQuery(countQuery, whereArgs);
+    final List<Map<String, dynamic>> maps = await db.rawQuery(
+      countQuery,
+      whereArgs,
+    );
     return Sqflite.firstIntValue(maps) ?? 0;
   }
 

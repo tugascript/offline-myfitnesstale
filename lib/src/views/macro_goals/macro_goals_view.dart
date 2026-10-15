@@ -1,4 +1,3 @@
-import '../../widgets/macro_goals/macro_goals_content_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -8,6 +7,7 @@ import '../../utilities/sizes/data_display_sizes.dart';
 import '../../utilities/sizes/screen_size.dart';
 import '../../widgets/layout/app_scaffold.dart';
 import '../../widgets/macro_goals/macro_goal_form_modal.dart';
+import '../../widgets/macro_goals/macro_goals_content_widget.dart';
 
 class MacroGoalsView extends StatefulWidget {
   static const routeName = '/macro-goals';
@@ -43,14 +43,20 @@ class _MacroGoalsViewState extends State<MacroGoalsView> {
             if (!state.isLoading && state.error != null) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                    content: Text(state.error!.description,
-                        style: TextStyle(fontSize: sizes.fontSize))),
+                  content: Text(
+                    state.error!.description,
+                    style: TextStyle(fontSize: sizes.fontSize),
+                  ),
+                ),
               );
             }
           },
           builder: (context, state) {
             return MacroGoalsContentWidget(
-                state: state, theme: theme, sizes: sizes);
+              state: state,
+              theme: theme,
+              sizes: sizes,
+            );
           },
         ),
       ),
@@ -59,10 +65,7 @@ class _MacroGoalsViewState extends State<MacroGoalsView> {
         onPressed: () {
           showDialog(
             context: context,
-            builder: (_) => MacroGoalFormModal(
-              theme: theme,
-              sizes: sizes,
-            ),
+            builder: (_) => MacroGoalFormModal(theme: theme, sizes: sizes),
           );
         },
         child: Icon(Icons.add, size: sizes.buttonIconSize),

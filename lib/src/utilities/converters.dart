@@ -49,6 +49,14 @@ sealed class Converters {
     return (percent / 100);
   }
 
+  static int macrosToCalories({
+    required int protein,
+    required int carbs,
+    required int fats,
+  }) {
+    return (protein * 4) + (carbs * 4) + (fats * 9);
+  }
+
   static String formatDuration(int seconds) {
     if (seconds < 60) {
       return "${seconds}s";

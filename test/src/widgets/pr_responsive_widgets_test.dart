@@ -359,22 +359,22 @@ typedef _Content = Widget Function(DataDisplaySizesList sizes, ThemeData theme);
 
 void main() {
   final contents = <String, _Content>{
-    'foods screen': (_, __) => const FoodsView(),
-    'food creation screen': (_, __) => const FoodCreationView(),
-    'food update screen': (_, __) => const FoodUpdateView(foodId: 1),
-    'food details screen': (_, __) => const FoodDetailsView(foodId: 1),
-    'recipes screen': (_, __) => const RecipesView(),
-    'recipe creation screen': (_, __) => const RecipeCreationView(),
-    'recipe update screen': (_, __) => const RecipeUpdateView(recipeId: 1),
-    'recipe details screen': (_, __) => const RecipeDetailsView(recipeId: 1),
-    'meal-plans screen': (_, __) => const MealPlanListView(),
-    'meal-plan creation screen': (_, __) => const MealPlanCreationView(),
-    'meal-plan update screen': (_, __) =>
+    'foods screen': (_, _) => const FoodsView(),
+    'food creation screen': (_, _) => const FoodCreationView(),
+    'food update screen': (_, _) => const FoodUpdateView(foodId: 1),
+    'food details screen': (_, _) => const FoodDetailsView(foodId: 1),
+    'recipes screen': (_, _) => const RecipesView(),
+    'recipe creation screen': (_, _) => const RecipeCreationView(),
+    'recipe update screen': (_, _) => const RecipeUpdateView(recipeId: 1),
+    'recipe details screen': (_, _) => const RecipeDetailsView(recipeId: 1),
+    'meal-plans screen': (_, _) => const MealPlanListView(),
+    'meal-plan creation screen': (_, _) => const MealPlanCreationView(),
+    'meal-plan update screen': (_, _) =>
         const MealPlanUpdateView(mealPlanId: 1),
-    'meal-plan details screen': (_, __) =>
+    'meal-plan details screen': (_, _) =>
         const MealPlanDetailsView(mealPlanId: 1),
-    'macro-goals screen': (_, __) => const MacroGoalsView(),
-    'macro-tracker screen': (_, __) => const MacroTrackerView(),
+    'macro-goals screen': (_, _) => const MacroGoalsView(),
+    'macro-tracker screen': (_, _) => const MacroTrackerView(),
     'food editor': (sizes, theme) => FoodFormWidget(
       sizes: sizes,
       theme: theme,
@@ -490,6 +490,8 @@ void main() {
             await tester.tap(find.text(_food.name).last);
             await tester.pumpAndSettle();
             expect(tester.takeException(), isNull);
+            await tester.ensureVisible(find.text('Recipe').last);
+            await tester.pumpAndSettle();
             await tester.tap(find.text('Recipe').last);
             await tester.pumpAndSettle();
             expect(tester.takeException(), isNull);
@@ -503,6 +505,17 @@ void main() {
             await tester.pumpAndSettle();
             expect(tester.takeException(), isNull);
             expect(confirm.hitTestable(), findsOneWidget);
+            await tester.ensureVisible(find.text('Quick Add'));
+            await tester.pumpAndSettle();
+            await tester.tap(find.text('Quick Add'));
+            await tester.pumpAndSettle();
+            final quickConfirm = find.byKey(
+              const ValueKey('quick-add-confirm-btn'),
+            );
+            await tester.ensureVisible(quickConfirm);
+            await tester.pumpAndSettle();
+            expect(tester.takeException(), isNull);
+            expect(quickConfirm.hitTestable(), findsOneWidget);
           }
         });
       }

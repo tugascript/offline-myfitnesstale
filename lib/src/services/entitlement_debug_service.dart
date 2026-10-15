@@ -25,13 +25,15 @@ class EntitlementDebugService {
       final Uri uri = Uri.parse('$baseUrl$_kDebugSetPath');
       final HttpClientRequest request = await client.postUrl(uri);
       request.headers.set(HttpHeaders.contentTypeHeader, 'application/json');
-      request.write(jsonEncode({
-        'appUserId': appUserId ?? _resolveAppUserId(),
-        'entitlement': entitlement.value,
-        'status': status.value,
-        'expiresAt': expiresAt,
-        'verificationToken': verificationToken ?? '',
-      }));
+      request.write(
+        jsonEncode({
+          'appUserId': appUserId ?? _resolveAppUserId(),
+          'entitlement': entitlement.value,
+          'status': status.value,
+          'expiresAt': expiresAt,
+          'verificationToken': verificationToken ?? '',
+        }),
+      );
 
       final HttpClientResponse response = await request.close();
       final String payload = await response.transform(utf8.decoder).join();
@@ -53,9 +55,7 @@ class EntitlementDebugService {
       final Uri uri = Uri.parse('$baseUrl$_kDebugResetPath');
       final HttpClientRequest request = await client.postUrl(uri);
       request.headers.set(HttpHeaders.contentTypeHeader, 'application/json');
-      request.write(jsonEncode({
-        if (appUserId != null) 'appUserId': appUserId,
-      }));
+      request.write(jsonEncode({'appUserId': ?appUserId}));
 
       final HttpClientResponse response = await request.close();
       final String payload = await response.transform(utf8.decoder).join();
@@ -91,7 +91,8 @@ class EntitlementDebugService {
   void _ensureDebugMode() {
     if (!kDebugMode) {
       throw Exception(
-          'Entitlement debug endpoints are only available in debug mode');
+        'Entitlement debug endpoints are only available in debug mode',
+      );
     }
   }
 }
