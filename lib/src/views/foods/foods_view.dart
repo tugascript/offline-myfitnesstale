@@ -1,4 +1,5 @@
 import '../../widgets/foods/food_list_item_widget.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -108,8 +109,10 @@ class _FoodsViewState extends State<FoodsView> {
                 children: [
                   FilterChip(
                     key: const ValueKey('foods-filter-favorites'),
-                    label: Text('Favorites',
-                        style: TextStyle(fontSize: sizes.fontSize)),
+                    label: Text(
+                      'Favorites',
+                      style: TextStyle(fontSize: sizes.fontSize),
+                    ),
                     selected: _onlyFavorites,
                     onSelected: (val) {
                       setState(() {
@@ -125,8 +128,9 @@ class _FoodsViewState extends State<FoodsView> {
                       padding: EdgeInsets.only(right: sizes.padding / 2),
                       child: FilterChip(
                         label: Text(
-                            cat.value[0].toUpperCase() + cat.value.substring(1),
-                            style: TextStyle(fontSize: sizes.fontSize)),
+                          cat.value[0].toUpperCase() + cat.value.substring(1),
+                          style: TextStyle(fontSize: sizes.fontSize),
+                        ),
                         selected: isSelected,
                         onSelected: (val) {
                           setState(() {
@@ -147,7 +151,8 @@ class _FoodsViewState extends State<FoodsView> {
                 builder: (context, state) {
                   if (state.isLoading && state.foods.isEmpty) {
                     return const Center(
-                        child: CircularProgressIndicator.adaptive());
+                      child: CircularProgressIndicator.adaptive(),
+                    );
                   }
 
                   if (state.foods.isEmpty) {
@@ -165,7 +170,7 @@ class _FoodsViewState extends State<FoodsView> {
                   return ListView.separated(
                     controller: _scrollController,
                     itemCount: state.foods.length + (state.isLoading ? 1 : 0),
-                    separatorBuilder: (_, __) =>
+                    separatorBuilder: (_, _) =>
                         SizedBox(height: sizes.spacing / 2),
                     itemBuilder: (context, index) {
                       if (index >= state.foods.length) {
@@ -179,18 +184,21 @@ class _FoodsViewState extends State<FoodsView> {
 
                       final food = state.foods[index];
                       return FoodListItemWidget(
-                          key: ValueKey('food-item-${food.id}'),
-                          food: food,
-                          sizes: sizes,
-                          onTap: () {
-                            context.push(
-                              FoodDetailsView.routeName
-                                  .replaceFirst(':id', food.id.toString()),
-                            );
-                          },
-                          onToggleFavorite: () {
-                            context.read<FoodCubit>().toggleFavorite(food.id);
-                          });
+                        key: ValueKey('food-item-${food.id}'),
+                        food: food,
+                        sizes: sizes,
+                        onTap: () {
+                          context.push(
+                            FoodDetailsView.routeName.replaceFirst(
+                              ':id',
+                              food.id.toString(),
+                            ),
+                          );
+                        },
+                        onToggleFavorite: () {
+                          context.read<FoodCubit>().toggleFavorite(food.id);
+                        },
+                      );
                     },
                   );
                 },

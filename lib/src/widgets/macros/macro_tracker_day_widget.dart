@@ -1,26 +1,28 @@
-import '../layout/responsive_fields.dart';
 import '../../widgets/macros/macro_progress_bar.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+
 import '../../cubits/macro_tracking_cubit.dart';
 import '../../cubits/states/macro_tracking_state.dart';
-import '../../models/enums.dart';
 import '../../utilities/sizes/data_display_sizes.dart';
 import '../../widgets/common/confirmation_dialog.dart';
 import '../../widgets/macros/log_food_modal.dart';
 import '../../views/macro_goals/macro_goals_view.dart';
 import 'planned_meals_widget.dart';
+import 'nutrition_timeline_widget.dart';
 
 class MacroTrackerDayWidget extends StatelessWidget {
   final DataDisplaySizesList sizes;
   final ThemeData theme;
   final DateTime selectedDate;
-  const MacroTrackerDayWidget(
-      {required this.theme,
-      super.key,
-      required this.sizes,
-      required this.selectedDate});
+  const MacroTrackerDayWidget({
+    required this.theme,
+    super.key,
+    required this.sizes,
+    required this.selectedDate,
+  });
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<MacroTrackingCubit, MacroTrackingState>(
@@ -30,7 +32,9 @@ class MacroTrackerDayWidget extends StatelessWidget {
 
         final currentCal = dailyLog?.totalCalories ?? 0;
         final targetCal = activeGoal?.targetCalories ?? 2000;
-        final calProgress = (currentCal / targetCal).clamp(0.0, 1.0);
+        final calProgress = targetCal > 0
+            ? (currentCal / targetCal).clamp(0.0, 1.0)
+            : 0.0;
 
         final currentProtein = dailyLog?.totalProtein ?? 0;
         final targetProtein = activeGoal?.targetProtein ?? 150;
@@ -46,14 +50,11 @@ class MacroTrackerDayWidget extends StatelessWidget {
 
         return ListView(
           children: [
-            // Active Meal Plan Integration Banner
-            PlannedMealsWidget(sizes: sizes, selectedDate: selectedDate),
-            SizedBox(height: sizes.spacing),
             // Macro Target Summary Card
             Card(
               margin: EdgeInsets.zero,
               child: Padding(
-                padding: EdgeInsets.all(sizes.padding),
+                padding: EdgeInsets.all(sizes.padding / 1.5),
                 child: Column(
                   children: [
                     Wrap(
@@ -72,47 +73,73 @@ class MacroTrackerDayWidget extends StatelessWidget {
                           TextButton(
                             onPressed: () =>
                                 context.push(MacroGoalsView.routeName),
-                            child: Text('Set Goal',
-                                style: TextStyle(fontSize: sizes.fontSize)),
+                            child: Text(
+                              'Set Goal',
+                              style: TextStyle(fontSize: sizes.fontSize),
+                            ),
                           ),
                       ],
                     ),
                     SizedBox(height: sizes.spacing),
                     LinearProgressIndicator(
                       value: calProgress,
-                      minHeight: 10,
-                      borderRadius: BorderRadius.circular(5),
+                      minHeight: sizes.spacing / 2,
+                      borderRadius: BorderRadius.zero,
                       backgroundColor: Colors.grey.withValues(alpha: 0.2),
-                      valueColor:
-                          AlwaysStoppedAnimation<Color>(theme.primaryColor),
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        theme.primaryColor,
+                      ),
                     ),
                     SizedBox(height: sizes.spacing),
-                    ResponsiveFields(sizes: sizes, children: [
-                      MacroProgressBar(
-                        label: 'Protein',
-                        current: currentProtein,
-                        target: targetProtein,
-                        unit: 'g',
-                        color: Colors.blue,
-                        sizes: sizes,
-                      ),
-                      MacroProgressBar(
-                        label: 'Carbs',
-                        current: currentCarbs,
-                        target: targetCarbs,
-                        unit: 'g',
-                        color: Colors.amber,
-                        sizes: sizes,
-                      ),
-                      MacroProgressBar(
-                        label: 'Fat',
-                        current: currentFat,
-                        target: targetFat,
-                        unit: 'g',
-                        color: Colors.red,
-                        sizes: sizes,
-                      ),
-                    ]),
+                    LayoutBuilder(
+                      builder: (context, constraints) {
+                        final minWidth = MediaQuery.textScalerOf(context)
+                            .scale(sizes.fontSize * 7);
+                        final columns =
+                            ((constraints.maxWidth + sizes.spacing) /
+                                    (minWidth + sizes.spacing))
+                                .floor()
+                                .clamp(1, 3);
+                        final width =
+                            (constraints.maxWidth -
+                                sizes.spacing * (columns - 1)) /
+                            columns;
+                        final metrics = <Widget>[
+                          MacroProgressBar(
+                            label: 'Protein',
+                            current: currentProtein,
+                            target: targetProtein,
+                            unit: 'g',
+                            color: Colors.blue,
+                            sizes: sizes,
+                          ),
+                          MacroProgressBar(
+                            label: 'Carbs',
+                            current: currentCarbs,
+                            target: targetCarbs,
+                            unit: 'g',
+                            color: Colors.amber,
+                            sizes: sizes,
+                          ),
+                          MacroProgressBar(
+                            label: 'Fat',
+                            current: currentFat,
+                            target: targetFat,
+                            unit: 'g',
+                            color: Colors.red,
+                            sizes: sizes,
+                          ),
+                        ];
+                        return Wrap(
+                          spacing: sizes.spacing,
+                          runSpacing: sizes.spacing / 2,
+                          children: [
+                            for (final metric in metrics)
+                              SizedBox(width: width, child: metric),
+                          ],
+                        );
+                      },
+                    ),
                   ],
                 ),
               ),
@@ -122,14 +149,17 @@ class MacroTrackerDayWidget extends StatelessWidget {
             Card(
               margin: EdgeInsets.zero,
               child: Padding(
-                padding: EdgeInsets.all(sizes.padding),
+                padding: EdgeInsets.all(sizes.padding / 1.5),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
                       children: [
-                        Icon(Icons.water_drop,
-                            color: Colors.cyan, size: sizes.buttonIconSize),
+                        Icon(
+                          Icons.water_drop,
+                          color: Colors.cyan,
+                          size: sizes.buttonIconSize,
+                        ),
                         SizedBox(width: sizes.spacing),
                         Expanded(
                           child: Text(
@@ -144,8 +174,10 @@ class MacroTrackerDayWidget extends StatelessWidget {
                           visualDensity: VisualDensity.compact,
                           icon: Icon(Icons.remove, size: sizes.compactIconSize),
                           onPressed: () {
-                            final newWater =
-                                (currentWater - 250).clamp(0, 100000);
+                            final newWater = (currentWater - 250).clamp(
+                              0,
+                              100000,
+                            );
                             context
                                 .read<MacroTrackingCubit>()
                                 .updateWaterIntake(newWater);
@@ -164,140 +196,46 @@ class MacroTrackerDayWidget extends StatelessWidget {
                     ),
                     SizedBox(height: sizes.spacing / 2),
                     LinearProgressIndicator(
-                      value: (currentWater / targetWater).clamp(0.0, 1.0),
+                      value: targetWater > 0
+                          ? (currentWater / targetWater).clamp(0.0, 1.0)
+                          : 0.0,
                       color: Colors.cyan,
                       backgroundColor: Colors.cyan.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(4),
+                      borderRadius: BorderRadius.zero,
                     ),
                   ],
                 ),
               ),
             ),
             SizedBox(height: sizes.spacing * 1.5),
-            // Meal Logs by MealType
-            ...MealType.values.map((type) {
-              final mealLog = dailyLog?.meals.where((m) => m.mealType == type);
-              final hasLog = mealLog != null && mealLog.isNotEmpty;
-              final meal = hasLog ? mealLog.first : null;
-
-              return Card(
-                margin: EdgeInsets.only(bottom: sizes.padding),
-                child: Padding(
-                  padding: EdgeInsets.all(sizes.padding),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Wrap(
-                        alignment: WrapAlignment.spaceBetween,
-                        crossAxisAlignment: WrapCrossAlignment.center,
-                        spacing: sizes.spacing,
-                        runSpacing: sizes.spacing,
-                        children: [
-                          Text(
-                            type.value[0].toUpperCase() +
-                                type.value.substring(1),
-                            style: TextStyle(
-                              fontSize: sizes.subtitleFontSize,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          Wrap(
-                            alignment: WrapAlignment.start,
-                            crossAxisAlignment: WrapCrossAlignment.center,
-                            spacing: sizes.spacing / 2,
-                            runSpacing: sizes.spacing / 2,
-                            children: [
-                              if (meal != null)
-                                Text(
-                                  '${meal.totalCalories} kcal',
-                                  style: TextStyle(
-                                    fontSize: sizes.fontSize,
-                                    fontWeight: FontWeight.w600,
-                                    color: theme.primaryColor,
-                                  ),
-                                ),
-                              IconButton(
-                                icon: Icon(Icons.add_circle_outline,
-                                    size: sizes.compactIconSize),
-                                onPressed: () {
-                                  showDialog(
-                                    context: context,
-                                    builder: (_) => LogFoodModal(
-                                      theme: theme,
-                                      sizes: sizes,
-                                      initialMealType: type,
-                                      selectedDate: selectedDate,
-                                    ),
-                                  );
-                                },
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                      if (meal != null && meal.items.isNotEmpty) ...[
-                        Divider(height: sizes.spacing),
-                        ...meal.items.map((item) {
-                          final portionText = item.portionName != null
-                              ? '${item.amount} × ${item.portionName}'
-                              : '${item.amount}g';
-                          return Padding(
-                            padding: EdgeInsets.symmetric(
-                                vertical: sizes.padding / 2),
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        item.loggedFoodName,
-                                        style: TextStyle(
-                                          fontSize: sizes.fontSize,
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                      ),
-                                      Text(
-                                        '$portionText • ${item.loggedCalories} kcal (P: ${item.loggedProtein}g C: ${item.loggedCarbs}g F: ${item.loggedFat}g)',
-                                        style: TextStyle(
-                                          fontSize: sizes.fontSize * 0.85,
-                                          color: Colors.grey[600],
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                IconButton(
-                                  icon: Icon(Icons.delete_outline,
-                                      size: sizes.compactIconSize,
-                                      color: Colors.grey),
-                                  onPressed: () {
-                                    showDialog(
-                                      context: context,
-                                      builder: (_) => ConfirmationDialog(
-                                        title: 'Delete Item',
-                                        content:
-                                            'Are you sure you want to remove this logged food?',
-                                        onConfirm: () {
-                                          context
-                                              .read<MacroTrackingCubit>()
-                                              .deleteMealLogItem(item.id);
-                                        },
-                                      ),
-                                    );
-                                  },
-                                ),
-                              ],
-                            ),
-                          );
-                        }),
-                      ],
-                    ],
-                  ),
+            PlannedMealsWidget(sizes: sizes, selectedDate: selectedDate),
+            SizedBox(height: sizes.spacing),
+            NutritionTimelineWidget(
+              meals: dailyLog?.meals ?? const [],
+              selectedDate: selectedDate,
+              theme: theme,
+              sizes: sizes,
+              onAdd: (hour) => showDialog(
+                context: context,
+                builder: (_) => LogFoodModal(
+                  theme: theme,
+                  sizes: sizes,
+                  selectedDate: selectedDate,
+                  initialTime: TimeOfDay(hour: hour, minute: 0),
                 ),
-              );
-            }),
+              ),
+              onDelete: (item) => showDialog(
+                context: context,
+                builder: (_) => ConfirmationDialog(
+                  title: 'Delete Item',
+                  content: 'Are you sure you want to remove this logged food?',
+                  onConfirm: () => context
+                      .read<MacroTrackingCubit>()
+                      .deleteMealLogItem(item.id),
+                ),
+              ),
+            ),
+            SizedBox(height: sizes.buttonSize * 2),
           ],
         );
       },

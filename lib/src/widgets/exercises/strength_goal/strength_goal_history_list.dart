@@ -39,10 +39,7 @@ class StrengthGoalHistoryList extends StatelessWidget {
               padding: EdgeInsets.all(sizes.padding),
               child: Text(
                 'No past strength goals found.',
-                style: TextStyle(
-                  fontSize: sizes.fontSize,
-                  color: Colors.grey,
-                ),
+                style: TextStyle(fontSize: sizes.fontSize, color: Colors.grey),
               ),
             ),
           );
@@ -52,7 +49,7 @@ class StrengthGoalHistoryList extends StatelessWidget {
           shrinkWrap: shrinkWrap,
           physics: shrinkWrap ? const NeverScrollableScrollPhysics() : null,
           itemCount: history.length,
-          separatorBuilder: (_, __) => SizedBox(height: sizes.spacing / 2),
+          separatorBuilder: (_, _) => SizedBox(height: sizes.spacing / 2),
           itemBuilder: (context, index) {
             final goal = history[index];
             final weightString = profileUnits == Units.imperial
@@ -68,11 +65,12 @@ class StrengthGoalHistoryList extends StatelessWidget {
               margin: EdgeInsets.zero,
               child: ListTile(
                 leading: Icon(
-                    isCompleted
-                        ? Icons.check_circle
-                        : Icons.radio_button_unchecked,
-                    color: isCompleted ? Colors.green : Colors.grey,
-                    size: sizes.buttonIconSize),
+                  isCompleted
+                      ? Icons.check_circle
+                      : Icons.radio_button_unchecked,
+                  color: isCompleted ? Colors.green : Colors.grey,
+                  size: sizes.buttonIconSize,
+                ),
                 title: Text(
                   goal.name,
                   style: TextStyle(
@@ -89,15 +87,17 @@ class StrengthGoalHistoryList extends StatelessWidget {
                   ),
                 ),
                 trailing: IconButton(
-                  icon: Icon(Icons.delete_outline,
-                      color: Colors.grey, size: sizes.buttonIconSize),
+                  icon: Icon(
+                    Icons.delete_outline,
+                    color: Colors.grey,
+                    size: sizes.buttonIconSize,
+                  ),
                   onPressed: () {
                     showDialog(
                       context: context,
                       builder: (ctx) => ConfirmationDialog(
                         title: 'Delete Past Goal',
-                        content:
-                            'Are you sure you want to delete this historical goal record?',
+                        content: 'Are you sure you want to delete this historical goal record?',
                         onConfirm: () {
                           context
                               .read<ExerciseRecordCubit>()

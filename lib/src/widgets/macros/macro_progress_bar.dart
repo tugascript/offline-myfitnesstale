@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../../utilities/sizes/data_display_sizes.dart';
 
 class MacroProgressBar extends StatelessWidget {
@@ -21,7 +22,7 @@ class MacroProgressBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final progress = (current / target).clamp(0.0, 1.0);
+    final progress = target > 0 ? (current / target).clamp(0.0, 1.0) : 0.0;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -46,7 +47,7 @@ class MacroProgressBar extends StatelessWidget {
           value: progress,
           color: color,
           backgroundColor: color.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(4),
+          borderRadius: BorderRadius.zero,
         ),
       ],
     );

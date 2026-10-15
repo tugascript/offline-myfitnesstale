@@ -90,13 +90,12 @@ class OnboardingService {
     ProfileService? profileService,
     WorkoutService? workoutService,
     WorkoutPlanService? workoutPlanService,
-    OnboardingStageCallback? afterStage,
-  })  : _databaseHelper = databaseHelper ?? DatabaseHelper(),
-        _exerciseService = exerciseService ?? ExerciseService(),
-        _profileService = profileService ?? ProfileService(),
-        _workoutService = workoutService ?? WorkoutService(),
-        _workoutPlanService = workoutPlanService ?? WorkoutPlanService(),
-        _afterStage = afterStage;
+    this._afterStage,
+  }) : _databaseHelper = databaseHelper ?? DatabaseHelper(),
+       _exerciseService = exerciseService ?? ExerciseService(),
+       _profileService = profileService ?? ProfileService(),
+       _workoutService = workoutService ?? WorkoutService(),
+       _workoutPlanService = workoutPlanService ?? WorkoutPlanService();
 
   Future<Result<OnboardingResult, ServiceError<OperationErrorTypes>>> onboard(
     OnboardingRequest request,
@@ -112,18 +111,22 @@ class OnboardingService {
         error,
         stackTrace,
       );
-      return err(ServiceError(
-        type: OperationErrorTypes.operationFailure,
-        description: error.requiresReset
-            ? 'Setup could not continue because existing development data is incomplete. Clear app data and try again. This attempt saved no data.'
-            : 'Setup failed during ${_stageLabel(error.stage)}. No data was saved. Please try again.',
-      ));
+      return err(
+        ServiceError(
+          type: OperationErrorTypes.operationFailure,
+          description: error.requiresReset
+              ? 'Setup could not continue because existing development data is incomplete. Clear app data and try again. This attempt saved no data.'
+              : 'Setup failed during ${_stageLabel(error.stage)}. No data was saved. Please try again.',
+        ),
+      );
     } catch (error, stackTrace) {
       _logger.severe('Onboarding failed unexpectedly', error, stackTrace);
-      return err(const ServiceError(
-        type: OperationErrorTypes.operationFailure,
-        description: 'Setup failed. No data was saved. Please try again.',
-      ));
+      return err(
+        const ServiceError(
+          type: OperationErrorTypes.operationFailure,
+          description: 'Setup failed. No data was saved. Please try again.',
+        ),
+      );
     }
   }
 
@@ -210,8 +213,10 @@ class OnboardingService {
       initialSetup: SetUpStatus.completed,
       transaction: transaction,
     );
-    final completedSystem =
-        _require(completionResult, OnboardingStage.completion);
+    final completedSystem = _require(
+      completionResult,
+      OnboardingStage.completion,
+    );
     await _stageCompleted(OnboardingStage.completion);
 
     return OnboardingResult(
@@ -296,9 +301,10 @@ class OnboardingService {
                               .map(
                                 (workout) =>
                                     WorkoutPlanWorkoutRegistrationInput(
-                                  workout: workoutByName[workout.workoutName]!,
-                                  timeOfDay: workout.timeOfDay,
-                                ),
+                                      workout:
+                                          workoutByName[workout.workoutName]!,
+                                      timeOfDay: workout.timeOfDay,
+                                    ),
                               )
                               .toList(),
                         ),
@@ -318,8 +324,9 @@ class OnboardingService {
   Future<OnboardingResult?> _getCompletedOnboarding(
     Transaction transaction,
   ) async {
-    final systemResult =
-        await _profileService.selectSystem(transaction: transaction);
+    final systemResult = await _profileService.selectSystem(
+      transaction: transaction,
+    );
     if (systemResult.isErr()) {
       if (systemResult.error.type == SingleErrorTypes.notFound) {
         return null;
@@ -334,8 +341,9 @@ class OnboardingService {
       return null;
     }
 
-    final profileResult =
-        await _profileService.selectProfile(transaction: transaction);
+    final profileResult = await _profileService.selectProfile(
+      transaction: transaction,
+    );
     final remindersResult = await _profileService.selectRemindersConfig(
       transaction: transaction,
     );
@@ -355,22 +363,20 @@ class OnboardingService {
   }
 
   Future<void> _rejectIncompleteState(Transaction transaction) async {
-    final profile =
-        await _profileService.selectProfile(transaction: transaction);
+    final profile = await _profileService.selectProfile(
+      transaction: transaction,
+    );
     final system = await _profileService.selectSystem(transaction: transaction);
     final reminders = await _profileService.selectRemindersConfig(
       transaction: transaction,
     );
 
-    final hasSeedData = await _containsAnyRows(
-      transaction,
-      const [
-        Equipment.table,
-        Exercise.table,
-        Workout.table,
-        WorkoutPlan.table,
-      ],
-    );
+    final hasSeedData = await _containsAnyRows(transaction, const [
+      Equipment.table,
+      Exercise.table,
+      Workout.table,
+      WorkoutPlan.table,
+    ]);
 
     if (profile.isOk() || system.isOk() || reminders.isOk() || hasSeedData) {
       throw const _OnboardingFailure(
@@ -393,10 +399,7 @@ class OnboardingService {
     return false;
   }
 
-  T _require<T, E>(
-    Result<T, ServiceError<E>> result,
-    OnboardingStage stage,
-  ) {
+  T _require<T, E>(Result<T, ServiceError<E>> result, OnboardingStage stage) {
     if (result.isErr()) {
       throw _OnboardingFailure(stage, result.error.description);
     }

@@ -19,7 +19,8 @@ class ModalSearchForm extends StatefulWidget {
     required String name,
     required MuscleGroup? muscleGroup,
     required bool isFavorite,
-  }) onSubmit;
+  })
+  onSubmit;
 
   const ModalSearchForm({
     super.key,
@@ -90,22 +91,14 @@ class _ModalSearchFormState extends State<ModalSearchForm> {
               }
             },
             prefixIcon: Padding(
-              padding: EdgeInsets.symmetric(
-                horizontal: padding,
-              ),
-              child: Icon(
-                Icons.search,
-                size: widget.sizes.fontSize,
-              ),
+              padding: EdgeInsets.symmetric(horizontal: padding),
+              child: Icon(Icons.search, size: widget.sizes.fontSize),
             ),
             suffixIcon: _data.name.isNotEmpty
                 ? IconButton(
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(),
-                    icon: Icon(
-                      Icons.clear,
-                      size: widget.sizes.smallFontSize,
-                    ),
+                    icon: Icon(Icons.clear, size: widget.sizes.smallFontSize),
                     onPressed: () {
                       setState(() {
                         _data.name = '';
@@ -168,11 +161,10 @@ class _ModalSearchFormState extends State<ModalSearchForm> {
 class _SmallSearchButton extends StatelessWidget {
   const _SmallSearchButton({
     required this.widget,
-    required GlobalKey<FormState> formKey,
+    required this._formKey,
     required _FormData data,
     required this.padding,
-  })  : _formKey = formKey,
-        _data = data;
+  }) : _data = data;
 
   final ModalSearchForm widget;
   final GlobalKey<FormState> _formKey;

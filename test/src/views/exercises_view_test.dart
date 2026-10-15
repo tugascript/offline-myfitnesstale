@@ -22,12 +22,11 @@ class _ExerciseSearchCubit extends ExerciseCubit {
     equipmentFetchCount += 1;
     equipmentFetchStarted.complete();
     await releaseEquipmentFetch.future;
-    emit(state.copyWith(
-      equipmentSelection: const {
-        1: 'Barbell',
-        2: 'Cable Machine',
-      },
-    ));
+    emit(
+      state.copyWith(
+        equipmentSelection: const {1: 'Barbell', 2: 'Cable Machine'},
+      ),
+    );
   }
 
   @override
@@ -43,8 +42,9 @@ class _ExerciseSearchCubit extends ExerciseCubit {
 }
 
 void main() {
-  testWidgets('refreshes equipment choices when exercise search opens',
-      (tester) async {
+  testWidgets('refreshes equipment choices when exercise search opens', (
+    tester,
+  ) async {
     final cubit = _ExerciseSearchCubit();
     addTearDown(cubit.close);
 
@@ -53,7 +53,7 @@ void main() {
       routes: [
         GoRoute(
           path: ExercisesView.routeName,
-          builder: (_, __) => const ExercisesView(),
+          builder: (_, _) => const ExercisesView(),
         ),
       ],
     );

@@ -1,5 +1,7 @@
 import '../services/common/errors.dart';
 import '../services/inputs/macro_goal_input.dart';
+import '../services/inputs/quick_food_log_input.dart';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:logging/logging.dart';
 
@@ -23,55 +25,72 @@ class MacroTrackingCubit extends Cubit<MacroTrackingState> {
     if (result.isErr()) {
       final error = result.error;
       if (error.type == SingleErrorTypes.notFound) {
-        emit(state.copyWith(
+        emit(
+          state.copyWith(
             activeGoal: const Nullable(null),
             isLoading: false,
-            error: const Nullable(null)));
+            error: const Nullable(null),
+          ),
+        );
       } else {
         _logger.warning('Failed to load active entity', error);
-        emit(state.copyWith(
+        emit(
+          state.copyWith(
             isLoading: false,
-            error: Nullable(ErrorState(
-                type: error.type.name, description: error.description))));
+            error: Nullable(
+              ErrorState(type: error.type.name, description: error.description),
+            ),
+          ),
+        );
       }
       return;
     }
 
-    emit(state.copyWith(
-      activeGoal: Nullable(result.value),
-      isLoading: false,
-      error: const Nullable(null),
-    ));
+    emit(
+      state.copyWith(
+        activeGoal: Nullable(result.value),
+        isLoading: false,
+        error: const Nullable(null),
+      ),
+    );
   }
 
   Future<void> getMacroGoals({int limit = 20, int offset = 0}) async {
     _logger.info('Getting macro goals');
     emit(state.copyWith(isLoading: true));
 
-    final result =
-        await _macroService.getMacroGoals(limit: limit, offset: offset);
+    final result = await _macroService.getMacroGoals(
+      limit: limit,
+      offset: offset,
+    );
     if (result.isErr()) {
       final error = result.error;
       _logger.warning('Failed to get macro goals', error);
-      emit(state.copyWith(
-        error: Nullable(ErrorState(
-          type: error.type.name,
-          description: error.description,
-        )),
-        isLoading: false,
-      ));
+      emit(
+        state.copyWith(
+          error: Nullable(
+            ErrorState(type: error.type.name, description: error.description),
+          ),
+          isLoading: false,
+        ),
+      );
       return;
     }
 
-    emit(state.copyWith(
-      goalHistory: offset > 0
-          ? [...state.goalHistory, ...result.value.data]
-          : result.value.data,
-      goalPagination: MacroGoalPagination(
-          total: result.value.total, limit: limit, offset: offset),
-      isLoading: false,
-      error: const Nullable(null),
-    ));
+    emit(
+      state.copyWith(
+        goalHistory: offset > 0
+            ? [...state.goalHistory, ...result.value.data]
+            : result.value.data,
+        goalPagination: MacroGoalPagination(
+          total: result.value.total,
+          limit: limit,
+          offset: offset,
+        ),
+        isLoading: false,
+        error: const Nullable(null),
+      ),
+    );
   }
 
   Future<bool> createMacroGoal(MacroGoalInput input) async {
@@ -83,13 +102,14 @@ class MacroTrackingCubit extends Cubit<MacroTrackingState> {
     if (result.isErr()) {
       final error = result.error;
       _logger.warning('Failed to create macro goal', error);
-      emit(state.copyWith(
-        error: Nullable(ErrorState(
-          type: error.type.name,
-          description: error.description,
-        )),
-        isLoading: false,
-      ));
+      emit(
+        state.copyWith(
+          error: Nullable(
+            ErrorState(type: error.type.name, description: error.description),
+          ),
+          isLoading: false,
+        ),
+      );
       return false;
     }
 
@@ -107,13 +127,14 @@ class MacroTrackingCubit extends Cubit<MacroTrackingState> {
     if (result.isErr()) {
       final error = result.error;
       _logger.warning('Failed to update macro goal $id', error);
-      emit(state.copyWith(
-        error: Nullable(ErrorState(
-          type: error.type.name,
-          description: error.description,
-        )),
-        isLoading: false,
-      ));
+      emit(
+        state.copyWith(
+          error: Nullable(
+            ErrorState(type: error.type.name, description: error.description),
+          ),
+          isLoading: false,
+        ),
+      );
       return false;
     }
 
@@ -130,13 +151,14 @@ class MacroTrackingCubit extends Cubit<MacroTrackingState> {
     if (result.isErr()) {
       final error = result.error;
       _logger.warning('Failed to complete macro goal $id', error);
-      emit(state.copyWith(
-        error: Nullable(ErrorState(
-          type: error.type.name,
-          description: error.description,
-        )),
-        isLoading: false,
-      ));
+      emit(
+        state.copyWith(
+          error: Nullable(
+            ErrorState(type: error.type.name, description: error.description),
+          ),
+          isLoading: false,
+        ),
+      );
       return false;
     }
 
@@ -153,13 +175,14 @@ class MacroTrackingCubit extends Cubit<MacroTrackingState> {
     if (result.isErr()) {
       final error = result.error;
       _logger.warning('Failed to delete macro goal $id', error);
-      emit(state.copyWith(
-        error: Nullable(ErrorState(
-          type: error.type.name,
-          description: error.description,
-        )),
-        isLoading: false,
-      ));
+      emit(
+        state.copyWith(
+          error: Nullable(
+            ErrorState(type: error.type.name, description: error.description),
+          ),
+          isLoading: false,
+        ),
+      );
       return false;
     }
 
@@ -181,22 +204,25 @@ class MacroTrackingCubit extends Cubit<MacroTrackingState> {
     if (result.isErr()) {
       final error = result.error;
       _logger.warning('Failed to get daily log', error);
-      emit(state.copyWith(
-        error: Nullable(ErrorState(
-          type: error.type.name,
-          description: error.description,
-        )),
-        isLoading: false,
-      ));
+      emit(
+        state.copyWith(
+          error: Nullable(
+            ErrorState(type: error.type.name, description: error.description),
+          ),
+          isLoading: false,
+        ),
+      );
       return;
     }
 
-    emit(state.copyWith(
-      selectedDailyLog: Nullable(result.value),
-      selectedDate: date,
-      isLoading: false,
-      error: const Nullable(null),
-    ));
+    emit(
+      state.copyWith(
+        selectedDailyLog: Nullable(result.value),
+        selectedDate: date,
+        isLoading: false,
+        error: const Nullable(null),
+      ),
+    );
   }
 
   Future<void> getDailyLogsForRange({
@@ -213,21 +239,24 @@ class MacroTrackingCubit extends Cubit<MacroTrackingState> {
     if (result.isErr()) {
       final error = result.error;
       _logger.warning('Failed to get range logs', error);
-      emit(state.copyWith(
-        error: Nullable(ErrorState(
-          type: error.type.name,
-          description: error.description,
-        )),
-        isLoading: false,
-      ));
+      emit(
+        state.copyWith(
+          error: Nullable(
+            ErrorState(type: error.type.name, description: error.description),
+          ),
+          isLoading: false,
+        ),
+      );
       return;
     }
 
-    emit(state.copyWith(
-      rangeLogs: result.value,
-      isLoading: false,
-      error: const Nullable(null),
-    ));
+    emit(
+      state.copyWith(
+        rangeLogs: result.value,
+        isLoading: false,
+        error: const Nullable(null),
+      ),
+    );
   }
 
   Future<bool> updateWaterIntake(int waterIntakeMl, {DateTime? date}) async {
@@ -242,19 +271,22 @@ class MacroTrackingCubit extends Cubit<MacroTrackingState> {
     if (result.isErr()) {
       final error = result.error;
       _logger.warning('Failed to update water intake', error);
-      emit(state.copyWith(
-        error: Nullable(ErrorState(
-          type: error.type.name,
-          description: error.description,
-        )),
-      ));
+      emit(
+        state.copyWith(
+          error: Nullable(
+            ErrorState(type: error.type.name, description: error.description),
+          ),
+        ),
+      );
       return false;
     }
 
-    emit(state.copyWith(
-      selectedDailyLog: Nullable(result.value),
-      error: const Nullable(null),
-    ));
+    emit(
+      state.copyWith(
+        selectedDailyLog: Nullable(result.value),
+        error: const Nullable(null),
+      ),
+    );
     return true;
   }
 
@@ -280,17 +312,46 @@ class MacroTrackingCubit extends Cubit<MacroTrackingState> {
     if (result.isErr()) {
       final error = result.error;
       _logger.warning('Failed to log food item', error);
-      emit(state.copyWith(
-        error: Nullable(ErrorState(
-          type: error.type.name,
-          description: error.description,
-        )),
-        isLoading: false,
-      ));
+      emit(
+        state.copyWith(
+          error: Nullable(
+            ErrorState(type: error.type.name, description: error.description),
+          ),
+          isLoading: false,
+        ),
+      );
       return false;
     }
 
     await getDailyLog(effectiveTime);
+    return true;
+  }
+
+  Future<bool> logQuickFood(
+    QuickFoodLogInput input, {
+    DateTime? logTime,
+    MealType mealType = MealType.snack,
+  }) async {
+    emit(state.copyWith(isLoading: true, error: const Nullable(null)));
+    final time = (logTime ?? state.selectedDate).toLocal();
+    final result = await _macroService.logQuickFood(
+      input,
+      logTime: time,
+      mealType: mealType,
+    );
+    if (result.isErr()) {
+      final error = result.error;
+      emit(
+        state.copyWith(
+          isLoading: false,
+          error: Nullable(
+            ErrorState(type: error.type.name, description: error.description),
+          ),
+        ),
+      );
+      return false;
+    }
+    await getDailyLog(time);
     return true;
   }
 
@@ -314,13 +375,14 @@ class MacroTrackingCubit extends Cubit<MacroTrackingState> {
     if (result.isErr()) {
       final error = result.error;
       _logger.warning('Failed to log recipe', error);
-      emit(state.copyWith(
-        error: Nullable(ErrorState(
-          type: error.type.name,
-          description: error.description,
-        )),
-        isLoading: false,
-      ));
+      emit(
+        state.copyWith(
+          error: Nullable(
+            ErrorState(type: error.type.name, description: error.description),
+          ),
+          isLoading: false,
+        ),
+      );
       return false;
     }
 
@@ -336,13 +398,14 @@ class MacroTrackingCubit extends Cubit<MacroTrackingState> {
     if (result.isErr()) {
       final error = result.error;
       _logger.warning('Failed to delete meal log', error);
-      emit(state.copyWith(
-        error: Nullable(ErrorState(
-          type: error.type.name,
-          description: error.description,
-        )),
-        isLoading: false,
-      ));
+      emit(
+        state.copyWith(
+          error: Nullable(
+            ErrorState(type: error.type.name, description: error.description),
+          ),
+          isLoading: false,
+        ),
+      );
       return false;
     }
 
@@ -358,13 +421,14 @@ class MacroTrackingCubit extends Cubit<MacroTrackingState> {
     if (result.isErr()) {
       final error = result.error;
       _logger.warning('Failed to delete meal log item', error);
-      emit(state.copyWith(
-        error: Nullable(ErrorState(
-          type: error.type.name,
-          description: error.description,
-        )),
-        isLoading: false,
-      ));
+      emit(
+        state.copyWith(
+          error: Nullable(
+            ErrorState(type: error.type.name, description: error.description),
+          ),
+          isLoading: false,
+        ),
+      );
       return false;
     }
 

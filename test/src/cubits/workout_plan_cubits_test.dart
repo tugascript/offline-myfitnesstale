@@ -26,10 +26,7 @@ void main() {
   String uniqueName(String prefix) => '$prefix-${seedCounter++}';
 
   Future<int> createWorkout(Database db, String name) async {
-    final workout = Workout.create(
-      name: name,
-      difficulty: Difficulty.beginner,
-    );
+    final workout = Workout.create(name: name, difficulty: Difficulty.beginner);
     return db.insert(Workout.table, workout.toMap());
   }
 
@@ -86,8 +83,9 @@ void main() {
 
     expect(cubit.state.error?.type, 'plan_limit_reached');
 
-    final countResult =
-        await WorkoutPlanService().countWorkoutPlans(createdBy: CreatedBy.user);
+    final countResult = await WorkoutPlanService().countWorkoutPlans(
+      createdBy: CreatedBy.user,
+    );
     expect(countResult.isOk(), isTrue);
     expect(countResult.value, 3);
 
@@ -192,9 +190,7 @@ void main() {
     await cubit.close();
   });
 
-  test(
-      'completing a workout plan workout record updates status and completedAt',
-      () async {
+  test('completing a workout plan workout record updates status and completedAt', () async {
     final db = await testDatabase.db;
     final workoutAId = await createWorkout(db, uniqueName('workout-a'));
     final workoutRecordId = await createWorkoutRecord(db, workoutAId);
@@ -241,8 +237,9 @@ void main() {
     await db.insert(WorkoutPlanWorkout.table, dayWorkout.toMap());
 
     final recordService = WorkoutPlanRecordService();
-    final recordResult =
-        await recordService.createWorkoutPlanRecord(workoutPlanId: planId);
+    final recordResult = await recordService.createWorkoutPlanRecord(
+      workoutPlanId: planId,
+    );
     expect(recordResult.isOk(), isTrue);
     final recordId = recordResult.value.id;
 
@@ -266,23 +263,23 @@ void main() {
     expect(startResult.isOk(), isTrue);
 
     // Complete workout
-    final completeResult =
-        await recordService.updateWorkoutPlanWorkoutRecordStatus(
-      workoutPlanRecordId: recordId,
-      workoutRecordId: workoutRecordId,
-      week: 1,
-      weekDay: 1,
-      workoutPosition: 1,
-      status: ProgressStatus.completed,
-    );
+    final completeResult = await recordService
+        .updateWorkoutPlanWorkoutRecordStatus(
+          workoutPlanRecordId: recordId,
+          workoutRecordId: workoutRecordId,
+          week: 1,
+          weekDay: 1,
+          workoutPosition: 1,
+          status: ProgressStatus.completed,
+        );
     expect(completeResult.isOk(), isTrue);
 
     final updatedPlanRecord = completeResult.value;
     // Verify progress propagation
     expect(
-        updatedPlanRecord.status,
-        ProgressStatus
-            .completed); // The whole plan is completed because there is only 1 week/day/workout!
+      updatedPlanRecord.status,
+      ProgressStatus.completed,
+    ); // The whole plan is completed because there is only 1 week/day/workout!
 
     // Verify workout record status in DB
     final List<Map<String, dynamic>> workoutRecords = await db.query(
@@ -297,9 +294,7 @@ void main() {
     expect(wRecord.completedAt, isNotNull);
   });
 
-  test(
-      'skipping a workout plan workout record updates status to skipped and completedAt remains null',
-      () async {
+  test('skipping a workout plan workout record updates status to skipped and completedAt remains null', () async {
     final db = await testDatabase.db;
     final workoutAId = await createWorkout(db, uniqueName('workout-a'));
     final workoutRecordId = await createWorkoutRecord(db, workoutAId);
@@ -346,8 +341,9 @@ void main() {
     await db.insert(WorkoutPlanWorkout.table, dayWorkout.toMap());
 
     final recordService = WorkoutPlanRecordService();
-    final recordResult =
-        await recordService.createWorkoutPlanRecord(workoutPlanId: planId);
+    final recordResult = await recordService.createWorkoutPlanRecord(
+      workoutPlanId: planId,
+    );
     expect(recordResult.isOk(), isTrue);
     final recordId = recordResult.value.id;
 
@@ -419,8 +415,7 @@ void main() {
         WorkoutRecord.table,
         where: 'id = ?',
         whereArgs: [first.value.id],
-      ))
-          .single,
+      )).single,
     );
     expect(stored.status, ProgressStatus.completed);
 
@@ -451,61 +446,67 @@ void main() {
         WorkoutRecord.table,
         where: 'id = ?',
         whereArgs: [result.value.id],
-      ))
-          .single,
+      )).single,
     );
     expect(stored.status, ProgressStatus.completed);
     expect(stored.completedAt, isNotNull);
   });
 
-  test('starting a plan abandons the previous active plan', () async {
-    final db = await testDatabase.db;
-    final service = WorkoutPlanRecordService();
-    final planIds = <int>[];
+  test(
+    'starting a plan updates cached details and abandons the previous plan',
+    () async {
+      final db = await testDatabase.db;
+      final cubit = WorkoutPlanRecordCubit();
+      addTearDown(cubit.close);
+      final planIds = <int>[];
 
-    for (var index = 0; index < 2; index++) {
-      final planId = await db.insert(
-        WorkoutPlan.table,
-        WorkoutPlan.create(
-          name: uniqueName('replacement-plan'),
-          difficulty: Difficulty.beginner,
-          totalWeeks: 1,
-          totalDays: 1,
-          totalWorkouts: 1,
-        ).toMap(),
-      );
-      planIds.add(planId);
-      await db.insert(
-        WorkoutPlanWeek.table,
-        WorkoutPlanWeek.create(
-          workoutPlanId: planId,
-          startWeek: 1,
-          endWeek: 1,
-          scheduleMode: WorkoutPlanWeekScheduleMode.manual,
-          totalDays: 1,
-          totalWorkouts: 1,
-        ).toMap(),
-      );
-    }
+      for (var index = 0; index < 2; index++) {
+        final planId = await db.insert(
+          WorkoutPlan.table,
+          WorkoutPlan.create(
+            name: uniqueName('replacement-plan'),
+            difficulty: Difficulty.beginner,
+            totalWeeks: 1,
+            totalDays: 1,
+            totalWorkouts: 1,
+          ).toMap(),
+        );
+        planIds.add(planId);
+        await db.insert(
+          WorkoutPlanWeek.table,
+          WorkoutPlanWeek.create(
+            workoutPlanId: planId,
+            startWeek: 1,
+            endWeek: 1,
+            scheduleMode: WorkoutPlanWeekScheduleMode.manual,
+            totalDays: 1,
+            totalWorkouts: 1,
+          ).toMap(),
+        );
+      }
 
-    final first =
-        await service.createWorkoutPlanRecord(workoutPlanId: planIds.first);
-    final second =
-        await service.createWorkoutPlanRecord(workoutPlanId: planIds.last);
-    expect(first.isOk(), isTrue);
-    expect(second.isOk(), isTrue);
+      for (final planId in planIds) {
+        await cubit.startWorkoutPlan(planId);
+        expect(cubit.state.error, isNull);
+        expect(cubit.state.isLoading, isFalse);
+        expect(
+          cubit.state.currentPlanRecord.currentPlanRecord?.workoutPlanId,
+          planId,
+        );
+        expect(cubit.state.currentPlanRecord.workoutPlan?.id, planId);
+        expect(cubit.state.currentPlanRecord.workoutPlan?.weeks, hasLength(1));
+      }
 
-    final records = (await db.query(
-      WorkoutPlanRecord.table,
-      orderBy: 'id ASC',
-    ))
-        .map(WorkoutPlanRecord.fromMap)
-        .toList();
-    expect(records, hasLength(2));
-    expect(records.first.status, ProgressStatus.abandoned);
-    expect(records.first.completedAt, isNotNull);
-    expect(records.last.status, ProgressStatus.inProgress);
-  });
+      final records = (await db.query(
+        WorkoutPlanRecord.table,
+        orderBy: 'id ASC',
+      )).map(WorkoutPlanRecord.fromMap).toList();
+      expect(records, hasLength(2));
+      expect(records.first.status, ProgressStatus.abandoned);
+      expect(records.first.completedAt, isNotNull);
+      expect(records.last.status, ProgressStatus.inProgress);
+    },
+  );
 
   test('a day and plan wait for every scheduled workout to finish', () async {
     final db = await testDatabase.db;
@@ -546,10 +547,7 @@ void main() {
         isRestDay: false,
       ).toMap(),
     );
-    for (final (position, workoutId) in [
-      (1, workoutAId),
-      (2, workoutBId),
-    ]) {
+    for (final (position, workoutId) in [(1, workoutAId), (2, workoutBId)]) {
       await db.insert(
         WorkoutPlanWorkout.table,
         WorkoutPlanWorkout.create(
@@ -564,8 +562,9 @@ void main() {
     }
 
     final service = WorkoutPlanRecordService();
-    final planRecord =
-        await service.createWorkoutPlanRecord(workoutPlanId: planId);
+    final planRecord = await service.createWorkoutPlanRecord(
+      workoutPlanId: planId,
+    );
     expect(planRecord.isOk(), isTrue);
     final planRecordId = planRecord.value.id;
 

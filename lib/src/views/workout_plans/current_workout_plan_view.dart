@@ -34,7 +34,12 @@ class _CurrentWorkoutPlanViewState extends State<CurrentWorkoutPlanView> {
   @override
   void didUpdateWidget(CurrentWorkoutPlanView oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.isVisible && !oldWidget.isVisible) _scheduleRefresh();
+    if (widget.isVisible &&
+        !oldWidget.isVisible &&
+        !_hasLoaded &&
+        !_refreshing) {
+      _scheduleRefresh();
+    }
   }
 
   void _scheduleRefresh() {
@@ -83,7 +88,11 @@ class _CurrentWorkoutPlanViewState extends State<CurrentWorkoutPlanView> {
         child: BlocBuilder<WorkoutPlanRecordCubit, WorkoutPlanRecordState>(
           builder: (context, state) {
             if (!_hasLoaded || _refreshing || state.isLoading) {
-              return const Center(child: CircularProgressIndicator());
+              return ActiveWorkoutPlanContent(
+                state: state.currentPlanRecord,
+                isLoading: true,
+                sizes: sizes,
+              );
             }
             if (state.error != null) {
               return CurrentWorkoutPlanPlaceholder(
