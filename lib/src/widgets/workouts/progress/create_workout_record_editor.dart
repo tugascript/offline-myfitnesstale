@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-import 'package:myfitnesstale/src/widgets/layout/app_text_form_field.dart';
 
 import '../../../cubits/states/workout_record_state.dart';
 import '../../../cubits/workout_plan_record_cubit.dart';
@@ -15,6 +14,7 @@ import '../../../utilities/formatters.dart';
 import '../../../utilities/sizes/data_display_sizes.dart';
 import '../../common/detail_number.dart';
 import '../../common/mutation_button.dart';
+import '../../layout/app_text_form_field.dart';
 import 'workout_set_exercise_record_form.dart';
 
 class CreateWorkoutRecordEditor extends StatefulWidget {
@@ -51,14 +51,14 @@ class CreateWorkoutRecordEditor extends StatefulWidget {
 
 class _CreateWorkoutRecordEditorState extends State<CreateWorkoutRecordEditor> {
   // Map of WorkoutSetId -> Map of IterationNumber -> Map of WorkoutSetExerciseId -> SetExerciseRecord
-  final Map<int, Map<int, Map<int, CreateWorkoutSetExerciseRecordBatchDto>>>
+  final Map<int, Map<int, Map<int, WorkoutSetExerciseRecordBatchInput>>>
   _setExercises = {};
 
   final _formKey = GlobalKey<FormState>();
   final _startTimeController = TextEditingController();
   final _endTimeController = TextEditingController();
 
-  List<CreateWorkoutSetRecordBatchDto> _sets = [];
+  List<WorkoutSetRecordBatchInput> _sets = [];
   DateTime _startedAt = DateTime.now().subtract(const Duration(hours: 1));
   DateTime _completedAt = DateTime.now();
 
@@ -175,7 +175,7 @@ class _CreateWorkoutRecordEditorState extends State<CreateWorkoutRecordEditor> {
   }
 
   void _updateChanges() {
-    final List<CreateWorkoutSetRecordBatchDto> result = [];
+    final List<WorkoutSetRecordBatchInput> result = [];
     for (final set in widget.sets) {
       final iterationsMap = _setExercises[set.id] ?? {};
       for (final entry in iterationsMap.entries) {
@@ -187,7 +187,7 @@ class _CreateWorkoutRecordEditorState extends State<CreateWorkoutRecordEditor> {
 
         if (exercisesList.isNotEmpty) {
           result.add(
-            CreateWorkoutSetRecordBatchDto(
+            WorkoutSetRecordBatchInput(
               workoutSetId: set.id,
               setNumber: iterationNumber,
               startedAt: _startedAt,
@@ -575,7 +575,7 @@ class _CreateWorkoutRecordEditorState extends State<CreateWorkoutRecordEditor> {
                                               setState(() {
                                                 _setExercises[set
                                                     .id]![iterationNumber]![exercise
-                                                    .id] = CreateWorkoutSetExerciseRecordBatchDto(
+                                                    .id] = WorkoutSetExerciseRecordBatchInput(
                                                   workoutSetExerciseId:
                                                       exercise.id,
                                                   exerciseId:
