@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 
+import '../../common/nullable.dart';
 import '../../models/enums.dart';
 import '../../models/weight_goal_model.dart';
 import 'dto.dart';
@@ -29,11 +30,15 @@ class WeightGoalDto extends Equatable implements Dto<WeightGoal> {
       id: model.id!,
       targetWeight: model.targetWeight,
       targetFatPercentage: model.targetFatPercentage,
-      startDate: DateTime.fromMillisecondsSinceEpoch(model.startDate * 1000,
-          isUtc: true),
+      startDate: DateTime.fromMillisecondsSinceEpoch(
+        model.startDate * 1000,
+        isUtc: true,
+      ),
       completedAt: model.completedAt != null
-          ? DateTime.fromMillisecondsSinceEpoch(model.completedAt! * 1000,
-              isUtc: true)
+          ? DateTime.fromMillisecondsSinceEpoch(
+              model.completedAt! * 1000,
+              isUtc: true,
+            )
           : null,
       status: model.status,
       phase: model.phase,
@@ -56,30 +61,32 @@ class WeightGoalDto extends Equatable implements Dto<WeightGoal> {
     int? id,
     int? targetWeight,
     DateTime? startDate,
-    DateTime? completedAt,
+    Nullable<DateTime>? completedAt,
     ProgressStatus? status,
-    int? targetFatPercentage,
+    Nullable<int>? targetFatPercentage,
     WeightGoalPhase? phase,
   }) {
     return WeightGoalDto(
       id: id ?? this.id,
       targetWeight: targetWeight ?? this.targetWeight,
       startDate: startDate ?? this.startDate,
-      completedAt: completedAt ?? this.completedAt,
+      completedAt: completedAt != null ? completedAt.value : this.completedAt,
       status: status ?? this.status,
-      targetFatPercentage: targetFatPercentage ?? this.targetFatPercentage,
+      targetFatPercentage: targetFatPercentage != null
+          ? targetFatPercentage.value
+          : this.targetFatPercentage,
       phase: phase ?? this.phase,
     );
   }
 
   @override
   List<Object?> get props => [
-        id,
-        targetWeight,
-        targetFatPercentage,
-        startDate,
-        completedAt,
-        status,
-        phase,
-      ];
+    id,
+    targetWeight,
+    targetFatPercentage,
+    startDate,
+    completedAt,
+    status,
+    phase,
+  ];
 }

@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 
+import '../common/nullable.dart';
 import 'enums.dart';
 import 'model.dart';
 import 'utilities.dart';
@@ -50,7 +51,8 @@ class WeightGoal extends Equatable implements Model {
   });
 
   static const String table = _table;
-  static final String tableCreate = '''
+  static final String tableCreate =
+      '''
   CREATE TABLE IF NOT EXISTS $_table (
     ${WeightGoalColumns.id.value} INTEGER PRIMARY KEY AUTOINCREMENT,
     ${WeightGoalColumns.targetWeight.value} INTEGER NOT NULL,
@@ -124,24 +126,25 @@ class WeightGoal extends Equatable implements Model {
 
   @override
   WeightGoal copyWith({
-    int? id,
+    Nullable<int>? id,
     int? targetWeight,
-    int? startWeight,
-    int? targetFatPercentage,
+    Nullable<int>? targetFatPercentage,
     int? startDate,
     ProgressStatus? status,
     WeightGoalPhase? phase,
-    int? completedAt,
+    Nullable<int>? completedAt,
     int? createdAt,
     int? updatedAt,
   }) {
     return WeightGoal(
-      id: id ?? this.id,
+      id: id != null ? id.value : this.id,
       targetWeight: targetWeight ?? this.targetWeight,
-      targetFatPercentage: targetFatPercentage ?? this.targetFatPercentage,
+      targetFatPercentage: targetFatPercentage != null
+          ? targetFatPercentage.value
+          : this.targetFatPercentage,
       startDate: startDate ?? this.startDate,
       status: status ?? this.status,
-      completedAt: completedAt ?? this.completedAt,
+      completedAt: completedAt != null ? completedAt.value : this.completedAt,
       phase: phase ?? this.phase,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -150,14 +153,14 @@ class WeightGoal extends Equatable implements Model {
 
   @override
   List<Object?> get props => [
-        id,
-        targetWeight,
-        targetFatPercentage,
-        startDate,
-        completedAt,
-        status,
-        phase,
-        createdAt,
-        updatedAt
-      ];
+    id,
+    targetWeight,
+    targetFatPercentage,
+    startDate,
+    completedAt,
+    status,
+    phase,
+    createdAt,
+    updatedAt,
+  ];
 }

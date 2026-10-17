@@ -101,10 +101,10 @@ unavailable-in-this-build explanation instead of purchase controls.
 
 ### Weight and goals
 
-- Creates, edits, deletes, and filters weight records.
+- Creates, edits, deletes, and filters weight records using shared `WeightRecordInput` PUT semantics (`Nullable<T>` in `copyWith` clears omitted nullable fields).
 - Displays the latest value, a date-range chart, and selectable chart points.
 - Converts displayed values between metric and imperial units.
-- Creates, edits, completes, and deletes weight goals and displays goal history.
+- Creates, edits, completes, and deletes weight goals using shared `WeightGoalInput` PUT semantics, abandoning prior in-progress goals when creating or reopening an active goal, and displays goal history.
 - Can associate weight records with a goal; deleting a goal keeps its weight
   records and clears their association.
 

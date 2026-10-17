@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 
+import '../../common/nullable.dart';
 import '../../models/weight_record_model.dart';
 import 'dto.dart';
 
@@ -33,36 +34,34 @@ class WeightRecordDto extends Equatable implements Dto<WeightRecord> {
   }
 
   factory WeightRecordDto.empty() {
-    return WeightRecordDto(
-      id: 0,
-      weight: 0,
-      recordDate: DateTime.now(),
-    );
+    return WeightRecordDto(id: 0, weight: 0, recordDate: DateTime.now());
   }
 
   @override
   WeightRecordDto copyWith({
     int? id,
     int? weight,
-    int? fatPercentage,
-    String? pictureUri,
+    Nullable<int>? fatPercentage,
+    Nullable<String>? pictureUri,
     DateTime? recordDate,
   }) {
     return WeightRecordDto(
       id: id ?? this.id,
       weight: weight ?? this.weight,
-      fatPercentage: fatPercentage ?? this.fatPercentage,
-      pictureUri: pictureUri ?? this.pictureUri,
+      fatPercentage: fatPercentage != null
+          ? fatPercentage.value
+          : this.fatPercentage,
+      pictureUri: pictureUri != null ? pictureUri.value : this.pictureUri,
       recordDate: recordDate ?? this.recordDate,
     );
   }
 
   @override
   List<Object?> get props => [
-        id,
-        weight,
-        fatPercentage,
-        pictureUri,
-        recordDate,
-      ];
+    id,
+    weight,
+    fatPercentage,
+    pictureUri,
+    recordDate,
+  ];
 }

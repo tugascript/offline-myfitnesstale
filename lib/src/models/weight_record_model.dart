@@ -1,3 +1,6 @@
+import 'package:equatable/equatable.dart';
+
+import '../common/nullable.dart';
 import 'model.dart';
 import 'utilities.dart';
 import 'weight_goal_model.dart';
@@ -20,7 +23,7 @@ enum WeightRecordColumns with Columns {
   const WeightRecordColumns(this.value);
 }
 
-class WeightRecord implements Model {
+class WeightRecord extends Equatable implements Model {
   @override
   final int? id;
   final int weight;
@@ -45,7 +48,8 @@ class WeightRecord implements Model {
   });
 
   static const String table = _table;
-  static final String tableCreate = '''
+  static final String tableCreate =
+      '''
   CREATE TABLE IF NOT EXISTS $_table (
     ${WeightRecordColumns.id.value} INTEGER PRIMARY KEY AUTOINCREMENT,
     ${WeightRecordColumns.weight.value} INTEGER NOT NULL,
@@ -111,24 +115,40 @@ class WeightRecord implements Model {
 
   @override
   WeightRecord copyWith({
-    int? id,
+    Nullable<int>? id,
     int? weight,
-    int? fatPercentage,
+    Nullable<int>? fatPercentage,
     int? recordDate,
-    String? pictureUri,
-    int? weightGoalId,
+    Nullable<String>? pictureUri,
+    Nullable<int>? weightGoalId,
     int? createdAt,
     int? updatedAt,
   }) {
     return WeightRecord(
-      id: id ?? this.id,
+      id: id != null ? id.value : this.id,
       weight: weight ?? this.weight,
-      fatPercentage: fatPercentage ?? this.fatPercentage,
+      fatPercentage: fatPercentage != null
+          ? fatPercentage.value
+          : this.fatPercentage,
       recordDate: recordDate ?? this.recordDate,
-      pictureUri: pictureUri ?? this.pictureUri,
-      weightGoalId: weightGoalId ?? this.weightGoalId,
+      pictureUri: pictureUri != null ? pictureUri.value : this.pictureUri,
+      weightGoalId: weightGoalId != null
+          ? weightGoalId.value
+          : this.weightGoalId,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
   }
+
+  @override
+  List<Object?> get props => [
+    id,
+    weight,
+    fatPercentage,
+    recordDate,
+    pictureUri,
+    weightGoalId,
+    createdAt,
+    updatedAt,
+  ];
 }
