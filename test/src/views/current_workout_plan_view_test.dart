@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:skeletonizer/skeletonizer.dart';
+import 'package:myfitnesstale/src/common/nullable.dart';
 import 'package:myfitnesstale/src/cubits/states/common_state.dart';
 import 'package:myfitnesstale/src/cubits/states/workout_plan_record_state.dart';
 import 'package:myfitnesstale/src/cubits/workout_plan_record_cubit.dart';
@@ -23,7 +24,7 @@ class _Cubit extends WorkoutPlanRecordCubit {
   @override
   Future<void> getLatestActivePlanRecord() async {
     loads++;
-    emit(state.copyWith(isLoading: true, clearError: true));
+    emit(state.copyWith(isLoading: true, error: const Nullable(null)));
     await pending?.future;
     emit(nextState);
   }
@@ -43,8 +44,11 @@ void main() {
   WorkoutPlanRecordState activeState() =>
       WorkoutPlanRecordState.initial().copyWith(
         currentPlanRecord: ActiveWorkoutPlanDummyData.dummyState.copyWith(
-          workoutPlan: ActiveWorkoutPlanDummyData.dummyState.workoutPlan!
-              .copyWith(name: 'My current plan'),
+          workoutPlan: Nullable(
+            ActiveWorkoutPlanDummyData.dummyState.workoutPlan!.copyWith(
+              name: 'My current plan',
+            ),
+          ),
         ),
       );
 
@@ -149,9 +153,8 @@ void main() {
   ) async {
     final cubit = _Cubit()
       ..nextState = activeState().copyWith(
-        error: const ErrorState(
-          type: 'operationFailure',
-          description: 'Lookup failed',
+        error: const Nullable(
+          ErrorState(type: 'operationFailure', description: 'Lookup failed'),
         ),
       );
     await pumpView(tester, cubit);
@@ -215,8 +218,8 @@ void main() {
       cubit.publish(
         activeState().copyWith(
           currentPlanRecord: current.copyWith(
-            currentPlanRecord: current.currentPlanRecord!.copyWith(
-              status: status,
+            currentPlanRecord: Nullable(
+              current.currentPlanRecord!.copyWith(status: status),
             ),
           ),
         ),

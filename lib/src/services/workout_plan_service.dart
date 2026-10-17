@@ -1,7 +1,7 @@
 import 'package:logging/logging.dart';
 import 'package:sqflite/sqflite.dart';
 
-import '../models/common.dart';
+import '../common/nullable.dart';
 import '../models/db.dart';
 import '../models/enums.dart';
 import '../models/repository.dart'
@@ -20,103 +20,9 @@ import 'dtos/workout_plan_day_dto.dart';
 import 'dtos/workout_plan_dto.dart';
 import 'dtos/workout_plan_week_dto.dart';
 import 'dtos/workout_plan_workout_dto.dart';
+import 'inputs/workout_plan_input.dart';
 
-class WeekWorkoutInput {
-  final int workoutId;
-  final WorkoutTimeOfDay? timeOfDay;
-
-  const WeekWorkoutInput({required this.workoutId, this.timeOfDay});
-}
-
-class WorkoutPlanWorkoutBatchCreateInput {
-  final int workoutId;
-  final WorkoutTimeOfDay? timeOfDay;
-
-  const WorkoutPlanWorkoutBatchCreateInput({
-    required this.workoutId,
-    this.timeOfDay,
-  });
-}
-
-class WorkoutPlanDayBatchCreateInput {
-  final int day;
-  final bool isRestDay;
-  final List<WorkoutPlanWorkoutBatchCreateInput> workouts;
-
-  const WorkoutPlanDayBatchCreateInput({
-    required this.day,
-    this.isRestDay = false,
-    required this.workouts,
-  });
-}
-
-class WorkoutPlanWeekBatchCreateInput {
-  final int startWeek;
-  final int endWeek;
-  final WorkoutPhase? phase;
-  final WorkoutPlanWeekScheduleMode scheduleMode;
-  final List<WorkoutPlanDayBatchCreateInput> days;
-
-  const WorkoutPlanWeekBatchCreateInput({
-    required this.startWeek,
-    required this.endWeek,
-    this.phase,
-    this.scheduleMode = WorkoutPlanWeekScheduleMode.manual,
-    required this.days,
-  });
-}
-
-class WorkoutPlanWorkoutRegistrationInput {
-  final WorkoutDto workout;
-  final WorkoutTimeOfDay timeOfDay;
-
-  const WorkoutPlanWorkoutRegistrationInput({
-    required this.workout,
-    required this.timeOfDay,
-  });
-}
-
-class WorkoutPlanDayRegistrationInput {
-  final bool isRestDay;
-  final List<WorkoutPlanWorkoutRegistrationInput> workouts;
-
-  const WorkoutPlanDayRegistrationInput({
-    this.isRestDay = false,
-    required this.workouts,
-  });
-}
-
-class WorkoutPlanWeekRegistrationInput {
-  final int startWeek;
-  final int endWeek;
-  final WorkoutPhase phase;
-  final List<WorkoutPlanDayRegistrationInput> days;
-
-  const WorkoutPlanWeekRegistrationInput({
-    required this.startWeek,
-    required this.endWeek,
-    required this.phase,
-    required this.days,
-  });
-}
-
-class WorkoutPlanRegistrationInput {
-  final String name;
-  final String description;
-  final PictureData? picture;
-  final VideoData? video;
-  final Difficulty difficulty;
-  final List<WorkoutPlanWeekRegistrationInput> weeks;
-
-  const WorkoutPlanRegistrationInput({
-    required this.name,
-    required this.description,
-    this.picture,
-    this.video,
-    required this.difficulty,
-    required this.weeks,
-  });
-}
+export 'inputs/workout_plan_input.dart';
 
 class WorkoutPlanService {
   WorkoutPlanService._();
@@ -496,31 +402,26 @@ class WorkoutPlanService {
   }
 
   Future<Result<WorkoutPlanDto, ServiceError<OperationErrorTypes>>>
-  createWorkoutPlan({
-    required String name,
-    required Difficulty difficulty,
-    required bool isFavorite,
-    String? description,
-    PictureData? picture,
-    VideoData? video,
-    int totalWeeks = 0,
-  }) async {
-    _logger.info('Creating workout plan with name $name');
+  createWorkoutPlan(WorkoutPlanInput input) async {
+    _logger.info('Creating workout plan with name ${input.name}');
     try {
       final WorkoutPlan plan = WorkoutPlan.create(
-        name: name,
-        totalWeeks: totalWeeks,
-        difficulty: difficulty,
-        isFavorite: isFavorite,
-        description: description,
-        picture: picture,
-        video: video,
+        name: input.name,
+        totalWeeks: input.totalWeeks,
+        difficulty: input.difficulty,
+        isFavorite: input.isFavorite,
+        description: input.description.value,
+        picture: input.picture.value,
+        video: input.video.value,
       );
       final int id = await _repository.insert(plan);
       _logger.info('Created workout plan with id $id');
-      return ok(WorkoutPlanDto.fromModel(plan.copyWith(id: id)));
+      return ok(WorkoutPlanDto.fromModel(plan.copyWith(id: Nullable(id))));
     } catch (e) {
-      _logger.severe('Failed to create workout plan with name $name', e);
+      _logger.severe(
+        'Failed to create workout plan with name ${input.name}',
+        e,
+      );
       return err(
         const ServiceError(
           type: OperationErrorTypes.operationFailure,
@@ -697,7 +598,7 @@ class WorkoutPlanService {
             createdBy: plan.createdBy,
           );
           final weekId = await _weekRepository.insert(week, txn);
-          final weekModel = week.copyWith(id: weekId);
+          final weekModel = week.copyWith(id: Nullable(weekId));
 
           final List<WorkoutPlanDayDto> createdDays = [];
           for (final dayInput in sortedDays) {
@@ -711,7 +612,7 @@ class WorkoutPlanService {
               createdBy: plan.createdBy,
             );
             final dayId = await _dayRepository.insert(day, txn);
-            final dayModel = day.copyWith(id: dayId);
+            final dayModel = day.copyWith(id: Nullable(dayId));
 
             final List<WorkoutPlanWorkoutDto> createdWorkouts = [];
             for (int i = 0; i < dayInput.workouts.length; i++) {
@@ -733,7 +634,7 @@ class WorkoutPlanService {
 
               createdWorkouts.add(
                 WorkoutPlanWorkoutDto.fromModel(
-                  planWorkout.copyWith(id: planWorkoutId),
+                  planWorkout.copyWith(id: Nullable(planWorkoutId)),
                   workout: workoutMap[workoutInput.workoutId],
                 ),
               );
@@ -878,7 +779,7 @@ class WorkoutPlanService {
 
                 createdWorkouts.add(
                   WorkoutPlanWorkoutDto.fromModel(
-                    workout.copyWith(id: planWorkoutId),
+                    workout.copyWith(id: Nullable(planWorkoutId)),
                     workout: workoutInput.workout,
                   ),
                 );
@@ -886,7 +787,7 @@ class WorkoutPlanService {
 
               createdDays.add(
                 WorkoutPlanDayDto.fromModel(
-                  day.copyWith(id: dayId),
+                  day.copyWith(id: Nullable(dayId)),
                   planWorkouts: createdWorkouts,
                 ),
               );
@@ -894,7 +795,7 @@ class WorkoutPlanService {
 
             createdWeeks.add(
               WorkoutPlanWeekDto.fromModel(
-                week.copyWith(id: weekId),
+                week.copyWith(id: Nullable(weekId)),
                 days: createdDays,
               ),
             );
@@ -902,7 +803,7 @@ class WorkoutPlanService {
 
           createdPlans.add(
             WorkoutPlanDto.fromModel(
-              plan.copyWith(id: planId),
+              plan.copyWith(id: Nullable(planId)),
               weeks: createdWeeks,
             ),
           );
@@ -930,16 +831,7 @@ class WorkoutPlanService {
   }
 
   Future<Result<WorkoutPlanDto, ServiceError<SingleErrorTypes>>>
-  updateWorkoutPlan(
-    int id, {
-    String? name,
-    int? totalWeeks,
-    Difficulty? difficulty,
-    String? description,
-    PictureData? picture,
-    VideoData? video,
-    bool? isFavorite,
-  }) async {
+  updateWorkoutPlan(int id, WorkoutPlanInput input) async {
     _logger.info('Updating workout plan with id $id');
     try {
       final WorkoutPlan? plan = await _repository.selectOne(id);
@@ -954,13 +846,13 @@ class WorkoutPlanService {
       }
 
       final WorkoutPlan updatedPlan = plan.copyWith(
-        name: name,
-        totalWeeks: totalWeeks,
-        difficulty: difficulty,
-        description: description,
-        picture: picture,
-        video: video,
-        isFavorite: isFavorite,
+        name: input.name,
+        totalWeeks: input.totalWeeks,
+        difficulty: input.difficulty,
+        description: input.description,
+        picture: input.picture,
+        video: input.video,
+        isFavorite: input.isFavorite,
         updatedAt: DateUtilities.getNowUtcUnix(),
       );
       await _repository.update(updatedPlan);
@@ -968,6 +860,39 @@ class WorkoutPlanService {
       return ok(WorkoutPlanDto.fromModel(updatedPlan));
     } catch (e) {
       _logger.severe('Failed to update workout plan with id $id', e);
+      return err(
+        const ServiceError(
+          type: SingleErrorTypes.operationFailure,
+          description: 'Failed to update workout plan',
+        ),
+      );
+    }
+  }
+
+  Future<Result<WorkoutPlanDto, ServiceError<SingleErrorTypes>>>
+  updateWorkoutPlanFavorite(int id, bool isFavorite) async {
+    _logger.info('Updating workout plan favorite with id $id');
+    try {
+      final WorkoutPlan? plan = await _repository.selectOne(id);
+      if (plan == null) {
+        _logger.info('Workout plan with id $id not found');
+        return err(
+          const ServiceError(
+            type: SingleErrorTypes.notFound,
+            description: 'Workout plan not found',
+          ),
+        );
+      }
+
+      final WorkoutPlan updatedPlan = plan.copyWith(
+        isFavorite: isFavorite,
+        updatedAt: DateUtilities.getNowUtcUnix(),
+      );
+      await _repository.update(updatedPlan);
+      _logger.info('Updated workout plan favorite with id $id');
+      return ok(WorkoutPlanDto.fromModel(updatedPlan));
+    } catch (e) {
+      _logger.severe('Failed to update workout plan favorite with id $id', e);
       return err(
         const ServiceError(
           type: SingleErrorTypes.operationFailure,
@@ -1005,15 +930,11 @@ class WorkoutPlanService {
   }
 
   Future<Result<WorkoutPlanWeekDto, ServiceError<SingleErrorTypes>>>
-  createWorkoutPlanWeek({
-    required int workoutPlanId,
-    required int startWeek,
-    required int endWeek,
-  }) async {
+  createWorkoutPlanWeek(int workoutPlanId, WorkoutPlanWeekInput input) async {
     _logger.info(
       'Creating workout plan week for workout plan with id $workoutPlanId',
     );
-    if (startWeek < 1 || endWeek < startWeek) {
+    if (input.startWeek < 1 || input.endWeek < input.startWeek) {
       return err(
         ServiceError(
           type: SingleErrorTypes.invalidInput,
@@ -1038,12 +959,14 @@ class WorkoutPlanService {
       final WorkoutPlanWeek week = WorkoutPlanWeek.create(
         workoutPlanId: workoutPlanId,
         planVersion: workoutPlan.version,
-        startWeek: startWeek,
-        endWeek: endWeek,
+        startWeek: input.startWeek,
+        endWeek: input.endWeek,
+        phase: input.phase.value,
+        scheduleMode: input.scheduleMode,
       );
       final int id = await _weekRepository.insert(week);
       _logger.info('Created workout plan week with id $id');
-      return ok(WorkoutPlanWeekDto.fromModel(week.copyWith(id: id)));
+      return ok(WorkoutPlanWeekDto.fromModel(week.copyWith(id: Nullable(id))));
     } catch (e) {
       _logger.severe(
         'Failed to create workout plan week for workout plan with id $workoutPlanId',
@@ -1059,12 +982,16 @@ class WorkoutPlanService {
   }
 
   Future<Result<WorkoutPlanWeekDto, ServiceError<SingleErrorTypes>>>
-  updateWorkoutPlanWeek({
-    required int weekId,
-    int? startWeek,
-    int? endWeek,
-  }) async {
+  updateWorkoutPlanWeek(int weekId, WorkoutPlanWeekInput input) async {
     _logger.info('Updating workout plan week with id $weekId');
+    if (input.startWeek < 1 || input.endWeek < input.startWeek) {
+      return err(
+        const ServiceError(
+          type: SingleErrorTypes.invalidInput,
+          description: 'Invalid week range',
+        ),
+      );
+    }
     try {
       final WorkoutPlanWeek? week = await _weekRepository.selectOne(weekId);
       if (week == null) {
@@ -1077,8 +1004,11 @@ class WorkoutPlanService {
       }
 
       final WorkoutPlanWeek updatedWeek = week.copyWith(
-        startWeek: startWeek,
-        endWeek: endWeek,
+        startWeek: input.startWeek,
+        endWeek: input.endWeek,
+        phase: input.phase,
+        scheduleMode: input.scheduleMode,
+        updatedAt: DateUtilities.getNowUtcUnix(),
       );
       await _weekRepository.update(updatedWeek);
       _logger.info('Updated workout plan week with id $weekId');
@@ -1383,7 +1313,9 @@ class WorkoutPlanService {
                 week,
                 days: daysMap[week.id]
                     ?.map(
-                      (day) => day.copyWith(planWorkouts: workoutPlans[day.id]),
+                      (day) => day.copyWith(
+                        planWorkouts: Nullable(workoutPlans[day.id]),
+                      ),
                     )
                     .toList(),
               ),
@@ -1520,7 +1452,7 @@ class WorkoutPlanService {
             planWorkout,
             txn,
           );
-          planWorkouts.add(planWorkout.copyWith(id: planWorkoutId));
+          planWorkouts.add(planWorkout.copyWith(id: Nullable(planWorkoutId)));
         }
 
         if (planDay.day < daysCount) {
@@ -1538,7 +1470,7 @@ class WorkoutPlanService {
       _logger.info('Created workout plan day with id $planDayId');
       return ok(
         WorkoutPlanDayDto.fromModel(
-          planDay.copyWith(id: planDayId),
+          planDay.copyWith(id: Nullable(planDayId)),
           planWorkouts: planWorkouts
               .map(
                 (e) => WorkoutPlanWorkoutDto.fromModel(
@@ -2010,12 +1942,10 @@ class WorkoutPlanService {
   }
 
   Future<Result<WorkoutPlanWorkoutDto, ServiceError<SingleErrorTypes>>>
-  createWorkoutPlanWorkout({
-    required int workoutPlanDayId,
-    required int workoutId,
-    int? position,
-    WorkoutTimeOfDay? timeOfDay,
-  }) async {
+  createWorkoutPlanWorkout(
+    int workoutPlanDayId,
+    WorkoutPlanWorkoutInput input,
+  ) async {
     _logger.info(
       "Creating workout plan workout for workout plan day with id $workoutPlanDayId",
     );
@@ -2033,13 +1963,15 @@ class WorkoutPlanService {
         );
       }
 
-      final Workout? workout = await _workoutRepository.selectOne(workoutId);
+      final Workout? workout = await _workoutRepository.selectOne(
+        input.workoutId,
+      );
       if (workout == null) {
-        _logger.warning('Workout with id $workoutId not found');
+        _logger.warning('Workout with id ${input.workoutId} not found');
         return err(
           ServiceError(
             type: SingleErrorTypes.notFound,
-            description: 'Workout with id $workoutId not found',
+            description: 'Workout with id ${input.workoutId} not found',
           ),
         );
       }
@@ -2049,7 +1981,7 @@ class WorkoutPlanService {
         whereArgs: [workoutPlanDayId],
       );
       final int finalPosition = count + 1;
-      final int intPosition = position ?? finalPosition;
+      final int intPosition = input.position ?? finalPosition;
       final int workoutPosition = intPosition > finalPosition
           ? finalPosition
           : intPosition;
@@ -2058,9 +1990,9 @@ class WorkoutPlanService {
         workoutPlanWeekId: planDay.workoutPlanWeekId,
         workoutPlanDayId: workoutPlanDayId,
         planVersion: planDay.planVersion,
-        workoutId: workoutId,
+        workoutId: input.workoutId,
         position: workoutPosition,
-        timeOfDay: timeOfDay,
+        timeOfDay: input.timeOfDay.value,
       );
 
       if (workoutPosition == finalPosition) {
@@ -2070,7 +2002,7 @@ class WorkoutPlanService {
         );
         return ok(
           WorkoutPlanWorkoutDto.fromModel(
-            planWorkout.copyWith(id: id),
+            planWorkout.copyWith(id: Nullable(id)),
             workout: WorkoutDto.fromModel(workout),
           ),
         );
@@ -2095,7 +2027,7 @@ class WorkoutPlanService {
       );
       return ok(
         WorkoutPlanWorkoutDto.fromModel(
-          planWorkout.copyWith(id: id),
+          planWorkout.copyWith(id: Nullable(id)),
           workout: WorkoutDto.fromModel(workout),
         ),
       );
@@ -2115,11 +2047,10 @@ class WorkoutPlanService {
   }
 
   Future<Result<WorkoutPlanWorkoutDto, ServiceError<SingleErrorTypes>>>
-  updateWorkoutPlanWorkout({
-    required int workoutPlanWorkoutId,
-    required int position,
-    WorkoutTimeOfDay? timeOfDay,
-  }) async {
+  updateWorkoutPlanWorkout(
+    int workoutPlanWorkoutId,
+    WorkoutPlanWorkoutInput input,
+  ) async {
     _logger.info('Updating workout plan workout with id $workoutPlanWorkoutId');
     try {
       final WorkoutPlanWorkout? planWorkout = await _planWorkoutRepository
@@ -2138,21 +2069,24 @@ class WorkoutPlanService {
       }
 
       final Workout? workout = await _workoutRepository.selectOne(
-        planWorkout.workoutId,
+        input.workoutId,
       );
       if (workout == null) {
-        _logger.warning('Workout with id ${planWorkout.workoutId} not found');
+        _logger.warning('Workout with id ${input.workoutId} not found');
         return err(
           ServiceError(
             type: SingleErrorTypes.notFound,
-            description: 'Workout with id ${planWorkout.workoutId} not found',
+            description: 'Workout with id ${input.workoutId} not found',
           ),
         );
       }
 
-      if (position == planWorkout.position) {
+      final int requestedPosition = input.position ?? planWorkout.position;
+      if (requestedPosition == planWorkout.position) {
         final WorkoutPlanWorkout updatedPlanWorkout = planWorkout.copyWith(
-          timeOfDay: timeOfDay,
+          workoutId: input.workoutId,
+          timeOfDay: input.timeOfDay,
+          updatedAt: DateUtilities.getNowUtcUnix(),
         );
         await _planWorkoutRepository.update(updatedPlanWorkout);
         _logger.info(
@@ -2171,12 +2105,14 @@ class WorkoutPlanService {
         where: "${WorkoutPlanWorkoutColumns.workoutPlanDayId.value} = ?",
         whereArgs: [planWorkout.workoutPlanDayId],
       );
-      final int workoutPosition = position > finalPosition
+      final int workoutPosition = requestedPosition > finalPosition
           ? finalPosition
-          : position;
+          : requestedPosition;
       final WorkoutPlanWorkout updatedPlanWorkout = planWorkout.copyWith(
+        workoutId: input.workoutId,
         position: workoutPosition,
-        timeOfDay: timeOfDay,
+        timeOfDay: input.timeOfDay,
+        updatedAt: DateUtilities.getNowUtcUnix(),
       );
       await (await _databaseHelper.db).transaction((txn) async {
         await _planWorkoutRepository.update(updatedPlanWorkout, txn);

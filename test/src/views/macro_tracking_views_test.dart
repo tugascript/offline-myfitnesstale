@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:myfitnesstale/src/common/nullable.dart';
 import 'package:myfitnesstale/src/cubits/active_workout_cubit.dart';
 import 'package:myfitnesstale/src/cubits/entitlement_cubit.dart';
 import 'package:myfitnesstale/src/cubits/exercise_cubit.dart';
@@ -136,16 +137,18 @@ class _TestWorkoutPlanRecordCubit extends WorkoutPlanRecordCubit {
     emit(
       state.copyWith(
         currentPlanRecord: state.currentPlanRecord.copyWith(
-          workoutPlan: const WorkoutPlanDto(
-            id: 1,
-            name: 'A workout plan with a longer title',
-            currentVersion: 1,
-            totalWeeks: 1,
-            totalDays: 7,
-            totalWorkouts: 3,
-            difficulty: Difficulty.beginner,
-            isFavorite: false,
-            createdBy: CreatedBy.user,
+          workoutPlan: const Nullable(
+            WorkoutPlanDto(
+              id: 1,
+              name: 'A workout plan with a longer title',
+              currentVersion: 1,
+              totalWeeks: 1,
+              totalDays: 7,
+              totalWorkouts: 3,
+              difficulty: Difficulty.beginner,
+              isFavorite: false,
+              createdBy: CreatedBy.user,
+            ),
           ),
           completedWorkouts: 1,
           totalWorkouts: 3,

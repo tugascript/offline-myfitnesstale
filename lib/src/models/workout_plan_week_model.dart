@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 
+import '../common/nullable.dart';
 import 'enums.dart';
 import 'model.dart';
 import 'utilities.dart';
@@ -157,12 +158,12 @@ class WorkoutPlanWeek extends Equatable implements Model {
 
   @override
   WorkoutPlanWeek copyWith({
-    int? id,
+    Nullable<int>? id,
     int? workoutPlanId,
     int? planVersion,
     int? startWeek,
     int? endWeek,
-    WorkoutPhase? phase,
+    Nullable<WorkoutPhase>? phase,
     int? totalDays,
     int? totalWorkouts,
     CreatedBy? createdBy,
@@ -171,7 +172,7 @@ class WorkoutPlanWeek extends Equatable implements Model {
     int? updatedAt,
   }) {
     return WorkoutPlanWeek(
-      id: id ?? this.id,
+      id: id != null ? id.value : this.id,
       workoutPlanId: workoutPlanId ?? this.workoutPlanId,
       planVersion: planVersion ?? this.planVersion,
       startWeek: startWeek ?? this.startWeek,
@@ -180,7 +181,7 @@ class WorkoutPlanWeek extends Equatable implements Model {
       scheduleMode: scheduleMode ?? this.scheduleMode,
       totalDays: totalDays ?? this.totalDays,
       totalWorkouts: totalWorkouts ?? this.totalWorkouts,
-      phase: phase ?? this.phase,
+      phase: phase != null ? phase.value : this.phase,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );

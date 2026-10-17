@@ -7,7 +7,6 @@ import '../../../../cubits/workout_cubit.dart';
 import '../../../../cubits/workout_plan_cubit.dart';
 import '../../../../models/enums.dart';
 import '../../../../services/dtos/workout_plan_week_dto.dart';
-import '../../../../services/workout_plan_service.dart';
 import '../../../../utilities/sizes/data_display_sizes.dart';
 import '../../../common/editors/save_buttons.dart';
 import '../../../layout/dynamic_list_input.dart';

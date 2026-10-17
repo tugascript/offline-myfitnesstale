@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 
+import '../../common/nullable.dart';
 import '../../models/enums.dart';
 import '../../models/workout_plan_workout_record_model.dart';
 import 'dto.dart';
@@ -67,7 +68,7 @@ class WorkoutPlanWorkoutRecordDto extends Equatable
     int? position,
     DateTime? startedAt,
     ProgressStatus? status,
-    DateTime? completedAt,
+    Nullable<DateTime>? completedAt,
   }) {
     return WorkoutPlanWorkoutRecordDto(
       id: id ?? this.id,
@@ -81,7 +82,7 @@ class WorkoutPlanWorkoutRecordDto extends Equatable
       position: position ?? this.position,
       startedAt: startedAt ?? this.startedAt,
       status: status ?? this.status,
-      completedAt: completedAt ?? this.completedAt,
+      completedAt: completedAt != null ? completedAt.value : this.completedAt,
     );
   }
 

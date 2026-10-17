@@ -88,10 +88,12 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
         workoutPosition != null) {
       final planRecordService = WorkoutPlanRecordService();
       final dayResult = await planRecordService.upsertWorkoutPlanDayRecord(
-        workoutPlanRecordId: workoutPlanRecordId,
-        status: ProgressStatus.inProgress,
-        week: week,
-        weekDay: day,
+        WorkoutPlanDayRecordInput(
+          workoutPlanRecordId: workoutPlanRecordId,
+          status: ProgressStatus.inProgress,
+          week: week,
+          weekDay: day,
+        ),
       );
       if (dayResult.isErr()) {
         emit(
@@ -110,13 +112,15 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
 
       final planWorkoutResult = await planRecordService
           .upsertWorkoutPlanWorkoutRecord(
-            workoutPlanRecordId: workoutPlanRecordId,
-            workoutRecordId: workoutRecordResult.value.id,
-            status: ProgressStatus.inProgress,
-            week: week,
-            weekDay: day,
-            workoutPosition: workoutPosition,
-            startedAt: startedAt,
+            WorkoutPlanWorkoutRecordInput(
+              workoutPlanRecordId: workoutPlanRecordId,
+              workoutRecordId: workoutRecordResult.value.id,
+              status: ProgressStatus.inProgress,
+              week: week,
+              weekDay: day,
+              workoutPosition: workoutPosition,
+              startedAt: startedAt,
+            ),
           );
       if (planWorkoutResult.isErr()) {
         emit(
@@ -422,12 +426,14 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
         final planRecordService = WorkoutPlanRecordService();
         final planResult = await planRecordService
             .updateWorkoutPlanWorkoutRecordStatus(
-              workoutPlanRecordId: planRecordId,
-              workoutRecordId: state.workoutRecord!.id,
-              week: week,
-              weekDay: day,
-              workoutPosition: position,
-              status: ProgressStatus.completed,
+              WorkoutPlanWorkoutRecordInput(
+                workoutPlanRecordId: planRecordId,
+                workoutRecordId: state.workoutRecord!.id,
+                week: week,
+                weekDay: day,
+                workoutPosition: position,
+                status: ProgressStatus.completed,
+              ),
             );
         if (planResult.isErr()) {
           emit(

@@ -294,7 +294,7 @@ void main() {
     expect(initial.isOk(), isTrue);
 
     final recordResult = await workoutPlanRecordService.createWorkoutPlanRecord(
-      workoutPlanId: workoutPlanId,
+      WorkoutPlanRecordInput(workoutPlanId: workoutPlanId),
     );
     expect(recordResult.isOk(), isTrue);
     expect(recordResult.value.workoutPlanVersion, 1);

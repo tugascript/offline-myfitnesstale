@@ -95,9 +95,9 @@ class _WorkoutPlanDetailViewState extends State<WorkoutPlanDetailView> {
                 // Plan Header
                 WorkoutPlanHeader(
                   actionButtonPress: () {
-                    context.read<WorkoutPlanCubit>().updateWorkoutPlan(
-                      id: plan.id,
-                      isFavorite: !plan.isFavorite,
+                    context.read<WorkoutPlanCubit>().updateWorkoutPlanFavorite(
+                      plan.id,
+                      !plan.isFavorite,
                     );
                   },
                   sizes: sizes,
