@@ -1,6 +1,7 @@
 import 'package:logging/logging.dart';
 import 'package:sqflite/sqflite.dart';
 
+import '../common/nullable.dart';
 import '../models/db.dart';
 import '../models/enums.dart';
 import '../models/repository.dart'
@@ -21,6 +22,9 @@ import 'dtos/workout_plan_day_record_dto.dart';
 import 'dtos/workout_plan_record_dto.dart';
 import 'dtos/workout_plan_week_record_dto.dart';
 import 'dtos/workout_plan_workout_record_dto.dart';
+import 'inputs/workout_plan_record_input.dart';
+
+export 'inputs/workout_plan_record_input.dart';
 
 class WorkoutPlanRecordService {
   WorkoutPlanRecordService._();
@@ -158,14 +162,12 @@ class WorkoutPlanRecordService {
   }
 
   Future<Result<WorkoutPlanRecordDto, ServiceError<SingleErrorTypes>>>
-  createWorkoutPlanRecord({
-    required int workoutPlanId,
-    ProgressStatus status = ProgressStatus.inProgress,
-    DateTime? startedAt,
-  }) async {
+  createWorkoutPlanRecord(WorkoutPlanRecordInput input) async {
     _logger.info('Creating workout plan record');
     try {
-      final workoutPlan = await _workoutPlanRepository.selectOne(workoutPlanId);
+      final workoutPlan = await _workoutPlanRepository.selectOne(
+        input.workoutPlanId,
+      );
       if (workoutPlan == null) {
         return err(
           const ServiceError(
@@ -176,7 +178,10 @@ class WorkoutPlanRecordService {
       }
 
       final weekWhere = WhereBuilder();
-      weekWhere.and(WorkoutPlanWeekColumns.workoutPlanId.equal, workoutPlanId);
+      weekWhere.and(
+        WorkoutPlanWeekColumns.workoutPlanId.equal,
+        input.workoutPlanId,
+      );
       weekWhere.and(
         WorkoutPlanWeekColumns.planVersion.equal,
         workoutPlan.version,
@@ -189,7 +194,7 @@ class WorkoutPlanRecordService {
             limit: 1,
           );
       if (weeks.isEmpty) {
-        _logger.info('No weeks found for workout plan $workoutPlanId');
+        _logger.info('No weeks found for workout plan ${input.workoutPlanId}');
         return err(
           const ServiceError(
             type: SingleErrorTypes.notFound,
@@ -199,20 +204,25 @@ class WorkoutPlanRecordService {
       }
 
       final WorkoutPlanRecord record = WorkoutPlanRecord.create(
-        workoutPlanId,
+        input.workoutPlanId,
         workoutPlanVersion: workoutPlan.version,
-        status: status,
-        startedAt: startedAt != null
-            ? DateUtilities.getDateUnix(startedAt)
+        status: input.status,
+        startedAt: input.startedAt != null
+            ? DateUtilities.getDateUnix(input.startedAt!)
             : DateUtilities.getNowUtcUnix(),
+        completedAt: input.completedAt.value != null
+            ? DateUtilities.getDateUnix(input.completedAt.value!)
+            : null,
         currentWeek: 1,
         currentDay: 1,
         currentWorkoutPosition: 1,
       );
-      if (status != ProgressStatus.inProgress) {
+      if (input.status != ProgressStatus.inProgress) {
         final int id = await _repository.insert(record);
         _logger.info('Created workout plan record with id $id');
-        return ok(WorkoutPlanRecordDto.fromModel(record.copyWith(id: id)));
+        return ok(
+          WorkoutPlanRecordDto.fromModel(record.copyWith(id: Nullable(id))),
+        );
       }
 
       final List<WorkoutPlanRecord> records = await _repository.selectMany(
@@ -222,7 +232,9 @@ class WorkoutPlanRecordService {
       if (records.isEmpty) {
         final int id = await _repository.insert(record);
         _logger.info('Created workout plan record with id $id');
-        return ok(WorkoutPlanRecordDto.fromModel(record.copyWith(id: id)));
+        return ok(
+          WorkoutPlanRecordDto.fromModel(record.copyWith(id: Nullable(id))),
+        );
       }
 
       final int id = await _repository.startTransaction((txn) async {
@@ -244,7 +256,9 @@ class WorkoutPlanRecordService {
         return await _repository.insert(record, txn);
       });
       _logger.info('Created workout plan record with id $id');
-      return ok(WorkoutPlanRecordDto.fromModel(record.copyWith(id: id)));
+      return ok(
+        WorkoutPlanRecordDto.fromModel(record.copyWith(id: Nullable(id))),
+      );
     } catch (e) {
       _logger.severe('Failed to create workout plan record', e);
       return err(
@@ -257,11 +271,7 @@ class WorkoutPlanRecordService {
   }
 
   Future<Result<WorkoutPlanRecordDto, ServiceError<SingleErrorTypes>>>
-  updateWorkoutPlanRecord(
-    int id, {
-    ProgressStatus? status,
-    int? completedAt,
-  }) async {
+  updateWorkoutPlanRecord(int id, WorkoutPlanRecordInput input) async {
     _logger.info('Updating workout plan record with id $id');
     try {
       final WorkoutPlanRecord? record = await _repository.selectOne(id);
@@ -276,8 +286,16 @@ class WorkoutPlanRecordService {
       }
 
       final WorkoutPlanRecord updatedRecord = record.copyWith(
-        status: status,
-        completedAt: completedAt,
+        workoutPlanId: input.workoutPlanId,
+        status: input.status,
+        startedAt: input.startedAt != null
+            ? DateUtilities.getDateUnix(input.startedAt!)
+            : record.startedAt,
+        completedAt: Nullable(
+          input.completedAt.value != null
+              ? DateUtilities.getDateUnix(input.completedAt.value!)
+              : null,
+        ),
         updatedAt: DateUtilities.getNowUtcUnix(),
       );
       await _repository.update(updatedRecord);
@@ -427,7 +445,9 @@ class WorkoutPlanRecordService {
         return ok(await _toRecordDtoWithTree(records.first));
       }
 
-      return await createWorkoutPlanRecord(workoutPlanId: workoutPlanId);
+      return await createWorkoutPlanRecord(
+        WorkoutPlanRecordInput(workoutPlanId: workoutPlanId),
+      );
     } catch (e) {
       _logger.severe('Failed to get or create current workout plan record', e);
       return err(
@@ -508,12 +528,8 @@ class WorkoutPlanRecordService {
   }
 
   Future<Result<WorkoutPlanRecordDto, ServiceError<SingleErrorTypes>>>
-  upsertWorkoutPlanDayRecord({
-    required int workoutPlanRecordId,
-    required ProgressStatus status,
-    int? week,
-    int? weekDay,
-  }) async {
+  upsertWorkoutPlanDayRecord(WorkoutPlanDayRecordInput input) async {
+    final workoutPlanRecordId = input.workoutPlanRecordId;
     _logger.info(
       'Getting or creating workout plan day record for workout plan record $workoutPlanRecordId',
     );
@@ -533,8 +549,8 @@ class WorkoutPlanRecordService {
         );
       }
 
-      final currentWeek = week ?? record.currentWeek;
-      final currentWeekDay = weekDay ?? record.currentDay;
+      final currentWeek = input.week ?? record.currentWeek;
+      final currentWeekDay = input.weekDay ?? record.currentDay;
       final weekWhere = WhereBuilder();
       weekWhere.and(
         WorkoutPlanWeekRecordColumns.workoutPlanRecordId.equal,
@@ -555,7 +571,7 @@ class WorkoutPlanRecordService {
           workoutPlanRecord: record,
           week: currentWeek,
           weekDay: currentWeekDay,
-          status: status,
+          status: input.status,
         );
         if (createResult.isErr()) {
           return err(createResult.error);
@@ -582,7 +598,7 @@ class WorkoutPlanRecordService {
             workoutPlanRecord: record,
             weekRecord: weekRecordData,
             weekDay: currentWeekDay,
-            status: status,
+            status: input.status,
           );
           if (createResult.isErr()) {
             return err(createResult.error);
@@ -591,6 +607,16 @@ class WorkoutPlanRecordService {
           _logger.info(
             'Found existing workout plan day record for workout plan record $workoutPlanRecordId, week record ${weekRecordData.id} and day $currentWeekDay',
           );
+          final existingDayRecord = dayRecords.first;
+          final now = DateUtilities.getNowUtcUnix();
+          final updatedDayRecord = existingDayRecord.copyWith(
+            status: input.status,
+            completedAt: Nullable(
+              input.status == ProgressStatus.completed ? now : null,
+            ),
+            updatedAt: now,
+          );
+          await _workoutPlanDayRecordRepository.update(updatedDayRecord);
         }
       }
 
@@ -619,15 +645,8 @@ class WorkoutPlanRecordService {
   }
 
   Future<Result<WorkoutPlanRecordDto, ServiceError<SingleErrorTypes>>>
-  upsertWorkoutPlanWorkoutRecord({
-    required int workoutPlanRecordId,
-    required int workoutRecordId,
-    required ProgressStatus status,
-    int? week,
-    int? weekDay,
-    int? workoutPosition,
-    DateTime? startedAt,
-  }) async {
+  upsertWorkoutPlanWorkoutRecord(WorkoutPlanWorkoutRecordInput input) async {
+    final workoutPlanRecordId = input.workoutPlanRecordId;
     _logger.info(
       'Upserting workout plan workout record for workout plan record $workoutPlanRecordId',
     );
@@ -647,10 +666,10 @@ class WorkoutPlanRecordService {
         );
       }
 
-      final currentWeek = week ?? record.currentWeek;
-      final currentWeekDay = weekDay ?? record.currentDay;
+      final currentWeek = input.week ?? record.currentWeek;
+      final currentWeekDay = input.weekDay ?? record.currentDay;
       final currentWorkoutPosition =
-          workoutPosition ?? record.currentWorkoutPosition;
+          input.workoutPosition ?? record.currentWorkoutPosition;
       final weekWhere = WhereBuilder();
       weekWhere.and(
         WorkoutPlanWeekRecordColumns.workoutPlanRecordId.equal,
@@ -723,22 +742,26 @@ class WorkoutPlanRecordService {
         final createResult = await _createWorkoutPlanWorkoutRecord(
           dayRecord: dayRecordData,
           workoutPosition: currentWorkoutPosition,
-          workoutRecordId: workoutRecordId,
-          status: status,
-          startedAt: startedAt,
+          workoutRecordId: input.workoutRecordId,
+          status: input.status,
+          startedAt: input.startedAt,
         );
         if (createResult.isErr()) {
           return err(createResult.error);
         }
       } else {
         final existingRecord = workoutRecords.first;
+        final now = DateUtilities.getNowUtcUnix();
         final updatedRecord = existingRecord.copyWith(
-          workoutRecordId: workoutRecordId,
-          status: status,
-          startedAt: startedAt != null
-              ? DateUtilities.getDateUnix(startedAt)
+          workoutRecordId: input.workoutRecordId,
+          status: input.status,
+          startedAt: input.startedAt != null
+              ? DateUtilities.getDateUnix(input.startedAt!)
               : existingRecord.startedAt,
-          updatedAt: DateUtilities.getNowUtcUnix(),
+          completedAt: Nullable(
+            input.status == ProgressStatus.completed ? now : null,
+          ),
+          updatedAt: now,
         );
         final updated = await _workoutPlanWorkoutRecordRepository.update(
           updatedRecord,
@@ -901,7 +924,7 @@ class WorkoutPlanRecordService {
           updatedAt: DateUtilities.getNowUtcUnix(),
         );
         await _repository.update(updatedRecord, txn);
-        return (weekRecordId, dayRecord.copyWith(id: dayRecordId));
+        return (weekRecordId, dayRecord.copyWith(id: Nullable(dayRecordId)));
       });
       _logger.info(
         'Created workout plan week record with id $weekRecordId and day record with id ${dayRecord.id} for workout plan record $workoutPlanRecordId',
@@ -997,7 +1020,9 @@ class WorkoutPlanRecordService {
         'Created workout plan day record with id $dayRecordId for workout plan record $workoutPlanRecordId',
       );
       return ok(
-        WorkoutPlanDayRecordDto.fromModel(dayRecord.copyWith(id: dayRecordId)),
+        WorkoutPlanDayRecordDto.fromModel(
+          dayRecord.copyWith(id: Nullable(dayRecordId)),
+        ),
       );
     } catch (e) {
       _logger.severe(
@@ -1076,7 +1101,9 @@ class WorkoutPlanRecordService {
       );
       return ok(
         WorkoutPlanWorkoutRecordDto.fromModel(
-          workoutPlanWorkoutRecord.copyWith(id: workoutPlanWorkoutRecordId),
+          workoutPlanWorkoutRecord.copyWith(
+            id: Nullable(workoutPlanWorkoutRecordId),
+          ),
         ),
       );
     } catch (e) {
@@ -1094,35 +1121,35 @@ class WorkoutPlanRecordService {
   }
 
   Future<Result<WorkoutPlanRecordDto, ServiceError<SingleErrorTypes>>>
-  updateWorkoutPlanWorkoutRecordStatus({
-    required int workoutPlanRecordId,
-    required int week,
-    required int weekDay,
-    required int workoutPosition,
-    required ProgressStatus status,
-    required int workoutRecordId,
-    DateTime? startedAt,
-  }) async {
+  updateWorkoutPlanWorkoutRecordStatus(
+    WorkoutPlanWorkoutRecordInput input,
+  ) async {
+    final workoutPlanRecordId = input.workoutPlanRecordId;
+    final status = input.status;
     _logger.info('Updating workout plan workout record status to $status');
     try {
       final dayResult = await upsertWorkoutPlanDayRecord(
-        workoutPlanRecordId: workoutPlanRecordId,
-        status: ProgressStatus.inProgress,
-        week: week,
-        weekDay: weekDay,
+        WorkoutPlanDayRecordInput(
+          workoutPlanRecordId: workoutPlanRecordId,
+          status: ProgressStatus.inProgress,
+          week: input.week,
+          weekDay: input.weekDay,
+        ),
       );
       if (dayResult.isErr()) {
         return err(dayResult.error);
       }
 
       final upsertResult = await upsertWorkoutPlanWorkoutRecord(
-        workoutPlanRecordId: workoutPlanRecordId,
-        workoutRecordId: workoutRecordId,
-        status: ProgressStatus.inProgress,
-        week: week,
-        weekDay: weekDay,
-        workoutPosition: workoutPosition,
-        startedAt: startedAt,
+        WorkoutPlanWorkoutRecordInput(
+          workoutPlanRecordId: workoutPlanRecordId,
+          workoutRecordId: input.workoutRecordId,
+          status: ProgressStatus.inProgress,
+          week: input.week,
+          weekDay: input.weekDay,
+          workoutPosition: input.workoutPosition,
+          startedAt: input.startedAt,
+        ),
       );
       if (upsertResult.isErr()) {
         return err(upsertResult.error);
@@ -1139,6 +1166,11 @@ class WorkoutPlanRecordService {
           ),
         );
       }
+
+      final week = input.week ?? record.currentWeek;
+      final weekDay = input.weekDay ?? record.currentDay;
+      final workoutPosition =
+          input.workoutPosition ?? record.currentWorkoutPosition;
 
       final weekWhere = WhereBuilder();
       weekWhere.and(
@@ -1214,7 +1246,9 @@ class WorkoutPlanRecordService {
       await _repository.startTransaction((txn) async {
         final updatedWorkoutRecord = workoutRecord.copyWith(
           status: status,
-          completedAt: status == ProgressStatus.completed ? now : null,
+          completedAt: Nullable(
+            status == ProgressStatus.completed ? now : null,
+          ),
           updatedAt: now,
         );
         await _workoutPlanWorkoutRecordRepository.update(
@@ -1251,7 +1285,7 @@ class WorkoutPlanRecordService {
         if (allCompletedOrSkipped) {
           final updatedDayRecord = dayRecord.copyWith(
             status: ProgressStatus.completed,
-            completedAt: now,
+            completedAt: Nullable(now),
             updatedAt: now,
           );
           await _workoutPlanDayRecordRepository.update(updatedDayRecord, txn);
@@ -1279,7 +1313,7 @@ class WorkoutPlanRecordService {
           if (allWeekWorkoutsCompleted) {
             final updatedWeekRecord = weekRecord.copyWith(
               status: ProgressStatus.completed,
-              completedAt: now,
+              completedAt: Nullable(now),
               updatedAt: now,
             );
             await _workoutPlanWeekRecordRepository.update(
@@ -1311,7 +1345,7 @@ class WorkoutPlanRecordService {
               if (allPlanWorkoutsCompleted) {
                 final updatedRecord = record.copyWith(
                   status: ProgressStatus.completed,
-                  completedAt: now,
+                  completedAt: Nullable(now),
                   updatedAt: now,
                 );
                 await _repository.update(updatedRecord, txn);

@@ -9,6 +9,8 @@ import '../services/workout_plan_service.dart';
 import 'states/common_state.dart';
 import 'states/workout_plan_record_state.dart';
 
+export '../services/inputs/workout_plan_record_input.dart';
+
 class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
   final WorkoutPlanRecordService _workoutPlanRecordService =
       WorkoutPlanRecordService();
@@ -45,7 +47,7 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
               )
             : null,
         isLoading: true,
-        clearError: true,
+        error: const Nullable(null),
       ),
     );
 
@@ -63,9 +65,11 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
       emit(
         state.copyWith(
           isLoading: false,
-          error: ErrorState(
-            type: result.error.type.name,
-            description: result.error.description,
+          error: Nullable(
+            ErrorState(
+              type: result.error.type.name,
+              description: result.error.description,
+            ),
           ),
         ),
       );
@@ -86,7 +90,7 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
           total: page.total,
         ),
         isLoading: false,
-        clearError: true,
+        error: const Nullable(null),
       ),
     );
   }
@@ -105,8 +109,8 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
         emit(
           state.copyWith(
             currentPlanRecord: state.currentPlanRecord.copyWith(
-              currentPlanRecord: null,
-              workoutPlan: null,
+              currentPlanRecord: const Nullable(null),
+              workoutPlan: const Nullable(null),
               todaysWorkouts: [],
             ),
             isLoading: false,
@@ -117,9 +121,11 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
 
       emit(
         state.copyWith(
-          error: ErrorState(
-            type: error.type.name,
-            description: "Something went wrong",
+          error: Nullable(
+            ErrorState(
+              type: error.type.name,
+              description: "Something went wrong",
+            ),
           ),
           isLoading: false,
         ),
@@ -137,9 +143,11 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
     if (planResult.isErr()) {
       emit(
         state.copyWith(
-          error: ErrorState(
-            type: planResult.error.type.name,
-            description: "Failed to load workout plan details",
+          error: Nullable(
+            ErrorState(
+              type: planResult.error.type.name,
+              description: "Failed to load workout plan details",
+            ),
           ),
           isLoading: false,
         ),
@@ -150,11 +158,11 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
     emit(
       state.copyWith(
         currentPlanRecord: state.currentPlanRecord.copyWith(
-          currentPlanRecord: record,
-          workoutPlan: planResult.value,
+          currentPlanRecord: Nullable(record),
+          workoutPlan: Nullable(planResult.value),
         ),
         isLoading: false,
-        clearError: true,
+        error: const Nullable(null),
       ),
     );
 
@@ -176,9 +184,11 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
     if (currentPlanRecord == null) {
       emit(
         state.copyWith(
-          error: ErrorState(
-            type: SingleErrorTypes.invalidInput.name,
-            description: 'No active workout plan record set',
+          error: Nullable(
+            ErrorState(
+              type: SingleErrorTypes.invalidInput.name,
+              description: 'No active workout plan record set',
+            ),
           ),
           isLoading: false,
         ),
@@ -193,10 +203,12 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
 
     final dayResult = await _workoutPlanRecordService
         .upsertWorkoutPlanDayRecord(
-          workoutPlanRecordId: currentPlanRecord.id,
-          status: ProgressStatus.inProgress,
-          week: useWeek,
-          weekDay: useDay,
+          WorkoutPlanDayRecordInput(
+            workoutPlanRecordId: currentPlanRecord.id,
+            status: ProgressStatus.inProgress,
+            week: useWeek,
+            weekDay: useDay,
+          ),
         );
     if (dayResult.isErr()) {
       final error = dayResult.error;
@@ -204,9 +216,11 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
         case SingleErrorTypes.operationFailure:
           emit(
             state.copyWith(
-              error: ErrorState(
-                type: error.type.name,
-                description: 'Failed to start workout plan record',
+              error: Nullable(
+                ErrorState(
+                  type: error.type.name,
+                  description: 'Failed to start workout plan record',
+                ),
               ),
               isLoading: false,
             ),
@@ -215,9 +229,11 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
         default:
           emit(
             state.copyWith(
-              error: ErrorState(
-                type: error.type.name,
-                description: 'Unknown error occurred',
+              error: Nullable(
+                ErrorState(
+                  type: error.type.name,
+                  description: 'Unknown error occurred',
+                ),
               ),
               isLoading: false,
             ),
@@ -228,20 +244,24 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
 
     final workoutResult = await _workoutPlanRecordService
         .upsertWorkoutPlanWorkoutRecord(
-          workoutPlanRecordId: currentPlanRecord.id,
-          workoutRecordId: workoutRecordId,
-          status: ProgressStatus.inProgress,
-          week: useWeek,
-          weekDay: useDay,
-          workoutPosition: useWorkoutPosition,
+          WorkoutPlanWorkoutRecordInput(
+            workoutPlanRecordId: currentPlanRecord.id,
+            workoutRecordId: workoutRecordId,
+            status: ProgressStatus.inProgress,
+            week: useWeek,
+            weekDay: useDay,
+            workoutPosition: useWorkoutPosition,
+          ),
         );
     if (workoutResult.isErr()) {
       final error = workoutResult.error;
       emit(
         state.copyWith(
-          error: ErrorState(
-            type: error.type.name,
-            description: 'Failed to start workout plan record',
+          error: Nullable(
+            ErrorState(
+              type: error.type.name,
+              description: 'Failed to start workout plan record',
+            ),
           ),
           isLoading: false,
         ),
@@ -253,7 +273,7 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
     emit(
       state.copyWith(
         currentPlanRecord: state.currentPlanRecord.copyWith(
-          currentPlanRecord: updatedRecord,
+          currentPlanRecord: Nullable(updatedRecord),
           currentWeek: updatedRecord.currentWeek,
           currentDay: updatedRecord.currentDay,
         ),
@@ -281,9 +301,11 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
       if (lookup.isErr() || lookup.value.status != ProgressStatus.inProgress) {
         emit(
           state.copyWith(
-            error: ErrorState(
-              type: SingleErrorTypes.invalidInput.name,
-              description: 'The selected workout plan is no longer active',
+            error: Nullable(
+              ErrorState(
+                type: SingleErrorTypes.invalidInput.name,
+                description: 'The selected workout plan is no longer active',
+              ),
             ),
           ),
         );
@@ -295,21 +317,25 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
     emit(state.copyWith(isLoading: true));
     final result = await _workoutPlanRecordService
         .updateWorkoutPlanWorkoutRecordStatus(
-          workoutPlanRecordId: planRecord.id,
-          workoutRecordId: workoutRecordId,
-          week: week,
-          weekDay: day,
-          workoutPosition: workoutPosition,
-          status: ProgressStatus.completed,
-          startedAt: startedAt,
+          WorkoutPlanWorkoutRecordInput(
+            workoutPlanRecordId: planRecord.id,
+            workoutRecordId: workoutRecordId,
+            week: week,
+            weekDay: day,
+            workoutPosition: workoutPosition,
+            status: ProgressStatus.completed,
+            startedAt: startedAt,
+          ),
         );
     if (result.isErr()) {
       emit(
         state.copyWith(
           isLoading: false,
-          error: ErrorState(
-            type: result.error.type.name,
-            description: result.error.description,
+          error: Nullable(
+            ErrorState(
+              type: result.error.type.name,
+              description: result.error.description,
+            ),
           ),
         ),
       );
@@ -319,9 +345,9 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
     emit(
       state.copyWith(
         isLoading: false,
-        clearError: true,
+        error: const Nullable(null),
         currentPlanRecord: state.currentPlanRecord.copyWith(
-          currentPlanRecord: result.value,
+          currentPlanRecord: Nullable(result.value),
         ),
       ),
     );
@@ -342,7 +368,7 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
             state.copyWith(
               isLoading: false,
               currentPlanRecord: CurrentWorkoutPlanRecordState.initial(),
-              clearError: true,
+              error: const Nullable(null),
             ),
           );
           return;
@@ -350,9 +376,11 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
         case SingleErrorTypes.operationFailure:
           emit(
             state.copyWith(
-              error: ErrorState(
-                type: error.type.name,
-                description: 'Failed to get latest active plan record',
+              error: Nullable(
+                ErrorState(
+                  type: error.type.name,
+                  description: 'Failed to get latest active plan record',
+                ),
               ),
               isLoading: false,
             ),
@@ -369,9 +397,11 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
     if (planResult.isErr()) {
       emit(
         state.copyWith(
-          error: ErrorState(
-            type: planResult.error.type.name,
-            description: 'Failed to load workout plan details',
+          error: Nullable(
+            ErrorState(
+              type: planResult.error.type.name,
+              description: 'Failed to load workout plan details',
+            ),
           ),
           isLoading: false,
         ),
@@ -382,11 +412,11 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
     emit(
       state.copyWith(
         currentPlanRecord: state.currentPlanRecord.copyWith(
-          currentPlanRecord: record,
-          workoutPlan: planResult.value,
+          currentPlanRecord: Nullable(record),
+          workoutPlan: Nullable(planResult.value),
         ),
         isLoading: false,
-        clearError: true,
+        error: const Nullable(null),
       ),
     );
 
@@ -521,14 +551,16 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
     emit(state.copyWith(isLoading: true));
 
     final result = await _workoutPlanRecordService.createWorkoutPlanRecord(
-      workoutPlanId: workoutPlanId,
+      WorkoutPlanRecordInput(workoutPlanId: workoutPlanId),
     );
     if (result.isErr()) {
       emit(
         state.copyWith(
-          error: ErrorState(
-            type: result.error.type.name,
-            description: result.error.description,
+          error: Nullable(
+            ErrorState(
+              type: result.error.type.name,
+              description: result.error.description,
+            ),
           ),
           isLoading: false,
         ),
@@ -554,9 +586,11 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
       _logger.info('No active workout plan record set');
       emit(
         state.copyWith(
-          error: ErrorState(
-            type: SingleErrorTypes.invalidInput.name,
-            description: 'No active workout plan record set',
+          error: Nullable(
+            ErrorState(
+              type: SingleErrorTypes.invalidInput.name,
+              description: 'No active workout plan record set',
+            ),
           ),
           isLoading: false,
         ),
@@ -565,17 +599,21 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
     }
 
     final result = await _workoutPlanRecordService.upsertWorkoutPlanDayRecord(
-      workoutPlanRecordId: workoutPlanRecordId,
-      status: status,
-      week: week,
-      weekDay: weekDay,
+      WorkoutPlanDayRecordInput(
+        workoutPlanRecordId: workoutPlanRecordId,
+        status: status,
+        week: week,
+        weekDay: weekDay,
+      ),
     );
     if (result.isErr()) {
       emit(
         state.copyWith(
-          error: ErrorState(
-            type: result.error.type.name,
-            description: result.error.description,
+          error: Nullable(
+            ErrorState(
+              type: result.error.type.name,
+              description: result.error.description,
+            ),
           ),
           isLoading: false,
         ),
@@ -587,12 +625,12 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
     emit(
       state.copyWith(
         currentPlanRecord: state.currentPlanRecord.copyWith(
-          currentPlanRecord: updatedPlanRecord,
+          currentPlanRecord: Nullable(updatedPlanRecord),
           currentWeek: updatedPlanRecord.currentWeek,
           currentDay: updatedPlanRecord.currentDay,
         ),
         isLoading: false,
-        clearError: true,
+        error: const Nullable(null),
       ),
     );
   }

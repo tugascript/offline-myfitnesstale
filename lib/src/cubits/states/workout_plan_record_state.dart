@@ -89,8 +89,8 @@ final class CurrentWorkoutPlanRecordState extends Equatable {
   }
 
   CurrentWorkoutPlanRecordState copyWith({
-    WorkoutPlanRecordDto? currentPlanRecord,
-    WorkoutPlanDto? workoutPlan,
+    Nullable<WorkoutPlanRecordDto>? currentPlanRecord,
+    Nullable<WorkoutPlanDto>? workoutPlan,
     List<WorkoutDto>? todaysWorkouts,
     int? currentWeek,
     int? currentDay,
@@ -99,8 +99,10 @@ final class CurrentWorkoutPlanRecordState extends Equatable {
     int? totalWorkouts,
   }) {
     return CurrentWorkoutPlanRecordState(
-      currentPlanRecord: currentPlanRecord ?? this.currentPlanRecord,
-      workoutPlan: workoutPlan ?? this.workoutPlan,
+      currentPlanRecord: currentPlanRecord != null
+          ? currentPlanRecord.value
+          : this.currentPlanRecord,
+      workoutPlan: workoutPlan != null ? workoutPlan.value : this.workoutPlan,
       todaysWorkouts: todaysWorkouts ?? this.todaysWorkouts,
       currentWeek: currentWeek ?? this.currentWeek,
       currentDay: currentDay ?? this.currentDay,
@@ -152,15 +154,14 @@ final class WorkoutPlanRecordState extends Equatable {
     List<WorkoutPlanRecordDto>? planRecords,
     WorkoutPlanRecordPagination? pagination,
     bool? isLoading,
-    ErrorState? error,
-    bool clearError = false,
+    Nullable<ErrorState>? error,
   }) {
     return WorkoutPlanRecordState(
       currentPlanRecord: currentPlanRecord ?? this.currentPlanRecord,
       planRecords: planRecords ?? this.planRecords,
       pagination: pagination ?? this.pagination,
       isLoading: isLoading ?? this.isLoading,
-      error: clearError ? null : error ?? this.error,
+      error: error != null ? error.value : this.error,
     );
   }
 

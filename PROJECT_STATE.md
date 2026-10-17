@@ -131,12 +131,17 @@ There is no import/export, local backup, or broader weight analytics.
 - Browse Plans appears only in the successful empty state. Active, loading,
   and failed lookup states have no plan-library shortcut; Workout Plans is
   available through Home's Workout Plans menu.
-- Creates and versions multi-week schedules.
+- Creates, edits, favorites, and versions multi-week schedules using shared
+  `WorkoutPlanInput`, `WorkoutPlanWeekInput`, and `WorkoutPlanWorkoutInput` PUT
+  semantics (`Nullable<T>` in `copyWith` clears omitted nullable fields across
+  plan, week, day, and workout models and DTOs).
 - Allows one active plan execution and abandons the previous active execution
   when another begins.
 - Expands ranged week templates into dated week instances.
 - Shows missed days and progress.
-- Starts/resumes live scheduled workouts or records them manually.
+- Starts/resumes live scheduled workouts or records them manually using shared
+  `WorkoutPlanRecordInput`, `WorkoutPlanDayRecordInput`, and
+  `WorkoutPlanWorkoutRecordInput` PUT semantics.
 - Provides paginated, newest-first plan history filtered by plan and status.
 
 Date and progress calculations are still duplicated across UI and service

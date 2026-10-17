@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:myfitnesstale/src/widgets/workout_plan/editor/workout_plan_header_edit_card.dart';
 
+import '../../common/nullable.dart';
 import '../../cubits/states/workout_plan_state.dart';
 import '../../cubits/workout_plan_cubit.dart';
+import '../../models/common.dart';
 import '../../models/enums.dart';
 import '../../services/dtos/workout_plan_dto.dart';
 import '../../utilities/sizes/data_display_sizes.dart';
@@ -85,11 +87,30 @@ class _WorkoutPlanEditViewState extends State<WorkoutPlanEditView> {
                         await context
                             .read<WorkoutPlanCubit>()
                             .updateWorkoutPlan(
-                              id: plan.id,
-                              name: name,
-                              isFavorite: isFavorite,
-                              difficulty: difficulty,
-                              description: description,
+                              plan.id,
+                              WorkoutPlanInput(
+                                name: name,
+                                isFavorite: isFavorite,
+                                difficulty: difficulty,
+                                totalWeeks: plan.totalWeeks,
+                                description: Nullable(description),
+                                picture: Nullable(
+                                  plan.picture != null
+                                      ? PictureData(
+                                          uri: plan.picture!.uri,
+                                          storage: plan.picture!.storage,
+                                        )
+                                      : null,
+                                ),
+                                video: Nullable(
+                                  plan.video != null
+                                      ? VideoData(
+                                          uri: plan.video!.uri,
+                                          platform: plan.video!.platform,
+                                        )
+                                      : null,
+                                ),
+                              ),
                             );
                         if (mounted) {
                           setState(() {
