@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:myfitnesstale/src/common/nullable.dart';
 import 'package:myfitnesstale/src/cubits/states/common_state.dart';
 import 'package:myfitnesstale/src/cubits/states/workout_plan_record_state.dart';
 import 'package:myfitnesstale/src/cubits/workout_plan_record_cubit.dart';
@@ -20,7 +21,9 @@ class _WorkoutPlanRecordCubit extends WorkoutPlanRecordCubit {
   void failWithLoadedRecords(String description) {
     emit(
       state.copyWith(
-        error: ErrorState(type: 'operationFailure', description: description),
+        error: Nullable(
+          ErrorState(type: 'operationFailure', description: description),
+        ),
       ),
     );
   }
@@ -93,9 +96,8 @@ void main() {
     cubit = await pumpView(
       tester,
       WorkoutPlanRecordState.initial().copyWith(
-        error: const ErrorState(
-          type: 'operationFailure',
-          description: 'History failed',
+        error: const Nullable(
+          ErrorState(type: 'operationFailure', description: 'History failed'),
         ),
       ),
     );

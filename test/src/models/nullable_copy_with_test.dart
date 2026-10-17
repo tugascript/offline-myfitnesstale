@@ -9,6 +9,14 @@ import 'package:myfitnesstale/src/models/food_model.dart';
 import 'package:myfitnesstale/src/models/weight_goal_model.dart';
 import 'package:myfitnesstale/src/models/weight_record_model.dart';
 import 'package:myfitnesstale/src/models/workout_model.dart';
+import 'package:myfitnesstale/src/models/workout_plan_day_model.dart';
+import 'package:myfitnesstale/src/models/workout_plan_day_record_model.dart';
+import 'package:myfitnesstale/src/models/workout_plan_model.dart';
+import 'package:myfitnesstale/src/models/workout_plan_record_model.dart';
+import 'package:myfitnesstale/src/models/workout_plan_week_model.dart';
+import 'package:myfitnesstale/src/models/workout_plan_week_record_model.dart';
+import 'package:myfitnesstale/src/models/workout_plan_workout_model.dart';
+import 'package:myfitnesstale/src/models/workout_plan_workout_record_model.dart';
 import 'package:myfitnesstale/src/models/workout_record_model.dart';
 import 'package:myfitnesstale/src/models/workout_set_exercise_model.dart';
 import 'package:myfitnesstale/src/models/workout_set_exercise_option_model.dart';
@@ -22,6 +30,14 @@ import 'package:myfitnesstale/src/services/dtos/strength_goal_dto.dart';
 import 'package:myfitnesstale/src/services/dtos/weight_goal_dto.dart';
 import 'package:myfitnesstale/src/services/dtos/weight_record_dto.dart';
 import 'package:myfitnesstale/src/services/dtos/workout_dto.dart';
+import 'package:myfitnesstale/src/services/dtos/workout_plan_day_dto.dart';
+import 'package:myfitnesstale/src/services/dtos/workout_plan_day_record_dto.dart';
+import 'package:myfitnesstale/src/services/dtos/workout_plan_dto.dart';
+import 'package:myfitnesstale/src/services/dtos/workout_plan_record_dto.dart';
+import 'package:myfitnesstale/src/services/dtos/workout_plan_week_dto.dart';
+import 'package:myfitnesstale/src/services/dtos/workout_plan_week_record_dto.dart';
+import 'package:myfitnesstale/src/services/dtos/workout_plan_workout_dto.dart';
+import 'package:myfitnesstale/src/services/dtos/workout_plan_workout_record_dto.dart';
 import 'package:myfitnesstale/src/services/dtos/workout_record_dto.dart';
 import 'package:myfitnesstale/src/services/dtos/workout_set_dto.dart';
 import 'package:myfitnesstale/src/services/dtos/workout_set_exercise_dto.dart';
@@ -451,6 +467,193 @@ void main() {
       );
       expect(
         workoutRecordDto.copyWith(setRecords: const Nullable(null)).setRecords,
+        isNull,
+      );
+    });
+
+    test('WorkoutPlan and WorkoutPlanRecord related models and DTOs support Nullable copyWith', () {
+      const pic = PictureData(
+        uri: 'file:///pic.jpg',
+        storage: PictureStorage.files,
+      );
+
+      final plan = WorkoutPlan.create(
+        name: 'Strength Block',
+        description: '4 week block',
+        picture: pic,
+        difficulty: Difficulty.intermediate,
+        isFavorite: true,
+      ).copyWith(id: const Nullable(1));
+      expect(plan.copyWith().description, '4 week block');
+      expect(
+        plan.copyWith(description: const Nullable(null)).description,
+        isNull,
+      );
+      expect(plan.copyWith(picture: const Nullable(null)).picture, isNull);
+
+      final week = WorkoutPlanWeek.create(
+        workoutPlanId: 1,
+        planVersion: 1,
+        startWeek: 1,
+        endWeek: 4,
+        phase: WorkoutPhase.maxStrength,
+      ).copyWith(id: const Nullable(2));
+      expect(week.copyWith().phase, WorkoutPhase.maxStrength);
+      expect(week.copyWith(phase: const Nullable(null)).phase, isNull);
+
+      final day = WorkoutPlanDay.create(
+        workoutPlanId: 1,
+        planVersion: 1,
+        workoutPlanWeekId: 2,
+        day: 1,
+      ).copyWith(id: const Nullable(3));
+      expect(day.copyWith().id, 3);
+      expect(day.copyWith(id: const Nullable(null)).id, isNull);
+
+      final planWorkout = WorkoutPlanWorkout.create(
+        workoutPlanId: 1,
+        planVersion: 1,
+        workoutPlanWeekId: 2,
+        workoutPlanDayId: 3,
+        workoutId: 10,
+        position: 1,
+        timeOfDay: WorkoutTimeOfDay.morning,
+      ).copyWith(id: const Nullable(4));
+      expect(planWorkout.copyWith().id, 4);
+      expect(planWorkout.copyWith().timeOfDay, WorkoutTimeOfDay.morning);
+      expect(
+        planWorkout.copyWith(timeOfDay: const Nullable(null)).timeOfDay,
+        isNull,
+      );
+
+      final planWorkoutDto = WorkoutPlanWorkoutDto.fromModel(planWorkout);
+      expect(
+        planWorkoutDto.copyWith(timeOfDay: const Nullable(null)).timeOfDay,
+        isNull,
+      );
+
+      final dayDto = WorkoutPlanDayDto.fromModel(
+        day,
+        planWorkouts: [planWorkoutDto],
+      );
+      expect(
+        dayDto.copyWith(planWorkouts: const Nullable(null)).planWorkouts,
+        isNull,
+      );
+
+      final weekDto = WorkoutPlanWeekDto.fromModel(week, days: [dayDto]);
+      expect(weekDto.copyWith().phase, WorkoutPhase.maxStrength);
+      expect(weekDto.copyWith(phase: const Nullable(null)).phase, isNull);
+
+      final planDto = WorkoutPlanDto.fromModel(plan, weeks: [weekDto]);
+      expect(
+        planDto.copyWith(description: const Nullable(null)).description,
+        isNull,
+      );
+      expect(planDto.copyWith(weeks: const Nullable(null)).weeks, isNull);
+
+      final planRecord = WorkoutPlanRecord.create(
+        1,
+        workoutPlanVersion: 1,
+        status: ProgressStatus.completed,
+        currentWeek: 1,
+        currentDay: 1,
+        currentWorkoutPosition: 1,
+        startedAt: 1700000000,
+        completedAt: 1700086400,
+      ).copyWith(id: const Nullable(5));
+      expect(planRecord.copyWith().completedAt, 1700086400);
+      expect(
+        planRecord.copyWith(completedAt: const Nullable(null)).completedAt,
+        isNull,
+      );
+
+      final weekRecord =
+          WorkoutPlanWeekRecord.create(
+            workoutPlanRecordId: 5,
+            workoutPlanWeekId: 2,
+            week: 1,
+            status: ProgressStatus.completed,
+          ).copyWith(
+            id: const Nullable(6),
+            completedAt: const Nullable(1700086400),
+          );
+      expect(weekRecord.copyWith().completedAt, 1700086400);
+      expect(
+        weekRecord.copyWith(completedAt: const Nullable(null)).completedAt,
+        isNull,
+      );
+
+      final dayRecord =
+          WorkoutPlanDayRecord.create(
+            workoutPlanRecordId: 5,
+            workoutPlanWeekRecordId: 6,
+            workoutPlanDayId: 3,
+            status: ProgressStatus.completed,
+          ).copyWith(
+            id: const Nullable(7),
+            completedAt: const Nullable(1700086400),
+          );
+      expect(dayRecord.copyWith().completedAt, 1700086400);
+      expect(
+        dayRecord.copyWith(completedAt: const Nullable(null)).completedAt,
+        isNull,
+      );
+
+      final workoutRecord =
+          WorkoutPlanWorkoutRecord.create(
+            workoutPlanRecordId: 5,
+            workoutPlanWeekRecordId: 6,
+            workoutPlanDayRecordId: 7,
+            workoutPlanWorkoutId: 4,
+            workoutRecordId: 99,
+            position: 1,
+            status: ProgressStatus.completed,
+          ).copyWith(
+            id: const Nullable(8),
+            completedAt: const Nullable(1700086400),
+          );
+      expect(workoutRecord.copyWith().completedAt, 1700086400);
+      expect(
+        workoutRecord.copyWith(completedAt: const Nullable(null)).completedAt,
+        isNull,
+      );
+
+      final workoutRecordDto = WorkoutPlanWorkoutRecordDto.fromModel(
+        workoutRecord,
+      );
+      expect(workoutRecordDto.copyWith().completedAt, isNotNull);
+      expect(
+        workoutRecordDto
+            .copyWith(completedAt: const Nullable(null))
+            .completedAt,
+        isNull,
+      );
+
+      final dayRecordDto = WorkoutPlanDayRecordDto.fromModel(
+        dayRecord,
+        workouts: [workoutRecordDto],
+      );
+      expect(
+        dayRecordDto.copyWith(completedAt: const Nullable(null)).completedAt,
+        isNull,
+      );
+
+      final weekRecordDto = WorkoutPlanWeekRecordDto.fromModel(
+        weekRecord,
+        days: [dayRecordDto],
+      );
+      expect(
+        weekRecordDto.copyWith(completedAt: const Nullable(null)).completedAt,
+        isNull,
+      );
+
+      final planRecordDto = WorkoutPlanRecordDto.fromModel(
+        planRecord,
+        weeks: [weekRecordDto],
+      );
+      expect(
+        planRecordDto.copyWith(completedAt: const Nullable(null)).completedAt,
         isNull,
       );
     });

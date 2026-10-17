@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 
+import '../../common/nullable.dart';
 import '../../models/enums.dart';
 import '../../models/workout_plan_week_model.dart';
 import 'dto.dart';
@@ -57,7 +58,7 @@ class WorkoutPlanWeekDto extends Equatable implements Dto<WorkoutPlanWeek> {
     int? totalDays,
     int? totalWorkouts,
     WorkoutPlanWeekScheduleMode? scheduleMode,
-    WorkoutPhase? phase,
+    Nullable<WorkoutPhase>? phase,
     List<WorkoutPlanDayDto>? days,
   }) {
     return WorkoutPlanWeekDto(
@@ -68,7 +69,7 @@ class WorkoutPlanWeekDto extends Equatable implements Dto<WorkoutPlanWeek> {
       totalDays: totalDays ?? this.totalDays,
       totalWorkouts: totalWorkouts ?? this.totalWorkouts,
       scheduleMode: scheduleMode ?? this.scheduleMode,
-      phase: phase ?? this.phase,
+      phase: phase != null ? phase.value : this.phase,
       days: days ?? this.days,
     );
   }

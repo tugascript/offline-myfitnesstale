@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 
+import '../../common/nullable.dart';
 import '../../models/workout_plan_day_record_model.dart';
 import 'dto.dart';
 import 'workout_plan_workout_record_dto.dart';
@@ -59,7 +60,7 @@ class WorkoutPlanDayRecordDto extends Equatable
     int? workoutPlanWeekRecordId,
     int? workoutPlanDayId,
     int? currentWorkoutPosition,
-    DateTime? completedAt,
+    Nullable<DateTime>? completedAt,
     int? week,
     int? day,
     List<WorkoutPlanWorkoutRecordDto>? workouts,
@@ -74,7 +75,7 @@ class WorkoutPlanDayRecordDto extends Equatable
       day: day ?? this.day,
       currentWorkoutPosition:
           currentWorkoutPosition ?? this.currentWorkoutPosition,
-      completedAt: completedAt ?? this.completedAt,
+      completedAt: completedAt != null ? completedAt.value : this.completedAt,
       workouts: workouts ?? this.workouts,
     );
   }

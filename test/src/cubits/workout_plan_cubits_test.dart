@@ -58,28 +58,36 @@ void main() {
     final cubit = WorkoutPlanCubit();
 
     await cubit.createWorkoutPlan(
-      name: uniqueName('plan'),
-      totalWeeks: 0,
-      difficulty: Difficulty.beginner,
-      isFavorite: false,
+      WorkoutPlanInput(
+        name: uniqueName('plan'),
+        totalWeeks: 0,
+        difficulty: Difficulty.beginner,
+        isFavorite: false,
+      ),
     );
     await cubit.createWorkoutPlan(
-      name: uniqueName('plan'),
-      totalWeeks: 0,
-      difficulty: Difficulty.beginner,
-      isFavorite: false,
+      WorkoutPlanInput(
+        name: uniqueName('plan'),
+        totalWeeks: 0,
+        difficulty: Difficulty.beginner,
+        isFavorite: false,
+      ),
     );
     await cubit.createWorkoutPlan(
-      name: uniqueName('plan'),
-      totalWeeks: 0,
-      difficulty: Difficulty.beginner,
-      isFavorite: false,
+      WorkoutPlanInput(
+        name: uniqueName('plan'),
+        totalWeeks: 0,
+        difficulty: Difficulty.beginner,
+        isFavorite: false,
+      ),
     );
     await cubit.createWorkoutPlan(
-      name: uniqueName('plan'),
-      totalWeeks: 0,
-      difficulty: Difficulty.beginner,
-      isFavorite: false,
+      WorkoutPlanInput(
+        name: uniqueName('plan'),
+        totalWeeks: 0,
+        difficulty: Difficulty.beginner,
+        isFavorite: false,
+      ),
     );
 
     expect(cubit.state.error?.type, 'plan_limit_reached');
@@ -239,39 +247,45 @@ void main() {
 
     final recordService = WorkoutPlanRecordService();
     final recordResult = await recordService.createWorkoutPlanRecord(
-      workoutPlanId: planId,
+      WorkoutPlanRecordInput(workoutPlanId: planId),
     );
     expect(recordResult.isOk(), isTrue);
     final recordId = recordResult.value.id;
 
     // Start workout (requires day record to exist first)
     final dayRecordResult = await recordService.upsertWorkoutPlanDayRecord(
-      workoutPlanRecordId: recordId,
-      status: ProgressStatus.inProgress,
-      week: 1,
-      weekDay: 1,
+      WorkoutPlanDayRecordInput(
+        workoutPlanRecordId: recordId,
+        status: ProgressStatus.inProgress,
+        week: 1,
+        weekDay: 1,
+      ),
     );
     expect(dayRecordResult.isOk(), isTrue);
 
     final startResult = await recordService.upsertWorkoutPlanWorkoutRecord(
-      workoutPlanRecordId: recordId,
-      workoutRecordId: workoutRecordId,
-      status: ProgressStatus.inProgress,
-      week: 1,
-      weekDay: 1,
-      workoutPosition: 1,
+      WorkoutPlanWorkoutRecordInput(
+        workoutPlanRecordId: recordId,
+        workoutRecordId: workoutRecordId,
+        status: ProgressStatus.inProgress,
+        week: 1,
+        weekDay: 1,
+        workoutPosition: 1,
+      ),
     );
     expect(startResult.isOk(), isTrue);
 
     // Complete workout
     final completeResult = await recordService
         .updateWorkoutPlanWorkoutRecordStatus(
-          workoutPlanRecordId: recordId,
-          workoutRecordId: workoutRecordId,
-          week: 1,
-          weekDay: 1,
-          workoutPosition: 1,
-          status: ProgressStatus.completed,
+          WorkoutPlanWorkoutRecordInput(
+            workoutPlanRecordId: recordId,
+            workoutRecordId: workoutRecordId,
+            week: 1,
+            weekDay: 1,
+            workoutPosition: 1,
+            status: ProgressStatus.completed,
+          ),
         );
     expect(completeResult.isOk(), isTrue);
 
@@ -343,38 +357,44 @@ void main() {
 
     final recordService = WorkoutPlanRecordService();
     final recordResult = await recordService.createWorkoutPlanRecord(
-      workoutPlanId: planId,
+      WorkoutPlanRecordInput(workoutPlanId: planId),
     );
     expect(recordResult.isOk(), isTrue);
     final recordId = recordResult.value.id;
 
     // Start workout (requires day record to exist first)
     final dayRecordResult = await recordService.upsertWorkoutPlanDayRecord(
-      workoutPlanRecordId: recordId,
-      status: ProgressStatus.inProgress,
-      week: 1,
-      weekDay: 1,
+      WorkoutPlanDayRecordInput(
+        workoutPlanRecordId: recordId,
+        status: ProgressStatus.inProgress,
+        week: 1,
+        weekDay: 1,
+      ),
     );
     expect(dayRecordResult.isOk(), isTrue);
 
     final startResult = await recordService.upsertWorkoutPlanWorkoutRecord(
-      workoutPlanRecordId: recordId,
-      workoutRecordId: workoutRecordId,
-      status: ProgressStatus.inProgress,
-      week: 1,
-      weekDay: 1,
-      workoutPosition: 1,
+      WorkoutPlanWorkoutRecordInput(
+        workoutPlanRecordId: recordId,
+        workoutRecordId: workoutRecordId,
+        status: ProgressStatus.inProgress,
+        week: 1,
+        weekDay: 1,
+        workoutPosition: 1,
+      ),
     );
     expect(startResult.isOk(), isTrue);
 
     // Skip workout
     final skipResult = await recordService.updateWorkoutPlanWorkoutRecordStatus(
-      workoutPlanRecordId: recordId,
-      workoutRecordId: workoutRecordId,
-      week: 1,
-      weekDay: 1,
-      workoutPosition: 1,
-      status: ProgressStatus.skipped,
+      WorkoutPlanWorkoutRecordInput(
+        workoutPlanRecordId: recordId,
+        workoutRecordId: workoutRecordId,
+        week: 1,
+        weekDay: 1,
+        workoutPosition: 1,
+        status: ProgressStatus.skipped,
+      ),
     );
     expect(skipResult.isOk(), isTrue);
 
@@ -569,7 +589,7 @@ void main() {
 
     final service = WorkoutPlanRecordService();
     final planRecord = await service.createWorkoutPlanRecord(
-      workoutPlanId: planId,
+      WorkoutPlanRecordInput(workoutPlanId: planId),
     );
     expect(planRecord.isOk(), isTrue);
     final planRecordId = planRecord.value.id;
@@ -579,19 +599,23 @@ void main() {
       (2, recordBId),
     ]) {
       final dayResult = await service.upsertWorkoutPlanDayRecord(
-        workoutPlanRecordId: planRecordId,
-        status: ProgressStatus.inProgress,
-        week: 1,
-        weekDay: 1,
+        WorkoutPlanDayRecordInput(
+          workoutPlanRecordId: planRecordId,
+          status: ProgressStatus.inProgress,
+          week: 1,
+          weekDay: 1,
+        ),
       );
       expect(dayResult.isOk(), isTrue);
       final result = await service.updateWorkoutPlanWorkoutRecordStatus(
-        workoutPlanRecordId: planRecordId,
-        workoutRecordId: workoutRecordId,
-        week: 1,
-        weekDay: 1,
-        workoutPosition: position,
-        status: ProgressStatus.completed,
+        WorkoutPlanWorkoutRecordInput(
+          workoutPlanRecordId: planRecordId,
+          workoutRecordId: workoutRecordId,
+          week: 1,
+          weekDay: 1,
+          workoutPosition: position,
+          status: ProgressStatus.completed,
+        ),
       );
       expect(result.isOk(), isTrue);
       expect(

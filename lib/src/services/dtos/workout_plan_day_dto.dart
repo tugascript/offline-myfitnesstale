@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 
+import '../../common/nullable.dart';
 import '../../models/workout_plan_day_model.dart';
 import 'dto.dart';
 import 'workout_plan_workout_dto.dart';
@@ -45,7 +46,7 @@ class WorkoutPlanDayDto extends Equatable implements Dto<WorkoutPlanDay> {
     int? day,
     bool? isRestDay,
     int? totalWorkouts,
-    List<WorkoutPlanWorkoutDto>? planWorkouts,
+    Nullable<List<WorkoutPlanWorkoutDto>>? planWorkouts,
   }) {
     return WorkoutPlanDayDto(
       id: id ?? this.id,
@@ -53,7 +54,9 @@ class WorkoutPlanDayDto extends Equatable implements Dto<WorkoutPlanDay> {
       day: day ?? this.day,
       isRestDay: isRestDay ?? this.isRestDay,
       totalWorkouts: totalWorkouts ?? this.totalWorkouts,
-      planWorkouts: planWorkouts ?? this.planWorkouts,
+      planWorkouts: planWorkouts != null
+          ? planWorkouts.value
+          : this.planWorkouts,
     );
   }
 

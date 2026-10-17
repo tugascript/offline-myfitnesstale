@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 
+import '../../common/nullable.dart';
 import '../../models/enums.dart';
 import '../../models/workout_plan_model.dart';
 import 'dto.dart';
@@ -68,32 +69,32 @@ class WorkoutPlanDto extends Equatable implements Dto<WorkoutPlan> {
   WorkoutPlanDto copyWith({
     int? id,
     String? name,
-    String? description,
+    Nullable<String>? description,
     int? currentVersion,
     int? totalWeeks,
     int? totalDays,
     int? totalWorkouts,
-    PictureDto? picture,
-    VideoDto? video,
+    Nullable<PictureDto>? picture,
+    Nullable<VideoDto>? video,
     Difficulty? difficulty,
     CreatedBy? createdBy,
     bool? isFavorite,
-    List<WorkoutPlanWeekDto>? weeks,
+    Nullable<List<WorkoutPlanWeekDto>>? weeks,
   }) {
     return WorkoutPlanDto(
       id: id ?? this.id,
       name: name ?? this.name,
-      description: description ?? this.description,
+      description: description != null ? description.value : this.description,
       currentVersion: currentVersion ?? this.currentVersion,
       totalWeeks: totalWeeks ?? this.totalWeeks,
       totalDays: totalDays ?? this.totalDays,
       totalWorkouts: totalWorkouts ?? this.totalWorkouts,
-      picture: picture ?? this.picture,
-      video: video ?? this.video,
+      picture: picture != null ? picture.value : this.picture,
+      video: video != null ? video.value : this.video,
       difficulty: difficulty ?? this.difficulty,
       createdBy: createdBy ?? this.createdBy,
       isFavorite: isFavorite ?? this.isFavorite,
-      weeks: weeks ?? this.weeks,
+      weeks: weeks != null ? weeks.value : this.weeks,
     );
   }
 

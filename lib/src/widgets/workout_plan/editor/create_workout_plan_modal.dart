@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../common/nullable.dart';
 import '../../../cubits/entitlement_cubit.dart';
 import '../../../cubits/states/entitlement_state.dart';
 import '../../../cubits/states/workout_plan_state.dart';
@@ -71,10 +72,12 @@ class _CreateWorkoutPlanModalState extends State<CreateWorkoutPlanModal> {
                       String? description,
                     }) async {
                       await context.read<WorkoutPlanCubit>().createWorkoutPlan(
-                        name: name,
-                        isFavorite: isFavorite,
-                        difficulty: difficulty,
-                        description: description,
+                        WorkoutPlanInput(
+                          name: name,
+                          isFavorite: isFavorite,
+                          difficulty: difficulty,
+                          description: Nullable(description),
+                        ),
                       );
                       await Future.delayed(const Duration(milliseconds: 10));
 

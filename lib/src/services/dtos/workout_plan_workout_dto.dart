@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 
+import '../../common/nullable.dart';
 import '../../models/workout_plan_workout_model.dart';
 import '../../models/enums.dart';
 import 'dto.dart';
@@ -45,17 +46,17 @@ class WorkoutPlanWorkoutDto extends Equatable
     int? id,
     int? planVersion,
     int? position,
-    WorkoutTimeOfDay? timeOfDay,
+    Nullable<WorkoutTimeOfDay>? timeOfDay,
     int? workoutId,
-    WorkoutDto? workout,
+    Nullable<WorkoutDto>? workout,
   }) {
     return WorkoutPlanWorkoutDto(
       id: id ?? this.id,
       planVersion: planVersion ?? this.planVersion,
       position: position ?? this.position,
-      timeOfDay: timeOfDay ?? this.timeOfDay,
+      timeOfDay: timeOfDay != null ? timeOfDay.value : this.timeOfDay,
       workoutId: workoutId ?? this.workoutId,
-      workout: workout ?? this.workout,
+      workout: workout != null ? workout.value : this.workout,
     );
   }
 
