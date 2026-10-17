@@ -44,14 +44,14 @@ class UpdateWorkoutRecordEditor extends StatefulWidget {
 
 class _UpdateWorkoutRecordEditorState extends State<UpdateWorkoutRecordEditor> {
   // Map of WorkoutSetId -> Map of IterationNumber -> Map of WorkoutSetExerciseId -> SetExerciseRecord
-  final Map<int, Map<int, Map<int, CreateWorkoutSetExerciseRecordBatchDto>>>
+  final Map<int, Map<int, Map<int, WorkoutSetExerciseRecordBatchInput>>>
   _setExercises = {};
 
   final _formKey = GlobalKey<FormState>();
   final _startTimeController = TextEditingController();
   final _endTimeController = TextEditingController();
 
-  List<CreateWorkoutSetRecordBatchDto> _sets = [];
+  List<WorkoutSetRecordBatchInput> _sets = [];
   DateTime _startedAt = DateTime.now().subtract(const Duration(hours: 1));
   DateTime _completedAt = DateTime.now();
 
@@ -102,7 +102,7 @@ class _UpdateWorkoutRecordEditorState extends State<UpdateWorkoutRecordEditor> {
         _setExercises[setId] ??= {};
         _setExercises[setId]![iterationNumber] ??= {};
         _setExercises[setId]![iterationNumber]![exRecord.workoutSetExerciseId] =
-            CreateWorkoutSetExerciseRecordBatchDto(
+            WorkoutSetExerciseRecordBatchInput(
               workoutSetExerciseId: exRecord.workoutSetExerciseId,
               exerciseId: exRecord.exerciseId,
               position: position,
@@ -169,7 +169,7 @@ class _UpdateWorkoutRecordEditorState extends State<UpdateWorkoutRecordEditor> {
   }
 
   void _updateChanges() {
-    final List<CreateWorkoutSetRecordBatchDto> result = [];
+    final List<WorkoutSetRecordBatchInput> result = [];
     for (final set in widget.sets) {
       final iterationsMap = _setExercises[set.id] ?? {};
       for (final entry in iterationsMap.entries) {
@@ -181,7 +181,7 @@ class _UpdateWorkoutRecordEditorState extends State<UpdateWorkoutRecordEditor> {
 
         if (exercisesList.isNotEmpty) {
           result.add(
-            CreateWorkoutSetRecordBatchDto(
+            WorkoutSetRecordBatchInput(
               workoutSetId: set.id,
               setNumber: iterationNumber,
               startedAt: _startedAt,
@@ -595,7 +595,7 @@ class _UpdateWorkoutRecordEditorState extends State<UpdateWorkoutRecordEditor> {
                                               setState(() {
                                                 _setExercises[set
                                                     .id]![iterationNumber]![exercise
-                                                    .id] = CreateWorkoutSetExerciseRecordBatchDto(
+                                                    .id] = WorkoutSetExerciseRecordBatchInput(
                                                   workoutSetExerciseId:
                                                       exercise.id,
                                                   exerciseId:

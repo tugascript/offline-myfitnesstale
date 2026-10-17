@@ -124,7 +124,3 @@ final class WorkoutSetExerciseRecordBatchInput {
     );
   }
 }
-
-typedef CreateWorkoutSetRecordBatchDto = WorkoutSetRecordBatchInput;
-typedef CreateWorkoutSetExerciseRecordBatchDto =
-    WorkoutSetExerciseRecordBatchInput;
