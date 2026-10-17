@@ -7,19 +7,13 @@ class ErrorView extends StatelessWidget {
   final String type;
   final String description;
 
-  const ErrorView({
-    super.key,
-    required this.type,
-    required this.description,
-  });
+  const ErrorView({super.key, required this.type, required this.description});
 
   @override
   Widget build(BuildContext context) {
     return ResponsiveScaffold(
       title: _formatType(type),
-      body: ServiceErrorDescription(
-        description: description,
-      ),
+      body: ServiceErrorDescription(description: description),
     );
   }
 

@@ -24,11 +24,7 @@ abstract class Model {
   final int createdAt;
   final int updatedAt;
 
-  const Model({
-    this.id,
-    required this.createdAt,
-    required this.updatedAt,
-  });
+  const Model({this.id, required this.createdAt, required this.updatedAt});
 
   Map<String, dynamic> toMap();
 
@@ -49,9 +45,7 @@ abstract class Model {
 abstract class JoinModel {
   final int createdAt;
 
-  const JoinModel({
-    required this.createdAt,
-  });
+  const JoinModel({required this.createdAt});
 
   Map<String, dynamic> toMap();
 

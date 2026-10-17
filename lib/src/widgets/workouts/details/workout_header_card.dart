@@ -71,7 +71,8 @@ class WorkoutHeaderCard extends StatelessWidget {
                     ? 'workout-favorite'
                     : 'workout-header-edit',
               ),
-              icon: actionButtonIcon ??
+              icon:
+                  actionButtonIcon ??
                   Icon(
                     workoutDto.isFavorite
                         ? Icons.favorite
@@ -102,12 +103,10 @@ class WorkoutHeaderCard extends StatelessWidget {
                 total: workoutDto.totalReps,
                 fontSize: sizes.fontSize,
               ),
-            )
+            ),
           ],
         ),
-        SizedBox(
-          height: sizes.spacing,
-        ),
+        SizedBox(height: sizes.spacing),
         MusclesWrap(
           leading: Text(
             '💪',
@@ -146,9 +145,7 @@ class WorkoutHeaderCard extends StatelessWidget {
         ),
         if (workoutDto.description != null &&
             workoutDto.description!.isNotEmpty) ...[
-          SizedBox(
-            height: sizes.spacing,
-          ),
+          SizedBox(height: sizes.spacing),
           Text(
             'Description',
             style: TextStyle(
@@ -156,18 +153,14 @@ class WorkoutHeaderCard extends StatelessWidget {
               fontWeight: FontWeight.w600,
             ),
           ),
-          SizedBox(
-            height: sizes.spacing / 2,
-          ),
+          SizedBox(height: sizes.spacing / 2),
           Wrap(
             spacing: sizes.spacing / 2,
             runSpacing: sizes.spacing / 2,
             children: [
               Text(
                 workoutDto.description!,
-                style: TextStyle(
-                  fontSize: sizes.fontSize,
-                ),
+                style: TextStyle(fontSize: sizes.fontSize),
               ),
             ],
           ),
@@ -209,9 +202,7 @@ class _MuscleGroups extends StatelessWidget {
             ),
           ],
         ),
-        SizedBox(
-          height: sizes.spacing / 2,
-        ),
+        SizedBox(height: sizes.spacing / 2),
         Wrap(
           spacing: dataSpacing,
           runSpacing: dataSpacing,

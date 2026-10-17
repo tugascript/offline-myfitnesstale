@@ -93,8 +93,8 @@ class WorkoutPlanWeekEditor extends StatelessWidget {
               title: week.days.isEmpty
                   ? "0"
                   : week.days.length > 1
-                      ? "1 - ${week.days.length}"
-                      : "1",
+                  ? "1 - ${week.days.length}"
+                  : "1",
               labelText: 'Days',
               children: [
                 Padding(
@@ -150,9 +150,7 @@ class WorkoutPlanWeekEditor extends StatelessWidget {
                         day: day,
                         onChanged: (updatedDay) {
                           final updatedDays =
-                              List<WorkoutPlanDayEditorData>.from(
-                            week.days,
-                          );
+                              List<WorkoutPlanDayEditorData>.from(week.days);
                           updatedDays[dayIndex] = updatedDay;
                           final updated = week.copy()..days = updatedDays;
                           onChanged(updated);

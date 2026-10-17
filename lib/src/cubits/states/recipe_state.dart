@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+
 import '../../common/nullable.dart';
 import '../../services/dtos/recipe_dto.dart';
 import 'common_state.dart';
@@ -39,28 +40,35 @@ final class RecipeState extends Equatable {
   final RecipePagination recipePagination;
   final bool isLoading;
   final ErrorState? error;
-  const RecipeState(
-      {this.recipes = const [],
-      this.selectedRecipe,
-      this.recipePagination = const RecipePagination(),
-      this.isLoading = false,
-      this.error});
+  const RecipeState({
+    this.recipes = const [],
+    this.selectedRecipe,
+    this.recipePagination = const RecipePagination(),
+    this.isLoading = false,
+    this.error,
+  });
   factory RecipeState.initial() => const RecipeState();
-  RecipeState copyWith(
-          {List<RecipeDto>? recipes,
-          Nullable<RecipeDto>? selectedRecipe,
-          RecipePagination? recipePagination,
-          bool? isLoading,
-          Nullable<ErrorState>? error}) =>
-      RecipeState(
-          recipes: recipes ?? this.recipes,
-          selectedRecipe: selectedRecipe != null
-              ? selectedRecipe.value
-              : this.selectedRecipe,
-          recipePagination: recipePagination ?? this.recipePagination,
-          isLoading: isLoading ?? this.isLoading,
-          error: error != null ? error.value : this.error);
+  RecipeState copyWith({
+    List<RecipeDto>? recipes,
+    Nullable<RecipeDto>? selectedRecipe,
+    RecipePagination? recipePagination,
+    bool? isLoading,
+    Nullable<ErrorState>? error,
+  }) => RecipeState(
+    recipes: recipes ?? this.recipes,
+    selectedRecipe: selectedRecipe != null
+        ? selectedRecipe.value
+        : this.selectedRecipe,
+    recipePagination: recipePagination ?? this.recipePagination,
+    isLoading: isLoading ?? this.isLoading,
+    error: error != null ? error.value : this.error,
+  );
   @override
-  List<Object?> get props =>
-      [recipes, selectedRecipe, recipePagination, isLoading, error];
+  List<Object?> get props => [
+    recipes,
+    selectedRecipe,
+    recipePagination,
+    isLoading,
+    error,
+  ];
 }

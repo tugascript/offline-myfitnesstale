@@ -40,7 +40,7 @@ class ActiveCompletedWorkout extends StatelessWidget {
                   fontWeight: FontWeight.bold,
                   color: theme.colorScheme.onSurface,
                 ),
-              )
+              ),
             ],
           ),
         ),

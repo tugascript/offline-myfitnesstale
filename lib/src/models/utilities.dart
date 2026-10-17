@@ -85,7 +85,7 @@ class WhereBuilder {
 
     return [
       firstCondition,
-      ..._where.skip(1).map((e) => '${e.union.value} (${e.condition})')
+      ..._where.skip(1).map((e) => '${e.union.value} (${e.condition})'),
     ].join(' ');
   }
 

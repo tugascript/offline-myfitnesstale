@@ -20,15 +20,11 @@ class MuscleBadge extends StatelessWidget {
     return Chip(
       shape: BeveledRectangleBorder(),
       side: BorderSide.none,
-      backgroundColor: theme.colorScheme.secondary.withValues(
-        alpha: 0.2,
-      ),
+      backgroundColor: theme.colorScheme.secondary.withValues(alpha: 0.2),
       visualDensity: VisualDensity.compact,
       label: Text(
         EnumDisplayNames.getMuscleDisplayName(muscle),
-        style: TextStyle(
-          fontSize: fontSize,
-        ),
+        style: TextStyle(fontSize: fontSize),
       ),
     );
   }

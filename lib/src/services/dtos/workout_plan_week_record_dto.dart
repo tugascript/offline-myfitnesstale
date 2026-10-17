@@ -34,8 +34,10 @@ class WorkoutPlanWeekRecordDto extends Equatable
       workoutPlanWeekId: model.workoutPlanWeekId,
       week: model.week,
       completedAt: model.completedAt != null
-          ? DateTime.fromMillisecondsSinceEpoch(model.completedAt! * 1000,
-              isUtc: true)
+          ? DateTime.fromMillisecondsSinceEpoch(
+              model.completedAt! * 1000,
+              isUtc: true,
+            )
           : null,
       days: days ?? const [],
     );
@@ -62,11 +64,11 @@ class WorkoutPlanWeekRecordDto extends Equatable
 
   @override
   List<Object?> get props => [
-        id,
-        workoutPlanRecordId,
-        workoutPlanWeekId,
-        week,
-        completedAt,
-        days.length,
-      ];
+    id,
+    workoutPlanRecordId,
+    workoutPlanWeekId,
+    week,
+    completedAt,
+    days.length,
+  ];
 }

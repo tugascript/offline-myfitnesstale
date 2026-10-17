@@ -38,8 +38,9 @@ class _CreateWorkoutPlanModalState extends State<CreateWorkoutPlanModal> {
   Widget build(BuildContext context) {
     return BlocBuilder<EntitlementCubit, EntitlementCubitState>(
       builder: (context, entitlementState) {
-        final bool canUsePremium =
-            EntitlementGuard.canUsePremium(entitlementState.snapshot);
+        final bool canUsePremium = EntitlementGuard.canUsePremium(
+          entitlementState.snapshot,
+        );
 
         return AppModal(
           theme: widget.theme,
@@ -62,30 +63,33 @@ class _CreateWorkoutPlanModalState extends State<CreateWorkoutPlanModal> {
                 initialIsFavorite: false,
                 initialDifficulty: Difficulty.beginner,
                 initialDescription: null,
-                onSubmit: ({
-                  required String name,
-                  required bool isFavorite,
-                  required Difficulty difficulty,
-                  String? description,
-                }) async {
-                  await context.read<WorkoutPlanCubit>().createWorkoutPlan(
+                onSubmit:
+                    ({
+                      required String name,
+                      required bool isFavorite,
+                      required Difficulty difficulty,
+                      String? description,
+                    }) async {
+                      await context.read<WorkoutPlanCubit>().createWorkoutPlan(
                         name: name,
                         isFavorite: isFavorite,
                         difficulty: difficulty,
                         description: description,
                       );
-                  await Future.delayed(const Duration(milliseconds: 10));
+                      await Future.delayed(const Duration(milliseconds: 10));
 
-                  if (context.mounted) {
-                    Navigator.of(context).pop();
-                    final cubitState = context.read<WorkoutPlanCubit>().state;
-                    if (cubitState.selectedWorkoutPlan != null) {
-                      context.push(
-                        "/workout-plans/${cubitState.selectedWorkoutPlan!.id}",
-                      );
-                    }
-                  }
-                },
+                      if (context.mounted) {
+                        Navigator.of(context).pop();
+                        final cubitState = context
+                            .read<WorkoutPlanCubit>()
+                            .state;
+                        if (cubitState.selectedWorkoutPlan != null) {
+                          context.push(
+                            "/workout-plans/${cubitState.selectedWorkoutPlan!.id}",
+                          );
+                        }
+                      }
+                    },
               );
             },
           ),
@@ -99,10 +103,7 @@ class _LockedPremiumEditor extends StatelessWidget {
   final ThemeData theme;
   final DataDisplaySizesList sizes;
 
-  const _LockedPremiumEditor({
-    required this.theme,
-    required this.sizes,
-  });
+  const _LockedPremiumEditor({required this.theme, required this.sizes});
 
   @override
   Widget build(BuildContext context) {
@@ -126,16 +127,12 @@ class _LockedPremiumEditor extends StatelessWidget {
           SizedBox(height: sizes.spacing * 2),
           Text(
             "Free users can only create 3 workout plans.",
-            style: TextStyle(
-              fontSize: sizes.fontSize,
-            ),
+            style: TextStyle(fontSize: sizes.fontSize),
           ),
           SizedBox(height: sizes.spacing),
           Text(
             "Premium upgrades are unavailable in this build. You can continue using your existing plans.",
-            style: TextStyle(
-              fontSize: sizes.fontSize,
-            ),
+            style: TextStyle(fontSize: sizes.fontSize),
           ),
           SizedBox(height: sizes.spacing),
           SizedBox(

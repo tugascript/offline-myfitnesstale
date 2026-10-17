@@ -59,19 +59,19 @@ class MealPlanMealItemDto extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        mealPlanMealId,
-        foodId,
-        portionId,
-        amount,
-        totalCalories,
-        totalProtein,
-        totalCarbs,
-        totalFat,
-        totalFiber,
-        foodName,
-        portionName,
-      ];
+    id,
+    mealPlanMealId,
+    foodId,
+    portionId,
+    amount,
+    totalCalories,
+    totalProtein,
+    totalCarbs,
+    totalFat,
+    totalFiber,
+    foodName,
+    portionName,
+  ];
 }
 
 class MealPlanMealDto extends Equatable {
@@ -144,25 +144,25 @@ class MealPlanMealDto extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        position,
-        timeOfDay,
-        mealPlanId,
-        mealPlanWeekId,
-        mealPlanDayId,
-        planVersion,
-        mealType,
-        totalCalories,
-        totalProtein,
-        totalCarbs,
-        totalFat,
-        totalFiber,
-        name,
-        recipeId,
-        recipeName,
-        createdBy,
-        items,
-      ];
+    id,
+    position,
+    timeOfDay,
+    mealPlanId,
+    mealPlanWeekId,
+    mealPlanDayId,
+    planVersion,
+    mealType,
+    totalCalories,
+    totalProtein,
+    totalCarbs,
+    totalFat,
+    totalFiber,
+    name,
+    recipeId,
+    recipeName,
+    createdBy,
+    items,
+  ];
 }
 
 class MealPlanDayDto extends Equatable {
@@ -222,21 +222,21 @@ class MealPlanDayDto extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        mealPlanId,
-        mealPlanWeekId,
-        planVersion,
-        day,
-        name,
-        targetCalories,
-        targetProtein,
-        targetCarbs,
-        targetFat,
-        targetFiber,
-        totalMeals,
-        createdBy,
-        meals,
-      ];
+    id,
+    mealPlanId,
+    mealPlanWeekId,
+    planVersion,
+    day,
+    name,
+    targetCalories,
+    targetProtein,
+    targetCarbs,
+    targetFat,
+    targetFiber,
+    totalMeals,
+    createdBy,
+    meals,
+  ];
 }
 
 class MealPlanWeekDto extends Equatable {
@@ -296,21 +296,21 @@ class MealPlanWeekDto extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        mealPlanId,
-        planVersion,
-        weekNumber,
-        phase,
-        targetCalories,
-        targetProtein,
-        targetCarbs,
-        targetFat,
-        targetFiber,
-        totalDays,
-        totalMeals,
-        createdBy,
-        days,
-      ];
+    id,
+    mealPlanId,
+    planVersion,
+    weekNumber,
+    phase,
+    targetCalories,
+    targetProtein,
+    targetCarbs,
+    targetFat,
+    targetFiber,
+    totalDays,
+    totalMeals,
+    createdBy,
+    days,
+  ];
 }
 
 class MealPlanDto extends Equatable {
@@ -358,15 +358,15 @@ class MealPlanDto extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        name,
-        description,
-        version,
-        totalWeeks,
-        totalDays,
-        totalMeals,
-        isFavorite,
-        createdBy,
-        weeks,
-      ];
+    id,
+    name,
+    description,
+    version,
+    totalWeeks,
+    totalDays,
+    totalMeals,
+    isFavorite,
+    createdBy,
+    weeks,
+  ];
 }

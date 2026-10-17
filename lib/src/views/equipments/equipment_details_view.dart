@@ -39,9 +39,7 @@ class _EquipmentDetailsViewState extends State<EquipmentDetailsView> {
     final theme = Theme.of(context);
     final isDarkTheme = theme.brightness == Brightness.dark;
     final breakpoints = BreakPoint.fromContext(context);
-    final sizes = DataDisplaySizes.getDataDisplaySizes(
-      breakpoints.screenSize,
-    );
+    final sizes = DataDisplaySizes.getDataDisplaySizes(breakpoints.screenSize);
 
     return BlocConsumer<ExerciseCubit, ExerciseState>(
       listener: (context, state) {
@@ -50,9 +48,8 @@ class _EquipmentDetailsViewState extends State<EquipmentDetailsView> {
         }
 
         if (state.error != null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(state.error!.description)),
-          );
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text(state.error!.description)));
         }
       },
       builder: (context, state) {
@@ -133,12 +130,11 @@ class _EquipmentDetailsViewState extends State<EquipmentDetailsView> {
                         context: context,
                         builder: (context) => ConfirmationDialog(
                           title: 'Delete ${equipment.name}',
-                          content:
-                              'Are you sure you want to delete this equipment? This action cannot be undone.',
+                          content: 'Are you sure you want to delete this equipment? This action cannot be undone.',
                           onConfirm: () {
-                            context
-                                .read<ExerciseCubit>()
-                                .deleteEquipment(equipment.id);
+                            context.read<ExerciseCubit>().deleteEquipment(
+                              equipment.id,
+                            );
                             if (context.canPop()) {
                               context.pop();
                             } else {

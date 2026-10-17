@@ -24,7 +24,8 @@ class WeightRecordForm extends StatefulWidget {
     required int weight,
     int? bodyFat,
     required DateTime date,
-  }) onSubmit;
+  })
+  onSubmit;
 
   const WeightRecordForm({
     super.key,
@@ -106,9 +107,7 @@ class _WeightRecordFormState extends State<WeightRecordForm> {
                 children: [
                   Text(
                     widget.units == Units.imperial ? "LBS" : "KG",
-                    style: TextStyle(
-                      fontSize: widget.sizes.subtitleFontSize,
-                    ),
+                    style: TextStyle(fontSize: widget.sizes.subtitleFontSize),
                   ),
                 ],
               ),
@@ -345,9 +344,5 @@ final class _FormData {
   double weight;
   double? bodyFatPercentage;
 
-  _FormData({
-    required this.date,
-    required this.weight,
-    this.bodyFatPercentage,
-  });
+  _FormData({required this.date, required this.weight, this.bodyFatPercentage});
 }

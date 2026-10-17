@@ -1,4 +1,5 @@
 import '../common/nullable.dart';
+
 import 'package:equatable/equatable.dart';
 
 import 'common.dart';
@@ -65,7 +66,8 @@ class MealPlan extends Equatable implements Model {
 
   static const String table = _table;
 
-  static final String tableCreate = '''
+  static final String tableCreate =
+      '''
   CREATE TABLE IF NOT EXISTS $_table (
     ${MealPlanColumns.id.value} INTEGER PRIMARY KEY AUTOINCREMENT,
     ${MealPlanColumns.name.value} TEXT NOT NULL,
@@ -121,8 +123,9 @@ class MealPlan extends Equatable implements Model {
       totalDays: map[MealPlanColumns.totalDays.value] as int? ?? 7,
       totalMeals: map[MealPlanColumns.totalMeals.value] as int? ?? 0,
       isFavorite: (map[MealPlanColumns.isFavorite.value] as int? ?? 0) == 1,
-      createdBy:
-          CreatedBy.fromValue(map[MealPlanColumns.createdBy.value] as String),
+      createdBy: CreatedBy.fromValue(
+        map[MealPlanColumns.createdBy.value] as String,
+      ),
       createdAt: map[MealPlanColumns.createdAt.value] as int,
       updatedAt: map[MealPlanColumns.updatedAt.value] as int,
     );
@@ -192,18 +195,18 @@ class MealPlan extends Equatable implements Model {
 
   @override
   List<Object?> get props => [
-        id,
-        name,
-        description,
-        picture,
-        video,
-        version,
-        totalWeeks,
-        totalDays,
-        totalMeals,
-        isFavorite,
-        createdBy,
-        createdAt,
-        updatedAt,
-      ];
+    id,
+    name,
+    description,
+    picture,
+    video,
+    version,
+    totalWeeks,
+    totalDays,
+    totalMeals,
+    isFavorite,
+    createdBy,
+    createdAt,
+    updatedAt,
+  ];
 }

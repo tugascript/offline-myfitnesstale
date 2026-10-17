@@ -27,7 +27,8 @@ class ExerciseRecordForm extends StatefulWidget {
     required int weight,
     required int reps,
     required DateTime date,
-  }) onSubmit;
+  })
+  onSubmit;
 
   const ExerciseRecordForm({
     super.key,
@@ -145,8 +146,9 @@ class _ExerciseRecordFormState extends State<ExerciseRecordForm> {
                     minHeight: widget.sizes.subtitleFontSize * 1.5,
                   ),
                   suffixIcon: Padding(
-                    padding:
-                        EdgeInsets.symmetric(horizontal: widget.sizes.padding),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: widget.sizes.padding,
+                    ),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       mainAxisSize: MainAxisSize.min,
@@ -304,11 +306,7 @@ final class _FormData {
   double weight;
   int reps;
 
-  _FormData({
-    required this.date,
-    required this.weight,
-    required this.reps,
-  });
+  _FormData({required this.date, required this.weight, required this.reps});
 }
 
 const int _repsMin = 1;
@@ -337,8 +335,9 @@ class _RepsWheelSheetContentState extends State<_RepsWheelSheetContent> {
   @override
   void initState() {
     super.initState();
-    _controller =
-        FixedExtentScrollController(initialItem: widget.initialReps - _repsMin);
+    _controller = FixedExtentScrollController(
+      initialItem: widget.initialReps - _repsMin,
+    );
   }
 
   @override
@@ -377,10 +376,7 @@ class _RepsWheelSheetContentState extends State<_RepsWheelSheetContent> {
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-                TextButton(
-                  onPressed: _onConfirm,
-                  child: const Text('Confirm'),
-                ),
+                TextButton(onPressed: _onConfirm, child: const Text('Confirm')),
               ],
             ),
           ),
@@ -394,7 +390,7 @@ class _RepsWheelSheetContentState extends State<_RepsWheelSheetContent> {
               itemExtent: wheelItemExtent,
               fontSize: widget.sizes.subtitleFontSize,
             ),
-          )
+          ),
         ],
       ),
     );

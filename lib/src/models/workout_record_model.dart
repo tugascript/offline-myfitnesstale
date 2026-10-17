@@ -79,7 +79,8 @@ class WorkoutRecord implements Model {
   });
 
   static const String table = _table;
-  static final String tableCreate = '''
+  static final String tableCreate =
+      '''
   CREATE TABLE IF NOT EXISTS $_table (
     ${WorkoutRecordColumns.id.value} INTEGER PRIMARY KEY AUTOINCREMENT,
     ${WorkoutRecordColumns.workoutId.value} INTEGER NOT NULL,
@@ -143,9 +144,9 @@ class WorkoutRecord implements Model {
       totalVolume: map[WorkoutRecordColumns.totalVolume.value] as int,
       muscleGroups: (map[WorkoutRecordColumns.muscleGroups.value] != null
           ? (jsonDecode(map[WorkoutRecordColumns.muscleGroups.value] as String)
-                  as List<dynamic>)
-              .map((g) => MuscleGroup.fromValue(g as String))
-              .toSet()
+                    as List<dynamic>)
+                .map((g) => MuscleGroup.fromValue(g as String))
+                .toSet()
           : <MuscleGroup>{}),
       muscles: TargetMuscles.fromJson(
         map[WorkoutRecordColumns.muscles.value] as String? ??

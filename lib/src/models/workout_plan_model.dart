@@ -66,7 +66,8 @@ class WorkoutPlan extends Equatable implements Model {
   });
 
   static const String table = _table;
-  static final String tableCreate = '''
+  static final String tableCreate =
+      '''
   CREATE TABLE IF NOT EXISTS $_table (
     ${WorkoutPlanColumns.id.value} INTEGER PRIMARY KEY AUTOINCREMENT,
     ${WorkoutPlanColumns.name.value} TEXT NOT NULL,
@@ -119,13 +120,15 @@ class WorkoutPlan extends Equatable implements Model {
       isFavorite: map[WorkoutPlanColumns.isFavorite.value] as int == 1,
       picture: map[WorkoutPlanColumns.picture.value] != null
           ? PictureData.fromJson(
-              map[WorkoutPlanColumns.picture.value] as String)
+              map[WorkoutPlanColumns.picture.value] as String,
+            )
           : null,
       video: map[WorkoutPlanColumns.video.value] != null
           ? VideoData.fromJson(map[WorkoutPlanColumns.video.value] as String)
           : null,
-      difficulty:
-          Difficulty.fromValue(map[WorkoutPlanColumns.difficulty.value] as int),
+      difficulty: Difficulty.fromValue(
+        map[WorkoutPlanColumns.difficulty.value] as int,
+      ),
       createdBy: CreatedBy.fromValue(
         map[WorkoutPlanColumns.createdBy.value] as String,
       ),
@@ -202,19 +205,19 @@ class WorkoutPlan extends Equatable implements Model {
 
   @override
   List<Object?> get props => [
-        id,
-        name,
-        description,
-        version,
-        totalWeeks,
-        totalDays,
-        totalWorkouts,
-        picture,
-        video,
-        difficulty,
-        createdBy,
-        isFavorite,
-        createdAt,
-        updatedAt
-      ];
+    id,
+    name,
+    description,
+    version,
+    totalWeeks,
+    totalDays,
+    totalWorkouts,
+    picture,
+    video,
+    difficulty,
+    createdBy,
+    isFavorite,
+    createdAt,
+    updatedAt,
+  ];
 }

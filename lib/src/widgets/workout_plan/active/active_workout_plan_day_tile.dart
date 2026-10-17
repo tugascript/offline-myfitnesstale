@@ -36,7 +36,8 @@ class ActiveWorkoutPlanDayTile extends StatelessWidget {
     final isPast = status == DayProgressStatus.past;
     final isCurrent = status == DayProgressStatus.current;
     final scheduledWorkoutCount = day.planWorkouts?.length ?? 0;
-    final isDayCompleted = scheduledWorkoutCount > 0 &&
+    final isDayCompleted =
+        scheduledWorkoutCount > 0 &&
         workoutRecords.length >= scheduledWorkoutCount &&
         workoutRecords.every(
           (record) =>
@@ -84,21 +85,21 @@ class ActiveWorkoutPlanDayTile extends StatelessWidget {
                     fontWeight: isCurrent ? FontWeight.bold : FontWeight.normal,
                     color: isPast
                         ? isDarkTheme
-                            ? Colors.grey.shade300
-                            : Colors.grey.shade700
+                              ? Colors.grey.shade300
+                              : Colors.grey.shade700
                         : isCurrent
-                            ? theme.primaryColor
-                            : theme.colorScheme.onSurface,
+                        ? theme.primaryColor
+                        : theme.colorScheme.onSurface,
                   ),
                 ),
                 const Spacer(),
                 if (isCurrent)
                   Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: theme.primaryColor,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
                     ),
+                    decoration: BoxDecoration(color: theme.primaryColor),
                     child: const Text(
                       'TODAY',
                       style: TextStyle(
@@ -110,8 +111,10 @@ class ActiveWorkoutPlanDayTile extends StatelessWidget {
                   ),
                 if (isPast && !isDayCompleted)
                   Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     color: Colors.orange.withValues(alpha: 0.15),
                     child: const Text(
                       'MISSED',
@@ -142,8 +145,10 @@ class ActiveWorkoutPlanDayTile extends StatelessWidget {
                 padding: const EdgeInsets.only(top: 8.0),
                 child: Column(
                   children: day.planWorkouts!
-                      .map((pw) =>
-                          _buildWorkoutRow(context, pw, isPast, isCurrent))
+                      .map(
+                        (pw) =>
+                            _buildWorkoutRow(context, pw, isPast, isCurrent),
+                      )
                       .toList(),
                 ),
               )
@@ -152,9 +157,7 @@ class ActiveWorkoutPlanDayTile extends StatelessWidget {
                 padding: const EdgeInsets.only(top: 8.0, left: 28.0),
                 child: Text(
                   'No workouts',
-                  style: TextStyle(
-                    color: Colors.grey[600],
-                  ),
+                  style: TextStyle(color: Colors.grey[600]),
                 ),
               ),
           ],
@@ -193,11 +196,11 @@ class ActiveWorkoutPlanDayTile extends StatelessWidget {
                     decoration: isCompleted ? TextDecoration.lineThrough : null,
                     color: isCompleted
                         ? isDarkTheme
-                            ? Colors.grey.shade300
-                            : Colors.grey.shade700
+                              ? Colors.grey.shade300
+                              : Colors.grey.shade700
                         : isCurrent
-                            ? theme.primaryColor
-                            : theme.colorScheme.onSurface,
+                        ? theme.primaryColor
+                        : theme.colorScheme.onSurface,
                   ),
                 ),
                 Text(

@@ -103,11 +103,11 @@ final class WorkoutState extends Equatable {
 
   @override
   List<Object?> get props => [
-        workouts.length,
-        pagination,
-        selectedWorkout,
-        workoutSelection.length,
-        isLoading,
-        error,
-      ];
+    workouts.length,
+    pagination,
+    selectedWorkout,
+    workoutSelection.length,
+    isLoading,
+    error,
+  ];
 }

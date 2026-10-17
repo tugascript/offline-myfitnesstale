@@ -61,8 +61,9 @@ class _ExerciseRecordsHistoryState extends State<ExerciseRecordsHistory> {
   Future<void> _selectDateRange() async {
     final DateTime now = DateTime.now();
     final DateTime oneYearAgo = now.subtract(const Duration(days: 365));
-    final DateTime firstDate =
-        DateTime(2025).isAfter(oneYearAgo) ? DateTime(2025) : oneYearAgo;
+    final DateTime firstDate = DateTime(2025).isAfter(oneYearAgo)
+        ? DateTime(2025)
+        : oneYearAgo;
 
     final DateTimeRange? picked = await showDateRangePicker(
       context: context,
@@ -114,24 +115,19 @@ class _ExerciseRecordsHistoryState extends State<ExerciseRecordsHistory> {
       });
       if (mounted) {
         await context.read<ExerciseRecordCubit>().getExerciseRecords(
-              exerciseId: widget.exercise.id,
-              dateRange: (_dateRange.start, _dateRange.end),
-              limit: 1000,
-              offset: 0,
-            );
+          exerciseId: widget.exercise.id,
+          dateRange: (_dateRange.start, _dateRange.end),
+          limit: 1000,
+          offset: 0,
+        );
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final dateRangeText = "${Formatters.formatDate(
-      widget.units,
-      _dateRange.start,
-    )} - ${Formatters.formatDate(
-      widget.units,
-      _dateRange.end,
-    )}";
+    final dateRangeText =
+        "${Formatters.formatDate(widget.units, _dateRange.start)} - ${Formatters.formatDate(widget.units, _dateRange.end)}";
     return Column(
       children: [
         Row(

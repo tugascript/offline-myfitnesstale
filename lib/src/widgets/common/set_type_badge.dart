@@ -8,11 +8,7 @@ class SetTypeBadge extends StatelessWidget {
   final DataDisplaySizesList sizes;
   final WorkoutSetType setType;
 
-  const SetTypeBadge({
-    super.key,
-    required this.sizes,
-    required this.setType,
-  });
+  const SetTypeBadge({super.key, required this.sizes, required this.setType});
 
   Color _getSetTypeColor(WorkoutSetType type) {
     switch (type) {
@@ -42,17 +38,11 @@ class SetTypeBadge extends StatelessWidget {
       ),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.2),
-        border: Border.all(
-          color: color,
-          width: 1,
-        ),
+        border: Border.all(color: color, width: 1),
       ),
       child: Text(
         EnumDisplayNames.getSetTypeDisplayName(setType),
-        style: TextStyle(
-          color: color,
-          fontSize: sizes.smallFontSize,
-        ),
+        style: TextStyle(color: color, fontSize: sizes.smallFontSize),
       ),
     );
   }

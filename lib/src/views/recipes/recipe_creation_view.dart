@@ -26,8 +26,11 @@ class RecipeCreationView extends StatelessWidget {
         if (!state.isLoading && state.error != null) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-                content: Text(state.error!.description,
-                    style: TextStyle(fontSize: sizes.fontSize))),
+              content: Text(
+                state.error!.description,
+                style: TextStyle(fontSize: sizes.fontSize),
+              ),
+            ),
           );
         }
       },
@@ -41,8 +44,9 @@ class RecipeCreationView extends StatelessWidget {
               sizes: sizes,
               isLoading: state.isLoading,
               onSubmit: (input) async {
-                final success =
-                    await context.read<RecipeCubit>().createRecipe(input);
+                final success = await context.read<RecipeCubit>().createRecipe(
+                  input,
+                );
                 if (success && context.mounted) {
                   context.pop();
                 }

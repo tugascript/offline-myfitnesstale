@@ -64,7 +64,8 @@ class MacroGoal extends Equatable implements Model {
 
   static const String table = _table;
 
-  static final String tableCreate = '''
+  static final String tableCreate =
+      '''
   CREATE TABLE IF NOT EXISTS $_table (
     ${MacroGoalColumns.id.value} INTEGER PRIMARY KEY AUTOINCREMENT,
     ${MacroGoalColumns.name.value} TEXT NOT NULL,
@@ -178,8 +179,9 @@ class MacroGoal extends Equatable implements Model {
       targetCarbs: targetCarbs ?? this.targetCarbs,
       targetFat: targetFat ?? this.targetFat,
       targetFiber: targetFiber != null ? targetFiber.value : this.targetFiber,
-      targetSodium:
-          targetSodium != null ? targetSodium.value : this.targetSodium,
+      targetSodium: targetSodium != null
+          ? targetSodium.value
+          : this.targetSodium,
       targetWaterIntakeMl: targetWaterIntakeMl != null
           ? targetWaterIntakeMl.value
           : this.targetWaterIntakeMl,
@@ -191,18 +193,18 @@ class MacroGoal extends Equatable implements Model {
 
   @override
   List<Object?> get props => [
-        id,
-        phase,
-        name,
-        targetCalories,
-        targetProtein,
-        targetCarbs,
-        targetFat,
-        targetFiber,
-        targetSodium,
-        targetWaterIntakeMl,
-        isActive,
-        createdAt,
-        updatedAt,
-      ];
+    id,
+    phase,
+    name,
+    targetCalories,
+    targetProtein,
+    targetCarbs,
+    targetFat,
+    targetFiber,
+    targetSodium,
+    targetWaterIntakeMl,
+    isActive,
+    createdAt,
+    updatedAt,
+  ];
 }

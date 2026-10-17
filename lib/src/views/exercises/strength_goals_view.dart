@@ -39,47 +39,40 @@ class _StrengthGoalsViewState extends State<StrengthGoalsView> {
       body: Padding(
         padding: EdgeInsets.all(sizes.viewPadding),
         child: SingleChildScrollView(
-            child: Column(
-          children: [
-            ActiveStrengthGoalCard(
-              sizes: sizes,
-              theme: theme,
-            ),
-            SizedBox(height: sizes.spacing * 2),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                'Goal History',
-                style: TextStyle(
-                  fontSize: sizes.subtitleFontSize,
-                  fontWeight: FontWeight.bold,
+          child: Column(
+            children: [
+              ActiveStrengthGoalCard(sizes: sizes, theme: theme),
+              SizedBox(height: sizes.spacing * 2),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  'Goal History',
+                  style: TextStyle(
+                    fontSize: sizes.subtitleFontSize,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
-            ),
-            SizedBox(height: sizes.spacing),
-            StrengthGoalHistoryList(
-              shrinkWrap: true,
-              sizes: sizes,
-              theme: theme,
-            ),
-          ],
-        )),
+              SizedBox(height: sizes.spacing),
+              StrengthGoalHistoryList(
+                shrinkWrap: true,
+                sizes: sizes,
+                theme: theme,
+              ),
+            ],
+          ),
+        ),
       ),
       floatingActionButton: FloatingActionButton(
         key: const ValueKey('strength-goal-add-fab'),
         onPressed: () {
           showDialog(
             context: context,
-            builder: (context) => StrengthGoalFormModal(
-              theme: theme,
-              sizes: sizes,
-            ),
+            builder: (context) =>
+                StrengthGoalFormModal(theme: theme, sizes: sizes),
           );
         },
-        child: Icon(
-          Icons.add,
-          size: sizes.buttonIconSize,
-        ),
+        child: Icon(Icons.add, size: sizes.buttonIconSize),
       ),
     );
   }

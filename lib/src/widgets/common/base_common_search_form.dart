@@ -27,7 +27,8 @@ class BaseCommonSearchForm extends StatefulWidget {
     required MuscleGroup? muscleGroup,
     required int? equipmentId,
     required bool isFavourite,
-  }) onSubmit;
+  })
+  onSubmit;
 
   const BaseCommonSearchForm({
     super.key,
@@ -102,22 +103,14 @@ class _BaseCommonSearchFormState extends State<BaseCommonSearchForm> {
               }
             },
             prefixIcon: Padding(
-              padding: EdgeInsets.symmetric(
-                horizontal: widget.padding * 0.65,
-              ),
-              child: Icon(
-                Icons.search,
-                size: widget.fontSize,
-              ),
+              padding: EdgeInsets.symmetric(horizontal: widget.padding * 0.65),
+              child: Icon(Icons.search, size: widget.fontSize),
             ),
             suffixIcon: _data.name.isNotEmpty
                 ? IconButton(
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(),
-                    icon: Icon(
-                      Icons.clear,
-                      size: widget.fontSize,
-                    ),
+                    icon: Icon(Icons.clear, size: widget.fontSize),
                     onPressed: () {
                       setState(() {
                         _data.name = '';
@@ -170,9 +163,7 @@ class _BaseCommonSearchFormState extends State<BaseCommonSearchForm> {
                   fontSize: widget.fontSize,
                   padding: widget.padding / 2,
                   labelBuilder: (d) {
-                    return EnumDisplayNames.getMuscleGroupDisplayName(
-                      d,
-                    );
+                    return EnumDisplayNames.getMuscleGroupDisplayName(d);
                   },
                   onChanged: (value) {
                     setState(() {

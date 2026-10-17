@@ -37,7 +37,7 @@ class TotalString extends StatelessWidget {
             fontSize: fontSize,
             color: theme.colorScheme.onSurface,
           ),
-        )
+        ),
       ],
     );
   }

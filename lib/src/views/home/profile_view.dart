@@ -61,10 +61,10 @@ class _ProfileViewState extends State<ProfileView> {
   void _saveProfile() {
     if (_formKey.currentState!.validate()) {
       context.read<ProfileCubit>().updateProfile(
-            name: _nameController.text,
-            height: _height,
-            gender: _selectedGender,
-          );
+        name: _nameController.text,
+        height: _height,
+        gender: _selectedGender,
+      );
       setState(() {
         _isEditing = false;
       });
@@ -135,10 +135,7 @@ class _ProfileViewState extends State<ProfileView> {
                     SizedBox(height: 8),
                     Text(
                       "Create a profile to get started",
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey,
-                      ),
+                      style: TextStyle(fontSize: 14, color: Colors.grey),
                     ),
                   ],
                 ),
@@ -161,11 +158,7 @@ class _ProfileViewState extends State<ProfileView> {
                 // Profile Form
                 if (_isEditing) _buildEditForm(profile, system, sizes),
                 if (!_isEditing)
-                  ProfileInfo(
-                    sizes: sizes,
-                    profile: profile,
-                    system: system,
-                  ),
+                  ProfileInfo(sizes: sizes, profile: profile, system: system),
 
                 SizedBox(height: sizes.spacing * 2),
 
@@ -301,7 +294,8 @@ class _ProfileViewState extends State<ProfileView> {
     return BlocBuilder<EntitlementCubit, EntitlementCubitState>(
       builder: (context, entitlementState) {
         final snapshot = entitlementState.snapshot;
-        final bool busy = entitlementState.isRefreshing ||
+        final bool busy =
+            entitlementState.isRefreshing ||
             entitlementState.isPurchasing ||
             entitlementState.isRestoring;
 
@@ -313,10 +307,7 @@ class _ProfileViewState extends State<ProfileView> {
               children: [
                 const Text(
                   "Developer Entitlement",
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 8),
                 Text(
@@ -363,15 +354,15 @@ class _ProfileViewState extends State<ProfileView> {
     if (!mounted) {
       return;
     }
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Entitlement refreshed")),
-    );
+    ScaffoldMessenger.of(context)
+        .showSnackBar(const SnackBar(content: Text("Entitlement refreshed")));
   }
 
   Future<void> _setPremiumActive() async {
     final entitlementCubit = context.read<EntitlementCubit>();
     try {
-      final int expiresAt = DateTime.now()
+      final int expiresAt =
+          DateTime.now()
               .toUtc()
               .add(const Duration(days: 30))
               .millisecondsSinceEpoch ~/
@@ -396,7 +387,8 @@ class _ProfileViewState extends State<ProfileView> {
   Future<void> _setFreeExpired() async {
     final entitlementCubit = context.read<EntitlementCubit>();
     try {
-      final int expiresAt = DateTime.now()
+      final int expiresAt =
+          DateTime.now()
               .toUtc()
               .subtract(const Duration(hours: 1))
               .millisecondsSinceEpoch ~/
@@ -411,9 +403,9 @@ class _ProfileViewState extends State<ProfileView> {
       if (!mounted) {
         return;
       }
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Mock set to free/expired")),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Mock set to free/expired")));
     } catch (e) {
       _showDebugError(e);
     }
@@ -427,9 +419,9 @@ class _ProfileViewState extends State<ProfileView> {
       if (!mounted) {
         return;
       }
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Mock entitlement reset")),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Mock entitlement reset")));
     } catch (e) {
       _showDebugError(e);
     }

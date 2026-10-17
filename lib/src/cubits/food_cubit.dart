@@ -23,16 +23,18 @@ class FoodCubit extends Cubit<FoodState> {
     int offset = 0,
   }) async {
     _logger.info('Getting foods');
-    emit(state.copyWith(
-      foodPagination: state.foodPagination.copyWith(
-        limit: limit,
-        offset: offset,
-        name: search ?? '',
-        category: Nullable(category),
-        isFavorite: isFavorite ?? false,
+    emit(
+      state.copyWith(
+        foodPagination: state.foodPagination.copyWith(
+          limit: limit,
+          offset: offset,
+          name: search ?? '',
+          category: Nullable(category),
+          isFavorite: isFavorite ?? false,
+        ),
+        isLoading: true,
       ),
-      isLoading: true,
-    ));
+    );
 
     final result = await _foodService.getFoods(
       name: search,
@@ -45,28 +47,30 @@ class FoodCubit extends Cubit<FoodState> {
     if (result.isErr()) {
       final error = result.error;
       _logger.warning('Failed to get foods', error);
-      emit(state.copyWith(
-        error: Nullable(ErrorState(
-          type: error.type.name,
-          description: error.description,
-        )),
-        isLoading: false,
-      ));
+      emit(
+        state.copyWith(
+          error: Nullable(
+            ErrorState(type: error.type.name, description: error.description),
+          ),
+          isLoading: false,
+        ),
+      );
       return;
     }
 
     final paginated = result.value;
-    final List<FoodDto> foods =
-        offset > 0 ? [...state.foods, ...paginated.data] : paginated.data;
+    final List<FoodDto> foods = offset > 0
+        ? [...state.foods, ...paginated.data]
+        : paginated.data;
 
-    emit(state.copyWith(
-      foodPagination: state.foodPagination.copyWith(
-        total: paginated.total,
+    emit(
+      state.copyWith(
+        foodPagination: state.foodPagination.copyWith(total: paginated.total),
+        foods: foods,
+        isLoading: false,
+        error: const Nullable(null),
       ),
-      foods: foods,
-      isLoading: false,
-      error: const Nullable(null),
-    ));
+    );
   }
 
   Future<void> getFood(int id) async {
@@ -77,21 +81,24 @@ class FoodCubit extends Cubit<FoodState> {
     if (result.isErr()) {
       final error = result.error;
       _logger.warning('Failed to get food $id', error);
-      emit(state.copyWith(
-        error: Nullable(ErrorState(
-          type: error.type.name,
-          description: error.description,
-        )),
-        isLoading: false,
-      ));
+      emit(
+        state.copyWith(
+          error: Nullable(
+            ErrorState(type: error.type.name, description: error.description),
+          ),
+          isLoading: false,
+        ),
+      );
       return;
     }
 
-    emit(state.copyWith(
-      selectedFood: Nullable(result.value),
-      isLoading: false,
-      error: const Nullable(null),
-    ));
+    emit(
+      state.copyWith(
+        selectedFood: Nullable(result.value),
+        isLoading: false,
+        error: const Nullable(null),
+      ),
+    );
   }
 
   Future<bool> createFood(
@@ -106,21 +113,24 @@ class FoodCubit extends Cubit<FoodState> {
     if (result.isErr()) {
       final error = result.error;
       _logger.warning('Failed to create food', error);
-      emit(state.copyWith(
-        error: Nullable(ErrorState(
-          type: error.type.name,
-          description: error.description,
-        )),
-        isLoading: false,
-      ));
+      emit(
+        state.copyWith(
+          error: Nullable(
+            ErrorState(type: error.type.name, description: error.description),
+          ),
+          isLoading: false,
+        ),
+      );
       return false;
     }
 
-    emit(state.copyWith(
-      selectedFood: Nullable(result.value),
-      isLoading: false,
-      error: const Nullable(null),
-    ));
+    emit(
+      state.copyWith(
+        selectedFood: Nullable(result.value),
+        isLoading: false,
+        error: const Nullable(null),
+      ),
+    );
     await getFoods(
       search: state.foodPagination.name,
       category: state.foodPagination.category,
@@ -140,21 +150,24 @@ class FoodCubit extends Cubit<FoodState> {
     if (result.isErr()) {
       final error = result.error;
       _logger.warning('Failed to update food $id', error);
-      emit(state.copyWith(
-        error: Nullable(ErrorState(
-          type: error.type.name,
-          description: error.description,
-        )),
-        isLoading: false,
-      ));
+      emit(
+        state.copyWith(
+          error: Nullable(
+            ErrorState(type: error.type.name, description: error.description),
+          ),
+          isLoading: false,
+        ),
+      );
       return false;
     }
 
-    emit(state.copyWith(
-      selectedFood: Nullable(result.value),
-      isLoading: false,
-      error: const Nullable(null),
-    ));
+    emit(
+      state.copyWith(
+        selectedFood: Nullable(result.value),
+        isLoading: false,
+        error: const Nullable(null),
+      ),
+    );
     await getFoods(
       search: state.foodPagination.name,
       category: state.foodPagination.category,
@@ -171,23 +184,27 @@ class FoodCubit extends Cubit<FoodState> {
     if (result.isErr()) {
       final error = result.error;
       _logger.warning('Failed to toggle favorite', error);
-      emit(state.copyWith(
-        error: Nullable(ErrorState(
-          type: error.type.name,
-          description: error.description,
-        )),
-      ));
+      emit(
+        state.copyWith(
+          error: Nullable(
+            ErrorState(type: error.type.name, description: error.description),
+          ),
+        ),
+      );
       return false;
     }
 
     final updated = result.value;
-    final updatedList =
-        state.foods.map((f) => f.id == id ? updated : f).toList();
-    emit(state.copyWith(
-      foods: updatedList,
-      selectedFood: state.selectedFood?.id == id ? Nullable(updated) : null,
-      error: const Nullable(null),
-    ));
+    final updatedList = state.foods
+        .map((f) => f.id == id ? updated : f)
+        .toList();
+    emit(
+      state.copyWith(
+        foods: updatedList,
+        selectedFood: state.selectedFood?.id == id ? Nullable(updated) : null,
+        error: const Nullable(null),
+      ),
+    );
     return true;
   }
 
@@ -199,27 +216,33 @@ class FoodCubit extends Cubit<FoodState> {
     if (result.isErr()) {
       final error = result.error;
       _logger.warning('Failed to delete food $id', error);
-      emit(state.copyWith(
-        error: Nullable(ErrorState(
-          type: error.type.name,
-          description: error.description,
-        )),
-        isLoading: false,
-      ));
+      emit(
+        state.copyWith(
+          error: Nullable(
+            ErrorState(type: error.type.name, description: error.description),
+          ),
+          isLoading: false,
+        ),
+      );
       return false;
     }
 
     final updatedList = state.foods.where((f) => f.id != id).toList();
-    emit(state.copyWith(
-      foodPagination: state.foodPagination.copyWith(
-        total:
-            state.foodPagination.total > 0 ? state.foodPagination.total - 1 : 0,
+    emit(
+      state.copyWith(
+        foodPagination: state.foodPagination.copyWith(
+          total: state.foodPagination.total > 0
+              ? state.foodPagination.total - 1
+              : 0,
+        ),
+        foods: updatedList,
+        selectedFood: state.selectedFood?.id == id
+            ? const Nullable(null)
+            : null,
+        isLoading: false,
+        error: const Nullable(null),
       ),
-      foods: updatedList,
-      selectedFood: state.selectedFood?.id == id ? const Nullable(null) : null,
-      isLoading: false,
-      error: const Nullable(null),
-    ));
+    );
     return true;
   }
 }

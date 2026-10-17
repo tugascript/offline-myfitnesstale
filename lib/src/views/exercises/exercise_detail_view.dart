@@ -24,10 +24,7 @@ class ExerciseDetailView extends StatefulWidget {
 
   final int exerciseId;
 
-  const ExerciseDetailView({
-    super.key,
-    required this.exerciseId,
-  });
+  const ExerciseDetailView({super.key, required this.exerciseId});
 
   @override
   State<ExerciseDetailView> createState() => _ExerciseDetailViewState();
@@ -42,9 +39,9 @@ class _ExerciseDetailViewState extends State<ExerciseDetailView> {
 
   void _toggleFavorite(bool isFavorite) {
     context.read<ExerciseCubit>().updateExerciseFavorite(
-          widget.exerciseId,
-          !isFavorite,
-        );
+      widget.exerciseId,
+      !isFavorite,
+    );
   }
 
   void _deleteExercise() {
@@ -52,8 +49,7 @@ class _ExerciseDetailViewState extends State<ExerciseDetailView> {
       context: context,
       builder: (context) => ConfirmationDialog(
         title: 'Delete Exercise',
-        content:
-            'Are you sure you want to delete this exercise? This action cannot be undone.',
+        content: 'Are you sure you want to delete this exercise? This action cannot be undone.',
         confirmLabel: 'Delete',
         isDestructive: true,
         onConfirm: () {
@@ -73,9 +69,7 @@ class _ExerciseDetailViewState extends State<ExerciseDetailView> {
     final theme = Theme.of(context);
     final isDarkTheme = theme.brightness == Brightness.dark;
     final breakpoints = BreakPoint.fromContext(context);
-    final sizes = DataDisplaySizes.getDataDisplaySizes(
-      breakpoints.screenSize,
-    );
+    final sizes = DataDisplaySizes.getDataDisplaySizes(breakpoints.screenSize);
 
     return BlocConsumer<ExerciseCubit, ExerciseState>(
       listener: (context, state) {

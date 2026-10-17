@@ -116,10 +116,12 @@ class _BasicEditorState extends State<BasicEditor> {
     final rawSets = state.selectedWorkout?.id == widget.workoutId
         ? state.selectedWorkout?.sets ?? []
         : (state.workouts
-                .firstWhere((w) => w.id == widget.workoutId,
-                    orElse: () => state.selectedWorkout!)
-                .sets ??
-            []);
+                  .firstWhere(
+                    (w) => w.id == widget.workoutId,
+                    orElse: () => state.selectedWorkout!,
+                  )
+                  .sets ??
+              []);
     return rawSets.map((s) {
       final exercise = s.exercises?.firstOrNull;
       return SetEditorData(
@@ -158,9 +160,7 @@ class _BasicEditorState extends State<BasicEditor> {
         if (state.error != null) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(
-                state.error?.description ?? "Something went wrong",
-              ),
+              content: Text(state.error?.description ?? "Something went wrong"),
               backgroundColor: Colors.red,
             ),
           );

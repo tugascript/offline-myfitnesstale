@@ -1,4 +1,5 @@
 import '../common/nullable.dart';
+
 import 'package:equatable/equatable.dart';
 
 import 'common.dart';
@@ -67,7 +68,8 @@ class MealLogItem extends Equatable implements Model {
 
   static const String table = _table;
 
-  static final String tableCreate = '''
+  static final String tableCreate =
+      '''
   CREATE TABLE IF NOT EXISTS $_table (
     ${MealLogItemColumns.id.value} INTEGER PRIMARY KEY AUTOINCREMENT,
     ${MealLogItemColumns.mealLogId.value} INTEGER NOT NULL,
@@ -191,8 +193,9 @@ class MealLogItem extends Equatable implements Model {
       loggedProtein: loggedProtein ?? this.loggedProtein,
       loggedCarbs: loggedCarbs ?? this.loggedCarbs,
       loggedFat: loggedFat ?? this.loggedFat,
-      loggedMicros:
-          loggedMicros != null ? loggedMicros.value : this.loggedMicros,
+      loggedMicros: loggedMicros != null
+          ? loggedMicros.value
+          : this.loggedMicros,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -200,18 +203,18 @@ class MealLogItem extends Equatable implements Model {
 
   @override
   List<Object?> get props => [
-        id,
-        mealLogId,
-        foodId,
-        portionId,
-        amount,
-        loggedFoodName,
-        loggedCalories,
-        loggedProtein,
-        loggedCarbs,
-        loggedFat,
-        loggedMicros,
-        createdAt,
-        updatedAt,
-      ];
+    id,
+    mealLogId,
+    foodId,
+    portionId,
+    amount,
+    loggedFoodName,
+    loggedCalories,
+    loggedProtein,
+    loggedCarbs,
+    loggedFat,
+    loggedMicros,
+    createdAt,
+    updatedAt,
+  ];
 }

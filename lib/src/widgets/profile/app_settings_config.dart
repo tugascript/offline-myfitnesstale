@@ -164,16 +164,9 @@ class _SettingsSelector<T> extends StatelessWidget {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(
-                        getIcon(v),
-                        size: fontSize * 1.2,
-                        color: iconColor,
-                      ),
+                      Icon(getIcon(v), size: fontSize * 1.2, color: iconColor),
                       SizedBox(width: spacing),
-                      Text(
-                        getText(v),
-                        style: TextStyle(fontSize: fontSize),
-                      ),
+                      Text(getText(v), style: TextStyle(fontSize: fontSize)),
                     ],
                   ),
                 ),

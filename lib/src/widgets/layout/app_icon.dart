@@ -4,10 +4,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 class AppIcon extends StatelessWidget {
   final double size;
 
-  const AppIcon({
-    super.key,
-    required this.size,
-  });
+  const AppIcon({super.key, required this.size});
 
   @override
   Widget build(BuildContext context) {
@@ -36,21 +33,21 @@ class AppIcon extends StatelessWidget {
         ),
         errorBuilder:
             (BuildContext context, Object exception, StackTrace? stackTrace) {
-          debugPrint('Failed to load SVG icon: $iconPath - $exception');
-          return Container(
-            width: size,
-            height: size,
-            decoration: BoxDecoration(
-              color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Icon(
-              Icons.fitness_center,
-              size: size * 0.6,
-              color: Theme.of(context).primaryColor,
-            ),
-          );
-        },
+              debugPrint('Failed to load SVG icon: $iconPath - $exception');
+              return Container(
+                width: size,
+                height: size,
+                decoration: BoxDecoration(
+                  color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
+                  Icons.fitness_center,
+                  size: size * 0.6,
+                  color: Theme.of(context).primaryColor,
+                ),
+              );
+            },
       ),
     );
   }

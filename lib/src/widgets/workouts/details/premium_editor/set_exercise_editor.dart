@@ -22,10 +22,10 @@ class SetExerciseEditor extends StatelessWidget {
   final ValueChanged<String>? onMaxRepsChanged;
   final ValueChanged<bool?>? onToMaxRepsChanged;
   final ValueChanged<WorkoutSetExerciseDifficultyType?>?
-      onDifficultyTypeChanged;
+  onDifficultyTypeChanged;
   final ValueChanged<String>? onDifficultyValueChanged;
   final ValueChanged<Set<AlternativeExerciseData>>?
-      onAlternativeExercisesChanged;
+  onAlternativeExercisesChanged;
 
   const SetExerciseEditor({
     super.key,
@@ -47,9 +47,7 @@ class SetExerciseEditor extends StatelessWidget {
     final difficulty = exerciseData.difficulty;
 
     return Container(
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-      ),
+      decoration: BoxDecoration(color: theme.colorScheme.surface),
       child: Padding(
         padding: EdgeInsets.all(sizes.padding),
         child: Column(
@@ -123,7 +121,7 @@ class _DifficultyInput extends StatelessWidget {
   final ValueChanged<String>? onDifficultyValueChanged;
   final bool isLoading;
   final ValueChanged<WorkoutSetExerciseDifficultyType?>?
-      onDifficultyTypeChanged;
+  onDifficultyTypeChanged;
 
   const _DifficultyInput({
     required this.difficulty,
@@ -212,7 +210,8 @@ class _DifficultyTypeInputState extends State<_DifficultyTypeInput> {
   void initState() {
     super.initState();
     _controller = TextEditingController(
-        text: _formatValue(widget.initialValue, widget.difficultyType));
+      text: _formatValue(widget.initialValue, widget.difficultyType),
+    );
   }
 
   @override
@@ -220,8 +219,10 @@ class _DifficultyTypeInputState extends State<_DifficultyTypeInput> {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.initialValue != widget.initialValue ||
         oldWidget.difficultyType != widget.difficultyType) {
-      _controller.text =
-          _formatValue(widget.initialValue, widget.difficultyType);
+      _controller.text = _formatValue(
+        widget.initialValue,
+        widget.difficultyType,
+      );
     }
   }
 
@@ -268,10 +269,7 @@ class _DifficultyTypeInputState extends State<_DifficultyTypeInput> {
         padding: widget.sizes.padding,
         isLoading: false,
         filled: true,
-        prefixIcon: Icon(
-          Icons.bolt,
-          size: widget.sizes.fontSize * 1.2,
-        ),
+        prefixIcon: Icon(Icons.bolt, size: widget.sizes.fontSize * 1.2),
       );
     }
 
@@ -314,10 +312,7 @@ class _DifficultyTypeInputState extends State<_DifficultyTypeInput> {
       padding: widget.sizes.padding,
       filled: true,
       isLoading: false,
-      prefixIcon: Icon(
-        Icons.bolt,
-        size: widget.sizes.fontSize * 1.2,
-      ),
+      prefixIcon: Icon(Icons.bolt, size: widget.sizes.fontSize * 1.2),
     );
   }
 }
@@ -354,7 +349,8 @@ class _DifficultyWheelSheetContentState
   void initState() {
     super.initState();
     _controller = FixedExtentScrollController(
-        initialItem: widget.initialValue - widget.minVal);
+      initialItem: widget.initialValue - widget.minVal,
+    );
   }
 
   @override
@@ -400,22 +396,23 @@ class _DifficultyWheelSheetContentState
                 Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text('Difficulty',
-                        style: TextStyle(
-                            fontSize: widget.sizes.subtitleFontSize,
-                            fontWeight: FontWeight.w600)),
+                    Text(
+                      'Difficulty',
+                      style: TextStyle(
+                        fontSize: widget.sizes.subtitleFontSize,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                     Text(
                       _getHelperText(),
                       style: TextStyle(
-                          fontSize: widget.sizes.fontSize * 0.8,
-                          color: Colors.grey),
+                        fontSize: widget.sizes.fontSize * 0.8,
+                        color: Colors.grey,
+                      ),
                     ),
                   ],
                 ),
-                TextButton(
-                  onPressed: _onConfirm,
-                  child: const Text('Confirm'),
-                ),
+                TextButton(onPressed: _onConfirm, child: const Text('Confirm')),
               ],
             ),
           ),

@@ -74,16 +74,11 @@ void main() {
   }
 
   Future<Map<String, int>> counts() async {
-    return {
-      for (final table in onboardingTables) table: await count(table),
-    };
+    return {for (final table in onboardingTables) table: await count(table)};
   }
 
   Future<void> expectEmptyOnboardingDatabase() async {
-    expect(
-      await counts(),
-      {for (final table in onboardingTables) table: 0},
-    );
+    expect(await counts(), {for (final table in onboardingTables) table: 0});
   }
 
   Future<void> expectCoreSeedCounts({required bool withWorkouts}) async {
@@ -199,16 +194,18 @@ void main() {
     expect(first.isOk(), isTrue);
     final originalCounts = await counts();
 
-    final second = await service.onboard(OnboardingRequest(
-      units: Units.metric,
-      theme: ThemeType.light,
-      name: 'Ignored retry values',
-      height: 150,
-      gender: Gender.female,
-      birthday: DateTime(2000),
-      createWorkouts: false,
-      notificationsOn: true,
-    ));
+    final second = await service.onboard(
+      OnboardingRequest(
+        units: Units.metric,
+        theme: ThemeType.light,
+        name: 'Ignored retry values',
+        height: 150,
+        gender: Gender.female,
+        birthday: DateTime(2000),
+        createWorkouts: false,
+        notificationsOn: true,
+      ),
+    );
 
     expect(second.isOk(), isTrue);
     expect(second.value.profile.id, first.value.profile.id);

@@ -48,8 +48,9 @@ class SingleWorkoutRecordList extends StatelessWidget {
       enabled: isLoading && workoutRecords.isEmpty,
       child: ListView.builder(
         controller: scrollController,
-        itemCount:
-            isLoading && workoutRecords.isEmpty ? 2 : workoutRecords.length,
+        itemCount: isLoading && workoutRecords.isEmpty
+            ? 2
+            : workoutRecords.length,
         itemBuilder: (context, index) {
           if (isLoading && workoutRecords.isEmpty) {
             return _SingleWorkoutRecordCard(

@@ -7,26 +7,14 @@ class PictureDto extends Equatable {
   final PictureStorage storage;
   final String uri;
 
-  const PictureDto({
-    required this.storage,
-    required this.uri,
-  });
+  const PictureDto({required this.storage, required this.uri});
 
   factory PictureDto.fromModel(PictureData picture) {
-    return PictureDto(
-      storage: picture.storage,
-      uri: picture.uri,
-    );
+    return PictureDto(storage: picture.storage, uri: picture.uri);
   }
 
-  PictureDto copyWith({
-    PictureStorage? storage,
-    String? uri,
-  }) {
-    return PictureDto(
-      storage: storage ?? this.storage,
-      uri: uri ?? this.uri,
-    );
+  PictureDto copyWith({PictureStorage? storage, String? uri}) {
+    return PictureDto(storage: storage ?? this.storage, uri: uri ?? this.uri);
   }
 
   @override

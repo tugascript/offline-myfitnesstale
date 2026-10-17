@@ -13,10 +13,7 @@ import '../../support/test_database.dart';
 void main() {
   final testDatabase = TestDatabase();
 
-  Future<int> seedPlan(
-    Database database, {
-    String name = 'History Plan',
-  }) {
+  Future<int> seedPlan(Database database, {String name = 'History Plan'}) {
     return database.insert(
       WorkoutPlan.table,
       WorkoutPlan.create(
@@ -57,69 +54,68 @@ void main() {
   tearDown(testDatabase.clearWorkoutPlanTables);
   tearDownAll(testDatabase.destroy);
 
-  test('first page replaces, later pages append, and results are newest-first',
-      () async {
-    final database = await testDatabase.db;
-    final planId = await seedPlan(database);
-    final oldestId = await seedRecord(
-      database,
-      planId: planId,
-      status: ProgressStatus.abandoned,
-      timestamp: 100,
-    );
-    final middleId = await seedRecord(
-      database,
-      planId: planId,
-      status: ProgressStatus.inProgress,
-      timestamp: 200,
-    );
-    final newestId = await seedRecord(
-      database,
-      planId: planId,
-      status: ProgressStatus.completed,
-      timestamp: 300,
-    );
-    final cubit = WorkoutPlanRecordCubit();
-    addTearDown(cubit.close);
+  test(
+    'first page replaces, later pages append, and results are newest-first',
+    () async {
+      final database = await testDatabase.db;
+      final planId = await seedPlan(database);
+      final oldestId = await seedRecord(
+        database,
+        planId: planId,
+        status: ProgressStatus.abandoned,
+        timestamp: 100,
+      );
+      final middleId = await seedRecord(
+        database,
+        planId: planId,
+        status: ProgressStatus.inProgress,
+        timestamp: 200,
+      );
+      final newestId = await seedRecord(
+        database,
+        planId: planId,
+        status: ProgressStatus.completed,
+        timestamp: 300,
+      );
+      final cubit = WorkoutPlanRecordCubit();
+      addTearDown(cubit.close);
 
-    await cubit.getWorkoutPlanRecords(
-      workoutPlanId: planId,
-      limit: 2,
-      offset: 0,
-    );
+      await cubit.getWorkoutPlanRecords(
+        workoutPlanId: planId,
+        limit: 2,
+        offset: 0,
+      );
 
-    expect(cubit.state.planRecords.map((record) => record.id), [
-      newestId,
-      middleId,
-    ]);
-    expect(cubit.state.pagination.total, 3);
+      expect(cubit.state.planRecords.map((record) => record.id), [
+        newestId,
+        middleId,
+      ]);
+      expect(cubit.state.pagination.total, 3);
 
-    await cubit.getWorkoutPlanRecords(
-      workoutPlanId: planId,
-      limit: 2,
-      offset: 2,
-    );
+      await cubit.getWorkoutPlanRecords(
+        workoutPlanId: planId,
+        limit: 2,
+        offset: 2,
+      );
 
-    expect(cubit.state.planRecords.map((record) => record.id), [
-      newestId,
-      middleId,
-      oldestId,
-    ]);
+      expect(cubit.state.planRecords.map((record) => record.id), [
+        newestId,
+        middleId,
+        oldestId,
+      ]);
 
-    await cubit.getWorkoutPlanRecords(
-      workoutPlanId: planId,
-      progressStatus: ProgressStatus.completed,
-      limit: 20,
-      offset: 0,
-    );
+      await cubit.getWorkoutPlanRecords(
+        workoutPlanId: planId,
+        progressStatus: ProgressStatus.completed,
+        limit: 20,
+        offset: 0,
+      );
 
-    expect(cubit.state.planRecords.map((record) => record.id), [newestId]);
-    expect(cubit.state.pagination.workoutPlanId, planId);
-    expect(
-      cubit.state.pagination.progressStatus,
-      ProgressStatus.completed,
-    );
-  });
+      expect(cubit.state.planRecords.map((record) => record.id), [newestId]);
+      expect(cubit.state.pagination.workoutPlanId, planId);
+      expect(cubit.state.pagination.progressStatus, ProgressStatus.completed);
+    },
+  );
 
   test('pagination copyWith retains filters and includes them in equality', () {
     const pagination = WorkoutPlanRecordPagination(
@@ -159,8 +155,9 @@ void main() {
     await cubit.getWorkoutPlanRecords(workoutPlanId: firstPlanId);
     expect(cubit.state.planRecords, isNotEmpty);
 
-    final secondPlanLoad =
-        cubit.getWorkoutPlanRecords(workoutPlanId: secondPlanId);
+    final secondPlanLoad = cubit.getWorkoutPlanRecords(
+      workoutPlanId: secondPlanId,
+    );
 
     expect(cubit.state.isLoading, isTrue);
     expect(cubit.state.planRecords, isEmpty);

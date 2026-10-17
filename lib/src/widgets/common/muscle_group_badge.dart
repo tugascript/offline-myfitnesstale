@@ -20,15 +20,11 @@ class MuscleGroupBadge extends StatelessWidget {
     return Chip(
       shape: BeveledRectangleBorder(),
       side: BorderSide.none,
-      backgroundColor: theme.colorScheme.primary.withValues(
-        alpha: 0.2,
-      ),
+      backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.2),
       visualDensity: VisualDensity.compact,
       label: Text(
         EnumDisplayNames.getMuscleGroupDisplayName(muscleGroup),
-        style: TextStyle(
-          fontSize: fontSize,
-        ),
+        style: TextStyle(fontSize: fontSize),
       ),
     );
   }

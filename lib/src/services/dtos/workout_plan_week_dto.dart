@@ -75,14 +75,14 @@ class WorkoutPlanWeekDto extends Equatable implements Dto<WorkoutPlanWeek> {
 
   @override
   List<Object?> get props => [
-        id,
-        planVersion,
-        startWeek,
-        endWeek,
-        totalDays,
-        totalWorkouts,
-        scheduleMode,
-        phase,
-        days.length,
-      ];
+    id,
+    planVersion,
+    startWeek,
+    endWeek,
+    totalDays,
+    totalWorkouts,
+    scheduleMode,
+    phase,
+    days.length,
+  ];
 }

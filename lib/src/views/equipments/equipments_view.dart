@@ -29,11 +29,7 @@ class _EquipmentsViewState extends State<EquipmentsView> {
     final cubit = context.read<ExerciseCubit>();
     if (cubit.state.equipments.isEmpty) {
       final pagination = cubit.state.equipmentPagination;
-      cubit.getEquipments(
-        name: pagination.name,
-        limit: 50,
-        offset: 0,
-      );
+      cubit.getEquipments(name: pagination.name, limit: 50, offset: 0);
     }
     _scrollController.addListener(_onScroll);
   }
@@ -71,9 +67,7 @@ class _EquipmentsViewState extends State<EquipmentsView> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final breakPoints = BreakPoint.fromContext(context);
-    final sizes = DataDisplaySizes.getDataDisplaySizes(
-      breakPoints.screenSize,
-    );
+    final sizes = DataDisplaySizes.getDataDisplaySizes(breakPoints.screenSize);
 
     return AppScaffold(
       title: "Equipments",
@@ -92,10 +86,10 @@ class _EquipmentsViewState extends State<EquipmentsView> {
                   initialName: state.equipmentPagination.name,
                   onSubmit: ({String? name}) {
                     context.read<ExerciseCubit>().getEquipments(
-                          name: name,
-                          limit: 50,
-                          offset: 0,
-                        );
+                      name: name,
+                      limit: 50,
+                      offset: 0,
+                    );
                   },
                 ),
                 SizedBox(height: sizes.inputSpacing),

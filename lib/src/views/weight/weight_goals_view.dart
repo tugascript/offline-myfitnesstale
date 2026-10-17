@@ -24,16 +24,10 @@ class WeightGoalView extends StatelessWidget {
         padding: EdgeInsets.all(sizes.viewPadding),
         child: Column(
           children: [
-            ActiveWeightGoal(
-              sizes: sizes,
-              theme: theme,
-            ),
+            ActiveWeightGoal(sizes: sizes, theme: theme),
             SizedBox(height: sizes.spacing * 2),
             Expanded(
-              child: WeightGoalHistory(
-                sizes: sizes,
-                theme: theme,
-              ),
+              child: WeightGoalHistory(sizes: sizes, theme: theme),
             ),
           ],
         ),
@@ -43,16 +37,11 @@ class WeightGoalView extends StatelessWidget {
         onPressed: () {
           showDialog(
             context: context,
-            builder: (context) => CreateWeightGoalModal(
-              theme: theme,
-              sizes: sizes,
-            ),
+            builder: (context) =>
+                CreateWeightGoalModal(theme: theme, sizes: sizes),
           );
         },
-        child: Icon(
-          Icons.add,
-          size: sizes.buttonIconSize,
-        ),
+        child: Icon(Icons.add, size: sizes.buttonIconSize),
       ),
     );
   }

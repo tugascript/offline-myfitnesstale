@@ -75,17 +75,18 @@ class ExerciseCreationView extends StatelessWidget {
                       initialEquipmentIds: {},
                       initialDifficulty: null,
                       initialIsFavorite: false,
-                      onSubmit: ({
-                        String? description,
-                        Difficulty? difficulty,
-                        required Set<int> equipmentIds,
-                        required bool isFavorite,
-                        required MuscleGroup muscleGroup,
-                        required String name,
-                        required Set<Muscle> primaryMuscles,
-                        required Set<Muscle> secondaryMuscles,
-                      }) {
-                        context.read<ExerciseCubit>().createExercise(
+                      onSubmit:
+                          ({
+                            String? description,
+                            Difficulty? difficulty,
+                            required Set<int> equipmentIds,
+                            required bool isFavorite,
+                            required MuscleGroup muscleGroup,
+                            required String name,
+                            required Set<Muscle> primaryMuscles,
+                            required Set<Muscle> secondaryMuscles,
+                          }) {
+                            context.read<ExerciseCubit>().createExercise(
                               name: name,
                               description: description,
                               muscleGroup: muscleGroup,
@@ -95,7 +96,7 @@ class ExerciseCreationView extends StatelessWidget {
                               difficulty: difficulty,
                               isFavorite: isFavorite,
                             );
-                      },
+                          },
                     ),
                   ),
                 );

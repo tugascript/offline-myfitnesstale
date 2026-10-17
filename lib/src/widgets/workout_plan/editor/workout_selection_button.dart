@@ -22,12 +22,7 @@ class WorkoutSelectionButton extends StatelessWidget {
       height: sizes.fontSize * 3,
       width: double.infinity,
       child: OutlinedButton.icon(
-        icon: Text(
-          '🏋️',
-          style: TextStyle(
-            fontSize: sizes.fontSize * 1.2,
-          ),
-        ),
+        icon: Text('🏋️', style: TextStyle(fontSize: sizes.fontSize * 1.2)),
         label: Text(
           workoutName == null ? "Select Workout" : workoutName!,
           softWrap: true,
@@ -40,10 +35,7 @@ class WorkoutSelectionButton extends StatelessWidget {
         style: OutlinedButton.styleFrom(
           backgroundColor: theme.scaffoldBackgroundColor,
           foregroundColor: theme.colorScheme.primary,
-          side: BorderSide(
-            color: theme.colorScheme.primary,
-            width: 0.5,
-          ),
+          side: BorderSide(color: theme.colorScheme.primary, width: 0.5),
         ),
         onPressed: onPressed,
       ),

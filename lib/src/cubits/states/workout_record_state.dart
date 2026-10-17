@@ -20,11 +20,7 @@ final class WorkoutRecordPagination extends Equatable {
   });
 
   factory WorkoutRecordPagination.initial() {
-    return const WorkoutRecordPagination(
-      limit: 20,
-      offset: 0,
-      total: 0,
-    );
+    return const WorkoutRecordPagination(limit: 20, offset: 0, total: 0);
   }
 
   WorkoutRecordPagination copyWith({
@@ -44,13 +40,7 @@ final class WorkoutRecordPagination extends Equatable {
   }
 
   @override
-  List<Object?> get props => [
-        workoutId,
-        dateRange,
-        limit,
-        offset,
-        total,
-      ];
+  List<Object?> get props => [workoutId, dateRange, limit, offset, total];
 }
 
 final class WorkoutRecordState extends Equatable {
@@ -102,11 +92,11 @@ final class WorkoutRecordState extends Equatable {
 
   @override
   List<Object?> get props => [
-        workoutRecords,
-        latestWorkoutRecord,
-        selectedWorkoutRecord,
-        pagination,
-        isLoading,
-        error,
-      ];
+    workoutRecords,
+    latestWorkoutRecord,
+    selectedWorkoutRecord,
+    pagination,
+    isLoading,
+    error,
+  ];
 }

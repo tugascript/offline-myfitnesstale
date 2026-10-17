@@ -1,4 +1,5 @@
 import '../common/nullable.dart';
+
 import 'package:equatable/equatable.dart';
 
 import 'model.dart';
@@ -44,7 +45,8 @@ class DailyNutritionLog extends Equatable implements Model {
 
   static const String table = _table;
 
-  static final String tableCreate = '''
+  static final String tableCreate =
+      '''
   CREATE TABLE IF NOT EXISTS $_table (
     ${DailyNutritionLogColumns.id.value} INTEGER PRIMARY KEY AUTOINCREMENT,
     ${DailyNutritionLogColumns.date.value} INTEGER NOT NULL,
@@ -117,11 +119,11 @@ class DailyNutritionLog extends Equatable implements Model {
 
   @override
   List<Object?> get props => [
-        id,
-        date,
-        waterIntakeMl,
-        notes,
-        createdAt,
-        updatedAt,
-      ];
+    id,
+    date,
+    waterIntakeMl,
+    notes,
+    createdAt,
+    updatedAt,
+  ];
 }

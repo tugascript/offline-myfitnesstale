@@ -8,11 +8,7 @@ final class _FormData {
   int height;
   Gender gender;
 
-  _FormData({
-    required this.name,
-    required this.height,
-    required this.gender,
-  });
+  _FormData({required this.name, required this.height, required this.gender});
 }
 
 final class ProfileForm extends StatefulWidget {
@@ -24,7 +20,8 @@ final class ProfileForm extends StatefulWidget {
     required String name,
     required int height,
     required Gender gender,
-  }) onSubmit;
+  })
+  onSubmit;
   final void Function(Units unit) onUnitsChanged;
   final String submitButtonLabel;
   final bool isLoading;

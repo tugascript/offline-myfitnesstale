@@ -180,10 +180,7 @@ class _SetsWheelSheetContentState extends State<_SetsWheelSheetContent> {
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-                TextButton(
-                  onPressed: _onConfirm,
-                  child: const Text('Confirm'),
-                ),
+                TextButton(onPressed: _onConfirm, child: const Text('Confirm')),
               ],
             ),
           ),

@@ -25,10 +25,7 @@ void main() {
         difficulty: Difficulty.beginner,
         isFavorite: true,
       ),
-      WorkoutPlan.create(
-        name: 'Not Favorite',
-        difficulty: Difficulty.beginner,
-      ),
+      WorkoutPlan.create(name: 'Not Favorite', difficulty: Difficulty.beginner),
     ]) {
       await db.insert(WorkoutPlan.table, plan.toMap());
     }

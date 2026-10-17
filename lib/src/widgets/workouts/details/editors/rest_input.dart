@@ -38,18 +38,23 @@ class _RestInputState extends State<RestInput> {
 
   void _updateControllerText() {
     final rest = widget.initialRest.clamp(_restSecsMin, _restSecsMax);
-    final maxRest =
-        (widget.initialMaxRest ?? rest).clamp(_restSecsMin, _restSecsMax);
+    final maxRest = (widget.initialMaxRest ?? rest).clamp(
+      _restSecsMin,
+      _restSecsMax,
+    );
     final displayMaxRest = maxRest >= rest ? maxRest : rest;
-    _controller.text =
-        rest == displayMaxRest ? '$rest' : '$rest – $displayMaxRest';
+    _controller.text = rest == displayMaxRest
+        ? '$rest'
+        : '$rest – $displayMaxRest';
   }
 
   void _openWheelSheet() {
     if (widget.restOnChanged == null || widget.maxRestOnChanged == null) return;
     final rest = widget.initialRest.clamp(_restSecsMin, _restSecsMax);
-    final maxRest =
-        (widget.initialMaxRest ?? rest).clamp(_restSecsMin, _restSecsMax);
+    final maxRest = (widget.initialMaxRest ?? rest).clamp(
+      _restSecsMin,
+      _restSecsMax,
+    );
     showModalBottomSheet<void>(
       context: context,
       builder: (sheetContext) => _RestWheelSheetContent(
@@ -135,10 +140,12 @@ class _RestWheelSheetContentState extends State<_RestWheelSheetContent> {
     super.initState();
     final rest = widget.initialRest.clamp(_restSecsMin, _restSecsMax);
     final maxRest = widget.initialMaxRest.clamp(_restSecsMin, _restSecsMax);
-    _restController =
-        FixedExtentScrollController(initialItem: rest - _restSecsMin);
-    _maxRestController =
-        FixedExtentScrollController(initialItem: maxRest - _restSecsMin);
+    _restController = FixedExtentScrollController(
+      initialItem: rest - _restSecsMin,
+    );
+    _maxRestController = FixedExtentScrollController(
+      initialItem: maxRest - _restSecsMin,
+    );
   }
 
   @override
@@ -173,14 +180,14 @@ class _RestWheelSheetContentState extends State<_RestWheelSheetContent> {
                   onPressed: () => Navigator.of(context).pop(),
                   child: const Text('Cancel'),
                 ),
-                Text('Rest (sec)',
-                    style: TextStyle(
-                        fontSize: widget.sizes.subtitleFontSize,
-                        fontWeight: FontWeight.w600)),
-                TextButton(
-                  onPressed: _onConfirm,
-                  child: const Text('Confirm'),
+                Text(
+                  'Rest (sec)',
+                  style: TextStyle(
+                    fontSize: widget.sizes.subtitleFontSize,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
+                TextButton(onPressed: _onConfirm, child: const Text('Confirm')),
               ],
             ),
           ),

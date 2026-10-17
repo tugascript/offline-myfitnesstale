@@ -51,7 +51,8 @@ class WorkoutPlanHeader extends StatelessWidget {
                     ? 'workout-plan-favorite'
                     : 'workout-plan-header-edit',
               ),
-              icon: actionButtonIcon ??
+              icon:
+                  actionButtonIcon ??
                   Icon(
                     plan.isFavorite ? Icons.favorite : Icons.favorite_border,
                     color: plan.isFavorite ? Colors.red : null,
@@ -70,9 +71,7 @@ class WorkoutPlanHeader extends StatelessWidget {
             fontWeight: FontWeight.w600,
           ),
         ),
-        SizedBox(
-          height: boxSpacing,
-        ),
+        SizedBox(height: boxSpacing),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -91,9 +90,7 @@ class WorkoutPlanHeader extends StatelessWidget {
             Row(
               children: [
                 Text("🏋️", style: TextStyle(fontSize: sizes.fontSize * 1.2)),
-                SizedBox(
-                  width: sizes.spacing / 2,
-                ),
+                SizedBox(width: sizes.spacing / 2),
                 Text(
                   " Workouts: ",
                   style: TextStyle(
@@ -103,18 +100,14 @@ class WorkoutPlanHeader extends StatelessWidget {
                 ),
                 Text(
                   plan.totalWorkouts.toString(),
-                  style: TextStyle(
-                    fontSize: sizes.fontSize,
-                  ),
+                  style: TextStyle(fontSize: sizes.fontSize),
                 ),
               ],
             ),
           ],
         ),
         if (plan.description != null && plan.description!.isNotEmpty) ...[
-          SizedBox(
-            height: sizes.spacing,
-          ),
+          SizedBox(height: sizes.spacing),
           Text(
             'Description',
             style: TextStyle(
@@ -122,18 +115,14 @@ class WorkoutPlanHeader extends StatelessWidget {
               fontWeight: FontWeight.w600,
             ),
           ),
-          SizedBox(
-            height: boxSpacing,
-          ),
+          SizedBox(height: boxSpacing),
           Wrap(
             spacing: boxSpacing,
             runSpacing: boxSpacing,
             children: [
               Text(
                 plan.description!,
-                style: TextStyle(
-                  fontSize: sizes.fontSize,
-                ),
+                style: TextStyle(fontSize: sizes.fontSize),
               ),
             ],
           ),
@@ -161,9 +150,7 @@ class _TotalString extends StatelessWidget {
     return Row(
       children: [
         Icon(icon, size: sizes.fontSize * 1.2),
-        SizedBox(
-          width: sizes.spacing / 2,
-        ),
+        SizedBox(width: sizes.spacing / 2),
         Text(
           " $name: ",
           style: TextStyle(
@@ -171,12 +158,7 @@ class _TotalString extends StatelessWidget {
             fontWeight: FontWeight.w600,
           ),
         ),
-        Text(
-          total.toString(),
-          style: TextStyle(
-            fontSize: sizes.fontSize,
-          ),
-        ),
+        Text(total.toString(), style: TextStyle(fontSize: sizes.fontSize)),
       ],
     );
   }

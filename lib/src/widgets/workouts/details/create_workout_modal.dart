@@ -14,10 +14,7 @@ import 'workout_base_form.dart';
 class CreateWorkoutDialog extends StatelessWidget {
   final DataDisplaySizesList sizes;
 
-  const CreateWorkoutDialog({
-    super.key,
-    required this.sizes,
-  });
+  const CreateWorkoutDialog({super.key, required this.sizes});
 
   @override
   Widget build(BuildContext context) {
@@ -28,8 +25,9 @@ class CreateWorkoutDialog extends StatelessWidget {
       child: BlocBuilder<WorkoutCubit, WorkoutState>(
         builder: (context, state) {
           final entitlementState = context.watch<EntitlementCubit>().state;
-          final canUsePremiumEditor =
-              EntitlementGuard.canUsePremium(entitlementState.snapshot);
+          final canUsePremiumEditor = EntitlementGuard.canUsePremium(
+            entitlementState.snapshot,
+          );
           return WorkoutBaseForm(
             theme: theme,
             sizes: sizes,
@@ -40,32 +38,33 @@ class CreateWorkoutDialog extends StatelessWidget {
             initialDifficulty: Difficulty.beginner,
             initialEditorType: EditorType.basic,
             canUsePremiumEditor: canUsePremiumEditor,
-            onSubmit: ({
-              required String name,
-              required bool isFavorite,
-              required Difficulty difficulty,
-              required EditorType editorType,
-              String? description,
-            }) async {
-              await context.read<WorkoutCubit>().createWorkout(
+            onSubmit:
+                ({
+                  required String name,
+                  required bool isFavorite,
+                  required Difficulty difficulty,
+                  required EditorType editorType,
+                  String? description,
+                }) async {
+                  await context.read<WorkoutCubit>().createWorkout(
                     name: name,
                     isFavorite: isFavorite,
                     difficulty: difficulty,
                     editorType: editorType,
                     description: description,
                   );
-              await Future.delayed(const Duration(milliseconds: 10));
+                  await Future.delayed(const Duration(milliseconds: 10));
 
-              if (context.mounted) {
-                Navigator.of(context).pop();
-                final cubitState = context.read<WorkoutCubit>().state;
-                if (cubitState.selectedWorkout != null) {
-                  context.push(
-                    "/workouts/${cubitState.selectedWorkout!.id}",
-                  );
-                }
-              }
-            },
+                  if (context.mounted) {
+                    Navigator.of(context).pop();
+                    final cubitState = context.read<WorkoutCubit>().state;
+                    if (cubitState.selectedWorkout != null) {
+                      context.push(
+                        "/workouts/${cubitState.selectedWorkout!.id}",
+                      );
+                    }
+                  }
+                },
           );
         },
       ),

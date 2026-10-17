@@ -43,8 +43,11 @@ class _RecipeUpdateViewState extends State<RecipeUpdateView> {
         if (!state.isLoading && state.error != null) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-                content: Text(state.error!.description,
-                    style: TextStyle(fontSize: sizes.fontSize))),
+              content: Text(
+                state.error!.description,
+                style: TextStyle(fontSize: sizes.fontSize),
+              ),
+            ),
           );
         }
       },
@@ -63,8 +66,10 @@ class _RecipeUpdateViewState extends State<RecipeUpdateView> {
             body: Center(
               child: ElevatedButton(
                 onPressed: () => context.pop(),
-                child:
-                    Text('Go Back', style: TextStyle(fontSize: sizes.fontSize)),
+                child: Text(
+                  'Go Back',
+                  style: TextStyle(fontSize: sizes.fontSize),
+                ),
               ),
             ),
           );
@@ -80,9 +85,10 @@ class _RecipeUpdateViewState extends State<RecipeUpdateView> {
               initialRecipe: recipe,
               isLoading: state.isLoading,
               onSubmit: (input) async {
-                final success = await context
-                    .read<RecipeCubit>()
-                    .updateRecipe(recipe.id, input);
+                final success = await context.read<RecipeCubit>().updateRecipe(
+                  recipe.id,
+                  input,
+                );
                 if (success && context.mounted) {
                   context.pop();
                 }

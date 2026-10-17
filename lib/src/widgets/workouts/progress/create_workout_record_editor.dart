@@ -53,7 +53,7 @@ class CreateWorkoutRecordEditor extends StatefulWidget {
 class _CreateWorkoutRecordEditorState extends State<CreateWorkoutRecordEditor> {
   // Map of WorkoutSetId -> Map of IterationNumber -> Map of WorkoutSetExerciseId -> SetExerciseRecord
   final Map<int, Map<int, Map<int, CreateWorkoutSetExerciseRecordBatchDto>>>
-      _setExercises = {};
+  _setExercises = {};
 
   final _formKey = GlobalKey<FormState>();
   final _startTimeController = TextEditingController();
@@ -106,20 +106,20 @@ class _CreateWorkoutRecordEditorState extends State<CreateWorkoutRecordEditor> {
       return;
     }
 
-    final record =
-        await context.read<WorkoutRecordCubit>().batchCreateWorkoutRecord(
-              workoutId: widget.workoutId,
-              version: widget.version,
-              startedAt: _startedAt,
-              completedAt: _completedAt,
-              sets: _sets,
-            );
+    final record = await context
+        .read<WorkoutRecordCubit>()
+        .batchCreateWorkoutRecord(
+          workoutId: widget.workoutId,
+          version: widget.version,
+          startedAt: _startedAt,
+          completedAt: _completedAt,
+          sets: _sets,
+        );
     if (!mounted) return;
     final err = context.read<WorkoutRecordCubit>().state.error;
     if (err != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(err.description)),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(err.description)));
       return;
     }
 
@@ -132,19 +132,23 @@ class _CreateWorkoutRecordEditorState extends State<CreateWorkoutRecordEditor> {
         week != null &&
         day != null &&
         workoutPosition != null) {
-      final linked =
-          await context.read<WorkoutPlanRecordCubit>().completePlanWorkout(
-                workoutPlanRecordId: planRecordId,
-                workoutRecordId: record.id,
-                week: week,
-                day: day,
-                workoutPosition: workoutPosition,
-                startedAt: _startedAt,
-              );
+      final linked = await context
+          .read<WorkoutPlanRecordCubit>()
+          .completePlanWorkout(
+            workoutPlanRecordId: planRecordId,
+            workoutRecordId: record.id,
+            week: week,
+            day: day,
+            workoutPosition: workoutPosition,
+            startedAt: _startedAt,
+          );
       if (!mounted) return;
       if (!linked) {
-        final planError =
-            context.read<WorkoutPlanRecordCubit>().state.error?.description;
+        final planError = context
+            .read<WorkoutPlanRecordCubit>()
+            .state
+            .error
+            ?.description;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
@@ -181,14 +185,16 @@ class _CreateWorkoutRecordEditorState extends State<CreateWorkoutRecordEditor> {
           ..sort((a, b) => a.position.compareTo(b.position));
 
         if (exercisesList.isNotEmpty) {
-          result.add(CreateWorkoutSetRecordBatchDto(
-            workoutSetId: set.id,
-            setNumber: iterationNumber,
-            startedAt: _startedAt,
-            completedAt: _completedAt,
-            totalRestSecs: _iterationRestSecs[set.id]?[iterationNumber] ?? 0,
-            exercises: exercisesList,
-          ));
+          result.add(
+            CreateWorkoutSetRecordBatchDto(
+              workoutSetId: set.id,
+              setNumber: iterationNumber,
+              startedAt: _startedAt,
+              completedAt: _completedAt,
+              totalRestSecs: _iterationRestSecs[set.id]?[iterationNumber] ?? 0,
+              exercises: exercisesList,
+            ),
+          );
         }
       }
     }
@@ -274,8 +280,9 @@ class _CreateWorkoutRecordEditorState extends State<CreateWorkoutRecordEditor> {
                               if (date != null && context.mounted) {
                                 final time = await showTimePicker(
                                   context: context,
-                                  initialTime:
-                                      TimeOfDay.fromDateTime(_startedAt),
+                                  initialTime: TimeOfDay.fromDateTime(
+                                    _startedAt,
+                                  ),
                                 );
                                 if (time != null) {
                                   setState(() {
@@ -321,8 +328,9 @@ class _CreateWorkoutRecordEditorState extends State<CreateWorkoutRecordEditor> {
                               if (date != null && context.mounted) {
                                 final time = await showTimePicker(
                                   context: context,
-                                  initialTime:
-                                      TimeOfDay.fromDateTime(_completedAt),
+                                  initialTime: TimeOfDay.fromDateTime(
+                                    _completedAt,
+                                  ),
                                 );
                                 if (time != null) {
                                   setState(() {
@@ -387,211 +395,216 @@ class _CreateWorkoutRecordEditorState extends State<CreateWorkoutRecordEditor> {
                   Card(
                     margin: EdgeInsets.only(bottom: widget.sizes.spacing),
                     child: Column(
-                      children: List<Widget>.generate(
-                        iterations,
-                        (iterationIndex) {
-                          final iterationNumber = iterationIndex + 1;
-                          final optional =
-                              _iterationIsOptional(set, iterationNumber);
-                          final skipped = _skippedOptionalIterations[set.id]
-                                  ?.contains(iterationNumber) ??
-                              false;
+                      children: List<Widget>.generate(iterations, (
+                        iterationIndex,
+                      ) {
+                        final iterationNumber = iterationIndex + 1;
+                        final optional = _iterationIsOptional(
+                          set,
+                          iterationNumber,
+                        );
+                        final skipped =
+                            _skippedOptionalIterations[set.id]?.contains(
+                              iterationNumber,
+                            ) ??
+                            false;
 
-                          return Padding(
-                            padding: EdgeInsets.all(widget.sizes.padding),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              children: [
-                                Row(
-                                  crossAxisAlignment: CrossAxisAlignment.center,
-                                  children: [
-                                    Expanded(
-                                      child: Text(
-                                        optional
-                                            ? 'Set $iterationNumber (optional)'
-                                            : 'Set $iterationNumber',
-                                        style: TextStyle(
-                                          fontSize: widget.sizes.fontSize,
-                                          fontWeight: FontWeight.bold,
-                                        ),
+                        return Padding(
+                          padding: EdgeInsets.all(widget.sizes.padding),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            children: [
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      optional
+                                          ? 'Set $iterationNumber (optional)'
+                                          : 'Set $iterationNumber',
+                                      style: TextStyle(
+                                        fontSize: widget.sizes.fontSize,
+                                        fontWeight: FontWeight.bold,
                                       ),
-                                    ),
-                                    if (optional && !skipped)
-                                      TextButton(
-                                        onPressed: state.isLoading
-                                            ? null
-                                            : () => _skipOptionalIteration(
-                                                  set,
-                                                  iterationNumber,
-                                                ),
-                                        child: Text(
-                                          'Skip',
-                                          style: TextStyle(
-                                            fontSize: widget.sizes.fontSize,
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                        ),
-                                      ),
-                                    if (optional && skipped)
-                                      TextButton(
-                                        onPressed: state.isLoading
-                                            ? null
-                                            : () => _includeOptionalIteration(
-                                                  set,
-                                                  iterationNumber,
-                                                ),
-                                        child: Text(
-                                          'Log this set',
-                                          style: TextStyle(
-                                            fontSize: widget.sizes.fontSize,
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                        ),
-                                      ),
-                                  ],
-                                ),
-                                SizedBox(height: widget.sizes.spacing),
-                                if (optional && skipped) ...[
-                                  Text(
-                                    'This set will not be saved.',
-                                    style: TextStyle(
-                                      fontSize: widget.sizes.fontSize * 0.95,
-                                      color: widget
-                                          .theme.colorScheme.onSurfaceVariant,
                                     ),
                                   ),
-                                ] else
-                                  ...exercises.asMap().entries.map((entry) {
-                                    final index = entry.key;
-                                    final exercise = entry.value;
+                                  if (optional && !skipped)
+                                    TextButton(
+                                      onPressed: state.isLoading
+                                          ? null
+                                          : () => _skipOptionalIteration(
+                                              set,
+                                              iterationNumber,
+                                            ),
+                                      child: Text(
+                                        'Skip',
+                                        style: TextStyle(
+                                          fontSize: widget.sizes.fontSize,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ),
+                                  if (optional && skipped)
+                                    TextButton(
+                                      onPressed: state.isLoading
+                                          ? null
+                                          : () => _includeOptionalIteration(
+                                              set,
+                                              iterationNumber,
+                                            ),
+                                      child: Text(
+                                        'Log this set',
+                                        style: TextStyle(
+                                          fontSize: widget.sizes.fontSize,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ),
+                                ],
+                              ),
+                              SizedBox(height: widget.sizes.spacing),
+                              if (optional && skipped) ...[
+                                Text(
+                                  'This set will not be saved.',
+                                  style: TextStyle(
+                                    fontSize: widget.sizes.fontSize * 0.95,
+                                    color: widget
+                                        .theme
+                                        .colorScheme
+                                        .onSurfaceVariant,
+                                  ),
+                                ),
+                              ] else
+                                ...exercises.asMap().entries.map((entry) {
+                                  final index = entry.key;
+                                  final exercise = entry.value;
 
-                                    final loggedEx = _setExercises[set.id]
-                                        ?[iterationNumber]?[exercise.id];
+                                  final loggedEx =
+                                      _setExercises[set
+                                          .id]?[iterationNumber]?[exercise.id];
 
-                                    return Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Row(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.center,
-                                          children: [
-                                            DetailNumber(
-                                              number: index + 1,
-                                              theme: widget.theme,
+                                  return Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.center,
+                                        children: [
+                                          DetailNumber(
+                                            number: index + 1,
+                                            theme: widget.theme,
+                                            fontSize: widget.sizes.fontSize,
+                                          ),
+                                          SizedBox(width: widget.sizes.spacing),
+                                          Text(
+                                            Formatters.formatReps(
+                                              minReps: exercise.minReps,
+                                              toMax: exercise.toMaxReps,
+                                              maxReps: exercise.maxReps,
+                                            ),
+                                            style: TextStyle(
                                               fontSize: widget.sizes.fontSize,
-                                            ),
-                                            SizedBox(
-                                              width: widget.sizes.spacing,
-                                            ),
-                                            Text(
-                                              Formatters.formatReps(
-                                                minReps: exercise.minReps,
-                                                toMax: exercise.toMaxReps,
-                                                maxReps: exercise.maxReps,
-                                              ),
-                                              style: TextStyle(
-                                                fontSize: widget.sizes.fontSize,
-                                                color: repsGrey,
-                                              ),
-                                            ),
-                                            Icon(
-                                              Icons.close,
-                                              size: widget.sizes.fontSize * 0.9,
                                               color: repsGrey,
                                             ),
-                                            Flexible(
-                                              child: Text(
-                                                ' ${exercise.exercise?.name ?? 'Unknown Exercise'}',
-                                                style: TextStyle(
-                                                  fontSize:
-                                                      widget.sizes.fontSize,
-                                                  fontWeight: FontWeight.w600,
-                                                ),
-                                                softWrap: true,
-                                                overflow: TextOverflow.ellipsis,
+                                          ),
+                                          Icon(
+                                            Icons.close,
+                                            size: widget.sizes.fontSize * 0.9,
+                                            color: repsGrey,
+                                          ),
+                                          Flexible(
+                                            child: Text(
+                                              ' ${exercise.exercise?.name ?? 'Unknown Exercise'}',
+                                              style: TextStyle(
+                                                fontSize: widget.sizes.fontSize,
+                                                fontWeight: FontWeight.w600,
                                               ),
+                                              softWrap: true,
+                                              overflow: TextOverflow.ellipsis,
                                             ),
-                                          ],
-                                        ),
-                                        SizedBox(
-                                            height: widget.sizes.inputSpacing),
-                                        WorkoutSetExerciseRecordForm(
-                                          key: ValueKey(
-                                            '${set.id}_${iterationNumber}_${exercise.id}',
                                           ),
-                                          theme: widget.theme,
-                                          sizes: widget.sizes,
-                                          units: widget.units,
-                                          isLoading: state.isLoading,
-                                          initialWeight: loggedEx?.weight ?? 0,
-                                          initialReps: loggedEx?.reps ?? 0,
-                                          initialDifficulty:
-                                              loggedEx?.difficulty.value ?? 8,
-                                          initialDifficultyType: loggedEx
-                                                  ?.difficulty.type ??
-                                              WorkoutSetExerciseDifficultyType
-                                                  .rpe,
-                                          showIterationRest:
-                                              index == exercises.length - 1 &&
-                                                  iterationNumber != iterations,
-                                          initialRestSecs:
-                                              _iterationRestSecs[set.id]
-                                                      ?[iterationNumber] ??
-                                                  set.recommendedRestSecs,
-                                          onRestSecsChanged: index ==
-                                                  exercises.length - 1
-                                              ? (secs) {
-                                                  setState(() {
-                                                    _iterationRestSecs[set.id]![
-                                                        iterationNumber] = secs;
-                                                  });
-                                                  _updateChanges();
-                                                }
-                                              : null,
-                                          onValuesChanged: ({
-                                            required double weight,
-                                            required int reps,
-                                            required WorkoutSetExerciseDifficulty
-                                                difficulty,
-                                          }) {
-                                            setState(() {
-                                              _setExercises[set.id]![
-                                                          iterationNumber]![
-                                                      exercise.id] =
-                                                  CreateWorkoutSetExerciseRecordBatchDto(
-                                                workoutSetExerciseId:
-                                                    exercise.id,
-                                                exerciseId: exercise.exerciseId,
-                                                position: exercise.position,
-                                                weight:
-                                                    widget.units == Units.metric
-                                                        ? Converters.kgToGrams(
-                                                            weight,
-                                                          )
-                                                        : Converters.lbsToGrams(
-                                                            weight,
-                                                          ),
-                                                reps: reps,
-                                                difficulty: difficulty,
-                                              );
-                                            });
-                                            _updateChanges();
-                                          },
+                                        ],
+                                      ),
+                                      SizedBox(
+                                        height: widget.sizes.inputSpacing,
+                                      ),
+                                      WorkoutSetExerciseRecordForm(
+                                        key: ValueKey(
+                                          '${set.id}_${iterationNumber}_${exercise.id}',
                                         ),
-                                        if (index < exercises.length - 1)
-                                          SizedBox(
-                                            height: widget.sizes.spacing,
-                                          ),
-                                      ],
-                                    );
-                                  }),
-                              ],
-                            ),
-                          );
-                        },
-                      ),
+                                        theme: widget.theme,
+                                        sizes: widget.sizes,
+                                        units: widget.units,
+                                        isLoading: state.isLoading,
+                                        initialWeight: loggedEx?.weight ?? 0,
+                                        initialReps: loggedEx?.reps ?? 0,
+                                        initialDifficulty:
+                                            loggedEx?.difficulty.value ?? 8,
+                                        initialDifficultyType:
+                                            loggedEx?.difficulty.type ??
+                                            WorkoutSetExerciseDifficultyType
+                                                .rpe,
+                                        showIterationRest:
+                                            index == exercises.length - 1 &&
+                                            iterationNumber != iterations,
+                                        initialRestSecs:
+                                            _iterationRestSecs[set
+                                                .id]?[iterationNumber] ??
+                                            set.recommendedRestSecs,
+                                        onRestSecsChanged:
+                                            index == exercises.length - 1
+                                            ? (secs) {
+                                                setState(() {
+                                                  _iterationRestSecs[set
+                                                          .id]![iterationNumber] =
+                                                      secs;
+                                                });
+                                                _updateChanges();
+                                              }
+                                            : null,
+                                        onValuesChanged:
+                                            ({
+                                              required double weight,
+                                              required int reps,
+                                              required WorkoutSetExerciseDifficulty
+                                              difficulty,
+                                            }) {
+                                              setState(() {
+                                                _setExercises[set
+                                                    .id]![iterationNumber]![exercise
+                                                    .id] = CreateWorkoutSetExerciseRecordBatchDto(
+                                                  workoutSetExerciseId:
+                                                      exercise.id,
+                                                  exerciseId:
+                                                      exercise.exerciseId,
+                                                  position: exercise.position,
+                                                  weight:
+                                                      widget.units ==
+                                                          Units.metric
+                                                      ? Converters.kgToGrams(
+                                                          weight,
+                                                        )
+                                                      : Converters.lbsToGrams(
+                                                          weight,
+                                                        ),
+                                                  reps: reps,
+                                                  difficulty: difficulty,
+                                                );
+                                              });
+                                              _updateChanges();
+                                            },
+                                      ),
+                                      if (index < exercises.length - 1)
+                                        SizedBox(height: widget.sizes.spacing),
+                                    ],
+                                  );
+                                }),
+                            ],
+                          ),
+                        );
+                      }),
                     ),
                   ),
                 ],

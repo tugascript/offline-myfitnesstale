@@ -48,7 +48,8 @@ class System extends Equatable implements Model {
 
   static const String table = _table;
 
-  static final String tableCreate = """
+  static final String tableCreate =
+      """
   CREATE TABLE IF NOT EXISTS $_table (
     ${SystemColumns.id.value} INTEGER PRIMARY KEY AUTOINCREMENT,
     ${SystemColumns.theme.value} TEXT NOT NULL,
@@ -85,9 +86,11 @@ class System extends Equatable implements Model {
       theme: ThemeType.fromValue(map[SystemColumns.theme.value]! as String),
       units: Units.fromValue(map[SystemColumns.units.value]! as String),
       initialSetup: SetUpStatus.fromValue(
-          map[SystemColumns.initialSetup.value]! as String),
-      notificationsOn:
-          map[SystemColumns.notificationsOn.value]! as int == 1 ? true : false,
+        map[SystemColumns.initialSetup.value]! as String,
+      ),
+      notificationsOn: map[SystemColumns.notificationsOn.value]! as int == 1
+          ? true
+          : false,
       profileId: map[SystemColumns.profileId.value]! as int,
       createdAt: map[SystemColumns.createdAt.value]! as int,
       updatedAt: map[SystemColumns.updatedAt.value]! as int,
@@ -137,13 +140,13 @@ class System extends Equatable implements Model {
 
   @override
   List<Object?> get props => [
-        id,
-        theme,
-        units,
-        initialSetup,
-        profileId,
-        notificationsOn,
-        createdAt,
-        updatedAt,
-      ];
+    id,
+    theme,
+    units,
+    initialSetup,
+    profileId,
+    notificationsOn,
+    createdAt,
+    updatedAt,
+  ];
 }

@@ -1,4 +1,5 @@
 import '../common/nullable.dart';
+
 import 'package:equatable/equatable.dart';
 
 import 'enums.dart';
@@ -65,15 +66,16 @@ class MealPlanWeekRecord extends Equatable implements Model {
     this.totalFiber,
     required this.createdAt,
     required this.updatedAt,
-  })  : assert(week >= 1 && week <= 52, 'week must be between 1 and 52'),
-        assert(
-          currentDay >= 1 && currentDay <= 7,
-          'currentDay must be between 1 and 7',
-        );
+  }) : assert(week >= 1 && week <= 52, 'week must be between 1 and 52'),
+       assert(
+         currentDay >= 1 && currentDay <= 7,
+         'currentDay must be between 1 and 7',
+       );
 
   static const String table = _table;
 
-  static final String tableCreate = '''
+  static final String tableCreate =
+      '''
   CREATE TABLE IF NOT EXISTS $_table (
     ${MealPlanWeekRecordColumns.id.value} INTEGER PRIMARY KEY AUTOINCREMENT,
     ${MealPlanWeekRecordColumns.mealPlanRecordId.value} INTEGER NOT NULL,
@@ -211,19 +213,19 @@ class MealPlanWeekRecord extends Equatable implements Model {
 
   @override
   List<Object?> get props => [
-        id,
-        mealPlanRecordId,
-        mealPlanWeekId,
-        week,
-        status,
-        currentDay,
-        completedAt,
-        totalCalories,
-        totalProtein,
-        totalCarbs,
-        totalFat,
-        totalFiber,
-        createdAt,
-        updatedAt,
-      ];
+    id,
+    mealPlanRecordId,
+    mealPlanWeekId,
+    week,
+    status,
+    currentDay,
+    completedAt,
+    totalCalories,
+    totalProtein,
+    totalCarbs,
+    totalFat,
+    totalFiber,
+    createdAt,
+    updatedAt,
+  ];
 }

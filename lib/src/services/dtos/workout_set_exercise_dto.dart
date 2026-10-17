@@ -78,12 +78,12 @@ class WorkoutSetExerciseDto extends Equatable
 
   @override
   List<Object?> get props => [
-        id,
-        exerciseId,
-        position,
-        minReps,
-        maxReps,
-        toMaxReps,
-        difficulty,
-      ];
+    id,
+    exerciseId,
+    position,
+    minReps,
+    maxReps,
+    toMaxReps,
+    difficulty,
+  ];
 }

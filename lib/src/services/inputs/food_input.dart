@@ -6,10 +6,7 @@ class FoodPortionInput {
   final String portionName;
   final int gramWeight;
 
-  const FoodPortionInput({
-    required this.portionName,
-    required this.gramWeight,
-  });
+  const FoodPortionInput({required this.portionName, required this.gramWeight});
 }
 
 class FoodInput {

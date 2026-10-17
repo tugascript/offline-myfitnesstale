@@ -33,23 +33,22 @@ class WeightRecordsChart extends StatelessWidget {
       return Center(
         child: Text(
           "No data available",
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
+          style: Theme.of(context).textTheme.bodyMedium
+              ?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
         ),
       );
     }
     final oneYearAgo = DateTime.now().subtract(const Duration(days: 365));
-    final chartRecords =
-        records.where((r) => r.recordDate.isAfter(oneYearAgo)).toList();
+    final chartRecords = records
+        .where((r) => r.recordDate.isAfter(oneYearAgo))
+        .toList();
 
     if (chartRecords.isEmpty) {
       return Center(
         child: Text(
           "No weight logs",
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
+          style: Theme.of(context).textTheme.bodyMedium
+              ?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
         ),
       );
     }
@@ -109,10 +108,7 @@ class WeightRecordsChart extends StatelessWidget {
               drawVerticalLine: false,
               horizontalInterval: yInterval,
               getDrawingHorizontalLine: (value) {
-                return FlLine(
-                  color: horizontalGuideColor,
-                  strokeWidth: 1,
-                );
+                return FlLine(color: horizontalGuideColor, strokeWidth: 1);
               },
             ),
             titlesData: FlTitlesData(
@@ -126,18 +122,14 @@ class WeightRecordsChart extends StatelessWidget {
                 axisNameWidget: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(
-                      Icons.calendar_today,
-                      size: sizes.fontSize * 1.2,
-                    ),
+                    Icon(Icons.calendar_today, size: sizes.fontSize * 1.2),
                     Text(
                       ' Date',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color:
-                                Theme.of(context).colorScheme.onSurfaceVariant,
-                            fontWeight: FontWeight.w600,
-                            fontSize: sizes.fontSize,
-                          ),
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        fontWeight: FontWeight.w600,
+                        fontSize: sizes.fontSize,
+                      ),
                     ),
                   ],
                 ),
@@ -150,19 +142,18 @@ class WeightRecordsChart extends StatelessWidget {
                     if (value == chartMaxX || value == chartMinX) {
                       return const SizedBox.shrink();
                     }
-                    final date =
-                        DateTime.fromMillisecondsSinceEpoch(value.toInt());
+                    final date = DateTime.fromMillisecondsSinceEpoch(
+                      value.toInt(),
+                    );
                     final formatted = DateFormat.MMMd().format(date);
                     return Padding(
                       padding: const EdgeInsets.only(top: 8.0),
                       child: Text(
                         formatted,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .onSurfaceVariant,
-                              fontSize: sizes.smallFontSize,
-                            ),
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          fontSize: sizes.smallFontSize,
+                        ),
                       ),
                     );
                   },
@@ -172,10 +163,7 @@ class WeightRecordsChart extends StatelessWidget {
                 axisNameWidget: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(
-                      Icons.monitor_weight,
-                      size: sizes.fontSize * 1.2,
-                    ),
+                    Icon(Icons.monitor_weight, size: sizes.fontSize * 1.2),
                     Text(
                       ' Weight (${isMetric ? 'kg' : 'lbs'})',
                       style: theme.textTheme.bodySmall?.copyWith(
@@ -199,10 +187,9 @@ class WeightRecordsChart extends StatelessWidget {
                     return Text(
                       value.toStringAsFixed(1),
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color:
-                                Theme.of(context).colorScheme.onSurfaceVariant,
-                            fontSize: sizes.smallFontSize,
-                          ),
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        fontSize: sizes.smallFontSize,
+                      ),
                     );
                   },
                 ),
@@ -211,14 +198,8 @@ class WeightRecordsChart extends StatelessWidget {
             borderData: FlBorderData(
               show: true,
               border: Border(
-                left: BorderSide(
-                  color: axisBorderColor,
-                  width: 1,
-                ),
-                bottom: BorderSide(
-                  color: axisBorderColor,
-                  width: 1,
-                ),
+                left: BorderSide(color: axisBorderColor, width: 1),
+                bottom: BorderSide(color: axisBorderColor, width: 1),
               ),
             ),
             lineBarsData: [
@@ -241,9 +222,7 @@ class WeightRecordsChart extends StatelessWidget {
                 ),
                 belowBarData: BarAreaData(
                   show: true,
-                  color: Theme.of(context)
-                      .colorScheme
-                      .primary
+                  color: Theme.of(context).colorScheme.primary
                       .withValues(alpha: 0.1),
                 ),
               ),

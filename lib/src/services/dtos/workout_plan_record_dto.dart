@@ -88,15 +88,15 @@ class WorkoutPlanRecordDto extends Equatable implements Dto<WorkoutPlanRecord> {
 
   @override
   List<Object?> get props => [
-        id,
-        workoutPlanId,
-        workoutPlanVersion,
-        status,
-        startedAt,
-        completedAt,
-        currentWeek,
-        currentDay,
-        currentWorkoutPosition,
-        weeks.length,
-      ];
+    id,
+    workoutPlanId,
+    workoutPlanVersion,
+    status,
+    startedAt,
+    completedAt,
+    currentWeek,
+    currentDay,
+    currentWorkoutPosition,
+    weeks.length,
+  ];
 }

@@ -32,7 +32,8 @@ class WorkoutPlanWorkoutRecordDto extends Equatable
   });
 
   factory WorkoutPlanWorkoutRecordDto.fromModel(
-      WorkoutPlanWorkoutRecord model) {
+    WorkoutPlanWorkoutRecord model,
+  ) {
     return WorkoutPlanWorkoutRecordDto(
       id: model.id!,
       workoutPlanRecordId: model.workoutPlanRecordId,
@@ -47,8 +48,10 @@ class WorkoutPlanWorkoutRecordDto extends Equatable
       ),
       status: model.status,
       completedAt: model.completedAt != null
-          ? DateTime.fromMillisecondsSinceEpoch(model.completedAt! * 1000,
-              isUtc: true)
+          ? DateTime.fromMillisecondsSinceEpoch(
+              model.completedAt! * 1000,
+              isUtc: true,
+            )
           : null,
     );
   }
@@ -84,15 +87,15 @@ class WorkoutPlanWorkoutRecordDto extends Equatable
 
   @override
   List<Object?> get props => [
-        id,
-        workoutPlanRecordId,
-        workoutPlanWeekRecordId,
-        workoutPlanDayRecordId,
-        workoutPlanWorkoutId,
-        workoutRecordId,
-        position,
-        startedAt,
-        status,
-        completedAt,
-      ];
+    id,
+    workoutPlanRecordId,
+    workoutPlanWeekRecordId,
+    workoutPlanDayRecordId,
+    workoutPlanWorkoutId,
+    workoutRecordId,
+    position,
+    startedAt,
+    status,
+    completedAt,
+  ];
 }

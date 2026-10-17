@@ -87,7 +87,11 @@ class ActiveExerciseCard extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  '$minReps${toMaxReps ? '-MAX ' : maxReps != null ? '-$maxReps ' : ' '}x ',
+                  '$minReps${toMaxReps
+                      ? '-MAX '
+                      : maxReps != null
+                      ? '-$maxReps '
+                      : ' '}x ',
                   style: TextStyle(
                     fontSize: sizes.subtitleFontSize,
                     fontWeight: FontWeight.w600,

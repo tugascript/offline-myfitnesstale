@@ -48,9 +48,7 @@ class _WorkoutHistoryViewState extends State<WorkoutHistoryView> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final breakpoints = BreakPoint.fromContext(context);
-    final sizes = DataDisplaySizes.getDataDisplaySizes(
-      breakpoints.screenSize,
-    );
+    final sizes = DataDisplaySizes.getDataDisplaySizes(breakpoints.screenSize);
 
     return BlocBuilder<WorkoutCubit, WorkoutState>(
       builder: (context, workoutState) {

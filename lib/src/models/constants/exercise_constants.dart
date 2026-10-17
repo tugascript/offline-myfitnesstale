@@ -214,14 +214,8 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
     name: kBarbellChestPressName,
     muscleGroup: MuscleGroup.push,
     muscles: TargetMuscles(
-      primary: {
-        Muscle.chest,
-      },
-      secondary: {
-        Muscle.triceps,
-        Muscle.shoulders,
-        Muscle.frontDelts,
-      },
+      primary: {Muscle.chest},
+      secondary: {Muscle.triceps, Muscle.shoulders, Muscle.frontDelts},
     ),
     equipments: {kBarbellName, kBenchName},
     difficulty: Difficulty.beginnerIntermediate,
@@ -230,14 +224,8 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
     name: kInclineBarbellChestPressName,
     muscleGroup: MuscleGroup.push,
     muscles: TargetMuscles(
-      primary: {
-        Muscle.upperChest,
-        Muscle.chest,
-      },
-      secondary: {
-        Muscle.triceps,
-        Muscle.frontDelts,
-      },
+      primary: {Muscle.upperChest, Muscle.chest},
+      secondary: {Muscle.triceps, Muscle.frontDelts},
     ),
     equipments: {kBarbellName, kBenchName},
     difficulty: Difficulty.intermediate,
@@ -246,13 +234,8 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
     name: kDumbbellChestPressName,
     muscleGroup: MuscleGroup.push,
     muscles: TargetMuscles(
-      primary: {
-        Muscle.chest,
-      },
-      secondary: {
-        Muscle.triceps,
-        Muscle.frontDelts,
-      },
+      primary: {Muscle.chest},
+      secondary: {Muscle.triceps, Muscle.frontDelts},
     ),
     equipments: {kDumbbellsName, kBenchName},
     difficulty: Difficulty.intermediate,
@@ -261,14 +244,8 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
     name: kInclineDumbbellChestPressName,
     muscleGroup: MuscleGroup.push,
     muscles: TargetMuscles(
-      primary: {
-        Muscle.upperChest,
-        Muscle.chest,
-      },
-      secondary: {
-        Muscle.triceps,
-        Muscle.frontDelts,
-      },
+      primary: {Muscle.upperChest, Muscle.chest},
+      secondary: {Muscle.triceps, Muscle.frontDelts},
     ),
     equipments: {kDumbbellsName, kBenchName},
     difficulty: Difficulty.beginnerIntermediate,
@@ -277,14 +254,8 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
     name: kInclineMachineChestPressName,
     muscleGroup: MuscleGroup.push,
     muscles: TargetMuscles(
-      primary: {
-        Muscle.upperChest,
-        Muscle.chest,
-      },
-      secondary: {
-        Muscle.triceps,
-        Muscle.frontDelts,
-      },
+      primary: {Muscle.upperChest, Muscle.chest},
+      secondary: {Muscle.triceps, Muscle.frontDelts},
     ),
     equipments: {kMachineName},
     difficulty: Difficulty.beginner,
@@ -293,13 +264,8 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
     name: kMachineChestPressName,
     muscleGroup: MuscleGroup.push,
     muscles: TargetMuscles(
-      primary: {
-        Muscle.chest,
-      },
-      secondary: {
-        Muscle.triceps,
-        Muscle.frontDelts,
-      },
+      primary: {Muscle.chest},
+      secondary: {Muscle.triceps, Muscle.frontDelts},
     ),
     equipments: {kMachineName},
     difficulty: Difficulty.beginner,
@@ -307,36 +273,21 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
   ExerciseData(
     name: kMachineChestFlysName,
     muscleGroup: MuscleGroup.push,
-    muscles: TargetMuscles(
-      primary: {
-        Muscle.chest,
-      },
-      secondary: {},
-    ),
+    muscles: TargetMuscles(primary: {Muscle.chest}, secondary: {}),
     equipments: {kMachineName},
     difficulty: Difficulty.beginner,
   ),
   ExerciseData(
     name: kCableUnderhandFlysName,
     muscleGroup: MuscleGroup.push,
-    muscles: TargetMuscles(
-      primary: {
-        Muscle.upperChest,
-      },
-      secondary: {},
-    ),
+    muscles: TargetMuscles(primary: {Muscle.upperChest}, secondary: {}),
     equipments: {kCableName, kDHandleName},
     difficulty: Difficulty.beginnerIntermediate,
   ),
   ExerciseData(
     name: kCableFlysName,
     muscleGroup: MuscleGroup.push,
-    muscles: TargetMuscles(
-      primary: {
-        Muscle.chest,
-      },
-      secondary: {},
-    ),
+    muscles: TargetMuscles(primary: {Muscle.chest}, secondary: {}),
     equipments: {kCableName, kDHandleName},
     difficulty: Difficulty.beginnerIntermediate,
   ),
@@ -344,12 +295,8 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
     name: kInclineCableFlysName,
     muscleGroup: MuscleGroup.push,
     muscles: TargetMuscles(
-      primary: {
-        Muscle.upperChest,
-      },
-      secondary: {
-        Muscle.chest,
-      },
+      primary: {Muscle.upperChest},
+      secondary: {Muscle.chest},
     ),
     equipments: {kCableName, kDHandleName},
     difficulty: Difficulty.beginnerIntermediate,
@@ -358,14 +305,8 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
     name: kStandingBarbellShoulderPressName,
     muscleGroup: MuscleGroup.push,
     muscles: TargetMuscles(
-      primary: {
-        Muscle.shoulders,
-        Muscle.frontDelts,
-      },
-      secondary: {
-        Muscle.sideDelts,
-        Muscle.triceps,
-      },
+      primary: {Muscle.shoulders, Muscle.frontDelts},
+      secondary: {Muscle.sideDelts, Muscle.triceps},
     ),
     equipments: {kBarbellName, kPowerRackName},
     difficulty: Difficulty.intermediate,
@@ -374,14 +315,8 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
     name: kSeatedBarbellShoulderPressName,
     muscleGroup: MuscleGroup.push,
     muscles: TargetMuscles(
-      primary: {
-        Muscle.shoulders,
-        Muscle.frontDelts,
-      },
-      secondary: {
-        Muscle.sideDelts,
-        Muscle.triceps,
-      },
+      primary: {Muscle.shoulders, Muscle.frontDelts},
+      secondary: {Muscle.sideDelts, Muscle.triceps},
     ),
     equipments: {kBarbellName, kPowerRackName, kBenchName},
     difficulty: Difficulty.intermediate,
@@ -390,14 +325,8 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
     name: kSmithMachineShoulderPressName,
     muscleGroup: MuscleGroup.push,
     muscles: TargetMuscles(
-      primary: {
-        Muscle.shoulders,
-        Muscle.frontDelts,
-      },
-      secondary: {
-        Muscle.sideDelts,
-        Muscle.triceps,
-      },
+      primary: {Muscle.shoulders, Muscle.frontDelts},
+      secondary: {Muscle.sideDelts, Muscle.triceps},
     ),
     equipments: {kSmithMachineName, kBenchName},
     difficulty: Difficulty.beginnerIntermediate,
@@ -406,14 +335,8 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
     name: kMachineShoulderPressName,
     muscleGroup: MuscleGroup.push,
     muscles: TargetMuscles(
-      primary: {
-        Muscle.shoulders,
-        Muscle.frontDelts,
-      },
-      secondary: {
-        Muscle.sideDelts,
-        Muscle.triceps,
-      },
+      primary: {Muscle.shoulders, Muscle.frontDelts},
+      secondary: {Muscle.sideDelts, Muscle.triceps},
     ),
     equipments: {kMachineName},
     difficulty: Difficulty.beginner,
@@ -422,14 +345,8 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
     name: kStandingDumbbellShoulderPressName,
     muscleGroup: MuscleGroup.push,
     muscles: TargetMuscles(
-      primary: {
-        Muscle.shoulders,
-        Muscle.frontDelts,
-      },
-      secondary: {
-        Muscle.sideDelts,
-        Muscle.triceps,
-      },
+      primary: {Muscle.shoulders, Muscle.frontDelts},
+      secondary: {Muscle.sideDelts, Muscle.triceps},
     ),
     equipments: {kDumbbellsName},
     difficulty: Difficulty.beginnerIntermediate,
@@ -438,14 +355,8 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
     name: kSeatedDumbbellShoulderPressName,
     muscleGroup: MuscleGroup.push,
     muscles: TargetMuscles(
-      primary: {
-        Muscle.shoulders,
-        Muscle.frontDelts,
-      },
-      secondary: {
-        Muscle.sideDelts,
-        Muscle.triceps,
-      },
+      primary: {Muscle.shoulders, Muscle.frontDelts},
+      secondary: {Muscle.sideDelts, Muscle.triceps},
     ),
     equipments: {kDumbbellsName, kBenchName},
     difficulty: Difficulty.beginnerIntermediate,
@@ -454,12 +365,8 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
     name: kDumbbellLateralRaisesName,
     muscleGroup: MuscleGroup.push,
     muscles: TargetMuscles(
-      primary: {
-        Muscle.sideDelts,
-      },
-      secondary: {
-        Muscle.shoulders,
-      },
+      primary: {Muscle.sideDelts},
+      secondary: {Muscle.shoulders},
     ),
     equipments: {kDumbbellsName},
     difficulty: Difficulty.beginner,
@@ -468,12 +375,8 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
     name: kCableLateralRaisesName,
     muscleGroup: MuscleGroup.push,
     muscles: TargetMuscles(
-      primary: {
-        Muscle.sideDelts,
-      },
-      secondary: {
-        Muscle.shoulders,
-      },
+      primary: {Muscle.sideDelts},
+      secondary: {Muscle.shoulders},
     ),
     equipments: {kCableName, kDHandleName},
     difficulty: Difficulty.beginner,
@@ -482,12 +385,8 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
     name: kLeaningCableLateralRaiseName,
     muscleGroup: MuscleGroup.push,
     muscles: TargetMuscles(
-      primary: {
-        Muscle.sideDelts,
-      },
-      secondary: {
-        Muscle.shoulders,
-      },
+      primary: {Muscle.sideDelts},
+      secondary: {Muscle.shoulders},
     ),
     equipments: {kCableName, kDHandleName},
     difficulty: Difficulty.beginnerIntermediate,
@@ -495,81 +394,44 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
   ExerciseData(
     name: kCableOverheadTricepsExtensionName,
     muscleGroup: MuscleGroup.push,
-    muscles: TargetMuscles(
-      primary: {
-        Muscle.triceps,
-      },
-      secondary: {},
-    ),
-    equipments: {
-      kCableName,
-      kEZBarAttachmentName,
-      kTricepsRopeAttachmentName,
-    },
+    muscles: TargetMuscles(primary: {Muscle.triceps}, secondary: {}),
+    equipments: {kCableName, kEZBarAttachmentName, kTricepsRopeAttachmentName},
     difficulty: Difficulty.beginnerIntermediate,
   ),
   ExerciseData(
     name: kDumbbellOverheadTricepsExtensionName,
     muscleGroup: MuscleGroup.push,
-    muscles: TargetMuscles(
-      primary: {
-        Muscle.triceps,
-      },
-      secondary: {},
-    ),
+    muscles: TargetMuscles(primary: {Muscle.triceps}, secondary: {}),
     equipments: {kDumbbellsName},
     difficulty: Difficulty.intermediate,
   ),
   ExerciseData(
     name: kEZBarOverheadTricepsExtensionName,
     muscleGroup: MuscleGroup.push,
-    muscles: TargetMuscles(
-      primary: {
-        Muscle.triceps,
-      },
-      secondary: {},
-    ),
+    muscles: TargetMuscles(primary: {Muscle.triceps}, secondary: {}),
     equipments: {kEZBarName},
     difficulty: Difficulty.beginnerIntermediate,
   ),
   ExerciseData(
     name: kSkullCrushersName,
     muscleGroup: MuscleGroup.push,
-    muscles: TargetMuscles(
-      primary: {
-        Muscle.triceps,
-      },
-      secondary: {},
-    ),
+    muscles: TargetMuscles(primary: {Muscle.triceps}, secondary: {}),
     equipments: {kBarbellName, kBenchName},
     difficulty: Difficulty.intermediate,
   ),
   ExerciseData(
     name: kTricepsPushdownName,
     muscleGroup: MuscleGroup.push,
-    muscles: TargetMuscles(
-      primary: {
-        Muscle.triceps,
-      },
-      secondary: {},
-    ),
-    equipments: {
-      kCableName,
-      kEZBarAttachmentName,
-      kTricepsRopeAttachmentName,
-    },
+    muscles: TargetMuscles(primary: {Muscle.triceps}, secondary: {}),
+    equipments: {kCableName, kEZBarAttachmentName, kTricepsRopeAttachmentName},
     difficulty: Difficulty.beginnerIntermediate,
   ),
   ExerciseData(
     name: kDipsName,
     muscleGroup: MuscleGroup.push,
     muscles: TargetMuscles(
-      primary: {
-        Muscle.chest,
-      },
-      secondary: {
-        Muscle.triceps,
-      },
+      primary: {Muscle.chest},
+      secondary: {Muscle.triceps},
     ),
     equipments: {kDipStationName, kBodyweightName, kWeightBeltName},
     difficulty: Difficulty.intermediate,
@@ -577,12 +439,7 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
   ExerciseData(
     name: kCableTricepKickbackName,
     muscleGroup: MuscleGroup.push,
-    muscles: TargetMuscles(
-      primary: {
-        Muscle.triceps,
-      },
-      secondary: {},
-    ),
+    muscles: TargetMuscles(primary: {Muscle.triceps}, secondary: {}),
     equipments: {kCableName},
     difficulty: Difficulty.beginner,
   ),
@@ -590,13 +447,8 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
     name: kOverhandLatPulldownName,
     muscleGroup: MuscleGroup.pull,
     muscles: TargetMuscles(
-      primary: {
-        Muscle.lats,
-      },
-      secondary: {
-        Muscle.biceps,
-        Muscle.forearms,
-      },
+      primary: {Muscle.lats},
+      secondary: {Muscle.biceps, Muscle.forearms},
     ),
     equipments: {kCableName, kLatPulldownBarName},
     difficulty: Difficulty.beginner,
@@ -605,13 +457,8 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
     name: kUnderhandLatPulldownName,
     muscleGroup: MuscleGroup.pull,
     muscles: TargetMuscles(
-      primary: {
-        Muscle.lats,
-      },
-      secondary: {
-        Muscle.biceps,
-        Muscle.forearms,
-      },
+      primary: {Muscle.lats},
+      secondary: {Muscle.biceps, Muscle.forearms},
     ),
     equipments: {kCableName, kLatPulldownBarName},
     difficulty: Difficulty.beginner,
@@ -620,10 +467,7 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
     name: kPendlayRowsName,
     muscleGroup: MuscleGroup.pull,
     muscles: TargetMuscles(
-      primary: {
-        Muscle.rhomboids,
-        Muscle.middleTrapezius,
-      },
+      primary: {Muscle.rhomboids, Muscle.middleTrapezius},
       secondary: {
         Muscle.trapezius,
         Muscle.biceps,
@@ -639,10 +483,7 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
     name: kBarbellBentOverRowsName,
     muscleGroup: MuscleGroup.pull,
     muscles: TargetMuscles(
-      primary: {
-        Muscle.rhomboids,
-        Muscle.middleTrapezius,
-      },
+      primary: {Muscle.rhomboids, Muscle.middleTrapezius},
       secondary: {
         Muscle.trapezius,
         Muscle.biceps,
@@ -658,10 +499,7 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
     name: kSingleArmSupportedDumbbellRowName,
     muscleGroup: MuscleGroup.pull,
     muscles: TargetMuscles(
-      primary: {
-        Muscle.rhomboids,
-        Muscle.lats,
-      },
+      primary: {Muscle.rhomboids, Muscle.lats},
       secondary: {
         Muscle.trapezius,
         Muscle.rearDelts,
@@ -676,10 +514,7 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
     name: kInclineDumbbellRowName,
     muscleGroup: MuscleGroup.pull,
     muscles: TargetMuscles(
-      primary: {
-        Muscle.rhomboids,
-        Muscle.middleTrapezius,
-      },
+      primary: {Muscle.rhomboids, Muscle.middleTrapezius},
       secondary: {
         Muscle.trapezius,
         Muscle.lats,
@@ -695,10 +530,7 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
     name: kTBarRowName,
     muscleGroup: MuscleGroup.pull,
     muscles: TargetMuscles(
-      primary: {
-        Muscle.rhomboids,
-        Muscle.middleTrapezius,
-      },
+      primary: {Muscle.rhomboids, Muscle.middleTrapezius},
       secondary: {
         Muscle.trapezius,
         Muscle.rearDelts,
@@ -715,10 +547,7 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
     name: kChestSupportedTBarRowName,
     muscleGroup: MuscleGroup.pull,
     muscles: TargetMuscles(
-      primary: {
-        Muscle.rhomboids,
-        Muscle.middleTrapezius,
-      },
+      primary: {Muscle.rhomboids, Muscle.middleTrapezius},
       secondary: {
         Muscle.trapezius,
         Muscle.rearDelts,
@@ -735,10 +564,7 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
     name: kChestSupportedRowMachineName,
     muscleGroup: MuscleGroup.pull,
     muscles: TargetMuscles(
-      primary: {
-        Muscle.rhomboids,
-        Muscle.middleTrapezius,
-      },
+      primary: {Muscle.rhomboids, Muscle.middleTrapezius},
       secondary: {
         Muscle.trapezius,
         Muscle.rearDelts,
@@ -754,10 +580,7 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
     name: kSeatedCableRowName,
     muscleGroup: MuscleGroup.pull,
     muscles: TargetMuscles(
-      primary: {
-        Muscle.rhomboids,
-        Muscle.middleTrapezius,
-      },
+      primary: {Muscle.rhomboids, Muscle.middleTrapezius},
       secondary: {
         Muscle.trapezius,
         Muscle.rearDelts,
@@ -773,15 +596,8 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
     name: kFacePullsName,
     muscleGroup: MuscleGroup.pull,
     muscles: TargetMuscles(
-      primary: {
-        Muscle.rearDelts,
-        Muscle.upperTrapezius,
-      },
-      secondary: {
-        Muscle.trapezius,
-        Muscle.biceps,
-        Muscle.forearms,
-      },
+      primary: {Muscle.rearDelts, Muscle.upperTrapezius},
+      secondary: {Muscle.trapezius, Muscle.biceps, Muscle.forearms},
     ),
     equipments: {kCableName, kTricepsRopeAttachmentName},
     difficulty: Difficulty.beginnerIntermediate,
@@ -789,48 +605,28 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
   ExerciseData(
     name: kMachineReverseFlysName,
     muscleGroup: MuscleGroup.pull,
-    muscles: TargetMuscles(
-      primary: {
-        Muscle.rearDelts,
-      },
-      secondary: {},
-    ),
+    muscles: TargetMuscles(primary: {Muscle.rearDelts}, secondary: {}),
     equipments: {kMachineName},
     difficulty: Difficulty.beginner,
   ),
   ExerciseData(
     name: kBentOverDumbbellReverseFlysName,
     muscleGroup: MuscleGroup.pull,
-    muscles: TargetMuscles(
-      primary: {
-        Muscle.rearDelts,
-      },
-      secondary: {},
-    ),
+    muscles: TargetMuscles(primary: {Muscle.rearDelts}, secondary: {}),
     equipments: {kDumbbellsName},
     difficulty: Difficulty.beginner,
   ),
   ExerciseData(
     name: kInclineDumbbellReverseFlysName,
     muscleGroup: MuscleGroup.pull,
-    muscles: TargetMuscles(
-      primary: {
-        Muscle.rearDelts,
-      },
-      secondary: {},
-    ),
+    muscles: TargetMuscles(primary: {Muscle.rearDelts}, secondary: {}),
     equipments: {kDumbbellsName, kBenchName},
     difficulty: Difficulty.beginnerIntermediate,
   ),
   ExerciseData(
     name: kBentOverCableReverseFlysName,
     muscleGroup: MuscleGroup.pull,
-    muscles: TargetMuscles(
-      primary: {
-        Muscle.rearDelts,
-      },
-      secondary: {},
-    ),
+    muscles: TargetMuscles(primary: {Muscle.rearDelts}, secondary: {}),
     equipments: {kCableName},
     difficulty: Difficulty.beginner,
   ),
@@ -838,12 +634,8 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
     name: kBarbellBicepCurlName,
     muscleGroup: MuscleGroup.pull,
     muscles: TargetMuscles(
-      primary: {
-        Muscle.biceps,
-      },
-      secondary: {
-        Muscle.forearms,
-      },
+      primary: {Muscle.biceps},
+      secondary: {Muscle.forearms},
     ),
     equipments: {kBarbellName, kEZBarName},
     difficulty: Difficulty.beginnerIntermediate,
@@ -852,12 +644,8 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
     name: kDumbbellBicepCurlName,
     muscleGroup: MuscleGroup.pull,
     muscles: TargetMuscles(
-      primary: {
-        Muscle.biceps,
-      },
-      secondary: {
-        Muscle.forearms,
-      },
+      primary: {Muscle.biceps},
+      secondary: {Muscle.forearms},
     ),
     equipments: {kDumbbellsName},
     difficulty: Difficulty.beginner,
@@ -866,13 +654,8 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
     name: kHammerCurlName,
     muscleGroup: MuscleGroup.pull,
     muscles: TargetMuscles(
-      primary: {
-        Muscle.brachialis,
-      },
-      secondary: {
-        Muscle.biceps,
-        Muscle.forearms,
-      },
+      primary: {Muscle.brachialis},
+      secondary: {Muscle.biceps, Muscle.forearms},
     ),
     equipments: {kDumbbellsName},
     difficulty: Difficulty.beginner,
@@ -881,12 +664,8 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
     name: kBarbellPreacherCurlName,
     muscleGroup: MuscleGroup.pull,
     muscles: TargetMuscles(
-      primary: {
-        Muscle.biceps,
-      },
-      secondary: {
-        Muscle.forearms,
-      },
+      primary: {Muscle.biceps},
+      secondary: {Muscle.forearms},
     ),
     equipments: {kBarbellName, kBenchName},
     difficulty: Difficulty.intermediate,
@@ -895,12 +674,8 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
     name: kDumbbellPreacherCurlName,
     muscleGroup: MuscleGroup.pull,
     muscles: TargetMuscles(
-      primary: {
-        Muscle.biceps,
-      },
-      secondary: {
-        Muscle.forearms,
-      },
+      primary: {Muscle.biceps},
+      secondary: {Muscle.forearms},
     ),
     equipments: {kDumbbellsName, kBenchName},
     difficulty: Difficulty.intermediate,
@@ -909,29 +684,18 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
     name: kCableEZBarBicepCurlName,
     muscleGroup: MuscleGroup.pull,
     muscles: TargetMuscles(
-      primary: {
-        Muscle.biceps,
-      },
-      secondary: {
-        Muscle.forearms,
-      },
+      primary: {Muscle.biceps},
+      secondary: {Muscle.forearms},
     ),
-    equipments: {
-      kCableName,
-      kEZBarAttachmentName,
-    },
+    equipments: {kCableName, kEZBarAttachmentName},
     difficulty: Difficulty.beginner,
   ),
   ExerciseData(
     name: kCableDHandleBicepCurlName,
     muscleGroup: MuscleGroup.pull,
     muscles: TargetMuscles(
-      primary: {
-        Muscle.biceps,
-      },
-      secondary: {
-        Muscle.forearms,
-      },
+      primary: {Muscle.biceps},
+      secondary: {Muscle.forearms},
     ),
     equipments: {kCableName, kDHandleName},
     difficulty: Difficulty.beginner,
@@ -939,12 +703,7 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
   ExerciseData(
     name: kBayesianCableCurlName,
     muscleGroup: MuscleGroup.pull,
-    muscles: TargetMuscles(
-      primary: {
-        Muscle.biceps,
-      },
-      secondary: {},
-    ),
+    muscles: TargetMuscles(primary: {Muscle.biceps}, secondary: {}),
     equipments: {kCableName, kDHandleName},
     difficulty: Difficulty.beginnerIntermediate,
   ),
@@ -952,13 +711,8 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
     name: kBarbellBackSquatName,
     muscleGroup: MuscleGroup.legs,
     muscles: TargetMuscles(
-      primary: {
-        Muscle.quadriceps,
-        Muscle.glutes,
-      },
-      secondary: {
-        Muscle.adductors,
-      },
+      primary: {Muscle.quadriceps, Muscle.glutes},
+      secondary: {Muscle.adductors},
     ),
     equipments: {kBarbellName, kPowerRackName},
     difficulty: Difficulty.intermediate,
@@ -967,14 +721,8 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
     name: kBarbellFrontSquatName,
     muscleGroup: MuscleGroup.legs,
     muscles: TargetMuscles(
-      primary: {
-        Muscle.quadriceps,
-        Muscle.glutes,
-      },
-      secondary: {
-        Muscle.lowerBack,
-        Muscle.adductors,
-      },
+      primary: {Muscle.quadriceps, Muscle.glutes},
+      secondary: {Muscle.lowerBack, Muscle.adductors},
     ),
     equipments: {kBarbellName, kPowerRackName},
     difficulty: Difficulty.intermediateAdvanced,
@@ -983,13 +731,8 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
     name: kSmithMachineSquatName,
     muscleGroup: MuscleGroup.legs,
     muscles: TargetMuscles(
-      primary: {
-        Muscle.quadriceps,
-        Muscle.glutes,
-      },
-      secondary: {
-        Muscle.adductors,
-      },
+      primary: {Muscle.quadriceps, Muscle.glutes},
+      secondary: {Muscle.adductors},
     ),
     equipments: {kSmithMachineName},
     difficulty: Difficulty.beginnerIntermediate,
@@ -998,13 +741,8 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
     name: kHackSquatName,
     muscleGroup: MuscleGroup.legs,
     muscles: TargetMuscles(
-      primary: {
-        Muscle.quadriceps,
-        Muscle.glutes,
-      },
-      secondary: {
-        Muscle.adductors,
-      },
+      primary: {Muscle.quadriceps, Muscle.glutes},
+      secondary: {Muscle.adductors},
     ),
     equipments: {kMachineName},
     difficulty: Difficulty.beginner,
@@ -1013,13 +751,8 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
     name: kLegPressName,
     muscleGroup: MuscleGroup.legs,
     muscles: TargetMuscles(
-      primary: {
-        Muscle.quadriceps,
-        Muscle.glutes,
-      },
-      secondary: {
-        Muscle.adductors,
-      },
+      primary: {Muscle.quadriceps, Muscle.glutes},
+      secondary: {Muscle.adductors},
     ),
     equipments: {kMachineName},
     difficulty: Difficulty.beginner,
@@ -1028,15 +761,8 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
     name: kBarbellDeadliftName,
     muscleGroup: MuscleGroup.legs,
     muscles: TargetMuscles(
-      primary: {
-        Muscle.hamstrings,
-        Muscle.glutes,
-      },
-      secondary: {
-        Muscle.lowerBack,
-        Muscle.adductors,
-        Muscle.forearms,
-      },
+      primary: {Muscle.hamstrings, Muscle.glutes},
+      secondary: {Muscle.lowerBack, Muscle.adductors, Muscle.forearms},
     ),
     equipments: {kBarbellName},
     difficulty: Difficulty.intermediate,
@@ -1045,15 +771,8 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
     name: kBarbellSumoDeadliftName,
     muscleGroup: MuscleGroup.legs,
     muscles: TargetMuscles(
-      primary: {
-        Muscle.hamstrings,
-        Muscle.glutes,
-      },
-      secondary: {
-        Muscle.quadriceps,
-        Muscle.lowerBack,
-        Muscle.forearms,
-      },
+      primary: {Muscle.hamstrings, Muscle.glutes},
+      secondary: {Muscle.quadriceps, Muscle.lowerBack, Muscle.forearms},
     ),
     equipments: {kBarbellName},
     difficulty: Difficulty.intermediate,
@@ -1062,14 +781,8 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
     name: kBarbellRomanianDeadliftName,
     muscleGroup: MuscleGroup.legs,
     muscles: TargetMuscles(
-      primary: {
-        Muscle.hamstrings,
-        Muscle.glutes,
-      },
-      secondary: {
-        Muscle.lowerBack,
-        Muscle.forearms,
-      },
+      primary: {Muscle.hamstrings, Muscle.glutes},
+      secondary: {Muscle.lowerBack, Muscle.forearms},
     ),
     equipments: {kBarbellName},
     difficulty: Difficulty.intermediate,
@@ -1078,14 +791,8 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
     name: kDumbbellRomanianDeadliftName,
     muscleGroup: MuscleGroup.legs,
     muscles: TargetMuscles(
-      primary: {
-        Muscle.hamstrings,
-        Muscle.glutes,
-      },
-      secondary: {
-        Muscle.lowerBack,
-        Muscle.forearms,
-      },
+      primary: {Muscle.hamstrings, Muscle.glutes},
+      secondary: {Muscle.lowerBack, Muscle.forearms},
     ),
     equipments: {kDumbbellsName},
     difficulty: Difficulty.beginnerIntermediate,
@@ -1094,14 +801,8 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
     name: kSmithMachineRomanianDeadliftName,
     muscleGroup: MuscleGroup.legs,
     muscles: TargetMuscles(
-      primary: {
-        Muscle.hamstrings,
-        Muscle.glutes,
-      },
-      secondary: {
-        Muscle.lowerBack,
-        Muscle.forearms,
-      },
+      primary: {Muscle.hamstrings, Muscle.glutes},
+      secondary: {Muscle.lowerBack, Muscle.forearms},
     ),
     equipments: {kSmithMachineName},
     difficulty: Difficulty.beginnerIntermediate,
@@ -1110,13 +811,8 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
     name: kSmithMachineGoodMorningName,
     muscleGroup: MuscleGroup.legs,
     muscles: TargetMuscles(
-      primary: {
-        Muscle.hamstrings,
-        Muscle.glutes,
-      },
-      secondary: {
-        Muscle.lowerBack,
-      },
+      primary: {Muscle.hamstrings, Muscle.glutes},
+      secondary: {Muscle.lowerBack},
     ),
     equipments: {kSmithMachineName},
     difficulty: Difficulty.beginnerIntermediate,
@@ -1125,14 +821,8 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
     name: kWalkingLungesName,
     muscleGroup: MuscleGroup.legs,
     muscles: TargetMuscles(
-      primary: {
-        Muscle.quadriceps,
-        Muscle.glutes,
-      },
-      secondary: {
-        Muscle.adductors,
-        Muscle.forearms,
-      },
+      primary: {Muscle.quadriceps, Muscle.glutes},
+      secondary: {Muscle.adductors, Muscle.forearms},
     ),
     equipments: {kBodyweightName, kDumbbellsName},
     difficulty: Difficulty.beginner,
@@ -1141,14 +831,8 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
     name: kLungeName,
     muscleGroup: MuscleGroup.legs,
     muscles: TargetMuscles(
-      primary: {
-        Muscle.quadriceps,
-        Muscle.glutes,
-      },
-      secondary: {
-        Muscle.adductors,
-        Muscle.forearms,
-      },
+      primary: {Muscle.quadriceps, Muscle.glutes},
+      secondary: {Muscle.adductors, Muscle.forearms},
     ),
     equipments: {kBodyweightName, kDumbbellsName},
     difficulty: Difficulty.beginner,
@@ -1157,14 +841,8 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
     name: kSmithMachineElevatedLungeName,
     muscleGroup: MuscleGroup.legs,
     muscles: TargetMuscles(
-      primary: {
-        Muscle.quadriceps,
-        Muscle.glutes,
-      },
-      secondary: {
-        Muscle.adductors,
-        Muscle.forearms,
-      },
+      primary: {Muscle.quadriceps, Muscle.glutes},
+      secondary: {Muscle.adductors, Muscle.forearms},
     ),
     equipments: {kSmithMachineName, kStepperName},
     difficulty: Difficulty.beginnerIntermediate,
@@ -1172,60 +850,35 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
   ExerciseData(
     name: kSeatedLegCurlName,
     muscleGroup: MuscleGroup.legs,
-    muscles: TargetMuscles(
-      primary: {
-        Muscle.hamstrings,
-      },
-      secondary: {},
-    ),
+    muscles: TargetMuscles(primary: {Muscle.hamstrings}, secondary: {}),
     equipments: {kMachineName},
     difficulty: Difficulty.beginner,
   ),
   ExerciseData(
     name: kLyingLegCurlName,
     muscleGroup: MuscleGroup.legs,
-    muscles: TargetMuscles(
-      primary: {
-        Muscle.hamstrings,
-      },
-      secondary: {},
-    ),
+    muscles: TargetMuscles(primary: {Muscle.hamstrings}, secondary: {}),
     equipments: {kMachineName},
     difficulty: Difficulty.beginner,
   ),
   ExerciseData(
     name: kLegExtensionName,
     muscleGroup: MuscleGroup.legs,
-    muscles: TargetMuscles(
-      primary: {
-        Muscle.quadriceps,
-      },
-      secondary: {},
-    ),
+    muscles: TargetMuscles(primary: {Muscle.quadriceps}, secondary: {}),
     equipments: {kMachineName},
     difficulty: Difficulty.beginner,
   ),
   ExerciseData(
     name: kStandingCalfRaisesName,
     muscleGroup: MuscleGroup.legs,
-    muscles: TargetMuscles(
-      primary: {
-        Muscle.calves,
-      },
-      secondary: {},
-    ),
+    muscles: TargetMuscles(primary: {Muscle.calves}, secondary: {}),
     equipments: {kBodyweightName, kMachineName, kStepperName},
     difficulty: Difficulty.beginnerIntermediate,
   ),
   ExerciseData(
     name: kSeatedCalfMachineName,
     muscleGroup: MuscleGroup.legs,
-    muscles: TargetMuscles(
-      primary: {
-        Muscle.calves,
-      },
-      secondary: {},
-    ),
+    muscles: TargetMuscles(primary: {Muscle.calves}, secondary: {}),
     equipments: {kMachineName},
     difficulty: Difficulty.beginner,
   ),
@@ -1233,10 +886,7 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
     name: kCrunchesName,
     muscleGroup: MuscleGroup.core,
     muscles: TargetMuscles(
-      primary: {
-        Muscle.abdominals,
-        Muscle.upperAbs,
-      },
+      primary: {Muscle.abdominals, Muscle.upperAbs},
       secondary: {},
     ),
     equipments: {kBodyweightName},
@@ -1246,10 +896,7 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
     name: kCableCrunchesName,
     muscleGroup: MuscleGroup.core,
     muscles: TargetMuscles(
-      primary: {
-        Muscle.abdominals,
-        Muscle.upperAbs,
-      },
+      primary: {Muscle.abdominals, Muscle.upperAbs},
       secondary: {},
     ),
     equipments: {kCableName},
@@ -1259,12 +906,8 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
     name: kCaptainsChairLegRaisesName,
     muscleGroup: MuscleGroup.core,
     muscles: TargetMuscles(
-      primary: {
-        Muscle.lowerAbs,
-      },
-      secondary: {
-        Muscle.abdominals,
-      },
+      primary: {Muscle.lowerAbs},
+      secondary: {Muscle.abdominals},
     ),
     equipments: {kBodyweightName, kMachineName, kDumbbellsName},
     difficulty: Difficulty.beginner,
@@ -1273,13 +916,8 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
     name: kHangingLegRaisesName,
     muscleGroup: MuscleGroup.core,
     muscles: TargetMuscles(
-      primary: {
-        Muscle.lowerAbs,
-      },
-      secondary: {
-        Muscle.abdominals,
-        Muscle.forearms,
-      },
+      primary: {Muscle.lowerAbs},
+      secondary: {Muscle.abdominals, Muscle.forearms},
     ),
     equipments: {kBodyweightName, kMachineName, kDumbbellsName},
     difficulty: Difficulty.beginnerIntermediate,
@@ -1288,12 +926,8 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
     name: kLyingLegRaisesName,
     muscleGroup: MuscleGroup.core,
     muscles: TargetMuscles(
-      primary: {
-        Muscle.lowerAbs,
-      },
-      secondary: {
-        Muscle.abdominals,
-      },
+      primary: {Muscle.lowerAbs},
+      secondary: {Muscle.abdominals},
     ),
     equipments: {kBodyweightName, kMachineName, kDumbbellsName},
     difficulty: Difficulty.beginner,
@@ -1301,24 +935,14 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
   ExerciseData(
     name: kCableWoodchopperName,
     muscleGroup: MuscleGroup.core,
-    muscles: TargetMuscles(
-      primary: {
-        Muscle.obliques,
-      },
-      secondary: {},
-    ),
+    muscles: TargetMuscles(primary: {Muscle.obliques}, secondary: {}),
     equipments: {kCableName},
     difficulty: Difficulty.beginnerIntermediate,
   ),
   ExerciseData(
     name: kBackExtensionName,
     muscleGroup: MuscleGroup.core,
-    muscles: TargetMuscles(
-      primary: {
-        Muscle.lowerBack,
-      },
-      secondary: {},
-    ),
+    muscles: TargetMuscles(primary: {Muscle.lowerBack}, secondary: {}),
     equipments: {kMachineName},
     difficulty: Difficulty.beginner,
   ),
@@ -1326,15 +950,8 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
     name: kBurpeesName,
     muscleGroup: MuscleGroup.full,
     muscles: TargetMuscles(
-      primary: {
-        Muscle.chest,
-        Muscle.quadriceps,
-      },
-      secondary: {
-        Muscle.frontDelts,
-        Muscle.triceps,
-        Muscle.glutes,
-      },
+      primary: {Muscle.chest, Muscle.quadriceps},
+      secondary: {Muscle.frontDelts, Muscle.triceps, Muscle.glutes},
     ),
     equipments: {kBodyweightName},
     difficulty: Difficulty.beginnerIntermediate,
@@ -1362,10 +979,7 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
   ExerciseData(
     name: kSmithMachineSkullCrushersName,
     muscleGroup: MuscleGroup.push,
-    muscles: TargetMuscles(
-      primary: {Muscle.triceps},
-      secondary: {},
-    ),
+    muscles: TargetMuscles(primary: {Muscle.triceps}, secondary: {}),
     equipments: {kSmithMachineName, kBenchName},
     difficulty: Difficulty.beginnerIntermediate,
   ),
@@ -1403,13 +1017,8 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
     name: kHipThrustName,
     muscleGroup: MuscleGroup.legs,
     muscles: TargetMuscles(
-      primary: {
-        Muscle.glutes,
-      },
-      secondary: {
-        Muscle.hamstrings,
-        Muscle.quadriceps,
-      },
+      primary: {Muscle.glutes},
+      secondary: {Muscle.hamstrings, Muscle.quadriceps},
     ),
     equipments: {kBarbellName, kBenchName},
     difficulty: Difficulty.beginnerIntermediate,
@@ -1417,22 +1026,14 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
   ExerciseData(
     name: kCrunchMachineName,
     muscleGroup: MuscleGroup.core,
-    muscles: TargetMuscles(
-      primary: {
-        Muscle.abdominals,
-      },
-      secondary: {},
-    ),
+    muscles: TargetMuscles(primary: {Muscle.abdominals}, secondary: {}),
     equipments: {kMachineName},
     difficulty: Difficulty.beginner,
   ),
   ExerciseData(
     name: kPlankName,
     muscleGroup: MuscleGroup.core,
-    muscles: TargetMuscles(
-      primary: {Muscle.abdominals},
-      secondary: {},
-    ),
+    muscles: TargetMuscles(primary: {Muscle.abdominals}, secondary: {}),
     equipments: {kBodyweightName},
     difficulty: Difficulty.beginner,
   ),
@@ -1440,15 +1041,8 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
     name: kMuscleUpName,
     muscleGroup: MuscleGroup.full,
     muscles: TargetMuscles(
-      primary: {
-        Muscle.lats,
-        Muscle.chest,
-      },
-      secondary: {
-        Muscle.forearms,
-        Muscle.biceps,
-        Muscle.triceps,
-      },
+      primary: {Muscle.lats, Muscle.chest},
+      secondary: {Muscle.forearms, Muscle.biceps, Muscle.triceps},
     ),
     equipments: {kBodyweightName},
     difficulty: Difficulty.advanced,

@@ -23,16 +23,10 @@ class DifficultyBadge extends StatelessWidget {
 
     return Container(
       alignment: Alignment.center,
-      padding: EdgeInsets.symmetric(
-        horizontal: spacing,
-        vertical: spacing / 2,
-      ),
+      padding: EdgeInsets.symmetric(horizontal: spacing, vertical: spacing / 2),
       decoration: BoxDecoration(
         color: difficultyColor.withValues(alpha: 0.2),
-        border: Border.all(
-          color: difficultyColor,
-          width: 1,
-        ),
+        border: Border.all(color: difficultyColor, width: 1),
       ),
       child: Text(
         EnumDisplayNames.getDifficultyDisplayName(difficulty),

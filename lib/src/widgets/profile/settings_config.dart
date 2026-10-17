@@ -63,9 +63,7 @@ class SettingsConfig extends StatelessWidget {
               trailing: const Icon(Icons.chevron_right),
               onTap: () {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text("Data management coming soon!"),
-                  ),
+                  const SnackBar(content: Text("Data management coming soon!")),
                 );
               },
             ),

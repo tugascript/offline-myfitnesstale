@@ -66,9 +66,7 @@ class AppTextFormField extends StatelessWidget {
       textInputAction: textInputAction,
       inputFormatters: inputFormatters,
       enabled: enabled && !isLoading,
-      style: TextStyle(
-        fontSize: fontSize,
-      ),
+      style: TextStyle(fontSize: fontSize),
       controller: controller,
       maxLines: maxLines,
       onChanged: onChanged,
@@ -78,13 +76,15 @@ class AppTextFormField extends StatelessWidget {
         labelText: labelText,
         hintText: hintText,
         alignLabelWithHint: true,
-        prefixIconConstraints: prefixIconConstraints ??
+        prefixIconConstraints:
+            prefixIconConstraints ??
             BoxConstraints.tightFor(
               width: fontSize * 2,
               height: fontSize * 1.5,
             ),
         prefixIcon: prefixIcon,
-        suffixIconConstraints: suffixIconConstraints ??
+        suffixIconConstraints:
+            suffixIconConstraints ??
             BoxConstraints.tightFor(
               width: fontSize * 2,
               height: fontSize * 1.5,
@@ -113,10 +113,7 @@ class AppTextFormField extends StatelessWidget {
         ),
         disabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.zero,
-          borderSide: BorderSide(
-            color: greyColor!,
-            width: 1.0,
-          ),
+          borderSide: BorderSide(color: greyColor!, width: 1.0),
         ),
         isDense: true,
         filled: filled,

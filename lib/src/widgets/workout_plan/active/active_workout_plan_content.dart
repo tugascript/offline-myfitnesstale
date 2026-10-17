@@ -47,7 +47,8 @@ class ActiveWorkoutPlanContent extends StatelessWidget {
       relativeDayIndex = (daysSinceStart % 7) + 1;
     }
 
-    final scheduleWeeks = plan.weeks
+    final scheduleWeeks =
+        plan.weeks
             ?.expand(
               (week) => List.generate(
                 week.endWeek - week.startWeek + 1,
@@ -99,8 +100,10 @@ class ActiveWorkoutPlanContent extends StatelessWidget {
                   completedWorkouts: displayState.completedWorkouts,
                   totalWorkouts: displayState.totalWorkouts,
                   progressPercentage: progressPercentage,
-                  completedWeeks:
-                      (currentWeekNum - 1).clamp(0, plan.totalWeeks),
+                  completedWeeks: (currentWeekNum - 1).clamp(
+                    0,
+                    plan.totalWeeks,
+                  ),
                   totalWeeks: plan.totalWeeks,
                 ),
                 SizedBox(height: sizes.spacing * 2),
@@ -120,26 +123,21 @@ class ActiveWorkoutPlanContent extends StatelessWidget {
           ),
           if (scheduleWeeks.isNotEmpty)
             SliverList(
-              delegate: SliverChildBuilderDelegate(
-                (context, index) {
-                  final scheduleWeek = scheduleWeeks[index];
-                  return ActiveWorkoutPlanWeekCard(
-                    sizes: sizes,
-                    theme: theme,
-                    isDarkTheme: isDarkTheme,
-                    week: scheduleWeek.week,
-                    weekNumber: scheduleWeek.number,
-                    currentWeekNum: currentWeekNum,
-                    relativeDayIndex: relativeDayIndex,
-                    workoutPlanRecord: record,
-                  );
-                },
-                childCount: scheduleWeeks.length,
-              ),
+              delegate: SliverChildBuilderDelegate((context, index) {
+                final scheduleWeek = scheduleWeeks[index];
+                return ActiveWorkoutPlanWeekCard(
+                  sizes: sizes,
+                  theme: theme,
+                  isDarkTheme: isDarkTheme,
+                  week: scheduleWeek.week,
+                  weekNumber: scheduleWeek.number,
+                  currentWeekNum: currentWeekNum,
+                  relativeDayIndex: relativeDayIndex,
+                  workoutPlanRecord: record,
+                );
+              }, childCount: scheduleWeeks.length),
             ),
-          SliverPadding(
-            padding: EdgeInsets.only(bottom: sizes.spacing * 2),
-          ),
+          SliverPadding(padding: EdgeInsets.only(bottom: sizes.spacing * 2)),
         ],
       ),
     );

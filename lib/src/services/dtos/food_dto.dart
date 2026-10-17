@@ -43,12 +43,7 @@ class FoodPortionDto extends Equatable {
   }
 
   @override
-  List<Object?> get props => [
-        id,
-        foodId,
-        portionName,
-        gramWeight,
-      ];
+  List<Object?> get props => [id, foodId, portionName, gramWeight];
 }
 
 class FoodDto extends Equatable {
@@ -152,21 +147,21 @@ class FoodDto extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        name,
-        category,
-        brand,
-        barcode,
-        servingSizeBaseGrams,
-        caloriesBase,
-        proteinBase,
-        carbsBase,
-        fatBase,
-        fiberBase,
-        sodiumBase,
-        micros,
-        isFavorite,
-        createdBy,
-        portions,
-      ];
+    id,
+    name,
+    category,
+    brand,
+    barcode,
+    servingSizeBaseGrams,
+    caloriesBase,
+    proteinBase,
+    carbsBase,
+    fatBase,
+    fiberBase,
+    sodiumBase,
+    micros,
+    isFavorite,
+    createdBy,
+    portions,
+  ];
 }

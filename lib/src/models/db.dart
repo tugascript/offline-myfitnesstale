@@ -110,10 +110,7 @@ class DatabaseHelper {
       );
     }
     await resetForTesting();
-    final path = join(
-      await getDatabasesPath(),
-      _integrationTestDatabaseName,
-    );
+    final path = join(await getDatabasesPath(), _integrationTestDatabaseName);
     await deleteDatabase(path);
   }
 

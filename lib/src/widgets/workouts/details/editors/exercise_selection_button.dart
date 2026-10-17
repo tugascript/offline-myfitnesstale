@@ -34,10 +34,7 @@ class ExerciseSelectionButton extends StatelessWidget {
         style: OutlinedButton.styleFrom(
           backgroundColor: theme.scaffoldBackgroundColor,
           foregroundColor: theme.colorScheme.primary,
-          side: BorderSide(
-            color: theme.colorScheme.primary,
-            width: 0.5,
-          ),
+          side: BorderSide(color: theme.colorScheme.primary, width: 0.5),
         ),
         onPressed: onPressed,
       ),

@@ -61,10 +61,12 @@ class _ActiveRestTimerState extends State<ActiveRestTimer> {
 
   Color get _progressColor {
     final isDarkTheme = widget.theme.colorScheme.brightness == Brightness.dark;
-    final greenColor =
-        isDarkTheme ? Colors.green.shade400 : Colors.green.shade600;
-    final yellowColor =
-        isDarkTheme ? Colors.yellow.shade400 : Colors.yellow.shade600;
+    final greenColor = isDarkTheme
+        ? Colors.green.shade400
+        : Colors.green.shade600;
+    final yellowColor = isDarkTheme
+        ? Colors.yellow.shade400
+        : Colors.yellow.shade600;
     final redColor = isDarkTheme ? Colors.red.shade400 : Colors.red.shade600;
 
     if (widget.maxSecs == null) {
@@ -109,9 +111,10 @@ class _ActiveRestTimerState extends State<ActiveRestTimer> {
                         value: _progress,
                         backgroundColor: widget.theme.colorScheme.onSurface
                             .withValues(alpha: 0.1),
-                        strokeWidth: ((widget.sizes.spacing / 2) *
-                                (_kProgressRingBase / restSize))
-                            .clamp(2.0, _kProgressRingBase * 0.22),
+                        strokeWidth:
+                            ((widget.sizes.spacing / 2) *
+                                    (_kProgressRingBase / restSize))
+                                .clamp(2.0, _kProgressRingBase * 0.22),
                         color: _progressColor,
                       ),
                     ),

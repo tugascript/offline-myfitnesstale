@@ -43,17 +43,18 @@ class _CreateProfileViewState extends State<CreateProfileView> {
                 initialUnits: _units,
                 initialThemeMode: ThemeType.system,
                 initialNotificationsOn: false,
-                onSubmit: ({
-                  required Units units,
-                  required ThemeType themeMode,
-                  required bool notificationsOn,
-                }) {
-                  context.read<ProfileCubit>().createSystem(
+                onSubmit:
+                    ({
+                      required Units units,
+                      required ThemeType themeMode,
+                      required bool notificationsOn,
+                    }) {
+                      context.read<ProfileCubit>().createSystem(
                         units: units,
                         theme: themeMode,
                         notificationsOn: notificationsOn,
                       );
-                },
+                    },
                 isLoading: state.isLoading,
               ),
             );
@@ -72,15 +73,18 @@ class _CreateProfileViewState extends State<CreateProfileView> {
                 _units = unit;
               });
             },
-            onSubmit: ({
-              required String name,
-              required int height,
-              required Gender gender,
-            }) {
-              context
-                  .read<ProfileCubit>()
-                  .createProfile(name: name, height: height, gender: gender);
-            },
+            onSubmit:
+                ({
+                  required String name,
+                  required int height,
+                  required Gender gender,
+                }) {
+                  context.read<ProfileCubit>().createProfile(
+                    name: name,
+                    height: height,
+                    gender: gender,
+                  );
+                },
             submitButtonLabel: "Create Profile",
             isLoading: state.isLoading,
           );

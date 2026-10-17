@@ -106,10 +106,7 @@ class _RepsInputState extends State<RepsInput> {
       padding: widget.sizes.padding,
       filled: true,
       isLoading: false,
-      prefixIcon: Icon(
-        Icons.repeat_one,
-        size: widget.sizes.fontSize * 1.2,
-      ),
+      prefixIcon: Icon(Icons.repeat_one, size: widget.sizes.fontSize * 1.2),
     );
   }
 }
@@ -234,14 +231,14 @@ class _RepsWheelSheetContentState extends State<_RepsWheelSheetContent> {
                   onPressed: () => Navigator.of(context).pop(),
                   child: const Text('Cancel'),
                 ),
-                Text('Reps',
-                    style: TextStyle(
-                        fontSize: widget.sizes.subtitleFontSize,
-                        fontWeight: FontWeight.w600)),
-                TextButton(
-                  onPressed: _onConfirm,
-                  child: const Text('Confirm'),
+                Text(
+                  'Reps',
+                  style: TextStyle(
+                    fontSize: widget.sizes.subtitleFontSize,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
+                TextButton(onPressed: _onConfirm, child: const Text('Confirm')),
               ],
             ),
           ),

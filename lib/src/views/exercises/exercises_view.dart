@@ -86,9 +86,7 @@ class _ExercisesViewState extends State<ExercisesView> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final breakPoints = BreakPoint.fromContext(context);
-    final sizes = DataDisplaySizes.getDataDisplaySizes(
-      breakPoints.screenSize,
-    );
+    final sizes = DataDisplaySizes.getDataDisplaySizes(breakPoints.screenSize);
 
     return AppScaffold(
       title: "Exercises",
@@ -113,14 +111,15 @@ class _ExercisesViewState extends State<ExercisesView> {
                   initialEquipmentId: state.exercisePagination.equipmentId,
                   equipmentSelection: state.equipmentSelection,
                   initialIsFavorite: state.exercisePagination.isFavorite,
-                  onSubmit: ({
-                    String? name,
-                    Difficulty? difficulty,
-                    MuscleGroup? muscleGroup,
-                    int? equipmentId,
-                    bool isFavourite = false,
-                  }) {
-                    context.read<ExerciseCubit>().getExercises(
+                  onSubmit:
+                      ({
+                        String? name,
+                        Difficulty? difficulty,
+                        MuscleGroup? muscleGroup,
+                        int? equipmentId,
+                        bool isFavourite = false,
+                      }) {
+                        context.read<ExerciseCubit>().getExercises(
                           name: name,
                           difficulty: difficulty,
                           muscleGroup: muscleGroup,
@@ -129,7 +128,7 @@ class _ExercisesViewState extends State<ExercisesView> {
                           limit: 20,
                           offset: 0,
                         );
-                  },
+                      },
                 ),
                 SizedBox(height: sizes.inputSpacing),
                 Expanded(

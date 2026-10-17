@@ -20,7 +20,8 @@ class WorkoutPlanSearchForm extends StatefulWidget {
     required String name,
     required Difficulty? difficulty,
     required bool isFavorite,
-  }) onSubmit;
+  })
+  onSubmit;
 
   const WorkoutPlanSearchForm({
     super.key,
@@ -84,22 +85,14 @@ class _WorkoutPlanSearchFormState extends State<WorkoutPlanSearchForm> {
               }
             },
             prefixIcon: Padding(
-              padding: EdgeInsets.symmetric(
-                horizontal: widget.padding * 0.65,
-              ),
-              child: Icon(
-                Icons.search,
-                size: widget.fontSize,
-              ),
+              padding: EdgeInsets.symmetric(horizontal: widget.padding * 0.65),
+              child: Icon(Icons.search, size: widget.fontSize),
             ),
             suffixIcon: _data.name.isNotEmpty
                 ? IconButton(
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(),
-                    icon: Icon(
-                      Icons.clear,
-                      size: widget.fontSize,
-                    ),
+                    icon: Icon(Icons.clear, size: widget.fontSize),
                     onPressed: () {
                       setState(() {
                         _data.name = '';
@@ -175,7 +168,7 @@ class _WorkoutPlanSearchFormState extends State<WorkoutPlanSearchForm> {
                     }
                   });
                 },
-              )
+              ),
             ],
           ),
         ],

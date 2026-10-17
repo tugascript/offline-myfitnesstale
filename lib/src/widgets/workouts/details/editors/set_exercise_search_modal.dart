@@ -34,8 +34,8 @@ class _SetExerciseSearchModalState extends State<SetExerciseSearchModal> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       context.read<ExerciseCubit>().getSelectionExercises(
-            muscleGroup: widget.initialMuscleGroup,
-          );
+        muscleGroup: widget.initialMuscleGroup,
+      );
     });
   }
 
@@ -63,21 +63,20 @@ class _SetExerciseSearchModalState extends State<SetExerciseSearchModal> {
                   initialName: '',
                   initialMuscleGroup: widget.initialMuscleGroup,
                   initialIsFavorite: false,
-                  onSubmit: ({
-                    required String name,
-                    required MuscleGroup? muscleGroup,
-                    required bool isFavorite,
-                  }) {
-                    context.read<ExerciseCubit>().getSelectionExercises(
+                  onSubmit:
+                      ({
+                        required String name,
+                        required MuscleGroup? muscleGroup,
+                        required bool isFavorite,
+                      }) {
+                        context.read<ExerciseCubit>().getSelectionExercises(
                           name: name,
                           muscleGroup: muscleGroup,
                           isFavorite: isFavorite,
                         );
-                  },
+                      },
                 ),
-                SizedBox(
-                  height: widget.sizes.spacing,
-                ),
+                SizedBox(height: widget.sizes.spacing),
                 Expanded(
                   child: SetExerciseSearchList(
                     sizes: widget.sizes,

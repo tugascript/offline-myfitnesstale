@@ -12,7 +12,8 @@ void main() async {
   Logger.root.level = Level.ALL;
   Logger.root.onRecord.listen((record) {
     debugPrint(
-        '${record.level.name}: ${record.time}: ${record.loggerName}: ${record.message}');
+      '${record.level.name}: ${record.time}: ${record.loggerName}: ${record.message}',
+    );
   });
 
   try {

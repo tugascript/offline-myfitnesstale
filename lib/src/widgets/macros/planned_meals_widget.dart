@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+
 import '../../cubits/macro_tracking_cubit.dart';
 import '../../cubits/meal_plan_cubit.dart';
 import '../../cubits/meal_plan_record_cubit.dart';
@@ -13,8 +14,11 @@ import '../../utilities/sizes/data_display_sizes.dart';
 class PlannedMealsWidget extends StatelessWidget {
   final DataDisplaySizesList sizes;
   final DateTime selectedDate;
-  const PlannedMealsWidget(
-      {super.key, required this.sizes, required this.selectedDate});
+  const PlannedMealsWidget({
+    super.key,
+    required this.sizes,
+    required this.selectedDate,
+  });
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<MealPlanRecordCubit, MealPlanRecordState>(
@@ -50,19 +54,22 @@ class PlannedMealsWidget extends StatelessWidget {
                       children: [
                         Row(
                           children: [
-                            Icon(Icons.restaurant_menu,
-                                color: Colors.green,
-                                size: sizes.compactIconSize),
+                            Icon(
+                              Icons.restaurant_menu,
+                              color: Colors.green,
+                              size: sizes.compactIconSize,
+                            ),
                             SizedBox(width: sizes.spacing),
                             Expanded(
-                                child: Text(
-                              'Active Meal Plan: ${activeRecord.planName ?? 'Plan'}',
-                              style: TextStyle(
-                                fontSize: sizes.fontSize,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.green[900],
+                              child: Text(
+                                'Active Meal Plan: ${activeRecord.planName ?? 'Plan'}',
+                                style: TextStyle(
+                                  fontSize: sizes.fontSize,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.green[900],
+                                ),
                               ),
-                            )),
+                            ),
                           ],
                         ),
                         Text(
@@ -85,37 +92,48 @@ class PlannedMealsWidget extends StatelessWidget {
                           fontWeight: FontWeight.w600,
                         ),
                       ),
-                      ...plannedMeals.map((meal) => ListTile(
-                            key: ValueKey('planned-meal-${meal.id}'),
-                            contentPadding: EdgeInsets.zero,
-                            title: Text(meal.name,
-                                style: TextStyle(fontSize: sizes.fontSize)),
-                            subtitle: Text(
-                                '${meal.totalCalories} kcal · '
-                                'P ${meal.totalProtein}g · '
-                                'C ${meal.totalCarbs}g · F ${meal.totalFat}g',
-                                style: TextStyle(fontSize: sizes.fontSize)),
-                            trailing: TextButton(
-                              key: ValueKey('log-planned-meal-${meal.id}'),
-                              onPressed: () => _logPlannedMeal(context, meal),
-                              child: Text('Log',
-                                  style: TextStyle(fontSize: sizes.fontSize)),
+                      ...plannedMeals.map(
+                        (meal) => ListTile(
+                          key: ValueKey('planned-meal-${meal.id}'),
+                          contentPadding: EdgeInsets.zero,
+                          title: Text(
+                            meal.name,
+                            style: TextStyle(fontSize: sizes.fontSize),
+                          ),
+                          subtitle: Text(
+                            '${meal.totalCalories} kcal · '
+                            'P ${meal.totalProtein}g · '
+                            'C ${meal.totalCarbs}g · F ${meal.totalFat}g',
+                            style: TextStyle(fontSize: sizes.fontSize),
+                          ),
+                          trailing: TextButton(
+                            key: ValueKey('log-planned-meal-${meal.id}'),
+                            onPressed: () => _logPlannedMeal(context, meal),
+                            child: Text(
+                              'Log',
+                              style: TextStyle(fontSize: sizes.fontSize),
                             ),
-                          )),
+                          ),
+                        ),
+                      ),
                     ] else if (plan != null &&
                         plan.id == activeRecord.mealPlanId &&
                         plan.version == activeRecord.mealPlanVersion &&
                         !_activeRecordCoversSelectedDate(activeRecord)) ...[
-                      Text('No planned meals for this date.',
-                          style: TextStyle(fontSize: sizes.fontSize)),
+                      Text(
+                        'No planned meals for this date.',
+                        style: TextStyle(fontSize: sizes.fontSize),
+                      ),
                     ],
                     Wrap(
                       alignment: WrapAlignment.end,
                       children: [
                         TextButton.icon(
                           icon: Icon(Icons.check, size: sizes.compactIconSize),
-                          label: Text('Complete Day Record',
-                              style: TextStyle(fontSize: sizes.fontSize)),
+                          label: Text(
+                            'Complete Day Record',
+                            style: TextStyle(fontSize: sizes.fontSize),
+                          ),
                           onPressed: () {
                             context
                                 .read<MealPlanRecordCubit>()
@@ -142,9 +160,11 @@ class PlannedMealsWidget extends StatelessWidget {
     final selectedNumericDate = DateUtilities.getNumericDate(selectedDate);
     final dayRecord = record.weeks
         .expand((week) => week.days)
-        .where((day) =>
-            _numericDateForDay(record, day.week, day.day) ==
-            selectedNumericDate)
+        .where(
+          (day) =>
+              _numericDateForDay(record, day.week, day.day) ==
+              selectedNumericDate,
+        )
         .firstOrNull;
     if (dayRecord == null) return const [];
 
@@ -156,10 +176,13 @@ class PlannedMealsWidget extends StatelessWidget {
       ..sort((a, b) => a.position.compareTo(b.position));
   }
 
-  bool _activeRecordCoversSelectedDate(MealPlanRecordDto record) =>
-      record.weeks.expand((week) => week.days).any((day) =>
-          _numericDateForDay(record, day.week, day.day) ==
-          DateUtilities.getNumericDate(selectedDate));
+  bool _activeRecordCoversSelectedDate(MealPlanRecordDto record) => record.weeks
+      .expand((week) => week.days)
+      .any(
+        (day) =>
+            _numericDateForDay(record, day.week, day.day) ==
+            DateUtilities.getNumericDate(selectedDate),
+      );
 
   int _numericDateForDay(MealPlanRecordDto record, int week, int day) {
     final startedAt = record.startedAt;
@@ -169,7 +192,9 @@ class PlannedMealsWidget extends StatelessWidget {
   }
 
   Future<void> _logPlannedMeal(
-      BuildContext context, MealPlanMealDto meal) async {
+    BuildContext context,
+    MealPlanMealDto meal,
+  ) async {
     final now = DateTime.now();
     final logTime = DateTime(
       selectedDate.year,

@@ -24,10 +24,7 @@ class WorkoutPlanDetailView extends StatefulWidget {
 
   final int workoutPlanId;
 
-  const WorkoutPlanDetailView({
-    super.key,
-    required this.workoutPlanId,
-  });
+  const WorkoutPlanDetailView({super.key, required this.workoutPlanId});
 
   @override
   State<WorkoutPlanDetailView> createState() => _WorkoutPlanDetailViewState();
@@ -50,9 +47,7 @@ class _WorkoutPlanDetailViewState extends State<WorkoutPlanDetailView> {
     final theme = Theme.of(context);
     final isDarkTheme = theme.brightness == Brightness.dark;
     final breakpoints = BreakPoint.fromContext(context);
-    final sizes = DataDisplaySizes.getDataDisplaySizes(
-      breakpoints.screenSize,
-    );
+    final sizes = DataDisplaySizes.getDataDisplaySizes(breakpoints.screenSize);
 
     return BlocConsumer<WorkoutPlanCubit, WorkoutPlanState>(
       builder: (context, state) {
@@ -101,9 +96,9 @@ class _WorkoutPlanDetailViewState extends State<WorkoutPlanDetailView> {
                 WorkoutPlanHeader(
                   actionButtonPress: () {
                     context.read<WorkoutPlanCubit>().updateWorkoutPlan(
-                          id: plan.id,
-                          isFavorite: !plan.isFavorite,
-                        );
+                      id: plan.id,
+                      isFavorite: !plan.isFavorite,
+                    );
                   },
                   sizes: sizes,
                   plan: plan,
@@ -120,21 +115,21 @@ class _WorkoutPlanDetailViewState extends State<WorkoutPlanDetailView> {
                 ),
                 SizedBox(height: sizes.spacing),
                 ...(plan.weeks?.asMap().entries.map(
-                          (entry) => WorkoutPlanWeekCard(
-                            theme: theme,
-                            isDarkTheme: isDarkTheme,
-                            sizes: sizes,
-                            week: entry.value,
-                            weekNumber: entry.key + 1,
-                          ),
-                        ) ??
+                      (entry) => WorkoutPlanWeekCard(
+                        theme: theme,
+                        isDarkTheme: isDarkTheme,
+                        sizes: sizes,
+                        week: entry.value,
+                        weekNumber: entry.key + 1,
+                      ),
+                    ) ??
                     []),
                 SizedBox(height: sizes.spacing),
                 BlocBuilder<WorkoutPlanRecordCubit, WorkoutPlanRecordState>(
                   builder: (context, recordState) {
                     final isActive =
                         recordState.currentPlanRecord.workoutPlan?.id ==
-                            plan.id;
+                        plan.id;
                     return ActionButtons(
                       isLoading: state.isLoading || recordState.isLoading,
                       showMutationBtns: plan.createdBy == CreatedBy.user,
@@ -150,8 +145,7 @@ class _WorkoutPlanDetailViewState extends State<WorkoutPlanDetailView> {
                           context: context,
                           builder: (context) => ConfirmationDialog(
                             title: 'Delete Workout Plan',
-                            content:
-                                'Are you sure you want to delete this workout plan? This action cannot be undone.',
+                            content: 'Are you sure you want to delete this workout plan? This action cannot be undone.',
                             onConfirm: () async {
                               await context
                                   .read<WorkoutPlanCubit>()

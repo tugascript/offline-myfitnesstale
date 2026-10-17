@@ -44,15 +44,9 @@ class WorkoutRecordHead extends StatelessWidget {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(
-                      Icons.calendar_today,
-                      size: sizes.fontSize * 1.2,
-                    ),
+                    Icon(Icons.calendar_today, size: sizes.fontSize * 1.2),
                     Text(
-                      " ${Formatters.formatDateTime(
-                        units,
-                        workoutRecord?.startedAt ?? DateTime.now(),
-                      )}",
+                      " ${Formatters.formatDateTime(units, workoutRecord?.startedAt ?? DateTime.now())}",
                       style: TextStyle(
                         fontSize: sizes.fontSize,
                         fontWeight: FontWeight.w600,
@@ -66,18 +60,9 @@ class WorkoutRecordHead extends StatelessWidget {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(
-                        Icons.schedule,
-                        size: sizes.fontSize * 1.2,
-                      ),
+                      Icon(Icons.schedule, size: sizes.fontSize * 1.2),
                       Text(
-                        " ${Formatters.formatDuration(
-                          workoutRecord!.completedAt!
-                              .difference(
-                                workoutRecord!.startedAt,
-                              )
-                              .inSeconds,
-                        )}",
+                        " ${Formatters.formatDuration(workoutRecord!.completedAt!.difference(workoutRecord!.startedAt).inSeconds)}",
                         style: TextStyle(
                           fontSize: sizes.fontSize,
                           fontWeight: FontWeight.w600,
@@ -97,12 +82,10 @@ class WorkoutRecordHead extends StatelessWidget {
                   leading: Icon(Icons.scale, size: sizes.fontSize * 1.2),
                   name: 'Volume',
                   total: units == Units.metric
-                      ? Converters.gramsToKg(
-                          workoutRecord?.totalVolume ?? 0,
-                        ).round()
-                      : Converters.gramsToLbs(
-                          workoutRecord?.totalVolume ?? 0,
-                        ).round(),
+                      ? Converters.gramsToKg(workoutRecord?.totalVolume ?? 0)
+                            .round()
+                      : Converters.gramsToLbs(workoutRecord?.totalVolume ?? 0)
+                            .round(),
                   fontSize: sizes.fontSize,
                 ),
               ),
@@ -111,7 +94,8 @@ class WorkoutRecordHead extends StatelessWidget {
                   leading: Icon(Icons.timer, size: sizes.fontSize * 1.2),
                   name: 'Rest',
                   total: Formatters.formatDuration(
-                      workoutRecord?.totalRestSecs ?? 0),
+                    workoutRecord?.totalRestSecs ?? 0,
+                  ),
                   fontSize: sizes.fontSize,
                 ),
               ),
@@ -161,9 +145,7 @@ class WorkoutRecordHead extends StatelessWidget {
                   child: MusclesWrap(
                     leading: Text(
                       '🥈',
-                      style: TextStyle(
-                        fontSize: sizes.subtitleFontSize * 1.2,
-                      ),
+                      style: TextStyle(fontSize: sizes.subtitleFontSize * 1.2),
                     ),
                     title: 'Secondary Muscles',
                     sizes: sizes,
@@ -172,7 +154,7 @@ class WorkoutRecordHead extends StatelessWidget {
                   ),
                 ),
             ],
-          )
+          ),
         ],
       ),
     );

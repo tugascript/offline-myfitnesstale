@@ -27,7 +27,8 @@ class WorkoutBaseForm extends StatefulWidget {
     required Difficulty difficulty,
     required EditorType editorType,
     String? description,
-  }) onSubmit;
+  })
+  onSubmit;
 
   const WorkoutBaseForm({
     super.key,
@@ -215,8 +216,9 @@ class _WorkoutBaseFormState extends State<WorkoutBaseForm> {
               if (!canTogglePremiumEditor) return;
 
               setState(() {
-                _data.editorType =
-                    value ? EditorType.advanced : EditorType.basic;
+                _data.editorType = value
+                    ? EditorType.advanced
+                    : EditorType.basic;
               });
             },
           ),

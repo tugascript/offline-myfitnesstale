@@ -64,7 +64,8 @@ class WorkoutSet implements Model {
   });
 
   static const String table = _table;
-  static final String tableCreate = '''
+  static final String tableCreate =
+      '''
   CREATE TABLE IF NOT EXISTS $_table (
     ${WorkoutSetColumns.id.value} INTEGER PRIMARY KEY AUTOINCREMENT,
     ${WorkoutSetColumns.position.value} INTEGER NOT NULL,
@@ -114,7 +115,8 @@ class WorkoutSet implements Model {
       position: map[WorkoutSetColumns.position.value] as int,
       workoutId: map[WorkoutSetColumns.workoutId.value] as int,
       setType: WorkoutSetType.fromValue(
-          map[WorkoutSetColumns.setType.value] as String),
+        map[WorkoutSetColumns.setType.value] as String,
+      ),
       minSets: map[WorkoutSetColumns.minSets.value] as int,
       maxSets: map[WorkoutSetColumns.maxSets.value] as int?,
       recommendedRestSecs:
@@ -123,8 +125,9 @@ class WorkoutSet implements Model {
       totalExercises: map[WorkoutSetColumns.totalExercises.value] as int,
       totalReps: map[WorkoutSetColumns.totalReps.value] as int,
       workoutVersion: map[WorkoutSetColumns.workoutVersion.value] as int,
-      createdBy:
-          CreatedBy.fromValue(map[WorkoutSetColumns.createdBy.value] as String),
+      createdBy: CreatedBy.fromValue(
+        map[WorkoutSetColumns.createdBy.value] as String,
+      ),
       createdAt: map[WorkoutSetColumns.createdAt.value] as int,
       updatedAt: map[WorkoutSetColumns.updatedAt.value] as int,
     );

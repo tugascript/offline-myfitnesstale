@@ -59,12 +59,15 @@ class AlternativeExercisesInput extends StatelessWidget {
                   initialMuscleGroup: exerciseData.exerciseMuscleGroup,
                   onExerciseSelected: (exercise) {
                     if (onAlternativesChanged != null) {
-                      final newAlternatives = Set<AlternativeExerciseData>.from(
-                        exerciseData.alternativeExercises,
-                      )..add(AlternativeExerciseData(
-                          id: exercise.id,
-                          name: exercise.name,
-                        ));
+                      final newAlternatives =
+                          Set<AlternativeExerciseData>.from(
+                            exerciseData.alternativeExercises,
+                          )..add(
+                            AlternativeExerciseData(
+                              id: exercise.id,
+                              name: exercise.name,
+                            ),
+                          );
                       onAlternativesChanged!(newAlternatives);
                     }
                     Navigator.of(dialogContext).pop();
@@ -80,8 +83,9 @@ class AlternativeExercisesInput extends StatelessWidget {
             return BlocBuilder<ExerciseCubit, ExerciseState>(
               builder: (context, state) {
                 return _SmallButton(
-                  exerciseName:
-                      exerciseData.alternativeExercises.elementAt(index).name,
+                  exerciseName: exerciseData.alternativeExercises
+                      .elementAt(index)
+                      .name,
                   sizes: sizes,
                   theme: theme,
                   onPressed: () {
@@ -96,8 +100,8 @@ class AlternativeExercisesInput extends StatelessWidget {
                             if (onAlternativesChanged != null) {
                               final newAlternatives =
                                   List<AlternativeExerciseData>.from(
-                                exerciseData.alternativeExercises,
-                              );
+                                    exerciseData.alternativeExercises,
+                                  );
                               newAlternatives[index] = AlternativeExerciseData(
                                 id: exercise.id,
                                 name: exercise.name,
@@ -151,10 +155,7 @@ class _SmallButton extends StatelessWidget {
         style: OutlinedButton.styleFrom(
           backgroundColor: theme.scaffoldBackgroundColor,
           foregroundColor: theme.colorScheme.primary,
-          side: BorderSide(
-            color: theme.colorScheme.primary,
-            width: 0.5,
-          ),
+          side: BorderSide(color: theme.colorScheme.primary, width: 0.5),
         ),
         onPressed: onPressed,
       ),

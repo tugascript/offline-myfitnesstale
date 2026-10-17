@@ -18,7 +18,8 @@ class WorkoutHeaderEditCard extends StatelessWidget {
     required Difficulty difficulty,
     required EditorType editorType,
     String? description,
-  }) onSubmit;
+  })
+  onSubmit;
 
   const WorkoutHeaderEditCard({
     super.key,

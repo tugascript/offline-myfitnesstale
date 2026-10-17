@@ -10,9 +10,7 @@ class EquipmentsSearchForm extends StatefulWidget {
 
   final bool isLoading;
   final String initialName;
-  final void Function({
-    required String name,
-  }) onSubmit;
+  final void Function({required String name}) onSubmit;
 
   const EquipmentsSearchForm({
     super.key,
@@ -35,9 +33,7 @@ class _EquipmentsSearchFormState extends State<EquipmentsSearchForm> {
   @override
   void initState() {
     super.initState();
-    _data = _FormData(
-      name: widget.initialName,
-    );
+    _data = _FormData(name: widget.initialName);
     _nameController.text = _data.name;
   }
 
@@ -76,19 +72,13 @@ class _EquipmentsSearchFormState extends State<EquipmentsSearchForm> {
                 padding: EdgeInsets.symmetric(
                   horizontal: widget.sizes.padding * 0.65,
                 ),
-                child: Icon(
-                  Icons.search,
-                  size: widget.sizes.fontSize,
-                ),
+                child: Icon(Icons.search, size: widget.sizes.fontSize),
               ),
               suffixIcon: _data.name.isNotEmpty
                   ? IconButton(
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(),
-                      icon: Icon(
-                        Icons.clear,
-                        size: widget.sizes.fontSize,
-                      ),
+                      icon: Icon(Icons.clear, size: widget.sizes.fontSize),
                       onPressed: () {
                         setState(() {
                           _data.name = '';
@@ -109,9 +99,7 @@ class _EquipmentsSearchFormState extends State<EquipmentsSearchForm> {
               if (!widget.isLoading) {
                 if (_formKey.currentState!.validate()) {
                   _formKey.currentState!.save();
-                  widget.onSubmit(
-                    name: _data.name,
-                  );
+                  widget.onSubmit(name: _data.name);
                 }
               }
             },
@@ -125,7 +113,5 @@ class _EquipmentsSearchFormState extends State<EquipmentsSearchForm> {
 final class _FormData {
   String name;
 
-  _FormData({
-    required this.name,
-  });
+  _FormData({required this.name});
 }

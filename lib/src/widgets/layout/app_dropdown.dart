@@ -88,9 +88,7 @@ class AppDropdown<T> extends StatelessWidget {
             child: Text(
               emptyLabel,
               overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: fontSize,
-              ),
+              style: TextStyle(fontSize: fontSize),
             ),
           ),
         ...items.map(
@@ -99,12 +97,10 @@ class AppDropdown<T> extends StatelessWidget {
             child: Text(
               labelBuilder(i),
               overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: fontSize,
-              ),
+              style: TextStyle(fontSize: fontSize),
             ),
           ),
-        )
+        ),
       ],
       onChanged: onChanged,
       onSaved: onSaved,

@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+
 import '../../common/nullable.dart';
 import '../../models/enums.dart';
 
@@ -36,13 +37,13 @@ class MealPlanMealInput extends Equatable {
 
   @override
   List<Object?> get props => [
-        position,
-        timeOfDay,
-        mealType,
-        name,
-        recipeId,
-        items,
-      ];
+    position,
+    timeOfDay,
+    mealType,
+    name,
+    recipeId,
+    items,
+  ];
 }
 
 class MealPlanDayInput extends Equatable {
@@ -50,11 +51,7 @@ class MealPlanDayInput extends Equatable {
   final String? name;
   final List<MealPlanMealInput> meals;
 
-  const MealPlanDayInput({
-    required this.day,
-    this.name,
-    this.meals = const [],
-  });
+  const MealPlanDayInput({required this.day, this.name, this.meals = const []});
 
   @override
   List<Object?> get props => [day, name, meals];
@@ -79,8 +76,9 @@ class MealPlanInput {
   final String name;
   final Nullable<String> description;
   final List<MealPlanWeekInput> weeks;
-  const MealPlanInput(
-      {required this.name,
-      this.description = const Nullable(null),
-      required this.weeks});
+  const MealPlanInput({
+    required this.name,
+    this.description = const Nullable(null),
+    required this.weeks,
+  });
 }

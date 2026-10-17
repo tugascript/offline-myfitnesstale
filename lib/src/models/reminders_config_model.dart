@@ -40,7 +40,8 @@ class RemindersConfig extends Equatable implements Model {
   });
 
   static const String table = _table;
-  static final String tableCreate = '''
+  static final String tableCreate =
+      '''
     CREATE TABLE IF NOT EXISTS $_table (
       ${RemindersConfigColumns.id.value} INTEGER PRIMARY KEY AUTOINCREMENT,
       ${RemindersConfigColumns.workoutsOn.value} INTEGER NOT NULL,
@@ -115,11 +116,11 @@ class RemindersConfig extends Equatable implements Model {
 
   @override
   List<Object?> get props => [
-        id,
-        workoutsOn,
-        weightRecordsOn,
-        profileId,
-        createdAt,
-        updatedAt,
-      ];
+    id,
+    workoutsOn,
+    weightRecordsOn,
+    profileId,
+    createdAt,
+    updatedAt,
+  ];
 }

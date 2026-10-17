@@ -12,10 +12,8 @@ class WorkoutSetExerciseDifficultyInput extends StatefulWidget {
   final int initialDifficultyValue;
   final ThemeData theme;
   final DataDisplaySizesList sizes;
-  final void Function(
-    WorkoutSetExerciseDifficultyType type,
-    int value,
-  ) onChanged;
+  final void Function(WorkoutSetExerciseDifficultyType type, int value)
+  onChanged;
 
   const WorkoutSetExerciseDifficultyInput({
     super.key,

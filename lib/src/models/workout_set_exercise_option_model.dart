@@ -57,7 +57,8 @@ final class WorkoutSetExerciseOption extends Equatable implements Model {
   });
 
   static const String table = _table;
-  static final String tableCreate = '''
+  static final String tableCreate =
+      '''
   CREATE TABLE IF NOT EXISTS $_table (
     ${WorkoutSetExerciseOptionColumns.id.value} INTEGER PRIMARY KEY AUTOINCREMENT,
     ${WorkoutSetExerciseOptionColumns.workoutId.value} INTEGER NOT NULL,
@@ -175,15 +176,15 @@ final class WorkoutSetExerciseOption extends Equatable implements Model {
 
   @override
   List<Object?> get props => [
-        id,
-        workoutId,
-        workoutSetId,
-        workoutSetExerciseId,
-        workoutVersion,
-        exerciseId,
-        position,
-        createdBy,
-        createdAt,
-        updatedAt,
-      ];
+    id,
+    workoutId,
+    workoutSetId,
+    workoutSetExerciseId,
+    workoutVersion,
+    exerciseId,
+    position,
+    createdBy,
+    createdAt,
+    updatedAt,
+  ];
 }

@@ -43,8 +43,9 @@ class DynamicListInput<T> extends StatelessWidget {
     final disabledColor = theme.colorScheme.brightness == Brightness.dark
         ? Colors.grey[400]!
         : Colors.grey[600]!;
-    final addBtnColor =
-        addEnabled ? theme.colorScheme.secondary : disabledColor;
+    final addBtnColor = addEnabled
+        ? theme.colorScheme.secondary
+        : disabledColor;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -68,7 +69,8 @@ class DynamicListInput<T> extends StatelessWidget {
             },
             itemBuilder: (context, index) {
               final item = items[index];
-              final key = keyBuilder?.call(item) ??
+              final key =
+                  keyBuilder?.call(item) ??
                   (item is Object ? ObjectKey(item) : ValueKey(item));
 
               return Container(
@@ -82,15 +84,10 @@ class DynamicListInput<T> extends StatelessWidget {
                         padding: EdgeInsets.symmetric(
                           horizontal: handlesPadding,
                         ),
-                        child: Icon(
-                          Icons.drag_indicator,
-                          size: fontSize * 1.2,
-                        ),
+                        child: Icon(Icons.drag_indicator, size: fontSize * 1.2),
                       ),
                     ),
-                    Expanded(
-                      child: itemBuilder(context, index, item),
-                    ),
+                    Expanded(child: itemBuilder(context, index, item)),
                     InkWell(
                       customBorder: const CircleBorder(),
                       onTap: isLoading
@@ -120,26 +117,16 @@ class DynamicListInput<T> extends StatelessWidget {
           height: addButtonHeight,
           child: FilledButton.icon(
             onPressed: isLoading || !addEnabled ? null : onAdd,
-            icon: Icon(
-              Icons.add,
-              size: fontSize,
-              color: addBtnColor,
-            ),
+            icon: Icon(Icons.add, size: fontSize, color: addBtnColor),
             label: Text(
               addLabel,
-              style: TextStyle(
-                fontSize: fontSize,
-                color: addBtnColor,
-              ),
+              style: TextStyle(fontSize: fontSize, color: addBtnColor),
             ),
             style: FilledButton.styleFrom(
               backgroundColor: !filled
                   ? theme.colorScheme.surface
                   : theme.scaffoldBackgroundColor,
-              side: BorderSide(
-                color: addBtnColor,
-                width: 0.5,
-              ),
+              side: BorderSide(color: addBtnColor, width: 0.5),
               shape: BeveledRectangleBorder(),
             ),
           ),

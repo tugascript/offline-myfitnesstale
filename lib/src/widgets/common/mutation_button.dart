@@ -33,11 +33,7 @@ class MutationButton extends StatelessWidget {
     final btnColor = isLoading ? lightGrey! : baseColor;
     return OutlinedButton.icon(
       onPressed: isLoading ? null : onPressed,
-      icon: Icon(
-        icon,
-        size: sizes.fontSize,
-        fontWeight: FontWeight.w600,
-      ),
+      icon: Icon(icon, size: sizes.fontSize, fontWeight: FontWeight.w600),
       label: Text(
         label.toUpperCase(),
         style: TextStyle(
@@ -50,10 +46,7 @@ class MutationButton extends StatelessWidget {
         visualDensity: isDense ? VisualDensity.compact : VisualDensity.standard,
         backgroundColor: theme.scaffoldBackgroundColor,
         foregroundColor: btnColor,
-        side: BorderSide(
-          color: btnColor,
-          width: 1,
-        ),
+        side: BorderSide(color: btnColor, width: 1),
         shape: const BeveledRectangleBorder(),
       ),
     );

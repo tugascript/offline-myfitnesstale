@@ -51,13 +51,13 @@ final class WorkoutPlanPagination extends Equatable {
 
   @override
   List<Object?> get props => [
-        name,
-        difficulty,
-        isFavorite,
-        limit,
-        offset,
-        total,
-      ];
+    name,
+    difficulty,
+    isFavorite,
+    limit,
+    offset,
+    total,
+  ];
 }
 
 final class WorkoutPlanState extends Equatable {
@@ -107,11 +107,11 @@ final class WorkoutPlanState extends Equatable {
 
   @override
   List<Object?> get props => [
-        workoutPlans.length,
-        pagination,
-        selectedWorkoutPlan,
-        createdWorkoutPlansCount,
-        isLoading,
-        error,
-      ];
+    workoutPlans.length,
+    pagination,
+    selectedWorkoutPlan,
+    createdWorkoutPlansCount,
+    isLoading,
+    error,
+  ];
 }

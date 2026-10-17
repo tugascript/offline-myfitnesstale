@@ -75,7 +75,8 @@ final class Workout implements Model {
   });
 
   static const String table = _table;
-  static final String tableCreate = '''
+  static final String tableCreate =
+      '''
   CREATE TABLE IF NOT EXISTS $_table (
     ${WorkoutColumns.id.value} INTEGER PRIMARY KEY AUTOINCREMENT,
     ${WorkoutColumns.name.value} TEXT NOT NULL,
@@ -107,8 +108,9 @@ final class Workout implements Model {
       WorkoutColumns.description.value: description,
       WorkoutColumns.picture.value: picture?.toJson(),
       WorkoutColumns.video.value: video?.toJson(),
-      WorkoutColumns.muscleGroups.value:
-          jsonEncode(muscleGroups.map((g) => g.value).toList()),
+      WorkoutColumns.muscleGroups.value: jsonEncode(
+        muscleGroups.map((g) => g.value).toList(),
+      ),
       WorkoutColumns.muscles.value: muscles.toJson(),
       WorkoutColumns.isFavorite.value: isFavorite ? 1 : 0,
       WorkoutColumns.difficulty.value: difficulty.value,
@@ -136,17 +138,18 @@ final class Workout implements Model {
           : null,
       muscleGroups: (map[WorkoutColumns.muscleGroups.value] != null
           ? (jsonDecode(map[WorkoutColumns.muscleGroups.value] as String)
-                  as List<dynamic>)
-              .map((g) => MuscleGroup.fromValue(g as String))
-              .toSet()
+                    as List<dynamic>)
+                .map((g) => MuscleGroup.fromValue(g as String))
+                .toSet()
           : <MuscleGroup>{}),
       muscles: TargetMuscles.fromJson(
         map[WorkoutColumns.muscles.value] as String? ??
             '{"primary":[],"secondary":[]}',
       ),
       isFavorite: map[WorkoutColumns.isFavorite.value] == 1,
-      difficulty:
-          Difficulty.fromValue(map[WorkoutColumns.difficulty.value] as int),
+      difficulty: Difficulty.fromValue(
+        map[WorkoutColumns.difficulty.value] as int,
+      ),
       phase: map[WorkoutColumns.phase.value] != null
           ? WorkoutPhase.fromValue(map[WorkoutColumns.phase.value] as String)
           : null,
@@ -156,8 +159,9 @@ final class Workout implements Model {
       editorType: EditorType.fromValue(
         map[WorkoutColumns.editorType.value] as String,
       ),
-      createdBy:
-          CreatedBy.fromValue(map[WorkoutColumns.createdBy.value] as String),
+      createdBy: CreatedBy.fromValue(
+        map[WorkoutColumns.createdBy.value] as String,
+      ),
       createdAt: map[WorkoutColumns.createdAt.value] as int,
       updatedAt: map[WorkoutColumns.updatedAt.value] as int,
     );

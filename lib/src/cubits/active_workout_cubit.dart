@@ -29,22 +29,21 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
     int? workoutPosition,
   }) async {
     _logger.info("Starting workout...");
-    emit(state.copyWith(
-      isLoading: true,
-      isCompleted: false,
-      workoutPlanRecordId: workoutPlanRecordId,
-      week: week,
-      day: day,
-      workoutPosition: workoutPosition,
-    ));
+    emit(
+      state.copyWith(
+        isLoading: true,
+        isCompleted: false,
+        workoutPlanRecordId: workoutPlanRecordId,
+        week: week,
+        day: day,
+        workoutPosition: workoutPosition,
+      ),
+    );
 
     final startedAt = DateTime.now();
 
-    final workoutRecordResult =
-        await _workoutRecordService.getOrCreateWorkoutRecord(
-      workoutId: workoutId,
-      startedAt: startedAt,
-    );
+    final workoutRecordResult = await _workoutRecordService
+        .getOrCreateWorkoutRecord(workoutId: workoutId, startedAt: startedAt);
     if (workoutRecordResult.isErr()) {
       final error = workoutRecordResult.error;
       switch (error.type) {
@@ -52,23 +51,31 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
           _logger.info(
             "Failed to create workout record for workout with id $workoutId",
           );
-          emit(state.copyWith(
-            error: Nullable(ErrorState(
-              type: error.type.name,
-              description: 'Failed to create workout record',
-            )),
-            isLoading: false,
-          ));
+          emit(
+            state.copyWith(
+              error: Nullable(
+                ErrorState(
+                  type: error.type.name,
+                  description: 'Failed to create workout record',
+                ),
+              ),
+              isLoading: false,
+            ),
+          );
           return;
         case OperationErrorTypes.invalidInput:
           _logger.info("Invalid workout id $workoutId");
-          emit(state.copyWith(
-            error: Nullable(ErrorState(
-              type: error.type.name,
-              description: error.description,
-            )),
-            isLoading: false,
-          ));
+          emit(
+            state.copyWith(
+              error: Nullable(
+                ErrorState(
+                  type: error.type.name,
+                  description: error.description,
+                ),
+              ),
+              isLoading: false,
+            ),
+          );
           return;
       }
     }
@@ -85,34 +92,42 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
         weekDay: day,
       );
       if (dayResult.isErr()) {
-        emit(state.copyWith(
-          isLoading: false,
-          error: Nullable(ErrorState(
-            type: dayResult.error.type.name,
-            description: 'Failed to start the workout in this plan',
-          )),
-        ));
+        emit(
+          state.copyWith(
+            isLoading: false,
+            error: Nullable(
+              ErrorState(
+                type: dayResult.error.type.name,
+                description: 'Failed to start the workout in this plan',
+              ),
+            ),
+          ),
+        );
         return;
       }
 
-      final planWorkoutResult =
-          await planRecordService.upsertWorkoutPlanWorkoutRecord(
-        workoutPlanRecordId: workoutPlanRecordId,
-        workoutRecordId: workoutRecordResult.value.id,
-        status: ProgressStatus.inProgress,
-        week: week,
-        weekDay: day,
-        workoutPosition: workoutPosition,
-        startedAt: startedAt,
-      );
+      final planWorkoutResult = await planRecordService
+          .upsertWorkoutPlanWorkoutRecord(
+            workoutPlanRecordId: workoutPlanRecordId,
+            workoutRecordId: workoutRecordResult.value.id,
+            status: ProgressStatus.inProgress,
+            week: week,
+            weekDay: day,
+            workoutPosition: workoutPosition,
+            startedAt: startedAt,
+          );
       if (planWorkoutResult.isErr()) {
-        emit(state.copyWith(
-          isLoading: false,
-          error: Nullable(ErrorState(
-            type: planWorkoutResult.error.type.name,
-            description: 'Failed to link the workout to this plan',
-          )),
-        ));
+        emit(
+          state.copyWith(
+            isLoading: false,
+            error: Nullable(
+              ErrorState(
+                type: planWorkoutResult.error.type.name,
+                description: 'Failed to link the workout to this plan',
+              ),
+            ),
+          ),
+        );
         return;
       }
     }
@@ -124,37 +139,47 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
         case SingleErrorTypes.notFound:
         case SingleErrorTypes.invalidInput:
           _logger.info("Workout with id $workoutId ${error.type.name}");
-          emit(state.copyWith(
-            error: Nullable(ErrorState(
-              type: error.type.name,
-              description: error.description,
-            )),
-            isLoading: false,
-          ));
+          emit(
+            state.copyWith(
+              error: Nullable(
+                ErrorState(
+                  type: error.type.name,
+                  description: error.description,
+                ),
+              ),
+              isLoading: false,
+            ),
+          );
           return;
         case SingleErrorTypes.operationFailure:
           _logger.info("Failed to get workout with id $workoutId");
-          emit(state.copyWith(
-            error: Nullable(ErrorState(
-              type: error.type.name,
-              description: 'Failed to get workout',
-            )),
-            isLoading: false,
-          ));
+          emit(
+            state.copyWith(
+              error: Nullable(
+                ErrorState(
+                  type: error.type.name,
+                  description: 'Failed to get workout',
+                ),
+              ),
+              isLoading: false,
+            ),
+          );
           return;
       }
     }
 
     final workoutRecord = workoutRecordResult.value;
-    emit(state.copyWith(
-      workout: Nullable(workoutResult.value),
-      workoutRecord: Nullable(workoutRecord),
-      currentSetPosition: 0,
-      currentExercisePosition: 0,
-      currentSetNumber: 1,
-      currentSetStartedAt: startedAt,
-      isLoading: false,
-    ));
+    emit(
+      state.copyWith(
+        workout: Nullable(workoutResult.value),
+        workoutRecord: Nullable(workoutRecord),
+        currentSetPosition: 0,
+        currentExercisePosition: 0,
+        currentSetNumber: 1,
+        currentSetStartedAt: startedAt,
+        isLoading: false,
+      ),
+    );
   }
 
   Future<void> startWorkoutSet(int position) async {
@@ -200,17 +225,17 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
 
     final setRecord = setRecordResult.value;
 
-    final exerciseRecordResult =
-        await _workoutRecordService.upsertWorkoutSetExerciseRecord(
-      workoutSetExerciseId: currentExercise.id,
-      workoutRecordId: state.workoutRecord!.id,
-      workoutSetRecordId: setRecord.id,
-      exerciseId: currentExercise.exerciseId,
-      position: position,
-      reps: reps,
-      weight: weight,
-      difficulty: difficulty,
-    );
+    final exerciseRecordResult = await _workoutRecordService
+        .upsertWorkoutSetExerciseRecord(
+          workoutSetExerciseId: currentExercise.id,
+          workoutRecordId: state.workoutRecord!.id,
+          workoutSetRecordId: setRecord.id,
+          exerciseId: currentExercise.exerciseId,
+          position: position,
+          reps: reps,
+          weight: weight,
+          difficulty: difficulty,
+        );
 
     if (exerciseRecordResult.isErr()) {
       _logger.warning("Failed to create exercise record");
@@ -219,17 +244,17 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
     }
 
     // Refresh workout record to get updated sets
-    final updatedRecordResult =
-        await _workoutRecordService.getWorkoutRecord(state.workoutRecord!.id);
+    final updatedRecordResult = await _workoutRecordService.getWorkoutRecord(
+      state.workoutRecord!.id,
+    );
     WorkoutRecordDto? updatedRecord;
     if (updatedRecordResult.isOk()) {
       updatedRecord = updatedRecordResult.value;
     }
 
-    emit(state.copyWith(
-      workoutRecord: Nullable(updatedRecord),
-      isLoading: false,
-    ));
+    emit(
+      state.copyWith(workoutRecord: Nullable(updatedRecord), isLoading: false),
+    );
   }
 
   void startRest() {
@@ -285,13 +310,15 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
       return;
     }
 
-    emit(state.copyWith(
-      isResting: false,
-      currentSetPosition: nextSetIndex,
-      currentExercisePosition: nextExerciseIndex,
-      currentSetNumber: nextSetNumber,
-      currentSetStartedAt: nextSetStartedAt,
-    ));
+    emit(
+      state.copyWith(
+        isResting: false,
+        currentSetPosition: nextSetIndex,
+        currentExercisePosition: nextExerciseIndex,
+        currentSetNumber: nextSetNumber,
+        currentSetStartedAt: nextSetStartedAt,
+      ),
+    );
   }
 
   void previousExercise() {
@@ -320,11 +347,13 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
       }
     }
 
-    emit(state.copyWith(
-      currentSetPosition: prevSetIndex,
-      currentExercisePosition: prevExerciseIndex,
-      currentSetNumber: prevSetNumber,
-    ));
+    emit(
+      state.copyWith(
+        currentSetPosition: prevSetIndex,
+        currentExercisePosition: prevExerciseIndex,
+        currentSetNumber: prevSetNumber,
+      ),
+    );
   }
 
   void skipToNextSet() {
@@ -338,12 +367,14 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
       return;
     }
 
-    emit(state.copyWith(
-      currentSetPosition: nextSetIndex,
-      currentExercisePosition: 0,
-      currentSetNumber: 1,
-      currentSetStartedAt: DateTime.now(),
-    ));
+    emit(
+      state.copyWith(
+        currentSetPosition: nextSetIndex,
+        currentExercisePosition: 0,
+        currentSetNumber: 1,
+        currentSetStartedAt: DateTime.now(),
+      ),
+    );
   }
 
   Future<void> cancelWorkout() async {
@@ -379,42 +410,52 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
           day != null &&
           position != null) {
         final planRecordService = WorkoutPlanRecordService();
-        final planResult =
-            await planRecordService.updateWorkoutPlanWorkoutRecordStatus(
-          workoutPlanRecordId: planRecordId,
-          workoutRecordId: state.workoutRecord!.id,
-          week: week,
-          weekDay: day,
-          workoutPosition: position,
-          status: ProgressStatus.completed,
-        );
+        final planResult = await planRecordService
+            .updateWorkoutPlanWorkoutRecordStatus(
+              workoutPlanRecordId: planRecordId,
+              workoutRecordId: state.workoutRecord!.id,
+              week: week,
+              weekDay: day,
+              workoutPosition: position,
+              status: ProgressStatus.completed,
+            );
         if (planResult.isErr()) {
-          emit(state.copyWith(
-            isLoading: false,
-            error: Nullable(ErrorState(
-              type: planResult.error.type.name,
-              description:
-                  'Workout saved, but plan progress could not be updated',
-            )),
-          ));
+          emit(
+            state.copyWith(
+              isLoading: false,
+              error: Nullable(
+                ErrorState(
+                  type: planResult.error.type.name,
+                  description:
+                      'Workout saved, but plan progress could not be updated',
+                ),
+              ),
+            ),
+          );
           return;
         }
       }
 
-      emit(state.copyWith(
-        workoutRecord: Nullable(result.value),
-        isCompleted: true,
-        isLoading: false,
-        isResting: false,
-      ));
+      emit(
+        state.copyWith(
+          workoutRecord: Nullable(result.value),
+          isCompleted: true,
+          isLoading: false,
+          isResting: false,
+        ),
+      );
     } else {
-      emit(state.copyWith(
-        isLoading: false,
-        error: Nullable(ErrorState(
-          type: 'CompletionError',
-          description: 'Failed to complete workout',
-        )),
-      ));
+      emit(
+        state.copyWith(
+          isLoading: false,
+          error: Nullable(
+            ErrorState(
+              type: 'CompletionError',
+              description: 'Failed to complete workout',
+            ),
+          ),
+        ),
+      );
     }
   }
 }

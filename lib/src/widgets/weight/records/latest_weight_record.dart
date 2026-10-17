@@ -42,10 +42,7 @@ class _LatestWeightRecordState extends State<LatestWeightRecord> {
     return BlocBuilder<WeightRecordCubit, WeightRecordState>(
       builder: (context, state) {
         if (!state.isLoading && state.latestWeightRecord == null) {
-          return _EmptyWeightRecord(
-            sizes: widget.sizes,
-            theme: widget.theme,
-          );
+          return _EmptyWeightRecord(sizes: widget.sizes, theme: widget.theme);
         }
 
         return _LatestWeightRecord(
@@ -77,10 +74,7 @@ class _EmptyWeightRecord extends StatelessWidget {
   final DataDisplaySizesList sizes;
   final ThemeData theme;
 
-  const _EmptyWeightRecord({
-    required this.sizes,
-    required this.theme,
-  });
+  const _EmptyWeightRecord({required this.sizes, required this.theme});
 
   @override
   Widget build(BuildContext context) {
@@ -92,10 +86,8 @@ class _EmptyWeightRecord extends StatelessWidget {
           onTap: () {
             showDialog(
               context: context,
-              builder: (context) => CreateWeightRecordModal(
-                theme: theme,
-                sizes: sizes,
-              ),
+              builder: (context) =>
+                  CreateWeightRecordModal(theme: theme, sizes: sizes),
             );
           },
           child: Padding(
@@ -105,10 +97,7 @@ class _EmptyWeightRecord extends StatelessWidget {
             ),
             child: Column(
               children: [
-                Icon(
-                  Icons.monitor_weight,
-                  size: sizes.titleFontSize * 2,
-                ),
+                Icon(Icons.monitor_weight, size: sizes.titleFontSize * 2),
                 SizedBox(height: sizes.spacing),
                 Text(
                   "No weight logs",
@@ -266,16 +255,15 @@ class _LatestWeightRecord extends StatelessWidget {
                             size: sizes.titleFontSize,
                             color:
                                 theme.colorScheme.brightness == Brightness.dark
-                                    ? Colors.red[400]
-                                    : Colors.red[600],
+                                ? Colors.red[400]
+                                : Colors.red[600],
                           ),
                           onPressed: () {
                             showDialog(
                               context: context,
                               builder: (context) => ConfirmationDialog(
                                 title: 'Delete Weight Log',
-                                content:
-                                    'Are you sure you want to delete this weight log? This action cannot be undone.',
+                                content: 'Are you sure you want to delete this weight log? This action cannot be undone.',
                                 onConfirm: () async {
                                   if (weightRecord != null) {
                                     await context
@@ -286,7 +274,7 @@ class _LatestWeightRecord extends StatelessWidget {
                               ),
                             );
                           },
-                        )
+                        ),
                       ],
                     ),
                   ],

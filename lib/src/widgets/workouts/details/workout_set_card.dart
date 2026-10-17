@@ -25,14 +25,14 @@ class WorkoutSetCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final iconGreyColor =
-        isDarkTheme ? Colors.grey.shade200 : Colors.grey.shade800;
-    final iconLightGreyColor =
-        isDarkTheme ? Colors.grey.shade400 : Colors.grey.shade600;
+    final iconGreyColor = isDarkTheme
+        ? Colors.grey.shade200
+        : Colors.grey.shade800;
+    final iconLightGreyColor = isDarkTheme
+        ? Colors.grey.shade400
+        : Colors.grey.shade600;
     return Card(
-      margin: EdgeInsets.symmetric(
-        vertical: sizes.margins / 2,
-      ),
+      margin: EdgeInsets.symmetric(vertical: sizes.margins / 2),
       child: ExpansionTile(
         leading: DetailNumber(
           number: setNumber,
@@ -108,9 +108,7 @@ class _SetExercise extends StatelessWidget {
           Flexible(
             child: Text(
               setExercise.exercise?.name ?? 'Unknown Exercise',
-              style: TextStyle(
-                fontSize: sizes.subtitleFontSize,
-              ),
+              style: TextStyle(fontSize: sizes.subtitleFontSize),
               softWrap: true,
               overflow: TextOverflow.ellipsis,
             ),
@@ -197,18 +195,11 @@ class _SetExerciseSubtitle extends StatelessWidget {
     final color = isDarkTheme ? Colors.red[400] : Colors.red[600];
     return Wrap(
       children: [
-        Icon(
-          Icons.bolt,
-          size: fontSize * 1.2,
-          color: color,
-        ),
+        Icon(Icons.bolt, size: fontSize * 1.2, color: color),
         SizedBox(width: fontSize),
         Text(
           '${setExercise.difficulty!.value} ${setExercise.difficulty!.type.value}',
-          style: TextStyle(
-            fontSize: fontSize,
-            color: color,
-          ),
+          style: TextStyle(fontSize: fontSize, color: color),
         ),
       ],
     );
@@ -218,21 +209,14 @@ class _SetExerciseSubtitle extends StatelessWidget {
     final color = isDarkTheme ? Colors.grey[400] : Colors.grey[600];
     return Wrap(
       children: [
-        Icon(
-          Icons.swap_horiz,
-          size: smallFontSize * 1.2,
-          color: color,
-        ),
+        Icon(Icons.swap_horiz, size: smallFontSize * 1.2, color: color),
         SizedBox(width: smallFontSize),
         ...setExercise.options!.asMap().entries.map(
-              (entry) => Text(
-                '${entry.value.exercise?.name}${entry.key == setExercise.options!.length - 1 ? '' : ', '}',
-                style: TextStyle(
-                  fontSize: smallFontSize,
-                  color: Colors.grey,
-                ),
-              ),
-            ),
+          (entry) => Text(
+            '${entry.value.exercise?.name}${entry.key == setExercise.options!.length - 1 ? '' : ', '}',
+            style: TextStyle(fontSize: smallFontSize, color: Colors.grey),
+          ),
+        ),
       ],
     );
   }

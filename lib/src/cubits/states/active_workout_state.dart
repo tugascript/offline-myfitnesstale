@@ -67,14 +67,15 @@ class ActiveWorkoutState extends Equatable {
     final records = workoutRecord?.setRecords;
     if (set == null || exercise == null || records == null) return null;
 
-    final relevantSetRecords = records
-        .where(
-          (record) =>
-              record.workoutSetId == set.id &&
-              record.setNumber <= currentSetNumber,
-        )
-        .toList()
-      ..sort((a, b) => b.setNumber.compareTo(a.setNumber));
+    final relevantSetRecords =
+        records
+            .where(
+              (record) =>
+                  record.workoutSetId == set.id &&
+                  record.setNumber <= currentSetNumber,
+            )
+            .toList()
+          ..sort((a, b) => b.setNumber.compareTo(a.setNumber));
 
     // Prefer the exact current entry when returning to or resuming an
     // exercise, even if this set group contains the same exercise twice.
@@ -108,8 +109,8 @@ class ActiveWorkoutState extends Equatable {
     final boundedPosition = currentSetPosition < 0
         ? 0
         : currentSetPosition > sets.length
-            ? sets.length
-            : currentSetPosition;
+        ? sets.length
+        : currentSetPosition;
     final precedingSetCount = sets
         .take(boundedPosition)
         .fold<int>(0, (total, set) => total + (set.maxSets ?? set.minSets));
@@ -151,8 +152,9 @@ class ActiveWorkoutState extends Equatable {
   }) {
     return ActiveWorkoutState(
       workout: workout != null ? workout.value : this.workout,
-      workoutRecord:
-          workoutRecord != null ? workoutRecord.value : this.workoutRecord,
+      workoutRecord: workoutRecord != null
+          ? workoutRecord.value
+          : this.workoutRecord,
       currentSetPosition: currentSetPosition ?? this.currentSetPosition,
       currentExercisePosition:
           currentExercisePosition ?? this.currentExercisePosition,
@@ -171,19 +173,19 @@ class ActiveWorkoutState extends Equatable {
 
   @override
   List<Object?> get props => [
-        workout?.id,
-        workoutRecord?.id,
-        currentSetPosition,
-        currentExercisePosition,
-        currentSetNumber,
-        isResting,
-        currentSetStartedAt,
-        isLoading,
-        error,
-        isCompleted,
-        workoutPlanRecordId,
-        week,
-        day,
-        workoutPosition,
-      ];
+    workout?.id,
+    workoutRecord?.id,
+    currentSetPosition,
+    currentExercisePosition,
+    currentSetNumber,
+    isResting,
+    currentSetStartedAt,
+    isLoading,
+    error,
+    isCompleted,
+    workoutPlanRecordId,
+    week,
+    day,
+    workoutPosition,
+  ];
 }

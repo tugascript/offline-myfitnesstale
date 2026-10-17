@@ -54,12 +54,12 @@ final class EntitlementCubitState extends Equatable {
 
   @override
   List<Object?> get props => [
-        snapshot,
-        isLoading,
-        isRefreshing,
-        isPurchasing,
-        isRestoring,
-        isInitialized,
-        error,
-      ];
+    snapshot,
+    isLoading,
+    isRefreshing,
+    isPurchasing,
+    isRestoring,
+    isInitialized,
+    error,
+  ];
 }

@@ -48,9 +48,7 @@ class ExerciseHeaderCard extends StatelessWidget {
             ),
           ],
         ),
-        SizedBox(
-          height: sizes.spacing,
-        ),
+        SizedBox(height: sizes.spacing),
         _PrimaryData(
           sizes: sizes,
           muscleGroup: exerciseDto.muscleGroup,
@@ -63,9 +61,7 @@ class ExerciseHeaderCard extends StatelessWidget {
           equipments: exerciseDto.equipments ?? [],
         ),
         if (exerciseDto.description.isNotEmpty) ...[
-          SizedBox(
-            height: sizes.spacing,
-          ),
+          SizedBox(height: sizes.spacing),
           Text(
             'Description',
             style: TextStyle(
@@ -73,14 +69,10 @@ class ExerciseHeaderCard extends StatelessWidget {
               fontWeight: FontWeight.w600,
             ),
           ),
-          SizedBox(
-            height: sizes.spacing / 2,
-          ),
+          SizedBox(height: sizes.spacing / 2),
           Text(
             exerciseDto.description,
-            style: TextStyle(
-              fontSize: sizes.fontSize,
-            ),
+            style: TextStyle(fontSize: sizes.fontSize),
           ),
         ],
       ],
@@ -198,9 +190,7 @@ class _MusclesSection extends StatelessWidget {
             fontWeight: FontWeight.w600,
           ),
         ),
-        SizedBox(
-          height: sizes.spacing / 2,
-        ),
+        SizedBox(height: sizes.spacing / 2),
         Wrap(
           spacing: dataSpacing,
           runSpacing: dataSpacing,
@@ -244,11 +234,7 @@ class _SecondaryData extends StatelessWidget {
       );
     }
     if (secondaryMuscles.isEmpty && equipments.isNotEmpty) {
-      return _EquipmentData(
-        theme: theme,
-        sizes: sizes,
-        equipments: equipments,
-      );
+      return _EquipmentData(theme: theme, sizes: sizes, equipments: equipments);
     }
 
     return Row(
@@ -294,10 +280,7 @@ class _EquipmentData extends StatelessWidget {
       children: [
         Row(
           children: [
-            Icon(
-              Icons.fitness_center,
-              size: sizes.subtitleFontSize,
-            ),
+            Icon(Icons.fitness_center, size: sizes.subtitleFontSize),
             Text(
               ' Equipment',
               style: TextStyle(
@@ -307,9 +290,7 @@ class _EquipmentData extends StatelessWidget {
             ),
           ],
         ),
-        SizedBox(
-          height: sizes.spacing / 2,
-        ),
+        SizedBox(height: sizes.spacing / 2),
         Wrap(
           spacing: dataSpacing,
           runSpacing: dataSpacing,
@@ -343,12 +324,7 @@ class _EquipmentBadge extends StatelessWidget {
       shape: BeveledRectangleBorder(),
       side: BorderSide(color: theme.colorScheme.onSurface, width: 0.5),
       visualDensity: VisualDensity.compact,
-      label: Text(
-        name,
-        style: TextStyle(
-          fontSize: fontSize,
-        ),
-      ),
+      label: Text(name, style: TextStyle(fontSize: fontSize)),
     );
   }
 }

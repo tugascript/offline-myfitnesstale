@@ -50,8 +50,9 @@ class ProfileService {
   }) async {
     _logger.info("Upserting profile...");
     try {
-      final Profile? existingProfile =
-          await _repository.selectLatest(transaction);
+      final Profile? existingProfile = await _repository.selectLatest(
+        transaction,
+      );
 
       if (existingProfile != null) {
         _logger.info('Profile already exists, updating...');
@@ -66,21 +67,18 @@ class ProfileService {
         return ok(ProfileDto.fromModel(updatedProfile));
       }
 
-      final Profile profile = Profile.create(
-        name,
-        height,
-        gender,
-        birthday,
-      );
+      final Profile profile = Profile.create(name, height, gender, birthday);
       final int id = await _repository.insert(profile, transaction);
       _logger.info('Created profile with id $id');
       return ok(ProfileDto.fromModel(profile.copyWith(id: id)));
     } catch (e) {
       _logger.severe("Failed to upsert profile", e);
-      return err(const ServiceError(
-        type: OperationErrorTypes.operationFailure,
-        description: 'Failed to upsert profile',
-      ));
+      return err(
+        const ServiceError(
+          type: OperationErrorTypes.operationFailure,
+          description: 'Failed to upsert profile',
+        ),
+      );
     }
   }
 
@@ -95,10 +93,12 @@ class ProfileService {
 
       if (existingProfile == null) {
         _logger.info("Profile does not exist");
-        return err(const ServiceError(
-          type: SingleErrorTypes.notFound,
-          description: 'Profile not found',
-        ));
+        return err(
+          const ServiceError(
+            type: SingleErrorTypes.notFound,
+            description: 'Profile not found',
+          ),
+        );
       }
 
       final Profile updatedProfile = existingProfile.copyWith(
@@ -112,10 +112,12 @@ class ProfileService {
       return ok(ProfileDto.fromModel(updatedProfile));
     } catch (e) {
       _logger.severe("Failed to update profile", e);
-      return err(const ServiceError(
-        type: SingleErrorTypes.operationFailure,
-        description: 'Failed to update profile',
-      ));
+      return err(
+        const ServiceError(
+          type: SingleErrorTypes.operationFailure,
+          description: 'Failed to update profile',
+        ),
+      );
     }
   }
 
@@ -127,20 +129,24 @@ class ProfileService {
       final Profile? profile = await _repository.selectLatest(transaction);
       if (profile == null) {
         _logger.info("Profile does not exist");
-        return err(const ServiceError(
-          type: SingleErrorTypes.notFound,
-          description: 'Profile not found',
-        ));
+        return err(
+          const ServiceError(
+            type: SingleErrorTypes.notFound,
+            description: 'Profile not found',
+          ),
+        );
       }
 
       _logger.info("Profile found with id ${profile.id}");
       return ok(ProfileDto.fromModel(profile));
     } catch (e) {
       _logger.severe("Failed to get latest profile", e);
-      return err(const ServiceError(
-        type: SingleErrorTypes.operationFailure,
-        description: 'Failed to get latest profile',
-      ));
+      return err(
+        const ServiceError(
+          type: SingleErrorTypes.operationFailure,
+          description: 'Failed to get latest profile',
+        ),
+      );
     }
   }
 
@@ -153,8 +159,9 @@ class ProfileService {
   }) async {
     _logger.info('Upserting system...');
     try {
-      final System? existingSystem =
-          await _systemRepository.selectLatest(transaction);
+      final System? existingSystem = await _systemRepository.selectLatest(
+        transaction,
+      );
 
       if (existingSystem != null) {
         _logger.info('System already exists, updating...');
@@ -180,10 +187,12 @@ class ProfileService {
       return ok(SystemDto.fromModel(system.copyWith(id: id)));
     } catch (e) {
       _logger.severe('Failed to upsert system', e);
-      return err(const ServiceError(
-        type: OperationErrorTypes.operationFailure,
-        description: 'Failed to upsert system',
-      ));
+      return err(
+        const ServiceError(
+          type: OperationErrorTypes.operationFailure,
+          description: 'Failed to upsert system',
+        ),
+      );
     }
   }
 
@@ -195,25 +204,29 @@ class ProfileService {
       final System? system = await _systemRepository.selectLatest(transaction);
       if (system == null) {
         _logger.info('No system found');
-        return err(const ServiceError(
-          type: SingleErrorTypes.notFound,
-          description: 'No system found',
-        ));
+        return err(
+          const ServiceError(
+            type: SingleErrorTypes.notFound,
+            description: 'No system found',
+          ),
+        );
       }
 
       _logger.info('System found');
       return ok(SystemDto.fromModel(system));
     } catch (e) {
       _logger.severe('Failed to select latest system', e);
-      return err(const ServiceError(
-        type: SingleErrorTypes.operationFailure,
-        description: 'Failed to select latest system',
-      ));
+      return err(
+        const ServiceError(
+          type: SingleErrorTypes.operationFailure,
+          description: 'Failed to select latest system',
+        ),
+      );
     }
   }
 
   Future<Result<RemindersConfigDto, ServiceError<OperationErrorTypes>>>
-      upsertRemindersConfig({
+  upsertRemindersConfig({
     required int profileId,
     required bool workoutsOn,
     required bool weightRecordsOn,
@@ -221,8 +234,8 @@ class ProfileService {
   }) async {
     _logger.info('Upserting reminders config...');
     try {
-      final RemindersConfig? existingConfig =
-          await _remindersRepository.selectLatest(transaction);
+      final RemindersConfig? existingConfig = await _remindersRepository
+          .selectLatest(transaction);
 
       if (existingConfig != null) {
         _logger.info('Reminders config exists, updating...');
@@ -241,61 +254,66 @@ class ProfileService {
         weightRecordsOn: weightRecordsOn,
         profileId: profileId,
       );
-      final int id =
-          await _remindersRepository.insert(remindersConfig, transaction);
-      _logger.info('Created reminders config with id $id');
-      return ok(
-        RemindersConfigDto.fromModel(remindersConfig.copyWith(id: id)),
+      final int id = await _remindersRepository.insert(
+        remindersConfig,
+        transaction,
       );
+      _logger.info('Created reminders config with id $id');
+      return ok(RemindersConfigDto.fromModel(remindersConfig.copyWith(id: id)));
     } catch (e) {
       _logger.severe('Failed to upsert reminders config', e);
-      return err(const ServiceError(
-        type: OperationErrorTypes.operationFailure,
-        description: 'Failed to upsert reminders config',
-      ));
+      return err(
+        const ServiceError(
+          type: OperationErrorTypes.operationFailure,
+          description: 'Failed to upsert reminders config',
+        ),
+      );
     }
   }
 
   Future<Result<RemindersConfigDto, ServiceError<SingleErrorTypes>>>
-      selectRemindersConfig({Transaction? transaction}) async {
+  selectRemindersConfig({Transaction? transaction}) async {
     _logger.info('Selecting reminders config...');
     try {
-      final RemindersConfig? remindersConfig =
-          await _remindersRepository.selectLatest(transaction);
+      final RemindersConfig? remindersConfig = await _remindersRepository
+          .selectLatest(transaction);
       if (remindersConfig == null) {
         _logger.info('Reminders config not found');
-        return err(const ServiceError(
-          type: SingleErrorTypes.notFound,
-          description: 'Reminders config not found',
-        ));
+        return err(
+          const ServiceError(
+            type: SingleErrorTypes.notFound,
+            description: 'Reminders config not found',
+          ),
+        );
       }
 
       _logger.info('Reminders config found with id ${remindersConfig.id}');
       return ok(RemindersConfigDto.fromModel(remindersConfig));
     } catch (e) {
       _logger.severe('Failed to select reminders config', e);
-      return err(const ServiceError(
-        type: SingleErrorTypes.operationFailure,
-        description: 'Failed to select reminders config',
-      ));
+      return err(
+        const ServiceError(
+          type: SingleErrorTypes.operationFailure,
+          description: 'Failed to select reminders config',
+        ),
+      );
     }
   }
 
   Future<Result<RemindersConfigDto, ServiceError<SingleErrorTypes>>>
-      updateRemindersConfig({
-    bool? workoutsOn,
-    bool? weightRecordsOn,
-  }) async {
+  updateRemindersConfig({bool? workoutsOn, bool? weightRecordsOn}) async {
     _logger.info('Updating reminders config...');
     try {
-      final RemindersConfig? remindersConfig =
-          await _remindersRepository.selectLatest();
+      final RemindersConfig? remindersConfig = await _remindersRepository
+          .selectLatest();
       if (remindersConfig == null) {
         _logger.info('Reminders config not found');
-        return err(const ServiceError(
-          type: SingleErrorTypes.notFound,
-          description: 'Reminders config not found',
-        ));
+        return err(
+          const ServiceError(
+            type: SingleErrorTypes.notFound,
+            description: 'Reminders config not found',
+          ),
+        );
       }
 
       final RemindersConfig updatedConfig = remindersConfig.copyWith(
@@ -308,10 +326,12 @@ class ProfileService {
       return ok(RemindersConfigDto.fromModel(updatedConfig));
     } catch (e) {
       _logger.severe('Failed to update reminders config', e);
-      return err(const ServiceError(
-        type: SingleErrorTypes.operationFailure,
-        description: 'Failed to update reminders config',
-      ));
+      return err(
+        const ServiceError(
+          type: SingleErrorTypes.operationFailure,
+          description: 'Failed to update reminders config',
+        ),
+      );
     }
   }
 
@@ -326,14 +346,17 @@ class ProfileService {
   }) async {
     _logger.info('Upgrading system...');
     try {
-      final System? existingSystem =
-          await _systemRepository.selectLatest(transaction);
+      final System? existingSystem = await _systemRepository.selectLatest(
+        transaction,
+      );
       if (existingSystem == null) {
         _logger.info('System does not exist');
-        return err(const ServiceError(
-          type: SingleErrorTypes.notFound,
-          description: 'System does not exist',
-        ));
+        return err(
+          const ServiceError(
+            type: SingleErrorTypes.notFound,
+            description: 'System does not exist',
+          ),
+        );
       }
 
       final System updatedSystem = existingSystem.copyWith(
@@ -347,10 +370,12 @@ class ProfileService {
       return ok(SystemDto.fromModel(updatedSystem));
     } catch (e) {
       _logger.severe('Failed to upgrade system', e);
-      return err(const ServiceError(
-        type: SingleErrorTypes.operationFailure,
-        description: 'Failed to upgrade system',
-      ));
+      return err(
+        const ServiceError(
+          type: SingleErrorTypes.operationFailure,
+          description: 'Failed to upgrade system',
+        ),
+      );
     }
   }
 }

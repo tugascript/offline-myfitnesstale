@@ -33,8 +33,9 @@ class ActiveWorkoutSetCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final iconGreyColor = isDarkTheme ? Colors.grey[200] : Colors.grey[800];
-    final iconLightGreyColor =
-        isDarkTheme ? Colors.grey[400] : Colors.grey[600];
+    final iconLightGreyColor = isDarkTheme
+        ? Colors.grey[400]
+        : Colors.grey[600];
     final isExpanded = isCurrentSet || setNumber == 1;
 
     return Card(
@@ -42,10 +43,7 @@ class ActiveWorkoutSetCard extends StatelessWidget {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(4),
         side: isCurrentSet
-            ? BorderSide(
-                color: theme.colorScheme.primary,
-                width: 2,
-              )
+            ? BorderSide(color: theme.colorScheme.primary, width: 2)
             : BorderSide.none,
       ),
       child: ExpansionTile(
@@ -87,10 +85,7 @@ class ActiveWorkoutSetCard extends StatelessWidget {
                 ),
               ],
             ),
-            _SetTypeBadge(
-              sizes: sizes,
-              setType: set.setType,
-            ),
+            _SetTypeBadge(sizes: sizes, setType: set.setType),
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -105,7 +100,7 @@ class ActiveWorkoutSetCard extends StatelessWidget {
                     fontSize: sizes.fontSize,
                     color: iconGreyColor,
                   ),
-                )
+                ),
               ],
             ),
             Row(
@@ -145,7 +140,8 @@ class ActiveWorkoutSetCard extends StatelessWidget {
             ...set.exercises!.asMap().entries.map((entry) {
               final exerciseIndex = entry.key;
               final setExercise = entry.value;
-              final isCurrentExercise = isCurrentSet &&
+              final isCurrentExercise =
+                  isCurrentSet &&
                   currentExerciseIndexInSet != null &&
                   exerciseIndex == currentExerciseIndexInSet;
               return _ActiveSetExercise(
@@ -167,10 +163,7 @@ class _SetTypeBadge extends StatelessWidget {
   final DataDisplaySizesList sizes;
   final WorkoutSetType setType;
 
-  const _SetTypeBadge({
-    required this.sizes,
-    required this.setType,
-  });
+  const _SetTypeBadge({required this.sizes, required this.setType});
 
   Color _getSetTypeColor(WorkoutSetType type) {
     switch (type) {
@@ -200,17 +193,11 @@ class _SetTypeBadge extends StatelessWidget {
       ),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.2),
-        border: Border.all(
-          color: color,
-          width: 1,
-        ),
+        border: Border.all(color: color, width: 1),
       ),
       child: Text(
         EnumDisplayNames.getSetTypeDisplayName(setType),
-        style: TextStyle(
-          color: color,
-          fontSize: sizes.smallFontSize,
-        ),
+        style: TextStyle(color: color, fontSize: sizes.smallFontSize),
       ),
     );
   }
@@ -258,8 +245,9 @@ class _ActiveSetExercise extends StatelessWidget {
               setExercise.exercise?.name ?? 'Unknown Exercise',
               style: TextStyle(
                 fontSize: sizes.subtitleFontSize,
-                fontWeight:
-                    isCurrentExercise ? FontWeight.w600 : FontWeight.normal,
+                fontWeight: isCurrentExercise
+                    ? FontWeight.w600
+                    : FontWeight.normal,
               ),
             ),
           ],

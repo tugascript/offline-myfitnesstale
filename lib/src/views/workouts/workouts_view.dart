@@ -99,21 +99,21 @@ class _WorkoutsViewState extends State<WorkoutsView> {
                   initialDifficulty: state.pagination.difficulty,
                   initialMuscleGroup: state.pagination.muscleGroup,
                   initialIsFavorite: state.pagination.isFavorite,
-                  onSubmit: ({
-                    required difficulty,
-                    required isFavourite,
-                    required muscleGroup,
-                    required equipmentId,
-                    required name,
-                  }) =>
-                      context.read<WorkoutCubit>().getWorkouts(
-                            name: name,
-                            difficulty: difficulty,
-                            muscleGroup: muscleGroup,
-                            limit: 20,
-                            offset: 0,
-                            isFavorite: isFavourite,
-                          ),
+                  onSubmit:
+                      ({
+                        required difficulty,
+                        required isFavourite,
+                        required muscleGroup,
+                        required equipmentId,
+                        required name,
+                      }) => context.read<WorkoutCubit>().getWorkouts(
+                        name: name,
+                        difficulty: difficulty,
+                        muscleGroup: muscleGroup,
+                        limit: 20,
+                        offset: 0,
+                        isFavorite: isFavourite,
+                      ),
                 ),
                 SizedBox(height: sizes.inputSpacing),
                 Expanded(

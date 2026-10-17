@@ -63,11 +63,7 @@ class _WorkoutPlanRestDay extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
-                Icons.snooze,
-                color: color,
-                size: fontSize * 2,
-              ),
+              Icon(Icons.snooze, color: color, size: fontSize * 2),
               Text(
                 " Day $number",
                 style: TextStyle(
@@ -116,10 +112,7 @@ class _WorkoutPlanWorkoutDay extends StatelessWidget {
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
-                Icons.calendar_today,
-                size: sizes.fontSize * 2,
-              ),
+              Icon(Icons.calendar_today, size: sizes.fontSize * 2),
               Text(
                 " Day ${day.day}",
                 style: TextStyle(
@@ -132,12 +125,7 @@ class _WorkoutPlanWorkoutDay extends StatelessWidget {
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
-                '🏋',
-                style: TextStyle(
-                  fontSize: sizes.fontSize * 1.2,
-                ),
-              ),
+              Text('🏋', style: TextStyle(fontSize: sizes.fontSize * 1.2)),
               Text(
                 ' ${day.totalWorkouts}',
                 style: TextStyle(
@@ -150,7 +138,8 @@ class _WorkoutPlanWorkoutDay extends StatelessWidget {
         ],
       ),
       initiallyExpanded: initiallyExpanded,
-      children: day.planWorkouts
+      children:
+          day.planWorkouts
               ?.map(
                 (planWorkout) => WorkoutPlanWorkoutCard(
                   isDarkTheme: isDarkTheme,

@@ -62,21 +62,21 @@ class MealPlanDayRecordDto extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        mealPlanRecordId,
-        mealPlanWeekRecordId,
-        mealPlanDayId,
-        dailyLogId,
-        week,
-        day,
-        status,
-        completedAt,
-        totalCalories,
-        totalProtein,
-        totalCarbs,
-        totalFat,
-        totalFiber,
-      ];
+    id,
+    mealPlanRecordId,
+    mealPlanWeekRecordId,
+    mealPlanDayId,
+    dailyLogId,
+    week,
+    day,
+    status,
+    completedAt,
+    totalCalories,
+    totalProtein,
+    totalCarbs,
+    totalFat,
+    totalFiber,
+  ];
 }
 
 class MealPlanWeekRecordDto extends Equatable {
@@ -135,20 +135,20 @@ class MealPlanWeekRecordDto extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        mealPlanRecordId,
-        mealPlanWeekId,
-        week,
-        status,
-        currentDay,
-        completedAt,
-        totalCalories,
-        totalProtein,
-        totalCarbs,
-        totalFat,
-        totalFiber,
-        days,
-      ];
+    id,
+    mealPlanRecordId,
+    mealPlanWeekId,
+    week,
+    status,
+    currentDay,
+    completedAt,
+    totalCalories,
+    totalProtein,
+    totalCarbs,
+    totalFat,
+    totalFiber,
+    days,
+  ];
 }
 
 class MealPlanRecordDto extends Equatable {
@@ -207,17 +207,17 @@ class MealPlanRecordDto extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        mealPlanId,
-        mealPlanVersion,
-        status,
-        startedAt,
-        currentWeek,
-        currentDay,
-        completedAt,
-        planName,
-        totalWeeks,
-        totalDays,
-        weeks,
-      ];
+    id,
+    mealPlanId,
+    mealPlanVersion,
+    status,
+    startedAt,
+    currentWeek,
+    currentDay,
+    completedAt,
+    planName,
+    totalWeeks,
+    totalDays,
+    weeks,
+  ];
 }

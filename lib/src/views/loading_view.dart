@@ -8,11 +8,7 @@ class LoadingView extends StatelessWidget {
 
   static const name = "loading";
 
-  const LoadingView({
-    super.key,
-    this.title,
-    this.message,
-  });
+  const LoadingView({super.key, this.title, this.message});
 
   @override
   Widget build(BuildContext context) {

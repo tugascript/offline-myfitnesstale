@@ -43,13 +43,15 @@ class WorkoutPlanCubit extends Cubit<WorkoutPlanState> {
       switch (error.type) {
         case OperationErrorTypes.invalidInput:
         case OperationErrorTypes.operationFailure:
-          emit(state.copyWith(
-            error: ErrorState(
-              type: error.type.name,
-              description: "Failed to get workout plans",
+          emit(
+            state.copyWith(
+              error: ErrorState(
+                type: error.type.name,
+                description: "Failed to get workout plans",
+              ),
+              isLoading: false,
             ),
-            isLoading: false,
-          ));
+          );
           return;
       }
     }
@@ -88,31 +90,32 @@ class WorkoutPlanCubit extends Cubit<WorkoutPlanState> {
       switch (error.type) {
         case SingleErrorTypes.invalidInput:
         case SingleErrorTypes.notFound:
-          emit(state.copyWith(
-            error: ErrorState(
-              type: error.type.name,
-              description: error.description,
+          emit(
+            state.copyWith(
+              error: ErrorState(
+                type: error.type.name,
+                description: error.description,
+              ),
+              isLoading: false,
             ),
-            isLoading: false,
-          ));
+          );
           return;
         case SingleErrorTypes.operationFailure:
-          emit(state.copyWith(
-            error: ErrorState(
-              type: error.type.name,
-              description: error.description,
+          emit(
+            state.copyWith(
+              error: ErrorState(
+                type: error.type.name,
+                description: error.description,
+              ),
+              isLoading: false,
             ),
-            isLoading: false,
-          ));
+          );
           return;
       }
     }
 
     _logger.info('Workout plan $id retrieved successfully');
-    emit(state.copyWith(
-      selectedWorkoutPlan: result.value,
-      isLoading: false,
-    ));
+    emit(state.copyWith(selectedWorkoutPlan: result.value, isLoading: false));
   }
 
   Future<void> createWorkoutPlanVersionWithWeeks({
@@ -130,13 +133,15 @@ class WorkoutPlanCubit extends Cubit<WorkoutPlanState> {
     if (result.isErr()) {
       final error = result.error;
       _logger.warning("Failed to create workout plan version", error);
-      emit(state.copyWith(
-        error: ErrorState(
-          type: error.type.name,
-          description: error.description,
+      emit(
+        state.copyWith(
+          error: ErrorState(
+            type: error.type.name,
+            description: error.description,
+          ),
+          isLoading: false,
         ),
-        isLoading: false,
-      ));
+      );
       return;
     }
 
@@ -155,47 +160,53 @@ class WorkoutPlanCubit extends Cubit<WorkoutPlanState> {
     _logger.info('Creating workout plan');
     emit(state.copyWith(isLoading: true));
 
-    final entitlementSnapshotResult =
-        await _entitlementService.getEntitlementSnapshot();
+    final entitlementSnapshotResult = await _entitlementService
+        .getEntitlementSnapshot();
     if (entitlementSnapshotResult.isErr()) {
-      emit(state.copyWith(
-        error: const ErrorState(
-          type: 'entitlement_unavailable',
-          description:
-              'Premium status unavailable. Please refresh and try again.',
+      emit(
+        state.copyWith(
+          error: const ErrorState(
+            type: 'entitlement_unavailable',
+            description:
+                'Premium status unavailable. Please refresh and try again.',
+          ),
+          isLoading: false,
         ),
-        isLoading: false,
-      ));
+      );
       return;
     }
 
-    final bool isPremium =
-        EntitlementGuard.canUsePremium(entitlementSnapshotResult.value);
+    final bool isPremium = EntitlementGuard.canUsePremium(
+      entitlementSnapshotResult.value,
+    );
     if (!isPremium) {
       final countResult = await _workoutPlanService.countWorkoutPlans(
         createdBy: CreatedBy.user,
       );
       if (countResult.isErr()) {
-        emit(state.copyWith(
-          error: ErrorState(
-            type: countResult.error.type.name,
-            description: countResult.error.description,
+        emit(
+          state.copyWith(
+            error: ErrorState(
+              type: countResult.error.type.name,
+              description: countResult.error.description,
+            ),
+            isLoading: false,
           ),
-          isLoading: false,
-        ));
+        );
         return;
       }
 
       emit(state.copyWith(createdWorkoutPlansCount: countResult.value));
       if (countResult.value >= 3) {
-        emit(state.copyWith(
-          error: const ErrorState(
-            type: 'plan_limit_reached',
-            description:
-                'Free users can create up to 3 workout plans. Upgrade to premium to create more.',
+        emit(
+          state.copyWith(
+            error: const ErrorState(
+              type: 'plan_limit_reached',
+              description: 'Free users can create up to 3 workout plans. Upgrade to premium to create more.',
+            ),
+            isLoading: false,
           ),
-          isLoading: false,
-        ));
+        );
         return;
       }
     }
@@ -212,26 +223,30 @@ class WorkoutPlanCubit extends Cubit<WorkoutPlanState> {
     if (result.isErr()) {
       final error = result.error;
       _logger.warning("Failed to create workout plan", error);
-      emit(state.copyWith(
-        error: ErrorState(
-          type: error.type.name,
-          description: error.description,
+      emit(
+        state.copyWith(
+          error: ErrorState(
+            type: error.type.name,
+            description: error.description,
+          ),
+          isLoading: false,
         ),
-        isLoading: false,
-      ));
+      );
       return;
     }
 
     _logger.info('Workout plan created successfully');
     final newPlan = result.value;
-    emit(state.copyWith(
-      workoutPlans: [newPlan, ...state.workoutPlans],
-      pagination: state.pagination.copyWith(
-        total: state.pagination.total + 1,
+    emit(
+      state.copyWith(
+        workoutPlans: [newPlan, ...state.workoutPlans],
+        pagination: state.pagination.copyWith(
+          total: state.pagination.total + 1,
+        ),
+        selectedWorkoutPlan: newPlan,
+        isLoading: false,
       ),
-      selectedWorkoutPlan: newPlan,
-      isLoading: false,
-    ));
+    );
   }
 
   Future<void> updateWorkoutPlan({
@@ -261,13 +276,15 @@ class WorkoutPlanCubit extends Cubit<WorkoutPlanState> {
     if (result.isErr()) {
       final error = result.error;
       _logger.warning("Failed to update workout plan $id", error);
-      emit(state.copyWith(
-        error: ErrorState(
-          type: error.type.name,
-          description: error.description,
+      emit(
+        state.copyWith(
+          error: ErrorState(
+            type: error.type.name,
+            description: error.description,
+          ),
+          isLoading: false,
         ),
-        isLoading: false,
-      ));
+      );
       return;
     }
 
@@ -284,27 +301,31 @@ class WorkoutPlanCubit extends Cubit<WorkoutPlanState> {
     if (result.isErr()) {
       final error = result.error;
       _logger.warning("Failed to delete workout plan $id", error);
-      emit(state.copyWith(
-        error: ErrorState(
-          type: error.type.name,
-          description: error.description,
+      emit(
+        state.copyWith(
+          error: ErrorState(
+            type: error.type.name,
+            description: error.description,
+          ),
+          isLoading: false,
         ),
-        isLoading: false,
-      ));
+      );
       return;
     }
 
     _logger.info('Workout plan $id deleted successfully');
-    emit(state.copyWith(
-      workoutPlans: state.workoutPlans.where((p) => p.id != id).toList(),
-      selectedWorkoutPlan: state.selectedWorkoutPlan?.id == id
-          ? null
-          : state.selectedWorkoutPlan,
-      pagination: state.pagination.copyWith(
-        total: state.pagination.total - 1,
+    emit(
+      state.copyWith(
+        workoutPlans: state.workoutPlans.where((p) => p.id != id).toList(),
+        selectedWorkoutPlan: state.selectedWorkoutPlan?.id == id
+            ? null
+            : state.selectedWorkoutPlan,
+        pagination: state.pagination.copyWith(
+          total: state.pagination.total - 1,
+        ),
+        isLoading: false,
       ),
-      isLoading: false,
-    ));
+    );
   }
 
   Future<void> countCreatedWorkoutPlans() async {
@@ -317,20 +338,21 @@ class WorkoutPlanCubit extends Cubit<WorkoutPlanState> {
     if (result.isErr()) {
       final error = result.error;
       _logger.warning("Failed to count created workout plans", error);
-      emit(state.copyWith(
-        error: ErrorState(
-          type: error.type.name,
-          description: error.description,
+      emit(
+        state.copyWith(
+          error: ErrorState(
+            type: error.type.name,
+            description: error.description,
+          ),
+          isLoading: false,
         ),
-        isLoading: false,
-      ));
+      );
       return;
     }
 
     _logger.info('Created workout plans count retrieved successfully');
-    emit(state.copyWith(
-      createdWorkoutPlansCount: result.value,
-      isLoading: false,
-    ));
+    emit(
+      state.copyWith(createdWorkoutPlansCount: result.value, isLoading: false),
+    );
   }
 }

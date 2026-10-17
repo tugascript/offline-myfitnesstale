@@ -16,12 +16,12 @@ class AppBarSizesList {
   });
 
   factory AppBarSizesList.multiply(double x) => AppBarSizesList(
-        height: 65.0 * x,
-        title: 25.0 * x,
-        icon: 50.0 * x,
-        btnPadding: 10.0 * x,
-        backBtnSize: 24.0 * x,
-      );
+    height: 65.0 * x,
+    title: 25.0 * x,
+    icon: 50.0 * x,
+    btnPadding: 10.0 * x,
+    backBtnSize: 24.0 * x,
+  );
 }
 
 class AppBarSizes {

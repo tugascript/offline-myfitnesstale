@@ -17,10 +17,7 @@ class ExerciseUpdateView extends StatefulWidget {
 
   final int exerciseId;
 
-  const ExerciseUpdateView({
-    super.key,
-    required this.exerciseId,
-  });
+  const ExerciseUpdateView({super.key, required this.exerciseId});
 
   @override
   State<ExerciseUpdateView> createState() => _ExerciseUpdateViewState();
@@ -41,9 +38,7 @@ class _ExerciseUpdateViewState extends State<ExerciseUpdateView> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final breakpoints = BreakPoint.fromContext(context);
-    final sizes = DataDisplaySizes.getDataDisplaySizes(
-      breakpoints.screenSize,
-    );
+    final sizes = DataDisplaySizes.getDataDisplaySizes(breakpoints.screenSize);
 
     return BlocConsumer<ExerciseCubit, ExerciseState>(
       listenWhen: (previous, current) =>
@@ -95,17 +90,18 @@ class _ExerciseUpdateViewState extends State<ExerciseUpdateView> {
                           exercise?.equipments?.map((e) => e.id).toSet() ?? {},
                       initialDifficulty: exercise?.difficulty,
                       initialIsFavorite: exercise?.isFavorite ?? false,
-                      onSubmit: ({
-                        String? description,
-                        Difficulty? difficulty,
-                        required Set<int> equipmentIds,
-                        required bool isFavorite,
-                        required MuscleGroup muscleGroup,
-                        required String name,
-                        required Set<Muscle> primaryMuscles,
-                        required Set<Muscle> secondaryMuscles,
-                      }) async {
-                        await context.read<ExerciseCubit>().updateExercise(
+                      onSubmit:
+                          ({
+                            String? description,
+                            Difficulty? difficulty,
+                            required Set<int> equipmentIds,
+                            required bool isFavorite,
+                            required MuscleGroup muscleGroup,
+                            required String name,
+                            required Set<Muscle> primaryMuscles,
+                            required Set<Muscle> secondaryMuscles,
+                          }) async {
+                            await context.read<ExerciseCubit>().updateExercise(
                               id: widget.exerciseId,
                               name: name,
                               description: description,
@@ -117,22 +113,22 @@ class _ExerciseUpdateViewState extends State<ExerciseUpdateView> {
                               isFavorite: isFavorite,
                             );
 
-                        if (context.mounted) {
-                          if (state.error == null) {
-                            if (context.canPop()) {
-                              context.pop();
-                              return;
-                            }
+                            if (context.mounted) {
+                              if (state.error == null) {
+                                if (context.canPop()) {
+                                  context.pop();
+                                  return;
+                                }
 
-                            context.go(
-                              ExerciseDetailView.routeName.replaceFirst(
-                                ":id",
-                                widget.exerciseId.toString(),
-                              ),
-                            );
-                          }
-                        }
-                      },
+                                context.go(
+                                  ExerciseDetailView.routeName.replaceFirst(
+                                    ":id",
+                                    widget.exerciseId.toString(),
+                                  ),
+                                );
+                              }
+                            }
+                          },
                     ),
                   ),
                 ),

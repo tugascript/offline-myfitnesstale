@@ -156,15 +156,15 @@ final class WeightRecordState extends Equatable {
 
   @override
   List<Object?> get props => [
-        weightRecords,
-        selectedWeightRecord,
-        latestWeightRecord,
-        recordPagination,
-        weightGoals,
-        selectedWeightGoal,
-        activeWeightGoal,
-        goalPagination,
-        isLoading,
-        error,
-      ];
+    weightRecords,
+    selectedWeightRecord,
+    latestWeightRecord,
+    recordPagination,
+    weightGoals,
+    selectedWeightGoal,
+    activeWeightGoal,
+    goalPagination,
+    isLoading,
+    error,
+  ];
 }

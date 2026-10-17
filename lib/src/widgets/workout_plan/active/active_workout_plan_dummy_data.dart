@@ -16,10 +16,7 @@ class ActiveWorkoutPlanDummyData {
       id: 0,
       name: 'Loading Workout Name...',
       muscleGroups: const {},
-      muscles: const TargetMuscles(
-        primary: {},
-        secondary: {},
-      ),
+      muscles: const TargetMuscles(primary: {}, secondary: {}),
       difficulty: Difficulty.beginner,
       version: 1,
       isFavorite: false,

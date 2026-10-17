@@ -1,6 +1,7 @@
 import '../../layout/app_text_form_field.dart';
 import '../../../common/nullable.dart';
 import '../../../services/inputs/strength_goal_input.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -41,15 +42,16 @@ class _StrengthGoalFormModalState extends State<StrengthGoalFormModal> {
     super.initState();
     final goal = widget.existingGoal;
     _selectedExerciseId = goal?.exerciseId;
-    _nameController =
-        TextEditingController(text: goal?.name ?? 'Strength Target');
+    _nameController = TextEditingController(
+      text: goal?.name ?? 'Strength Target',
+    );
 
     final profileUnits =
         context.read<ProfileCubit>().state.system?.units ?? Units.metric;
     final double weightVal = goal != null
         ? (profileUnits == Units.imperial
-            ? Converters.gramsToLbs(goal.targetWeight)
-            : Converters.gramsToKg(goal.targetWeight))
+              ? Converters.gramsToLbs(goal.targetWeight)
+              : Converters.gramsToKg(goal.targetWeight))
         : 0.0;
 
     _weightController = TextEditingController(
@@ -83,8 +85,11 @@ class _StrengthGoalFormModalState extends State<StrengthGoalFormModal> {
     if (_selectedExerciseId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-            content: Text('Please select an exercise',
-                style: TextStyle(fontSize: widget.sizes.fontSize))),
+          content: Text(
+            'Please select an exercise',
+            style: TextStyle(fontSize: widget.sizes.fontSize),
+          ),
+        ),
       );
       return;
     }
@@ -104,27 +109,30 @@ class _StrengthGoalFormModalState extends State<StrengthGoalFormModal> {
     final cubit = context.read<ExerciseRecordCubit>();
     if (widget.existingGoal != null) {
       cubit.updateStrengthGoal(
-          widget.existingGoal!.id,
-          StrengthGoalInput(
-            name: name,
-            targetWeight: targetWeightGrams,
-            targetReps: targetReps,
-            targetMaxStrength: targetMaxStrength,
-            status: widget.existingGoal!.status,
-            exerciseId: widget.existingGoal!.exerciseId,
-            startDate: widget.existingGoal!.startDate,
-            completedAt: Nullable(widget.existingGoal!.completedAt),
-          ));
+        widget.existingGoal!.id,
+        StrengthGoalInput(
+          name: name,
+          targetWeight: targetWeightGrams,
+          targetReps: targetReps,
+          targetMaxStrength: targetMaxStrength,
+          status: widget.existingGoal!.status,
+          exerciseId: widget.existingGoal!.exerciseId,
+          startDate: widget.existingGoal!.startDate,
+          completedAt: Nullable(widget.existingGoal!.completedAt),
+        ),
+      );
     } else {
-      cubit.createStrengthGoal(StrengthGoalInput(
-        exerciseId: _selectedExerciseId!,
-        name: name,
-        targetWeight: targetWeightGrams,
-        targetReps: targetReps,
-        targetMaxStrength: targetMaxStrength,
-        startDate: DateTime.now(),
-        status: ProgressStatus.inProgress,
-      ));
+      cubit.createStrengthGoal(
+        StrengthGoalInput(
+          exerciseId: _selectedExerciseId!,
+          name: name,
+          targetWeight: targetWeightGrams,
+          targetReps: targetReps,
+          targetMaxStrength: targetMaxStrength,
+          startDate: DateTime.now(),
+          status: ProgressStatus.inProgress,
+        ),
+      );
     }
 
     Navigator.of(context).pop();
@@ -164,8 +172,9 @@ class _StrengthGoalFormModalState extends State<StrengthGoalFormModal> {
                     itemHeight: null,
                     iconSize: widget.sizes.buttonIconSize,
                     style: TextStyle(
-                        fontSize: widget.sizes.fontSize,
-                        color: widget.theme.textTheme.bodyMedium?.color),
+                      fontSize: widget.sizes.fontSize,
+                      color: widget.theme.textTheme.bodyMedium?.color,
+                    ),
                     key: const ValueKey('strength-goal-exercise-dropdown'),
                     initialValue: _selectedExerciseId,
                     decoration: const InputDecoration(
@@ -175,8 +184,10 @@ class _StrengthGoalFormModalState extends State<StrengthGoalFormModal> {
                     items: exercises.map((e) {
                       return DropdownMenuItem<int>(
                         value: e.id,
-                        child: Text(e.name,
-                            style: TextStyle(fontSize: widget.sizes.fontSize)),
+                        child: Text(
+                          e.name,
+                          style: TextStyle(fontSize: widget.sizes.fontSize),
+                        ),
                       );
                     }).toList(),
                     onChanged: (val) {
@@ -195,8 +206,9 @@ class _StrengthGoalFormModalState extends State<StrengthGoalFormModal> {
                     isLoading: false,
                     key: const ValueKey('strength-goal-weight-input'),
                     controller: _weightController,
-                    keyboardType:
-                        const TextInputType.numberWithOptions(decimal: true),
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
                     labelText: 'Target Weight ($weightUnitLabel)',
                     validator: (val) {
                       if (val == null || val.isEmpty) return 'Required';
@@ -260,16 +272,19 @@ class _StrengthGoalFormModalState extends State<StrengthGoalFormModal> {
                     children: [
                       TextButton(
                         onPressed: () => Navigator.of(context).pop(),
-                        child: Text('Cancel',
-                            style: TextStyle(fontSize: widget.sizes.fontSize)),
+                        child: Text(
+                          'Cancel',
+                          style: TextStyle(fontSize: widget.sizes.fontSize),
+                        ),
                       ),
                       SizedBox(width: widget.sizes.spacing),
                       ElevatedButton(
                         key: const ValueKey('strength-goal-submit-button'),
                         onPressed: _submit,
                         child: Text(
-                            widget.existingGoal != null ? 'Update' : 'Create',
-                            style: TextStyle(fontSize: widget.sizes.fontSize)),
+                          widget.existingGoal != null ? 'Update' : 'Create',
+                          style: TextStyle(fontSize: widget.sizes.fontSize),
+                        ),
                       ),
                     ],
                   ),

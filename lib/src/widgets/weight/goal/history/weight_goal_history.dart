@@ -35,11 +35,7 @@ class _WeightGoalHistoryState extends State<WeightGoalHistory> {
     final cubit = context.read<WeightRecordCubit>();
 
     if (cubit.state.weightGoals.isEmpty) {
-      cubit.getWeightGoals(
-        skipInProgress: true,
-        offset: 0,
-        limit: 20,
-      );
+      cubit.getWeightGoals(skipInProgress: true, offset: 0, limit: 20);
     }
 
     _scrollController.addListener(_onScroll);
@@ -76,40 +72,12 @@ class _WeightGoalHistoryState extends State<WeightGoalHistory> {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<WeightRecordCubit, WeightRecordState>(
-        builder: (context, weightState) {
-      if (!weightState.isLoading && weightState.weightGoals.isEmpty) {
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              "Weight Goals History",
-              style: TextStyle(
-                fontSize: widget.sizes.titleFontSize,
-                fontWeight: FontWeight.bold,
-              ),
-              textAlign: TextAlign.start,
-            ),
-            SizedBox(height: widget.sizes.spacing),
-            Expanded(
-              child: NotFoundList(
-                sizes: widget.sizes,
-                message: "Empty history",
-                icon: Icons.history,
-              ),
-            ),
-          ],
-        );
-      }
-
-      return Column(
-        children: [
-          Padding(
-            padding: EdgeInsets.only(
-              left: widget.sizes.spacing / 2,
-            ),
-            child: SizedBox(
-              width: double.infinity,
-              child: Text(
+      builder: (context, weightState) {
+        if (!weightState.isLoading && weightState.weightGoals.isEmpty) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
                 "Weight Goals History",
                 style: TextStyle(
                   fontSize: widget.sizes.titleFontSize,
@@ -117,45 +85,75 @@ class _WeightGoalHistoryState extends State<WeightGoalHistory> {
                 ),
                 textAlign: TextAlign.start,
               ),
+              SizedBox(height: widget.sizes.spacing),
+              Expanded(
+                child: NotFoundList(
+                  sizes: widget.sizes,
+                  message: "Empty history",
+                  icon: Icons.history,
+                ),
+              ),
+            ],
+          );
+        }
+
+        return Column(
+          children: [
+            Padding(
+              padding: EdgeInsets.only(left: widget.sizes.spacing / 2),
+              child: SizedBox(
+                width: double.infinity,
+                child: Text(
+                  "Weight Goals History",
+                  style: TextStyle(
+                    fontSize: widget.sizes.titleFontSize,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.start,
+                ),
+              ),
             ),
-          ),
-          SizedBox(height: widget.sizes.spacing),
-          Expanded(
-            child: Skeletonizer(
-              enabled: weightState.isLoading && weightState.weightGoals.isEmpty,
-              child: BlocBuilder<ProfileCubit, ProfileState>(
-                builder: (context, state) {
-                  final stateIsLoading =
-                      weightState.isLoading && weightState.weightGoals.isEmpty;
-                  return ListView.builder(
-                    controller: _scrollController,
-                    itemCount:
-                        stateIsLoading ? 3 : weightState.weightGoals.length,
-                    itemBuilder: (context, index) {
-                      if (stateIsLoading) {
+            SizedBox(height: widget.sizes.spacing),
+            Expanded(
+              child: Skeletonizer(
+                enabled:
+                    weightState.isLoading && weightState.weightGoals.isEmpty,
+                child: BlocBuilder<ProfileCubit, ProfileState>(
+                  builder: (context, state) {
+                    final stateIsLoading =
+                        weightState.isLoading &&
+                        weightState.weightGoals.isEmpty;
+                    return ListView.builder(
+                      controller: _scrollController,
+                      itemCount: stateIsLoading
+                          ? 3
+                          : weightState.weightGoals.length,
+                      itemBuilder: (context, index) {
+                        if (stateIsLoading) {
+                          return WeightGoalCard(
+                            theme: widget.theme,
+                            units: state.system?.units ?? Units.metric,
+                            weightGoal: WeightGoalDto.empty(),
+                            sizes: widget.sizes,
+                          );
+                        }
+
+                        final weightGoal = weightState.weightGoals[index];
                         return WeightGoalCard(
                           theme: widget.theme,
                           units: state.system?.units ?? Units.metric,
-                          weightGoal: WeightGoalDto.empty(),
+                          weightGoal: weightGoal,
                           sizes: widget.sizes,
                         );
-                      }
-
-                      final weightGoal = weightState.weightGoals[index];
-                      return WeightGoalCard(
-                        theme: widget.theme,
-                        units: state.system?.units ?? Units.metric,
-                        weightGoal: weightGoal,
-                        sizes: widget.sizes,
-                      );
-                    },
-                  );
-                },
+                      },
+                    );
+                  },
+                ),
               ),
             ),
-          ),
-        ],
-      );
-    });
+          ],
+        );
+      },
+    );
   }
 }

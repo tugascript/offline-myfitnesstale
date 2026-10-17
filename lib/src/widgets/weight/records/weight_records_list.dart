@@ -79,9 +79,7 @@ class _WeightRecordCard extends StatelessWidget {
 
     return Card(
       clipBehavior: Clip.antiAlias,
-      margin: EdgeInsets.symmetric(
-        vertical: sizes.margins / 2,
-      ),
+      margin: EdgeInsets.symmetric(vertical: sizes.margins / 2),
       child: Padding(
         padding: EdgeInsets.all(sizes.padding),
         child: Row(
@@ -91,10 +89,7 @@ class _WeightRecordCard extends StatelessWidget {
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(
-                  Icons.monitor_weight,
-                  size: sizes.fontSize * 1.2,
-                ),
+                Icon(Icons.monitor_weight, size: sizes.fontSize * 1.2),
                 Text(
                   " ${_displayWeight()} ${units == Units.imperial ? "LBS" : "KG"}",
                   style: TextStyle(
@@ -104,10 +99,7 @@ class _WeightRecordCard extends StatelessWidget {
                 ),
                 if (record.fatPercentage != null) ...[
                   SizedBox(width: sizes.spacing),
-                  Icon(
-                    Icons.water_drop_outlined,
-                    size: sizes.fontSize * 1.2,
-                  ),
+                  Icon(Icons.water_drop_outlined, size: sizes.fontSize * 1.2),
                   Text(
                     _displayBodyFatPercentage(),
                     style: TextStyle(
@@ -121,10 +113,7 @@ class _WeightRecordCard extends StatelessWidget {
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(
-                  Icons.calendar_today,
-                  size: sizes.fontSize * 1.2,
-                ),
+                Icon(Icons.calendar_today, size: sizes.fontSize * 1.2),
                 Text(
                   " ${_formatDate()}",
                   style: TextStyle(
@@ -159,8 +148,7 @@ class _WeightRecordCard extends StatelessWidget {
                       context: context,
                       builder: (context) => ConfirmationDialog(
                         title: "Delete Weight Record",
-                        content:
-                            "Are you sure you want to delete this weight record?",
+                        content: "Are you sure you want to delete this weight record?",
                         confirmLabel: "Delete",
                         isDestructive: true,
                         onConfirm: () async {
@@ -174,7 +162,7 @@ class _WeightRecordCard extends StatelessWidget {
                   icon: Icon(Icons.delete),
                   color: redColor,
                   visualDensity: VisualDensity.compact,
-                )
+                ),
               ],
             ),
           ],

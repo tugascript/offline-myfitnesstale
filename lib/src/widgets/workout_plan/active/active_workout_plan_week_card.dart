@@ -49,7 +49,8 @@ class _ActiveWorkoutPlanWeekCardState extends State<ActiveWorkoutPlanWeekCard> {
     final isPastWeek = widget.currentWeekNum > widget.weekNumber;
     final isCurrentWeek = widget.currentWeekNum == widget.weekNumber;
     final isFutureWeek = widget.currentWeekNum < widget.weekNumber;
-    final isWeekCompleted = widget.workoutPlanRecord?.weeks
+    final isWeekCompleted =
+        widget.workoutPlanRecord?.weeks
             .where((recordWeek) => recordWeek.week == widget.weekNumber)
             .any((recordWeek) => recordWeek.completedAt != null) ??
         false;
@@ -59,13 +60,14 @@ class _ActiveWorkoutPlanWeekCardState extends State<ActiveWorkoutPlanWeekCard> {
       headerColor = isWeekCompleted
           ? Colors.green
           : widget.isDarkTheme
-              ? Colors.orange.shade300
-              : Colors.orange.shade700;
+          ? Colors.orange.shade300
+          : Colors.orange.shade700;
     } else if (isCurrentWeek) {
       headerColor = widget.theme.primaryColor;
     } else {
-      headerColor =
-          widget.isDarkTheme ? Colors.grey.shade500 : Colors.grey.shade300;
+      headerColor = widget.isDarkTheme
+          ? Colors.grey.shade500
+          : Colors.grey.shade300;
     }
 
     return Card(
@@ -75,7 +77,8 @@ class _ActiveWorkoutPlanWeekCardState extends State<ActiveWorkoutPlanWeekCard> {
         side: isCurrentWeek
             ? BorderSide(
                 color: widget.theme.primaryColor.withValues(alpha: 0.5),
-                width: 1)
+                width: 1,
+              )
             : BorderSide.none,
       ),
       child: Column(
@@ -141,9 +144,12 @@ class _ActiveWorkoutPlanWeekCardState extends State<ActiveWorkoutPlanWeekCard> {
                     status: status,
                     week: widget.weekNumber,
                     workoutPlanRecordId: widget.workoutPlanRecord?.id ?? 0,
-                    workoutRecords: widget.workoutPlanRecord?.weeks
-                            .where((recordWeek) =>
-                                recordWeek.week == widget.weekNumber)
+                    workoutRecords:
+                        widget.workoutPlanRecord?.weeks
+                            .where(
+                              (recordWeek) =>
+                                  recordWeek.week == widget.weekNumber,
+                            )
                             .expand((recordWeek) => recordWeek.days)
                             .where((recordDay) => recordDay.day == day.day)
                             .expand((recordDay) => recordDay.workouts)

@@ -128,7 +128,7 @@ class _ActiveProgressBarState extends State<ActiveProgressBar> {
                   ],
                 ),
               ],
-            )
+            ),
           ],
         ),
       ),
