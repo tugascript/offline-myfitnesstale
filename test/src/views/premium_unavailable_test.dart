@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:myfitnesstale/src/common/nullable.dart';
 import 'package:myfitnesstale/src/cubits/entitlement_cubit.dart';
 import 'package:myfitnesstale/src/cubits/states/workout_plan_state.dart';
 import 'package:myfitnesstale/src/cubits/states/workout_state.dart';
@@ -27,7 +28,7 @@ class _WorkoutPlanCubit extends WorkoutPlanCubit {
 
 class _WorkoutCubit extends WorkoutCubit {
   _WorkoutCubit(WorkoutDto workout) {
-    emit(WorkoutState.initial().copyWith(selectedWorkout: workout));
+    emit(WorkoutState.initial().copyWith(selectedWorkout: Nullable(workout)));
   }
 
   @override

@@ -43,7 +43,9 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
     final startedAt = DateTime.now();
 
     final workoutRecordResult = await _workoutRecordService
-        .getOrCreateWorkoutRecord(workoutId: workoutId, startedAt: startedAt);
+        .getOrCreateWorkoutRecord(
+          WorkoutRecordInput(workoutId: workoutId, startedAt: startedAt),
+        );
     if (workoutRecordResult.isErr()) {
       final error = workoutRecordResult.error;
       switch (error.type) {
@@ -209,12 +211,14 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
 
     emit(state.copyWith(isLoading: true, isCompleted: false));
     final setRecordResult = await _workoutRecordService.upsertWorkoutSetRecord(
-      workoutSetId: currentSet.id,
-      workoutRecordId: state.workoutRecord!.id,
-      setNumber: setNumber,
-      startedAt: state.currentSetStartedAt,
-      totalRestSecs: restSecs,
-      completedAt: DateTime.now(),
+      WorkoutSetRecordInput(
+        workoutSetId: currentSet.id,
+        workoutRecordId: state.workoutRecord!.id,
+        setNumber: setNumber,
+        startedAt: state.currentSetStartedAt,
+        totalRestSecs: Nullable(restSecs),
+        completedAt: Nullable(DateTime.now()),
+      ),
     );
 
     if (setRecordResult.isErr()) {
@@ -227,14 +231,16 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
 
     final exerciseRecordResult = await _workoutRecordService
         .upsertWorkoutSetExerciseRecord(
-          workoutSetExerciseId: currentExercise.id,
-          workoutRecordId: state.workoutRecord!.id,
-          workoutSetRecordId: setRecord.id,
-          exerciseId: currentExercise.exerciseId,
-          position: position,
-          reps: reps,
-          weight: weight,
-          difficulty: difficulty,
+          WorkoutSetExerciseRecordInput(
+            workoutSetExerciseId: currentExercise.id,
+            workoutRecordId: state.workoutRecord!.id,
+            workoutSetRecordId: setRecord.id,
+            exerciseId: currentExercise.exerciseId,
+            position: position,
+            reps: reps,
+            weight: weight,
+            difficulty: difficulty,
+          ),
         );
 
     if (exerciseRecordResult.isErr()) {
@@ -395,8 +401,12 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
 
     emit(state.copyWith(isLoading: true, isCompleted: false));
     final result = await _workoutRecordService.updateWorkoutRecord(
-      id: state.workoutRecord!.id,
-      completedAt: DateTime.now(),
+      state.workoutRecord!.id,
+      WorkoutRecordInput(
+        workoutId: state.workoutRecord!.workoutId,
+        startedAt: state.workoutRecord!.startedAt,
+        completedAt: Nullable(DateTime.now()),
+      ),
     );
 
     if (result.isOk()) {

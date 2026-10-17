@@ -1,6 +1,7 @@
 import 'package:logging/logging.dart';
 import 'package:sqflite/sqflite.dart';
 
+import '../common/nullable.dart';
 import '../models/common.dart';
 import '../models/db.dart';
 import '../models/enums.dart';
@@ -20,122 +21,9 @@ import 'dtos/paginated_dto.dart';
 import 'dtos/workout_dto.dart';
 import 'dtos/workout_set_exercise_dto.dart';
 import 'dtos/workout_set_exercise_option_dto.dart';
+import 'inputs/workout_input.dart';
 
-class WorkoutSetExerciseInput {
-  final int exerciseId;
-  final int minReps;
-  final int? maxReps;
-  final bool toMaxReps;
-  final WorkoutSetExerciseDifficulty? difficulty;
-  final List<int>? alternativeExerciseIds;
-
-  const WorkoutSetExerciseInput({
-    required this.exerciseId,
-    required this.minReps,
-    this.maxReps,
-    this.toMaxReps = false,
-    this.difficulty,
-    this.alternativeExerciseIds,
-  });
-}
-
-final class WorkoutSetExerciseUpsertInput {
-  final int? id;
-  final int exerciseId;
-  final int position;
-  final int minReps;
-  final int? maxReps;
-  final bool toMaxReps;
-  final WorkoutSetExerciseDifficulty? difficulty;
-  final List<int>? alternativeExerciseIds;
-
-  const WorkoutSetExerciseUpsertInput({
-    this.id,
-    required this.exerciseId,
-    required this.position,
-    required this.minReps,
-    this.maxReps,
-    this.toMaxReps = false,
-    this.difficulty,
-    this.alternativeExerciseIds,
-  });
-}
-
-final class WorkoutSetUpsertInput {
-  final int? id;
-  final WorkoutSetType setType;
-  final int minSets;
-  final int recommendedRestSecs;
-  final List<WorkoutSetExerciseUpsertInput> exercises;
-  final int position;
-  final int? maxSets;
-  final int? maxRestSecs;
-
-  const WorkoutSetUpsertInput({
-    this.id,
-    required this.setType,
-    required this.minSets,
-    required this.recommendedRestSecs,
-    required this.exercises,
-    required this.position,
-    this.maxSets,
-    this.maxRestSecs,
-  });
-}
-
-class WorkoutSetExerciseRegistrationInput {
-  final ExerciseDto exercise;
-  final int minReps;
-  final int? maxReps;
-  final WorkoutSetExerciseDifficulty? difficulty;
-  final List<ExerciseDto> alternativeExercises;
-
-  const WorkoutSetExerciseRegistrationInput({
-    required this.exercise,
-    required this.minReps,
-    this.maxReps,
-    this.difficulty,
-    this.alternativeExercises = const [],
-  });
-}
-
-class WorkoutSetRegistrationInput {
-  final WorkoutSetType setType;
-  final int minSets;
-  final int? maxSets;
-  final int recommendedRestSecs;
-  final int? maxRestSecs;
-  final List<WorkoutSetExerciseRegistrationInput> exercises;
-
-  const WorkoutSetRegistrationInput({
-    required this.setType,
-    required this.minSets,
-    this.maxSets,
-    required this.recommendedRestSecs,
-    this.maxRestSecs,
-    required this.exercises,
-  });
-}
-
-class WorkoutRegistrationInput {
-  final String name;
-  final String description;
-  final PictureData? picture;
-  final VideoData? video;
-  final Difficulty difficulty;
-  final WorkoutPhase? phase;
-  final List<WorkoutSetRegistrationInput> sets;
-
-  const WorkoutRegistrationInput({
-    required this.name,
-    required this.description,
-    this.picture,
-    this.video,
-    required this.difficulty,
-    this.phase,
-    required this.sets,
-  });
-}
+export 'inputs/workout_input.dart';
 
 class WorkoutService {
   WorkoutService._();
@@ -359,32 +247,27 @@ class WorkoutService {
     }
   }
 
-  Future<Result<WorkoutDto, ServiceError<OperationErrorTypes>>> createWorkout({
-    required String name,
-    required Difficulty difficulty,
-    EditorType editorType = EditorType.basic,
-    bool isFavorite = false,
-    String? description,
-    PictureData? picture,
-    VideoData? video,
-  }) async {
-    _logger.info('Creating workout with name $name');
+  Future<Result<WorkoutDto, ServiceError<OperationErrorTypes>>> createWorkout(
+    WorkoutInput input,
+  ) async {
+    _logger.info('Creating workout with name ${input.name}');
     try {
       final Workout workout = Workout.create(
-        name: name,
-        difficulty: difficulty,
+        name: input.name,
+        difficulty: input.difficulty,
         muscleGroups: <MuscleGroup>{},
-        description: description,
-        isFavorite: isFavorite,
-        picture: picture,
-        video: video,
-        editorType: editorType,
+        description: input.description.value,
+        isFavorite: input.isFavorite,
+        picture: input.picture.value,
+        video: input.video.value,
+        phase: input.phase.value,
+        editorType: input.editorType,
       );
       final int id = await _repository.insert(workout);
       _logger.info('Created workout with id $id');
-      return ok(WorkoutDto.fromModel(workout.copyWith(id: id)));
+      return ok(WorkoutDto.fromModel(workout.copyWith(id: Nullable(id))));
     } catch (e) {
-      _logger.severe('Failed to create workout with name $name', e);
+      _logger.severe('Failed to create workout with name ${input.name}', e);
       return err(
         const ServiceError(
           type: OperationErrorTypes.operationFailure,
@@ -506,7 +389,7 @@ class WorkoutService {
 
                 createdOptions.add(
                   WorkoutSetExerciseOptionDto.fromModel(
-                    option.copyWith(id: optionKey),
+                    option.copyWith(id: Nullable(optionKey)),
                     exercise: optionDto,
                   ),
                 );
@@ -514,7 +397,7 @@ class WorkoutService {
 
               createdSetExercises.add(
                 WorkoutSetExerciseDto.fromModel(
-                  setExercise.copyWith(id: setExerciseId),
+                  setExercise.copyWith(id: Nullable(setExerciseId)),
                   exercise: exerciseInput.exercise,
                   options: createdOptions,
                 ),
@@ -523,7 +406,7 @@ class WorkoutService {
 
             createdSets.add(
               WorkoutSetDto.fromModel(
-                set.copyWith(id: setId),
+                set.copyWith(id: Nullable(setId)),
                 exercises: createdSetExercises,
               ),
             );
@@ -531,7 +414,7 @@ class WorkoutService {
 
           createdWorkouts.add(
             WorkoutDto.fromModel(
-              workout.copyWith(id: workoutId),
+              workout.copyWith(id: Nullable(workoutId)),
               sets: createdSets,
             ),
           );
@@ -557,16 +440,10 @@ class WorkoutService {
     }
   }
 
-  Future<Result<WorkoutDto, ServiceError<SingleErrorTypes>>> updateWorkout({
-    required int id,
-    String? name,
-    Difficulty? difficulty,
-    EditorType? editorType,
-    String? description,
-    PictureData? picture,
-    VideoData? video,
-    bool? isFavorite,
-  }) async {
+  Future<Result<WorkoutDto, ServiceError<SingleErrorTypes>>> updateWorkout(
+    int id,
+    WorkoutInput input,
+  ) async {
     _logger.info('Updating workout with id $id');
     try {
       final Workout? workout = await _repository.selectOne(id);
@@ -581,13 +458,14 @@ class WorkoutService {
       }
 
       final Workout updatedWorkout = workout.copyWith(
-        name: name,
-        difficulty: difficulty,
-        description: description,
-        picture: picture,
-        video: video,
-        isFavorite: isFavorite,
-        editorType: editorType,
+        name: input.name,
+        difficulty: input.difficulty,
+        description: input.description,
+        picture: input.picture,
+        video: input.video,
+        phase: input.phase,
+        isFavorite: input.isFavorite,
+        editorType: input.editorType,
         updatedAt: DateUtilities.getNowUtcUnix(),
       );
       await _repository.update(updatedWorkout);
@@ -595,6 +473,39 @@ class WorkoutService {
       return ok(WorkoutDto.fromModel(updatedWorkout));
     } catch (e) {
       _logger.severe('Failed to update workout with id $id', e);
+      return err(
+        const ServiceError(
+          type: SingleErrorTypes.operationFailure,
+          description: 'Failed to update workout',
+        ),
+      );
+    }
+  }
+
+  Future<Result<WorkoutDto, ServiceError<SingleErrorTypes>>>
+  updateWorkoutFavorite(int id, bool isFavorite) async {
+    _logger.info('Updating workout favorite status with id $id');
+    try {
+      final Workout? workout = await _repository.selectOne(id);
+      if (workout == null) {
+        _logger.info('Workout with id $id not found');
+        return err(
+          const ServiceError(
+            type: SingleErrorTypes.notFound,
+            description: 'Workout not found',
+          ),
+        );
+      }
+
+      final Workout updatedWorkout = workout.copyWith(
+        isFavorite: isFavorite,
+        updatedAt: DateUtilities.getNowUtcUnix(),
+      );
+      await _repository.update(updatedWorkout);
+      _logger.info('Updated workout favorite status with id $id');
+      return ok(WorkoutDto.fromModel(updatedWorkout));
+    } catch (e) {
+      _logger.severe('Failed to update workout favorite status with id $id', e);
       return err(
         const ServiceError(
           type: SingleErrorTypes.operationFailure,
@@ -899,8 +810,8 @@ class WorkoutService {
             setType: input.setType,
             minSets: input.minSets,
             recommendedRestSecs: input.recommendedRestSecs,
-            maxSets: input.maxSets,
-            maxRestSecs: input.maxRestSecs,
+            maxSets: Nullable(input.maxSets),
+            maxRestSecs: Nullable(input.maxRestSecs),
             totalExercises: input.exercises.length,
             totalReps:
                 (input.maxSets ?? input.minSets) *
@@ -908,6 +819,7 @@ class WorkoutService {
                   return previousValue + (element.maxReps ?? element.minReps);
                 }),
             position: input.position,
+            updatedAt: DateUtilities.getNowUtcUnix(),
           );
 
           if (oldPosition != input.position) {
@@ -1136,9 +1048,10 @@ class WorkoutService {
       exerciseId: exerciseInput.exerciseId,
       position: exerciseInput.position,
       minReps: exerciseInput.minReps,
-      maxReps: exerciseInput.maxReps,
+      maxReps: Nullable(exerciseInput.maxReps),
       toMaxReps: exerciseInput.toMaxReps,
-      difficulty: exerciseInput.difficulty,
+      difficulty: Nullable(exerciseInput.difficulty),
+      updatedAt: DateUtilities.getNowUtcUnix(),
     );
 
     if (oldPosition != exerciseInput.position) {

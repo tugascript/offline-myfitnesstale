@@ -8,7 +8,6 @@ import '../../../cubits/states/workout_record_state.dart';
 import '../../../cubits/workout_record_cubit.dart';
 import '../../../models/common.dart';
 import '../../../models/enums.dart';
-import '../../../services/dtos/create_workout_record_batch_dto.dart';
 import '../../../services/dtos/workout_set_dto.dart';
 import '../../../services/dtos/workout_set_exercise_record_dto.dart';
 import '../../../utilities/converters.dart';
@@ -23,6 +22,8 @@ class UpdateWorkoutRecordEditor extends StatefulWidget {
   final DataDisplaySizesList sizes;
   final Units units;
   final List<WorkoutSetDto> sets;
+  final int workoutId;
+  final int version;
   final int workoutRecordId;
 
   const UpdateWorkoutRecordEditor({
@@ -31,6 +32,8 @@ class UpdateWorkoutRecordEditor extends StatefulWidget {
     required this.sizes,
     required this.units,
     required this.sets,
+    required this.workoutId,
+    required this.version,
     required this.workoutRecordId,
   });
 
@@ -144,10 +147,14 @@ class _UpdateWorkoutRecordEditorState extends State<UpdateWorkoutRecordEditor> {
     }
 
     await context.read<WorkoutRecordCubit>().batchUpdateWorkoutRecord(
-      workoutRecordId: widget.workoutRecordId,
-      startedAt: _startedAt,
-      completedAt: _completedAt,
-      sets: _sets,
+      widget.workoutRecordId,
+      WorkoutRecordBatchInput(
+        workoutId: widget.workoutId,
+        version: widget.version,
+        startedAt: _startedAt,
+        completedAt: _completedAt,
+        sets: _sets,
+      ),
     );
     if (!mounted) return;
     final err = context.read<WorkoutRecordCubit>().state.error;

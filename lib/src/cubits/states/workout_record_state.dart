@@ -24,15 +24,15 @@ final class WorkoutRecordPagination extends Equatable {
   }
 
   WorkoutRecordPagination copyWith({
-    int? workoutId,
-    (DateTime, DateTime)? dateRange,
+    Nullable<int>? workoutId,
+    Nullable<(DateTime, DateTime)>? dateRange,
     int? limit,
     int? offset,
     int? total,
   }) {
     return WorkoutRecordPagination(
-      workoutId: workoutId ?? this.workoutId,
-      dateRange: dateRange ?? this.dateRange,
+      workoutId: workoutId != null ? workoutId.value : this.workoutId,
+      dateRange: dateRange != null ? dateRange.value : this.dateRange,
       limit: limit ?? this.limit,
       offset: offset ?? this.offset,
       total: total ?? this.total,

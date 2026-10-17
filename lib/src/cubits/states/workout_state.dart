@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 
+import '../../common/nullable.dart';
 import '../../models/enums.dart';
 import '../../services/dtos/workout_dto.dart';
 import 'common_state.dart';
@@ -35,8 +36,8 @@ final class WorkoutPagination extends Equatable {
 
   WorkoutPagination copyWith({
     String? name,
-    MuscleGroup? muscleGroup,
-    Difficulty? difficulty,
+    Nullable<MuscleGroup>? muscleGroup,
+    Nullable<Difficulty>? difficulty,
     int? limit,
     int? offset,
     int? total,
@@ -44,8 +45,8 @@ final class WorkoutPagination extends Equatable {
   }) {
     return WorkoutPagination(
       name: name ?? this.name,
-      muscleGroup: muscleGroup, // if the user passes null
-      difficulty: difficulty, // if the user passes null
+      muscleGroup: muscleGroup != null ? muscleGroup.value : this.muscleGroup,
+      difficulty: difficulty != null ? difficulty.value : this.difficulty,
       limit: limit ?? this.limit,
       offset: offset ?? this.offset,
       total: total ?? this.total,
@@ -86,18 +87,20 @@ final class WorkoutState extends Equatable {
   WorkoutState copyWith({
     List<WorkoutDto>? workouts,
     WorkoutPagination? pagination,
-    WorkoutDto? selectedWorkout,
+    Nullable<WorkoutDto>? selectedWorkout,
     bool? isLoading,
-    ErrorState? error,
+    Nullable<ErrorState>? error,
     List<WorkoutDto>? workoutSelection,
   }) {
     return WorkoutState(
       workouts: workouts ?? this.workouts,
       pagination: pagination ?? this.pagination,
-      selectedWorkout: selectedWorkout ?? this.selectedWorkout,
+      selectedWorkout: selectedWorkout != null
+          ? selectedWorkout.value
+          : this.selectedWorkout,
       isLoading: isLoading ?? this.isLoading,
       workoutSelection: workoutSelection ?? this.workoutSelection,
-      error: error,
+      error: error != null ? error.value : this.error,
     );
   }
 

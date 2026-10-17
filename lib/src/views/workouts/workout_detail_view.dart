@@ -105,9 +105,9 @@ class _WorkoutDetailViewState extends State<WorkoutDetailView> {
                   sizes: sizes,
                   workoutDto: workout,
                   actionButtonPress: () {
-                    context.read<WorkoutCubit>().updateWorkout(
-                      id: workout.id,
-                      isFavorite: !workout.isFavorite,
+                    context.read<WorkoutCubit>().updateWorkoutFavorite(
+                      workout.id,
+                      !workout.isFavorite,
                     );
                   },
                 ),

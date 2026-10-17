@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 
+import '../../common/nullable.dart';
 import '../../models/common.dart';
 import '../../models/workout_set_exercise_model.dart';
 import 'dto.dart';
@@ -56,23 +57,23 @@ class WorkoutSetExerciseDto extends Equatable
     int? id,
     int? position,
     int? minReps,
-    int? maxReps,
+    Nullable<int>? maxReps,
     int? exerciseId,
-    WorkoutSetExerciseDifficulty? difficulty,
+    Nullable<WorkoutSetExerciseDifficulty>? difficulty,
     bool? toMaxReps,
-    ExerciseDto? exercise,
-    List<WorkoutSetExerciseOptionDto>? options,
+    Nullable<ExerciseDto>? exercise,
+    Nullable<List<WorkoutSetExerciseOptionDto>>? options,
   }) {
     return WorkoutSetExerciseDto(
       id: id ?? this.id,
       position: position ?? this.position,
       minReps: minReps ?? this.minReps,
-      maxReps: maxReps ?? this.maxReps,
+      maxReps: maxReps != null ? maxReps.value : this.maxReps,
       exerciseId: exerciseId ?? this.exerciseId,
-      difficulty: difficulty ?? this.difficulty,
+      difficulty: difficulty != null ? difficulty.value : this.difficulty,
       toMaxReps: toMaxReps ?? this.toMaxReps,
-      exercise: exercise ?? this.exercise,
-      options: options ?? this.options,
+      exercise: exercise != null ? exercise.value : this.exercise,
+      options: options != null ? options.value : this.options,
     );
   }
 

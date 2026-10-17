@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 
+import '../../common/nullable.dart';
 import '../../models/common.dart';
 import '../../models/workout_set_exercise_record_model.dart';
 import 'dto.dart';
@@ -50,7 +51,7 @@ class WorkoutSetExerciseRecordDto extends Equatable
     int? reps,
     int? weightGrams,
     WorkoutSetExerciseDifficulty? difficulty,
-    ExerciseDto? exercise,
+    Nullable<ExerciseDto>? exercise,
   }) {
     return WorkoutSetExerciseRecordDto(
       id: id ?? this.id,
@@ -59,7 +60,7 @@ class WorkoutSetExerciseRecordDto extends Equatable
       reps: reps ?? this.reps,
       weightGrams: weightGrams ?? this.weightGrams,
       difficulty: difficulty ?? this.difficulty,
-      exercise: exercise ?? this.exercise,
+      exercise: exercise != null ? exercise.value : this.exercise,
     );
   }
 
