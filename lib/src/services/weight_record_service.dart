@@ -369,12 +369,21 @@ class WeightRecordService {
   createWeightRecord(WeightRecordInput input) async {
     _logger.info('Creating weight record');
     try {
+      final weightGoalIdResult = await _getCurrentWeightGoalId();
+      if (weightGoalIdResult.isErr()) {
+        _logger.severe(
+          'Failed to get current weight goal id',
+          weightGoalIdResult.error,
+        );
+        return err(weightGoalIdResult.error);
+      }
+
       final WeightRecord weightRecord = WeightRecord.create(
         weight: input.weight,
         recordDate: DateUtilities.getDateUnix(input.recordDate),
         fatPercentage: input.fatPercentage.value,
         pictureUri: input.pictureUri.value,
-        weightGoalId: input.weightGoalId.value,
+        weightGoalId: weightGoalIdResult.value,
       );
       final int id = await _repository.insert(weightRecord);
       _logger.info('Created weight record with id $id');
@@ -390,6 +399,23 @@ class WeightRecordService {
         ),
       );
     }
+  }
+
+  Future<Result<int?, ServiceError<OperationErrorTypes>>>
+  _getCurrentWeightGoalId() async {
+    final result = await getActiveWeightGoal();
+    if (result.isOk()) {
+      return ok(result.value.id);
+    }
+    if (result.error.type == SingleErrorTypes.notFound) {
+      return ok(null);
+    }
+    return err(
+      const ServiceError(
+        type: OperationErrorTypes.operationFailure,
+        description: 'Failed to get current weight goal id',
+      ),
+    );
   }
 
   Future<
@@ -567,7 +593,6 @@ class WeightRecordService {
         recordDate: DateUtilities.getDateUnix(input.recordDate),
         fatPercentage: input.fatPercentage,
         pictureUri: input.pictureUri,
-        weightGoalId: input.weightGoalId,
         updatedAt: DateUtilities.getNowUtcUnix(),
       );
       await _repository.update(updatedWeightRecord);
