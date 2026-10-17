@@ -157,6 +157,7 @@ class _WorkoutEditViewState extends State<WorkoutEditView> {
                                           )
                                         : null,
                                   ),
+                                  phase: Nullable(workout.phase),
                                 ),
                               );
 
