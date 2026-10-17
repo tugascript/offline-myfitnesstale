@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../common/nullable.dart';
 import '../../cubits/entitlement_cubit.dart';
 import '../../cubits/states/entitlement_state.dart';
 import '../../cubits/states/workout_state.dart';
 import '../../cubits/workout_cubit.dart';
+import '../../models/common.dart';
 import '../../models/enums.dart';
 import '../../services/entitlement_guard.dart';
 import '../../utilities/sizes/data_display_sizes.dart';
@@ -132,12 +134,30 @@ class _WorkoutEditViewState extends State<WorkoutEditView> {
                               String? description,
                             }) async {
                               await context.read<WorkoutCubit>().updateWorkout(
-                                id: workout.id,
-                                name: name,
-                                isFavorite: isFavorite,
-                                difficulty: difficulty,
-                                editorType: editorType,
-                                description: description,
+                                workout.id,
+                                WorkoutInput(
+                                  name: name,
+                                  isFavorite: isFavorite,
+                                  difficulty: difficulty,
+                                  editorType: editorType,
+                                  description: Nullable(description),
+                                  picture: Nullable(
+                                    workout.picture != null
+                                        ? PictureData(
+                                            uri: workout.picture!.uri,
+                                            storage: workout.picture!.storage,
+                                          )
+                                        : null,
+                                  ),
+                                  video: Nullable(
+                                    workout.video != null
+                                        ? VideoData(
+                                            uri: workout.video!.uri,
+                                            platform: workout.video!.platform,
+                                          )
+                                        : null,
+                                  ),
+                                ),
                               );
 
                               if (!mounted) return;

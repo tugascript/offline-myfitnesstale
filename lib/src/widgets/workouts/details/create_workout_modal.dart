@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../common/nullable.dart';
 import '../../../cubits/entitlement_cubit.dart';
 import '../../../cubits/states/workout_state.dart';
 import '../../../cubits/workout_cubit.dart';
@@ -47,11 +48,13 @@ class CreateWorkoutDialog extends StatelessWidget {
                   String? description,
                 }) async {
                   await context.read<WorkoutCubit>().createWorkout(
-                    name: name,
-                    isFavorite: isFavorite,
-                    difficulty: difficulty,
-                    editorType: editorType,
-                    description: description,
+                    WorkoutInput(
+                      name: name,
+                      isFavorite: isFavorite,
+                      difficulty: difficulty,
+                      editorType: editorType,
+                      description: Nullable(description),
+                    ),
                   );
                   await Future.delayed(const Duration(milliseconds: 10));
 

@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 
+import '../common/nullable.dart';
 import 'common.dart';
 import 'enums.dart';
 import 'exercise_model.dart';
@@ -172,31 +173,31 @@ final class WorkoutSetExercise extends Equatable implements Model {
 
   @override
   WorkoutSetExercise copyWith({
-    int? id,
+    Nullable<int>? id,
     int? workoutId,
     int? workoutVersion,
     int? workoutSetId,
     int? exerciseId,
     int? position,
     int? minReps,
-    int? maxReps,
+    Nullable<int>? maxReps,
     bool? toMaxReps,
-    WorkoutSetExerciseDifficulty? difficulty,
+    Nullable<WorkoutSetExerciseDifficulty>? difficulty,
     CreatedBy? createdBy,
     int? createdAt,
     int? updatedAt,
   }) {
     return WorkoutSetExercise(
-      id: id ?? this.id,
+      id: id != null ? id.value : this.id,
       workoutId: workoutId ?? this.workoutId,
       workoutVersion: workoutVersion ?? this.workoutVersion,
       workoutSetId: workoutSetId ?? this.workoutSetId,
       exerciseId: exerciseId ?? this.exerciseId,
       position: position ?? this.position,
       minReps: minReps ?? this.minReps,
-      maxReps: maxReps ?? this.maxReps,
+      maxReps: maxReps != null ? maxReps.value : this.maxReps,
       toMaxReps: toMaxReps ?? this.toMaxReps,
-      difficulty: difficulty ?? this.difficulty,
+      difficulty: difficulty != null ? difficulty.value : this.difficulty,
       createdBy: createdBy ?? this.createdBy,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,

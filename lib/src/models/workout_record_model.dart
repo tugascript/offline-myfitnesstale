@@ -1,5 +1,8 @@
 import 'dart:convert';
 
+import 'package:equatable/equatable.dart';
+
+import '../common/nullable.dart';
 import 'common.dart';
 import 'enums.dart';
 import 'model.dart';
@@ -34,7 +37,7 @@ enum WorkoutRecordColumns with Columns {
   const WorkoutRecordColumns(this.value);
 }
 
-class WorkoutRecord implements Model {
+class WorkoutRecord extends Equatable implements Model {
   @override
   final int? id;
   final int workoutId;
@@ -213,7 +216,7 @@ class WorkoutRecord implements Model {
 
   @override
   WorkoutRecord copyWith({
-    int? id,
+    Nullable<int>? id,
     int? workoutId,
     int? totalSets,
     int? totalReps,
@@ -226,14 +229,14 @@ class WorkoutRecord implements Model {
     int? currentExercisePosition,
     int? version,
     int? startedAt,
-    int? completedAt,
-    int? droppedAt,
+    Nullable<int>? completedAt,
+    Nullable<int>? droppedAt,
     ProgressStatus? status,
     int? createdAt,
     int? updatedAt,
   }) {
     return WorkoutRecord(
-      id: id ?? this.id,
+      id: id != null ? id.value : this.id,
       workoutId: workoutId ?? this.workoutId,
       totalSets: totalSets ?? this.totalSets,
       totalReps: totalReps ?? this.totalReps,
@@ -248,8 +251,8 @@ class WorkoutRecord implements Model {
       version: version ?? this.version,
       startedAt: startedAt ?? this.startedAt,
       status: status ?? this.status,
-      completedAt: completedAt ?? this.completedAt,
-      droppedAt: droppedAt ?? this.droppedAt,
+      completedAt: completedAt != null ? completedAt.value : this.completedAt,
+      droppedAt: droppedAt != null ? droppedAt.value : this.droppedAt,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -259,4 +262,26 @@ class WorkoutRecord implements Model {
   String toString() {
     return 'WorkoutRecord{id: $id, workoutId: $workoutId, totalSets: $totalSets, totalReps: $totalReps, totalRestSecs: $totalRestSecs, totalVolume: $totalVolume, muscleGroups: $muscleGroups, muscles: $muscles, version: $version, startedAt: $startedAt, status: $status, completedAt: $completedAt, droppedAt: $droppedAt, createdAt: $createdAt, updatedAt: $updatedAt}';
   }
+
+  @override
+  List<Object?> get props => [
+    id,
+    workoutId,
+    totalSets,
+    totalReps,
+    totalRestSecs,
+    totalVolume,
+    muscleGroups,
+    muscles,
+    version,
+    startedAt,
+    status,
+    currentSetPosition,
+    currentSetNumber,
+    currentExercisePosition,
+    completedAt,
+    droppedAt,
+    createdAt,
+    updatedAt,
+  ];
 }

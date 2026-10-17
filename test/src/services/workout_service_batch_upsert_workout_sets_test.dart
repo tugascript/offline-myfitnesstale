@@ -976,4 +976,98 @@ void main() {
     expect(rowsByVersion, hasLength(2));
     expect(rowsByVersion.map((row) => row['count']), everyElement(1));
   });
+
+  test('clears nullable maxSets, maxRestSecs, maxReps, and difficulty when omitted on update', () async {
+    final db = await testDatabase.db;
+    final workoutId = await createWorkout(
+      db,
+      totalSets: 4,
+      totalReps: 40,
+      muscleGroups: {MuscleGroup.push},
+      muscles: const TargetMuscles(
+        primary: {Muscle.chest},
+        secondary: <Muscle>{},
+      ),
+    );
+    final exerciseId = await createExercise(
+      db,
+      muscleGroup: MuscleGroup.push,
+      primaryMuscles: {Muscle.chest},
+    );
+    final setId = await createWorkoutSet(
+      db,
+      workoutId: workoutId,
+      workoutVersion: 1,
+      position: 1,
+      minSets: 2,
+      maxSets: 4,
+      recommendedRestSecs: 90,
+      maxRestSecs: 150,
+      totalExercises: 1,
+      totalReps: 40,
+    );
+    final setExerciseId = await db.insert(
+      WorkoutSetExercise.table,
+      WorkoutSetExercise.create(
+        workoutId: workoutId,
+        workoutVersion: 1,
+        workoutSetId: setId,
+        exerciseId: exerciseId,
+        position: 1,
+        minReps: 6,
+        maxReps: 10,
+        difficulty: const WorkoutSetExerciseDifficulty(
+          type: WorkoutSetExerciseDifficultyType.rpe,
+          value: 8,
+        ),
+      ).toMap(),
+    );
+
+    final result = await workoutService.batchUpsertWorkoutSets(
+      workoutId: workoutId,
+      inputs: [
+        WorkoutSetUpsertInput(
+          id: setId,
+          setType: WorkoutSetType.standard,
+          minSets: 2,
+          maxSets: null,
+          recommendedRestSecs: 90,
+          maxRestSecs: null,
+          position: 1,
+          exercises: [
+            WorkoutSetExerciseUpsertInput(
+              id: setExerciseId,
+              exerciseId: exerciseId,
+              position: 1,
+              minReps: 6,
+              maxReps: null,
+              difficulty: null,
+            ),
+          ],
+        ),
+      ],
+    );
+
+    expect(result.isOk(), isTrue);
+
+    final updatedSet = WorkoutSet.fromMap(
+      (await db.query(
+        WorkoutSet.table,
+        where: '${WorkoutSetColumns.id.value} = ?',
+        whereArgs: [setId],
+      )).single,
+    );
+    expect(updatedSet.maxSets, isNull);
+    expect(updatedSet.maxRestSecs, isNull);
+
+    final updatedSetExercise = WorkoutSetExercise.fromMap(
+      (await db.query(
+        WorkoutSetExercise.table,
+        where: '${WorkoutSetExerciseColumns.id.value} = ?',
+        whereArgs: [setExerciseId],
+      )).single,
+    );
+    expect(updatedSetExercise.maxReps, isNull);
+    expect(updatedSetExercise.difficulty, isNull);
+  });
 }

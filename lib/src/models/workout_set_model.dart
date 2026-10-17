@@ -1,3 +1,6 @@
+import 'package:equatable/equatable.dart';
+
+import '../common/nullable.dart';
 import 'enums.dart';
 import 'model.dart';
 import 'utilities.dart';
@@ -27,7 +30,7 @@ enum WorkoutSetColumns with Columns {
   const WorkoutSetColumns(this.value);
 }
 
-class WorkoutSet implements Model {
+class WorkoutSet extends Equatable implements Model {
   @override
   final int? id;
   final int position;
@@ -166,14 +169,14 @@ class WorkoutSet implements Model {
 
   @override
   WorkoutSet copyWith({
-    int? id,
+    Nullable<int>? id,
     int? position,
     int? workoutId,
     WorkoutSetType? setType,
     int? minSets,
-    int? maxSets,
+    Nullable<int>? maxSets,
     int? recommendedRestSecs,
-    int? maxRestSecs,
+    Nullable<int>? maxRestSecs,
     int? totalExercises,
     int? totalReps,
     int? workoutVersion,
@@ -182,14 +185,14 @@ class WorkoutSet implements Model {
     int? updatedAt,
   }) {
     return WorkoutSet(
-      id: id ?? this.id,
+      id: id != null ? id.value : this.id,
       position: position ?? this.position,
       workoutId: workoutId ?? this.workoutId,
       setType: setType ?? this.setType,
       minSets: minSets ?? this.minSets,
-      maxSets: maxSets ?? this.maxSets,
+      maxSets: maxSets != null ? maxSets.value : this.maxSets,
       recommendedRestSecs: recommendedRestSecs ?? this.recommendedRestSecs,
-      maxRestSecs: maxRestSecs ?? this.maxRestSecs,
+      maxRestSecs: maxRestSecs != null ? maxRestSecs.value : this.maxRestSecs,
       totalExercises: totalExercises ?? this.totalExercises,
       totalReps: totalReps ?? this.totalReps,
       workoutVersion: workoutVersion ?? this.workoutVersion,
@@ -198,4 +201,22 @@ class WorkoutSet implements Model {
       updatedAt: updatedAt ?? this.updatedAt,
     );
   }
+
+  @override
+  List<Object?> get props => [
+    id,
+    position,
+    workoutId,
+    setType,
+    minSets,
+    maxSets,
+    recommendedRestSecs,
+    maxRestSecs,
+    totalExercises,
+    totalReps,
+    workoutVersion,
+    createdBy,
+    createdAt,
+    updatedAt,
+  ];
 }

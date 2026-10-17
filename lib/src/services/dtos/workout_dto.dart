@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 
+import '../../common/nullable.dart';
 import '../../models/common.dart';
 import '../../models/enums.dart';
 import '../../models/workout_model.dart';
@@ -74,13 +75,13 @@ class WorkoutDto extends Equatable implements Dto<Workout> {
     String? name,
     Set<MuscleGroup>? muscleGroups,
     TargetMuscles? muscles,
-    String? description,
-    PictureDto? picture,
-    VideoDto? video,
+    Nullable<String>? description,
+    Nullable<PictureDto>? picture,
+    Nullable<VideoDto>? video,
     Difficulty? difficulty,
     bool? isFavorite,
     int? version,
-    List<WorkoutSetDto>? sets,
+    Nullable<List<WorkoutSetDto>>? sets,
     int? totalSets,
     int? totalReps,
     EditorType? editorType,
@@ -91,9 +92,9 @@ class WorkoutDto extends Equatable implements Dto<Workout> {
       name: name ?? this.name,
       muscleGroups: muscleGroups ?? this.muscleGroups,
       muscles: muscles ?? this.muscles,
-      description: description ?? this.description,
-      picture: picture ?? this.picture,
-      video: video ?? this.video,
+      description: description != null ? description.value : this.description,
+      picture: picture != null ? picture.value : this.picture,
+      video: video != null ? video.value : this.video,
       difficulty: difficulty ?? this.difficulty,
       isFavorite: isFavorite ?? this.isFavorite,
       version: version ?? this.version,
@@ -101,7 +102,7 @@ class WorkoutDto extends Equatable implements Dto<Workout> {
       totalReps: totalReps ?? this.totalReps,
       editorType: editorType ?? this.editorType,
       createdBy: createdBy ?? this.createdBy,
-      sets: sets ?? this.sets,
+      sets: sets != null ? sets.value : this.sets,
     );
   }
 

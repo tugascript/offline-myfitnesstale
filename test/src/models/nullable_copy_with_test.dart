@@ -8,12 +8,26 @@ import 'package:myfitnesstale/src/models/exercise_record_model.dart';
 import 'package:myfitnesstale/src/models/food_model.dart';
 import 'package:myfitnesstale/src/models/weight_goal_model.dart';
 import 'package:myfitnesstale/src/models/weight_record_model.dart';
+import 'package:myfitnesstale/src/models/workout_model.dart';
+import 'package:myfitnesstale/src/models/workout_record_model.dart';
+import 'package:myfitnesstale/src/models/workout_set_exercise_model.dart';
+import 'package:myfitnesstale/src/models/workout_set_exercise_option_model.dart';
+import 'package:myfitnesstale/src/models/workout_set_exercise_record_model.dart';
+import 'package:myfitnesstale/src/models/workout_set_model.dart';
+import 'package:myfitnesstale/src/models/workout_set_record_model.dart';
 import 'package:myfitnesstale/src/services/dtos/equipment_dto.dart';
 import 'package:myfitnesstale/src/services/dtos/exercise_dto.dart';
 import 'package:myfitnesstale/src/services/dtos/exercise_record_dto.dart';
 import 'package:myfitnesstale/src/services/dtos/strength_goal_dto.dart';
 import 'package:myfitnesstale/src/services/dtos/weight_goal_dto.dart';
 import 'package:myfitnesstale/src/services/dtos/weight_record_dto.dart';
+import 'package:myfitnesstale/src/services/dtos/workout_dto.dart';
+import 'package:myfitnesstale/src/services/dtos/workout_record_dto.dart';
+import 'package:myfitnesstale/src/services/dtos/workout_set_dto.dart';
+import 'package:myfitnesstale/src/services/dtos/workout_set_exercise_dto.dart';
+import 'package:myfitnesstale/src/services/dtos/workout_set_exercise_option_dto.dart';
+import 'package:myfitnesstale/src/services/dtos/workout_set_exercise_record_dto.dart';
+import 'package:myfitnesstale/src/services/dtos/workout_set_record_dto.dart';
 
 void main() {
   group('nullable copyWith fields', () {
@@ -228,6 +242,214 @@ void main() {
         isNull,
       );
       expect(recordDto.copyWith(picture: const Nullable(null)).picture, isNull);
+    });
+
+    test('Workout and WorkoutRecord related models and DTOs support Nullable copyWith', () {
+      const pic = PictureData(
+        uri: 'file:///pic.jpg',
+        storage: PictureStorage.files,
+      );
+      const vid = VideoData(
+        uri: 'https://youtu.be/1',
+        platform: VideoPlatform.youtube,
+      );
+
+      final workout = Workout.create(
+        name: 'Push Day',
+        difficulty: Difficulty.intermediate,
+        description: 'Chest focus',
+        picture: pic,
+        video: vid,
+        phase: WorkoutPhase.maxStrength,
+      ).copyWith(id: const Nullable(1));
+      expect(workout.copyWith().description, 'Chest focus');
+      expect(workout.copyWith().phase, WorkoutPhase.maxStrength);
+      expect(
+        workout.copyWith(description: const Nullable(null)).description,
+        isNull,
+      );
+      expect(workout.copyWith(picture: const Nullable(null)).picture, isNull);
+      expect(workout.copyWith(video: const Nullable(null)).video, isNull);
+      expect(workout.copyWith(phase: const Nullable(null)).phase, isNull);
+
+      final workoutSet = WorkoutSet.create(
+        workoutId: 1,
+        workoutVersion: 1,
+        position: 1,
+        setType: WorkoutSetType.standard,
+        minSets: 3,
+        maxSets: 4,
+        recommendedRestSecs: 90,
+        maxRestSecs: 120,
+      ).copyWith(id: const Nullable(2));
+      expect(workoutSet.copyWith().maxSets, 4);
+      expect(workoutSet.copyWith().maxRestSecs, 120);
+      expect(
+        workoutSet.copyWith(maxSets: const Nullable(null)).maxSets,
+        isNull,
+      );
+      expect(
+        workoutSet.copyWith(maxRestSecs: const Nullable(null)).maxRestSecs,
+        isNull,
+      );
+
+      const diff = WorkoutSetExerciseDifficulty(
+        type: WorkoutSetExerciseDifficultyType.rpe,
+        value: 8,
+      );
+      final setExercise = WorkoutSetExercise.create(
+        workoutId: 1,
+        workoutVersion: 1,
+        workoutSetId: 2,
+        exerciseId: 10,
+        position: 1,
+        minReps: 8,
+        maxReps: 12,
+        difficulty: diff,
+      ).copyWith(id: const Nullable(3));
+      expect(setExercise.copyWith().maxReps, 12);
+      expect(setExercise.copyWith().difficulty, diff);
+      expect(
+        setExercise.copyWith(maxReps: const Nullable(null)).maxReps,
+        isNull,
+      );
+      expect(
+        setExercise.copyWith(difficulty: const Nullable(null)).difficulty,
+        isNull,
+      );
+
+      final option = WorkoutSetExerciseOption.create(
+        workoutId: 1,
+        workoutVersion: 1,
+        workoutSetId: 2,
+        workoutSetExerciseId: 3,
+        exerciseId: 11,
+        position: 1,
+      ).copyWith(id: const Nullable(4));
+      expect(option.copyWith().id, 4);
+      expect(option.copyWith(id: const Nullable(null)).id, isNull);
+
+      final optionDto = WorkoutSetExerciseOptionDto.fromModel(option);
+      final setExerciseDto = WorkoutSetExerciseDto.fromModel(
+        setExercise,
+        options: [optionDto],
+      );
+      expect(setExerciseDto.copyWith().maxReps, 12);
+      expect(
+        setExerciseDto.copyWith(maxReps: const Nullable(null)).maxReps,
+        isNull,
+      );
+      expect(
+        setExerciseDto.copyWith(difficulty: const Nullable(null)).difficulty,
+        isNull,
+      );
+      expect(
+        setExerciseDto.copyWith(options: const Nullable(null)).options,
+        isNull,
+      );
+
+      final setDto = WorkoutSetDto.fromModel(
+        workoutSet,
+        exercises: [setExerciseDto],
+      );
+      expect(setDto.copyWith(maxSets: const Nullable(null)).maxSets, isNull);
+      expect(
+        setDto.copyWith(maxRestSecs: const Nullable(null)).maxRestSecs,
+        isNull,
+      );
+      expect(
+        setDto.copyWith(exercises: const Nullable(null)).exercises,
+        isNull,
+      );
+
+      final workoutDto = WorkoutDto.fromModel(workout, sets: [setDto]);
+      expect(
+        workoutDto.copyWith(description: const Nullable(null)).description,
+        isNull,
+      );
+      expect(workoutDto.copyWith(sets: const Nullable(null)).sets, isNull);
+
+      final workoutRecord = WorkoutRecord.create(
+        workoutId: 1,
+        version: 1,
+        startedAt: 1700000000,
+        completedAt: 1700003600,
+        droppedAt: 1700001800,
+      ).copyWith(id: const Nullable(5));
+      expect(workoutRecord.copyWith().completedAt, 1700003600);
+      expect(workoutRecord.copyWith().droppedAt, 1700001800);
+      expect(
+        workoutRecord.copyWith(completedAt: const Nullable(null)).completedAt,
+        isNull,
+      );
+      expect(
+        workoutRecord.copyWith(droppedAt: const Nullable(null)).droppedAt,
+        isNull,
+      );
+
+      final setRecord = WorkoutSetRecord.create(
+        workoutSetId: 2,
+        workoutRecordId: 5,
+        setNumber: 1,
+        startedAt: 1700000000,
+        totalRestSecs: 90,
+        completedAt: 1700000100,
+      ).copyWith(id: const Nullable(6));
+      expect(setRecord.copyWith().totalRestSecs, 90);
+      expect(setRecord.copyWith().completedAt, 1700000100);
+      expect(
+        setRecord.copyWith(totalRestSecs: const Nullable(null)).totalRestSecs,
+        isNull,
+      );
+      expect(
+        setRecord.copyWith(completedAt: const Nullable(null)).completedAt,
+        isNull,
+      );
+
+      final exerciseRecord = WorkoutSetExerciseRecord.create(
+        workoutSetExerciseId: 3,
+        workoutRecordId: 5,
+        workoutSetRecordId: 6,
+        exerciseId: 10,
+        position: 1,
+        reps: 10,
+        weightGrams: 60000,
+        difficulty: diff,
+      ).copyWith(id: const Nullable(7));
+      expect(exerciseRecord.copyWith().id, 7);
+
+      final exerciseRecordDto = WorkoutSetExerciseRecordDto.fromModel(
+        exerciseRecord,
+      );
+      final setRecordDto = WorkoutSetRecordDto.fromModel(
+        setRecord,
+        setExerciseRecords: [exerciseRecordDto],
+      );
+      expect(
+        setRecordDto
+            .copyWith(totalRestSecs: const Nullable(null))
+            .totalRestSecs,
+        isNull,
+      );
+      expect(
+        setRecordDto.copyWith(completedAt: const Nullable(null)).completedAt,
+        isNull,
+      );
+
+      final workoutRecordDto = WorkoutRecordDto.fromModel(
+        workoutRecord,
+        setRecords: [setRecordDto],
+      );
+      expect(
+        workoutRecordDto
+            .copyWith(completedAt: const Nullable(null))
+            .completedAt,
+        isNull,
+      );
+      expect(
+        workoutRecordDto.copyWith(setRecords: const Nullable(null)).setRecords,
+        isNull,
+      );
     });
   });
 }

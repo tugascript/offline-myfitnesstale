@@ -88,6 +88,8 @@ class _UpdateWorkoutRecordViewState extends State<UpdateWorkoutRecordView> {
                       theme: theme,
                       sizes: sizes,
                       units: profileState.system?.units ?? Units.metric,
+                      workoutId: widget.workoutId,
+                      version: widget.version,
                       workoutRecordId: widget.workoutRecordId,
                       sets: workout.sets!,
                     );

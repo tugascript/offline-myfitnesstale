@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite/sqflite.dart';
 
+import 'package:myfitnesstale/src/common/nullable.dart';
 import 'package:myfitnesstale/src/cubits/workout_plan_cubit.dart';
 import 'package:myfitnesstale/src/cubits/workout_plan_record_cubit.dart';
 import 'package:myfitnesstale/src/models/enums.dart';
@@ -398,15 +399,19 @@ void main() {
     final workoutId = await createWorkout(db, uniqueName('lifecycle-workout'));
     final service = WorkoutRecordService();
 
+    final startedAt = DateTime.now().subtract(const Duration(hours: 1));
     final first = await service.getOrCreateWorkoutRecord(
-      workoutId: workoutId,
-      startedAt: DateTime.now().subtract(const Duration(hours: 1)),
+      WorkoutRecordInput(workoutId: workoutId, startedAt: startedAt),
     );
     expect(first.isOk(), isTrue);
 
     final completed = await service.updateWorkoutRecord(
-      id: first.value.id,
-      completedAt: DateTime.now(),
+      first.value.id,
+      WorkoutRecordInput(
+        workoutId: workoutId,
+        startedAt: startedAt,
+        completedAt: Nullable(DateTime.now()),
+      ),
     );
     expect(completed.isOk(), isTrue);
 
@@ -420,8 +425,7 @@ void main() {
     expect(stored.status, ProgressStatus.completed);
 
     final next = await service.getOrCreateWorkoutRecord(
-      workoutId: workoutId,
-      startedAt: DateTime.now(),
+      WorkoutRecordInput(workoutId: workoutId, startedAt: DateTime.now()),
     );
     expect(next.isOk(), isTrue);
     expect(next.value.id, isNot(first.value.id));
@@ -433,11 +437,13 @@ void main() {
     final now = DateTime.now();
 
     final result = await WorkoutRecordService().batchCreateWorkoutRecord(
-      workoutId: workoutId,
-      version: 1,
-      startedAt: now.subtract(const Duration(hours: 1)),
-      completedAt: now,
-      sets: const [],
+      WorkoutRecordBatchInput(
+        workoutId: workoutId,
+        version: 1,
+        startedAt: now.subtract(const Duration(hours: 1)),
+        completedAt: now,
+        sets: const [],
+      ),
     );
     expect(result.isOk(), isTrue);
 

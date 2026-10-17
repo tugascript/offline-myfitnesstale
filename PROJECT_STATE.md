@@ -92,12 +92,17 @@ records. Media fields exist, but there is no picker, upload, or storage flow.
 
 ### Workouts and history
 
-- Creates reusable, versioned workouts with basic and advanced editors.
+- Creates, edits, favorites, and deletes reusable, versioned workouts with basic
+  and advanced editors using shared `WorkoutInput` PUT semantics (`Nullable<T>`
+  in `copyWith` clears omitted nullable fields across `Workout`, `WorkoutSet`,
+  `WorkoutSetExercise`, and `WorkoutSetExerciseOption`).
 - Supports sets, alternatives, rep ranges, rest, and difficulty.
 - Starts live workout records, logs decimal weight and reps, carries prior
-  values within a set group, and tracks rest/progress.
+  values within a set group, and tracks rest/progress using `WorkoutRecordInput`,
+  `WorkoutSetRecordInput`, and `WorkoutSetExerciseRecordInput` PUT semantics.
 - Completes, cancels, and resumes active workouts within the covered lifecycle.
-- Lists, creates, edits, and deletes completed workout history.
+- Lists, creates, edits, and deletes completed workout history using shared
+  `WorkoutRecordBatchInput` PUT semantics.
 
 Advanced mutations remain entitlement-gated. Free users receive an
 unavailable-in-this-build explanation instead of purchase controls.

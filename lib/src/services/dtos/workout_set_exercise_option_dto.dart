@@ -1,6 +1,7 @@
 import 'package:equatable/equatable.dart';
 import 'package:myfitnesstale/src/services/dtos/exercise_dto.dart';
 
+import '../../common/nullable.dart';
 import '../../models/workout_set_exercise_option_model.dart';
 import 'dto.dart';
 
@@ -42,14 +43,14 @@ class WorkoutSetExerciseOptionDto extends Equatable
     int? workoutSetExerciseId,
     int? exerciseId,
     int? position,
-    ExerciseDto? exercise,
+    Nullable<ExerciseDto>? exercise,
   }) {
     return WorkoutSetExerciseOptionDto(
       id: id ?? this.id,
       workoutSetExerciseId: workoutSetExerciseId ?? this.workoutSetExerciseId,
       exerciseId: exerciseId ?? this.exerciseId,
       position: position ?? this.position,
-      exercise: exercise ?? this.exercise,
+      exercise: exercise != null ? exercise.value : this.exercise,
     );
   }
 

@@ -3,11 +3,12 @@ import 'package:logging/logging.dart';
 
 import '../common/nullable.dart';
 import '../services/common/errors.dart';
-import '../services/dtos/create_workout_record_batch_dto.dart';
 import '../services/dtos/workout_record_dto.dart';
 import '../services/workout_record_service.dart';
 import 'states/common_state.dart';
 import 'states/workout_record_state.dart';
+
+export '../services/inputs/workout_record_input.dart';
 
 class WorkoutRecordCubit extends Cubit<WorkoutRecordState> {
   final WorkoutRecordService _workoutRecordService = WorkoutRecordService();
@@ -75,14 +76,14 @@ class WorkoutRecordCubit extends Cubit<WorkoutRecordState> {
             ? [...state.workoutRecords, ...workoutRecords]
             : workoutRecords,
         pagination: state.pagination.copyWith(
-          workoutId: workoutId,
-          dateRange: dateRange,
+          workoutId: workoutId != null ? Nullable(workoutId) : null,
+          dateRange: dateRange != null ? Nullable(dateRange) : null,
           total: paginatedData.total,
           limit: paginatedData.limit,
           offset: paginatedData.offset,
         ),
         isLoading: false,
-        error: Nullable(null),
+        error: const Nullable(null),
       ),
     );
   }
@@ -102,7 +103,7 @@ class WorkoutRecordCubit extends Cubit<WorkoutRecordState> {
         case SingleErrorTypes.notFound:
           emit(
             state.copyWith(
-              latestWorkoutRecord: Nullable(null),
+              latestWorkoutRecord: const Nullable(null),
               isLoading: false,
             ),
           );
@@ -116,7 +117,7 @@ class WorkoutRecordCubit extends Cubit<WorkoutRecordState> {
                   description: "Failed to get latest workout record",
                 ),
               ),
-              latestWorkoutRecord: Nullable(null),
+              latestWorkoutRecord: const Nullable(null),
               isLoading: false,
             ),
           );
@@ -130,7 +131,7 @@ class WorkoutRecordCubit extends Cubit<WorkoutRecordState> {
     emit(
       state.copyWith(
         latestWorkoutRecord: Nullable(result.value),
-        error: Nullable(null),
+        error: const Nullable(null),
         isLoading: false,
       ),
     );
@@ -181,7 +182,7 @@ class WorkoutRecordCubit extends Cubit<WorkoutRecordState> {
       state.copyWith(
         selectedWorkoutRecord: Nullable(result.value),
         isLoading: false,
-        error: Nullable(null),
+        error: const Nullable(null),
       ),
     );
   }
@@ -244,28 +245,20 @@ class WorkoutRecordCubit extends Cubit<WorkoutRecordState> {
               : state.latestWorkoutRecord,
         ),
         isLoading: false,
-        error: Nullable(null),
+        error: const Nullable(null),
       ),
     );
   }
 
-  Future<WorkoutRecordDto?> batchCreateWorkoutRecord({
-    required int workoutId,
-    required int version,
-    required DateTime startedAt,
-    required DateTime completedAt,
-    required List<CreateWorkoutSetRecordBatchDto> sets,
-  }) async {
-    _logger.info('Batch creating workout record for workout $workoutId');
+  Future<WorkoutRecordDto?> batchCreateWorkoutRecord(
+    WorkoutRecordBatchInput input,
+  ) async {
+    _logger.info(
+      'Batch creating workout record for workout ${input.workoutId}',
+    );
     emit(state.copyWith(isLoading: true));
 
-    final result = await _workoutRecordService.batchCreateWorkoutRecord(
-      workoutId: workoutId,
-      version: version,
-      startedAt: startedAt,
-      completedAt: completedAt,
-      sets: sets,
-    );
+    final result = await _workoutRecordService.batchCreateWorkoutRecord(input);
     if (result.isErr()) {
       final error = result.error;
       _logger.warning("Failed to batch create workout record", error);
@@ -308,26 +301,22 @@ class WorkoutRecordCubit extends Cubit<WorkoutRecordState> {
           total: state.pagination.total + 1,
         ),
         isLoading: false,
-        error: Nullable(null),
+        error: const Nullable(null),
       ),
     );
     return result.value;
   }
 
-  Future<void> batchUpdateWorkoutRecord({
-    required int workoutRecordId,
-    required DateTime startedAt,
-    required DateTime completedAt,
-    required List<CreateWorkoutSetRecordBatchDto> sets,
-  }) async {
+  Future<void> batchUpdateWorkoutRecord(
+    int workoutRecordId,
+    WorkoutRecordBatchInput input,
+  ) async {
     _logger.info('Batch updating workout record $workoutRecordId');
     emit(state.copyWith(isLoading: true));
 
     final result = await _workoutRecordService.batchUpdateWorkoutRecord(
-      workoutRecordId: workoutRecordId,
-      startedAt: startedAt,
-      completedAt: completedAt,
-      sets: sets,
+      workoutRecordId,
+      input,
     );
     if (result.isErr()) {
       final error = result.error;
@@ -381,7 +370,7 @@ class WorkoutRecordCubit extends Cubit<WorkoutRecordState> {
               : state.latestWorkoutRecord,
         ),
         isLoading: false,
-        error: Nullable(null),
+        error: const Nullable(null),
       ),
     );
   }

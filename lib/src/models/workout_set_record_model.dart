@@ -1,4 +1,8 @@
+import 'package:equatable/equatable.dart';
+
+import '../common/nullable.dart';
 import 'model.dart';
+import 'utilities.dart';
 import 'workout_record_model.dart';
 import 'workout_set_model.dart';
 
@@ -21,7 +25,7 @@ enum WorkoutSetRecordColumns with Columns {
   const WorkoutSetRecordColumns(this.value);
 }
 
-class WorkoutSetRecord implements Model {
+class WorkoutSetRecord extends Equatable implements Model {
   @override
   final int? id;
   final int workoutSetId;
@@ -110,7 +114,7 @@ class WorkoutSetRecord implements Model {
     int? totalRestSecs,
     int? completedAt,
   }) {
-    final int now = DateTime.now().millisecondsSinceEpoch;
+    final int now = DateUtilities.getNowUtcUnix();
     return WorkoutSetRecord(
       workoutSetId: workoutSetId,
       workoutRecordId: workoutRecordId,
@@ -125,24 +129,26 @@ class WorkoutSetRecord implements Model {
 
   @override
   WorkoutSetRecord copyWith({
-    int? id,
+    Nullable<int>? id,
     int? workoutSetId,
     int? workoutRecordId,
     int? setNumber,
-    int? totalRestSecs,
+    Nullable<int>? totalRestSecs,
     int? startedAt,
-    int? completedAt,
+    Nullable<int>? completedAt,
     int? createdAt,
     int? updatedAt,
   }) {
     return WorkoutSetRecord(
-      id: id ?? this.id,
+      id: id != null ? id.value : this.id,
       workoutSetId: workoutSetId ?? this.workoutSetId,
       workoutRecordId: workoutRecordId ?? this.workoutRecordId,
       setNumber: setNumber ?? this.setNumber,
-      totalRestSecs: totalRestSecs ?? this.totalRestSecs,
+      totalRestSecs: totalRestSecs != null
+          ? totalRestSecs.value
+          : this.totalRestSecs,
       startedAt: startedAt ?? this.startedAt,
-      completedAt: completedAt ?? this.completedAt,
+      completedAt: completedAt != null ? completedAt.value : this.completedAt,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -152,4 +158,17 @@ class WorkoutSetRecord implements Model {
   String toString() {
     return 'WorkoutSetRecord{id: $id, workoutSetId: $workoutSetId, workoutRecordId: $workoutRecordId, setNumber: $setNumber, totalRestSecs: $totalRestSecs, startedAt: $startedAt, completedAt: $completedAt, createdAt: $createdAt, updatedAt: $updatedAt}';
   }
+
+  @override
+  List<Object?> get props => [
+    id,
+    workoutSetId,
+    workoutRecordId,
+    setNumber,
+    startedAt,
+    totalRestSecs,
+    completedAt,
+    createdAt,
+    updatedAt,
+  ];
 }

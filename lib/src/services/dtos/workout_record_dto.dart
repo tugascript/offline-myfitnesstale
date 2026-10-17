@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 
+import '../../common/nullable.dart';
 import '../../models/common.dart';
 import '../../models/utilities.dart';
 import '../../models/workout_record_model.dart';
@@ -92,8 +93,8 @@ class WorkoutRecordDto extends Equatable implements Dto<WorkoutRecord> {
     int? currentSetNumber,
     int? currentExercisePosition,
     DateTime? startedAt,
-    DateTime? completedAt,
-    List<WorkoutSetRecordDto>? setRecords,
+    Nullable<DateTime>? completedAt,
+    Nullable<List<WorkoutSetRecordDto>>? setRecords,
   }) {
     return WorkoutRecordDto(
       id: id ?? this.id,
@@ -108,8 +109,8 @@ class WorkoutRecordDto extends Equatable implements Dto<WorkoutRecord> {
       totalVolume: totalVolume ?? this.totalVolume,
       muscles: muscles ?? this.muscles,
       startedAt: startedAt ?? this.startedAt,
-      completedAt: completedAt ?? this.completedAt,
-      setRecords: setRecords ?? this.setRecords,
+      completedAt: completedAt != null ? completedAt.value : this.completedAt,
+      setRecords: setRecords != null ? setRecords.value : this.setRecords,
     );
   }
 

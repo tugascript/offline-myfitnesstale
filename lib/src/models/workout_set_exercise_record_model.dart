@@ -1,3 +1,6 @@
+import 'package:equatable/equatable.dart';
+
+import '../common/nullable.dart';
 import 'common.dart';
 import 'exercise_model.dart';
 import 'model.dart';
@@ -27,7 +30,7 @@ enum WorkoutSetExerciseRecordColumns with Columns {
   const WorkoutSetExerciseRecordColumns(this.value);
 }
 
-class WorkoutSetExerciseRecord implements Model {
+class WorkoutSetExerciseRecord extends Equatable implements Model {
   @override
   final int? id;
   final int workoutSetExerciseId;
@@ -111,7 +114,7 @@ class WorkoutSetExerciseRecord implements Model {
 
   factory WorkoutSetExerciseRecord.fromMap(Map<String, Object?> map) {
     return WorkoutSetExerciseRecord(
-      id: map[WorkoutSetExerciseRecordColumns.id.value] as int,
+      id: map[WorkoutSetExerciseRecordColumns.id.value] as int?,
       workoutSetExerciseId:
           map[WorkoutSetExerciseRecordColumns.workoutSetExerciseId.value]
               as int,
@@ -159,7 +162,7 @@ class WorkoutSetExerciseRecord implements Model {
 
   @override
   WorkoutSetExerciseRecord copyWith({
-    int? id,
+    Nullable<int>? id,
     int? workoutSetExerciseId,
     int? workoutRecordId,
     int? workoutSetRecordId,
@@ -172,7 +175,7 @@ class WorkoutSetExerciseRecord implements Model {
     int? updatedAt,
   }) {
     return WorkoutSetExerciseRecord(
-      id: id ?? this.id,
+      id: id != null ? id.value : this.id,
       workoutSetExerciseId: workoutSetExerciseId ?? this.workoutSetExerciseId,
       workoutRecordId: workoutRecordId ?? this.workoutRecordId,
       workoutSetRecordId: workoutSetRecordId ?? this.workoutSetRecordId,
@@ -190,4 +193,19 @@ class WorkoutSetExerciseRecord implements Model {
   String toString() {
     return 'WorkoutSetExerciseRecord{id: $id, workoutSetExerciseId: $workoutSetExerciseId, workoutRecordId: $workoutRecordId, workoutSetRecordId: $workoutSetRecordId, exerciseId: $exerciseId, position: $position, reps: $reps, weightGrams: $weightGrams, difficulty: $difficulty, createdAt: $createdAt, updatedAt: $updatedAt}';
   }
+
+  @override
+  List<Object?> get props => [
+    id,
+    workoutSetExerciseId,
+    workoutRecordId,
+    workoutSetRecordId,
+    exerciseId,
+    position,
+    reps,
+    weightGrams,
+    difficulty,
+    createdAt,
+    updatedAt,
+  ];
 }

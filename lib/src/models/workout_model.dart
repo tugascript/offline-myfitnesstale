@@ -1,5 +1,8 @@
 import 'dart:convert';
 
+import 'package:equatable/equatable.dart';
+
+import '../common/nullable.dart';
 import 'common.dart';
 import 'enums.dart';
 import 'model.dart';
@@ -32,7 +35,7 @@ enum WorkoutColumns with Columns {
   const WorkoutColumns(this.value);
 }
 
-final class Workout implements Model {
+final class Workout extends Equatable implements Model {
   @override
   final int? id;
   final String name;
@@ -209,16 +212,16 @@ final class Workout implements Model {
 
   @override
   Workout copyWith({
-    int? id,
+    Nullable<int>? id,
     String? name,
-    String? description,
-    PictureData? picture,
-    VideoData? video,
+    Nullable<String>? description,
+    Nullable<PictureData>? picture,
+    Nullable<VideoData>? video,
     Set<MuscleGroup>? muscleGroups,
     TargetMuscles? muscles,
     Difficulty? difficulty,
     CreatedBy? createdBy,
-    WorkoutPhase? phase,
+    Nullable<WorkoutPhase>? phase,
     int? totalSets,
     int? totalReps,
     bool? isFavorite,
@@ -228,18 +231,18 @@ final class Workout implements Model {
     EditorType? editorType,
   }) {
     return Workout(
-      id: id ?? this.id,
+      id: id != null ? id.value : this.id,
       name: name ?? this.name,
-      description: description ?? this.description,
-      picture: picture ?? this.picture,
-      video: video ?? this.video,
+      description: description != null ? description.value : this.description,
+      picture: picture != null ? picture.value : this.picture,
+      video: video != null ? video.value : this.video,
       difficulty: difficulty ?? this.difficulty,
       muscleGroups: muscleGroups ?? this.muscleGroups,
       muscles: muscles ?? this.muscles,
       createdBy: createdBy ?? this.createdBy,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
-      phase: phase ?? this.phase,
+      phase: phase != null ? phase.value : this.phase,
       totalSets: totalSets ?? this.totalSets,
       totalReps: totalReps ?? this.totalReps,
       isFavorite: isFavorite ?? this.isFavorite,
@@ -252,4 +255,25 @@ final class Workout implements Model {
   String toString() {
     return 'Workout{id: $id, name: $name, description: $description, picture: $picture, video: $video, createdBy: $createdBy, createdAt: $createdAt, updatedAt: $updatedAt, phase: $phase, totalSets: $totalSets, totalReps: $totalReps, isFavorite: $isFavorite, editorType: $editorType, version: $version  }';
   }
+
+  @override
+  List<Object?> get props => [
+    id,
+    name,
+    description,
+    picture,
+    video,
+    phase,
+    muscleGroups,
+    muscles,
+    isFavorite,
+    difficulty,
+    version,
+    totalSets,
+    totalReps,
+    editorType,
+    createdBy,
+    createdAt,
+    updatedAt,
+  ];
 }

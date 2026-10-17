@@ -9,7 +9,6 @@ import '../../../cubits/workout_plan_record_cubit.dart';
 import '../../../cubits/workout_record_cubit.dart';
 import '../../../models/common.dart';
 import '../../../models/enums.dart';
-import '../../../services/dtos/create_workout_record_batch_dto.dart';
 import '../../../services/dtos/workout_set_dto.dart';
 import '../../../utilities/converters.dart';
 import '../../../utilities/formatters.dart';
@@ -109,11 +108,13 @@ class _CreateWorkoutRecordEditorState extends State<CreateWorkoutRecordEditor> {
     final record = await context
         .read<WorkoutRecordCubit>()
         .batchCreateWorkoutRecord(
-          workoutId: widget.workoutId,
-          version: widget.version,
-          startedAt: _startedAt,
-          completedAt: _completedAt,
-          sets: _sets,
+          WorkoutRecordBatchInput(
+            workoutId: widget.workoutId,
+            version: widget.version,
+            startedAt: _startedAt,
+            completedAt: _completedAt,
+            sets: _sets,
+          ),
         );
     if (!mounted) return;
     final err = context.read<WorkoutRecordCubit>().state.error;
