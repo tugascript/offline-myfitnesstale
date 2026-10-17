@@ -21,7 +21,8 @@ class UpdateWeightGoalCard extends StatelessWidget {
     required int weight,
     required WeightGoalPhase phase,
     int? fatPercentage,
-  }) onSubmit;
+  })
+  onSubmit;
   final VoidCallback onClose;
 
   const UpdateWeightGoalCard({

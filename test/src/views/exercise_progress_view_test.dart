@@ -27,11 +27,13 @@ class _ExerciseRecordCubit extends ExerciseRecordCubit {
   int loadCalls = 0;
 
   void showOnlyExercise(int exerciseId) {
-    emit(state.copyWith(
-      exerciseRecords: aggregateRecords
-          .where((record) => record.exerciseId == exerciseId)
-          .toList(),
-    ));
+    emit(
+      state.copyWith(
+        exerciseRecords: aggregateRecords
+            .where((record) => record.exerciseId == exerciseId)
+            .toList(),
+      ),
+    );
   }
 
   @override
@@ -54,25 +56,24 @@ class _ProfileCubit extends ProfileCubit {
   }
 
   void setUnits(Units units) {
-    emit(ProfileState(
-      system: SystemDto(
-        id: 1,
-        units: units,
-        theme: ThemeType.system,
-        initialSetup: SetUpStatus.completed,
-        notificationsOn: false,
+    emit(
+      ProfileState(
+        system: SystemDto(
+          id: 1,
+          units: units,
+          theme: ThemeType.system,
+          initialSetup: SetUpStatus.completed,
+          notificationsOn: false,
+        ),
+        isLoading: false,
+        isInitiated: true,
       ),
-      isLoading: false,
-      isInitiated: true,
-    ));
+    );
   }
 }
 
 void main() {
-  const muscles = TargetMuscles(
-    primary: <Muscle>{},
-    secondary: <Muscle>{},
-  );
+  const muscles = TargetMuscles(primary: <Muscle>{}, secondary: <Muscle>{});
   const alpha = ExerciseDto(
     id: 1,
     name: 'Alpha Press',
@@ -161,8 +162,9 @@ void main() {
     await profileCubit.close();
   });
 
-  testWidgets('renders in a bounded layout with sorted, coherent metric data',
-      (tester) async {
+  testWidgets('renders in a bounded layout with sorted, coherent metric data', (
+    tester,
+  ) async {
     await tester.pumpWidget(buildHarness());
     await tester.pump();
 
@@ -186,8 +188,9 @@ void main() {
     expect(find.textContaining('kg'), findsNothing);
   });
 
-  testWidgets('opens the implemented exercise records destination',
-      (tester) async {
+  testWidgets('opens the implemented exercise records destination', (
+    tester,
+  ) async {
     await tester.pumpWidget(buildHarness());
 
     await tester.tap(find.text(alpha.name));
@@ -196,20 +199,22 @@ void main() {
     expect(find.text('Records for 1'), findsOneWidget);
   });
 
-  testWidgets('reloads aggregate records after returning from exercise details',
-      (tester) async {
-    await tester.pumpWidget(buildHarness());
-    expect(find.text(zulu.name), findsOneWidget);
+  testWidgets(
+    'reloads aggregate records after returning from exercise details',
+    (tester) async {
+      await tester.pumpWidget(buildHarness());
+      expect(find.text(zulu.name), findsOneWidget);
 
-    await tester.tap(find.text(alpha.name));
-    await tester.pumpAndSettle();
-    exerciseRecordCubit.showOnlyExercise(alpha.id);
+      await tester.tap(find.text(alpha.name));
+      await tester.pumpAndSettle();
+      exerciseRecordCubit.showOnlyExercise(alpha.id);
 
-    await tester.pageBack();
-    await tester.pumpAndSettle();
+      await tester.pageBack();
+      await tester.pumpAndSettle();
 
-    expect(find.text(alpha.name), findsOneWidget);
-    expect(find.text(zulu.name), findsOneWidget);
-    expect(exerciseRecordCubit.loadCalls, 2);
-  });
+      expect(find.text(alpha.name), findsOneWidget);
+      expect(find.text(zulu.name), findsOneWidget);
+      expect(exerciseRecordCubit.loadCalls, 2);
+    },
+  );
 }

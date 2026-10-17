@@ -24,13 +24,12 @@ class SharpSwitch extends StatelessWidget {
 
     final activeColor =
         switchTheme.trackColor?.resolve({WidgetState.selected}) ??
-            theme.colorScheme.primary;
+        theme.colorScheme.primary;
     final inactiveColor =
         switchTheme.trackColor?.resolve({}) ?? theme.disabledColor;
 
-    final thumbColor = switchTheme.thumbColor?.resolve(
-          value ? {WidgetState.selected} : {},
-        ) ??
+    final thumbColor =
+        switchTheme.thumbColor?.resolve(value ? {WidgetState.selected} : {}) ??
         (value ? theme.colorScheme.onPrimary : theme.colorScheme.onSurface);
 
     final trackWidth = thumbSize * 2.0;

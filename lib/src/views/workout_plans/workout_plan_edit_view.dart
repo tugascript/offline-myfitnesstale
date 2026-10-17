@@ -19,10 +19,7 @@ class WorkoutPlanEditView extends StatefulWidget {
 
   final int workoutPlanId;
 
-  const WorkoutPlanEditView({
-    super.key,
-    required this.workoutPlanId,
-  });
+  const WorkoutPlanEditView({super.key, required this.workoutPlanId});
 
   @override
   State<WorkoutPlanEditView> createState() => _WorkoutPlanEditViewState();
@@ -78,25 +75,28 @@ class _WorkoutPlanEditViewState extends State<WorkoutPlanEditView> {
                       _isEditingHeader = false;
                     });
                   },
-                  onSubmit: ({
-                    String? description,
-                    required Difficulty difficulty,
-                    required bool isFavorite,
-                    required String name,
-                  }) async {
-                    await context.read<WorkoutPlanCubit>().updateWorkoutPlan(
-                          id: plan.id,
-                          name: name,
-                          isFavorite: isFavorite,
-                          difficulty: difficulty,
-                          description: description,
-                        );
-                    if (mounted) {
-                      setState(() {
-                        _isEditingHeader = false;
-                      });
-                    }
-                  },
+                  onSubmit:
+                      ({
+                        String? description,
+                        required Difficulty difficulty,
+                        required bool isFavorite,
+                        required String name,
+                      }) async {
+                        await context
+                            .read<WorkoutPlanCubit>()
+                            .updateWorkoutPlan(
+                              id: plan.id,
+                              name: name,
+                              isFavorite: isFavorite,
+                              difficulty: difficulty,
+                              description: description,
+                            );
+                        if (mounted) {
+                          setState(() {
+                            _isEditingHeader = false;
+                          });
+                        }
+                      },
                   onEdit: () {
                     setState(() {
                       _isEditingHeader = true;
@@ -118,8 +118,9 @@ class _WorkoutPlanEditViewState extends State<WorkoutPlanEditView> {
                         style: TextStyle(
                           fontSize: sizes.titleFontSize,
                           fontWeight: FontWeight.bold,
-                          color:
-                              isDarkTheme ? Colors.grey[200] : Colors.grey[800],
+                          color: isDarkTheme
+                              ? Colors.grey[200]
+                              : Colors.grey[800],
                         ),
                       ),
                       SizedBox(height: sizes.spacing),
@@ -132,7 +133,7 @@ class _WorkoutPlanEditViewState extends State<WorkoutPlanEditView> {
                       ),
                     ],
                   ),
-                )
+                ),
               ],
             ),
           ),
@@ -168,7 +169,8 @@ class _WorkoutPlanEditHeader extends StatelessWidget {
     required bool isFavorite,
     required Difficulty difficulty,
     String? description,
-  }) onSubmit;
+  })
+  onSubmit;
 
   final VoidCallback onEdit;
   final bool isEditing;

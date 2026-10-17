@@ -1,4 +1,5 @@
 import '../common/nullable.dart';
+
 import 'package:equatable/equatable.dart';
 
 import 'common.dart';
@@ -62,7 +63,8 @@ class Recipe extends Equatable implements Model {
 
   static const String table = _table;
 
-  static final String tableCreate = '''
+  static final String tableCreate =
+      '''
   CREATE TABLE IF NOT EXISTS $_table (
     ${RecipeColumns.id.value} INTEGER PRIMARY KEY AUTOINCREMENT,
     ${RecipeColumns.name.value} TEXT NOT NULL,
@@ -114,8 +116,9 @@ class Recipe extends Equatable implements Model {
               map[RecipeColumns.servingMicros.value] as String,
             )
           : null,
-      createdBy:
-          CreatedBy.fromValue(map[RecipeColumns.createdBy.value] as String),
+      createdBy: CreatedBy.fromValue(
+        map[RecipeColumns.createdBy.value] as String,
+      ),
       createdAt: map[RecipeColumns.createdAt.value] as int,
       updatedAt: map[RecipeColumns.updatedAt.value] as int,
     );
@@ -172,8 +175,9 @@ class Recipe extends Equatable implements Model {
       servingProtein: servingProtein ?? this.servingProtein,
       servingCarbs: servingCarbs ?? this.servingCarbs,
       servingFat: servingFat ?? this.servingFat,
-      servingMicros:
-          servingMicros != null ? servingMicros.value : this.servingMicros,
+      servingMicros: servingMicros != null
+          ? servingMicros.value
+          : this.servingMicros,
       createdBy: createdBy ?? this.createdBy,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -182,17 +186,17 @@ class Recipe extends Equatable implements Model {
 
   @override
   List<Object?> get props => [
-        id,
-        name,
-        description,
-        servingsYield,
-        servingCalories,
-        servingProtein,
-        servingCarbs,
-        servingFat,
-        servingMicros,
-        createdBy,
-        createdAt,
-        updatedAt,
-      ];
+    id,
+    name,
+    description,
+    servingsYield,
+    servingCalories,
+    servingProtein,
+    servingCarbs,
+    servingFat,
+    servingMicros,
+    createdBy,
+    createdAt,
+    updatedAt,
+  ];
 }

@@ -60,7 +60,8 @@ final class WorkoutPlanWorkout extends Equatable implements Model {
   });
 
   static const String table = _table;
-  static final String tableCreate = '''
+  static final String tableCreate =
+      '''
   CREATE TABLE IF NOT EXISTS $_table (
     ${WorkoutPlanWorkoutColumns.id.value} INTEGER PRIMARY KEY,
     ${WorkoutPlanWorkoutColumns.position.value} INTEGER NOT NULL,
@@ -189,16 +190,16 @@ final class WorkoutPlanWorkout extends Equatable implements Model {
 
   @override
   List<Object?> get props => [
-        id,
-        position,
-        timeOfDay,
-        workoutPlanId,
-        workoutPlanWeekId,
-        workoutPlanDayId,
-        planVersion,
-        workoutId,
-        createdBy,
-        createdAt,
-        updatedAt,
-      ];
+    id,
+    position,
+    timeOfDay,
+    workoutPlanId,
+    workoutPlanWeekId,
+    workoutPlanDayId,
+    planVersion,
+    workoutId,
+    createdBy,
+    createdAt,
+    updatedAt,
+  ];
 }

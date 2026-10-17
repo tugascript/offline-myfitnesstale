@@ -23,10 +23,7 @@ final class ProfileState extends Equatable {
   });
 
   factory ProfileState.initial() {
-    return const ProfileState(
-      isLoading: false,
-      isInitiated: false,
-    );
+    return const ProfileState(isLoading: false, isInitiated: false);
   }
 
   ProfileState copyWith({
@@ -52,11 +49,11 @@ final class ProfileState extends Equatable {
 
   @override
   List<Object?> get props => [
-        isLoading,
-        error,
-        profile,
-        system,
-        remindersConfig,
-        isInitiated,
-      ];
+    isLoading,
+    error,
+    profile,
+    system,
+    remindersConfig,
+    isInitiated,
+  ];
 }

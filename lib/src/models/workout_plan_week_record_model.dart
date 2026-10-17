@@ -50,7 +50,8 @@ class WorkoutPlanWeekRecord extends Equatable implements Model {
   });
 
   static const String table = _table;
-  static final String tableCreate = '''
+  static final String tableCreate =
+      '''
   CREATE TABLE IF NOT EXISTS $_table (
     ${WorkoutPlanWeekRecordColumns.id.value} INTEGER PRIMARY KEY,
     ${WorkoutPlanWeekRecordColumns.workoutPlanRecordId.value} INTEGER NOT NULL,
@@ -93,7 +94,8 @@ class WorkoutPlanWeekRecord extends Equatable implements Model {
           map[WorkoutPlanWeekRecordColumns.workoutPlanWeekId.value]! as int,
       week: map[WorkoutPlanWeekRecordColumns.week.value]! as int,
       status: ProgressStatus.fromValue(
-          map[WorkoutPlanWeekRecordColumns.status.value]! as String),
+        map[WorkoutPlanWeekRecordColumns.status.value]! as String,
+      ),
       currentDay: map[WorkoutPlanWeekRecordColumns.currentDay.value]! as int,
       completedAt: map[WorkoutPlanWeekRecordColumns.completedAt.value] as int?,
       createdAt: map[WorkoutPlanWeekRecordColumns.createdAt.value]! as int,
@@ -147,14 +149,14 @@ class WorkoutPlanWeekRecord extends Equatable implements Model {
 
   @override
   List<Object?> get props => [
-        id,
-        workoutPlanRecordId,
-        workoutPlanWeekId,
-        week,
-        status,
-        currentDay,
-        completedAt,
-        createdAt,
-        updatedAt,
-      ];
+    id,
+    workoutPlanRecordId,
+    workoutPlanWeekId,
+    week,
+    status,
+    currentDay,
+    completedAt,
+    createdAt,
+    updatedAt,
+  ];
 }

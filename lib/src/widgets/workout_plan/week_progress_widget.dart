@@ -53,10 +53,7 @@ class WeekProgressWidget extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               '$completedWeeks of $totalWeeks weeks completed',
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.grey[600],
-              ),
+              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
             ),
           ],
         ),

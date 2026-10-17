@@ -24,11 +24,7 @@ class ResponsiveScaffold extends StatelessWidget {
       title: title,
       showBackButton: showBackButton,
       isEntity: isEntity,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: body,
-        ),
-      ),
+      body: SafeArea(child: SingleChildScrollView(child: body)),
       floatingActionButton: floatingActionButton,
     );
   }

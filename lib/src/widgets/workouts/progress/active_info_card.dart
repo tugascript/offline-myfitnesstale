@@ -26,13 +26,7 @@ class ActiveInfoCard extends StatelessWidget {
         children: [
           Icon(icon, color: color),
           const SizedBox(height: 4),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 12,
-              color: color,
-            ),
-          ),
+          Text(label, style: TextStyle(fontSize: 12, color: color)),
           const SizedBox(height: 4),
           Text(
             value,

@@ -1,4 +1,5 @@
 import '../common/nullable.dart';
+
 import 'package:equatable/equatable.dart';
 
 import 'enums.dart';
@@ -83,7 +84,8 @@ final class MealPlanMeal extends Equatable implements Model {
 
   static const String table = _table;
 
-  static final String tableCreate = '''
+  static final String tableCreate =
+      '''
   CREATE TABLE IF NOT EXISTS $_table (
     ${MealPlanMealColumns.id.value} INTEGER PRIMARY KEY AUTOINCREMENT,
     ${MealPlanMealColumns.position.value} INTEGER NOT NULL,
@@ -152,8 +154,9 @@ final class MealPlanMeal extends Equatable implements Model {
       mealPlanWeekId: map[MealPlanMealColumns.mealPlanWeekId.value] as int,
       mealPlanDayId: map[MealPlanMealColumns.mealPlanDayId.value] as int,
       planVersion: map[MealPlanMealColumns.planVersion.value] as int? ?? 1,
-      mealType:
-          MealType.fromValue(map[MealPlanMealColumns.mealType.value] as String),
+      mealType: MealType.fromValue(
+        map[MealPlanMealColumns.mealType.value] as String,
+      ),
       totalCalories: map[MealPlanMealColumns.totalCalories.value] as int,
       totalProtein: map[MealPlanMealColumns.totalProtein.value] as int,
       totalCarbs: map[MealPlanMealColumns.totalCarbs.value] as int,
@@ -162,7 +165,8 @@ final class MealPlanMeal extends Equatable implements Model {
       name: map[MealPlanMealColumns.name.value] as String,
       recipeId: map[MealPlanMealColumns.recipeId.value] as int?,
       createdBy: CreatedBy.fromValue(
-          map[MealPlanMealColumns.createdBy.value] as String),
+        map[MealPlanMealColumns.createdBy.value] as String,
+      ),
       createdAt: map[MealPlanMealColumns.createdAt.value] as int,
       updatedAt: map[MealPlanMealColumns.updatedAt.value] as int,
     );
@@ -252,23 +256,23 @@ final class MealPlanMeal extends Equatable implements Model {
 
   @override
   List<Object?> get props => [
-        id,
-        position,
-        timeOfDay,
-        mealPlanId,
-        mealPlanWeekId,
-        mealPlanDayId,
-        planVersion,
-        mealType,
-        totalCalories,
-        totalProtein,
-        totalCarbs,
-        totalFat,
-        totalFiber,
-        name,
-        recipeId,
-        createdBy,
-        createdAt,
-        updatedAt,
-      ];
+    id,
+    position,
+    timeOfDay,
+    mealPlanId,
+    mealPlanWeekId,
+    mealPlanDayId,
+    planVersion,
+    mealType,
+    totalCalories,
+    totalProtein,
+    totalCarbs,
+    totalFat,
+    totalFiber,
+    name,
+    recipeId,
+    createdBy,
+    createdAt,
+    updatedAt,
+  ];
 }

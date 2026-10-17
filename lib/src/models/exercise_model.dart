@@ -60,7 +60,8 @@ class Exercise extends Equatable implements Model {
   });
 
   static const String table = _table;
-  static final String tableCreate = """
+  static final String tableCreate =
+      """
   CREATE TABLE IF NOT EXISTS $_table (
     ${ExerciseColumns.id.value} INTEGER PRIMARY KEY AUTOINCREMENT,
     ${ExerciseColumns.name.value} TEXT NOT NULL,
@@ -110,16 +111,19 @@ class Exercise extends Equatable implements Model {
           ? VideoData.fromJson(map[ExerciseColumns.video.value] as String)
           : null,
       muscleGroup: MuscleGroup.fromValue(
-          map[ExerciseColumns.muscleGroup.value] as String),
+        map[ExerciseColumns.muscleGroup.value] as String,
+      ),
       muscles: TargetMuscles.fromJson(
-          map[ExerciseColumns.muscles.value] as String? ??
-              '{"primary":[],"secondary":[]}'),
+        map[ExerciseColumns.muscles.value] as String? ??
+            '{"primary":[],"secondary":[]}',
+      ),
       isFavorite: map[ExerciseColumns.isFavorite.value] as int == 1,
       difficulty: map[ExerciseColumns.difficulty.value] != null
           ? Difficulty.fromValue(map[ExerciseColumns.difficulty.value] as int)
           : null,
-      createdBy:
-          CreatedBy.fromValue(map[ExerciseColumns.createdBy.value] as String),
+      createdBy: CreatedBy.fromValue(
+        map[ExerciseColumns.createdBy.value] as String,
+      ),
       createdAt: map[ExerciseColumns.createdAt.value] as int,
       updatedAt: map[ExerciseColumns.updatedAt.value] as int,
     );
@@ -190,17 +194,17 @@ class Exercise extends Equatable implements Model {
 
   @override
   List<Object?> get props => [
-        id,
-        name,
-        description,
-        picture,
-        video,
-        muscleGroup,
-        muscles,
-        isFavorite,
-        difficulty,
-        createdBy,
-        createdAt,
-        updatedAt,
-      ];
+    id,
+    name,
+    description,
+    picture,
+    video,
+    muscleGroup,
+    muscles,
+    isFavorite,
+    difficulty,
+    createdBy,
+    createdAt,
+    updatedAt,
+  ];
 }

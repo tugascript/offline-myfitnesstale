@@ -28,11 +28,7 @@ class SearchFormButton extends StatelessWidget {
                 ),
               ),
             )
-          : Icon(
-              Icons.search,
-              size: loadingSize,
-              color: theme.primaryColor,
-            ),
+          : Icon(Icons.search, size: loadingSize, color: theme.primaryColor),
       onPressed: isLoading ? null : onPressed,
     );
   }

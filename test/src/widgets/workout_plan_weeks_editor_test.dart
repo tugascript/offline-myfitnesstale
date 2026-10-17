@@ -34,10 +34,7 @@ void main() {
       name: workoutName,
       version: workoutVersion,
       muscleGroups: const {},
-      muscles: const TargetMuscles(
-        primary: <Muscle>{},
-        secondary: <Muscle>{},
-      ),
+      muscles: const TargetMuscles(primary: <Muscle>{}, secondary: <Muscle>{}),
       difficulty: Difficulty.beginner,
       isFavorite: false,
       totalSets: 0,
@@ -46,7 +43,8 @@ void main() {
       createdBy: CreatedBy.user,
     );
 
-    final effectiveWorkouts = workouts ??
+    final effectiveWorkouts =
+        workouts ??
         [
           WorkoutPlanWorkoutDto(
             id: planWorkoutId,
@@ -110,23 +108,24 @@ void main() {
                 BlocProvider.value(value: cubit),
                 BlocProvider(create: (_) => WorkoutCubit()),
               ],
-              child: Builder(builder: (context) {
-                return WorkoutPlanWeeksEditor(
-                  theme: Theme.of(context),
-                  sizes: sizes,
-                  workoutPlanId: workoutPlanId,
-                  currentVersion: currentVersion,
-                  initialWeeks: initialWeeks,
-                );
-              }),
+              child: Builder(
+                builder: (context) {
+                  return WorkoutPlanWeeksEditor(
+                    theme: Theme.of(context),
+                    sizes: sizes,
+                    workoutPlanId: workoutPlanId,
+                    currentVersion: currentVersion,
+                    initialWeeks: initialWeeks,
+                  );
+                },
+              ),
             ),
           ),
         ),
         GoRoute(
           path: '/workout-plans/:id',
-          builder: (context, state) => const Scaffold(
-            body: Text('Plan details'),
-          ),
+          builder: (context, state) =>
+              const Scaffold(body: Text('Plan details')),
         ),
       ],
     );
@@ -138,12 +137,14 @@ void main() {
     final cubit = WorkoutPlanCubit();
     final week = await createWeekDto();
 
-    await tester.pumpWidget(buildHarness(
-      cubit: cubit,
-      workoutPlanId: 1,
-      currentVersion: 1,
-      initialWeeks: [week],
-    ));
+    await tester.pumpWidget(
+      buildHarness(
+        cubit: cubit,
+        workoutPlanId: 1,
+        currentVersion: 1,
+        initialWeeks: [week],
+      ),
+    );
 
     expect(find.byType(WorkoutPlanWeekEditor), findsOneWidget);
     expect(find.byType(WorkoutPlanDayEditor), findsOneWidget);
@@ -151,20 +152,20 @@ void main() {
     await cubit.close();
   });
 
-  testWidgets('invalid structure blocks save with validation message',
-      (tester) async {
+  testWidgets('invalid structure blocks save with validation message', (
+    tester,
+  ) async {
     final cubit = WorkoutPlanCubit();
-    final invalidWeek = await createWeekDto(
-      isRestDay: false,
-      workouts: [],
-    );
+    final invalidWeek = await createWeekDto(isRestDay: false, workouts: []);
 
-    await tester.pumpWidget(buildHarness(
-      cubit: cubit,
-      workoutPlanId: 1,
-      currentVersion: 1,
-      initialWeeks: [invalidWeek],
-    ));
+    await tester.pumpWidget(
+      buildHarness(
+        cubit: cubit,
+        workoutPlanId: 1,
+        currentVersion: 1,
+        initialWeeks: [invalidWeek],
+      ),
+    );
 
     await tester.tap(find.text('SAVE'));
     await tester.pumpAndSettle();
@@ -181,12 +182,14 @@ void main() {
     final cubit = WorkoutPlanCubit();
     final week = await createWeekDto();
 
-    await tester.pumpWidget(buildHarness(
-      cubit: cubit,
-      workoutPlanId: 1,
-      currentVersion: 1,
-      initialWeeks: [week],
-    ));
+    await tester.pumpWidget(
+      buildHarness(
+        cubit: cubit,
+        workoutPlanId: 1,
+        currentVersion: 1,
+        initialWeeks: [week],
+      ),
+    );
 
     await tester.tap(find.text('SAVE'));
     await tester.pumpAndSettle();
@@ -200,12 +203,14 @@ void main() {
     final cubit = WorkoutPlanCubit();
     final week = await createWeekDto();
 
-    await tester.pumpWidget(buildHarness(
-      cubit: cubit,
-      workoutPlanId: 1,
-      currentVersion: 1,
-      initialWeeks: [week],
-    ));
+    await tester.pumpWidget(
+      buildHarness(
+        cubit: cubit,
+        workoutPlanId: 1,
+        currentVersion: 1,
+        initialWeeks: [week],
+      ),
+    );
 
     await tester.tap(find.text('CANCEL'));
     await tester.pumpAndSettle();

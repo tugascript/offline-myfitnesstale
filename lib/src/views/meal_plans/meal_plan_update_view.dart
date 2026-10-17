@@ -43,8 +43,11 @@ class _MealPlanUpdateViewState extends State<MealPlanUpdateView> {
         if (!state.isLoading && state.error != null) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-                content: Text(state.error!.description,
-                    style: TextStyle(fontSize: sizes.fontSize))),
+              content: Text(
+                state.error!.description,
+                style: TextStyle(fontSize: sizes.fontSize),
+              ),
+            ),
           );
         }
       },
@@ -63,8 +66,10 @@ class _MealPlanUpdateViewState extends State<MealPlanUpdateView> {
             body: Center(
               child: ElevatedButton(
                 onPressed: () => context.pop(),
-                child:
-                    Text('Go Back', style: TextStyle(fontSize: sizes.fontSize)),
+                child: Text(
+                  'Go Back',
+                  style: TextStyle(fontSize: sizes.fontSize),
+                ),
               ),
             ),
           );

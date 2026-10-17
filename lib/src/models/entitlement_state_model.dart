@@ -51,7 +51,8 @@ class EntitlementStateModel extends Equatable implements Model {
   });
 
   static const String table = _table;
-  static final String tableCreate = '''
+  static final String tableCreate =
+      '''
   CREATE TABLE IF NOT EXISTS $_table (
     ${EntitlementStateColumns.id.value} INTEGER PRIMARY KEY AUTOINCREMENT,
     ${EntitlementStateColumns.entitlement.value} TEXT NOT NULL,
@@ -142,14 +143,14 @@ class EntitlementStateModel extends Equatable implements Model {
 
   @override
   List<Object?> get props => [
-        id,
-        entitlement,
-        status,
-        expiresAt,
-        lastVerifiedAt,
-        source,
-        verificationToken,
-        createdAt,
-        updatedAt,
-      ];
+    id,
+    entitlement,
+    status,
+    expiresAt,
+    lastVerifiedAt,
+    source,
+    verificationToken,
+    createdAt,
+    updatedAt,
+  ];
 }

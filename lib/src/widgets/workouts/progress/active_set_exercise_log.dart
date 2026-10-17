@@ -26,7 +26,8 @@ class ActiveSetExerciseLog extends StatefulWidget {
     required double weight,
     required int reps,
     required WorkoutSetExerciseDifficulty difficulty,
-  }) onLogSet;
+  })
+  onLogSet;
   final VoidCallback onSkip;
 
   const ActiveSetExerciseLog({
@@ -116,11 +117,13 @@ class _ActiveSetExerciseLogState extends State<ActiveSetExerciseLog> {
     int tempTens = _weightTens;
     double tempDecimals = _weightDecimals;
 
-    final hundredsController =
-        FixedExtentScrollController(initialItem: tempHundreds);
+    final hundredsController = FixedExtentScrollController(
+      initialItem: tempHundreds,
+    );
     final tensController = FixedExtentScrollController(initialItem: tempTens);
     final decimalsController = FixedExtentScrollController(
-        initialItem: _decimalValues.indexOf(tempDecimals).clamp(0, 3));
+      initialItem: _decimalValues.indexOf(tempDecimals).clamp(0, 3),
+    );
 
     showModalBottomSheet<void>(
       context: context,
@@ -138,17 +141,20 @@ class _ActiveSetExerciseLogState extends State<ActiveSetExerciseLog> {
                     child: const Text('Cancel'),
                   ),
                   Text(
-                      'Weight (${widget.units == Units.metric ? "KG" : "LBS"})',
-                      style: TextStyle(
-                          fontSize: widget.sizes.subtitleFontSize,
-                          fontWeight: FontWeight.w600)),
+                    'Weight (${widget.units == Units.metric ? "KG" : "LBS"})',
+                    style: TextStyle(
+                      fontSize: widget.sizes.subtitleFontSize,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                   TextButton(
                     onPressed: () {
                       setState(() {
                         _weightHundreds = hundredsController.selectedItem;
                         _weightTens = tensController.selectedItem;
-                        _weightDecimals = _decimalValues[
-                            decimalsController.selectedItem.clamp(0, 3)];
+                        _weightDecimals =
+                            _decimalValues[decimalsController.selectedItem
+                                .clamp(0, 3)];
 
                         _weightController.text = _formatWeight();
                       });
@@ -174,7 +180,8 @@ class _ActiveSetExerciseLogState extends State<ActiveSetExerciseLog> {
                           child: Text(
                             '$index',
                             style: TextStyle(
-                                fontSize: widget.sizes.subtitleFontSize),
+                              fontSize: widget.sizes.subtitleFontSize,
+                            ),
                           ),
                         ),
                       ),
@@ -191,7 +198,8 @@ class _ActiveSetExerciseLogState extends State<ActiveSetExerciseLog> {
                           child: Text(
                             index.toString().padLeft(2, '0'),
                             style: TextStyle(
-                                fontSize: widget.sizes.subtitleFontSize),
+                              fontSize: widget.sizes.subtitleFontSize,
+                            ),
                           ),
                         ),
                       ),
@@ -208,7 +216,8 @@ class _ActiveSetExerciseLogState extends State<ActiveSetExerciseLog> {
                           child: Text(
                             _decimalLabels[index],
                             style: TextStyle(
-                                fontSize: widget.sizes.subtitleFontSize),
+                              fontSize: widget.sizes.subtitleFontSize,
+                            ),
                           ),
                         ),
                       ),
@@ -246,10 +255,13 @@ class _ActiveSetExerciseLogState extends State<ActiveSetExerciseLog> {
                     onPressed: () => Navigator.of(sheetContext).pop(),
                     child: const Text('Cancel'),
                   ),
-                  Text('Reps',
-                      style: TextStyle(
-                          fontSize: widget.sizes.subtitleFontSize,
-                          fontWeight: FontWeight.w600)),
+                  Text(
+                    'Reps',
+                    style: TextStyle(
+                      fontSize: widget.sizes.subtitleFontSize,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                   TextButton(
                     onPressed: () {
                       setState(() {
@@ -309,8 +321,10 @@ class _ActiveSetExerciseLogState extends State<ActiveSetExerciseLog> {
                     padding: widget.sizes.padding,
                     isLoading: false,
                     filled: true,
-                    prefixIcon:
-                        Icon(Icons.scale, size: widget.sizes.fontSize * 1.2),
+                    prefixIcon: Icon(
+                      Icons.scale,
+                      size: widget.sizes.fontSize * 1.2,
+                    ),
                   ),
                 ),
                 SizedBox(width: widget.sizes.inputSpacing),
@@ -336,9 +350,7 @@ class _ActiveSetExerciseLogState extends State<ActiveSetExerciseLog> {
             ),
             SizedBox(height: widget.sizes.inputSpacing),
             WorkoutSetExerciseDifficultyInput(
-              key: ValueKey(
-                (widget.workoutSetExerciseId, widget.setNumber),
-              ),
+              key: ValueKey((widget.workoutSetExerciseId, widget.setNumber)),
               initialDifficultyType: widget.initialDifficultyType,
               initialDifficultyValue: widget.initialDifficultyValue,
               theme: widget.theme,

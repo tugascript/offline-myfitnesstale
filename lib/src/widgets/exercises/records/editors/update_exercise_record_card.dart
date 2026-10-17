@@ -83,24 +83,25 @@ class UpdateExerciseRecordCard extends StatelessWidget {
                 initialDate: record.recordDate,
                 initialWeight: record.weight,
                 initialReps: record.reps,
-                onSubmit: ({
-                  required int exerciseId,
-                  required int weight,
-                  required int reps,
-                  required DateTime date,
-                }) async {
-                  await context
-                      .read<ExerciseRecordCubit>()
-                      .updateExerciseRecord(
-                        id: record.id,
-                        weight: weight,
-                        reps: reps,
-                        date: date,
-                      );
-                  if (context.mounted) {
-                    onClose();
-                  }
-                },
+                onSubmit:
+                    ({
+                      required int exerciseId,
+                      required int weight,
+                      required int reps,
+                      required DateTime date,
+                    }) async {
+                      await context
+                          .read<ExerciseRecordCubit>()
+                          .updateExerciseRecord(
+                            id: record.id,
+                            weight: weight,
+                            reps: reps,
+                            date: date,
+                          );
+                      if (context.mounted) {
+                        onClose();
+                      }
+                    },
               ),
             ],
           ),

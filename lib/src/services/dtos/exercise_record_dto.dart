@@ -44,8 +44,9 @@ class ExerciseRecordDto extends Equatable implements Dto<ExerciseRecord> {
       reps: model.reps,
       maxStrength: model.maxStrength,
       recordDate: DateUtilities.getDateFromUnix(model.recordDate),
-      picture:
-          model.picture != null ? PictureDto.fromModel(model.picture!) : null,
+      picture: model.picture != null
+          ? PictureDto.fromModel(model.picture!)
+          : null,
       video: model.video != null ? VideoDto.fromModel(model.video!) : null,
       exercise: exercise,
     );
@@ -89,13 +90,13 @@ class ExerciseRecordDto extends Equatable implements Dto<ExerciseRecord> {
 
   @override
   List<Object?> get props => [
-        id,
-        exerciseId,
-        weight,
-        reps,
-        maxStrength,
-        picture,
-        video,
-        recordDate,
-      ];
+    id,
+    exerciseId,
+    weight,
+    reps,
+    maxStrength,
+    picture,
+    video,
+    recordDate,
+  ];
 }

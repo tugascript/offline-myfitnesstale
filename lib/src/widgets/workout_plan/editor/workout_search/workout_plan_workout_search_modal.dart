@@ -67,17 +67,18 @@ class _WorkoutPlanWorkoutSearchModalState
                   initialName: '',
                   initialMuscleGroup: null,
                   initialIsFavorite: false,
-                  onSubmit: ({
-                    required String name,
-                    required MuscleGroup? muscleGroup,
-                    required bool isFavorite,
-                  }) {
-                    context.read<WorkoutCubit>().getSelectionWorkouts(
+                  onSubmit:
+                      ({
+                        required String name,
+                        required MuscleGroup? muscleGroup,
+                        required bool isFavorite,
+                      }) {
+                        context.read<WorkoutCubit>().getSelectionWorkouts(
                           name: name,
                           muscleGroup: muscleGroup,
                           isFavorite: isFavorite,
                         );
-                  },
+                      },
                 ),
                 SizedBox(height: widget.sizes.spacing),
                 Expanded(

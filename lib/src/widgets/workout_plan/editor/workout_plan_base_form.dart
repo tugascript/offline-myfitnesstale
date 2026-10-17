@@ -23,7 +23,8 @@ class WorkoutPlanBaseForm extends StatefulWidget {
     required bool isFavorite,
     required Difficulty difficulty,
     String? description,
-  }) onSubmit;
+  })
+  onSubmit;
 
   const WorkoutPlanBaseForm({
     super.key,

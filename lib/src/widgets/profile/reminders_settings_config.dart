@@ -123,11 +123,7 @@ class _ReminderToggle extends StatelessWidget {
               ),
             ),
           ),
-          Switch(
-            key: switchKey,
-            value: value,
-            onChanged: onChanged,
-          ),
+          Switch(key: switchKey, value: value, onChanged: onChanged),
         ],
       ),
     );

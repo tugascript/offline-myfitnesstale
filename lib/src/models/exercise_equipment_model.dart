@@ -29,7 +29,8 @@ class ExerciseEquipment implements JoinModel {
   });
 
   static const String table = _table;
-  static final String tableCreate = '''
+  static final String tableCreate =
+      '''
   CREATE TABLE IF NOT EXISTS $_table (
     ${ExerciseEquipmentColumns.exerciseId.value} INTEGER NOT NULL,
     ${ExerciseEquipmentColumns.equipmentId.value} INTEGER NOT NULL,

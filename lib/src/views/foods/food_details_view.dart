@@ -45,8 +45,11 @@ class _FoodDetailsViewState extends State<FoodDetailsView> {
         if (!state.isLoading && state.error != null) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-                content: Text(state.error!.description,
-                    style: TextStyle(fontSize: sizes.fontSize))),
+              content: Text(
+                state.error!.description,
+                style: TextStyle(fontSize: sizes.fontSize),
+              ),
+            ),
           );
         }
       },
@@ -66,16 +69,23 @@ class _FoodDetailsViewState extends State<FoodDetailsView> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.error_outline,
-                      size: sizes.largeIconSize, color: Colors.grey),
+                  Icon(
+                    Icons.error_outline,
+                    size: sizes.largeIconSize,
+                    color: Colors.grey,
+                  ),
                   SizedBox(height: sizes.spacing),
-                  Text(state.error?.description ?? 'Food not found',
-                      style: TextStyle(fontSize: sizes.fontSize)),
+                  Text(
+                    state.error?.description ?? 'Food not found',
+                    style: TextStyle(fontSize: sizes.fontSize),
+                  ),
                   SizedBox(height: sizes.spacing),
                   ElevatedButton(
                     onPressed: () => context.pop(),
-                    child: Text('Go Back',
-                        style: TextStyle(fontSize: sizes.fontSize)),
+                    child: Text(
+                      'Go Back',
+                      style: TextStyle(fontSize: sizes.fontSize),
+                    ),
                   ),
                 ],
               ),
@@ -93,10 +103,11 @@ class _FoodDetailsViewState extends State<FoodDetailsView> {
             child: ListView(
               children: [
                 FoodDetailsWidget(
-                    food: food,
-                    sizes: sizes,
-                    onToggleFavorite: () =>
-                        context.read<FoodCubit>().toggleFavorite(food.id)),
+                  food: food,
+                  sizes: sizes,
+                  onToggleFavorite: () =>
+                      context.read<FoodCubit>().toggleFavorite(food.id),
+                ),
                 // Screen check: Machine-authored vs User-authored
                 if (!isUserAuthored)
                   Card(
@@ -105,8 +116,11 @@ class _FoodDetailsViewState extends State<FoodDetailsView> {
                       padding: EdgeInsets.all(sizes.padding),
                       child: Row(
                         children: [
-                          Icon(Icons.lock_outline,
-                              color: Colors.blue, size: sizes.buttonIconSize),
+                          Icon(
+                            Icons.lock_outline,
+                            color: Colors.blue,
+                            size: sizes.buttonIconSize,
+                          ),
                           SizedBox(width: sizes.spacing),
                           Expanded(
                             child: Text(
@@ -128,8 +142,10 @@ class _FoodDetailsViewState extends State<FoodDetailsView> {
                     sizes: sizes,
                     onEdit: () {
                       context.push(
-                        FoodUpdateView.routeName
-                            .replaceFirst(':id', food.id.toString()),
+                        FoodUpdateView.routeName.replaceFirst(
+                          ':id',
+                          food.id.toString(),
+                        ),
                       );
                     },
                     onDelete: () {
@@ -137,8 +153,7 @@ class _FoodDetailsViewState extends State<FoodDetailsView> {
                         context: context,
                         builder: (ctx) => ConfirmationDialog(
                           title: 'Delete ${food.name}',
-                          content:
-                              'Are you sure you want to delete this food item? This action cannot be undone.',
+                          content: 'Are you sure you want to delete this food item? This action cannot be undone.',
                           onConfirm: () {
                             context.read<FoodCubit>().deleteFood(food.id);
                             if (context.canPop()) {

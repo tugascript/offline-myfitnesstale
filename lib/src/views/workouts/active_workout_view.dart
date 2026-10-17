@@ -70,12 +70,12 @@ class _ActiveWorkoutViewState extends State<ActiveWorkoutView> {
   void initState() {
     super.initState();
     context.read<ActiveWorkoutCubit>().startWorkout(
-          widget.workoutId,
-          workoutPlanRecordId: widget.workoutPlanRecordId,
-          week: widget.week,
-          day: widget.day,
-          workoutPosition: widget.workoutPosition,
-        );
+      widget.workoutId,
+      workoutPlanRecordId: widget.workoutPlanRecordId,
+      week: widget.week,
+      day: widget.day,
+      workoutPosition: widget.workoutPosition,
+    );
   }
 
   @override
@@ -87,9 +87,7 @@ class _ActiveWorkoutViewState extends State<ActiveWorkoutView> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final breakpoints = BreakPoint.fromContext(context);
-    final sizes = DataDisplaySizes.getDataDisplaySizes(
-      breakpoints.screenSize,
-    );
+    final sizes = DataDisplaySizes.getDataDisplaySizes(breakpoints.screenSize);
 
     return BlocConsumer<ActiveWorkoutCubit, ActiveWorkoutState>(
       listenWhen: (previous, current) {
@@ -137,7 +135,8 @@ class _ActiveWorkoutViewState extends State<ActiveWorkoutView> {
               return Padding(
                 padding: EdgeInsets.all(sizes.viewPadding),
                 child: Skeletonizer(
-                  enabled: activeState.isLoading &&
+                  enabled:
+                      activeState.isLoading &&
                       (workoutSetExercise == null ||
                           exercise == null ||
                           currentSet == null),
@@ -199,8 +198,8 @@ class _ActiveWorkoutViewState extends State<ActiveWorkoutView> {
                                 reps: _loggedReps,
                                 weight:
                                     profileState.system?.units == Units.metric
-                                        ? Converters.kgToGrams(_loggedWeight)
-                                        : Converters.lbsToGrams(_loggedWeight),
+                                    ? Converters.kgToGrams(_loggedWeight)
+                                    : Converters.lbsToGrams(_loggedWeight),
                                 setNumber: activeState.currentSetNumber,
                                 restSecs: restTime,
                                 difficulty: WorkoutSetExerciseDifficulty.create(
@@ -221,79 +220,90 @@ class _ActiveWorkoutViewState extends State<ActiveWorkoutView> {
                             units: profileState.system?.units ?? Units.metric,
                             initialDifficultyType:
                                 workoutSetExercise.difficulty?.type ??
-                                    WorkoutSetExerciseDifficultyType.rir,
+                                WorkoutSetExerciseDifficultyType.rir,
                             initialDifficultyValue:
                                 workoutSetExercise.difficulty?.value ?? 2,
                             workoutSetExerciseId: workoutSetExercise.id,
                             setNumber: activeState.currentSetNumber,
                             initialWeight:
                                 profileState.system?.units == Units.imperial
-                                    ? Converters.gramsToLbs(
-                                        previousRecord?.weightGrams ?? 0,
-                                      )
-                                    : Converters.gramsToKg(
-                                        previousRecord?.weightGrams ?? 0,
-                                      ),
+                                ? Converters.gramsToLbs(
+                                    previousRecord?.weightGrams ?? 0,
+                                  )
+                                : Converters.gramsToKg(
+                                    previousRecord?.weightGrams ?? 0,
+                                  ),
                             initialReps: previousRecord?.reps ?? 0,
                             isLoading: activeState.isLoading,
-                            onLogSet: (
-                                {required weight,
-                                required reps,
-                                required difficulty}) async {
-                              if (reps <= 0) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content:
-                                        const Text('Please enter valid reps'),
-                                    backgroundColor: theme.colorScheme.error,
-                                  ),
-                                );
-                                return;
-                              }
-                              setState(() {
-                                _loggedWeight = weight;
-                                _loggedReps = reps;
-                                _loggedDifficultyType = difficulty.type;
-                                _loggedDifficultyValue = difficulty.value;
-                              });
+                            onLogSet:
+                                ({
+                                  required weight,
+                                  required reps,
+                                  required difficulty,
+                                }) async {
+                                  if (reps <= 0) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: const Text(
+                                          'Please enter valid reps',
+                                        ),
+                                        backgroundColor:
+                                            theme.colorScheme.error,
+                                      ),
+                                    );
+                                    return;
+                                  }
+                                  setState(() {
+                                    _loggedWeight = weight;
+                                    _loggedReps = reps;
+                                    _loggedDifficultyType = difficulty.type;
+                                    _loggedDifficultyValue = difficulty.value;
+                                  });
 
-                              final isLastExercise =
-                                  activeState.currentExercisePosition ==
+                                  final isLastExercise =
+                                      activeState.currentExercisePosition ==
                                       (currentSet.exercises?.length ?? 1) - 1;
 
-                              final cubit = context.read<ActiveWorkoutCubit>();
-                              await cubit.logExerciseSet(
-                                position: workoutSetExercise.position,
-                                reps: reps,
-                                weight:
-                                    profileState.system?.units == Units.metric
+                                  final cubit = context
+                                      .read<ActiveWorkoutCubit>();
+                                  await cubit.logExerciseSet(
+                                    position: workoutSetExercise.position,
+                                    reps: reps,
+                                    weight:
+                                        profileState.system?.units ==
+                                            Units.metric
                                         ? Converters.kgToGrams(weight)
                                         : Converters.lbsToGrams(weight),
-                                setNumber: activeState.currentSetNumber,
-                                difficulty: WorkoutSetExerciseDifficulty.create(
-                                  value: difficulty.value,
-                                  type: difficulty.type,
-                                ),
-                              );
+                                    setNumber: activeState.currentSetNumber,
+                                    difficulty:
+                                        WorkoutSetExerciseDifficulty.create(
+                                          value: difficulty.value,
+                                          type: difficulty.type,
+                                        ),
+                                  );
 
-                              if (mounted) {
-                                final isLastSetOfWorkout = activeState
-                                            .currentSetPosition ==
-                                        (activeState.workout?.sets?.length ??
-                                                0) -
-                                            1 &&
-                                    activeState.currentSetNumber ==
-                                        (currentSet.maxSets ??
-                                            currentSet.minSets);
+                                  if (mounted) {
+                                    final isLastSetOfWorkout =
+                                        activeState.currentSetPosition ==
+                                            (activeState
+                                                        .workout
+                                                        ?.sets
+                                                        ?.length ??
+                                                    0) -
+                                                1 &&
+                                        activeState.currentSetNumber ==
+                                            (currentSet.maxSets ??
+                                                currentSet.minSets);
 
-                                if (isLastExercise && !isLastSetOfWorkout) {
-                                  cubit.startRest();
-                                } else {
-                                  cubit.nextExercise();
-                                }
-                              }
-                            },
-                            isOptional: currentSet.maxSets != null &&
+                                    if (isLastExercise && !isLastSetOfWorkout) {
+                                      cubit.startRest();
+                                    } else {
+                                      cubit.nextExercise();
+                                    }
+                                  }
+                                },
+                            isOptional:
+                                currentSet.maxSets != null &&
                                 activeState.currentSetNumber >
                                     currentSet.minSets,
                             onSkip: () {
@@ -316,8 +326,8 @@ class _ActiveWorkoutViewState extends State<ActiveWorkoutView> {
                               isLoading: activeState.isLoading,
                               onPressed: () async {
                                 if (!mounted) return;
-                                final cubit =
-                                    context.read<ActiveWorkoutCubit>();
+                                final cubit = context
+                                    .read<ActiveWorkoutCubit>();
                                 final confirmed = await showDialog<bool>(
                                   context: context,
                                   builder: (dialogContext) => AlertDialog(

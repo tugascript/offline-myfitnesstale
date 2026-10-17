@@ -54,7 +54,8 @@ class ExerciseRecord extends Equatable implements Model {
   });
 
   static const String table = _table;
-  static final String tableCreate = """
+  static final String tableCreate =
+      """
   CREATE TABLE IF NOT EXISTS $_table (
     ${ExerciseRecordColumns.id.value} INTEGER PRIMARY KEY AUTOINCREMENT,
     ${ExerciseRecordColumns.exerciseId.value} INTEGER NOT NULL,
@@ -98,7 +99,8 @@ class ExerciseRecord extends Equatable implements Model {
       maxStrength: map[ExerciseRecordColumns.maxStrength.value] as int,
       picture: map[ExerciseRecordColumns.picture.value] != null
           ? PictureData.fromJson(
-              map[ExerciseRecordColumns.picture.value] as String)
+              map[ExerciseRecordColumns.picture.value] as String,
+            )
           : null,
       video: map[ExerciseRecordColumns.video.value] != null
           ? VideoData.fromJson(map[ExerciseRecordColumns.video.value] as String)
@@ -167,15 +169,15 @@ class ExerciseRecord extends Equatable implements Model {
 
   @override
   List<Object?> get props => [
-        id,
-        exerciseId,
-        weight,
-        reps,
-        maxStrength,
-        picture,
-        video,
-        recordDate,
-        createdAt,
-        updatedAt,
-      ];
+    id,
+    exerciseId,
+    weight,
+    reps,
+    maxStrength,
+    picture,
+    video,
+    recordDate,
+    createdAt,
+    updatedAt,
+  ];
 }

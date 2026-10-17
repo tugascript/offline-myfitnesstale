@@ -24,7 +24,8 @@ class WorkoutSetExerciseRecordForm extends StatefulWidget {
     required double weight,
     required int reps,
     required WorkoutSetExerciseDifficulty difficulty,
-  }) onValuesChanged;
+  })
+  onValuesChanged;
 
   final bool showIterationRest;
   final int initialRestSecs;
@@ -65,8 +66,8 @@ class _WorkoutSetExerciseRecordFormState
   static final _decimalInputFormatter = TextInputFormatter.withFunction(
     (oldValue, newValue) =>
         RegExp(r'^\d*(?:\.\d{0,3})?$').hasMatch(newValue.text)
-            ? newValue
-            : oldValue,
+        ? newValue
+        : oldValue,
   );
 
   @override

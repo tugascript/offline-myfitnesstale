@@ -1,4 +1,5 @@
 import '../common/nullable.dart';
+
 import 'package:equatable/equatable.dart';
 
 import 'enums.dart';
@@ -57,7 +58,8 @@ class StrengthGoal extends Equatable implements Model {
   });
 
   static const String table = _table;
-  static final String tableCreate = '''
+  static final String tableCreate =
+      '''
   CREATE TABLE IF NOT EXISTS $_table (
     ${StrengthGoalColumns.id.value} INTEGER PRIMARY KEY AUTOINCREMENT,
     ${StrengthGoalColumns.name.value} TEXT NOT NULL,
@@ -171,16 +173,16 @@ class StrengthGoal extends Equatable implements Model {
 
   @override
   List<Object?> get props => [
-        id,
-        name,
-        targetReps,
-        targetWeight,
-        targetMaxStrength,
-        exerciseId,
-        status,
-        startDate,
-        completedAt,
-        createdAt,
-        updatedAt
-      ];
+    id,
+    name,
+    targetReps,
+    targetWeight,
+    targetMaxStrength,
+    exerciseId,
+    status,
+    startDate,
+    completedAt,
+    createdAt,
+    updatedAt,
+  ];
 }

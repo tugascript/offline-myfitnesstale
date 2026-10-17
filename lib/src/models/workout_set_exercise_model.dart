@@ -66,7 +66,8 @@ final class WorkoutSetExercise extends Equatable implements Model {
   });
 
   static const String table = _table;
-  static final String tableCreate = '''
+  static final String tableCreate =
+      '''
   CREATE TABLE IF NOT EXISTS $_table (
     ${WorkoutSetExerciseColumns.id.value} INTEGER PRIMARY KEY AUTOINCREMENT,
     ${WorkoutSetExerciseColumns.workoutId.value} INTEGER NOT NULL,
@@ -129,10 +130,12 @@ final class WorkoutSetExercise extends Equatable implements Model {
       toMaxReps: map[WorkoutSetExerciseColumns.toMaxReps.value] as int == 1,
       difficulty: map[WorkoutSetExerciseColumns.difficulty.value] != null
           ? WorkoutSetExerciseDifficulty.fromJson(
-              map[WorkoutSetExerciseColumns.difficulty.value] as String)
+              map[WorkoutSetExerciseColumns.difficulty.value] as String,
+            )
           : null,
       createdBy: CreatedBy.fromValue(
-          map[WorkoutSetExerciseColumns.createdBy.value] as String),
+        map[WorkoutSetExerciseColumns.createdBy.value] as String,
+      ),
       createdAt: map[WorkoutSetExerciseColumns.createdAt.value] as int,
       updatedAt: map[WorkoutSetExerciseColumns.updatedAt.value] as int,
     );
@@ -202,18 +205,18 @@ final class WorkoutSetExercise extends Equatable implements Model {
 
   @override
   List<Object?> get props => [
-        id,
-        workoutId,
-        workoutVersion,
-        workoutSetId,
-        exerciseId,
-        position,
-        minReps,
-        maxReps,
-        toMaxReps,
-        difficulty,
-        createdBy,
-        createdAt,
-        updatedAt,
-      ];
+    id,
+    workoutId,
+    workoutVersion,
+    workoutSetId,
+    exerciseId,
+    position,
+    minReps,
+    maxReps,
+    toMaxReps,
+    difficulty,
+    createdBy,
+    createdAt,
+    updatedAt,
+  ];
 }

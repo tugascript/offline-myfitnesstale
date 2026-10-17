@@ -16,10 +16,7 @@ class EquipmentUpdateView extends StatefulWidget {
 
   final int equipmentId;
 
-  const EquipmentUpdateView({
-    super.key,
-    required this.equipmentId,
-  });
+  const EquipmentUpdateView({super.key, required this.equipmentId});
 
   @override
   State<EquipmentUpdateView> createState() => _EquipmentUpdateViewState();
@@ -49,9 +46,8 @@ class _EquipmentUpdateViewState extends State<EquipmentUpdateView> {
         }
 
         if (state.error != null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(state.error!.description)),
-          );
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text(state.error!.description)));
         }
       },
       builder: (context, state) {
@@ -78,9 +74,9 @@ class _EquipmentUpdateViewState extends State<EquipmentUpdateView> {
                   submitLabel: "UPDATE",
                   onSubmit: ({required String name}) {
                     context.read<ExerciseCubit>().updateEquipment(
-                          id: widget.equipmentId,
-                          name: name,
-                        );
+                      id: widget.equipmentId,
+                      name: name,
+                    );
                     if (context.mounted) {
                       if (state.error == null) {
                         if (context.canPop()) {

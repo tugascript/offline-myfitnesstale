@@ -77,7 +77,8 @@ class Food extends Equatable implements Model {
 
   static const String table = _table;
 
-  static final String tableCreate = '''
+  static final String tableCreate =
+      '''
   CREATE TABLE IF NOT EXISTS $_table (
     ${FoodColumns.id.value} INTEGER PRIMARY KEY AUTOINCREMENT,
     ${FoodColumns.name.value} TEXT NOT NULL,
@@ -131,8 +132,9 @@ class Food extends Equatable implements Model {
     return Food(
       id: map[FoodColumns.id.value] as int?,
       name: map[FoodColumns.name.value] as String,
-      category:
-          FoodCategory.fromValue(map[FoodColumns.category.value] as String),
+      category: FoodCategory.fromValue(
+        map[FoodColumns.category.value] as String,
+      ),
       brand: map[FoodColumns.brand.value] as String?,
       barcode: map[FoodColumns.barcode.value] as String?,
       servingSizeBaseGrams: map[FoodColumns.servingSizeBaseGrams.value] as int,
@@ -146,8 +148,9 @@ class Food extends Equatable implements Model {
           ? Micronutrients.fromJson(map[FoodColumns.micros.value] as String)
           : null,
       isFavorite: (map[FoodColumns.isFavorite.value] as int? ?? 0) == 1,
-      createdBy:
-          CreatedBy.fromValue(map[FoodColumns.createdBy.value] as String),
+      createdBy: CreatedBy.fromValue(
+        map[FoodColumns.createdBy.value] as String,
+      ),
       createdAt: map[FoodColumns.createdAt.value] as int,
       updatedAt: map[FoodColumns.updatedAt.value] as int,
     );
@@ -233,22 +236,22 @@ class Food extends Equatable implements Model {
 
   @override
   List<Object?> get props => [
-        id,
-        name,
-        category,
-        brand,
-        barcode,
-        servingSizeBaseGrams,
-        caloriesBase,
-        proteinBase,
-        carbsBase,
-        fatBase,
-        fiberBase,
-        sodiumBase,
-        micros,
-        isFavorite,
-        createdBy,
-        createdAt,
-        updatedAt,
-      ];
+    id,
+    name,
+    category,
+    brand,
+    barcode,
+    servingSizeBaseGrams,
+    caloriesBase,
+    proteinBase,
+    carbsBase,
+    fatBase,
+    fiberBase,
+    sodiumBase,
+    micros,
+    isFavorite,
+    createdBy,
+    createdAt,
+    updatedAt,
+  ];
 }

@@ -18,12 +18,11 @@ class _WorkoutPlanRecordCubit extends WorkoutPlanRecordCubit {
   int loadCalls = 0;
 
   void failWithLoadedRecords(String description) {
-    emit(state.copyWith(
-      error: ErrorState(
-        type: 'operationFailure',
-        description: description,
+    emit(
+      state.copyWith(
+        error: ErrorState(type: 'operationFailure', description: description),
       ),
-    ));
+    );
   }
 
   @override
@@ -105,8 +104,9 @@ void main() {
     expect(find.text('Retry'), findsOneWidget);
   });
 
-  testWidgets('renders read-only progress summaries for every status',
-      (tester) async {
+  testWidgets('renders read-only progress summaries for every status', (
+    tester,
+  ) async {
     final records = [
       record(1, ProgressStatus.inProgress),
       record(2, ProgressStatus.completed),
@@ -149,8 +149,9 @@ void main() {
     expect(find.byType(InkWell), findsNothing);
   });
 
-  testWidgets('reports refresh errors while retaining loaded history',
-      (tester) async {
+  testWidgets('reports refresh errors while retaining loaded history', (
+    tester,
+  ) async {
     final cubit = await pumpView(
       tester,
       WorkoutPlanRecordState.initial().copyWith(

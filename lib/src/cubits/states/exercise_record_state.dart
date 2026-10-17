@@ -21,11 +21,7 @@ final class ExerciseRecordPagination extends Equatable {
   });
 
   factory ExerciseRecordPagination.initial() {
-    return const ExerciseRecordPagination(
-      limit: 10,
-      offset: 0,
-      total: 0,
-    );
+    return const ExerciseRecordPagination(limit: 10, offset: 0, total: 0);
   }
 
   ExerciseRecordPagination copyWith({
@@ -54,24 +50,26 @@ final class StrengthGoalPagination extends Equatable {
   final int total;
   final int limit;
   final int offset;
-  const StrengthGoalPagination(
-      {this.exerciseId,
-      this.skipInProgress = false,
-      this.total = 0,
-      this.limit = 20,
-      this.offset = 0});
-  StrengthGoalPagination copyWith(
-          {Nullable<int>? exerciseId,
-          bool? skipInProgress,
-          int? total,
-          int? limit,
-          int? offset}) =>
-      StrengthGoalPagination(
-          exerciseId: exerciseId != null ? exerciseId.value : this.exerciseId,
-          skipInProgress: skipInProgress ?? this.skipInProgress,
-          total: total ?? this.total,
-          limit: limit ?? this.limit,
-          offset: offset ?? this.offset);
+  const StrengthGoalPagination({
+    this.exerciseId,
+    this.skipInProgress = false,
+    this.total = 0,
+    this.limit = 20,
+    this.offset = 0,
+  });
+  StrengthGoalPagination copyWith({
+    Nullable<int>? exerciseId,
+    bool? skipInProgress,
+    int? total,
+    int? limit,
+    int? offset,
+  }) => StrengthGoalPagination(
+    exerciseId: exerciseId != null ? exerciseId.value : this.exerciseId,
+    skipInProgress: skipInProgress ?? this.skipInProgress,
+    total: total ?? this.total,
+    limit: limit ?? this.limit,
+    offset: offset ?? this.offset,
+  );
   @override
   List<Object?> get props => [exerciseId, skipInProgress, total, limit, offset];
 }
@@ -148,15 +146,15 @@ final class ExerciseRecordState extends Equatable {
 
   @override
   List<Object?> get props => [
-        exerciseRecords,
-        selectedExerciseRecord,
-        latestExerciseRecord,
-        recordPagination,
-        activeStrengthGoal,
-        strengthGoals,
-        strengthGoalPagination,
-        selectedStrengthGoal,
-        isLoading,
-        error,
-      ];
+    exerciseRecords,
+    selectedExerciseRecord,
+    latestExerciseRecord,
+    recordPagination,
+    activeStrengthGoal,
+    strengthGoals,
+    strengthGoalPagination,
+    selectedStrengthGoal,
+    isLoading,
+    error,
+  ];
 }

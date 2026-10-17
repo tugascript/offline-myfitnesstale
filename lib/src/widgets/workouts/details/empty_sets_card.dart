@@ -5,10 +5,7 @@ import '../../../utilities/sizes/data_display_sizes.dart';
 class EmptySetsCard extends StatelessWidget {
   final DataDisplaySizesList sizes;
 
-  const EmptySetsCard({
-    super.key,
-    required this.sizes,
-  });
+  const EmptySetsCard({super.key, required this.sizes});
 
   @override
   Widget build(BuildContext context) {

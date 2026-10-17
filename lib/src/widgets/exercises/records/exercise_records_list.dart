@@ -100,9 +100,7 @@ class _ExerciseRecordCard extends StatelessWidget {
 
     return Card(
       clipBehavior: Clip.antiAlias,
-      margin: EdgeInsets.symmetric(
-        vertical: sizes.margins / 2,
-      ),
+      margin: EdgeInsets.symmetric(vertical: sizes.margins / 2),
       child: Padding(
         padding: EdgeInsets.all(sizes.padding),
         child: Column(
@@ -182,8 +180,7 @@ class _ExerciseRecordCard extends StatelessWidget {
                           context: context,
                           builder: (context) => ConfirmationDialog(
                             title: "Delete Exercise Record",
-                            content:
-                                "Are you sure you want to delete this exercise record?",
+                            content: "Are you sure you want to delete this exercise record?",
                             confirmLabel: "Delete",
                             isDestructive: true,
                             onConfirm: () async {
@@ -200,7 +197,7 @@ class _ExerciseRecordCard extends StatelessWidget {
                       ),
                       color: redColor,
                       visualDensity: VisualDensity.compact,
-                    )
+                    ),
                   ],
                 ),
               ],

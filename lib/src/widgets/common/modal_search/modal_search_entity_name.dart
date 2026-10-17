@@ -17,10 +17,7 @@ class ModalSearchEntityName extends StatelessWidget {
     if (!isFavorite) {
       return Text(
         name,
-        style: TextStyle(
-          fontSize: fontSize,
-          fontWeight: FontWeight.bold,
-        ),
+        style: TextStyle(fontSize: fontSize, fontWeight: FontWeight.bold),
         softWrap: true,
         overflow: TextOverflow.ellipsis,
       );
@@ -30,18 +27,11 @@ class ModalSearchEntityName extends StatelessWidget {
       children: [
         Text(
           "$name ",
-          style: TextStyle(
-            fontSize: fontSize,
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(fontSize: fontSize, fontWeight: FontWeight.bold),
           softWrap: true,
           overflow: TextOverflow.ellipsis,
         ),
-        Icon(
-          Icons.favorite,
-          color: Colors.red,
-          size: fontSize * 1.2,
-        ),
+        Icon(Icons.favorite, color: Colors.red, size: fontSize * 1.2),
       ],
     );
   }

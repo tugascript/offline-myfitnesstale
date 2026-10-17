@@ -7,9 +7,9 @@ enum CreatedBy {
   const CreatedBy(this.value);
 
   static CreatedBy fromValue(String v) => CreatedBy.values.firstWhere(
-        (c) => c.value == v,
-        orElse: () => CreatedBy.user,
-      );
+    (c) => c.value == v,
+    orElse: () => CreatedBy.user,
+  );
 }
 
 enum EditorType {
@@ -21,9 +21,9 @@ enum EditorType {
   const EditorType(this.value);
 
   static EditorType fromValue(String v) => EditorType.values.firstWhere(
-        (e) => e.value == v,
-        orElse: () => EditorType.basic,
-      );
+    (e) => e.value == v,
+    orElse: () => EditorType.basic,
+  );
 }
 
 enum MuscleGroup {
@@ -38,9 +38,9 @@ enum MuscleGroup {
   const MuscleGroup(this.value);
 
   static MuscleGroup fromValue(String v) => MuscleGroup.values.firstWhere(
-        (m) => m.value == v,
-        orElse: () => MuscleGroup.full,
-      );
+    (m) => m.value == v,
+    orElse: () => MuscleGroup.full,
+  );
 }
 
 enum Muscle {
@@ -79,10 +79,8 @@ enum Muscle {
 
   const Muscle(this.value);
 
-  static Muscle fromValue(String v) => Muscle.values.firstWhere(
-        (m) => m.value == v,
-        orElse: () => Muscle.chest,
-      );
+  static Muscle fromValue(String v) =>
+      Muscle.values.firstWhere((m) => m.value == v, orElse: () => Muscle.chest);
 }
 
 const Map<MuscleGroup, Set<Muscle>> kMuscleGroupMuscleMap = {
@@ -168,10 +166,8 @@ enum Gender {
 
   const Gender(this.value);
 
-  static Gender fromValue(String v) => Gender.values.firstWhere(
-        (g) => g.value == v,
-        orElse: () => Gender.other,
-      );
+  static Gender fromValue(String v) =>
+      Gender.values.firstWhere((g) => g.value == v, orElse: () => Gender.other);
 }
 
 enum Units {
@@ -182,10 +178,8 @@ enum Units {
 
   const Units(this.value);
 
-  static Units fromValue(String v) => Units.values.firstWhere(
-        (u) => u.value == v,
-        orElse: () => Units.metric,
-      );
+  static Units fromValue(String v) =>
+      Units.values.firstWhere((u) => u.value == v, orElse: () => Units.metric);
 }
 
 enum ThemeType {
@@ -198,9 +192,9 @@ enum ThemeType {
   const ThemeType(this.value);
 
   static ThemeType fromValue(String v) => ThemeType.values.firstWhere(
-        (t) => t.value == v,
-        orElse: () => ThemeType.system,
-      );
+    (t) => t.value == v,
+    orElse: () => ThemeType.system,
+  );
 }
 
 enum VideoPlatform {
@@ -219,9 +213,9 @@ enum VideoPlatform {
   const VideoPlatform(this.value);
 
   static VideoPlatform fromValue(String v) => VideoPlatform.values.firstWhere(
-        (p) => p.value == v,
-        orElse: () => VideoPlatform.youtube,
-      );
+    (p) => p.value == v,
+    orElse: () => VideoPlatform.youtube,
+  );
 }
 
 enum PictureStorage {
@@ -234,9 +228,9 @@ enum PictureStorage {
   const PictureStorage(this.value);
 
   static PictureStorage fromValue(String v) => PictureStorage.values.firstWhere(
-        (p) => p.value == v,
-        orElse: () => PictureStorage.files,
-      );
+    (p) => p.value == v,
+    orElse: () => PictureStorage.files,
+  );
 }
 
 enum Difficulty {
@@ -251,9 +245,9 @@ enum Difficulty {
   const Difficulty(this.value);
 
   static Difficulty fromValue(int v) => Difficulty.values.firstWhere(
-        (d) => d.value == v,
-        orElse: () => Difficulty.beginner,
-      );
+    (d) => d.value == v,
+    orElse: () => Difficulty.beginner,
+  );
 }
 
 enum WorkoutTimeOfDay {
@@ -267,11 +261,8 @@ enum WorkoutTimeOfDay {
 
   const WorkoutTimeOfDay(this.value);
 
-  static WorkoutTimeOfDay fromValue(String v) =>
-      WorkoutTimeOfDay.values.firstWhere(
-        (t) => t.value == v,
-        orElse: () => WorkoutTimeOfDay.anytime,
-      );
+  static WorkoutTimeOfDay fromValue(String v) => WorkoutTimeOfDay.values
+      .firstWhere((t) => t.value == v, orElse: () => WorkoutTimeOfDay.anytime);
 }
 
 enum SetUpStatus {
@@ -284,9 +275,9 @@ enum SetUpStatus {
   const SetUpStatus(this.value);
 
   static SetUpStatus fromValue(String v) => SetUpStatus.values.firstWhere(
-        (s) => s.value == v,
-        orElse: () => SetUpStatus.notStarted,
-      );
+    (s) => s.value == v,
+    orElse: () => SetUpStatus.notStarted,
+  );
 }
 
 enum ProgressStatus {
@@ -300,9 +291,9 @@ enum ProgressStatus {
   const ProgressStatus(this.value);
 
   static ProgressStatus fromValue(String v) => ProgressStatus.values.firstWhere(
-        (p) => p.value == v,
-        orElse: () => ProgressStatus.inProgress,
-      );
+    (p) => p.value == v,
+    orElse: () => ProgressStatus.inProgress,
+  );
 }
 
 enum WeightGoalPhase {
@@ -314,11 +305,8 @@ enum WeightGoalPhase {
 
   const WeightGoalPhase(this.value);
 
-  static WeightGoalPhase fromValue(String v) =>
-      WeightGoalPhase.values.firstWhere(
-        (g) => g.value == v,
-        orElse: () => WeightGoalPhase.bulk,
-      );
+  static WeightGoalPhase fromValue(String v) => WeightGoalPhase.values
+      .firstWhere((g) => g.value == v, orElse: () => WeightGoalPhase.bulk);
 }
 
 enum WorkoutPhase {
@@ -332,9 +320,9 @@ enum WorkoutPhase {
   const WorkoutPhase(this.value);
 
   static WorkoutPhase fromValue(String v) => WorkoutPhase.values.firstWhere(
-        (p) => p.value == v,
-        orElse: () => WorkoutPhase.endurance,
-      );
+    (p) => p.value == v,
+    orElse: () => WorkoutPhase.endurance,
+  );
 }
 
 enum WorkoutSetExerciseDifficultyType {
@@ -399,9 +387,9 @@ enum WorkoutSetType {
   const WorkoutSetType(this.value);
 
   static WorkoutSetType fromValue(String v) => WorkoutSetType.values.firstWhere(
-        (t) => t.value == v,
-        orElse: () => WorkoutSetType.standard,
-      );
+    (t) => t.value == v,
+    orElse: () => WorkoutSetType.standard,
+  );
 }
 
 enum WorkoutPlanWeekScheduleMode {
@@ -429,11 +417,8 @@ enum ReminderSchedule {
 
   const ReminderSchedule(this.value);
 
-  static ReminderSchedule fromValue(String v) =>
-      ReminderSchedule.values.firstWhere(
-        (s) => s.value == v,
-        orElse: () => ReminderSchedule.daily,
-      );
+  static ReminderSchedule fromValue(String v) => ReminderSchedule.values
+      .firstWhere((s) => s.value == v, orElse: () => ReminderSchedule.daily);
 }
 
 enum DayOfWeek {
@@ -458,11 +443,8 @@ enum EntitlementType {
 
   const EntitlementType(this.value);
 
-  static EntitlementType fromValue(String v) =>
-      EntitlementType.values.firstWhere(
-        (t) => t.value == v,
-        orElse: () => EntitlementType.free,
-      );
+  static EntitlementType fromValue(String v) => EntitlementType.values
+      .firstWhere((t) => t.value == v, orElse: () => EntitlementType.free);
 }
 
 enum EntitlementStatus {
@@ -476,11 +458,8 @@ enum EntitlementStatus {
 
   const EntitlementStatus(this.value);
 
-  static EntitlementStatus fromValue(String v) =>
-      EntitlementStatus.values.firstWhere(
-        (s) => s.value == v,
-        orElse: () => EntitlementStatus.unknown,
-      );
+  static EntitlementStatus fromValue(String v) => EntitlementStatus.values
+      .firstWhere((s) => s.value == v, orElse: () => EntitlementStatus.unknown);
 }
 
 enum EntitlementSource {
@@ -491,11 +470,8 @@ enum EntitlementSource {
 
   const EntitlementSource(this.value);
 
-  static EntitlementSource fromValue(String v) =>
-      EntitlementSource.values.firstWhere(
-        (s) => s.value == v,
-        orElse: () => EntitlementSource.cache,
-      );
+  static EntitlementSource fromValue(String v) => EntitlementSource.values
+      .firstWhere((s) => s.value == v, orElse: () => EntitlementSource.cache);
 }
 
 enum FoodCategory {
@@ -519,9 +495,9 @@ enum FoodCategory {
   const FoodCategory(this.value);
 
   static FoodCategory fromValue(String v) => FoodCategory.values.firstWhere(
-        (c) => c.value == v,
-        orElse: () => FoodCategory.other,
-      );
+    (c) => c.value == v,
+    orElse: () => FoodCategory.other,
+  );
 }
 
 enum MealType {
@@ -535,9 +511,9 @@ enum MealType {
   const MealType(this.value);
 
   static MealType fromValue(String v) => MealType.values.firstWhere(
-        (m) => m.value == v,
-        orElse: () => MealType.snack,
-      );
+    (m) => m.value == v,
+    orElse: () => MealType.snack,
+  );
 }
 
 enum MealPlanPhase {
@@ -550,7 +526,7 @@ enum MealPlanPhase {
   const MealPlanPhase(this.value);
 
   static MealPlanPhase fromValue(String v) => MealPlanPhase.values.firstWhere(
-        (p) => p.value == v,
-        orElse: () => MealPlanPhase.maintain,
-      );
+    (p) => p.value == v,
+    orElse: () => MealPlanPhase.maintain,
+  );
 }

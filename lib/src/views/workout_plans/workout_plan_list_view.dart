@@ -105,19 +105,20 @@ class _WorkoutPlanListViewState extends State<WorkoutPlanListView> {
                   initialName: state.pagination.name,
                   initialDifficulty: state.pagination.difficulty,
                   initialIsFavorite: state.pagination.isFavorite,
-                  onSubmit: ({
-                    required String name,
-                    required Difficulty? difficulty,
-                    required bool isFavorite,
-                  }) {
-                    context.read<WorkoutPlanCubit>().getWorkoutPlans(
+                  onSubmit:
+                      ({
+                        required String name,
+                        required Difficulty? difficulty,
+                        required bool isFavorite,
+                      }) {
+                        context.read<WorkoutPlanCubit>().getWorkoutPlans(
                           name: name,
                           difficulty: difficulty,
                           isFavorite: isFavorite,
                           limit: 20,
                           offset: 0,
                         );
-                  },
+                      },
                 ),
                 SizedBox(height: sizes.inputSpacing),
                 Expanded(
@@ -139,10 +140,8 @@ class _WorkoutPlanListViewState extends State<WorkoutPlanListView> {
         onPressed: () {
           showDialog(
             context: context,
-            builder: (context) => CreateWorkoutPlanModal(
-              theme: theme,
-              sizes: sizes,
-            ),
+            builder: (context) =>
+                CreateWorkoutPlanModal(theme: theme, sizes: sizes),
           );
         },
         shape: BeveledRectangleBorder(),

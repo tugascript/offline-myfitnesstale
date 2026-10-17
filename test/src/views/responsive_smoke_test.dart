@@ -15,21 +15,21 @@ void main() {
       builder: textScaler == null
           ? null
           : (context, child) => MediaQuery(
-                data: MediaQuery.of(context).copyWith(textScaler: textScaler),
-                child: child!,
-              ),
+              data: MediaQuery.of(context).copyWith(textScaler: textScaler),
+              child: child!,
+            ),
     );
   }
 
   GoRouter createRouter() => GoRouter(
-        initialLocation: '/activity',
-        routes: [
-          GoRoute(
-            path: '/activity',
-            builder: (context, state) => const ActivityView(),
-          ),
-        ],
-      );
+    initialLocation: '/activity',
+    routes: [
+      GoRoute(
+        path: '/activity',
+        builder: (context, state) => const ActivityView(),
+      ),
+    ],
+  );
 
   testWidgets('activity hub renders on a narrow phone', (tester) async {
     tester.view.devicePixelRatio = 1;
@@ -57,10 +57,7 @@ void main() {
     addTearDown(router.dispose);
 
     await tester.pumpWidget(
-      buildHarness(
-        router,
-        textScaler: const TextScaler.linear(2),
-      ),
+      buildHarness(router, textScaler: const TextScaler.linear(2)),
     );
     await tester.pump();
     await tester.scrollUntilVisible(find.text('Plan History'), 200);
@@ -69,8 +66,9 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('muscle groups render in a narrow workout column',
-      (tester) async {
+  testWidgets('muscle groups render in a narrow workout column', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(
@@ -80,9 +78,7 @@ void main() {
               width: 180.2,
               child: MusclesWrap(
                 theme: ThemeData.light(),
-                sizes: DataDisplaySizes.getDataDisplaySizes(
-                  ScreenSize.xs,
-                ),
+                sizes: DataDisplaySizes.getDataDisplaySizes(ScreenSize.xs),
                 leading: const Icon(Icons.fitness_center),
                 title: 'Primary Muscles',
                 muscles: const {Muscle.hamstrings},

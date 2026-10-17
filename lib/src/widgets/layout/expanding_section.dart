@@ -30,31 +30,20 @@ class ExpandingSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return ExpansionTile(
       dense: dense,
-      leading: Icon(
-        icon,
-        size: titleFountSize * 1.2,
-      ),
+      leading: Icon(icon, size: titleFountSize * 1.2),
       maintainState: true,
       initiallyExpanded: initiallyExpanded,
       title: Text(
         title,
-        style: TextStyle(
-          fontSize: titleFountSize,
-          fontWeight: titleFontWeight,
-        ),
+        style: TextStyle(fontSize: titleFountSize, fontWeight: titleFontWeight),
       ),
       subtitle: subtitle != null && subtitleFontSize != null
-          ? Text(
-              subtitle!,
-              style: TextStyle(fontSize: subtitleFontSize),
-            )
+          ? Text(subtitle!, style: TextStyle(fontSize: subtitleFontSize))
           : null,
       children: [
         Padding(
           padding: EdgeInsets.all(padding),
-          child: Column(
-            children: children,
-          ),
+          child: Column(children: children),
         ),
       ],
     );

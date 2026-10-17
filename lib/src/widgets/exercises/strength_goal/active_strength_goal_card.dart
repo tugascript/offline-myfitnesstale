@@ -1,4 +1,5 @@
 import '../../layout/responsive_fields.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
@@ -64,15 +65,15 @@ class ActiveStrengthGoalCard extends StatelessWidget {
                   ElevatedButton.icon(
                     key: const ValueKey('strength-goal-set-active-button'),
                     icon: Icon(Icons.add, size: sizes.buttonIconSize),
-                    label: Text('Set Goal',
-                        style: TextStyle(fontSize: sizes.fontSize)),
+                    label: Text(
+                      'Set Goal',
+                      style: TextStyle(fontSize: sizes.fontSize),
+                    ),
                     onPressed: () {
                       showDialog(
                         context: context,
-                        builder: (ctx) => StrengthGoalFormModal(
-                          theme: theme,
-                          sizes: sizes,
-                        ),
+                        builder: (ctx) =>
+                            StrengthGoalFormModal(theme: theme, sizes: sizes),
                       );
                     },
                   ),
@@ -109,8 +110,10 @@ class ActiveStrengthGoalCard extends StatelessWidget {
                     ),
                     IconButton(
                       key: const ValueKey('active-strength-goal-edit-btn'),
-                      icon:
-                          Icon(Icons.edit_outlined, size: sizes.buttonIconSize),
+                      icon: Icon(
+                        Icons.edit_outlined,
+                        size: sizes.buttonIconSize,
+                      ),
                       onPressed: () {
                         showDialog(
                           context: context,
@@ -133,26 +136,29 @@ class ActiveStrengthGoalCard extends StatelessWidget {
                   ),
                 ),
                 SizedBox(height: sizes.spacing),
-                ResponsiveFields(sizes: sizes, children: [
-                  _MetricChip(
-                    theme: theme,
-                    label: 'Target Weight',
-                    value: weightString,
-                    sizes: sizes,
-                  ),
-                  _MetricChip(
-                    theme: theme,
-                    label: 'Reps',
-                    value: '${goal.targetReps}',
-                    sizes: sizes,
-                  ),
-                  _MetricChip(
-                    theme: theme,
-                    label: 'Target 1RM',
-                    value: '${goal.targetMaxStrength}',
-                    sizes: sizes,
-                  ),
-                ]),
+                ResponsiveFields(
+                  sizes: sizes,
+                  children: [
+                    _MetricChip(
+                      theme: theme,
+                      label: 'Target Weight',
+                      value: weightString,
+                      sizes: sizes,
+                    ),
+                    _MetricChip(
+                      theme: theme,
+                      label: 'Reps',
+                      value: '${goal.targetReps}',
+                      sizes: sizes,
+                    ),
+                    _MetricChip(
+                      theme: theme,
+                      label: 'Target 1RM',
+                      value: '${goal.targetMaxStrength}',
+                      sizes: sizes,
+                    ),
+                  ],
+                ),
                 SizedBox(height: sizes.spacing),
                 Text(
                   'Started: ${DateFormat('MMM d, yyyy').format(goal.startDate)}',
@@ -170,20 +176,24 @@ class ActiveStrengthGoalCard extends StatelessWidget {
                   children: [
                     TextButton.icon(
                       key: const ValueKey('active-strength-goal-delete-btn'),
-                      icon: Icon(Icons.delete_outline,
-                          color: Colors.red, size: sizes.buttonIconSize),
+                      icon: Icon(
+                        Icons.delete_outline,
+                        color: Colors.red,
+                        size: sizes.buttonIconSize,
+                      ),
                       label: Text(
                         'Delete',
                         style: TextStyle(
-                            color: Colors.red, fontSize: sizes.fontSize),
+                          color: Colors.red,
+                          fontSize: sizes.fontSize,
+                        ),
                       ),
                       onPressed: () {
                         showDialog(
                           context: context,
                           builder: (ctx) => ConfirmationDialog(
                             title: 'Delete Strength Goal',
-                            content:
-                                'Are you sure you want to delete this strength goal?',
+                            content: 'Are you sure you want to delete this strength goal?',
                             onConfirm: () {
                               context
                                   .read<ExerciseRecordCubit>()
@@ -197,8 +207,10 @@ class ActiveStrengthGoalCard extends StatelessWidget {
                     ElevatedButton.icon(
                       key: const ValueKey('active-strength-goal-complete-btn'),
                       icon: Icon(Icons.check, size: sizes.buttonIconSize),
-                      label: Text('Complete Goal',
-                          style: TextStyle(fontSize: sizes.fontSize)),
+                      label: Text(
+                        'Complete Goal',
+                        style: TextStyle(fontSize: sizes.fontSize),
+                      ),
                       onPressed: () {
                         context
                             .read<ExerciseRecordCubit>()

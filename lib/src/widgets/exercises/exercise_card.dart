@@ -56,7 +56,7 @@ class ExerciseCard extends StatelessWidget {
               Icons.arrow_forward_ios,
               size: sizes.fontSize * 1.2,
               color: Colors.grey,
-            )
+            ),
           ],
         ),
       ],

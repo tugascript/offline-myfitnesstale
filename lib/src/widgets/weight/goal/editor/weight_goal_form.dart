@@ -23,7 +23,8 @@ class WeightGoalForm extends StatefulWidget {
     required int weight,
     required WeightGoalPhase phase,
     int? fatPercentage,
-  }) onSubmit;
+  })
+  onSubmit;
 
   const WeightGoalForm({
     super.key,
@@ -140,9 +141,7 @@ class _WeightGoalFormState extends State<WeightGoalForm> {
                 children: [
                   Text(
                     widget.units == Units.imperial ? "LBS" : "KG",
-                    style: TextStyle(
-                      fontSize: widget.sizes.subtitleFontSize,
-                    ),
+                    style: TextStyle(fontSize: widget.sizes.subtitleFontSize),
                   ),
                 ],
               ),
@@ -348,9 +347,5 @@ final class _FormData {
   double weight;
   double? fatPercentage;
 
-  _FormData({
-    required this.phase,
-    required this.weight,
-    this.fatPercentage,
-  });
+  _FormData({required this.phase, required this.weight, this.fatPercentage});
 }

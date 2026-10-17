@@ -60,15 +60,15 @@ final class ExercisePagination extends Equatable {
 
   @override
   List<Object?> get props => [
-        name,
-        muscleGroup,
-        difficulty,
-        equipmentId,
-        isFavorite,
-        total,
-        limit,
-        offset,
-      ];
+    name,
+    muscleGroup,
+    difficulty,
+    equipmentId,
+    isFavorite,
+    total,
+    limit,
+    offset,
+  ];
 }
 
 final class EquipmentPagination extends Equatable {
@@ -85,12 +85,7 @@ final class EquipmentPagination extends Equatable {
   });
 
   factory EquipmentPagination.initial() {
-    return const EquipmentPagination(
-      name: "",
-      total: 0,
-      limit: 10,
-      offset: 0,
-    );
+    return const EquipmentPagination(name: "", total: 0, limit: 10, offset: 0);
   }
 
   EquipmentPagination copyWith({
@@ -200,15 +195,15 @@ final class ExerciseState extends Equatable {
 
   @override
   List<Object?> get props => [
-        isLoading,
-        error,
-        exercises,
-        selectedExercise,
-        exercisePagination,
-        equipments,
-        selectedEquipment,
-        equipmentPagination,
-        equipmentSelection,
-        exerciseSelection,
-      ];
+    isLoading,
+    error,
+    exercises,
+    selectedExercise,
+    exercisePagination,
+    equipments,
+    selectedEquipment,
+    equipmentPagination,
+    equipmentSelection,
+    exerciseSelection,
+  ];
 }

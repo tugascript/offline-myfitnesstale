@@ -50,8 +50,7 @@ void main() {
       where: '${WorkoutPlanColumns.id.value} = ?',
       whereArgs: [workoutPlanId],
       limit: 1,
-    ))
-        .single;
+    )).single;
     return WorkoutPlan.fromMap(map);
   }
 
@@ -133,39 +132,48 @@ void main() {
     expect(plan.totalDays, 3);
     expect(plan.totalWorkouts, 4);
 
-    final weekCount = Sqflite.firstIntValue(await db.rawQuery(
-          'SELECT COUNT(*) AS count FROM ${WorkoutPlanWeek.table} WHERE ${WorkoutPlanWeekColumns.workoutPlanId.value} = ?',
-          [workoutPlanId],
-        )) ??
+    final weekCount =
+        Sqflite.firstIntValue(
+          await db.rawQuery(
+            'SELECT COUNT(*) AS count FROM ${WorkoutPlanWeek.table} WHERE ${WorkoutPlanWeekColumns.workoutPlanId.value} = ?',
+            [workoutPlanId],
+          ),
+        ) ??
         0;
-    final dayCount = Sqflite.firstIntValue(await db.rawQuery(
-          'SELECT COUNT(*) AS count FROM ${WorkoutPlanDay.table} WHERE ${WorkoutPlanDayColumns.workoutPlanId.value} = ?',
-          [workoutPlanId],
-        )) ??
+    final dayCount =
+        Sqflite.firstIntValue(
+          await db.rawQuery(
+            'SELECT COUNT(*) AS count FROM ${WorkoutPlanDay.table} WHERE ${WorkoutPlanDayColumns.workoutPlanId.value} = ?',
+            [workoutPlanId],
+          ),
+        ) ??
         0;
-    final workoutCount = Sqflite.firstIntValue(await db.rawQuery(
-          'SELECT COUNT(*) AS count FROM ${WorkoutPlanWorkout.table} WHERE ${WorkoutPlanWorkoutColumns.workoutPlanId.value} = ?',
-          [workoutPlanId],
-        )) ??
+    final workoutCount =
+        Sqflite.firstIntValue(
+          await db.rawQuery(
+            'SELECT COUNT(*) AS count FROM ${WorkoutPlanWorkout.table} WHERE ${WorkoutPlanWorkoutColumns.workoutPlanId.value} = ?',
+            [workoutPlanId],
+          ),
+        ) ??
         0;
 
     expect(weekCount, 2);
     expect(dayCount, 4);
     expect(workoutCount, 4);
 
-    final weekVersions = (await db.query(
-      WorkoutPlanWeek.table,
-      columns: [WorkoutPlanWeekColumns.planVersion.value],
-      where: '${WorkoutPlanWeekColumns.workoutPlanId.value} = ?',
-      whereArgs: [workoutPlanId],
-    ))
-        .map((row) => row[WorkoutPlanWeekColumns.planVersion.value] as int)
-        .toSet();
+    final weekVersions =
+        (await db.query(
+              WorkoutPlanWeek.table,
+              columns: [WorkoutPlanWeekColumns.planVersion.value],
+              where: '${WorkoutPlanWeekColumns.workoutPlanId.value} = ?',
+              whereArgs: [workoutPlanId],
+            ))
+            .map((row) => row[WorkoutPlanWeekColumns.planVersion.value] as int)
+            .toSet();
     expect(weekVersions, {1});
   });
 
-  test('creating a new structure creates a new version and preserves old rows',
-      () async {
+  test('creating a new structure creates a new version and preserves old rows', () async {
     final db = await testDatabase.db;
     final workoutPlanId = await createWorkoutPlan(db);
     final workoutA = await createWorkout(db);
@@ -221,28 +229,40 @@ void main() {
     final plan = await getPlan(db, workoutPlanId);
     expect(plan.version, 2);
 
-    final weekV1Count = Sqflite.firstIntValue(await db.rawQuery(
-          'SELECT COUNT(*) AS count FROM ${WorkoutPlanWeek.table} WHERE ${WorkoutPlanWeekColumns.workoutPlanId.value} = ? AND ${WorkoutPlanWeekColumns.planVersion.value} = 1',
-          [workoutPlanId],
-        )) ??
+    final weekV1Count =
+        Sqflite.firstIntValue(
+          await db.rawQuery(
+            'SELECT COUNT(*) AS count FROM ${WorkoutPlanWeek.table} WHERE ${WorkoutPlanWeekColumns.workoutPlanId.value} = ? AND ${WorkoutPlanWeekColumns.planVersion.value} = 1',
+            [workoutPlanId],
+          ),
+        ) ??
         0;
-    final weekV2Count = Sqflite.firstIntValue(await db.rawQuery(
-          'SELECT COUNT(*) AS count FROM ${WorkoutPlanWeek.table} WHERE ${WorkoutPlanWeekColumns.workoutPlanId.value} = ? AND ${WorkoutPlanWeekColumns.planVersion.value} = 2',
-          [workoutPlanId],
-        )) ??
+    final weekV2Count =
+        Sqflite.firstIntValue(
+          await db.rawQuery(
+            'SELECT COUNT(*) AS count FROM ${WorkoutPlanWeek.table} WHERE ${WorkoutPlanWeekColumns.workoutPlanId.value} = ? AND ${WorkoutPlanWeekColumns.planVersion.value} = 2',
+            [workoutPlanId],
+          ),
+        ) ??
         0;
     expect(weekV1Count, 1);
     expect(weekV2Count, 1);
 
-    final dayV1Count = Sqflite.firstIntValue(await db.rawQuery(
-          'SELECT COUNT(*) AS count FROM ${WorkoutPlanDay.table} WHERE ${WorkoutPlanDayColumns.workoutPlanId.value} = ? AND ${WorkoutPlanDayColumns.planVersion.value} = 1',
-          [workoutPlanId],
-        )) ??
+    final dayV1Count =
+        Sqflite.firstIntValue(
+          await db.rawQuery(
+            'SELECT COUNT(*) AS count FROM ${WorkoutPlanDay.table} WHERE ${WorkoutPlanDayColumns.workoutPlanId.value} = ? AND ${WorkoutPlanDayColumns.planVersion.value} = 1',
+            [workoutPlanId],
+          ),
+        ) ??
         0;
-    final dayV2Count = Sqflite.firstIntValue(await db.rawQuery(
-          'SELECT COUNT(*) AS count FROM ${WorkoutPlanDay.table} WHERE ${WorkoutPlanDayColumns.workoutPlanId.value} = ? AND ${WorkoutPlanDayColumns.planVersion.value} = 2',
-          [workoutPlanId],
-        )) ??
+    final dayV2Count =
+        Sqflite.firstIntValue(
+          await db.rawQuery(
+            'SELECT COUNT(*) AS count FROM ${WorkoutPlanDay.table} WHERE ${WorkoutPlanDayColumns.workoutPlanId.value} = ? AND ${WorkoutPlanDayColumns.planVersion.value} = 2',
+            [workoutPlanId],
+          ),
+        ) ??
         0;
     expect(dayV1Count, 1);
     expect(dayV2Count, 2);
@@ -279,24 +299,24 @@ void main() {
     expect(recordResult.isOk(), isTrue);
     expect(recordResult.value.workoutPlanVersion, 1);
 
-    final versionTwo =
-        await workoutPlanService.createWorkoutPlanVersionWithWeeks(
-      workoutPlanId: workoutPlanId,
-      weeks: [
-        WorkoutPlanWeekBatchCreateInput(
-          startWeek: 1,
-          endWeek: 2,
-          days: [
-            WorkoutPlanDayBatchCreateInput(
-              day: 1,
-              workouts: [
-                WorkoutPlanWorkoutBatchCreateInput(workoutId: workoutB),
+    final versionTwo = await workoutPlanService
+        .createWorkoutPlanVersionWithWeeks(
+          workoutPlanId: workoutPlanId,
+          weeks: [
+            WorkoutPlanWeekBatchCreateInput(
+              startWeek: 1,
+              endWeek: 2,
+              days: [
+                WorkoutPlanDayBatchCreateInput(
+                  day: 1,
+                  workouts: [
+                    WorkoutPlanWorkoutBatchCreateInput(workoutId: workoutB),
+                  ],
+                ),
               ],
             ),
           ],
-        ),
-      ],
-    );
+        );
     expect(versionTwo.isOk(), isTrue);
     expect(versionTwo.value.currentVersion, 2);
 
@@ -306,8 +326,7 @@ void main() {
         where: '${WorkoutPlanRecordColumns.id.value} = ?',
         whereArgs: [recordResult.value.id],
         limit: 1,
-      ))
-          .single,
+      )).single,
     );
     expect(persistedRecord.workoutPlanVersion, 1);
   });
@@ -316,32 +335,32 @@ void main() {
     final db = await testDatabase.db;
     final workoutPlanId = await createWorkoutPlan(db);
 
-    final endBeforeStart =
-        await workoutPlanService.createWorkoutPlanVersionWithWeeks(
-      workoutPlanId: workoutPlanId,
-      weeks: [
-        const WorkoutPlanWeekBatchCreateInput(
-          startWeek: 3,
-          endWeek: 2,
-          days: [],
-        ),
-      ],
-    );
+    final endBeforeStart = await workoutPlanService
+        .createWorkoutPlanVersionWithWeeks(
+          workoutPlanId: workoutPlanId,
+          weeks: [
+            const WorkoutPlanWeekBatchCreateInput(
+              startWeek: 3,
+              endWeek: 2,
+              days: [],
+            ),
+          ],
+        );
 
     expect(endBeforeStart.isErr(), isTrue);
     expect(endBeforeStart.error.type, SingleErrorTypes.invalidInput);
 
-    final longerThan12 =
-        await workoutPlanService.createWorkoutPlanVersionWithWeeks(
-      workoutPlanId: workoutPlanId,
-      weeks: [
-        const WorkoutPlanWeekBatchCreateInput(
-          startWeek: 1,
-          endWeek: 13,
-          days: [],
-        ),
-      ],
-    );
+    final longerThan12 = await workoutPlanService
+        .createWorkoutPlanVersionWithWeeks(
+          workoutPlanId: workoutPlanId,
+          weeks: [
+            const WorkoutPlanWeekBatchCreateInput(
+              startWeek: 1,
+              endWeek: 13,
+              days: [],
+            ),
+          ],
+        );
 
     expect(longerThan12.isErr(), isTrue);
     expect(longerThan12.error.type, SingleErrorTypes.invalidInput);
@@ -391,79 +410,79 @@ void main() {
     final workoutPlanId = await createWorkoutPlan(db);
     final workoutA = await createWorkout(db);
 
-    final dayOutOfRange =
-        await workoutPlanService.createWorkoutPlanVersionWithWeeks(
-      workoutPlanId: workoutPlanId,
-      weeks: [
-        WorkoutPlanWeekBatchCreateInput(
-          startWeek: 1,
-          endWeek: 1,
-          days: [
-            WorkoutPlanDayBatchCreateInput(
-              day: 8,
-              workouts: [
-                WorkoutPlanWorkoutBatchCreateInput(workoutId: workoutA),
+    final dayOutOfRange = await workoutPlanService
+        .createWorkoutPlanVersionWithWeeks(
+          workoutPlanId: workoutPlanId,
+          weeks: [
+            WorkoutPlanWeekBatchCreateInput(
+              startWeek: 1,
+              endWeek: 1,
+              days: [
+                WorkoutPlanDayBatchCreateInput(
+                  day: 8,
+                  workouts: [
+                    WorkoutPlanWorkoutBatchCreateInput(workoutId: workoutA),
+                  ],
+                ),
               ],
             ),
           ],
-        ),
-      ],
-    );
+        );
     expect(dayOutOfRange.isErr(), isTrue);
     expect(dayOutOfRange.error.type, SingleErrorTypes.invalidInput);
 
-    final duplicateDay =
-        await workoutPlanService.createWorkoutPlanVersionWithWeeks(
-      workoutPlanId: workoutPlanId,
-      weeks: [
-        WorkoutPlanWeekBatchCreateInput(
-          startWeek: 1,
-          endWeek: 1,
-          days: [
-            WorkoutPlanDayBatchCreateInput(
-              day: 1,
-              workouts: [
-                WorkoutPlanWorkoutBatchCreateInput(workoutId: workoutA),
-              ],
-            ),
-            WorkoutPlanDayBatchCreateInput(
-              day: 1,
-              workouts: [
-                WorkoutPlanWorkoutBatchCreateInput(workoutId: workoutA),
+    final duplicateDay = await workoutPlanService
+        .createWorkoutPlanVersionWithWeeks(
+          workoutPlanId: workoutPlanId,
+          weeks: [
+            WorkoutPlanWeekBatchCreateInput(
+              startWeek: 1,
+              endWeek: 1,
+              days: [
+                WorkoutPlanDayBatchCreateInput(
+                  day: 1,
+                  workouts: [
+                    WorkoutPlanWorkoutBatchCreateInput(workoutId: workoutA),
+                  ],
+                ),
+                WorkoutPlanDayBatchCreateInput(
+                  day: 1,
+                  workouts: [
+                    WorkoutPlanWorkoutBatchCreateInput(workoutId: workoutA),
+                  ],
+                ),
               ],
             ),
           ],
-        ),
-      ],
-    );
+        );
     expect(duplicateDay.isErr(), isTrue);
     expect(duplicateDay.error.type, SingleErrorTypes.invalidInput);
 
-    final tooManyDays =
-        await workoutPlanService.createWorkoutPlanVersionWithWeeks(
-      workoutPlanId: workoutPlanId,
-      weeks: [
-        WorkoutPlanWeekBatchCreateInput(
-          startWeek: 1,
-          endWeek: 1,
-          days: [
-            for (int i = 1; i <= 7; i++)
-              WorkoutPlanDayBatchCreateInput(
-                day: i,
-                workouts: [
-                  WorkoutPlanWorkoutBatchCreateInput(workoutId: workoutA),
-                ],
-              ),
-            WorkoutPlanDayBatchCreateInput(
-              day: 7,
-              workouts: [
-                WorkoutPlanWorkoutBatchCreateInput(workoutId: workoutA),
+    final tooManyDays = await workoutPlanService
+        .createWorkoutPlanVersionWithWeeks(
+          workoutPlanId: workoutPlanId,
+          weeks: [
+            WorkoutPlanWeekBatchCreateInput(
+              startWeek: 1,
+              endWeek: 1,
+              days: [
+                for (int i = 1; i <= 7; i++)
+                  WorkoutPlanDayBatchCreateInput(
+                    day: i,
+                    workouts: [
+                      WorkoutPlanWorkoutBatchCreateInput(workoutId: workoutA),
+                    ],
+                  ),
+                WorkoutPlanDayBatchCreateInput(
+                  day: 7,
+                  workouts: [
+                    WorkoutPlanWorkoutBatchCreateInput(workoutId: workoutA),
+                  ],
+                ),
               ],
             ),
           ],
-        ),
-      ],
-    );
+        );
     expect(tooManyDays.isErr(), isTrue);
     expect(tooManyDays.error.type, SingleErrorTypes.invalidInput);
   });
@@ -473,46 +492,46 @@ void main() {
     final workoutPlanId = await createWorkoutPlan(db);
     final workoutA = await createWorkout(db);
 
-    final restDayWithWorkout =
-        await workoutPlanService.createWorkoutPlanVersionWithWeeks(
-      workoutPlanId: workoutPlanId,
-      weeks: [
-        WorkoutPlanWeekBatchCreateInput(
-          startWeek: 1,
-          endWeek: 1,
-          days: [
-            WorkoutPlanDayBatchCreateInput(
-              day: 1,
-              isRestDay: true,
-              workouts: [
-                WorkoutPlanWorkoutBatchCreateInput(workoutId: workoutA),
+    final restDayWithWorkout = await workoutPlanService
+        .createWorkoutPlanVersionWithWeeks(
+          workoutPlanId: workoutPlanId,
+          weeks: [
+            WorkoutPlanWeekBatchCreateInput(
+              startWeek: 1,
+              endWeek: 1,
+              days: [
+                WorkoutPlanDayBatchCreateInput(
+                  day: 1,
+                  isRestDay: true,
+                  workouts: [
+                    WorkoutPlanWorkoutBatchCreateInput(workoutId: workoutA),
+                  ],
+                ),
               ],
             ),
           ],
-        ),
-      ],
-    );
+        );
 
     expect(restDayWithWorkout.isErr(), isTrue);
     expect(restDayWithWorkout.error.type, SingleErrorTypes.invalidInput);
 
-    final workoutDayWithoutWorkouts =
-        await workoutPlanService.createWorkoutPlanVersionWithWeeks(
-      workoutPlanId: workoutPlanId,
-      weeks: const [
-        WorkoutPlanWeekBatchCreateInput(
-          startWeek: 1,
-          endWeek: 1,
-          days: [
-            WorkoutPlanDayBatchCreateInput(
-              day: 1,
-              isRestDay: false,
-              workouts: [],
+    final workoutDayWithoutWorkouts = await workoutPlanService
+        .createWorkoutPlanVersionWithWeeks(
+          workoutPlanId: workoutPlanId,
+          weeks: const [
+            WorkoutPlanWeekBatchCreateInput(
+              startWeek: 1,
+              endWeek: 1,
+              days: [
+                WorkoutPlanDayBatchCreateInput(
+                  day: 1,
+                  isRestDay: false,
+                  workouts: [],
+                ),
+              ],
             ),
           ],
-        ),
-      ],
-    );
+        );
 
     expect(workoutDayWithoutWorkouts.isErr(), isTrue);
     expect(workoutDayWithoutWorkouts.error.type, SingleErrorTypes.invalidInput);
@@ -564,9 +583,7 @@ void main() {
           days: [
             WorkoutPlanDayBatchCreateInput(
               day: 1,
-              workouts: [
-                WorkoutPlanWorkoutBatchCreateInput(workoutId: 999999),
-              ],
+              workouts: [WorkoutPlanWorkoutBatchCreateInput(workoutId: 999999)],
             ),
           ],
         ),
@@ -619,20 +636,29 @@ void main() {
     expect(plan.totalDays, 0);
     expect(plan.totalWorkouts, 0);
 
-    final weekCount = Sqflite.firstIntValue(await db.rawQuery(
-          'SELECT COUNT(*) AS count FROM ${WorkoutPlanWeek.table} WHERE ${WorkoutPlanWeekColumns.workoutPlanId.value} = ?',
-          [workoutPlanId],
-        )) ??
+    final weekCount =
+        Sqflite.firstIntValue(
+          await db.rawQuery(
+            'SELECT COUNT(*) AS count FROM ${WorkoutPlanWeek.table} WHERE ${WorkoutPlanWeekColumns.workoutPlanId.value} = ?',
+            [workoutPlanId],
+          ),
+        ) ??
         0;
-    final dayCount = Sqflite.firstIntValue(await db.rawQuery(
-          'SELECT COUNT(*) AS count FROM ${WorkoutPlanDay.table} WHERE ${WorkoutPlanDayColumns.workoutPlanId.value} = ?',
-          [workoutPlanId],
-        )) ??
+    final dayCount =
+        Sqflite.firstIntValue(
+          await db.rawQuery(
+            'SELECT COUNT(*) AS count FROM ${WorkoutPlanDay.table} WHERE ${WorkoutPlanDayColumns.workoutPlanId.value} = ?',
+            [workoutPlanId],
+          ),
+        ) ??
         0;
-    final workoutCount = Sqflite.firstIntValue(await db.rawQuery(
-          'SELECT COUNT(*) AS count FROM ${WorkoutPlanWorkout.table} WHERE ${WorkoutPlanWorkoutColumns.workoutPlanId.value} = ?',
-          [workoutPlanId],
-        )) ??
+    final workoutCount =
+        Sqflite.firstIntValue(
+          await db.rawQuery(
+            'SELECT COUNT(*) AS count FROM ${WorkoutPlanWorkout.table} WHERE ${WorkoutPlanWorkoutColumns.workoutPlanId.value} = ?',
+            [workoutPlanId],
+          ),
+        ) ??
         0;
 
     expect(weekCount, 0);

@@ -11,9 +11,10 @@ final class MacroGoalPagination extends Equatable {
   const MacroGoalPagination({this.total = 0, this.limit = 20, this.offset = 0});
   MacroGoalPagination copyWith({int? total, int? limit, int? offset}) =>
       MacroGoalPagination(
-          total: total ?? this.total,
-          limit: limit ?? this.limit,
-          offset: offset ?? this.offset);
+        total: total ?? this.total,
+        limit: limit ?? this.limit,
+        offset: offset ?? this.offset,
+      );
   @override
   List<Object?> get props => [total, limit, offset];
 }
@@ -76,13 +77,13 @@ final class MacroTrackingState extends Equatable {
 
   @override
   List<Object?> get props => [
-        activeGoal,
-        goalHistory,
-        goalPagination,
-        selectedDailyLog,
-        selectedDate,
-        rangeLogs,
-        isLoading,
-        error,
-      ];
+    activeGoal,
+    goalHistory,
+    goalPagination,
+    selectedDailyLog,
+    selectedDate,
+    rangeLogs,
+    isLoading,
+    error,
+  ];
 }

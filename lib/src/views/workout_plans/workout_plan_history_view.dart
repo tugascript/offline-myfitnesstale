@@ -15,10 +15,7 @@ class WorkoutPlanHistoryView extends StatefulWidget {
 
   final int workoutPlanId;
 
-  const WorkoutPlanHistoryView({
-    super.key,
-    required this.workoutPlanId,
-  });
+  const WorkoutPlanHistoryView({super.key, required this.workoutPlanId});
 
   static String location(int workoutPlanId) =>
       routeName.replaceFirst(':id', workoutPlanId.toString());
@@ -46,10 +43,10 @@ class _WorkoutPlanHistoryViewState extends State<WorkoutPlanHistoryView> {
 
   Future<void> _loadFirstPage() {
     return context.read<WorkoutPlanRecordCubit>().getWorkoutPlanRecords(
-          workoutPlanId: widget.workoutPlanId,
-          limit: _pageSize,
-          offset: 0,
-        );
+      workoutPlanId: widget.workoutPlanId,
+      limit: _pageSize,
+      offset: 0,
+    );
   }
 
   void _onScroll() {
@@ -59,7 +56,8 @@ class _WorkoutPlanHistoryViewState extends State<WorkoutPlanHistoryView> {
 
     final cubit = context.read<WorkoutPlanRecordCubit>();
     final state = cubit.state;
-    final isNearBottom = _scrollController.offset >=
+    final isNearBottom =
+        _scrollController.offset >=
         _scrollController.position.maxScrollExtent * 0.9;
     final hasMore = state.planRecords.length < state.pagination.total;
 
@@ -86,9 +84,8 @@ class _WorkoutPlanHistoryViewState extends State<WorkoutPlanHistoryView> {
             current.error != null &&
             current.planRecords.isNotEmpty,
         listener: (context, state) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(state.error!.description)),
-          );
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text(state.error!.description)));
         },
         builder: (context, state) {
           if (state.isLoading && state.planRecords.isEmpty) {
@@ -201,25 +198,25 @@ class _WorkoutPlanHistoryCard extends StatelessWidget {
 ) {
   return switch (status) {
     ProgressStatus.inProgress => (
-        label: 'In Progress',
-        icon: Icons.play_circle_outline,
-        color: Colors.blue,
-      ),
+      label: 'In Progress',
+      icon: Icons.play_circle_outline,
+      color: Colors.blue,
+    ),
     ProgressStatus.completed => (
-        label: 'Completed',
-        icon: Icons.check_circle_outline,
-        color: Colors.green,
-      ),
+      label: 'Completed',
+      icon: Icons.check_circle_outline,
+      color: Colors.green,
+    ),
     ProgressStatus.skipped => (
-        label: 'Skipped',
-        icon: Icons.skip_next_outlined,
-        color: Colors.orange,
-      ),
+      label: 'Skipped',
+      icon: Icons.skip_next_outlined,
+      color: Colors.orange,
+    ),
     ProgressStatus.abandoned => (
-        label: 'Abandoned',
-        icon: Icons.cancel_outlined,
-        color: Colors.red,
-      ),
+      label: 'Abandoned',
+      icon: Icons.cancel_outlined,
+      color: Colors.red,
+    ),
   };
 }
 
@@ -253,10 +250,7 @@ class _HistoryMessage extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(description, textAlign: TextAlign.center),
-            if (action != null) ...[
-              const SizedBox(height: 16),
-              action!,
-            ],
+            if (action != null) ...[const SizedBox(height: 16), action!],
           ],
         ),
       ),

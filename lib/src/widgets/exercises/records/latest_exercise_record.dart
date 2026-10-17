@@ -40,9 +40,9 @@ class _LatestExerciseRecordState extends State<LatestExerciseRecord> {
   @override
   void initState() {
     super.initState();
-    context
-        .read<ExerciseRecordCubit>()
-        .getLatestExerciseRecord(widget.exercise.id);
+    context.read<ExerciseRecordCubit>().getLatestExerciseRecord(
+      widget.exercise.id,
+    );
   }
 
   @override
@@ -133,10 +133,7 @@ class _EmptyExerciseRecord extends StatelessWidget {
             ),
             child: Column(
               children: [
-                Icon(
-                  Icons.fitness_center,
-                  size: sizes.titleFontSize * 2,
-                ),
+                Icon(Icons.fitness_center, size: sizes.titleFontSize * 2),
                 SizedBox(height: sizes.spacing),
                 Text(
                   "No $exerciseName records",
@@ -248,12 +245,8 @@ class _LatestExerciseRecord extends StatelessWidget {
                         ),
                         Text(
                           units == Units.imperial
-                              ? " ${Converters.gramsToLbs(
-                                  exerciseRecord?.maxStrength ?? 0,
-                                ).toStringAsFixed(2)} LBS"
-                              : " ${Converters.gramsToKg(
-                                  exerciseRecord?.maxStrength ?? 0,
-                                ).toStringAsFixed(2)} KG",
+                              ? " ${Converters.gramsToLbs(exerciseRecord?.maxStrength ?? 0).toStringAsFixed(2)} LBS"
+                              : " ${Converters.gramsToKg(exerciseRecord?.maxStrength ?? 0).toStringAsFixed(2)} KG",
                           style: TextStyle(
                             fontSize: sizes.subtitleFontSize,
                             fontWeight: FontWeight.w600,
@@ -305,16 +298,15 @@ class _LatestExerciseRecord extends StatelessWidget {
                             size: sizes.titleFontSize,
                             color:
                                 theme.colorScheme.brightness == Brightness.dark
-                                    ? Colors.red[400]
-                                    : Colors.red[600],
+                                ? Colors.red[400]
+                                : Colors.red[600],
                           ),
                           onPressed: () {
                             showDialog(
                               context: context,
                               builder: (context) => ConfirmationDialog(
                                 title: 'Delete Exercise Record',
-                                content:
-                                    'Are you sure you want to delete this exercise record? This action cannot be undone.',
+                                content: 'Are you sure you want to delete this exercise record? This action cannot be undone.',
                                 confirmLabel: 'DELETE',
                                 isDestructive: true,
                                 onConfirm: () async {

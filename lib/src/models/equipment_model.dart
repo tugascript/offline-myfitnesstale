@@ -43,7 +43,8 @@ class Equipment implements Model {
   });
 
   static const String table = _table;
-  static final String tableCreate = '''
+  static final String tableCreate =
+      '''
   CREATE TABLE IF NOT EXISTS $_table (
     ${EquipmentColumns.id.value} INTEGER PRIMARY KEY AUTOINCREMENT,
     ${EquipmentColumns.name.value} TEXT NOT NULL,
@@ -78,8 +79,9 @@ class Equipment implements Model {
           ? PictureData.fromJson(map[EquipmentColumns.picture.value] as String)
           : null,
       isFavorite: map[EquipmentColumns.isFavorite.value] as int == 1,
-      createdBy:
-          CreatedBy.fromValue(map[EquipmentColumns.createdBy.value] as String),
+      createdBy: CreatedBy.fromValue(
+        map[EquipmentColumns.createdBy.value] as String,
+      ),
       createdAt: map[EquipmentColumns.createdAt.value] as int,
       updatedAt: map[EquipmentColumns.updatedAt.value] as int,
     );

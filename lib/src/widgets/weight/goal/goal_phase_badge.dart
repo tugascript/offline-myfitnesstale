@@ -22,25 +22,15 @@ class GoalPhaseBadge extends StatelessWidget {
     final color = _phaseColor();
     return Container(
       alignment: Alignment.center,
-      padding: EdgeInsets.symmetric(
-        horizontal: spacing,
-        vertical: spacing / 2,
-      ),
+      padding: EdgeInsets.symmetric(horizontal: spacing, vertical: spacing / 2),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.2),
-        border: Border.all(
-          color: color,
-          width: 1,
-        ),
+        border: Border.all(color: color, width: 1),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            _phaseIcon(),
-            size: fontSize * 1.2,
-            color: color,
-          ),
+          Icon(_phaseIcon(), size: fontSize * 1.2, color: color),
           Text(
             " ${EnumDisplayNames.getWeightGoalPhaseDisplayName(phase)}",
             style: TextStyle(
@@ -48,7 +38,7 @@ class GoalPhaseBadge extends StatelessWidget {
               fontWeight: fontWeight,
               color: color,
             ),
-          )
+          ),
         ],
       ),
     );

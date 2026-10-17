@@ -7,10 +7,7 @@ import '../../../cubits/workout_plan_record_cubit.dart';
 class StartWorkoutPlan extends StatelessWidget {
   final int workoutPlanId;
 
-  const StartWorkoutPlan({
-    super.key,
-    required this.workoutPlanId,
-  });
+  const StartWorkoutPlan({super.key, required this.workoutPlanId});
 
   @override
   Widget build(BuildContext context) {
@@ -24,9 +21,9 @@ class StartWorkoutPlan extends StatelessWidget {
               onPressed: state.isLoading
                   ? () {}
                   : () {
-                      context
-                          .read<WorkoutPlanRecordCubit>()
-                          .startWorkoutPlan(workoutPlanId);
+                      context.read<WorkoutPlanRecordCubit>().startWorkoutPlan(
+                        workoutPlanId,
+                      );
                     },
               icon: const Icon(Icons.play_arrow),
               label: Text(state.isLoading ? "Loading..." : "Start Plan"),
@@ -44,10 +41,7 @@ class StartWorkoutPlan extends StatelessWidget {
           decoration: BoxDecoration(
             color: Colors.green.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(
-              color: Colors.green,
-              width: 1,
-            ),
+            border: Border.all(color: Colors.green, width: 1),
           ),
           child: Row(
             children: [
@@ -81,8 +75,8 @@ class StartWorkoutPlan extends StatelessWidget {
 
         if (state.currentPlanRecord.workoutPlan == null) {
           context.read<WorkoutPlanRecordCubit>().getOrCreateActivePlanRecord(
-                workoutPlanId,
-              );
+            workoutPlanId,
+          );
         }
       },
     );

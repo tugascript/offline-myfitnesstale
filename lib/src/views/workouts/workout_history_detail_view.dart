@@ -53,9 +53,7 @@ class _WorkoutHistoryDetailViewState extends State<WorkoutHistoryDetailView> {
     final workoutRecordCubit = context.read<WorkoutRecordCubit>();
     if (workoutRecordCubit.state.selectedWorkoutRecord?.id !=
         widget.workoutRecordId) {
-      workoutRecordCubit.getWorkoutRecord(
-        widget.workoutRecordId,
-      );
+      workoutRecordCubit.getWorkoutRecord(widget.workoutRecordId);
     }
   }
 
@@ -63,9 +61,7 @@ class _WorkoutHistoryDetailViewState extends State<WorkoutHistoryDetailView> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final breakpoints = BreakPoint.fromContext(context);
-    final sizes = DataDisplaySizes.getDataDisplaySizes(
-      breakpoints.screenSize,
-    );
+    final sizes = DataDisplaySizes.getDataDisplaySizes(breakpoints.screenSize);
 
     return BlocBuilder<ProfileCubit, ProfileState>(
       builder: (context, profileState) {
@@ -79,7 +75,7 @@ class _WorkoutHistoryDetailViewState extends State<WorkoutHistoryDetailView> {
                   builder: (context, workoutRecordState) {
                     final Map<int, List<WorkoutSetRecordDto>> setRecordsMap =
                         workoutRecordState.selectedWorkoutRecord?.setRecords
-                                ?.fold<Map<int, List<WorkoutSetRecordDto>>>(
+                            ?.fold<Map<int, List<WorkoutSetRecordDto>>>(
                               {},
                               (map, s) => map
                                 ..update(
@@ -88,7 +84,7 @@ class _WorkoutHistoryDetailViewState extends State<WorkoutHistoryDetailView> {
                                   ifAbsent: () => [s],
                                 ),
                             ) ??
-                            {};
+                        {};
 
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -114,7 +110,8 @@ class _WorkoutHistoryDetailViewState extends State<WorkoutHistoryDetailView> {
                           sizes: sizes,
                           theme: theme,
                           units: profileState.system?.units ?? Units.metric,
-                          data: workoutState.selectedWorkout?.sets
+                          data:
+                              workoutState.selectedWorkout?.sets
                                   ?.where(
                                     (set) => setRecordsMap[set.id] != null,
                                   )
@@ -155,8 +152,7 @@ class _WorkoutHistoryDetailViewState extends State<WorkoutHistoryDetailView> {
                               context: context,
                               builder: (context) => ConfirmationDialog(
                                 title: 'Delete workout record',
-                                content:
-                                    'Are you sure you want to delete this workout record? This action cannot be undone.',
+                                content: 'Are you sure you want to delete this workout record? This action cannot be undone.',
                                 onConfirm: () {
                                   context
                                       .read<WorkoutRecordCubit>()
@@ -168,7 +164,7 @@ class _WorkoutHistoryDetailViewState extends State<WorkoutHistoryDetailView> {
                               ),
                             );
                           },
-                        )
+                        ),
                       ],
                     );
                   },

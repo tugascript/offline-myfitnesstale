@@ -25,8 +25,9 @@ class AppScaffold extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final BreakPoint breakPoint = BreakPoint.fromContext(context);
-    final AppBarSizesList sizes =
-        AppBarSizes.getAppBarSizes(breakPoint.screenSize);
+    final AppBarSizesList sizes = AppBarSizes.getAppBarSizes(
+      breakPoint.screenSize,
+    );
 
     return Scaffold(
       appBar: AppBar(

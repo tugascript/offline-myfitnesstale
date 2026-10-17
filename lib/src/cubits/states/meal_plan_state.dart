@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+
 import '../../common/nullable.dart';
 import '../../services/dtos/meal_plan_dto.dart';
 import 'common_state.dart';
@@ -43,28 +44,35 @@ final class MealPlanState extends Equatable {
   final MealPlanPagination mealPlanPagination;
   final bool isLoading;
   final ErrorState? error;
-  const MealPlanState(
-      {this.mealPlans = const [],
-      this.selectedMealPlan,
-      this.mealPlanPagination = const MealPlanPagination(),
-      this.isLoading = false,
-      this.error});
+  const MealPlanState({
+    this.mealPlans = const [],
+    this.selectedMealPlan,
+    this.mealPlanPagination = const MealPlanPagination(),
+    this.isLoading = false,
+    this.error,
+  });
   factory MealPlanState.initial() => const MealPlanState();
-  MealPlanState copyWith(
-          {List<MealPlanDto>? mealPlans,
-          Nullable<MealPlanDto>? selectedMealPlan,
-          MealPlanPagination? mealPlanPagination,
-          bool? isLoading,
-          Nullable<ErrorState>? error}) =>
-      MealPlanState(
-          mealPlans: mealPlans ?? this.mealPlans,
-          selectedMealPlan: selectedMealPlan != null
-              ? selectedMealPlan.value
-              : this.selectedMealPlan,
-          mealPlanPagination: mealPlanPagination ?? this.mealPlanPagination,
-          isLoading: isLoading ?? this.isLoading,
-          error: error != null ? error.value : this.error);
+  MealPlanState copyWith({
+    List<MealPlanDto>? mealPlans,
+    Nullable<MealPlanDto>? selectedMealPlan,
+    MealPlanPagination? mealPlanPagination,
+    bool? isLoading,
+    Nullable<ErrorState>? error,
+  }) => MealPlanState(
+    mealPlans: mealPlans ?? this.mealPlans,
+    selectedMealPlan: selectedMealPlan != null
+        ? selectedMealPlan.value
+        : this.selectedMealPlan,
+    mealPlanPagination: mealPlanPagination ?? this.mealPlanPagination,
+    isLoading: isLoading ?? this.isLoading,
+    error: error != null ? error.value : this.error,
+  );
   @override
-  List<Object?> get props =>
-      [mealPlans, selectedMealPlan, mealPlanPagination, isLoading, error];
+  List<Object?> get props => [
+    mealPlans,
+    selectedMealPlan,
+    mealPlanPagination,
+    isLoading,
+    error,
+  ];
 }

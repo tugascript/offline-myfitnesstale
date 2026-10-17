@@ -1,4 +1,5 @@
 import '../common/nullable.dart';
+
 import 'package:equatable/equatable.dart';
 
 import 'daily_nutrition_log_model.dart';
@@ -62,7 +63,8 @@ class MealLog extends Equatable implements Model {
 
   static const String table = _table;
 
-  static final String tableCreate = '''
+  static final String tableCreate =
+      '''
   CREATE TABLE IF NOT EXISTS $_table (
     ${MealLogColumns.id.value} INTEGER PRIMARY KEY AUTOINCREMENT,
     ${MealLogColumns.dailyLogId.value} INTEGER NOT NULL,
@@ -105,8 +107,9 @@ class MealLog extends Equatable implements Model {
     return MealLog(
       id: map[MealLogColumns.id.value] as int?,
       dailyLogId: map[MealLogColumns.dailyLogId.value] as int,
-      mealType:
-          MealType.fromValue(map[MealLogColumns.mealType.value] as String),
+      mealType: MealType.fromValue(
+        map[MealLogColumns.mealType.value] as String,
+      ),
       recipeId: map[MealLogColumns.recipeId.value] as int?,
       logTime: map[MealLogColumns.logTime.value] as int,
       totalCalories: map[MealLogColumns.totalCalories.value] as int,
@@ -179,17 +182,17 @@ class MealLog extends Equatable implements Model {
 
   @override
   List<Object?> get props => [
-        id,
-        dailyLogId,
-        mealType,
-        recipeId,
-        logTime,
-        totalCalories,
-        totalProtein,
-        totalCarbs,
-        totalFat,
-        totalFiber,
-        createdAt,
-        updatedAt,
-      ];
+    id,
+    dailyLogId,
+    mealType,
+    recipeId,
+    logTime,
+    totalCalories,
+    totalProtein,
+    totalCarbs,
+    totalFat,
+    totalFiber,
+    createdAt,
+    updatedAt,
+  ];
 }

@@ -49,7 +49,8 @@ class OnboardingForm extends StatefulWidget {
     required DateTime birthday,
     required bool preLoadWorkouts,
     required bool notificationsOn,
-  }) onSubmit;
+  })
+  onSubmit;
   final String submitButtonLabel;
   final bool isLoading;
 
@@ -209,7 +210,8 @@ class _OnboardingFormState extends State<OnboardingForm> {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
                             content: Text(
-                                'Permission denied. Please enable notifications in settings.'),
+                              'Permission denied. Please enable notifications in settings.',
+                            ),
                           ),
                         );
                       }
@@ -389,7 +391,7 @@ class _OnboardingFormState extends State<OnboardingForm> {
                       fontWeight: FontWeight.w600,
                     ),
                   ),
-          )
+          ),
         ],
       ),
     );

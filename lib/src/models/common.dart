@@ -19,10 +19,7 @@ class VideoData extends Equatable implements JsonData {
   final VideoPlatform platform;
   final String uri;
 
-  const VideoData({
-    required this.platform,
-    required this.uri,
-  });
+  const VideoData({required this.platform, required this.uri});
 
   @override
   String toJson() {
@@ -38,14 +35,8 @@ class VideoData extends Equatable implements JsonData {
   }
 
   @override
-  VideoData copyWith({
-    VideoPlatform? platform,
-    String? uri,
-  }) {
-    return VideoData(
-      platform: platform ?? this.platform,
-      uri: uri ?? this.uri,
-    );
+  VideoData copyWith({VideoPlatform? platform, String? uri}) {
+    return VideoData(platform: platform ?? this.platform, uri: uri ?? this.uri);
   }
 
   @override
@@ -56,10 +47,7 @@ class PictureData extends Equatable implements JsonData {
   final PictureStorage storage;
   final String uri;
 
-  const PictureData({
-    required this.storage,
-    required this.uri,
-  });
+  const PictureData({required this.storage, required this.uri});
 
   @override
   String toJson() {
@@ -75,14 +63,8 @@ class PictureData extends Equatable implements JsonData {
   }
 
   @override
-  PictureData copyWith({
-    PictureStorage? storage,
-    String? uri,
-  }) {
-    return PictureData(
-      storage: storage ?? this.storage,
-      uri: uri ?? this.uri,
-    );
+  PictureData copyWith({PictureStorage? storage, String? uri}) {
+    return PictureData(storage: storage ?? this.storage, uri: uri ?? this.uri);
   }
 
   @override
@@ -93,10 +75,7 @@ class TargetMuscles extends Equatable implements JsonData {
   final Set<Muscle> primary;
   final Set<Muscle> secondary;
 
-  const TargetMuscles({
-    required this.primary,
-    required this.secondary,
-  });
+  const TargetMuscles({required this.primary, required this.secondary});
 
   Map<String, List<String>> toMap() {
     return {
@@ -117,16 +96,14 @@ class TargetMuscles extends Equatable implements JsonData {
     return TargetMuscles(
       primary:
           map['primary']?.map((m) => Muscle.fromValue(m)).toSet() ?? <Muscle>{},
-      secondary: map['secondary']?.map((m) => Muscle.fromValue(m)).toSet() ??
+      secondary:
+          map['secondary']?.map((m) => Muscle.fromValue(m)).toSet() ??
           <Muscle>{},
     );
   }
 
   @override
-  TargetMuscles copyWith({
-    Set<Muscle>? primary,
-    Set<Muscle>? secondary,
-  }) {
+  TargetMuscles copyWith({Set<Muscle>? primary, Set<Muscle>? secondary}) {
     return TargetMuscles(
       primary: primary ?? this.primary,
       secondary: secondary ?? this.secondary,
@@ -138,10 +115,7 @@ class TargetMuscles extends Equatable implements JsonData {
     final Set<Muscle> secondary = this.secondary.union(other.secondary);
     secondary.removeAll(primary);
 
-    return TargetMuscles(
-      primary: primary,
-      secondary: secondary,
-    );
+    return TargetMuscles(primary: primary, secondary: secondary);
   }
 
   @override
@@ -157,27 +131,18 @@ class WorkoutSetExerciseDifficulty extends Equatable implements JsonData {
   final int value;
   final WorkoutSetExerciseDifficultyType type;
 
-  const WorkoutSetExerciseDifficulty({
-    required this.value,
-    required this.type,
-  });
+  const WorkoutSetExerciseDifficulty({required this.value, required this.type});
 
   @override
   String toJson() {
-    return jsonEncode({
-      'value': value,
-      'type': type.value,
-    });
+    return jsonEncode({'value': value, 'type': type.value});
   }
 
   factory WorkoutSetExerciseDifficulty.create({
     required int value,
     required WorkoutSetExerciseDifficultyType type,
   }) {
-    return WorkoutSetExerciseDifficulty(
-      value: value,
-      type: type,
-    );
+    return WorkoutSetExerciseDifficulty(value: value, type: type);
   }
 
   factory WorkoutSetExerciseDifficulty.fromMap(Map<String, Object?> map) {
@@ -302,8 +267,9 @@ class Micronutrients extends Equatable implements JsonData {
       vitaminEMg: vitaminEMg != null ? vitaminEMg.value : this.vitaminEMg,
       vitaminKMcg: vitaminKMcg != null ? vitaminKMcg.value : this.vitaminKMcg,
       vitaminB6Mg: vitaminB6Mg != null ? vitaminB6Mg.value : this.vitaminB6Mg,
-      vitaminB12Mcg:
-          vitaminB12Mcg != null ? vitaminB12Mcg.value : this.vitaminB12Mcg,
+      vitaminB12Mcg: vitaminB12Mcg != null
+          ? vitaminB12Mcg.value
+          : this.vitaminB12Mcg,
     );
   }
 
@@ -312,17 +278,17 @@ class Micronutrients extends Equatable implements JsonData {
 
   @override
   List<Object?> get props => [
-        potassiumMg,
-        magnesiumMg,
-        calciumMg,
-        ironMg,
-        zincMg,
-        vitaminAMcg,
-        vitaminCMg,
-        vitaminDIu,
-        vitaminEMg,
-        vitaminKMcg,
-        vitaminB6Mg,
-        vitaminB12Mcg,
-      ];
+    potassiumMg,
+    magnesiumMg,
+    calciumMg,
+    ironMg,
+    zincMg,
+    vitaminAMcg,
+    vitaminCMg,
+    vitaminDIu,
+    vitaminEMg,
+    vitaminKMcg,
+    vitaminB6Mg,
+    vitaminB12Mcg,
+  ];
 }

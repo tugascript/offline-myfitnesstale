@@ -37,9 +37,5 @@ class RemindersConfigDto extends Equatable implements Dto<RemindersConfig> {
   }
 
   @override
-  List<Object?> get props => [
-        id,
-        workoutsOn,
-        weightRecordsOn,
-      ];
+  List<Object?> get props => [id, workoutsOn, weightRecordsOn];
 }

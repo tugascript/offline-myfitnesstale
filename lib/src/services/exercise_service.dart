@@ -64,19 +64,23 @@ class ExerciseService {
 
   final _exerciseEquipmentRepository =
       JoinRepository<ExerciseEquipment, Equipment, Exercise>(
-    databaseHelper: DatabaseHelper(),
-    tableName: ExerciseEquipment.table,
-    fromMap: ExerciseEquipment.fromMap,
-    primaryKeys: ExerciseEquipment.primaryKeys,
-    joinTableName: Equipment.table,
-    joinFromMap: Equipment.fromMap,
-    reverseTableName: Exercise.table,
-    reverseFromMap: Exercise.fromMap,
-  );
+        databaseHelper: DatabaseHelper(),
+        tableName: ExerciseEquipment.table,
+        fromMap: ExerciseEquipment.fromMap,
+        primaryKeys: ExerciseEquipment.primaryKeys,
+        joinTableName: Equipment.table,
+        joinFromMap: Equipment.fromMap,
+        reverseTableName: Exercise.table,
+        reverseFromMap: Exercise.fromMap,
+      );
 
   Future<
-      Result<PaginatedDto<ExerciseDto, Exercise>,
-          ServiceError<OperationErrorTypes>>> getExercises({
+    Result<
+      PaginatedDto<ExerciseDto, Exercise>,
+      ServiceError<OperationErrorTypes>
+    >
+  >
+  getExercises({
     String? name,
     MuscleGroup? muscleGroup,
     Difficulty? difficulty,
@@ -124,24 +128,28 @@ class ExerciseService {
         whereArgs: query.args,
       );
       _logger.info("Found ${exercises.length} exercises");
-      return ok(PaginatedDto<ExerciseDto, Exercise>.mapData(
-        data: exercises,
-        mapper: (e) => ExerciseDto.fromModel(e),
-        limit: limit,
-        offset: offset,
-        total: total,
-      ));
+      return ok(
+        PaginatedDto<ExerciseDto, Exercise>.mapData(
+          data: exercises,
+          mapper: (e) => ExerciseDto.fromModel(e),
+          limit: limit,
+          offset: offset,
+          total: total,
+        ),
+      );
     } catch (e) {
       _logger.severe("Failed to get exercises", e);
-      return err(const ServiceError(
-        type: OperationErrorTypes.operationFailure,
-        description: 'Failed to get exercises',
-      ));
+      return err(
+        const ServiceError(
+          type: OperationErrorTypes.operationFailure,
+          description: 'Failed to get exercises',
+        ),
+      );
     }
   }
 
   Future<Result<List<ExerciseDto>, ServiceError<OperationErrorTypes>>>
-      getAllExercises({
+  getAllExercises({
     MuscleGroup? muscleGroup,
     String name = "",
     bool isFavorite = false,
@@ -169,10 +177,12 @@ class ExerciseService {
       return ok(exercises.map((e) => ExerciseDto.fromModel(e)).toList());
     } catch (e) {
       _logger.severe("Failed to get all exercises", e);
-      return err(const ServiceError(
-        type: OperationErrorTypes.operationFailure,
-        description: 'Failed to get all exercises',
-      ));
+      return err(
+        const ServiceError(
+          type: OperationErrorTypes.operationFailure,
+          description: 'Failed to get all exercises',
+        ),
+      );
     }
   }
 
@@ -184,17 +194,19 @@ class ExerciseService {
       final Exercise? exercise = await _repository.selectOne(id);
       if (exercise == null) {
         _logger.info("Exercise with id: $id not found");
-        return err(const ServiceError(
-          type: SingleErrorTypes.notFound,
-          description: 'Exercise not found',
-        ));
+        return err(
+          const ServiceError(
+            type: SingleErrorTypes.notFound,
+            description: 'Exercise not found',
+          ),
+        );
       }
 
       _logger.info(
         "Found exercise with id: $id, Getting the equipments for the exercise",
       );
-      final List<Equipment> equipments =
-          await _exerciseEquipmentRepository.selectJoined(id);
+      final List<Equipment> equipments = await _exerciseEquipmentRepository
+          .selectJoined(id);
       _logger.info("Found ${equipments.length} equipments");
 
       return ok(
@@ -205,10 +217,12 @@ class ExerciseService {
       );
     } catch (e) {
       _logger.severe("Failed to get exercise with id: $id", e);
-      return err(const ServiceError(
-        type: SingleErrorTypes.operationFailure,
-        description: 'Failed to get exercise',
-      ));
+      return err(
+        const ServiceError(
+          type: SingleErrorTypes.operationFailure,
+          description: 'Failed to get exercise',
+        ),
+      );
     }
   }
 
@@ -261,10 +275,12 @@ class ExerciseService {
         _logger.info(
           "Not all equipments were found, ${equipments.length} equipments found, ${equipmentIds.length} equipments expected",
         );
-        return err(const ServiceError(
-          type: SingleErrorTypes.notFound,
-          description: 'Not all equipments were found',
-        ));
+        return err(
+          const ServiceError(
+            type: SingleErrorTypes.notFound,
+            description: 'Not all equipments were found',
+          ),
+        );
       }
 
       final int id = await (await _databaseHelper.db).transaction((txn) async {
@@ -288,15 +304,17 @@ class ExerciseService {
       );
     } catch (e) {
       _logger.severe("Failed to create exercise", e);
-      return err(const ServiceError(
-        type: SingleErrorTypes.operationFailure,
-        description: 'Failed to create exercise',
-      ));
+      return err(
+        const ServiceError(
+          type: SingleErrorTypes.operationFailure,
+          description: 'Failed to create exercise',
+        ),
+      );
     }
   }
 
   Future<Result<List<ExerciseDto>, ServiceError<OperationErrorTypes>>>
-      createExercises(
+  createExercises(
     List<ExerciseInput> exerciseInputs, {
     CreatedBy createdBy = CreatedBy.user,
     Transaction? transaction,
@@ -331,10 +349,12 @@ class ExerciseService {
             equipments.add(equipment);
           }
 
-          exercises.add(ExerciseDto.fromModel(
-            exercise.copyWith(id: id),
-            equipments: equipments,
-          ));
+          exercises.add(
+            ExerciseDto.fromModel(
+              exercise.copyWith(id: id),
+              equipments: equipments,
+            ),
+          );
         }
 
         return exercises;
@@ -347,10 +367,12 @@ class ExerciseService {
       return ok(exercises);
     } catch (e) {
       _logger.severe("Failed to creates exercises", e);
-      return err(const ServiceError(
-        type: OperationErrorTypes.operationFailure,
-        description: 'Failed to create exercises',
-      ));
+      return err(
+        const ServiceError(
+          type: OperationErrorTypes.operationFailure,
+          description: 'Failed to create exercises',
+        ),
+      );
     }
   }
 
@@ -371,10 +393,12 @@ class ExerciseService {
       final Exercise? exercise = await _repository.selectOne(id);
       if (exercise == null) {
         _logger.info("Exercise with id: $id not found");
-        return err(const ServiceError(
-          type: SingleErrorTypes.notFound,
-          description: 'Exercise not found',
-        ));
+        return err(
+          const ServiceError(
+            type: SingleErrorTypes.notFound,
+            description: 'Exercise not found',
+          ),
+        );
       }
 
       final Exercise updatedExercise = exercise.copyWith(
@@ -392,12 +416,13 @@ class ExerciseService {
       if (equipmentIds == null || equipmentIds.isEmpty) {
         await _repository.update(updatedExercise);
         _logger.info("Updated exercise with id: $id");
-        final List<Equipment> equipments =
-            await _exerciseEquipmentRepository.selectJoined(id);
+        final List<Equipment> equipments = await _exerciseEquipmentRepository
+            .selectJoined(id);
         return ok(
           ExerciseDto.fromModel(updatedExercise).copyWith(
-            equipments:
-                equipments.map((e) => EquipmentDto.fromModel(e)).toList(),
+            equipments: equipments
+                .map((e) => EquipmentDto.fromModel(e))
+                .toList(),
           ),
         );
       }
@@ -410,10 +435,12 @@ class ExerciseService {
         _logger.info(
           "Not all equipments were found, ${equipments.length} equipments found, ${equipmentIds.length} equipments expected",
         );
-        return err(const ServiceError(
-          type: SingleErrorTypes.notFound,
-          description: 'Not all equipments were found',
-        ));
+        return err(
+          const ServiceError(
+            type: SingleErrorTypes.notFound,
+            description: 'Not all equipments were found',
+          ),
+        );
       }
 
       await _repository.startTransaction((txn) async {
@@ -421,10 +448,9 @@ class ExerciseService {
         await _exerciseEquipmentRepository.deleteAllByPk1(id, txn);
         await _exerciseEquipmentRepository.insertMany(
           equipmentIds
-              .map((e) => ExerciseEquipment.create(
-                    exerciseId: id,
-                    equipmentId: e,
-                  ))
+              .map(
+                (e) => ExerciseEquipment.create(exerciseId: id, equipmentId: e),
+              )
               .toList(),
           txn,
         );
@@ -438,10 +464,12 @@ class ExerciseService {
       );
     } catch (e) {
       _logger.severe("Failed to update exercise with id: $id", e);
-      return err(const ServiceError(
-        type: SingleErrorTypes.operationFailure,
-        description: 'Failed to update exercise',
-      ));
+      return err(
+        const ServiceError(
+          type: SingleErrorTypes.operationFailure,
+          description: 'Failed to update exercise',
+        ),
+      );
     }
   }
 
@@ -453,26 +481,34 @@ class ExerciseService {
     try {
       final bool deleted = await _repository.deleteOne(id);
       if (!deleted) {
-        return err(const ServiceError(
-          type: SingleErrorTypes.notFound,
-          description: 'Exercise not found',
-        ));
+        return err(
+          const ServiceError(
+            type: SingleErrorTypes.notFound,
+            description: 'Exercise not found',
+          ),
+        );
       }
 
       _logger.info("Exercise with id: $id deleted successfully");
       return ok(null);
     } catch (e) {
       _logger.severe("Failed to delete exercise with id: $id", e);
-      return err(const ServiceError(
-        type: SingleErrorTypes.operationFailure,
-        description: 'Failed to delete exercise',
-      ));
+      return err(
+        const ServiceError(
+          type: SingleErrorTypes.operationFailure,
+          description: 'Failed to delete exercise',
+        ),
+      );
     }
   }
 
   Future<
-      Result<PaginatedDto<EquipmentDto, Equipment>,
-          ServiceError<OperationErrorTypes>>> getEquipments({
+    Result<
+      PaginatedDto<EquipmentDto, Equipment>,
+      ServiceError<OperationErrorTypes>
+    >
+  >
+  getEquipments({
     String? name,
     int limit = kDefaultLimit,
     int offset = kDefaultOffset,
@@ -485,37 +521,41 @@ class ExerciseService {
     }
 
     try {
-      final List<Equipment> equipments =
-          await _equipmentRepository.selectPaginated(
-        limit: limit,
-        offset: offset,
-        where: query.where,
-        whereArgs: query.args,
-        orderBy: [EquipmentColumns.name.orderCaseInsensitiveAsc],
-      );
+      final List<Equipment> equipments = await _equipmentRepository
+          .selectPaginated(
+            limit: limit,
+            offset: offset,
+            where: query.where,
+            whereArgs: query.args,
+            orderBy: [EquipmentColumns.name.orderCaseInsensitiveAsc],
+          );
       final int total = await _equipmentRepository.count(
         where: query.where,
         whereArgs: query.args,
       );
       _logger.info('Got ${equipments.length} equipments');
-      return ok(PaginatedDto<EquipmentDto, Equipment>.mapData(
-        data: equipments,
-        mapper: (equipment) => EquipmentDto.fromModel(equipment),
-        total: total,
-        limit: limit,
-        offset: offset,
-      ));
+      return ok(
+        PaginatedDto<EquipmentDto, Equipment>.mapData(
+          data: equipments,
+          mapper: (equipment) => EquipmentDto.fromModel(equipment),
+          total: total,
+          limit: limit,
+          offset: offset,
+        ),
+      );
     } catch (e) {
       _logger.severe("Failed to get equipments", e.toString());
-      return err(const ServiceError(
-        type: OperationErrorTypes.operationFailure,
-        description: 'Failed to get equipments',
-      ));
+      return err(
+        const ServiceError(
+          type: OperationErrorTypes.operationFailure,
+          description: 'Failed to get equipments',
+        ),
+      );
     }
   }
 
   Future<Result<List<EquipmentDto>, ServiceError<OperationErrorTypes>>>
-      getAllEquipments() async {
+  getAllEquipments() async {
     _logger.info('Getting all equipments');
     try {
       final List<Equipment> equipments = await _equipmentRepository.selectMany(
@@ -529,62 +569,65 @@ class ExerciseService {
       );
     } catch (e) {
       _logger.severe("Failed to get all equipments", e);
-      return err(const ServiceError(
-        type: OperationErrorTypes.operationFailure,
-        description: 'Failed to get all equipments',
-      ));
+      return err(
+        const ServiceError(
+          type: OperationErrorTypes.operationFailure,
+          description: 'Failed to get all equipments',
+        ),
+      );
     }
   }
 
   Future<Result<EquipmentDto, ServiceError<SingleErrorTypes>>> getEquipment(
-      int id) async {
+    int id,
+  ) async {
     _logger.info('Getting equipment with id $id');
 
     try {
       final Equipment? equipment = await _equipmentRepository.selectOne(id);
       if (equipment == null) {
-        return err(const ServiceError(
-          type: SingleErrorTypes.notFound,
-          description: 'Equipment not found',
-        ));
+        return err(
+          const ServiceError(
+            type: SingleErrorTypes.notFound,
+            description: 'Equipment not found',
+          ),
+        );
       }
 
       _logger.info('Got equipment with id $id');
       return ok(EquipmentDto.fromModel(equipment));
     } catch (e) {
       _logger.severe("Failed to get equipment with id $id", e);
-      return err(const ServiceError(
-        type: SingleErrorTypes.operationFailure,
-        description: 'Failed to get equipment',
-      ));
+      return err(
+        const ServiceError(
+          type: SingleErrorTypes.operationFailure,
+          description: 'Failed to get equipment',
+        ),
+      );
     }
   }
 
   Future<Result<EquipmentDto, ServiceError<OperationErrorTypes>>>
-      createEquipment({
-    required String name,
-    PictureData? picture,
-  }) async {
+  createEquipment({required String name, PictureData? picture}) async {
     _logger.info('Creating equipment with name $name');
-    final Equipment equipment = Equipment.create(
-      name: name,
-      picture: picture,
-    );
+    final Equipment equipment = Equipment.create(name: name, picture: picture);
 
     try {
       final int id = await _equipmentRepository.insert(equipment);
       return ok(EquipmentDto.fromModel(equipment.copyWith(id: id)));
     } catch (e) {
       _logger.severe("Failed to create equipment with name $name", e);
-      return err(const ServiceError(
-        type: OperationErrorTypes.operationFailure,
-        description: 'Failed to create equipment',
-      ));
+      return err(
+        const ServiceError(
+          type: OperationErrorTypes.operationFailure,
+          description: 'Failed to create equipment',
+        ),
+      );
     }
   }
 
   Future<Result<int, ServiceError<OperationErrorTypes>>>
-      countEquipments() async {
+  countEquipments() async {
     _logger.info('Counting equipments');
     try {
       final int count = await _equipmentRepository.count();
@@ -592,15 +635,17 @@ class ExerciseService {
       return ok(count);
     } catch (e) {
       _logger.severe("Failed to count equipments", e);
-      return err(const ServiceError(
-        type: OperationErrorTypes.operationFailure,
-        description: 'Failed to count equipments',
-      ));
+      return err(
+        const ServiceError(
+          type: OperationErrorTypes.operationFailure,
+          description: 'Failed to count equipments',
+        ),
+      );
     }
   }
 
   Future<Result<List<EquipmentDto>, ServiceError<OperationErrorTypes>>>
-      createEquipments(
+  createEquipments(
     List<String> names, {
     CreatedBy createdBy = CreatedBy.user,
     Transaction? transaction,
@@ -627,10 +672,12 @@ class ExerciseService {
       return ok(equipments.map((e) => EquipmentDto.fromModel(e)).toList());
     } catch (e) {
       _logger.severe("Failed to create equipments", e);
-      return err(const ServiceError(
-        type: OperationErrorTypes.operationFailure,
-        description: 'Failed to create equipments',
-      ));
+      return err(
+        const ServiceError(
+          type: OperationErrorTypes.operationFailure,
+          description: 'Failed to create equipments',
+        ),
+      );
     }
   }
 
@@ -642,20 +689,24 @@ class ExerciseService {
       final deleted = await _equipmentRepository.deleteOne(id);
       if (!deleted) {
         _logger.info('Equipment with id: $id not found');
-        return err(const ServiceError(
-          type: SingleErrorTypes.notFound,
-          description: 'Equipment not found',
-        ));
+        return err(
+          const ServiceError(
+            type: SingleErrorTypes.notFound,
+            description: 'Equipment not found',
+          ),
+        );
       }
 
       _logger.info('Deleted equipment with id: $id');
       return ok(null);
     } catch (e) {
       _logger.severe("Failed to delete equipment with id: $id", e);
-      return err(const ServiceError(
-        type: SingleErrorTypes.operationFailure,
-        description: 'Failed to delete equipment',
-      ));
+      return err(
+        const ServiceError(
+          type: SingleErrorTypes.operationFailure,
+          description: 'Failed to delete equipment',
+        ),
+      );
     }
   }
 
@@ -669,10 +720,12 @@ class ExerciseService {
       final Equipment? equipment = await _equipmentRepository.selectOne(id);
       if (equipment == null) {
         _logger.info('Equipment with id: $id not found');
-        return err(const ServiceError(
-          type: SingleErrorTypes.notFound,
-          description: 'Equipment not found',
-        ));
+        return err(
+          const ServiceError(
+            type: SingleErrorTypes.notFound,
+            description: 'Equipment not found',
+          ),
+        );
       }
 
       final Equipment updatedEquipment = equipment.copyWith(
@@ -685,15 +738,17 @@ class ExerciseService {
       return ok(EquipmentDto.fromModel(updatedEquipment));
     } catch (e) {
       _logger.severe("Failed to update equipment with id: $id", e);
-      return err(const ServiceError(
-        type: SingleErrorTypes.operationFailure,
-        description: 'Failed to update equipment',
-      ));
+      return err(
+        const ServiceError(
+          type: SingleErrorTypes.operationFailure,
+          description: 'Failed to update equipment',
+        ),
+      );
     }
   }
 
   Future<Result<List<ExerciseDto>, ServiceError<SingleErrorTypes>>>
-      getExercisesByEquipmentId(int equipmentId) async {
+  getExercisesByEquipmentId(int equipmentId) async {
     _logger.info('Getting exercises for equipment with id: $equipmentId');
     try {
       final Equipment? equipment = await _equipmentRepository.selectOne(
@@ -701,27 +756,33 @@ class ExerciseService {
       );
       if (equipment == null) {
         _logger.info('Equipment with id: $equipmentId not found');
-        return err(ServiceError(
-          type: SingleErrorTypes.notFound,
-          description: 'Equipment with id: $equipmentId not found',
-        ));
+        return err(
+          ServiceError(
+            type: SingleErrorTypes.notFound,
+            description: 'Equipment with id: $equipmentId not found',
+          ),
+        );
       }
 
-      final List<Exercise> exercises =
-          await _exerciseEquipmentRepository.selectReverseJoined(
-        equipmentId,
-        [ExerciseColumns.name.orderCaseInsensitiveAsc],
-      );
+      final List<Exercise> exercises = await _exerciseEquipmentRepository
+          .selectReverseJoined(equipmentId, [
+            ExerciseColumns.name.orderCaseInsensitiveAsc,
+          ]);
       _logger.info(
-          'Got ${exercises.length} exercises for equipment with id: $equipmentId');
+        'Got ${exercises.length} exercises for equipment with id: $equipmentId',
+      );
       return ok(exercises.map((e) => ExerciseDto.fromModel(e)).toList());
     } catch (e) {
       _logger.severe(
-          "Failed to get exercises for equipment with id: $equipmentId", e);
-      return err(const ServiceError(
-        type: SingleErrorTypes.operationFailure,
-        description: 'Failed to get exercises for equipment',
-      ));
+        "Failed to get exercises for equipment with id: $equipmentId",
+        e,
+      );
+      return err(
+        const ServiceError(
+          type: SingleErrorTypes.operationFailure,
+          description: 'Failed to get exercises for equipment',
+        ),
+      );
     }
   }
 }

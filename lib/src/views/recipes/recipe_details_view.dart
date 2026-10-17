@@ -1,4 +1,5 @@
 import '../../widgets/recipes/recipe_details_widget.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -45,8 +46,11 @@ class _RecipeDetailsViewState extends State<RecipeDetailsView> {
         if (!state.isLoading && state.error != null) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-                content: Text(state.error!.description,
-                    style: TextStyle(fontSize: sizes.fontSize))),
+              content: Text(
+                state.error!.description,
+                style: TextStyle(fontSize: sizes.fontSize),
+              ),
+            ),
           );
         }
       },
@@ -66,16 +70,23 @@ class _RecipeDetailsViewState extends State<RecipeDetailsView> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.error_outline,
-                      size: sizes.largeIconSize, color: Colors.grey),
+                  Icon(
+                    Icons.error_outline,
+                    size: sizes.largeIconSize,
+                    color: Colors.grey,
+                  ),
                   SizedBox(height: sizes.spacing),
-                  Text(state.error?.description ?? 'Recipe not found',
-                      style: TextStyle(fontSize: sizes.fontSize)),
+                  Text(
+                    state.error?.description ?? 'Recipe not found',
+                    style: TextStyle(fontSize: sizes.fontSize),
+                  ),
                   SizedBox(height: sizes.spacing),
                   ElevatedButton(
                     onPressed: () => context.pop(),
-                    child: Text('Go Back',
-                        style: TextStyle(fontSize: sizes.fontSize)),
+                    child: Text(
+                      'Go Back',
+                      style: TextStyle(fontSize: sizes.fontSize),
+                    ),
                   ),
                 ],
               ),
@@ -101,8 +112,11 @@ class _RecipeDetailsViewState extends State<RecipeDetailsView> {
                       padding: EdgeInsets.all(sizes.padding),
                       child: Row(
                         children: [
-                          Icon(Icons.lock_outline,
-                              color: Colors.blue, size: sizes.buttonIconSize),
+                          Icon(
+                            Icons.lock_outline,
+                            color: Colors.blue,
+                            size: sizes.buttonIconSize,
+                          ),
                           SizedBox(width: sizes.spacing),
                           Expanded(
                             child: Text(
@@ -124,8 +138,10 @@ class _RecipeDetailsViewState extends State<RecipeDetailsView> {
                     sizes: sizes,
                     onEdit: () {
                       context.push(
-                        RecipeUpdateView.routeName
-                            .replaceFirst(':id', recipe.id.toString()),
+                        RecipeUpdateView.routeName.replaceFirst(
+                          ':id',
+                          recipe.id.toString(),
+                        ),
                       );
                     },
                     onDelete: () {
@@ -133,8 +149,7 @@ class _RecipeDetailsViewState extends State<RecipeDetailsView> {
                         context: context,
                         builder: (ctx) => ConfirmationDialog(
                           title: 'Delete ${recipe.name}',
-                          content:
-                              'Are you sure you want to delete this recipe? This action cannot be undone.',
+                          content: 'Are you sure you want to delete this recipe? This action cannot be undone.',
                           onConfirm: () {
                             context.read<RecipeCubit>().deleteRecipe(recipe.id);
                             if (context.canPop()) {

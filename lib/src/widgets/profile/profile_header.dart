@@ -37,8 +37,9 @@ class ProfileHeader extends StatelessWidget {
           children: [
             CircleAvatar(
               radius: sizes.titleFontSize * 1.65,
-              backgroundColor:
-                  theme.primaryColor.withValues(alpha: isDarkTheme ? 0.2 : 0.1),
+              backgroundColor: theme.primaryColor.withValues(
+                alpha: isDarkTheme ? 0.2 : 0.1,
+              ),
               child: Text(
                 _getNameInitials(profile.name),
                 style: TextStyle(
@@ -111,10 +112,7 @@ class ProfileHeader extends StatelessWidget {
               IconButton(
                 key: const ValueKey('profile-edit'),
                 onPressed: editOnPress,
-                icon: Icon(
-                  Icons.edit,
-                  size: sizes.titleFontSize,
-                ),
+                icon: Icon(Icons.edit, size: sizes.titleFontSize),
                 color: theme.primaryColor,
                 tooltip: "Edit Profile",
               ),

@@ -17,7 +17,8 @@ class WorkoutPlanHeaderEditCard extends StatelessWidget {
     required bool isFavorite,
     required Difficulty difficulty,
     String? description,
-  }) onSubmit;
+  })
+  onSubmit;
 
   const WorkoutPlanHeaderEditCard({
     super.key,

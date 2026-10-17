@@ -139,9 +139,9 @@ class WeightRecordPointDetailsModal extends StatelessWidget {
                   confirmLabel: "Delete",
                   isDestructive: true,
                   onConfirm: () async {
-                    await context
-                        .read<WeightRecordCubit>()
-                        .deleteWeightRecord(record.id);
+                    await context.read<WeightRecordCubit>().deleteWeightRecord(
+                      record.id,
+                    );
                   },
                 ),
               );

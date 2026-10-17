@@ -24,10 +24,7 @@ class WorkoutPlanWorkoutCard extends StatelessWidget {
     final lightGrey = isDarkTheme ? Colors.grey[200] : Colors.grey[800];
     final grey = isDarkTheme ? Colors.grey[400] : Colors.grey[600];
     return ListTile(
-      leading: Icon(
-        Icons.fitness_center,
-        color: lightGrey,
-      ),
+      leading: Icon(Icons.fitness_center, color: lightGrey),
       title: Text(
         workoutPlanWorkout.workout?.name ?? "Unknown Workout",
         style: TextStyle(
@@ -74,17 +71,10 @@ class _TimeOfDayInfo extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(
-          _getTimeOfDayIcon(timeOfDay),
-          size: fontSize * 1.2,
-          color: color,
-        ),
+        Icon(_getTimeOfDayIcon(timeOfDay), size: fontSize * 1.2, color: color),
         Text(
           " ${EnumDisplayNames.getTimeOfDayDisplayName(timeOfDay)}",
-          style: TextStyle(
-            fontSize: fontSize,
-            color: color,
-          ),
+          style: TextStyle(fontSize: fontSize, color: color),
         ),
       ],
     );

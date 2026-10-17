@@ -38,9 +38,7 @@ class TestDatabase {
     await DatabaseHelper().resetForTesting();
 
     _originalDatabasesPath = await databaseFactory.getDatabasesPath();
-    _tempDir = await Directory.systemTemp.createTemp(
-      'myfitnesstale_test_db_',
-    );
+    _tempDir = await Directory.systemTemp.createTemp('myfitnesstale_test_db_');
     await databaseFactory.setDatabasesPath(_tempDir!.path);
 
     _dbPath = join(_tempDir!.path, 'app.db');

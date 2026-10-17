@@ -24,10 +24,7 @@ class WorkoutEditView extends StatefulWidget {
 
   final int workoutId;
 
-  const WorkoutEditView({
-    super.key,
-    required this.workoutId,
-  });
+  const WorkoutEditView({super.key, required this.workoutId});
 
   @override
   State<WorkoutEditView> createState() => _WorkoutEditViewState();
@@ -82,10 +79,12 @@ class _WorkoutEditViewState extends State<WorkoutEditView> {
 
         return BlocBuilder<EntitlementCubit, EntitlementCubitState>(
           builder: (context, entitlementState) {
-            final bool hasComplexSets = (workout.sets ?? [])
-                .any((set) => set.setType != WorkoutSetType.standard);
-            final bool canUsePremium =
-                EntitlementGuard.canUsePremium(entitlementState.snapshot);
+            final bool hasComplexSets = (workout.sets ?? []).any(
+              (set) => set.setType != WorkoutSetType.standard,
+            );
+            final bool canUsePremium = EntitlementGuard.canUsePremium(
+              entitlementState.snapshot,
+            );
             final bool wantsPremiumEditor =
                 workout.editorType == EditorType.advanced;
 
@@ -124,14 +123,15 @@ class _WorkoutEditViewState extends State<WorkoutEditView> {
                             _isEditingHeader = false;
                           });
                         },
-                        onSubmit: ({
-                          required String name,
-                          required bool isFavorite,
-                          required Difficulty difficulty,
-                          required EditorType editorType,
-                          String? description,
-                        }) async {
-                          await context.read<WorkoutCubit>().updateWorkout(
+                        onSubmit:
+                            ({
+                              required String name,
+                              required bool isFavorite,
+                              required Difficulty difficulty,
+                              required EditorType editorType,
+                              String? description,
+                            }) async {
+                              await context.read<WorkoutCubit>().updateWorkout(
                                 id: workout.id,
                                 name: name,
                                 isFavorite: isFavorite,
@@ -140,12 +140,12 @@ class _WorkoutEditViewState extends State<WorkoutEditView> {
                                 description: description,
                               );
 
-                          if (!mounted) return;
+                              if (!mounted) return;
 
-                          setState(() {
-                            _isEditingHeader = false;
-                          });
-                        },
+                              setState(() {
+                                _isEditingHeader = false;
+                              });
+                            },
                       )
                     else
                       WorkoutHeaderCard(
@@ -174,8 +174,8 @@ class _WorkoutEditViewState extends State<WorkoutEditView> {
                             fontWeight: FontWeight.bold,
                             color:
                                 theme.colorScheme.brightness == Brightness.dark
-                                    ? Colors.grey[200]
-                                    : Colors.grey[800],
+                                ? Colors.grey[200]
+                                : Colors.grey[800],
                           ),
                         ),
                         SizedBox(height: sizes.spacing),
@@ -206,10 +206,7 @@ class _LockedPremiumEditor extends StatelessWidget {
           children: [
             const Text(
               'Premium Required',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-              ),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 8),
             const Text(

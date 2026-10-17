@@ -22,44 +22,22 @@ class ExerciseRecordReps extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(
-          Icons.repeat_one,
-          size: fontSize * 1.2,
-        ),
+        Icon(Icons.repeat_one, size: fontSize * 1.2),
         Text(
           " $reps Reps ",
-          style: TextStyle(
-            fontSize: fontSize,
-            fontWeight: FontWeight.w400,
-          ),
+          style: TextStyle(fontSize: fontSize, fontWeight: FontWeight.w400),
         ),
-        Icon(
-          Icons.close,
-          size: fontSize,
-        ),
+        Icon(Icons.close, size: fontSize),
         Text(
           " ",
-          style: TextStyle(
-            fontSize: fontSize,
-            fontWeight: FontWeight.w400,
-          ),
+          style: TextStyle(fontSize: fontSize, fontWeight: FontWeight.w400),
         ),
-        Icon(
-          Icons.scale,
-          size: fontSize * 1.2,
-        ),
+        Icon(Icons.scale, size: fontSize * 1.2),
         Text(
           units == Units.imperial
-              ? " ${Converters.gramsToLbs(
-                  weight,
-                ).toStringAsFixed(2)} LBS"
-              : " ${Converters.gramsToKg(
-                  weight,
-                ).toStringAsFixed(2)} KG",
-          style: TextStyle(
-            fontSize: fontSize,
-            fontWeight: FontWeight.w400,
-          ),
+              ? " ${Converters.gramsToLbs(weight).toStringAsFixed(2)} LBS"
+              : " ${Converters.gramsToKg(weight).toStringAsFixed(2)} KG",
+          style: TextStyle(fontSize: fontSize, fontWeight: FontWeight.w400),
         ),
       ],
     );

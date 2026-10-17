@@ -40,8 +40,9 @@ class _WorkoutRestDurationInputState extends State<WorkoutRestDurationInput> {
   void initState() {
     super.initState();
     _totalSecs = _clampTotal(widget.initialTotalSecs);
-    _controller =
-        TextEditingController(text: formatRestDurationMmSs(_totalSecs));
+    _controller = TextEditingController(
+      text: formatRestDurationMmSs(_totalSecs),
+    );
   }
 
   @override
@@ -96,8 +97,10 @@ class _WorkoutRestDurationInputState extends State<WorkoutRestDurationInput> {
                   ),
                   TextButton(
                     onPressed: () {
-                      int m =
-                          minutesController.selectedItem.clamp(0, _maxMinutes);
+                      int m = minutesController.selectedItem.clamp(
+                        0,
+                        _maxMinutes,
+                      );
                       int s = secondsController.selectedItem.clamp(0, 59);
                       if (m == _maxMinutes) s = 0;
                       final total = m * 60 + s;

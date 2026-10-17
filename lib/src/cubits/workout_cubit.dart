@@ -50,13 +50,15 @@ class WorkoutCubit extends Cubit<WorkoutState> {
       switch (error.type) {
         case OperationErrorTypes.invalidInput:
         case OperationErrorTypes.operationFailure:
-          emit(state.copyWith(
-            error: ErrorState(
-              type: error.type.name,
-              description: "Failed to get workouts",
+          emit(
+            state.copyWith(
+              error: ErrorState(
+                type: error.type.name,
+                description: "Failed to get workouts",
+              ),
+              isLoading: false,
             ),
-            isLoading: false,
-          ));
+          );
           return;
       }
     }
@@ -71,19 +73,21 @@ class WorkoutCubit extends Cubit<WorkoutState> {
       updatedWorkouts = paginatedData.data;
     }
 
-    emit(state.copyWith(
-      workouts: updatedWorkouts,
-      pagination: state.pagination.copyWith(
-        name: name,
-        muscleGroup: muscleGroup,
-        difficulty: difficulty,
-        limit: paginatedData.limit,
-        offset: paginatedData.offset,
-        total: paginatedData.total,
-        isFavorite: isFavorite,
+    emit(
+      state.copyWith(
+        workouts: updatedWorkouts,
+        pagination: state.pagination.copyWith(
+          name: name,
+          muscleGroup: muscleGroup,
+          difficulty: difficulty,
+          limit: paginatedData.limit,
+          offset: paginatedData.offset,
+          total: paginatedData.total,
+          isFavorite: isFavorite,
+        ),
+        isLoading: false,
       ),
-      isLoading: false,
-    ));
+    );
   }
 
   Future<void> createWorkout({
@@ -114,35 +118,35 @@ class WorkoutCubit extends Cubit<WorkoutState> {
       switch (error.type) {
         case OperationErrorTypes.invalidInput:
         case OperationErrorTypes.operationFailure:
-          emit(state.copyWith(
-            error: ErrorState(
-              type: error.type.name,
-              description: "Failed to create workout",
+          emit(
+            state.copyWith(
+              error: ErrorState(
+                type: error.type.name,
+                description: "Failed to create workout",
+              ),
+              isLoading: false,
             ),
-            isLoading: false,
-          ));
+          );
           return;
       }
     }
 
     _logger.info("Workout created successfully");
     final workout = result.value;
-    emit(state.copyWith(
-      workouts: [workout, ...state.workouts],
-      selectedWorkout: workout,
-      pagination: state.pagination.copyWith(
-        total: state.pagination.total + 1,
+    emit(
+      state.copyWith(
+        workouts: [workout, ...state.workouts],
+        selectedWorkout: workout,
+        pagination: state.pagination.copyWith(
+          total: state.pagination.total + 1,
+        ),
+        error: null,
+        isLoading: false,
       ),
-      error: null,
-      isLoading: false,
-    ));
+    );
   }
 
-  Future<void> getWorkout(
-    int id, {
-    int? version,
-    bool refresh = false,
-  }) async {
+  Future<void> getWorkout(int id, {int? version, bool refresh = false}) async {
     _logger.info('Getting workout with id $id');
     if (!refresh) {
       emit(state.copyWith(isLoading: true));
@@ -181,11 +185,13 @@ class WorkoutCubit extends Cubit<WorkoutState> {
     }
 
     _logger.info("Workout got successfully");
-    emit(state.copyWith(
-      selectedWorkout: result.value,
-      isLoading: false,
-      error: null,
-    ));
+    emit(
+      state.copyWith(
+        selectedWorkout: result.value,
+        isLoading: false,
+        error: null,
+      ),
+    );
   }
 
   Future<void> updateWorkout({
@@ -248,11 +254,13 @@ class WorkoutCubit extends Cubit<WorkoutState> {
           ? state.selectedWorkout?.sets
           : result.value.sets,
     );
-    emit(state.copyWith(
-      selectedWorkout: workout,
-      workouts: state.workouts.map((w) => w.id == id ? workout : w).toList(),
-      isLoading: false,
-    ));
+    emit(
+      state.copyWith(
+        selectedWorkout: workout,
+        workouts: state.workouts.map((w) => w.id == id ? workout : w).toList(),
+        isLoading: false,
+      ),
+    );
   }
 
   Future<void> deleteWorkout(int id) async {
@@ -292,14 +300,16 @@ class WorkoutCubit extends Cubit<WorkoutState> {
     }
 
     _logger.info("Workout deleted successfully");
-    emit(state.copyWith(
-      workouts: state.workouts.where((w) => w.id != id).toList(),
-      selectedWorkout: null,
-      pagination: state.pagination.copyWith(
-        total: state.pagination.total - 1,
+    emit(
+      state.copyWith(
+        workouts: state.workouts.where((w) => w.id != id).toList(),
+        selectedWorkout: null,
+        pagination: state.pagination.copyWith(
+          total: state.pagination.total - 1,
+        ),
+        isLoading: false,
       ),
-      isLoading: false,
-    ));
+    );
   }
 
   Future<void> refreshWorkoutSets(int workoutId) async {
@@ -312,21 +322,25 @@ class WorkoutCubit extends Cubit<WorkoutState> {
     if (sets.isErr()) {
       final error = sets.error;
       _logger.warning("Failed to get workout sets", error);
-      emit(state.copyWith(
-        error: ErrorState(
-          type: error.type.name,
-          description: error.description,
+      emit(
+        state.copyWith(
+          error: ErrorState(
+            type: error.type.name,
+            description: error.description,
+          ),
+          isLoading: false,
         ),
-        isLoading: false,
-      ));
+      );
       return;
     }
 
     final updatedSets = sets.value;
-    emit(state.copyWith(
-      selectedWorkout: state.selectedWorkout?.copyWith(sets: updatedSets),
-      isLoading: false,
-    ));
+    emit(
+      state.copyWith(
+        selectedWorkout: state.selectedWorkout?.copyWith(sets: updatedSets),
+        isLoading: false,
+      ),
+    );
   }
 
   Future<void> batchUpsertBasicWorkoutSets({
@@ -370,13 +384,15 @@ class WorkoutCubit extends Cubit<WorkoutState> {
     if (result.isErr()) {
       final error = result.error;
       _logger.warning("Failed to batch upsert workout sets", error);
-      emit(state.copyWith(
-        error: ErrorState(
-          type: error.type.name,
-          description: error.description,
+      emit(
+        state.copyWith(
+          error: ErrorState(
+            type: error.type.name,
+            description: error.description,
+          ),
+          isLoading: false,
         ),
-        isLoading: false,
-      ));
+      );
       return;
     }
 
@@ -409,8 +425,8 @@ class WorkoutCubit extends Cubit<WorkoutState> {
           minReps: exercise.minReps,
           maxReps:
               exercise.maxReps != null && exercise.maxReps! >= exercise.minReps
-                  ? exercise.maxReps
-                  : null,
+              ? exercise.maxReps
+              : null,
           toMaxReps: exercise.toMaxReps,
           difficulty: exercise.difficulty,
           alternativeExerciseIds: exercise.alternativeExerciseIds.isEmpty
@@ -424,8 +440,9 @@ class WorkoutCubit extends Cubit<WorkoutState> {
           id: s.id,
           setType: s.setType,
           minSets: s.minSets,
-          maxSets:
-              s.maxSets != null && s.maxSets! >= s.minSets ? s.maxSets : null,
+          maxSets: s.maxSets != null && s.maxSets! >= s.minSets
+              ? s.maxSets
+              : null,
           recommendedRestSecs: s.recommendedRestSecs,
           maxRestSecs: s.maxRestSecs,
           position: s.position,
@@ -442,13 +459,15 @@ class WorkoutCubit extends Cubit<WorkoutState> {
     if (result.isErr()) {
       final error = result.error;
       _logger.warning("Failed to batch upsert complex workout sets", error);
-      emit(state.copyWith(
-        error: ErrorState(
-          type: error.type.name,
-          description: error.description,
+      emit(
+        state.copyWith(
+          error: ErrorState(
+            type: error.type.name,
+            description: error.description,
+          ),
+          isLoading: false,
         ),
-        isLoading: false,
-      ));
+      );
       return;
     }
 
@@ -471,43 +490,45 @@ class WorkoutCubit extends Cubit<WorkoutState> {
     if (result.isErr()) {
       final error = result.error;
       _logger.warning("Failed to get selection workouts", error);
-      emit(state.copyWith(
-        error: ErrorState(
-          type: error.type.name,
-          description: error.description,
+      emit(
+        state.copyWith(
+          error: ErrorState(
+            type: error.type.name,
+            description: error.description,
+          ),
+          isLoading: false,
         ),
-        isLoading: false,
-      ));
+      );
       return;
     }
 
-    emit(state.copyWith(
-      workoutSelection: result.value,
-      isLoading: false,
-    ));
+    emit(state.copyWith(workoutSelection: result.value, isLoading: false));
   }
 
   Future<bool> _ensurePremiumAccessForMutation() async {
     final snapshotResult = await _entitlementService.getEntitlementSnapshot();
     if (snapshotResult.isErr()) {
-      emit(state.copyWith(
-        error: const ErrorState(
-          type: 'entitlement_unavailable',
-          description:
-              'Premium status unavailable. Please refresh and try again.',
+      emit(
+        state.copyWith(
+          error: const ErrorState(
+            type: 'entitlement_unavailable',
+            description:
+                'Premium status unavailable. Please refresh and try again.',
+          ),
         ),
-      ));
+      );
       return false;
     }
 
     if (!EntitlementGuard.canUsePremium(snapshotResult.value)) {
-      emit(state.copyWith(
-        error: const ErrorState(
-          type: 'premium_required',
-          description:
-              'Premium subscription required. Restore purchases or subscribe to continue.',
+      emit(
+        state.copyWith(
+          error: const ErrorState(
+            type: 'premium_required',
+            description: 'Premium subscription required. Restore purchases or subscribe to continue.',
+          ),
         ),
-      ));
+      );
       return false;
     }
 

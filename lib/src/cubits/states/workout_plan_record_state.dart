@@ -23,11 +23,7 @@ final class WorkoutPlanRecordPagination extends Equatable {
   });
 
   factory WorkoutPlanRecordPagination.initial() {
-    return const WorkoutPlanRecordPagination(
-      limit: 20,
-      offset: 0,
-      total: 0,
-    );
+    return const WorkoutPlanRecordPagination(limit: 20, offset: 0, total: 0);
   }
 
   WorkoutPlanRecordPagination copyWith({
@@ -38,10 +34,12 @@ final class WorkoutPlanRecordPagination extends Equatable {
     int? total,
   }) {
     return WorkoutPlanRecordPagination(
-      workoutPlanId:
-          workoutPlanId != null ? workoutPlanId.value : this.workoutPlanId,
-      progressStatus:
-          progressStatus != null ? progressStatus.value : this.progressStatus,
+      workoutPlanId: workoutPlanId != null
+          ? workoutPlanId.value
+          : this.workoutPlanId,
+      progressStatus: progressStatus != null
+          ? progressStatus.value
+          : this.progressStatus,
       limit: limit ?? this.limit,
       offset: offset ?? this.offset,
       total: total ?? this.total,
@@ -50,12 +48,12 @@ final class WorkoutPlanRecordPagination extends Equatable {
 
   @override
   List<Object?> get props => [
-        workoutPlanId,
-        progressStatus,
-        limit,
-        offset,
-        total,
-      ];
+    workoutPlanId,
+    progressStatus,
+    limit,
+    offset,
+    total,
+  ];
 }
 
 final class CurrentWorkoutPlanRecordState extends Equatable {
@@ -114,15 +112,15 @@ final class CurrentWorkoutPlanRecordState extends Equatable {
 
   @override
   List<Object?> get props => [
-        currentPlanRecord,
-        workoutPlan,
-        todaysWorkouts,
-        currentWeek,
-        currentDay,
-        workoutIndex,
-        completedWorkouts,
-        totalWorkouts,
-      ];
+    currentPlanRecord,
+    workoutPlan,
+    todaysWorkouts,
+    currentWeek,
+    currentDay,
+    workoutIndex,
+    completedWorkouts,
+    totalWorkouts,
+  ];
 }
 
 final class WorkoutPlanRecordState extends Equatable {
@@ -168,10 +166,10 @@ final class WorkoutPlanRecordState extends Equatable {
 
   @override
   List<Object?> get props => [
-        currentPlanRecord,
-        planRecords,
-        pagination,
-        isLoading,
-        error,
-      ];
+    currentPlanRecord,
+    planRecords,
+    pagination,
+    isLoading,
+    error,
+  ];
 }

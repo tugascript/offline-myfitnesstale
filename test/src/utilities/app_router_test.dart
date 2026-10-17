@@ -45,29 +45,31 @@ class _WorkoutPlanRecordCubit extends WorkoutPlanRecordCubit {
 
 class _ProfileCubit extends ProfileCubit {
   _ProfileCubit() {
-    emit(ProfileState(
-      profile: ProfileDto(
-        id: 1,
-        name: 'Router Tester',
-        height: 175,
-        gender: Gender.other,
-        birthdate: DateTime(1990),
+    emit(
+      ProfileState(
+        profile: ProfileDto(
+          id: 1,
+          name: 'Router Tester',
+          height: 175,
+          gender: Gender.other,
+          birthdate: DateTime(1990),
+        ),
+        system: const SystemDto(
+          id: 1,
+          units: Units.metric,
+          theme: ThemeType.system,
+          initialSetup: SetUpStatus.completed,
+          notificationsOn: false,
+        ),
+        remindersConfig: const RemindersConfigDto(
+          id: 1,
+          workoutsOn: false,
+          weightRecordsOn: false,
+        ),
+        isLoading: false,
+        isInitiated: true,
       ),
-      system: const SystemDto(
-        id: 1,
-        units: Units.metric,
-        theme: ThemeType.system,
-        initialSetup: SetUpStatus.completed,
-        notificationsOn: false,
-      ),
-      remindersConfig: const RemindersConfigDto(
-        id: 1,
-        workoutsOn: false,
-        weightRecordsOn: false,
-      ),
-      isLoading: false,
-      isInitiated: true,
-    ));
+    );
   }
 
   @override
@@ -109,8 +111,9 @@ void main() {
     await tester.pump();
   }
 
-  testWidgets('exercise progress wins over the dynamic exercise ID route',
-      (tester) async {
+  testWidgets('exercise progress wins over the dynamic exercise ID route', (
+    tester,
+  ) async {
     await pumpRoute(tester, ExerciseProgressView.routeName);
 
     expect(find.byType(ExerciseProgressView), findsOneWidget);

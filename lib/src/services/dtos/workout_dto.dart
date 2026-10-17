@@ -51,8 +51,9 @@ class WorkoutDto extends Equatable implements Dto<Workout> {
       id: model.id!,
       name: model.name,
       description: model.description,
-      picture:
-          model.picture != null ? PictureDto.fromModel(model.picture!) : null,
+      picture: model.picture != null
+          ? PictureDto.fromModel(model.picture!)
+          : null,
       video: model.video != null ? VideoDto.fromModel(model.video!) : null,
       muscleGroups: model.muscleGroups,
       muscles: model.muscles,
@@ -106,20 +107,20 @@ class WorkoutDto extends Equatable implements Dto<Workout> {
 
   @override
   List<Object?> get props => [
-        id,
-        name,
-        muscleGroups,
-        muscles,
-        description,
-        picture,
-        video,
-        difficulty,
-        isFavorite,
-        version,
-        totalSets,
-        totalReps,
-        editorType,
-        createdBy,
-        sets,
-      ];
+    id,
+    name,
+    muscleGroups,
+    muscles,
+    description,
+    picture,
+    video,
+    difficulty,
+    isFavorite,
+    version,
+    totalSets,
+    totalReps,
+    editorType,
+    createdBy,
+    sets,
+  ];
 }

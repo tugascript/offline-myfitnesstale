@@ -22,17 +22,11 @@ class GoalDate extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Icon(
-          icon,
-          size: fontSize * 1.2,
-        ),
+        Icon(icon, size: fontSize * 1.2),
         SizedBox(width: fontSize / 2),
         Text(
           " ${_displayDate(units, date)}",
-          style: TextStyle(
-            fontSize: fontSize,
-            fontWeight: FontWeight.w600,
-          ),
+          style: TextStyle(fontSize: fontSize, fontWeight: FontWeight.w600),
           softWrap: true,
           overflow: TextOverflow.ellipsis,
         ),
@@ -51,8 +45,9 @@ class GoalDate extends StatelessWidget {
     final hour = date.hour.toString().padLeft(2, '0');
     final minute = date.minute.toString().padLeft(2, '0');
 
-    final calendarDate =
-        units == Units.imperial ? '$month/$day/$year' : '$day/$month/$year';
+    final calendarDate = units == Units.imperial
+        ? '$month/$day/$year'
+        : '$day/$month/$year';
     return '$calendarDate $hour:$minute';
   }
 }

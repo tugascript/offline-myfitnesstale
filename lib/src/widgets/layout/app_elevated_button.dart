@@ -26,18 +26,15 @@ class AppElevatedButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final baseColor =
-        isSecondary ? theme.colorScheme.secondary : theme.primaryColor;
+    final baseColor = isSecondary
+        ? theme.colorScheme.secondary
+        : theme.primaryColor;
     final greyColor = theme.colorScheme.brightness == Brightness.light
         ? Colors.grey[400]
         : Colors.grey[600];
     return ElevatedButton.icon(
       onPressed: isLoading ? null : onPressed,
-      icon: Icon(
-        icon,
-        size: sizes.fontSize * 1.2,
-        fontWeight: FontWeight.w600,
-      ),
+      icon: Icon(icon, size: sizes.fontSize * 1.2, fontWeight: FontWeight.w600),
       label: Text(
         label.toUpperCase(),
         style: TextStyle(

@@ -36,9 +36,9 @@ class EquipmentCreationView extends StatelessWidget {
             }
 
             if (state.error != null) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(state.error!.description)),
-              );
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(SnackBar(content: Text(state.error!.description)));
             }
 
             if (state.selectedEquipment != null) {

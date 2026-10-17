@@ -143,196 +143,48 @@ void main() {
     await testDatabase.destroy();
   });
 
-  test(
-    'creates workout sets, set exercises, options and updates workout aggregates',
-    () async {
-      final db = await testDatabase.db;
-      final workoutId = await createWorkout(db);
-      final exerciseA = await createExercise(
-        db,
-        muscleGroup: MuscleGroup.push,
-        primaryMuscles: {Muscle.chest},
-      );
-      final exerciseB = await createExercise(
-        db,
-        muscleGroup: MuscleGroup.pull,
-        primaryMuscles: {Muscle.lats},
-      );
-      final alternativeExercise = await createExercise(
-        db,
-        muscleGroup: MuscleGroup.push,
-        primaryMuscles: {Muscle.triceps},
-      );
-
-      final result = await workoutService.batchUpsertWorkoutSets(
-        workoutId: workoutId,
-        inputs: [
-          WorkoutSetUpsertInput(
-            setType: WorkoutSetType.standard,
-            minSets: 2,
-            maxSets: 3,
-            recommendedRestSecs: 90,
-            maxRestSecs: 120,
-            position: 1,
-            exercises: [
-              WorkoutSetExerciseUpsertInput(
-                exerciseId: exerciseA,
-                position: 1,
-                minReps: 8,
-                maxReps: 10,
-                alternativeExerciseIds: [alternativeExercise],
-              ),
-              WorkoutSetExerciseUpsertInput(
-                exerciseId: exerciseB,
-                position: 2,
-                minReps: 6,
-                maxReps: 6,
-              ),
-            ],
-          ),
-        ],
-      );
-
-      expect(result.isOk(), isTrue);
-
-      final workout = Workout.fromMap(
-        (await db.query(
-          Workout.table,
-          where: '${WorkoutColumns.id.value} = ?',
-          whereArgs: [workoutId],
-          limit: 1,
-        ))
-            .single,
-      );
-      expect(workout.totalSets, 3);
-      expect(workout.totalReps, 48);
-      expect(workout.muscleGroups, {MuscleGroup.push, MuscleGroup.pull});
-      expect(workout.muscles.primary, {Muscle.chest, Muscle.lats});
-
-      final createdSets = (await db.query(
-        WorkoutSet.table,
-        where: '${WorkoutSetColumns.workoutId.value} = ?',
-        whereArgs: [workoutId],
-        orderBy: WorkoutSetColumns.position.orderAsc,
-      ))
-          .map(WorkoutSet.fromMap)
-          .toList();
-      expect(createdSets, hasLength(1));
-      expect(createdSets.single.totalExercises, 2);
-      expect(createdSets.single.totalReps, 48);
-
-      final createdSetExercises = (await db.query(
-        WorkoutSetExercise.table,
-        where: '${WorkoutSetExerciseColumns.workoutSetId.value} = ?',
-        whereArgs: [createdSets.single.id],
-        orderBy: WorkoutSetExerciseColumns.position.orderAsc,
-      ))
-          .map(WorkoutSetExercise.fromMap)
-          .toList();
-      expect(createdSetExercises, hasLength(2));
-      expect(
-          createdSetExercises.map((e) => e.exerciseId), [exerciseA, exerciseB]);
-      expect(createdSetExercises.map((e) => e.position), [1, 2]);
-
-      final options = (await db.query(
-        WorkoutSetExerciseOption.table,
-        where:
-            '${WorkoutSetExerciseOptionColumns.workoutSetExerciseId.value} = ?',
-        whereArgs: [createdSetExercises.first.id],
-        orderBy: WorkoutSetExerciseOptionColumns.position.orderAsc,
-      ))
-          .map(WorkoutSetExerciseOption.fromMap)
-          .toList();
-      expect(options, hasLength(1));
-      expect(options.single.exerciseId, alternativeExercise);
-      expect(options.single.position, 1);
-    },
-  );
-
-  test('updates existing set exercise and replaces alternative options',
-      () async {
+  test('creates workout sets, set exercises, options and updates workout aggregates', () async {
     final db = await testDatabase.db;
-    final workoutId = await createWorkout(
-      db,
-      totalSets: 2,
-      totalReps: 20,
-      muscleGroups: {MuscleGroup.push},
-      muscles: const TargetMuscles(
-        primary: {Muscle.chest},
-        secondary: <Muscle>{},
-      ),
-    );
-    final originalExercise = await createExercise(
+    final workoutId = await createWorkout(db);
+    final exerciseA = await createExercise(
       db,
       muscleGroup: MuscleGroup.push,
       primaryMuscles: {Muscle.chest},
     );
-    final oldAlternative = await createExercise(
+    final exerciseB = await createExercise(
+      db,
+      muscleGroup: MuscleGroup.pull,
+      primaryMuscles: {Muscle.lats},
+    );
+    final alternativeExercise = await createExercise(
       db,
       muscleGroup: MuscleGroup.push,
       primaryMuscles: {Muscle.triceps},
-    );
-    final updatedExercise = await createExercise(
-      db,
-      muscleGroup: MuscleGroup.legs,
-      primaryMuscles: {Muscle.quadriceps},
-    );
-    final newAlternative = await createExercise(
-      db,
-      muscleGroup: MuscleGroup.legs,
-      primaryMuscles: {Muscle.hamstrings},
-    );
-
-    final setId = await createWorkoutSet(
-      db,
-      workoutId: workoutId,
-      workoutVersion: 1,
-      position: 1,
-      minSets: 2,
-      maxSets: 2,
-      totalExercises: 1,
-      totalReps: 20,
-    );
-    final setExerciseId = await createWorkoutSetExercise(
-      db,
-      workoutId: workoutId,
-      workoutVersion: 1,
-      workoutSetId: setId,
-      exerciseId: originalExercise,
-      position: 1,
-      minReps: 10,
-      maxReps: 10,
-    );
-    await createWorkoutSetExerciseOption(
-      db,
-      workoutId: workoutId,
-      workoutVersion: 1,
-      workoutSetId: setId,
-      workoutSetExerciseId: setExerciseId,
-      exerciseId: oldAlternative,
-      position: 1,
     );
 
     final result = await workoutService.batchUpsertWorkoutSets(
       workoutId: workoutId,
       inputs: [
         WorkoutSetUpsertInput(
-          id: setId,
-          setType: WorkoutSetType.drop,
-          minSets: 3,
-          maxSets: 4,
-          recommendedRestSecs: 120,
-          maxRestSecs: 180,
+          setType: WorkoutSetType.standard,
+          minSets: 2,
+          maxSets: 3,
+          recommendedRestSecs: 90,
+          maxRestSecs: 120,
           position: 1,
           exercises: [
             WorkoutSetExerciseUpsertInput(
-              id: setExerciseId,
-              exerciseId: updatedExercise,
+              exerciseId: exerciseA,
               position: 1,
-              minReps: 7,
-              maxReps: 9,
-              toMaxReps: true,
-              alternativeExerciseIds: [newAlternative, oldAlternative],
+              minReps: 8,
+              maxReps: 10,
+              alternativeExerciseIds: [alternativeExercise],
+            ),
+            WorkoutSetExerciseUpsertInput(
+              exerciseId: exerciseB,
+              position: 2,
+              minReps: 6,
+              maxReps: 6,
             ),
           ],
         ),
@@ -341,65 +193,204 @@ void main() {
 
     expect(result.isOk(), isTrue);
 
-    final updatedSet = WorkoutSet.fromMap(
-      (await db.query(
-        WorkoutSet.table,
-        where: '${WorkoutSetColumns.id.value} = ?',
-        whereArgs: [setId],
-        limit: 1,
-      ))
-          .single,
-    );
-    expect(updatedSet.setType, WorkoutSetType.drop);
-    expect(updatedSet.minSets, 3);
-    expect(updatedSet.maxSets, 4);
-    expect(updatedSet.totalExercises, 1);
-    expect(updatedSet.totalReps, 36);
-    expect(updatedSet.recommendedRestSecs, 120);
-    expect(updatedSet.maxRestSecs, 180);
-
-    final updatedSetExercise = WorkoutSetExercise.fromMap(
-      (await db.query(
-        WorkoutSetExercise.table,
-        where: '${WorkoutSetExerciseColumns.id.value} = ?',
-        whereArgs: [setExerciseId],
-        limit: 1,
-      ))
-          .single,
-    );
-    expect(updatedSetExercise.exerciseId, updatedExercise);
-    expect(updatedSetExercise.minReps, 7);
-    expect(updatedSetExercise.maxReps, 9);
-    expect(updatedSetExercise.toMaxReps, isTrue);
-
-    final updatedOptions = (await db.query(
-      WorkoutSetExerciseOption.table,
-      where:
-          '${WorkoutSetExerciseOptionColumns.workoutSetExerciseId.value} = ?',
-      whereArgs: [setExerciseId],
-      orderBy: WorkoutSetExerciseOptionColumns.position.orderAsc,
-    ))
-        .map(WorkoutSetExerciseOption.fromMap)
-        .toList();
-    expect(updatedOptions, hasLength(2));
-    expect(updatedOptions.map((o) => o.exerciseId),
-        [newAlternative, oldAlternative]);
-    expect(updatedOptions.map((o) => o.position), [1, 2]);
-
     final workout = Workout.fromMap(
       (await db.query(
         Workout.table,
         where: '${WorkoutColumns.id.value} = ?',
         whereArgs: [workoutId],
         limit: 1,
-      ))
-          .single,
+      )).single,
     );
-    expect(workout.totalSets, 4);
-    expect(workout.totalReps, 36);
-    expect(workout.muscleGroups, {MuscleGroup.legs});
-    expect(workout.muscles.primary, {Muscle.quadriceps});
+    expect(workout.totalSets, 3);
+    expect(workout.totalReps, 48);
+    expect(workout.muscleGroups, {MuscleGroup.push, MuscleGroup.pull});
+    expect(workout.muscles.primary, {Muscle.chest, Muscle.lats});
+
+    final createdSets = (await db.query(
+      WorkoutSet.table,
+      where: '${WorkoutSetColumns.workoutId.value} = ?',
+      whereArgs: [workoutId],
+      orderBy: WorkoutSetColumns.position.orderAsc,
+    )).map(WorkoutSet.fromMap).toList();
+    expect(createdSets, hasLength(1));
+    expect(createdSets.single.totalExercises, 2);
+    expect(createdSets.single.totalReps, 48);
+
+    final createdSetExercises = (await db.query(
+      WorkoutSetExercise.table,
+      where: '${WorkoutSetExerciseColumns.workoutSetId.value} = ?',
+      whereArgs: [createdSets.single.id],
+      orderBy: WorkoutSetExerciseColumns.position.orderAsc,
+    )).map(WorkoutSetExercise.fromMap).toList();
+    expect(createdSetExercises, hasLength(2));
+    expect(createdSetExercises.map((e) => e.exerciseId), [
+      exerciseA,
+      exerciseB,
+    ]);
+    expect(createdSetExercises.map((e) => e.position), [1, 2]);
+
+    final options = (await db.query(
+      WorkoutSetExerciseOption.table,
+      where:
+          '${WorkoutSetExerciseOptionColumns.workoutSetExerciseId.value} = ?',
+      whereArgs: [createdSetExercises.first.id],
+      orderBy: WorkoutSetExerciseOptionColumns.position.orderAsc,
+    )).map(WorkoutSetExerciseOption.fromMap).toList();
+    expect(options, hasLength(1));
+    expect(options.single.exerciseId, alternativeExercise);
+    expect(options.single.position, 1);
   });
+
+  test(
+    'updates existing set exercise and replaces alternative options',
+    () async {
+      final db = await testDatabase.db;
+      final workoutId = await createWorkout(
+        db,
+        totalSets: 2,
+        totalReps: 20,
+        muscleGroups: {MuscleGroup.push},
+        muscles: const TargetMuscles(
+          primary: {Muscle.chest},
+          secondary: <Muscle>{},
+        ),
+      );
+      final originalExercise = await createExercise(
+        db,
+        muscleGroup: MuscleGroup.push,
+        primaryMuscles: {Muscle.chest},
+      );
+      final oldAlternative = await createExercise(
+        db,
+        muscleGroup: MuscleGroup.push,
+        primaryMuscles: {Muscle.triceps},
+      );
+      final updatedExercise = await createExercise(
+        db,
+        muscleGroup: MuscleGroup.legs,
+        primaryMuscles: {Muscle.quadriceps},
+      );
+      final newAlternative = await createExercise(
+        db,
+        muscleGroup: MuscleGroup.legs,
+        primaryMuscles: {Muscle.hamstrings},
+      );
+
+      final setId = await createWorkoutSet(
+        db,
+        workoutId: workoutId,
+        workoutVersion: 1,
+        position: 1,
+        minSets: 2,
+        maxSets: 2,
+        totalExercises: 1,
+        totalReps: 20,
+      );
+      final setExerciseId = await createWorkoutSetExercise(
+        db,
+        workoutId: workoutId,
+        workoutVersion: 1,
+        workoutSetId: setId,
+        exerciseId: originalExercise,
+        position: 1,
+        minReps: 10,
+        maxReps: 10,
+      );
+      await createWorkoutSetExerciseOption(
+        db,
+        workoutId: workoutId,
+        workoutVersion: 1,
+        workoutSetId: setId,
+        workoutSetExerciseId: setExerciseId,
+        exerciseId: oldAlternative,
+        position: 1,
+      );
+
+      final result = await workoutService.batchUpsertWorkoutSets(
+        workoutId: workoutId,
+        inputs: [
+          WorkoutSetUpsertInput(
+            id: setId,
+            setType: WorkoutSetType.drop,
+            minSets: 3,
+            maxSets: 4,
+            recommendedRestSecs: 120,
+            maxRestSecs: 180,
+            position: 1,
+            exercises: [
+              WorkoutSetExerciseUpsertInput(
+                id: setExerciseId,
+                exerciseId: updatedExercise,
+                position: 1,
+                minReps: 7,
+                maxReps: 9,
+                toMaxReps: true,
+                alternativeExerciseIds: [newAlternative, oldAlternative],
+              ),
+            ],
+          ),
+        ],
+      );
+
+      expect(result.isOk(), isTrue);
+
+      final updatedSet = WorkoutSet.fromMap(
+        (await db.query(
+          WorkoutSet.table,
+          where: '${WorkoutSetColumns.id.value} = ?',
+          whereArgs: [setId],
+          limit: 1,
+        )).single,
+      );
+      expect(updatedSet.setType, WorkoutSetType.drop);
+      expect(updatedSet.minSets, 3);
+      expect(updatedSet.maxSets, 4);
+      expect(updatedSet.totalExercises, 1);
+      expect(updatedSet.totalReps, 36);
+      expect(updatedSet.recommendedRestSecs, 120);
+      expect(updatedSet.maxRestSecs, 180);
+
+      final updatedSetExercise = WorkoutSetExercise.fromMap(
+        (await db.query(
+          WorkoutSetExercise.table,
+          where: '${WorkoutSetExerciseColumns.id.value} = ?',
+          whereArgs: [setExerciseId],
+          limit: 1,
+        )).single,
+      );
+      expect(updatedSetExercise.exerciseId, updatedExercise);
+      expect(updatedSetExercise.minReps, 7);
+      expect(updatedSetExercise.maxReps, 9);
+      expect(updatedSetExercise.toMaxReps, isTrue);
+
+      final updatedOptions = (await db.query(
+        WorkoutSetExerciseOption.table,
+        where:
+            '${WorkoutSetExerciseOptionColumns.workoutSetExerciseId.value} = ?',
+        whereArgs: [setExerciseId],
+        orderBy: WorkoutSetExerciseOptionColumns.position.orderAsc,
+      )).map(WorkoutSetExerciseOption.fromMap).toList();
+      expect(updatedOptions, hasLength(2));
+      expect(updatedOptions.map((o) => o.exerciseId), [
+        newAlternative,
+        oldAlternative,
+      ]);
+      expect(updatedOptions.map((o) => o.position), [1, 2]);
+
+      final workout = Workout.fromMap(
+        (await db.query(
+          Workout.table,
+          where: '${WorkoutColumns.id.value} = ?',
+          whereArgs: [workoutId],
+          limit: 1,
+        )).single,
+      );
+      expect(workout.totalSets, 4);
+      expect(workout.totalReps, 36);
+      expect(workout.muscleGroups, {MuscleGroup.legs});
+      expect(workout.muscles.primary, {Muscle.quadriceps});
+    },
+  );
 
   test('deletes removed set exercises when updating a workout set', () async {
     final db = await testDatabase.db;
@@ -499,9 +490,7 @@ void main() {
       where: '${WorkoutSetExerciseColumns.workoutSetId.value} = ?',
       whereArgs: [setId],
       orderBy: WorkoutSetExerciseColumns.position.orderAsc,
-    ))
-        .map(WorkoutSetExercise.fromMap)
-        .toList();
+    )).map(WorkoutSetExercise.fromMap).toList();
     expect(setExercises, hasLength(1));
     expect(setExercises.single.id, keptSetExerciseId);
 
@@ -526,8 +515,7 @@ void main() {
         where: '${WorkoutSetColumns.id.value} = ?',
         whereArgs: [setId],
         limit: 1,
-      ))
-          .single,
+      )).single,
     );
     expect(updatedSet.totalExercises, 1);
     expect(updatedSet.totalReps, 10);
@@ -619,9 +607,7 @@ void main() {
       where: '${WorkoutSetColumns.workoutId.value} = ?',
       whereArgs: [workoutId],
       orderBy: WorkoutSetColumns.position.orderAsc,
-    ))
-        .map(WorkoutSet.fromMap)
-        .toList();
+    )).map(WorkoutSet.fromMap).toList();
     expect(sets, hasLength(1));
     expect(sets.single.id, setToKeep);
     expect(sets.single.position, 1);
@@ -634,102 +620,103 @@ void main() {
     expect(deletedSetExercises, isEmpty);
   });
 
-  test('deletes all sets when inputs are empty and idsToDelete is not empty',
-      () async {
-    final db = await testDatabase.db;
-    final workoutId = await createWorkout(
-      db,
-      totalSets: 3,
-      totalReps: 24,
-      muscleGroups: {MuscleGroup.push},
-      muscles: const TargetMuscles(
-        primary: {Muscle.chest},
-        secondary: <Muscle>{},
-      ),
-    );
-    final exerciseId = await createExercise(
-      db,
-      muscleGroup: MuscleGroup.push,
-      primaryMuscles: {Muscle.chest},
-    );
+  test(
+    'deletes all sets when inputs are empty and idsToDelete is not empty',
+    () async {
+      final db = await testDatabase.db;
+      final workoutId = await createWorkout(
+        db,
+        totalSets: 3,
+        totalReps: 24,
+        muscleGroups: {MuscleGroup.push},
+        muscles: const TargetMuscles(
+          primary: {Muscle.chest},
+          secondary: <Muscle>{},
+        ),
+      );
+      final exerciseId = await createExercise(
+        db,
+        muscleGroup: MuscleGroup.push,
+        primaryMuscles: {Muscle.chest},
+      );
 
-    final setA = await createWorkoutSet(
-      db,
-      workoutId: workoutId,
-      workoutVersion: 1,
-      position: 1,
-      minSets: 1,
-      maxSets: 1,
-      totalExercises: 1,
-      totalReps: 8,
-    );
-    final setB = await createWorkoutSet(
-      db,
-      workoutId: workoutId,
-      workoutVersion: 1,
-      position: 2,
-      minSets: 2,
-      maxSets: 2,
-      totalExercises: 1,
-      totalReps: 16,
-    );
-    await createWorkoutSetExercise(
-      db,
-      workoutId: workoutId,
-      workoutVersion: 1,
-      workoutSetId: setA,
-      exerciseId: exerciseId,
-      position: 1,
-      minReps: 8,
-      maxReps: 8,
-    );
-    await createWorkoutSetExercise(
-      db,
-      workoutId: workoutId,
-      workoutVersion: 1,
-      workoutSetId: setB,
-      exerciseId: exerciseId,
-      position: 1,
-      minReps: 8,
-      maxReps: 8,
-    );
+      final setA = await createWorkoutSet(
+        db,
+        workoutId: workoutId,
+        workoutVersion: 1,
+        position: 1,
+        minSets: 1,
+        maxSets: 1,
+        totalExercises: 1,
+        totalReps: 8,
+      );
+      final setB = await createWorkoutSet(
+        db,
+        workoutId: workoutId,
+        workoutVersion: 1,
+        position: 2,
+        minSets: 2,
+        maxSets: 2,
+        totalExercises: 1,
+        totalReps: 16,
+      );
+      await createWorkoutSetExercise(
+        db,
+        workoutId: workoutId,
+        workoutVersion: 1,
+        workoutSetId: setA,
+        exerciseId: exerciseId,
+        position: 1,
+        minReps: 8,
+        maxReps: 8,
+      );
+      await createWorkoutSetExercise(
+        db,
+        workoutId: workoutId,
+        workoutVersion: 1,
+        workoutSetId: setB,
+        exerciseId: exerciseId,
+        position: 1,
+        minReps: 8,
+        maxReps: 8,
+      );
 
-    final result = await workoutService.batchUpsertWorkoutSets(
-      workoutId: workoutId,
-      inputs: const [],
-    );
+      final result = await workoutService.batchUpsertWorkoutSets(
+        workoutId: workoutId,
+        inputs: const [],
+      );
 
-    expect(result.isOk(), isTrue);
+      expect(result.isOk(), isTrue);
 
-    final remainingSets = await db.query(
-      WorkoutSet.table,
-      where: '${WorkoutSetColumns.workoutId.value} = ?',
-      whereArgs: [workoutId],
-    );
-    expect(remainingSets, isEmpty);
-
-    final remainingSetExercises = await db.query(
-      WorkoutSetExercise.table,
-      where: '${WorkoutSetExerciseColumns.workoutId.value} = ?',
-      whereArgs: [workoutId],
-    );
-    expect(remainingSetExercises, isEmpty);
-
-    final workout = Workout.fromMap(
-      (await db.query(
-        Workout.table,
-        where: '${WorkoutColumns.id.value} = ?',
+      final remainingSets = await db.query(
+        WorkoutSet.table,
+        where: '${WorkoutSetColumns.workoutId.value} = ?',
         whereArgs: [workoutId],
-        limit: 1,
-      ))
-          .single,
-    );
-    expect(workout.totalSets, 0);
-    expect(workout.totalReps, 0);
-    expect(workout.muscleGroups, isEmpty);
-    expect(workout.muscles.primary, isEmpty);
-    expect(workout.muscles.secondary, isEmpty);
-  });
+      );
+      expect(remainingSets, isEmpty);
+
+      final remainingSetExercises = await db.query(
+        WorkoutSetExercise.table,
+        where: '${WorkoutSetExerciseColumns.workoutId.value} = ?',
+        whereArgs: [workoutId],
+      );
+      expect(remainingSetExercises, isEmpty);
+
+      final workout = Workout.fromMap(
+        (await db.query(
+          Workout.table,
+          where: '${WorkoutColumns.id.value} = ?',
+          whereArgs: [workoutId],
+          limit: 1,
+        )).single,
+      );
+      expect(workout.totalSets, 0);
+      expect(workout.totalReps, 0);
+      expect(workout.muscleGroups, isEmpty);
+      expect(workout.muscles.primary, isEmpty);
+      expect(workout.muscles.secondary, isEmpty);
+    },
+  );
 
   test('returns notFound when workout does not exist', () async {
     final result = await workoutService.batchUpsertWorkoutSets(
@@ -741,35 +728,37 @@ void main() {
     expect(result.error.type, SingleErrorTypes.notFound);
   });
 
-  test('returns notFound when at least one exercise id does not exist',
-      () async {
-    final db = await testDatabase.db;
-    final workoutId = await createWorkout(db);
+  test(
+    'returns notFound when at least one exercise id does not exist',
+    () async {
+      final db = await testDatabase.db;
+      final workoutId = await createWorkout(db);
 
-    final result = await workoutService.batchUpsertWorkoutSets(
-      workoutId: workoutId,
-      inputs: const [
-        WorkoutSetUpsertInput(
-          setType: WorkoutSetType.standard,
-          minSets: 1,
-          maxSets: 1,
-          recommendedRestSecs: 60,
-          position: 1,
-          exercises: [
-            WorkoutSetExerciseUpsertInput(
-              exerciseId: 999999,
-              position: 1,
-              minReps: 8,
-              maxReps: 10,
-            ),
-          ],
-        ),
-      ],
-    );
+      final result = await workoutService.batchUpsertWorkoutSets(
+        workoutId: workoutId,
+        inputs: const [
+          WorkoutSetUpsertInput(
+            setType: WorkoutSetType.standard,
+            minSets: 1,
+            maxSets: 1,
+            recommendedRestSecs: 60,
+            position: 1,
+            exercises: [
+              WorkoutSetExerciseUpsertInput(
+                exerciseId: 999999,
+                position: 1,
+                minReps: 8,
+                maxReps: 10,
+              ),
+            ],
+          ),
+        ],
+      );
 
-    expect(result.isErr(), isTrue);
-    expect(result.error.type, SingleErrorTypes.notFound);
-  });
+      expect(result.isErr(), isTrue);
+      expect(result.error.type, SingleErrorTypes.notFound);
+    },
+  );
 
   test('rolls back transaction when a set exercise update fails', () async {
     final db = await testDatabase.db;
@@ -848,8 +837,7 @@ void main() {
         where: '${WorkoutSetColumns.id.value} = ?',
         whereArgs: [setId],
         limit: 1,
-      ))
-          .single,
+      )).single,
     );
     expect(setAfterFailure.setType, WorkoutSetType.standard);
     expect(setAfterFailure.minSets, 1);
@@ -862,8 +850,7 @@ void main() {
         where: '${WorkoutSetExerciseColumns.id.value} = ?',
         whereArgs: [originalSetExerciseId],
         limit: 1,
-      ))
-          .single,
+      )).single,
     );
     expect(setExerciseAfterFailure.exerciseId, originalExercise);
     expect(setExerciseAfterFailure.minReps, 10);
@@ -875,8 +862,7 @@ void main() {
         where: '${WorkoutColumns.id.value} = ?',
         whereArgs: [workoutId],
         limit: 1,
-      ))
-          .single,
+      )).single,
     );
     expect(workoutAfterFailure.totalSets, 1);
     expect(workoutAfterFailure.totalReps, 10);
@@ -955,8 +941,7 @@ void main() {
         Workout.table,
         where: '${WorkoutColumns.id.value} = ?',
         whereArgs: [workoutId],
-      ))
-          .single,
+      )).single,
     );
     expect(storedWorkout.version, 2);
     expect(storedWorkout.totalSets, 3);
@@ -970,8 +955,10 @@ void main() {
     expect(versionOne.value.totalReps, 10);
     expect(versionOne.value.muscleGroups, {MuscleGroup.push});
     expect(versionOne.value.sets!.single.id, originalSetId);
-    expect(versionOne.value.sets!.single.exercises!.single.exerciseId,
-        originalExercise);
+    expect(
+      versionOne.value.sets!.single.exercises!.single.exerciseId,
+      originalExercise,
+    );
     expect(versionTwo.isOk(), isTrue);
     expect(versionTwo.value.version, 2);
     expect(versionTwo.value.totalSets, 3);
@@ -987,9 +974,6 @@ void main() {
       [workoutId],
     );
     expect(rowsByVersion, hasLength(2));
-    expect(
-      rowsByVersion.map((row) => row['count']),
-      everyElement(1),
-    );
+    expect(rowsByVersion.map((row) => row['count']), everyElement(1));
   });
 }

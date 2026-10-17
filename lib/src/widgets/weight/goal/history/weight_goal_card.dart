@@ -30,9 +30,7 @@ class WeightGoalCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       clipBehavior: Clip.antiAlias,
-      margin: EdgeInsets.symmetric(
-        vertical: sizes.margins / 2,
-      ),
+      margin: EdgeInsets.symmetric(vertical: sizes.margins / 2),
       child: Padding(
         padding: EdgeInsets.all(sizes.padding),
         child: Column(
@@ -117,8 +115,7 @@ class WeightGoalCard extends StatelessWidget {
                       context: context,
                       builder: (context) => ConfirmationDialog(
                         title: 'Delete Weight Goal',
-                        content:
-                            'Are you sure you want to delete this weight goal? This action cannot be undone.',
+                        content: 'Are you sure you want to delete this weight goal? This action cannot be undone.',
                         onConfirm: () async {
                           await context
                               .read<WeightRecordCubit>()

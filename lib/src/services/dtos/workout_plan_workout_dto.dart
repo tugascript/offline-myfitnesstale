@@ -61,11 +61,11 @@ class WorkoutPlanWorkoutDto extends Equatable
 
   @override
   List<Object?> get props => [
-        id,
-        planVersion,
-        position,
-        timeOfDay,
-        workoutId,
-        workout,
-      ];
+    id,
+    planVersion,
+    position,
+    timeOfDay,
+    workoutId,
+    workout,
+  ];
 }

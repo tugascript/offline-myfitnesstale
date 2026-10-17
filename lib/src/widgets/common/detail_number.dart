@@ -17,9 +17,7 @@ class DetailNumber extends StatelessWidget {
     return Container(
       width: fontSize * 1.75,
       height: fontSize * 1.75,
-      decoration: BoxDecoration(
-        color: theme.primaryColor,
-      ),
+      decoration: BoxDecoration(color: theme.primaryColor),
       child: Center(
         child: Text(
           number.toString(),

@@ -26,8 +26,11 @@ class FoodCreationView extends StatelessWidget {
         if (!state.isLoading && state.error != null) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-                content: Text(state.error!.description,
-                    style: TextStyle(fontSize: sizes.fontSize))),
+              content: Text(
+                state.error!.description,
+                style: TextStyle(fontSize: sizes.fontSize),
+              ),
+            ),
           );
         }
       },
@@ -41,8 +44,9 @@ class FoodCreationView extends StatelessWidget {
               sizes: sizes,
               isLoading: state.isLoading,
               onSubmit: (input) async {
-                final success =
-                    await context.read<FoodCubit>().createFood(input);
+                final success = await context.read<FoodCubit>().createFood(
+                  input,
+                );
                 if (success && context.mounted) {
                   context.pop();
                 }

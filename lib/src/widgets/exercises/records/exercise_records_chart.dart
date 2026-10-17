@@ -45,10 +45,9 @@ class ExerciseRecordsChart extends StatelessWidget {
       );
     }
     final oneYearAgo = DateTime.now().subtract(const Duration(days: 365));
-    final chartRecords = records
-        .where((r) => r.recordDate.isAfter(oneYearAgo))
-        .toList()
-      ..sort((a, b) => a.recordDate.compareTo(b.recordDate));
+    final chartRecords =
+        records.where((r) => r.recordDate.isAfter(oneYearAgo)).toList()
+          ..sort((a, b) => a.recordDate.compareTo(b.recordDate));
 
     if (chartRecords.isEmpty) {
       return Center(
@@ -116,10 +115,7 @@ class ExerciseRecordsChart extends StatelessWidget {
               drawVerticalLine: false,
               horizontalInterval: yInterval,
               getDrawingHorizontalLine: (value) {
-                return FlLine(
-                  color: horizontalGuideColor,
-                  strokeWidth: 1,
-                );
+                return FlLine(color: horizontalGuideColor, strokeWidth: 1);
               },
             ),
             titlesData: FlTitlesData(
@@ -133,10 +129,7 @@ class ExerciseRecordsChart extends StatelessWidget {
                 axisNameWidget: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(
-                      Icons.calendar_today,
-                      size: sizes.fontSize * 1.2,
-                    ),
+                    Icon(Icons.calendar_today, size: sizes.fontSize * 1.2),
                     Text(
                       ' Date',
                       style: theme.textTheme.bodySmall?.copyWith(
@@ -156,8 +149,9 @@ class ExerciseRecordsChart extends StatelessWidget {
                     if (value == chartMaxX || value == chartMinX) {
                       return const SizedBox.shrink();
                     }
-                    final date =
-                        DateTime.fromMillisecondsSinceEpoch(value.toInt());
+                    final date = DateTime.fromMillisecondsSinceEpoch(
+                      value.toInt(),
+                    );
                     final formatted = DateFormat.MMMd().format(date);
                     return Padding(
                       padding: const EdgeInsets.only(top: 8.0),
@@ -178,9 +172,7 @@ class ExerciseRecordsChart extends StatelessWidget {
                   children: [
                     Text(
                       '💪',
-                      style: TextStyle(
-                        fontSize: sizes.fontSize * 1.2,
-                      ),
+                      style: TextStyle(fontSize: sizes.fontSize * 1.2),
                     ),
                     Text(
                       ' Est. Max (${isMetric ? 'kg' : 'lbs'})',
@@ -215,14 +207,8 @@ class ExerciseRecordsChart extends StatelessWidget {
             borderData: FlBorderData(
               show: true,
               border: Border(
-                left: BorderSide(
-                  color: axisBorderColor,
-                  width: 1,
-                ),
-                bottom: BorderSide(
-                  color: axisBorderColor,
-                  width: 1,
-                ),
+                left: BorderSide(color: axisBorderColor, width: 1),
+                bottom: BorderSide(color: axisBorderColor, width: 1),
               ),
             ),
             lineBarsData: [

@@ -152,8 +152,9 @@ class _PremiumEditorState extends State<PremiumEditor> {
               maxReps: exercise.maxReps,
               toMaxReps: exercise.toMaxReps,
               difficulty: exercise.difficulty,
-              alternativeExerciseIds:
-                  exercise.alternativeExercises.map((e) => e.id).toSet(),
+              alternativeExerciseIds: exercise.alternativeExercises
+                  .map((e) => e.id)
+                  .toSet(),
             );
           }).toList(),
         );
@@ -189,9 +190,7 @@ class _PremiumEditorState extends State<PremiumEditor> {
         if (state.error != null) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(
-                state.error?.description ?? "Something went wrong",
-              ),
+              content: Text(state.error?.description ?? "Something went wrong"),
               backgroundColor: Colors.red,
             ),
           );

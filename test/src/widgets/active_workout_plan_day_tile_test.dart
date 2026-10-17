@@ -31,10 +31,7 @@ void main() {
     name: 'Upper body',
     version: 2,
     muscleGroups: const {MuscleGroup.push},
-    muscles: const TargetMuscles(
-      primary: {Muscle.chest},
-      secondary: {},
-    ),
+    muscles: const TargetMuscles(primary: {Muscle.chest}, secondary: {}),
     difficulty: Difficulty.beginner,
     isFavorite: false,
     totalSets: 3,
@@ -80,8 +77,9 @@ void main() {
     );
   }
 
-  testWidgets('missed plan workout offers live and manual recording',
-      (tester) async {
+  testWidgets('missed plan workout offers live and manual recording', (
+    tester,
+  ) async {
     await tester.pumpWidget(harness(status: DayProgressStatus.past));
 
     expect(find.text('MISSED'), findsOneWidget);
@@ -90,26 +88,29 @@ void main() {
     expect(find.text('Completed'), findsNothing);
   });
 
-  testWidgets('completed plan workout shows completion instead of actions',
-      (tester) async {
+  testWidgets('completed plan workout shows completion instead of actions', (
+    tester,
+  ) async {
     final now = DateTime.now();
-    await tester.pumpWidget(harness(
-      status: DayProgressStatus.past,
-      records: [
-        WorkoutPlanWorkoutRecordDto(
-          id: 50,
-          workoutPlanRecordId: 40,
-          workoutPlanWeekRecordId: 41,
-          workoutPlanDayRecordId: 42,
-          workoutPlanWorkoutId: planWorkout.id,
-          workoutRecordId: 60,
-          position: 1,
-          startedAt: now.subtract(const Duration(hours: 1)),
-          status: ProgressStatus.completed,
-          completedAt: now,
-        ),
-      ],
-    ));
+    await tester.pumpWidget(
+      harness(
+        status: DayProgressStatus.past,
+        records: [
+          WorkoutPlanWorkoutRecordDto(
+            id: 50,
+            workoutPlanRecordId: 40,
+            workoutPlanWeekRecordId: 41,
+            workoutPlanDayRecordId: 42,
+            workoutPlanWorkoutId: planWorkout.id,
+            workoutRecordId: 60,
+            position: 1,
+            startedAt: now.subtract(const Duration(hours: 1)),
+            status: ProgressStatus.completed,
+            completedAt: now,
+          ),
+        ],
+      ),
+    );
 
     expect(find.text('MISSED'), findsNothing);
     expect(find.text('Completed'), findsOneWidget);

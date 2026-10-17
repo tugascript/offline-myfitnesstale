@@ -24,10 +24,7 @@ import 'src/utilities/theme_generator.dart';
 class MyApp extends StatelessWidget {
   final RouterConfig<Object>? routerConfig;
 
-  const MyApp({
-    super.key,
-    this.routerConfig,
-  });
+  const MyApp({super.key, this.routerConfig});
 
   @override
   Widget build(BuildContext context) {
@@ -66,9 +63,7 @@ class MyApp extends StatelessWidget {
         BlocProvider<ActiveWorkoutCubit>(
           create: (BuildContext context) => ActiveWorkoutCubit(),
         ),
-        BlocProvider<FoodCubit>(
-          create: (BuildContext context) => FoodCubit(),
-        ),
+        BlocProvider<FoodCubit>(create: (BuildContext context) => FoodCubit()),
         BlocProvider<RecipeCubit>(
           create: (BuildContext context) => RecipeCubit(),
         ),

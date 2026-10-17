@@ -36,9 +36,7 @@ class WorkoutCard extends StatelessWidget {
         ),
         SizedBox(height: sizes.spacing),
         Padding(
-          padding: EdgeInsets.only(
-            right: sizes.padding,
-          ),
+          padding: EdgeInsets.only(right: sizes.padding),
           child: Wrap(
             spacing: sizes.spacing,
             runSpacing: sizes.spacing,

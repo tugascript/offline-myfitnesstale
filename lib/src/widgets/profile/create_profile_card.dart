@@ -6,16 +6,14 @@ import '../../utilities/sizes/screen_size.dart';
 class CreateProfileCard extends StatelessWidget {
   final VoidCallback onTap;
 
-  const CreateProfileCard({
-    super.key,
-    required this.onTap,
-  });
+  const CreateProfileCard({super.key, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
     final BreakPoint breakPoint = BreakPoint.fromContext(context);
-    final DataDisplaySizesList sizes =
-        DataDisplaySizes.getDataDisplaySizes(breakPoint.screenSize);
+    final DataDisplaySizesList sizes = DataDisplaySizes.getDataDisplaySizes(
+      breakPoint.screenSize,
+    );
     return Card(
       elevation: 1,
       margin: EdgeInsets.all(sizes.padding * 1.25),
@@ -30,17 +28,16 @@ class CreateProfileCard extends StatelessWidget {
               Text(
                 "Your Fitness Tale starts here",
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      fontSize: sizes.titleFontSize,
-                    ),
+                  fontWeight: FontWeight.bold,
+                  fontSize: sizes.titleFontSize,
+                ),
                 textAlign: TextAlign.center,
               ),
               SizedBox(height: sizes.spacing * 0.5),
               Text(
                 "Please create your profile",
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      fontSize: sizes.subtitleFontSize,
-                    ),
+                style: Theme.of(context).textTheme.bodyLarge
+                    ?.copyWith(fontSize: sizes.subtitleFontSize),
                 textAlign: TextAlign.center,
               ),
               SizedBox(height: sizes.spacing * 0.75),

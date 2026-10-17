@@ -21,8 +21,9 @@ void main() {
     elevation: 1,
   );
 
-  testWidgets('manual records accept decimal weight and typed reps',
-      (tester) async {
+  testWidgets('manual records accept decimal weight and typed reps', (
+    tester,
+  ) async {
     double capturedWeight = -1;
     int capturedReps = -1;
 
@@ -39,14 +40,15 @@ void main() {
               initialReps: 0,
               initialDifficulty: 2,
               initialDifficultyType: WorkoutSetExerciseDifficultyType.rir,
-              onValuesChanged: ({
-                required weight,
-                required reps,
-                required WorkoutSetExerciseDifficulty difficulty,
-              }) {
-                capturedWeight = weight;
-                capturedReps = reps;
-              },
+              onValuesChanged:
+                  ({
+                    required weight,
+                    required reps,
+                    required WorkoutSetExerciseDifficulty difficulty,
+                  }) {
+                    capturedWeight = weight;
+                    capturedReps = reps;
+                  },
             ),
           ),
         ),

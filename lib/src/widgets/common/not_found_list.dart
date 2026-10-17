@@ -41,10 +41,7 @@ class NotFoundList extends StatelessWidget {
             SizedBox(height: sizes.margins),
             Text(
               message ?? 'No ${name ?? 'data'} found',
-              style: TextStyle(
-                fontSize: sizes.titleFontSize,
-                color: color,
-              ),
+              style: TextStyle(fontSize: sizes.titleFontSize, color: color),
             ),
           ],
         ),

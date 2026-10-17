@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../../utilities/sizes/data_display_sizes.dart';
 
 class MacroGoalChip extends StatelessWidget {
@@ -19,7 +20,9 @@ class MacroGoalChip extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: EdgeInsets.symmetric(
-          vertical: sizes.padding / 2, horizontal: sizes.padding / 2),
+        vertical: sizes.padding / 2,
+        horizontal: sizes.padding / 2,
+      ),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),

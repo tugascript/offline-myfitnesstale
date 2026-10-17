@@ -21,10 +21,7 @@ class ExerciseRecordsView extends StatefulWidget {
 
   final int exerciseId;
 
-  const ExerciseRecordsView({
-    super.key,
-    required this.exerciseId,
-  });
+  const ExerciseRecordsView({super.key, required this.exerciseId});
 
   static String location(int exerciseId) =>
       routeName.replaceFirst(':id', exerciseId.toString());
@@ -104,10 +101,7 @@ class _ExerciseRecordsViewState extends State<ExerciseRecordsView> {
                     ),
                   );
                 },
-                child: Icon(
-                  Icons.add,
-                  size: sizes.buttonIconSize,
-                ),
+                child: Icon(Icons.add, size: sizes.buttonIconSize),
               ),
             );
           },

@@ -1,4 +1,5 @@
 import '../common/nullable.dart';
+
 import 'package:equatable/equatable.dart';
 
 import 'enums.dart';
@@ -56,7 +57,8 @@ class MealPlanRecord extends Equatable implements Model {
 
   static const String table = _table;
 
-  static final String tableCreate = '''
+  static final String tableCreate =
+      '''
   CREATE TABLE IF NOT EXISTS $_table (
     ${MealPlanRecordColumns.id.value} INTEGER PRIMARY KEY AUTOINCREMENT,
     ${MealPlanRecordColumns.mealPlanId.value} INTEGER NOT NULL,
@@ -162,15 +164,15 @@ class MealPlanRecord extends Equatable implements Model {
 
   @override
   List<Object?> get props => [
-        id,
-        mealPlanId,
-        mealPlanVersion,
-        status,
-        startedAt,
-        currentWeek,
-        currentDay,
-        completedAt,
-        createdAt,
-        updatedAt,
-      ];
+    id,
+    mealPlanId,
+    mealPlanVersion,
+    status,
+    startedAt,
+    currentWeek,
+    currentDay,
+    completedAt,
+    createdAt,
+    updatedAt,
+  ];
 }

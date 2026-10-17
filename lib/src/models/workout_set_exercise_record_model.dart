@@ -58,7 +58,8 @@ class WorkoutSetExerciseRecord implements Model {
   });
 
   static const String table = _table;
-  static final String tableCreate = '''
+  static final String tableCreate =
+      '''
   CREATE TABLE IF NOT EXISTS $_table (
     ${WorkoutSetExerciseRecordColumns.id.value} INTEGER PRIMARY KEY,
     ${WorkoutSetExerciseRecordColumns.workoutSetExerciseId.value} INTEGER NOT NULL,

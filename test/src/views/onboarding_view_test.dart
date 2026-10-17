@@ -14,12 +14,10 @@ import 'package:myfitnesstale/src/services/onboarding_service.dart';
 import 'package:myfitnesstale/src/views/onboarding_view.dart';
 
 void main() {
-  testWidgets('shows persistent rollback feedback and retries unchanged form',
-      (tester) async {
-    final service = _OnboardingService([
-      _failure,
-      _failure,
-    ]);
+  testWidgets('shows persistent rollback feedback and retries unchanged form', (
+    tester,
+  ) async {
+    final service = _OnboardingService([_failure, _failure]);
     final cubit = ProfileCubit(onboardingService: service);
     addTearDown(cubit.close);
 
@@ -92,8 +90,8 @@ void main() {
   });
 }
 
-typedef OnboardingServiceResult
-    = Result<OnboardingResult, ServiceError<OperationErrorTypes>>;
+typedef OnboardingServiceResult =
+    Result<OnboardingResult, ServiceError<OperationErrorTypes>>;
 
 final class _OnboardingService extends OnboardingService {
   final List<OnboardingServiceResult> _responses;

@@ -1,4 +1,5 @@
 import '../common/nullable.dart';
+
 import 'package:equatable/equatable.dart';
 
 import 'enums.dart';
@@ -72,7 +73,8 @@ class MealPlanDay extends Equatable implements Model {
 
   static const String table = _table;
 
-  static final String tableCreate = '''
+  static final String tableCreate =
+      '''
   CREATE TABLE IF NOT EXISTS $_table (
     ${MealPlanDayColumns.id.value} INTEGER PRIMARY KEY AUTOINCREMENT,
     ${MealPlanDayColumns.mealPlanId.value} INTEGER NOT NULL,
@@ -136,7 +138,8 @@ class MealPlanDay extends Equatable implements Model {
       targetFat: map[MealPlanDayColumns.targetFat.value] as int,
       targetFiber: map[MealPlanDayColumns.targetFiber.value] as int?,
       createdBy: CreatedBy.fromValue(
-          map[MealPlanDayColumns.createdBy.value] as String),
+        map[MealPlanDayColumns.createdBy.value] as String,
+      ),
       createdAt: map[MealPlanDayColumns.createdAt.value] as int,
       updatedAt: map[MealPlanDayColumns.updatedAt.value] as int,
     );
@@ -214,20 +217,20 @@ class MealPlanDay extends Equatable implements Model {
 
   @override
   List<Object?> get props => [
-        id,
-        mealPlanId,
-        mealPlanWeekId,
-        planVersion,
-        day,
-        name,
-        targetCalories,
-        targetProtein,
-        targetCarbs,
-        targetFat,
-        targetFiber,
-        totalMeals,
-        createdBy,
-        createdAt,
-        updatedAt,
-      ];
+    id,
+    mealPlanId,
+    mealPlanWeekId,
+    planVersion,
+    day,
+    name,
+    targetCalories,
+    targetProtein,
+    targetCarbs,
+    targetFat,
+    targetFiber,
+    totalMeals,
+    createdBy,
+    createdAt,
+    updatedAt,
+  ];
 }

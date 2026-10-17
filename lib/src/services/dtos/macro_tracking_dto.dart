@@ -74,16 +74,16 @@ class MacroGoalDto extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        name,
-        targetCalories,
-        targetProtein,
-        targetCarbs,
-        targetFat,
-        targetWaterIntakeMl,
-        isActive,
-        phase,
-      ];
+    id,
+    name,
+    targetCalories,
+    targetProtein,
+    targetCarbs,
+    targetFat,
+    targetWaterIntakeMl,
+    isActive,
+    phase,
+  ];
 }
 
 class MealLogItemDto extends Equatable {
@@ -115,10 +115,7 @@ class MealLogItemDto extends Equatable {
     this.portionName,
   });
 
-  factory MealLogItemDto.fromModel(
-    MealLogItem model, {
-    String? portionName,
-  }) {
+  factory MealLogItemDto.fromModel(MealLogItem model, {String? portionName}) {
     return MealLogItemDto(
       id: model.id!,
       mealLogId: model.mealLogId,
@@ -137,19 +134,19 @@ class MealLogItemDto extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        mealLogId,
-        foodId,
-        portionId,
-        amount,
-        loggedFoodName,
-        loggedCalories,
-        loggedProtein,
-        loggedCarbs,
-        loggedFat,
-        loggedMicros,
-        portionName,
-      ];
+    id,
+    mealLogId,
+    foodId,
+    portionId,
+    amount,
+    loggedFoodName,
+    loggedCalories,
+    loggedProtein,
+    loggedCarbs,
+    loggedFat,
+    loggedMicros,
+    portionName,
+  ];
 }
 
 class MealLogDto extends Equatable {
@@ -200,18 +197,18 @@ class MealLogDto extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        dailyLogId,
-        mealType,
-        recipeId,
-        logTime,
-        totalCalories,
-        totalProtein,
-        totalCarbs,
-        totalFat,
-        totalFiber,
-        items,
-      ];
+    id,
+    dailyLogId,
+    mealType,
+    recipeId,
+    logTime,
+    totalCalories,
+    totalProtein,
+    totalCarbs,
+    totalFat,
+    totalFiber,
+    items,
+  ];
 }
 
 class DailyNutritionLogDto extends Equatable {
@@ -273,15 +270,15 @@ class DailyNutritionLogDto extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        date,
-        waterIntakeMl,
-        notes,
-        meals,
-        totalCalories,
-        totalProtein,
-        totalCarbs,
-        totalFat,
-        totalFiber,
-      ];
+    id,
+    date,
+    waterIntakeMl,
+    notes,
+    meals,
+    totalCalories,
+    totalProtein,
+    totalCarbs,
+    totalFat,
+    totalFiber,
+  ];
 }

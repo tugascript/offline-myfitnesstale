@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+
 import '../../common/nullable.dart';
 import '../../models/enums.dart';
 import '../../services/dtos/food_dto.dart';
@@ -51,27 +52,33 @@ final class FoodState extends Equatable {
   final FoodPagination foodPagination;
   final bool isLoading;
   final ErrorState? error;
-  const FoodState(
-      {this.foods = const [],
-      this.selectedFood,
-      this.foodPagination = const FoodPagination(),
-      this.isLoading = false,
-      this.error});
+  const FoodState({
+    this.foods = const [],
+    this.selectedFood,
+    this.foodPagination = const FoodPagination(),
+    this.isLoading = false,
+    this.error,
+  });
   factory FoodState.initial() => const FoodState();
-  FoodState copyWith(
-          {List<FoodDto>? foods,
-          Nullable<FoodDto>? selectedFood,
-          FoodPagination? foodPagination,
-          bool? isLoading,
-          Nullable<ErrorState>? error}) =>
-      FoodState(
-          foods: foods ?? this.foods,
-          selectedFood:
-              selectedFood != null ? selectedFood.value : this.selectedFood,
-          foodPagination: foodPagination ?? this.foodPagination,
-          isLoading: isLoading ?? this.isLoading,
-          error: error != null ? error.value : this.error);
+  FoodState copyWith({
+    List<FoodDto>? foods,
+    Nullable<FoodDto>? selectedFood,
+    FoodPagination? foodPagination,
+    bool? isLoading,
+    Nullable<ErrorState>? error,
+  }) => FoodState(
+    foods: foods ?? this.foods,
+    selectedFood: selectedFood != null ? selectedFood.value : this.selectedFood,
+    foodPagination: foodPagination ?? this.foodPagination,
+    isLoading: isLoading ?? this.isLoading,
+    error: error != null ? error.value : this.error,
+  );
   @override
-  List<Object?> get props =>
-      [foods, selectedFood, foodPagination, isLoading, error];
+  List<Object?> get props => [
+    foods,
+    selectedFood,
+    foodPagination,
+    isLoading,
+    error,
+  ];
 }

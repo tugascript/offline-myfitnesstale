@@ -1,4 +1,5 @@
 import '../common/nullable.dart';
+
 import 'package:equatable/equatable.dart';
 
 import 'enums.dart';
@@ -68,13 +69,14 @@ class MealPlanWeek extends Equatable implements Model {
     required this.createdAt,
     required this.updatedAt,
   }) : assert(
-          weekNumber >= 1 && weekNumber <= 52,
-          'weekNumber must be between 1 and 52',
-        );
+         weekNumber >= 1 && weekNumber <= 52,
+         'weekNumber must be between 1 and 52',
+       );
 
   static const String table = _table;
 
-  static final String tableCreate = '''
+  static final String tableCreate =
+      '''
   CREATE TABLE IF NOT EXISTS $_table (
     ${MealPlanWeekColumns.id.value} INTEGER PRIMARY KEY AUTOINCREMENT,
     ${MealPlanWeekColumns.mealPlanId.value} INTEGER NOT NULL,
@@ -216,20 +218,20 @@ class MealPlanWeek extends Equatable implements Model {
 
   @override
   List<Object?> get props => [
-        id,
-        mealPlanId,
-        planVersion,
-        weekNumber,
-        phase,
-        targetCalories,
-        targetProtein,
-        targetCarbs,
-        targetFat,
-        targetFiber,
-        totalDays,
-        totalMeals,
-        createdBy,
-        createdAt,
-        updatedAt,
-      ];
+    id,
+    mealPlanId,
+    planVersion,
+    weekNumber,
+    phase,
+    targetCalories,
+    targetProtein,
+    targetCarbs,
+    targetFat,
+    targetFiber,
+    totalDays,
+    totalMeals,
+    createdBy,
+    createdAt,
+    updatedAt,
+  ];
 }

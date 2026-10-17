@@ -7,10 +7,7 @@ import '../../utilities/sizes/screen_size.dart';
 class ServiceErrorDescription extends StatelessWidget {
   final String description;
 
-  const ServiceErrorDescription({
-    super.key,
-    required this.description,
-  });
+  const ServiceErrorDescription({super.key, required this.description});
 
   @override
   Widget build(BuildContext context) {
@@ -29,10 +26,7 @@ class ServiceErrorDescription extends StatelessWidget {
           SizedBox(height: fontSize),
           ElevatedButton(
             onPressed: () => context.pop(),
-            child: Text(
-              'Go Back',
-              style: TextStyle(fontSize: fontSize * 0.9),
-            ),
+            child: Text('Go Back', style: TextStyle(fontSize: fontSize * 0.9)),
           ),
         ],
       ),

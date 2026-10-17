@@ -1,4 +1,5 @@
 import '../../widgets/meal_plans/meal_plan_schedule_widget.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -47,8 +48,11 @@ class _MealPlanDetailsViewState extends State<MealPlanDetailsView> {
         if (!state.isLoading && state.error != null) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-                content: Text(state.error!.description,
-                    style: TextStyle(fontSize: sizes.fontSize))),
+              content: Text(
+                state.error!.description,
+                style: TextStyle(fontSize: sizes.fontSize),
+              ),
+            ),
           );
         }
       },
@@ -67,8 +71,10 @@ class _MealPlanDetailsViewState extends State<MealPlanDetailsView> {
             body: Center(
               child: ElevatedButton(
                 onPressed: () => context.pop(),
-                child:
-                    Text('Go Back', style: TextStyle(fontSize: sizes.fontSize)),
+                child: Text(
+                  'Go Back',
+                  style: TextStyle(fontSize: sizes.fontSize),
+                ),
               ),
             ),
           );
@@ -98,11 +104,12 @@ class _MealPlanDetailsViewState extends State<MealPlanDetailsView> {
                     ),
                     IconButton(
                       icon: Icon(
-                          plan.isFavorite
-                              ? Icons.favorite
-                              : Icons.favorite_border,
-                          color: plan.isFavorite ? Colors.red : Colors.grey,
-                          size: sizes.buttonIconSize),
+                        plan.isFavorite
+                            ? Icons.favorite
+                            : Icons.favorite_border,
+                        color: plan.isFavorite ? Colors.red : Colors.grey,
+                        size: sizes.buttonIconSize,
+                      ),
                       onPressed: () {
                         context.read<MealPlanCubit>().toggleFavorite(plan.id);
                       },
@@ -121,8 +128,10 @@ class _MealPlanDetailsViewState extends State<MealPlanDetailsView> {
                 ElevatedButton.icon(
                   key: const ValueKey('start-meal-plan-button'),
                   icon: Icon(Icons.play_arrow, size: sizes.buttonIconSize),
-                  label: Text('Start This Meal Plan',
-                      style: TextStyle(fontSize: sizes.fontSize)),
+                  label: Text(
+                    'Start This Meal Plan',
+                    style: TextStyle(fontSize: sizes.fontSize),
+                  ),
                   onPressed: () async {
                     final success = await context
                         .read<MealPlanRecordCubit>()
@@ -130,8 +139,10 @@ class _MealPlanDetailsViewState extends State<MealPlanDetailsView> {
                     if (success && context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: Text('Started meal plan: ${plan.name}',
-                              style: TextStyle(fontSize: sizes.fontSize)),
+                          content: Text(
+                            'Started meal plan: ${plan.name}',
+                            style: TextStyle(fontSize: sizes.fontSize),
+                          ),
                           action: SnackBarAction(
                             label: 'Open Tracker',
                             onPressed: () {
@@ -161,8 +172,11 @@ class _MealPlanDetailsViewState extends State<MealPlanDetailsView> {
                       padding: EdgeInsets.all(sizes.padding),
                       child: Row(
                         children: [
-                          Icon(Icons.lock_outline,
-                              color: Colors.blue, size: sizes.buttonIconSize),
+                          Icon(
+                            Icons.lock_outline,
+                            color: Colors.blue,
+                            size: sizes.buttonIconSize,
+                          ),
                           SizedBox(width: sizes.spacing),
                           Expanded(
                             child: Text(
@@ -184,8 +198,10 @@ class _MealPlanDetailsViewState extends State<MealPlanDetailsView> {
                     sizes: sizes,
                     onEdit: () {
                       context.push(
-                        MealPlanUpdateView.routeName
-                            .replaceFirst(':id', plan.id.toString()),
+                        MealPlanUpdateView.routeName.replaceFirst(
+                          ':id',
+                          plan.id.toString(),
+                        ),
                       );
                     },
                     onDelete: () {
@@ -193,12 +209,11 @@ class _MealPlanDetailsViewState extends State<MealPlanDetailsView> {
                         context: context,
                         builder: (ctx) => ConfirmationDialog(
                           title: 'Delete ${plan.name}',
-                          content:
-                              'Are you sure you want to delete this meal plan? All associated weeks, days, and meals will also be deleted.',
+                          content: 'Are you sure you want to delete this meal plan? All associated weeks, days, and meals will also be deleted.',
                           onConfirm: () {
-                            context
-                                .read<MealPlanCubit>()
-                                .deleteMealPlan(plan.id);
+                            context.read<MealPlanCubit>().deleteMealPlan(
+                              plan.id,
+                            );
                             if (context.canPop()) {
                               context.pop();
                             } else {

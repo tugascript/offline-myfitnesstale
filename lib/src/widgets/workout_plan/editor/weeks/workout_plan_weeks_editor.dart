@@ -84,22 +84,26 @@ class _WorkoutPlanWeeksEditorState extends State<WorkoutPlanWeeksEditor> {
     final sortedWeeks = _cloneWeeks(weeks)
       ..sort((a, b) => a.startWeek.compareTo(b.startWeek));
 
-    final weekParts = sortedWeeks.map((week) {
-      final sortedDays = week.days.map((d) => d.copy()).toList()
-        ..sort((a, b) => a.day.compareTo(b.day));
+    final weekParts = sortedWeeks
+        .map((week) {
+          final sortedDays = week.days.map((d) => d.copy()).toList()
+            ..sort((a, b) => a.day.compareTo(b.day));
 
-      final dayParts = sortedDays.map((day) {
-        final workoutParts = day.workouts
-            .map(
-              (workout) =>
-                  '${workout.workoutId ?? 0}:${workout.timeOfDay?.value ?? ''}',
-            )
-            .join(',');
-        return '${day.day}|${day.isRestDay ? 1 : 0}|$workoutParts';
-      }).join(';');
+          final dayParts = sortedDays
+              .map((day) {
+                final workoutParts = day.workouts
+                    .map(
+                      (workout) =>
+                          '${workout.workoutId ?? 0}:${workout.timeOfDay?.value ?? ''}',
+                    )
+                    .join(',');
+                return '${day.day}|${day.isRestDay ? 1 : 0}|$workoutParts';
+              })
+              .join(';');
 
-      return '${week.startWeek}-${week.endWeek}|${week.phase?.value ?? ''}|$dayParts';
-    }).join('||');
+          return '${week.startWeek}-${week.endWeek}|${week.phase?.value ?? ''}|$dayParts';
+        })
+        .join('||');
 
     return weekParts;
   }
@@ -176,17 +180,19 @@ class _WorkoutPlanWeeksEditorState extends State<WorkoutPlanWeeksEditor> {
         scheduleMode: week.days.length == 7
             ? WorkoutPlanWeekScheduleMode.manual
             : week.days.any((d) => d.isRestDay)
-                ? WorkoutPlanWeekScheduleMode.hybrid
-                : WorkoutPlanWeekScheduleMode.automatic,
+            ? WorkoutPlanWeekScheduleMode.hybrid
+            : WorkoutPlanWeekScheduleMode.automatic,
         days: sortedDays.map((day) {
           return WorkoutPlanDayBatchCreateInput(
             day: day.day,
             isRestDay: day.isRestDay,
             workouts: day.workouts
-                .map((workout) => WorkoutPlanWorkoutBatchCreateInput(
-                      workoutId: workout.workoutId!,
-                      timeOfDay: workout.timeOfDay,
-                    ))
+                .map(
+                  (workout) => WorkoutPlanWorkoutBatchCreateInput(
+                    workoutId: workout.workoutId!,
+                    timeOfDay: workout.timeOfDay,
+                  ),
+                )
                 .toList(),
           );
         }).toList(),
@@ -194,17 +200,11 @@ class _WorkoutPlanWeeksEditorState extends State<WorkoutPlanWeeksEditor> {
     }).toList();
   }
 
-  void _showSnackBar(
-    String message, {
-    Color? backgroundColor,
-  }) {
+  void _showSnackBar(String message, {Color? backgroundColor}) {
     if (!mounted) return;
 
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: backgroundColor,
-      ),
+      SnackBar(content: Text(message), backgroundColor: backgroundColor),
     );
   }
 
@@ -272,8 +272,9 @@ class _WorkoutPlanWeeksEditorState extends State<WorkoutPlanWeeksEditor> {
                   index: index,
                   week: week,
                   onChanged: (updatedWeek) {
-                    final updatedWeeks =
-                        List<WorkoutPlanWeekEditorData>.from(_weeks);
+                    final updatedWeeks = List<WorkoutPlanWeekEditorData>.from(
+                      _weeks,
+                    );
                     updatedWeeks[index] = updatedWeek;
 
                     // Cascade the week changes forward to maintain contiguous blocks

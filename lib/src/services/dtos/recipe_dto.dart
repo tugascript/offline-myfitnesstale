@@ -88,19 +88,19 @@ class RecipeItemDto extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        recipeId,
-        foodId,
-        portionId,
-        amount,
-        totalCalories,
-        totalProtein,
-        totalCarbs,
-        totalFat,
-        totalFiber,
-        foodName,
-        portionName,
-      ];
+    id,
+    recipeId,
+    foodId,
+    portionId,
+    amount,
+    totalCalories,
+    totalProtein,
+    totalCarbs,
+    totalFat,
+    totalFiber,
+    foodName,
+    portionName,
+  ];
 }
 
 class RecipeDto extends Equatable {
@@ -172,8 +172,9 @@ class RecipeDto extends Equatable {
       servingProtein: servingProtein ?? this.servingProtein,
       servingCarbs: servingCarbs ?? this.servingCarbs,
       servingFat: servingFat ?? this.servingFat,
-      servingMicros:
-          servingMicros != null ? servingMicros.value : this.servingMicros,
+      servingMicros: servingMicros != null
+          ? servingMicros.value
+          : this.servingMicros,
       createdBy: createdBy ?? this.createdBy,
       items: items ?? this.items,
     );
@@ -181,16 +182,16 @@ class RecipeDto extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        name,
-        description,
-        servingsYield,
-        servingCalories,
-        servingProtein,
-        servingCarbs,
-        servingFat,
-        servingMicros,
-        createdBy,
-        items,
-      ];
+    id,
+    name,
+    description,
+    servingsYield,
+    servingCalories,
+    servingProtein,
+    servingCarbs,
+    servingFat,
+    servingMicros,
+    createdBy,
+    items,
+  ];
 }

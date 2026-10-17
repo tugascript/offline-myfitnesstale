@@ -92,20 +92,20 @@ class _WeeksInputState extends State<WeeksInput> {
       readOnly: true,
       onTap:
           widget.startWeekOnChanged == null || widget.endWeekOnChanged == null
-              ? null
-              : () {
-                  showModalBottomSheet<void>(
-                    context: context,
-                    builder: (sheetContext) => _WeeksWheelSheetContent(
-                      theme: widget.theme,
-                      sizes: widget.sizes,
-                      initialMin: min,
-                      initialMax: displayMax,
-                      onMinChanged: widget.startWeekOnChanged!,
-                      onMaxChanged: widget.endWeekOnChanged!,
-                    ),
-                  );
-                },
+          ? null
+          : () {
+              showModalBottomSheet<void>(
+                context: context,
+                builder: (sheetContext) => _WeeksWheelSheetContent(
+                  theme: widget.theme,
+                  sizes: widget.sizes,
+                  initialMin: min,
+                  initialMax: displayMax,
+                  onMinChanged: widget.startWeekOnChanged!,
+                  onMaxChanged: widget.endWeekOnChanged!,
+                ),
+              );
+            },
       theme: widget.theme,
       labelText: 'Weeks',
       hintText: 'Start - End',
@@ -113,10 +113,7 @@ class _WeeksInputState extends State<WeeksInput> {
       padding: widget.sizes.padding,
       filled: true,
       isLoading: false,
-      prefixIcon: Icon(
-        Icons.calendar_month,
-        size: widget.sizes.fontSize * 1.2,
-      ),
+      prefixIcon: Icon(Icons.calendar_month, size: widget.sizes.fontSize * 1.2),
     );
   }
 }
@@ -200,10 +197,7 @@ class _WeeksWheelSheetContentState extends State<_WeeksWheelSheetContent> {
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-                TextButton(
-                  onPressed: _onConfirm,
-                  child: const Text('Confirm'),
-                ),
+                TextButton(onPressed: _onConfirm, child: const Text('Confirm')),
               ],
             ),
           ),

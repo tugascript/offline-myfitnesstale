@@ -42,9 +42,7 @@ class _ExerciseProgressViewState extends State<ExerciseProgressView> {
     return grouped;
   }
 
-  ExerciseProgressData _calculateProgressData(
-    List<ExerciseRecordDto> records,
-  ) {
+  ExerciseProgressData _calculateProgressData(List<ExerciseRecordDto> records) {
     if (records.isEmpty) {
       return const ExerciseProgressData.empty();
     }
@@ -65,8 +63,9 @@ class _ExerciseProgressViewState extends State<ExerciseProgressView> {
       maxWeightGrams: records
           .map((record) => record.weight)
           .reduce((a, b) => a > b ? a : b),
-      maxReps:
-          records.map((record) => record.reps).reduce((a, b) => a > b ? a : b),
+      maxReps: records
+          .map((record) => record.reps)
+          .reduce((a, b) => a > b ? a : b),
       personalBest: personalBest,
     );
   }
@@ -82,16 +81,17 @@ class _ExerciseProgressViewState extends State<ExerciseProgressView> {
     }
 
     final normalizedQuery = _searchQuery.trim().toLowerCase();
-    final exerciseList = exercises.values
-        .where(
-          (exercise) =>
-              normalizedQuery.isEmpty ||
-              exercise.name.toLowerCase().contains(normalizedQuery),
-        )
-        .toList()
-      ..sort(
-        (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
-      );
+    final exerciseList =
+        exercises.values
+            .where(
+              (exercise) =>
+                  normalizedQuery.isEmpty ||
+                  exercise.name.toLowerCase().contains(normalizedQuery),
+            )
+            .toList()
+          ..sort(
+            (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
+          );
 
     return exerciseList;
   }
@@ -161,8 +161,9 @@ class _ExerciseProgressViewState extends State<ExerciseProgressView> {
                 );
               }
 
-              final groupedRecords =
-                  _groupRecordsByExercise(state.exerciseRecords);
+              final groupedRecords = _groupRecordsByExercise(
+                state.exerciseRecords,
+              );
               final filteredExercises = _getFilteredExercises(groupedRecords);
 
               if (filteredExercises.isEmpty) {
@@ -400,10 +401,7 @@ class _ExerciseProgressViewState extends State<ExerciseProgressView> {
             color: color,
           ),
         ),
-        Text(
-          label,
-          style: TextStyle(fontSize: 11, color: Colors.grey[600]),
-        ),
+        Text(label, style: TextStyle(fontSize: 11, color: Colors.grey[600])),
       ],
     );
   }
@@ -423,8 +421,8 @@ class ExerciseProgressData {
   });
 
   const ExerciseProgressData.empty()
-      : totalRecords = 0,
-        maxWeightGrams = 0,
-        maxReps = 0,
-        personalBest = null;
+    : totalRecords = 0,
+      maxWeightGrams = 0,
+      maxReps = 0,
+      personalBest = null;
 }

@@ -33,15 +33,15 @@ class WorkoutRecordSetGroup extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final iconGreyColor =
-        isDarkTheme ? Colors.grey.shade200 : Colors.grey.shade800;
-    final iconLightGreyColor =
-        isDarkTheme ? Colors.grey.shade400 : Colors.grey.shade600;
+    final iconGreyColor = isDarkTheme
+        ? Colors.grey.shade200
+        : Colors.grey.shade800;
+    final iconLightGreyColor = isDarkTheme
+        ? Colors.grey.shade400
+        : Colors.grey.shade600;
 
     return Card(
-      margin: EdgeInsets.symmetric(
-        vertical: sizes.margins / 2,
-      ),
+      margin: EdgeInsets.symmetric(vertical: sizes.margins / 2),
       child: ExpansionTile(
         dense: true,
         initiallyExpanded: initiallyExpanded,
@@ -92,9 +92,7 @@ class _WorkoutRecordSet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.symmetric(
-        vertical: sizes.spacing / 2,
-      ),
+      padding: EdgeInsets.symmetric(vertical: sizes.spacing / 2),
       child: ListTile(
         dense: true,
         visualDensity: VisualDensity.compact,
@@ -128,20 +126,10 @@ class _WorkoutRecordSet extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.start,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      Icon(
-                        Icons.schedule,
-                        size: sizes.fontSize * 1.2,
-                      ),
+                      Icon(Icons.schedule, size: sizes.fontSize * 1.2),
                       Text(
-                        ' ${Formatters.formatDuration(
-                          setRecord.completedAt
-                                  ?.difference(setRecord.startedAt)
-                                  .inSeconds ??
-                              0,
-                        )}',
-                        style: TextStyle(
-                          fontSize: sizes.fontSize,
-                        ),
+                        ' ${Formatters.formatDuration(setRecord.completedAt?.difference(setRecord.startedAt).inSeconds ?? 0)}',
+                        style: TextStyle(fontSize: sizes.fontSize),
                       ),
                     ],
                   ),
@@ -204,41 +192,21 @@ class _WorkoutRecordSetExercise extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              '${isMetric ? Formatters.formatWeight(Converters.gramsToKg(
-                  setExerciseRecord.weightGrams,
-                )) : Formatters.formatWeight(Converters.gramsToLbs(
-                  setExerciseRecord.weightGrams,
-                ))}${isMetric ? 'KG' : 'LBS'}',
-              style: TextStyle(
-                fontSize: sizes.fontSize,
-                color: greyColor,
-              ),
+              '${isMetric ? Formatters.formatWeight(Converters.gramsToKg(setExerciseRecord.weightGrams)) : Formatters.formatWeight(Converters.gramsToLbs(setExerciseRecord.weightGrams))}${isMetric ? 'KG' : 'LBS'}',
+              style: TextStyle(fontSize: sizes.fontSize, color: greyColor),
             ),
-            Icon(
-              Icons.remove,
-              color: greyColor,
-              size: sizes.fontSize * 0.9,
-            ),
+            Icon(Icons.remove, color: greyColor, size: sizes.fontSize * 0.9),
             Text(
               '${setExerciseRecord.reps}',
-              style: TextStyle(
-                fontSize: sizes.fontSize,
-                color: greyColor,
-              ),
+              style: TextStyle(fontSize: sizes.fontSize, color: greyColor),
             ),
-            Icon(
-              Icons.close,
-              color: greyColor,
-              size: sizes.fontSize * 0.9,
-            ),
+            Icon(Icons.close, color: greyColor, size: sizes.fontSize * 0.9),
           ],
         ),
         Flexible(
           child: Text(
             ' ${setExerciseRecord.exercise?.name ?? 'Unknown Exercise'} ',
-            style: TextStyle(
-              fontSize: sizes.fontSize,
-            ),
+            style: TextStyle(fontSize: sizes.fontSize),
             softWrap: true,
             overflow: TextOverflow.ellipsis,
             maxLines: 1,
@@ -276,17 +244,10 @@ class _WorkoutRecordDifficulty extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.center,
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Icon(
-          Icons.bolt,
-          size: sizes.fontSize * 1.2,
-          color: color,
-        ),
+        Icon(Icons.bolt, size: sizes.fontSize * 1.2, color: color),
         Text(
           '$difficultyValue ${difficultyType.value}',
-          style: TextStyle(
-            fontSize: sizes.fontSize,
-            color: color,
-          ),
+          style: TextStyle(fontSize: sizes.fontSize, color: color),
         ),
       ],
     );

@@ -10,13 +10,14 @@ class StrengthGoalInput {
   final DateTime startDate;
   final ProgressStatus status;
   final Nullable<DateTime> completedAt;
-  const StrengthGoalInput(
-      {required this.exerciseId,
-      required this.name,
-      required this.targetReps,
-      required this.targetWeight,
-      required this.targetMaxStrength,
-      required this.startDate,
-      this.status = ProgressStatus.inProgress,
-      this.completedAt = const Nullable(null)});
+  const StrengthGoalInput({
+    required this.exerciseId,
+    required this.name,
+    required this.targetReps,
+    required this.targetWeight,
+    required this.targetMaxStrength,
+    required this.startDate,
+    this.status = ProgressStatus.inProgress,
+    this.completedAt = const Nullable(null),
+  });
 }

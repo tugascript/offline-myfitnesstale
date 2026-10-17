@@ -119,12 +119,7 @@ class _InfoRow extends StatelessWidget {
             ),
           ),
           Expanded(
-            child: Text(
-              value,
-              style: TextStyle(
-                fontSize: fontSize,
-              ),
-            ),
+            child: Text(value, style: TextStyle(fontSize: fontSize)),
           ),
         ],
       ),

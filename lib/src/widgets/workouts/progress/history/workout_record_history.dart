@@ -101,11 +101,11 @@ class _WorkoutRecordHistoryState extends State<WorkoutRecordHistory> {
       });
       if (mounted) {
         await context.read<WorkoutRecordCubit>().getWorkoutRecords(
-              workoutId: widget.workoutId,
-              dateRange: (_dateRange.start, _dateRange.end),
-              limit: 20,
-              offset: 0,
-            );
+          workoutId: widget.workoutId,
+          dateRange: (_dateRange.start, _dateRange.end),
+          limit: 20,
+          offset: 0,
+        );
       }
     }
   }

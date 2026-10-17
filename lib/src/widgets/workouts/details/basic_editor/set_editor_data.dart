@@ -1,10 +1,6 @@
 import 'package:flutter/foundation.dart';
 
-enum SetEditorDataStatus {
-  initial,
-  pending,
-  created,
-}
+enum SetEditorDataStatus { initial, pending, created }
 
 final class SetEditorData {
   int? id;

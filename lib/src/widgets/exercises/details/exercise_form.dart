@@ -35,7 +35,8 @@ class ExerciseForm extends StatefulWidget {
     required Set<int> equipmentIds,
     required Difficulty? difficulty,
     required bool isFavorite,
-  }) onSubmit;
+  })
+  onSubmit;
 
   const ExerciseForm({
     super.key,
@@ -235,9 +236,7 @@ class _ExerciseFormState extends State<ExerciseForm> {
                 value: item,
                 emptyLabel: 'Primary Muscle',
                 items: Muscle.values
-                    .where(
-                      (m) => !_data.secondaryMuscles.contains(m),
-                    )
+                    .where((m) => !_data.secondaryMuscles.contains(m))
                     .toList(),
                 fontSize: widget.sizes.subtitleFontSize,
                 padding: widget.sizes.padding,
@@ -305,9 +304,7 @@ class _ExerciseFormState extends State<ExerciseForm> {
                 filled: true,
                 emptyLabel: 'Secondary Muscle',
                 items: Muscle.values
-                    .where(
-                      (m) => !_data.primaryMuscles.contains(m),
-                    )
+                    .where((m) => !_data.primaryMuscles.contains(m))
                     .toList(),
                 fontSize: widget.sizes.subtitleFontSize,
                 padding: widget.sizes.padding,
@@ -361,10 +358,7 @@ class _ExerciseFormState extends State<ExerciseForm> {
             mainAxisSize: MainAxisSize.min,
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
-              Icon(
-                Icons.fitness_center,
-                size: widget.sizes.subtitleFontSize,
-              ),
+              Icon(Icons.fitness_center, size: widget.sizes.subtitleFontSize),
               Text(
                 " Equipments",
                 style: TextStyle(

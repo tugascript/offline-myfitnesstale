@@ -14,10 +14,7 @@ class ActiveWorkoutPlanView extends StatefulWidget {
 
   final int workoutPlanId;
 
-  const ActiveWorkoutPlanView({
-    super.key,
-    required this.workoutPlanId,
-  });
+  const ActiveWorkoutPlanView({super.key, required this.workoutPlanId});
 
   @override
   State<ActiveWorkoutPlanView> createState() => _ActiveWorkoutPlanViewState();
@@ -42,9 +39,7 @@ class _ActiveWorkoutPlanViewState extends State<ActiveWorkoutPlanView> {
   @override
   Widget build(BuildContext context) {
     final breakpoints = BreakPoint.fromContext(context);
-    final sizes = DataDisplaySizes.getDataDisplaySizes(
-      breakpoints.screenSize,
-    );
+    final sizes = DataDisplaySizes.getDataDisplaySizes(breakpoints.screenSize);
 
     return BlocConsumer<WorkoutPlanRecordCubit, WorkoutPlanRecordState>(
       builder: (context, state) {

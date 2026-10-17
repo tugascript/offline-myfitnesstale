@@ -67,13 +67,13 @@ class EntitlementStateDto extends Equatable
 
   @override
   List<Object?> get props => [
-        id,
-        entitlement,
-        status,
-        expiresAt,
-        lastVerifiedAt,
-        source,
-        verificationToken,
-        updatedAt,
-      ];
+    id,
+    entitlement,
+    status,
+    expiresAt,
+    lastVerifiedAt,
+    source,
+    verificationToken,
+    updatedAt,
+  ];
 }

@@ -34,8 +34,9 @@ class _HeightInputState extends State<HeightInput> {
       return;
     }
 
-    final (int, int) feetAndInches =
-        Converters.cmToFeetAndInches(widget.initialHeight);
+    final (int, int) feetAndInches = Converters.cmToFeetAndInches(
+      widget.initialHeight,
+    );
     _feetController.text = feetAndInches.$1.toString();
     _inchesController.text = feetAndInches.$2.toString();
   }

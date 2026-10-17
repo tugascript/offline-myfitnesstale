@@ -29,7 +29,8 @@ class SharpSwitchTitle extends StatelessWidget {
     return InkWell(
       onTap: enabled ? () => onChanged(!value) : null,
       child: Padding(
-        padding: contentPadding ??
+        padding:
+            contentPadding ??
             const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
         child: Row(
           children: [

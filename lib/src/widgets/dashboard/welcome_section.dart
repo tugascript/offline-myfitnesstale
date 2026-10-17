@@ -8,10 +8,7 @@ import '../../utilities/sizes/data_display_sizes.dart';
 class WelcomeSection extends StatelessWidget {
   final DataDisplaySizesList sizes;
 
-  const WelcomeSection({
-    super.key,
-    required this.sizes,
-  });
+  const WelcomeSection({super.key, required this.sizes});
 
   @override
   Widget build(BuildContext context) {
@@ -46,8 +43,9 @@ class WelcomeSection extends StatelessWidget {
                 "Let's continue your fitness tale!",
                 style: TextStyle(
                   fontSize: sizes.subtitleFontSize * 1.15,
-                  color:
-                      isDarkTheme ? Colors.grey.shade400 : Colors.grey.shade600,
+                  color: isDarkTheme
+                      ? Colors.grey.shade400
+                      : Colors.grey.shade600,
                 ),
               ),
             ],

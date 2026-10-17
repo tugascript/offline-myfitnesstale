@@ -6,10 +6,7 @@ import '../../models/workout_model.dart';
 class TodayWorkoutWidget extends StatelessWidget {
   final List<Workout> workouts;
 
-  const TodayWorkoutWidget({
-    super.key,
-    required this.workouts,
-  });
+  const TodayWorkoutWidget({super.key, required this.workouts});
 
   @override
   Widget build(BuildContext context) {
@@ -24,10 +21,7 @@ class TodayWorkoutWidget extends StatelessWidget {
               Expanded(
                 child: Text(
                   'No workout scheduled for today',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.grey[700],
-                  ),
+                  style: TextStyle(fontSize: 16, color: Colors.grey[700]),
                 ),
               ),
             ],
@@ -53,8 +47,8 @@ class TodayWorkoutWidget extends StatelessWidget {
             margin: const EdgeInsets.only(bottom: 12),
             child: ListTile(
               leading: CircleAvatar(
-                backgroundColor:
-                    Theme.of(context).primaryColor.withValues(alpha: 0.1),
+                backgroundColor: Theme.of(context).primaryColor
+                    .withValues(alpha: 0.1),
                 child: Icon(
                   Icons.fitness_center,
                   color: Theme.of(context).primaryColor,
@@ -62,16 +56,11 @@ class TodayWorkoutWidget extends StatelessWidget {
               ),
               title: Text(
                 workout.name,
-                style: const TextStyle(
-                  fontWeight: FontWeight.w600,
-                ),
+                style: const TextStyle(fontWeight: FontWeight.w600),
               ),
               subtitle: Text(
                 'Tap to view details',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey[600],
-                ),
+                style: TextStyle(fontSize: 12, color: Colors.grey[600]),
               ),
               trailing: ElevatedButton.icon(
                 onPressed: () {

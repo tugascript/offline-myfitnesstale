@@ -43,7 +43,8 @@ class Profile extends Equatable implements Model {
   });
 
   static const String table = _table;
-  static final String tableCreate = '''
+  static final String tableCreate =
+      '''
   CREATE TABLE IF NOT EXISTS $_table (
     ${ProfileColumns.id.value} INTEGER PRIMARY KEY AUTOINCREMENT,
     ${ProfileColumns.name.value} TEXT NOT NULL,
@@ -119,14 +120,7 @@ class Profile extends Equatable implements Model {
   }
 
   @override
-  List<Object?> get props => [
-        id,
-        name,
-        height,
-        gender,
-        createdAt,
-        updatedAt,
-      ];
+  List<Object?> get props => [id, name, height, gender, createdAt, updatedAt];
 
   @override
   String toString() {

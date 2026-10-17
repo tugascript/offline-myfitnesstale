@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+
 import '../../common/nullable.dart';
 import '../../models/enums.dart';
 import '../../services/dtos/meal_plan_record_dto.dart';
@@ -45,28 +46,34 @@ final class MealPlanRecordState extends Equatable {
   final MealPlanRecordPagination mealPlanRecordPagination;
   final bool isLoading;
   final ErrorState? error;
-  const MealPlanRecordState(
-      {this.records = const [],
-      this.activeRecord,
-      this.mealPlanRecordPagination = const MealPlanRecordPagination(),
-      this.isLoading = false,
-      this.error});
+  const MealPlanRecordState({
+    this.records = const [],
+    this.activeRecord,
+    this.mealPlanRecordPagination = const MealPlanRecordPagination(),
+    this.isLoading = false,
+    this.error,
+  });
   factory MealPlanRecordState.initial() => const MealPlanRecordState();
-  MealPlanRecordState copyWith(
-          {List<MealPlanRecordDto>? records,
-          Nullable<MealPlanRecordDto>? activeRecord,
-          MealPlanRecordPagination? mealPlanRecordPagination,
-          bool? isLoading,
-          Nullable<ErrorState>? error}) =>
-      MealPlanRecordState(
-          records: records ?? this.records,
-          activeRecord:
-              activeRecord != null ? activeRecord.value : this.activeRecord,
-          mealPlanRecordPagination:
-              mealPlanRecordPagination ?? this.mealPlanRecordPagination,
-          isLoading: isLoading ?? this.isLoading,
-          error: error != null ? error.value : this.error);
+  MealPlanRecordState copyWith({
+    List<MealPlanRecordDto>? records,
+    Nullable<MealPlanRecordDto>? activeRecord,
+    MealPlanRecordPagination? mealPlanRecordPagination,
+    bool? isLoading,
+    Nullable<ErrorState>? error,
+  }) => MealPlanRecordState(
+    records: records ?? this.records,
+    activeRecord: activeRecord != null ? activeRecord.value : this.activeRecord,
+    mealPlanRecordPagination:
+        mealPlanRecordPagination ?? this.mealPlanRecordPagination,
+    isLoading: isLoading ?? this.isLoading,
+    error: error != null ? error.value : this.error,
+  );
   @override
-  List<Object?> get props =>
-      [records, activeRecord, mealPlanRecordPagination, isLoading, error];
+  List<Object?> get props => [
+    records,
+    activeRecord,
+    mealPlanRecordPagination,
+    isLoading,
+    error,
+  ];
 }

@@ -37,11 +37,7 @@ class ModalSearchCard extends StatelessWidget {
                 fontSize: fontSize,
               ),
             ),
-            Icon(
-              Icons.add,
-              size: fontSize * 1.2,
-              color: Colors.grey,
-            ),
+            Icon(Icons.add, size: fontSize * 1.2, color: Colors.grey),
           ],
         ),
       ],

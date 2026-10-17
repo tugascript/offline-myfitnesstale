@@ -72,11 +72,11 @@ class WorkoutSetRecordDto extends Equatable implements Dto<WorkoutSetRecord> {
 
   @override
   List<Object?> get props => [
-        id,
-        workoutSetId,
-        setNumber,
-        totalRestSecs,
-        startedAt,
-        completedAt,
-      ];
+    id,
+    workoutSetId,
+    setNumber,
+    totalRestSecs,
+    startedAt,
+    completedAt,
+  ];
 }

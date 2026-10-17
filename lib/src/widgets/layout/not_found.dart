@@ -22,10 +22,7 @@ class NotFound extends StatelessWidget {
             fontWeight: FontWeight.w500,
           ),
         ),
-        Icon(
-          Icons.broken_image_rounded,
-          size: fontSize * 7,
-        ),
+        Icon(Icons.broken_image_rounded, size: fontSize * 7),
       ],
     );
   }

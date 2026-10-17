@@ -39,10 +39,7 @@ class BaseSetData extends StatelessWidget {
             ),
           ],
         ),
-        SetTypeBadge(
-          sizes: sizes,
-          setType: workoutSet.setType,
-        ),
+        SetTypeBadge(sizes: sizes, setType: workoutSet.setType),
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -53,11 +50,8 @@ class BaseSetData extends StatelessWidget {
             ),
             Text(
               ' ${workoutSet.exercises?.length ?? 0} ',
-              style: TextStyle(
-                fontSize: sizes.fontSize,
-                color: workoutsColor,
-              ),
-            )
+              style: TextStyle(fontSize: sizes.fontSize, color: workoutsColor),
+            ),
           ],
         ),
         Row(
@@ -71,10 +65,7 @@ class BaseSetData extends StatelessWidget {
             ),
             Text(
               ' ${Converters.formatDuration(workoutSet.recommendedRestSecs)}${workoutSet.maxRestSecs != null && workoutSet.maxRestSecs! > workoutSet.recommendedRestSecs ? '-${Converters.formatDuration(workoutSet.maxRestSecs!)}' : ''}',
-              style: TextStyle(
-                fontSize: sizes.fontSize,
-                color: restTimeColor,
-              ),
+              style: TextStyle(fontSize: sizes.fontSize, color: restTimeColor),
             ),
           ],
         ),

@@ -31,11 +31,7 @@ class _WorkoutCubit extends WorkoutCubit {
   }
 
   @override
-  Future<void> getWorkout(
-    int id, {
-    int? version,
-    bool refresh = false,
-  }) async {}
+  Future<void> getWorkout(int id, {int? version, bool refresh = false}) async {}
 }
 
 void main() {
@@ -54,8 +50,9 @@ void main() {
     elevation: 1,
   );
 
-  testWidgets('plan limit explains unavailability without an upgrade action',
-      (tester) async {
+  testWidgets('plan limit explains unavailability without an upgrade action', (
+    tester,
+  ) async {
     final planCubit = _WorkoutPlanCubit();
     final entitlementCubit = EntitlementCubit();
     addTearDown(planCubit.close);
@@ -69,10 +66,8 @@ void main() {
         ],
         child: MaterialApp(
           home: Builder(
-            builder: (context) => CreateWorkoutPlanModal(
-              theme: Theme.of(context),
-              sizes: sizes,
-            ),
+            builder: (context) =>
+                CreateWorkoutPlanModal(theme: Theme.of(context), sizes: sizes),
           ),
         ),
       ),
@@ -83,16 +78,14 @@ void main() {
     expect(find.text('CLOSE'), findsOneWidget);
   });
 
-  testWidgets('advanced workout lock has only a working back action',
-      (tester) async {
+  testWidgets('advanced workout lock has only a working back action', (
+    tester,
+  ) async {
     const workout = WorkoutDto(
       id: 1,
       name: 'Advanced Workout',
       muscleGroups: <MuscleGroup>{},
-      muscles: TargetMuscles(
-        primary: <Muscle>{},
-        secondary: <Muscle>{},
-      ),
+      muscles: TargetMuscles(primary: <Muscle>{}, secondary: <Muscle>{}),
       difficulty: Difficulty.advanced,
       version: 1,
       isFavorite: false,

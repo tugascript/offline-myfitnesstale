@@ -41,7 +41,7 @@ class WeightRecordsView extends StatelessWidget {
                   sizes: sizes,
                   breakPoint: breakpoints,
                   units: state.system?.units ?? Units.metric,
-                )
+                ),
               ],
             );
           },
@@ -52,16 +52,11 @@ class WeightRecordsView extends StatelessWidget {
         onPressed: () {
           showDialog(
             context: context,
-            builder: (context) => CreateWeightRecordModal(
-              theme: theme,
-              sizes: sizes,
-            ),
+            builder: (context) =>
+                CreateWeightRecordModal(theme: theme, sizes: sizes),
           );
         },
-        child: Icon(
-          Icons.add,
-          size: sizes.buttonIconSize,
-        ),
+        child: Icon(Icons.add, size: sizes.buttonIconSize),
       ),
     );
   }

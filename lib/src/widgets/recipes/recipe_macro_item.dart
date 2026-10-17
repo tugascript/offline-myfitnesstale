@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../../utilities/sizes/data_display_sizes.dart';
 
 class RecipeMacroItem extends StatelessWidget {
@@ -30,10 +31,7 @@ class RecipeMacroItem extends StatelessWidget {
         SizedBox(height: sizes.spacing / 2),
         Text(
           label,
-          style: TextStyle(
-            fontSize: sizes.fontSize * 0.8,
-            color: Colors.grey,
-          ),
+          style: TextStyle(fontSize: sizes.fontSize * 0.8, color: Colors.grey),
         ),
       ],
     );

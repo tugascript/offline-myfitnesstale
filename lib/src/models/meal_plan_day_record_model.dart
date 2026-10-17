@@ -1,4 +1,5 @@
 import '../common/nullable.dart';
+
 import 'package:equatable/equatable.dart';
 
 import 'daily_nutrition_log_model.dart';
@@ -73,12 +74,13 @@ class MealPlanDayRecord extends Equatable implements Model {
     this.totalFiber,
     required this.createdAt,
     required this.updatedAt,
-  })  : assert(week >= 1 && week <= 52, 'week must be between 1 and 52'),
-        assert(day >= 1 && day <= 7, 'day must be between 1 and 7');
+  }) : assert(week >= 1 && week <= 52, 'week must be between 1 and 52'),
+       assert(day >= 1 && day <= 7, 'day must be between 1 and 7');
 
   static const String table = _table;
 
-  static final String tableCreate = '''
+  static final String tableCreate =
+      '''
   CREATE TABLE IF NOT EXISTS $_table (
     ${MealPlanDayRecordColumns.id.value} INTEGER PRIMARY KEY AUTOINCREMENT,
     ${MealPlanDayRecordColumns.mealPlanRecordId.value} INTEGER NOT NULL,
@@ -236,21 +238,21 @@ class MealPlanDayRecord extends Equatable implements Model {
 
   @override
   List<Object?> get props => [
-        id,
-        mealPlanRecordId,
-        mealPlanWeekRecordId,
-        mealPlanDayId,
-        dailyLogId,
-        week,
-        day,
-        totalCalories,
-        totalProtein,
-        totalCarbs,
-        totalFat,
-        totalFiber,
-        status,
-        completedAt,
-        createdAt,
-        updatedAt,
-      ];
+    id,
+    mealPlanRecordId,
+    mealPlanWeekRecordId,
+    mealPlanDayId,
+    dailyLogId,
+    week,
+    day,
+    totalCalories,
+    totalProtein,
+    totalCarbs,
+    totalFat,
+    totalFiber,
+    status,
+    completedAt,
+    createdAt,
+    updatedAt,
+  ];
 }

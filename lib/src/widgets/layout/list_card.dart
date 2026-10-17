@@ -18,9 +18,7 @@ class ListCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       clipBehavior: Clip.antiAlias,
-      margin: EdgeInsets.symmetric(
-        vertical: margin,
-      ),
+      margin: EdgeInsets.symmetric(vertical: margin),
       child: InkWell(
         onTap: onTap,
         child: Padding(

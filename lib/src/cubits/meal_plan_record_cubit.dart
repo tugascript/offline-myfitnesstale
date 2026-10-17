@@ -1,4 +1,5 @@
 import '../services/common/errors.dart';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:logging/logging.dart';
 
@@ -23,25 +24,34 @@ class MealPlanRecordCubit extends Cubit<MealPlanRecordState> {
     if (result.isErr()) {
       final error = result.error;
       if (error.type == SingleErrorTypes.notFound) {
-        emit(state.copyWith(
+        emit(
+          state.copyWith(
             activeRecord: const Nullable(null),
             isLoading: false,
-            error: const Nullable(null)));
+            error: const Nullable(null),
+          ),
+        );
       } else {
         _logger.warning('Failed to load active entity', error);
-        emit(state.copyWith(
+        emit(
+          state.copyWith(
             isLoading: false,
-            error: Nullable(ErrorState(
-                type: error.type.name, description: error.description))));
+            error: Nullable(
+              ErrorState(type: error.type.name, description: error.description),
+            ),
+          ),
+        );
       }
       return;
     }
 
-    emit(state.copyWith(
-      activeRecord: Nullable(result.value),
-      isLoading: false,
-      error: const Nullable(null),
-    ));
+    emit(
+      state.copyWith(
+        activeRecord: Nullable(result.value),
+        isLoading: false,
+        error: const Nullable(null),
+      ),
+    );
   }
 
   Future<void> getMealPlanRecords({
@@ -51,15 +61,17 @@ class MealPlanRecordCubit extends Cubit<MealPlanRecordState> {
     int offset = 0,
   }) async {
     _logger.info('Getting meal plan records');
-    emit(state.copyWith(
-      mealPlanRecordPagination: state.mealPlanRecordPagination.copyWith(
-        limit: limit,
-        offset: offset,
-        mealPlanId: Nullable(mealPlanId),
-        status: Nullable(status),
+    emit(
+      state.copyWith(
+        mealPlanRecordPagination: state.mealPlanRecordPagination.copyWith(
+          limit: limit,
+          offset: offset,
+          mealPlanId: Nullable(mealPlanId),
+          status: Nullable(status),
+        ),
+        isLoading: true,
       ),
-      isLoading: true,
-    ));
+    );
 
     final result = await _recordService.getMealPlanRecords(
       mealPlanId: mealPlanId,
@@ -71,28 +83,32 @@ class MealPlanRecordCubit extends Cubit<MealPlanRecordState> {
     if (result.isErr()) {
       final error = result.error;
       _logger.warning('Failed to get meal plan records', error);
-      emit(state.copyWith(
-        error: Nullable(ErrorState(
-          type: error.type.name,
-          description: error.description,
-        )),
-        isLoading: false,
-      ));
+      emit(
+        state.copyWith(
+          error: Nullable(
+            ErrorState(type: error.type.name, description: error.description),
+          ),
+          isLoading: false,
+        ),
+      );
       return;
     }
 
     final paginated = result.value;
-    final List<MealPlanRecordDto> records =
-        offset > 0 ? [...state.records, ...paginated.data] : paginated.data;
+    final List<MealPlanRecordDto> records = offset > 0
+        ? [...state.records, ...paginated.data]
+        : paginated.data;
 
-    emit(state.copyWith(
-      mealPlanRecordPagination: state.mealPlanRecordPagination.copyWith(
-        total: paginated.total,
+    emit(
+      state.copyWith(
+        mealPlanRecordPagination: state.mealPlanRecordPagination.copyWith(
+          total: paginated.total,
+        ),
+        records: records,
+        isLoading: false,
+        error: const Nullable(null),
       ),
-      records: records,
-      isLoading: false,
-      error: const Nullable(null),
-    ));
+    );
   }
 
   Future<bool> startMealPlan({
@@ -112,23 +128,28 @@ class MealPlanRecordCubit extends Cubit<MealPlanRecordState> {
     if (result.isErr()) {
       final error = result.error;
       _logger.warning('Failed to start meal plan', error);
-      emit(state.copyWith(
-        error: Nullable(ErrorState(
-          type: error.type.name,
-          description: error.description,
-        )),
-        isLoading: false,
-      ));
+      emit(
+        state.copyWith(
+          error: Nullable(
+            ErrorState(type: error.type.name, description: error.description),
+          ),
+          isLoading: false,
+        ),
+      );
       return false;
     }
 
-    emit(state.copyWith(
-      activeRecord: Nullable(result.value),
-      isLoading: false,
-      error: const Nullable(null),
-    ));
+    emit(
+      state.copyWith(
+        activeRecord: Nullable(result.value),
+        isLoading: false,
+        error: const Nullable(null),
+      ),
+    );
     await getMealPlanRecords(
-        limit: state.mealPlanRecordPagination.limit, offset: 0);
+      limit: state.mealPlanRecordPagination.limit,
+      offset: 0,
+    );
     return true;
   }
 
@@ -140,19 +161,22 @@ class MealPlanRecordCubit extends Cubit<MealPlanRecordState> {
     if (result.isErr()) {
       final error = result.error;
       _logger.warning('Failed to complete current day', error);
-      emit(state.copyWith(
-        error: Nullable(ErrorState(
-          type: error.type.name,
-          description: error.description,
-        )),
-        isLoading: false,
-      ));
+      emit(
+        state.copyWith(
+          error: Nullable(
+            ErrorState(type: error.type.name, description: error.description),
+          ),
+          isLoading: false,
+        ),
+      );
       return false;
     }
 
     await getActiveMealPlanRecord();
     await getMealPlanRecords(
-        limit: state.mealPlanRecordPagination.limit, offset: 0);
+      limit: state.mealPlanRecordPagination.limit,
+      offset: 0,
+    );
     return true;
   }
 
@@ -164,19 +188,22 @@ class MealPlanRecordCubit extends Cubit<MealPlanRecordState> {
     if (result.isErr()) {
       final error = result.error;
       _logger.warning('Failed to abandon meal plan record', error);
-      emit(state.copyWith(
-        error: Nullable(ErrorState(
-          type: error.type.name,
-          description: error.description,
-        )),
-        isLoading: false,
-      ));
+      emit(
+        state.copyWith(
+          error: Nullable(
+            ErrorState(type: error.type.name, description: error.description),
+          ),
+          isLoading: false,
+        ),
+      );
       return false;
     }
 
     await getActiveMealPlanRecord();
     await getMealPlanRecords(
-        limit: state.mealPlanRecordPagination.limit, offset: 0);
+      limit: state.mealPlanRecordPagination.limit,
+      offset: 0,
+    );
     return true;
   }
 }

@@ -81,10 +81,7 @@ class ExerciseRecordPointDetailsModal extends StatelessWidget {
           SizedBox(height: sizes.spacing),
           Row(
             children: [
-              Text(
-                "💪",
-                style: TextStyle(fontSize: sizes.fontSize * 1.2),
-              ),
+              Text("💪", style: TextStyle(fontSize: sizes.fontSize * 1.2)),
               Text(
                 " $maxStrengthValue $weightUnit",
                 style: TextStyle(

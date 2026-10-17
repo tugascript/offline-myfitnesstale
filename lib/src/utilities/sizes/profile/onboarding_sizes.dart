@@ -36,14 +36,14 @@ sealed class OnboardingSizes {
   static const double _xsRatio = 0.8;
 
   static OnboardingSizesList _sizeByRatio(double ratio) => OnboardingSizesList(
-        padding: _padding * ratio,
-        marginTop: _marginTop * ratio,
-        icon: _icon * ratio,
-        breaks: _breaks * ratio,
-        formBreaks: _formBreaks * ratio,
-        titleFontSize: _titleFontSize * ratio,
-        subtitleFontSize: _subtitleFontSize * ratio,
-      );
+    padding: _padding * ratio,
+    marginTop: _marginTop * ratio,
+    icon: _icon * ratio,
+    breaks: _breaks * ratio,
+    formBreaks: _formBreaks * ratio,
+    titleFontSize: _titleFontSize * ratio,
+    subtitleFontSize: _subtitleFontSize * ratio,
+  );
 
   static OnboardingSizesList getOnboardingSizes(ScreenSize screenSize) {
     switch (screenSize) {

@@ -25,7 +25,8 @@ final class SystemForm extends StatefulWidget {
     required Units units,
     required ThemeType themeMode,
     required bool notificationsOn,
-  }) onSubmit;
+  })
+  onSubmit;
   final bool isLoading;
 
   const SystemForm({
@@ -80,40 +81,25 @@ class _SystemFormState extends State<SystemForm> {
                   ButtonSegment(
                     label: Text(
                       "Light",
-                      style: TextStyle(
-                        fontSize: sizes.fontSize,
-                      ),
+                      style: TextStyle(fontSize: sizes.fontSize),
                     ),
-                    icon: Icon(
-                      Icons.light_mode,
-                      size: sizes.iconSize,
-                    ),
+                    icon: Icon(Icons.light_mode, size: sizes.iconSize),
                     value: ThemeType.light,
                   ),
                   ButtonSegment(
                     label: Text(
                       "System",
-                      style: TextStyle(
-                        fontSize: sizes.fontSize,
-                      ),
+                      style: TextStyle(fontSize: sizes.fontSize),
                     ),
-                    icon: Icon(
-                      Icons.settings,
-                      size: sizes.iconSize,
-                    ),
+                    icon: Icon(Icons.settings, size: sizes.iconSize),
                     value: ThemeType.system,
                   ),
                   ButtonSegment(
                     label: Text(
                       "Dark",
-                      style: TextStyle(
-                        fontSize: sizes.fontSize,
-                      ),
+                      style: TextStyle(fontSize: sizes.fontSize),
                     ),
-                    icon: Icon(
-                      Icons.dark_mode,
-                      size: sizes.iconSize,
-                    ),
+                    icon: Icon(Icons.dark_mode, size: sizes.iconSize),
                     value: ThemeType.dark,
                   ),
                 ],
@@ -131,9 +117,7 @@ class _SystemFormState extends State<SystemForm> {
                     SizedBox(width: sizes.fontSize / 2),
                     Text(
                       "Units ${isMetric ? "Metric" : "Imperial"}",
-                      style: TextStyle(
-                        fontSize: sizes.fontSize,
-                      ),
+                      style: TextStyle(fontSize: sizes.fontSize),
                     ),
                   ],
                 ),
@@ -163,9 +147,7 @@ class _SystemFormState extends State<SystemForm> {
             },
             child: Text(
               widget.isLoading ? "Loading..." : "Confirm",
-              style: TextStyle(
-                fontSize: sizes.fontSize,
-              ),
+              style: TextStyle(fontSize: sizes.fontSize),
             ),
           ),
         ],

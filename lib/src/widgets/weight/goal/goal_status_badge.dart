@@ -23,25 +23,15 @@ class GoalStatusBadge extends StatelessWidget {
     final color = _statusColor();
     return Container(
       alignment: Alignment.center,
-      padding: EdgeInsets.symmetric(
-        horizontal: spacing,
-        vertical: spacing / 2,
-      ),
+      padding: EdgeInsets.symmetric(horizontal: spacing, vertical: spacing / 2),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.2),
-        border: Border.all(
-          color: color,
-          width: 1,
-        ),
+        border: Border.all(color: color, width: 1),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            _statusIcon(),
-            size: fontSize * 1.2,
-            color: color,
-          ),
+          Icon(_statusIcon(), size: fontSize * 1.2, color: color),
           Text(
             " ${EnumDisplayNames.getProgressStatusDisplayName(status)}",
             style: TextStyle(
@@ -49,7 +39,7 @@ class GoalStatusBadge extends StatelessWidget {
               fontWeight: fontWeight,
               color: color,
             ),
-          )
+          ),
         ],
       ),
     );

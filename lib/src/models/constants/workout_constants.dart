@@ -93,8 +93,7 @@ const String kPowerStandardLowerWorkout2Name =
 
 const WorkoutData kStandardEnduranceUpperWorkout1 = WorkoutData(
   name: kEnduranceStandardUpperWorkout1Name,
-  description:
-      "Upper body push focused workout with high reps to build muscular endurance.",
+  description: "Upper body push focused workout with high reps to build muscular endurance.",
   difficulty: Difficulty.beginner,
   phase: WorkoutPhase.endurance,
   sets: [
@@ -216,8 +215,7 @@ const WorkoutData kStandardEnduranceUpperWorkout1 = WorkoutData(
 
 const WorkoutData kStandardLowerWorkout1 = WorkoutData(
   name: kEnduranceStandardLowerWorkout1Name,
-  description:
-      "Lower body quad focused workout with high reps to build muscular endurance",
+  description: "Lower body quad focused workout with high reps to build muscular endurance",
   difficulty: Difficulty.beginner,
   phase: WorkoutPhase.endurance,
   sets: [
@@ -320,8 +318,7 @@ const WorkoutData kStandardLowerWorkout1 = WorkoutData(
 
 const WorkoutData kStandardUpperWorkout2 = WorkoutData(
   name: kEnduranceStandardUpperWorkout2Name,
-  description:
-      "Upper body pull focused workout with high reps to build muscular endurance",
+  description: "Upper body pull focused workout with high reps to build muscular endurance",
   difficulty: Difficulty.intermediate,
   phase: WorkoutPhase.endurance,
   sets: [
@@ -446,8 +443,7 @@ const WorkoutData kStandardUpperWorkout2 = WorkoutData(
 
 const WorkoutData kStandardLowerWorkout2 = WorkoutData(
   name: kEnduranceStandardLowerWorkout2Name,
-  description:
-      "Lower body hamstring focused workout with high reps to build muscular endurance",
+  description: "Lower body hamstring focused workout with high reps to build muscular endurance",
   difficulty: Difficulty.intermediate,
   phase: WorkoutPhase.endurance,
   sets: [
@@ -553,8 +549,7 @@ const WorkoutData kStandardLowerWorkout2 = WorkoutData(
 
 const WorkoutData kHypotrophyStandardUpperWorkout1 = WorkoutData(
   name: kHypotrophyStandardUpperWorkout1Name,
-  description:
-      "Upper body push focused workout with medium reps to build muscular hypertrophy.",
+  description: "Upper body push focused workout with medium reps to build muscular hypertrophy.",
   difficulty: Difficulty.intermediate,
   phase: WorkoutPhase.hypertrophy,
   sets: [
@@ -677,8 +672,7 @@ const WorkoutData kHypotrophyStandardUpperWorkout1 = WorkoutData(
 
 const WorkoutData kHypotrophyStandardLowerWorkout1 = WorkoutData(
   name: kHypotrophyStandardLowerWorkout1Name,
-  description:
-      "Lower body quad focused workout with medium reps to build muscular hypertrophy.",
+  description: "Lower body quad focused workout with medium reps to build muscular hypertrophy.",
   difficulty: Difficulty.intermediate,
   phase: WorkoutPhase.hypertrophy,
   sets: [
@@ -782,8 +776,7 @@ const WorkoutData kHypotrophyStandardLowerWorkout1 = WorkoutData(
 
 const WorkoutData kHypotrophyStandardUpperWorkout2 = WorkoutData(
   name: kHypotrophyStandardUpperWorkout2Name,
-  description:
-      "Upper body pull focused workout with medium reps to build muscular hypertrophy.",
+  description: "Upper body pull focused workout with medium reps to build muscular hypertrophy.",
   difficulty: Difficulty.intermediate,
   phase: WorkoutPhase.hypertrophy,
   sets: [
@@ -906,8 +899,7 @@ const WorkoutData kHypotrophyStandardUpperWorkout2 = WorkoutData(
 
 const WorkoutData kHypotrophyStandardLowerWorkout2 = WorkoutData(
   name: kHypotrophyStandardLowerWorkout2Name,
-  description:
-      "Lower body quad focused workout with medium reps to build muscular hypertrophy.",
+  description: "Lower body quad focused workout with medium reps to build muscular hypertrophy.",
   difficulty: Difficulty.intermediate,
   phase: WorkoutPhase.hypertrophy,
   sets: [
@@ -1013,8 +1005,7 @@ const WorkoutData kHypotrophyStandardLowerWorkout2 = WorkoutData(
 
 const WorkoutData kMaxStrengthStandardUpperWorkout1 = WorkoutData(
   name: kMaxStrengthStandardUpperWorkout1Name,
-  description:
-      "Upper body push focused workout with low reps to build maximum strength.",
+  description: "Upper body push focused workout with low reps to build maximum strength.",
   difficulty: Difficulty.intermediateAdvanced,
   phase: WorkoutPhase.maxStrength,
   sets: [
@@ -1092,7 +1083,7 @@ const WorkoutData kMaxStrengthStandardUpperWorkout1 = WorkoutData(
           ),
           exerciseOptionsNames: [
             kSingleArmSupportedDumbbellRowName,
-            kSeatedCableRowName
+            kSeatedCableRowName,
           ],
         ),
       ],
@@ -1102,8 +1093,7 @@ const WorkoutData kMaxStrengthStandardUpperWorkout1 = WorkoutData(
 
 const WorkoutData kMaxStrengthStandardLowerWorkout1 = WorkoutData(
   name: kMaxStrengthStandardLowerWorkout1Name,
-  description:
-      "Lower body quad focused workout with low reps to build maximum strength.",
+  description: "Lower body quad focused workout with low reps to build maximum strength.",
   difficulty: Difficulty.intermediateAdvanced,
   phase: WorkoutPhase.maxStrength,
   sets: [
@@ -1207,8 +1197,7 @@ const WorkoutData kMaxStrengthStandardLowerWorkout1 = WorkoutData(
 
 const WorkoutData kMaxStrengthStandardUpperWorkout2 = WorkoutData(
   name: kMaxStrengthStandardUpperWorkout2Name,
-  description:
-      "Upper body pull focused workout with low reps to build maximum strength.",
+  description: "Upper body pull focused workout with low reps to build maximum strength.",
   difficulty: Difficulty.intermediateAdvanced,
   phase: WorkoutPhase.maxStrength,
   sets: [
@@ -1248,7 +1237,7 @@ const WorkoutData kMaxStrengthStandardUpperWorkout2 = WorkoutData(
           ),
           exerciseOptionsNames: [
             kSeatedBarbellShoulderPressName,
-            kSmithMachineShoulderPressName
+            kSmithMachineShoulderPressName,
           ],
         ),
       ],
@@ -1296,8 +1285,7 @@ const WorkoutData kMaxStrengthStandardUpperWorkout2 = WorkoutData(
 
 const WorkoutData kMaxStrengthStandardLowerWorkout2 = WorkoutData(
   name: kMaxStrengthStandardLowerWorkout2Name,
-  description:
-      "Lower body hamstring focused workout with low reps to build maximum strength.",
+  description: "Lower body hamstring focused workout with low reps to build maximum strength.",
   difficulty: Difficulty.intermediateAdvanced,
   phase: WorkoutPhase.maxStrength,
   sets: [
@@ -1400,8 +1388,7 @@ const WorkoutData kMaxStrengthStandardLowerWorkout2 = WorkoutData(
 
 const WorkoutData kPowerStandardUpperWorkout1 = WorkoutData(
   name: kPowerStandardUpperWorkout1Name,
-  description:
-      "Upper body push focused workout with very low reps to build explosive power.",
+  description: "Upper body push focused workout with very low reps to build explosive power.",
   difficulty: Difficulty.intermediateAdvanced,
   phase: WorkoutPhase.power,
   sets: [
@@ -1486,8 +1473,7 @@ const WorkoutData kPowerStandardUpperWorkout1 = WorkoutData(
 
 const WorkoutData kPowerStandardLowerWorkout1 = WorkoutData(
   name: kPowerStandardLowerWorkout1Name,
-  description:
-      "Lower body quad focused workout with very low reps to build explosive power.",
+  description: "Lower body quad focused workout with very low reps to build explosive power.",
   difficulty: Difficulty.intermediateAdvanced,
   phase: WorkoutPhase.power,
   sets: [
@@ -1591,8 +1577,7 @@ const WorkoutData kPowerStandardLowerWorkout1 = WorkoutData(
 
 const WorkoutData kPowerStandardUpperWorkout2 = WorkoutData(
   name: kPowerStandardUpperWorkout2Name,
-  description:
-      "Upper body pull focused workout with very low reps to build explosive power.",
+  description: "Upper body pull focused workout with very low reps to build explosive power.",
   difficulty: Difficulty.intermediateAdvanced,
   phase: WorkoutPhase.power,
   sets: [
@@ -1632,7 +1617,7 @@ const WorkoutData kPowerStandardUpperWorkout2 = WorkoutData(
           ),
           exerciseOptionsNames: [
             kSeatedBarbellShoulderPressName,
-            kSmithMachineShoulderPressName
+            kSmithMachineShoulderPressName,
           ],
         ),
       ],
@@ -1680,8 +1665,7 @@ const WorkoutData kPowerStandardUpperWorkout2 = WorkoutData(
 
 const WorkoutData kPowerStandardLowerWorkout2 = WorkoutData(
   name: kPowerStandardLowerWorkout2Name,
-  description:
-      "Lower body hamstring focused workout with very low reps to build explosive power.",
+  description: "Lower body hamstring focused workout with very low reps to build explosive power.",
   difficulty: Difficulty.intermediateAdvanced,
   phase: WorkoutPhase.power,
   sets: [
@@ -1702,7 +1686,7 @@ const WorkoutData kPowerStandardLowerWorkout2 = WorkoutData(
           ),
           exerciseOptionsNames: [
             kBarbellSumoDeadliftName,
-            kBarbellRomanianDeadliftName
+            kBarbellRomanianDeadliftName,
           ],
         ),
       ],

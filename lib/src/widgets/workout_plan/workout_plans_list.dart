@@ -67,9 +67,7 @@ class WorkoutPlansList extends StatelessWidget {
         return WorkoutPlanCard(
           plan: plan,
           sizes: sizes,
-          onTap: () => context.push(
-            '/workout-plans/${plan.id}',
-          ),
+          onTap: () => context.push('/workout-plans/${plan.id}'),
         );
       },
     );

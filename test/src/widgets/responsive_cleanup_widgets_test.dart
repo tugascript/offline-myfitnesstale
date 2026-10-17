@@ -7,8 +7,9 @@ import 'package:myfitnesstale/src/widgets/common/confirmation_dialog.dart';
 void main() {
   const phoneSize = Size(320, 568);
 
-  testWidgets('equipment search form fits narrow screens with large text',
-      (tester) async {
+  testWidgets('equipment search form fits narrow screens with large text', (
+    tester,
+  ) async {
     await tester.binding.setSurfaceSize(phoneSize);
     addTearDown(() => tester.binding.setSurfaceSize(null));
     int? submittedEquipmentId;
@@ -35,15 +36,16 @@ void main() {
                   initialEquipmentId: null,
                   equipmentSelection: const {1: 'Barbell'},
                   initialIsFavorite: false,
-                  onSubmit: ({
-                    required String name,
-                    required Difficulty? difficulty,
-                    required MuscleGroup? muscleGroup,
-                    required int? equipmentId,
-                    required bool isFavourite,
-                  }) {
-                    submittedEquipmentId = equipmentId;
-                  },
+                  onSubmit:
+                      ({
+                        required String name,
+                        required Difficulty? difficulty,
+                        required MuscleGroup? muscleGroup,
+                        required int? equipmentId,
+                        required bool isFavourite,
+                      }) {
+                        submittedEquipmentId = equipmentId;
+                      },
                 ),
               ),
             ),
@@ -63,8 +65,9 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('confirmation dialog scrolls long content on a narrow phone',
-      (tester) async {
+  testWidgets('confirmation dialog scrolls long content on a narrow phone', (
+    tester,
+  ) async {
     await tester.binding.setSurfaceSize(phoneSize);
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await tester.pumpWidget(

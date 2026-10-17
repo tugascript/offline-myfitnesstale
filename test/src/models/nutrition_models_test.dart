@@ -91,10 +91,7 @@ void main() {
       fatBase: 4,
       servingSizeBaseGrams: 100,
       sodiumBase: 74,
-      micros: const Micronutrients(
-        potassiumMg: 256,
-        ironMg: 1,
-      ),
+      micros: const Micronutrients(potassiumMg: 256, ironMg: 1),
     );
     final foodId = await db.insert(Food.table, food.toMap());
     expect(foodId, isPositive);
@@ -128,8 +125,10 @@ void main() {
       waterIntakeMl: 2500,
       notes: 'Great workout today',
     );
-    final dailyLogId =
-        await db.insert(DailyNutritionLog.table, dailyLog.toMap());
+    final dailyLogId = await db.insert(
+      DailyNutritionLog.table,
+      dailyLog.toMap(),
+    );
     expect(dailyLogId, isPositive);
 
     // 6. Insert MealLog
@@ -156,10 +155,7 @@ void main() {
       loggedProtein: 47,
       loggedCarbs: 0,
       loggedFat: 6,
-      loggedMicros: const Micronutrients(
-        potassiumMg: 384,
-        ironMg: 2,
-      ),
+      loggedMicros: const Micronutrients(potassiumMg: 384, ironMg: 2),
     );
     final itemId = await db.insert(MealLogItem.table, mealLogItem.toMap());
     expect(itemId, isPositive);
@@ -176,12 +172,15 @@ void main() {
     expect(fetchedDaily.waterIntakeMl, 2500);
 
     // 9. Query items for that daily log
-    final items = await db.rawQuery('''
+    final items = await db.rawQuery(
+      '''
       SELECT item.* 
       FROM ${MealLogItem.table} item
       JOIN ${MealLog.table} meal ON item.${MealLogItemColumns.mealLogId.value} = meal.${MealLogColumns.id.value}
       WHERE meal.${MealLogColumns.dailyLogId.value} = ?
-    ''', [dailyLogId]);
+    ''',
+      [dailyLogId],
+    );
 
     expect(items.length, 1);
     final fetchedItem = MealLogItem.fromMap(items.first);
@@ -238,255 +237,263 @@ void main() {
   });
 
   test(
-      'creates and queries meal plan with 1..52 weeks, phases, days, and meals',
-      () async {
-    await databaseHelper.initialize();
-    final db = await databaseHelper.db;
+    'creates and queries meal plan with 1..52 weeks, phases, days, and meals',
+    () async {
+      await databaseHelper.initialize();
+      final db = await databaseHelper.db;
 
-    // 1. Create a 52-week annual meal plan
-    final plan = MealPlan.create(
-      name: 'Annual Periodized Nutrition',
-      description:
-          '52-week nutrition plan with cutting, maintaining, and bulking phases',
-      totalWeeks: 52,
-      totalDays: 364,
-    );
-    final planId = await db.insert(MealPlan.table, plan.toMap());
-    expect(planId, isPositive);
+      // 1. Create a 52-week annual meal plan
+      final plan = MealPlan.create(
+        name: 'Annual Periodized Nutrition',
+        description: '52-week nutrition plan with cutting, maintaining, and bulking phases',
+        totalWeeks: 52,
+        totalDays: 364,
+      );
+      final planId = await db.insert(MealPlan.table, plan.toMap());
+      expect(planId, isPositive);
 
-    // 2. Insert week 1 (cutting phase) and week 52 (bulking phase)
-    final week1 = MealPlanWeek.create(
-      mealPlanId: planId,
-      weekNumber: 1,
-      phase: MealPlanPhase.cut,
-      targetCalories: 2100,
-      targetProtein: 210,
-      targetCarbs: 180,
-      targetFat: 55,
-    );
-    final week1Id = await db.insert(MealPlanWeek.table, week1.toMap());
-    expect(week1Id, isPositive);
+      // 2. Insert week 1 (cutting phase) and week 52 (bulking phase)
+      final week1 = MealPlanWeek.create(
+        mealPlanId: planId,
+        weekNumber: 1,
+        phase: MealPlanPhase.cut,
+        targetCalories: 2100,
+        targetProtein: 210,
+        targetCarbs: 180,
+        targetFat: 55,
+      );
+      final week1Id = await db.insert(MealPlanWeek.table, week1.toMap());
+      expect(week1Id, isPositive);
 
-    final week26 = MealPlanWeek.create(
-      mealPlanId: planId,
-      weekNumber: 26,
-      phase: MealPlanPhase.maintain,
-      targetCalories: 2600,
-      targetProtein: 190,
-      targetCarbs: 290,
-      targetFat: 75,
-    );
-    final week26Id = await db.insert(MealPlanWeek.table, week26.toMap());
-    expect(week26Id, isPositive);
+      final week26 = MealPlanWeek.create(
+        mealPlanId: planId,
+        weekNumber: 26,
+        phase: MealPlanPhase.maintain,
+        targetCalories: 2600,
+        targetProtein: 190,
+        targetCarbs: 290,
+        targetFat: 75,
+      );
+      final week26Id = await db.insert(MealPlanWeek.table, week26.toMap());
+      expect(week26Id, isPositive);
 
-    final week52 = MealPlanWeek.create(
-      mealPlanId: planId,
-      weekNumber: 52,
-      phase: MealPlanPhase.bulk,
-      targetCalories: 3100,
-      targetProtein: 200,
-      targetCarbs: 400,
-      targetFat: 80,
-    );
-    final week52Id = await db.insert(MealPlanWeek.table, week52.toMap());
-    expect(week52Id, isPositive);
+      final week52 = MealPlanWeek.create(
+        mealPlanId: planId,
+        weekNumber: 52,
+        phase: MealPlanPhase.bulk,
+        targetCalories: 3100,
+        targetProtein: 200,
+        targetCarbs: 400,
+        targetFat: 80,
+      );
+      final week52Id = await db.insert(MealPlanWeek.table, week52.toMap());
+      expect(week52Id, isPositive);
 
-    // 3. Insert Day for week 1 (Day 1 - Monday)
-    final day1 = MealPlanDay.create(
-      mealPlanId: planId,
-      mealPlanWeekId: week1Id,
-      day: 1,
-      name: 'High Protein Monday',
-      targetCalories: 2100,
-      targetProtein: 210,
-      targetCarbs: 180,
-      targetFat: 55,
-    );
-    final day1Id = await db.insert(MealPlanDay.table, day1.toMap());
-    expect(day1Id, isPositive);
+      // 3. Insert Day for week 1 (Day 1 - Monday)
+      final day1 = MealPlanDay.create(
+        mealPlanId: planId,
+        mealPlanWeekId: week1Id,
+        day: 1,
+        name: 'High Protein Monday',
+        targetCalories: 2100,
+        targetProtein: 210,
+        targetCarbs: 180,
+        targetFat: 55,
+      );
+      final day1Id = await db.insert(MealPlanDay.table, day1.toMap());
+      expect(day1Id, isPositive);
 
-    // 4. Insert Meal in Day 1
-    final meal1 = MealPlanMeal.create(
-      mealPlanId: planId,
-      mealPlanWeekId: week1Id,
-      mealPlanDayId: day1Id,
-      position: 1,
-      timeOfDay: '08:00',
-      mealType: MealType.breakfast,
-      name: 'Power Breakfast',
-      totalCalories: 300,
-      totalProtein: 12,
-      totalCarbs: 50,
-      totalFat: 6,
-    );
-    final meal1Id = await db.insert(MealPlanMeal.table, meal1.toMap());
-    expect(meal1Id, isPositive);
+      // 4. Insert Meal in Day 1
+      final meal1 = MealPlanMeal.create(
+        mealPlanId: planId,
+        mealPlanWeekId: week1Id,
+        mealPlanDayId: day1Id,
+        position: 1,
+        timeOfDay: '08:00',
+        mealType: MealType.breakfast,
+        name: 'Power Breakfast',
+        totalCalories: 300,
+        totalProtein: 12,
+        totalCarbs: 50,
+        totalFat: 6,
+      );
+      final meal1Id = await db.insert(MealPlanMeal.table, meal1.toMap());
+      expect(meal1Id, isPositive);
 
-    // 5. Insert Food & MealPlanMealItem
-    final food = Food.create(
-      name: 'Oatmeal',
-      servingSizeBaseGrams: 100,
-      category: FoodCategory.grainsAndCereals,
-      caloriesBase: 389,
-      proteinBase: 17,
-      carbsBase: 66,
-      fatBase: 7,
-    );
-    final foodId = await db.insert(Food.table, food.toMap());
+      // 5. Insert Food & MealPlanMealItem
+      final food = Food.create(
+        name: 'Oatmeal',
+        servingSizeBaseGrams: 100,
+        category: FoodCategory.grainsAndCereals,
+        caloriesBase: 389,
+        proteinBase: 17,
+        carbsBase: 66,
+        fatBase: 7,
+      );
+      final foodId = await db.insert(Food.table, food.toMap());
 
-    final mealItem = MealPlanMealItem.create(
-      mealPlanMealId: meal1Id,
-      foodId: foodId,
-      amount: 80,
-      totalCalories: 311,
-      totalProtein: 14,
-      totalCarbs: 53,
-      totalFat: 6,
-    );
-    final mealItemId =
-        await db.insert(MealPlanMealItem.table, mealItem.toMap());
-    expect(mealItemId, isPositive);
-
-    // 6. Start active MealPlanRecord
-    final record = MealPlanRecord.create(
-      mealPlanId: planId,
-      currentWeek: 1,
-      currentDay: 1,
-      status: ProgressStatus.inProgress,
-    );
-    final recordId = await db.insert(MealPlanRecord.table, record.toMap());
-    expect(recordId, isPositive);
-
-    final dailyLog = DailyNutritionLog.create(date: 20261012);
-    final dailyLogId =
-        await db.insert(DailyNutritionLog.table, dailyLog.toMap());
-    expect(dailyLogId, isPositive);
-
-    final weekRecord = MealPlanWeekRecord.create(
-      mealPlanRecordId: recordId,
-      mealPlanWeekId: week1Id,
-      week: 1,
-    );
-    final weekRecordId =
-        await db.insert(MealPlanWeekRecord.table, weekRecord.toMap());
-    expect(weekRecordId, isPositive);
-
-    final dayRecord = MealPlanDayRecord.create(
-      mealPlanRecordId: recordId,
-      mealPlanWeekRecordId: weekRecordId,
-      mealPlanDayId: day1Id,
-      dailyLogId: dailyLogId,
-      week: 1,
-      day: 1,
-    );
-    final dayRecordId =
-        await db.insert(MealPlanDayRecord.table, dayRecord.toMap());
-    expect(dayRecordId, isPositive);
-
-    final dayRecordRows = await db.query(
-      MealPlanDayRecord.table,
-      where: '${MealPlanDayRecordColumns.id.value} = ?',
-      whereArgs: [dayRecordId],
-    );
-    final fetchedDayRecord = MealPlanDayRecord.fromMap(dayRecordRows.first);
-    expect(fetchedDayRecord.mealPlanDayId, day1Id);
-    expect(fetchedDayRecord.dailyLogId, dailyLogId);
-    expect(fetchedDayRecord.week, 1);
-    expect(fetchedDayRecord.day, 1);
-    expect(fetchedDayRecord.status, ProgressStatus.inProgress);
-
-    // 7. Verify PRAGMA foreign_key_check passes
-    final fkCheck = await db.rawQuery('PRAGMA foreign_key_check');
-    expect(fkCheck, isEmpty);
-
-    // 8. Query and verify week phases
-    final weeks = await db.query(
-      MealPlanWeek.table,
-      where: '${MealPlanWeekColumns.mealPlanId.value} = ?',
-      whereArgs: [planId],
-      orderBy: MealPlanWeekColumns.weekNumber.value,
-    );
-    expect(weeks.length, 3);
-    final parsedWeek1 = MealPlanWeek.fromMap(weeks[0]);
-    final parsedWeek26 = MealPlanWeek.fromMap(weeks[1]);
-    final parsedWeek52 = MealPlanWeek.fromMap(weeks[2]);
-
-    expect(parsedWeek1.weekNumber, 1);
-    expect(parsedWeek1.phase, MealPlanPhase.cut);
-    expect(parsedWeek26.weekNumber, 26);
-    expect(parsedWeek26.phase, MealPlanPhase.maintain);
-    expect(parsedWeek52.weekNumber, 52);
-    expect(parsedWeek52.phase, MealPlanPhase.bulk);
-
-    // 9. Cascade delete deletes child weeks, days, meals, items, and records
-    await db.delete(
-      MealPlan.table,
-      where: '${MealPlanColumns.id.value} = ?',
-      whereArgs: [planId],
-    );
-    expect(
-      await db.query(
-        MealPlanWeek.table,
-        where: '${MealPlanWeekColumns.mealPlanId.value} = ?',
-        whereArgs: [planId],
-      ),
-      isEmpty,
-    );
-    expect(
-      await db.query(
-        MealPlanDay.table,
-        where: '${MealPlanDayColumns.mealPlanId.value} = ?',
-        whereArgs: [planId],
-      ),
-      isEmpty,
-    );
-    expect(
-      await db.query(
-        MealPlanMeal.table,
-        where: '${MealPlanMealColumns.mealPlanId.value} = ?',
-        whereArgs: [planId],
-      ),
-      isEmpty,
-    );
-    expect(
-      await db.query(
+      final mealItem = MealPlanMealItem.create(
+        mealPlanMealId: meal1Id,
+        foodId: foodId,
+        amount: 80,
+        totalCalories: 311,
+        totalProtein: 14,
+        totalCarbs: 53,
+        totalFat: 6,
+      );
+      final mealItemId = await db.insert(
         MealPlanMealItem.table,
-        where: '${MealPlanMealItemColumns.mealPlanMealId.value} = ?',
-        whereArgs: [meal1Id],
-      ),
-      isEmpty,
-    );
-    expect(
-      await db.query(
-        MealPlanRecord.table,
-        where: '${MealPlanRecordColumns.mealPlanId.value} = ?',
-        whereArgs: [planId],
-      ),
-      isEmpty,
-    );
-    expect(
-      await db.query(
+        mealItem.toMap(),
+      );
+      expect(mealItemId, isPositive);
+
+      // 6. Start active MealPlanRecord
+      final record = MealPlanRecord.create(
+        mealPlanId: planId,
+        currentWeek: 1,
+        currentDay: 1,
+        status: ProgressStatus.inProgress,
+      );
+      final recordId = await db.insert(MealPlanRecord.table, record.toMap());
+      expect(recordId, isPositive);
+
+      final dailyLog = DailyNutritionLog.create(date: 20261012);
+      final dailyLogId = await db.insert(
+        DailyNutritionLog.table,
+        dailyLog.toMap(),
+      );
+      expect(dailyLogId, isPositive);
+
+      final weekRecord = MealPlanWeekRecord.create(
+        mealPlanRecordId: recordId,
+        mealPlanWeekId: week1Id,
+        week: 1,
+      );
+      final weekRecordId = await db.insert(
         MealPlanWeekRecord.table,
-        where: '${MealPlanWeekRecordColumns.mealPlanRecordId.value} = ?',
-        whereArgs: [recordId],
-      ),
-      isEmpty,
-    );
-    expect(
-      await db.query(
+        weekRecord.toMap(),
+      );
+      expect(weekRecordId, isPositive);
+
+      final dayRecord = MealPlanDayRecord.create(
+        mealPlanRecordId: recordId,
+        mealPlanWeekRecordId: weekRecordId,
+        mealPlanDayId: day1Id,
+        dailyLogId: dailyLogId,
+        week: 1,
+        day: 1,
+      );
+      final dayRecordId = await db.insert(
+        MealPlanDayRecord.table,
+        dayRecord.toMap(),
+      );
+      expect(dayRecordId, isPositive);
+
+      final dayRecordRows = await db.query(
         MealPlanDayRecord.table,
         where: '${MealPlanDayRecordColumns.id.value} = ?',
         whereArgs: [dayRecordId],
-      ),
-      isEmpty,
-    );
-    expect(
-      await db.query(
-        DailyNutritionLog.table,
-        where: '${DailyNutritionLogColumns.id.value} = ?',
-        whereArgs: [dailyLogId],
-      ),
-      isNotEmpty,
-    );
-  });
+      );
+      final fetchedDayRecord = MealPlanDayRecord.fromMap(dayRecordRows.first);
+      expect(fetchedDayRecord.mealPlanDayId, day1Id);
+      expect(fetchedDayRecord.dailyLogId, dailyLogId);
+      expect(fetchedDayRecord.week, 1);
+      expect(fetchedDayRecord.day, 1);
+      expect(fetchedDayRecord.status, ProgressStatus.inProgress);
+
+      // 7. Verify PRAGMA foreign_key_check passes
+      final fkCheck = await db.rawQuery('PRAGMA foreign_key_check');
+      expect(fkCheck, isEmpty);
+
+      // 8. Query and verify week phases
+      final weeks = await db.query(
+        MealPlanWeek.table,
+        where: '${MealPlanWeekColumns.mealPlanId.value} = ?',
+        whereArgs: [planId],
+        orderBy: MealPlanWeekColumns.weekNumber.value,
+      );
+      expect(weeks.length, 3);
+      final parsedWeek1 = MealPlanWeek.fromMap(weeks[0]);
+      final parsedWeek26 = MealPlanWeek.fromMap(weeks[1]);
+      final parsedWeek52 = MealPlanWeek.fromMap(weeks[2]);
+
+      expect(parsedWeek1.weekNumber, 1);
+      expect(parsedWeek1.phase, MealPlanPhase.cut);
+      expect(parsedWeek26.weekNumber, 26);
+      expect(parsedWeek26.phase, MealPlanPhase.maintain);
+      expect(parsedWeek52.weekNumber, 52);
+      expect(parsedWeek52.phase, MealPlanPhase.bulk);
+
+      // 9. Cascade delete deletes child weeks, days, meals, items, and records
+      await db.delete(
+        MealPlan.table,
+        where: '${MealPlanColumns.id.value} = ?',
+        whereArgs: [planId],
+      );
+      expect(
+        await db.query(
+          MealPlanWeek.table,
+          where: '${MealPlanWeekColumns.mealPlanId.value} = ?',
+          whereArgs: [planId],
+        ),
+        isEmpty,
+      );
+      expect(
+        await db.query(
+          MealPlanDay.table,
+          where: '${MealPlanDayColumns.mealPlanId.value} = ?',
+          whereArgs: [planId],
+        ),
+        isEmpty,
+      );
+      expect(
+        await db.query(
+          MealPlanMeal.table,
+          where: '${MealPlanMealColumns.mealPlanId.value} = ?',
+          whereArgs: [planId],
+        ),
+        isEmpty,
+      );
+      expect(
+        await db.query(
+          MealPlanMealItem.table,
+          where: '${MealPlanMealItemColumns.mealPlanMealId.value} = ?',
+          whereArgs: [meal1Id],
+        ),
+        isEmpty,
+      );
+      expect(
+        await db.query(
+          MealPlanRecord.table,
+          where: '${MealPlanRecordColumns.mealPlanId.value} = ?',
+          whereArgs: [planId],
+        ),
+        isEmpty,
+      );
+      expect(
+        await db.query(
+          MealPlanWeekRecord.table,
+          where: '${MealPlanWeekRecordColumns.mealPlanRecordId.value} = ?',
+          whereArgs: [recordId],
+        ),
+        isEmpty,
+      );
+      expect(
+        await db.query(
+          MealPlanDayRecord.table,
+          where: '${MealPlanDayRecordColumns.id.value} = ?',
+          whereArgs: [dayRecordId],
+        ),
+        isEmpty,
+      );
+      expect(
+        await db.query(
+          DailyNutritionLog.table,
+          where: '${DailyNutritionLogColumns.id.value} = ?',
+          whereArgs: [dailyLogId],
+        ),
+        isNotEmpty,
+      );
+    },
+  );
 }

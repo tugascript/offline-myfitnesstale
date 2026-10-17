@@ -22,10 +22,7 @@ class WorkoutDetailView extends StatefulWidget {
 
   final int workoutId;
 
-  const WorkoutDetailView({
-    super.key,
-    required this.workoutId,
-  });
+  const WorkoutDetailView({super.key, required this.workoutId});
 
   @override
   State<WorkoutDetailView> createState() => _WorkoutDetailViewState();
@@ -43,9 +40,7 @@ class _WorkoutDetailViewState extends State<WorkoutDetailView> {
     final theme = Theme.of(context);
     final isDarkTheme = theme.brightness == Brightness.dark;
     final breakpoints = BreakPoint.fromContext(context);
-    final sizes = DataDisplaySizes.getDataDisplaySizes(
-      breakpoints.screenSize,
-    );
+    final sizes = DataDisplaySizes.getDataDisplaySizes(breakpoints.screenSize);
 
     return BlocConsumer<WorkoutCubit, WorkoutState>(
       listenWhen: (previous, current) =>
@@ -111,9 +106,9 @@ class _WorkoutDetailViewState extends State<WorkoutDetailView> {
                   workoutDto: workout,
                   actionButtonPress: () {
                     context.read<WorkoutCubit>().updateWorkout(
-                          id: workout.id,
-                          isFavorite: !workout.isFavorite,
-                        );
+                      id: workout.id,
+                      isFavorite: !workout.isFavorite,
+                    );
                   },
                 ),
                 SizedBox(height: sizes.spacing * 1.25),
@@ -130,10 +125,9 @@ class _WorkoutDetailViewState extends State<WorkoutDetailView> {
                 if (workout.sets == null || workout.sets!.isEmpty)
                   EmptySetsCard(sizes: sizes)
                 else
-                  ...workoutState.selectedWorkout!.sets!
-                      .asMap()
-                      .entries
-                      .map((entry) {
+                  ...workoutState.selectedWorkout!.sets!.asMap().entries.map((
+                    entry,
+                  ) {
                     return WorkoutSetCard(
                       theme: theme,
                       isDarkTheme: isDarkTheme,
@@ -144,37 +138,35 @@ class _WorkoutDetailViewState extends State<WorkoutDetailView> {
                   }),
                 SizedBox(height: sizes.spacing),
                 ActionButtons(
-                    isLoading: workoutState.isLoading,
-                    theme: theme,
-                    sizes: sizes,
-                    showMutationBtns: workout.createdBy == CreatedBy.user,
-                    onStart: () => context.push(
-                          "/workouts/${workout.id}/active",
-                        ),
-                    startLabel: 'Start Workout',
-                    onEdit: () => context.push('/workouts/${workout.id}/edit'),
-                    onHistory: () => context.push(
-                          '/workouts/${workout.id}/history/${workout.version}',
-                        ),
-                    historyLabel: 'History',
-                    onDelete: () {
-                      showDialog(
-                        context: context,
-                        builder: (context) => ConfirmationDialog(
-                          title: 'Delete Workout',
-                          content:
-                              'Are you sure you want to delete this workout? This action cannot be undone.',
-                          confirmLabel: 'Delete',
-                          isDestructive: true,
-                          onConfirm: () {
-                            context
-                                .read<WorkoutCubit>()
-                                .deleteWorkout(widget.workoutId);
-                            context.pop();
-                          },
-                        ),
-                      );
-                    }),
+                  isLoading: workoutState.isLoading,
+                  theme: theme,
+                  sizes: sizes,
+                  showMutationBtns: workout.createdBy == CreatedBy.user,
+                  onStart: () => context.push("/workouts/${workout.id}/active"),
+                  startLabel: 'Start Workout',
+                  onEdit: () => context.push('/workouts/${workout.id}/edit'),
+                  onHistory: () => context.push(
+                    '/workouts/${workout.id}/history/${workout.version}',
+                  ),
+                  historyLabel: 'History',
+                  onDelete: () {
+                    showDialog(
+                      context: context,
+                      builder: (context) => ConfirmationDialog(
+                        title: 'Delete Workout',
+                        content: 'Are you sure you want to delete this workout? This action cannot be undone.',
+                        confirmLabel: 'Delete',
+                        isDestructive: true,
+                        onConfirm: () {
+                          context.read<WorkoutCubit>().deleteWorkout(
+                            widget.workoutId,
+                          );
+                          context.pop();
+                        },
+                      ),
+                    );
+                  },
+                ),
                 SizedBox(height: sizes.spacing),
               ],
             ),

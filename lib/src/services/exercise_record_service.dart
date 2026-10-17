@@ -1,4 +1,5 @@
 import 'inputs/strength_goal_input.dart';
+
 import 'package:logging/logging.dart';
 
 import '../common/nullable.dart';
@@ -40,13 +41,13 @@ class ExerciseRecordService {
 
   final Repository<StrengthGoal> _strengthGoalRepository =
       Repository<StrengthGoal>(
-    databaseHelper: DatabaseHelper(),
-    tableName: StrengthGoal.table,
-    fromMap: StrengthGoal.fromMap,
-  );
+        databaseHelper: DatabaseHelper(),
+        tableName: StrengthGoal.table,
+        fromMap: StrengthGoal.fromMap,
+      );
 
   Future<Result<ExerciseRecordDto, ServiceError<SingleErrorTypes>>>
-      createExerciseRecord({
+  createExerciseRecord({
     required int exerciseId,
     required int weight,
     required int reps,
@@ -61,10 +62,12 @@ class ExerciseRecordService {
       );
       if (exercise == null) {
         _logger.warning("Exercise with id: $exerciseId not found");
-        return err(ServiceError(
-          type: SingleErrorTypes.notFound,
-          description: "Exercise with id $exerciseId not found",
-        ));
+        return err(
+          ServiceError(
+            type: SingleErrorTypes.notFound,
+            description: "Exercise with id $exerciseId not found",
+          ),
+        );
       }
 
       final ExerciseRecord exerciseRecord = ExerciseRecord.create(
@@ -77,60 +80,77 @@ class ExerciseRecordService {
       );
       final int id = await _repository.insert(exerciseRecord);
       _logger.info('Created exercise record with id $id');
-      return ok(ExerciseRecordDto.fromModel(
-        exerciseRecord.copyWith(id: id),
-        exercise: ExerciseDto.fromModel(exercise),
-      ));
+      return ok(
+        ExerciseRecordDto.fromModel(
+          exerciseRecord.copyWith(id: id),
+          exercise: ExerciseDto.fromModel(exercise),
+        ),
+      );
     } catch (e) {
       _logger.severe('Failed to create exercise record', e);
-      return err(ServiceError(
-        type: SingleErrorTypes.operationFailure,
-        description:
-            'Failed to create exercise record with error ${e.toString()}',
-      ));
+      return err(
+        ServiceError(
+          type: SingleErrorTypes.operationFailure,
+          description:
+              'Failed to create exercise record with error ${e.toString()}',
+        ),
+      );
     }
   }
 
   Future<Result<ExerciseRecordDto, ServiceError<SingleErrorTypes>>>
-      getExerciseRecord(int id) async {
+  getExerciseRecord(int id) async {
     _logger.info('Getting exercise record with id $id');
     try {
       final ExerciseRecord? exerciseRecord = await _repository.selectOne(id);
       if (exerciseRecord == null) {
-        return err(ServiceError(
-          type: SingleErrorTypes.notFound,
-          description: 'Exercise record with id $id not found',
-        ));
+        return err(
+          ServiceError(
+            type: SingleErrorTypes.notFound,
+            description: 'Exercise record with id $id not found',
+          ),
+        );
       }
 
       final Exercise? exercise = await _exerciseRepository.selectOne(
         exerciseRecord.exerciseId,
       );
       if (exercise == null) {
-        return err(ServiceError(
-          type: SingleErrorTypes.notFound,
-          description:
-              'Exercise with id ${exerciseRecord.exerciseId} not found',
-        ));
+        return err(
+          ServiceError(
+            type: SingleErrorTypes.notFound,
+            description:
+                'Exercise with id ${exerciseRecord.exerciseId} not found',
+          ),
+        );
       }
 
       _logger.info('Got exercise record with id $id');
-      return ok(ExerciseRecordDto.fromModel(
-        exerciseRecord,
-        exercise: ExerciseDto.fromModel(exercise),
-      ));
+      return ok(
+        ExerciseRecordDto.fromModel(
+          exerciseRecord,
+          exercise: ExerciseDto.fromModel(exercise),
+        ),
+      );
     } catch (e) {
       _logger.severe('Failed to get exercise record with id $id', e);
-      return err(ServiceError(
-        type: SingleErrorTypes.operationFailure,
-        description: 'Failed to get exercise record with error ${e.toString()}',
-      ));
+      return err(
+        ServiceError(
+          type: SingleErrorTypes.operationFailure,
+          description:
+              'Failed to get exercise record with error ${e.toString()}',
+        ),
+      );
     }
   }
 
   Future<
-      Result<PaginatedDto<ExerciseRecordDto, ExerciseRecord>,
-          ServiceError<SingleErrorTypes>>> getExerciseRecords({
+    Result<
+      PaginatedDto<ExerciseRecordDto, ExerciseRecord>,
+      ServiceError<SingleErrorTypes>
+    >
+  >
+  getExerciseRecords({
     (DateTime start, DateTime end)? dateRange,
     int? exerciseId,
     int limit = kDefaultLimit,
@@ -172,16 +192,15 @@ class ExerciseRecordService {
           exerciseId,
         );
         if (exercise == null) {
-          return err(ServiceError(
-            type: SingleErrorTypes.notFound,
-            description: 'Exercise with id $exerciseId not found',
-          ));
+          return err(
+            ServiceError(
+              type: SingleErrorTypes.notFound,
+              description: 'Exercise with id $exerciseId not found',
+            ),
+          );
         }
 
-        query.and(
-          '${ExerciseRecordColumns.exerciseId.value} = ?',
-          exerciseId,
-        );
+        query.and('${ExerciseRecordColumns.exerciseId.value} = ?', exerciseId);
       }
 
       final List<ExerciseRecord> records = await _repository.selectPaginated(
@@ -201,19 +220,19 @@ class ExerciseRecordService {
       _logger.info('Got ${records.length} exercise records');
 
       if (exerciseId != null) {
-        return ok(PaginatedDto<ExerciseRecordDto, ExerciseRecord>.mapData(
-          data: records,
-          mapper: ExerciseRecordDto.fromModel,
-          total: total,
-          limit: limit,
-          offset: offset,
-        ));
+        return ok(
+          PaginatedDto<ExerciseRecordDto, ExerciseRecord>.mapData(
+            data: records,
+            mapper: ExerciseRecordDto.fromModel,
+            total: total,
+            limit: limit,
+            offset: offset,
+          ),
+        );
       }
 
       final Set<int> exerciseIds = records
-          .map(
-            (record) => record.exerciseId,
-          )
+          .map((record) => record.exerciseId)
           .toSet();
       final List<Exercise> exercises = await _exerciseRepository.selectMany(
         where:
@@ -222,38 +241,44 @@ class ExerciseRecordService {
       );
       if (exerciseIds.length != exercises.length) {
         _logger.warning("Not all exercises were found");
-        return err(const ServiceError(
-          type: SingleErrorTypes.notFound,
-          description: 'Some exercises were not found',
-        ));
+        return err(
+          const ServiceError(
+            type: SingleErrorTypes.notFound,
+            description: 'Some exercises were not found',
+          ),
+        );
       }
 
       final Map<int, ExerciseDto> exerciseMap = exercises.fold({}, (map, e) {
         map[e.id!] = ExerciseDto.fromModel(e);
         return map;
       });
-      return ok(PaginatedDto<ExerciseRecordDto, ExerciseRecord>.mapData(
-        data: records,
-        mapper: (record) => ExerciseRecordDto.fromModel(
-          record,
-          exercise: exerciseMap[record.exerciseId],
+      return ok(
+        PaginatedDto<ExerciseRecordDto, ExerciseRecord>.mapData(
+          data: records,
+          mapper: (record) => ExerciseRecordDto.fromModel(
+            record,
+            exercise: exerciseMap[record.exerciseId],
+          ),
+          total: total,
+          limit: limit,
+          offset: offset,
         ),
-        total: total,
-        limit: limit,
-        offset: offset,
-      ));
+      );
     } catch (e) {
       _logger.severe('Failed to get exercise records', e);
-      return err(ServiceError(
-        type: SingleErrorTypes.operationFailure,
-        description:
-            'Failed to get exercise records with error ${e.toString()}',
-      ));
+      return err(
+        ServiceError(
+          type: SingleErrorTypes.operationFailure,
+          description:
+              'Failed to get exercise records with error ${e.toString()}',
+        ),
+      );
     }
   }
 
   Future<Result<ExerciseRecordDto, ServiceError<SingleErrorTypes>>>
-      getLatestRecord(int exerciseId) async {
+  getLatestRecord(int exerciseId) async {
     _logger.info('Getting latest record for exercise $exerciseId');
     try {
       final List<ExerciseRecord> records = await _repository.selectMany(
@@ -263,25 +288,29 @@ class ExerciseRecordService {
         limit: 1,
       );
       if (records.isEmpty) {
-        return err(const ServiceError(
-          type: SingleErrorTypes.notFound,
-          description: 'Latest exercise record not found',
-        ));
+        return err(
+          const ServiceError(
+            type: SingleErrorTypes.notFound,
+            description: 'Latest exercise record not found',
+          ),
+        );
       }
 
       _logger.info('Got latest exercise record');
       return ok(ExerciseRecordDto.fromModel(records.first));
     } catch (e) {
       _logger.severe('Failed to get latest exercise record', e);
-      return err(const ServiceError(
-        type: SingleErrorTypes.operationFailure,
-        description: 'Failed to get latest exercise record',
-      ));
+      return err(
+        const ServiceError(
+          type: SingleErrorTypes.operationFailure,
+          description: 'Failed to get latest exercise record',
+        ),
+      );
     }
   }
 
   Future<Result<ExerciseRecordDto, ServiceError<SingleErrorTypes>>>
-      updateExerciseRecord({
+  updateExerciseRecord({
     required int id,
     int? weight,
     int? reps,
@@ -296,10 +325,12 @@ class ExerciseRecordService {
 
       if (exerciseRecord == null) {
         _logger.info('Exercise record with id $id not found');
-        return err(ServiceError(
-          type: SingleErrorTypes.notFound,
-          description: 'Exercise record with id $id not found',
-        ));
+        return err(
+          ServiceError(
+            type: SingleErrorTypes.notFound,
+            description: 'Exercise record with id $id not found',
+          ),
+        );
       }
 
       final int newWeight = weight ?? exerciseRecord.weight;
@@ -320,11 +351,13 @@ class ExerciseRecordService {
       return ok(ExerciseRecordDto.fromModel(updatedExerciseRecord));
     } catch (e) {
       _logger.severe('Failed to update exercise record with id $id', e);
-      return err(ServiceError(
-        type: SingleErrorTypes.operationFailure,
-        description:
-            'Failed to update exercise record with error ${e.toString()}',
-      ));
+      return err(
+        ServiceError(
+          type: SingleErrorTypes.operationFailure,
+          description:
+              'Failed to update exercise record with error ${e.toString()}',
+        ),
+      );
     }
   }
 
@@ -335,34 +368,41 @@ class ExerciseRecordService {
     try {
       final bool deleted = await _repository.deleteOne(id);
       if (!deleted) {
-        return err(const ServiceError(
-          type: SingleErrorTypes.notFound,
-          description: 'Exercise record not found',
-        ));
+        return err(
+          const ServiceError(
+            type: SingleErrorTypes.notFound,
+            description: 'Exercise record not found',
+          ),
+        );
       }
       _logger.info('Deleted exercise record with id $id');
       return ok(null);
     } catch (e) {
       _logger.severe('Failed to delete exercise record with id $id', e);
-      return err(const ServiceError(
-        type: SingleErrorTypes.operationFailure,
-        description: 'Failed to delete exercise record',
-      ));
+      return err(
+        const ServiceError(
+          type: SingleErrorTypes.operationFailure,
+          description: 'Failed to delete exercise record',
+        ),
+      );
     }
   }
 
   Future<Result<StrengthGoalDto, ServiceError<SingleErrorTypes>>>
-      createStrengthGoal(StrengthGoalInput input) async {
+  createStrengthGoal(StrengthGoalInput input) async {
     _logger.info('Creating strength goal for exercise ${input.exerciseId}');
     try {
-      final Exercise? exercise =
-          await _exerciseRepository.selectOne(input.exerciseId);
+      final Exercise? exercise = await _exerciseRepository.selectOne(
+        input.exerciseId,
+      );
       if (exercise == null) {
         _logger.warning('Exercise with id ${input.exerciseId} not found');
-        return err(ServiceError(
-          type: SingleErrorTypes.notFound,
-          description: 'Exercise with id ${input.exerciseId} not found',
-        ));
+        return err(
+          ServiceError(
+            type: SingleErrorTypes.notFound,
+            description: 'Exercise with id ${input.exerciseId} not found',
+          ),
+        );
       }
 
       final StrengthGoal goal = StrengthGoal.create(
@@ -384,8 +424,9 @@ class ExerciseRecordService {
         return ok(StrengthGoalDto.fromModel(goal.copyWith(id: Nullable(id))));
       }
 
-      final int id =
-          await _strengthGoalRepository.startTransaction((txn) async {
+      final int id = await _strengthGoalRepository.startTransaction((
+        txn,
+      ) async {
         final activeGoals = await _strengthGoalRepository.selectMany(
           where:
               '${StrengthGoalColumns.exerciseId.equal} AND ${StrengthGoalColumns.status.equal}',
@@ -395,11 +436,13 @@ class ExerciseRecordService {
         final now = DateUtilities.getNowUtcUnix();
         for (final activeGoal in activeGoals) {
           await _strengthGoalRepository.update(
-              activeGoal.copyWith(
-                  status: ProgressStatus.abandoned,
-                  completedAt: Nullable(now),
-                  updatedAt: now),
-              txn);
+            activeGoal.copyWith(
+              status: ProgressStatus.abandoned,
+              completedAt: Nullable(now),
+              updatedAt: now,
+            ),
+            txn,
+          );
         }
         return await _strengthGoalRepository.insert(goal, txn);
       });
@@ -407,16 +450,22 @@ class ExerciseRecordService {
       return ok(StrengthGoalDto.fromModel(goal.copyWith(id: Nullable(id))));
     } catch (e) {
       _logger.severe('Failed to create strength goal', e);
-      return err(const ServiceError(
-        type: SingleErrorTypes.operationFailure,
-        description: 'Failed to create strength goal',
-      ));
+      return err(
+        const ServiceError(
+          type: SingleErrorTypes.operationFailure,
+          description: 'Failed to create strength goal',
+        ),
+      );
     }
   }
 
   Future<
-      Result<PaginatedDto<StrengthGoalDto, StrengthGoal>,
-          ServiceError<OperationErrorTypes>>> getStrengthGoals({
+    Result<
+      PaginatedDto<StrengthGoalDto, StrengthGoal>,
+      ServiceError<OperationErrorTypes>
+    >
+  >
+  getStrengthGoals({
     int? exerciseId,
     bool skipInProgress = false,
     int limit = kDefaultLimit,
@@ -435,42 +484,44 @@ class ExerciseRecordService {
         );
       }
 
-      final List<StrengthGoal> goals =
-          await _strengthGoalRepository.selectPaginated(
-        where: where.where,
-        whereArgs: where.args,
-        limit: limit,
-        offset: offset,
-        orderBy: [
-          StrengthGoalColumns.startDate.orderDesc,
-          StrengthGoalColumns.createdAt.orderDesc,
-        ],
-      );
+      final List<StrengthGoal> goals = await _strengthGoalRepository
+          .selectPaginated(
+            where: where.where,
+            whereArgs: where.args,
+            limit: limit,
+            offset: offset,
+            orderBy: [
+              StrengthGoalColumns.startDate.orderDesc,
+              StrengthGoalColumns.createdAt.orderDesc,
+            ],
+          );
       final int total = await _strengthGoalRepository.count(
         where: where.where,
         whereArgs: where.args,
       );
       _logger.info('Got ${goals.length} strength goals');
-      return ok(PaginatedDto<StrengthGoalDto, StrengthGoal>.mapData(
-        data: goals,
-        mapper: (goal) => StrengthGoalDto.fromModel(goal),
-        total: total,
-        limit: limit,
-        offset: offset,
-      ));
+      return ok(
+        PaginatedDto<StrengthGoalDto, StrengthGoal>.mapData(
+          data: goals,
+          mapper: (goal) => StrengthGoalDto.fromModel(goal),
+          total: total,
+          limit: limit,
+          offset: offset,
+        ),
+      );
     } catch (e) {
       _logger.severe('Failed to get strength goals', e);
-      return err(const ServiceError(
-        type: OperationErrorTypes.operationFailure,
-        description: 'Failed to get strength goals',
-      ));
+      return err(
+        const ServiceError(
+          type: OperationErrorTypes.operationFailure,
+          description: 'Failed to get strength goals',
+        ),
+      );
     }
   }
 
   Future<Result<StrengthGoalDto, ServiceError<SingleErrorTypes>>>
-      getActiveStrengthGoal({
-    int? exerciseId,
-  }) async {
+  getActiveStrengthGoal({int? exerciseId}) async {
     _logger.info('Getting active strength goal');
     try {
       final where = WhereBuilder();
@@ -493,59 +544,72 @@ class ExerciseRecordService {
       );
       if (goals.isEmpty) {
         _logger.info('No active strength goal found');
-        return err(const ServiceError(
-          type: SingleErrorTypes.notFound,
-          description: 'No active strength goal found',
-        ));
+        return err(
+          const ServiceError(
+            type: SingleErrorTypes.notFound,
+            description: 'No active strength goal found',
+          ),
+        );
       }
       return ok(StrengthGoalDto.fromModel(goals.first));
     } catch (e) {
       _logger.severe('Failed to get active strength goal', e);
-      return err(const ServiceError(
-        type: SingleErrorTypes.operationFailure,
-        description: 'Failed to get active strength goal',
-      ));
+      return err(
+        const ServiceError(
+          type: SingleErrorTypes.operationFailure,
+          description: 'Failed to get active strength goal',
+        ),
+      );
     }
   }
 
   Future<Result<StrengthGoalDto, ServiceError<SingleErrorTypes>>>
-      getStrengthGoal(int id) async {
+  getStrengthGoal(int id) async {
     _logger.info('Getting strength goal with id $id');
     try {
       final StrengthGoal? goal = await _strengthGoalRepository.selectOne(id);
       if (goal == null) {
-        return err(const ServiceError(
-          type: SingleErrorTypes.notFound,
-          description: 'Strength goal not found',
-        ));
+        return err(
+          const ServiceError(
+            type: SingleErrorTypes.notFound,
+            description: 'Strength goal not found',
+          ),
+        );
       }
       return ok(StrengthGoalDto.fromModel(goal));
     } catch (e) {
       _logger.severe('Failed to get strength goal with id $id', e);
-      return err(const ServiceError(
-        type: SingleErrorTypes.operationFailure,
-        description: 'Failed to get strength goal',
-      ));
+      return err(
+        const ServiceError(
+          type: SingleErrorTypes.operationFailure,
+          description: 'Failed to get strength goal',
+        ),
+      );
     }
   }
 
   Future<Result<StrengthGoalDto, ServiceError<SingleErrorTypes>>>
-      updateStrengthGoal(int id, StrengthGoalInput input) async {
+  updateStrengthGoal(int id, StrengthGoalInput input) async {
     _logger.info('Updating strength goal with id $id');
     try {
       final StrengthGoal? goal = await _strengthGoalRepository.selectOne(id);
       if (goal == null) {
-        return err(const ServiceError(
-          type: SingleErrorTypes.notFound,
-          description: 'Strength goal not found',
-        ));
+        return err(
+          const ServiceError(
+            type: SingleErrorTypes.notFound,
+            description: 'Strength goal not found',
+          ),
+        );
       }
 
       final exercise = await _exerciseRepository.selectOne(input.exerciseId);
       if (exercise == null) {
-        return err(const ServiceError(
+        return err(
+          const ServiceError(
             type: SingleErrorTypes.notFound,
-            description: 'Exercise not found'));
+            description: 'Exercise not found',
+          ),
+        );
       }
       final StrengthGoal updated = goal.copyWith(
         exerciseId: input.exerciseId,
@@ -573,11 +637,13 @@ class ExerciseRecordService {
           final now = DateUtilities.getNowUtcUnix();
           for (final activeGoal in activeGoals) {
             await _strengthGoalRepository.update(
-                activeGoal.copyWith(
-                    status: ProgressStatus.abandoned,
-                    completedAt: Nullable(now),
-                    updatedAt: now),
-                txn);
+              activeGoal.copyWith(
+                status: ProgressStatus.abandoned,
+                completedAt: Nullable(now),
+                updatedAt: now,
+              ),
+              txn,
+            );
           }
         }
         await _strengthGoalRepository.update(updated, txn);
@@ -586,23 +652,27 @@ class ExerciseRecordService {
       return ok(StrengthGoalDto.fromModel(updated));
     } catch (e) {
       _logger.severe('Failed to update strength goal with id $id', e);
-      return err(const ServiceError(
-        type: SingleErrorTypes.operationFailure,
-        description: 'Failed to update strength goal',
-      ));
+      return err(
+        const ServiceError(
+          type: SingleErrorTypes.operationFailure,
+          description: 'Failed to update strength goal',
+        ),
+      );
     }
   }
 
   Future<Result<StrengthGoalDto, ServiceError<SingleErrorTypes>>>
-      completeStrengthGoal(int id) async {
+  completeStrengthGoal(int id) async {
     _logger.info('Completing strength goal with id $id');
     try {
       final StrengthGoal? goal = await _strengthGoalRepository.selectOne(id);
       if (goal == null) {
-        return err(const ServiceError(
-          type: SingleErrorTypes.notFound,
-          description: 'Strength goal not found',
-        ));
+        return err(
+          const ServiceError(
+            type: SingleErrorTypes.notFound,
+            description: 'Strength goal not found',
+          ),
+        );
       }
 
       final StrengthGoal updated = goal.copyWith(
@@ -615,10 +685,12 @@ class ExerciseRecordService {
       return ok(StrengthGoalDto.fromModel(updated));
     } catch (e) {
       _logger.severe('Failed to complete strength goal with id $id', e);
-      return err(const ServiceError(
-        type: SingleErrorTypes.operationFailure,
-        description: 'Failed to complete strength goal',
-      ));
+      return err(
+        const ServiceError(
+          type: SingleErrorTypes.operationFailure,
+          description: 'Failed to complete strength goal',
+        ),
+      );
     }
   }
 
@@ -629,19 +701,23 @@ class ExerciseRecordService {
     try {
       final bool deleted = await _strengthGoalRepository.deleteOne(id);
       if (!deleted) {
-        return err(const ServiceError(
-          type: SingleErrorTypes.notFound,
-          description: 'Strength goal not found',
-        ));
+        return err(
+          const ServiceError(
+            type: SingleErrorTypes.notFound,
+            description: 'Strength goal not found',
+          ),
+        );
       }
       _logger.info('Deleted strength goal with id $id');
       return ok(null);
     } catch (e) {
       _logger.severe('Failed to delete strength goal with id $id', e);
-      return err(const ServiceError(
-        type: SingleErrorTypes.operationFailure,
-        description: 'Failed to delete strength goal',
-      ));
+      return err(
+        const ServiceError(
+          type: SingleErrorTypes.operationFailure,
+          description: 'Failed to delete strength goal',
+        ),
+      );
     }
   }
 }

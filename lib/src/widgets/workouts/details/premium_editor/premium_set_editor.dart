@@ -102,10 +102,7 @@ class _PremiumSetEditorState extends State<PremiumSetEditor> {
       return null;
     }
 
-    return WorkoutSetExerciseDifficulty.create(
-      value: value,
-      type: type,
-    );
+    return WorkoutSetExerciseDifficulty.create(value: value, type: type);
   }
 
   void _updateExerciseAtIndex(
@@ -395,8 +392,9 @@ class _PremiumSetEditorState extends State<PremiumSetEditor> {
 
         _emitSetChange((setData) {
           final minReps = lastExercise.minReps - 2;
-          final maxReps =
-              lastExercise.maxReps != null ? lastExercise.maxReps! - 2 : null;
+          final maxReps = lastExercise.maxReps != null
+              ? lastExercise.maxReps! - 2
+              : null;
 
           setData.exercises.add(
             ComplexSetExerciseEditorData(
@@ -509,8 +507,9 @@ class _PremiumSetEditorState extends State<PremiumSetEditor> {
 
         _emitSetChange((setData) {
           final minReps = lastExercise.minReps + 2;
-          final maxReps =
-              lastExercise.maxReps != null ? lastExercise.maxReps! + 2 : null;
+          final maxReps = lastExercise.maxReps != null
+              ? lastExercise.maxReps! + 2
+              : null;
           setData.exercises.add(
             ComplexSetExerciseEditorData(
               id: null,

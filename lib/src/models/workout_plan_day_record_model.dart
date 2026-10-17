@@ -59,7 +59,8 @@ class WorkoutPlanDayRecord extends Equatable implements Model {
   });
 
   static const String table = _table;
-  static final String tableCreate = '''
+  static final String tableCreate =
+      '''
   CREATE TABLE IF NOT EXISTS $_table (
     ${WorkoutPlanDayRecordColumns.id.value} INTEGER PRIMARY KEY AUTOINCREMENT,
     ${WorkoutPlanDayRecordColumns.workoutPlanRecordId.value} INTEGER NOT NULL,
@@ -184,16 +185,16 @@ class WorkoutPlanDayRecord extends Equatable implements Model {
 
   @override
   List<Object?> get props => [
-        id,
-        workoutPlanRecordId,
-        workoutPlanWeekRecordId,
-        workoutPlanDayId,
-        completedAt,
-        week,
-        currentWorkoutPosition,
-        createdAt,
-        updatedAt,
-        day,
-        status,
-      ];
+    id,
+    workoutPlanRecordId,
+    workoutPlanWeekRecordId,
+    workoutPlanDayId,
+    completedAt,
+    week,
+    currentWorkoutPosition,
+    createdAt,
+    updatedAt,
+    day,
+    status,
+  ];
 }

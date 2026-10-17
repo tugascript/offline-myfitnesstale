@@ -1,4 +1,5 @@
 import '../services/inputs/strength_goal_input.dart';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:logging/logging.dart';
 
@@ -39,30 +40,36 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
         case SingleErrorTypes.notFound:
         case SingleErrorTypes.invalidInput:
         case SingleErrorTypes.operationFailure:
-          emit(state.copyWith(
-            error: Nullable(ErrorState(
-              type: error.type.name,
-              description: "Failed to get exercise records",
-            )),
-            isLoading: false,
-          ));
+          emit(
+            state.copyWith(
+              error: Nullable(
+                ErrorState(
+                  type: error.type.name,
+                  description: "Failed to get exercise records",
+                ),
+              ),
+              isLoading: false,
+            ),
+          );
           return;
       }
     }
 
     final paginatedData = result.value;
     final exerciseRecords = paginatedData.data;
-    emit(state.copyWith(
-      exerciseRecords: offset >= state.recordPagination.offset + limit
-          ? [...state.exerciseRecords, ...exerciseRecords]
-          : exerciseRecords,
-      recordPagination: state.recordPagination.copyWith(
-        limit: limit,
-        offset: offset,
-        total: paginatedData.total,
+    emit(
+      state.copyWith(
+        exerciseRecords: offset >= state.recordPagination.offset + limit
+            ? [...state.exerciseRecords, ...exerciseRecords]
+            : exerciseRecords,
+        recordPagination: state.recordPagination.copyWith(
+          limit: limit,
+          offset: offset,
+          total: paginatedData.total,
+        ),
+        isLoading: false,
       ),
-      isLoading: false,
-    ));
+    );
   }
 
   Future<void> getLatestExerciseRecord(int exerciseId) async {
@@ -76,28 +83,36 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
       _logger.warning("Failed to fetch latest exercise record", error);
       switch (error.type) {
         case SingleErrorTypes.notFound:
-          emit(state.copyWith(
-            latestExerciseRecord: Nullable(null),
-            isLoading: false,
-          ));
+          emit(
+            state.copyWith(
+              latestExerciseRecord: Nullable(null),
+              isLoading: false,
+            ),
+          );
           return;
         case SingleErrorTypes.invalidInput:
         case SingleErrorTypes.operationFailure:
-          emit(state.copyWith(
-            error: Nullable(ErrorState(
-              type: error.type.name,
-              description: "Failed to get latest exercise record",
-            )),
-            isLoading: false,
-          ));
+          emit(
+            state.copyWith(
+              error: Nullable(
+                ErrorState(
+                  type: error.type.name,
+                  description: "Failed to get latest exercise record",
+                ),
+              ),
+              isLoading: false,
+            ),
+          );
           return;
       }
     }
 
-    emit(state.copyWith(
-      latestExerciseRecord: Nullable(result.value),
-      isLoading: false,
-    ));
+    emit(
+      state.copyWith(
+        latestExerciseRecord: Nullable(result.value),
+        isLoading: false,
+      ),
+    );
   }
 
   Future<void> createExerciseRecord({
@@ -126,13 +141,17 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
         case SingleErrorTypes.notFound:
         case SingleErrorTypes.invalidInput:
         case SingleErrorTypes.operationFailure:
-          emit(state.copyWith(
-            error: Nullable(ErrorState(
-              type: error.type.name,
-              description: "Failed to create exercise record",
-            )),
-            isLoading: false,
-          ));
+          emit(
+            state.copyWith(
+              error: Nullable(
+                ErrorState(
+                  type: error.type.name,
+                  description: "Failed to create exercise record",
+                ),
+              ),
+              isLoading: false,
+            ),
+          );
           return;
       }
     }
@@ -152,10 +171,12 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
         case SingleErrorTypes.operationFailure:
           emit(
             state.copyWith(
-              error: Nullable(ErrorState(
-                type: error.type.name,
-                description: "Failed to get exercise records",
-              )),
+              error: Nullable(
+                ErrorState(
+                  type: error.type.name,
+                  description: "Failed to get exercise records",
+                ),
+              ),
               isLoading: false,
             ),
           );
@@ -166,23 +187,25 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
     final record = result.value;
     final paginatedData = recordsResult.value;
     final records = paginatedData.data;
-    emit(state.copyWith(
-      selectedExerciseRecord: Nullable(record),
-      exerciseRecords: records,
-      recordPagination: state.recordPagination.copyWith(
-        exerciseId: Nullable(exerciseId),
-        limit: paginatedData.limit,
-        offset: paginatedData.offset,
-        total: paginatedData.total,
+    emit(
+      state.copyWith(
+        selectedExerciseRecord: Nullable(record),
+        exerciseRecords: records,
+        recordPagination: state.recordPagination.copyWith(
+          exerciseId: Nullable(exerciseId),
+          limit: paginatedData.limit,
+          offset: paginatedData.offset,
+          total: paginatedData.total,
+        ),
+        latestExerciseRecord: Nullable(
+          state.latestExerciseRecord?.recordDate.isAfter(record.recordDate) ??
+                  false
+              ? state.latestExerciseRecord
+              : record,
+        ),
+        isLoading: false,
       ),
-      latestExerciseRecord: Nullable(
-        state.latestExerciseRecord?.recordDate.isAfter(record.recordDate) ??
-                false
-            ? state.latestExerciseRecord
-            : record,
-      ),
-      isLoading: false,
-    ));
+    );
   }
 
   Future<void> updateExerciseRecord({
@@ -213,13 +236,17 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
         case SingleErrorTypes.notFound:
         case SingleErrorTypes.invalidInput:
         case SingleErrorTypes.operationFailure:
-          emit(state.copyWith(
-            error: Nullable(ErrorState(
-              type: error.type.name,
-              description: error.description,
-            )),
-            isLoading: false,
-          ));
+          emit(
+            state.copyWith(
+              error: Nullable(
+                ErrorState(
+                  type: error.type.name,
+                  description: error.description,
+                ),
+              ),
+              isLoading: false,
+            ),
+          );
           return;
       }
     }
@@ -239,29 +266,35 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
         case SingleErrorTypes.notFound:
         case SingleErrorTypes.invalidInput:
         case SingleErrorTypes.operationFailure:
-          emit(state.copyWith(
-            error: Nullable(ErrorState(
-              type: error.type.name,
-              description: "Failed to get exercise records",
-            )),
-            isLoading: false,
-          ));
+          emit(
+            state.copyWith(
+              error: Nullable(
+                ErrorState(
+                  type: error.type.name,
+                  description: "Failed to get exercise records",
+                ),
+              ),
+              isLoading: false,
+            ),
+          );
           return;
       }
     }
 
     final paginatedData = recordsResult.value;
-    emit(state.copyWith(
-      exerciseRecords: paginatedData.data,
-      recordPagination: state.recordPagination.copyWith(
-        limit: paginatedData.limit,
-        offset: paginatedData.offset,
-        total: paginatedData.total,
+    emit(
+      state.copyWith(
+        exerciseRecords: paginatedData.data,
+        recordPagination: state.recordPagination.copyWith(
+          limit: paginatedData.limit,
+          offset: paginatedData.offset,
+          total: paginatedData.total,
+        ),
+        selectedExerciseRecord: Nullable(exerciseRecord),
+        latestExerciseRecord: Nullable(paginatedData.data.firstOrNull),
+        isLoading: false,
       ),
-      selectedExerciseRecord: Nullable(exerciseRecord),
-      latestExerciseRecord: Nullable(paginatedData.data.firstOrNull),
-      isLoading: false,
-    ));
+    );
   }
 
   Future<void> deleteExerciseRecord(int id) async {
@@ -274,48 +307,56 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
       switch (error.type) {
         case SingleErrorTypes.notFound:
         case SingleErrorTypes.invalidInput:
-          emit(state.copyWith(
-            error: Nullable(ErrorState(
-              type: error.type.name,
-              description: error.description,
-            )),
-            isLoading: false,
-          ));
+          emit(
+            state.copyWith(
+              error: Nullable(
+                ErrorState(
+                  type: error.type.name,
+                  description: error.description,
+                ),
+              ),
+              isLoading: false,
+            ),
+          );
           return;
         case SingleErrorTypes.operationFailure:
-          emit(state.copyWith(
-            error: Nullable(ErrorState(
-              type: error.type.name,
-              description: "Failed to delete exercise record",
-            )),
-            isLoading: false,
-          ));
+          emit(
+            state.copyWith(
+              error: Nullable(
+                ErrorState(
+                  type: error.type.name,
+                  description: "Failed to delete exercise record",
+                ),
+              ),
+              isLoading: false,
+            ),
+          );
           return;
       }
     }
 
     final updatedRecords = state.exerciseRecords
-        .where(
-          (r) => r.id != id,
-        )
+        .where((r) => r.id != id)
         .toList();
-    emit(state.copyWith(
-      exerciseRecords: updatedRecords,
-      selectedExerciseRecord: Nullable(
-        state.selectedExerciseRecord?.id == id
-            ? null
-            : state.selectedExerciseRecord,
+    emit(
+      state.copyWith(
+        exerciseRecords: updatedRecords,
+        selectedExerciseRecord: Nullable(
+          state.selectedExerciseRecord?.id == id
+              ? null
+              : state.selectedExerciseRecord,
+        ),
+        recordPagination: state.recordPagination.copyWith(
+          total: state.recordPagination.total - 1,
+        ),
+        latestExerciseRecord: Nullable(
+          state.latestExerciseRecord?.id == id
+              ? updatedRecords.firstOrNull
+              : state.latestExerciseRecord,
+        ),
+        isLoading: false,
       ),
-      recordPagination: state.recordPagination.copyWith(
-        total: state.recordPagination.total - 1,
-      ),
-      latestExerciseRecord: Nullable(
-        state.latestExerciseRecord?.id == id
-            ? updatedRecords.firstOrNull
-            : state.latestExerciseRecord,
-      ),
-      isLoading: false,
-    ));
+    );
   }
 
   Future<void> getActiveStrengthGoal({int? exerciseId}) async {
@@ -327,24 +368,33 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
     if (result.isErr()) {
       final error = result.error;
       if (error.type == SingleErrorTypes.notFound) {
-        emit(state.copyWith(
+        emit(
+          state.copyWith(
             activeStrengthGoal: const Nullable(null),
             isLoading: false,
-            error: const Nullable(null)));
+            error: const Nullable(null),
+          ),
+        );
       } else {
         _logger.warning('Failed to load active entity', error);
-        emit(state.copyWith(
+        emit(
+          state.copyWith(
             isLoading: false,
-            error: Nullable(ErrorState(
-                type: error.type.name, description: error.description))));
+            error: Nullable(
+              ErrorState(type: error.type.name, description: error.description),
+            ),
+          ),
+        );
       }
       return;
     }
-    emit(state.copyWith(
-      activeStrengthGoal: Nullable(result.value),
-      isLoading: false,
-      error: const Nullable(null),
-    ));
+    emit(
+      state.copyWith(
+        activeStrengthGoal: Nullable(result.value),
+        isLoading: false,
+        error: const Nullable(null),
+      ),
+    );
   }
 
   Future<void> getStrengthGoals({
@@ -364,28 +414,32 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
     if (result.isErr()) {
       final error = result.error;
       _logger.warning("Failed to get strength goals", error);
-      emit(state.copyWith(
-        error: Nullable(ErrorState(
-          type: error.type.name,
-          description: error.description,
-        )),
-        isLoading: false,
-      ));
+      emit(
+        state.copyWith(
+          error: Nullable(
+            ErrorState(type: error.type.name, description: error.description),
+          ),
+          isLoading: false,
+        ),
+      );
       return;
     }
-    emit(state.copyWith(
-      strengthGoals: offset > 0
-          ? [...state.strengthGoals, ...result.value.data]
-          : result.value.data,
-      strengthGoalPagination: StrengthGoalPagination(
+    emit(
+      state.copyWith(
+        strengthGoals: offset > 0
+            ? [...state.strengthGoals, ...result.value.data]
+            : result.value.data,
+        strengthGoalPagination: StrengthGoalPagination(
           exerciseId: exerciseId,
           skipInProgress: skipInProgress,
           total: result.value.total,
           limit: limit,
-          offset: offset),
-      isLoading: false,
-      error: const Nullable(null),
-    ));
+          offset: offset,
+        ),
+        isLoading: false,
+        error: const Nullable(null),
+      ),
+    );
   }
 
   Future<bool> createStrengthGoal(StrengthGoalInput input) async {
@@ -395,22 +449,25 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
     if (result.isErr()) {
       final error = result.error;
       _logger.warning("Failed to create strength goal", error);
-      emit(state.copyWith(
-        error: Nullable(ErrorState(
-          type: error.type.name,
-          description: error.description,
-        )),
-        isLoading: false,
-      ));
+      emit(
+        state.copyWith(
+          error: Nullable(
+            ErrorState(type: error.type.name, description: error.description),
+          ),
+          isLoading: false,
+        ),
+      );
       return false;
     }
 
     await getActiveStrengthGoal(
-        exerciseId: state.strengthGoalPagination.exerciseId);
+      exerciseId: state.strengthGoalPagination.exerciseId,
+    );
     await getStrengthGoals(
-        exerciseId: state.strengthGoalPagination.exerciseId,
-        skipInProgress: state.strengthGoalPagination.skipInProgress,
-        limit: state.strengthGoalPagination.limit);
+      exerciseId: state.strengthGoalPagination.exerciseId,
+      skipInProgress: state.strengthGoalPagination.skipInProgress,
+      limit: state.strengthGoalPagination.limit,
+    );
     return true;
   }
 
@@ -421,22 +478,25 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
     if (result.isErr()) {
       final error = result.error;
       _logger.warning("Failed to update strength goal", error);
-      emit(state.copyWith(
-        error: Nullable(ErrorState(
-          type: error.type.name,
-          description: error.description,
-        )),
-        isLoading: false,
-      ));
+      emit(
+        state.copyWith(
+          error: Nullable(
+            ErrorState(type: error.type.name, description: error.description),
+          ),
+          isLoading: false,
+        ),
+      );
       return false;
     }
 
     await getActiveStrengthGoal(
-        exerciseId: state.strengthGoalPagination.exerciseId);
+      exerciseId: state.strengthGoalPagination.exerciseId,
+    );
     await getStrengthGoals(
-        exerciseId: state.strengthGoalPagination.exerciseId,
-        skipInProgress: state.strengthGoalPagination.skipInProgress,
-        limit: state.strengthGoalPagination.limit);
+      exerciseId: state.strengthGoalPagination.exerciseId,
+      skipInProgress: state.strengthGoalPagination.skipInProgress,
+      limit: state.strengthGoalPagination.limit,
+    );
     return true;
   }
 
@@ -447,22 +507,25 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
     if (result.isErr()) {
       final error = result.error;
       _logger.warning("Failed to complete strength goal", error);
-      emit(state.copyWith(
-        error: Nullable(ErrorState(
-          type: error.type.name,
-          description: error.description,
-        )),
-        isLoading: false,
-      ));
+      emit(
+        state.copyWith(
+          error: Nullable(
+            ErrorState(type: error.type.name, description: error.description),
+          ),
+          isLoading: false,
+        ),
+      );
       return false;
     }
 
     await getActiveStrengthGoal(
-        exerciseId: state.strengthGoalPagination.exerciseId);
+      exerciseId: state.strengthGoalPagination.exerciseId,
+    );
     await getStrengthGoals(
-        exerciseId: state.strengthGoalPagination.exerciseId,
-        skipInProgress: state.strengthGoalPagination.skipInProgress,
-        limit: state.strengthGoalPagination.limit);
+      exerciseId: state.strengthGoalPagination.exerciseId,
+      skipInProgress: state.strengthGoalPagination.skipInProgress,
+      limit: state.strengthGoalPagination.limit,
+    );
     return true;
   }
 
@@ -473,22 +536,25 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
     if (result.isErr()) {
       final error = result.error;
       _logger.warning("Failed to delete strength goal", error);
-      emit(state.copyWith(
-        error: Nullable(ErrorState(
-          type: error.type.name,
-          description: error.description,
-        )),
-        isLoading: false,
-      ));
+      emit(
+        state.copyWith(
+          error: Nullable(
+            ErrorState(type: error.type.name, description: error.description),
+          ),
+          isLoading: false,
+        ),
+      );
       return false;
     }
 
     await getActiveStrengthGoal(
-        exerciseId: state.strengthGoalPagination.exerciseId);
+      exerciseId: state.strengthGoalPagination.exerciseId,
+    );
     await getStrengthGoals(
-        exerciseId: state.strengthGoalPagination.exerciseId,
-        skipInProgress: state.strengthGoalPagination.skipInProgress,
-        limit: state.strengthGoalPagination.limit);
+      exerciseId: state.strengthGoalPagination.exerciseId,
+      skipInProgress: state.strengthGoalPagination.skipInProgress,
+      limit: state.strengthGoalPagination.limit,
+    );
     return true;
   }
 }

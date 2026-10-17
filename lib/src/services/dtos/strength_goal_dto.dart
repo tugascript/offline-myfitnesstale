@@ -70,14 +70,14 @@ class StrengthGoalDto extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        name,
-        targetReps,
-        targetWeight,
-        targetMaxStrength,
-        exerciseId,
-        status,
-        startDate,
-        completedAt,
-      ];
+    id,
+    name,
+    targetReps,
+    targetWeight,
+    targetMaxStrength,
+    exerciseId,
+    status,
+    startDate,
+    completedAt,
+  ];
 }

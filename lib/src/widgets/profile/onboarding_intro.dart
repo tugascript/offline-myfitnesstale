@@ -41,7 +41,7 @@ class OnboardingIntro extends StatelessWidget {
               fontSize: sizes.subtitleFontSize,
             ),
             textAlign: TextAlign.center,
-          )
+          ),
         ],
       ),
     );

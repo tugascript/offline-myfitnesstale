@@ -20,9 +20,7 @@ class OnboardingView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final breakPoint = BreakPoint.fromContext(context);
-    final sizes = OnboardingSizes.getOnboardingSizes(
-      breakPoint.screenSize,
-    );
+    final sizes = OnboardingSizes.getOnboardingSizes(breakPoint.screenSize);
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
@@ -100,27 +98,30 @@ class OnboardingView extends StatelessWidget {
                           ),
                           submitButtonLabel: "Create & get started",
                           isLoading: state.isLoading,
-                          onSubmit: ({
-                            required Units units,
-                            required ThemeType theme,
-                            required String name,
-                            required int height,
-                            required Gender gender,
-                            required DateTime birthday,
-                            required bool preLoadWorkouts,
-                            required bool notificationsOn,
-                          }) async {
-                            await context.read<ProfileCubit>().onboardProfile(
-                                  units: units,
-                                  theme: theme,
-                                  name: name,
-                                  height: height,
-                                  gender: gender,
-                                  birthday: birthday,
-                                  createWorkouts: preLoadWorkouts,
-                                  notificationsOn: notificationsOn,
-                                );
-                          },
+                          onSubmit:
+                              ({
+                                required Units units,
+                                required ThemeType theme,
+                                required String name,
+                                required int height,
+                                required Gender gender,
+                                required DateTime birthday,
+                                required bool preLoadWorkouts,
+                                required bool notificationsOn,
+                              }) async {
+                                await context
+                                    .read<ProfileCubit>()
+                                    .onboardProfile(
+                                      units: units,
+                                      theme: theme,
+                                      name: name,
+                                      height: height,
+                                      gender: gender,
+                                      birthday: birthday,
+                                      createWorkouts: preLoadWorkouts,
+                                      notificationsOn: notificationsOn,
+                                    );
+                              },
                           initialPreLoadWorkouts: true,
                           initialNotificationsOn: false,
                         ),

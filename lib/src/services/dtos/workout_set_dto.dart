@@ -62,17 +62,17 @@ class WorkoutSetDto extends Equatable implements Dto<WorkoutSet> {
 
   @override
   List<Object?> get props => [
-        id,
-        position,
-        setType,
-        minSets,
-        maxSets,
-        recommendedRestSecs,
-        maxRestSecs,
-        totalExercises,
-        totalReps,
-        exercises,
-      ];
+    id,
+    position,
+    setType,
+    minSets,
+    maxSets,
+    recommendedRestSecs,
+    maxRestSecs,
+    totalExercises,
+    totalReps,
+    exercises,
+  ];
 
   factory WorkoutSetDto.fromModel(
     WorkoutSet model, {

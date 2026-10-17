@@ -10,13 +10,14 @@ class MacroGoalInput {
   final Nullable<int> targetWaterIntakeMl;
   final WeightGoalPhase phase;
   final bool isActive;
-  const MacroGoalInput(
-      {required this.name,
-      required this.targetCalories,
-      required this.targetProtein,
-      required this.targetCarbs,
-      required this.targetFat,
-      this.targetWaterIntakeMl = const Nullable(null),
-      required this.phase,
-      this.isActive = true});
+  const MacroGoalInput({
+    required this.name,
+    required this.targetCalories,
+    required this.targetProtein,
+    required this.targetCarbs,
+    required this.targetFat,
+    this.targetWaterIntakeMl = const Nullable(null),
+    required this.phase,
+    this.isActive = true,
+  });
 }

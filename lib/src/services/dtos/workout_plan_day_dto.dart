@@ -69,11 +69,11 @@ class WorkoutPlanDayDto extends Equatable implements Dto<WorkoutPlanDay> {
 
   @override
   List<Object?> get props => [
-        id,
-        planVersion,
-        day,
-        totalWorkouts,
-        isRestDay,
-        planWorkouts,
-      ];
+    id,
+    planVersion,
+    day,
+    totalWorkouts,
+    isRestDay,
+    planWorkouts,
+  ];
 }

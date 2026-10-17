@@ -26,9 +26,7 @@ class WorkoutPlanWeekCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      margin: EdgeInsets.symmetric(
-        vertical: sizes.margins / 2,
-      ),
+      margin: EdgeInsets.symmetric(vertical: sizes.margins / 2),
       child: ExpansionTile(
         dense: true,
         leading: DetailNumber(
@@ -57,24 +55,16 @@ class WorkoutPlanWeekCard extends StatelessWidget {
             ),
             if (week.phase != null) ...[
               SizedBox(width: sizes.spacing),
-              _WorkoutPhaseBadge(
-                sizes: sizes,
-                phase: week.phase!,
-              ),
+              _WorkoutPhaseBadge(sizes: sizes, phase: week.phase!),
             ],
             Row(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Icon(
-                  Icons.calendar_today,
-                  size: sizes.subtitleFontSize * 1.2,
-                ),
+                Icon(Icons.calendar_today, size: sizes.subtitleFontSize * 1.2),
                 Text(
                   ' ${week.totalDays}',
-                  style: TextStyle(
-                    fontSize: sizes.subtitleFontSize,
-                  ),
+                  style: TextStyle(fontSize: sizes.subtitleFontSize),
                 ),
               ],
             ),
@@ -84,15 +74,11 @@ class WorkoutPlanWeekCard extends StatelessWidget {
               children: [
                 Text(
                   '🏋',
-                  style: TextStyle(
-                    fontSize: sizes.subtitleFontSize * 1.2,
-                  ),
+                  style: TextStyle(fontSize: sizes.subtitleFontSize * 1.2),
                 ),
                 Text(
                   ' ${week.totalWorkouts}',
-                  style: TextStyle(
-                    fontSize: sizes.subtitleFontSize,
-                  ),
+                  style: TextStyle(fontSize: sizes.subtitleFontSize),
                 ),
               ],
             ),
@@ -117,10 +103,7 @@ class _WorkoutPhaseBadge extends StatelessWidget {
   final DataDisplaySizesList sizes;
   final WorkoutPhase phase;
 
-  const _WorkoutPhaseBadge({
-    required this.sizes,
-    required this.phase,
-  });
+  const _WorkoutPhaseBadge({required this.sizes, required this.phase});
 
   Color _getPhaseColor(WorkoutPhase phase) {
     switch (phase) {
@@ -146,17 +129,11 @@ class _WorkoutPhaseBadge extends StatelessWidget {
       ),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.2),
-        border: Border.all(
-          color: color,
-          width: 1,
-        ),
+        border: Border.all(color: color, width: 1),
       ),
       child: Text(
         EnumDisplayNames.getWorkoutPhaseDisplayName(phase),
-        style: TextStyle(
-          color: color,
-          fontSize: sizes.smallFontSize,
-        ),
+        style: TextStyle(color: color, fontSize: sizes.smallFontSize),
       ),
     );
   }
