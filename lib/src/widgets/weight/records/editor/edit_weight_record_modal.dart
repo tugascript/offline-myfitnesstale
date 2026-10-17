@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../common/nullable.dart';
 import '../../../../cubits/states/weight_record_state.dart';
 import '../../../../cubits/weight_record_cubit.dart';
 import '../../../../models/enums.dart';
 import '../../../../services/dtos/weight_record_dto.dart';
+import '../../../../services/inputs/weight_record_input.dart';
 import '../../../../utilities/sizes/data_display_sizes.dart';
 import '../../../layout/app_modal.dart';
 import 'weight_record_form.dart';
@@ -40,21 +42,25 @@ class EditWeightRecordModal extends StatelessWidget {
             initialWeight: record.weight,
             initialBodyFatPercentage: record.fatPercentage,
             units: units,
-            onSubmit: ({
-              int? bodyFat,
-              required DateTime date,
-              required int weight,
-            }) async {
-              await context.read<WeightRecordCubit>().updateWeightRecord(
-                    id: record.id,
-                    weight: weight,
-                    date: date,
-                    fatPercentage: bodyFat,
+            onSubmit:
+                ({
+                  int? bodyFat,
+                  required DateTime date,
+                  required int weight,
+                }) async {
+                  await context.read<WeightRecordCubit>().updateWeightRecord(
+                    record.id,
+                    WeightRecordInput(
+                      weight: weight,
+                      recordDate: date,
+                      fatPercentage: Nullable(bodyFat),
+                      pictureUri: Nullable(record.pictureUri),
+                    ),
                   );
-              if (context.mounted) {
-                Navigator.of(context).pop();
-              }
-            },
+                  if (context.mounted) {
+                    Navigator.of(context).pop();
+                  }
+                },
           );
         },
       ),

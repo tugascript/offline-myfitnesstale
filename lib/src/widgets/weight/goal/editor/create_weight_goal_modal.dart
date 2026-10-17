@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../common/nullable.dart';
 import '../../../../cubits/profile_cubit.dart';
 import '../../../../cubits/states/profile_state.dart';
 import '../../../../cubits/states/weight_record_state.dart';
 import '../../../../cubits/weight_record_cubit.dart';
 import '../../../../models/enums.dart';
+import '../../../../services/inputs/weight_goal_input.dart';
 import '../../../../utilities/sizes/data_display_sizes.dart';
 import '../../../layout/app_modal.dart';
 import 'weight_goal_form.dart';
@@ -36,20 +38,20 @@ class CreateWeightGoalModal extends StatelessWidget {
                 submitLabel: "CREATE WEIGHT GOAL",
                 initialWeight: 0,
                 initialPhase: WeightGoalPhase.cut,
-                onSubmit: ({
-                  required phase,
-                  required weight,
-                  fatPercentage,
-                }) async {
-                  await context.read<WeightRecordCubit>().createWeightGoal(
-                        targetWeight: weight,
-                        targetFatPercentage: fatPercentage,
-                        phase: phase,
+                onSubmit:
+                    ({required phase, required weight, fatPercentage}) async {
+                      await context.read<WeightRecordCubit>().createWeightGoal(
+                        WeightGoalInput(
+                          targetWeight: weight,
+                          targetFatPercentage: Nullable(fatPercentage),
+                          startDate: DateTime.now(),
+                          phase: phase,
+                        ),
                       );
-                  if (context.mounted) {
-                    Navigator.pop(context);
-                  }
-                },
+                      if (context.mounted) {
+                        Navigator.pop(context);
+                      }
+                    },
                 units: profileState.system?.units ?? Units.metric,
               );
             },
