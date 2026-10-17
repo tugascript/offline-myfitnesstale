@@ -1,3 +1,6 @@
+import 'package:equatable/equatable.dart';
+
+import '../common/nullable.dart';
 import 'common.dart';
 import 'enums.dart';
 import 'model.dart';
@@ -20,7 +23,7 @@ enum EquipmentColumns with Columns {
   const EquipmentColumns(this.value);
 }
 
-class Equipment implements Model {
+class Equipment extends Equatable implements Model {
   @override
   final int? id;
   final String name;
@@ -106,18 +109,18 @@ class Equipment implements Model {
 
   @override
   Equipment copyWith({
-    int? id,
+    Nullable<int>? id,
     String? name,
-    PictureData? picture,
+    Nullable<PictureData>? picture,
     bool? isFavorite,
     CreatedBy? createdBy,
     int? createdAt,
     int? updatedAt,
   }) {
     return Equipment(
-      id: id ?? this.id,
+      id: id != null ? id.value : this.id,
       name: name ?? this.name,
-      picture: picture ?? this.picture,
+      picture: picture != null ? picture.value : this.picture,
       isFavorite: isFavorite ?? this.isFavorite,
       createdBy: createdBy ?? this.createdBy,
       createdAt: createdAt ?? this.createdAt,
@@ -129,4 +132,15 @@ class Equipment implements Model {
   String toString() {
     return 'Equipment{id: $id, name: $name, picture: $picture, isFavorite: $isFavorite, createdBy: $createdBy, createdAt: $createdAt, updatedAt: $updatedAt}';
   }
+
+  @override
+  List<Object?> get props => [
+    id,
+    name,
+    picture,
+    isFavorite,
+    createdBy,
+    createdAt,
+    updatedAt,
+  ];
 }

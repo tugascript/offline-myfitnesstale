@@ -78,9 +78,12 @@ exist.
 ### Equipment, exercises, and progress
 
 - Browses, searches, filters, favorites, creates, edits, and deletes equipment
-  and exercises.
+  and exercises using shared `EquipmentInput` and `ExerciseInput` PUT semantics
+  (`Nullable<T>` in `copyWith` clears omitted nullable fields and replaces
+  equipment links atomically).
 - Maintains exercise/equipment relationships.
-- Creates, edits, deletes, and filters exercise records.
+- Creates, edits, deletes, and filters exercise records using shared
+  `ExerciseRecordInput` PUT semantics.
 - Shows estimated-max progress and kg/lb summaries.
 - Provides aggregate Exercise Progress ordered by exercise name.
 

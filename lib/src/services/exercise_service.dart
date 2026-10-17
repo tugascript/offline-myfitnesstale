@@ -1,7 +1,7 @@
 import 'package:logging/logging.dart';
 import 'package:sqflite/sqflite.dart';
 
-import '../models/common.dart';
+import '../common/nullable.dart';
 import '../models/db.dart';
 import '../models/enums.dart';
 import '../models/equipment_model.dart';
@@ -14,30 +14,8 @@ import 'common/result.dart';
 import 'dtos/equipment_dto.dart';
 import 'dtos/exercise_dto.dart';
 import 'dtos/paginated_dto.dart';
-
-class ExerciseInput {
-  final String name;
-  final MuscleGroup muscleGroup;
-  final TargetMuscles muscles;
-  final List<EquipmentDto>? equipments;
-  final String? description;
-  final PictureData? picture;
-  final VideoData? video;
-  final Difficulty? difficulty;
-  final bool isFavorite;
-
-  const ExerciseInput({
-    required this.name,
-    required this.muscleGroup,
-    required this.muscles,
-    this.equipments,
-    this.description,
-    this.picture,
-    this.video,
-    this.difficulty,
-    this.isFavorite = false,
-  });
-}
+import 'inputs/equipment_input.dart';
+import 'inputs/exercise_input.dart';
 
 class ExerciseService {
   ExerciseService._();
@@ -238,42 +216,41 @@ class ExerciseService {
     return {for (final Exercise e in exercises) e.id!: e};
   }
 
-  Future<Result<ExerciseDto, ServiceError<SingleErrorTypes>>> createExercise({
-    required String name,
-    required MuscleGroup muscleGroup,
-    required TargetMuscles muscles,
-    Set<int>? equipmentIds,
-    String? description,
-    PictureData? picture,
-    VideoData? video,
-    Difficulty? difficulty,
-    bool isFavorite = false,
-  }) async {
-    _logger.info("Creating exercise with name: $name");
+  Future<Result<ExerciseDto, ServiceError<SingleErrorTypes>>> createExercise(
+    ExerciseInput input, [
+    CreatedBy createdBy = CreatedBy.user,
+  ]) async {
+    _logger.info("Creating exercise with name: ${input.name}");
     final Exercise exercise = Exercise.create(
-      name: name,
-      muscleGroup: muscleGroup,
-      muscles: muscles,
-      description: description,
-      picture: picture,
-      video: video,
-      isFavorite: isFavorite,
-      difficulty: difficulty,
+      name: input.name,
+      muscleGroup: input.muscleGroup,
+      muscles: input.muscles,
+      description: input.description.value,
+      picture: input.picture.value,
+      video: input.video.value,
+      isFavorite: input.isFavorite,
+      difficulty: input.difficulty.value,
+      createdBy: createdBy,
     );
 
     try {
-      if (equipmentIds == null || equipmentIds.isEmpty) {
+      if (input.equipmentIds.isEmpty) {
         final id = await _repository.insert(exercise);
-        return ok(ExerciseDto.fromModel(exercise.copyWith(id: id)));
+        return ok(
+          ExerciseDto.fromModel(
+            exercise.copyWith(id: Nullable(id)),
+            equipments: const [],
+          ),
+        );
       }
 
       final List<Equipment> equipments = await _equipmentRepository.selectMany(
-        where: EquipmentColumns.id.inList(equipmentIds.length),
-        whereArgs: equipmentIds.toList(),
+        where: EquipmentColumns.id.inList(input.equipmentIds.length),
+        whereArgs: input.equipmentIds.toList(),
       );
-      if (equipments.length != equipmentIds.length) {
+      if (equipments.length != input.equipmentIds.length) {
         _logger.info(
-          "Not all equipments were found, ${equipments.length} equipments found, ${equipmentIds.length} equipments expected",
+          "Not all equipments were found, ${equipments.length} equipments found, ${input.equipmentIds.length} equipments expected",
         );
         return err(
           const ServiceError(
@@ -285,7 +262,7 @@ class ExerciseService {
 
       final int id = await (await _databaseHelper.db).transaction((txn) async {
         final int exerciseId = await _repository.insert(exercise, txn);
-        final List<ExerciseEquipment> exerciseEquipments = equipmentIds
+        final List<ExerciseEquipment> exerciseEquipments = input.equipmentIds
             .map(
               (e) => ExerciseEquipment.create(
                 exerciseId: exerciseId,
@@ -298,7 +275,8 @@ class ExerciseService {
       });
       _logger.info("Created exercise with id: $id");
       return ok(
-        ExerciseDto.fromModel(exercise.copyWith(id: id)).copyWith(
+        ExerciseDto.fromModel(
+          exercise.copyWith(id: Nullable(id)),
           equipments: equipments.map((e) => EquipmentDto.fromModel(e)).toList(),
         ),
       );
@@ -323,35 +301,58 @@ class ExerciseService {
     try {
       Future<List<ExerciseDto>> create(Transaction txn) async {
         final List<ExerciseDto> exercises = [];
+        final Set<int> allEquipmentIds = {
+          for (final input in exerciseInputs) ...input.equipmentIds,
+        };
+        final Map<int, EquipmentDto> equipmentMap = {};
+        if (allEquipmentIds.isNotEmpty) {
+          final fetched = await _equipmentRepository.selectMany(
+            where: EquipmentColumns.id.inList(allEquipmentIds.length),
+            whereArgs: allEquipmentIds.toList(),
+            trx: txn,
+          );
+          for (final eq in fetched) {
+            equipmentMap[eq.id!] = EquipmentDto.fromModel(eq);
+          }
+        }
 
         for (final exerciseInput in exerciseInputs) {
           final exercise = Exercise.create(
             name: exerciseInput.name,
             muscleGroup: exerciseInput.muscleGroup,
             muscles: exerciseInput.muscles,
-            difficulty: exerciseInput.difficulty,
+            description: exerciseInput.description.value,
+            picture: exerciseInput.picture.value,
+            video: exerciseInput.video.value,
+            difficulty: exerciseInput.difficulty.value,
+            isFavorite: exerciseInput.isFavorite,
             createdBy: createdBy,
           );
           final id = await _repository.insert(exercise, txn);
 
-          if (exerciseInput.equipments == null) {
-            exercises.add(ExerciseDto.fromModel(exercise.copyWith(id: id)));
+          if (exerciseInput.equipmentIds.isEmpty) {
+            exercises.add(
+              ExerciseDto.fromModel(exercise.copyWith(id: Nullable(id))),
+            );
             continue;
           }
 
           final List<EquipmentDto> equipments = [];
-          for (final equipment in exerciseInput.equipments!) {
+          for (final equipmentId in exerciseInput.equipmentIds) {
             final exerciseEquipment = ExerciseEquipment.create(
-              equipmentId: equipment.id,
+              equipmentId: equipmentId,
               exerciseId: id,
             );
             await _exerciseEquipmentRepository.insert(exerciseEquipment, txn);
-            equipments.add(equipment);
+            final eqDto = equipmentMap[equipmentId];
+            if (eqDto != null) {
+              equipments.add(eqDto);
+            }
           }
 
           exercises.add(
             ExerciseDto.fromModel(
-              exercise.copyWith(id: id),
+              exercise.copyWith(id: Nullable(id)),
               equipments: equipments,
             ),
           );
@@ -377,17 +378,9 @@ class ExerciseService {
   }
 
   Future<Result<ExerciseDto, ServiceError<SingleErrorTypes>>> updateExercise(
-    int id, {
-    String? name,
-    String? description,
-    MuscleGroup? muscleGroup,
-    TargetMuscles? muscles,
-    PictureData? picture,
-    VideoData? video,
-    bool? isFavorite,
-    Difficulty? difficulty,
-    Set<int>? equipmentIds,
-  }) async {
+    int id,
+    ExerciseInput input,
+  ) async {
     _logger.info("Updating exercise with id: $id");
     try {
       final Exercise? exercise = await _repository.selectOne(id);
@@ -402,38 +395,33 @@ class ExerciseService {
       }
 
       final Exercise updatedExercise = exercise.copyWith(
-        name: name,
-        description: description,
-        muscles: muscles,
-        muscleGroup: muscleGroup,
-        picture: picture,
-        video: video,
-        isFavorite: isFavorite,
-        difficulty: difficulty,
+        name: input.name,
+        description: input.description,
+        muscles: input.muscles,
+        muscleGroup: input.muscleGroup,
+        picture: input.picture,
+        video: input.video,
+        isFavorite: input.isFavorite,
+        difficulty: input.difficulty,
         updatedAt: DateUtilities.getNowUtcUnix(),
       );
 
-      if (equipmentIds == null || equipmentIds.isEmpty) {
-        await _repository.update(updatedExercise);
+      if (input.equipmentIds.isEmpty) {
+        await _repository.startTransaction((txn) async {
+          await _repository.update(updatedExercise, txn);
+          await _exerciseEquipmentRepository.deleteAllByPk1(id, txn);
+        });
         _logger.info("Updated exercise with id: $id");
-        final List<Equipment> equipments = await _exerciseEquipmentRepository
-            .selectJoined(id);
-        return ok(
-          ExerciseDto.fromModel(updatedExercise).copyWith(
-            equipments: equipments
-                .map((e) => EquipmentDto.fromModel(e))
-                .toList(),
-          ),
-        );
+        return ok(ExerciseDto.fromModel(updatedExercise, equipments: const []));
       }
 
       final List<Equipment> equipments = await _equipmentRepository.selectMany(
-        where: EquipmentColumns.id.inList(equipmentIds.length),
-        whereArgs: equipmentIds.toList(),
+        where: EquipmentColumns.id.inList(input.equipmentIds.length),
+        whereArgs: input.equipmentIds.toList(),
       );
-      if (equipments.length != equipmentIds.length) {
+      if (equipments.length != input.equipmentIds.length) {
         _logger.info(
-          "Not all equipments were found, ${equipments.length} equipments found, ${equipmentIds.length} equipments expected",
+          "Not all equipments were found, ${equipments.length} equipments found, ${input.equipmentIds.length} equipments expected",
         );
         return err(
           const ServiceError(
@@ -447,7 +435,7 @@ class ExerciseService {
         await _repository.update(updatedExercise, txn);
         await _exerciseEquipmentRepository.deleteAllByPk1(id, txn);
         await _exerciseEquipmentRepository.insertMany(
-          equipmentIds
+          input.equipmentIds
               .map(
                 (e) => ExerciseEquipment.create(exerciseId: id, equipmentId: e),
               )
@@ -468,6 +456,45 @@ class ExerciseService {
         const ServiceError(
           type: SingleErrorTypes.operationFailure,
           description: 'Failed to update exercise',
+        ),
+      );
+    }
+  }
+
+  Future<Result<ExerciseDto, ServiceError<SingleErrorTypes>>>
+  updateExerciseFavorite(int id, bool isFavorite) async {
+    _logger.info("Updating exercise favorite with id: $id");
+    try {
+      final Exercise? exercise = await _repository.selectOne(id);
+      if (exercise == null) {
+        _logger.info("Exercise with id: $id not found");
+        return err(
+          const ServiceError(
+            type: SingleErrorTypes.notFound,
+            description: 'Exercise not found',
+          ),
+        );
+      }
+
+      final Exercise updatedExercise = exercise.copyWith(
+        isFavorite: isFavorite,
+        updatedAt: DateUtilities.getNowUtcUnix(),
+      );
+      await _repository.update(updatedExercise);
+      final List<Equipment> equipments = await _exerciseEquipmentRepository
+          .selectJoined(id);
+      return ok(
+        ExerciseDto.fromModel(
+          updatedExercise,
+          equipments: equipments.map((e) => EquipmentDto.fromModel(e)).toList(),
+        ),
+      );
+    } catch (e) {
+      _logger.severe("Failed to update exercise favorite with id: $id", e);
+      return err(
+        const ServiceError(
+          type: SingleErrorTypes.operationFailure,
+          description: 'Failed to update exercise favorite',
         ),
       );
     }
@@ -608,15 +635,23 @@ class ExerciseService {
   }
 
   Future<Result<EquipmentDto, ServiceError<OperationErrorTypes>>>
-  createEquipment({required String name, PictureData? picture}) async {
-    _logger.info('Creating equipment with name $name');
-    final Equipment equipment = Equipment.create(name: name, picture: picture);
+  createEquipment(
+    EquipmentInput input, [
+    CreatedBy createdBy = CreatedBy.user,
+  ]) async {
+    _logger.info('Creating equipment with name ${input.name}');
+    final Equipment equipment = Equipment.create(
+      name: input.name,
+      picture: input.picture.value,
+      isFavorite: input.isFavorite,
+      createdBy: createdBy,
+    );
 
     try {
       final int id = await _equipmentRepository.insert(equipment);
-      return ok(EquipmentDto.fromModel(equipment.copyWith(id: id)));
+      return ok(EquipmentDto.fromModel(equipment.copyWith(id: Nullable(id))));
     } catch (e) {
-      _logger.severe("Failed to create equipment with name $name", e);
+      _logger.severe("Failed to create equipment with name ${input.name}", e);
       return err(
         const ServiceError(
           type: OperationErrorTypes.operationFailure,
@@ -658,7 +693,7 @@ class ExerciseService {
         for (final name in names) {
           final equipment = Equipment.create(name: name, createdBy: createdBy);
           final id = await _equipmentRepository.insert(equipment, txn);
-          equipments.add(equipment.copyWith(id: id));
+          equipments.add(equipment.copyWith(id: Nullable(id)));
         }
 
         return equipments;
@@ -711,10 +746,9 @@ class ExerciseService {
   }
 
   Future<Result<EquipmentDto, ServiceError<SingleErrorTypes>>> updateEquipment(
-    int id, {
-    String? name,
-    PictureData? picture,
-  }) async {
+    int id,
+    EquipmentInput input,
+  ) async {
     _logger.info('Updating equipment with id: $id');
     try {
       final Equipment? equipment = await _equipmentRepository.selectOne(id);
@@ -729,8 +763,9 @@ class ExerciseService {
       }
 
       final Equipment updatedEquipment = equipment.copyWith(
-        name: name,
-        picture: picture,
+        name: input.name,
+        picture: input.picture,
+        isFavorite: input.isFavorite,
         updatedAt: DateUtilities.getNowUtcUnix(),
       );
       await _equipmentRepository.update(updatedEquipment);

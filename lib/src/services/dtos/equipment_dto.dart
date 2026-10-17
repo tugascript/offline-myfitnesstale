@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 
+import '../../common/nullable.dart';
 import '../../models/enums.dart';
 import '../../models/equipment_model.dart';
 import 'dto.dart';
@@ -10,12 +11,14 @@ class EquipmentDto extends Equatable implements Dto<Equipment> {
   final int id;
   final String name;
   final PictureDto? picture;
+  final bool isFavorite;
   final CreatedBy createdBy;
 
   const EquipmentDto({
     required this.id,
     required this.name,
     this.picture,
+    this.isFavorite = false,
     required this.createdBy,
   });
 
@@ -26,6 +29,7 @@ class EquipmentDto extends Equatable implements Dto<Equipment> {
       picture: equipment.picture != null
           ? PictureDto.fromModel(equipment.picture!)
           : null,
+      isFavorite: equipment.isFavorite,
       createdBy: equipment.createdBy,
     );
   }
@@ -34,17 +38,19 @@ class EquipmentDto extends Equatable implements Dto<Equipment> {
   EquipmentDto copyWith({
     int? id,
     String? name,
-    PictureDto? picture,
+    Nullable<PictureDto>? picture,
+    bool? isFavorite,
     CreatedBy? createdBy,
   }) {
     return EquipmentDto(
       id: id ?? this.id,
       name: name ?? this.name,
-      picture: picture ?? this.picture,
+      picture: picture != null ? picture.value : this.picture,
+      isFavorite: isFavorite ?? this.isFavorite,
       createdBy: createdBy ?? this.createdBy,
     );
   }
 
   @override
-  List<Object?> get props => [id, name, picture, createdBy];
+  List<Object?> get props => [id, name, picture, isFavorite, createdBy];
 }

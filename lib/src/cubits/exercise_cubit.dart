@@ -1,11 +1,13 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:logging/logging.dart';
 
-import '../models/common.dart';
+import '../common/nullable.dart';
 import '../models/enums.dart';
 import '../services/common/errors.dart';
 import '../services/dtos/exercise_dto.dart';
 import '../services/exercise_service.dart';
+import '../services/inputs/equipment_input.dart';
+import '../services/inputs/exercise_input.dart';
 import 'states/common_state.dart';
 import 'states/exercise_state.dart';
 
@@ -48,9 +50,11 @@ class ExerciseCubit extends Cubit<ExerciseState> {
         case OperationErrorTypes.operationFailure:
           emit(
             state.copyWith(
-              error: ErrorState(
-                type: error.type.name,
-                description: "Failed to get exercises",
+              error: Nullable(
+                ErrorState(
+                  type: error.type.name,
+                  description: "Failed to get exercises",
+                ),
               ),
               isLoading: false,
             ),
@@ -74,15 +78,16 @@ class ExerciseCubit extends Cubit<ExerciseState> {
         exercises: updatedExercises,
         exercisePagination: state.exercisePagination.copyWith(
           name: name,
-          muscleGroup: muscleGroup,
-          difficulty: difficulty,
-          equipmentId: equipmentId,
+          muscleGroup: Nullable(muscleGroup),
+          difficulty: Nullable(difficulty),
+          equipmentId: Nullable(equipmentId),
           isFavorite: isFavourite,
           total: paginatedData.total,
           limit: paginatedData.limit,
           offset: paginatedData.offset,
         ),
         isLoading: false,
+        error: const Nullable(null),
       ),
     );
   }
@@ -100,9 +105,11 @@ class ExerciseCubit extends Cubit<ExerciseState> {
         case SingleErrorTypes.invalidInput:
           emit(
             state.copyWith(
-              error: ErrorState(
-                type: error.type.name,
-                description: error.description,
+              error: Nullable(
+                ErrorState(
+                  type: error.type.name,
+                  description: error.description,
+                ),
               ),
               isLoading: false,
             ),
@@ -111,9 +118,11 @@ class ExerciseCubit extends Cubit<ExerciseState> {
         case SingleErrorTypes.operationFailure:
           emit(
             state.copyWith(
-              error: ErrorState(
-                type: error.type.name,
-                description: "Failed to get exercise",
+              error: Nullable(
+                ErrorState(
+                  type: error.type.name,
+                  description: "Failed to get exercise",
+                ),
               ),
               isLoading: false,
             ),
@@ -123,37 +132,22 @@ class ExerciseCubit extends Cubit<ExerciseState> {
     }
 
     _logger.info('Exercise retrieved successfully');
-    emit(state.copyWith(selectedExercise: result.value, isLoading: false));
+    emit(
+      state.copyWith(
+        selectedExercise: Nullable(result.value),
+        isLoading: false,
+        error: const Nullable(null),
+      ),
+    );
   }
 
-  Future<void> createExercise({
-    required String name,
-    required MuscleGroup muscleGroup,
-    required Set<Muscle> primaryMuscles,
-    required Set<Muscle> secondaryMuscles,
-    VideoData? video,
-    PictureData? picture,
-    String? description,
-    Set<int>? equipmentIds,
-    Difficulty? difficulty,
-    bool isFavorite = false,
-  }) async {
+  Future<void> createExercise(
+    ExerciseInput input, [
+    CreatedBy createdBy = CreatedBy.user,
+  ]) async {
     _logger.info('createExercise: creating exercise');
     emit(state.copyWith(isLoading: true));
-    final result = await _exerciseService.createExercise(
-      name: name,
-      muscleGroup: muscleGroup,
-      muscles: TargetMuscles(
-        primary: primaryMuscles,
-        secondary: secondaryMuscles,
-      ),
-      video: video,
-      picture: picture,
-      description: description,
-      equipmentIds: equipmentIds,
-      difficulty: difficulty,
-      isFavorite: isFavorite,
-    );
+    final result = await _exerciseService.createExercise(input, createdBy);
 
     if (result.isErr()) {
       final error = result.error;
@@ -163,9 +157,11 @@ class ExerciseCubit extends Cubit<ExerciseState> {
         case SingleErrorTypes.invalidInput:
           emit(
             state.copyWith(
-              error: ErrorState(
-                type: error.type.name,
-                description: error.description,
+              error: Nullable(
+                ErrorState(
+                  type: error.type.name,
+                  description: error.description,
+                ),
               ),
               isLoading: false,
             ),
@@ -174,9 +170,11 @@ class ExerciseCubit extends Cubit<ExerciseState> {
         case SingleErrorTypes.operationFailure:
           emit(
             state.copyWith(
-              error: ErrorState(
-                type: error.type.name,
-                description: "Failed to create exercise",
+              error: Nullable(
+                ErrorState(
+                  type: error.type.name,
+                  description: "Failed to create exercise",
+                ),
               ),
               isLoading: false,
             ),
@@ -186,39 +184,19 @@ class ExerciseCubit extends Cubit<ExerciseState> {
     }
 
     _logger.info('Exercise created successfully');
-    emit(state.copyWith(selectedExercise: result.value, isLoading: false));
+    emit(
+      state.copyWith(
+        selectedExercise: Nullable(result.value),
+        isLoading: false,
+        error: const Nullable(null),
+      ),
+    );
   }
 
-  Future<void> updateExercise({
-    required int id,
-    required Set<Muscle> primaryMuscles,
-    required Set<Muscle> secondaryMuscles,
-    String? name,
-    String? description,
-    MuscleGroup? muscleGroup,
-    VideoData? video,
-    PictureData? picture,
-    Set<int>? equipmentIds,
-    bool? isFavorite,
-    Difficulty? difficulty,
-  }) async {
+  Future<void> updateExercise(int id, ExerciseInput input) async {
     _logger.info('updateExercise: updating exercise by id: $id');
     emit(state.copyWith(isLoading: true));
-    final result = await _exerciseService.updateExercise(
-      id,
-      name: name,
-      description: description,
-      muscleGroup: muscleGroup,
-      muscles: TargetMuscles(
-        primary: primaryMuscles,
-        secondary: secondaryMuscles,
-      ),
-      video: video,
-      picture: picture,
-      isFavorite: isFavorite,
-      difficulty: difficulty,
-      equipmentIds: equipmentIds,
-    );
+    final result = await _exerciseService.updateExercise(id, input);
 
     if (result.isErr()) {
       final error = result.error;
@@ -228,9 +206,11 @@ class ExerciseCubit extends Cubit<ExerciseState> {
         case SingleErrorTypes.invalidInput:
           emit(
             state.copyWith(
-              error: ErrorState(
-                type: error.type.name,
-                description: error.description,
+              error: Nullable(
+                ErrorState(
+                  type: error.type.name,
+                  description: error.description,
+                ),
               ),
               isLoading: false,
             ),
@@ -239,9 +219,11 @@ class ExerciseCubit extends Cubit<ExerciseState> {
         case SingleErrorTypes.operationFailure:
           emit(
             state.copyWith(
-              error: ErrorState(
-                type: error.type.name,
-                description: "Failed to update exercise",
+              error: Nullable(
+                ErrorState(
+                  type: error.type.name,
+                  description: "Failed to update exercise",
+                ),
               ),
               isLoading: false,
             ),
@@ -249,7 +231,13 @@ class ExerciseCubit extends Cubit<ExerciseState> {
           return;
       }
     }
-    emit(state.copyWith(selectedExercise: result.value, isLoading: false));
+    emit(
+      state.copyWith(
+        selectedExercise: Nullable(result.value),
+        isLoading: false,
+        error: const Nullable(null),
+      ),
+    );
 
     // Refresh exercises list if the updated exercise is in it
     if (state.exercises.any((e) => e.id == id)) {
@@ -270,9 +258,9 @@ class ExerciseCubit extends Cubit<ExerciseState> {
       'updateExerciseFavorite: updating exercise favorite by id: $id',
     );
     emit(state.copyWith(isLoading: true));
-    final result = await _exerciseService.updateExercise(
+    final result = await _exerciseService.updateExerciseFavorite(
       id,
-      isFavorite: isFavorite,
+      isFavorite,
     );
     if (result.isErr()) {
       final error = result.error;
@@ -282,9 +270,11 @@ class ExerciseCubit extends Cubit<ExerciseState> {
         case SingleErrorTypes.invalidInput:
           emit(
             state.copyWith(
-              error: ErrorState(
-                type: error.type.name,
-                description: error.description,
+              error: Nullable(
+                ErrorState(
+                  type: error.type.name,
+                  description: error.description,
+                ),
               ),
               isLoading: false,
             ),
@@ -293,9 +283,11 @@ class ExerciseCubit extends Cubit<ExerciseState> {
         case SingleErrorTypes.operationFailure:
           emit(
             state.copyWith(
-              error: ErrorState(
-                type: error.type.name,
-                description: "Failed to update exercise favorite",
+              error: Nullable(
+                ErrorState(
+                  type: error.type.name,
+                  description: "Failed to update exercise favorite",
+                ),
               ),
               isLoading: false,
             ),
@@ -303,7 +295,13 @@ class ExerciseCubit extends Cubit<ExerciseState> {
           return;
       }
     }
-    emit(state.copyWith(selectedExercise: result.value, isLoading: false));
+    emit(
+      state.copyWith(
+        selectedExercise: Nullable(result.value),
+        isLoading: false,
+        error: const Nullable(null),
+      ),
+    );
   }
 
   Future<void> deleteExercise(int id) async {
@@ -318,9 +316,11 @@ class ExerciseCubit extends Cubit<ExerciseState> {
         case SingleErrorTypes.invalidInput:
           emit(
             state.copyWith(
-              error: ErrorState(
-                type: error.type.name,
-                description: error.description,
+              error: Nullable(
+                ErrorState(
+                  type: error.type.name,
+                  description: error.description,
+                ),
               ),
               isLoading: false,
             ),
@@ -329,9 +329,11 @@ class ExerciseCubit extends Cubit<ExerciseState> {
         case SingleErrorTypes.operationFailure:
           emit(
             state.copyWith(
-              error: ErrorState(
-                type: error.type.name,
-                description: "Failed to delete exercise",
+              error: Nullable(
+                ErrorState(
+                  type: error.type.name,
+                  description: "Failed to delete exercise",
+                ),
               ),
               isLoading: false,
             ),
@@ -346,9 +348,10 @@ class ExerciseCubit extends Cubit<ExerciseState> {
       state.copyWith(
         exercises: updatedExercises,
         selectedExercise: state.selectedExercise?.id == id
-            ? null
-            : state.selectedExercise,
+            ? const Nullable(null)
+            : null,
         isLoading: false,
+        error: const Nullable(null),
       ),
     );
   }
@@ -372,9 +375,11 @@ class ExerciseCubit extends Cubit<ExerciseState> {
       _logger.warning("Failed to fetch equipments, error: $error");
       emit(
         state.copyWith(
-          error: ErrorState(
-            type: error.type.name,
-            description: "Failed to fetch equipments",
+          error: Nullable(
+            ErrorState(
+              type: error.type.name,
+              description: "Failed to fetch equipments",
+            ),
           ),
           isLoading: false,
         ),
@@ -395,6 +400,7 @@ class ExerciseCubit extends Cubit<ExerciseState> {
           total: paginatedData.total,
         ),
         isLoading: false,
+        error: const Nullable(null),
       ),
     );
   }
@@ -412,9 +418,11 @@ class ExerciseCubit extends Cubit<ExerciseState> {
         case SingleErrorTypes.invalidInput:
           emit(
             state.copyWith(
-              error: ErrorState(
-                type: error.type.name,
-                description: error.description,
+              error: Nullable(
+                ErrorState(
+                  type: error.type.name,
+                  description: error.description,
+                ),
               ),
               isLoading: false,
             ),
@@ -423,9 +431,11 @@ class ExerciseCubit extends Cubit<ExerciseState> {
         case SingleErrorTypes.operationFailure:
           emit(
             state.copyWith(
-              error: ErrorState(
-                type: error.type.name,
-                description: "Failed to get equipment",
+              error: Nullable(
+                ErrorState(
+                  type: error.type.name,
+                  description: "Failed to get equipment",
+                ),
               ),
               isLoading: false,
             ),
@@ -443,9 +453,11 @@ class ExerciseCubit extends Cubit<ExerciseState> {
       _logger.warning("Failed to get exercises for equipment, error: $error");
       emit(
         state.copyWith(
-          error: ErrorState(
-            type: error.type.name,
-            description: "Failed to get exercises for equipment",
+          error: Nullable(
+            ErrorState(
+              type: error.type.name,
+              description: "Failed to get exercises for equipment",
+            ),
           ),
           isLoading: false,
         ),
@@ -456,20 +468,26 @@ class ExerciseCubit extends Cubit<ExerciseState> {
     _logger.info('Equipment retrieved successfully');
     emit(
       state.copyWith(
-        selectedEquipment: SelectedEquipment(
-          equipment: equipment,
-          relatedExercises: exercisesResult.value,
+        selectedEquipment: Nullable(
+          SelectedEquipment(
+            equipment: equipment,
+            relatedExercises: exercisesResult.value,
+          ),
         ),
         isLoading: false,
+        error: const Nullable(null),
       ),
     );
   }
 
-  Future<void> createEquipment(String name) async {
+  Future<void> createEquipment(
+    EquipmentInput input, [
+    CreatedBy createdBy = CreatedBy.user,
+  ]) async {
     _logger.info('createEquipment: creating equipment');
     emit(state.copyWith(isLoading: true));
 
-    final result = await _exerciseService.createEquipment(name: name);
+    final result = await _exerciseService.createEquipment(input, createdBy);
     if (result.isErr()) {
       final error = result.error;
       _logger.warning('Failed to create equipment, error: $error');
@@ -478,9 +496,11 @@ class ExerciseCubit extends Cubit<ExerciseState> {
         case OperationErrorTypes.operationFailure:
           emit(
             state.copyWith(
-              error: ErrorState(
-                type: error.type.name,
-                description: "Failed to create equipment",
+              error: Nullable(
+                ErrorState(
+                  type: error.type.name,
+                  description: "Failed to create equipment",
+                ),
               ),
               isLoading: false,
             ),
@@ -500,9 +520,11 @@ class ExerciseCubit extends Cubit<ExerciseState> {
       _logger.warning("Failed to get equipments, error: $error");
       emit(
         state.copyWith(
-          error: ErrorState(
-            type: error.type.name,
-            description: "Failed to get equipments",
+          error: Nullable(
+            ErrorState(
+              type: error.type.name,
+              description: "Failed to get equipments",
+            ),
           ),
           isLoading: false,
         ),
@@ -522,10 +544,10 @@ class ExerciseCubit extends Cubit<ExerciseState> {
           offset: 0,
           total: paginatedData.total,
         ),
-        selectedEquipment: SelectedEquipment(
-          equipment: result.value,
-          relatedExercises: [],
+        selectedEquipment: Nullable(
+          SelectedEquipment(equipment: result.value, relatedExercises: []),
         ),
+        error: const Nullable(null),
       ),
     );
   }
@@ -542,9 +564,11 @@ class ExerciseCubit extends Cubit<ExerciseState> {
         case SingleErrorTypes.notFound:
           emit(
             state.copyWith(
-              error: ErrorState(
-                type: error.type.name,
-                description: "Equipment not found",
+              error: Nullable(
+                ErrorState(
+                  type: error.type.name,
+                  description: "Equipment not found",
+                ),
               ),
               isLoading: false,
             ),
@@ -554,9 +578,11 @@ class ExerciseCubit extends Cubit<ExerciseState> {
         case SingleErrorTypes.operationFailure:
           emit(
             state.copyWith(
-              error: ErrorState(
-                type: error.type.name,
-                description: "Failed to delete equipment",
+              error: Nullable(
+                ErrorState(
+                  type: error.type.name,
+                  description: "Failed to delete equipment",
+                ),
               ),
               isLoading: false,
             ),
@@ -571,16 +597,20 @@ class ExerciseCubit extends Cubit<ExerciseState> {
       state.copyWith(
         isLoading: false,
         equipments: state.equipments.where((e) => e.id != id).toList(),
+        selectedEquipment: state.selectedEquipment?.equipment.id == id
+            ? const Nullable(null)
+            : null,
         equipmentPagination: pagination.copyWith(total: pagination.total - 1),
+        error: const Nullable(null),
       ),
     );
   }
 
-  Future<void> updateEquipment({required int id, required String name}) async {
+  Future<void> updateEquipment(int id, EquipmentInput input) async {
     _logger.info('updateEquipment: updating equipment');
     emit(state.copyWith(isLoading: true));
 
-    final result = await _exerciseService.updateEquipment(id, name: name);
+    final result = await _exerciseService.updateEquipment(id, input);
     if (result.isErr()) {
       final error = result.error;
       _logger.warning('Failed to update equipment, error: $error');
@@ -588,9 +618,11 @@ class ExerciseCubit extends Cubit<ExerciseState> {
         case SingleErrorTypes.notFound:
           emit(
             state.copyWith(
-              error: ErrorState(
-                type: error.type.name,
-                description: "Equipment not found",
+              error: Nullable(
+                ErrorState(
+                  type: error.type.name,
+                  description: "Equipment not found",
+                ),
               ),
               isLoading: false,
             ),
@@ -600,9 +632,11 @@ class ExerciseCubit extends Cubit<ExerciseState> {
         case SingleErrorTypes.operationFailure:
           emit(
             state.copyWith(
-              error: ErrorState(
-                type: error.type.name,
-                description: "Failed to update equipment",
+              error: Nullable(
+                ErrorState(
+                  type: error.type.name,
+                  description: "Failed to update equipment",
+                ),
               ),
               isLoading: false,
             ),
@@ -619,9 +653,11 @@ class ExerciseCubit extends Cubit<ExerciseState> {
       _logger.warning("Failed to get exercises for equipment, error: $error");
       emit(
         state.copyWith(
-          error: ErrorState(
-            type: error.type.name,
-            description: "Failed to get exercises for equipment",
+          error: Nullable(
+            ErrorState(
+              type: error.type.name,
+              description: "Failed to get exercises for equipment",
+            ),
           ),
           isLoading: false,
         ),
@@ -640,9 +676,11 @@ class ExerciseCubit extends Cubit<ExerciseState> {
       _logger.warning("Failed to get equipments, error: $error");
       emit(
         state.copyWith(
-          error: ErrorState(
-            type: error.type.name,
-            description: "Failed to get equipments",
+          error: Nullable(
+            ErrorState(
+              type: error.type.name,
+              description: "Failed to get equipments",
+            ),
           ),
           isLoading: false,
         ),
@@ -662,10 +700,13 @@ class ExerciseCubit extends Cubit<ExerciseState> {
           offset: 0,
           total: paginatedData.total,
         ),
-        selectedEquipment: SelectedEquipment(
-          equipment: result.value,
-          relatedExercises: exercisesResult.value,
+        selectedEquipment: Nullable(
+          SelectedEquipment(
+            equipment: result.value,
+            relatedExercises: exercisesResult.value,
+          ),
         ),
+        error: const Nullable(null),
       ),
     );
   }
@@ -678,9 +719,11 @@ class ExerciseCubit extends Cubit<ExerciseState> {
       _logger.warning("Failed to get equipments, error: $error");
       emit(
         state.copyWith(
-          error: ErrorState(
-            type: error.type.name,
-            description: "Failed to get equipments",
+          error: Nullable(
+            ErrorState(
+              type: error.type.name,
+              description: "Failed to get equipments",
+            ),
           ),
           isLoading: false,
         ),
@@ -697,6 +740,7 @@ class ExerciseCubit extends Cubit<ExerciseState> {
           previousValue[element.id] = element.name;
           return previousValue;
         }),
+        error: const Nullable(null),
       ),
     );
   }
@@ -717,9 +761,11 @@ class ExerciseCubit extends Cubit<ExerciseState> {
       _logger.warning("Failed to get exercises, error: $error");
       emit(
         state.copyWith(
-          error: ErrorState(
-            type: error.type.name,
-            description: "Failed to get exercises",
+          error: Nullable(
+            ErrorState(
+              type: error.type.name,
+              description: "Failed to get exercises",
+            ),
           ),
           isLoading: false,
         ),
@@ -730,6 +776,7 @@ class ExerciseCubit extends Cubit<ExerciseState> {
       state.copyWith(
         isLoading: false,
         exerciseSelection: exercisesResult.value,
+        error: const Nullable(null),
       ),
     );
   }

@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../common/nullable.dart';
 import '../../cubits/exercise_cubit.dart';
 import '../../cubits/states/exercise_state.dart';
+import '../../models/common.dart';
 import '../../models/enums.dart';
+import '../../services/inputs/exercise_input.dart';
 import '../../utilities/sizes/data_display_sizes.dart';
 import '../../utilities/sizes/screen_size.dart';
 import '../../widgets/exercises/details/exercise_form.dart';
@@ -101,16 +104,38 @@ class _ExerciseUpdateViewState extends State<ExerciseUpdateView> {
                             required Set<Muscle> primaryMuscles,
                             required Set<Muscle> secondaryMuscles,
                           }) async {
+                            final existingPicture = exercise?.picture;
+                            final existingVideo = exercise?.video;
                             await context.read<ExerciseCubit>().updateExercise(
-                              id: widget.exerciseId,
-                              name: name,
-                              description: description,
-                              muscleGroup: muscleGroup,
-                              primaryMuscles: primaryMuscles,
-                              secondaryMuscles: secondaryMuscles,
-                              equipmentIds: equipmentIds,
-                              difficulty: difficulty,
-                              isFavorite: isFavorite,
+                              widget.exerciseId,
+                              ExerciseInput(
+                                name: name,
+                                description: Nullable(description),
+                                muscleGroup: muscleGroup,
+                                muscles: TargetMuscles(
+                                  primary: primaryMuscles,
+                                  secondary: secondaryMuscles,
+                                ),
+                                picture: Nullable(
+                                  existingPicture != null
+                                      ? PictureData(
+                                          uri: existingPicture.uri,
+                                          source: existingPicture.source,
+                                        )
+                                      : null,
+                                ),
+                                video: Nullable(
+                                  existingVideo != null
+                                      ? VideoData(
+                                          uri: existingVideo.uri,
+                                          platform: existingVideo.platform,
+                                        )
+                                      : null,
+                                ),
+                                equipmentIds: equipmentIds,
+                                difficulty: Nullable(difficulty),
+                                isFavorite: isFavorite,
+                              ),
                             );
 
                             if (context.mounted) {

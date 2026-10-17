@@ -1,13 +1,12 @@
-import '../services/inputs/strength_goal_input.dart';
-
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:logging/logging.dart';
 
 import '../common/nullable.dart';
-import '../models/common.dart';
 import '../models/repository.dart';
 import '../services/common/errors.dart';
 import '../services/exercise_record_service.dart';
+import '../services/inputs/exercise_record_input.dart';
+import '../services/inputs/strength_goal_input.dart';
 import 'states/common_state.dart';
 import 'states/exercise_record_state.dart';
 
@@ -68,6 +67,7 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
           total: paginatedData.total,
         ),
         isLoading: false,
+        error: const Nullable(null),
       ),
     );
   }
@@ -111,28 +111,15 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
       state.copyWith(
         latestExerciseRecord: Nullable(result.value),
         isLoading: false,
+        error: const Nullable(null),
       ),
     );
   }
 
-  Future<void> createExerciseRecord({
-    required int exerciseId,
-    required int weight,
-    required int reps,
-    required DateTime date,
-    PictureData? picture,
-    VideoData? video,
-  }) async {
+  Future<void> createExerciseRecord(ExerciseRecordInput input) async {
     emit(state.copyWith(isLoading: true));
 
-    final result = await _exerciseRecordService.createExerciseRecord(
-      exerciseId: exerciseId,
-      weight: weight,
-      reps: reps,
-      date: date,
-      picture: picture,
-      video: video,
-    );
+    final result = await _exerciseRecordService.createExerciseRecord(input);
 
     if (result.isErr()) {
       final error = result.error;
@@ -158,7 +145,7 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
 
     final currentPagination = state.recordPagination;
     final recordsResult = await _exerciseRecordService.getExerciseRecords(
-      exerciseId: exerciseId,
+      exerciseId: input.exerciseId,
       limit: currentPagination.limit,
       dateRange: currentPagination.dateRange,
     );
@@ -192,7 +179,7 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
         selectedExerciseRecord: Nullable(record),
         exerciseRecords: records,
         recordPagination: state.recordPagination.copyWith(
-          exerciseId: Nullable(exerciseId),
+          exerciseId: Nullable(input.exerciseId),
           limit: paginatedData.limit,
           offset: paginatedData.offset,
           total: paginatedData.total,
@@ -204,30 +191,15 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
               : record,
         ),
         isLoading: false,
+        error: const Nullable(null),
       ),
     );
   }
 
-  Future<void> updateExerciseRecord({
-    required int id,
-    int? weight,
-    int? reps,
-    int? maxStrength,
-    PictureData? picture,
-    VideoData? video,
-    DateTime? date,
-  }) async {
+  Future<void> updateExerciseRecord(int id, ExerciseRecordInput input) async {
     emit(state.copyWith(isLoading: true));
 
-    final result = await _exerciseRecordService.updateExerciseRecord(
-      id: id,
-      weight: weight,
-      reps: reps,
-      maxStrength: maxStrength,
-      picture: picture,
-      video: video,
-      date: date,
-    );
+    final result = await _exerciseRecordService.updateExerciseRecord(id, input);
 
     if (result.isErr()) {
       final error = result.error;
@@ -293,6 +265,7 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
         selectedExerciseRecord: Nullable(exerciseRecord),
         latestExerciseRecord: Nullable(paginatedData.data.firstOrNull),
         isLoading: false,
+        error: const Nullable(null),
       ),
     );
   }

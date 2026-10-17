@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../cubits/exercise_cubit.dart';
 import '../../cubits/states/exercise_state.dart';
+import '../../services/inputs/equipment_input.dart';
 import '../../utilities/sizes/data_display_sizes.dart';
 import '../../utilities/sizes/screen_size.dart';
 import '../../widgets/equipment/equipment_form.dart';
@@ -67,7 +68,7 @@ class EquipmentCreationView extends StatelessWidget {
                   submitLabel: "CREATE",
                   onSubmit: ({required String name}) {
                     final cubit = context.read<ExerciseCubit>();
-                    cubit.createEquipment(name);
+                    cubit.createEquipment(EquipmentInput(name: name));
                   },
                 ),
               ],

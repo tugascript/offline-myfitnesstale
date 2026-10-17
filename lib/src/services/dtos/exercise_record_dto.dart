@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 
+import '../../common/nullable.dart';
 import '../../models/exercise_record_model.dart';
 import '../../models/utilities.dart';
 import 'dto.dart';
@@ -70,9 +71,9 @@ class ExerciseRecordDto extends Equatable implements Dto<ExerciseRecord> {
     int? weight,
     int? reps,
     int? maxStrength,
-    PictureDto? picture,
-    VideoDto? video,
-    ExerciseDto? exercise,
+    Nullable<PictureDto>? picture,
+    Nullable<VideoDto>? video,
+    Nullable<ExerciseDto>? exercise,
     DateTime? recordDate,
   }) {
     return ExerciseRecordDto(
@@ -81,9 +82,9 @@ class ExerciseRecordDto extends Equatable implements Dto<ExerciseRecord> {
       weight: weight ?? this.weight,
       reps: reps ?? this.reps,
       maxStrength: maxStrength ?? this.maxStrength,
-      picture: picture ?? this.picture,
-      video: video ?? this.video,
-      exercise: exercise ?? this.exercise,
+      picture: picture != null ? picture.value : this.picture,
+      video: video != null ? video.value : this.video,
+      exercise: exercise != null ? exercise.value : this.exercise,
       recordDate: recordDate ?? this.recordDate,
     );
   }
@@ -97,6 +98,7 @@ class ExerciseRecordDto extends Equatable implements Dto<ExerciseRecord> {
     maxStrength,
     picture,
     video,
+    exercise,
     recordDate,
   ];
 }

@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 
+import '../../common/nullable.dart';
 import '../../models/enums.dart';
 import '../../services/dtos/equipment_dto.dart';
 import '../../services/dtos/exercise_dto.dart';
@@ -38,9 +39,9 @@ final class ExercisePagination extends Equatable {
 
   ExercisePagination copyWith({
     String? name,
-    MuscleGroup? muscleGroup,
-    Difficulty? difficulty,
-    int? equipmentId,
+    Nullable<MuscleGroup>? muscleGroup,
+    Nullable<Difficulty>? difficulty,
+    Nullable<int>? equipmentId,
     bool? isFavorite,
     int? total,
     int? limit,
@@ -48,9 +49,9 @@ final class ExercisePagination extends Equatable {
   }) {
     return ExercisePagination(
       name: name ?? this.name,
-      muscleGroup: muscleGroup, // if the user passes null
-      difficulty: difficulty, // if the user passes null
-      equipmentId: equipmentId,
+      muscleGroup: muscleGroup != null ? muscleGroup.value : this.muscleGroup,
+      difficulty: difficulty != null ? difficulty.value : this.difficulty,
+      equipmentId: equipmentId != null ? equipmentId.value : this.equipmentId,
       isFavorite: isFavorite ?? this.isFavorite,
       total: total ?? this.total,
       limit: limit ?? this.limit,
@@ -169,13 +170,12 @@ final class ExerciseState extends Equatable {
   ExerciseState copyWith({
     List<ExerciseDto>? exercises,
     ExercisePagination? exercisePagination,
-    ExerciseDto? selectedExercise,
-    List<ExerciseDto>? favoriteExercises,
+    Nullable<ExerciseDto>? selectedExercise,
     bool? isLoading,
-    ErrorState? error,
+    Nullable<ErrorState>? error,
     List<EquipmentDto>? equipments,
     EquipmentPagination? equipmentPagination,
-    SelectedEquipment? selectedEquipment,
+    Nullable<SelectedEquipment>? selectedEquipment,
     Map<int, String>? equipmentSelection,
     List<ExerciseDto>? exerciseSelection,
   }) {
@@ -183,12 +183,16 @@ final class ExerciseState extends Equatable {
       exerciseSelection: exerciseSelection ?? this.exerciseSelection,
       exercises: exercises ?? this.exercises,
       exercisePagination: exercisePagination ?? this.exercisePagination,
-      selectedExercise: selectedExercise ?? this.selectedExercise,
+      selectedExercise: selectedExercise != null
+          ? selectedExercise.value
+          : this.selectedExercise,
       isLoading: isLoading ?? this.isLoading,
-      error: error ?? this.error,
+      error: error != null ? error.value : this.error,
       equipments: equipments ?? this.equipments,
       equipmentPagination: equipmentPagination ?? this.equipmentPagination,
-      selectedEquipment: selectedEquipment ?? this.selectedEquipment,
+      selectedEquipment: selectedEquipment != null
+          ? selectedEquipment.value
+          : this.selectedEquipment,
       equipmentSelection: equipmentSelection ?? this.equipmentSelection,
     );
   }

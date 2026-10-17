@@ -237,7 +237,7 @@ class _Exercises extends ExerciseCubit {
               name: 'Bench press with a long exercise name',
               muscleGroup: MuscleGroup.push,
               muscles: const TargetMuscles(primary: {}, secondary: {}),
-            ).copyWith(id: 1),
+            ).copyWith(id: const Nullable(1)),
           ),
         ],
       ),

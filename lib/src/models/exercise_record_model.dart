@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 
+import '../common/nullable.dart';
 import 'common.dart';
 import 'exercise_model.dart';
 import 'model.dart';
@@ -135,18 +136,18 @@ class ExerciseRecord extends Equatable implements Model {
 
   @override
   ExerciseRecord copyWith({
-    int? id,
+    Nullable<int>? id,
     int? exerciseId,
     int? weight,
     int? reps,
-    PictureData? picture,
-    VideoData? video,
+    Nullable<PictureData>? picture,
+    Nullable<VideoData>? video,
     int? recordDate,
     int? createdAt,
     int? updatedAt,
   }) {
     return ExerciseRecord(
-      id: id ?? this.id,
+      id: id != null ? id.value : this.id,
       exerciseId: exerciseId ?? this.exerciseId,
       weight: weight ?? this.weight,
       reps: reps ?? this.reps,
@@ -154,8 +155,8 @@ class ExerciseRecord extends Equatable implements Model {
         reps ?? this.reps,
         weight ?? this.weight,
       ),
-      picture: picture ?? this.picture,
-      video: video ?? this.video,
+      picture: picture != null ? picture.value : this.picture,
+      video: video != null ? video.value : this.video,
       recordDate: recordDate ?? this.recordDate,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
