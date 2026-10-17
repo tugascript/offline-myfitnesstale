@@ -86,7 +86,7 @@ class _EquipmentUpdateViewState extends State<EquipmentUpdateView> {
                           existingPicture != null
                               ? PictureData(
                                   uri: existingPicture.uri,
-                                  source: existingPicture.source,
+                                  storage: existingPicture.storage,
                                 )
                               : null,
                         ),

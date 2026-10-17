@@ -67,7 +67,7 @@ class EditExerciseRecordModal extends StatelessWidget {
                     existingPicture != null
                         ? PictureData(
                             uri: existingPicture.uri,
-                            source: existingPicture.source,
+                            storage: existingPicture.storage,
                           )
                         : null,
                   ),
