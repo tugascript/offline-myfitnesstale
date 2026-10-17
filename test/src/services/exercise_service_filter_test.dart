@@ -126,7 +126,10 @@ void main() {
       const EquipmentInput(
         name: 'Barbell',
         picture: Nullable(
-          PictureData(uri: 'file:///barbell.jpg', source: FileSource.url),
+          PictureData(
+            uri: 'file:///barbell.jpg',
+            storage: PictureStorage.files,
+          ),
         ),
         isFavorite: true,
       ),
@@ -189,7 +192,7 @@ void main() {
         reps: 5,
         recordDate: DateTime(2026, 10, 10),
         picture: const Nullable(
-          PictureData(uri: 'file:///lift.jpg', source: FileSource.url),
+          PictureData(uri: 'file:///lift.jpg', storage: PictureStorage.files),
         ),
       ),
     );

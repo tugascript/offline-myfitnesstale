@@ -27,10 +27,10 @@ class VideoData extends Equatable implements JsonData {
   }
 
   factory VideoData.fromJson(String json) {
-    final Map<String, String> map = jsonDecode(json);
+    final Map<String, dynamic> map = jsonDecode(json);
     return VideoData(
-      platform: VideoPlatform.fromValue(map['platform']!),
-      uri: map['uri']!,
+      platform: VideoPlatform.fromValue(map['platform'] as String),
+      uri: map['uri'] as String,
     );
   }
 
@@ -55,10 +55,10 @@ class PictureData extends Equatable implements JsonData {
   }
 
   factory PictureData.fromJson(String json) {
-    final Map<String, String> map = jsonDecode(json);
+    final Map<String, dynamic> map = jsonDecode(json);
     return PictureData(
-      storage: PictureStorage.fromValue(map['storage']!),
-      uri: map['uri']!,
+      storage: PictureStorage.fromValue(map['storage'] as String),
+      uri: map['uri'] as String,
     );
   }
 

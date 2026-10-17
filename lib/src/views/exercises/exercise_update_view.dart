@@ -120,7 +120,7 @@ class _ExerciseUpdateViewState extends State<ExerciseUpdateView> {
                                   existingPicture != null
                                       ? PictureData(
                                           uri: existingPicture.uri,
-                                          source: existingPicture.source,
+                                          storage: existingPicture.storage,
                                         )
                                       : null,
                                 ),

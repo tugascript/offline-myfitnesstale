@@ -148,7 +148,10 @@ void main() {
     });
 
     test('Equipment, Exercise, ExerciseRecord and their DTOs can clear nullable fields', () {
-      const pic = PictureData(uri: 'file:///pic.jpg', source: FileSource.url);
+      const pic = PictureData(
+        uri: 'file:///pic.jpg',
+        storage: PictureStorage.files,
+      );
       const vid = VideoData(
         uri: 'https://youtu.be/1',
         platform: VideoPlatform.youtube,
