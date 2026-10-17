@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:logging/logging.dart';
 import 'package:sqflite/sqflite.dart';
 
+import '../common/nullable.dart';
 import '../models/constants/equipment_constants.dart';
 import '../models/constants/exercise_constants.dart';
 import '../models/constants/workout_constants.dart';
@@ -22,6 +23,7 @@ import 'dtos/reminders_config_dto.dart';
 import 'dtos/system_dto.dart';
 import 'dtos/workout_dto.dart';
 import 'exercise_service.dart';
+import 'inputs/exercise_input.dart';
 import 'profile_service.dart';
 import 'workout_plan_service.dart';
 import 'workout_service.dart';
@@ -159,11 +161,11 @@ class OnboardingService {
               name: exercise.name,
               muscleGroup: exercise.muscleGroup,
               muscles: exercise.muscles,
-              equipments: exercise.equipments
-                  .map((name) => equipmentByName[name])
+              equipmentIds: exercise.equipments
+                  .map((name) => equipmentByName[name]?.id)
                   .nonNulls
-                  .toList(),
-              difficulty: exercise.difficulty,
+                  .toSet(),
+              difficulty: Nullable(exercise.difficulty),
             ),
           )
           .toList(),

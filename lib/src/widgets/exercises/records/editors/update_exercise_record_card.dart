@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../common/nullable.dart';
 import '../../../../cubits/exercise_record_cubit.dart';
+import '../../../../models/common.dart';
 import '../../../../models/enums.dart';
 import '../../../../services/dtos/exercise_dto.dart';
 import '../../../../services/dtos/exercise_record_dto.dart';
+import '../../../../services/inputs/exercise_record_input.dart';
 import '../../../../utilities/sizes/data_display_sizes.dart';
 import 'exercise_record_form.dart';
 
@@ -90,13 +93,34 @@ class UpdateExerciseRecordCard extends StatelessWidget {
                       required int reps,
                       required DateTime date,
                     }) async {
+                      final existingPicture = record.picture;
+                      final existingVideo = record.video;
                       await context
                           .read<ExerciseRecordCubit>()
                           .updateExerciseRecord(
-                            id: record.id,
-                            weight: weight,
-                            reps: reps,
-                            date: date,
+                            record.id,
+                            ExerciseRecordInput(
+                              exerciseId: exerciseId,
+                              weight: weight,
+                              reps: reps,
+                              recordDate: date,
+                              picture: Nullable(
+                                existingPicture != null
+                                    ? PictureData(
+                                        uri: existingPicture.uri,
+                                        source: existingPicture.source,
+                                      )
+                                    : null,
+                              ),
+                              video: Nullable(
+                                existingVideo != null
+                                    ? VideoData(
+                                        uri: existingVideo.uri,
+                                        platform: existingVideo.platform,
+                                      )
+                                    : null,
+                              ),
+                            ),
                           );
                       if (context.mounted) {
                         onClose();

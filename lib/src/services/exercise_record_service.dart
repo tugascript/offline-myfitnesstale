@@ -1,9 +1,6 @@
-import 'inputs/strength_goal_input.dart';
-
 import 'package:logging/logging.dart';
 
 import '../common/nullable.dart';
-import '../models/common.dart';
 import '../models/db.dart';
 import '../models/enums.dart';
 import '../models/exercise_model.dart';
@@ -17,6 +14,8 @@ import 'dtos/exercise_dto.dart';
 import 'dtos/exercise_record_dto.dart';
 import 'dtos/paginated_dto.dart';
 import 'dtos/strength_goal_dto.dart';
+import 'inputs/exercise_record_input.dart';
+import 'inputs/strength_goal_input.dart';
 
 class ExerciseRecordService {
   ExerciseRecordService._();
@@ -47,42 +46,35 @@ class ExerciseRecordService {
       );
 
   Future<Result<ExerciseRecordDto, ServiceError<SingleErrorTypes>>>
-  createExerciseRecord({
-    required int exerciseId,
-    required int weight,
-    required int reps,
-    required DateTime date,
-    PictureData? picture,
-    VideoData? video,
-  }) async {
-    _logger.info('Creating exercise record for exercise $exerciseId');
+  createExerciseRecord(ExerciseRecordInput input) async {
+    _logger.info('Creating exercise record for exercise ${input.exerciseId}');
     try {
       final Exercise? exercise = await _exerciseRepository.selectOne(
-        exerciseId,
+        input.exerciseId,
       );
       if (exercise == null) {
-        _logger.warning("Exercise with id: $exerciseId not found");
+        _logger.warning("Exercise with id: ${input.exerciseId} not found");
         return err(
           ServiceError(
             type: SingleErrorTypes.notFound,
-            description: "Exercise with id $exerciseId not found",
+            description: "Exercise with id ${input.exerciseId} not found",
           ),
         );
       }
 
       final ExerciseRecord exerciseRecord = ExerciseRecord.create(
-        exerciseId: exerciseId,
-        weight: weight,
-        reps: reps,
-        picture: picture,
-        video: video,
-        recordDate: DateUtilities.getDateUnix(date),
+        exerciseId: input.exerciseId,
+        weight: input.weight,
+        reps: input.reps,
+        picture: input.picture.value,
+        video: input.video.value,
+        recordDate: DateUtilities.getDateUnix(input.recordDate),
       );
       final int id = await _repository.insert(exerciseRecord);
       _logger.info('Created exercise record with id $id');
       return ok(
         ExerciseRecordDto.fromModel(
-          exerciseRecord.copyWith(id: id),
+          exerciseRecord.copyWith(id: Nullable(id)),
           exercise: ExerciseDto.fromModel(exercise),
         ),
       );
@@ -310,15 +302,7 @@ class ExerciseRecordService {
   }
 
   Future<Result<ExerciseRecordDto, ServiceError<SingleErrorTypes>>>
-  updateExerciseRecord({
-    required int id,
-    int? weight,
-    int? reps,
-    int? maxStrength,
-    PictureData? picture,
-    VideoData? video,
-    DateTime? date,
-  }) async {
+  updateExerciseRecord(int id, ExerciseRecordInput input) async {
     _logger.info('Updating exercise record with id $id');
     try {
       final ExerciseRecord? exerciseRecord = await _repository.selectOne(id);
@@ -333,22 +317,35 @@ class ExerciseRecordService {
         );
       }
 
-      final int newWeight = weight ?? exerciseRecord.weight;
-      final int newReps = reps ?? exerciseRecord.reps;
+      final Exercise? exercise = await _exerciseRepository.selectOne(
+        input.exerciseId,
+      );
+      if (exercise == null) {
+        return err(
+          ServiceError(
+            type: SingleErrorTypes.notFound,
+            description: 'Exercise with id ${input.exerciseId} not found',
+          ),
+        );
+      }
 
       final ExerciseRecord updatedExerciseRecord = exerciseRecord.copyWith(
-        weight: newWeight,
-        reps: newReps,
-        picture: picture,
-        video: video,
-        recordDate: date != null
-            ? DateUtilities.getDateUnix(date)
-            : exerciseRecord.recordDate,
+        exerciseId: input.exerciseId,
+        weight: input.weight,
+        reps: input.reps,
+        picture: input.picture,
+        video: input.video,
+        recordDate: DateUtilities.getDateUnix(input.recordDate),
         updatedAt: DateUtilities.getNowUtcUnix(),
       );
       await _repository.update(updatedExerciseRecord);
       _logger.info('Updated exercise record with id $id');
-      return ok(ExerciseRecordDto.fromModel(updatedExerciseRecord));
+      return ok(
+        ExerciseRecordDto.fromModel(
+          updatedExerciseRecord,
+          exercise: ExerciseDto.fromModel(exercise),
+        ),
+      );
     } catch (e) {
       _logger.severe('Failed to update exercise record with id $id', e);
       return err(

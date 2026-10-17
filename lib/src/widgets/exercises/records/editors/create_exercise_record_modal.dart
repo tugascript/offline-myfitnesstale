@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../cubits/exercise_record_cubit.dart';
 import '../../../../cubits/states/exercise_record_state.dart';
 import '../../../../models/enums.dart';
+import '../../../../services/inputs/exercise_record_input.dart';
 import '../../../../utilities/sizes/data_display_sizes.dart';
 import '../../../layout/app_modal.dart';
 import 'exercise_record_form.dart';
@@ -49,10 +50,12 @@ class CreateExerciseRecordModal extends StatelessWidget {
                   await context
                       .read<ExerciseRecordCubit>()
                       .createExerciseRecord(
-                        exerciseId: exerciseId,
-                        weight: weight,
-                        reps: reps,
-                        date: date,
+                        ExerciseRecordInput(
+                          exerciseId: exerciseId,
+                          weight: weight,
+                          reps: reps,
+                          recordDate: date,
+                        ),
                       );
                   if (context.mounted) {
                     Navigator.pop(context);

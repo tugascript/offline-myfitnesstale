@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../common/nullable.dart';
 import '../../cubits/exercise_cubit.dart';
 import '../../cubits/states/exercise_state.dart';
+import '../../models/common.dart';
+import '../../services/inputs/equipment_input.dart';
 import '../../utilities/sizes/data_display_sizes.dart';
 import '../../utilities/sizes/screen_size.dart';
 import '../../widgets/equipment/equipment_form.dart';
@@ -73,9 +76,23 @@ class _EquipmentUpdateViewState extends State<EquipmentUpdateView> {
                   isLoading: state.isLoading,
                   submitLabel: "UPDATE",
                   onSubmit: ({required String name}) {
+                    final existingPicture =
+                        selectedEquipment?.equipment.picture;
                     context.read<ExerciseCubit>().updateEquipment(
-                      id: widget.equipmentId,
-                      name: name,
+                      widget.equipmentId,
+                      EquipmentInput(
+                        name: name,
+                        picture: Nullable(
+                          existingPicture != null
+                              ? PictureData(
+                                  uri: existingPicture.uri,
+                                  source: existingPicture.source,
+                                )
+                              : null,
+                        ),
+                        isFavorite:
+                            selectedEquipment?.equipment.isFavorite ?? false,
+                      ),
                     );
                     if (context.mounted) {
                       if (state.error == null) {

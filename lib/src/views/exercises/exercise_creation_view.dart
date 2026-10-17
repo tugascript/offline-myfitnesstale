@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../common/nullable.dart';
 import '../../cubits/exercise_cubit.dart';
 import '../../cubits/states/exercise_state.dart';
+import '../../models/common.dart';
 import '../../models/enums.dart';
+import '../../services/inputs/exercise_input.dart';
 import '../../utilities/sizes/data_display_sizes.dart';
 import '../../utilities/sizes/screen_size.dart';
 import '../../widgets/exercises/details/exercise_form.dart';
@@ -87,14 +90,18 @@ class ExerciseCreationView extends StatelessWidget {
                             required Set<Muscle> secondaryMuscles,
                           }) {
                             context.read<ExerciseCubit>().createExercise(
-                              name: name,
-                              description: description,
-                              muscleGroup: muscleGroup,
-                              primaryMuscles: primaryMuscles,
-                              secondaryMuscles: secondaryMuscles,
-                              equipmentIds: equipmentIds,
-                              difficulty: difficulty,
-                              isFavorite: isFavorite,
+                              ExerciseInput(
+                                name: name,
+                                description: Nullable(description),
+                                muscleGroup: muscleGroup,
+                                muscles: TargetMuscles(
+                                  primary: primaryMuscles,
+                                  secondary: secondaryMuscles,
+                                ),
+                                equipmentIds: equipmentIds,
+                                difficulty: Nullable(difficulty),
+                                isFavorite: isFavorite,
+                              ),
                             );
                           },
                     ),

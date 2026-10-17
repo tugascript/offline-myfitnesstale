@@ -2,9 +2,15 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:myfitnesstale/src/common/nullable.dart';
 import 'package:myfitnesstale/src/models/common.dart';
 import 'package:myfitnesstale/src/models/enums.dart';
+import 'package:myfitnesstale/src/models/equipment_model.dart';
+import 'package:myfitnesstale/src/models/exercise_model.dart';
+import 'package:myfitnesstale/src/models/exercise_record_model.dart';
 import 'package:myfitnesstale/src/models/food_model.dart';
 import 'package:myfitnesstale/src/models/weight_goal_model.dart';
 import 'package:myfitnesstale/src/models/weight_record_model.dart';
+import 'package:myfitnesstale/src/services/dtos/equipment_dto.dart';
+import 'package:myfitnesstale/src/services/dtos/exercise_dto.dart';
+import 'package:myfitnesstale/src/services/dtos/exercise_record_dto.dart';
 import 'package:myfitnesstale/src/services/dtos/strength_goal_dto.dart';
 import 'package:myfitnesstale/src/services/dtos/weight_goal_dto.dart';
 import 'package:myfitnesstale/src/services/dtos/weight_record_dto.dart';
@@ -139,6 +145,86 @@ void main() {
         dto.copyWith(completedAt: const Nullable(null)).completedAt,
         isNull,
       );
+    });
+
+    test('Equipment, Exercise, ExerciseRecord and their DTOs can clear nullable fields', () {
+      const pic = PictureData(uri: 'file:///pic.jpg', source: FileSource.url);
+      const vid = VideoData(
+        uri: 'https://youtu.be/1',
+        platform: VideoPlatform.youtube,
+      );
+
+      final equipment = Equipment.create(
+        name: 'Barbell',
+        picture: pic,
+        isFavorite: true,
+      ).copyWith(id: const Nullable(1));
+      expect(equipment.copyWith().picture, pic);
+      expect(equipment.copyWith(picture: const Nullable(null)).picture, isNull);
+      final equipmentDto = EquipmentDto.fromModel(equipment);
+      expect(equipmentDto.copyWith().picture, isNotNull);
+      expect(
+        equipmentDto.copyWith(picture: const Nullable(null)).picture,
+        isNull,
+      );
+
+      final exercise = Exercise.create(
+        name: 'Bench Press',
+        muscleGroup: MuscleGroup.push,
+        muscles: const TargetMuscles(primary: {}, secondary: {}),
+        description: 'Flat bench',
+        picture: pic,
+        video: vid,
+        difficulty: Difficulty.intermediate,
+      ).copyWith(id: const Nullable(2));
+      expect(exercise.copyWith().description, 'Flat bench');
+      expect(
+        exercise.copyWith(description: const Nullable(null)).description,
+        isNull,
+      );
+      expect(exercise.copyWith(picture: const Nullable(null)).picture, isNull);
+      expect(exercise.copyWith(video: const Nullable(null)).video, isNull);
+      expect(
+        exercise.copyWith(difficulty: const Nullable(null)).difficulty,
+        isNull,
+      );
+
+      final exerciseDto = ExerciseDto.fromModel(
+        exercise,
+        equipments: [equipmentDto],
+      );
+      expect(exerciseDto.copyWith().difficulty, Difficulty.intermediate);
+      expect(
+        exerciseDto.copyWith(difficulty: const Nullable(null)).difficulty,
+        isNull,
+      );
+      expect(
+        exerciseDto.copyWith(equipments: const Nullable(null)).equipments,
+        isNull,
+      );
+
+      final record = ExerciseRecord.create(
+        exerciseId: 2,
+        weight: 80000,
+        reps: 5,
+        recordDate: 1700000000,
+        picture: pic,
+        video: vid,
+      ).copyWith(id: const Nullable(3));
+      expect(record.copyWith().picture, pic);
+      expect(record.copyWith(picture: const Nullable(null)).picture, isNull);
+      expect(record.copyWith(video: const Nullable(null)).video, isNull);
+
+      final recordDto = ExerciseRecordDto.fromModel(
+        record,
+        exercise: exerciseDto,
+      );
+      expect(recordDto.copyWith().exercise, exerciseDto);
+      expect(
+        recordDto.copyWith(exercise: const Nullable(null)).exercise,
+        isNull,
+      );
+      expect(recordDto.copyWith(picture: const Nullable(null)).picture, isNull);
     });
   });
 }

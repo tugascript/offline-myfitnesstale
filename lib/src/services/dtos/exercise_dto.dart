@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 
+import '../../common/nullable.dart';
 import '../../models/common.dart';
 import '../../models/enums.dart';
 import '../../models/exercise_model.dart';
@@ -66,32 +67,33 @@ class ExerciseDto extends Equatable implements Dto<Exercise> {
     int? id,
     String? name,
     String? description,
-    PictureDto? picture,
-    VideoDto? video,
+    Nullable<PictureDto>? picture,
+    Nullable<VideoDto>? video,
     MuscleGroup? muscleGroup,
     TargetMuscles? muscles,
-    List<EquipmentDto>? equipments,
+    Nullable<List<EquipmentDto>>? equipments,
     bool? isFavorite,
-    Difficulty? difficulty,
+    Nullable<Difficulty>? difficulty,
     CreatedBy? createdBy,
   }) {
     return ExerciseDto(
       id: id ?? this.id,
       name: name ?? this.name,
       description: description ?? this.description,
-      picture: picture ?? this.picture,
-      video: video ?? this.video,
+      picture: picture != null ? picture.value : this.picture,
+      video: video != null ? video.value : this.video,
       muscleGroup: muscleGroup ?? this.muscleGroup,
       muscles: muscles ?? this.muscles,
-      equipments: equipments ?? this.equipments,
+      equipments: equipments != null ? equipments.value : this.equipments,
       isFavorite: isFavorite ?? this.isFavorite,
-      difficulty: difficulty ?? this.difficulty,
+      difficulty: difficulty != null ? difficulty.value : this.difficulty,
       createdBy: createdBy ?? this.createdBy,
     );
   }
 
   @override
   List<Object?> get props => [
+    id,
     name,
     description,
     picture,
