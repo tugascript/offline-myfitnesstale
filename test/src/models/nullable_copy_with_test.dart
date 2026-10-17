@@ -363,10 +363,13 @@ void main() {
       );
 
       final workoutDto = WorkoutDto.fromModel(workout, sets: [setDto]);
+      expect(workoutDto.phase, WorkoutPhase.maxStrength);
+      expect(workoutDto.copyWith().phase, WorkoutPhase.maxStrength);
       expect(
         workoutDto.copyWith(description: const Nullable(null)).description,
         isNull,
       );
+      expect(workoutDto.copyWith(phase: const Nullable(null)).phase, isNull);
       expect(workoutDto.copyWith(sets: const Nullable(null)).sets, isNull);
 
       final workoutRecord = WorkoutRecord.create(

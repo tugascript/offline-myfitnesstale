@@ -19,6 +19,7 @@ class WorkoutDto extends Equatable implements Dto<Workout> {
   final PictureDto? picture;
   final VideoDto? video;
   final Difficulty difficulty;
+  final WorkoutPhase? phase;
   final int version;
   final bool isFavorite;
   final int totalSets;
@@ -38,6 +39,7 @@ class WorkoutDto extends Equatable implements Dto<Workout> {
     this.picture,
     this.video,
     required this.difficulty,
+    this.phase,
     required this.version,
     required this.isFavorite,
     required this.totalSets,
@@ -59,6 +61,7 @@ class WorkoutDto extends Equatable implements Dto<Workout> {
       muscleGroups: model.muscleGroups,
       muscles: model.muscles,
       difficulty: model.difficulty,
+      phase: model.phase,
       isFavorite: model.isFavorite,
       version: model.version,
       totalSets: model.totalSets,
@@ -79,6 +82,7 @@ class WorkoutDto extends Equatable implements Dto<Workout> {
     Nullable<PictureDto>? picture,
     Nullable<VideoDto>? video,
     Difficulty? difficulty,
+    Nullable<WorkoutPhase>? phase,
     bool? isFavorite,
     int? version,
     Nullable<List<WorkoutSetDto>>? sets,
@@ -96,6 +100,7 @@ class WorkoutDto extends Equatable implements Dto<Workout> {
       picture: picture != null ? picture.value : this.picture,
       video: video != null ? video.value : this.video,
       difficulty: difficulty ?? this.difficulty,
+      phase: phase != null ? phase.value : this.phase,
       isFavorite: isFavorite ?? this.isFavorite,
       version: version ?? this.version,
       totalSets: totalSets ?? this.totalSets,
@@ -116,6 +121,7 @@ class WorkoutDto extends Equatable implements Dto<Workout> {
     picture,
     video,
     difficulty,
+    phase,
     isFavorite,
     version,
     totalSets,
