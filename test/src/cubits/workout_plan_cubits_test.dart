@@ -625,7 +625,34 @@ void main() {
       );
     }
 
-    // Failing workout status update must not reopen the completed day/week/plan
+    // Failing workout status update or day+workout upsert must not reopen the completed day/week/plan
+    final dayUpsertOnCompleted = await service.upsertWorkoutPlanDayRecord(
+      WorkoutPlanDayRecordInput(
+        workoutPlanRecordId: planRecordId,
+        status: ProgressStatus.inProgress,
+        week: 1,
+        weekDay: 1,
+      ),
+    );
+    expect(dayUpsertOnCompleted.isOk(), isTrue);
+    expect(
+      dayUpsertOnCompleted.value.weeks.single.days.single.completedAt,
+      isNotNull,
+    );
+
+    final failedUpsert = await service.upsertWorkoutPlanWorkoutRecord(
+      WorkoutPlanWorkoutRecordInput(
+        workoutPlanRecordId: planRecordId,
+        workoutRecordId: recordBId,
+        week: 1,
+        weekDay: 1,
+        workoutPosition: 99,
+        status: ProgressStatus.inProgress,
+      ),
+    );
+    expect(failedUpsert.isErr(), isTrue);
+    expect(failedUpsert.error.type, SingleErrorTypes.notFound);
+
     final failedUpdate = await service.updateWorkoutPlanWorkoutRecordStatus(
       WorkoutPlanWorkoutRecordInput(
         workoutPlanRecordId: planRecordId,
