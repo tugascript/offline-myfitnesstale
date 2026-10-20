@@ -201,47 +201,6 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
     final useWorkoutPosition =
         workoutPosition ?? currentPlanRecord.currentWorkoutPosition;
 
-    final dayResult = await _workoutPlanRecordService
-        .upsertWorkoutPlanDayRecord(
-          WorkoutPlanDayRecordInput(
-            workoutPlanRecordId: currentPlanRecord.id,
-            status: ProgressStatus.inProgress,
-            week: useWeek,
-            weekDay: useDay,
-          ),
-        );
-    if (dayResult.isErr()) {
-      final error = dayResult.error;
-      switch (error.type) {
-        case SingleErrorTypes.operationFailure:
-          emit(
-            state.copyWith(
-              error: Nullable(
-                ErrorState(
-                  type: error.type.name,
-                  description: 'Failed to start workout plan record',
-                ),
-              ),
-              isLoading: false,
-            ),
-          );
-          break;
-        default:
-          emit(
-            state.copyWith(
-              error: Nullable(
-                ErrorState(
-                  type: error.type.name,
-                  description: 'Unknown error occurred',
-                ),
-              ),
-              isLoading: false,
-            ),
-          );
-      }
-      return;
-    }
-
     final workoutResult = await _workoutPlanRecordService
         .upsertWorkoutPlanWorkoutRecord(
           WorkoutPlanWorkoutRecordInput(
