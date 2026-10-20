@@ -284,9 +284,20 @@ class WorkoutPlanRecordService {
           ),
         );
       }
+      if (input.workoutPlanId != record.workoutPlanId) {
+        _logger.info(
+          'Workout plan record $id belongs to workout plan ${record.workoutPlanId}, not ${input.workoutPlanId}',
+        );
+        return err(
+          const ServiceError(
+            type: SingleErrorTypes.invalidInput,
+            description:
+                'Workout plan record cannot be moved to another workout plan',
+          ),
+        );
+      }
 
       final WorkoutPlanRecord updatedRecord = record.copyWith(
-        workoutPlanId: input.workoutPlanId,
         status: input.status,
         startedAt: input.startedAt != null
             ? DateUtilities.getDateUnix(input.startedAt!)
@@ -800,19 +811,10 @@ class WorkoutPlanRecordService {
     }
   }
 
-  Future<Result<WorkoutPlanDayRecordDto, ServiceError<SingleErrorTypes>>>
-  _createWorkoutPlanWeekAndDayRecords({
-    required WorkoutPlanRecord workoutPlanRecord,
-    required int week,
-    required int weekDay,
-    required ProgressStatus status,
-  }) async {
-    final int workoutPlanRecordId = workoutPlanRecord.id!;
-    final int workoutPlanId = workoutPlanRecord.workoutPlanId;
-    _logger.info(
-      'Creating workout plan week and day records for workout plan record $workoutPlanRecordId and workout plan $workoutPlanId for week $week and day $weekDay',
-    );
-
+  Future<WorkoutPlanWeek?> _findTemplateWeek(
+    int workoutPlanId,
+    int week,
+  ) async {
     final WhereBuilder mainWhere = WhereBuilder();
     mainWhere.and(WorkoutPlanWeekColumns.workoutPlanId.equal, workoutPlanId);
 
@@ -849,7 +851,27 @@ class WorkoutPlanRecordService {
           orderBy: [WorkoutPlanWeekColumns.startWeek.orderAsc],
           limit: 1,
         );
-    if (weeks.isEmpty) {
+    return weeks.isNotEmpty ? weeks.first : null;
+  }
+
+  Future<Result<WorkoutPlanDayRecordDto, ServiceError<SingleErrorTypes>>>
+  _createWorkoutPlanWeekAndDayRecords({
+    required WorkoutPlanRecord workoutPlanRecord,
+    required int week,
+    required int weekDay,
+    required ProgressStatus status,
+  }) async {
+    final int workoutPlanRecordId = workoutPlanRecord.id!;
+    final int workoutPlanId = workoutPlanRecord.workoutPlanId;
+    _logger.info(
+      'Creating workout plan week and day records for workout plan record $workoutPlanRecordId and workout plan $workoutPlanId for week $week and day $weekDay',
+    );
+
+    final WorkoutPlanWeek? templateWeek = await _findTemplateWeek(
+      workoutPlanId,
+      week,
+    );
+    if (templateWeek == null) {
       _logger.info(
         'No workout plan week found for workout plan $workoutPlanId and week $week',
       );
@@ -863,7 +885,7 @@ class WorkoutPlanRecordService {
 
     final WorkoutPlanWeekRecord weekRecord = WorkoutPlanWeekRecord.create(
       workoutPlanRecordId: workoutPlanRecordId,
-      workoutPlanWeekId: weeks.first.id!,
+      workoutPlanWeekId: templateWeek.id!,
       week: week,
       status: status,
       currentDay: weekDay,
@@ -871,7 +893,7 @@ class WorkoutPlanRecordService {
     final WhereBuilder dayWhere = WhereBuilder();
     dayWhere.and(
       WorkoutPlanDayColumns.workoutPlanWeekId.equal,
-      weeks.first.id!,
+      templateWeek.id!,
     );
     dayWhere.and(WorkoutPlanDayColumns.day.equal, weekDay);
 
@@ -884,7 +906,7 @@ class WorkoutPlanRecordService {
           );
       if (dayData.isEmpty) {
         _logger.info(
-          'No workout plan day found for workout plan week ${weeks.first.id} and day $weekDay',
+          'No workout plan day found for workout plan week ${templateWeek.id} and day $weekDay',
         );
         return err(
           const ServiceError(
@@ -1128,33 +1150,6 @@ class WorkoutPlanRecordService {
     final status = input.status;
     _logger.info('Updating workout plan workout record status to $status');
     try {
-      final dayResult = await upsertWorkoutPlanDayRecord(
-        WorkoutPlanDayRecordInput(
-          workoutPlanRecordId: workoutPlanRecordId,
-          status: ProgressStatus.inProgress,
-          week: input.week,
-          weekDay: input.weekDay,
-        ),
-      );
-      if (dayResult.isErr()) {
-        return err(dayResult.error);
-      }
-
-      final upsertResult = await upsertWorkoutPlanWorkoutRecord(
-        WorkoutPlanWorkoutRecordInput(
-          workoutPlanRecordId: workoutPlanRecordId,
-          workoutRecordId: input.workoutRecordId,
-          status: ProgressStatus.inProgress,
-          week: input.week,
-          weekDay: input.weekDay,
-          workoutPosition: input.workoutPosition,
-          startedAt: input.startedAt,
-        ),
-      );
-      if (upsertResult.isErr()) {
-        return err(upsertResult.error);
-      }
-
       final WorkoutPlanRecord? record = await _repository.selectOne(
         workoutPlanRecordId,
       );
@@ -1184,77 +1179,220 @@ class WorkoutPlanRecordService {
             whereArgs: weekWhere.args,
             limit: 1,
           );
-      if (weekRecords.isEmpty) {
-        return err(
-          const ServiceError(
-            type: SingleErrorTypes.notFound,
-            description: 'Week record not found',
-          ),
-        );
-      }
-      final weekRecord = weekRecords.first;
+      final WorkoutPlanWeekRecord? existingWeekRecord = weekRecords.isNotEmpty
+          ? weekRecords.first
+          : null;
 
-      final dayWhere = WhereBuilder();
-      dayWhere.and(
-        WorkoutPlanDayRecordColumns.workoutPlanWeekRecordId.equal,
-        weekRecord.id!,
-      );
-      dayWhere.and(WorkoutPlanDayRecordColumns.day.equal, weekDay);
-      final List<WorkoutPlanDayRecord> dayRecords =
-          await _workoutPlanDayRecordRepository.selectMany(
-            where: dayWhere.where,
-            whereArgs: dayWhere.args,
-            limit: 1,
+      WorkoutPlanWeek? templateWeek;
+      if (existingWeekRecord == null) {
+        templateWeek = await _findTemplateWeek(record.workoutPlanId, week);
+        if (templateWeek == null) {
+          return err(
+            const ServiceError(
+              type: SingleErrorTypes.notFound,
+              description:
+                  'No workout plan week found for workout plan and week',
+            ),
           );
-      if (dayRecords.isEmpty) {
-        return err(
-          const ServiceError(
-            type: SingleErrorTypes.notFound,
-            description: 'Day record not found',
-          ),
-        );
+        }
       }
-      final dayRecord = dayRecords.first;
+      final int workoutPlanWeekId =
+          existingWeekRecord?.workoutPlanWeekId ?? templateWeek!.id!;
 
-      final workoutWhere = WhereBuilder();
-      workoutWhere.and(
-        WorkoutPlanWorkoutRecordColumns.workoutPlanDayRecordId.equal,
-        dayRecord.id!,
-      );
-      workoutWhere.and(
-        WorkoutPlanWorkoutRecordColumns.position.equal,
-        workoutPosition,
-      );
-      final List<WorkoutPlanWorkoutRecord> workoutRecords =
-          await _workoutPlanWorkoutRecordRepository.selectMany(
-            where: workoutWhere.where,
-            whereArgs: workoutWhere.args,
-            limit: 1,
-          );
-      if (workoutRecords.isEmpty) {
-        return err(
-          const ServiceError(
-            type: SingleErrorTypes.notFound,
-            description: 'Workout record not found',
-          ),
+      WorkoutPlanDayRecord? existingDayRecord;
+      if (existingWeekRecord != null) {
+        final dayWhere = WhereBuilder();
+        dayWhere.and(
+          WorkoutPlanDayRecordColumns.workoutPlanWeekRecordId.equal,
+          existingWeekRecord.id!,
         );
+        dayWhere.and(WorkoutPlanDayRecordColumns.day.equal, weekDay);
+        final List<WorkoutPlanDayRecord> dayRecords =
+            await _workoutPlanDayRecordRepository.selectMany(
+              where: dayWhere.where,
+              whereArgs: dayWhere.args,
+              limit: 1,
+            );
+        if (dayRecords.isNotEmpty) {
+          existingDayRecord = dayRecords.first;
+        }
       }
-      final workoutRecord = workoutRecords.first;
+
+      WorkoutPlanDay? templateDay;
+      if (existingDayRecord == null) {
+        final dayTemplateWhere = WhereBuilder();
+        dayTemplateWhere.and(
+          WorkoutPlanDayColumns.workoutPlanWeekId.equal,
+          workoutPlanWeekId,
+        );
+        dayTemplateWhere.and(WorkoutPlanDayColumns.day.equal, weekDay);
+        final List<WorkoutPlanDay> dayData = await _workoutPlanDayRepository
+            .selectMany(
+              where: dayTemplateWhere.where,
+              whereArgs: dayTemplateWhere.args,
+              limit: 1,
+            );
+        if (dayData.isEmpty) {
+          return err(
+            const ServiceError(
+              type: SingleErrorTypes.notFound,
+              description:
+                  'No workout plan day found for workout plan week and day',
+            ),
+          );
+        }
+        templateDay = dayData.first;
+      }
+      final int workoutPlanDayId =
+          existingDayRecord?.workoutPlanDayId ?? templateDay!.id!;
+
+      WorkoutPlanWorkoutRecord? existingWorkoutRecord;
+      if (existingDayRecord != null) {
+        final workoutWhere = WhereBuilder();
+        workoutWhere.and(
+          WorkoutPlanWorkoutRecordColumns.workoutPlanDayRecordId.equal,
+          existingDayRecord.id!,
+        );
+        workoutWhere.and(
+          WorkoutPlanWorkoutRecordColumns.position.equal,
+          workoutPosition,
+        );
+        final List<WorkoutPlanWorkoutRecord> workoutRecords =
+            await _workoutPlanWorkoutRecordRepository.selectMany(
+              where: workoutWhere.where,
+              whereArgs: workoutWhere.args,
+              limit: 1,
+            );
+        if (workoutRecords.isNotEmpty) {
+          existingWorkoutRecord = workoutRecords.first;
+        }
+      }
+
+      WorkoutPlanWorkout? templateWorkout;
+      if (existingWorkoutRecord == null) {
+        final workoutTemplateWhere = WhereBuilder();
+        workoutTemplateWhere.and(
+          WorkoutPlanWorkoutColumns.workoutPlanDayId.equal,
+          workoutPlanDayId,
+        );
+        workoutTemplateWhere.and(
+          WorkoutPlanWorkoutColumns.position.equal,
+          workoutPosition,
+        );
+        final workoutPlansWorkouts = await _workoutPlanWorkoutRepository
+            .selectMany(
+              where: workoutTemplateWhere.where,
+              whereArgs: workoutTemplateWhere.args,
+              limit: 1,
+            );
+        if (workoutPlansWorkouts.isEmpty) {
+          return err(
+            const ServiceError(
+              type: SingleErrorTypes.notFound,
+              description: 'Workout plan workout not found',
+            ),
+          );
+        }
+        templateWorkout = workoutPlansWorkouts.first;
+      }
 
       final now = DateUtilities.getNowUtcUnix();
 
       await _repository.startTransaction((txn) async {
-        final updatedWorkoutRecord = workoutRecord.copyWith(
-          status: status,
-          completedAt: Nullable(
-            status == ProgressStatus.completed ? now : null,
-          ),
-          updatedAt: now,
-        );
-        await _workoutPlanWorkoutRecordRepository.update(
-          updatedWorkoutRecord,
-          txn,
-        );
+        WorkoutPlanRecord currentRecord = record;
+        late WorkoutPlanWeekRecord weekRecord;
+        if (existingWeekRecord == null) {
+          final newWeekRecord = WorkoutPlanWeekRecord.create(
+            workoutPlanRecordId: workoutPlanRecordId,
+            workoutPlanWeekId: workoutPlanWeekId,
+            week: week,
+            status: ProgressStatus.inProgress,
+            currentDay: weekDay,
+          );
+          final weekRecordId = await _workoutPlanWeekRecordRepository.insert(
+            newWeekRecord,
+            txn,
+          );
+          weekRecord = newWeekRecord.copyWith(id: Nullable(weekRecordId));
+        } else {
+          weekRecord = existingWeekRecord;
+          if (existingDayRecord == null) {
+            weekRecord = weekRecord.copyWith(
+              currentDay: weekDay,
+              updatedAt: now,
+            );
+            await _workoutPlanWeekRecordRepository.update(weekRecord, txn);
+          }
+        }
+
+        late WorkoutPlanDayRecord dayRecord;
+        if (existingDayRecord == null) {
+          final newDayRecord = WorkoutPlanDayRecord.create(
+            workoutPlanRecordId: workoutPlanRecordId,
+            workoutPlanWeekRecordId: weekRecord.id!,
+            workoutPlanDayId: workoutPlanDayId,
+            day: weekDay,
+            week: week,
+            status: ProgressStatus.inProgress,
+          );
+          final dayRecordId = await _workoutPlanDayRecordRepository.insert(
+            newDayRecord,
+            txn,
+          );
+          dayRecord = newDayRecord.copyWith(id: Nullable(dayRecordId));
+
+          currentRecord = currentRecord.copyWith(
+            currentWeek: week,
+            currentDay: weekDay,
+            updatedAt: now,
+          );
+          await _repository.update(currentRecord, txn);
+        } else {
+          dayRecord = existingDayRecord;
+        }
+
+        late WorkoutPlanWorkoutRecord updatedWorkoutRecord;
+        if (existingWorkoutRecord == null) {
+          final newWorkoutRecord =
+              WorkoutPlanWorkoutRecord.create(
+                workoutPlanRecordId: workoutPlanRecordId,
+                workoutPlanWeekRecordId: weekRecord.id!,
+                workoutPlanDayRecordId: dayRecord.id!,
+                workoutPlanWorkoutId: templateWorkout!.id!,
+                workoutRecordId: input.workoutRecordId,
+                position: workoutPosition,
+                startedAt: input.startedAt != null
+                    ? DateUtilities.getDateUnix(input.startedAt!)
+                    : null,
+                status: status,
+              ).copyWith(
+                completedAt: Nullable(
+                  status == ProgressStatus.completed ? now : null,
+                ),
+                updatedAt: now,
+              );
+          final workoutRecordId = await _workoutPlanWorkoutRecordRepository
+              .insert(newWorkoutRecord, txn);
+          updatedWorkoutRecord = newWorkoutRecord.copyWith(
+            id: Nullable(workoutRecordId),
+          );
+        } else {
+          updatedWorkoutRecord = existingWorkoutRecord.copyWith(
+            workoutRecordId: input.workoutRecordId,
+            startedAt: input.startedAt != null
+                ? DateUtilities.getDateUnix(input.startedAt!)
+                : existingWorkoutRecord.startedAt,
+            status: status,
+            completedAt: Nullable(
+              status == ProgressStatus.completed ? now : null,
+            ),
+            updatedAt: now,
+          );
+          await _workoutPlanWorkoutRecordRepository.update(
+            updatedWorkoutRecord,
+            txn,
+          );
+        }
 
         final siblingWorkouts = await _workoutPlanWorkoutRecordRepository
             .selectMany(
@@ -1322,7 +1460,7 @@ class WorkoutPlanRecordService {
             );
 
             final plan = await _workoutPlanRepository.selectOne(
-              record.workoutPlanId,
+              currentRecord.workoutPlanId,
               txn,
             );
             if (plan != null) {
@@ -1343,14 +1481,69 @@ class WorkoutPlanRecordService {
                   );
 
               if (allPlanWorkoutsCompleted) {
-                final updatedRecord = record.copyWith(
+                currentRecord = currentRecord.copyWith(
                   status: ProgressStatus.completed,
                   completedAt: Nullable(now),
                   updatedAt: now,
                 );
-                await _repository.update(updatedRecord, txn);
+                await _repository.update(currentRecord, txn);
+              } else if (currentRecord.status == ProgressStatus.completed ||
+                  currentRecord.completedAt != null) {
+                currentRecord = currentRecord.copyWith(
+                  status: ProgressStatus.inProgress,
+                  completedAt: const Nullable(null),
+                  updatedAt: now,
+                );
+                await _repository.update(currentRecord, txn);
               }
             }
+          } else {
+            if (weekRecord.status == ProgressStatus.completed ||
+                weekRecord.completedAt != null) {
+              weekRecord = weekRecord.copyWith(
+                status: ProgressStatus.inProgress,
+                completedAt: const Nullable(null),
+                updatedAt: now,
+              );
+              await _workoutPlanWeekRecordRepository.update(weekRecord, txn);
+            }
+            if (currentRecord.status == ProgressStatus.completed ||
+                currentRecord.completedAt != null) {
+              currentRecord = currentRecord.copyWith(
+                status: ProgressStatus.inProgress,
+                completedAt: const Nullable(null),
+                updatedAt: now,
+              );
+              await _repository.update(currentRecord, txn);
+            }
+          }
+        } else {
+          if (dayRecord.status != ProgressStatus.inProgress ||
+              dayRecord.completedAt != null) {
+            final updatedDayRecord = dayRecord.copyWith(
+              status: ProgressStatus.inProgress,
+              completedAt: const Nullable(null),
+              updatedAt: now,
+            );
+            await _workoutPlanDayRecordRepository.update(updatedDayRecord, txn);
+          }
+          if (weekRecord.status == ProgressStatus.completed ||
+              weekRecord.completedAt != null) {
+            weekRecord = weekRecord.copyWith(
+              status: ProgressStatus.inProgress,
+              completedAt: const Nullable(null),
+              updatedAt: now,
+            );
+            await _workoutPlanWeekRecordRepository.update(weekRecord, txn);
+          }
+          if (currentRecord.status == ProgressStatus.completed ||
+              currentRecord.completedAt != null) {
+            currentRecord = currentRecord.copyWith(
+              status: ProgressStatus.inProgress,
+              completedAt: const Nullable(null),
+              updatedAt: now,
+            );
+            await _repository.update(currentRecord, txn);
           }
         }
       });
