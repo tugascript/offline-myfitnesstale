@@ -14,6 +14,7 @@ import 'package:myfitnesstale/src/models/workout_plan_week_model.dart';
 import 'package:myfitnesstale/src/models/workout_plan_workout_model.dart';
 import 'package:myfitnesstale/src/models/workout_plan_workout_record_model.dart';
 import 'package:myfitnesstale/src/models/workout_record_model.dart';
+import 'package:myfitnesstale/src/services/common/errors.dart';
 import 'package:myfitnesstale/src/services/workout_plan_service.dart';
 import 'package:myfitnesstale/src/services/workout_plan_record_service.dart';
 import 'package:myfitnesstale/src/services/workout_record_service.dart';
@@ -623,5 +624,53 @@ void main() {
         position == 1 ? ProgressStatus.inProgress : ProgressStatus.completed,
       );
     }
+
+    // Failing workout status update must not reopen the completed day/week/plan
+    final failedUpdate = await service.updateWorkoutPlanWorkoutRecordStatus(
+      WorkoutPlanWorkoutRecordInput(
+        workoutPlanRecordId: planRecordId,
+        workoutRecordId: recordBId,
+        week: 1,
+        weekDay: 1,
+        workoutPosition: 99,
+        status: ProgressStatus.inProgress,
+      ),
+    );
+    expect(failedUpdate.isErr(), isTrue);
+    expect(failedUpdate.error.type, SingleErrorTypes.notFound);
+
+    final afterFailedLookup = await service
+        .getWorkoutPlanRecordWeeksDaysAndWorkouts(planRecordId);
+    expect(afterFailedLookup.isOk(), isTrue);
+    expect(afterFailedLookup.value.single.completedAt, isNotNull);
+    expect(afterFailedLookup.value.single.days.single.completedAt, isNotNull);
+
+    // Valid workout status reset atomically reopens the day/week/plan
+    final reopened = await service.updateWorkoutPlanWorkoutRecordStatus(
+      WorkoutPlanWorkoutRecordInput(
+        workoutPlanRecordId: planRecordId,
+        workoutRecordId: recordBId,
+        week: 1,
+        weekDay: 1,
+        workoutPosition: 2,
+        status: ProgressStatus.inProgress,
+      ),
+    );
+    expect(reopened.isOk(), isTrue);
+    expect(reopened.value.status, ProgressStatus.inProgress);
+    expect(reopened.value.completedAt, isNull);
+    expect(reopened.value.weeks.single.completedAt, isNull);
+    expect(reopened.value.weeks.single.days.single.completedAt, isNull);
+
+    // Reparenting a workout plan record to another plan is rejected
+    final reparentAttempt = await service.updateWorkoutPlanRecord(
+      planRecordId,
+      WorkoutPlanRecordInput(
+        workoutPlanId: planId + 999,
+        status: ProgressStatus.inProgress,
+      ),
+    );
+    expect(reparentAttempt.isErr(), isTrue);
+    expect(reparentAttempt.error.type, SingleErrorTypes.invalidInput);
   });
 }
