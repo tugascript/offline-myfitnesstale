@@ -672,7 +672,58 @@ void main() {
     expect(afterFailedLookup.value.single.completedAt, isNotNull);
     expect(afterFailedLookup.value.single.days.single.completedAt, isNotNull);
 
-    // Valid workout status reset atomically reopens the day/week/plan
+    // Starting another execution must not allow an old one to reopen alongside it.
+    final replacement = await service.createWorkoutPlanRecord(
+      WorkoutPlanRecordInput(workoutPlanId: planId),
+    );
+    expect(replacement.isOk(), isTrue);
+    final replacementId = replacement.value.id;
+    final tables = [
+      WorkoutPlanRecord.table,
+      'workout_plan_week_records',
+      'workout_plan_day_records',
+      WorkoutPlanWorkoutRecord.table,
+    ];
+    Future<List<List<Map<String, Object?>>>> snapshot() async => [
+      for (final table in tables) await db.query(table, orderBy: 'id'),
+    ];
+
+    final beforeReopen = await snapshot();
+    final stalePosition = await service.updateWorkoutPlanWorkoutRecordStatus(
+      WorkoutPlanWorkoutRecordInput(
+        workoutPlanRecordId: planRecordId,
+        workoutRecordId: recordBId,
+        workoutPosition: 99,
+      ),
+    );
+    expect(stalePosition.isErr(), isTrue);
+    expect(await snapshot(), beforeReopen);
+
+    // A failure while abandoning the active execution rolls back the whole tree.
+    await db.execute('''
+      CREATE TEMP TRIGGER fail_plan_replacement
+      BEFORE UPDATE ON ${WorkoutPlanRecord.table}
+      WHEN OLD.id = $replacementId
+      BEGIN
+        SELECT RAISE(ABORT, 'injected replacement failure');
+      END;
+    ''');
+    try {
+      final failedReopen = await service.updateWorkoutPlanWorkoutRecordStatus(
+        WorkoutPlanWorkoutRecordInput(
+          workoutPlanRecordId: planRecordId,
+          workoutRecordId: recordBId,
+          workoutPosition: 2,
+        ),
+      );
+      expect(failedReopen.isErr(), isTrue);
+      expect(failedReopen.error.type, SingleErrorTypes.operationFailure);
+      expect(await snapshot(), beforeReopen);
+    } finally {
+      await db.execute('DROP TRIGGER fail_plan_replacement');
+    }
+
+    // Valid workout status reset atomically reopens the day/week/plan.
     final reopened = await service.updateWorkoutPlanWorkoutRecordStatus(
       WorkoutPlanWorkoutRecordInput(
         workoutPlanRecordId: planRecordId,
@@ -688,6 +739,50 @@ void main() {
     expect(reopened.value.completedAt, isNull);
     expect(reopened.value.weeks.single.completedAt, isNull);
     expect(reopened.value.weeks.single.days.single.completedAt, isNull);
+
+    Future<void> expectOnlyActive(int id) async {
+      final records = (await db.query(WorkoutPlanRecord.table))
+          .map(WorkoutPlanRecord.fromMap)
+          .toList();
+      expect(
+        records
+            .where((r) => r.status == ProgressStatus.inProgress)
+            .map((r) => r.id),
+        [id],
+      );
+      for (final record in records.where((r) => r.id != id)) {
+        expect(record.status, ProgressStatus.abandoned);
+        expect(record.completedAt, isNotNull);
+      }
+    }
+
+    await expectOnlyActive(planRecordId);
+
+    // A normal start upsert also reopens an abandoned execution atomically.
+    final nextExecution = await service.createWorkoutPlanRecord(
+      WorkoutPlanRecordInput(workoutPlanId: planId),
+    );
+    expect(nextExecution.isOk(), isTrue);
+    await expectOnlyActive(nextExecution.value.id);
+    final resumed = await service.upsertWorkoutPlanWorkoutRecord(
+      WorkoutPlanWorkoutRecordInput(
+        workoutPlanRecordId: planRecordId,
+        workoutRecordId: recordBId,
+        workoutPosition: 2,
+      ),
+    );
+    expect(resumed.isOk(), isTrue);
+    expect(resumed.value.status, ProgressStatus.inProgress);
+    await expectOnlyActive(planRecordId);
+
+    // Direct PUT updates obey the same single-active-execution rule.
+    final putResult = await service.updateWorkoutPlanRecord(
+      replacementId,
+      WorkoutPlanRecordInput(workoutPlanId: planId),
+    );
+    expect(putResult.isOk(), isTrue);
+    expect(putResult.value.completedAt, isNull);
+    await expectOnlyActive(replacementId);
 
     // Reparenting a workout plan record to another plan is rejected
     final reparentAttempt = await service.updateWorkoutPlanRecord(
