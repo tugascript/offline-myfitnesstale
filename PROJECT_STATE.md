@@ -136,7 +136,10 @@ There is no import/export, local backup, or broader weight analytics.
   semantics (`Nullable<T>` in `copyWith` clears omitted nullable fields across
   plan, week, day, and workout models and DTOs).
 - Allows one active plan execution and abandons the previous active execution
-  when another begins.
+  when another begins or an older execution is reopened, including through
+  record PUT updates and scheduled-workout status changes. The activation and
+  abandonment commit in the same transaction; failed updates preserve both
+  executions and their week/day/workout history.
 - Expands ranged week templates into dated week instances.
 - Shows missed days and progress.
 - Starts/resumes live scheduled workouts or records them manually using shared

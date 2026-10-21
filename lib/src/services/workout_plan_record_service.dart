@@ -225,34 +225,8 @@ class WorkoutPlanRecordService {
         );
       }
 
-      final List<WorkoutPlanRecord> records = await _repository.selectMany(
-        where: WorkoutPlanRecordColumns.status.equal,
-        whereArgs: [ProgressStatus.inProgress.value],
-      );
-      if (records.isEmpty) {
-        final int id = await _repository.insert(record);
-        _logger.info('Created workout plan record with id $id');
-        return ok(
-          WorkoutPlanRecordDto.fromModel(record.copyWith(id: Nullable(id))),
-        );
-      }
-
       final int id = await _repository.startTransaction((txn) async {
-        await txn.rawUpdate(
-          '''
-          UPDATE ${WorkoutPlanRecord.table} SET 
-          ${WorkoutPlanRecordColumns.status.value} = ?,
-          ${WorkoutPlanRecordColumns.completedAt.value} = ?,
-          ${WorkoutPlanRecordColumns.updatedAt.value} = ?
-          WHERE ${WorkoutPlanRecordColumns.status.value} = ?;
-          ''',
-          [
-            ProgressStatus.abandoned.value,
-            DateUtilities.getNowUtcUnix(),
-            DateUtilities.getNowUtcUnix(),
-            ProgressStatus.inProgress.value,
-          ],
-        );
+        await _abandonOtherActiveRecords(txn, DateUtilities.getNowUtcUnix());
         return await _repository.insert(record, txn);
       });
       _logger.info('Created workout plan record with id $id');
@@ -309,7 +283,16 @@ class WorkoutPlanRecordService {
         ),
         updatedAt: DateUtilities.getNowUtcUnix(),
       );
-      await _repository.update(updatedRecord);
+      await _repository.startTransaction((txn) async {
+        await _repository.update(updatedRecord, txn);
+        if (updatedRecord.status == ProgressStatus.inProgress) {
+          await _abandonOtherActiveRecords(
+            txn,
+            updatedRecord.updatedAt,
+            exceptId: id,
+          );
+        }
+      });
       _logger.info('Updated workout plan record with id $id');
       return ok(WorkoutPlanRecordDto.fromModel(updatedRecord));
     } catch (e) {
@@ -321,6 +304,25 @@ class WorkoutPlanRecordService {
         ),
       );
     }
+  }
+
+  Future<void> _abandonOtherActiveRecords(
+    Transaction txn,
+    int now, {
+    int? exceptId,
+  }) async {
+    await txn.update(
+      WorkoutPlanRecord.table,
+      {
+        WorkoutPlanRecordColumns.status.value: ProgressStatus.abandoned.value,
+        WorkoutPlanRecordColumns.completedAt.value: now,
+        WorkoutPlanRecordColumns.updatedAt.value: now,
+      },
+      where:
+          '${WorkoutPlanRecordColumns.status.value} = ?'
+          '${exceptId == null ? '' : ' AND ${WorkoutPlanRecordColumns.id.value} != ?'}',
+      whereArgs: [ProgressStatus.inProgress.value, ?exceptId],
+    );
   }
 
   Future<Result<void, ServiceError<SingleErrorTypes>>> deleteWorkoutPlanRecord(
@@ -1313,6 +1315,13 @@ class WorkoutPlanRecordService {
             );
             await _repository.update(currentRecord, txn);
           }
+        }
+        if (currentRecord.status == ProgressStatus.inProgress) {
+          await _abandonOtherActiveRecords(
+            txn,
+            now,
+            exceptId: workoutPlanRecordId,
+          );
         }
       });
 
