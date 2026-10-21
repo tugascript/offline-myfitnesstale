@@ -42,9 +42,21 @@ class QuickActionsWidget extends StatelessWidget {
           WorkoutsView.routeName,
         ),
         QuickActionDestination(
+          'workout-history',
+          'Workout History',
+          Icons.history,
+          WorkoutsView.routeName,
+        ),
+        QuickActionDestination(
           'workout-plans',
           'Workout Plans',
           Icons.event_note,
+          WorkoutPlanListView.routeName,
+        ),
+        QuickActionDestination(
+          'workout-plan-history',
+          'Workout Plan History',
+          Icons.event_note_outlined,
           WorkoutPlanListView.routeName,
         ),
       ],
