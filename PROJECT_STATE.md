@@ -50,7 +50,7 @@ Repository facts at this review:
 
 - Quick Actions has four categories: Workout Plans, Weight Goals,
   Exercises, and Nutrition. Their modal bottom sheets expose all
-  twelve destinations, including Exercise Progress as the entry to records.
+  fourteen entries, including Exercise Progress as the entry to records.
 - Menus have a title, close button, destination icons and chevrons. They support
   swipe, outside-tap, and system Back dismissal; selecting a destination closes
   the sheet completely before opening the existing routed page.
@@ -59,8 +59,20 @@ Repository facts at this review:
 - Back returns directly to Home with its scroll position retained. Category
   cards use at most two columns, falling back to one on narrow screens or with
   large text. Sheets size to content and scroll when necessary.
-- History remains a separate Home section. Reminder preferences
-  remain outside these four feature groups.
+- Home has no separate History section. Workout History and Workout Plan History
+  appear in the Workout Plans quick-action menu, opening the respective libraries
+  to select an item and review its history. Exercise Progress and Weight Records
+  remain in their corresponding quick-action menus. Reminder preferences remain
+  outside these four feature groups.
+- Removed the unused History section, former Activity screen, obsolete workout
+  and plan widgets, unused error-screen components, and empty settings widget file.
+  Activity-only tests were removed; current quick-action navigation and responsive
+  coverage remains in the grouped-menu and Home tests.
+- Cleanup verification on 21 October 2026: 327 host tests passed and one skipped;
+  dependency resolution, repository-wide formatting, and whitespace checks passed.
+  Import traversal from `lib/main.dart` found no unreachable Dart files under `lib/`.
+  `dart analyze` stalled without diagnostics and was stopped; analysis remains
+  unverified for this cleanup.
 
 ### Onboarding and settings
 
@@ -226,8 +238,9 @@ above a keyboard inset.
 
 Meal plans remain accessible from Home quick actions and the meal card.
 
-Activity links are now housed in a dedicated `ProgressSection` on the Home screen
-(Workout History, Exercise Progress, Weight History, Plan History).
+History is accessible through Home quick actions: Workout History and Workout Plan
+History under Workout Plans, Exercise Progress under Exercises, and Weight Records
+under Weight Goals.
 Other notable routes include:
 
 - `/exercises/progress`;

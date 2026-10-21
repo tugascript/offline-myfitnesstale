@@ -36,7 +36,6 @@ import 'package:myfitnesstale/src/views/recipes/recipes_view.dart';
 import 'package:myfitnesstale/src/views/workout_plans/workout_plan_list_view.dart';
 import 'package:myfitnesstale/src/widgets/dashboard/active/active_meal_plan_widget.dart';
 import 'package:myfitnesstale/src/widgets/dashboard/active/active_plans_carousel.dart';
-import 'package:myfitnesstale/src/widgets/dashboard/progress_section.dart';
 import 'package:myfitnesstale/src/widgets/dashboard/quick_actions_widget.dart';
 
 class _TestProfileCubit extends ProfileCubit {
@@ -353,7 +352,7 @@ void main() {
         expect(tester.takeException(), isNull);
       });
     }
-    testWidgets('renders active meal plan widget and progress section', (
+    testWidgets('renders active meal plan widget without a history section', (
       tester,
     ) async {
       await tester.pumpWidget(
@@ -362,12 +361,12 @@ void main() {
       await tester.pump();
 
       expect(find.byType(ActiveMealPlanWidget), findsOneWidget);
-      expect(find.byType(ProgressSection), findsOneWidget);
-      expect(find.text('History'), findsOneWidget);
-      expect(find.text('Workout History'), findsOneWidget);
-      expect(find.text('Exercise History'), findsOneWidget);
-      expect(find.text('Weight History'), findsOneWidget);
-      expect(find.text('Plan History'), findsOneWidget);
+      expect(find.text('Quick Actions'), findsOneWidget);
+      expect(find.text('History'), findsNothing);
+      expect(find.text('Workout History'), findsNothing);
+      expect(find.text('Exercise History'), findsNothing);
+      expect(find.text('Weight History'), findsNothing);
+      expect(find.text('Plan History'), findsNothing);
     });
   });
 

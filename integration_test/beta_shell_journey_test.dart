@@ -29,7 +29,6 @@ void main() {
 
       await _visitBottomNavigation(tester, harness);
       await _visitQuickActions(tester, harness);
-      await _visitActivityDestinations(tester, harness);
     },
     timeout: const Timeout(Duration(minutes: 8)),
   );
@@ -122,6 +121,8 @@ Future<void> _visitQuickActions(
   const destinations = {
     'workouts': ('training', 'Workouts'),
     'workout-plans': ('training', 'Workout Plans'),
+    'workout-history': ('training', 'Workouts'),
+    'workout-plan-history': ('training', 'Workout Plans'),
     'weight-records': ('weight', 'Weight Logs'),
     'weight-goal': ('weight', 'Weight Goals'),
     'exercises': ('exercises', 'Exercises'),
@@ -141,31 +142,6 @@ Future<void> _visitQuickActions(
       category: entry.value.$1,
       destination: entry.key,
       page: find.textContaining(entry.value.$2),
-    );
-    await harness.pageBack(
-      tester,
-      find.byKey(const ValueKey('main-bottom-navigation')),
-    );
-  }
-}
-
-Future<void> _visitActivityDestinations(
-  WidgetTester tester,
-  DeviceTestHarness harness,
-) async {
-  const destinations = {
-    'activity-workout-history': 'Workouts',
-    'activity-exercise-progress': 'Exercise Progress',
-    'activity-weight-history': 'Weight Logs',
-    'activity-plan-history': 'Workout Plans',
-  };
-
-  for (final entry in destinations.entries) {
-    await harness.selectBottomNavigation(tester, 'Home');
-    await harness.tapAndWait(
-      tester,
-      control: find.byKey(ValueKey(entry.key)),
-      destination: find.textContaining(entry.value),
     );
     await harness.pageBack(
       tester,

@@ -8,7 +8,12 @@ import 'package:myfitnesstale/src/widgets/dashboard/quick_action_destination_she
 import 'package:myfitnesstale/src/widgets/dashboard/quick_actions_widget.dart';
 
 const _groups = {
-  'training': {'Workouts': '/workouts', 'Workout Plans': '/workout-plans'},
+  'training': {
+    'Workouts': '/workouts',
+    'Workout Plans': '/workout-plans',
+    'Workout History': '/workouts',
+    'Workout Plan History': '/workout-plans',
+  },
   'weight': {
     'Weight Records': '/weight-records',
     'Weight Goals': '/weight-goal',
@@ -64,15 +69,15 @@ void main() {
             ),
           ),
         ),
-        for (final group in _groups.values)
-          for (final destination in group.entries)
-            GoRoute(
-              path: destination.value,
-              builder: (context, state) => Scaffold(
-                appBar: AppBar(title: Text(destination.key)),
-                body: Text('Destination ${state.uri.path}'),
-              ),
+        for (final route
+            in _groups.values.expand((group) => group.values).toSet())
+          GoRoute(
+            path: route,
+            builder: (context, state) => Scaffold(
+              appBar: AppBar(title: Text(route)),
+              body: Text('Destination ${state.uri.path}'),
             ),
+          ),
       ],
     );
     addTearDown(router.dispose);
