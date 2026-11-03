@@ -8,8 +8,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:myfitnesstale/src/models/enums.dart';
 import 'package:myfitnesstale/src/models/food_model.dart';
 import 'package:myfitnesstale/src/models/food_portion_model.dart';
-import 'package:myfitnesstale/src/models/macro_goal_model.dart';
 import 'package:myfitnesstale/src/models/meal_plan_record_model.dart';
+import 'package:myfitnesstale/src/models/week_macro_goal_model.dart';
 import 'package:myfitnesstale/src/services/common/errors.dart';
 import 'package:myfitnesstale/src/services/food_service.dart';
 import 'package:myfitnesstale/src/services/macro_tracking_service.dart';
@@ -215,11 +215,11 @@ void main() {
 
       final db = await testDatabase.db;
       final g1Rows = await db.query(
-        MacroGoal.table,
-        where: '${MacroGoalColumns.id.value} = ?',
+        WeekMacroGoal.table,
+        where: '${WeekMacroGoalColumns.id.value} = ?',
         whereArgs: [goal1.value.id],
       );
-      expect(g1Rows.first[MacroGoalColumns.isActive.value], 0);
+      expect(g1Rows.first[WeekMacroGoalColumns.isActive.value], 0);
 
       // 2. Log food item for a specific date
       final date = DateTime(2026, 10, 12, 12, 30);
@@ -257,6 +257,78 @@ void main() {
       expect(dailyLog.totalCalories, 330);
       expect(dailyLog.totalProtein, 62);
       expect(dailyLog.meals.length, 1);
+    });
+
+    test('creates calorie cycling goal with day groups, resolves date targets, and rejects incomplete week', () async {
+      final cyclingResult = await macroTrackingService.createMacroGoal(
+        const MacroGoalInput(
+          name: 'Weekend Refeed',
+          goalType: MacroGoalType.calorieCycling,
+          phase: WeightGoalPhase.cut,
+          days: [
+            DayMacroGoalInput(
+              name: 'Weekdays',
+              days: [
+                DayOfWeek.monday,
+                DayOfWeek.tuesday,
+                DayOfWeek.wednesday,
+                DayOfWeek.thursday,
+                DayOfWeek.friday,
+              ],
+              targetCalories: 1800,
+              targetProtein: 160,
+              targetCarbs: 150,
+              targetFat: 60,
+              targetWaterIntakeMl: Nullable(2500),
+            ),
+            DayMacroGoalInput(
+              name: 'Weekend Cheat',
+              days: [DayOfWeek.saturday, DayOfWeek.sunday],
+              targetCalories: 2500,
+              targetProtein: 160,
+              targetCarbs: 300,
+              targetFat: 70,
+              targetWaterIntakeMl: Nullable(3000),
+            ),
+          ],
+        ),
+      );
+      expect(cyclingResult.isOk(), isTrue);
+      final cycling = cyclingResult.value;
+      expect(cycling.goalType, MacroGoalType.calorieCycling);
+      expect(cycling.totalTargetCalories, 14000);
+      expect(cycling.targetCalories, 2000);
+      expect(cycling.days.length, 2);
+
+      // Monday (2026-10-12) -> 1800 kcal
+      final mondayGoal = cycling.effectiveGoalForDate(DateTime(2026, 10, 12));
+      expect(mondayGoal.targetCalories, 1800);
+      expect(mondayGoal.name, 'Weekdays');
+
+      // Saturday (2026-10-17) -> 2500 kcal
+      final saturdayGoal = cycling.effectiveGoalForDate(DateTime(2026, 10, 17));
+      expect(saturdayGoal.targetCalories, 2500);
+      expect(saturdayGoal.name, 'Weekend Cheat');
+
+      // Incomplete 7-day coverage is rejected
+      final invalidResult = await macroTrackingService.createMacroGoal(
+        const MacroGoalInput(
+          name: 'Invalid Cycling',
+          goalType: MacroGoalType.calorieCycling,
+          days: [
+            DayMacroGoalInput(
+              name: 'Only Monday',
+              days: [DayOfWeek.monday],
+              targetCalories: 1800,
+              targetProtein: 150,
+              targetCarbs: 200,
+              targetFat: 50,
+            ),
+          ],
+        ),
+      );
+      expect(invalidResult.isErr(), isTrue);
+      expect(invalidResult.error.type, SingleErrorTypes.invalidInput);
     });
   });
 

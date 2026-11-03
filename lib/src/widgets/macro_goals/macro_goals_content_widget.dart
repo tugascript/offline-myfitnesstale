@@ -1,24 +1,93 @@
-import '../../widgets/macro_goals/macro_goal_chip.dart';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../cubits/macro_tracking_cubit.dart';
 import '../../cubits/states/macro_tracking_state.dart';
+import '../../models/enums.dart';
+import '../../services/dtos/macro_tracking_dto.dart';
 import '../../utilities/sizes/data_display_sizes.dart';
 import '../../widgets/common/confirmation_dialog.dart';
+import '../../widgets/macro_goals/macro_goal_chip.dart';
 import '../../widgets/macro_goals/macro_goal_form_modal.dart';
 
 class MacroGoalsContentWidget extends StatelessWidget {
   final MacroTrackingState state;
   final ThemeData theme;
   final DataDisplaySizesList sizes;
+
   const MacroGoalsContentWidget({
     super.key,
     required this.state,
     required this.theme,
     required this.sizes,
   });
+
+  static const Map<DayOfWeek, String> _dayLabels = {
+    DayOfWeek.monday: 'Mon',
+    DayOfWeek.tuesday: 'Tue',
+    DayOfWeek.wednesday: 'Wed',
+    DayOfWeek.thursday: 'Thu',
+    DayOfWeek.friday: 'Fri',
+    DayOfWeek.saturday: 'Sat',
+    DayOfWeek.sunday: 'Sun',
+  };
+
+  String _formatDays(List<DayOfWeek> days) {
+    final sorted = List<DayOfWeek>.from(days)
+      ..sort((a, b) => a.value.compareTo(b.value));
+    return sorted.map((d) => _dayLabels[d] ?? '').join(', ');
+  }
+
+  Widget _buildCyclingSchedule(MacroGoalDto goal) {
+    if (goal.goalType != MacroGoalType.calorieCycling || goal.days.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Padding(
+      padding: EdgeInsets.only(top: sizes.spacing),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Weekly Schedule (${goal.totalTargetCalories} kcal / week)',
+            style: TextStyle(
+              fontSize: sizes.fontSize,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          SizedBox(height: sizes.spacing / 2),
+          for (final dayGroup in goal.days)
+            Padding(
+              padding: EdgeInsets.only(bottom: sizes.spacing / 2),
+              child: Container(
+                width: double.infinity,
+                padding: EdgeInsets.all(sizes.padding * 0.75),
+                color: theme.colorScheme.surfaceContainerHighest,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '${dayGroup.name ?? 'Days'} (${_formatDays(dayGroup.days)})',
+                      style: TextStyle(
+                        fontSize: sizes.fontSize,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    SizedBox(height: sizes.spacing / 4),
+                    Text(
+                      '${dayGroup.targetCalories} kcal • P: ${dayGroup.targetProtein}g C: ${dayGroup.targetCarbs}g F: ${dayGroup.targetFat}g'
+                      '${dayGroup.targetWaterIntakeMl != null ? ' • Water: ${dayGroup.targetWaterIntakeMl}ml' : ''}',
+                      style: TextStyle(fontSize: sizes.smallFontSize),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final activeGoal = state.activeGoal;
@@ -125,6 +194,14 @@ class MacroGoalsContentWidget extends StatelessWidget {
                     ),
                     SizedBox(height: sizes.spacing / 2),
                     Text(
+                      '${activeGoal.name} • ${activeGoal.goalType == MacroGoalType.calorieCycling ? 'Calorie Cycling' : 'Flat Week'}',
+                      style: TextStyle(
+                        fontSize: sizes.fontSize,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    SizedBox(height: sizes.spacing / 4),
+                    Text(
                       '${activeGoal.targetCalories} kcal / day',
                       style: TextStyle(
                         fontSize: sizes.titleFontSize,
@@ -169,6 +246,7 @@ class MacroGoalsContentWidget extends StatelessWidget {
                         ],
                       ],
                     ),
+                    _buildCyclingSchedule(activeGoal),
                     SizedBox(height: sizes.spacing),
                     Wrap(
                       alignment: WrapAlignment.end,
@@ -270,6 +348,7 @@ class MacroGoalsContentWidget extends StatelessWidget {
                           ),
                         ),
                         subtitle: Text(
+                          '${g.goalType == MacroGoalType.calorieCycling ? 'Calorie Cycling • ' : ''}'
                           'Water: ${g.targetWaterIntakeMl ?? 0}ml • ${g.name}',
                           style: TextStyle(
                             fontSize: sizes.fontSize * 0.9,

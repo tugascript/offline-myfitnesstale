@@ -10,13 +10,14 @@ import 'package:sqflite/sqflite.dart';
 import '../common/nullable.dart';
 import '../models/common.dart';
 import '../models/daily_nutrition_log_model.dart';
+import '../models/day_macro_goal_model.dart';
 import '../models/db.dart';
 import '../models/enums.dart';
-import '../models/macro_goal_model.dart';
 import '../models/meal_log_item_model.dart';
 import '../models/meal_log_model.dart';
 import '../models/repository.dart';
 import '../models/utilities.dart';
+import '../models/week_macro_goal_model.dart';
 import 'common/errors.dart';
 import 'common/result.dart';
 import 'dtos/macro_tracking_dto.dart';
@@ -50,11 +51,19 @@ class MacroTrackingService {
 
   final Logger _logger = Logger('Macro Tracking Service');
 
-  final Repository<MacroGoal> _macroGoalRepository = Repository<MacroGoal>(
-    databaseHelper: DatabaseHelper(),
-    tableName: MacroGoal.table,
-    fromMap: MacroGoal.fromMap,
-  );
+  final Repository<WeekMacroGoal> _weekMacroGoalRepository =
+      Repository<WeekMacroGoal>(
+        databaseHelper: DatabaseHelper(),
+        tableName: WeekMacroGoal.table,
+        fromMap: WeekMacroGoal.fromMap,
+      );
+
+  final Repository<DayMacroGoal> _dayMacroGoalRepository =
+      Repository<DayMacroGoal>(
+        databaseHelper: DatabaseHelper(),
+        tableName: DayMacroGoal.table,
+        fromMap: DayMacroGoal.fromMap,
+      );
 
   final Repository<DailyNutritionLog> _dailyLogRepository =
       Repository<DailyNutritionLog>(
@@ -78,55 +87,188 @@ class MacroTrackingService {
 
   // ==================== MACRO GOALS ====================
 
+  List<DayMacroGoalInput> _resolveAndValidateDayInputs(MacroGoalInput input) {
+    final List<DayMacroGoalInput> dayInputs = input.days.isEmpty
+        ? (input.goalType == MacroGoalType.flat
+              ? [
+                  DayMacroGoalInput(
+                    name: input.name,
+                    days: DayOfWeek.values,
+                    targetCalories: input.targetCalories,
+                    targetProtein: input.targetProtein,
+                    targetCarbs: input.targetCarbs,
+                    targetFat: input.targetFat,
+                    targetFiber: input.targetFiber,
+                    targetSodium: input.targetSodium,
+                    targetWaterIntakeMl: input.targetWaterIntakeMl,
+                    phase: input.phase,
+                    isActive: input.isActive,
+                  ),
+                ]
+              : const [])
+        : input.days;
+
+    if (dayInputs.isEmpty) {
+      throw const ServiceError<SingleErrorTypes>(
+        type: SingleErrorTypes.invalidInput,
+        description: 'Macro goal requires day configurations',
+      );
+    }
+
+    final seenDays = <DayOfWeek>{};
+    int totalDaysCount = 0;
+
+    for (final dayInput in dayInputs) {
+      if (dayInput.days.isEmpty) {
+        throw const ServiceError<SingleErrorTypes>(
+          type: SingleErrorTypes.invalidInput,
+          description: 'Each day configuration must have at least one day',
+        );
+      }
+      if (dayInput.targetCalories < 0 ||
+          dayInput.targetProtein < 0 ||
+          dayInput.targetCarbs < 0 ||
+          dayInput.targetFat < 0) {
+        throw const ServiceError<SingleErrorTypes>(
+          type: SingleErrorTypes.invalidInput,
+          description: 'Macro targets cannot be negative',
+        );
+      }
+      totalDaysCount += dayInput.days.length;
+      seenDays.addAll(dayInput.days);
+    }
+
+    if (totalDaysCount != 7 || seenDays.length != 7) {
+      throw const ServiceError<SingleErrorTypes>(
+        type: SingleErrorTypes.invalidInput,
+        description: 'Day macro goals must cover all 7 days of the week without duplicates',
+      );
+    }
+
+    return dayInputs;
+  }
+
+  ({
+    int calories,
+    int protein,
+    int carbs,
+    int fat,
+    int? fiber,
+    int? sodium,
+    int? water,
+  })
+  _computeWeeklyTotals(List<DayMacroGoalInput> dayInputs) {
+    int totalCalories = 0;
+    int totalProtein = 0;
+    int totalCarbs = 0;
+    int totalFat = 0;
+    int totalFiber = 0;
+    bool hasFiber = false;
+    int totalSodium = 0;
+    bool hasSodium = false;
+    int totalWater = 0;
+    bool hasWater = false;
+
+    for (final d in dayInputs) {
+      final count = d.days.length;
+      totalCalories += d.targetCalories * count;
+      totalProtein += d.targetProtein * count;
+      totalCarbs += d.targetCarbs * count;
+      totalFat += d.targetFat * count;
+      if (d.targetFiber.value != null) {
+        hasFiber = true;
+        totalFiber += d.targetFiber.value! * count;
+      }
+      if (d.targetSodium.value != null) {
+        hasSodium = true;
+        totalSodium += d.targetSodium.value! * count;
+      }
+      if (d.targetWaterIntakeMl.value != null) {
+        hasWater = true;
+        totalWater += d.targetWaterIntakeMl.value! * count;
+      }
+    }
+
+    return (
+      calories: totalCalories,
+      protein: totalProtein,
+      carbs: totalCarbs,
+      fat: totalFat,
+      fiber: hasFiber ? totalFiber : null,
+      sodium: hasSodium ? totalSodium : null,
+      water: hasWater ? totalWater : null,
+    );
+  }
+
   Future<Result<MacroGoalDto, ServiceError<SingleErrorTypes>>> createMacroGoal(
     MacroGoalInput input,
   ) async {
-    final name = input.name;
-    final targetCalories = input.targetCalories;
-    final targetProtein = input.targetProtein;
-    final targetCarbs = input.targetCarbs;
-    final targetFat = input.targetFat;
-    final targetWaterIntakeMl = input.targetWaterIntakeMl.value;
-    final phase = input.phase;
-    final isActive = input.isActive;
-
-    _logger.info('Creating macro goal: $name');
+    _logger.info('Creating macro goal: ${input.name}');
     try {
-      final goal = MacroGoal.create(
-        profileId: 1, // unused in db
-        name: name,
-        targetCalories: targetCalories,
-        targetProtein: targetProtein,
-        targetCarbs: targetCarbs,
-        targetFat: targetFat,
-        targetWaterIntakeMl: targetWaterIntakeMl,
-        phase: phase,
-        isActive: isActive,
+      final dayInputs = _resolveAndValidateDayInputs(input);
+      final totals = _computeWeeklyTotals(dayInputs);
+
+      final weekGoal = WeekMacroGoal.create(
+        name: input.name,
+        totalTargetCalories: totals.calories,
+        totalTargetProtein: totals.protein,
+        totalTargetCarbs: totals.carbs,
+        totalTargetFat: totals.fat,
+        totalTargetFiber: totals.fiber,
+        totalTargetSodium: totals.sodium,
+        totalTargetWaterIntakeMl: totals.water,
+        goalType: input.goalType,
+        phase: input.phase,
+        isActive: input.isActive,
       );
 
-      final int id = await _macroGoalRepository.startTransaction<int>((
-        txn,
-      ) async {
-        if (isActive) {
-          {
-            final models = await _macroGoalRepository.selectMany(
-              where: '${MacroGoalColumns.isActive.value} = ?',
+      final dto = await _weekMacroGoalRepository.startTransaction<MacroGoalDto>(
+        (txn) async {
+          if (input.isActive) {
+            final activeWeeks = await _weekMacroGoalRepository.selectMany(
+              where: '${WeekMacroGoalColumns.isActive.value} = ?',
               whereArgs: [1],
               trx: txn,
             );
-            for (final model in models) {
-              await _macroGoalRepository.update(
-                model.copyWith(isActive: false),
+            for (final activeWeek in activeWeeks) {
+              await _weekMacroGoalRepository.update(
+                activeWeek.copyWith(isActive: false),
                 txn,
               );
             }
           }
-        }
-        return await _macroGoalRepository.insert(goal, txn);
-      });
 
-      _logger.info('Created macro goal with id: $id');
-      return ok(MacroGoalDto.fromModel(goal.copyWith(id: Nullable(id))));
+          final weekId = await _weekMacroGoalRepository.insert(weekGoal, txn);
+          final createdDays = <DayMacroGoal>[];
+
+          for (final d in dayInputs) {
+            final dayModel = DayMacroGoal.create(
+              weekMacroGoalId: weekId,
+              days: d.days,
+              name: d.name,
+              targetCalories: d.targetCalories,
+              targetProtein: d.targetProtein,
+              targetCarbs: d.targetCarbs,
+              targetFat: d.targetFat,
+              targetFiber: d.targetFiber.value,
+              targetSodium: d.targetSodium.value,
+              targetWaterIntakeMl: d.targetWaterIntakeMl.value,
+              phase: d.phase,
+              isActive: input.isActive,
+            );
+            final dayId = await _dayMacroGoalRepository.insert(dayModel, txn);
+            createdDays.add(dayModel.copyWith(id: Nullable(dayId)));
+          }
+
+          return MacroGoalDto.fromWeekModel(
+            weekGoal.copyWith(id: Nullable(weekId)),
+            createdDays,
+          );
+        },
+      );
+
+      _logger.info('Created macro goal with id: ${dto.id}');
+      return ok(dto);
     } on ServiceError<SingleErrorTypes> catch (error) {
       return err(error);
     } catch (e) {
@@ -144,17 +286,9 @@ class MacroTrackingService {
     int id,
     MacroGoalInput input,
   ) async {
-    final name = input.name;
-    final targetCalories = input.targetCalories;
-    final targetProtein = input.targetProtein;
-    final targetCarbs = input.targetCarbs;
-    final targetFat = input.targetFat;
-    final phase = input.phase;
-    final isActive = input.isActive;
-
     _logger.info('Updating macro goal: $id');
     try {
-      final existing = await _macroGoalRepository.selectOne(id);
+      final existing = await _weekMacroGoalRepository.selectOne(id);
       if (existing == null) {
         return err(
           const ServiceError(
@@ -164,39 +298,69 @@ class MacroTrackingService {
         );
       }
 
-      return await _macroGoalRepository.startTransaction<
+      final dayInputs = _resolveAndValidateDayInputs(input);
+      final totals = _computeWeeklyTotals(dayInputs);
+
+      return await _weekMacroGoalRepository.startTransaction<
         Result<MacroGoalDto, ServiceError<SingleErrorTypes>>
       >((txn) async {
-        if (isActive == true) {
-          {
-            final models = await _macroGoalRepository.selectMany(
-              where: '${MacroGoalColumns.isActive.value} = ?',
-              whereArgs: [1],
-              trx: txn,
+        if (input.isActive) {
+          final models = await _weekMacroGoalRepository.selectMany(
+            where: '${WeekMacroGoalColumns.isActive.value} = ?',
+            whereArgs: [1],
+            trx: txn,
+          );
+          for (final model in models) {
+            await _weekMacroGoalRepository.update(
+              model.copyWith(isActive: false),
+              txn,
             );
-            for (final model in models) {
-              await _macroGoalRepository.update(
-                model.copyWith(isActive: false),
-                txn,
-              );
-            }
           }
         }
 
         final updated = existing.copyWith(
-          name: name,
-          targetCalories: targetCalories,
-          targetProtein: targetProtein,
-          targetCarbs: targetCarbs,
-          targetFat: targetFat,
-          targetWaterIntakeMl: input.targetWaterIntakeMl,
-          phase: phase,
-          isActive: isActive,
+          name: Nullable(input.name),
+          totalTargetCalories: totals.calories,
+          totalTargetProtein: totals.protein,
+          totalTargetCarbs: totals.carbs,
+          totalTargetFat: totals.fat,
+          totalTargetFiber: Nullable(totals.fiber),
+          totalTargetSodium: Nullable(totals.sodium),
+          totalTargetWaterIntakeMl: Nullable(totals.water),
+          goalType: input.goalType,
+          phase: input.phase,
+          isActive: input.isActive,
           updatedAt: DateUtilities.getNowUtcUnix(),
         );
 
-        await _macroGoalRepository.update(updated, txn);
-        return ok(MacroGoalDto.fromModel(updated));
+        await _weekMacroGoalRepository.update(updated, txn);
+        await _dayMacroGoalRepository.deleteMany(
+          where: '${DayMacroGoalColumns.weekMacroGoalId.value} = ?',
+          whereArgs: [id],
+          trx: txn,
+        );
+
+        final createdDays = <DayMacroGoal>[];
+        for (final d in dayInputs) {
+          final dayModel = DayMacroGoal.create(
+            weekMacroGoalId: id,
+            days: d.days,
+            name: d.name,
+            targetCalories: d.targetCalories,
+            targetProtein: d.targetProtein,
+            targetCarbs: d.targetCarbs,
+            targetFat: d.targetFat,
+            targetFiber: d.targetFiber.value,
+            targetSodium: d.targetSodium.value,
+            targetWaterIntakeMl: d.targetWaterIntakeMl.value,
+            phase: d.phase,
+            isActive: input.isActive,
+          );
+          final dayId = await _dayMacroGoalRepository.insert(dayModel, txn);
+          createdDays.add(dayModel.copyWith(id: Nullable(dayId)));
+        }
+
+        return ok(MacroGoalDto.fromWeekModel(updated, createdDays));
       });
     } on ServiceError<SingleErrorTypes> catch (error) {
       return err(error);
@@ -215,7 +379,7 @@ class MacroTrackingService {
   completeMacroGoal(int id) async {
     _logger.info('Completing macro goal: $id');
     try {
-      final existing = await _macroGoalRepository.selectOne(id);
+      final existing = await _weekMacroGoalRepository.selectOne(id);
       if (existing == null) {
         return err(
           const ServiceError(
@@ -228,8 +392,13 @@ class MacroTrackingService {
         isActive: false,
         updatedAt: DateUtilities.getNowUtcUnix(),
       );
-      await _macroGoalRepository.update(updated);
-      return ok(MacroGoalDto.fromModel(updated));
+      await _weekMacroGoalRepository.update(updated);
+      final dayGoals = await _dayMacroGoalRepository.selectMany(
+        where: '${DayMacroGoalColumns.weekMacroGoalId.value} = ?',
+        whereArgs: [id],
+        orderBy: [DayMacroGoalColumns.id.orderAsc],
+      );
+      return ok(MacroGoalDto.fromWeekModel(updated, dayGoals));
     } catch (e) {
       _logger.severe('Failed to complete macro goal', e);
       return err(
@@ -246,7 +415,7 @@ class MacroTrackingService {
   ) async {
     _logger.info('Deleting macro goal: $id');
     try {
-      final deleted = await _macroGoalRepository.deleteOne(id);
+      final deleted = await _weekMacroGoalRepository.deleteOne(id);
       if (!deleted) {
         return err(
           const ServiceError(
@@ -273,10 +442,10 @@ class MacroTrackingService {
   getActiveMacroGoal() async {
     _logger.info('Getting active macro goal');
     try {
-      final goals = await _macroGoalRepository.selectMany(
-        where: MacroGoalColumns.isActive.equal,
+      final goals = await _weekMacroGoalRepository.selectMany(
+        where: WeekMacroGoalColumns.isActive.equal,
         whereArgs: [1],
-        orderBy: [MacroGoalColumns.createdAt.orderDesc],
+        orderBy: [WeekMacroGoalColumns.createdAt.orderDesc],
         limit: 1,
       );
       if (goals.isEmpty) {
@@ -287,7 +456,13 @@ class MacroTrackingService {
           ),
         );
       }
-      return ok(MacroGoalDto.fromModel(goals.first));
+      final activeWeek = goals.first;
+      final dayGoals = await _dayMacroGoalRepository.selectMany(
+        where: '${DayMacroGoalColumns.weekMacroGoalId.value} = ?',
+        whereArgs: [activeWeek.id],
+        orderBy: [DayMacroGoalColumns.id.orderAsc],
+      );
+      return ok(MacroGoalDto.fromWeekModel(activeWeek, dayGoals));
     } on ServiceError<SingleErrorTypes> catch (error) {
       return err(error);
     } catch (e) {
@@ -303,7 +478,7 @@ class MacroTrackingService {
 
   Future<
     Result<
-      PaginatedDto<MacroGoalDto, MacroGoal>,
+      PaginatedDto<MacroGoalDto, WeekMacroGoal>,
       ServiceError<OperationErrorTypes>
     >
   >
@@ -313,17 +488,26 @@ class MacroTrackingService {
   }) async {
     _logger.info('Getting macro goals history');
     try {
-      final goals = await _macroGoalRepository.selectPaginated(
+      final goals = await _weekMacroGoalRepository.selectPaginated(
         limit: limit,
         offset: offset,
-        orderBy: [MacroGoalColumns.createdAt.orderDesc],
+        orderBy: [WeekMacroGoalColumns.createdAt.orderDesc],
       );
-      final total = await _macroGoalRepository.count();
+      final total = await _weekMacroGoalRepository.count();
+
+      final dtos = <MacroGoalDto>[];
+      for (final g in goals) {
+        final dayGoals = await _dayMacroGoalRepository.selectMany(
+          where: '${DayMacroGoalColumns.weekMacroGoalId.value} = ?',
+          whereArgs: [g.id],
+          orderBy: [DayMacroGoalColumns.id.orderAsc],
+        );
+        dtos.add(MacroGoalDto.fromWeekModel(g, dayGoals));
+      }
 
       return ok(
-        PaginatedDto<MacroGoalDto, MacroGoal>.mapData(
-          data: goals,
-          mapper: (g) => MacroGoalDto.fromModel(g),
+        PaginatedDto<MacroGoalDto, WeekMacroGoal>(
+          data: dtos,
           total: total,
           limit: limit,
           offset: offset,
@@ -366,7 +550,7 @@ class MacroTrackingService {
     final numericDate = DateUtilities.getNumericDate(localDate);
     _logger.info('Getting daily log for date $numericDate');
     try {
-      return await _macroGoalRepository.startTransaction<
+      return await _dailyLogRepository.startTransaction<
         Result<DailyNutritionLogDto, ServiceError<SingleErrorTypes>>
       >((txn) async {
         final dailyLog = await _getOrCreateDailyLogInternal(txn, numericDate);
@@ -437,7 +621,7 @@ class MacroTrackingService {
     final endNum = DateUtilities.getNumericDate(end);
     _logger.info('Getting daily logs for range $startNum to $endNum');
     try {
-      final logs = await _macroGoalRepository
+      final logs = await _dailyLogRepository
           .startTransaction<List<DailyNutritionLogDto>>((txn) async {
             final logRows = await _dailyLogRepository.selectMany(
               where:
@@ -478,7 +662,7 @@ class MacroTrackingService {
     final numericDate = DateUtilities.getNumericDate(date);
     _logger.info('Updating water intake for $numericDate to $waterIntakeMl ml');
     try {
-      return await _macroGoalRepository.startTransaction<
+      return await _dailyLogRepository.startTransaction<
         Result<DailyNutritionLogDto, ServiceError<SingleErrorTypes>>
       >((txn) async {
         final dailyLog = await _getOrCreateDailyLogInternal(txn, numericDate);
@@ -516,7 +700,7 @@ class MacroTrackingService {
 
     _logger.info('Logging food $foodId for meal $mealType at $numericDate');
     try {
-      return await _macroGoalRepository.startTransaction<
+      return await _dailyLogRepository.startTransaction<
         Result<MealLogDto, ServiceError<SingleErrorTypes>>
       >((txn) async {
         final foodRows = await _foodRepository.selectMany(
@@ -673,7 +857,7 @@ class MacroTrackingService {
     }
     final time = (logTime ?? DateTime.now()).toLocal();
     try {
-      return await _macroGoalRepository.startTransaction<
+      return await _dailyLogRepository.startTransaction<
         Result<MealLogDto, ServiceError<SingleErrorTypes>>
       >((txn) async {
         final dailyLog = await _getOrCreateDailyLogInternal(
@@ -735,7 +919,7 @@ class MacroTrackingService {
 
     _logger.info('Logging recipe $recipeId for meal $mealType');
     try {
-      return await _macroGoalRepository.startTransaction<
+      return await _dailyLogRepository.startTransaction<
         Result<MealLogDto, ServiceError<SingleErrorTypes>>
       >((txn) async {
         final recipeRows = await _recipeRepository.selectMany(
@@ -876,7 +1060,7 @@ class MacroTrackingService {
   ) async {
     _logger.info('Deleting meal log item: $itemId');
     try {
-      return await _macroGoalRepository
+      return await _dailyLogRepository
           .startTransaction<Result<void, ServiceError<SingleErrorTypes>>>((
             txn,
           ) async {

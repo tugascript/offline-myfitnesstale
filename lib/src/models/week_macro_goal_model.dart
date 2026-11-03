@@ -18,6 +18,8 @@ enum WeekMacroGoalColumns with Columns {
   totalTargetSodium("total_target_sodium"),
   totalTargetWaterIntakeMl("total_target_water_intake_ml"),
   goalType("goal_type"),
+  isActive("is_active"),
+  phase("phase"),
   createdAt("created_at"),
   updatedAt("updated_at");
 
@@ -39,6 +41,8 @@ class WeekMacroGoal extends Equatable implements Model {
   final int? totalTargetSodium;
   final int? totalTargetWaterIntakeMl;
   final MacroGoalType goalType;
+  final bool isActive;
+  final WeightGoalPhase phase;
   @override
   final int createdAt;
   @override
@@ -55,6 +59,8 @@ class WeekMacroGoal extends Equatable implements Model {
     this.totalTargetSodium,
     this.totalTargetWaterIntakeMl,
     required this.goalType,
+    this.isActive = true,
+    this.phase = WeightGoalPhase.maintain,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -74,6 +80,8 @@ class WeekMacroGoal extends Equatable implements Model {
     ${WeekMacroGoalColumns.totalTargetSodium.value} INTEGER,
     ${WeekMacroGoalColumns.totalTargetWaterIntakeMl.value} INTEGER,
     ${WeekMacroGoalColumns.goalType.value} TEXT NOT NULL,
+    ${WeekMacroGoalColumns.isActive.value} INTEGER NOT NULL DEFAULT 1,
+    ${WeekMacroGoalColumns.phase.value} TEXT NOT NULL DEFAULT 'maintain',
     ${WeekMacroGoalColumns.createdAt.value} INTEGER NOT NULL,
     ${WeekMacroGoalColumns.updatedAt.value} INTEGER NOT NULL
   );
@@ -93,6 +101,8 @@ class WeekMacroGoal extends Equatable implements Model {
       WeekMacroGoalColumns.totalTargetWaterIntakeMl.value:
           totalTargetWaterIntakeMl,
       WeekMacroGoalColumns.goalType.value: goalType.value,
+      WeekMacroGoalColumns.isActive.value: isActive ? 1 : 0,
+      WeekMacroGoalColumns.phase.value: phase.value,
       WeekMacroGoalColumns.createdAt.value: createdAt,
       WeekMacroGoalColumns.updatedAt.value: updatedAt,
     };
@@ -117,6 +127,10 @@ class WeekMacroGoal extends Equatable implements Model {
       goalType: MacroGoalType.fromValue(
         map[WeekMacroGoalColumns.goalType.value] as String,
       ),
+      isActive: (map[WeekMacroGoalColumns.isActive.value] as int? ?? 1) == 1,
+      phase: WeightGoalPhase.fromValue(
+        map[WeekMacroGoalColumns.phase.value] as String? ?? 'maintain',
+      ),
       createdAt: map[WeekMacroGoalColumns.createdAt.value] as int,
       updatedAt: map[WeekMacroGoalColumns.updatedAt.value] as int,
     );
@@ -132,6 +146,8 @@ class WeekMacroGoal extends Equatable implements Model {
     int? totalTargetSodium,
     int? totalTargetWaterIntakeMl,
     required MacroGoalType goalType,
+    bool isActive = true,
+    WeightGoalPhase phase = WeightGoalPhase.maintain,
   }) {
     final int now = DateUtilities.getNowUtcUnix();
     return WeekMacroGoal(
@@ -144,6 +160,8 @@ class WeekMacroGoal extends Equatable implements Model {
       totalTargetSodium: totalTargetSodium,
       totalTargetWaterIntakeMl: totalTargetWaterIntakeMl,
       goalType: goalType,
+      isActive: isActive,
+      phase: phase,
       createdAt: now,
       updatedAt: now,
     );
@@ -161,6 +179,8 @@ class WeekMacroGoal extends Equatable implements Model {
     Nullable<int>? totalTargetSodium,
     Nullable<int>? totalTargetWaterIntakeMl,
     MacroGoalType? goalType,
+    bool? isActive,
+    WeightGoalPhase? phase,
     int? createdAt,
     int? updatedAt,
   }) {
@@ -181,6 +201,8 @@ class WeekMacroGoal extends Equatable implements Model {
           ? totalTargetWaterIntakeMl.value
           : this.totalTargetWaterIntakeMl,
       goalType: goalType ?? this.goalType,
+      isActive: isActive ?? this.isActive,
+      phase: phase ?? this.phase,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -198,6 +220,8 @@ class WeekMacroGoal extends Equatable implements Model {
     totalTargetSodium,
     totalTargetWaterIntakeMl,
     goalType,
+    isActive,
+    phase,
     createdAt,
     updatedAt,
   ];

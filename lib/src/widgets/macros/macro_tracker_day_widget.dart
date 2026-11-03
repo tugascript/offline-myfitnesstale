@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../cubits/macro_tracking_cubit.dart';
 import '../../cubits/states/macro_tracking_state.dart';
+import '../../models/enums.dart';
 import '../../utilities/sizes/data_display_sizes.dart';
 import '../../widgets/common/confirmation_dialog.dart';
 import '../../widgets/macros/log_food_modal.dart';
@@ -29,24 +30,25 @@ class MacroTrackerDayWidget extends StatelessWidget {
       builder: (context, state) {
         final dailyLog = state.selectedDailyLog;
         final activeGoal = state.activeGoal;
+        final dayGoal = activeGoal?.effectiveGoalForDate(selectedDate);
 
         final currentCal = dailyLog?.totalCalories ?? 0;
-        final targetCal = activeGoal?.targetCalories ?? 2000;
+        final targetCal = dayGoal?.targetCalories ?? 2000;
         final calProgress = targetCal > 0
             ? (currentCal / targetCal).clamp(0.0, 1.0)
             : 0.0;
 
         final currentProtein = dailyLog?.totalProtein ?? 0;
-        final targetProtein = activeGoal?.targetProtein ?? 150;
+        final targetProtein = dayGoal?.targetProtein ?? 150;
 
         final currentCarbs = dailyLog?.totalCarbs ?? 0;
-        final targetCarbs = activeGoal?.targetCarbs ?? 200;
+        final targetCarbs = dayGoal?.targetCarbs ?? 200;
 
         final currentFat = dailyLog?.totalFat ?? 0;
-        final targetFat = activeGoal?.targetFat ?? 65;
+        final targetFat = dayGoal?.targetFat ?? 65;
 
         final currentWater = dailyLog?.waterIntakeMl ?? 0;
-        final targetWater = activeGoal?.targetWaterIntakeMl ?? 2500;
+        final targetWater = dayGoal?.targetWaterIntakeMl ?? 2500;
 
         return ListView(
           children: [
@@ -76,6 +78,18 @@ class MacroTrackerDayWidget extends StatelessWidget {
                             child: Text(
                               'Set Goal',
                               style: TextStyle(fontSize: sizes.fontSize),
+                            ),
+                          )
+                        else if (activeGoal.goalType ==
+                                MacroGoalType.calorieCycling &&
+                            dayGoal?.name != null)
+                          Text(
+                            dayGoal!.name!,
+                            key: const ValueKey('macro-tracker-day-goal-name'),
+                            style: TextStyle(
+                              fontSize: sizes.smallFontSize,
+                              fontWeight: FontWeight.w600,
+                              color: theme.primaryColor,
                             ),
                           ),
                       ],

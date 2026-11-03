@@ -75,6 +75,12 @@ final class MacroTrackingState extends Equatable {
     );
   }
 
+  DayMacroGoalDto? get activeDayGoal =>
+      activeGoal?.effectiveGoalForDate(selectedDate);
+
+  DayMacroGoalDto? goalForDate(DateTime date) =>
+      activeGoal?.effectiveGoalForDate(date);
+
   @override
   List<Object?> get props => [
     activeGoal,

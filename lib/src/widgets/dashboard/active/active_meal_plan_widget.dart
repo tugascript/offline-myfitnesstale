@@ -46,6 +46,7 @@ class _ActiveMealPlanWidgetState extends State<ActiveMealPlanWidget> {
           builder: (context, macroState) {
             final record = planState.activeRecord;
             final goal = macroState.activeGoal;
+            final dayGoal = goal?.effectiveGoalForDate(macroState.selectedDate);
             final isEmpty = record == null && goal == null;
             return ActivePlanFrame(
               title: 'Active Meal Plan',
@@ -171,7 +172,7 @@ class _ActiveMealPlanWidgetState extends State<ActiveMealPlanWidget> {
                                         Text(
                                           record != null
                                               ? 'Week ${record.currentWeek} • Day ${record.currentDay}'
-                                              : '${goal!.targetCalories} kcal',
+                                              : '${dayGoal!.targetCalories} kcal',
                                           style: TextStyle(
                                             fontSize: sizes.fontSize,
                                             fontWeight: FontWeight.w600,
@@ -188,8 +189,8 @@ class _ActiveMealPlanWidgetState extends State<ActiveMealPlanWidget> {
                             Text(
                               record != null
                                   ? 'Track meals and daily nutrition in the macro tracker.'
-                                  : 'Protein: ${goal!.targetProtein}g • Carbs: ${goal.targetCarbs}g • Fat: ${goal.targetFat}g'
-                                        '${goal.targetWaterIntakeMl != null ? ' • Water: ${goal.targetWaterIntakeMl}ml' : ''}',
+                                  : 'Protein: ${dayGoal!.targetProtein}g • Carbs: ${dayGoal.targetCarbs}g • Fat: ${dayGoal.targetFat}g'
+                                        '${dayGoal.targetWaterIntakeMl != null ? ' • Water: ${dayGoal.targetWaterIntakeMl}ml' : ''}',
                               style: TextStyle(
                                 fontSize: sizes.smallFontSize,
                                 color: colors.onSurfaceVariant,
