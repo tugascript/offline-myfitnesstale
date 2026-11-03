@@ -433,6 +433,14 @@ enum DayOfWeek {
   final int value;
 
   const DayOfWeek(this.value);
+
+  static DayOfWeek fromValue(int v) => DayOfWeek.values.firstWhere(
+    (d) => d.value == v,
+    orElse: () => DayOfWeek.monday,
+  );
+
+  static DayOfWeek fromDateTime(DateTime dateTime) =>
+      fromValue(dateTime.weekday);
 }
 
 enum EntitlementType {
@@ -528,5 +536,19 @@ enum MealPlanPhase {
   static MealPlanPhase fromValue(String v) => MealPlanPhase.values.firstWhere(
     (p) => p.value == v,
     orElse: () => MealPlanPhase.maintain,
+  );
+}
+
+enum MacroGoalType {
+  flat("flat"),
+  calorieCycling("calorie_cycling");
+
+  final String value;
+
+  const MacroGoalType(this.value);
+
+  static MacroGoalType fromValue(String v) => MacroGoalType.values.firstWhere(
+    (w) => w.value == v,
+    orElse: () => MacroGoalType.flat,
   );
 }

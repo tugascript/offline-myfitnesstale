@@ -31,7 +31,7 @@ enum MacroGoalColumns with Columns {
 class MacroGoal extends Equatable implements Model {
   @override
   final int? id;
-  final String name;
+  final String? name;
   final int targetCalories;
   final int targetProtein;
   final int targetCarbs;
@@ -48,7 +48,7 @@ class MacroGoal extends Equatable implements Model {
 
   const MacroGoal({
     this.id,
-    required this.name,
+    this.name,
     required this.targetCalories,
     required this.targetProtein,
     required this.targetCarbs,
@@ -68,7 +68,7 @@ class MacroGoal extends Equatable implements Model {
       '''
   CREATE TABLE IF NOT EXISTS $_table (
     ${MacroGoalColumns.id.value} INTEGER PRIMARY KEY AUTOINCREMENT,
-    ${MacroGoalColumns.name.value} TEXT NOT NULL,
+    ${MacroGoalColumns.name.value} TEXT,
     ${MacroGoalColumns.targetCalories.value} INTEGER NOT NULL,
     ${MacroGoalColumns.targetProtein.value} INTEGER NOT NULL,
     ${MacroGoalColumns.targetCarbs.value} INTEGER NOT NULL,
@@ -105,7 +105,7 @@ class MacroGoal extends Equatable implements Model {
   factory MacroGoal.fromMap(Map<String, Object?> map) {
     return MacroGoal(
       id: map[MacroGoalColumns.id.value] as int?,
-      name: map[MacroGoalColumns.name.value] as String,
+      name: map[MacroGoalColumns.name.value] as String?,
       targetCalories: map[MacroGoalColumns.targetCalories.value] as int,
       targetProtein: map[MacroGoalColumns.targetProtein.value] as int,
       targetCarbs: map[MacroGoalColumns.targetCarbs.value] as int,
@@ -126,7 +126,7 @@ class MacroGoal extends Equatable implements Model {
   factory MacroGoal.create({
     required int profileId,
     int? weightGoalId,
-    required String name,
+    String? name,
     required int targetCalories,
     required int targetProtein,
     required int targetCarbs,
@@ -158,7 +158,7 @@ class MacroGoal extends Equatable implements Model {
   MacroGoal copyWith({
     Nullable<int>? id,
     WeightGoalPhase? phase,
-    String? name,
+    Nullable<String>? name,
     int? targetCalories,
     int? targetProtein,
     int? targetCarbs,
@@ -173,7 +173,7 @@ class MacroGoal extends Equatable implements Model {
     return MacroGoal(
       id: id != null ? id.value : this.id,
       phase: phase ?? this.phase,
-      name: name ?? this.name,
+      name: name != null ? name.value : this.name,
       targetCalories: targetCalories ?? this.targetCalories,
       targetProtein: targetProtein ?? this.targetProtein,
       targetCarbs: targetCarbs ?? this.targetCarbs,
