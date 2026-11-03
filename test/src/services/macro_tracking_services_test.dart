@@ -329,6 +329,46 @@ void main() {
       );
       expect(invalidResult.isErr(), isTrue);
       expect(invalidResult.error.type, SingleErrorTypes.invalidInput);
+
+      // Flat goal with multiple day groups is rejected
+      final invalidFlatResult = await macroTrackingService.createMacroGoal(
+        const MacroGoalInput(
+          name: 'Invalid Flat',
+          goalType: MacroGoalType.flat,
+          days: [
+            DayMacroGoalInput(
+              days: [
+                DayOfWeek.monday,
+                DayOfWeek.tuesday,
+                DayOfWeek.wednesday,
+                DayOfWeek.thursday,
+                DayOfWeek.friday,
+              ],
+              targetCalories: 1800,
+              targetProtein: 150,
+              targetCarbs: 200,
+              targetFat: 50,
+            ),
+            DayMacroGoalInput(
+              days: [DayOfWeek.saturday, DayOfWeek.sunday],
+              targetCalories: 2200,
+              targetProtein: 150,
+              targetCarbs: 250,
+              targetFat: 60,
+            ),
+          ],
+        ),
+      );
+      expect(invalidFlatResult.isErr(), isTrue);
+      expect(invalidFlatResult.error.type, SingleErrorTypes.invalidInput);
+
+      // History pagination loads day goals in batch
+      final historyResult = await macroTrackingService.getMacroGoals();
+      expect(historyResult.isOk(), isTrue);
+      final loadedCycling = historyResult.value.data.firstWhere(
+        (g) => g.id == cycling.id,
+      );
+      expect(loadedCycling.days.length, 2);
     });
   });
 

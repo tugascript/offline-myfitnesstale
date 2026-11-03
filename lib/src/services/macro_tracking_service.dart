@@ -115,6 +115,13 @@ class MacroTrackingService {
       );
     }
 
+    if (input.goalType == MacroGoalType.flat && dayInputs.length != 1) {
+      throw const ServiceError<SingleErrorTypes>(
+        type: SingleErrorTypes.invalidInput,
+        description: 'Flat macro goal must have exactly one day configuration',
+      );
+    }
+
     final seenDays = <DayOfWeek>{};
     int totalDaysCount = 0;
 
@@ -496,13 +503,29 @@ class MacroTrackingService {
       final total = await _weekMacroGoalRepository.count();
 
       final dtos = <MacroGoalDto>[];
-      for (final g in goals) {
-        final dayGoals = await _dayMacroGoalRepository.selectMany(
-          where: '${DayMacroGoalColumns.weekMacroGoalId.value} = ?',
-          whereArgs: [g.id],
+      if (goals.isNotEmpty) {
+        final weekIds = goals.map((g) => g.id!).toList();
+        final placeholders = List.filled(weekIds.length, '?').join(', ');
+        final allDayGoals = await _dayMacroGoalRepository.selectMany(
+          where:
+              '${DayMacroGoalColumns.weekMacroGoalId.value} IN ($placeholders)',
+          whereArgs: weekIds,
           orderBy: [DayMacroGoalColumns.id.orderAsc],
         );
-        dtos.add(MacroGoalDto.fromWeekModel(g, dayGoals));
+        final dayGoalsByWeekId = <int, List<DayMacroGoal>>{};
+        for (final dayGoal in allDayGoals) {
+          dayGoalsByWeekId
+              .putIfAbsent(dayGoal.weekMacroGoalId, () => <DayMacroGoal>[])
+              .add(dayGoal);
+        }
+        for (final g in goals) {
+          dtos.add(
+            MacroGoalDto.fromWeekModel(
+              g,
+              dayGoalsByWeekId[g.id] ?? const <DayMacroGoal>[],
+            ),
+          );
+        }
       }
 
       return ok(
