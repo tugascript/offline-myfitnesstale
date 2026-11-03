@@ -6,7 +6,6 @@ import 'package:go_router/go_router.dart';
 
 import '../../cubits/macro_tracking_cubit.dart';
 import '../../cubits/states/macro_tracking_state.dart';
-import '../../models/enums.dart';
 import '../../utilities/sizes/data_display_sizes.dart';
 import '../../widgets/common/confirmation_dialog.dart';
 import '../../widgets/macros/log_food_modal.dart';
@@ -78,18 +77,6 @@ class MacroTrackerDayWidget extends StatelessWidget {
                             child: Text(
                               'Set Goal',
                               style: TextStyle(fontSize: sizes.fontSize),
-                            ),
-                          )
-                        else if (activeGoal.goalType ==
-                                MacroGoalType.calorieCycling &&
-                            dayGoal?.name != null)
-                          Text(
-                            dayGoal!.name!,
-                            key: const ValueKey('macro-tracker-day-goal-name'),
-                            style: TextStyle(
-                              fontSize: sizes.smallFontSize,
-                              fontWeight: FontWeight.w600,
-                              color: theme.primaryColor,
                             ),
                           ),
                       ],

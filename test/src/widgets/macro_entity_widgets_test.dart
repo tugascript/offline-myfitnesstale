@@ -214,11 +214,8 @@ void main() {
       ),
     );
     expect(find.textContaining('Calorie Cycling'), findsOneWidget);
-    expect(
-      find.textContaining('Weekdays (Mon, Tue, Wed, Thu, Fri)'),
-      findsOneWidget,
-    );
-    expect(find.textContaining('Weekend Cheat (Sat, Sun)'), findsOneWidget);
+    expect(find.text('Mon, Tue, Wed, Thu, Fri'), findsOneWidget);
+    expect(find.text('Sat, Sun'), findsOneWidget);
   });
 
   testWidgets('populated meal schedule fits at 320px and 200% text', (

@@ -12,7 +12,6 @@ import '../layout/app_text_form_field.dart';
 import '../layout/responsive_fields.dart';
 
 class _DayGroupFormState {
-  final TextEditingController nameController;
   final TextEditingController caloriesController;
   final TextEditingController proteinController;
   final TextEditingController carbsController;
@@ -23,7 +22,6 @@ class _DayGroupFormState {
   final VoidCallback onChanged;
 
   _DayGroupFormState({
-    required String name,
     required String calories,
     required String protein,
     required String carbs,
@@ -31,8 +29,7 @@ class _DayGroupFormState {
     required String water,
     required Iterable<DayOfWeek> days,
     required this.onChanged,
-  }) : nameController = TextEditingController(text: name),
-       caloriesController = TextEditingController(text: calories),
+  }) : caloriesController = TextEditingController(text: calories),
        proteinController = TextEditingController(text: protein),
        carbsController = TextEditingController(text: carbs),
        fatController = TextEditingController(text: fat),
@@ -74,7 +71,6 @@ class _DayGroupFormState {
   }
 
   void dispose() {
-    nameController.dispose();
     caloriesController.dispose();
     proteinController.dispose();
     carbsController.dispose();
@@ -164,7 +160,6 @@ class _MacroGoalFormModalState extends State<MacroGoalFormModal> {
         final d = g.days[i];
         _dayGroups.add(
           _DayGroupFormState(
-            name: d.name ?? 'Group ${i + 1}',
             calories: d.targetCalories.toString(),
             protein: d.targetProtein.toString(),
             carbs: d.targetCarbs.toString(),
@@ -197,7 +192,6 @@ class _MacroGoalFormModalState extends State<MacroGoalFormModal> {
 
     _dayGroups.add(
       _DayGroupFormState(
-        name: 'Weekdays',
         calories: _caloriesController.text,
         protein: baseProtein,
         carbs: baseCarbs,
@@ -215,7 +209,6 @@ class _MacroGoalFormModalState extends State<MacroGoalFormModal> {
     );
     _dayGroups.add(
       _DayGroupFormState(
-        name: 'Weekends',
         calories: _caloriesController.text,
         protein: baseProtein,
         carbs: weekendCarbs,
@@ -292,7 +285,6 @@ class _MacroGoalFormModalState extends State<MacroGoalFormModal> {
       _dayValidationError = null;
       _dayGroups.add(
         _DayGroupFormState(
-          name: 'Group ${_dayGroups.length + 1}',
           calories: _caloriesController.text.isNotEmpty
               ? _caloriesController.text
               : '2000',
@@ -441,9 +433,6 @@ class _MacroGoalFormModalState extends State<MacroGoalFormModal> {
       final g = _dayGroups[i];
       final sortedDays = g.selectedDays.toList()
         ..sort((a, b) => a.value.compareTo(b.value));
-      final groupName = g.nameController.text.trim().isEmpty
-          ? 'Group ${i + 1}'
-          : g.nameController.text.trim();
       final calories = int.tryParse(g.caloriesController.text) ?? 2000;
       final protein = int.tryParse(g.proteinController.text) ?? 150;
       final carbs = int.tryParse(g.carbsController.text) ?? 200;
@@ -462,7 +451,6 @@ class _MacroGoalFormModalState extends State<MacroGoalFormModal> {
 
       dayInputs.add(
         DayMacroGoalInput(
-          name: groupName,
           days: sortedDays,
           targetCalories: calories,
           targetProtein: protein,
@@ -680,18 +668,6 @@ class _MacroGoalFormModalState extends State<MacroGoalFormModal> {
                     ),
                   ),
               ],
-            ),
-            SizedBox(height: widget.sizes.spacing / 2),
-            AppTextFormField(
-              theme: widget.theme,
-              fontSize: widget.sizes.fontSize,
-              padding: widget.sizes.padding,
-              isLoading: false,
-              key: ValueKey('macro-goal-group-$index-name-input'),
-              controller: group.nameController,
-              labelText: 'Group Name *',
-              validator: (v) =>
-                  v == null || v.trim().isEmpty ? 'Required' : null,
             ),
             SizedBox(height: widget.sizes.spacing / 2),
             Wrap(
