@@ -43,26 +43,24 @@ class _DayGroupFormState {
   }
 
   void _recalculate() {
-    if (calculateCaloriesFromMacros) {
-      final protein = int.tryParse(proteinController.text);
-      final carbs = int.tryParse(carbsController.text);
-      final fat = int.tryParse(fatController.text);
-      if (protein == null ||
-          carbs == null ||
-          fat == null ||
-          protein < 0 ||
-          carbs < 0 ||
-          fat < 0) {
-        caloriesController.clear();
-      } else {
-        caloriesController.text = Converters.macrosToCalories(
-          protein: protein,
-          carbs: carbs,
-          fats: fat,
-        ).toString();
-      }
+    if (!calculateCaloriesFromMacros) return;
+    final protein = int.tryParse(proteinController.text);
+    final carbs = int.tryParse(carbsController.text);
+    final fat = int.tryParse(fatController.text);
+    if (protein == null ||
+        carbs == null ||
+        fat == null ||
+        protein < 0 ||
+        carbs < 0 ||
+        fat < 0) {
+      caloriesController.clear();
+    } else {
+      caloriesController.text = Converters.macrosToCalories(
+        protein: protein,
+        carbs: carbs,
+        fats: fat,
+      ).toString();
     }
-    onChanged();
   }
 
   void setCalculateCalories(bool value) {

@@ -158,9 +158,9 @@ class DayMacroGoal extends Equatable implements Model {
       targetSodium: map[DayMacroGoalColumns.targetSodium.value] as int?,
       targetWaterIntakeMl:
           map[DayMacroGoalColumns.targetWaterIntakeMl.value] as int?,
-      isActive: (map[DayMacroGoalColumns.isActive.value] as int?) == 1,
+      isActive: (map[DayMacroGoalColumns.isActive.value] as int? ?? 1) == 1,
       phase: WeightGoalPhase.fromValue(
-        map[DayMacroGoalColumns.phase.value] as String? ?? '',
+        map[DayMacroGoalColumns.phase.value] as String? ?? 'maintain',
       ),
       createdAt: map[DayMacroGoalColumns.createdAt.value] as int,
       updatedAt: map[DayMacroGoalColumns.updatedAt.value] as int,

@@ -91,6 +91,20 @@ void main() {
     expect(fetchedDayGoal.days, const [DayOfWeek.saturday, DayOfWeek.sunday]);
     expect(fetchedDayGoal.targetCalories, 2500);
 
+    final defaultedDayGoal = DayMacroGoal.fromMap({
+      DayMacroGoalColumns.id.value: 99,
+      DayMacroGoalColumns.weekMacroGoalId.value: weekGoalId,
+      DayMacroGoalColumns.days.value: '[1]',
+      DayMacroGoalColumns.targetCalories.value: 2000,
+      DayMacroGoalColumns.targetProtein.value: 150,
+      DayMacroGoalColumns.targetCarbs.value: 200,
+      DayMacroGoalColumns.targetFat.value: 65,
+      DayMacroGoalColumns.createdAt.value: 1,
+      DayMacroGoalColumns.updatedAt.value: 1,
+    });
+    expect(defaultedDayGoal.isActive, isTrue);
+    expect(defaultedDayGoal.phase, WeightGoalPhase.maintain);
+
     // 3. Insert Food with FoodCategory enum and Micronutrients JSON
     final food = Food.create(
       name: 'Chicken Breast',

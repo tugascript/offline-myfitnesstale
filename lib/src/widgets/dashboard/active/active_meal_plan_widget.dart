@@ -46,7 +46,7 @@ class _ActiveMealPlanWidgetState extends State<ActiveMealPlanWidget> {
           builder: (context, macroState) {
             final record = planState.activeRecord;
             final goal = macroState.activeGoal;
-            final dayGoal = goal?.effectiveGoalForDate(macroState.selectedDate);
+            final dayGoal = goal?.effectiveGoalForDate(DateTime.now());
             final isEmpty = record == null && goal == null;
             return ActivePlanFrame(
               title: 'Active Meal Plan',
