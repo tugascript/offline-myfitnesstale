@@ -223,4 +223,145 @@ void main() {
       expect(macros.submitted!.days[1].days.length, 2);
     },
   );
+
+  testWidgets(
+    'switching from flat to cycling seeds cycling groups with edited flat values',
+    (tester) async {
+      final macros = await open(tester);
+      await tester.enterText(field('protein'), '222');
+      await tester.pump();
+
+      await tester.tap(find.byKey(const ValueKey('macro-goal-type-cycling')));
+      await tester.pumpAndSettle();
+
+      final submit = find.byKey(const ValueKey('macro-goal-submit-button'));
+      await tester.ensureVisible(submit);
+      await tester.tap(submit);
+      await tester.pumpAndSettle();
+
+      expect(macros.submitted, isNotNull);
+      expect(macros.submitted!.goalType, MacroGoalType.calorieCycling);
+      expect(macros.submitted!.days[0].targetProtein, 222);
+      expect(macros.submitted!.days[1].targetProtein, 222);
+    },
+  );
+
+  testWidgets(
+    'editing existing flat and cycling goals preserves unexposed metadata (name, fiber, sodium)',
+    (tester) async {
+      // 1. Flat goal edit preserves fiber and sodium
+      final flatMacros = await open(
+        tester,
+        goal: const MacroGoalDto(
+          id: 11,
+          name: 'Flat With Micros',
+          targetCalories: 2000,
+          targetProtein: 160,
+          targetCarbs: 200,
+          targetFat: 60,
+          targetFiber: 35,
+          targetSodium: 2300,
+          targetWaterIntakeMl: 2500,
+          goalType: MacroGoalType.flat,
+          days: [
+            DayMacroGoalDto(
+              id: 1,
+              weekMacroGoalId: 11,
+              days: DayOfWeek.values,
+              name: 'Flat With Micros',
+              targetCalories: 2000,
+              targetProtein: 160,
+              targetCarbs: 200,
+              targetFat: 60,
+              targetFiber: 35,
+              targetSodium: 2300,
+              targetWaterIntakeMl: 2500,
+            ),
+          ],
+          isActive: true,
+          phase: WeightGoalPhase.cut,
+        ),
+      );
+      final submitFlat = find.byKey(const ValueKey('macro-goal-submit-button'));
+      await tester.ensureVisible(submitFlat);
+      await tester.tap(submitFlat);
+      await tester.pumpAndSettle();
+
+      expect(flatMacros.updatedId, 11);
+      expect(flatMacros.submitted?.targetFiber.value, 35);
+      expect(flatMacros.submitted?.targetSodium.value, 2300);
+      expect(flatMacros.submitted?.days.first.targetFiber.value, 35);
+      expect(flatMacros.submitted?.days.first.targetSodium.value, 2300);
+
+      // 2. Cycling goal edit preserves day group name, fiber, sodium, and phase
+      final cyclingMacros = await open(
+        tester,
+        goal: const MacroGoalDto(
+          id: 12,
+          name: 'Cycling With Metadata',
+          targetCalories: 2000,
+          targetProtein: 160,
+          targetCarbs: 193,
+          targetFat: 63,
+          targetFiber: 32,
+          targetSodium: 2400,
+          targetWaterIntakeMl: 2500,
+          goalType: MacroGoalType.calorieCycling,
+          days: [
+            DayMacroGoalDto(
+              id: 10,
+              weekMacroGoalId: 12,
+              days: [
+                DayOfWeek.monday,
+                DayOfWeek.tuesday,
+                DayOfWeek.wednesday,
+                DayOfWeek.thursday,
+                DayOfWeek.friday,
+              ],
+              name: 'Training Days',
+              targetCalories: 1800,
+              targetProtein: 160,
+              targetCarbs: 150,
+              targetFat: 60,
+              targetFiber: 30,
+              targetSodium: 2200,
+              phase: WeightGoalPhase.cut,
+            ),
+            DayMacroGoalDto(
+              id: 11,
+              weekMacroGoalId: 12,
+              days: [DayOfWeek.saturday, DayOfWeek.sunday],
+              name: 'Refeed Days',
+              targetCalories: 2500,
+              targetProtein: 160,
+              targetCarbs: 300,
+              targetFat: 70,
+              targetFiber: 38,
+              targetSodium: 2900,
+              phase: WeightGoalPhase.cut,
+            ),
+          ],
+          isActive: true,
+          phase: WeightGoalPhase.cut,
+        ),
+      );
+
+      final submitCycling = find.byKey(
+        const ValueKey('macro-goal-submit-button'),
+      );
+      await tester.ensureVisible(submitCycling);
+      await tester.tap(submitCycling);
+      await tester.pumpAndSettle();
+
+      expect(cyclingMacros.updatedId, 12);
+      expect(cyclingMacros.submitted?.days[0].name, 'Training Days');
+      expect(cyclingMacros.submitted?.days[0].targetFiber.value, 30);
+      expect(cyclingMacros.submitted?.days[0].targetSodium.value, 2200);
+      expect(cyclingMacros.submitted?.days[1].name, 'Refeed Days');
+      expect(cyclingMacros.submitted?.days[1].targetFiber.value, 38);
+      expect(cyclingMacros.submitted?.days[1].targetSodium.value, 2900);
+      expect(cyclingMacros.submitted?.targetFiber.value, 32);
+      expect(cyclingMacros.submitted?.targetSodium.value, 2400);
+    },
+  );
 }

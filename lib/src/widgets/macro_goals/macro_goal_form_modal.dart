@@ -18,7 +18,11 @@ class _DayGroupFormState {
   final TextEditingController fatController;
   final TextEditingController waterController;
   final Set<DayOfWeek> selectedDays;
-  bool calculateCaloriesFromMacros = true;
+  final String? preservedName;
+  final int? preservedFiber;
+  final int? preservedSodium;
+  final WeightGoalPhase? preservedPhase;
+  bool calculateCaloriesFromMacros;
   final VoidCallback onChanged;
 
   _DayGroupFormState({
@@ -28,6 +32,11 @@ class _DayGroupFormState {
     required String fat,
     required String water,
     required Iterable<DayOfWeek> days,
+    this.preservedName,
+    this.preservedFiber,
+    this.preservedSodium,
+    this.preservedPhase,
+    this.calculateCaloriesFromMacros = true,
     required this.onChanged,
   }) : caloriesController = TextEditingController(text: calories),
        proteinController = TextEditingController(text: protein),
@@ -164,12 +173,14 @@ class _MacroGoalFormModalState extends State<MacroGoalFormModal> {
             fat: d.targetFat.toString(),
             water: d.targetWaterIntakeMl?.toString() ?? '',
             days: d.days,
+            preservedName: d.name,
+            preservedFiber: d.targetFiber,
+            preservedSodium: d.targetSodium,
+            preservedPhase: d.phase,
             onChanged: _onDayGroupChanged,
           ),
         );
       }
-    } else {
-      _createDefaultCyclingGroups();
     }
   }
 
@@ -187,6 +198,15 @@ class _MacroGoalFormModalState extends State<MacroGoalFormModal> {
     final baseFat = _fatController.text.isNotEmpty ? _fatController.text : '65';
     final baseWater = _waterController.text;
     final weekendCarbs = ((int.tryParse(baseCarbs) ?? 200) + 50).toString();
+    final existingDay =
+        widget.existingGoal != null && widget.existingGoal!.days.length == 1
+        ? widget.existingGoal!.days.first
+        : null;
+    final preservedFiber =
+        existingDay?.targetFiber ?? widget.existingGoal?.targetFiber;
+    final preservedSodium =
+        existingDay?.targetSodium ?? widget.existingGoal?.targetSodium;
+    final preservedPhase = existingDay?.phase ?? widget.existingGoal?.phase;
 
     _dayGroups.add(
       _DayGroupFormState(
@@ -202,6 +222,10 @@ class _MacroGoalFormModalState extends State<MacroGoalFormModal> {
           DayOfWeek.thursday,
           DayOfWeek.friday,
         ],
+        preservedFiber: preservedFiber,
+        preservedSodium: preservedSodium,
+        preservedPhase: preservedPhase,
+        calculateCaloriesFromMacros: _calculateCaloriesFromMacros,
         onChanged: _onDayGroupChanged,
       ),
     );
@@ -213,6 +237,10 @@ class _MacroGoalFormModalState extends State<MacroGoalFormModal> {
         fat: baseFat,
         water: baseWater,
         days: const [DayOfWeek.saturday, DayOfWeek.sunday],
+        preservedFiber: preservedFiber,
+        preservedSodium: preservedSodium,
+        preservedPhase: preservedPhase,
+        calculateCaloriesFromMacros: _calculateCaloriesFromMacros,
         onChanged: _onDayGroupChanged,
       ),
     );
@@ -363,6 +391,14 @@ class _MacroGoalFormModalState extends State<MacroGoalFormModal> {
       final carbs = int.tryParse(_carbsController.text) ?? 200;
       final fat = int.tryParse(_fatController.text) ?? 65;
       final water = int.tryParse(_waterController.text);
+      final existingDay =
+          widget.existingGoal != null && widget.existingGoal!.days.length == 1
+          ? widget.existingGoal!.days.first
+          : null;
+      final preservedFiber =
+          existingDay?.targetFiber ?? widget.existingGoal?.targetFiber;
+      final preservedSodium =
+          existingDay?.targetSodium ?? widget.existingGoal?.targetSodium;
 
       final input = MacroGoalInput(
         name: name,
@@ -370,6 +406,8 @@ class _MacroGoalFormModalState extends State<MacroGoalFormModal> {
         targetProtein: protein,
         targetCarbs: carbs,
         targetFat: fat,
+        targetFiber: Nullable(preservedFiber),
+        targetSodium: Nullable(preservedSodium),
         targetWaterIntakeMl: Nullable(water),
         goalType: MacroGoalType.flat,
         days: [
@@ -380,6 +418,8 @@ class _MacroGoalFormModalState extends State<MacroGoalFormModal> {
             targetProtein: protein,
             targetCarbs: carbs,
             targetFat: fat,
+            targetFiber: Nullable(preservedFiber),
+            targetSodium: Nullable(preservedSodium),
             targetWaterIntakeMl: Nullable(water),
             phase: phase,
             isActive: isActive,
@@ -424,6 +464,10 @@ class _MacroGoalFormModalState extends State<MacroGoalFormModal> {
     int totalProtein = 0;
     int totalCarbs = 0;
     int totalFat = 0;
+    int totalFiber = 0;
+    bool hasFiber = false;
+    int totalSodium = 0;
+    bool hasSodium = false;
     int totalWater = 0;
     bool hasWater = false;
 
@@ -442,6 +486,14 @@ class _MacroGoalFormModalState extends State<MacroGoalFormModal> {
       totalProtein += protein * count;
       totalCarbs += carbs * count;
       totalFat += fat * count;
+      if (g.preservedFiber != null) {
+        hasFiber = true;
+        totalFiber += g.preservedFiber! * count;
+      }
+      if (g.preservedSodium != null) {
+        hasSodium = true;
+        totalSodium += g.preservedSodium! * count;
+      }
       if (water != null) {
         hasWater = true;
         totalWater += water * count;
@@ -449,13 +501,16 @@ class _MacroGoalFormModalState extends State<MacroGoalFormModal> {
 
       dayInputs.add(
         DayMacroGoalInput(
+          name: g.preservedName,
           days: sortedDays,
           targetCalories: calories,
           targetProtein: protein,
           targetCarbs: carbs,
           targetFat: fat,
+          targetFiber: Nullable(g.preservedFiber),
+          targetSodium: Nullable(g.preservedSodium),
           targetWaterIntakeMl: Nullable(water),
-          phase: phase,
+          phase: g.preservedPhase ?? phase,
           isActive: isActive,
         ),
       );
@@ -467,6 +522,8 @@ class _MacroGoalFormModalState extends State<MacroGoalFormModal> {
       targetProtein: (totalProtein / 7).round(),
       targetCarbs: (totalCarbs / 7).round(),
       targetFat: (totalFat / 7).round(),
+      targetFiber: Nullable(hasFiber ? (totalFiber / 7).round() : null),
+      targetSodium: Nullable(hasSodium ? (totalSodium / 7).round() : null),
       targetWaterIntakeMl: Nullable(hasWater ? (totalWater / 7).round() : null),
       goalType: MacroGoalType.calorieCycling,
       days: dayInputs,
