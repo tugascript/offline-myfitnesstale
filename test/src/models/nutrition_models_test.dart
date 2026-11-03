@@ -3,11 +3,11 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:myfitnesstale/src/models/common.dart';
 import 'package:myfitnesstale/src/models/daily_nutrition_log_model.dart';
+import 'package:myfitnesstale/src/models/day_macro_goal_model.dart';
 import 'package:myfitnesstale/src/models/db.dart';
 import 'package:myfitnesstale/src/models/enums.dart';
 import 'package:myfitnesstale/src/models/food_model.dart';
 import 'package:myfitnesstale/src/models/food_portion_model.dart';
-import 'package:myfitnesstale/src/models/macro_goal_model.dart';
 import 'package:myfitnesstale/src/models/meal_log_item_model.dart';
 import 'package:myfitnesstale/src/models/meal_log_model.dart';
 import 'package:myfitnesstale/src/models/meal_plan_day_model.dart';
@@ -18,10 +18,10 @@ import 'package:myfitnesstale/src/models/meal_plan_model.dart';
 import 'package:myfitnesstale/src/models/meal_plan_record_model.dart';
 import 'package:myfitnesstale/src/models/meal_plan_week_model.dart';
 import 'package:myfitnesstale/src/models/meal_plan_week_record_model.dart';
-import 'package:myfitnesstale/src/models/profile_model.dart';
 import 'package:myfitnesstale/src/models/recipe_item_model.dart';
 import 'package:myfitnesstale/src/models/recipe_model.dart';
 import 'package:myfitnesstale/src/models/utilities.dart';
+import 'package:myfitnesstale/src/models/week_macro_goal_model.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 void main() {
@@ -57,29 +57,39 @@ void main() {
     final fkCheck = await db.rawQuery('PRAGMA foreign_key_check');
     expect(fkCheck, isEmpty);
 
-    // 1. Insert Profile for MacroGoal
-    final profileId = await db.insert(
-      Profile.table,
-      Profile.create(
-        'Athlete',
-        180,
-        Gender.male,
-        DateTime(1995, 5, 20),
-      ).toMap(),
-    );
-
-    // 2. Insert MacroGoal
-    final macroGoal = MacroGoal.create(
-      profileId: profileId,
-      name: 'High Protein Cut',
-      targetCalories: 2200,
-      targetProtein: 200,
-      targetCarbs: 200,
-      targetFat: 60,
+    // 1. Insert WeekMacroGoal and DayMacroGoal
+    final weekGoal = WeekMacroGoal.create(
+      name: 'Cycling Cut',
+      totalTargetCalories: 14000,
+      totalTargetProtein: 1120,
+      totalTargetCarbs: 1400,
+      totalTargetFat: 420,
+      goalType: MacroGoalType.calorieCycling,
       phase: WeightGoalPhase.cut,
     );
-    final macroGoalId = await db.insert(MacroGoal.table, macroGoal.toMap());
-    expect(macroGoalId, isPositive);
+    final weekGoalId = await db.insert(WeekMacroGoal.table, weekGoal.toMap());
+    expect(weekGoalId, isPositive);
+
+    final dayGoal = DayMacroGoal.create(
+      weekMacroGoalId: weekGoalId,
+      days: const [DayOfWeek.saturday, DayOfWeek.sunday],
+      name: 'Weekends',
+      targetCalories: 2500,
+      targetProtein: 160,
+      targetCarbs: 280,
+      targetFat: 82,
+      phase: WeightGoalPhase.cut,
+    );
+    final dayGoalId = await db.insert(DayMacroGoal.table, dayGoal.toMap());
+    expect(dayGoalId, isPositive);
+    final dayGoalRows = await db.query(
+      DayMacroGoal.table,
+      where: '${DayMacroGoalColumns.id.value} = ?',
+      whereArgs: [dayGoalId],
+    );
+    final fetchedDayGoal = DayMacroGoal.fromMap(dayGoalRows.first);
+    expect(fetchedDayGoal.days, const [DayOfWeek.saturday, DayOfWeek.sunday]);
+    expect(fetchedDayGoal.targetCalories, 2500);
 
     // 3. Insert Food with FoodCategory enum and Micronutrients JSON
     final food = Food.create(

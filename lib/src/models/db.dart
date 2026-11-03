@@ -4,6 +4,7 @@ import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
 import 'daily_nutrition_log_model.dart';
+import 'day_macro_goal_model.dart';
 import 'entitlement_state_model.dart';
 import 'equipment_model.dart';
 import 'exercise_equipment_model.dart';
@@ -11,7 +12,6 @@ import 'exercise_model.dart';
 import 'exercise_record_model.dart';
 import 'food_model.dart';
 import 'food_portion_model.dart';
-import 'macro_goal_model.dart';
 import 'meal_log_item_model.dart';
 import 'meal_log_model.dart';
 import 'meal_plan_day_model.dart';
@@ -28,6 +28,7 @@ import 'strength_goal_model.dart';
 import 'recipe_model.dart';
 import 'reminders_config_model.dart';
 import 'system_model.dart';
+import 'week_macro_goal_model.dart';
 import 'weight_goal_model.dart';
 import 'weight_record_model.dart';
 import 'workout_model.dart';
@@ -169,7 +170,8 @@ class DatabaseHelper {
       FoodPortion.tableCreate,
       Recipe.tableCreate,
       RecipeItem.tableCreate,
-      MacroGoal.tableCreate,
+      WeekMacroGoal.tableCreate,
+      DayMacroGoal.tableCreate,
       StrengthGoal.tableCreate,
       DailyNutritionLog.tableCreate,
       MealLog.tableCreate,

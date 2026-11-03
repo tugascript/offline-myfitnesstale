@@ -158,6 +158,69 @@ void main() {
     expect(find.text('Active Macro Target'), findsOneWidget);
   });
 
+  testWidgets('active calorie cycling goal fits at 320px and 200% text', (
+    tester,
+  ) async {
+    await pumpNarrow(
+      tester,
+      MacroGoalsContentWidget(
+        sizes: sizes,
+        theme: ThemeData(),
+        state: MacroTrackingState(
+          selectedDate: DateTime(2026, 10, 13),
+          isLoading: false,
+          activeGoal: const MacroGoalDto(
+            id: 2,
+            name: 'Weekend Refeed',
+            targetCalories: 2000,
+            targetProtein: 160,
+            targetCarbs: 193,
+            targetFat: 63,
+            targetWaterIntakeMl: 2500,
+            totalTargetCalories: 14000,
+            goalType: MacroGoalType.calorieCycling,
+            days: [
+              DayMacroGoalDto(
+                id: 1,
+                weekMacroGoalId: 2,
+                days: [
+                  DayOfWeek.monday,
+                  DayOfWeek.tuesday,
+                  DayOfWeek.wednesday,
+                  DayOfWeek.thursday,
+                  DayOfWeek.friday,
+                ],
+                name: 'Weekdays',
+                targetCalories: 1800,
+                targetProtein: 160,
+                targetCarbs: 150,
+                targetFat: 60,
+              ),
+              DayMacroGoalDto(
+                id: 2,
+                weekMacroGoalId: 2,
+                days: [DayOfWeek.saturday, DayOfWeek.sunday],
+                name: 'Weekend Cheat',
+                targetCalories: 2500,
+                targetProtein: 160,
+                targetCarbs: 300,
+                targetFat: 70,
+              ),
+            ],
+            isActive: true,
+            phase: WeightGoalPhase.cut,
+          ),
+        ),
+      ),
+    );
+    expect(find.textContaining('Calorie Cycling'), findsOneWidget);
+    expect(
+      find.textContaining('Weekdays (Mon, Tue, Wed, Thu, Fri)'),
+      findsOneWidget,
+    );
+    expect(find.textContaining('Weekend Cheat (Sat, Sun)'), findsOneWidget);
+  });
+
   testWidgets('populated meal schedule fits at 320px and 200% text', (
     tester,
   ) async {

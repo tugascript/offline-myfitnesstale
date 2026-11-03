@@ -174,4 +174,53 @@ void main() {
     await tester.pump();
     expect(calories(tester), '1385');
   });
+
+  testWidgets(
+    'switches to calorie cycling, validates 7-day coverage, and submits day groups',
+    (tester) async {
+      final macros = await open(tester);
+      await tester.tap(find.byKey(const ValueKey('macro-goal-type-cycling')));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.byKey(const ValueKey('macro-goal-day-group-0')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const ValueKey('macro-goal-day-group-1')),
+        findsOneWidget,
+      );
+
+      // Unselect Sunday (day 7) from group 1 -> missing day validation prevents submit
+      final sundayChip = find.byKey(const ValueKey('macro-goal-group-1-day-7'));
+      await tester.ensureVisible(sundayChip);
+      await tester.tap(sundayChip);
+      await tester.pump();
+
+      final submit = find.byKey(const ValueKey('macro-goal-submit-button'));
+      await tester.ensureVisible(submit);
+      await tester.tap(submit);
+      await tester.pump();
+      expect(macros.submitted, isNull);
+      expect(
+        find.byKey(const ValueKey('macro-goal-days-error')),
+        findsOneWidget,
+      );
+
+      // Re-select Sunday in group 1 and submit
+      await tester.ensureVisible(sundayChip);
+      await tester.tap(sundayChip);
+      await tester.pump();
+
+      await tester.ensureVisible(submit);
+      await tester.tap(submit);
+      await tester.pumpAndSettle();
+
+      expect(macros.submitted, isNotNull);
+      expect(macros.submitted!.goalType, MacroGoalType.calorieCycling);
+      expect(macros.submitted!.days.length, 2);
+      expect(macros.submitted!.days[0].days.length, 5);
+      expect(macros.submitted!.days[1].days.length, 2);
+    },
+  );
 }
