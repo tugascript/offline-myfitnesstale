@@ -5,6 +5,7 @@ import 'package:myfitnesstale/src/services/inputs/meal_plan_input.dart';
 import 'package:myfitnesstale/src/services/inputs/recipe_input.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:myfitnesstale/src/models/day_macro_goal_model.dart';
 import 'package:myfitnesstale/src/models/enums.dart';
 import 'package:myfitnesstale/src/models/food_model.dart';
 import 'package:myfitnesstale/src/models/food_portion_model.dart';
@@ -369,6 +370,124 @@ void main() {
         (g) => g.id == cycling.id,
       );
       expect(loadedCycling.days.length, 2);
+      for (final d in loadedCycling.days) {
+        expect(d.phase, WeightGoalPhase.cut);
+        expect(d.isActive, isTrue);
+      }
+
+      // Overlapping days across groups is rejected
+      final overlappingResult = await macroTrackingService.createMacroGoal(
+        const MacroGoalInput(
+          name: 'Overlapping Days',
+          goalType: MacroGoalType.calorieCycling,
+          days: [
+            DayMacroGoalInput(
+              days: [
+                DayOfWeek.monday,
+                DayOfWeek.tuesday,
+                DayOfWeek.wednesday,
+                DayOfWeek.thursday,
+                DayOfWeek.friday,
+              ],
+              targetCalories: 1800,
+              targetProtein: 150,
+              targetCarbs: 200,
+              targetFat: 50,
+            ),
+            DayMacroGoalInput(
+              days: [DayOfWeek.monday, DayOfWeek.saturday],
+              targetCalories: 2200,
+              targetProtein: 150,
+              targetCarbs: 250,
+              targetFat: 60,
+            ),
+          ],
+        ),
+      );
+      expect(overlappingResult.isErr(), isTrue);
+      expect(overlappingResult.error.type, SingleErrorTypes.invalidInput);
+
+      // Update cycling goal replaces day groups and syncs phase/isActive
+      final updatedCyclingResult = await macroTrackingService.updateMacroGoal(
+        cycling.id,
+        const MacroGoalInput(
+          name: 'Updated Cycling',
+          goalType: MacroGoalType.calorieCycling,
+          phase: WeightGoalPhase.bulk,
+          isActive: true,
+          days: [
+            DayMacroGoalInput(
+              name: 'Mon-Thu',
+              days: [
+                DayOfWeek.monday,
+                DayOfWeek.tuesday,
+                DayOfWeek.wednesday,
+                DayOfWeek.thursday,
+              ],
+              targetCalories: 2600,
+              targetProtein: 180,
+              targetCarbs: 300,
+              targetFat: 75,
+              targetFiber: Nullable(35),
+              targetSodium: Nullable(2400),
+            ),
+            DayMacroGoalInput(
+              name: 'Fri-Sun',
+              days: [DayOfWeek.friday, DayOfWeek.saturday, DayOfWeek.sunday],
+              targetCalories: 3000,
+              targetProtein: 180,
+              targetCarbs: 380,
+              targetFat: 85,
+              targetFiber: Nullable(42),
+              targetSodium: Nullable(2800),
+            ),
+          ],
+        ),
+      );
+      expect(updatedCyclingResult.isOk(), isTrue);
+      final updatedCycling = updatedCyclingResult.value;
+      expect(updatedCycling.name, 'Updated Cycling');
+      expect(updatedCycling.phase, WeightGoalPhase.bulk);
+      expect(updatedCycling.totalTargetCalories, 2600 * 4 + 3000 * 3);
+      expect(updatedCycling.days.length, 2);
+      expect(updatedCycling.days[0].phase, WeightGoalPhase.bulk);
+      expect(updatedCycling.days[1].phase, WeightGoalPhase.bulk);
+      expect(updatedCycling.days[0].targetFiber, 35);
+      expect(updatedCycling.days[1].targetSodium, 2800);
+
+      // Completing goal deactivates both week and child day rows
+      final completedResult = await macroTrackingService.completeMacroGoal(
+        cycling.id,
+      );
+      expect(completedResult.isOk(), isTrue);
+      expect(completedResult.value.isActive, isFalse);
+      expect(completedResult.value.days.every((d) => !d.isActive), isTrue);
+
+      final db = await testDatabase.db;
+      final dayRowsBeforeDelete = await db.query(
+        DayMacroGoal.table,
+        where: '${DayMacroGoalColumns.weekMacroGoalId.value} = ?',
+        whereArgs: [cycling.id],
+      );
+      expect(dayRowsBeforeDelete.length, 2);
+      expect(
+        dayRowsBeforeDelete.every(
+          (r) => r[DayMacroGoalColumns.isActive.value] == 0,
+        ),
+        isTrue,
+      );
+
+      // Deleting week goal cascades to day_macro_goals
+      final deleteResult = await macroTrackingService.deleteMacroGoal(
+        cycling.id,
+      );
+      expect(deleteResult.isOk(), isTrue);
+      final dayRowsAfterDelete = await db.query(
+        DayMacroGoal.table,
+        where: '${DayMacroGoalColumns.weekMacroGoalId.value} = ?',
+        whereArgs: [cycling.id],
+      );
+      expect(dayRowsAfterDelete, isEmpty);
     });
   });
 

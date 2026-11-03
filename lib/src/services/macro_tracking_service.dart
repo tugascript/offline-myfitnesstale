@@ -243,6 +243,17 @@ class MacroTrackingService {
                 txn,
               );
             }
+            final activeDays = await _dayMacroGoalRepository.selectMany(
+              where: '${DayMacroGoalColumns.isActive.value} = ?',
+              whereArgs: [1],
+              trx: txn,
+            );
+            for (final activeDay in activeDays) {
+              await _dayMacroGoalRepository.update(
+                activeDay.copyWith(isActive: false),
+                txn,
+              );
+            }
           }
 
           final weekId = await _weekMacroGoalRepository.insert(weekGoal, txn);
@@ -260,7 +271,7 @@ class MacroTrackingService {
               targetFiber: d.targetFiber.value,
               targetSodium: d.targetSodium.value,
               targetWaterIntakeMl: d.targetWaterIntakeMl.value,
-              phase: d.phase,
+              phase: input.phase,
               isActive: input.isActive,
             );
             final dayId = await _dayMacroGoalRepository.insert(dayModel, txn);
@@ -323,6 +334,17 @@ class MacroTrackingService {
               txn,
             );
           }
+          final activeDays = await _dayMacroGoalRepository.selectMany(
+            where: '${DayMacroGoalColumns.isActive.value} = ?',
+            whereArgs: [1],
+            trx: txn,
+          );
+          for (final activeDay in activeDays) {
+            await _dayMacroGoalRepository.update(
+              activeDay.copyWith(isActive: false),
+              txn,
+            );
+          }
         }
 
         final updated = existing.copyWith(
@@ -360,7 +382,7 @@ class MacroTrackingService {
             targetFiber: d.targetFiber.value,
             targetSodium: d.targetSodium.value,
             targetWaterIntakeMl: d.targetWaterIntakeMl.value,
-            phase: d.phase,
+            phase: input.phase,
             isActive: input.isActive,
           );
           final dayId = await _dayMacroGoalRepository.insert(dayModel, txn);
@@ -395,17 +417,26 @@ class MacroTrackingService {
           ),
         );
       }
-      final updated = existing.copyWith(
-        isActive: false,
-        updatedAt: DateUtilities.getNowUtcUnix(),
-      );
-      await _weekMacroGoalRepository.update(updated);
-      final dayGoals = await _dayMacroGoalRepository.selectMany(
-        where: '${DayMacroGoalColumns.weekMacroGoalId.value} = ?',
-        whereArgs: [id],
-        orderBy: [DayMacroGoalColumns.id.orderAsc],
-      );
-      return ok(MacroGoalDto.fromWeekModel(updated, dayGoals));
+      final now = DateUtilities.getNowUtcUnix();
+      final updated = existing.copyWith(isActive: false, updatedAt: now);
+      return await _weekMacroGoalRepository.startTransaction<
+        Result<MacroGoalDto, ServiceError<SingleErrorTypes>>
+      >((txn) async {
+        await _weekMacroGoalRepository.update(updated, txn);
+        final dayGoals = await _dayMacroGoalRepository.selectMany(
+          where: '${DayMacroGoalColumns.weekMacroGoalId.value} = ?',
+          whereArgs: [id],
+          orderBy: [DayMacroGoalColumns.id.orderAsc],
+          trx: txn,
+        );
+        final updatedDayGoals = <DayMacroGoal>[];
+        for (final dayGoal in dayGoals) {
+          final updatedDay = dayGoal.copyWith(isActive: false, updatedAt: now);
+          await _dayMacroGoalRepository.update(updatedDay, txn);
+          updatedDayGoals.add(updatedDay);
+        }
+        return ok(MacroGoalDto.fromWeekModel(updated, updatedDayGoals));
+      });
     } catch (e) {
       _logger.severe('Failed to complete macro goal', e);
       return err(
