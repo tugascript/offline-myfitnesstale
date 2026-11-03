@@ -67,7 +67,7 @@ class MacroGoalsContentWidget extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      '${dayGroup.name ?? 'Days'} (${_formatDays(dayGroup.days)})',
+                      _formatDays(dayGroup.days),
                       style: TextStyle(
                         fontSize: sizes.fontSize,
                         fontWeight: FontWeight.bold,
