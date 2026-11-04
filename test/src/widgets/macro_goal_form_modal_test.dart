@@ -364,4 +364,47 @@ void main() {
       expect(cyclingMacros.submitted?.targetSodium.value, 2400);
     },
   );
+
+  testWidgets('manual cycling calories reject non-integer or negative values', (
+    tester,
+  ) async {
+    final macros = await open(tester);
+    await tester.tap(find.byKey(const ValueKey('macro-goal-type-cycling')));
+    await tester.pumpAndSettle();
+
+    final group0Checkbox = find.byKey(
+      const ValueKey('macro-goal-group-0-calculate-calories-checkbox'),
+    );
+    await tester.ensureVisible(group0Checkbox);
+    await tester.tap(group0Checkbox);
+    await tester.pump();
+
+    final group0Calories = find.descendant(
+      of: find.byKey(const ValueKey('macro-goal-group-0-calories-input')),
+      matching: find.byType(TextFormField),
+    );
+    final submit = find.byKey(const ValueKey('macro-goal-submit-button'));
+
+    for (final invalid in ['1800.5', '-100', 'abc', '']) {
+      await tester.ensureVisible(group0Calories);
+      await tester.enterText(group0Calories, invalid);
+      await tester.pump();
+
+      await tester.ensureVisible(submit);
+      await tester.tap(submit);
+      await tester.pump();
+      expect(macros.submitted, isNull);
+    }
+
+    await tester.ensureVisible(group0Calories);
+    await tester.enterText(group0Calories, '1850');
+    await tester.pump();
+
+    await tester.ensureVisible(submit);
+    await tester.tap(submit);
+    await tester.pumpAndSettle();
+
+    expect(macros.submitted, isNotNull);
+    expect(macros.submitted!.days[0].targetCalories, 1850);
+  });
 }
