@@ -411,7 +411,7 @@ class MacroTrackingService {
             targetFiber: d.targetFiber.value,
             targetSodium: d.targetSodium.value,
             targetWaterIntakeMl: d.targetWaterIntakeMl.value,
-            phase: input.phase,
+            phase: d.phase ?? input.phase,
             isActive: input.isActive,
           );
           final dayId = await _dayMacroGoalRepository.insert(dayModel, txn);

@@ -430,6 +430,7 @@ void main() {
               targetFat: 75,
               targetFiber: Nullable(35),
               targetSodium: Nullable(2400),
+              phase: WeightGoalPhase.maintain,
             ),
             DayMacroGoalInput(
               name: 'Fri-Sun',
@@ -450,7 +451,7 @@ void main() {
       expect(updatedCycling.phase, WeightGoalPhase.bulk);
       expect(updatedCycling.totalTargetCalories, 2600 * 4 + 3000 * 3);
       expect(updatedCycling.days.length, 2);
-      expect(updatedCycling.days[0].phase, WeightGoalPhase.bulk);
+      expect(updatedCycling.days[0].phase, WeightGoalPhase.maintain);
       expect(updatedCycling.days[1].phase, WeightGoalPhase.bulk);
       expect(updatedCycling.days[0].targetFiber, 35);
       expect(updatedCycling.days[1].targetSodium, 2800);
