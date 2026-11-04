@@ -434,10 +434,14 @@ enum DayOfWeek {
 
   const DayOfWeek(this.value);
 
-  static DayOfWeek fromValue(int v) => DayOfWeek.values.firstWhere(
-    (d) => d.value == v,
-    orElse: () => DayOfWeek.monday,
-  );
+  static DayOfWeek? tryFromValue(int v) {
+    for (final d in DayOfWeek.values) {
+      if (d.value == v) return d;
+    }
+    return null;
+  }
+
+  static DayOfWeek fromValue(int v) => tryFromValue(v) ?? DayOfWeek.monday;
 
   static DayOfWeek fromDateTime(DateTime dateTime) =>
       fromValue(dateTime.weekday);

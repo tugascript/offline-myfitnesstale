@@ -122,6 +122,29 @@ class MacroTrackingService {
       );
     }
 
+    if (input.goalType == MacroGoalType.calorieCycling &&
+        dayInputs.length < 2) {
+      throw const ServiceError<SingleErrorTypes>(
+        type: SingleErrorTypes.invalidInput,
+        description:
+            'Calorie cycling macro goal requires at least two day groups',
+      );
+    }
+
+    if (input.targetCalories < 0 ||
+        input.targetProtein < 0 ||
+        input.targetCarbs < 0 ||
+        input.targetFat < 0 ||
+        (input.targetFiber.value != null && input.targetFiber.value! < 0) ||
+        (input.targetSodium.value != null && input.targetSodium.value! < 0) ||
+        (input.targetWaterIntakeMl.value != null &&
+            input.targetWaterIntakeMl.value! < 0)) {
+      throw const ServiceError<SingleErrorTypes>(
+        type: SingleErrorTypes.invalidInput,
+        description: 'Macro targets cannot be negative',
+      );
+    }
+
     final seenDays = <DayOfWeek>{};
     int totalDaysCount = 0;
 
@@ -135,7 +158,13 @@ class MacroTrackingService {
       if (dayInput.targetCalories < 0 ||
           dayInput.targetProtein < 0 ||
           dayInput.targetCarbs < 0 ||
-          dayInput.targetFat < 0) {
+          dayInput.targetFat < 0 ||
+          (dayInput.targetFiber.value != null &&
+              dayInput.targetFiber.value! < 0) ||
+          (dayInput.targetSodium.value != null &&
+              dayInput.targetSodium.value! < 0) ||
+          (dayInput.targetWaterIntakeMl.value != null &&
+              dayInput.targetWaterIntakeMl.value! < 0)) {
         throw const ServiceError<SingleErrorTypes>(
           type: SingleErrorTypes.invalidInput,
           description: 'Macro targets cannot be negative',
@@ -271,7 +300,7 @@ class MacroTrackingService {
               targetFiber: d.targetFiber.value,
               targetSodium: d.targetSodium.value,
               targetWaterIntakeMl: d.targetWaterIntakeMl.value,
-              phase: input.phase,
+              phase: d.phase ?? input.phase,
               isActive: input.isActive,
             );
             final dayId = await _dayMacroGoalRepository.insert(dayModel, txn);

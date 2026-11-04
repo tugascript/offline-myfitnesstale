@@ -214,7 +214,7 @@ class MacroGoalDto extends Equatable {
         return dayGoal;
       }
     }
-    return days.isNotEmpty ? days.first : null;
+    return null;
   }
 
   DayMacroGoalDto? goalForDate(DateTime date) =>

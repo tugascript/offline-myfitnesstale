@@ -13,7 +13,7 @@ class DayMacroGoalInput extends Equatable {
   final Nullable<int> targetFiber;
   final Nullable<int> targetSodium;
   final Nullable<int> targetWaterIntakeMl;
-  final WeightGoalPhase phase;
+  final WeightGoalPhase? phase;
   final bool isActive;
 
   const DayMacroGoalInput({
@@ -26,7 +26,7 @@ class DayMacroGoalInput extends Equatable {
     this.targetFiber = const Nullable(null),
     this.targetSodium = const Nullable(null),
     this.targetWaterIntakeMl = const Nullable(null),
-    this.phase = WeightGoalPhase.maintain,
+    this.phase,
     this.isActive = true,
   });
 

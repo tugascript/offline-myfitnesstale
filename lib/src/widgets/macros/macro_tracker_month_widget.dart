@@ -42,6 +42,9 @@ class MacroTrackerMonthWidget extends StatelessWidget {
             final numDate = DateUtilities.getNumericDate(dayDate);
             final dayLog = logs.where((l) => l.date == numDate);
             final log = dayLog.isNotEmpty ? dayLog.first : null;
+            final targetCal = state.activeGoal
+                ?.effectiveGoalForDate(dayDate)
+                .targetCalories;
 
             return Card(
               margin: EdgeInsets.zero,
@@ -50,6 +53,15 @@ class MacroTrackerMonthWidget extends StatelessWidget {
                   DateFormat('EEE, MMM d').format(dayDate),
                   style: TextStyle(fontSize: sizes.fontSize),
                 ),
+                subtitle: targetCal != null
+                    ? Text(
+                        'Target: $targetCal kcal',
+                        style: TextStyle(
+                          fontSize: sizes.smallFontSize,
+                          color: Colors.grey[600],
+                        ),
+                      )
+                    : null,
                 trailing: Text(
                   log != null ? '${log.totalCalories} kcal' : '-',
                   style: TextStyle(

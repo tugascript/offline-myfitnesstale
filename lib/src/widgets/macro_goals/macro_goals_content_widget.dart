@@ -202,7 +202,9 @@ class MacroGoalsContentWidget extends StatelessWidget {
                     ),
                     SizedBox(height: sizes.spacing / 4),
                     Text(
-                      '${activeGoal.targetCalories} kcal / day',
+                      activeGoal.goalType == MacroGoalType.calorieCycling
+                          ? 'Daily Average: ${activeGoal.targetCalories} kcal / day'
+                          : '${activeGoal.targetCalories} kcal / day',
                       style: TextStyle(
                         fontSize: sizes.titleFontSize,
                         fontWeight: FontWeight.bold,
@@ -341,6 +343,7 @@ class MacroGoalsContentWidget extends StatelessWidget {
                       margin: EdgeInsets.zero,
                       child: ListTile(
                         title: Text(
+                          '${g.goalType == MacroGoalType.calorieCycling ? 'Daily Average: ' : ''}'
                           '${g.targetCalories} kcal • P: ${g.targetProtein}g C: ${g.targetCarbs}g F: ${g.targetFat}g',
                           style: TextStyle(
                             fontSize: sizes.fontSize,
