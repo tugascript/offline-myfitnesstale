@@ -386,10 +386,10 @@ class _MacroGoalFormModalState extends State<MacroGoalFormModal> {
     final cubit = context.read<MacroTrackingCubit>();
 
     if (_goalType == MacroGoalType.flat) {
-      final calories = int.tryParse(_caloriesController.text) ?? 2000;
-      final protein = int.tryParse(_proteinController.text) ?? 150;
-      final carbs = int.tryParse(_carbsController.text) ?? 200;
-      final fat = int.tryParse(_fatController.text) ?? 65;
+      final calories = int.parse(_caloriesController.text);
+      final protein = int.parse(_proteinController.text);
+      final carbs = int.parse(_carbsController.text);
+      final fat = int.parse(_fatController.text);
       final water = int.tryParse(_waterController.text);
       final existingDay =
           widget.existingGoal != null && widget.existingGoal!.days.length == 1
@@ -475,10 +475,10 @@ class _MacroGoalFormModalState extends State<MacroGoalFormModal> {
       final g = _dayGroups[i];
       final sortedDays = g.selectedDays.toList()
         ..sort((a, b) => a.value.compareTo(b.value));
-      final calories = int.tryParse(g.caloriesController.text) ?? 2000;
-      final protein = int.tryParse(g.proteinController.text) ?? 150;
-      final carbs = int.tryParse(g.carbsController.text) ?? 200;
-      final fat = int.tryParse(g.fatController.text) ?? 65;
+      final calories = int.parse(g.caloriesController.text);
+      final protein = int.parse(g.proteinController.text);
+      final carbs = int.parse(g.carbsController.text);
+      final fat = int.parse(g.fatController.text);
       final water = int.tryParse(g.waterController.text);
 
       final count = sortedDays.length;
@@ -554,7 +554,7 @@ class _MacroGoalFormModalState extends State<MacroGoalFormModal> {
           readOnly: _calculateCaloriesFromMacros,
           keyboardType: TextInputType.number,
           labelText: 'Daily Calories (kcal) *',
-          validator: (v) => v == null || v.isEmpty ? 'Required' : null,
+          validator: _validateMacro,
         ),
         SizedBox(height: widget.sizes.spacing),
         CheckboxListTile(
@@ -753,7 +753,7 @@ class _MacroGoalFormModalState extends State<MacroGoalFormModal> {
               readOnly: group.calculateCaloriesFromMacros,
               keyboardType: TextInputType.number,
               labelText: 'Daily Calories (kcal) *',
-              validator: (v) => v == null || v.isEmpty ? 'Required' : null,
+              validator: _validateMacro,
             ),
             SizedBox(height: widget.sizes.spacing / 2),
             CheckboxListTile(
