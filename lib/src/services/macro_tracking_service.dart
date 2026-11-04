@@ -1,9 +1,3 @@
-import '../models/food_portion_model.dart';
-import '../models/recipe_model.dart';
-import '../models/food_model.dart';
-import 'inputs/macro_goal_input.dart';
-import 'inputs/quick_food_log_input.dart';
-
 import 'package:logging/logging.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -13,8 +7,11 @@ import '../models/daily_nutrition_log_model.dart';
 import '../models/day_macro_goal_model.dart';
 import '../models/db.dart';
 import '../models/enums.dart';
+import '../models/food_model.dart';
+import '../models/food_portion_model.dart';
 import '../models/meal_log_item_model.dart';
 import '../models/meal_log_model.dart';
+import '../models/recipe_model.dart';
 import '../models/repository.dart';
 import '../models/utilities.dart';
 import '../models/week_macro_goal_model.dart';
@@ -22,6 +19,8 @@ import 'common/errors.dart';
 import 'common/result.dart';
 import 'dtos/macro_tracking_dto.dart';
 import 'dtos/paginated_dto.dart';
+import 'inputs/macro_goal_input.dart';
+import 'inputs/quick_food_log_input.dart';
 
 class MacroTrackingService {
   MacroTrackingService._();
@@ -87,7 +86,8 @@ class MacroTrackingService {
 
   // ==================== MACRO GOALS ====================
 
-  List<DayMacroGoalInput> _resolveAndValidateDayInputs(MacroGoalInput input) {
+  Result<List<DayMacroGoalInput>, ServiceError<SingleErrorTypes>>
+  _resolveAndValidateDayInputs(MacroGoalInput input) {
     final List<DayMacroGoalInput> dayInputs = input.days.isEmpty
         ? (input.goalType == MacroGoalType.flat
               ? [
@@ -109,25 +109,32 @@ class MacroTrackingService {
         : input.days;
 
     if (dayInputs.isEmpty) {
-      throw const ServiceError<SingleErrorTypes>(
-        type: SingleErrorTypes.invalidInput,
-        description: 'Macro goal requires day configurations',
+      return err(
+        const ServiceError<SingleErrorTypes>(
+          type: SingleErrorTypes.invalidInput,
+          description: 'Macro goal requires day configurations',
+        ),
       );
     }
 
     if (input.goalType == MacroGoalType.flat && dayInputs.length != 1) {
-      throw const ServiceError<SingleErrorTypes>(
-        type: SingleErrorTypes.invalidInput,
-        description: 'Flat macro goal must have exactly one day configuration',
+      return err(
+        const ServiceError<SingleErrorTypes>(
+          type: SingleErrorTypes.invalidInput,
+          description:
+              'Flat macro goal must have exactly one day configuration',
+        ),
       );
     }
 
     if (input.goalType == MacroGoalType.calorieCycling &&
         dayInputs.length < 2) {
-      throw const ServiceError<SingleErrorTypes>(
-        type: SingleErrorTypes.invalidInput,
-        description:
-            'Calorie cycling macro goal requires at least two day groups',
+      return err(
+        const ServiceError<SingleErrorTypes>(
+          type: SingleErrorTypes.invalidInput,
+          description:
+              'Calorie cycling macro goal requires at least two day groups',
+        ),
       );
     }
 
@@ -139,9 +146,11 @@ class MacroTrackingService {
         (input.targetSodium.value != null && input.targetSodium.value! < 0) ||
         (input.targetWaterIntakeMl.value != null &&
             input.targetWaterIntakeMl.value! < 0)) {
-      throw const ServiceError<SingleErrorTypes>(
-        type: SingleErrorTypes.invalidInput,
-        description: 'Macro targets cannot be negative',
+      return err(
+        const ServiceError<SingleErrorTypes>(
+          type: SingleErrorTypes.invalidInput,
+          description: 'Macro targets cannot be negative',
+        ),
       );
     }
 
@@ -150,9 +159,11 @@ class MacroTrackingService {
 
     for (final dayInput in dayInputs) {
       if (dayInput.days.isEmpty) {
-        throw const ServiceError<SingleErrorTypes>(
-          type: SingleErrorTypes.invalidInput,
-          description: 'Each day configuration must have at least one day',
+        return err(
+          const ServiceError<SingleErrorTypes>(
+            type: SingleErrorTypes.invalidInput,
+            description: 'Each day configuration must have at least one day',
+          ),
         );
       }
       if (dayInput.targetCalories < 0 ||
@@ -165,9 +176,11 @@ class MacroTrackingService {
               dayInput.targetSodium.value! < 0) ||
           (dayInput.targetWaterIntakeMl.value != null &&
               dayInput.targetWaterIntakeMl.value! < 0)) {
-        throw const ServiceError<SingleErrorTypes>(
-          type: SingleErrorTypes.invalidInput,
-          description: 'Macro targets cannot be negative',
+        return err(
+          const ServiceError<SingleErrorTypes>(
+            type: SingleErrorTypes.invalidInput,
+            description: 'Macro targets cannot be negative',
+          ),
         );
       }
       totalDaysCount += dayInput.days.length;
@@ -175,13 +188,15 @@ class MacroTrackingService {
     }
 
     if (totalDaysCount != 7 || seenDays.length != 7) {
-      throw const ServiceError<SingleErrorTypes>(
-        type: SingleErrorTypes.invalidInput,
-        description: 'Day macro goals must cover all 7 days of the week without duplicates',
+      return err(
+        const ServiceError<SingleErrorTypes>(
+          type: SingleErrorTypes.invalidInput,
+          description: 'Day macro goals must cover all 7 days of the week without duplicates',
+        ),
       );
     }
 
-    return dayInputs;
+    return ok(dayInputs);
   }
 
   ({
@@ -241,7 +256,12 @@ class MacroTrackingService {
   ) async {
     _logger.info('Creating macro goal: ${input.name}');
     try {
-      final dayInputs = _resolveAndValidateDayInputs(input);
+      final dayInputsResult = _resolveAndValidateDayInputs(input);
+      if (dayInputsResult.isErr()) {
+        return err(dayInputsResult.error);
+      }
+
+      final dayInputs = dayInputsResult.value;
       final totals = _computeWeeklyTotals(dayInputs);
 
       final weekGoal = WeekMacroGoal.create(
@@ -316,8 +336,6 @@ class MacroTrackingService {
 
       _logger.info('Created macro goal with id: ${dto.id}');
       return ok(dto);
-    } on ServiceError<SingleErrorTypes> catch (error) {
-      return err(error);
     } catch (e) {
       _logger.severe('Failed to create macro goal', e);
       return err(
@@ -345,7 +363,11 @@ class MacroTrackingService {
         );
       }
 
-      final dayInputs = _resolveAndValidateDayInputs(input);
+      final dayInputsResult = _resolveAndValidateDayInputs(input);
+      if (dayInputsResult.isErr()) {
+        return err(dayInputsResult.error);
+      }
+      final dayInputs = dayInputsResult.value;
       final totals = _computeWeeklyTotals(dayInputs);
 
       return await _weekMacroGoalRepository.startTransaction<
@@ -420,8 +442,6 @@ class MacroTrackingService {
 
         return ok(MacroGoalDto.fromWeekModel(updated, createdDays));
       });
-    } on ServiceError<SingleErrorTypes> catch (error) {
-      return err(error);
     } catch (e) {
       _logger.severe('Failed to update macro goal with id $id', e);
       return err(
@@ -492,8 +512,6 @@ class MacroTrackingService {
         );
       }
       return ok(null);
-    } on ServiceError<SingleErrorTypes> catch (error) {
-      return err(error);
     } catch (e) {
       _logger.severe('Failed to delete macro goal with id $id', e);
       return err(
@@ -530,8 +548,6 @@ class MacroTrackingService {
         orderBy: [DayMacroGoalColumns.id.orderAsc],
       );
       return ok(MacroGoalDto.fromWeekModel(activeWeek, dayGoals));
-    } on ServiceError<SingleErrorTypes> catch (error) {
-      return err(error);
     } catch (e) {
       _logger.severe('Failed to get active macro goal', e);
       return err(
@@ -640,8 +656,6 @@ class MacroTrackingService {
         final meals = await _loadMealsForDailyLog(txn, dailyLog.id!);
         return ok(DailyNutritionLogDto.fromModel(dailyLog, meals: meals));
       });
-    } on ServiceError<SingleErrorTypes> catch (error) {
-      return err(error);
     } catch (e) {
       _logger.severe('Failed to get daily log for date $numericDate', e);
       return err(
@@ -757,8 +771,6 @@ class MacroTrackingService {
         final meals = await _loadMealsForDailyLog(txn, updated.id!);
         return ok(DailyNutritionLogDto.fromModel(updated, meals: meals));
       });
-    } on ServiceError<SingleErrorTypes> catch (error) {
-      return err(error);
     } catch (e) {
       _logger.severe('Failed to update water intake', e);
       return err(
@@ -793,9 +805,11 @@ class MacroTrackingService {
           trx: txn,
         );
         if (foodRows.isEmpty) {
-          throw ServiceError(
-            type: SingleErrorTypes.notFound,
-            description: 'Food with id $foodId not found',
+          return err(
+            ServiceError(
+              type: SingleErrorTypes.notFound,
+              description: 'Food with id $foodId not found',
+            ),
           );
         }
         final food = foodRows.first;
@@ -811,10 +825,12 @@ class MacroTrackingService {
             trx: txn,
           );
           if (pRows.isEmpty) {
-            throw ServiceError(
-              type: SingleErrorTypes.notFound,
-              description:
-                  'Portion with id $portionId not found for food $foodId',
+            return err(
+              ServiceError(
+                type: SingleErrorTypes.notFound,
+                description:
+                    'Portion with id $portionId not found for food $foodId',
+              ),
             );
           }
           final portion = pRows.first;
@@ -908,8 +924,6 @@ class MacroTrackingService {
 
         return ok(MealLogDto.fromModel(updatedMeal, items: itemDtos));
       });
-    } on ServiceError<SingleErrorTypes> catch (error) {
-      return err(error);
     } catch (e) {
       _logger.severe('Failed to log food item', e);
       return err(
@@ -976,10 +990,8 @@ class MacroTrackingService {
           ),
         );
       });
-    } on ServiceError<SingleErrorTypes> catch (error) {
-      return err(error);
-    } catch (error) {
-      _logger.severe('Failed to quick add food', error);
+    } catch (e) {
+      _logger.severe('Failed to quick add food', e);
       return err(
         const ServiceError(
           type: SingleErrorTypes.operationFailure,
@@ -1012,9 +1024,11 @@ class MacroTrackingService {
           trx: txn,
         );
         if (recipeRows.isEmpty) {
-          throw ServiceError(
-            type: SingleErrorTypes.notFound,
-            description: 'Recipe with id $recipeId not found',
+          return err(
+            ServiceError(
+              type: SingleErrorTypes.notFound,
+              description: 'Recipe with id $recipeId not found',
+            ),
           );
         }
         final recipe = recipeRows.first;
@@ -1097,8 +1111,6 @@ class MacroTrackingService {
 
         return ok(MealLogDto.fromModel(updatedMeal, items: itemDtos));
       });
-    } on ServiceError<SingleErrorTypes> catch (error) {
-      return err(error);
     } catch (e) {
       _logger.severe('Failed to log recipe', e);
       return err(
@@ -1125,8 +1137,6 @@ class MacroTrackingService {
         );
       }
       return ok(null);
-    } on ServiceError<SingleErrorTypes> catch (error) {
-      return err(error);
     } catch (e) {
       _logger.severe('Failed to delete meal log with id $mealLogId', e);
       return err(
@@ -1149,9 +1159,11 @@ class MacroTrackingService {
           ) async {
             final item = await _mealLogItemRepository.selectOne(itemId, txn);
             if (item == null) {
-              throw const ServiceError(
-                type: SingleErrorTypes.notFound,
-                description: 'Meal log item not found',
+              return err(
+                const ServiceError(
+                  type: SingleErrorTypes.notFound,
+                  description: 'Meal log item not found',
+                ),
               );
             }
 
@@ -1190,8 +1202,6 @@ class MacroTrackingService {
 
             return ok(null);
           });
-    } on ServiceError<SingleErrorTypes> catch (error) {
-      return err(error);
     } catch (e) {
       _logger.severe('Failed to delete meal log item with id $itemId', e);
       return err(
