@@ -129,19 +129,29 @@ class DayMacroGoal extends Equatable implements Model {
         final decoded = jsonDecode(rawDays);
         if (decoded is List) {
           parsedDays = decoded
-              .map((v) => DayOfWeek.fromValue(v as int))
+              .whereType<int>()
+              .map(DayOfWeek.tryFromValue)
+              .whereType<DayOfWeek>()
               .toList();
         }
       } catch (_) {
         parsedDays = rawDays
             .split(',')
             .where((s) => s.trim().isNotEmpty)
-            .map((s) => DayOfWeek.fromValue(int.parse(s.trim())))
+            .map((s) => int.tryParse(s.trim()))
+            .whereType<int>()
+            .map(DayOfWeek.tryFromValue)
+            .whereType<DayOfWeek>()
             .toList();
       }
     } else if (rawDays is List) {
       parsedDays = rawDays
-          .map((v) => v is DayOfWeek ? v : DayOfWeek.fromValue(v as int))
+          .map(
+            (v) => v is DayOfWeek
+                ? v
+                : (v is int ? DayOfWeek.tryFromValue(v) : null),
+          )
+          .whereType<DayOfWeek>()
           .toList();
     }
 

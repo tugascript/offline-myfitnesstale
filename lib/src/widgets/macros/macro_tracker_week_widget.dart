@@ -36,6 +36,9 @@ class MacroTrackerWeekWidget extends StatelessWidget {
             final numDate = DateUtilities.getNumericDate(dayDate);
             final dayLog = logs.where((l) => l.date == numDate);
             final log = dayLog.isNotEmpty ? dayLog.first : null;
+            final targetCal = state.activeGoal
+                ?.effectiveGoalForDate(dayDate)
+                .targetCalories;
 
             final isSelectedDay =
                 dayDate.year == selectedDate.year &&
@@ -57,8 +60,8 @@ class MacroTrackerWeekWidget extends StatelessWidget {
                 ),
                 subtitle: Text(
                   log != null
-                      ? '${log.totalCalories} kcal • P: ${log.totalProtein}g C: ${log.totalCarbs}g F: ${log.totalFat}g'
-                      : 'No foods logged',
+                      ? '${log.totalCalories}${targetCal != null ? ' / $targetCal' : ''} kcal • P: ${log.totalProtein}g C: ${log.totalCarbs}g F: ${log.totalFat}g'
+                      : 'No foods logged${targetCal != null ? ' • Target: $targetCal kcal' : ''}',
                   style: TextStyle(
                     fontSize: sizes.fontSize * 0.85,
                     color: Colors.grey[600],

@@ -109,51 +109,50 @@ void main() {
     },
   );
 
-  testWidgets('existing goals can switch to manual calories and back', (
-    tester,
-  ) async {
-    final macros = await open(
-      tester,
-      goal: const MacroGoalDto(
-        id: 9,
-        name: 'Existing goal',
-        targetCalories: 2000,
-        targetProtein: 100,
-        targetCarbs: 100,
-        targetFat: 50,
-        isActive: true,
-        phase: WeightGoalPhase.maintain,
-      ),
-    );
-    expect(calories(tester), '1250');
-    expect(macros.submitted, isNull);
-    await tester.tap(checkbox);
-    await tester.pump();
-    expect(
-      tester
-          .widget<TextField>(
-            find.descendant(
-              of: field('calories'),
-              matching: find.byType(TextField),
-            ),
-          )
-          .readOnly,
-      isFalse,
-    );
-    await tester.enterText(field('calories'), '1800');
-    await tester.enterText(field('protein'), '150');
-    expect(calories(tester), '1800');
-    await tester.tap(checkbox);
-    await tester.pump();
-    expect(calories(tester), '1450');
-    await tester.tap(checkbox);
-    await tester.pump();
-    await tester.enterText(field('calories'), '1900');
-    await tester.tap(find.byKey(const ValueKey('macro-goal-submit-button')));
-    await tester.pumpAndSettle();
-    expect(macros.updatedId, 9);
-    expect(macros.submitted?.targetCalories, 1900);
-  });
+  testWidgets(
+    'existing goals preserve manual calories and can toggle calculation',
+    (tester) async {
+      final macros = await open(
+        tester,
+        goal: const MacroGoalDto(
+          id: 9,
+          name: 'Existing goal',
+          targetCalories: 2000,
+          targetProtein: 100,
+          targetCarbs: 100,
+          targetFat: 50,
+          isActive: true,
+          phase: WeightGoalPhase.maintain,
+        ),
+      );
+      expect(calories(tester), '2000');
+      expect(macros.submitted, isNull);
+      expect(
+        tester
+            .widget<TextField>(
+              find.descendant(
+                of: field('calories'),
+                matching: find.byType(TextField),
+              ),
+            )
+            .readOnly,
+        isFalse,
+      );
+      await tester.enterText(field('calories'), '1800');
+      await tester.enterText(field('protein'), '150');
+      expect(calories(tester), '1800');
+      await tester.tap(checkbox);
+      await tester.pump();
+      expect(calories(tester), '1450');
+      await tester.tap(checkbox);
+      await tester.pump();
+      await tester.enterText(field('calories'), '1900');
+      await tester.tap(find.byKey(const ValueKey('macro-goal-submit-button')));
+      await tester.pumpAndSettle();
+      expect(macros.updatedId, 9);
+      expect(macros.submitted?.targetCalories, 1900);
+    },
+  );
 
   testWidgets('invalid macros cannot save a misleading calculated total', (
     tester,
@@ -234,6 +233,15 @@ void main() {
       await tester.tap(find.byKey(const ValueKey('macro-goal-type-cycling')));
       await tester.pumpAndSettle();
 
+      // Switch back to flat, edit protein again, and switch back to cycling
+      await tester.tap(find.byKey(const ValueKey('macro-goal-type-flat')));
+      await tester.pumpAndSettle();
+      await tester.enterText(field('protein'), '240');
+      await tester.pump();
+
+      await tester.tap(find.byKey(const ValueKey('macro-goal-type-cycling')));
+      await tester.pumpAndSettle();
+
       final submit = find.byKey(const ValueKey('macro-goal-submit-button'));
       await tester.ensureVisible(submit);
       await tester.tap(submit);
@@ -241,8 +249,8 @@ void main() {
 
       expect(macros.submitted, isNotNull);
       expect(macros.submitted!.goalType, MacroGoalType.calorieCycling);
-      expect(macros.submitted!.days[0].targetProtein, 222);
-      expect(macros.submitted!.days[1].targetProtein, 222);
+      expect(macros.submitted!.days[0].targetProtein, 240);
+      expect(macros.submitted!.days[1].targetProtein, 240);
     },
   );
 
@@ -355,9 +363,11 @@ void main() {
 
       expect(cyclingMacros.updatedId, 12);
       expect(cyclingMacros.submitted?.days[0].name, 'Training Days');
+      expect(cyclingMacros.submitted?.days[0].targetCalories, 1800);
       expect(cyclingMacros.submitted?.days[0].targetFiber.value, 30);
       expect(cyclingMacros.submitted?.days[0].targetSodium.value, 2200);
       expect(cyclingMacros.submitted?.days[1].name, 'Refeed Days');
+      expect(cyclingMacros.submitted?.days[1].targetCalories, 2500);
       expect(cyclingMacros.submitted?.days[1].targetFiber.value, 38);
       expect(cyclingMacros.submitted?.days[1].targetSodium.value, 2900);
       expect(cyclingMacros.submitted?.targetFiber.value, 32);
