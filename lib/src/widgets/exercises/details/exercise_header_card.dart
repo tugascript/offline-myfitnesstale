@@ -54,19 +54,6 @@ class ExerciseHeaderCard extends StatelessWidget {
           ],
         ),
         SizedBox(height: sizes.spacing),
-        _PrimaryData(
-          theme: resolvedTheme,
-          sizes: sizes,
-          muscleGroup: exerciseDto.muscleGroup,
-          primaryMuscles: exerciseDto.muscles.primary,
-        ),
-        _SecondaryData(
-          theme: resolvedTheme,
-          sizes: sizes,
-          secondaryMuscles: exerciseDto.muscles.secondary,
-          equipments: exerciseDto.equipments ?? [],
-        ),
-        SizedBox(height: sizes.spacing),
         MusclesDiagram(
           muscles: exerciseDto.muscles,
           sizes: sizes,

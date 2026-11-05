@@ -8,6 +8,7 @@ import '../../utilities/sizes/data_display_sizes.dart';
 
 class MusclesDiagram extends StatelessWidget {
   static const String assetPath = 'assets/svgs/muscles.svg';
+  static const String frontBackAssetPath = 'assets/svgs/muscles-front-back.svg';
   static const Color defaultPrimaryColor = Color(0xFFC14B23);
   static const Color defaultSecondaryColor = Color(0xFFEDB8A9);
 
@@ -16,6 +17,7 @@ class MusclesDiagram extends StatelessWidget {
   final ThemeData theme;
   final Color primaryColor;
   final Color secondaryColor;
+  final bool pixelated;
 
   const MusclesDiagram({
     super.key,
@@ -24,6 +26,7 @@ class MusclesDiagram extends StatelessWidget {
     required this.theme,
     this.primaryColor = defaultPrimaryColor,
     this.secondaryColor = defaultSecondaryColor,
+    this.pixelated = false,
   });
 
   @override
@@ -32,6 +35,7 @@ class MusclesDiagram extends StatelessWidget {
       muscles: muscles,
       primaryColor: primaryColor,
       secondaryColor: secondaryColor,
+      assetName: pixelated ? assetPath : frontBackAssetPath,
       assetBundle: DefaultAssetBundle.of(context),
     );
 
@@ -40,7 +44,7 @@ class MusclesDiagram extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         ConstrainedBox(
-          constraints: BoxConstraints(maxHeight: sizes.buttonSize * 3),
+          constraints: BoxConstraints(maxHeight: sizes.svgMaxHeight),
           child: AspectRatio(
             aspectRatio: 200 / 170,
             child: SvgPicture(
@@ -114,8 +118,6 @@ class _LegendItem extends StatelessWidget {
 }
 
 class MusclesSvgLoader extends SvgAssetLoader {
-  static const String _inactiveFill = '#616161';
-
   static const Map<Muscle, Set<String>> muscleToSvgRegionIds = {
     Muscle.chest: {'chest'},
     Muscle.upperChest: {'chest'},
@@ -157,9 +159,10 @@ class MusclesSvgLoader extends SvgAssetLoader {
     required this.muscles,
     this.primaryColor = MusclesDiagram.defaultPrimaryColor,
     this.secondaryColor = MusclesDiagram.defaultSecondaryColor,
+    String assetName = MusclesDiagram.assetPath,
     super.assetBundle,
     super.packageName,
-  }) : super(MusclesDiagram.assetPath);
+  }) : super(assetName);
 
   static Set<String> resolveRegionIds(Set<Muscle> muscleSet) {
     final regionIds = <String>{};
@@ -196,15 +199,15 @@ class MusclesSvgLoader extends SvgAssetLoader {
 
     var painted = rawSvg;
     for (final id in primaryRegions) {
-      painted = painted.replaceAll(
-        'id="$id" fill="$_inactiveFill"',
-        'id="$id" fill="$primaryHex"',
+      painted = painted.replaceAllMapped(
+        RegExp('id="$id" fill="#[0-9a-fA-F]{6}"'),
+        (_) => 'id="$id" fill="$primaryHex"',
       );
     }
     for (final id in secondaryRegions) {
-      painted = painted.replaceAll(
-        'id="$id" fill="$_inactiveFill"',
-        'id="$id" fill="$secondaryHex"',
+      painted = painted.replaceAllMapped(
+        RegExp('id="$id" fill="#[0-9a-fA-F]{6}"'),
+        (_) => 'id="$id" fill="$secondaryHex"',
       );
     }
     return painted;

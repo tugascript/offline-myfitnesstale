@@ -78,6 +78,7 @@ flutter:
     - assets/icons/icon_dark.svg
     - assets/icons/icon_light.svg
     - assets/svgs/muscles.svg
+    - assets/svgs/muscles-front-back.svg
     - assets/fonts/
   #   - images/a_dot_burr.jpeg
   #   - images/a_dot_ham.jpeg

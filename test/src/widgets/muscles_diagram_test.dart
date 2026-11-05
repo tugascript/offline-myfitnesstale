@@ -26,13 +26,16 @@ class _StubExerciseCubit extends ExerciseCubit {
 
 void main() {
   late String rawSvg;
+  late String rawFrontBackSvg;
 
   setUpAll(() {
     rawSvg = File(MusclesDiagram.assetPath).readAsStringSync();
+    rawFrontBackSvg = File(MusclesDiagram.frontBackAssetPath)
+        .readAsStringSync();
   });
 
   group('MusclesSvgLoader', () {
-    test('maps every Muscle enum value to valid path IDs in muscles.svg', () {
+    test('maps every Muscle enum value to valid path IDs in muscles.svg and muscles-front-back.svg', () {
       for (final muscle in Muscle.values) {
         final regionIds = MusclesSvgLoader.muscleToSvgRegionIds[muscle];
         expect(
@@ -45,19 +48,30 @@ void main() {
           expect(
             rawSvg,
             contains('id="$id" fill="#616161"'),
-            reason: 'SVG is missing path with id="$id" for ${muscle.name}',
+            reason:
+                'muscles.svg is missing path with id="$id" for ${muscle.name}',
+          );
+          expect(
+            rawFrontBackSvg,
+            contains('id="$id" fill="#454545"'),
+            reason:
+                'muscles-front-back.svg is missing path with id="$id" for ${muscle.name}',
           );
         }
       }
     });
 
-    test('paints primary muscles dark and secondary muscles light with primary precedence', () {
+    test('paints primary muscles dark and secondary muscles light with primary precedence on both SVGs', () {
       const muscles = TargetMuscles(
         primary: {Muscle.upperChest, Muscle.lats},
         secondary: {Muscle.chest, Muscle.triceps, Muscle.frontDelts},
       );
 
       final painted = MusclesSvgLoader.paintSvg(rawSvg, muscles: muscles);
+      final paintedFrontBack = MusclesSvgLoader.paintSvg(
+        rawFrontBackSvg,
+        muscles: muscles,
+      );
       final primaryHex = MusclesSvgLoader.colorToHex(
         MusclesDiagram.defaultPrimaryColor,
       );
@@ -70,6 +84,15 @@ void main() {
       expect(painted, contains('id="triceps" fill="$secondaryHex"'));
       expect(painted, contains('id="front_delts" fill="$secondaryHex"'));
       expect(painted, contains('id="biceps" fill="#616161"'));
+
+      expect(paintedFrontBack, contains('id="chest" fill="$primaryHex"'));
+      expect(paintedFrontBack, contains('id="lats" fill="$primaryHex"'));
+      expect(paintedFrontBack, contains('id="triceps" fill="$secondaryHex"'));
+      expect(
+        paintedFrontBack,
+        contains('id="front_delts" fill="$secondaryHex"'),
+      );
+      expect(paintedFrontBack, contains('id="biceps" fill="#454545"'));
     });
 
     test(
