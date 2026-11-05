@@ -8,21 +8,26 @@ import '../../common/base_details_header.dart';
 import '../../common/difficulty_badge.dart';
 import '../../common/muscle_badge.dart';
 import '../../common/muscle_group_badge.dart';
+import '../../common/muscles_diagram.dart';
 
 class ExerciseHeaderCard extends StatelessWidget {
   final DataDisplaySizesList sizes;
   final ExerciseDto exerciseDto;
   final VoidCallback onFavoriteToggle;
+  final ThemeData? theme;
 
   const ExerciseHeaderCard({
     super.key,
     required this.sizes,
     required this.exerciseDto,
     required this.onFavoriteToggle,
+    this.theme,
   });
 
   @override
   Widget build(BuildContext context) {
+    final resolvedTheme = theme ?? Theme.of(context);
+
     return BaseDetailsHeader(
       padding: sizes.padding,
       children: [
@@ -50,15 +55,22 @@ class ExerciseHeaderCard extends StatelessWidget {
         ),
         SizedBox(height: sizes.spacing),
         _PrimaryData(
+          theme: resolvedTheme,
           sizes: sizes,
           muscleGroup: exerciseDto.muscleGroup,
           primaryMuscles: exerciseDto.muscles.primary,
         ),
         _SecondaryData(
-          theme: Theme.of(context),
+          theme: resolvedTheme,
           sizes: sizes,
           secondaryMuscles: exerciseDto.muscles.secondary,
           equipments: exerciseDto.equipments ?? [],
+        ),
+        SizedBox(height: sizes.spacing),
+        MusclesDiagram(
+          muscles: exerciseDto.muscles,
+          sizes: sizes,
+          theme: resolvedTheme,
         ),
         if (exerciseDto.description.isNotEmpty) ...[
           SizedBox(height: sizes.spacing),
@@ -81,11 +93,13 @@ class ExerciseHeaderCard extends StatelessWidget {
 }
 
 class _PrimaryData extends StatelessWidget {
+  final ThemeData theme;
   final DataDisplaySizesList sizes;
   final MuscleGroup muscleGroup;
   final Set<Muscle> primaryMuscles;
 
   const _PrimaryData({
+    required this.theme,
     required this.sizes,
     required this.muscleGroup,
     required this.primaryMuscles,
@@ -93,8 +107,6 @@ class _PrimaryData extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     // If no muscles at all, return empty (shouldn't happen usually)
     if (primaryMuscles.isEmpty) {
       // Show only muscle group if no specific muscles
@@ -281,11 +293,13 @@ class _EquipmentData extends StatelessWidget {
         Row(
           children: [
             Icon(Icons.fitness_center, size: sizes.subtitleFontSize),
-            Text(
-              ' Equipment',
-              style: TextStyle(
-                fontSize: sizes.subtitleFontSize,
-                fontWeight: FontWeight.w600,
+            Flexible(
+              child: Text(
+                ' Equipment',
+                style: TextStyle(
+                  fontSize: sizes.subtitleFontSize,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
           ],
