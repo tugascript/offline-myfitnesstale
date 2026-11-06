@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../models/common.dart';
 import '../../models/enums.dart';
 import '../../services/dtos/equipment_dto.dart';
 import '../../utilities/sizes/data_display_sizes.dart';
@@ -7,11 +8,66 @@ import 'muscle_badge.dart';
 import 'muscle_group_badge.dart';
 
 class MusclesData extends StatelessWidget {
-  const MusclesData({super.key});
+  final ThemeData? theme;
+  final DataDisplaySizesList sizes;
+  final MuscleGroup muscleGroup;
+  final Set<Muscle> primaryMuscles;
+  final Set<Muscle> secondaryMuscles;
+  final List<EquipmentDto> equipments;
+
+  const MusclesData({
+    super.key,
+    this.theme,
+    required this.sizes,
+    required this.muscleGroup,
+    this.primaryMuscles = const <Muscle>{},
+    this.secondaryMuscles = const <Muscle>{},
+    this.equipments = const <EquipmentDto>[],
+  });
+
+  MusclesData.fromTargetMuscles({
+    super.key,
+    this.theme,
+    required this.sizes,
+    required this.muscleGroup,
+    required TargetMuscles muscles,
+    this.equipments = const <EquipmentDto>[],
+  }) : primaryMuscles = muscles.primary,
+       secondaryMuscles = muscles.secondary;
+
+  TargetMuscles get targetMuscles =>
+      TargetMuscles(primary: primaryMuscles, secondary: secondaryMuscles);
 
   @override
   Widget build(BuildContext context) {
-    return const Placeholder();
+    final resolvedTheme = theme ?? Theme.of(context);
+
+    return ConstrainedBox(
+      constraints: BoxConstraints(maxHeight: sizes.svgMaxHeight),
+      child: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _PrimaryData(
+              theme: resolvedTheme,
+              sizes: sizes,
+              muscleGroup: muscleGroup,
+              primaryMuscles: primaryMuscles,
+            ),
+            if (secondaryMuscles.isNotEmpty || equipments.isNotEmpty) ...[
+              SizedBox(height: sizes.spacing),
+              _SecondaryData(
+                theme: resolvedTheme,
+                sizes: sizes,
+                secondaryMuscles: secondaryMuscles,
+                equipments: equipments,
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
   }
 }
 
@@ -42,6 +98,7 @@ class _PrimaryData extends StatelessWidget {
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Expanded(
           child: _MuscleGroupSection(
@@ -162,7 +219,7 @@ class _SecondaryData extends StatelessWidget {
     }
     if (secondaryMuscles.isNotEmpty && equipments.isEmpty) {
       return _MusclesSection(
-        title: '💪 Secondary Muscles',
+        title: '🥈 Secondary Muscles',
         sizes: sizes,
         muscles: secondaryMuscles,
         theme: theme,
