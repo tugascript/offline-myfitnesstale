@@ -94,6 +94,10 @@ exist.
   (`Nullable<T>` in `copyWith` clears omitted nullable fields and replaces
   equipment links atomically).
 - Maintains exercise/equipment relationships.
+- Displays an anatomical SVG muscle diagram (`assets/svgs/muscles.svg`) on
+  exercise details (`ExerciseHeaderCard`), dynamically painting primary target
+  muscles in a dark orange shade and secondary target muscles in a light orange
+  shade.
 - Creates, edits, deletes, and filters exercise records using shared
   `ExerciseRecordInput` PUT semantics.
 - Shows estimated-max progress and kg/lb summaries.

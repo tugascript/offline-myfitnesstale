@@ -144,6 +144,7 @@ class _ExerciseDetailViewState extends State<ExerciseDetailView> {
               children: [
                 // Exercise Header
                 ExerciseHeaderCard(
+                  theme: theme,
                   sizes: sizes,
                   exerciseDto: exercise,
                   onFavoriteToggle: () => _toggleFavorite(exercise.isFavorite),

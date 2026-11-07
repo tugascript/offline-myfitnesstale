@@ -45,6 +45,7 @@ class MusclesWrap extends StatelessWidget {
         SizedBox(height: sizes.spacing / 2),
         Wrap(
           spacing: sizes.spacing / 4,
+          runSpacing: sizes.spacing / 4,
           children: muscles.map((m) {
             return MuscleBadge(
               muscle: m,
