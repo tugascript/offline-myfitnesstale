@@ -10,7 +10,7 @@ import 'muscles_diagram.dart';
 
 class MusclesCarousel extends StatelessWidget {
   final DataDisplaySizesList sizes;
-  final MuscleGroup muscleGroup;
+  final Set<MuscleGroup> muscleGroups;
   final TargetMuscles muscles;
   final List<EquipmentDto> equipments;
   final ThemeData? theme;
@@ -19,10 +19,14 @@ class MusclesCarousel extends StatelessWidget {
   final bool pixelated;
   final List<String> pageLabels;
 
-  const MusclesCarousel({
+  MuscleGroup? get muscleGroup =>
+      muscleGroups.isNotEmpty ? muscleGroups.first : null;
+
+  MusclesCarousel({
     super.key,
     required this.sizes,
-    required this.muscleGroup,
+    MuscleGroup? muscleGroup,
+    Set<MuscleGroup>? muscleGroups,
     required this.muscles,
     this.equipments = const <EquipmentDto>[],
     this.theme,
@@ -30,12 +34,15 @@ class MusclesCarousel extends StatelessWidget {
     this.secondaryColor = MusclesDiagram.defaultSecondaryColor,
     this.pixelated = false,
     this.pageLabels = const ['Diagram', 'Data'],
-  });
+  }) : muscleGroups =
+           muscleGroups ??
+           (muscleGroup != null ? {muscleGroup} : const <MuscleGroup>{});
 
   factory MusclesCarousel.fromMuscles({
     Key? key,
     required DataDisplaySizesList sizes,
-    required MuscleGroup muscleGroup,
+    MuscleGroup? muscleGroup,
+    Set<MuscleGroup>? muscleGroups,
     Set<Muscle> primaryMuscles = const <Muscle>{},
     Set<Muscle> secondaryMuscles = const <Muscle>{},
     List<EquipmentDto> equipments = const <EquipmentDto>[],
@@ -49,6 +56,7 @@ class MusclesCarousel extends StatelessWidget {
       key: key,
       sizes: sizes,
       muscleGroup: muscleGroup,
+      muscleGroups: muscleGroups,
       muscles: TargetMuscles(
         primary: primaryMuscles,
         secondary: secondaryMuscles,
@@ -84,7 +92,7 @@ class MusclesCarousel extends StatelessWidget {
         MusclesData(
           theme: resolvedTheme,
           sizes: sizes,
-          muscleGroup: muscleGroup,
+          muscleGroups: muscleGroups,
           primaryMuscles: muscles.primary,
           secondaryMuscles: muscles.secondary,
           equipments: equipments,

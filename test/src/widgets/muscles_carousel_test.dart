@@ -204,5 +204,24 @@ void main() {
       expect(find.text('Visual'), findsOneWidget);
       expect(find.text('Details'), findsOneWidget);
     });
+
+    testWidgets('supports muscleGroups set parameter', (tester) async {
+      final widget = MusclesCarousel(
+        sizes: sizes,
+        muscleGroups: const {MuscleGroup.push, MuscleGroup.pull},
+        muscles: const TargetMuscles(
+          primary: {Muscle.chest, Muscle.lats},
+          secondary: {},
+        ),
+      );
+
+      expect(widget.muscleGroups, equals({MuscleGroup.push, MuscleGroup.pull}));
+      expect(widget.muscleGroup, equals(MuscleGroup.push));
+
+      await tester.pumpWidget(buildTestableWidget(widget));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(MusclesCarousel), findsOneWidget);
+    });
   });
 }

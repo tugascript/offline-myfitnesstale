@@ -22,20 +22,26 @@ class TotalString extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        ...(leading != null ? [leading!] : []),
-        Text(
-          "${leading != null ? " " : ""}Total $name: ",
-          style: TextStyle(
-            fontSize: fontSize,
-            color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        Text(
-          total,
-          style: TextStyle(
-            fontSize: fontSize,
-            color: theme.colorScheme.onSurface,
+        if (leading != null) ...[leading!, const SizedBox(width: 4)],
+        Flexible(
+          child: Text.rich(
+            TextSpan(
+              text: "Total $name: ",
+              style: TextStyle(
+                fontSize: fontSize,
+                color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                fontWeight: FontWeight.w600,
+              ),
+              children: [
+                TextSpan(
+                  text: total,
+                  style: TextStyle(
+                    fontSize: fontSize,
+                    color: theme.colorScheme.onSurface,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ],
