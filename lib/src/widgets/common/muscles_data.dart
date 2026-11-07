@@ -4,35 +4,45 @@ import '../../models/common.dart';
 import '../../models/enums.dart';
 import '../../services/dtos/equipment_dto.dart';
 import '../../utilities/sizes/data_display_sizes.dart';
-import 'muscle_badge.dart';
 import 'muscle_group_badge.dart';
+import 'muscles_wrap.dart';
 
 class MusclesData extends StatelessWidget {
   final ThemeData? theme;
   final DataDisplaySizesList sizes;
-  final MuscleGroup muscleGroup;
+  final Set<MuscleGroup> muscleGroups;
   final Set<Muscle> primaryMuscles;
   final Set<Muscle> secondaryMuscles;
   final List<EquipmentDto> equipments;
 
-  const MusclesData({
+  MuscleGroup? get muscleGroup =>
+      muscleGroups.isNotEmpty ? muscleGroups.first : null;
+
+  MusclesData({
     super.key,
     this.theme,
     required this.sizes,
-    required this.muscleGroup,
+    MuscleGroup? muscleGroup,
+    Set<MuscleGroup>? muscleGroups,
     this.primaryMuscles = const <Muscle>{},
     this.secondaryMuscles = const <Muscle>{},
     this.equipments = const <EquipmentDto>[],
-  });
+  }) : muscleGroups =
+           muscleGroups ??
+           (muscleGroup != null ? {muscleGroup} : const <MuscleGroup>{});
 
   MusclesData.fromTargetMuscles({
     super.key,
     this.theme,
     required this.sizes,
-    required this.muscleGroup,
+    MuscleGroup? muscleGroup,
+    Set<MuscleGroup>? muscleGroups,
     required TargetMuscles muscles,
     this.equipments = const <EquipmentDto>[],
-  }) : primaryMuscles = muscles.primary,
+  }) : muscleGroups =
+           muscleGroups ??
+           (muscleGroup != null ? {muscleGroup} : const <MuscleGroup>{}),
+       primaryMuscles = muscles.primary,
        secondaryMuscles = muscles.secondary;
 
   TargetMuscles get targetMuscles =>
@@ -41,6 +51,8 @@ class MusclesData extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final resolvedTheme = theme ?? Theme.of(context);
+    final hasPrimary = muscleGroups.isNotEmpty || primaryMuscles.isNotEmpty;
+    final hasSecondary = secondaryMuscles.isNotEmpty || equipments.isNotEmpty;
 
     return ConstrainedBox(
       constraints: BoxConstraints(maxHeight: sizes.svgMaxHeight),
@@ -49,21 +61,43 @@ class MusclesData extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           mainAxisSize: MainAxisSize.min,
           children: [
-            _PrimaryData(
-              theme: resolvedTheme,
-              sizes: sizes,
-              muscleGroup: muscleGroup,
-              primaryMuscles: primaryMuscles,
-            ),
-            if (secondaryMuscles.isNotEmpty || equipments.isNotEmpty) ...[
-              SizedBox(height: sizes.spacing),
-              _SecondaryData(
-                theme: resolvedTheme,
-                sizes: sizes,
-                secondaryMuscles: secondaryMuscles,
-                equipments: equipments,
+            if (hasPrimary)
+              _DataRow(
+                left: muscleGroups.isNotEmpty
+                    ? _MuscleGroupSection(
+                        sizes: sizes,
+                        muscleGroups: muscleGroups,
+                        theme: resolvedTheme,
+                      )
+                    : null,
+                right: primaryMuscles.isNotEmpty
+                    ? MusclesWrap(
+                        theme: resolvedTheme,
+                        sizes: sizes,
+                        title: '💪 Primary Muscles',
+                        muscles: primaryMuscles,
+                      )
+                    : null,
               ),
-            ],
+            if (hasPrimary && hasSecondary) SizedBox(height: sizes.spacing),
+            if (hasSecondary)
+              _DataRow(
+                left: equipments.isNotEmpty
+                    ? _EquipmentData(
+                        theme: resolvedTheme,
+                        sizes: sizes,
+                        equipments: equipments,
+                      )
+                    : null,
+                right: secondaryMuscles.isNotEmpty
+                    ? MusclesWrap(
+                        theme: resolvedTheme,
+                        sizes: sizes,
+                        title: '🥈 Secondary Muscles',
+                        muscles: secondaryMuscles,
+                      )
+                    : null,
+              ),
           ],
         ),
       ),
@@ -71,50 +105,24 @@ class MusclesData extends StatelessWidget {
   }
 }
 
-class _PrimaryData extends StatelessWidget {
-  final ThemeData theme;
-  final DataDisplaySizesList sizes;
-  final MuscleGroup muscleGroup;
-  final Set<Muscle> primaryMuscles;
+class _DataRow extends StatelessWidget {
+  final Widget? left;
+  final Widget? right;
 
-  const _PrimaryData({
-    required this.theme,
-    required this.sizes,
-    required this.muscleGroup,
-    required this.primaryMuscles,
-  });
+  const _DataRow({this.left, this.right});
 
   @override
   Widget build(BuildContext context) {
-    // If no muscles at all, return empty (shouldn't happen usually)
-    if (primaryMuscles.isEmpty) {
-      // Show only muscle group if no specific muscles
-      return _MuscleGroupSection(
-        sizes: sizes,
-        muscleGroup: muscleGroup,
-        theme: theme,
-      );
-    }
+    if (left == null && right == null) return const SizedBox.shrink();
+    if (left == null) return right!;
+    if (right == null) return left!;
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Expanded(
-          child: _MuscleGroupSection(
-            sizes: sizes,
-            muscleGroup: muscleGroup,
-            theme: theme,
-          ),
-        ),
-        Expanded(
-          child: _MusclesSection(
-            title: '💪 Primary Muscles',
-            sizes: sizes,
-            muscles: primaryMuscles,
-            theme: theme,
-          ),
-        ),
+        Expanded(child: left!),
+        Expanded(child: right!),
       ],
     );
   }
@@ -122,61 +130,29 @@ class _PrimaryData extends StatelessWidget {
 
 class _MuscleGroupSection extends StatelessWidget {
   final DataDisplaySizesList sizes;
-  final MuscleGroup muscleGroup;
+  final Set<MuscleGroup> muscleGroups;
   final ThemeData theme;
 
   const _MuscleGroupSection({
     required this.sizes,
-    required this.muscleGroup,
+    required this.muscleGroups,
     required this.theme,
   });
 
   @override
   Widget build(BuildContext context) {
+    if (muscleGroups.isEmpty) return const SizedBox.shrink();
+    final dataSpacing = sizes.spacing / 4;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       mainAxisAlignment: MainAxisAlignment.start,
       children: [
         Text(
-          '🏋️‍♂️ Muscle Group',
-          style: TextStyle(
-            fontSize: sizes.subtitleFontSize,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        SizedBox(height: sizes.spacing / 2),
-        MuscleGroupBadge(
-          muscleGroup: muscleGroup,
-          fontSize: sizes.smallFontSize,
-          theme: theme,
-        ),
-      ],
-    );
-  }
-}
-
-class _MusclesSection extends StatelessWidget {
-  final String title;
-  final DataDisplaySizesList sizes;
-  final Set<Muscle> muscles;
-  final ThemeData theme;
-
-  const _MusclesSection({
-    required this.title,
-    required this.sizes,
-    required this.muscles,
-    required this.theme,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final dataSpacing = sizes.spacing / 4;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
+          muscleGroups.length > 1
+              ? '🏋️‍♂️ Muscle Groups'
+              : '🏋️‍♂️ Muscle Group',
           style: TextStyle(
             fontSize: sizes.subtitleFontSize,
             fontWeight: FontWeight.w600,
@@ -186,67 +162,13 @@ class _MusclesSection extends StatelessWidget {
         Wrap(
           spacing: dataSpacing,
           runSpacing: dataSpacing,
-          children: muscles.map((m) {
-            return MuscleBadge(
-              muscle: m,
+          children: muscleGroups.map((mg) {
+            return MuscleGroupBadge(
+              muscleGroup: mg,
               fontSize: sizes.smallFontSize,
               theme: theme,
             );
           }).toList(),
-        ),
-      ],
-    );
-  }
-}
-
-class _SecondaryData extends StatelessWidget {
-  final List<EquipmentDto> equipments;
-  final Set<Muscle> secondaryMuscles;
-  final DataDisplaySizesList sizes;
-  final ThemeData theme;
-
-  const _SecondaryData({
-    required this.equipments,
-    required this.secondaryMuscles,
-    required this.sizes,
-    required this.theme,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    if (secondaryMuscles.isEmpty && equipments.isEmpty) {
-      return const SizedBox.shrink();
-    }
-    if (secondaryMuscles.isNotEmpty && equipments.isEmpty) {
-      return _MusclesSection(
-        title: '🥈 Secondary Muscles',
-        sizes: sizes,
-        muscles: secondaryMuscles,
-        theme: theme,
-      );
-    }
-    if (secondaryMuscles.isEmpty && equipments.isNotEmpty) {
-      return _EquipmentData(theme: theme, sizes: sizes, equipments: equipments);
-    }
-
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(
-          child: _EquipmentData(
-            theme: theme,
-            sizes: sizes,
-            equipments: equipments,
-          ),
-        ),
-        Expanded(
-          child: _MusclesSection(
-            title: '🥈 Secondary Muscles',
-            sizes: sizes,
-            muscles: secondaryMuscles,
-            theme: theme,
-          ),
         ),
       ],
     );
@@ -315,7 +237,7 @@ class _EquipmentBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Chip(
-      shape: BeveledRectangleBorder(),
+      shape: const BeveledRectangleBorder(),
       side: BorderSide(color: theme.colorScheme.onSurface, width: 0.5),
       visualDensity: VisualDensity.compact,
       label: Text(name, style: TextStyle(fontSize: fontSize)),

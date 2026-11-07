@@ -270,5 +270,22 @@ void main() {
       final badge = tester.widget<MuscleBadge>(find.byType(MuscleBadge));
       expect(badge.theme, equals(customTheme));
     });
+
+    testWidgets('renders multiple muscle groups properly', (tester) async {
+      await tester.pumpWidget(
+        buildTestableWidget(
+          MusclesData(
+            sizes: sizes,
+            muscleGroups: const {MuscleGroup.push, MuscleGroup.pull},
+            primaryMuscles: const {Muscle.chest, Muscle.lats},
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('🏋️‍♂️ Muscle Groups'), findsOneWidget);
+      expect(find.text('Push'), findsOneWidget);
+      expect(find.text('Pull'), findsOneWidget);
+    });
   });
 }
