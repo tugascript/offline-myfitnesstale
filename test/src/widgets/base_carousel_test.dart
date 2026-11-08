@@ -133,7 +133,7 @@ void main() {
       // Swipe left
       await tester.drag(
         find.byKey(const ValueKey('test-swipe-scroll')),
-        const Offset(-400, 0),
+        Offset(-scroll.controller!.position.viewportDimension * 0.75, 0),
       );
       await tester.pumpAndSettle();
 
