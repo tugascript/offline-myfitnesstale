@@ -120,7 +120,9 @@ records. Media fields exist, but there is no picker, upload, or storage flow.
 - Starts live workout records, logs decimal weight and reps, carries prior
   values within a set group, and tracks rest/progress using `WorkoutRecordInput`,
   `WorkoutSetRecordInput`, and `WorkoutSetExerciseRecordInput` PUT semantics.
-- Completes, cancels, and resumes active workouts within the covered lifecycle.
+- Completes, cancels, and resumes active workouts within the covered lifecycle;
+  manual completion requires confirmation, while finishing the final exercise
+  completes the workout automatically.
 - Lists, creates, edits, and deletes completed workout history using shared
   `WorkoutRecordBatchInput` PUT semantics.
 
