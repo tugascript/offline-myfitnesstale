@@ -11,8 +11,8 @@ const _groups = {
   'training': {
     'Workouts': '/workouts',
     'Workout Plans': '/workout-plans',
-    'Workout History': '/workouts',
-    'Workout Plan History': '/workout-plans',
+    'Workout History': '/workouts/history',
+    'Workout Plan History': '/workout-plans/history',
   },
   'weight': {
     'Weight Records': '/weight-records',

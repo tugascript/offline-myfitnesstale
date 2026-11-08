@@ -6,7 +6,9 @@ import 'package:myfitnesstale/src/cubits/exercise_cubit.dart';
 import 'package:myfitnesstale/src/cubits/exercise_record_cubit.dart';
 import 'package:myfitnesstale/src/cubits/profile_cubit.dart';
 import 'package:myfitnesstale/src/cubits/states/profile_state.dart';
+import 'package:myfitnesstale/src/cubits/workout_cubit.dart';
 import 'package:myfitnesstale/src/cubits/workout_plan_record_cubit.dart';
+import 'package:myfitnesstale/src/cubits/workout_record_cubit.dart';
 import 'package:myfitnesstale/src/models/enums.dart';
 import 'package:myfitnesstale/src/services/dtos/profile_dto.dart';
 import 'package:myfitnesstale/src/services/dtos/reminders_config_dto.dart';
@@ -17,6 +19,7 @@ import 'package:myfitnesstale/src/views/exercises/exercise_records_view.dart';
 import 'package:myfitnesstale/src/views/not_found_view.dart';
 import 'package:myfitnesstale/src/views/profile/reminder_preferences_view.dart';
 import 'package:myfitnesstale/src/views/workout_plans/workout_plan_history_view.dart';
+import 'package:myfitnesstale/src/views/workouts/workout_history_view.dart';
 
 class _ExerciseCubit extends ExerciseCubit {
   @override
@@ -30,6 +33,28 @@ class _ExerciseRecordCubit extends ExerciseRecordCubit {
     int offset = 0,
     (DateTime start, DateTime end)? dateRange,
     int? exerciseId,
+  }) async {}
+}
+
+class _WorkoutCubit extends WorkoutCubit {
+  @override
+  Future<void> getWorkout(
+    int id, {
+    int? version,
+    bool refresh = false,
+  }) async {}
+}
+
+class _WorkoutRecordCubit extends WorkoutRecordCubit {
+  @override
+  Future<void> getLatestWorkoutRecord([int? workoutId]) async {}
+
+  @override
+  Future<void> getWorkoutRecords({
+    int? workoutId,
+    int? limit,
+    int? offset,
+    (DateTime start, DateTime end)? dateRange,
   }) async {}
 }
 
@@ -83,6 +108,8 @@ void main() {
   Future<void> pumpRoute(WidgetTester tester, String location) async {
     final exerciseCubit = _ExerciseCubit();
     final exerciseRecordCubit = _ExerciseRecordCubit();
+    final workoutCubit = _WorkoutCubit();
+    final workoutRecordCubit = _WorkoutRecordCubit();
     final workoutPlanRecordCubit = _WorkoutPlanRecordCubit();
     final profileCubit = _ProfileCubit();
     final router = AppRouter.createRouter(initialLocation: location);
@@ -91,6 +118,8 @@ void main() {
       router.dispose();
       await exerciseCubit.close();
       await exerciseRecordCubit.close();
+      await workoutCubit.close();
+      await workoutRecordCubit.close();
       await workoutPlanRecordCubit.close();
       await profileCubit.close();
     });
@@ -100,6 +129,8 @@ void main() {
         providers: [
           BlocProvider<ExerciseCubit>.value(value: exerciseCubit),
           BlocProvider<ExerciseRecordCubit>.value(value: exerciseRecordCubit),
+          BlocProvider<WorkoutCubit>.value(value: workoutCubit),
+          BlocProvider<WorkoutRecordCubit>.value(value: workoutRecordCubit),
           BlocProvider<WorkoutPlanRecordCubit>.value(
             value: workoutPlanRecordCubit,
           ),
@@ -120,17 +151,55 @@ void main() {
     expect(find.byType(NotFoundView), findsNothing);
   });
 
-  testWidgets('valid plan history IDs resolve', (tester) async {
+  testWidgets('global and single plan history routes resolve', (tester) async {
+    await pumpRoute(tester, WorkoutPlanHistoryView.location());
+
+    var view = tester.widget<WorkoutPlanHistoryView>(
+      find.byType(WorkoutPlanHistoryView),
+    );
+    expect(view.workoutPlanId, isNull);
+
     await pumpRoute(tester, WorkoutPlanHistoryView.location(42));
 
-    final view = tester.widget<WorkoutPlanHistoryView>(
+    view = tester.widget<WorkoutPlanHistoryView>(
       find.byType(WorkoutPlanHistoryView),
     );
     expect(view.workoutPlanId, 42);
   });
 
   testWidgets('invalid plan history IDs show Not Found', (tester) async {
-    await pumpRoute(tester, '/workout-plans/not-a-number/history');
+    await pumpRoute(tester, '/workout-plans/history?id=not-a-number');
+
+    expect(find.byType(NotFoundView), findsOneWidget);
+  });
+
+  testWidgets('global and single workout history routes resolve', (
+    tester,
+  ) async {
+    await pumpRoute(tester, WorkoutHistoryView.location());
+
+    var view = tester.widget<WorkoutHistoryView>(
+      find.byType(WorkoutHistoryView),
+    );
+    expect(view.workoutId, isNull);
+    expect(view.version, isNull);
+
+    await pumpRoute(
+      tester,
+      WorkoutHistoryView.location(workoutId: 12, version: 3),
+    );
+
+    view = tester.widget<WorkoutHistoryView>(
+      find.byType(WorkoutHistoryView),
+    );
+    expect(view.workoutId, 12);
+    expect(view.version, 3);
+  });
+
+  testWidgets('invalid workout history query params show Not Found', (
+    tester,
+  ) async {
+    await pumpRoute(tester, '/workouts/history?id=not-a-number');
 
     expect(find.byType(NotFoundView), findsOneWidget);
   });

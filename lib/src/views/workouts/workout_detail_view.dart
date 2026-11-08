@@ -15,6 +15,7 @@ import '../../widgets/workouts/details/empty_sets_card.dart';
 import '../../widgets/workouts/details/workout_header_card.dart';
 import '../../widgets/workouts/details/workout_set_card.dart';
 import '../loading_view.dart';
+import 'workout_history_view.dart';
 
 class WorkoutDetailView extends StatefulWidget {
   static const name = "workout-detail";
@@ -146,7 +147,10 @@ class _WorkoutDetailViewState extends State<WorkoutDetailView> {
                   startLabel: 'Start Workout',
                   onEdit: () => context.push('/workouts/${workout.id}/edit'),
                   onHistory: () => context.push(
-                    '/workouts/${workout.id}/history/${workout.version}',
+                    WorkoutHistoryView.location(
+                      workoutId: workout.id,
+                      version: workout.version,
+                    ),
                   ),
                   historyLabel: 'History',
                   onDelete: () {

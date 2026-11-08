@@ -17,16 +17,26 @@ import '../../widgets/workouts/progress/history/workout_record_history.dart';
 import 'create_workout_record_view.dart';
 
 class WorkoutHistoryView extends StatefulWidget {
-  static const routeName = '/workouts/:id/history/:version';
+  static const routeName = '/workouts/history';
 
-  final int workoutId;
-  final int version;
+  final int? workoutId;
+  final int? version;
 
   const WorkoutHistoryView({
     super.key,
-    required this.workoutId,
-    required this.version,
+    this.workoutId,
+    this.version,
   });
+
+  static String location({int? workoutId, int? version}) {
+    if (workoutId == null) {
+      return routeName;
+    }
+    if (version == null) {
+      return '$routeName?id=$workoutId';
+    }
+    return '$routeName?id=$workoutId&version=$version';
+  }
 
   @override
   State<WorkoutHistoryView> createState() => _WorkoutHistoryViewState();
@@ -37,10 +47,13 @@ class _WorkoutHistoryViewState extends State<WorkoutHistoryView> {
   void initState() {
     super.initState();
 
-    final workoutCubit = context.read<WorkoutCubit>();
-    if (workoutCubit.state.selectedWorkout?.id != widget.workoutId ||
-        workoutCubit.state.selectedWorkout?.version != widget.version) {
-      workoutCubit.getWorkout(widget.workoutId, version: widget.version);
+    if (widget.workoutId != null) {
+      final workoutCubit = context.read<WorkoutCubit>();
+      if (workoutCubit.state.selectedWorkout?.id != widget.workoutId ||
+          (widget.version != null &&
+              workoutCubit.state.selectedWorkout?.version != widget.version)) {
+        workoutCubit.getWorkout(widget.workoutId!, version: widget.version);
+      }
     }
   }
 
@@ -49,12 +62,19 @@ class _WorkoutHistoryViewState extends State<WorkoutHistoryView> {
     final theme = Theme.of(context);
     final breakpoints = BreakPoint.fromContext(context);
     final sizes = DataDisplaySizes.getDataDisplaySizes(breakpoints.screenSize);
+    final isSingleWorkout = widget.workoutId != null;
 
     return BlocBuilder<WorkoutCubit, WorkoutState>(
       builder: (context, workoutState) {
+        final workoutVersion = isSingleWorkout
+            ? (widget.version ?? workoutState.selectedWorkout?.version ?? 1)
+            : null;
+
         return ResponsiveScaffold(
-          title: workoutState.selectedWorkout?.name ?? 'Workout History',
-          isEntity: true,
+          title: isSingleWorkout
+              ? (workoutState.selectedWorkout?.name ?? 'Workout History')
+              : 'Workout History',
+          isEntity: isSingleWorkout,
           body: BlocBuilder<ProfileCubit, ProfileState>(
             builder: (context, profileState) {
               final units = profileState.system?.units ?? Units.metric;
@@ -81,8 +101,7 @@ class _WorkoutHistoryViewState extends State<WorkoutHistoryView> {
                           theme: theme,
                           units: units,
                           workoutId: widget.workoutId,
-                          workoutVersion:
-                              workoutState.selectedWorkout?.version ?? 1,
+                          workoutVersion: workoutVersion,
                         ),
                         SizedBox(height: sizes.spacing),
                         WorkoutRecordHistory(
@@ -91,8 +110,7 @@ class _WorkoutHistoryViewState extends State<WorkoutHistoryView> {
                           sizes: sizes,
                           units: units,
                           workoutId: widget.workoutId,
-                          workoutVersion:
-                              workoutState.selectedWorkout?.version ?? 1,
+                          workoutVersion: workoutVersion,
                         ),
                       ],
                     );
@@ -101,18 +119,23 @@ class _WorkoutHistoryViewState extends State<WorkoutHistoryView> {
               );
             },
           ),
-          floatingActionButton: FloatingActionButton(
-            key: const ValueKey('workout-record-add'),
-            elevation: sizes.elevation,
-            onPressed: () {
-              context.push(
-                CreateWorkoutRecordView.routeName
-                    .replaceFirst(':id', widget.workoutId.toString())
-                    .replaceFirst(':version', widget.version.toString()),
-              );
-            },
-            child: const Icon(Icons.add),
-          ),
+          floatingActionButton: isSingleWorkout
+              ? FloatingActionButton(
+                  key: const ValueKey('workout-record-add'),
+                  elevation: sizes.elevation,
+                  onPressed: () {
+                    context.push(
+                      CreateWorkoutRecordView.routeName
+                          .replaceFirst(':id', widget.workoutId.toString())
+                          .replaceFirst(
+                            ':version',
+                            (workoutVersion ?? 1).toString(),
+                          ),
+                    );
+                  },
+                  child: const Icon(Icons.add),
+                )
+              : null,
         );
       },
     );

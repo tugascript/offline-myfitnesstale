@@ -16,6 +16,7 @@ import 'common/errors.dart';
 import 'common/result.dart';
 import 'dtos/exercise_dto.dart';
 import 'dtos/paginated_dto.dart';
+import 'dtos/workout_dto.dart';
 import 'dtos/workout_record_dto.dart';
 import 'dtos/workout_set_exercise_record_dto.dart';
 import 'dtos/workout_set_record_dto.dart';
@@ -132,10 +133,35 @@ class WorkoutRecordService {
         whereArgs: query.args,
       );
       _logger.info('Got ${records.length} workout records');
+      if (workoutId != null || records.isEmpty) {
+        return ok(
+          PaginatedDto<WorkoutRecordDto, WorkoutRecord>.mapData(
+            data: records,
+            mapper: WorkoutRecordDto.fromModel,
+            total: total,
+            limit: limit,
+            offset: offset,
+          ),
+        );
+      }
+
+      final Set<int> workoutIds = records.map((r) => r.workoutId).toSet();
+      final List<Workout> workouts = await _workoutRepository.selectMany(
+        where: WorkoutColumns.id.inList(workoutIds.length),
+        whereArgs: workoutIds.toList(),
+      );
+      final Map<int, WorkoutDto> workoutMap = {
+        for (final workout in workouts)
+          workout.id!: WorkoutDto.fromModel(workout),
+      };
+
       return ok(
         PaginatedDto<WorkoutRecordDto, WorkoutRecord>.mapData(
           data: records,
-          mapper: WorkoutRecordDto.fromModel,
+          mapper: (record) => WorkoutRecordDto.fromModel(
+            record,
+            workout: workoutMap[record.workoutId],
+          ),
           total: total,
           limit: limit,
           offset: offset,
@@ -262,12 +288,12 @@ class WorkoutRecordService {
   }
 
   Future<Result<WorkoutRecordDto, ServiceError<SingleErrorTypes>>>
-  getLatestWorkoutRecord(int workoutId) async {
+  getLatestWorkoutRecord([int? workoutId]) async {
     _logger.info('Getting latest workout record for workout $workoutId');
     try {
       final List<WorkoutRecord> records = await _repository.selectMany(
-        where: WorkoutRecordColumns.workoutId.equal,
-        whereArgs: [workoutId],
+        where: workoutId != null ? WorkoutRecordColumns.workoutId.equal : null,
+        whereArgs: workoutId != null ? [workoutId] : null,
         orderBy: [WorkoutRecordColumns.startedAt.orderDesc],
         limit: 1,
       );
@@ -281,8 +307,19 @@ class WorkoutRecordService {
         );
       }
 
+      final record = records.first;
+      WorkoutDto? workoutDto;
+      if (workoutId == null) {
+        final Workout? workout = await _workoutRepository.selectOne(
+          record.workoutId,
+        );
+        if (workout != null) {
+          workoutDto = WorkoutDto.fromModel(workout);
+        }
+      }
+
       _logger.info('Got latest workout record for workout $workoutId');
-      return ok(WorkoutRecordDto.fromModel(records.first));
+      return ok(WorkoutRecordDto.fromModel(record, workout: workoutDto));
     } catch (e) {
       _logger.severe(
         'Failed to get latest workout record for workout $workoutId',

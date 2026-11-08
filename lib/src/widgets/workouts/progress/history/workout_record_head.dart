@@ -36,6 +36,25 @@ class WorkoutRecordHead extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          if (workoutRecord?.workout != null) ...[
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.fitness_center, size: sizes.subtitleFontSize * 1.2),
+                Flexible(
+                  child: Text(
+                    " ${workoutRecord!.workout!.name}",
+                    style: TextStyle(
+                      fontSize: sizes.subtitleFontSize,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: sizes.spacing),
+          ],
           Row(
             mainAxisAlignment: MainAxisAlignment.start,
             mainAxisSize: MainAxisSize.max,
