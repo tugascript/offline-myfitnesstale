@@ -6,7 +6,7 @@ import '../../../../services/dtos/workout_record_dto.dart';
 import '../../../../utilities/converters.dart';
 import '../../../../utilities/formatters.dart';
 import '../../../../utilities/sizes/data_display_sizes.dart';
-import '../../../common/muscles_wrap.dart';
+import '../../../common/muscles_carousel.dart';
 import '../../../common/total_numeric_string.dart';
 import '../../../common/total_string.dart';
 
@@ -142,38 +142,14 @@ class WorkoutRecordHead extends StatelessWidget {
               ),
             ],
           ),
-          SizedBox(height: sizes.spacing),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              Expanded(
-                child: MusclesWrap(
-                  leading: Text(
-                    '💪',
-                    style: TextStyle(fontSize: sizes.subtitleFontSize * 1.2),
-                  ),
-                  title: 'Primary Muscles',
-                  sizes: sizes,
-                  muscles: workoutRecord?.muscles.primary ?? {},
-                  theme: theme,
-                ),
-              ),
-              if (workoutRecord?.muscles.secondary.isNotEmpty ?? false)
-                Expanded(
-                  child: MusclesWrap(
-                    leading: Text(
-                      '🥈',
-                      style: TextStyle(fontSize: sizes.subtitleFontSize * 1.2),
-                    ),
-                    title: 'Secondary Muscles',
-                    sizes: sizes,
-                    muscles: workoutRecord!.muscles.secondary,
-                    theme: theme,
-                  ),
-                ),
-            ],
-          ),
+          if (workoutRecord != null) ...[
+            SizedBox(height: sizes.spacing),
+            MusclesCarousel(
+              sizes: sizes,
+              theme: theme,
+              muscles: workoutRecord!.muscles,
+            ),
+          ],
         ],
       ),
     );

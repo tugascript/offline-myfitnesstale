@@ -201,7 +201,8 @@ class _EmptyWorkoutRecord extends StatelessWidget {
                     theme: theme,
                     sizes: sizes,
                     isDense: true,
-                    onPressed: () => context.push('/workouts/$workoutId/active'),
+                    onPressed: () =>
+                        context.push('/workouts/$workoutId/active'),
                     label: 'Start Workout',
                     icon: Icons.play_arrow,
                   ),

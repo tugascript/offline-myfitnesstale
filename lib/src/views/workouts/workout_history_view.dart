@@ -22,11 +22,7 @@ class WorkoutHistoryView extends StatefulWidget {
   final int? workoutId;
   final int? version;
 
-  const WorkoutHistoryView({
-    super.key,
-    this.workoutId,
-    this.version,
-  });
+  const WorkoutHistoryView({super.key, this.workoutId, this.version});
 
   static String location({int? workoutId, int? version}) {
     if (workoutId == null) {
