@@ -17,10 +17,15 @@ an on-device SQLite database which acts as the main source of truth.
 - Reusable basic and advanced workouts;
 - Live workout tracking and workout history;
 - Weight records, charts, and weight goals;
-- Multi-week workout plans, active-plan progress, and plan history.
+- Strength goals and anatomical muscle targeting views;
+- Multi-week workout plans, active-plan progress, and plan history;
+- Food and recipe libraries, versioned meal plans, and meal-plan execution;
+- Flat and calorie-cycling macro goals;
+- Daily nutrition tracking with food, recipe, and quick-add entries, water intake,
+  and day/week/month summaries.
 
-Reminder switches currently save preferences only, they do not schedule notifications yet. Premium
-purchases still in development.
+Reminder switches currently save preferences only; they do not schedule notifications yet. Premium
+purchases are still in development.
 
 For the detailed implementation snapshot and known limitations, see
 [PROJECT_STATE.md](PROJECT_STATE.md).
@@ -43,8 +48,8 @@ The goal is for it to be divided into four parts:
 3. an IDP REST service built in the [DevLogs repo](https://github.com/tugascript/devlogs);
 4. a main gRPC service for encrypted backup/sync, subscription verification, and AI model updates.
 
-Only the mobile app exists in this repository today. Meals and macros, the AI trainer, watch apps,
-accounts, and cloud services are roadmap items, not current features. Gamification and social
+Only the mobile app exists in this repository today. Its meal and macro flows work offline; the AI
+trainer, watch apps, accounts, and cloud services remain roadmap items. Gamification and social
 networking existing on the original BuffQuest are outside the first major release. The ordered
 roadmap is in [project.md](project.md).
 
@@ -125,8 +130,8 @@ SQLite model -> repository/service -> Cubit -> view/widget
 └── project.md              # What should be built next
 ```
 
-Feature folders are grouped around equipment, exercises, profile, weight, workouts, and workout
-plans.
+Feature folders are grouped around equipment, exercises, profile, weight, workouts, workout plans,
+foods, recipes, meal plans, and macro tracking.
 
 ### Local data model
 
@@ -147,6 +152,7 @@ erDiagram
     exercises ||--o{ exercise_equipment : uses
     equipment ||--o{ exercise_equipment : supports
     exercises ||--o{ exercise_records : records
+    exercises ||--o{ strength_goals : targets
 
     workouts ||--o{ workout_sets : contains
     workout_sets ||--o{ workout_set_exercises : contains
@@ -170,6 +176,32 @@ erDiagram
     workout_plan_week_records ||--o{ workout_plan_day_records : contains
     workout_plan_day_records ||--o{ workout_plan_workout_records : contains
     workout_records ||--o{ workout_plan_workout_records : completes
+
+    foods ||--o{ food_portions : offers
+    recipes ||--o{ recipe_items : contains
+    foods ||--o{ recipe_items : supplies
+    food_portions ||--o{ recipe_items : measures
+
+    week_macro_goals ||--|{ day_macro_goals : contains
+
+    daily_nutrition_logs ||--o{ meal_logs : contains
+    meal_logs ||--|{ meal_log_items : snapshots
+    foods |o--o{ meal_log_items : sources
+    food_portions |o--o{ meal_log_items : measures
+
+    meal_plans ||--o{ meal_plan_weeks : contains
+    meal_plan_weeks ||--o{ meal_plan_days : contains
+    meal_plan_days ||--o{ meal_plan_meals : schedules
+    recipes |o--o{ meal_plan_meals : supplies
+    meal_plan_meals ||--o{ meal_plan_meal_items : contains
+    foods |o--o{ meal_plan_meal_items : supplies
+    food_portions |o--o{ meal_plan_meal_items : measures
+
+    meal_plans ||--o{ meal_plan_records : produces
+    meal_plan_records ||--o{ meal_plan_week_records : contains
+    meal_plan_week_records ||--o{ meal_plan_day_records : contains
+    meal_plan_days ||--o{ meal_plan_day_records : instantiates
+    daily_nutrition_logs ||--o| meal_plan_day_records : tracks
 ```
 
 </details>
