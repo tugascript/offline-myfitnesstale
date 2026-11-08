@@ -16,6 +16,7 @@ import '../../utilities/sizes/screen_size.dart';
 import '../../widgets/common/mutation_button.dart';
 import '../../widgets/layout/app_elevated_button.dart';
 import '../../widgets/layout/responsive_scaffold.dart';
+import '../../widgets/workouts/details/complete_modal.dart';
 import '../../widgets/workouts/progress/active_completed_workout.dart';
 import '../../widgets/workouts/progress/active_exercise_card.dart';
 import '../../widgets/workouts/progress/active_progress_bar.dart';
@@ -374,10 +375,15 @@ class _ActiveWorkoutViewState extends State<ActiveWorkoutView> {
                               theme: theme,
                               isLoading: activeState.isLoading,
                               sizes: sizes,
-                              onPressed: () async {
-                                await context
-                                    .read<ActiveWorkoutCubit>()
-                                    .completeWorkout();
+                              onPressed: () {
+                                showDialog<void>(
+                                  context: context,
+                                  builder: (_) => CompleteWorkoutDialog(
+                                    workoutName: activeState.workout != null
+                                        ? '"${activeState.workout!.name}"'
+                                        : "this",
+                                  ),
+                                );
                               },
                               label: 'Complete',
                               icon: Icons.check,
