@@ -1,7 +1,7 @@
 # My Fitness Tale: Current Project State
 
-Reviewed on 15 September 2026 from branch `ab/fix-all-todos` at commit
-`82bf79c`, including the current working tree. This file records what the code
+Reviewed on 9 November 2026 from branch `tugascript/update-docs` at commit
+`cd7f73b`, including the current working tree. This file records what the code
 does now. See [README.md](README.md) for the product overview and
 [project.md](project.md) for planned work.
 
@@ -10,8 +10,9 @@ does now. See [README.md](README.md) for the product overview and
 My Fitness Tale is a local-first Flutter fitness tracker for Android and iOS.
 The implemented app covers onboarding, profiles, equipment, exercises,
 exercise progress, workouts, workout history, weight tracking, weight goals,
-multi-week plans, and plan execution. Data is stored in SQLite and the core
-flows do not require a backend or account.
+strength goals, multi-week workout and meal plans, foods, recipes, macro goals,
+and daily nutrition tracking. Data is stored in SQLite and the core flows do not
+require a backend or account.
 
 The app is suitable for continued development and simulator testing, but not
 for release or irreplaceable user data. Backup/restore is absent, platform
@@ -20,12 +21,12 @@ preferences do not schedule notifications, and purchases are unavailable.
 
 Repository facts at this review:
 
-- 327 Dart source files under `lib/`;
+- 410 Dart source files under `lib/`;
 - 42 SQLite tables in the create schema, including strength goals;
 - database schema version 1;
 - 89 seeded exercises and 25 seeded equipment entries;
 - 16 optional starter workouts and one 16-week starter plan;
-- 29 host test files and five integration-test files;
+- 44 host test files and five integration-test files;
 - no repository CI configuration;
 - no backend implementation in the current working tree.
 
@@ -94,10 +95,12 @@ exist.
   (`Nullable<T>` in `copyWith` clears omitted nullable fields and replaces
   equipment links atomically).
 - Maintains exercise/equipment relationships.
-- Displays an anatomical SVG muscle diagram (`assets/svgs/muscles.svg`) on
-  exercise details (`ExerciseHeaderCard`), dynamically painting primary target
-  muscles in a dark orange shade and secondary target muscles in a light orange
-  shade.
+- Exercise details use a reusable, swipeable Diagram/Data carousel. Its clean
+  front/back anatomical SVG dynamically paints primary target muscles in dark
+  orange and secondary targets in light orange; the companion page lists muscle
+  groups, primary and secondary muscles, and equipment. The carousel supports
+  responsive sizing, large text, touch indicators, and an optional pixelated
+  rendering mode.
 - Creates, edits, deletes, and filters exercise records using shared
   `ExerciseRecordInput` PUT semantics.
 - Shows estimated-max progress and kg/lb summaries.
@@ -351,7 +354,7 @@ selected.
 Five integration files contain seven journeys covering:
 
 - onboarding with starter workouts disabled and enabled;
-- all primary navigation, dashboard, and Activity destinations;
+- all primary navigation, dashboard, and Home quick-action destinations;
 - profile, units, theme, and reminder persistence;
 - weight records and goals;
 - equipment, exercises, and exercise records;
@@ -397,7 +400,7 @@ Grouped navigation and Current Plan verification on 14 October 2026:
 - Full host suite: 310 tests passed, one skipped, including current-plan
   loading, empty/error/retry, library return, cached-tab revisits, completed
   execution filtering, and narrow layouts at 200% text scaling.
-- Grouped-menu tests cover all twelve destinations, four dismissal methods,
+- Grouped-menu tests cover all fourteen destinations, four dismissal methods,
   direct Back navigation with preserved Home scroll position, one/two-column
   layouts, and scrolling on a short screen while keeping Close accessible.
 - `dart analyze` completed with no errors or warnings; the existing 30
@@ -420,6 +423,16 @@ including switching between plan executions with matching cached template data.
 The subsequent Android plan-journey rerun built successfully but stalled during
 native app startup before Flutter connected; it was stopped. The Android journey
 results above remain evidence from the earlier run.
+
+Current host verification on 9 November 2026:
+
+- `flutter pub get` completed successfully;
+- `flutter test` passed 362 tests with one skipped pre-beta migration test;
+- `dart analyze` completed with one existing informational
+  `prefer_initializing_formals` lint and no errors or warnings;
+- the repository-wide format check reports one pending change in
+  `lib/src/widgets/common/base_carousel.dart`;
+- no device journey was run for this documentation review.
 
 ## Known gaps and release blockers
 
@@ -450,9 +463,9 @@ validation.
 
 ## Next work
 
-The immediate priority is completing the core mobile fitness features (starting with
-meal and macro tracking) and consolidating plan date/progress calculations. Local backup
-and restore is deferred to P2 so that the full SQLite data schema is finalized before
-freezing the export format. Reminder delivery, physical-device testing, and release
-configuration follow, ahead of advanced AI and ecosystem components. See [project.md](project.md)
-for the ordered plan.
+The core mobile fitness feature set, including offline meal and macro tracking, is
+implemented. The immediate priority is device-level nutrition verification and
+consolidating duplicated plan date/progress and nutrition calculations. Local backup
+and restore remains P2 work after the version 1 schema is stabilized. Reminder
+delivery, physical-device testing, and release configuration follow, ahead of advanced
+AI and ecosystem components. See [project.md](project.md) for the ordered plan.

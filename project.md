@@ -1,6 +1,6 @@
 # My Fitness Tale: Delivery Plan
 
-Last aligned with [README.md](README.md) on 7 October 2026. For the
+Last aligned with [README.md](README.md) on 9 November 2026. For the
 code-grounded implementation snapshot, see [PROJECT_STATE.md](PROJECT_STATE.md).
 
 ## Product objective
@@ -16,19 +16,27 @@ Gamification and social networking are outside the first major release.
 
 ### Phase 1: complete and consolidate the mobile fitness features
 
-The current exercise, workout, plan, and weight flows are substantial and have
-simulator journey coverage. The immediate goal is to complete the core mobile feature
-set—including meal and macro tracking—and consolidate domain helpers before freezing
-the SQLite schema for backup and release.
+The core exercise, workout, plan, weight, food, recipe, meal-plan, and macro-tracking
+flows are implemented offline. The immediate goal is to consolidate shared domain
+helpers and verify the complete mobile feature set before freezing the SQLite schema
+for backup and release.
 
-#### P1 — Add meal and macro tracking
+#### Completed foundation — Offline meal and macro tracking
 
-Complete the core offline fitness experience by adding nutrition, meal, and macro
-tracking alongside exercises, workouts, and weight:
+The app now includes the local SQLite schema and end-to-end flows for foods, recipes,
+versioned meal plans, meal-plan execution, weekly macro goals, and daily nutrition:
 
-- Design and implement the local SQLite schema for foods, meals, and macro targets.
-- Provide meal logging, daily macro progress, and target tracking.
-- Ensure onboarding and offline data operations remain local-first and atomic.
+- weekly goals support flat targets and calorie-cycling day groups;
+- the diary supports timestamped food, recipe, and standalone quick-add snapshots,
+  water tracking, planned meals, and day/week/month views;
+- nutrition mutations use local transactions and preserve immutable logged snapshots.
+
+Remaining P1 work is verification and consolidation, not initial implementation:
+
+- add device-journey coverage for nutrition and meal-plan execution;
+- keep narrow-screen and 200% text-scale coverage current as shared widgets evolve;
+- consolidate duplicated date, progress, and nutrition calculations where a tested
+  domain helper can replace UI/service duplication.
 
 #### P1 — Consolidate workout-plan calculations
 
@@ -45,12 +53,12 @@ persistence with device coverage.
 
 ### Phase 2: beta-safety, backup, and release hardening
 
-Once the full mobile feature set and SQLite data model are implemented, establish
-data preservation and release readiness:
+With the full mobile feature set and SQLite data model now implemented, establish data
+preservation and release readiness:
 
 #### P2 — Add local backup and restore
 
-Deferred to P2 so the complete mobile schema (including meals and macros) is
+Deferred to P2 so the complete mobile schema, now including meals and macros, can be
 stabilized before defining the serialization format, avoiding migration churn on
 disposable pre-beta schemas.
 
@@ -167,15 +175,16 @@ been reverified. See [PROJECT_STATE.md](PROJECT_STATE.md) for coverage details.
 Before release, verify:
 
 1. onboarding with starter workouts both disabled and enabled;
-2. all bottom-navigation, dashboard, and Activity destinations;
+2. all bottom-navigation, dashboard, and Home quick-action destinations;
 3. profile, theme, units, and reminder preferences after restart;
 4. weight records, chart points, and weight-goal CRUD;
 5. equipment, exercises, filters, favorites, and exercise records;
 6. workout creation/editing, live completion/cancellation/resume, and history;
-7. plan creation/editing, scheduling, progress, restart, and history;
-8. locked premium states with no broken purchase or restore actions;
-9. narrow layouts, large text, screen readers, and interrupted app lifecycles;
-10. backup/export followed by a verified restore on a clean installation.
+7. workout- and meal-plan creation/editing, scheduling, progress, restart, and history;
+8. foods, recipes, macro goals, diary logging, water, and day/week/month nutrition views;
+9. locked premium states with no broken purchase or restore actions;
+10. narrow layouts, large text, screen readers, and interrupted app lifecycles;
+11. backup/export followed by a verified restore on a clean installation.
 
 ## Definition of done
 
