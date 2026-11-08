@@ -22,7 +22,7 @@ class TotalNumericString extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        if (leading != null) ...[leading!, const SizedBox(width: 4)],
+        if (leading != null) ...[leading!, SizedBox(width: fontSize / 4)],
         Flexible(
           child: Text.rich(
             TextSpan(
