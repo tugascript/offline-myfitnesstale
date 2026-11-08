@@ -60,6 +60,14 @@ class _BaseCarouselState extends State<BaseCarousel> {
     super.initState();
     _page = widget.initialPage;
     _controller = ScrollController();
+    if (_page != 0) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted || !_controller.hasClients) return;
+        _controller.jumpTo(
+          _page * _controller.position.viewportDimension,
+        );
+      });
+    }
   }
 
   @override
