@@ -447,45 +447,6 @@ enum DayOfWeek {
       fromValue(dateTime.weekday);
 }
 
-enum EntitlementType {
-  free('free'),
-  premium('premium');
-
-  final String value;
-
-  const EntitlementType(this.value);
-
-  static EntitlementType fromValue(String v) => EntitlementType.values
-      .firstWhere((t) => t.value == v, orElse: () => EntitlementType.free);
-}
-
-enum EntitlementStatus {
-  active('active'),
-  grace('grace'),
-  expired('expired'),
-  billingIssue('billing_issue'),
-  unknown('unknown');
-
-  final String value;
-
-  const EntitlementStatus(this.value);
-
-  static EntitlementStatus fromValue(String v) => EntitlementStatus.values
-      .firstWhere((s) => s.value == v, orElse: () => EntitlementStatus.unknown);
-}
-
-enum EntitlementSource {
-  server('server'),
-  cache('cache');
-
-  final String value;
-
-  const EntitlementSource(this.value);
-
-  static EntitlementSource fromValue(String v) => EntitlementSource.values
-      .firstWhere((s) => s.value == v, orElse: () => EntitlementSource.cache);
-}
-
 enum FoodCategory {
   meatAndPoultry("meat_and_poultry"),
   fishAndSeafood("fish_and_seafood"),

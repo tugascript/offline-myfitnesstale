@@ -11,22 +11,22 @@ My Fitness Tale is a local-first Flutter fitness tracker for Android and iOS.
 The implemented app covers onboarding, profiles, equipment, exercises,
 exercise progress, workouts, workout history, weight tracking, weight goals,
 strength goals, multi-week workout and meal plans, foods, recipes, macro goals,
-and daily nutrition tracking. Data is stored in SQLite and the core flows do not
-require a backend or account.
+and daily nutrition tracking. Data is stored in SQLite and all implemented
+offline features are completely free and do not require a backend or account.
 
 The app is suitable for continued development and simulator testing, but not
 for release or irreplaceable user data. Backup/restore is absent, platform
-identifiers and signing are unfinished, physical-device checks remain, reminder
-preferences do not schedule notifications, and purchases are unavailable.
+identifiers and signing are unfinished, physical-device checks remain, and
+reminder preferences do not schedule notifications.
 
 Repository facts at this review:
 
-- 410 Dart source files under `lib/`;
-- 42 SQLite tables in the create schema, including strength goals;
+- 403 Dart source files under `lib/`;
+- 41 SQLite tables in the create schema, including strength goals;
 - database schema version 1;
 - 89 seeded exercises and 25 seeded equipment entries;
 - 16 optional starter workouts and one 16-week starter plan;
-- 44 host test files and five integration-test files;
+- 42 host test files and five integration-test files;
 - no repository CI configuration;
 - no backend implementation in the current working tree.
 
@@ -112,19 +112,17 @@ records. Media fields exist, but there is no picker, upload, or storage flow.
 ### Workouts and history
 
 - Creates, edits, favorites, and deletes reusable, versioned workouts with basic
-  and advanced editors using shared `WorkoutInput` PUT semantics (`Nullable<T>`
-  in `copyWith` clears omitted nullable fields across `Workout`, `WorkoutSet`,
-  `WorkoutSetExercise`, and `WorkoutSetExerciseOption`).
-- Supports sets, alternatives, rep ranges, rest, and difficulty.
+  and advanced editors (`BasicEditor` and `AdvancedEditor`) using shared `WorkoutInput`
+  PUT semantics (`Nullable<T>` in `copyWith` clears omitted nullable fields across
+  `Workout`, `WorkoutSet`, `WorkoutSetExercise`, and `WorkoutSetExerciseOption`).
+- Supports standard and complex set types (drop, superset, giant, pyramid, circuit),
+  alternatives, rep ranges, rest, and difficulty without paywalls or entitlement gates.
 - Starts live workout records, logs decimal weight and reps, carries prior
   values within a set group, and tracks rest/progress using `WorkoutRecordInput`,
   `WorkoutSetRecordInput`, and `WorkoutSetExerciseRecordInput` PUT semantics.
 - Completes, cancels, and resumes active workouts within the covered lifecycle.
 - Lists, creates, edits, and deletes completed workout history using shared
   `WorkoutRecordBatchInput` PUT semantics.
-
-Advanced mutations remain entitlement-gated. Free users receive an
-unavailable-in-this-build explanation instead of purchase controls.
 
 ### Weight and goals
 
@@ -150,7 +148,7 @@ There is no import/export, local backup, or broader weight analytics.
 - Browse Plans appears only in the successful empty state. Active, loading,
   and failed lookup states have no plan-library shortcut; Workout Plans is
   available through Home's Workout Plans menu.
-- Creates, edits, favorites, and versions multi-week schedules using shared
+- Creates, edits, favorites, and versions unlimited multi-week schedules using shared
   `WorkoutPlanInput`, `WorkoutPlanWeekInput`, and `WorkoutPlanWorkoutInput` PUT
   semantics (`Nullable<T>` in `copyWith` clears omitted nullable fields across
   plan, week, day, and workout models and DTOs).
@@ -280,8 +278,6 @@ SQLite model -> Repository<T>/feature service -> Cubit -> view/widget
 - `fl_chart` renders weight and exercise charts.
 - Android and iOS are the only configured platforms; portrait is forced at
   runtime.
-- Entitlement development code includes a Dart HTTP client, local cache/guard,
-  Go mock server, and debug controls. There is no production backend here.
 
 This is a convention rather than a strict dependency boundary. Most services
 are singletons and Cubits construct them directly, which can make replacement
@@ -331,18 +327,6 @@ completion propagate only after required child workouts are completed or
 skipped. Cancelling a live scheduled workout removes the plan association and
 its unfinished workout-history row.
 
-### Entitlement limitations
-
-Premium access currently depends on a local entitlement snapshot, verification
-token presence, freshness, and a 24-hour offline grace window. Free users are
-limited to three user-created plans, and advanced workout mutations recheck
-access outside the UI.
-
-This is not production subscription infrastructure. There is no native
-RevenueCat handler or dependency, authenticated verification backend, or
-working purchase experience. Purchase/restore APIs remain for later work, but
-visible locked flows do not call them.
-
 ## Test harness and recorded results
 
 The device harness selects `integration_test.db` before creating app Cubits or
@@ -362,9 +346,8 @@ Five integration files contain seven journeys covering:
 - plan creation/editing/start/progress/restart and completed history.
 
 Host tests also cover narrow phone layouts, 200% text scaling, onboarding
-rollback/idempotency, route precedence, entitlement guards, workout mutation
-rollback, plan lifecycle and pagination, reminder disclosure, and database
-isolation.
+rollback/idempotency, route precedence, workout mutation rollback, plan
+lifecycle and pagination, reminder disclosure, and database isolation.
 
 The latest full verification run on 13 October 2026:
 
@@ -424,23 +407,12 @@ The subsequent Android plan-journey rerun built successfully but stalled during
 native app startup before Flutter connected; it was stopped. The Android journey
 results above remain evidence from the earlier run.
 
-Current host verification on 9 November 2026:
-
-- `flutter pub get` completed successfully;
-- `flutter test` passed 362 tests with one skipped pre-beta migration test;
-- `dart analyze` completed with one existing informational
-  `prefer_initializing_formals` lint and no errors or warnings;
-- the repository-wide format check reports one pending change in
-  `lib/src/widgets/common/base_carousel.dart`;
-- no device journey was run for this documentation review.
-
 ## Known gaps and release blockers
 
 - No fitness-data import/export, backup/restore, cloud sync, or account system.
 - Meal, macro, food, recipe, and meal-plan tracking and execution flows are fully implemented offline. No local AI trainer.
 - No Apple Watch or Wear OS app.
 - Reminder preferences do not deliver notifications.
-- Purchases and production subscription verification are unavailable.
 - No physical-device, release-build, signing, or full accessibility evidence.
 - Android and iOS identifiers/signing are still development placeholders.
 - No CI, crash reporting, privacy/data-retention statement, store assets, or

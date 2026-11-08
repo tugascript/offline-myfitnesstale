@@ -4,8 +4,6 @@ import 'package:logging/logging.dart';
 import '../common/nullable.dart';
 import '../models/enums.dart';
 import '../services/common/errors.dart';
-import '../services/entitlement_guard.dart';
-import '../services/entitlement_service.dart';
 import '../services/workout_plan_service.dart';
 import 'states/common_state.dart';
 import 'states/workout_plan_state.dart';
@@ -14,7 +12,6 @@ export '../services/inputs/workout_plan_input.dart';
 
 class WorkoutPlanCubit extends Cubit<WorkoutPlanState> {
   final WorkoutPlanService _workoutPlanService = WorkoutPlanService();
-  final EntitlementService _entitlementService = EntitlementService();
 
   WorkoutPlanCubit() : super(WorkoutPlanState.initial());
 
@@ -164,63 +161,6 @@ class WorkoutPlanCubit extends Cubit<WorkoutPlanState> {
     _logger.info('Creating workout plan');
     emit(state.copyWith(isLoading: true));
 
-    final entitlementSnapshotResult = await _entitlementService
-        .getEntitlementSnapshot();
-    if (entitlementSnapshotResult.isErr()) {
-      emit(
-        state.copyWith(
-          error: const Nullable(
-            ErrorState(
-              type: 'entitlement_unavailable',
-              description:
-                  'Premium status unavailable. Please refresh and try again.',
-            ),
-          ),
-          isLoading: false,
-        ),
-      );
-      return;
-    }
-
-    final bool isPremium = EntitlementGuard.canUsePremium(
-      entitlementSnapshotResult.value,
-    );
-    if (!isPremium) {
-      final countResult = await _workoutPlanService.countWorkoutPlans(
-        createdBy: CreatedBy.user,
-      );
-      if (countResult.isErr()) {
-        emit(
-          state.copyWith(
-            error: Nullable(
-              ErrorState(
-                type: countResult.error.type.name,
-                description: countResult.error.description,
-              ),
-            ),
-            isLoading: false,
-          ),
-        );
-        return;
-      }
-
-      emit(state.copyWith(createdWorkoutPlansCount: countResult.value));
-      if (countResult.value >= 3) {
-        emit(
-          state.copyWith(
-            error: const Nullable(
-              ErrorState(
-                type: 'plan_limit_reached',
-                description: 'Free users can create up to 3 workout plans. Upgrade to premium to create more.',
-              ),
-            ),
-            isLoading: false,
-          ),
-        );
-        return;
-      }
-    }
-
     final result = await _workoutPlanService.createWorkoutPlan(input);
     if (result.isErr()) {
       final error = result.error;
@@ -333,33 +273,6 @@ class WorkoutPlanCubit extends Cubit<WorkoutPlanState> {
         ),
         isLoading: false,
       ),
-    );
-  }
-
-  Future<void> countCreatedWorkoutPlans() async {
-    _logger.info('Counting created workout plans');
-    emit(state.copyWith(isLoading: true));
-
-    final result = await _workoutPlanService.countWorkoutPlans(
-      createdBy: CreatedBy.user,
-    );
-    if (result.isErr()) {
-      final error = result.error;
-      _logger.warning("Failed to count created workout plans", error);
-      emit(
-        state.copyWith(
-          error: Nullable(
-            ErrorState(type: error.type.name, description: error.description),
-          ),
-          isLoading: false,
-        ),
-      );
-      return;
-    }
-
-    _logger.info('Created workout plans count retrieved successfully');
-    emit(
-      state.copyWith(createdWorkoutPlansCount: result.value, isLoading: false),
     );
   }
 }

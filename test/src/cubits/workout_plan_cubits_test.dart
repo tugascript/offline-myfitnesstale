@@ -55,52 +55,32 @@ void main() {
     await testDatabase.destroy();
   });
 
-  test('free users cannot create more than 3 workout plans', () async {
-    final cubit = WorkoutPlanCubit();
+  test(
+    'users can create more than 3 workout plans without restriction',
+    () async {
+      final cubit = WorkoutPlanCubit();
 
-    await cubit.createWorkoutPlan(
-      WorkoutPlanInput(
-        name: uniqueName('plan'),
-        totalWeeks: 0,
-        difficulty: Difficulty.beginner,
-        isFavorite: false,
-      ),
-    );
-    await cubit.createWorkoutPlan(
-      WorkoutPlanInput(
-        name: uniqueName('plan'),
-        totalWeeks: 0,
-        difficulty: Difficulty.beginner,
-        isFavorite: false,
-      ),
-    );
-    await cubit.createWorkoutPlan(
-      WorkoutPlanInput(
-        name: uniqueName('plan'),
-        totalWeeks: 0,
-        difficulty: Difficulty.beginner,
-        isFavorite: false,
-      ),
-    );
-    await cubit.createWorkoutPlan(
-      WorkoutPlanInput(
-        name: uniqueName('plan'),
-        totalWeeks: 0,
-        difficulty: Difficulty.beginner,
-        isFavorite: false,
-      ),
-    );
+      for (var i = 0; i < 4; i++) {
+        await cubit.createWorkoutPlan(
+          WorkoutPlanInput(
+            name: uniqueName('plan'),
+            totalWeeks: 0,
+            difficulty: Difficulty.beginner,
+            isFavorite: false,
+          ),
+        );
+        expect(cubit.state.error, isNull);
+      }
 
-    expect(cubit.state.error?.type, 'plan_limit_reached');
+      final countResult = await WorkoutPlanService().countWorkoutPlans(
+        createdBy: CreatedBy.user,
+      );
+      expect(countResult.isOk(), isTrue);
+      expect(countResult.value, 4);
 
-    final countResult = await WorkoutPlanService().countWorkoutPlans(
-      createdBy: CreatedBy.user,
-    );
-    expect(countResult.isOk(), isTrue);
-    expect(countResult.value, 3);
-
-    await cubit.close();
-  });
+      await cubit.close();
+    },
+  );
 
   test('today mapping uses relative day index from plan start', () async {
     final db = await testDatabase.db;

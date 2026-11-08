@@ -18,7 +18,6 @@ class WorkoutBaseForm extends StatefulWidget {
   final bool initialIsFavorite;
   final Difficulty initialDifficulty;
   final EditorType initialEditorType;
-  final bool canUsePremiumEditor;
   final String? initialDescription;
 
   final void Function({
@@ -40,7 +39,6 @@ class WorkoutBaseForm extends StatefulWidget {
     required this.initialIsFavorite,
     required this.initialDifficulty,
     required this.initialEditorType,
-    required this.canUsePremiumEditor,
     required this.onSubmit,
     this.initialDescription,
   });
@@ -62,9 +60,7 @@ class _WorkoutBaseFormState extends State<WorkoutBaseForm> {
       name: widget.initialName,
       isFavorite: widget.initialIsFavorite,
       difficulty: widget.initialDifficulty,
-      editorType: widget.canUsePremiumEditor
-          ? widget.initialEditorType
-          : EditorType.basic,
+      editorType: widget.initialEditorType,
       description: widget.initialDescription,
     );
     _nameController.text = widget.initialName;
@@ -93,11 +89,10 @@ class _WorkoutBaseFormState extends State<WorkoutBaseForm> {
 
   @override
   Widget build(BuildContext context) {
-    final isPremiumEditorEnabled = _data.editorType == EditorType.advanced;
-    final isPremiumEditorLocked =
+    final isAdvancedEditorEnabled = _data.editorType == EditorType.advanced;
+    final isAdvancedEditorLocked =
         widget.initialEditorType == EditorType.advanced;
-    final canTogglePremiumEditor =
-        widget.canUsePremiumEditor && !isPremiumEditorLocked;
+    final canToggleAdvancedEditor = !isAdvancedEditorLocked;
 
     return Form(
       key: _formKey,
@@ -208,12 +203,12 @@ class _WorkoutBaseFormState extends State<WorkoutBaseForm> {
           SharpSwitchTitle(
             contentPadding: EdgeInsets.zero,
             title: 'Advanced Editor',
-            value: isPremiumEditorEnabled,
-            enabled: canTogglePremiumEditor,
+            value: isAdvancedEditorEnabled,
+            enabled: canToggleAdvancedEditor,
             thumbSize: widget.sizes.subtitleFontSize * 1.5,
             switchPadding: EdgeInsets.all(widget.sizes.padding / 2),
             onChanged: (value) {
-              if (!canTogglePremiumEditor) return;
+              if (!canToggleAdvancedEditor) return;
 
               setState(() {
                 _data.editorType = value
@@ -222,20 +217,7 @@ class _WorkoutBaseFormState extends State<WorkoutBaseForm> {
               });
             },
           ),
-          if (!widget.canUsePremiumEditor) ...[
-            SizedBox(height: widget.sizes.spacing / 2),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                'Premium subscription required for Advanced Editor access',
-                style: TextStyle(
-                  fontSize: widget.sizes.smallFontSize,
-                  color: widget.theme.colorScheme.secondary,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-          ] else if (isPremiumEditorLocked) ...[
+          if (isAdvancedEditorLocked) ...[
             SizedBox(height: widget.sizes.spacing / 2),
             Align(
               alignment: Alignment.centerLeft,
