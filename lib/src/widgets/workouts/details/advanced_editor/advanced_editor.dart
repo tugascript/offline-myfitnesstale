@@ -11,24 +11,24 @@ import '../../../../utilities/sizes/data_display_sizes.dart';
 import '../../../../utilities/sizes/screen_size.dart';
 import '../../../common/editors/save_buttons.dart';
 import '../../../layout/dynamic_list_input.dart';
+import 'advanced_set_editor.dart';
 import 'complex_set_editor_data.dart';
-import 'premium_set_editor.dart';
 
-class PremiumEditor extends StatefulWidget {
+class AdvancedEditor extends StatefulWidget {
   final int workoutId;
   final List<WorkoutSetDto> initialSets;
 
-  const PremiumEditor({
+  const AdvancedEditor({
     super.key,
     required this.workoutId,
     required this.initialSets,
   });
 
   @override
-  State<PremiumEditor> createState() => _PremiumEditorState();
+  State<AdvancedEditor> createState() => _AdvancedEditorState();
 }
 
-class _PremiumEditorState extends State<PremiumEditor> {
+class _AdvancedEditorState extends State<AdvancedEditor> {
   late List<ComplexSetEditorData> _displayedSets;
   bool _isCompleting = false;
 
@@ -247,7 +247,7 @@ class _PremiumEditorState extends State<PremiumEditor> {
               },
               onReorder: (oldIndex, newIndex) {},
               itemBuilder: (context, index, setData) {
-                return PremiumSetEditor(
+                return AdvancedSetEditor(
                   setData: setData,
                   sizes: sizes,
                   isLoading: state.isLoading || _isCompleting,

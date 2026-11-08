@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 
 import 'package:myfitnesstale/src/common/nullable.dart';
 import 'package:myfitnesstale/src/cubits/active_workout_cubit.dart';
-import 'package:myfitnesstale/src/cubits/entitlement_cubit.dart';
 import 'package:myfitnesstale/src/cubits/exercise_cubit.dart';
 import 'package:myfitnesstale/src/cubits/exercise_record_cubit.dart';
 import 'package:myfitnesstale/src/cubits/food_cubit.dart';
@@ -180,7 +179,6 @@ void main() {
     return MultiBlocProvider(
       providers: [
         BlocProvider<ProfileCubit>(create: (_) => _TestProfileCubit()),
-        BlocProvider<EntitlementCubit>(create: (_) => EntitlementCubit()),
         BlocProvider<ExerciseCubit>(create: (_) => ExerciseCubit()),
         BlocProvider<ExerciseRecordCubit>(
           create: (_) => _TestExerciseRecordCubit(),

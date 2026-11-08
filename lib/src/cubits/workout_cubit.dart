@@ -5,8 +5,6 @@ import '../common/nullable.dart';
 import '../models/enums.dart';
 import '../services/common/errors.dart';
 import '../services/dtos/workout_dto.dart';
-import '../services/entitlement_guard.dart';
-import '../services/entitlement_service.dart';
 import '../services/workout_service.dart';
 import 'states/common_state.dart';
 import 'states/workout_state.dart';
@@ -15,7 +13,6 @@ export '../services/inputs/workout_input.dart';
 
 class WorkoutCubit extends Cubit<WorkoutState> {
   final WorkoutService _workoutService = WorkoutService();
-  final EntitlementService _entitlementService = EntitlementService();
 
   final Logger _logger = Logger('WorkoutCubit');
 
@@ -456,9 +453,6 @@ class WorkoutCubit extends Cubit<WorkoutState> {
     required List<ComplexSetInput> sets,
   }) async {
     _logger.info('Batch updating complex workout sets for workout $workoutId');
-    if (!(await _ensurePremiumAccessForMutation())) {
-      return;
-    }
     emit(state.copyWith(isLoading: true));
 
     if (sets.isEmpty) {
@@ -559,39 +553,5 @@ class WorkoutCubit extends Cubit<WorkoutState> {
         isLoading: false,
       ),
     );
-  }
-
-  Future<bool> _ensurePremiumAccessForMutation() async {
-    final snapshotResult = await _entitlementService.getEntitlementSnapshot();
-    if (snapshotResult.isErr()) {
-      emit(
-        state.copyWith(
-          error: const Nullable(
-            ErrorState(
-              type: 'entitlement_unavailable',
-              description:
-                  'Premium status unavailable. Please refresh and try again.',
-            ),
-          ),
-        ),
-      );
-      return false;
-    }
-
-    if (!EntitlementGuard.canUsePremium(snapshotResult.value)) {
-      emit(
-        state.copyWith(
-          error: const Nullable(
-            ErrorState(
-              type: 'premium_required',
-              description: 'Premium subscription required. Restore purchases or subscribe to continue.',
-            ),
-          ),
-        ),
-      );
-      return false;
-    }
-
-    return true;
   }
 }

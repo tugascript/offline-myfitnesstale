@@ -24,8 +24,8 @@ an on-device SQLite database which acts as the main source of truth.
 - Daily nutrition tracking with food, recipe, and quick-add entries, water intake,
   and day/week/month summaries.
 
-Reminder switches currently save preferences only; they do not schedule notifications yet. Premium
-purchases are still in development.
+All offline features are completely free and unlocked. Reminder switches currently save preferences
+only; they do not schedule notifications yet.
 
 For the detailed implementation snapshot and known limitations, see
 [PROJECT_STATE.md](PROJECT_STATE.md).
@@ -125,7 +125,6 @@ SQLite model -> repository/service -> Cubit -> view/widget
 │       ├── views/          # Route-level screens
 │       └── widgets/        # Feature UI components
 ├── test/                   # Unit and widget tests
-├── tools/                  # Local development helpers
 ├── PROJECT_STATE.md        # What is implemented now
 └── project.md              # What should be built next
 ```

@@ -13,13 +13,13 @@ import '../editors/sets_input.dart';
 import 'complex_set_editor_data.dart';
 import 'set_exercise_editor.dart';
 
-class PremiumSetEditor extends StatefulWidget {
+class AdvancedSetEditor extends StatefulWidget {
   final ComplexSetEditorData setData;
   final DataDisplaySizesList sizes;
   final bool isLoading;
   final ValueChanged<ComplexSetEditorData> onChanged;
 
-  const PremiumSetEditor({
+  const AdvancedSetEditor({
     super.key,
     required this.setData,
     required this.sizes,
@@ -28,10 +28,10 @@ class PremiumSetEditor extends StatefulWidget {
   });
 
   @override
-  State<PremiumSetEditor> createState() => _PremiumSetEditorState();
+  State<AdvancedSetEditor> createState() => _AdvancedSetEditorState();
 }
 
-class _PremiumSetEditorState extends State<PremiumSetEditor> {
+class _AdvancedSetEditorState extends State<AdvancedSetEditor> {
   late ComplexSetEditorData _workingSetData;
 
   ComplexSetEditorData _cloneSetData(ComplexSetEditorData source) {
@@ -73,7 +73,7 @@ class _PremiumSetEditorState extends State<PremiumSetEditor> {
   }
 
   @override
-  void didUpdateWidget(covariant PremiumSetEditor oldWidget) {
+  void didUpdateWidget(covariant AdvancedSetEditor oldWidget) {
     super.didUpdateWidget(oldWidget);
     _workingSetData = _cloneSetData(widget.setData);
   }

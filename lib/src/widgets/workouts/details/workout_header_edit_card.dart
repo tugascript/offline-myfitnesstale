@@ -9,7 +9,6 @@ class WorkoutHeaderEditCard extends StatelessWidget {
   final ThemeData theme;
   final DataDisplaySizesList sizes;
   final WorkoutDto workout;
-  final bool canUsePremiumEditor;
   final bool isLoading;
   final VoidCallback onCancel;
   final void Function({
@@ -26,7 +25,6 @@ class WorkoutHeaderEditCard extends StatelessWidget {
     required this.theme,
     required this.sizes,
     required this.workout,
-    required this.canUsePremiumEditor,
     required this.isLoading,
     required this.onCancel,
     required this.onSubmit,
@@ -73,7 +71,6 @@ class WorkoutHeaderEditCard extends StatelessWidget {
               initialIsFavorite: workout.isFavorite,
               initialDifficulty: workout.difficulty,
               initialEditorType: workout.editorType,
-              canUsePremiumEditor: canUsePremiumEditor,
               initialDescription: workout.description,
               onSubmit: onSubmit,
             ),

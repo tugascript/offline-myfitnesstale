@@ -92,8 +92,6 @@ Acceptance criteria:
 1. Design a privacy-preserving local AI trainer with explicit model, hardware,
    safety, and update constraints.
 2. Expand analytics only where they support actionable training decisions.
-3. Resume production subscription work only when there are premium features to
-   sell and server-side verification is ready.
 
 ### Phase 3: extend the product ecosystem
 
@@ -111,8 +109,9 @@ local-first.
 
 ### Local-first is the default
 
-Implemented mobile flows must work without a backend or account. Future network
-features should be optional and must not silently weaken local ownership.
+Implemented mobile flows must work without a backend or account. All offline
+features are completely free and unlocked. Future network features should be
+optional and must not silently weaken local ownership.
 
 ### Pre-release database policy
 
@@ -121,12 +120,6 @@ Development databases may be cleared after schema changes. The first external
 beta establishes the compatibility baseline; after that, every schema change
 must include an ordered migration, upgrade fixtures, data-preservation checks,
 and foreign-key validation.
-
-### Premium behavior is unavailable for now
-
-No visible action should call an unfinished purchase bridge. Entitlement code,
-guards, limits, and development controls may remain, but locked screens must
-explain that purchasing is unavailable and provide a working exit.
 
 ### Onboarding must remain atomic
 
@@ -182,9 +175,8 @@ Before release, verify:
 6. workout creation/editing, live completion/cancellation/resume, and history;
 7. workout- and meal-plan creation/editing, scheduling, progress, restart, and history;
 8. foods, recipes, macro goals, diary logging, water, and day/week/month nutrition views;
-9. locked premium states with no broken purchase or restore actions;
-10. narrow layouts, large text, screen readers, and interrupted app lifecycles;
-11. backup/export followed by a verified restore on a clean installation.
+9. narrow layouts, large text, screen readers, and interrupted app lifecycles;
+10. backup/export followed by a verified restore on a clean installation.
 
 ## Definition of done
 

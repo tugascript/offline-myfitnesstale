@@ -63,9 +63,7 @@ class _BaseCarouselState extends State<BaseCarousel> {
     if (_page != 0) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted || !_controller.hasClients) return;
-        _controller.jumpTo(
-          _page * _controller.position.viewportDimension,
-        );
+        _controller.jumpTo(_page * _controller.position.viewportDimension);
       });
     }
   }
