@@ -159,9 +159,8 @@ class _WorkoutPlanHistoryCard extends StatelessWidget {
             if (record.workoutPlan != null) ...[
               Text(
                 record.workoutPlan!.name,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+                style: Theme.of(context).textTheme.titleMedium
+                    ?.copyWith(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8),
             ],

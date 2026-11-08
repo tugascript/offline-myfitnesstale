@@ -38,11 +38,7 @@ class _ExerciseRecordCubit extends ExerciseRecordCubit {
 
 class _WorkoutCubit extends WorkoutCubit {
   @override
-  Future<void> getWorkout(
-    int id, {
-    int? version,
-    bool refresh = false,
-  }) async {}
+  Future<void> getWorkout(int id, {int? version, bool refresh = false}) async {}
 }
 
 class _WorkoutRecordCubit extends WorkoutRecordCubit {
@@ -189,9 +185,7 @@ void main() {
       WorkoutHistoryView.location(workoutId: 12, version: 3),
     );
 
-    view = tester.widget<WorkoutHistoryView>(
-      find.byType(WorkoutHistoryView),
-    );
+    view = tester.widget<WorkoutHistoryView>(find.byType(WorkoutHistoryView));
     expect(view.workoutId, 12);
     expect(view.version, 3);
   });
