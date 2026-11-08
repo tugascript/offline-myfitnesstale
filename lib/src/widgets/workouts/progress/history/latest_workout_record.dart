@@ -14,16 +14,16 @@ class LatestWorkoutRecord extends StatefulWidget {
   final ThemeData theme;
   final DataDisplaySizesList sizes;
   final Units units;
-  final int workoutId;
-  final int workoutVersion;
+  final int? workoutId;
+  final int? workoutVersion;
 
   const LatestWorkoutRecord({
     super.key,
     required this.sizes,
     required this.theme,
     required this.units,
-    required this.workoutId,
-    required this.workoutVersion,
+    this.workoutId,
+    this.workoutVersion,
   });
 
   @override
@@ -71,8 +71,8 @@ class _LatestWorkoutRecord extends StatelessWidget {
   final Units units;
 
   final bool isLoading;
-  final int workoutId;
-  final int workoutVersion;
+  final int? workoutId;
+  final int? workoutVersion;
   final WorkoutRecordDto? workoutRecord;
 
   const _LatestWorkoutRecord({
@@ -95,8 +95,10 @@ class _LatestWorkoutRecord extends StatelessWidget {
             return;
           }
 
+          final targetWorkoutId = workoutId ?? workoutRecord!.workoutId;
+          final targetVersion = workoutVersion ?? workoutRecord!.version;
           context.push(
-            '/workouts/$workoutId/history/$workoutVersion/records/${workoutRecord?.id}',
+            '/workouts/$targetWorkoutId/history/$targetVersion/records/${workoutRecord?.id}',
           );
         },
         child: SizedBox(
@@ -150,8 +152,8 @@ class _EmptyWorkoutRecord extends StatelessWidget {
   final DataDisplaySizesList sizes;
   final ThemeData theme;
   final bool isLoading;
-  final int workoutId;
-  final int workoutVersion;
+  final int? workoutId;
+  final int? workoutVersion;
 
   const _EmptyWorkoutRecord({
     required this.sizes,
@@ -190,35 +192,51 @@ class _EmptyWorkoutRecord extends StatelessWidget {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              SizedBox(height: sizes.spacing),
-              SizedBox(
-                width: double.infinity,
-                child: AppElevatedButton(
-                  isLoading: isLoading,
-                  theme: theme,
-                  sizes: sizes,
-                  isDense: true,
-                  onPressed: () => context.push('/workouts/$workoutId/active'),
-                  label: 'Start Workout',
-                  icon: Icons.play_arrow,
-                ),
-              ),
-              SizedBox(height: sizes.spacing / 2),
-              SizedBox(
-                width: double.infinity,
-                child: AppElevatedButton(
-                  isLoading: isLoading,
-                  theme: theme,
-                  sizes: sizes,
-                  isDense: true,
-                  isSecondary: true,
-                  onPressed: () => context.push(
-                    '/workouts/$workoutId/history/$workoutVersion/records/create',
+              if (workoutId != null) ...[
+                SizedBox(height: sizes.spacing),
+                SizedBox(
+                  width: double.infinity,
+                  child: AppElevatedButton(
+                    isLoading: isLoading,
+                    theme: theme,
+                    sizes: sizes,
+                    isDense: true,
+                    onPressed: () => context.push('/workouts/$workoutId/active'),
+                    label: 'Start Workout',
+                    icon: Icons.play_arrow,
                   ),
-                  label: 'Create Record',
-                  icon: Icons.add,
                 ),
-              ),
+                SizedBox(height: sizes.spacing / 2),
+                SizedBox(
+                  width: double.infinity,
+                  child: AppElevatedButton(
+                    isLoading: isLoading,
+                    theme: theme,
+                    sizes: sizes,
+                    isDense: true,
+                    isSecondary: true,
+                    onPressed: () => context.push(
+                      '/workouts/$workoutId/history/${workoutVersion ?? 1}/records/create',
+                    ),
+                    label: 'Create Record',
+                    icon: Icons.add,
+                  ),
+                ),
+              ] else ...[
+                SizedBox(height: sizes.spacing),
+                SizedBox(
+                  width: double.infinity,
+                  child: AppElevatedButton(
+                    isLoading: isLoading,
+                    theme: theme,
+                    sizes: sizes,
+                    isDense: true,
+                    onPressed: () => context.push('/workouts'),
+                    label: 'Browse Workouts',
+                    icon: Icons.fitness_center,
+                  ),
+                ),
+              ],
             ],
           ),
         ),

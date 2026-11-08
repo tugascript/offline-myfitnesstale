@@ -12,7 +12,9 @@ import '../../views/meal_plans/meal_plan_list_view.dart';
 import '../../views/recipes/recipes_view.dart';
 import '../../views/weight/weight_goals_view.dart';
 import '../../views/weight/weight_records_view.dart';
+import '../../views/workout_plans/workout_plan_history_view.dart';
 import '../../views/workout_plans/workout_plan_list_view.dart';
+import '../../views/workouts/workout_history_view.dart';
 import '../../views/workouts/workouts_view.dart';
 import 'quick_action_category.dart';
 import 'quick_action_category_card.dart';
@@ -45,7 +47,7 @@ class QuickActionsWidget extends StatelessWidget {
           'workout-history',
           'Workout History',
           Icons.history,
-          WorkoutsView.routeName,
+          WorkoutHistoryView.routeName,
         ),
         QuickActionDestination(
           'workout-plans',
@@ -57,7 +59,7 @@ class QuickActionsWidget extends StatelessWidget {
           'workout-plan-history',
           'Workout Plan History',
           Icons.event_note_outlined,
-          WorkoutPlanListView.routeName,
+          WorkoutPlanHistoryView.routeName,
         ),
       ],
     ),

@@ -11,14 +11,14 @@ import '../../utilities/sizes/screen_size.dart';
 import '../../widgets/layout/app_scaffold.dart';
 
 class WorkoutPlanHistoryView extends StatefulWidget {
-  static const routeName = '/workout-plans/:id/history';
+  static const routeName = '/workout-plans/history';
 
-  final int workoutPlanId;
+  final int? workoutPlanId;
 
-  const WorkoutPlanHistoryView({super.key, required this.workoutPlanId});
+  const WorkoutPlanHistoryView({super.key, this.workoutPlanId});
 
-  static String location(int workoutPlanId) =>
-      routeName.replaceFirst(':id', workoutPlanId.toString());
+  static String location([int? workoutPlanId]) =>
+      workoutPlanId != null ? '$routeName?id=$workoutPlanId' : routeName;
 
   @override
   State<WorkoutPlanHistoryView> createState() => _WorkoutPlanHistoryViewState();
@@ -156,6 +156,15 @@ class _WorkoutPlanHistoryCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            if (record.workoutPlan != null) ...[
+              Text(
+                record.workoutPlan!.name,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 8),
+            ],
             Row(
               children: [
                 Icon(status.icon, color: status.color),

@@ -8,6 +8,7 @@ import 'package:myfitnesstale/src/cubits/states/common_state.dart';
 import 'package:myfitnesstale/src/cubits/states/workout_plan_record_state.dart';
 import 'package:myfitnesstale/src/cubits/workout_plan_record_cubit.dart';
 import 'package:myfitnesstale/src/models/enums.dart';
+import 'package:myfitnesstale/src/services/dtos/workout_plan_dto.dart';
 import 'package:myfitnesstale/src/services/dtos/workout_plan_record_dto.dart';
 import 'package:myfitnesstale/src/views/workout_plans/workout_plan_history_view.dart';
 
@@ -40,7 +41,11 @@ class _WorkoutPlanRecordCubit extends WorkoutPlanRecordCubit {
 }
 
 void main() {
-  WorkoutPlanRecordDto record(int id, ProgressStatus status) {
+  WorkoutPlanRecordDto record(
+    int id,
+    ProgressStatus status, {
+    String? planName,
+  }) {
     return WorkoutPlanRecordDto(
       id: id,
       workoutPlanId: 9,
@@ -53,22 +58,36 @@ void main() {
       completedAt: status == ProgressStatus.completed
           ? DateTime.utc(2026, 8, id, 1)
           : null,
+      workoutPlan: planName != null
+          ? WorkoutPlanDto(
+              id: 9,
+              name: planName,
+              currentVersion: id,
+              totalWeeks: 4,
+              totalDays: 12,
+              totalWorkouts: 12,
+              difficulty: Difficulty.intermediate,
+              isFavorite: false,
+              createdBy: CreatedBy.user,
+            )
+          : null,
     );
   }
 
   Future<_WorkoutPlanRecordCubit> pumpView(
     WidgetTester tester,
-    WorkoutPlanRecordState state,
-  ) async {
+    WorkoutPlanRecordState state, {
+    int? workoutPlanId = 9,
+  }) async {
     final cubit = _WorkoutPlanRecordCubit(state);
     addTearDown(cubit.close);
     final router = GoRouter(
-      initialLocation: WorkoutPlanHistoryView.location(9),
+      initialLocation: WorkoutPlanHistoryView.location(workoutPlanId),
       routes: [
         GoRoute(
           path: WorkoutPlanHistoryView.routeName,
           builder: (context, state) =>
-              const WorkoutPlanHistoryView(workoutPlanId: 9),
+              WorkoutPlanHistoryView(workoutPlanId: workoutPlanId),
         ),
       ],
     );
@@ -150,6 +169,31 @@ void main() {
     expect(find.textContaining('Completed:'), findsOneWidget);
     expect(find.byType(InkWell), findsNothing);
   });
+
+  testWidgets(
+    'shows workout plan names when global history includes workoutPlan DTOs',
+    (tester) async {
+      final records = [
+        record(1, ProgressStatus.inProgress, planName: 'Upper/Lower Split'),
+        record(2, ProgressStatus.completed, planName: 'Push/Pull/Legs'),
+      ];
+      await pumpView(
+        tester,
+        WorkoutPlanRecordState.initial().copyWith(
+          planRecords: records,
+          pagination: const WorkoutPlanRecordPagination(
+            limit: 20,
+            offset: 0,
+            total: 2,
+          ),
+        ),
+        workoutPlanId: null,
+      );
+
+      expect(find.text('Upper/Lower Split'), findsOneWidget);
+      expect(find.text('Push/Pull/Legs'), findsOneWidget);
+    },
+  );
 
   testWidgets('reports refresh errors while retaining loaded history', (
     tester,

@@ -16,8 +16,8 @@ class SingleWorkoutRecordList extends StatelessWidget {
   final DataDisplaySizesList sizes;
   final Units units;
   final bool isLoading;
-  final int workoutId;
-  final int workoutVersion;
+  final int? workoutId;
+  final int? workoutVersion;
   final List<WorkoutRecordDto> workoutRecords;
   final WorkoutRecordPagination pagination;
   final ScrollController? scrollController;
@@ -27,8 +27,8 @@ class SingleWorkoutRecordList extends StatelessWidget {
     required this.sizes,
     required this.units,
     required this.isLoading,
-    required this.workoutId,
-    required this.workoutVersion,
+    this.workoutId,
+    this.workoutVersion,
     required this.workoutRecords,
     required this.pagination,
     this.scrollController,
@@ -80,8 +80,8 @@ class _SingleWorkoutRecordCard extends StatelessWidget {
   final Units units;
 
   final WorkoutRecordDto workoutRecord;
-  final int workoutId;
-  final int workoutVersion;
+  final int? workoutId;
+  final int? workoutVersion;
   const _SingleWorkoutRecordCard({
     required this.sizes,
     required this.units,
@@ -96,6 +96,25 @@ class _SingleWorkoutRecordCard extends StatelessWidget {
       margin: sizes.margins / 2,
       padding: sizes.padding,
       children: [
+        if (workoutRecord.workout != null) ...[
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.fitness_center, size: sizes.subtitleFontSize * 1.2),
+              Flexible(
+                child: Text(
+                  " ${workoutRecord.workout!.name}",
+                  style: TextStyle(
+                    fontSize: sizes.subtitleFontSize,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: sizes.spacing),
+        ],
         Row(
           mainAxisAlignment: MainAxisAlignment.start,
           mainAxisSize: MainAxisSize.max,
@@ -158,11 +177,12 @@ class _SingleWorkoutRecordCard extends StatelessWidget {
             ),
           ],
         ),
-        // Utility methods below the build method
       ],
       onTap: () {
+        final targetWorkoutId = workoutId ?? workoutRecord.workoutId;
+        final targetVersion = workoutVersion ?? workoutRecord.version;
         context.push(
-          '/workouts/$workoutId/history/$workoutVersion/records/${workoutRecord.id}',
+          '/workouts/$targetWorkoutId/history/$targetVersion/records/${workoutRecord.id}',
         );
       },
     );

@@ -19,6 +19,7 @@ import 'common/errors.dart';
 import 'common/result.dart';
 import 'dtos/paginated_dto.dart';
 import 'dtos/workout_plan_day_record_dto.dart';
+import 'dtos/workout_plan_dto.dart';
 import 'dtos/workout_plan_record_dto.dart';
 import 'dtos/workout_plan_week_record_dto.dart';
 import 'dtos/workout_plan_workout_record_dto.dart';
@@ -115,10 +116,34 @@ class WorkoutPlanRecordService {
         whereArgs: query.args,
       );
       _logger.info('Got ${records.length} workout plan records');
+      if (workoutPlanId != null || records.isEmpty) {
+        return ok(
+          PaginatedDto<WorkoutPlanRecordDto, WorkoutPlanRecord>.mapData(
+            data: records,
+            mapper: (record) => WorkoutPlanRecordDto.fromModel(record),
+            total: total,
+            limit: limit,
+            offset: offset,
+          ),
+        );
+      }
+
+      final Set<int> planIds = records.map((r) => r.workoutPlanId).toSet();
+      final List<WorkoutPlan> plans = await _workoutPlanRepository.selectMany(
+        where: WorkoutPlanColumns.id.inList(planIds.length),
+        whereArgs: planIds.toList(),
+      );
+      final Map<int, WorkoutPlanDto> planMap = {
+        for (final plan in plans) plan.id!: WorkoutPlanDto.fromModel(plan),
+      };
+
       return ok(
         PaginatedDto<WorkoutPlanRecordDto, WorkoutPlanRecord>.mapData(
           data: records,
-          mapper: (record) => WorkoutPlanRecordDto.fromModel(record),
+          mapper: (record) => WorkoutPlanRecordDto.fromModel(
+            record,
+            workoutPlan: planMap[record.workoutPlanId],
+          ),
           total: total,
           limit: limit,
           offset: offset,

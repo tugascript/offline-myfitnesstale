@@ -4,6 +4,7 @@ import '../../common/nullable.dart';
 import '../../models/enums.dart';
 import '../../models/workout_plan_record_model.dart';
 import 'dto.dart';
+import 'workout_plan_dto.dart';
 import 'workout_plan_week_record_dto.dart';
 
 class WorkoutPlanRecordDto extends Equatable implements Dto<WorkoutPlanRecord> {
@@ -18,6 +19,7 @@ class WorkoutPlanRecordDto extends Equatable implements Dto<WorkoutPlanRecord> {
   final DateTime startedAt;
   final DateTime? completedAt;
 
+  final WorkoutPlanDto? workoutPlan;
   final List<WorkoutPlanWeekRecordDto> weeks;
 
   const WorkoutPlanRecordDto({
@@ -30,11 +32,13 @@ class WorkoutPlanRecordDto extends Equatable implements Dto<WorkoutPlanRecord> {
     required this.currentWorkoutPosition,
     required this.startedAt,
     this.completedAt,
+    this.workoutPlan,
     this.weeks = const [],
   });
 
   factory WorkoutPlanRecordDto.fromModel(
     WorkoutPlanRecord model, {
+    WorkoutPlanDto? workoutPlan,
     List<WorkoutPlanWeekRecordDto>? weeks,
   }) {
     return WorkoutPlanRecordDto(
@@ -55,6 +59,7 @@ class WorkoutPlanRecordDto extends Equatable implements Dto<WorkoutPlanRecord> {
               isUtc: true,
             )
           : null,
+      workoutPlan: workoutPlan,
       weeks: weeks ?? const [],
     );
   }
@@ -70,6 +75,7 @@ class WorkoutPlanRecordDto extends Equatable implements Dto<WorkoutPlanRecord> {
     int? currentWeek,
     int? currentDay,
     int? currentWorkoutPosition,
+    Nullable<WorkoutPlanDto>? workoutPlan,
     List<WorkoutPlanWeekRecordDto>? weeks,
   }) {
     return WorkoutPlanRecordDto(
@@ -83,6 +89,7 @@ class WorkoutPlanRecordDto extends Equatable implements Dto<WorkoutPlanRecord> {
       currentDay: currentDay ?? this.currentDay,
       currentWorkoutPosition:
           currentWorkoutPosition ?? this.currentWorkoutPosition,
+      workoutPlan: workoutPlan != null ? workoutPlan.value : this.workoutPlan,
       weeks: weeks ?? this.weeks,
     );
   }
@@ -98,6 +105,7 @@ class WorkoutPlanRecordDto extends Equatable implements Dto<WorkoutPlanRecord> {
     currentWeek,
     currentDay,
     currentWorkoutPosition,
+    workoutPlan,
     weeks.length,
   ];
 }

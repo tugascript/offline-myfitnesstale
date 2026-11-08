@@ -27,7 +27,7 @@ class WorkoutRecordCubit extends Cubit<WorkoutRecordState> {
     emit(state.copyWith(isLoading: true));
 
     final result = await _workoutRecordService.getWorkoutRecords(
-      workoutId: workoutId ?? state.pagination.workoutId,
+      workoutId: workoutId,
       dateRange: dateRange ?? state.pagination.dateRange,
       limit: limit ?? state.pagination.limit,
       offset: offset ?? state.pagination.offset,
@@ -76,7 +76,7 @@ class WorkoutRecordCubit extends Cubit<WorkoutRecordState> {
             ? [...state.workoutRecords, ...workoutRecords]
             : workoutRecords,
         pagination: state.pagination.copyWith(
-          workoutId: workoutId != null ? Nullable(workoutId) : null,
+          workoutId: Nullable(workoutId),
           dateRange: dateRange != null ? Nullable(dateRange) : null,
           total: paginatedData.total,
           limit: paginatedData.limit,
@@ -88,7 +88,7 @@ class WorkoutRecordCubit extends Cubit<WorkoutRecordState> {
     );
   }
 
-  Future<void> getLatestWorkoutRecord(int workoutId) async {
+  Future<void> getLatestWorkoutRecord([int? workoutId]) async {
     _logger.info('Getting latest workout record for workout $workoutId');
     emit(state.copyWith(isLoading: true));
 

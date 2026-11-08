@@ -16,8 +16,8 @@ class WorkoutRecordHistory extends StatefulWidget {
   final BreakPoint breakPoint;
   final DataDisplaySizesList sizes;
   final Units units;
-  final int workoutId;
-  final int workoutVersion;
+  final int? workoutId;
+  final int? workoutVersion;
 
   const WorkoutRecordHistory({
     super.key,
@@ -25,8 +25,8 @@ class WorkoutRecordHistory extends StatefulWidget {
     required this.breakPoint,
     required this.sizes,
     required this.units,
-    required this.workoutId,
-    required this.workoutVersion,
+    this.workoutId,
+    this.workoutVersion,
   });
 
   @override

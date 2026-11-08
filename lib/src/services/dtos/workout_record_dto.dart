@@ -5,12 +5,14 @@ import '../../models/common.dart';
 import '../../models/utilities.dart';
 import '../../models/workout_record_model.dart';
 import 'dto.dart';
+import 'workout_dto.dart';
 import 'workout_set_record_dto.dart';
 
 class WorkoutRecordDto extends Equatable implements Dto<WorkoutRecord> {
   @override
   final int id;
   final int workoutId;
+  final int version;
   final int totalSets;
   final int totalReps;
   final int totalRestSecs;
@@ -23,11 +25,13 @@ class WorkoutRecordDto extends Equatable implements Dto<WorkoutRecord> {
   final DateTime? completedAt;
 
   // Related data
+  final WorkoutDto? workout;
   final List<WorkoutSetRecordDto>? setRecords;
 
   const WorkoutRecordDto({
     required this.id,
     required this.workoutId,
+    this.version = 1,
     required this.currentSetPosition,
     required this.currentSetNumber,
     required this.currentExercisePosition,
@@ -38,16 +42,19 @@ class WorkoutRecordDto extends Equatable implements Dto<WorkoutRecord> {
     required this.muscles,
     required this.startedAt,
     this.completedAt,
+    this.workout,
     this.setRecords,
   });
 
   factory WorkoutRecordDto.fromModel(
     WorkoutRecord model, {
+    WorkoutDto? workout,
     List<WorkoutSetRecordDto>? setRecords,
   }) {
     return WorkoutRecordDto(
       id: model.id!,
       workoutId: model.workoutId,
+      version: model.version,
       currentSetPosition: model.currentSetPosition,
       currentSetNumber: model.currentSetNumber,
       currentExercisePosition: model.currentExercisePosition,
@@ -60,6 +67,7 @@ class WorkoutRecordDto extends Equatable implements Dto<WorkoutRecord> {
       completedAt: model.completedAt != null
           ? DateUtilities.getDateFromUnix(model.completedAt!)
           : null,
+      workout: workout,
       setRecords: setRecords,
     );
   }
@@ -68,6 +76,7 @@ class WorkoutRecordDto extends Equatable implements Dto<WorkoutRecord> {
     return WorkoutRecordDto(
       id: 0,
       workoutId: 0,
+      version: 1,
       currentSetPosition: 0,
       currentSetNumber: 1,
       currentExercisePosition: 0,
@@ -84,6 +93,7 @@ class WorkoutRecordDto extends Equatable implements Dto<WorkoutRecord> {
   WorkoutRecordDto copyWith({
     int? id,
     int? workoutId,
+    int? version,
     int? totalSets,
     int? totalReps,
     int? totalRestSecs,
@@ -94,11 +104,13 @@ class WorkoutRecordDto extends Equatable implements Dto<WorkoutRecord> {
     int? currentExercisePosition,
     DateTime? startedAt,
     Nullable<DateTime>? completedAt,
+    Nullable<WorkoutDto>? workout,
     Nullable<List<WorkoutSetRecordDto>>? setRecords,
   }) {
     return WorkoutRecordDto(
       id: id ?? this.id,
       workoutId: workoutId ?? this.workoutId,
+      version: version ?? this.version,
       currentSetPosition: currentSetPosition ?? this.currentSetPosition,
       currentSetNumber: currentSetNumber ?? this.currentSetNumber,
       currentExercisePosition:
@@ -110,6 +122,7 @@ class WorkoutRecordDto extends Equatable implements Dto<WorkoutRecord> {
       muscles: muscles ?? this.muscles,
       startedAt: startedAt ?? this.startedAt,
       completedAt: completedAt != null ? completedAt.value : this.completedAt,
+      workout: workout != null ? workout.value : this.workout,
       setRecords: setRecords != null ? setRecords.value : this.setRecords,
     );
   }
@@ -118,6 +131,7 @@ class WorkoutRecordDto extends Equatable implements Dto<WorkoutRecord> {
   List<Object?> get props => [
     id,
     workoutId,
+    version,
     totalSets,
     totalReps,
     totalRestSecs,
@@ -127,6 +141,7 @@ class WorkoutRecordDto extends Equatable implements Dto<WorkoutRecord> {
     currentSetNumber,
     currentExercisePosition,
     startedAt,
+    workout,
     setRecords?.length,
     completedAt,
   ];

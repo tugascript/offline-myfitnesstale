@@ -145,14 +145,22 @@ sealed class AppRouter {
     GoRoute(
       path: WorkoutHistoryView.routeName,
       builder: (context, state) {
-        final workoutId = int.tryParse(state.pathParameters['id'] ?? '');
-        if (workoutId == null) {
-          return const NotFoundView();
+        final idParam = state.uri.queryParameters['id'];
+        int? workoutId;
+        if (idParam != null) {
+          workoutId = int.tryParse(idParam);
+          if (workoutId == null) {
+            return const NotFoundView();
+          }
         }
 
-        final version = int.tryParse(state.pathParameters['version'] ?? '');
-        if (version == null) {
-          return const NotFoundView();
+        final versionParam = state.uri.queryParameters['version'];
+        int? version;
+        if (versionParam != null) {
+          version = int.tryParse(versionParam);
+          if (version == null) {
+            return const NotFoundView();
+          }
         }
 
         return WorkoutHistoryView(workoutId: workoutId, version: version);
@@ -289,9 +297,13 @@ sealed class AppRouter {
     GoRoute(
       path: WorkoutPlanHistoryView.routeName,
       builder: (context, state) {
-        final id = int.tryParse(state.pathParameters['id'] ?? '');
-        if (id == null) {
-          return const NotFoundView();
+        final idParam = state.uri.queryParameters['id'];
+        int? id;
+        if (idParam != null) {
+          id = int.tryParse(idParam);
+          if (id == null) {
+            return const NotFoundView();
+          }
         }
         return WorkoutPlanHistoryView(workoutPlanId: id);
       },
