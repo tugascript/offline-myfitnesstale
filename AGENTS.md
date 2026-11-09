@@ -77,10 +77,22 @@ Follow the strict flow: `SQLite Model -> Repository -> Service -> Cubit -> View/
 - **Meals & Macros**: Food, recipe, meal-plan, meal-plan execution, macro-goal, and daily nutrition tracking flows are
   implemented for offline use. Keep cloud and AI capabilities deferred to Phase 2/3, and describe any remaining roadmap
   work as incomplete.
-- **Cloud, Sync & Paid Plans**: All offline features (including advanced workouts and unlimited workout plans) are completely
+- **Cloud, Sync & Paid Plans**: All offline features (including advanced workouts and unlimited workout plans) are
+  completely
   free and unlocked. Cloud sync and server-backed paid plans are strictly deferred to Phase 2/3. Core flows must remain
   fully offline.
 - Do not present roadmap items as working features.
+
+## Coding Practice
+
+- Follow the [Flutter Style Guide](https://dart.dev/guides/language/effective-dart/style).
+- Use sound null safety; avoid `!` unless the invariant is clear.
+- Services functions, even intermediate, return `Result<T, ServiceError<E>>`, never throw exceptions. Catch failures at
+  the service boundary and map them to appropriate errors; do not let exceptions escape.
+- Keep views focused on composition and Cubit wiring. Reuse existing widgets and extract cohesive UI components into
+  `lib/src/widgets/`.
+- Reuse existing helpers, components, widgets, services, and patterns consistently with surrounding code. Otherwise,
+  write the simplest implementation that meets the requirements; avoid speculative abstractions.
 
 ## Testing and Verification Baseline
 
