@@ -103,7 +103,7 @@ class ExerciseRecordPointDetailsModal extends StatelessWidget {
             children: [
               Icon(Icons.calendar_today, size: sizes.subtitleFontSize * 1.2),
               Text(
-                " ${Formatters.formatDate(units, record.recordDate)}",
+                " ${Formatters.formatRelativeDate(units, record.recordDate)}",
                 style: TextStyle(
                   fontSize: sizes.fontSize,
                   color: theme.colorScheme.onSurfaceVariant,

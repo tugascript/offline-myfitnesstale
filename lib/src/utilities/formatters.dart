@@ -12,6 +12,36 @@ sealed class Formatters {
     }
   }
 
+  static String formatRelativeDate(
+    Units unit,
+    DateTime date, {
+    DateTime? now,
+  }) {
+    final reference = (now ?? DateTime.now()).toLocal();
+    final localDate = date.toLocal();
+    final today = DateTime(reference.year, reference.month, reference.day);
+    final targetDay = DateTime(localDate.year, localDate.month, localDate.day);
+    final days = today.difference(targetDay).inDays;
+
+    if (days < 0 || days >= 30) {
+      return formatDate(unit, date);
+    }
+    if (days == 0) {
+      return 'Today';
+    }
+    if (days == 1) {
+      return 'Yesterday';
+    }
+    if (days < 7) {
+      return '$days days ago';
+    }
+    final weeks = days ~/ 7;
+    if (weeks == 1) {
+      return '1 week ago';
+    }
+    return '$weeks weeks ago';
+  }
+
   static String formatDateTime(Units unit, DateTime time) {
     switch (unit) {
       case Units.metric:
@@ -19,6 +49,41 @@ sealed class Formatters {
       case Units.imperial:
         return DateFormat("MM/dd/yyyy HH:mm").format(time);
     }
+  }
+
+  static String formatRelativeDateTime(
+    Units unit,
+    DateTime time, {
+    DateTime? now,
+  }) {
+    return '${formatRelativeDate(unit, time, now: now)} ${formatTime(time)}';
+  }
+
+  static String formatTime(DateTime time) {
+    return DateFormat("HH:mm").format(time);
+  }
+
+  static String formatDateTimeRange(
+    Units unit,
+    DateTime start,
+    DateTime? end, {
+    DateTime? now,
+  }) {
+    final startStr = formatRelativeDateTime(unit, start, now: now);
+    if (end == null) {
+      return startStr;
+    }
+
+    final isSameDay =
+        start.year == end.year &&
+        start.month == end.month &&
+        start.day == end.day;
+
+    if (isSameDay) {
+      return '$startStr - ${formatTime(end)}';
+    }
+
+    return '$startStr - ${formatRelativeDateTime(unit, end, now: now)}';
   }
 
   static String formatDuration(int totalSecs) {

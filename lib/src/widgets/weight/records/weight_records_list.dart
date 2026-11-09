@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:intl/intl.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
 import '../../../cubits/weight_record_cubit.dart';
 import '../../../models/enums.dart';
 import '../../../services/dtos/weight_record_dto.dart';
 import '../../../utilities/converters.dart';
+import '../../../utilities/formatters.dart';
 import '../../../utilities/sizes/data_display_sizes.dart';
 import '../../common/confirmation_dialog.dart';
 import 'editor/edit_weight_record_modal.dart';
@@ -115,7 +115,7 @@ class _WeightRecordCard extends StatelessWidget {
               children: [
                 Icon(Icons.calendar_today, size: sizes.fontSize * 1.2),
                 Text(
-                  " ${_formatDate()}",
+                  " ${Formatters.formatRelativeDate(units, record.recordDate)}",
                   style: TextStyle(
                     fontSize: sizes.fontSize,
                     fontWeight: FontWeight.w400,
@@ -177,15 +177,6 @@ class _WeightRecordCard extends StatelessWidget {
     }
 
     return Converters.gramsToKg(record.weight).toStringAsFixed(2);
-  }
-
-  String _formatDate() {
-    switch (units) {
-      case Units.metric:
-        return DateFormat("dd/MM/yyyy").format(record.recordDate);
-      case Units.imperial:
-        return DateFormat("MM/dd/yyyy").format(record.recordDate);
-    }
   }
 
   String _displayBodyFatPercentage() {

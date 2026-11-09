@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:intl/intl.dart';
 
 import '../../../../cubits/weight_record_cubit.dart';
 import '../../../../models/enums.dart';
 import '../../../../services/dtos/weight_record_dto.dart';
 import '../../../../utilities/converters.dart';
+import '../../../../utilities/formatters.dart';
 import '../../../../utilities/sizes/data_display_sizes.dart';
 import '../../../common/confirmation_dialog.dart';
 import '../../../common/mutation_buttons.dart';
@@ -102,7 +102,7 @@ class WeightRecordPointDetailsModal extends StatelessWidget {
             children: [
               Icon(Icons.calendar_today, size: sizes.subtitleFontSize * 1.2),
               Text(
-                " ${_formatDate(units, record.recordDate)}",
+                " ${Formatters.formatRelativeDate(units, record.recordDate)}",
                 style: TextStyle(
                   fontSize: sizes.fontSize,
                   color: theme.colorScheme.onSurfaceVariant,
@@ -150,14 +150,5 @@ class WeightRecordPointDetailsModal extends StatelessWidget {
         ],
       ),
     );
-  }
-
-  String _formatDate(Units unit, DateTime date) {
-    switch (unit) {
-      case Units.metric:
-        return DateFormat("dd/MM/yyyy").format(date);
-      case Units.imperial:
-        return DateFormat("MM/dd/yyyy").format(date);
-    }
   }
 }
