@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:intl/intl.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
 import '../../../cubits/states/weight_record_state.dart';
@@ -8,6 +7,7 @@ import '../../../cubits/weight_record_cubit.dart';
 import '../../../models/enums.dart';
 import '../../../services/dtos/weight_record_dto.dart';
 import '../../../utilities/converters.dart';
+import '../../../utilities/formatters.dart';
 import '../../../utilities/sizes/data_display_sizes.dart';
 import '../../common/confirmation_dialog.dart';
 import 'editor/create_weight_record_modal.dart';
@@ -237,7 +237,7 @@ class _LatestWeightRecord extends StatelessWidget {
                                 size: sizes.subtitleFontSize * 1.2,
                               ),
                               Text(
-                                " ${_formatDate()}",
+                                " ${Formatters.formatRelativeDate(units, weightRecord?.recordDate ?? DateTime.now())}",
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                   fontSize: sizes.subtitleFontSize,
@@ -285,17 +285,6 @@ class _LatestWeightRecord extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  String _formatDate() {
-    final date = weightRecord?.recordDate ?? DateTime.now();
-
-    switch (units) {
-      case Units.metric:
-        return DateFormat("dd/MM/yyyy").format(date);
-      case Units.imperial:
-        return DateFormat("MM/dd/yyyy").format(date);
-    }
   }
 
   String _displayWeight() {

@@ -119,37 +119,16 @@ class _SingleWorkoutRecordCard extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.start,
           mainAxisSize: MainAxisSize.max,
           children: [
-            Expanded(
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.calendar_today, size: sizes.fontSize * 1.2),
-                  Text(
-                    " ${Formatters.formatDate(units, workoutRecord.startedAt)}",
-                    style: TextStyle(
-                      fontSize: sizes.fontSize,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            if (workoutRecord.completedAt != null)
-              Expanded(
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.event_available, size: sizes.fontSize * 1.2),
-                    Text(
-                      " ${Formatters.formatDate(units, workoutRecord.completedAt!)}",
-                      style: TextStyle(
-                        fontSize: sizes.fontSize,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
+            Icon(Icons.calendar_today, size: sizes.fontSize * 1.2),
+            Flexible(
+              child: Text(
+                " ${Formatters.formatDateTimeRange(units, workoutRecord.startedAt, workoutRecord.completedAt)}",
+                style: TextStyle(
+                  fontSize: sizes.fontSize,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
+            ),
           ],
         ),
         SizedBox(height: sizes.spacing),

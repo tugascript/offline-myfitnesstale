@@ -280,7 +280,7 @@ class _LatestExerciseRecord extends StatelessWidget {
                                 size: sizes.subtitleFontSize * 1.2,
                               ),
                               Text(
-                                " ${Formatters.formatDate(units, exerciseRecord?.recordDate ?? DateTime.now())}",
+                                " ${Formatters.formatRelativeDate(units, exerciseRecord?.recordDate ?? DateTime.now())}",
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                   fontSize: sizes.subtitleFontSize,

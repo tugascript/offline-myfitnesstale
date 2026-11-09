@@ -56,16 +56,34 @@ class WorkoutRecordHead extends StatelessWidget {
             SizedBox(height: sizes.spacing),
           ],
           Row(
-            mainAxisAlignment: MainAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             mainAxisSize: MainAxisSize.max,
             children: [
-              Expanded(
+              Flexible(
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(Icons.calendar_today, size: sizes.fontSize * 1.2),
+                    Flexible(
+                      child: Text(
+                        " ${Formatters.formatDateTimeRange(units, workoutRecord?.startedAt ?? DateTime.now(), workoutRecord?.completedAt)}",
+                        style: TextStyle(
+                          fontSize: sizes.fontSize,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (workoutRecord?.completedAt != null) ...[
+                SizedBox(width: sizes.spacing),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.schedule, size: sizes.fontSize * 1.2),
                     Text(
-                      " ${Formatters.formatDateTime(units, workoutRecord?.startedAt ?? DateTime.now())}",
+                      " ${Formatters.formatDuration(workoutRecord!.completedAt!.difference(workoutRecord!.startedAt).inSeconds)}",
                       style: TextStyle(
                         fontSize: sizes.fontSize,
                         fontWeight: FontWeight.w600,
@@ -73,23 +91,7 @@ class WorkoutRecordHead extends StatelessWidget {
                     ),
                   ],
                 ),
-              ),
-              if (workoutRecord?.completedAt != null)
-                Expanded(
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.schedule, size: sizes.fontSize * 1.2),
-                      Text(
-                        " ${Formatters.formatDuration(workoutRecord!.completedAt!.difference(workoutRecord!.startedAt).inSeconds)}",
-                        style: TextStyle(
-                          fontSize: sizes.fontSize,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+              ],
             ],
           ),
           SizedBox(height: sizes.spacing),
