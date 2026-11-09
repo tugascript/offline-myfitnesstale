@@ -6,24 +6,31 @@ import 'common_state.dart';
 
 final class RecipePagination extends Equatable {
   final String? search;
+  final bool isFavorite;
   final int total;
   final int limit;
   final int offset;
+
   const RecipePagination({
     this.search,
+    this.isFavorite = false,
     this.total = 0,
     this.limit = 20,
     this.offset = 0,
   });
+
   factory RecipePagination.initial() => const RecipePagination();
+
   RecipePagination copyWith({
     Nullable<String>? search,
+    bool? isFavorite,
     int? total,
     int? limit,
     int? offset,
   }) {
     return RecipePagination(
       search: search != null ? search.value : this.search,
+      isFavorite: isFavorite ?? this.isFavorite,
       total: total ?? this.total,
       limit: limit ?? this.limit,
       offset: offset ?? this.offset,
@@ -31,7 +38,7 @@ final class RecipePagination extends Equatable {
   }
 
   @override
-  List<Object?> get props => [search, total, limit, offset];
+  List<Object?> get props => [search, isFavorite, total, limit, offset];
 }
 
 final class RecipeState extends Equatable {
@@ -40,6 +47,7 @@ final class RecipeState extends Equatable {
   final RecipePagination recipePagination;
   final bool isLoading;
   final ErrorState? error;
+
   const RecipeState({
     this.recipes = const [],
     this.selectedRecipe,
@@ -47,7 +55,9 @@ final class RecipeState extends Equatable {
     this.isLoading = false,
     this.error,
   });
+
   factory RecipeState.initial() => const RecipeState();
+
   RecipeState copyWith({
     List<RecipeDto>? recipes,
     Nullable<RecipeDto>? selectedRecipe,
@@ -63,6 +73,7 @@ final class RecipeState extends Equatable {
     isLoading: isLoading ?? this.isLoading,
     error: error != null ? error.value : this.error,
   );
+
   @override
   List<Object?> get props => [
     recipes,

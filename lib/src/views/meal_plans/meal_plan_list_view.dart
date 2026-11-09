@@ -1,3 +1,4 @@
+import '../../widgets/common/search_favorite_form.dart';
 import '../../widgets/meal_plans/meal_plan_list_item_widget.dart';
 
 import 'package:flutter/material.dart';
@@ -25,9 +26,6 @@ class MealPlanListView extends StatefulWidget {
 }
 
 class _MealPlanListViewState extends State<MealPlanListView> {
-  final TextEditingController _searchController = TextEditingController();
-  bool _onlyFavorites = false;
-
   @override
   void initState() {
     super.initState();
@@ -35,24 +33,18 @@ class _MealPlanListViewState extends State<MealPlanListView> {
   }
 
   void _loadPlans() {
-    context.read<MealPlanCubit>().getMealPlans(
-      search: _searchController.text.trim().isEmpty
-          ? null
-          : _searchController.text.trim(),
-      isFavorite: _onlyFavorites ? true : null,
+    final cubit = context.read<MealPlanCubit>();
+    cubit.getMealPlans(
+      search: cubit.state.mealPlanPagination.search,
+      isFavorite: cubit.state.mealPlanPagination.isFavorite,
       limit: 50,
       offset: 0,
     );
   }
 
   @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final breakpoints = BreakPoint.fromContext(context);
     final sizes = DataDisplaySizes.getDataDisplaySizes(breakpoints.screenSize);
 
@@ -60,129 +52,113 @@ class _MealPlanListViewState extends State<MealPlanListView> {
       title: 'Meal Plans',
       body: Padding(
         padding: EdgeInsets.all(sizes.viewPadding),
-        child: Column(
-          children: [
-            TextField(
-              key: const ValueKey('meal-plans-search-input'),
-              controller: _searchController,
-              decoration: InputDecoration(
-                hintText: 'Search meal plans...',
-                prefixIcon: Icon(Icons.search, size: sizes.buttonIconSize),
-                suffixIcon: _searchController.text.isNotEmpty
-                    ? IconButton(
-                        icon: Icon(Icons.clear, size: sizes.buttonIconSize),
-                        onPressed: () {
-                          _searchController.clear();
-                          _loadPlans();
-                        },
-                      )
-                    : null,
-                border: const OutlineInputBorder(),
-              ),
-              onSubmitted: (_) => _loadPlans(),
-            ),
-            SizedBox(height: sizes.spacing),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: FilterChip(
-                key: const ValueKey('meal-plans-filter-favorites'),
-                label: Text(
-                  'Favorites Only',
-                  style: TextStyle(fontSize: sizes.fontSize),
+        child: BlocConsumer<MealPlanCubit, MealPlanState>(
+          listener: (context, state) {
+            if (!state.isLoading && state.error != null) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    state.error!.description,
+                    style: TextStyle(fontSize: sizes.fontSize),
+                  ),
                 ),
-                selected: _onlyFavorites,
-                onSelected: (val) {
-                  setState(() {
-                    _onlyFavorites = val;
-                  });
-                  _loadPlans();
-                },
-              ),
-            ),
-            SizedBox(height: sizes.spacing),
-            Expanded(
-              child: BlocConsumer<MealPlanCubit, MealPlanState>(
-                listener: (context, state) {
-                  if (!state.isLoading && state.error != null) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          state.error!.description,
-                          style: TextStyle(fontSize: sizes.fontSize),
-                        ),
-                      ),
+              );
+            }
+          },
+          builder: (context, state) {
+            return Column(
+              children: [
+                SearchFavoriteForm(
+                  theme: theme,
+                  nameLabel: 'meal plans',
+                  padding: sizes.padding,
+                  fontSize: sizes.fontSize,
+                  spacing: sizes.inputSpacing,
+                  isLoading: state.isLoading,
+                  initialName: state.mealPlanPagination.search ?? '',
+                  initialIsFavorite:
+                      state.mealPlanPagination.isFavorite ?? false,
+                  onSubmit: ({required String name, required bool isFavorite}) {
+                    context.read<MealPlanCubit>().getMealPlans(
+                      search: name.trim().isEmpty ? null : name.trim(),
+                      isFavorite: isFavorite ? true : null,
+                      limit: 50,
+                      offset: 0,
                     );
-                  }
-                },
-                builder: (context, state) {
-                  if (state.isLoading && state.mealPlans.isEmpty) {
-                    return const Center(
-                      child: CircularProgressIndicator.adaptive(),
-                    );
-                  }
-
-                  if (state.mealPlans.isEmpty) {
-                    return Center(
-                      child: Text(
-                        'No meal plans found.',
-                        style: TextStyle(
-                          fontSize: sizes.fontSize,
-                          color: Colors.grey,
-                        ),
-                      ),
-                    );
-                  }
-
-                  return ListView.separated(
-                    itemCount: state.mealPlans.length,
-                    separatorBuilder: (_, _) =>
-                        SizedBox(height: sizes.spacing / 2),
-                    itemBuilder: (context, index) {
-                      final plan = state.mealPlans[index];
-
-                      return MealPlanListItemWidget(
-                        key: ValueKey('meal-plan-card-${plan.id}'),
-                        plan: plan,
-                        sizes: sizes,
-                        onStart: () async {
-                          final success = await context
-                              .read<MealPlanRecordCubit>()
-                              .startMealPlan(mealPlanId: plan.id);
-                          if (success && context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  'Started meal plan: ${plan.name}',
-                                  style: TextStyle(fontSize: sizes.fontSize),
-                                ),
-                                action: SnackBarAction(
-                                  label: 'Tracker',
-                                  onPressed: () {
-                                    context.push(MacroTrackerView.routeName);
-                                  },
-                                ),
-                              ),
-                            );
-                          }
-                        },
-                        onView: () {
-                          context.push(
-                            MealPlanDetailsView.routeName.replaceFirst(
-                              ':id',
-                              plan.id.toString(),
+                  },
+                ),
+                SizedBox(height: sizes.spacing),
+                Expanded(
+                  child: state.isLoading && state.mealPlans.isEmpty
+                      ? const Center(
+                          child: CircularProgressIndicator.adaptive(),
+                        )
+                      : state.mealPlans.isEmpty
+                      ? Center(
+                          child: Text(
+                            'No meal plans found.',
+                            style: TextStyle(
+                              fontSize: sizes.fontSize,
+                              color: Colors.grey,
                             ),
-                          );
-                        },
-                        onToggleFavorite: () {
-                          context.read<MealPlanCubit>().toggleFavorite(plan.id);
-                        },
-                      );
-                    },
-                  );
-                },
-              ),
-            ),
-          ],
+                          ),
+                        )
+                      : ListView.separated(
+                          itemCount: state.mealPlans.length,
+                          separatorBuilder: (_, _) =>
+                              SizedBox(height: sizes.spacing / 2),
+                          itemBuilder: (context, index) {
+                            final plan = state.mealPlans[index];
+
+                            return MealPlanListItemWidget(
+                              key: ValueKey('meal-plan-card-${plan.id}'),
+                              plan: plan,
+                              sizes: sizes,
+                              onStart: () async {
+                                final success = await context
+                                    .read<MealPlanRecordCubit>()
+                                    .startMealPlan(mealPlanId: plan.id);
+                                if (success && context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        'Started meal plan: ${plan.name}',
+                                        style: TextStyle(
+                                          fontSize: sizes.fontSize,
+                                        ),
+                                      ),
+                                      action: SnackBarAction(
+                                        label: 'Tracker',
+                                        onPressed: () {
+                                          context.push(
+                                            MacroTrackerView.routeName,
+                                          );
+                                        },
+                                      ),
+                                    ),
+                                  );
+                                }
+                              },
+                              onView: () {
+                                context.push(
+                                  MealPlanDetailsView.routeName.replaceFirst(
+                                    ':id',
+                                    plan.id.toString(),
+                                  ),
+                                );
+                              },
+                              onToggleFavorite: () {
+                                context.read<MealPlanCubit>().toggleFavorite(
+                                  plan.id,
+                                );
+                              },
+                            );
+                          },
+                        ),
+                ),
+              ],
+            );
+          },
         ),
       ),
       floatingActionButton: FloatingActionButton(

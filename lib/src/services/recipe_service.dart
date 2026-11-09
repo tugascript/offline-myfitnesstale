@@ -279,14 +279,20 @@ class RecipeService {
   >
   getRecipes({
     String? search,
+    bool isFavorite = false,
     int limit = kDefaultLimit,
     int offset = kDefaultOffset,
   }) async {
-    _logger.info('Getting recipes with search: $search');
+    _logger.info(
+      'Getting recipes with search: $search, isFavorite: $isFavorite',
+    );
     try {
       final where = WhereBuilder();
       if (search != null && search.trim().isNotEmpty) {
         where.and('${RecipeColumns.name.value} LIKE ?', '%${search.trim()}%');
+      }
+      if (isFavorite) {
+        where.and(RecipeColumns.isFavorite.equal, 1);
       }
 
       final List<Recipe> recipes = await _recipeRepository.selectPaginated(
@@ -516,6 +522,66 @@ class RecipeService {
         const ServiceError(
           type: SingleErrorTypes.operationFailure,
           description: 'Failed to update recipe',
+        ),
+      );
+    }
+  }
+
+  Future<Result<RecipeDto, ServiceError<SingleErrorTypes>>> toggleFavorite(
+    int id,
+  ) async {
+    _logger.info('Toggling favorite for recipe with id $id');
+    try {
+      final Recipe? recipe = await _recipeRepository.selectOne(id);
+      if (recipe == null) {
+        return err(
+          const ServiceError(
+            type: SingleErrorTypes.notFound,
+            description: 'Recipe not found',
+          ),
+        );
+      }
+
+      final updated = recipe.copyWith(
+        isFavorite: !recipe.isFavorite,
+        updatedAt: DateUtilities.getNowUtcUnix(),
+      );
+      await _recipeRepository.update(updated);
+
+      final List<RecipeItem> items = await _itemRepository.selectMany(
+        where: RecipeItemColumns.recipeId.equal,
+        whereArgs: [id],
+      );
+
+      final List<RecipeItemDto> itemDtos = [];
+      for (final item in items) {
+        final Food? food = await _foodRepository.selectOne(item.foodId);
+        String? portionName;
+        if (item.portionId != null) {
+          final FoodPortion? portion = await _portionRepository.selectOne(
+            item.portionId!,
+          );
+          portionName = portion?.portionName;
+        }
+        itemDtos.add(
+          RecipeItemDto.fromModel(
+            item,
+            foodName: food?.name,
+            portionName: portionName,
+          ),
+        );
+      }
+
+      _logger.info(
+        'Toggled favorite for recipe with id $id to ${updated.isFavorite}',
+      );
+      return ok(RecipeDto.fromModel(updated, items: itemDtos));
+    } catch (e) {
+      _logger.severe('Failed to toggle favorite for recipe with id $id', e);
+      return err(
+        const ServiceError(
+          type: SingleErrorTypes.operationFailure,
+          description: 'Failed to toggle favorite',
         ),
       );
     }

@@ -113,6 +113,7 @@ class RecipeDto extends Equatable {
   final int servingCarbs;
   final int servingFat;
   final Micronutrients? servingMicros;
+  final bool isFavorite;
   final CreatedBy createdBy;
 
   final List<RecipeItemDto> items;
@@ -127,6 +128,7 @@ class RecipeDto extends Equatable {
     required this.servingCarbs,
     required this.servingFat,
     this.servingMicros,
+    this.isFavorite = false,
     required this.createdBy,
     this.items = const [],
   });
@@ -145,6 +147,7 @@ class RecipeDto extends Equatable {
       servingCarbs: model.servingCarbs,
       servingFat: model.servingFat,
       servingMicros: model.servingMicros,
+      isFavorite: model.isFavorite,
       createdBy: model.createdBy,
       items: items,
     );
@@ -160,6 +163,7 @@ class RecipeDto extends Equatable {
     int? servingCarbs,
     int? servingFat,
     Nullable<Micronutrients>? servingMicros,
+    bool? isFavorite,
     CreatedBy? createdBy,
     List<RecipeItemDto>? items,
   }) {
@@ -175,6 +179,7 @@ class RecipeDto extends Equatable {
       servingMicros: servingMicros != null
           ? servingMicros.value
           : this.servingMicros,
+      isFavorite: isFavorite ?? this.isFavorite,
       createdBy: createdBy ?? this.createdBy,
       items: items ?? this.items,
     );
@@ -191,6 +196,7 @@ class RecipeDto extends Equatable {
     servingCarbs,
     servingFat,
     servingMicros,
+    isFavorite,
     createdBy,
     items,
   ];

@@ -103,7 +103,12 @@ class _RecipeDetailsViewState extends State<RecipeDetailsView> {
             padding: EdgeInsets.all(sizes.viewPadding),
             child: ListView(
               children: [
-                RecipeDetailsWidget(recipe: recipe, sizes: sizes),
+                RecipeDetailsWidget(
+                  recipe: recipe,
+                  sizes: sizes,
+                  onToggleFavorite: () =>
+                      context.read<RecipeCubit>().toggleFavorite(recipe.id),
+                ),
                 // Screen check: Machine-authored vs User-authored
                 if (!isUserAuthored)
                   Card(

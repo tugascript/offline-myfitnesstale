@@ -7,11 +7,13 @@ import 'recipe_macro_item.dart';
 class RecipeDetailsWidget extends StatelessWidget {
   final RecipeDto recipe;
   final DataDisplaySizesList sizes;
+  final VoidCallback? onToggleFavorite;
 
   const RecipeDetailsWidget({
     super.key,
     required this.recipe,
     required this.sizes,
+    this.onToggleFavorite,
   });
   @override
   Widget build(BuildContext context) => Column(
@@ -29,6 +31,14 @@ class RecipeDetailsWidget extends StatelessWidget {
               fontSize: sizes.subtitleFontSize,
               fontWeight: FontWeight.bold,
             ),
+          ),
+          IconButton(
+            icon: Icon(
+              recipe.isFavorite ? Icons.favorite : Icons.favorite_border,
+              color: recipe.isFavorite ? Colors.red : Colors.grey,
+              size: sizes.buttonIconSize,
+            ),
+            onPressed: onToggleFavorite,
           ),
         ],
       ),

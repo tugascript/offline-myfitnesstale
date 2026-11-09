@@ -1,5 +1,3 @@
-import '../../widgets/recipes/recipe_list_item_widget.dart';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -8,7 +6,9 @@ import '../../cubits/recipe_cubit.dart';
 import '../../cubits/states/recipe_state.dart';
 import '../../utilities/sizes/data_display_sizes.dart';
 import '../../utilities/sizes/screen_size.dart';
+import '../../widgets/common/search_favorite_form.dart';
 import '../../widgets/layout/app_scaffold.dart';
+import '../../widgets/recipes/recipe_list_item_widget.dart';
 import 'recipe_creation_view.dart';
 import 'recipe_details_view.dart';
 
@@ -24,7 +24,6 @@ class RecipesView extends StatefulWidget {
 
 class _RecipesViewState extends State<RecipesView> {
   final ScrollController _scrollController = ScrollController();
-  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
@@ -37,9 +36,8 @@ class _RecipesViewState extends State<RecipesView> {
     final cubit = context.read<RecipeCubit>();
     final currentCount = reset ? 0 : cubit.state.recipes.length;
     cubit.getRecipes(
-      search: _searchController.text.trim().isEmpty
-          ? null
-          : _searchController.text.trim(),
+      search: cubit.state.recipePagination.search,
+      isFavorite: cubit.state.recipePagination.isFavorite,
       offset: currentCount,
       limit: 30,
     );
@@ -61,12 +59,12 @@ class _RecipesViewState extends State<RecipesView> {
   @override
   void dispose() {
     _scrollController.dispose();
-    _searchController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final breakpoints = BreakPoint.fromContext(context);
     final sizes = DataDisplaySizes.getDataDisplaySizes(breakpoints.screenSize);
 
@@ -74,84 +72,98 @@ class _RecipesViewState extends State<RecipesView> {
       title: 'Recipes',
       body: Padding(
         padding: EdgeInsets.all(sizes.viewPadding),
-        child: Column(
-          children: [
-            TextField(
-              key: const ValueKey('recipes-search-input'),
-              controller: _searchController,
-              decoration: InputDecoration(
-                hintText: 'Search recipes...',
-                prefixIcon: Icon(Icons.search, size: sizes.buttonIconSize),
-                suffixIcon: _searchController.text.isNotEmpty
-                    ? IconButton(
-                        icon: Icon(Icons.clear, size: sizes.buttonIconSize),
-                        onPressed: () {
-                          _searchController.clear();
-                          _loadRecipes(reset: true);
-                        },
-                      )
-                    : null,
-                border: const OutlineInputBorder(),
-              ),
-              onSubmitted: (_) => _loadRecipes(reset: true),
-            ),
-            SizedBox(height: sizes.spacing),
-            Expanded(
-              child: BlocBuilder<RecipeCubit, RecipeState>(
-                builder: (context, state) {
-                  if (state.isLoading && state.recipes.isEmpty) {
-                    return const Center(
-                      child: CircularProgressIndicator.adaptive(),
+        child: BlocConsumer<RecipeCubit, RecipeState>(
+          listener: (context, state) {
+            if (!state.isLoading && state.error != null) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    state.error!.description,
+                    style: TextStyle(fontSize: sizes.fontSize),
+                  ),
+                ),
+              );
+            }
+          },
+          builder: (context, state) {
+            return Column(
+              children: [
+                SearchFavoriteForm(
+                  theme: theme,
+                  nameLabel: 'recipes',
+                  padding: sizes.padding,
+                  fontSize: sizes.fontSize,
+                  spacing: sizes.inputSpacing,
+                  isLoading: state.isLoading,
+                  initialName: state.recipePagination.search ?? '',
+                  initialIsFavorite: state.recipePagination.isFavorite,
+                  onSubmit: ({required String name, required bool isFavorite}) {
+                    context.read<RecipeCubit>().getRecipes(
+                      search: name.trim().isEmpty ? null : name.trim(),
+                      isFavorite: isFavorite,
+                      limit: 30,
+                      offset: 0,
                     );
-                  }
-
-                  if (state.recipes.isEmpty) {
-                    return Center(
-                      child: Text(
-                        'No recipes found.',
-                        style: TextStyle(
-                          fontSize: sizes.fontSize,
-                          color: Colors.grey,
-                        ),
-                      ),
-                    );
-                  }
-
-                  return ListView.separated(
-                    controller: _scrollController,
-                    itemCount: state.recipes.length + (state.isLoading ? 1 : 0),
-                    separatorBuilder: (_, _) =>
-                        SizedBox(height: sizes.spacing / 2),
-                    itemBuilder: (context, index) {
-                      if (index >= state.recipes.length) {
-                        return Center(
-                          child: Padding(
-                            padding: EdgeInsets.all(sizes.padding / 2),
-                            child: CircularProgressIndicator.adaptive(),
-                          ),
-                        );
-                      }
-
-                      final recipe = state.recipes[index];
-                      return RecipeListItemWidget(
-                        key: ValueKey('recipe-item-${recipe.id}'),
-                        recipe: recipe,
-                        sizes: sizes,
-                        onTap: () {
-                          context.push(
-                            RecipeDetailsView.routeName.replaceFirst(
-                              ':id',
-                              recipe.id.toString(),
+                  },
+                ),
+                SizedBox(height: sizes.spacing),
+                Expanded(
+                  child: state.isLoading && state.recipes.isEmpty
+                      ? const Center(
+                          child: CircularProgressIndicator.adaptive(),
+                        )
+                      : state.recipes.isEmpty
+                      ? Center(
+                          child: Text(
+                            'No recipes found.',
+                            style: TextStyle(
+                              fontSize: sizes.fontSize,
+                              color: Colors.grey,
                             ),
-                          );
-                        },
-                      );
-                    },
-                  );
-                },
-              ),
-            ),
-          ],
+                          ),
+                        )
+                      : ListView.separated(
+                          controller: _scrollController,
+                          itemCount:
+                              state.recipes.length + (state.isLoading ? 1 : 0),
+                          separatorBuilder: (_, _) =>
+                              SizedBox(height: sizes.spacing / 2),
+                          itemBuilder: (context, index) {
+                            if (index >= state.recipes.length) {
+                              return Center(
+                                child: Padding(
+                                  padding: EdgeInsets.all(sizes.padding / 2),
+                                  child:
+                                      const CircularProgressIndicator.adaptive(),
+                                ),
+                              );
+                            }
+
+                            final recipe = state.recipes[index];
+                            return RecipeListItemWidget(
+                              key: ValueKey('recipe-item-${recipe.id}'),
+                              recipe: recipe,
+                              sizes: sizes,
+                              onTap: () {
+                                context.push(
+                                  RecipeDetailsView.routeName.replaceFirst(
+                                    ':id',
+                                    recipe.id.toString(),
+                                  ),
+                                );
+                              },
+                              onToggleFavorite: () {
+                                context.read<RecipeCubit>().toggleFavorite(
+                                  recipe.id,
+                                );
+                              },
+                            );
+                          },
+                        ),
+                ),
+              ],
+            );
+          },
         ),
       ),
       floatingActionButton: FloatingActionButton(

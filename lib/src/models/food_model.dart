@@ -102,7 +102,6 @@ class Food extends Equatable implements Model {
   CREATE INDEX IF NOT EXISTS idx_foods_name ON $_table (${FoodColumns.name.value});
   CREATE INDEX IF NOT EXISTS idx_foods_category ON $_table (${FoodColumns.category.value});
   CREATE INDEX IF NOT EXISTS idx_foods_barcode ON $_table (${FoodColumns.barcode.value});
-  CREATE INDEX IF NOT EXISTS idx_foods_is_favorite ON $_table (${FoodColumns.isFavorite.value});
   ''';
 
   @override

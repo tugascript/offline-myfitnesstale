@@ -18,6 +18,7 @@ class RecipeCubit extends Cubit<RecipeState> {
 
   Future<void> getRecipes({
     String? search,
+    bool isFavorite = false,
     int limit = 20,
     int offset = 0,
   }) async {
@@ -28,6 +29,7 @@ class RecipeCubit extends Cubit<RecipeState> {
           limit: limit,
           offset: offset,
           search: Nullable(search),
+          isFavorite: isFavorite,
         ),
         isLoading: true,
       ),
@@ -35,6 +37,7 @@ class RecipeCubit extends Cubit<RecipeState> {
 
     final result = await _recipeService.getRecipes(
       search: search,
+      isFavorite: isFavorite,
       limit: limit,
       offset: offset,
     );
@@ -130,6 +133,7 @@ class RecipeCubit extends Cubit<RecipeState> {
     );
     await getRecipes(
       search: state.recipePagination.search,
+      isFavorite: state.recipePagination.isFavorite,
       limit: state.recipePagination.limit,
       offset: 0,
     );
@@ -165,8 +169,41 @@ class RecipeCubit extends Cubit<RecipeState> {
     );
     await getRecipes(
       search: state.recipePagination.search,
+      isFavorite: state.recipePagination.isFavorite,
       limit: state.recipePagination.limit,
       offset: 0,
+    );
+    return true;
+  }
+
+  Future<bool> toggleFavorite(int id) async {
+    _logger.info('Toggling favorite for recipe $id');
+    final result = await _recipeService.toggleFavorite(id);
+    if (result.isErr()) {
+      final error = result.error;
+      _logger.warning('Failed to toggle favorite', error);
+      emit(
+        state.copyWith(
+          error: Nullable(
+            ErrorState(type: error.type.name, description: error.description),
+          ),
+        ),
+      );
+      return false;
+    }
+
+    final updated = result.value;
+    final updatedList = state.recipes
+        .map((r) => r.id == id ? updated : r)
+        .toList();
+    emit(
+      state.copyWith(
+        recipes: updatedList,
+        selectedRecipe: state.selectedRecipe?.id == id
+            ? Nullable(updated)
+            : null,
+        error: const Nullable(null),
+      ),
     );
     return true;
   }
