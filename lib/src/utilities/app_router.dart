@@ -157,6 +157,9 @@ sealed class AppRouter {
         final versionParam = state.uri.queryParameters['version'];
         int? version;
         if (versionParam != null) {
+          if (workoutId == null) {
+            return const NotFoundView();
+          }
           version = int.tryParse(versionParam);
           if (version == null) {
             return const NotFoundView();

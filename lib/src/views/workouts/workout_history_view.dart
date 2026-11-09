@@ -45,9 +45,9 @@ class _WorkoutHistoryViewState extends State<WorkoutHistoryView> {
 
     if (widget.workoutId != null) {
       final workoutCubit = context.read<WorkoutCubit>();
-      if (workoutCubit.state.selectedWorkout?.id != widget.workoutId ||
-          (widget.version != null &&
-              workoutCubit.state.selectedWorkout?.version != widget.version)) {
+      if (widget.version == null ||
+          workoutCubit.state.selectedWorkout?.id != widget.workoutId ||
+          workoutCubit.state.selectedWorkout?.version != widget.version) {
         workoutCubit.getWorkout(widget.workoutId!, version: widget.version);
       }
     }
@@ -62,13 +62,18 @@ class _WorkoutHistoryViewState extends State<WorkoutHistoryView> {
 
     return BlocBuilder<WorkoutCubit, WorkoutState>(
       builder: (context, workoutState) {
+        final selectedWorkout =
+            workoutState.selectedWorkout?.id == widget.workoutId &&
+                (widget.version != null || !workoutState.isLoading)
+            ? workoutState.selectedWorkout
+            : null;
         final workoutVersion = isSingleWorkout
-            ? (widget.version ?? workoutState.selectedWorkout?.version ?? 1)
+            ? (widget.version ?? selectedWorkout?.version ?? 1)
             : null;
 
         return ResponsiveScaffold(
           title: isSingleWorkout
-              ? (workoutState.selectedWorkout?.name ?? 'Workout History')
+              ? (selectedWorkout?.name ?? 'Workout History')
               : 'Workout History',
           isEntity: isSingleWorkout,
           body: BlocBuilder<ProfileCubit, ProfileState>(

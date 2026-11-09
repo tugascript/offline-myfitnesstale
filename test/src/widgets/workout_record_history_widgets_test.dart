@@ -4,11 +4,13 @@ import 'package:myfitnesstale/src/common/nullable.dart';
 import 'package:myfitnesstale/src/cubits/states/workout_record_state.dart';
 import 'package:myfitnesstale/src/models/common.dart';
 import 'package:myfitnesstale/src/models/enums.dart';
+import 'package:myfitnesstale/src/services/dtos/exercise_dto.dart';
 import 'package:myfitnesstale/src/services/dtos/workout_dto.dart';
 import 'package:myfitnesstale/src/services/dtos/workout_record_dto.dart';
 import 'package:myfitnesstale/src/utilities/formatters.dart';
 import 'package:myfitnesstale/src/utilities/sizes/data_display_sizes.dart';
 import 'package:myfitnesstale/src/utilities/sizes/screen_size.dart';
+import 'package:myfitnesstale/src/widgets/exercises/exercise_card.dart';
 import 'package:myfitnesstale/src/widgets/workouts/progress/history/single_workout_record_list.dart';
 import 'package:myfitnesstale/src/widgets/workouts/progress/history/workout_record_head.dart';
 
@@ -99,6 +101,19 @@ void main() {
         );
       },
     );
+
+    test('computes calendar-day differences across spring DST transitions', () {
+      for (final (yesterday, today) in [
+        (DateTime(2026, 3, 8, 23, 0), DateTime(2026, 3, 9, 1, 0)),
+        (DateTime(2026, 3, 29, 23, 0), DateTime(2026, 3, 30, 1, 0)),
+        (DateTime(2026, 9, 27, 23, 0), DateTime(2026, 9, 28, 1, 0)),
+      ]) {
+        expect(
+          Formatters.formatRelativeDate(Units.metric, yesterday, now: today),
+          'Yesterday',
+        );
+      }
+    });
 
     test('falls back to formatted date when 30 days or older', () {
       final older = DateTime(2026, 10, 1, 10, 0);
@@ -259,6 +274,54 @@ void main() {
       expect(find.text(' Upper Body'), findsOneWidget);
       expect(find.text(' Today 10:30 - 11:45'), findsOneWidget);
       expect(find.text(' 09/05/2025 23:30 - 10/05/2025 00:45'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
+    'ExerciseCard wraps badges without overflow on narrow screens at 200% text scale',
+    (tester) async {
+      tester.view.physicalSize = const Size(320, 640);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      final sizes = DataDisplaySizes.getDataDisplaySizes(ScreenSize.xs);
+      const exercise = ExerciseDto(
+        id: 1,
+        name: 'Incline Dumbbell Bench Press',
+        muscleGroup: MuscleGroup.full,
+        muscles: TargetMuscles(
+          primary: {Muscle.chest},
+          secondary: {Muscle.triceps},
+        ),
+        difficulty: Difficulty.intermediateAdvanced,
+        description: '',
+        isFavorite: true,
+        createdBy: CreatedBy.user,
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          builder: (context, child) => MediaQuery(
+            data: MediaQuery.of(context)
+                .copyWith(textScaler: const TextScaler.linear(2.0)),
+            child: child!,
+          ),
+          home: Scaffold(
+            body: Builder(
+              builder: (context) => ExerciseCard(
+                theme: Theme.of(context),
+                exercise: exercise,
+                onTap: () {},
+                sizes: sizes,
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
       expect(tester.takeException(), isNull);
     },
   );

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:myfitnesstale/src/common/nullable.dart';
 import 'package:myfitnesstale/src/cubits/exercise_cubit.dart';
 import 'package:myfitnesstale/src/cubits/exercise_record_cubit.dart';
 import 'package:myfitnesstale/src/cubits/profile_cubit.dart';
@@ -9,10 +10,12 @@ import 'package:myfitnesstale/src/cubits/states/profile_state.dart';
 import 'package:myfitnesstale/src/cubits/workout_cubit.dart';
 import 'package:myfitnesstale/src/cubits/workout_plan_record_cubit.dart';
 import 'package:myfitnesstale/src/cubits/workout_record_cubit.dart';
+import 'package:myfitnesstale/src/models/common.dart';
 import 'package:myfitnesstale/src/models/enums.dart';
 import 'package:myfitnesstale/src/services/dtos/profile_dto.dart';
 import 'package:myfitnesstale/src/services/dtos/reminders_config_dto.dart';
 import 'package:myfitnesstale/src/services/dtos/system_dto.dart';
+import 'package:myfitnesstale/src/services/dtos/workout_dto.dart';
 import 'package:myfitnesstale/src/utilities/app_router.dart';
 import 'package:myfitnesstale/src/views/exercise_progress_view.dart';
 import 'package:myfitnesstale/src/views/exercises/exercise_records_view.dart';
@@ -37,8 +40,18 @@ class _ExerciseRecordCubit extends ExerciseRecordCubit {
 }
 
 class _WorkoutCubit extends WorkoutCubit {
+  final List<(int, int?)> calls = [];
+
+  _WorkoutCubit({WorkoutDto? selectedWorkout}) {
+    if (selectedWorkout != null) {
+      emit(state.copyWith(selectedWorkout: Nullable(selectedWorkout)));
+    }
+  }
+
   @override
-  Future<void> getWorkout(int id, {int? version, bool refresh = false}) async {}
+  Future<void> getWorkout(int id, {int? version, bool refresh = false}) async {
+    calls.add((id, version));
+  }
 }
 
 class _WorkoutRecordCubit extends WorkoutRecordCubit {
@@ -101,10 +114,14 @@ class _ProfileCubit extends ProfileCubit {
 }
 
 void main() {
-  Future<void> pumpRoute(WidgetTester tester, String location) async {
+  Future<_WorkoutCubit> pumpRoute(
+    WidgetTester tester,
+    String location, {
+    WorkoutDto? selectedWorkout,
+  }) async {
     final exerciseCubit = _ExerciseCubit();
     final exerciseRecordCubit = _ExerciseRecordCubit();
-    final workoutCubit = _WorkoutCubit();
+    final workoutCubit = _WorkoutCubit(selectedWorkout: selectedWorkout);
     final workoutRecordCubit = _WorkoutRecordCubit();
     final workoutPlanRecordCubit = _WorkoutPlanRecordCubit();
     final profileCubit = _ProfileCubit();
@@ -136,6 +153,7 @@ void main() {
       ),
     );
     await tester.pump();
+    return workoutCubit;
   }
 
   testWidgets('exercise progress wins over the dynamic exercise ID route', (
@@ -188,13 +206,41 @@ void main() {
     view = tester.widget<WorkoutHistoryView>(find.byType(WorkoutHistoryView));
     expect(view.workoutId, 12);
     expect(view.version, 3);
+
+    final workoutCubit = await pumpRoute(
+      tester,
+      WorkoutHistoryView.location(workoutId: 12),
+      selectedWorkout: const WorkoutDto(
+        id: 12,
+        name: 'Cached Older Workout',
+        muscleGroups: {MuscleGroup.push},
+        muscles: TargetMuscles(primary: {Muscle.chest}, secondary: {}),
+        difficulty: Difficulty.intermediate,
+        version: 1,
+        isFavorite: false,
+        totalSets: 3,
+        totalReps: 30,
+        editorType: EditorType.basic,
+        createdBy: CreatedBy.user,
+      ),
+    );
+
+    view = tester.widget<WorkoutHistoryView>(find.byType(WorkoutHistoryView));
+    expect(view.workoutId, 12);
+    expect(view.version, isNull);
+    expect(workoutCubit.calls, [(12, null)]);
   });
 
   testWidgets('invalid workout history query params show Not Found', (
     tester,
   ) async {
     await pumpRoute(tester, '/workouts/history?id=not-a-number');
+    expect(find.byType(NotFoundView), findsOneWidget);
 
+    await pumpRoute(tester, '/workouts/history?version=3');
+    expect(find.byType(NotFoundView), findsOneWidget);
+
+    await pumpRoute(tester, '/workouts/history?id=12&version=not-a-number');
     expect(find.byType(NotFoundView), findsOneWidget);
   });
 

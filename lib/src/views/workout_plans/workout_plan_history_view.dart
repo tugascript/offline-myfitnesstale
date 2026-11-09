@@ -94,6 +94,7 @@ class _WorkoutPlanHistoryViewState extends State<WorkoutPlanHistoryView> {
 
           if (state.error != null && state.planRecords.isEmpty) {
             return _HistoryMessage(
+              sizes: sizes,
               icon: Icons.error_outline,
               title: 'Could not load plan history',
               description: state.error!.description,
@@ -105,7 +106,8 @@ class _WorkoutPlanHistoryViewState extends State<WorkoutPlanHistoryView> {
           }
 
           if (state.planRecords.isEmpty) {
-            return const _HistoryMessage(
+            return _HistoryMessage(
+              sizes: sizes,
               icon: Icons.event_note_outlined,
               title: 'No Plan History',
               description: 'Start this plan to create its first history entry.',
@@ -121,14 +123,15 @@ class _WorkoutPlanHistoryViewState extends State<WorkoutPlanHistoryView> {
               itemCount: state.planRecords.length + (state.isLoading ? 1 : 0),
               itemBuilder: (context, index) {
                 if (index == state.planRecords.length) {
-                  return const Padding(
-                    padding: EdgeInsets.all(16),
-                    child: Center(child: CircularProgressIndicator()),
+                  return Padding(
+                    padding: EdgeInsets.all(sizes.padding),
+                    child: const Center(child: CircularProgressIndicator()),
                   );
                 }
 
                 return _WorkoutPlanHistoryCard(
                   record: state.planRecords[index],
+                  sizes: sizes,
                 );
               },
             ),
@@ -141,8 +144,9 @@ class _WorkoutPlanHistoryViewState extends State<WorkoutPlanHistoryView> {
 
 class _WorkoutPlanHistoryCard extends StatelessWidget {
   final WorkoutPlanRecordDto record;
+  final DataDisplaySizesList sizes;
 
-  const _WorkoutPlanHistoryCard({required this.record});
+  const _WorkoutPlanHistoryCard({required this.record, required this.sizes});
 
   @override
   Widget build(BuildContext context) {
@@ -150,9 +154,9 @@ class _WorkoutPlanHistoryCard extends StatelessWidget {
     final localDateFormat = DateFormat.yMMMd().add_jm();
 
     return Card(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: EdgeInsets.only(bottom: sizes.margins),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(sizes.padding),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -162,12 +166,12 @@ class _WorkoutPlanHistoryCard extends StatelessWidget {
                 style: Theme.of(context).textTheme.titleMedium
                     ?.copyWith(fontWeight: FontWeight.bold),
               ),
-              const SizedBox(height: 8),
+              SizedBox(height: sizes.spacing / 2),
             ],
             Row(
               children: [
                 Icon(status.icon, color: status.color),
-                const SizedBox(width: 8),
+                SizedBox(width: sizes.spacing / 2),
                 Expanded(
                   child: Text(
                     status.label,
@@ -180,17 +184,17 @@ class _WorkoutPlanHistoryCard extends StatelessWidget {
                 Text('Version ${record.workoutPlanVersion}'),
               ],
             ),
-            const SizedBox(height: 12),
+            SizedBox(height: sizes.spacing),
             Text(
               'Started: ${localDateFormat.format(record.startedAt.toLocal())}',
             ),
             if (record.completedAt != null) ...[
-              const SizedBox(height: 4),
+              SizedBox(height: sizes.spacing / 3),
               Text(
                 'Completed: ${localDateFormat.format(record.completedAt!.toLocal())}',
               ),
             ],
-            const SizedBox(height: 8),
+            SizedBox(height: sizes.spacing / 2),
             Text(
               'Last reached: Week ${record.currentWeek} • Day ${record.currentDay} • Workout ${record.currentWorkoutPosition}',
             ),
@@ -229,12 +233,14 @@ class _WorkoutPlanHistoryCard extends StatelessWidget {
 }
 
 class _HistoryMessage extends StatelessWidget {
+  final DataDisplaySizesList sizes;
   final IconData icon;
   final String title;
   final String description;
   final Widget? action;
 
   const _HistoryMessage({
+    required this.sizes,
     required this.icon,
     required this.title,
     required this.description,
@@ -245,20 +251,20 @@ class _HistoryMessage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: EdgeInsets.all(sizes.padding * 1.5),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 64, color: Colors.grey),
-            const SizedBox(height: 16),
+            Icon(icon, size: sizes.largeIconSize, color: Colors.grey),
+            SizedBox(height: sizes.spacing),
             Text(
               title,
               style: Theme.of(context).textTheme.titleLarge,
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: sizes.spacing / 2),
             Text(description, textAlign: TextAlign.center),
-            if (action != null) ...[const SizedBox(height: 16), action!],
+            if (action != null) ...[SizedBox(height: sizes.spacing), action!],
           ],
         ),
       ),
