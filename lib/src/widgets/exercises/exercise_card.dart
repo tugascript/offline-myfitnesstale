@@ -37,26 +37,32 @@ class ExerciseCard extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            DifficultyBadge(
-              difficulty: exercise.difficulty,
-              spacing: sizes.padding / 2,
-              fontSize: sizes.fontSize,
-              fontWeight: FontWeight.w600,
+            Expanded(
+              child: Wrap(
+                alignment: WrapAlignment.spaceBetween,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                spacing: sizes.spacing,
+                runSpacing: sizes.spacing / 2,
+                children: [
+                  DifficultyBadge(
+                    difficulty: exercise.difficulty,
+                    spacing: sizes.padding / 2,
+                    fontSize: sizes.fontSize,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  MuscleGroupBadge(
+                    muscleGroup: exercise.muscleGroup,
+                    fontSize: sizes.fontSize,
+                    theme: theme,
+                  ),
+                ],
+              ),
             ),
-            Row(
-              children: [
-                MuscleGroupBadge(
-                  muscleGroup: exercise.muscleGroup,
-                  fontSize: sizes.fontSize,
-                  theme: theme,
-                ),
-                SizedBox(width: sizes.spacing),
-                Icon(
-                  Icons.arrow_forward_ios,
-                  size: sizes.fontSize * 1.2,
-                  color: Colors.grey,
-                ),
-              ],
+            SizedBox(width: sizes.spacing),
+            Icon(
+              Icons.arrow_forward_ios,
+              size: sizes.fontSize * 1.2,
+              color: Colors.grey,
             ),
           ],
         ),

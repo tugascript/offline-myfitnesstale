@@ -25,11 +25,13 @@ class ModalSearchEntityName extends StatelessWidget {
 
     return Row(
       children: [
-        Text(
-          "$name ",
-          style: TextStyle(fontSize: fontSize, fontWeight: FontWeight.bold),
-          softWrap: true,
-          overflow: TextOverflow.ellipsis,
+        Flexible(
+          child: Text(
+            "$name ",
+            style: TextStyle(fontSize: fontSize, fontWeight: FontWeight.bold),
+            softWrap: true,
+            overflow: TextOverflow.ellipsis,
+          ),
         ),
         Icon(Icons.favorite, color: Colors.red, size: fontSize * 1.2),
       ],

@@ -15,8 +15,12 @@ sealed class Formatters {
   static String formatRelativeDate(Units unit, DateTime date, {DateTime? now}) {
     final reference = (now ?? DateTime.now()).toLocal();
     final localDate = date.toLocal();
-    final today = DateTime(reference.year, reference.month, reference.day);
-    final targetDay = DateTime(localDate.year, localDate.month, localDate.day);
+    final today = DateTime.utc(reference.year, reference.month, reference.day);
+    final targetDay = DateTime.utc(
+      localDate.year,
+      localDate.month,
+      localDate.day,
+    );
     final days = today.difference(targetDay).inDays;
 
     if (days < 0 || days >= 30) {
@@ -70,10 +74,12 @@ sealed class Formatters {
       return startStr;
     }
 
+    final localStart = start.toLocal();
+    final localEnd = end.toLocal();
     final isSameDay =
-        start.year == end.year &&
-        start.month == end.month &&
-        start.day == end.day;
+        localStart.year == localEnd.year &&
+        localStart.month == localEnd.month &&
+        localStart.day == localEnd.day;
 
     if (isSameDay) {
       return '$startStr - ${formatTime(end)}';

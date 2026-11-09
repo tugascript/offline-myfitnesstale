@@ -22,7 +22,6 @@ class DifficultyBadge extends StatelessWidget {
     final difficultyColor = _difficultyColor(difficulty);
 
     return Container(
-      alignment: Alignment.center,
       padding: EdgeInsets.symmetric(horizontal: spacing, vertical: spacing / 2),
       decoration: BoxDecoration(
         color: difficultyColor.withValues(alpha: 0.2),
@@ -30,6 +29,7 @@ class DifficultyBadge extends StatelessWidget {
       ),
       child: Text(
         EnumDisplayNames.getDifficultyDisplayName(difficulty),
+        textAlign: TextAlign.center,
         style: TextStyle(
           fontSize: fontSize,
           fontWeight: fontWeight,
