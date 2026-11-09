@@ -119,14 +119,12 @@ void main() {
       await cubit.getRecipes(isFavorite: true);
       expect(cubit.state.recipePagination.isFavorite, isTrue);
       expect(cubit.state.recipes.length, 1);
+      expect(cubit.state.recipePagination.total, 1);
 
-      // Toggle back to not favorite
+      // Toggle back to not favorite while favorites filter is active
       await cubit.toggleFavorite(id);
-      expect(cubit.state.recipes.first.isFavorite, isFalse);
-
-      // Refresh with isFavorite: true
-      await cubit.getRecipes(isFavorite: true);
       expect(cubit.state.recipes, isEmpty);
+      expect(cubit.state.recipePagination.total, 0);
     },
   );
 }

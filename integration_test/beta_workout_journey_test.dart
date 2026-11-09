@@ -9,6 +9,7 @@ import 'package:myfitnesstale/src/models/workout_model.dart';
 import 'package:myfitnesstale/src/models/workout_record_model.dart';
 import 'package:myfitnesstale/src/models/workout_set_exercise_model.dart';
 import 'package:myfitnesstale/src/models/workout_set_model.dart';
+import 'package:myfitnesstale/src/views/workouts/workout_history_view.dart';
 
 import 'support/device_test_harness.dart';
 
@@ -124,6 +125,8 @@ void main() {
       await harness.pumpUntilFound(tester, find.text('LOG SET'));
       await tester.ensureVisible(find.text('COMPLETE'));
       await tester.tap(find.text('COMPLETE'));
+      await harness.pumpUntilFound(tester, find.text('COMPLETE WORKOUT'));
+      await tester.tap(find.text('YES'));
       await harness.pumpUntilFound(tester, find.text('START WORKOUT'));
       expect(
         await _countWhere(
@@ -174,7 +177,10 @@ void main() {
       );
       await harness.goAndWait(
         tester,
-        location: '/workouts/$workoutId/history/$version',
+        location: WorkoutHistoryView.location(
+          workoutId: workoutId,
+          version: version,
+        ),
         destination: find.text('Latest Record'),
       );
       expect(find.textContaining('Not Found'), findsNothing);

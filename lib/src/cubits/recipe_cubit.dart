@@ -193,6 +193,24 @@ class RecipeCubit extends Cubit<RecipeState> {
     }
 
     final updated = result.value;
+    if (state.recipePagination.isFavorite) {
+      emit(
+        state.copyWith(
+          selectedRecipe: state.selectedRecipe?.id == id
+              ? Nullable(updated)
+              : null,
+          error: const Nullable(null),
+        ),
+      );
+      await getRecipes(
+        search: state.recipePagination.search,
+        isFavorite: state.recipePagination.isFavorite,
+        limit: state.recipePagination.limit,
+        offset: 0,
+      );
+      return true;
+    }
+
     final updatedList = state.recipes
         .map((r) => r.id == id ? updated : r)
         .toList();

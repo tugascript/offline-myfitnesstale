@@ -532,50 +532,56 @@ class RecipeService {
   ) async {
     _logger.info('Toggling favorite for recipe with id $id');
     try {
-      final Recipe? recipe = await _recipeRepository.selectOne(id);
-      if (recipe == null) {
-        return err(
-          const ServiceError(
-            type: SingleErrorTypes.notFound,
-            description: 'Recipe not found',
-          ),
-        );
-      }
-
-      final updated = recipe.copyWith(
-        isFavorite: !recipe.isFavorite,
-        updatedAt: DateUtilities.getNowUtcUnix(),
-      );
-      await _recipeRepository.update(updated);
-
-      final List<RecipeItem> items = await _itemRepository.selectMany(
-        where: RecipeItemColumns.recipeId.equal,
-        whereArgs: [id],
-      );
-
-      final List<RecipeItemDto> itemDtos = [];
-      for (final item in items) {
-        final Food? food = await _foodRepository.selectOne(item.foodId);
-        String? portionName;
-        if (item.portionId != null) {
-          final FoodPortion? portion = await _portionRepository.selectOne(
-            item.portionId!,
+      return await _recipeRepository.startTransaction<
+        Result<RecipeDto, ServiceError<SingleErrorTypes>>
+      >((txn) async {
+        final Recipe? recipe = await _recipeRepository.selectOne(id, txn);
+        if (recipe == null) {
+          return err(
+            const ServiceError(
+              type: SingleErrorTypes.notFound,
+              description: 'Recipe not found',
+            ),
           );
-          portionName = portion?.portionName;
         }
-        itemDtos.add(
-          RecipeItemDto.fromModel(
-            item,
-            foodName: food?.name,
-            portionName: portionName,
-          ),
-        );
-      }
 
-      _logger.info(
-        'Toggled favorite for recipe with id $id to ${updated.isFavorite}',
-      );
-      return ok(RecipeDto.fromModel(updated, items: itemDtos));
+        final updated = recipe.copyWith(
+          isFavorite: !recipe.isFavorite,
+          updatedAt: DateUtilities.getNowUtcUnix(),
+        );
+        await _recipeRepository.update(updated, txn);
+
+        final List<RecipeItem> items = await _itemRepository.selectMany(
+          where: RecipeItemColumns.recipeId.equal,
+          whereArgs: [id],
+          trx: txn,
+        );
+
+        final List<RecipeItemDto> itemDtos = [];
+        for (final item in items) {
+          final Food? food = await _foodRepository.selectOne(item.foodId, txn);
+          String? portionName;
+          if (item.portionId != null) {
+            final FoodPortion? portion = await _portionRepository.selectOne(
+              item.portionId!,
+              txn,
+            );
+            portionName = portion?.portionName;
+          }
+          itemDtos.add(
+            RecipeItemDto.fromModel(
+              item,
+              foodName: food?.name,
+              portionName: portionName,
+            ),
+          );
+        }
+
+        _logger.info(
+          'Toggled favorite for recipe with id $id to ${updated.isFavorite}',
+        );
+        return ok(RecipeDto.fromModel(updated, items: itemDtos));
+      });
     } catch (e) {
       _logger.severe('Failed to toggle favorite for recipe with id $id', e);
       return err(

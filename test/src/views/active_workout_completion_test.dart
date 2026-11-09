@@ -81,17 +81,32 @@ void main() {
                 .copyWith(textScaler: const TextScaler.linear(2)),
             child: child!,
           ),
-          home: const Scaffold(
-            body: CompleteWorkoutDialog(workoutName: "this"),
+          home: Scaffold(
+            body: Builder(
+              builder: (context) => ElevatedButton(
+                onPressed: () {
+                  showDialog<void>(
+                    context: context,
+                    builder: (_) =>
+                        const CompleteWorkoutDialog(workoutName: 'this'),
+                  );
+                },
+                child: const Text('OPEN'),
+              ),
+            ),
           ),
         ),
       ),
     );
 
+    await tester.tap(find.text('OPEN'));
+    await tester.pumpAndSettle();
+    expect(find.byType(CompleteWorkoutDialog), findsOneWidget);
     expect(tester.takeException(), isNull);
     await tester.tap(find.text('YES'));
     await tester.pumpAndSettle();
     expect(cubit.completions, 1);
+    expect(find.byType(CompleteWorkoutDialog), findsNothing);
     expect(tester.takeException(), isNull);
   });
 }

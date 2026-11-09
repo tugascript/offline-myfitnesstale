@@ -16,6 +16,7 @@ class AppTextFormField extends StatelessWidget {
   final bool filled;
   final void Function(String)? onChanged;
   final void Function(String?)? onSaved;
+  final void Function(String)? onFieldSubmitted;
   final String? Function(String?)? validator;
   final TextInputType? keyboardType;
   final bool readOnly;
@@ -43,6 +44,7 @@ class AppTextFormField extends StatelessWidget {
     this.filled = false,
     this.onChanged,
     this.onSaved,
+    this.onFieldSubmitted,
     this.validator,
     this.keyboardType,
     this.readOnly = false,
@@ -71,6 +73,7 @@ class AppTextFormField extends StatelessWidget {
       maxLines: maxLines,
       onChanged: onChanged,
       onSaved: onSaved,
+      onFieldSubmitted: onFieldSubmitted,
       validator: validator,
       decoration: InputDecoration(
         labelText: labelText,

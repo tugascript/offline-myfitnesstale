@@ -40,6 +40,9 @@ class RecipeListItemWidget extends StatelessWidget {
         runSpacing: sizes.spacing / 2,
         children: [
           IconButton(
+            tooltip: recipe.isFavorite
+                ? 'Remove from favorites'
+                : 'Add to favorites',
             icon: Icon(
               recipe.isFavorite ? Icons.favorite : Icons.favorite_border,
               color: recipe.isFavorite ? Colors.red : Colors.grey,

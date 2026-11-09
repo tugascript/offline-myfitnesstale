@@ -24,7 +24,7 @@ sealed class Formatters {
     final days = today.difference(targetDay).inDays;
 
     if (days < 0 || days >= 30) {
-      return formatDate(unit, date);
+      return formatDate(unit, localDate);
     }
     if (days == 0) {
       return 'Today';
@@ -56,7 +56,8 @@ sealed class Formatters {
     DateTime time, {
     DateTime? now,
   }) {
-    return '${formatRelativeDate(unit, time, now: now)} ${formatTime(time)}';
+    final localTime = time.toLocal();
+    return '${formatRelativeDate(unit, localTime, now: now)} ${formatTime(localTime)}';
   }
 
   static String formatTime(DateTime time) {
@@ -82,10 +83,10 @@ sealed class Formatters {
         localStart.day == localEnd.day;
 
     if (isSameDay) {
-      return '$startStr - ${formatTime(end)}';
+      return '$startStr - ${formatTime(localEnd)}';
     }
 
-    return '$startStr - ${formatRelativeDateTime(unit, end, now: now)}';
+    return '$startStr - ${formatRelativeDateTime(unit, localEnd, now: now)}';
   }
 
   static String formatDuration(int totalSecs) {

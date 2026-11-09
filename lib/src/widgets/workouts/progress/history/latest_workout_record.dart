@@ -96,9 +96,8 @@ class _LatestWorkoutRecord extends StatelessWidget {
           }
 
           final targetWorkoutId = workoutId ?? workoutRecord!.workoutId;
-          final targetVersion = workoutVersion ?? workoutRecord!.version;
           context.push(
-            '/workouts/$targetWorkoutId/history/$targetVersion/records/${workoutRecord?.id}',
+            '/workouts/$targetWorkoutId/history/${workoutRecord!.version}/records/${workoutRecord?.id}',
           );
         },
         child: SizedBox(
