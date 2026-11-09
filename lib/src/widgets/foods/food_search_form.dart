@@ -147,6 +147,7 @@ class _FoodSearchFormState extends State<FoodSearchForm> {
                 ),
               ),
               SearchFormButton(
+                key: const ValueKey('foods-search-button'),
                 theme: theme,
                 loadingSize: loadingSize,
                 isLoading: widget.isLoading,
