@@ -54,8 +54,9 @@ class _FoodsViewState extends State<FoodsView> {
           cubit.state.foodPagination.total > cubit.state.foods.length) {
         final pagination = cubit.state.foodPagination;
         cubit.getFoods(
-          search:
-              pagination.name.trim().isEmpty ? null : pagination.name.trim(),
+          search: pagination.name.trim().isEmpty
+              ? null
+              : pagination.name.trim(),
           category: pagination.category,
           isFavorite: pagination.isFavorite,
           offset: cubit.state.foods.length,
@@ -110,19 +111,20 @@ class _FoodsViewState extends State<FoodsView> {
                   initialName: state.foodPagination.name,
                   initialCategory: state.foodPagination.category,
                   initialIsFavorite: state.foodPagination.isFavorite,
-                  onSubmit: ({
-                    required String name,
-                    required FoodCategory? category,
-                    required bool isFavorite,
-                  }) {
-                    context.read<FoodCubit>().getFoods(
+                  onSubmit:
+                      ({
+                        required String name,
+                        required FoodCategory? category,
+                        required bool isFavorite,
+                      }) {
+                        context.read<FoodCubit>().getFoods(
                           search: name.trim().isEmpty ? null : name.trim(),
                           category: category,
                           isFavorite: isFavorite,
                           limit: 30,
                           offset: 0,
                         );
-                  },
+                      },
                 ),
                 SizedBox(height: sizes.spacing),
                 Expanded(
@@ -176,9 +178,7 @@ class _FoodsViewState extends State<FoodsView> {
                               );
                             },
                             onToggleFavorite: () {
-                              context
-                                  .read<FoodCubit>()
-                                  .toggleFavorite(food.id);
+                              context.read<FoodCubit>().toggleFavorite(food.id);
                             },
                           );
                         },

@@ -12,11 +12,7 @@ sealed class Formatters {
     }
   }
 
-  static String formatRelativeDate(
-    Units unit,
-    DateTime date, {
-    DateTime? now,
-  }) {
+  static String formatRelativeDate(Units unit, DateTime date, {DateTime? now}) {
     final reference = (now ?? DateTime.now()).toLocal();
     final localDate = date.toLocal();
     final today = DateTime(reference.year, reference.month, reference.day);

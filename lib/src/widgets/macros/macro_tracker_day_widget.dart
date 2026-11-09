@@ -9,7 +9,7 @@ import '../../cubits/states/macro_tracking_state.dart';
 import '../../utilities/sizes/data_display_sizes.dart';
 import '../../widgets/common/confirmation_dialog.dart';
 import '../../widgets/macros/log_food_modal.dart';
-import '../../views/macro_goals/macro_goals_view.dart';
+import '../../views/macros/macro_goals_view.dart';
 import 'planned_meals_widget.dart';
 import 'nutrition_timeline_widget.dart';
 

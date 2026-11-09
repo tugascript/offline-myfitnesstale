@@ -6,7 +6,7 @@ import 'package:myfitnesstale/src/services/inputs/food_input.dart';
 import 'package:myfitnesstale/src/widgets/foods/food_form_widget.dart';
 import 'package:myfitnesstale/src/cubits/states/macro_tracking_state.dart';
 import 'package:myfitnesstale/src/services/dtos/macro_tracking_dto.dart';
-import 'package:myfitnesstale/src/widgets/macro_goals/macro_goals_content_widget.dart';
+import 'package:myfitnesstale/src/widgets/macros/goals/macro_goals_content_widget.dart';
 import 'package:myfitnesstale/src/services/dtos/food_dto.dart';
 import 'package:myfitnesstale/src/services/dtos/recipe_dto.dart';
 import 'package:myfitnesstale/src/services/dtos/meal_plan_dto.dart';

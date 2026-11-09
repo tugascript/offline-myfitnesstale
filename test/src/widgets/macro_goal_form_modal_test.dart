@@ -7,7 +7,7 @@ import 'package:myfitnesstale/src/services/dtos/macro_tracking_dto.dart';
 import 'package:myfitnesstale/src/services/inputs/macro_goal_input.dart';
 import 'package:myfitnesstale/src/utilities/sizes/data_display_sizes.dart';
 import 'package:myfitnesstale/src/utilities/sizes/screen_size.dart';
-import 'package:myfitnesstale/src/widgets/macro_goals/macro_goal_form_modal.dart';
+import 'package:myfitnesstale/src/widgets/macros/goals/macro_goal_form_modal.dart';
 
 class _Macros extends MacroTrackingCubit {
   MacroGoalInput? submitted;

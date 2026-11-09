@@ -9,7 +9,7 @@ import '../../../cubits/meal_plan_record_cubit.dart';
 import '../../../cubits/states/macro_tracking_state.dart';
 import '../../../cubits/states/meal_plan_record_state.dart';
 import '../../../utilities/sizes/data_display_sizes.dart';
-import '../../../views/macro_goals/macro_goals_view.dart';
+import '../../../views/macros/macro_goals_view.dart';
 import '../../../views/macros/macro_tracker_view.dart';
 import '../../../views/meal_plans/meal_plan_list_view.dart';
 

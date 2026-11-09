@@ -17,7 +17,8 @@ void main() {
       required String name,
       required FoodCategory? category,
       required bool isFavorite,
-    }) onSubmit,
+    })
+    onSubmit,
   }) {
     return MaterialApp(
       home: Scaffold(
@@ -49,7 +50,10 @@ void main() {
     await tester.pump();
 
     expect(find.byKey(const ValueKey('foods-search-input')), findsOneWidget);
-    expect(find.byKey(const ValueKey('foods-filter-favorites')), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('foods-filter-favorites')),
+      findsOneWidget,
+    );
     expect(find.byKey(const ValueKey('foods-filter-category')), findsOneWidget);
     expect(find.byKey(const ValueKey('foods-search-button')), findsOneWidget);
     expect(find.byIcon(Icons.favorite_border), findsOneWidget);

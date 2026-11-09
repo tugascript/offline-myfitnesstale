@@ -6,8 +6,8 @@ import '../../cubits/states/macro_tracking_state.dart';
 import '../../utilities/sizes/data_display_sizes.dart';
 import '../../utilities/sizes/screen_size.dart';
 import '../../widgets/layout/app_scaffold.dart';
-import '../../widgets/macro_goals/macro_goal_form_modal.dart';
-import '../../widgets/macro_goals/macro_goals_content_widget.dart';
+import '../../widgets/macros/goals/macro_goal_form_modal.dart';
+import '../../widgets/macros/goals/macro_goals_content_widget.dart';
 
 class MacroGoalsView extends StatefulWidget {
   static const routeName = '/macro-goals';
