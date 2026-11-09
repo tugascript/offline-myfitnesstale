@@ -17,7 +17,7 @@ import '../views/foods/food_details_view.dart';
 import '../views/foods/food_update_view.dart';
 import '../views/foods/foods_view.dart';
 import '../views/home/main_navigation_view.dart';
-import '../views/macro_goals/macro_goals_view.dart';
+import '../views/macros/macro_goals_view.dart';
 import '../views/macros/macro_tracker_view.dart';
 import '../views/meal_plans/meal_plan_creation_view.dart';
 import '../views/meal_plans/meal_plan_details_view.dart';

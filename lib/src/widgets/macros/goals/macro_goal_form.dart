@@ -1,48 +1,52 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../common/nullable.dart';
-import '../../cubits/macro_tracking_cubit.dart';
-import '../../models/enums.dart';
-import '../../services/dtos/macro_tracking_dto.dart';
-import '../../services/inputs/macro_goal_input.dart';
-import '../../utilities/converters.dart';
-import '../../utilities/sizes/data_display_sizes.dart';
-import '../layout/app_text_form_field.dart';
-import '../layout/responsive_fields.dart';
+import '../../../common/nullable.dart';
+import '../../../models/enums.dart';
+import '../../../services/dtos/macro_tracking_dto.dart';
+import '../../../services/inputs/macro_goal_input.dart';
+import '../../../utilities/converters.dart';
+import '../../../utilities/sizes/data_display_sizes.dart';
+import '../../common/icons_switch.dart';
+import '../../layout/app_elevated_button.dart';
+import '../../layout/app_text_form_field.dart';
+import '../../layout/responsive_fields.dart';
 import 'macro_goal_day_group_card.dart';
 
-class MacroGoalFormModal extends StatefulWidget {
+class MacroGoalForm extends StatefulWidget {
   final ThemeData theme;
   final DataDisplaySizesList sizes;
   final MacroGoalDto? existingGoal;
+  final bool isLoading;
+  final String? submitLabel;
+  final IconData? submitIcon;
+  final void Function(MacroGoalInput input) onSubmit;
 
-  const MacroGoalFormModal({
+  const MacroGoalForm({
     super.key,
     required this.theme,
     required this.sizes,
     this.existingGoal,
+    this.isLoading = false,
+    this.submitLabel,
+    this.submitIcon,
+    required this.onSubmit,
   });
 
   @override
-  State<MacroGoalFormModal> createState() => _MacroGoalFormModalState();
+  State<MacroGoalForm> createState() => _MacroGoalFormState();
 }
 
-class _MacroGoalFormModalState extends State<MacroGoalFormModal> {
+class _MacroGoalFormState extends State<MacroGoalForm> {
   final _formKey = GlobalKey<FormState>();
-  late MacroGoalType _goalType;
-  bool _calculateCaloriesFromMacros = true;
-  bool _cyclingGroupsCustomized = false;
+  late final _FormData _data;
   String? _dayValidationError;
 
-  late TextEditingController _nameController;
-  late TextEditingController _caloriesController;
-  late TextEditingController _proteinController;
-  late TextEditingController _carbsController;
-  late TextEditingController _fatController;
-  late TextEditingController _waterController;
-
-  final List<DayGroupFormState> _dayGroups = [];
+  late final TextEditingController _nameController;
+  late final TextEditingController _caloriesController;
+  late final TextEditingController _proteinController;
+  late final TextEditingController _carbsController;
+  late final TextEditingController _fatController;
+  late final TextEditingController _waterController;
 
   static const Map<DayOfWeek, String> _dayLabels = {
     DayOfWeek.monday: 'Mon',
@@ -58,25 +62,16 @@ class _MacroGoalFormModalState extends State<MacroGoalFormModal> {
   void initState() {
     super.initState();
     final g = widget.existingGoal;
-    _goalType = g?.goalType ?? MacroGoalType.flat;
-    _nameController = TextEditingController(text: g?.name ?? 'Daily Target');
-    _caloriesController = TextEditingController(
-      text: g?.targetCalories.toString() ?? '2000',
-    );
-    _proteinController = TextEditingController(
-      text: g?.targetProtein.toString() ?? '150',
-    );
-    _carbsController = TextEditingController(
-      text: g?.targetCarbs.toString() ?? '200',
-    );
-    _fatController = TextEditingController(
-      text: g?.targetFat.toString() ?? '65',
-    );
-    _waterController = TextEditingController(
-      text: g?.targetWaterIntakeMl?.toString() ?? '2500',
-    );
+    final goalType = g?.goalType ?? MacroGoalType.flat;
+    final name = g?.name ?? 'Daily Target';
+    final calories = g?.targetCalories ?? 2000;
+    final protein = g?.targetProtein ?? 150;
+    final carbs = g?.targetCarbs ?? 200;
+    final fat = g?.targetFat ?? 65;
+    final water = g?.targetWaterIntakeMl ?? 2500;
+    bool calcFromMacros = true;
     if (g != null) {
-      _calculateCaloriesFromMacros =
+      calcFromMacros =
           g.targetCalories ==
           Converters.macrosToCalories(
             protein: g.targetProtein,
@@ -84,6 +79,29 @@ class _MacroGoalFormModalState extends State<MacroGoalFormModal> {
             fats: g.targetFat,
           );
     }
+
+    _data = _FormData(
+      goalType: goalType,
+      name: name,
+      calories: calories,
+      protein: protein,
+      carbs: carbs,
+      fat: fat,
+      water: water,
+      calculateCaloriesFromMacros: calcFromMacros,
+    );
+
+    _nameController = TextEditingController(text: _data.name);
+    _caloriesController = TextEditingController(
+      text: _data.calories.toString(),
+    );
+    _proteinController = TextEditingController(text: _data.protein.toString());
+    _carbsController = TextEditingController(text: _data.carbs.toString());
+    _fatController = TextEditingController(text: _data.fat.toString());
+    _waterController = TextEditingController(
+      text: g?.targetWaterIntakeMl?.toString() ?? '2500',
+    );
+
     for (final controller in [
       _proteinController,
       _carbsController,
@@ -99,7 +117,7 @@ class _MacroGoalFormModalState extends State<MacroGoalFormModal> {
     if (g != null &&
         g.goalType == MacroGoalType.calorieCycling &&
         g.days.isNotEmpty) {
-      _cyclingGroupsCustomized = true;
+      _data.cyclingGroupsCustomized = true;
       for (int i = 0; i < g.days.length; i++) {
         final d = g.days[i];
         final isCalculated =
@@ -109,7 +127,7 @@ class _MacroGoalFormModalState extends State<MacroGoalFormModal> {
               carbs: d.targetCarbs,
               fats: d.targetFat,
             );
-        _dayGroups.add(
+        _data.dayGroups.add(
           DayGroupFormState(
             calories: d.targetCalories.toString(),
             protein: d.targetProtein.toString(),
@@ -130,11 +148,11 @@ class _MacroGoalFormModalState extends State<MacroGoalFormModal> {
   }
 
   void _createDefaultCyclingGroups() {
-    for (final group in _dayGroups) {
+    for (final group in _data.dayGroups) {
       group.dispose();
     }
-    _dayGroups.clear();
-    _cyclingGroupsCustomized = false;
+    _data.dayGroups.clear();
+    _data.cyclingGroupsCustomized = false;
     final baseProtein = _proteinController.text.isNotEmpty
         ? _proteinController.text
         : '150';
@@ -154,7 +172,7 @@ class _MacroGoalFormModalState extends State<MacroGoalFormModal> {
         existingDay?.targetSodium ?? widget.existingGoal?.targetSodium;
     final preservedPhase = existingDay?.phase ?? widget.existingGoal?.phase;
 
-    _dayGroups.add(
+    _data.dayGroups.add(
       DayGroupFormState(
         calories: _caloriesController.text,
         protein: baseProtein,
@@ -171,11 +189,11 @@ class _MacroGoalFormModalState extends State<MacroGoalFormModal> {
         preservedFiber: preservedFiber,
         preservedSodium: preservedSodium,
         preservedPhase: preservedPhase,
-        calculateCaloriesFromMacros: _calculateCaloriesFromMacros,
+        calculateCaloriesFromMacros: _data.calculateCaloriesFromMacros,
         onChanged: _onDayGroupChanged,
       ),
     );
-    _dayGroups.add(
+    _data.dayGroups.add(
       DayGroupFormState(
         calories: _caloriesController.text,
         protein: baseProtein,
@@ -186,21 +204,33 @@ class _MacroGoalFormModalState extends State<MacroGoalFormModal> {
         preservedFiber: preservedFiber,
         preservedSodium: preservedSodium,
         preservedPhase: preservedPhase,
-        calculateCaloriesFromMacros: _calculateCaloriesFromMacros,
+        calculateCaloriesFromMacros: _data.calculateCaloriesFromMacros,
         onChanged: _onDayGroupChanged,
       ),
     );
   }
 
   void _onDayGroupChanged() {
-    _cyclingGroupsCustomized = true;
+    _data.cyclingGroupsCustomized = true;
     if (mounted) {
       setState(() {});
     }
   }
 
+  void _setGoalType(MacroGoalType type) {
+    if (_data.goalType == type) return;
+    setState(() {
+      _data.goalType = type;
+      _dayValidationError = null;
+      if (type == MacroGoalType.calorieCycling &&
+          (_data.dayGroups.isEmpty || !_data.cyclingGroupsCustomized)) {
+        _createDefaultCyclingGroups();
+      }
+    });
+  }
+
   void _updateCalculatedCalories() {
-    if (!_calculateCaloriesFromMacros) return;
+    if (!_data.calculateCaloriesFromMacros) return;
     final protein = int.tryParse(_proteinController.text);
     final carbs = int.tryParse(_carbsController.text);
     final fat = int.tryParse(_fatController.text);
@@ -238,40 +268,44 @@ class _MacroGoalFormModalState extends State<MacroGoalFormModal> {
 
   void _toggleDayForGroup(int groupIndex, DayOfWeek day, bool selected) {
     setState(() {
-      _cyclingGroupsCustomized = true;
+      _data.cyclingGroupsCustomized = true;
       _dayValidationError = null;
       if (selected) {
-        for (int i = 0; i < _dayGroups.length; i++) {
+        for (int i = 0; i < _data.dayGroups.length; i++) {
           if (i != groupIndex) {
-            _dayGroups[i].selectedDays.remove(day);
+            _data.dayGroups[i].selectedDays.remove(day);
           }
         }
-        _dayGroups[groupIndex].selectedDays.add(day);
+        _data.dayGroups[groupIndex].selectedDays.add(day);
       } else {
-        _dayGroups[groupIndex].selectedDays.remove(day);
+        _data.dayGroups[groupIndex].selectedDays.remove(day);
       }
     });
   }
 
   void _addDayGroup() {
-    if (_dayGroups.length >= 7) return;
-    final assigned = <DayOfWeek>{for (final g in _dayGroups) ...g.selectedDays};
+    if (_data.dayGroups.length >= 7) return;
+    final assigned = <DayOfWeek>{
+      for (final g in _data.dayGroups) ...g.selectedDays,
+    };
     final unassigned = DayOfWeek.values
         .where((d) => !assigned.contains(d))
         .toList();
     final initialDays = unassigned.isNotEmpty
         ? <DayOfWeek>[unassigned.first]
         : <DayOfWeek>[];
-    final sourceGroup = _dayGroups.isNotEmpty ? _dayGroups.last : null;
+    final sourceGroup = _data.dayGroups.isNotEmpty
+        ? _data.dayGroups.last
+        : null;
     final existingDay =
         widget.existingGoal != null && widget.existingGoal!.days.isNotEmpty
         ? widget.existingGoal!.days.first
         : null;
 
     setState(() {
-      _cyclingGroupsCustomized = true;
+      _data.cyclingGroupsCustomized = true;
       _dayValidationError = null;
-      _dayGroups.add(
+      _data.dayGroups.add(
         DayGroupFormState(
           calories:
               sourceGroup?.caloriesController.text ??
@@ -307,7 +341,7 @@ class _MacroGoalFormModalState extends State<MacroGoalFormModal> {
               widget.existingGoal?.phase,
           calculateCaloriesFromMacros:
               sourceGroup?.calculateCaloriesFromMacros ??
-              _calculateCaloriesFromMacros,
+              _data.calculateCaloriesFromMacros,
           onChanged: _onDayGroupChanged,
         ),
       );
@@ -315,11 +349,11 @@ class _MacroGoalFormModalState extends State<MacroGoalFormModal> {
   }
 
   void _removeDayGroup(int index) {
-    if (_dayGroups.length <= 2) return;
+    if (_data.dayGroups.length <= 2) return;
     setState(() {
-      _cyclingGroupsCustomized = true;
+      _data.cyclingGroupsCustomized = true;
       _dayValidationError = null;
-      final removed = _dayGroups.removeAt(index);
+      final removed = _data.dayGroups.removeAt(index);
       removed.dispose();
     });
   }
@@ -328,7 +362,7 @@ class _MacroGoalFormModalState extends State<MacroGoalFormModal> {
   _computeCyclingSummary() {
     int totalCals = 0;
     final assigned = <DayOfWeek>{};
-    for (final g in _dayGroups) {
+    for (final g in _data.dayGroups) {
       final cals = int.tryParse(g.caloriesController.text) ?? 0;
       totalCals += cals * g.selectedDays.length;
       assigned.addAll(g.selectedDays);
@@ -351,7 +385,7 @@ class _MacroGoalFormModalState extends State<MacroGoalFormModal> {
     _carbsController.dispose();
     _fatController.dispose();
     _waterController.dispose();
-    for (final group in _dayGroups) {
+    for (final group in _data.dayGroups) {
       group.dispose();
     }
     super.dispose();
@@ -359,20 +393,18 @@ class _MacroGoalFormModalState extends State<MacroGoalFormModal> {
 
   void _submit() {
     if (!_formKey.currentState!.validate()) return;
+    _formKey.currentState!.save();
 
-    final name = _nameController.text.trim().isEmpty
-        ? 'Daily Target'
-        : _nameController.text.trim();
+    final name = _data.name.trim().isEmpty ? 'Daily Target' : _data.name.trim();
     final phase = widget.existingGoal?.phase ?? WeightGoalPhase.maintain;
     final isActive = widget.existingGoal?.isActive ?? true;
-    final cubit = context.read<MacroTrackingCubit>();
 
-    if (_goalType == MacroGoalType.flat) {
-      final calories = int.parse(_caloriesController.text);
-      final protein = int.parse(_proteinController.text);
-      final carbs = int.parse(_carbsController.text);
-      final fat = int.parse(_fatController.text);
-      final water = int.tryParse(_waterController.text.trim());
+    if (_data.goalType == MacroGoalType.flat) {
+      final calories = int.tryParse(_caloriesController.text) ?? _data.calories;
+      final protein = int.tryParse(_proteinController.text) ?? _data.protein;
+      final carbs = int.tryParse(_carbsController.text) ?? _data.carbs;
+      final fat = int.tryParse(_fatController.text) ?? _data.fat;
+      final water = _data.water;
       final existingDay =
           widget.existingGoal != null && widget.existingGoal!.days.length == 1
           ? widget.existingGoal!.days.first
@@ -411,25 +443,20 @@ class _MacroGoalFormModalState extends State<MacroGoalFormModal> {
         isActive: isActive,
       );
 
-      if (widget.existingGoal != null) {
-        cubit.updateMacroGoal(widget.existingGoal!.id, input);
-      } else {
-        cubit.createMacroGoal(input);
-      }
-      Navigator.of(context).pop();
+      widget.onSubmit(input);
       return;
     }
 
     // Calorie cycling validation
-    if (_dayGroups.length < 2) {
+    if (_data.dayGroups.length < 2) {
       setState(() {
         _dayValidationError =
             'Calorie cycling requires at least two day groups.';
       });
       return;
     }
-    for (int i = 0; i < _dayGroups.length; i++) {
-      if (_dayGroups[i].selectedDays.isEmpty) {
+    for (int i = 0; i < _data.dayGroups.length; i++) {
+      if (_data.dayGroups[i].selectedDays.isEmpty) {
         setState(() {
           _dayValidationError =
               'Each day group must have at least one day selected.';
@@ -460,8 +487,8 @@ class _MacroGoalFormModalState extends State<MacroGoalFormModal> {
     int totalWater = 0;
     bool hasWater = false;
 
-    for (int i = 0; i < _dayGroups.length; i++) {
-      final g = _dayGroups[i];
+    for (int i = 0; i < _data.dayGroups.length; i++) {
+      final g = _data.dayGroups[i];
       final sortedDays = g.selectedDays.toList()
         ..sort((a, b) => a.value.compareTo(b.value));
       final calories = int.parse(g.caloriesController.text);
@@ -520,13 +547,7 @@ class _MacroGoalFormModalState extends State<MacroGoalFormModal> {
       isActive: isActive,
     );
 
-    if (widget.existingGoal != null) {
-      cubit.updateMacroGoal(widget.existingGoal!.id, input);
-    } else {
-      cubit.createMacroGoal(input);
-    }
-
-    Navigator.of(context).pop();
+    widget.onSubmit(input);
   }
 
   Widget _buildFlatFormFields() {
@@ -537,18 +558,23 @@ class _MacroGoalFormModalState extends State<MacroGoalFormModal> {
           theme: widget.theme,
           fontSize: widget.sizes.fontSize,
           padding: widget.sizes.padding,
-          isLoading: false,
+          isLoading: widget.isLoading,
           key: const ValueKey('macro-goal-calories-input'),
           controller: _caloriesController,
-          readOnly: _calculateCaloriesFromMacros,
+          readOnly: _data.calculateCaloriesFromMacros,
           keyboardType: TextInputType.number,
           labelText: 'Daily Calories (kcal) *',
           validator: _validateMacro,
+          onSaved: (v) {
+            if (v != null) {
+              _data.calories = int.tryParse(v) ?? 0;
+            }
+          },
         ),
         SizedBox(height: widget.sizes.spacing),
         CheckboxListTile(
           key: const ValueKey('macro-goal-calculate-calories-checkbox'),
-          value: _calculateCaloriesFromMacros,
+          value: _data.calculateCaloriesFromMacros,
           contentPadding: EdgeInsets.zero,
           controlAffinity: ListTileControlAffinity.leading,
           title: Text(
@@ -557,7 +583,7 @@ class _MacroGoalFormModalState extends State<MacroGoalFormModal> {
           ),
           onChanged: (value) {
             setState(() {
-              _calculateCaloriesFromMacros = value ?? false;
+              _data.calculateCaloriesFromMacros = value ?? false;
               _updateCalculatedCalories();
             });
           },
@@ -570,23 +596,33 @@ class _MacroGoalFormModalState extends State<MacroGoalFormModal> {
               theme: widget.theme,
               fontSize: widget.sizes.fontSize,
               padding: widget.sizes.padding,
-              isLoading: false,
+              isLoading: widget.isLoading,
               key: const ValueKey('macro-goal-protein-input'),
               controller: _proteinController,
               keyboardType: TextInputType.number,
               labelText: 'Protein (g) *',
               validator: _validateMacro,
+              onSaved: (v) {
+                if (v != null) {
+                  _data.protein = int.tryParse(v) ?? 0;
+                }
+              },
             ),
             AppTextFormField(
               theme: widget.theme,
               fontSize: widget.sizes.fontSize,
               padding: widget.sizes.padding,
-              isLoading: false,
+              isLoading: widget.isLoading,
               key: const ValueKey('macro-goal-carbs-input'),
               controller: _carbsController,
               keyboardType: TextInputType.number,
               labelText: 'Carbs (g) *',
               validator: _validateMacro,
+              onSaved: (v) {
+                if (v != null) {
+                  _data.carbs = int.tryParse(v) ?? 0;
+                }
+              },
             ),
           ],
         ),
@@ -598,23 +634,31 @@ class _MacroGoalFormModalState extends State<MacroGoalFormModal> {
               theme: widget.theme,
               fontSize: widget.sizes.fontSize,
               padding: widget.sizes.padding,
-              isLoading: false,
+              isLoading: widget.isLoading,
               key: const ValueKey('macro-goal-fat-input'),
               controller: _fatController,
               keyboardType: TextInputType.number,
               labelText: 'Fat (g) *',
               validator: _validateMacro,
+              onSaved: (v) {
+                if (v != null) {
+                  _data.fat = int.tryParse(v) ?? 0;
+                }
+              },
             ),
             AppTextFormField(
               theme: widget.theme,
               fontSize: widget.sizes.fontSize,
               padding: widget.sizes.padding,
-              isLoading: false,
+              isLoading: widget.isLoading,
               key: const ValueKey('macro-goal-water-input'),
               controller: _waterController,
               keyboardType: TextInputType.number,
               labelText: 'Water (ml)',
               validator: _validateOptionalMacro,
+              onSaved: (v) {
+                _data.water = int.tryParse(v?.trim() ?? '');
+              },
             ),
           ],
         ),
@@ -662,11 +706,11 @@ class _MacroGoalFormModalState extends State<MacroGoalFormModal> {
           ),
         ],
         SizedBox(height: widget.sizes.spacing),
-        for (int i = 0; i < _dayGroups.length; i++) ...[
+        for (int i = 0; i < _data.dayGroups.length; i++) ...[
           MacroGoalDayGroupCard(
             index: i,
-            group: _dayGroups[i],
-            canRemove: _dayGroups.length > 2,
+            group: _data.dayGroups[i],
+            canRemove: _data.dayGroups.length > 2,
             theme: widget.theme,
             sizes: widget.sizes,
             dayLabels: _dayLabels,
@@ -675,8 +719,8 @@ class _MacroGoalFormModalState extends State<MacroGoalFormModal> {
                 _toggleDayForGroup(i, day, selected),
             onToggleCalculateCalories: (value) {
               setState(() {
-                _cyclingGroupsCustomized = true;
-                _dayGroups[i].setCalculateCalories(value);
+                _data.cyclingGroupsCustomized = true;
+                _data.dayGroups[i].setCalculateCalories(value);
               });
             },
             validateMacro: _validateMacro,
@@ -684,7 +728,7 @@ class _MacroGoalFormModalState extends State<MacroGoalFormModal> {
           ),
           SizedBox(height: widget.sizes.spacing),
         ],
-        if (_dayGroups.length < 7)
+        if (_data.dayGroups.length < 7)
           OutlinedButton.icon(
             key: const ValueKey('macro-goal-add-day-group-btn'),
             onPressed: _addDayGroup,
@@ -700,119 +744,140 @@ class _MacroGoalFormModalState extends State<MacroGoalFormModal> {
 
   @override
   Widget build(BuildContext context) {
-    return Dialog(
-      child: ConstrainedBox(
-        constraints: BoxConstraints(maxWidth: widget.sizes.modalMaxWidth),
-        child: Padding(
-          padding: EdgeInsets.all(widget.sizes.padding * 1.5),
-          child: Form(
-            key: _formKey,
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Text(
-                    widget.existingGoal != null
-                        ? 'Edit Macro Goal'
-                        : 'Create Macro Goal',
+    return Form(
+      key: _formKey,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          AppTextFormField(
+            theme: widget.theme,
+            fontSize: widget.sizes.fontSize,
+            padding: widget.sizes.padding,
+            isLoading: widget.isLoading,
+            key: const ValueKey('macro-goal-name-input'),
+            controller: _nameController,
+            labelText: 'Goal Name *',
+            validator: (v) => v == null || v.trim().isEmpty ? 'Required' : null,
+            onSaved: (v) {
+              _data.name = v ?? '';
+            },
+          ),
+          SizedBox(height: widget.sizes.spacing),
+          Wrap(
+            key: const ValueKey('macro-goal-type-selector'),
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: widget.sizes.spacing,
+            runSpacing: widget.sizes.spacing / 2,
+            children: [
+              InkWell(
+                key: const ValueKey('macro-goal-type-flat'),
+                onTap: () => _setGoalType(MacroGoalType.flat),
+                child: Padding(
+                  padding: EdgeInsets.symmetric(
+                    vertical: widget.sizes.padding / 2,
+                  ),
+                  child: Text(
+                    'Flat Week',
                     style: TextStyle(
-                      fontSize: widget.sizes.titleFontSize,
-                      fontWeight: FontWeight.bold,
+                      fontSize: widget.sizes.fontSize,
+                      fontWeight: _data.goalType == MacroGoalType.flat
+                          ? FontWeight.bold
+                          : FontWeight.normal,
+                      color: _data.goalType == MacroGoalType.flat
+                          ? widget.theme.colorScheme.primary
+                          : widget.theme.colorScheme.onSurfaceVariant,
                     ),
                   ),
-                  SizedBox(height: widget.sizes.spacing),
-                  AppTextFormField(
-                    theme: widget.theme,
-                    fontSize: widget.sizes.fontSize,
-                    padding: widget.sizes.padding,
-                    isLoading: false,
-                    key: const ValueKey('macro-goal-name-input'),
-                    controller: _nameController,
-                    labelText: 'Goal Name *',
-                    validator: (v) =>
-                        v == null || v.trim().isEmpty ? 'Required' : null,
-                  ),
-                  SizedBox(height: widget.sizes.spacing),
-                  Wrap(
-                    key: const ValueKey('macro-goal-type-selector'),
-                    spacing: widget.sizes.spacing / 2,
-                    runSpacing: widget.sizes.spacing / 2,
-                    children: [
-                      ChoiceChip(
-                        key: const ValueKey('macro-goal-type-flat'),
-                        label: Text(
-                          'Flat Week',
-                          style: TextStyle(fontSize: widget.sizes.fontSize),
-                        ),
-                        selected: _goalType == MacroGoalType.flat,
-                        onSelected: (selected) {
-                          if (selected) {
-                            setState(() {
-                              _goalType = MacroGoalType.flat;
-                              _dayValidationError = null;
-                            });
-                          }
-                        },
-                      ),
-                      ChoiceChip(
-                        key: const ValueKey('macro-goal-type-cycling'),
-                        label: Text(
-                          'Calorie Cycling',
-                          style: TextStyle(fontSize: widget.sizes.fontSize),
-                        ),
-                        selected: _goalType == MacroGoalType.calorieCycling,
-                        onSelected: (selected) {
-                          if (selected) {
-                            setState(() {
-                              _goalType = MacroGoalType.calorieCycling;
-                              _dayValidationError = null;
-                              if (_dayGroups.isEmpty ||
-                                  !_cyclingGroupsCustomized) {
-                                _createDefaultCyclingGroups();
-                              }
-                            });
-                          }
-                        },
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: widget.sizes.spacing),
-                  if (_goalType == MacroGoalType.flat)
-                    _buildFlatFormFields()
-                  else
-                    _buildCyclingFormFields(),
-                  SizedBox(height: widget.sizes.spacing * 1.5),
-                  Wrap(
-                    alignment: WrapAlignment.end,
-                    crossAxisAlignment: WrapCrossAlignment.center,
-                    spacing: widget.sizes.spacing / 2,
-                    runSpacing: widget.sizes.spacing / 2,
-                    children: [
-                      TextButton(
-                        onPressed: () => Navigator.of(context).pop(),
-                        child: Text(
-                          'Cancel',
-                          style: TextStyle(fontSize: widget.sizes.fontSize),
-                        ),
-                      ),
-                      SizedBox(width: widget.sizes.spacing),
-                      ElevatedButton(
-                        key: const ValueKey('macro-goal-submit-button'),
-                        onPressed: _submit,
-                        child: Text(
-                          widget.existingGoal != null ? 'Update' : 'Create',
-                          style: TextStyle(fontSize: widget.sizes.fontSize),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+                ),
               ),
+              IconsSwitch(
+                key: const ValueKey('macro-goal-type-switch'),
+                theme: widget.theme,
+                offIcon: Icons.calendar_view_week,
+                onIcon: Icons.sync,
+                switchOn: _data.goalType == MacroGoalType.calorieCycling,
+                spacing: widget.sizes.spacing / 2,
+                switchPadding: widget.sizes.padding / 4,
+                thumbSize: widget.sizes.subtitleFontSize * 1.1,
+                iconSize: widget.sizes.titleFontSize,
+                onChanged: (bool value) {
+                  _setGoalType(
+                    value ? MacroGoalType.calorieCycling : MacroGoalType.flat,
+                  );
+                },
+              ),
+              InkWell(
+                key: const ValueKey('macro-goal-type-cycling'),
+                onTap: () => _setGoalType(MacroGoalType.calorieCycling),
+                child: Padding(
+                  padding: EdgeInsets.symmetric(
+                    vertical: widget.sizes.padding / 2,
+                  ),
+                  child: Text(
+                    'Calorie Cycling',
+                    style: TextStyle(
+                      fontSize: widget.sizes.fontSize,
+                      fontWeight: _data.goalType == MacroGoalType.calorieCycling
+                          ? FontWeight.bold
+                          : FontWeight.normal,
+                      color: _data.goalType == MacroGoalType.calorieCycling
+                          ? widget.theme.colorScheme.primary
+                          : widget.theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: widget.sizes.spacing),
+          if (_data.goalType == MacroGoalType.flat)
+            _buildFlatFormFields()
+          else
+            _buildCyclingFormFields(),
+          SizedBox(height: widget.sizes.spacing * 1.5),
+          SizedBox(
+            width: double.infinity,
+            child: AppElevatedButton(
+              key: const ValueKey('macro-goal-submit-button'),
+              theme: widget.theme,
+              isLoading: widget.isLoading,
+              sizes: widget.sizes,
+              onPressed: _submit,
+              label:
+                  widget.submitLabel ??
+                  (widget.existingGoal != null ? 'Update' : 'Create'),
+              icon: widget.submitIcon ?? Icons.add,
             ),
           ),
-        ),
+        ],
       ),
     );
   }
+}
+
+final class _FormData {
+  MacroGoalType goalType;
+  String name;
+  int calories;
+  int protein;
+  int carbs;
+  int fat;
+  int? water;
+  bool calculateCaloriesFromMacros;
+  bool cyclingGroupsCustomized = false;
+  final List<DayGroupFormState> dayGroups;
+
+  _FormData({
+    required this.goalType,
+    required this.name,
+    required this.calories,
+    required this.protein,
+    required this.carbs,
+    required this.fat,
+    this.water,
+    this.calculateCaloriesFromMacros = true,
+    List<DayGroupFormState>? dayGroups,
+  }) : dayGroups = dayGroups ?? [];
 }

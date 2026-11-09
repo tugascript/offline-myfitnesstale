@@ -3,53 +3,53 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:myfitnesstale/src/common/nullable.dart';
-import 'package:myfitnesstale/src/cubits/food_cubit.dart';
-import 'package:myfitnesstale/src/cubits/recipe_cubit.dart';
 import 'package:myfitnesstale/src/cubits/exercise_cubit.dart';
 import 'package:myfitnesstale/src/cubits/exercise_record_cubit.dart';
-import 'package:myfitnesstale/src/cubits/profile_cubit.dart';
+import 'package:myfitnesstale/src/cubits/food_cubit.dart';
 import 'package:myfitnesstale/src/cubits/macro_tracking_cubit.dart';
 import 'package:myfitnesstale/src/cubits/meal_plan_cubit.dart';
 import 'package:myfitnesstale/src/cubits/meal_plan_record_cubit.dart';
+import 'package:myfitnesstale/src/cubits/profile_cubit.dart';
+import 'package:myfitnesstale/src/cubits/recipe_cubit.dart';
+import 'package:myfitnesstale/src/cubits/workout_plan_record_cubit.dart';
 import 'package:myfitnesstale/src/models/common.dart';
 import 'package:myfitnesstale/src/models/enums.dart';
 import 'package:myfitnesstale/src/models/exercise_model.dart';
 import 'package:myfitnesstale/src/services/dtos/exercise_dto.dart';
 import 'package:myfitnesstale/src/services/dtos/food_dto.dart';
-import 'package:myfitnesstale/src/services/dtos/recipe_dto.dart';
+import 'package:myfitnesstale/src/services/dtos/macro_tracking_dto.dart';
 import 'package:myfitnesstale/src/services/dtos/meal_plan_dto.dart';
 import 'package:myfitnesstale/src/services/dtos/meal_plan_record_dto.dart';
-import 'package:myfitnesstale/src/services/dtos/macro_tracking_dto.dart';
+import 'package:myfitnesstale/src/services/dtos/recipe_dto.dart';
 import 'package:myfitnesstale/src/services/dtos/strength_goal_dto.dart';
 import 'package:myfitnesstale/src/utilities/sizes/data_display_sizes.dart';
 import 'package:myfitnesstale/src/utilities/sizes/screen_size.dart';
 import 'package:myfitnesstale/src/views/exercises/strength_goals_view.dart';
-import 'package:myfitnesstale/src/views/foods/foods_view.dart';
 import 'package:myfitnesstale/src/views/foods/food_creation_view.dart';
-import 'package:myfitnesstale/src/views/foods/food_update_view.dart';
 import 'package:myfitnesstale/src/views/foods/food_details_view.dart';
-import 'package:myfitnesstale/src/views/recipes/recipes_view.dart';
-import 'package:myfitnesstale/src/views/recipes/recipe_creation_view.dart';
-import 'package:myfitnesstale/src/views/recipes/recipe_update_view.dart';
-import 'package:myfitnesstale/src/views/recipes/recipe_details_view.dart';
-import 'package:myfitnesstale/src/views/meal_plans/meal_plan_list_view.dart';
-import 'package:myfitnesstale/src/views/meal_plans/meal_plan_creation_view.dart';
-import 'package:myfitnesstale/src/views/meal_plans/meal_plan_update_view.dart';
-import 'package:myfitnesstale/src/views/meal_plans/meal_plan_details_view.dart';
+import 'package:myfitnesstale/src/views/foods/food_update_view.dart';
+import 'package:myfitnesstale/src/views/foods/foods_view.dart';
+import 'package:myfitnesstale/src/views/macros/macro_goals_view.dart';
 import 'package:myfitnesstale/src/views/macros/macro_tracker_view.dart';
-import 'package:myfitnesstale/src/views/macro_goals/macro_goals_view.dart';
-import 'package:myfitnesstale/src/widgets/foods/food_form_widget.dart';
-import 'package:myfitnesstale/src/widgets/recipes/recipe_form_widget.dart';
-import 'package:myfitnesstale/src/widgets/meal_plans/meal_plan_form_widget.dart';
-import 'package:myfitnesstale/src/widgets/macro_goals/macro_goal_form_modal.dart';
+import 'package:myfitnesstale/src/views/meal_plans/meal_plan_creation_view.dart';
+import 'package:myfitnesstale/src/views/meal_plans/meal_plan_details_view.dart';
+import 'package:myfitnesstale/src/views/meal_plans/meal_plan_list_view.dart';
+import 'package:myfitnesstale/src/views/meal_plans/meal_plan_update_view.dart';
+import 'package:myfitnesstale/src/views/recipes/recipe_creation_view.dart';
+import 'package:myfitnesstale/src/views/recipes/recipe_details_view.dart';
+import 'package:myfitnesstale/src/views/recipes/recipe_update_view.dart';
+import 'package:myfitnesstale/src/views/recipes/recipes_view.dart';
+import 'package:myfitnesstale/src/widgets/dashboard/active/active_plans_carousel.dart';
+import 'package:myfitnesstale/src/widgets/dashboard/quick_actions_widget.dart';
 import 'package:myfitnesstale/src/widgets/exercises/strength_goal/strength_goal_form_modal.dart';
+import 'package:myfitnesstale/src/widgets/foods/food_form_widget.dart';
+import 'package:myfitnesstale/src/widgets/macros/goals/macro_goal_form_modal.dart';
 import 'package:myfitnesstale/src/widgets/macros/log_food_modal.dart';
 import 'package:myfitnesstale/src/widgets/macros/macro_tracker_day_widget.dart';
-import 'package:myfitnesstale/src/widgets/macros/macro_tracker_week_widget.dart';
 import 'package:myfitnesstale/src/widgets/macros/macro_tracker_month_widget.dart';
-import 'package:myfitnesstale/src/widgets/dashboard/active/active_plans_carousel.dart';
-import 'package:myfitnesstale/src/cubits/workout_plan_record_cubit.dart';
-import 'package:myfitnesstale/src/widgets/dashboard/quick_actions_widget.dart';
+import 'package:myfitnesstale/src/widgets/macros/macro_tracker_week_widget.dart';
+import 'package:myfitnesstale/src/widgets/meal_plans/meal_plan_form_widget.dart';
+import 'package:myfitnesstale/src/widgets/recipes/recipe_form_widget.dart';
 
 const _food = FoodDto(
   id: 1,
@@ -196,8 +196,10 @@ class _Foods extends FoodCubit {
   _Foods() {
     emit(state.copyWith(foods: [_food], selectedFood: const Nullable(_food)));
   }
+
   @override
   Future<void> getFood(int id) async {}
+
   @override
   Future<void> getFoods({
     String? search,
@@ -217,8 +219,10 @@ class _Recipes extends RecipeCubit {
       ),
     );
   }
+
   @override
   Future<void> getRecipe(int id) async {}
+
   @override
   Future<void> getRecipes({
     String? search,
@@ -256,8 +260,10 @@ class _Goals extends ExerciseRecordCubit {
       ),
     );
   }
+
   @override
   Future<void> getActiveStrengthGoal({int? exerciseId}) async {}
+
   @override
   Future<void> getStrengthGoals({
     int? exerciseId,
@@ -299,12 +305,16 @@ class _Macros extends MacroTrackingCubit {
       ),
     );
   }
+
   @override
   Future<void> getActiveMacroGoal() async {}
+
   @override
   Future<void> getMacroGoals({int limit = 20, int offset = 0}) async {}
+
   @override
   Future<void> getDailyLog(DateTime date) async {}
+
   @override
   Future<void> getDailyLogsForRange({
     required DateTime start,
@@ -321,8 +331,10 @@ class _Plans extends MealPlanCubit {
       ),
     );
   }
+
   @override
   Future<void> getMealPlan(int id, {int? version}) async {}
+
   @override
   Future<void> getMealPlans({
     String? search,
@@ -351,6 +363,7 @@ class _Records extends MealPlanRecordCubit {
       ),
     );
   }
+
   @override
   Future<void> getActiveMealPlanRecord() async {}
 }

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
-import '../../models/enums.dart';
-import '../../utilities/converters.dart';
-import '../../utilities/sizes/data_display_sizes.dart';
-import '../layout/app_text_form_field.dart';
-import '../layout/responsive_fields.dart';
+import '../../../models/enums.dart';
+import '../../../utilities/converters.dart';
+import '../../../utilities/sizes/data_display_sizes.dart';
+import '../../layout/app_text_form_field.dart';
+import '../../layout/responsive_fields.dart';
 
 class DayGroupFormState {
   final TextEditingController caloriesController;
@@ -166,6 +166,7 @@ class MacroGoalDayGroupCard extends StatelessWidget {
               children: [
                 for (final day in DayOfWeek.values)
                   FilterChip(
+                    shape: const BeveledRectangleBorder(),
                     key: ValueKey('macro-goal-group-$index-day-${day.value}'),
                     label: Text(
                       dayLabels[day]!,

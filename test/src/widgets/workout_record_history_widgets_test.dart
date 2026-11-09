@@ -54,48 +54,51 @@ void main() {
   group('Formatters.formatRelativeDate', () {
     final now = DateTime(2026, 11, 9, 15, 0);
 
-    test('returns Today, Yesterday, N days ago, and N weeks ago under 30 days', () {
-      expect(
-        Formatters.formatRelativeDate(
-          Units.metric,
-          DateTime(2026, 11, 9, 9, 0),
-          now: now,
-        ),
-        'Today',
-      );
-      expect(
-        Formatters.formatRelativeDate(
-          Units.metric,
-          DateTime(2026, 11, 8, 20, 0),
-          now: now,
-        ),
-        'Yesterday',
-      );
-      expect(
-        Formatters.formatRelativeDate(
-          Units.metric,
-          DateTime(2026, 11, 6, 12, 0),
-          now: now,
-        ),
-        '3 days ago',
-      );
-      expect(
-        Formatters.formatRelativeDate(
-          Units.metric,
-          DateTime(2026, 11, 2, 12, 0),
-          now: now,
-        ),
-        '1 week ago',
-      );
-      expect(
-        Formatters.formatRelativeDate(
-          Units.metric,
-          DateTime(2026, 10, 23, 12, 0),
-          now: now,
-        ),
-        '2 weeks ago',
-      );
-    });
+    test(
+      'returns Today, Yesterday, N days ago, and N weeks ago under 30 days',
+      () {
+        expect(
+          Formatters.formatRelativeDate(
+            Units.metric,
+            DateTime(2026, 11, 9, 9, 0),
+            now: now,
+          ),
+          'Today',
+        );
+        expect(
+          Formatters.formatRelativeDate(
+            Units.metric,
+            DateTime(2026, 11, 8, 20, 0),
+            now: now,
+          ),
+          'Yesterday',
+        );
+        expect(
+          Formatters.formatRelativeDate(
+            Units.metric,
+            DateTime(2026, 11, 6, 12, 0),
+            now: now,
+          ),
+          '3 days ago',
+        );
+        expect(
+          Formatters.formatRelativeDate(
+            Units.metric,
+            DateTime(2026, 11, 2, 12, 0),
+            now: now,
+          ),
+          '1 week ago',
+        );
+        expect(
+          Formatters.formatRelativeDate(
+            Units.metric,
+            DateTime(2026, 10, 23, 12, 0),
+            now: now,
+          ),
+          '2 weeks ago',
+        );
+      },
+    );
 
     test('falls back to formatted date when 30 days or older', () {
       final older = DateTime(2026, 10, 1, 10, 0);
@@ -255,10 +258,7 @@ void main() {
 
       expect(find.text(' Upper Body'), findsOneWidget);
       expect(find.text(' Today 10:30 - 11:45'), findsOneWidget);
-      expect(
-        find.text(' 09/05/2025 23:30 - 10/05/2025 00:45'),
-        findsOneWidget,
-      );
+      expect(find.text(' 09/05/2025 23:30 - 10/05/2025 00:45'), findsOneWidget);
       expect(tester.takeException(), isNull);
     },
   );

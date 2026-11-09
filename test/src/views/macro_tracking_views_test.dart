@@ -29,7 +29,7 @@ import 'package:myfitnesstale/src/views/exercises/strength_goals_view.dart';
 import 'package:myfitnesstale/src/views/foods/foods_view.dart';
 import 'package:myfitnesstale/src/views/home/home_view.dart';
 import 'package:myfitnesstale/src/views/home/main_navigation_view.dart';
-import 'package:myfitnesstale/src/views/macro_goals/macro_goals_view.dart';
+import 'package:myfitnesstale/src/views/macros/macro_goals_view.dart';
 import 'package:myfitnesstale/src/views/macros/macro_tracker_view.dart';
 import 'package:myfitnesstale/src/views/recipes/recipes_view.dart';
 import 'package:myfitnesstale/src/views/workout_plans/workout_plan_list_view.dart';

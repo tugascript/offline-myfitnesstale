@@ -7,7 +7,7 @@ import '../../views/exercise_progress_view.dart';
 import '../../views/exercises/exercises_view.dart';
 import '../../views/exercises/strength_goals_view.dart';
 import '../../views/foods/foods_view.dart';
-import '../../views/macro_goals/macro_goals_view.dart';
+import '../../views/macros/macro_goals_view.dart';
 import '../../views/meal_plans/meal_plan_list_view.dart';
 import '../../views/recipes/recipes_view.dart';
 import '../../views/weight/weight_goals_view.dart';

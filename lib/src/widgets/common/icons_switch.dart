@@ -31,12 +31,15 @@ class IconsSwitch extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(
-          offIcon,
-          size: iconSize,
-          color: switchOn
-              ? theme.colorScheme.onSurfaceVariant
-              : theme.colorScheme.primary,
+        InkWell(
+          onTap: () => onChanged(false),
+          child: Icon(
+            offIcon,
+            size: iconSize,
+            color: switchOn
+                ? theme.colorScheme.onSurfaceVariant
+                : theme.colorScheme.primary,
+          ),
         ),
         SizedBox(width: spacing),
         SharpSwitch(
@@ -46,12 +49,15 @@ class IconsSwitch extends StatelessWidget {
           padding: EdgeInsets.all(switchPadding),
         ),
         SizedBox(width: spacing),
-        Icon(
-          onIcon,
-          size: iconSize,
-          color: switchOn
-              ? theme.colorScheme.primary
-              : theme.colorScheme.onSurfaceVariant,
+        InkWell(
+          onTap: () => onChanged(true),
+          child: Icon(
+            onIcon,
+            size: iconSize,
+            color: switchOn
+                ? theme.colorScheme.primary
+                : theme.colorScheme.onSurfaceVariant,
+          ),
         ),
       ],
     );

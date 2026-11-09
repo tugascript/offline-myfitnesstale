@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../cubits/macro_tracking_cubit.dart';
-import '../../cubits/states/macro_tracking_state.dart';
-import '../../models/enums.dart';
-import '../../services/dtos/macro_tracking_dto.dart';
-import '../../utilities/sizes/data_display_sizes.dart';
-import '../../widgets/common/confirmation_dialog.dart';
-import '../../widgets/macro_goals/macro_goal_chip.dart';
-import '../../widgets/macro_goals/macro_goal_form_modal.dart';
+import '../../../cubits/macro_tracking_cubit.dart';
+import '../../../cubits/states/macro_tracking_state.dart';
+import '../../../models/enums.dart';
+import '../../../services/dtos/macro_tracking_dto.dart';
+import '../../../utilities/sizes/data_display_sizes.dart';
+import '../../common/confirmation_dialog.dart';
+import 'macro_goal_chip.dart';
+import 'macro_goal_form_modal.dart';
 
 class MacroGoalsContentWidget extends StatelessWidget {
   final MacroTrackingState state;
@@ -102,51 +102,54 @@ class MacroGoalsContentWidget extends StatelessWidget {
           // Active Macro Goal Card
           if (activeGoal == null)
             Card(
-              elevation: 1,
               margin: EdgeInsets.zero,
-              child: Padding(
-                padding: EdgeInsets.all(sizes.padding * 1.5),
-                child: Column(
-                  children: [
-                    Icon(
-                      Icons.track_changes,
-                      size: sizes.titleFontSize * 2,
-                      color: Colors.grey,
+              child: SizedBox(
+                width: double.infinity,
+                child: InkWell(
+                  key: const ValueKey('macro-goal-set-button'),
+                  onTap: () {
+                    showDialog(
+                      context: context,
+                      builder: (_) =>
+                          MacroGoalFormModal(theme: theme, sizes: sizes),
+                    );
+                  },
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(
+                      vertical: sizes.padding * 2,
+                      horizontal: sizes.padding,
                     ),
-                    SizedBox(height: sizes.spacing),
-                    Text(
-                      'No Active Macro Goal',
-                      style: TextStyle(
-                        fontSize: sizes.subtitleFontSize,
-                        fontWeight: FontWeight.bold,
-                      ),
+                    child: Column(
+                      children: [
+                        Icon(
+                          Icons.track_changes,
+                          size: sizes.titleFontSize * 2,
+                        ),
+                        SizedBox(height: sizes.spacing),
+                        Text(
+                          'No Active Macro Goal',
+                          style: TextStyle(
+                            fontSize: sizes.titleFontSize,
+                            fontWeight: FontWeight.bold,
+                            color: theme.brightness == Brightness.dark
+                                ? Colors.grey[200]
+                                : Colors.grey[800],
+                          ),
+                        ),
+                        SizedBox(height: sizes.spacing),
+                        Text(
+                          'Create a macro goal',
+                          style: TextStyle(
+                            fontSize: sizes.subtitleFontSize,
+                            fontWeight: FontWeight.w600,
+                            color: theme.brightness == Brightness.dark
+                                ? Colors.grey[400]
+                                : Colors.grey[600],
+                          ),
+                        ),
+                      ],
                     ),
-                    SizedBox(height: sizes.spacing / 2),
-                    Text(
-                      'Set your target daily calories, protein, carbs, and fats.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: sizes.fontSize,
-                        color: Colors.grey,
-                      ),
-                    ),
-                    SizedBox(height: sizes.spacing),
-                    ElevatedButton.icon(
-                      key: const ValueKey('macro-goal-set-button'),
-                      icon: Icon(Icons.add, size: sizes.buttonIconSize),
-                      label: Text(
-                        'Set Goal',
-                        style: TextStyle(fontSize: sizes.fontSize),
-                      ),
-                      onPressed: () {
-                        showDialog(
-                          context: context,
-                          builder: (_) =>
-                              MacroGoalFormModal(theme: theme, sizes: sizes),
-                        );
-                      },
-                    ),
-                  ],
+                  ),
                 ),
               ),
             )
