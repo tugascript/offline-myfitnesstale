@@ -92,6 +92,7 @@ class _FoodSearchFormState extends State<FoodSearchForm> {
                 });
               }
             },
+            onFieldSubmitted: (_) => _submit(),
             prefixIcon: Padding(
               padding: EdgeInsets.symmetric(horizontal: widget.padding * 0.65),
               child: Icon(Icons.search, size: widget.fontSize),
@@ -116,6 +117,9 @@ class _FoodSearchFormState extends State<FoodSearchForm> {
               HeartCheckbox(
                 key: const ValueKey('foods-filter-favorites'),
                 value: _data.isFavorite,
+                tooltip: _data.isFavorite
+                    ? 'Show all ${widget.nameLabel}'
+                    : 'Filter favorite ${widget.nameLabel}',
                 onChanged: (value) {
                   setState(() {
                     _data.isFavorite = value;
@@ -151,25 +155,24 @@ class _FoodSearchFormState extends State<FoodSearchForm> {
                 theme: theme,
                 loadingSize: loadingSize,
                 isLoading: widget.isLoading,
-                onPressed: () {
-                  setState(() {
-                    if (!widget.isLoading) {
-                      if (_formKey.currentState!.validate()) {
-                        _formKey.currentState!.save();
-                        widget.onSubmit(
-                          name: _data.name,
-                          category: _data.category,
-                          isFavorite: _data.isFavorite,
-                        );
-                      }
-                    }
-                  });
-                },
+                onPressed: _submit,
               ),
             ],
           ),
         ],
       ),
+    );
+  }
+
+  void _submit() {
+    if (widget.isLoading || !_formKey.currentState!.validate()) {
+      return;
+    }
+    _formKey.currentState!.save();
+    widget.onSubmit(
+      name: _data.name,
+      category: _data.category,
+      isFavorite: _data.isFavorite,
     );
   }
 }

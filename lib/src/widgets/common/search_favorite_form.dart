@@ -80,6 +80,9 @@ class _SearchFavoriteFormState extends State<SearchFavoriteForm> {
         children: [
           HeartCheckbox(
             value: _data.isFavorite,
+            tooltip: _data.isFavorite
+                ? 'Show all ${widget.nameLabel}'
+                : 'Filter favorite ${widget.nameLabel}',
             onChanged: (value) {
               setState(() {
                 _data.isFavorite = value;
@@ -107,6 +110,7 @@ class _SearchFavoriteFormState extends State<SearchFavoriteForm> {
                   });
                 }
               },
+              onFieldSubmitted: (_) => _submit(),
               prefixIcon: Padding(
                 padding: EdgeInsets.symmetric(
                   horizontal: widget.padding * 0.65,

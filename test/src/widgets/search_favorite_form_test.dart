@@ -49,6 +49,7 @@ void main() {
     expect(find.byType(HeartCheckbox), findsOneWidget);
     expect(find.byType(SearchFormButton), findsOneWidget);
     expect(find.byIcon(Icons.favorite_border), findsOneWidget);
+    expect(find.byTooltip('Filter favorite recipes'), findsOneWidget);
   });
 
   testWidgets('renders heart as filled when initially favorite', (
@@ -64,6 +65,7 @@ void main() {
 
     expect(find.byIcon(Icons.favorite), findsOneWidget);
     expect(find.byIcon(Icons.favorite_border), findsNothing);
+    expect(find.byTooltip('Show all recipes'), findsOneWidget);
   });
 
   testWidgets('toggles favorite heart on tap and submits', (tester) async {
@@ -95,6 +97,24 @@ void main() {
 
     expect(submittedName, 'Pasta');
     expect(submittedFavorite, isTrue);
+  });
+
+  testWidgets('submits form on keyboard submission', (tester) async {
+    String? submittedName;
+    await tester.pumpWidget(
+      buildTestWidget(
+        onSubmit: ({required name, required isFavorite}) {
+          submittedName = name;
+        },
+      ),
+    );
+    await tester.pump();
+
+    await tester.enterText(find.byType(TextField), 'Curry');
+    await tester.testTextInput.receiveAction(TextInputAction.done);
+    await tester.pumpAndSettle();
+
+    expect(submittedName, 'Curry');
   });
 
   testWidgets('clears search input with clear icon', (tester) async {

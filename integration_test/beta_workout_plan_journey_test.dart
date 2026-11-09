@@ -11,6 +11,7 @@ import 'package:myfitnesstale/src/models/workout_plan_record_model.dart';
 import 'package:myfitnesstale/src/models/workout_plan_week_model.dart';
 import 'package:myfitnesstale/src/models/workout_plan_workout_model.dart';
 import 'package:myfitnesstale/src/models/workout_plan_workout_record_model.dart';
+import 'package:myfitnesstale/src/views/workout_plans/workout_plan_history_view.dart';
 
 import 'support/device_test_harness.dart';
 
@@ -141,6 +142,8 @@ void main() {
       await tester.ensureVisible(find.text('COMPLETE'));
       await harness.pumpUntilFound(tester, find.text('COMPLETE').hitTestable());
       await tester.tap(find.text('COMPLETE'));
+      await harness.pumpUntilFound(tester, find.text('COMPLETE WORKOUT'));
+      await tester.tap(find.text('YES'));
       await harness.pumpUntilFound(tester, find.text('Completed'));
       await harness.pumpUntilFound(tester, find.text('Log'));
       expect(
@@ -197,7 +200,7 @@ void main() {
 
       await harness.goAndWait(
         tester,
-        location: '/workout-plans/$planId/history',
+        location: WorkoutPlanHistoryView.location(planId),
         destination: find.textContaining('Plan History'),
       );
       await harness.pumpUntilFound(tester, find.text('Completed'));
@@ -216,7 +219,7 @@ void main() {
       );
       await harness.goAndWait(
         tester,
-        location: '/workout-plans/$planId/history',
+        location: WorkoutPlanHistoryView.location(planId),
         destination: find.textContaining('Plan History'),
       );
       await harness.pumpUntilFound(tester, find.text('Completed'));

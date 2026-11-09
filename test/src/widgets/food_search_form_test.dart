@@ -57,6 +57,7 @@ void main() {
     expect(find.byKey(const ValueKey('foods-filter-category')), findsOneWidget);
     expect(find.byKey(const ValueKey('foods-search-button')), findsOneWidget);
     expect(find.byIcon(Icons.favorite_border), findsOneWidget);
+    expect(find.byTooltip('Filter favorite foods'), findsOneWidget);
   });
 
   testWidgets('renders heart as filled when initially favorite', (
@@ -72,6 +73,7 @@ void main() {
 
     expect(find.byIcon(Icons.favorite), findsOneWidget);
     expect(find.byIcon(Icons.favorite_border), findsNothing);
+    expect(find.byTooltip('Show all foods'), findsOneWidget);
   });
 
   testWidgets('toggles favorite heart on tap', (tester) async {
@@ -133,6 +135,27 @@ void main() {
 
     expect(submittedName, 'Chicken');
     expect(submittedCategory, FoodCategory.meatAndPoultry);
+  });
+
+  testWidgets('submits form on keyboard submission', (tester) async {
+    String? submittedName;
+    await tester.pumpWidget(
+      buildTestWidget(
+        onSubmit: ({required name, required category, required isFavorite}) {
+          submittedName = name;
+        },
+      ),
+    );
+    await tester.pump();
+
+    await tester.enterText(
+      find.byKey(const ValueKey('foods-search-input')),
+      'Salmon',
+    );
+    await tester.testTextInput.receiveAction(TextInputAction.done);
+    await tester.pumpAndSettle();
+
+    expect(submittedName, 'Salmon');
   });
 
   testWidgets('clears search input with clear icon', (tester) async {
