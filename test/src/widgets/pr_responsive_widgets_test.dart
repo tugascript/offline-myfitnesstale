@@ -226,6 +226,7 @@ class _Recipes extends RecipeCubit {
   @override
   Future<void> getRecipes({
     String? search,
+    bool isFavorite = false,
     int limit = 20,
     int offset = 0,
   }) async {}

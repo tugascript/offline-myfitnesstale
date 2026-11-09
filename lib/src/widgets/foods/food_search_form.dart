@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../models/enums.dart';
 import '../../models/utilities.dart';
 import '../common/favourite_checkbox.dart';
+import '../common/search_form_button.dart';
 import '../layout/app_dropdown.dart';
 import '../layout/app_text_form_field.dart';
 
@@ -145,25 +146,10 @@ class _FoodSearchFormState extends State<FoodSearchForm> {
                   },
                 ),
               ),
-              SizedBox(width: widget.spacing),
-              IconButton(
-                key: const ValueKey('foods-search-button'),
-                icon: widget.isLoading
-                    ? SizedBox(
-                        width: loadingSize,
-                        height: loadingSize,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                            Theme.of(context).primaryColor,
-                          ),
-                        ),
-                      )
-                    : Icon(
-                        Icons.search,
-                        size: loadingSize,
-                        color: Theme.of(context).primaryColor,
-                      ),
+              SearchFormButton(
+                theme: theme,
+                loadingSize: loadingSize,
+                isLoading: widget.isLoading,
                 onPressed: () {
                   setState(() {
                     if (!widget.isLoading) {

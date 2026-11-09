@@ -1,7 +1,6 @@
-import '../common/nullable.dart';
-
 import 'package:equatable/equatable.dart';
 
+import '../common/nullable.dart';
 import 'common.dart';
 import 'enums.dart';
 import 'model.dart';
@@ -19,6 +18,7 @@ enum RecipeColumns with Columns {
   servingCarbs("serving_carbs"),
   servingFat("serving_fat"),
   servingMicros("serving_micros"),
+  isFavorite("is_favorite"),
   createdBy("created_by"),
   createdAt("created_at"),
   updatedAt("updated_at");
@@ -40,6 +40,7 @@ class Recipe extends Equatable implements Model {
   final int servingCarbs;
   final int servingFat;
   final Micronutrients? servingMicros;
+  final bool isFavorite;
   final CreatedBy createdBy;
   @override
   final int createdAt;
@@ -56,6 +57,7 @@ class Recipe extends Equatable implements Model {
     required this.servingCarbs,
     required this.servingFat,
     this.servingMicros,
+    this.isFavorite = false,
     required this.createdBy,
     required this.createdAt,
     required this.updatedAt,
@@ -75,6 +77,7 @@ class Recipe extends Equatable implements Model {
     ${RecipeColumns.servingCarbs.value} INTEGER NOT NULL,
     ${RecipeColumns.servingFat.value} INTEGER NOT NULL,
     ${RecipeColumns.servingMicros.value} TEXT,
+    ${RecipeColumns.isFavorite.value} INTEGER NOT NULL DEFAULT 0,
     ${RecipeColumns.createdBy.value} TEXT NOT NULL,
     ${RecipeColumns.createdAt.value} INTEGER NOT NULL,
     ${RecipeColumns.updatedAt.value} INTEGER NOT NULL
@@ -95,6 +98,7 @@ class Recipe extends Equatable implements Model {
       RecipeColumns.servingCarbs.value: servingCarbs,
       RecipeColumns.servingFat.value: servingFat,
       RecipeColumns.servingMicros.value: servingMicros?.toJson(),
+      RecipeColumns.isFavorite.value: isFavorite ? 1 : 0,
       RecipeColumns.createdBy.value: createdBy.value,
       RecipeColumns.createdAt.value: createdAt,
       RecipeColumns.updatedAt.value: updatedAt,
@@ -116,6 +120,7 @@ class Recipe extends Equatable implements Model {
               map[RecipeColumns.servingMicros.value] as String,
             )
           : null,
+      isFavorite: (map[RecipeColumns.isFavorite.value] as int? ?? 0) == 1,
       createdBy: CreatedBy.fromValue(
         map[RecipeColumns.createdBy.value] as String,
       ),
@@ -133,6 +138,7 @@ class Recipe extends Equatable implements Model {
     required int servingCarbs,
     required int servingFat,
     Micronutrients? servingMicros,
+    bool isFavorite = false,
     CreatedBy createdBy = CreatedBy.user,
   }) {
     final int now = DateUtilities.getNowUtcUnix();
@@ -145,6 +151,7 @@ class Recipe extends Equatable implements Model {
       servingCarbs: servingCarbs,
       servingFat: servingFat,
       servingMicros: servingMicros,
+      isFavorite: isFavorite,
       createdBy: createdBy,
       createdAt: now,
       updatedAt: now,
@@ -162,6 +169,7 @@ class Recipe extends Equatable implements Model {
     int? servingCarbs,
     int? servingFat,
     Nullable<Micronutrients>? servingMicros,
+    bool? isFavorite,
     CreatedBy? createdBy,
     int? createdAt,
     int? updatedAt,
@@ -178,6 +186,7 @@ class Recipe extends Equatable implements Model {
       servingMicros: servingMicros != null
           ? servingMicros.value
           : this.servingMicros,
+      isFavorite: isFavorite ?? this.isFavorite,
       createdBy: createdBy ?? this.createdBy,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -195,6 +204,7 @@ class Recipe extends Equatable implements Model {
     servingCarbs,
     servingFat,
     servingMicros,
+    isFavorite,
     createdBy,
     createdAt,
     updatedAt,
