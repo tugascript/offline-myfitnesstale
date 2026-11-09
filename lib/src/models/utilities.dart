@@ -300,4 +300,39 @@ sealed class EnumDisplayNames {
         return 'Unknown';
     }
   }
+
+  static String getFoodCategoryDisplayName(FoodCategory? c) {
+    switch (c) {
+      case FoodCategory.meatAndPoultry:
+        return 'Meat and Poultry';
+      case FoodCategory.fishAndSeafood:
+        return 'Fish and Seafood';
+      case FoodCategory.dairyAndEggs:
+        return 'Dairy and Eggs';
+      case FoodCategory.grainsAndCereals:
+        return 'Grains and Cereals';
+      case FoodCategory.fruits:
+        return 'Fruits';
+      case FoodCategory.vegetables:
+        return 'Vegetables';
+      case FoodCategory.legumes:
+        return 'Legumes';
+      case FoodCategory.nutsAndSeeds:
+        return 'Nuts and Seeds';
+      case FoodCategory.fatsAndOils:
+        return 'Fats and Oils';
+      case FoodCategory.supplements:
+        return 'Supplements';
+      case FoodCategory.beverages:
+        return 'Beverages';
+      case FoodCategory.snacksAndSweets:
+        return 'Snacks and Sweets';
+      case FoodCategory.preparedMeals:
+        return 'Prepared Meals';
+      case FoodCategory.other:
+        return 'Other';
+      case null:
+        return 'Unknown';
+    }
+  }
 }
