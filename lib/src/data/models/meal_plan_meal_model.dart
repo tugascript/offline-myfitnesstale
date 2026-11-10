@@ -3,11 +3,11 @@ import '../../utils/nullable.dart';
 import 'package:equatable/equatable.dart';
 
 import '../utils/enums.dart';
-import 'meal_plan_day_model.dart';
-import 'meal_plan_model.dart';
-import 'meal_plan_week_model.dart';
-import 'model.dart';
-import 'recipe_model.dart';
+import './meal_plan_day_model.dart';
+import './meal_plan_model.dart';
+import './meal_plan_week_model.dart';
+import './model.dart';
+import './recipe_model.dart';
 import '../utils/dates.dart';
 
 const String _table = 'meal_plan_meals';

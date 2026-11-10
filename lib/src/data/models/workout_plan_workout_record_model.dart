@@ -2,13 +2,13 @@ import 'package:equatable/equatable.dart';
 
 import '../../utils/nullable.dart';
 import '../utils/enums.dart';
-import 'model.dart';
+import './model.dart';
 
-import 'workout_plan_day_record_model.dart';
-import 'workout_plan_record_model.dart';
-import 'workout_plan_week_record_model.dart';
-import 'workout_plan_workout_model.dart';
-import 'workout_record_model.dart';
+import './workout_plan_day_record_model.dart';
+import './workout_plan_record_model.dart';
+import './workout_plan_week_record_model.dart';
+import './workout_plan_workout_model.dart';
+import './workout_record_model.dart';
 import '../utils/dates.dart';
 
 const String _table = 'workout_plan_workout_records';

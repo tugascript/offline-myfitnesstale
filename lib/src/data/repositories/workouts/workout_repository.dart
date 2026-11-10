@@ -14,18 +14,18 @@ import '../../utils/dates.dart';
 import '../../utils/enums.dart';
 import '../../utils/json_data.dart';
 import '../../utils/where_builder.dart';
-import 'dtos/workout_set_dto.dart';
+import './dtos/workout_set_dto.dart';
 import '../../../utils/errors.dart';
 import '../../../utils/nullable.dart';
 import '../../../utils/result.dart';
 import '../exercises/dtos/exercise_dto.dart';
 import '../core/dtos/paginated_dto.dart';
-import 'dtos/workout_dto.dart';
-import 'dtos/workout_set_exercise_dto.dart';
-import 'dtos/workout_set_exercise_option_dto.dart';
-import 'inputs/workout_input.dart';
+import './dtos/workout_dto.dart';
+import './dtos/workout_set_exercise_dto.dart';
+import './dtos/workout_set_exercise_option_dto.dart';
+import './inputs/workout_input.dart';
 
-export 'inputs/workout_input.dart';
+export './inputs/workout_input.dart';
 
 class WorkoutRepository {
   WorkoutRepository._();

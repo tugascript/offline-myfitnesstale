@@ -2,12 +2,12 @@ import '../../utils/nullable.dart';
 
 import 'package:equatable/equatable.dart';
 
-import 'daily_nutrition_log_model.dart';
+import './daily_nutrition_log_model.dart';
 import '../utils/enums.dart';
-import 'meal_plan_day_model.dart';
-import 'meal_plan_record_model.dart';
-import 'meal_plan_week_record_model.dart';
-import 'model.dart';
+import './meal_plan_day_model.dart';
+import './meal_plan_record_model.dart';
+import './meal_plan_week_record_model.dart';
+import './model.dart';
 import '../utils/dates.dart';
 
 const String _table = 'meal_plan_day_records';

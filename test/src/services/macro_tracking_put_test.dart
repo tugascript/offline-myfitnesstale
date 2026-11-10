@@ -1,8 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 
-import '../../../lib/src/cubits/food_cubit.dart';
-import '../../../lib/src/cubits/meal_plan_cubit.dart';
-import '../../../lib/src/cubits/weight_record_cubit.dart';
+import '../../../lib/src/ui/foods/view_models/food_cubit.dart';
+import '../../../lib/src/ui/meal_plans/view_models/meal_plan_cubit.dart';
+import '../../../lib/src/ui/weight/view_models/weight_record_cubit.dart';
 import '../../../lib/src/data/models/exercise_model.dart';
 import '../../../lib/src/data/repositories/exercises/exercise_record_repository.dart';
 import '../../../lib/src/data/utils/enums.dart';

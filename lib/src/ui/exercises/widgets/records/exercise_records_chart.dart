@@ -7,7 +7,7 @@ import '../../../../data/repositories/exercises/dtos/exercise_dto.dart';
 import '../../../../data/repositories/exercises/dtos/exercise_record_dto.dart';
 import '../../../core/utils/converters.dart';
 import '../../../core/sizes/data_display_sizes.dart';
-import 'editors/exercise_record_point_details_modal.dart';
+import './editors/exercise_record_point_details_modal.dart';
 
 class ExerciseRecordsChart extends StatelessWidget {
   static const double _fallbackXAxisPaddingMs = 43200000; // 12 hours

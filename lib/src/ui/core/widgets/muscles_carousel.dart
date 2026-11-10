@@ -4,9 +4,9 @@ import '../../../data/utils/json_data.dart';
 import '../../../data/utils/enums.dart';
 import '../../../data/repositories/exercises/dtos/equipment_dto.dart';
 import '../sizes/data_display_sizes.dart';
-import 'base_carousel.dart';
-import 'muscles_data.dart';
-import 'muscles_diagram.dart';
+import './base_carousel.dart';
+import './muscles_data.dart';
+import './muscles_diagram.dart';
 
 class MusclesCarousel extends StatelessWidget {
   final DataDisplaySizesList sizes;

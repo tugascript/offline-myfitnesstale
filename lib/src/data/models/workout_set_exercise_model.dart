@@ -3,11 +3,11 @@ import 'package:equatable/equatable.dart';
 import '../../utils/nullable.dart';
 import '../utils/json_data.dart';
 import '../utils/enums.dart';
-import 'exercise_model.dart';
-import 'model.dart';
+import './exercise_model.dart';
+import './model.dart';
 
-import 'workout_model.dart';
-import 'workout_set_model.dart';
+import './workout_model.dart';
+import './workout_set_model.dart';
 import '../utils/dates.dart';
 
 const String _table = 'workout_set_exercises';

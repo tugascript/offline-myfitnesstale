@@ -6,7 +6,7 @@ import '../../../../data/utils/enums.dart';
 import '../../../../data/repositories/weight/dtos/weight_record_dto.dart';
 import '../../../core/utils/converters.dart';
 import '../../../core/sizes/data_display_sizes.dart';
-import 'editor/weight_record_point_details_modal.dart';
+import './editor/weight_record_point_details_modal.dart';
 
 class WeightRecordsChart extends StatelessWidget {
   static const double _fallbackXAxisPaddingMs = 43200000; // 12 hours

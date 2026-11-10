@@ -19,14 +19,14 @@ import '../../../utils/errors.dart';
 import '../../../utils/nullable.dart';
 import '../../../utils/result.dart';
 import '../core/dtos/paginated_dto.dart';
-import 'dtos/workout_plan_day_record_dto.dart';
-import 'dtos/workout_plan_dto.dart';
-import 'dtos/workout_plan_record_dto.dart';
-import 'dtos/workout_plan_week_record_dto.dart';
-import 'dtos/workout_plan_workout_record_dto.dart';
-import 'inputs/workout_plan_record_input.dart';
+import './dtos/workout_plan_day_record_dto.dart';
+import './dtos/workout_plan_dto.dart';
+import './dtos/workout_plan_record_dto.dart';
+import './dtos/workout_plan_week_record_dto.dart';
+import './dtos/workout_plan_workout_record_dto.dart';
+import './inputs/workout_plan_record_input.dart';
 
-export 'inputs/workout_plan_record_input.dart';
+export './inputs/workout_plan_record_input.dart';
 
 class WorkoutPlanRecordRepository {
   WorkoutPlanRecordRepository._();

@@ -5,7 +5,7 @@ import '../../../../data/utils/enums.dart';
 import '../../../../data/repositories/workout_plans/dtos/workout_plan_week_dto.dart';
 import '../../../core/sizes/data_display_sizes.dart';
 import '../../../core/widgets/detail_number.dart';
-import 'workout_plan_day_card.dart';
+import './workout_plan_day_card.dart';
 import '../../../../data/utils/display_names.dart';
 
 class WorkoutPlanWeekCard extends StatelessWidget {

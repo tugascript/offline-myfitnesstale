@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../../../cubits/states/workout_state.dart';
-import '../../../../../cubits/workout_cubit.dart';
+import '../../../../workouts/view_models/states/workout_state.dart';
+import '../../../../workouts/view_models/workout_cubit.dart';
 import '../../../../../data/utils/enums.dart';
 import '../../../../../data/repositories/workouts/dtos/workout_dto.dart';
 import '../../../../core/sizes/data_display_sizes.dart';
 import '../../../../core/widgets/modal_search/modal_search_form.dart';
-import 'workout_plan_workout_search_list.dart';
+import './workout_plan_workout_search_list.dart';
 
 class WorkoutPlanWorkoutSearchModal extends StatefulWidget {
   final DataDisplaySizesList sizes;

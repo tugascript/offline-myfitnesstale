@@ -1,4 +1,4 @@
-import '../../../../cubits/states/workout_plan_record_state.dart';
+import '../../view_models/states/workout_plan_record_state.dart';
 import '../../../../data/utils/json_data.dart';
 import '../../../../data/utils/enums.dart';
 import '../../../../data/repositories/workouts/dtos/workout_dto.dart';

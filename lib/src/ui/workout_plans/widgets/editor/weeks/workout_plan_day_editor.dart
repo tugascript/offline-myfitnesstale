@@ -4,8 +4,8 @@ import '../../../../core/sizes/data_display_sizes.dart';
 import '../../../../core/widgets/editors/expanding_dynamic_input_wrapper.dart';
 import '../../../../core/widgets/layout/dynamic_list_input.dart';
 import '../../../../core/widgets/layout/sharp_switch.dart';
-import 'workout_plan_editor_data.dart';
-import 'workout_plan_workout_row_editor.dart';
+import './workout_plan_editor_data.dart';
+import './workout_plan_workout_row_editor.dart';
 
 class WorkoutPlanDayEditor extends StatelessWidget {
   final ThemeData theme;

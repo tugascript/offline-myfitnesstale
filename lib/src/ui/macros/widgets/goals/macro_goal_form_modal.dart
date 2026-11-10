@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../../cubits/macro_tracking_cubit.dart';
+import '../../view_models/macro_tracking_cubit.dart';
 import '../../../../data/repositories/macros/dtos/macro_tracking_dto.dart';
 import '../../../core/sizes/data_display_sizes.dart';
-import 'macro_goal_form.dart';
+import './macro_goal_form.dart';
 
 class MacroGoalFormModal extends StatelessWidget {
   final ThemeData theme;

@@ -3,8 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../lib/src/cubits/workout_plan_cubit.dart';
-import '../../../lib/src/cubits/workout_cubit.dart';
+import '../../../lib/src/ui/workout_plans/view_models/workout_plan_cubit.dart';
+import '../../../lib/src/ui/workouts/view_models/workout_cubit.dart';
 import '../../../lib/src/data/utils/json_data.dart';
 import '../../../lib/src/data/utils/enums.dart';
 import '../../../lib/src/data/repositories/workouts/dtos/workout_dto.dart';

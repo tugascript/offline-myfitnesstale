@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../data/repositories/macros/dtos/macro_tracking_dto.dart';
 import '../../core/sizes/data_display_sizes.dart';
-import 'nutrition_log_entry.dart';
+import './nutrition_log_entry.dart';
 
 class NutritionHourRow extends StatelessWidget {
   final int hour;

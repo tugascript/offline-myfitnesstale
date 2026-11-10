@@ -10,8 +10,8 @@ import '../../../../core/widgets/layout/app_text_form_field.dart';
 import '../editors/exercise_selection_button.dart';
 import '../editors/reps_input.dart';
 import '../editors/set_exercise_search_modal.dart';
-import 'alternative_exercises_input.dart';
-import 'complex_set_editor_data.dart';
+import './alternative_exercises_input.dart';
+import './complex_set_editor_data.dart';
 
 class SetExerciseEditor extends StatelessWidget {
   final ComplexSetExerciseEditorData exerciseData;

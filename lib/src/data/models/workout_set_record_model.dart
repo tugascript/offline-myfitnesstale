@@ -1,10 +1,10 @@
 import 'package:equatable/equatable.dart';
 
 import '../../utils/nullable.dart';
-import 'model.dart';
+import './model.dart';
 
-import 'workout_record_model.dart';
-import 'workout_set_model.dart';
+import './workout_record_model.dart';
+import './workout_set_model.dart';
 import '../utils/dates.dart';
 
 const String _table = 'workout_set_records';

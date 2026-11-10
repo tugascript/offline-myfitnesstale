@@ -10,8 +10,8 @@ import '../../../../core/widgets/layout/expanding_section.dart';
 import '../editors/rest_input.dart';
 import '../editors/set_exercise_search_modal.dart';
 import '../editors/sets_input.dart';
-import 'complex_set_editor_data.dart';
-import 'set_exercise_editor.dart';
+import './complex_set_editor_data.dart';
+import './set_exercise_editor.dart';
 import '../../../../../data/utils/display_names.dart';
 
 class AdvancedSetEditor extends StatefulWidget {

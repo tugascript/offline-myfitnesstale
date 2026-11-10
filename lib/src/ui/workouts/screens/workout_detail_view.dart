@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../cubits/states/workout_state.dart';
-import '../../../cubits/workout_cubit.dart';
+import '../view_models/states/workout_state.dart';
+import '../view_models/workout_cubit.dart';
 import '../../../data/utils/enums.dart';
 import '../../core/sizes/data_display_sizes.dart';
 import '../../core/sizes/screen_size.dart';
@@ -15,7 +15,7 @@ import '../widgets/details/empty_sets_card.dart';
 import '../widgets/details/workout_header_card.dart';
 import '../widgets/details/workout_set_card.dart';
 import '../../core/screens/loading_view.dart';
-import 'workout_history_view.dart';
+import './workout_history_view.dart';
 
 class WorkoutDetailView extends StatefulWidget {
   static const name = "workout-detail";

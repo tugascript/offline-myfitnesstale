@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:permission_handler/permission_handler.dart';
 
-import '../../../../cubits/profile_cubit.dart';
+import '../../view_models/profile_cubit.dart';
 import '../../../../data/utils/enums.dart';
 import '../../../core/sizes/profile/onboarding_sizes.dart';
 import '../../../core/widgets/layout/sharp_switch_title.dart';
-import 'height_input.dart';
+import './height_input.dart';
 
 final class _FormData {
   Units units;

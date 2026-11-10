@@ -2,7 +2,7 @@ import '../../utils/nullable.dart';
 
 import 'package:equatable/equatable.dart';
 
-import 'model.dart';
+import './model.dart';
 import '../utils/dates.dart';
 
 const String _table = 'daily_nutrition_logs';

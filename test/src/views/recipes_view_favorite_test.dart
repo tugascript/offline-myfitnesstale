@@ -4,7 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../lib/src/utils/nullable.dart';
-import '../../../lib/src/cubits/recipe_cubit.dart';
+import '../../../lib/src/ui/recipes/view_models/recipe_cubit.dart';
 import '../../../lib/src/data/utils/enums.dart';
 import '../../../lib/src/routing/routing.dart';
 import '../../../lib/src/data/repositories/recipes/dtos/recipe_dto.dart';

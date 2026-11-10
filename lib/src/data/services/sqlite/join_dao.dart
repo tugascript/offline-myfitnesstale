@@ -3,7 +3,7 @@ import 'package:sqflite/sqflite.dart';
 import '../../models/model.dart';
 import '../../utils/where_builder.dart';
 import '../common.dart';
-import 'database_helper.dart';
+import './database_helper.dart';
 
 final class JoinDao<T extends JoinModel, J extends Model, R extends Model> {
   final DatabaseHelper databaseHelper;

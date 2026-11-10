@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../cubits/profile_cubit.dart';
-import '../../../../cubits/states/profile_state.dart';
+import '../../view_models/profile_cubit.dart';
+import '../../view_models/states/profile_state.dart';
 import '../../../../data/utils/enums.dart';
 import '../../../../routing/routing.dart';
 import '../../../core/widgets/layout/responsive_scaffold.dart';

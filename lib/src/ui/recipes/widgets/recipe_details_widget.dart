@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../data/repositories/recipes/dtos/recipe_dto.dart';
 import '../../core/sizes/data_display_sizes.dart';
-import 'recipe_macro_item.dart';
+import './recipe_macro_item.dart';
 
 class RecipeDetailsWidget extends StatelessWidget {
   final RecipeDto recipe;

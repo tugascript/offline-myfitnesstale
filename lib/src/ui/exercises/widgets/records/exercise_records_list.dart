@@ -10,8 +10,8 @@ import '../../../core/utils/converters.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../core/sizes/data_display_sizes.dart';
 import '../../../core/widgets/confirmation_dialog.dart';
-import 'editors/edit_exercise_record_modal.dart';
-import 'exercise_record_reps.dart';
+import './editors/edit_exercise_record_modal.dart';
+import './exercise_record_reps.dart';
 
 class ExerciseRecordsList extends StatelessWidget {
   final ThemeData theme;

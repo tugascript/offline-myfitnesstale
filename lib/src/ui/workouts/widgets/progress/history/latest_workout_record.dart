@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../../cubits/states/workout_record_state.dart';
-import '../../../../../cubits/workout_record_cubit.dart';
+import '../../../view_models/states/workout_record_state.dart';
+import '../../../view_models/workout_record_cubit.dart';
 import '../../../../../data/utils/enums.dart';
 import '../../../../../data/repositories/workouts/dtos/workout_record_dto.dart';
 import '../../../../core/sizes/data_display_sizes.dart';
 import '../../../../core/widgets/layout/app_elevated_button.dart';
-import 'workout_record_head.dart';
+import './workout_record_head.dart';
 
 class LatestWorkoutRecord extends StatefulWidget {
   final ThemeData theme;

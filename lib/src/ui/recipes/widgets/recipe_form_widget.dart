@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../utils/nullable.dart';
-import '../../../cubits/food_cubit.dart';
+import '../../foods/view_models/food_cubit.dart';
 import '../../../data/repositories/foods/dtos/food_dto.dart';
 import '../../../data/repositories/recipes/dtos/recipe_dto.dart';
 import '../../../data/repositories/recipes/inputs/recipe_input.dart';

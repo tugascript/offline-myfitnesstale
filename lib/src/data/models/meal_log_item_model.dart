@@ -3,10 +3,10 @@ import '../../utils/nullable.dart';
 import 'package:equatable/equatable.dart';
 
 import '../utils/json_data.dart';
-import 'food_model.dart';
-import 'food_portion_model.dart';
-import 'meal_log_model.dart';
-import 'model.dart';
+import './food_model.dart';
+import './food_portion_model.dart';
+import './meal_log_model.dart';
+import './model.dart';
 import '../utils/dates.dart';
 
 const String _table = 'meal_log_items';

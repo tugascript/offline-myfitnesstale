@@ -3,7 +3,7 @@ import 'package:sqflite/sqflite.dart';
 
 import '../../models/model.dart';
 import '../common.dart';
-import 'database_helper.dart';
+import './database_helper.dart';
 
 final class Dao<T extends Model> {
   final DatabaseHelper _databaseHelper;

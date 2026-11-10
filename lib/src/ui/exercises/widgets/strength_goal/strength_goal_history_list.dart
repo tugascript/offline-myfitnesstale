@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 
 import '../../view_models/exercise_record_cubit.dart';
-import '../../../../cubits/profile_cubit.dart';
+import '../../../home/view_models/profile_cubit.dart';
 import '../../view_models/states/exercise_record_state.dart';
 import '../../../../data/utils/enums.dart';
 import '../../../core/utils/converters.dart';

@@ -10,7 +10,7 @@ import '../../../core/widgets/icons_switch.dart';
 import '../../../core/widgets/layout/app_elevated_button.dart';
 import '../../../core/widgets/layout/app_text_form_field.dart';
 import '../../../core/widgets/layout/responsive_fields.dart';
-import 'macro_goal_day_group_card.dart';
+import './macro_goal_day_group_card.dart';
 
 class MacroGoalForm extends StatefulWidget {
   final ThemeData theme;

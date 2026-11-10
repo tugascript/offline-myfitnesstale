@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../layout/list_card.dart';
-import 'modal_search_entity_name.dart';
+import './modal_search_entity_name.dart';
 
 class ModalSearchCard extends StatelessWidget {
   final String name;

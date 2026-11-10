@@ -2,8 +2,8 @@ import 'package:equatable/equatable.dart';
 
 import '../../utils/nullable.dart';
 import '../utils/json_data.dart';
-import 'exercise_model.dart';
-import 'model.dart';
+import './exercise_model.dart';
+import './model.dart';
 import '../utils/dates.dart';
 import '../utils/max_strength_calculator.dart';
 

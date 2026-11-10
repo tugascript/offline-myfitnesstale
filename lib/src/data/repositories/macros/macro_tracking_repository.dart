@@ -19,10 +19,10 @@ import '../../utils/where_builder.dart';
 import '../../../utils/errors.dart';
 import '../../../utils/nullable.dart';
 import '../../../utils/result.dart';
-import 'dtos/macro_tracking_dto.dart';
+import './dtos/macro_tracking_dto.dart';
 import '../core/dtos/paginated_dto.dart';
-import 'inputs/macro_goal_input.dart';
-import 'inputs/quick_food_log_input.dart';
+import './inputs/macro_goal_input.dart';
+import './inputs/quick_food_log_input.dart';
 
 class MacroTrackingRepository {
   MacroTrackingRepository._();

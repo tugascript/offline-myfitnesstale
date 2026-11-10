@@ -17,9 +17,9 @@ import '../../utils/where_builder.dart';
 import '../../../utils/errors.dart';
 import '../../../utils/nullable.dart';
 import '../../../utils/result.dart';
-import 'dtos/meal_plan_dto.dart';
+import './dtos/meal_plan_dto.dart';
 import '../core/dtos/paginated_dto.dart';
-import 'inputs/meal_plan_input.dart';
+import './inputs/meal_plan_input.dart';
 
 class MealPlanRepository {
   MealPlanRepository._();

@@ -4,9 +4,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../lib/src/utils/nullable.dart';
-import '../../../lib/src/cubits/states/common_state.dart';
-import '../../../lib/src/cubits/states/workout_plan_record_state.dart';
-import '../../../lib/src/cubits/workout_plan_record_cubit.dart';
+import '../../../lib/src/ui/core/view_models/states/common_state.dart';
+import '../../../lib/src/ui/workout_plans/view_models/states/workout_plan_record_state.dart';
+import '../../../lib/src/ui/workout_plans/view_models/workout_plan_record_cubit.dart';
 import '../../../lib/src/data/utils/enums.dart';
 import '../../../lib/src/routing/routing.dart';
 import '../../../lib/src/data/repositories/workout_plans/dtos/workout_plan_dto.dart';

@@ -3,8 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../lib/src/cubits/meal_plan_cubit.dart';
-import '../../../lib/src/cubits/meal_plan_record_cubit.dart';
+import '../../../lib/src/ui/meal_plans/view_models/meal_plan_cubit.dart';
+import '../../../lib/src/ui/meal_plans/view_models/meal_plan_record_cubit.dart';
 import '../../../lib/src/data/utils/enums.dart';
 import '../../../lib/src/routing/routing.dart';
 import '../../../lib/src/data/repositories/meal_plans/dtos/meal_plan_dto.dart';

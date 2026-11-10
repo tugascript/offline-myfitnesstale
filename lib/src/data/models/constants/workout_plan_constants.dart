@@ -1,5 +1,5 @@
 import '../../utils/enums.dart';
-import 'workout_constants.dart';
+import './workout_constants.dart';
 
 final class WorkoutPlanWorkoutData {
   final WorkoutTimeOfDay timeOfDay;

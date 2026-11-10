@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import '../../../../data/repositories/profile/dtos/reminders_config_dto.dart';
 import '../../../../data/repositories/profile/dtos/system_dto.dart';
 import '../../../core/sizes/data_display_sizes.dart';
-import 'app_settings_config.dart';
-import 'reminders_settings_config.dart';
+import './app_settings_config.dart';
+import './reminders_settings_config.dart';
 
 class SettingsConfig extends StatelessWidget {
   final int profileId;

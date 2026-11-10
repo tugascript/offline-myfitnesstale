@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../data/utils/enums.dart';
 import '../sizes/data_display_sizes.dart';
-import 'muscle_badge.dart';
+import './muscle_badge.dart';
 
 class MusclesWrap extends StatelessWidget {
   final ThemeData theme;

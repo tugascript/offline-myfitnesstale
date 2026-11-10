@@ -2,9 +2,9 @@ import '../../utils/nullable.dart';
 
 import 'package:equatable/equatable.dart';
 
-import 'daily_nutrition_log_model.dart';
+import './daily_nutrition_log_model.dart';
 import '../utils/enums.dart';
-import 'model.dart';
+import './model.dart';
 import '../utils/dates.dart';
 
 const String _table = 'meal_logs';

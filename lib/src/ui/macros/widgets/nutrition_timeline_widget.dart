@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../data/repositories/macros/dtos/macro_tracking_dto.dart';
 import '../../core/sizes/data_display_sizes.dart';
-import 'nutrition_hour_row.dart';
+import './nutrition_hour_row.dart';
 
 class NutritionTimelineWidget extends StatelessWidget {
   final List<MealLogDto> meals;

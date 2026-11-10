@@ -28,9 +28,9 @@ import '../../utils/where_builder.dart';
 import '../../../utils/errors.dart';
 import '../../../utils/nullable.dart';
 import '../../../utils/result.dart';
-import 'dtos/food_dto.dart';
+import './dtos/food_dto.dart';
 import '../core/dtos/paginated_dto.dart';
-import 'inputs/food_input.dart';
+import './inputs/food_input.dart';
 
 class FoodRepository {
   FoodRepository._();

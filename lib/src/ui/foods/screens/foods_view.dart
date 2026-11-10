@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../cubits/food_cubit.dart';
-import '../../../cubits/states/food_state.dart';
+import '../view_models/food_cubit.dart';
+import '../view_models/states/food_state.dart';
 import '../../../data/utils/enums.dart';
 import '../../../routing/routing.dart';
 import '../../core/sizes/data_display_sizes.dart';

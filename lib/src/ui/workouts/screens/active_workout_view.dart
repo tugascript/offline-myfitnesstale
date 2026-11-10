@@ -3,11 +3,11 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
-import '../../../cubits/active_workout_cubit.dart';
-import '../../../cubits/profile_cubit.dart';
-import '../../../cubits/states/active_workout_state.dart';
-import '../../../cubits/states/profile_state.dart';
-import '../../../cubits/workout_plan_record_cubit.dart';
+import '../view_models/active_workout_cubit.dart';
+import '../../home/view_models/profile_cubit.dart';
+import '../view_models/states/active_workout_state.dart';
+import '../../home/view_models/states/profile_state.dart';
+import '../../workout_plans/view_models/workout_plan_record_cubit.dart';
 import '../../../data/utils/json_data.dart';
 import '../../../data/utils/enums.dart';
 import '../../../routing/routing.dart';

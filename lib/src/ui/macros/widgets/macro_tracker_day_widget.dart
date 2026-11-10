@@ -2,15 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../cubits/macro_tracking_cubit.dart';
-import '../../../cubits/states/macro_tracking_state.dart';
+import '../view_models/macro_tracking_cubit.dart';
+import '../view_models/states/macro_tracking_state.dart';
 import '../../../routing/routing.dart';
 import '../../core/sizes/data_display_sizes.dart';
 import '../../core/widgets/confirmation_dialog.dart';
 import './log_food_modal.dart';
 import './macro_progress_bar.dart';
-import 'nutrition_timeline_widget.dart';
-import 'planned_meals_widget.dart';
+import './nutrition_timeline_widget.dart';
+import './planned_meals_widget.dart';
 
 class MacroTrackerDayWidget extends StatelessWidget {
   final DataDisplaySizesList sizes;

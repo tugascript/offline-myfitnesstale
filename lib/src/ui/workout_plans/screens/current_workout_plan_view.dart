@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../cubits/states/workout_plan_record_state.dart';
-import '../../../cubits/workout_plan_record_cubit.dart';
+import '../view_models/states/workout_plan_record_state.dart';
+import '../view_models/workout_plan_record_cubit.dart';
 import '../../../data/utils/enums.dart';
 import '../../../routing/routing.dart';
 import '../../core/sizes/data_display_sizes.dart';

@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../../../core/sizes/data_display_sizes.dart';
 import '../../../core/widgets/base_carousel.dart';
-import 'active_meal_plan_widget.dart';
-import 'active_plan_widget.dart';
+import './active_meal_plan_widget.dart';
+import './active_plan_widget.dart';
 
 /// Keeps both feature widgets mounted and uses their natural maximum height.
 /// Unlike a fixed-height PageView, this also fits asynchronously loaded content

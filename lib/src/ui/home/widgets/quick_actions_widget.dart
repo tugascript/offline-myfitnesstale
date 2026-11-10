@@ -3,9 +3,9 @@ import 'package:go_router/go_router.dart';
 
 import '../../../routing/routing.dart';
 import '../../core/sizes/data_display_sizes.dart';
-import 'quick_action_category.dart';
-import 'quick_action_category_card.dart';
-import 'quick_action_destination_sheet.dart';
+import './quick_action_category.dart';
+import './quick_action_category_card.dart';
+import './quick_action_destination_sheet.dart';
 
 class QuickActionsWidget extends StatelessWidget {
   final DataDisplaySizesList sizes;

@@ -17,13 +17,13 @@ import '../../../utils/nullable.dart';
 import '../../../utils/result.dart';
 import '../exercises/dtos/exercise_dto.dart';
 import '../core/dtos/paginated_dto.dart';
-import 'dtos/workout_dto.dart';
-import 'dtos/workout_record_dto.dart';
-import 'dtos/workout_set_exercise_record_dto.dart';
-import 'dtos/workout_set_record_dto.dart';
-import 'inputs/workout_record_input.dart';
+import './dtos/workout_dto.dart';
+import './dtos/workout_record_dto.dart';
+import './dtos/workout_set_exercise_record_dto.dart';
+import './dtos/workout_set_record_dto.dart';
+import './inputs/workout_record_input.dart';
 
-export 'inputs/workout_record_input.dart';
+export './inputs/workout_record_input.dart';
 
 class WorkoutRecordRepository {
   WorkoutRecordRepository._();

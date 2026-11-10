@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../../cubits/active_workout_cubit.dart';
+import '../../view_models/active_workout_cubit.dart';
 import '../../../core/widgets/confirmation_dialog.dart';
 
 class CompleteWorkoutDialog extends StatelessWidget {

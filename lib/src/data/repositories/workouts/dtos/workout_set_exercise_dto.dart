@@ -5,7 +5,7 @@ import '../../../utils/json_data.dart';
 import '../../../models/workout_set_exercise_model.dart';
 import '../../core/dtos/dto.dart';
 import '../../exercises/dtos/exercise_dto.dart';
-import 'workout_set_exercise_option_dto.dart';
+import './workout_set_exercise_option_dto.dart';
 
 class WorkoutSetExerciseDto extends Equatable
     implements Dto<WorkoutSetExercise> {

@@ -4,8 +4,8 @@ import '../../../data/utils/enums.dart';
 
 import './layout/app_dropdown.dart';
 import './layout/app_text_form_field.dart';
-import 'favourite_checkbox.dart';
-import 'search_form_button.dart';
+import './favourite_checkbox.dart';
+import './search_form_button.dart';
 import '../../../data/utils/display_names.dart';
 
 class BaseCommonSearchForm extends StatefulWidget {

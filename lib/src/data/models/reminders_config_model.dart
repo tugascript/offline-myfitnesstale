@@ -1,7 +1,7 @@
 import 'package:equatable/equatable.dart';
 
-import 'model.dart';
-import 'profile_model.dart';
+import './model.dart';
+import './profile_model.dart';
 import '../utils/dates.dart';
 
 const String _table = 'reminders_configs';
