@@ -94,50 +94,54 @@ production `app.db` is selected.
 
 ## How the app is organized
 
-It follows a typical MVC flow with the following components:
+It follows the [Guide to app architecture](https://docs.flutter.dev/app-architecture/guide) from the Flutter docs, using
+a strict MVVM flow:
 
 ```text
-SQLite model -> repository/service -> Cubit -> view/widget
+SQLite Model -> DAO -> Repository -> Cubit/ViewModel -> Screen/Widget
 ```
 
-- **Models** define SQLite tables and map database rows.
-- **Repositories and services** handle queries, validation, relationships, and
-  transactions.
-- **Cubits** expose feature state to the UI.
-- **Views and widgets** render routed screens and reusable interface elements.
-- **GoRouter** connects the four main areas: Home, Plans, Tracker, and Profile.
+- **Models** (`lib/src/data/models`) define SQLite tables and map database rows.
+- **DAOs** (`lib/src/data/services/sqlite`) handle single-table CRUD against SQLite.
+- **Repositories** (`lib/src/data/repositories/<feature>`) own domain rules, multi-table transactions, DTOs, and
+  `Result`/`ServiceError` returns.
+- **Cubits** live under `lib/src/ui/<feature>/view_models` and expose feature state to the UI.
+- **Screens and widgets** under `lib/src/ui/<feature>` render routed screens (`*_screen.dart`) and reusable UI; shared
+  pieces live in `lib/src/ui/core`.
+- **GoRouter** (`lib/src/routing`) connects the four main areas: Home, Plans, Tracker, and Profile.
 
 ```text
 .
-├── android/                # Android host project
-├── assets/                 # Fonts, icons, and seed JSON
-├── integration_test/       # Android/iOS journey tests
-├── ios/                    # iOS host project
+├── android/                     # Android host project
+├── assets/                      # Fonts, icons, and seed JSON
+├── integration_test/            # Android/iOS journey tests
+├── ios/                         # iOS host project
 ├── lib/
-│   ├── main.dart           # Application entry point
-│   ├── my_app.dart         # Root app, providers, and router
+│   ├── main.dart                # Application entry point
+│   ├── my_app.dart              # Root app, providers, and router
 │   └── src/
-│       ├── common/         # Shared helpers
-│       ├── cubits/         # Application state
-│       ├── models/         # SQLite models and repositories
-│       ├── services/       # Domain operations and DTOs
-│       ├── utilities/      # Theme, conversion, and sizing
-│       ├── routing/         # Routing
-│       ├── views/          # Route-level screens
-│       └── widgets/        # Feature UI components
-├── test/                   # Unit and widget tests
-├── PROJECT_STATE.md        # What is implemented now
-└── project.md              # What should be built next
+│       ├── data/
+│       │   ├── models/          # SQLite models and schema
+│       │   ├── repositories/    # Feature repositories, DTOs, inputs
+│       │   └── services/        # SQLite DAOs and DB helpers
+│       ├── routing/             # GoRouter configuration
+│       ├── ui/
+│       │   ├── core/            # Shared screens, widgets, sizes, themes
+│       │   └── <feature>/       # screens/, view_models/, widgets/
+│       └── utils/               # Result, Nullable, and shared helpers
+├── test/                        # Unit and widget tests
+├── PROJECT_STATE.md             # What is implemented now
+└── project.md                   # What should be built next
 ```
 
-Feature folders are grouped around equipment, exercises, profile, weight, workouts, workout plans,
-foods, recipes, meal plans, and macro tracking.
+Feature folders under `ui/` and `data/repositories/` are grouped around equipment, exercises, profile/onboarding,
+weight, workouts, workout plans, foods, recipes, meal plans, and macros.
 
 ### Local data model
 
-`DatabaseHelper` in `lib/src/data/models` creates the SQLite schema and enables foreign-key
-enforcement. The diagram below intentionally shows domain relationships rather than every column;
-the model files are the authoritative schema definition.
+`DatabaseHelper` in `lib/src/data/models` creates the SQLite schema and enables foreign-key enforcement. The diagram
+below intentionally shows domain relationships rather than every column; the model files are the authoritative schema
+definition.
 
 <details>
 <summary>Show the entity-relationship diagram</summary>
@@ -198,12 +202,11 @@ erDiagram
 ## Documentation map
 
 - [README.md](README.md): product overview, setup, and architecture orientation;
-- [PROJECT_STATE.md](PROJECT_STATE.md): code-grounded capabilities, invariants, test evidence, and
-  limitations;
+- [PROJECT_STATE.md](PROJECT_STATE.md): code-grounded capabilities, invariants, test evidence, and limitations;
 - [project.md](project.md): priorities, sequencing, and release criteria.
 
-When behavior changes, update the project state. When priorities or scope change, update the
-delivery plan. Keep this README focused on helping a new contributor understand and run the project.
+When behavior changes, update the project state. When priorities or scope change, update the delivery plan. Keep this
+README focused on helping a new contributor understand and run the project.
 
 ## License
 
