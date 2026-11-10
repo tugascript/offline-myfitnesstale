@@ -1,5 +1,3 @@
-import 'inputs/recipe_input.dart';
-
 import 'package:logging/logging.dart';
 
 import '../common/nullable.dart';
@@ -16,6 +14,7 @@ import 'common/errors.dart';
 import 'common/result.dart';
 import 'dtos/paginated_dto.dart';
 import 'dtos/recipe_dto.dart';
+import 'inputs/recipe_input.dart';
 
 class RecipeService {
   RecipeService._();
@@ -79,7 +78,7 @@ class RecipeService {
 
         for (final input in items) {
           final foodRows = await _foodRepository.selectMany(
-            where: '${FoodColumns.id.value} = ?',
+            where: FoodColumns.id.equal,
             whereArgs: [input.foodId],
             limit: 1,
             trx: txn,
@@ -95,10 +94,12 @@ class RecipeService {
 
           double effectiveGrams = input.amount.toDouble();
           if (input.portionId != null) {
+            final portionWhere = WhereBuilder()
+              ..and(FoodPortionColumns.id.equal, input.portionId)
+              ..and(FoodPortionColumns.foodId.equal, input.foodId);
             final portionRows = await _portionRepository.selectMany(
-              where:
-                  '${FoodPortionColumns.id.value} = ? AND ${FoodPortionColumns.foodId.value} = ?',
-              whereArgs: [input.portionId, input.foodId],
+              where: portionWhere.where,
+              whereArgs: portionWhere.args,
               limit: 1,
               trx: txn,
             );
@@ -144,7 +145,8 @@ class RecipeService {
 
           calculatedItems.add(
             RecipeItem.create(
-              recipeId: 0, // placeholder, will set after recipe insert
+              recipeId: 0,
+              // placeholder, will set after recipe insert
               foodId: input.foodId,
               portionId: input.portionId,
               amount: input.amount,
@@ -289,7 +291,7 @@ class RecipeService {
     try {
       final where = WhereBuilder();
       if (search != null && search.trim().isNotEmpty) {
-        where.and('${RecipeColumns.name.value} LIKE ?', '%${search.trim()}%');
+        where.and(RecipeColumns.name.like, '%${search.trim()}%');
       }
       if (isFavorite) {
         where.and(RecipeColumns.isFavorite.equal, 1);
@@ -375,7 +377,7 @@ class RecipeService {
         Micronutrients? servingMicros = existing.servingMicros;
 
         await _itemRepository.deleteMany(
-          where: '${RecipeItemColumns.recipeId.value} = ?',
+          where: RecipeItemColumns.recipeId.equal,
           whereArgs: [id],
           trx: txn,
         );
@@ -392,7 +394,7 @@ class RecipeService {
 
         for (final input in items) {
           final foodRows = await _foodRepository.selectMany(
-            where: '${FoodColumns.id.value} = ?',
+            where: FoodColumns.id.equal,
             whereArgs: [input.foodId],
             limit: 1,
             trx: txn,
@@ -408,10 +410,12 @@ class RecipeService {
 
           double effectiveGrams = input.amount.toDouble();
           if (input.portionId != null) {
+            final portionWhere = WhereBuilder()
+              ..and(FoodPortionColumns.id.equal, input.portionId)
+              ..and(FoodPortionColumns.foodId.equal, input.foodId);
             final portionRows = await _portionRepository.selectMany(
-              where:
-                  '${FoodPortionColumns.id.value} = ? AND ${FoodPortionColumns.foodId.value} = ?',
-              whereArgs: [input.portionId, input.foodId],
+              where: portionWhere.where,
+              whereArgs: portionWhere.args,
               limit: 1,
               trx: txn,
             );

@@ -1,24 +1,23 @@
-import '../models/food_portion_model.dart';
-import '../models/recipe_model.dart';
-import '../models/food_model.dart';
-import 'inputs/meal_plan_input.dart';
-
 import 'package:logging/logging.dart';
 
 import '../common/nullable.dart';
 import '../models/db.dart';
 import '../models/enums.dart';
+import '../models/food_model.dart';
+import '../models/food_portion_model.dart';
 import '../models/meal_plan_day_model.dart';
 import '../models/meal_plan_meal_item_model.dart';
 import '../models/meal_plan_meal_model.dart';
 import '../models/meal_plan_model.dart';
 import '../models/meal_plan_week_model.dart';
+import '../models/recipe_model.dart';
 import '../models/repository.dart';
 import '../models/utilities.dart';
 import 'common/errors.dart';
 import 'common/result.dart';
 import 'dtos/meal_plan_dto.dart';
 import 'dtos/paginated_dto.dart';
+import 'inputs/meal_plan_input.dart';
 
 class MealPlanService {
   MealPlanService._();
@@ -98,7 +97,7 @@ class MealPlanService {
             for (final m in d.meals) {
               if (m.recipeId != null) {
                 final rRows = await _recipeRepository.selectMany(
-                  where: '${RecipeColumns.id.value} = ?',
+                  where: RecipeColumns.id.equal,
                   whereArgs: [m.recipeId],
                   limit: 1,
                   trx: txn,
@@ -112,7 +111,7 @@ class MealPlanService {
               }
               for (final item in m.items) {
                 final fRows = await _foodRepository.selectMany(
-                  where: '${FoodColumns.id.value} = ?',
+                  where: FoodColumns.id.equal,
                   whereArgs: [item.foodId],
                   limit: 1,
                   trx: txn,
@@ -124,10 +123,12 @@ class MealPlanService {
                   );
                 }
                 if (item.portionId != null) {
+                  final portionWhere = WhereBuilder()
+                    ..and(FoodPortionColumns.id.equal, item.portionId)
+                    ..and(FoodPortionColumns.foodId.equal, item.foodId);
                   final pRows = await _foodPortionRepository.selectMany(
-                    where:
-                        '${FoodPortionColumns.id.value} = ? AND ${FoodPortionColumns.foodId.value} = ?',
-                    whereArgs: [item.portionId, item.foodId],
+                    where: portionWhere.where!,
+                    whereArgs: portionWhere.args!,
                     limit: 1,
                     trx: txn,
                   );
@@ -226,7 +227,7 @@ class MealPlanService {
 
               if (mInput.recipeId != null) {
                 final rRows = await _recipeRepository.selectMany(
-                  where: '${RecipeColumns.id.value} = ?',
+                  where: RecipeColumns.id.equal,
                   whereArgs: [mInput.recipeId],
                   limit: 1,
                   trx: txn,
@@ -263,7 +264,7 @@ class MealPlanService {
 
               for (final itemInput in mInput.items) {
                 final fRows = await _foodRepository.selectMany(
-                  where: '${FoodColumns.id.value} = ?',
+                  where: FoodColumns.id.equal,
                   whereArgs: [itemInput.foodId],
                   limit: 1,
                   trx: txn,
@@ -274,7 +275,7 @@ class MealPlanService {
                 String? portionName;
                 if (itemInput.portionId != null) {
                   final pRows = await _foodPortionRepository.selectMany(
-                    where: '${FoodPortionColumns.id.value} = ?',
+                    where: FoodPortionColumns.id.equal,
                     whereArgs: [itemInput.portionId],
                     limit: 1,
                     trx: txn,
@@ -430,10 +431,12 @@ class MealPlanService {
 
       final targetVersion = version ?? plan.version;
 
+      final weeksWhere = WhereBuilder()
+        ..and(MealPlanWeekColumns.mealPlanId.equal, id)
+        ..and(MealPlanWeekColumns.planVersion.equal, targetVersion);
       final weeks = await _weekRepository.selectMany(
-        where:
-            '${MealPlanWeekColumns.mealPlanId.value} = ? AND ${MealPlanWeekColumns.planVersion.value} = ?',
-        whereArgs: [id, targetVersion],
+        where: weeksWhere.where!,
+        whereArgs: weeksWhere.args!,
         orderBy: [MealPlanWeekColumns.weekNumber.orderAsc],
       );
 
@@ -441,7 +444,7 @@ class MealPlanService {
 
       for (final w in weeks) {
         final days = await _dayRepository.selectMany(
-          where: '${MealPlanDayColumns.mealPlanWeekId.value} = ?',
+          where: MealPlanDayColumns.mealPlanWeekId.equal,
           whereArgs: [w.id!],
           orderBy: [MealPlanDayColumns.day.orderAsc],
         );
@@ -449,7 +452,7 @@ class MealPlanService {
         final List<MealPlanDayDto> dayDtos = [];
         for (final d in days) {
           final meals = await _mealRepository.selectMany(
-            where: '${MealPlanMealColumns.mealPlanDayId.value} = ?',
+            where: MealPlanMealColumns.mealPlanDayId.equal,
             whereArgs: [d.id!],
             orderBy: [MealPlanMealColumns.position.orderAsc],
           );
@@ -459,7 +462,7 @@ class MealPlanService {
             String? recipeName;
             if (m.recipeId != null) {
               final r = await _recipeRepository.selectMany(
-                where: '${RecipeColumns.id.value} = ?',
+                where: RecipeColumns.id.equal,
                 whereArgs: [m.recipeId],
                 limit: 1,
               );
@@ -469,14 +472,14 @@ class MealPlanService {
             }
 
             final items = await _itemRepository.selectMany(
-              where: '${MealPlanMealItemColumns.mealPlanMealId.value} = ?',
+              where: MealPlanMealItemColumns.mealPlanMealId.equal,
               whereArgs: [m.id!],
             );
 
             final List<MealPlanMealItemDto> itemDtos = [];
             for (final it in items) {
               final fRows = await _foodRepository.selectMany(
-                where: '${FoodColumns.id.value} = ?',
+                where: FoodColumns.id.equal,
                 whereArgs: [it.foodId],
                 limit: 1,
               );
@@ -485,7 +488,7 @@ class MealPlanService {
               String? portionName;
               if (it.portionId != null) {
                 final pRows = await _foodPortionRepository.selectMany(
-                  where: '${FoodPortionColumns.id.value} = ?',
+                  where: FoodPortionColumns.id.equal,
                   whereArgs: [it.portionId],
                   limit: 1,
                 );
@@ -567,7 +570,7 @@ class MealPlanService {
     try {
       final where = WhereBuilder();
       if (search != null && search.trim().isNotEmpty) {
-        where.and('${MealPlanColumns.name.value} LIKE ?', '%${search.trim()}%');
+        where.and(MealPlanColumns.name.like, '%${search.trim()}%');
       }
       if (isFavorite != null) {
         where.and(MealPlanColumns.isFavorite.equal, isFavorite ? 1 : 0);
@@ -643,7 +646,7 @@ class MealPlanService {
             for (final m in d.meals) {
               if (m.recipeId != null) {
                 final rRows = await _recipeRepository.selectMany(
-                  where: '${RecipeColumns.id.value} = ?',
+                  where: RecipeColumns.id.equal,
                   whereArgs: [m.recipeId],
                   limit: 1,
                   trx: txn,
@@ -657,7 +660,7 @@ class MealPlanService {
               }
               for (final item in m.items) {
                 final fRows = await _foodRepository.selectMany(
-                  where: '${FoodColumns.id.value} = ?',
+                  where: FoodColumns.id.equal,
                   whereArgs: [item.foodId],
                   limit: 1,
                   trx: txn,
@@ -669,10 +672,12 @@ class MealPlanService {
                   );
                 }
                 if (item.portionId != null) {
+                  final portionWhere = WhereBuilder()
+                    ..and(FoodPortionColumns.id.equal, item.portionId)
+                    ..and(FoodPortionColumns.foodId.equal, item.foodId);
                   final pRows = await _foodPortionRepository.selectMany(
-                    where:
-                        '${FoodPortionColumns.id.value} = ? AND ${FoodPortionColumns.foodId.value} = ?',
-                    whereArgs: [item.portionId, item.foodId],
+                    where: portionWhere.where!,
+                    whereArgs: portionWhere.args!,
                     limit: 1,
                     trx: txn,
                   );
@@ -761,7 +766,7 @@ class MealPlanService {
 
               if (mInput.recipeId != null) {
                 final rRows = await _recipeRepository.selectMany(
-                  where: '${RecipeColumns.id.value} = ?',
+                  where: RecipeColumns.id.equal,
                   whereArgs: [mInput.recipeId],
                   limit: 1,
                   trx: txn,
@@ -798,7 +803,7 @@ class MealPlanService {
 
               for (final itemInput in mInput.items) {
                 final fRows = await _foodRepository.selectMany(
-                  where: '${FoodColumns.id.value} = ?',
+                  where: FoodColumns.id.equal,
                   whereArgs: [itemInput.foodId],
                   limit: 1,
                   trx: txn,
@@ -809,7 +814,7 @@ class MealPlanService {
                 String? portionName;
                 if (itemInput.portionId != null) {
                   final pRows = await _foodPortionRepository.selectMany(
-                    where: '${FoodPortionColumns.id.value} = ?',
+                    where: FoodPortionColumns.id.equal,
                     whereArgs: [itemInput.portionId],
                     limit: 1,
                     trx: txn,
