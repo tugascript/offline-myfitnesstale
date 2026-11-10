@@ -419,11 +419,13 @@ void main() {
         const MealPlanDetailsScreen(mealPlanId: 1),
     'macro-goals screen': (_, _) => const MacroGoalsScreen(),
     'macro-tracker screen': (_, _) => const MacroTrackerScreen(),
-    'food editor': (sizes, theme) => FoodFormWidget(
-      sizes: sizes,
-      theme: theme,
-      initialFood: _food,
-      onSubmit: (_) {},
+    'food editor': (sizes, theme) => SingleChildScrollView(
+      child: FoodFormWidget(
+        sizes: sizes,
+        theme: theme,
+        initialFood: _food,
+        onSubmit: (_) {},
+      ),
     ),
     'recipe editor': (sizes, theme) => RecipeFormWidget(
       sizes: sizes,

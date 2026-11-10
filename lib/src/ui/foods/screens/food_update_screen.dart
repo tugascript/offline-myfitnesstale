@@ -19,13 +19,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import '../view_models/food_cubit.dart';
-import '../view_models/states/food_state.dart';
+import '../../core/screens/loading_screen.dart';
 import '../../core/sizes/data_display_sizes.dart';
 import '../../core/sizes/screen_size.dart';
-import '../widgets/food_form_widget.dart';
 import '../../core/widgets/layout/app_scaffold.dart';
-import '../../core/screens/loading_screen.dart';
+import '../../core/widgets/layout/responsive_scaffold.dart';
+import '../view_models/food_cubit.dart';
+import '../view_models/states/food_state.dart';
+import '../widgets/food_form_widget.dart';
 
 class FoodUpdateScreen extends StatefulWidget {
   static const name = 'food_update';
@@ -91,24 +92,33 @@ class _FoodUpdateScreenState extends State<FoodUpdateScreen> {
           );
         }
 
-        return AppScaffold(
+        return ResponsiveScaffold(
           title: 'Edit ${food.name}',
           body: Padding(
             padding: EdgeInsets.all(sizes.viewPadding),
-            child: FoodFormWidget(
-              theme: theme,
-              sizes: sizes,
-              initialFood: food,
-              isLoading: state.isLoading,
-              onSubmit: (input) async {
-                final success = await context.read<FoodCubit>().updateFood(
-                  food.id,
-                  input,
-                );
-                if (success && context.mounted) {
-                  context.pop();
-                }
-              },
+            child: Card(
+              margin: EdgeInsets.zero,
+              child: Padding(
+                padding: EdgeInsets.symmetric(
+                  horizontal: sizes.padding,
+                  vertical: sizes.padding * 2,
+                ),
+                child: FoodFormWidget(
+                  theme: theme,
+                  sizes: sizes,
+                  initialFood: food,
+                  isLoading: state.isLoading,
+                  onSubmit: (input) async {
+                    final success = await context.read<FoodCubit>().updateFood(
+                      food.id,
+                      input,
+                    );
+                    if (success && context.mounted) {
+                      context.pop();
+                    }
+                  },
+                ),
+              ),
             ),
           ),
         );
