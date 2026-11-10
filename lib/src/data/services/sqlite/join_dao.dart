@@ -1,15 +1,11 @@
 import 'package:sqflite/sqflite.dart';
 
-import '../models/model.dart';
-import '../utils/where_builder.dart';
-import 'common.dart';
-import 'db.dart';
+import '../../models/model.dart';
+import '../../utils/where_builder.dart';
+import '../common.dart';
+import 'database_helper.dart';
 
-final class JoinRepository<
-  T extends JoinModel,
-  J extends Model,
-  R extends Model
-> {
+final class JoinDao<T extends JoinModel, J extends Model, R extends Model> {
   final DatabaseHelper databaseHelper;
   final String tableName;
   final (String, String) primaryKeys;
@@ -19,7 +15,7 @@ final class JoinRepository<
   final String reverseTableName;
   final FromMap<R> reverseFromMap;
 
-  const JoinRepository({
+  const JoinDao({
     required this.databaseHelper,
     required this.tableName,
     required this.primaryKeys,

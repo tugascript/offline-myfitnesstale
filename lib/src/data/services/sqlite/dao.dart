@@ -1,11 +1,11 @@
 import 'package:logging/logging.dart';
 import 'package:sqflite/sqflite.dart';
 
-import '../models/model.dart';
-import 'common.dart';
-import 'db.dart';
+import '../../models/model.dart';
+import '../common.dart';
+import 'database_helper.dart';
 
-final class Repository<T extends Model> {
+final class Dao<T extends Model> {
   final DatabaseHelper _databaseHelper;
   final String _tableName;
   final FromMap<T> _fromMap;
@@ -13,7 +13,7 @@ final class Repository<T extends Model> {
 
   static const String _baseCountQuery = "SELECT COUNT(*) as count FROM";
 
-  Repository({
+  Dao({
     required this._databaseHelper,
     required String tableName,
     required this._fromMap,

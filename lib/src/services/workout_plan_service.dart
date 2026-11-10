@@ -1,18 +1,19 @@
 import 'package:logging/logging.dart';
 import 'package:sqflite/sqflite.dart';
 
-import '../utils/nullable.dart';
-import '../data/repositories/db.dart';
-import '../data/utils/enums.dart';
-import '../data/repositories/repository.dart'
-    show Repository;
-
 import '../data/models/workout_model.dart';
 import '../data/models/workout_plan_day_model.dart';
 import '../data/models/workout_plan_model.dart';
 import '../data/models/workout_plan_week_model.dart';
 import '../data/models/workout_plan_workout_model.dart';
+import '../data/services/common.dart';
+import '../data/services/sqlite/database_helper.dart';
+import '../data/services/sqlite/dao.dart' show Dao;
+import '../data/utils/dates.dart';
+import '../data/utils/enums.dart';
+import '../data/utils/where_builder.dart';
 import '../utils/errors.dart';
+import '../utils/nullable.dart';
 import '../utils/result.dart';
 import 'dtos/paginated_dto.dart';
 import 'dtos/workout_dto.dart';
@@ -21,9 +22,6 @@ import 'dtos/workout_plan_dto.dart';
 import 'dtos/workout_plan_week_dto.dart';
 import 'dtos/workout_plan_workout_dto.dart';
 import 'inputs/workout_plan_input.dart';
-import '../data/utils/dates.dart';
-import '../data/utils/where_builder.dart';
-import '../data/repositories/common.dart';
 
 export 'inputs/workout_plan_input.dart';
 
@@ -36,33 +34,32 @@ class WorkoutPlanService {
 
   final Logger _logger = Logger('Workout Plan Service');
 
-  final Repository<WorkoutPlan> _repository = Repository<WorkoutPlan>(
+  final Dao<WorkoutPlan> _repository = Dao<WorkoutPlan>(
     databaseHelper: DatabaseHelper(),
     tableName: WorkoutPlan.table,
     fromMap: WorkoutPlan.fromMap,
   );
 
-  final Repository<WorkoutPlanWeek> _weekRepository =
-      Repository<WorkoutPlanWeek>(
-        databaseHelper: DatabaseHelper(),
-        tableName: WorkoutPlanWeek.table,
-        fromMap: WorkoutPlanWeek.fromMap,
-      );
+  final Dao<WorkoutPlanWeek> _weekRepository = Dao<WorkoutPlanWeek>(
+    databaseHelper: DatabaseHelper(),
+    tableName: WorkoutPlanWeek.table,
+    fromMap: WorkoutPlanWeek.fromMap,
+  );
 
-  final Repository<WorkoutPlanDay> _dayRepository = Repository<WorkoutPlanDay>(
+  final Dao<WorkoutPlanDay> _dayRepository = Dao<WorkoutPlanDay>(
     databaseHelper: DatabaseHelper(),
     tableName: WorkoutPlanDay.table,
     fromMap: WorkoutPlanDay.fromMap,
   );
 
-  final Repository<WorkoutPlanWorkout> _planWorkoutRepository =
-      Repository<WorkoutPlanWorkout>(
+  final Dao<WorkoutPlanWorkout> _planWorkoutRepository =
+      Dao<WorkoutPlanWorkout>(
         databaseHelper: DatabaseHelper(),
         tableName: WorkoutPlanWorkout.table,
         fromMap: WorkoutPlanWorkout.fromMap,
       );
 
-  final Repository<Workout> _workoutRepository = Repository<Workout>(
+  final Dao<Workout> _workoutRepository = Dao<Workout>(
     databaseHelper: DatabaseHelper(),
     tableName: Workout.table,
     fromMap: Workout.fromMap,

@@ -1,29 +1,28 @@
 import 'package:logging/logging.dart';
 import 'package:sqflite/sqflite.dart';
 
-import '../utils/nullable.dart';
-import '../data/utils/json_data.dart';
 import '../data/models/daily_nutrition_log_model.dart';
 import '../data/models/day_macro_goal_model.dart';
-import '../data/repositories/db.dart';
-import '../data/utils/enums.dart';
 import '../data/models/food_model.dart';
 import '../data/models/food_portion_model.dart';
 import '../data/models/meal_log_item_model.dart';
 import '../data/models/meal_log_model.dart';
 import '../data/models/recipe_model.dart';
-import '../data/repositories/repository.dart';
-
 import '../data/models/week_macro_goal_model.dart';
+import '../data/services/common.dart';
+import '../data/services/sqlite/database_helper.dart';
+import '../data/services/sqlite/dao.dart';
+import '../data/utils/dates.dart';
+import '../data/utils/enums.dart';
+import '../data/utils/json_data.dart';
+import '../data/utils/where_builder.dart';
 import '../utils/errors.dart';
+import '../utils/nullable.dart';
 import '../utils/result.dart';
 import 'dtos/macro_tracking_dto.dart';
 import 'dtos/paginated_dto.dart';
 import 'inputs/macro_goal_input.dart';
 import 'inputs/quick_food_log_input.dart';
-import '../data/utils/dates.dart';
-import '../data/utils/where_builder.dart';
-import '../data/repositories/common.dart';
 
 class MacroTrackingService {
   MacroTrackingService._();
@@ -32,60 +31,55 @@ class MacroTrackingService {
 
   factory MacroTrackingService() => _instance;
 
-  final Repository<Food> _foodRepository = Repository<Food>(
+  final Dao<Food> _foodRepository = Dao<Food>(
     databaseHelper: DatabaseHelper(),
     tableName: Food.table,
     fromMap: Food.fromMap,
   );
 
-  final Repository<Recipe> _recipeRepository = Repository<Recipe>(
+  final Dao<Recipe> _recipeRepository = Dao<Recipe>(
     databaseHelper: DatabaseHelper(),
     tableName: Recipe.table,
     fromMap: Recipe.fromMap,
   );
 
-  final Repository<FoodPortion> _foodPortionRepository =
-      Repository<FoodPortion>(
-        databaseHelper: DatabaseHelper(),
-        tableName: FoodPortion.table,
-        fromMap: FoodPortion.fromMap,
-      );
+  final Dao<FoodPortion> _foodPortionRepository = Dao<FoodPortion>(
+    databaseHelper: DatabaseHelper(),
+    tableName: FoodPortion.table,
+    fromMap: FoodPortion.fromMap,
+  );
 
   final Logger _logger = Logger('Macro Tracking Service');
 
-  final Repository<WeekMacroGoal> _weekMacroGoalRepository =
-      Repository<WeekMacroGoal>(
-        databaseHelper: DatabaseHelper(),
-        tableName: WeekMacroGoal.table,
-        fromMap: WeekMacroGoal.fromMap,
-      );
+  final Dao<WeekMacroGoal> _weekMacroGoalRepository = Dao<WeekMacroGoal>(
+    databaseHelper: DatabaseHelper(),
+    tableName: WeekMacroGoal.table,
+    fromMap: WeekMacroGoal.fromMap,
+  );
 
-  final Repository<DayMacroGoal> _dayMacroGoalRepository =
-      Repository<DayMacroGoal>(
-        databaseHelper: DatabaseHelper(),
-        tableName: DayMacroGoal.table,
-        fromMap: DayMacroGoal.fromMap,
-      );
+  final Dao<DayMacroGoal> _dayMacroGoalRepository = Dao<DayMacroGoal>(
+    databaseHelper: DatabaseHelper(),
+    tableName: DayMacroGoal.table,
+    fromMap: DayMacroGoal.fromMap,
+  );
 
-  final Repository<DailyNutritionLog> _dailyLogRepository =
-      Repository<DailyNutritionLog>(
-        databaseHelper: DatabaseHelper(),
-        tableName: DailyNutritionLog.table,
-        fromMap: DailyNutritionLog.fromMap,
-      );
+  final Dao<DailyNutritionLog> _dailyLogRepository = Dao<DailyNutritionLog>(
+    databaseHelper: DatabaseHelper(),
+    tableName: DailyNutritionLog.table,
+    fromMap: DailyNutritionLog.fromMap,
+  );
 
-  final Repository<MealLog> _mealLogRepository = Repository<MealLog>(
+  final Dao<MealLog> _mealLogRepository = Dao<MealLog>(
     databaseHelper: DatabaseHelper(),
     tableName: MealLog.table,
     fromMap: MealLog.fromMap,
   );
 
-  final Repository<MealLogItem> _mealLogItemRepository =
-      Repository<MealLogItem>(
-        databaseHelper: DatabaseHelper(),
-        tableName: MealLogItem.table,
-        fromMap: MealLogItem.fromMap,
-      );
+  final Dao<MealLogItem> _mealLogItemRepository = Dao<MealLogItem>(
+    databaseHelper: DatabaseHelper(),
+    tableName: MealLogItem.table,
+    fromMap: MealLogItem.fromMap,
+  );
 
   // ==================== MACRO GOALS ====================
 

@@ -1,9 +1,6 @@
 import 'package:logging/logging.dart';
 
-import '../utils/nullable.dart';
 import '../data/models/daily_nutrition_log_model.dart';
-import '../data/repositories/db.dart';
-import '../data/utils/enums.dart';
 import '../data/models/meal_log_model.dart';
 import '../data/models/meal_plan_day_model.dart';
 import '../data/models/meal_plan_day_record_model.dart';
@@ -11,15 +8,17 @@ import '../data/models/meal_plan_model.dart';
 import '../data/models/meal_plan_record_model.dart';
 import '../data/models/meal_plan_week_model.dart';
 import '../data/models/meal_plan_week_record_model.dart';
-import '../data/repositories/repository.dart';
-
+import '../data/services/common.dart';
+import '../data/services/sqlite/database_helper.dart';
+import '../data/services/sqlite/dao.dart';
+import '../data/utils/dates.dart';
+import '../data/utils/enums.dart';
+import '../data/utils/where_builder.dart';
 import '../utils/errors.dart';
+import '../utils/nullable.dart';
 import '../utils/result.dart';
 import 'dtos/meal_plan_record_dto.dart';
 import 'dtos/paginated_dto.dart';
-import '../data/utils/dates.dart';
-import '../data/utils/where_builder.dart';
-import '../data/repositories/common.dart';
 
 class MealPlanRecordService {
   MealPlanRecordService._();
@@ -28,61 +27,55 @@ class MealPlanRecordService {
 
   factory MealPlanRecordService() => _instance;
 
-  final Repository<MealLog> _mealLogRepository = Repository<MealLog>(
+  final Dao<MealLog> _mealLogRepository = Dao<MealLog>(
     databaseHelper: DatabaseHelper(),
     tableName: MealLog.table,
     fromMap: MealLog.fromMap,
   );
 
-  final Repository<MealPlanDay> _mealPlanDayRepository =
-      Repository<MealPlanDay>(
-        databaseHelper: DatabaseHelper(),
-        tableName: MealPlanDay.table,
-        fromMap: MealPlanDay.fromMap,
-      );
+  final Dao<MealPlanDay> _mealPlanDayRepository = Dao<MealPlanDay>(
+    databaseHelper: DatabaseHelper(),
+    tableName: MealPlanDay.table,
+    fromMap: MealPlanDay.fromMap,
+  );
 
-  final Repository<MealPlanWeek> _mealPlanWeekRepository =
-      Repository<MealPlanWeek>(
-        databaseHelper: DatabaseHelper(),
-        tableName: MealPlanWeek.table,
-        fromMap: MealPlanWeek.fromMap,
-      );
+  final Dao<MealPlanWeek> _mealPlanWeekRepository = Dao<MealPlanWeek>(
+    databaseHelper: DatabaseHelper(),
+    tableName: MealPlanWeek.table,
+    fromMap: MealPlanWeek.fromMap,
+  );
 
   final Logger _logger = Logger('Meal Plan Record Service');
 
-  final Repository<MealPlanRecord> _recordRepository =
-      Repository<MealPlanRecord>(
-        databaseHelper: DatabaseHelper(),
-        tableName: MealPlanRecord.table,
-        fromMap: MealPlanRecord.fromMap,
-      );
+  final Dao<MealPlanRecord> _recordRepository = Dao<MealPlanRecord>(
+    databaseHelper: DatabaseHelper(),
+    tableName: MealPlanRecord.table,
+    fromMap: MealPlanRecord.fromMap,
+  );
 
-  final Repository<MealPlanWeekRecord> _weekRecordRepository =
-      Repository<MealPlanWeekRecord>(
-        databaseHelper: DatabaseHelper(),
-        tableName: MealPlanWeekRecord.table,
-        fromMap: MealPlanWeekRecord.fromMap,
-      );
+  final Dao<MealPlanWeekRecord> _weekRecordRepository = Dao<MealPlanWeekRecord>(
+    databaseHelper: DatabaseHelper(),
+    tableName: MealPlanWeekRecord.table,
+    fromMap: MealPlanWeekRecord.fromMap,
+  );
 
-  final Repository<MealPlanDayRecord> _dayRecordRepository =
-      Repository<MealPlanDayRecord>(
-        databaseHelper: DatabaseHelper(),
-        tableName: MealPlanDayRecord.table,
-        fromMap: MealPlanDayRecord.fromMap,
-      );
+  final Dao<MealPlanDayRecord> _dayRecordRepository = Dao<MealPlanDayRecord>(
+    databaseHelper: DatabaseHelper(),
+    tableName: MealPlanDayRecord.table,
+    fromMap: MealPlanDayRecord.fromMap,
+  );
 
-  final Repository<MealPlan> _mealPlanRepository = Repository<MealPlan>(
+  final Dao<MealPlan> _mealPlanRepository = Dao<MealPlan>(
     databaseHelper: DatabaseHelper(),
     tableName: MealPlan.table,
     fromMap: MealPlan.fromMap,
   );
 
-  final Repository<DailyNutritionLog> _dailyLogRepository =
-      Repository<DailyNutritionLog>(
-        databaseHelper: DatabaseHelper(),
-        tableName: DailyNutritionLog.table,
-        fromMap: DailyNutritionLog.fromMap,
-      );
+  final Dao<DailyNutritionLog> _dailyLogRepository = Dao<DailyNutritionLog>(
+    databaseHelper: DatabaseHelper(),
+    tableName: DailyNutritionLog.table,
+    fromMap: DailyNutritionLog.fromMap,
+  );
 
   Future<Result<MealPlanRecordDto, ServiceError<SingleErrorTypes>>>
   startMealPlan({

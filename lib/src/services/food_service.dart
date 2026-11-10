@@ -1,4 +1,3 @@
-import 'inputs/food_input.dart';
 // Copyright (C) 2026 Afonso Barracha
 //
 // This file is part of My Fitness Tale.
@@ -18,20 +17,20 @@ import 'inputs/food_input.dart';
 
 import 'package:logging/logging.dart';
 
-import '../utils/nullable.dart';
-import '../data/repositories/db.dart';
-import '../data/utils/enums.dart';
 import '../data/models/food_model.dart';
 import '../data/models/food_portion_model.dart';
-import '../data/repositories/repository.dart';
-
+import '../data/services/common.dart';
+import '../data/services/sqlite/database_helper.dart';
+import '../data/services/sqlite/dao.dart';
+import '../data/utils/dates.dart';
+import '../data/utils/enums.dart';
+import '../data/utils/where_builder.dart';
 import '../utils/errors.dart';
+import '../utils/nullable.dart';
 import '../utils/result.dart';
 import 'dtos/food_dto.dart';
 import 'dtos/paginated_dto.dart';
-import '../data/utils/dates.dart';
-import '../data/utils/where_builder.dart';
-import '../data/repositories/common.dart';
+import 'inputs/food_input.dart';
 
 class FoodService {
   FoodService._();
@@ -42,13 +41,13 @@ class FoodService {
 
   final Logger _logger = Logger('Food Service');
 
-  final Repository<Food> _foodRepository = Repository<Food>(
+  final Dao<Food> _foodRepository = Dao<Food>(
     databaseHelper: DatabaseHelper(),
     tableName: Food.table,
     fromMap: Food.fromMap,
   );
 
-  final Repository<FoodPortion> _portionRepository = Repository<FoodPortion>(
+  final Dao<FoodPortion> _portionRepository = Dao<FoodPortion>(
     databaseHelper: DatabaseHelper(),
     tableName: FoodPortion.table,
     fromMap: FoodPortion.fromMap,

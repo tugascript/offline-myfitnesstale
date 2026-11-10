@@ -4,7 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:myfitnesstale/src/data/utils/json_data.dart';
 import 'package:myfitnesstale/src/data/models/daily_nutrition_log_model.dart';
 import 'package:myfitnesstale/src/data/models/day_macro_goal_model.dart';
-import 'package:myfitnesstale/src/data/repositories/db.dart';
+import 'package:myfitnesstale/src/data/services/sqlite/database_helper.dart';
 import 'package:myfitnesstale/src/data/utils/enums.dart';
 import 'package:myfitnesstale/src/data/models/food_model.dart';
 import 'package:myfitnesstale/src/data/models/food_portion_model.dart';
