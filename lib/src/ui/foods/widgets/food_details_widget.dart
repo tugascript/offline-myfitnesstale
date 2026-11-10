@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../data/repositories/foods/dtos/food_dto.dart';
 import '../../core/sizes/data_display_sizes.dart';
-import 'food_macro_column.dart';
+import './food_macro_column.dart';
 
 class FoodDetailsWidget extends StatelessWidget {
   final FoodDto food;

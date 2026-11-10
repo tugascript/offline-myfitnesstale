@@ -3,9 +3,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
-import '../../../../cubits/states/workout_record_state.dart';
-import '../../../../cubits/workout_plan_record_cubit.dart';
-import '../../../../cubits/workout_record_cubit.dart';
+import '../../view_models/states/workout_record_state.dart';
+import '../../../workout_plans/view_models/workout_plan_record_cubit.dart';
+import '../../view_models/workout_record_cubit.dart';
 import '../../../../data/utils/json_data.dart';
 import '../../../../data/utils/enums.dart';
 import '../../../../data/repositories/workouts/dtos/workout_set_dto.dart';
@@ -15,7 +15,7 @@ import '../../../core/sizes/data_display_sizes.dart';
 import '../../../core/widgets/detail_number.dart';
 import '../../../core/widgets/mutation_button.dart';
 import '../../../core/widgets/layout/app_text_form_field.dart';
-import 'workout_set_exercise_record_form.dart';
+import './workout_set_exercise_record_form.dart';
 
 class CreateWorkoutRecordEditor extends StatefulWidget {
   final ThemeData theme;

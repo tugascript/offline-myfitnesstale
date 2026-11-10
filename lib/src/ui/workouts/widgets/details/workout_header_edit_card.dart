@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../data/utils/enums.dart';
 import '../../../../data/repositories/workouts/dtos/workout_dto.dart';
 import '../../../core/sizes/data_display_sizes.dart';
-import 'workout_base_form.dart';
+import './workout_base_form.dart';
 
 class WorkoutHeaderEditCard extends StatelessWidget {
   final ThemeData theme;

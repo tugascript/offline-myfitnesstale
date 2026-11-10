@@ -1,14 +1,14 @@
 import '../../core/widgets/layout/app_text_form_field.dart';
 import '../../../data/repositories/macros/inputs/quick_food_log_input.dart';
-import 'quick_add_food_form.dart';
+import './quick_add_food_form.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 
-import '../../../cubits/food_cubit.dart';
-import '../../../cubits/macro_tracking_cubit.dart';
-import '../../../cubits/recipe_cubit.dart';
+import '../../foods/view_models/food_cubit.dart';
+import '../view_models/macro_tracking_cubit.dart';
+import '../../recipes/view_models/recipe_cubit.dart';
 import '../../../data/utils/enums.dart';
 import '../../../data/repositories/foods/dtos/food_dto.dart';
 import '../../core/sizes/data_display_sizes.dart';

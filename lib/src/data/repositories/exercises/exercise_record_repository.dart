@@ -1,7 +1,7 @@
 import 'package:logging/logging.dart';
 
-import 'dtos/strength_goal_dto.dart';
-import 'inputs/strength_goal_input.dart';
+import './dtos/strength_goal_dto.dart';
+import './inputs/strength_goal_input.dart';
 import '../../../utils/errors.dart';
 import '../../../utils/nullable.dart';
 import '../../../utils/result.dart';
@@ -15,9 +15,9 @@ import '../../utils/dates.dart';
 import '../../utils/enums.dart';
 import '../../utils/where_builder.dart';
 import '../core/dtos/paginated_dto.dart';
-import 'dtos/exercise_dto.dart';
-import 'dtos/exercise_record_dto.dart';
-import 'inputs/exercise_record_input.dart';
+import './dtos/exercise_dto.dart';
+import './dtos/exercise_record_dto.dart';
+import './inputs/exercise_record_input.dart';
 
 class ExerciseRecordRepository {
   final Dao<ExerciseRecord> _exerciseRecordDao;

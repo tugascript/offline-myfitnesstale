@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 
-import '../../../../../cubits/states/workout_record_state.dart';
-import '../../../../../cubits/workout_record_cubit.dart';
+import '../../../view_models/states/workout_record_state.dart';
+import '../../../view_models/workout_record_cubit.dart';
 import '../../../../../data/utils/enums.dart';
 import '../../../../core/sizes/data_display_sizes.dart';
 import '../../../../core/sizes/screen_size.dart';
 import '../../../../core/widgets/not_found_list.dart';
 import '../../../../core/widgets/layout/app_text_form_field.dart';
-import 'single_workout_record_list.dart';
+import './single_workout_record_list.dart';
 
 class WorkoutRecordHistory extends StatefulWidget {
   final ThemeData theme;

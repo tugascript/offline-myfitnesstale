@@ -2,8 +2,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite/sqflite.dart';
 
 import '../../../lib/src/utils/nullable.dart';
-import '../../../lib/src/cubits/workout_plan_cubit.dart';
-import '../../../lib/src/cubits/workout_plan_record_cubit.dart';
+import '../../../lib/src/ui/workout_plans/view_models/workout_plan_cubit.dart';
+import '../../../lib/src/ui/workout_plans/view_models/workout_plan_record_cubit.dart';
 import '../../../lib/src/data/utils/enums.dart';
 
 import '../../../lib/src/data/models/workout_model.dart';

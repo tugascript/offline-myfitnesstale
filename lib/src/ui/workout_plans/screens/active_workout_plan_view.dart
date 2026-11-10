@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../cubits/states/workout_plan_record_state.dart';
-import '../../../cubits/workout_plan_record_cubit.dart';
+import '../view_models/states/workout_plan_record_state.dart';
+import '../view_models/workout_plan_record_cubit.dart';
 import '../../core/sizes/data_display_sizes.dart';
 import '../../core/sizes/screen_size.dart';
 import '../../core/widgets/layout/app_scaffold.dart';

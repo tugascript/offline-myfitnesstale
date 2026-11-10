@@ -16,10 +16,10 @@ import '../../utils/enums.dart';
 import '../../utils/where_builder.dart';
 import '../core/dtos/paginated_dto.dart';
 import '../core/repository.dart';
-import 'dtos/equipment_dto.dart';
-import 'dtos/exercise_dto.dart';
-import 'inputs/equipment_input.dart';
-import 'inputs/exercise_input.dart';
+import './dtos/equipment_dto.dart';
+import './dtos/exercise_dto.dart';
+import './inputs/equipment_input.dart';
+import './inputs/exercise_input.dart';
 
 final class ExerciseRepository implements Repository {
   final Dao<Exercise> _exerciseDao;

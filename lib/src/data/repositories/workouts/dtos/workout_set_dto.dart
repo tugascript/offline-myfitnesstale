@@ -4,7 +4,7 @@ import '../../../../utils/nullable.dart';
 import '../../../utils/enums.dart';
 import '../../../models/workout_set_model.dart';
 import '../../core/dtos/dto.dart';
-import 'workout_set_exercise_dto.dart';
+import './workout_set_exercise_dto.dart';
 
 class WorkoutSetDto extends Equatable implements Dto<WorkoutSet> {
   @override

@@ -6,7 +6,7 @@ import '../editors/reps_input.dart';
 import '../editors/rest_input.dart';
 import '../editors/set_exercise_search_modal.dart';
 import '../editors/sets_input.dart';
-import 'set_editor_data.dart';
+import './set_editor_data.dart';
 
 class BasicSetEditor extends StatelessWidget {
   final SetEditorData setData;

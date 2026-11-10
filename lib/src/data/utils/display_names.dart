@@ -1,4 +1,4 @@
-import 'enums.dart';
+import './enums.dart';
 
 sealed class EnumDisplayNames {
   static String getMuscleGroupDisplayName(MuscleGroup? group) {

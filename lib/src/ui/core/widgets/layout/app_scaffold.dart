@@ -3,7 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../sizes/app_bar_sizes.dart';
 import '../../sizes/screen_size.dart';
-import 'app_icon.dart';
+import './app_icon.dart';
 
 class AppScaffold extends StatelessWidget {
   final String title;

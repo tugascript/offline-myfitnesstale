@@ -4,7 +4,7 @@ import '../../../../utils/nullable.dart';
 import '../../../models/exercise_record_model.dart';
 
 import '../../core/dtos/dto.dart';
-import 'exercise_dto.dart';
+import './exercise_dto.dart';
 import '../../core/dtos/picture_dto.dart';
 import '../../core/dtos/video_dto.dart';
 import '../../../utils/dates.dart';

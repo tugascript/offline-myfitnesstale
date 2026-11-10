@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
 import './layout/app_text_form_field.dart';
-import 'favourite_checkbox.dart';
-import 'search_form_button.dart';
+import './favourite_checkbox.dart';
+import './search_form_button.dart';
 
 class SearchFavoriteForm extends StatefulWidget {
   final ThemeData theme;

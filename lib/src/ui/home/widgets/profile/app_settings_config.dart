@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../../cubits/profile_cubit.dart';
+import '../../view_models/profile_cubit.dart';
 import '../../../../data/utils/enums.dart';
 import '../../../../data/repositories/profile/dtos/system_dto.dart';
 import '../../../core/sizes/data_display_sizes.dart';

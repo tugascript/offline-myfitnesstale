@@ -4,7 +4,7 @@ import '../../../../utils/nullable.dart';
 import '../../../utils/enums.dart';
 import '../../../models/workout_plan_week_model.dart';
 import '../../core/dtos/dto.dart';
-import 'workout_plan_day_dto.dart';
+import './workout_plan_day_dto.dart';
 
 class WorkoutPlanWeekDto extends Equatable implements Dto<WorkoutPlanWeek> {
   @override

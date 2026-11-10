@@ -4,8 +4,8 @@ import '../../../../utils/nullable.dart';
 import '../../../utils/enums.dart';
 import '../../../models/workout_plan_record_model.dart';
 import '../../core/dtos/dto.dart';
-import 'workout_plan_dto.dart';
-import 'workout_plan_week_record_dto.dart';
+import './workout_plan_dto.dart';
+import './workout_plan_week_record_dto.dart';
 
 class WorkoutPlanRecordDto extends Equatable implements Dto<WorkoutPlanRecord> {
   @override

@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
 
-import '../../../lib/src/cubits/profile_cubit.dart';
+import '../../../lib/src/ui/home/view_models/profile_cubit.dart';
 import '../../../lib/src/data/utils/enums.dart';
 import '../../../lib/src/utils/errors.dart';
 import '../../../lib/src/utils/result.dart';

@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 
-import '../../../lib/src/cubits/recipe_cubit.dart';
+import '../../../lib/src/ui/recipes/view_models/recipe_cubit.dart';
 import '../../../lib/src/data/models/recipe_model.dart';
 import '../../../lib/src/data/repositories/recipes/recipe_repository.dart';
 

@@ -1,6 +1,6 @@
-import 'equipment_model.dart';
-import 'exercise_model.dart';
-import 'model.dart';
+import './equipment_model.dart';
+import './exercise_model.dart';
+import './model.dart';
 import '../utils/dates.dart';
 
 const String _table = 'exercise_equipment';

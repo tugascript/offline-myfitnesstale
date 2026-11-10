@@ -17,13 +17,13 @@ import '../../../utils/nullable.dart';
 import '../../../utils/result.dart';
 import '../core/dtos/paginated_dto.dart';
 import '../workouts/dtos/workout_dto.dart';
-import 'dtos/workout_plan_day_dto.dart';
-import 'dtos/workout_plan_dto.dart';
-import 'dtos/workout_plan_week_dto.dart';
-import 'dtos/workout_plan_workout_dto.dart';
-import 'inputs/workout_plan_input.dart';
+import './dtos/workout_plan_day_dto.dart';
+import './dtos/workout_plan_dto.dart';
+import './dtos/workout_plan_week_dto.dart';
+import './dtos/workout_plan_workout_dto.dart';
+import './inputs/workout_plan_input.dart';
 
-export 'inputs/workout_plan_input.dart';
+export './inputs/workout_plan_input.dart';
 
 class WorkoutPlanRepository {
   WorkoutPlanRepository._();

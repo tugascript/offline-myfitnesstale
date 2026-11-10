@@ -5,7 +5,7 @@ import '../../../utils/json_data.dart';
 import '../../../utils/enums.dart';
 import '../../../models/exercise_model.dart';
 import '../../core/dtos/dto.dart';
-import 'equipment_dto.dart';
+import './equipment_dto.dart';
 import '../../core/dtos/picture_dto.dart';
 import '../../core/dtos/video_dto.dart';
 

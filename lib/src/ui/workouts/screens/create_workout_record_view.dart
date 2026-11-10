@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../cubits/profile_cubit.dart';
-import '../../../cubits/states/profile_state.dart';
-import '../../../cubits/states/workout_state.dart';
-import '../../../cubits/workout_cubit.dart';
+import '../../home/view_models/profile_cubit.dart';
+import '../../home/view_models/states/profile_state.dart';
+import '../view_models/states/workout_state.dart';
+import '../view_models/workout_cubit.dart';
 import '../../../data/utils/enums.dart';
 import '../../core/sizes/data_display_sizes.dart';
 import '../../core/sizes/screen_size.dart';

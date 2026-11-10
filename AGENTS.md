@@ -29,16 +29,18 @@ Follow the strict flow: `SQLite Model -> DAO -> Repository -> Cubit/ViewModel ->
     - Returns functional `Result<T, ServiceError<E>>` objects (`lib/src/utils/result.dart`) instead of
       throwing unhandled exceptions or leaking database details.
     - Preference for CRUD where the UPDATE uses the same input as CREATE making a "PUT" system.
-- **Cubit / ViewModel (`lib/src/cubits/`, `lib/src/ui/<feature>/view_models/`)**:
-    - Feature and application state management (`flutter_bloc`).
-    - Invokes repositories, unpackages `Result` objects, and emits immutable states.
+- **Cubit / ViewModel (`lib/src/ui/<feature>/view_models/`)**:
+    - Feature and application state management (`flutter_bloc`), colocated with each feature under `view_models/`.
+    - Shared state helpers (e.g. `ErrorState`) live in `lib/src/ui/core/view_models/states/`.
+    - Invokes repositories, unpackages `Result` objects, and emits immutable states under `view_models/states/`.
     - Uses `Nullable<T?>` wrappers (`lib/src/utils/nullable.dart`) in state `copyWith` to differentiate between
       omitting an argument and deliberately setting a field to `null`.
     - Never interacts directly with `sqflite` or raw database models.
     - Has a pagination state inside each type of entity state.
 - **View & Widget (`lib/src/ui/<feature>/`)**:
-    - UI layer under feature folders: `screens/`, `widgets/`, and optionally `view_models/`.
-    - Shared UI lives in `lib/src/ui/core/` (`widgets/`, `widgets/layout/`, `sizes/`, `themes/`, `screens/`).
+    - UI layer under feature folders: `screens/`, `widgets/`, and `view_models/`.
+    - Shared UI lives in `lib/src/ui/core/` (`widgets/`, `widgets/layout/`, `sizes/`, `themes/`, `screens/`,
+      `view_models/`).
     - Consumes Cubit states via `BlocBuilder` / `BlocConsumer` / `context.watch`.
     - Dispatches user intents to Cubit methods.
     - Never calls repositories or DAOs directly.

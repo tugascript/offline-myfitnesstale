@@ -4,9 +4,9 @@ import 'package:equatable/equatable.dart';
 
 import '../../utils/nullable.dart';
 import '../utils/enums.dart';
-import 'model.dart';
+import './model.dart';
 
-import 'week_macro_goal_model.dart';
+import './week_macro_goal_model.dart';
 import '../utils/dates.dart';
 
 const String _table = 'day_macro_goals';

@@ -4,7 +4,7 @@ import '../../../../../../data/utils/enums.dart';
 import '../../../../../../data/repositories/workouts/dtos/workout_set_dto.dart';
 import '../../../../../../data/repositories/workouts/dtos/workout_set_record_dto.dart';
 import '../../../../../core/sizes/data_display_sizes.dart';
-import 'workout_record_set_group.dart';
+import './workout_record_set_group.dart';
 
 final class WorkoutRecordSetsData {
   final WorkoutSetDto workoutSet;

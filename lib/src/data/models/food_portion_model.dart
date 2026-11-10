@@ -2,8 +2,8 @@ import '../../utils/nullable.dart';
 
 import 'package:equatable/equatable.dart';
 
-import 'food_model.dart';
-import 'model.dart';
+import './food_model.dart';
+import './model.dart';
 import '../utils/dates.dart';
 
 const String _table = 'food_portions';

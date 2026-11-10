@@ -10,9 +10,9 @@ import '../../utils/dates.dart';
 import '../../utils/enums.dart';
 import '../../../utils/errors.dart';
 import '../../../utils/result.dart';
-import 'dtos/profile_dto.dart';
-import 'dtos/reminders_config_dto.dart';
-import 'dtos/system_dto.dart';
+import './dtos/profile_dto.dart';
+import './dtos/reminders_config_dto.dart';
+import './dtos/system_dto.dart';
 
 class ProfileRepository {
   ProfileRepository._();

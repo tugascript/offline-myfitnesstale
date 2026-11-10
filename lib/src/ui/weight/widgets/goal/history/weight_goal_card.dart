@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../../../cubits/weight_record_cubit.dart';
+import '../../../view_models/weight_record_cubit.dart';
 import '../../../../../data/utils/enums.dart';
 import '../../../../../data/repositories/weight/dtos/weight_goal_dto.dart';
 import '../../../../core/utils/converters.dart';

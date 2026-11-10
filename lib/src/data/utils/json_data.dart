@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:equatable/equatable.dart';
 
 import '../../utils/nullable.dart';
-import 'enums.dart';
+import './enums.dart';
 
 abstract class JsonData {
   String toJson();

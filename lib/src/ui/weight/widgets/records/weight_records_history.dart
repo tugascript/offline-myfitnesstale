@@ -2,16 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 
-import '../../../../cubits/states/weight_record_state.dart';
-import '../../../../cubits/weight_record_cubit.dart';
+import '../../view_models/states/weight_record_state.dart';
+import '../../view_models/weight_record_cubit.dart';
 import '../../../../data/utils/enums.dart';
 import '../../../core/sizes/data_display_sizes.dart';
 import '../../../core/sizes/screen_size.dart';
 import '../../../core/widgets/icons_switch.dart';
 import '../../../core/widgets/not_found_list.dart';
 import '../../../core/widgets/layout/app_text_form_field.dart';
-import 'weight_records_chart.dart';
-import 'weight_records_list.dart';
+import './weight_records_chart.dart';
+import './weight_records_list.dart';
 
 const int maxWeightHistoryRangeDays = 365;
 

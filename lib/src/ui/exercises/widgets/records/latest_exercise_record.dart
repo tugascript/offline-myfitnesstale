@@ -11,9 +11,9 @@ import '../../../core/utils/converters.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../core/sizes/data_display_sizes.dart';
 import '../../../core/widgets/confirmation_dialog.dart';
-import 'editors/create_exercise_record_modal.dart';
-import 'editors/update_exercise_record_card.dart';
-import 'exercise_record_reps.dart';
+import './editors/create_exercise_record_modal.dart';
+import './editors/update_exercise_record_card.dart';
+import './exercise_record_reps.dart';
 
 class LatestExerciseRecord extends StatefulWidget {
   final DataDisplaySizesList sizes;

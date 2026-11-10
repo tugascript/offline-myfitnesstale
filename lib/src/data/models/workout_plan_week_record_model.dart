@@ -2,7 +2,7 @@ import 'package:equatable/equatable.dart';
 
 import '../../utils/nullable.dart';
 import '../utils/enums.dart';
-import 'model.dart';
+import './model.dart';
 import '../utils/dates.dart';
 
 const String _table = 'workout_plan_week_records';

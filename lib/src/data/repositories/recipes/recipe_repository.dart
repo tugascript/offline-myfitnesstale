@@ -15,8 +15,8 @@ import '../../../utils/errors.dart';
 import '../../../utils/nullable.dart';
 import '../../../utils/result.dart';
 import '../core/dtos/paginated_dto.dart';
-import 'dtos/recipe_dto.dart';
-import 'inputs/recipe_input.dart';
+import './dtos/recipe_dto.dart';
+import './inputs/recipe_input.dart';
 
 class RecipeRepository {
   RecipeRepository._();

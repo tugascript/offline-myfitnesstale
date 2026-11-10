@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'app_scaffold.dart';
+import './app_scaffold.dart';
 
 class ResponsiveScaffold extends StatelessWidget {
   final String title;

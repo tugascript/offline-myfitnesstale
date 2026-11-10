@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:logging/logging.dart';
 
-import 'my_app.dart';
-import 'src/data/services/sqlite/database_helper.dart';
+import './my_app.dart';
+import './src/data/services/sqlite/database_helper.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

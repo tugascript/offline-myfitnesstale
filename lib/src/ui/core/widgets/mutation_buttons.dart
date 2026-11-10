@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../sizes/data_display_sizes.dart';
-import 'mutation_button.dart';
+import './mutation_button.dart';
 
 class MutationButtons extends StatelessWidget {
   final ThemeData theme;

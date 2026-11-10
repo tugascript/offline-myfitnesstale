@@ -1,6 +1,6 @@
 import '../../utils/json_data.dart';
 import '../../utils/enums.dart';
-import 'exercise_constants.dart';
+import './exercise_constants.dart';
 
 final class WorkoutSetExerciseData {
   final String exerciseName;

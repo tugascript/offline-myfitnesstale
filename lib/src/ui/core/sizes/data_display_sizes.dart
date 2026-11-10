@@ -1,4 +1,4 @@
-import 'screen_size.dart';
+import './screen_size.dart';
 
 final class DataDisplaySizesList {
   final double padding;

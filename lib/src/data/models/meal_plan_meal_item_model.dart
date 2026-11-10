@@ -2,10 +2,10 @@ import '../../utils/nullable.dart';
 
 import 'package:equatable/equatable.dart';
 
-import 'food_model.dart';
-import 'food_portion_model.dart';
-import 'meal_plan_meal_model.dart';
-import 'model.dart';
+import './food_model.dart';
+import './food_portion_model.dart';
+import './meal_plan_meal_model.dart';
+import './model.dart';
 import '../utils/dates.dart';
 
 const String _table = 'meal_plan_meal_items';

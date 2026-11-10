@@ -7,9 +7,9 @@ import 'package:go_router/go_router.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
 import '../../../lib/src/utils/nullable.dart';
-import '../../../lib/src/cubits/states/common_state.dart';
-import '../../../lib/src/cubits/states/workout_plan_record_state.dart';
-import '../../../lib/src/cubits/workout_plan_record_cubit.dart';
+import '../../../lib/src/ui/core/view_models/states/common_state.dart';
+import '../../../lib/src/ui/workout_plans/view_models/states/workout_plan_record_state.dart';
+import '../../../lib/src/ui/workout_plans/view_models/workout_plan_record_cubit.dart';
 import '../../../lib/src/data/utils/enums.dart';
 import '../../../lib/src/ui/workout_plans/screens/current_workout_plan_view.dart';
 import '../../../lib/src/ui/workout_plans/widgets/active/active_workout_plan_content.dart';

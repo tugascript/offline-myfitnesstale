@@ -6,7 +6,7 @@ import '../../../models/workout_plan_model.dart';
 import '../../core/dtos/dto.dart';
 import '../../core/dtos/picture_dto.dart';
 import '../../core/dtos/video_dto.dart';
-import 'workout_plan_week_dto.dart';
+import './workout_plan_week_dto.dart';
 
 class WorkoutPlanDto extends Equatable implements Dto<WorkoutPlan> {
   @override

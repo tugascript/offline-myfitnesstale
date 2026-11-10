@@ -2,7 +2,7 @@ import 'package:equatable/equatable.dart';
 
 import '../../../../utils/nullable.dart';
 import '../../../models/workout_set_record_model.dart';
-import 'workout_set_exercise_record_dto.dart';
+import './workout_set_exercise_record_dto.dart';
 import '../../core/dtos/dto.dart';
 
 class WorkoutSetRecordDto extends Equatable implements Dto<WorkoutSetRecord> {

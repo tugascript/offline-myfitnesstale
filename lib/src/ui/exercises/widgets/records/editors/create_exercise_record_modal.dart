@@ -7,7 +7,7 @@ import '../../../../../data/utils/enums.dart';
 import '../../../../../data/repositories/exercises/inputs/exercise_record_input.dart';
 import '../../../../core/sizes/data_display_sizes.dart';
 import '../../../../core/widgets/layout/app_modal.dart';
-import 'exercise_record_form.dart';
+import './exercise_record_form.dart';
 
 class CreateExerciseRecordModal extends StatelessWidget {
   final ThemeData theme;

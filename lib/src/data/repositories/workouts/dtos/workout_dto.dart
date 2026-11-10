@@ -7,7 +7,7 @@ import '../../../models/workout_model.dart';
 import '../../core/dtos/dto.dart';
 import '../../core/dtos/picture_dto.dart';
 import '../../core/dtos/video_dto.dart';
-import 'workout_set_dto.dart';
+import './workout_set_dto.dart';
 
 class WorkoutDto extends Equatable implements Dto<Workout> {
   @override

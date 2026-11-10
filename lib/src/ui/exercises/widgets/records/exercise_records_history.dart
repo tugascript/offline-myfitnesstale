@@ -11,8 +11,8 @@ import '../../../core/sizes/screen_size.dart';
 import '../../../core/widgets/icons_switch.dart';
 import '../../../core/widgets/not_found_list.dart';
 import '../../../core/widgets/layout/app_text_form_field.dart';
-import 'exercise_records_chart.dart';
-import 'exercise_records_list.dart';
+import './exercise_records_chart.dart';
+import './exercise_records_list.dart';
 
 class ExerciseRecordsHistory extends StatefulWidget {
   final ThemeData theme;

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../data/repositories/workout_plans/dtos/workout_plan_day_dto.dart';
 import '../../../core/sizes/data_display_sizes.dart';
-import 'workout_plan_workout_card.dart';
+import './workout_plan_workout_card.dart';
 
 class WorkoutPlanDayCard extends StatelessWidget {
   final ThemeData theme;

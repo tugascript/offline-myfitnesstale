@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/sizes/data_display_sizes.dart';
-import 'quick_action_category.dart';
+import './quick_action_category.dart';
 
 class QuickActionCategoryCard extends StatelessWidget {
   final QuickActionCategory category;

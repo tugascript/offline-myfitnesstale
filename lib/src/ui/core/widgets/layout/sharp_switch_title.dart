@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'sharp_switch.dart';
+import './sharp_switch.dart';
 
 class SharpSwitchTitle extends StatelessWidget {
   final String title;

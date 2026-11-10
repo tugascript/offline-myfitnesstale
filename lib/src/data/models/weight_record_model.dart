@@ -1,9 +1,9 @@
 import 'package:equatable/equatable.dart';
 
 import '../../utils/nullable.dart';
-import 'model.dart';
+import './model.dart';
 
-import 'weight_goal_model.dart';
+import './weight_goal_model.dart';
 import '../utils/dates.dart';
 
 const String _table = 'weight_records';

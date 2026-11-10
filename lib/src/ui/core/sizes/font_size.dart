@@ -1,4 +1,4 @@
-import 'screen_size.dart';
+import './screen_size.dart';
 
 class FontSize {
   static const double _scale = 14.0;

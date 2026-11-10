@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
-import '../../../../../cubits/states/workout_record_state.dart';
+import '../../../view_models/states/workout_record_state.dart';
 import '../../../../../data/utils/enums.dart';
 import '../../../../../data/repositories/workouts/dtos/workout_record_dto.dart';
 import '../../../../core/utils/converters.dart';

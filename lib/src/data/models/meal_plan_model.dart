@@ -4,7 +4,7 @@ import 'package:equatable/equatable.dart';
 
 import '../utils/json_data.dart';
 import '../utils/enums.dart';
-import 'model.dart';
+import './model.dart';
 import '../utils/dates.dart';
 
 const String _table = 'meal_plans';

@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../cubits/macro_tracking_cubit.dart';
-import '../../../../cubits/meal_plan_record_cubit.dart';
-import '../../../../cubits/states/macro_tracking_state.dart';
-import '../../../../cubits/states/meal_plan_record_state.dart';
+import '../../../macros/view_models/macro_tracking_cubit.dart';
+import '../../../meal_plans/view_models/meal_plan_record_cubit.dart';
+import '../../../macros/view_models/states/macro_tracking_state.dart';
+import '../../../meal_plans/view_models/states/meal_plan_record_state.dart';
 import '../../../../routing/routing.dart';
 import '../../../core/sizes/data_display_sizes.dart';
-import 'active_plan_frame.dart';
+import './active_plan_frame.dart';
 
 class ActiveMealPlanWidget extends StatefulWidget {
   final DataDisplaySizesList sizes;

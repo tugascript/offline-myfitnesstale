@@ -5,12 +5,12 @@ import 'package:go_router/go_router.dart';
 import '../../../routing/routing.dart';
 import '../../core/widgets/confirmation_dialog.dart';
 
-import '../../../cubits/profile_cubit.dart';
-import '../../../cubits/states/profile_state.dart';
-import '../../../cubits/states/workout_record_state.dart';
-import '../../../cubits/states/workout_state.dart';
-import '../../../cubits/workout_cubit.dart';
-import '../../../cubits/workout_record_cubit.dart';
+import '../../home/view_models/profile_cubit.dart';
+import '../../home/view_models/states/profile_state.dart';
+import '../view_models/states/workout_record_state.dart';
+import '../view_models/states/workout_state.dart';
+import '../view_models/workout_cubit.dart';
+import '../view_models/workout_record_cubit.dart';
 import '../../../data/utils/enums.dart';
 import '../../../data/repositories/workouts/dtos/workout_set_record_dto.dart';
 import '../../core/sizes/data_display_sizes.dart';

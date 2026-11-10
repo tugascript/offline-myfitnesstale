@@ -6,7 +6,7 @@ import '../../../data/repositories/meal_plans/inputs/meal_plan_input.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../cubits/food_cubit.dart';
+import '../../foods/view_models/food_cubit.dart';
 import '../../../data/utils/enums.dart';
 import '../../../data/repositories/foods/dtos/food_dto.dart';
 import '../../../data/repositories/meal_plans/dtos/meal_plan_dto.dart';
