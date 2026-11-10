@@ -15,12 +15,14 @@
 // You should have received a copy of the GNU General Public License
 // along with My Fitness Tale.  If not, see <https://www.gnu.org/licenses/>.
 
+import 'package:equatable/equatable.dart';
+
 /// Domain DTO mapped from a SQLite model [T].
 ///
 /// Concrete DTOs should also declare:
 /// - `factory Foo.fromModel(T model, {...})`
 /// - `Foo copyWith({...})` returning the concrete type
-abstract interface class ModelDto<T> {
+abstract interface class ModelDto<T> extends Equatable {
   final int id;
 
   const ModelDto({required this.id});
@@ -29,6 +31,6 @@ abstract interface class ModelDto<T> {
 }
 
 /// Normal DTO
-abstract interface class Dto {
+abstract interface class Dto extends Equatable {
   Dto copyWith();
 }

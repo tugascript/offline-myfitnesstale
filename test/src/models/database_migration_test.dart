@@ -79,10 +79,10 @@ void main() {
       final profileId = await legacyDatabase.insert(
         Profile.table,
         Profile.create(
-          'Legacy Profile',
-          175,
-          Gender.other,
-          DateTime(1990),
+          name: 'Legacy Profile',
+          height: 175,
+          gender: Gender.other,
+          birthdate: DateTime(1990),
         ).toMap(),
       );
       await legacyDatabase.insert(

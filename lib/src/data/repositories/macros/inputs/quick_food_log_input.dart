@@ -15,8 +15,12 @@
 // You should have received a copy of the GNU General Public License
 // along with My Fitness Tale.  If not, see <https://www.gnu.org/licenses/>.
 
+import 'package:equatable/equatable.dart';
+
+import '../../core/inputs/input.dart';
+
 /// Nutrition totals for one diary entry, independent of the food library.
-final class QuickFoodLogInput {
+final class QuickFoodLogInput extends Equatable implements Input {
   final String name;
   final int calories;
   final int protein;
@@ -30,4 +34,7 @@ final class QuickFoodLogInput {
     required this.carbs,
     required this.fat,
   });
+
+  @override
+  List<Object?> get props => [name, calories, protein, carbs, fat];
 }

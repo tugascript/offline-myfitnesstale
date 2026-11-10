@@ -15,6 +15,10 @@
 // You should have received a copy of the GNU General Public License
 // along with My Fitness Tale.  If not, see <https://www.gnu.org/licenses/>.
 
+import '../../../data/repositories/meal_plans/inputs/meal_plan_day_input.dart';
+import '../../../data/repositories/meal_plans/inputs/meal_plan_meal_input.dart';
+import '../../../data/repositories/meal_plans/inputs/meal_plan_meal_item_input.dart';
+import '../../../data/repositories/meal_plans/inputs/meal_plan_week_input.dart';
 import '../../core/widgets/layout/responsive_fields.dart';
 import '../../core/widgets/layout/app_text_form_field.dart';
 import '../../../utils/nullable.dart';

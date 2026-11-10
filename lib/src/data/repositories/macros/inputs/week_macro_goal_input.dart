@@ -18,52 +18,13 @@
 import 'package:equatable/equatable.dart';
 
 import '../../../../utils/nullable.dart';
+import '../../../models/sqlite/week_macro_goal_model.dart';
 import '../../../utils/enums.dart';
+import '../../core/inputs/input.dart';
+import 'day_macro_goal_input.dart';
 
-final class DayMacroGoalInput extends Equatable {
-  final String? name;
-  final List<DayOfWeek> days;
-  final int targetCalories;
-  final int targetProtein;
-  final int targetCarbs;
-  final int targetFat;
-  final Nullable<int> targetFiber;
-  final Nullable<int> targetSodium;
-  final Nullable<int> targetWaterIntakeMl;
-  final WeightGoalPhase? phase;
-  final bool isActive;
-
-  const DayMacroGoalInput({
-    this.name,
-    required this.days,
-    required this.targetCalories,
-    required this.targetProtein,
-    required this.targetCarbs,
-    required this.targetFat,
-    this.targetFiber = const Nullable(null),
-    this.targetSodium = const Nullable(null),
-    this.targetWaterIntakeMl = const Nullable(null),
-    this.phase,
-    this.isActive = true,
-  });
-
-  @override
-  List<Object?> get props => [
-    name,
-    days,
-    targetCalories,
-    targetProtein,
-    targetCarbs,
-    targetFat,
-    targetFiber,
-    targetSodium,
-    targetWaterIntakeMl,
-    phase,
-    isActive,
-  ];
-}
-
-final class MacroGoalInput extends Equatable {
+final class WeekMacroGoalInput extends Equatable
+    implements ModelInput<WeekMacroGoal> {
   final String? name;
   final int targetCalories;
   final int targetProtein;
@@ -77,7 +38,7 @@ final class MacroGoalInput extends Equatable {
   final List<DayMacroGoalInput> days;
   final bool isActive;
 
-  const MacroGoalInput({
+  const WeekMacroGoalInput({
     this.name,
     this.targetCalories = 0,
     this.targetProtein = 0,
@@ -108,5 +69,3 @@ final class MacroGoalInput extends Equatable {
     isActive,
   ];
 }
-
-typedef WeekMacroGoalInput = MacroGoalInput;

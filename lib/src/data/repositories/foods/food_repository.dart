@@ -32,6 +32,7 @@ import '../core/dtos/paginated_dto.dart';
 import '../core/repository.dart';
 import './dtos/food_dto.dart';
 import './inputs/food_input.dart';
+import 'inputs/food_portion_input.dart';
 
 final class FoodRepository implements Repository {
   final Dao<Food> _foodDao;

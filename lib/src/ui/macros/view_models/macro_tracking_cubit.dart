@@ -16,7 +16,7 @@
 // along with My Fitness Tale.  If not, see <https://www.gnu.org/licenses/>.
 
 import '../../../utils/errors.dart';
-import '../../../data/repositories/macros/inputs/macro_goal_input.dart';
+import '../../../data/repositories/macros/inputs/week_macro_goal_input.dart';
 import '../../../data/repositories/macros/inputs/quick_food_log_input.dart';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -112,7 +112,7 @@ class MacroTrackingCubit extends Cubit<MacroTrackingState> {
     );
   }
 
-  Future<bool> createMacroGoal(MacroGoalInput input) async {
+  Future<bool> createMacroGoal(WeekMacroGoalInput input) async {
     _logger.info('Creating macro goal: ${input.name}');
     emit(state.copyWith(isLoading: true));
 
@@ -137,7 +137,7 @@ class MacroTrackingCubit extends Cubit<MacroTrackingState> {
     return true;
   }
 
-  Future<bool> updateMacroGoal(int id, MacroGoalInput input) async {
+  Future<bool> updateMacroGoal(int id, WeekMacroGoalInput input) async {
     _logger.info('Updating macro goal $id');
     emit(state.copyWith(isLoading: true));
 

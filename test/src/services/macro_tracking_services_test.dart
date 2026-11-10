@@ -15,26 +15,30 @@
 // You should have received a copy of the GNU General Public License
 // along with My Fitness Tale.  If not, see <https://www.gnu.org/licenses/>.
 
-import 'package:myfitnesstale/src/data/repositories/macros/inputs/macro_goal_input.dart';
-import 'package:myfitnesstale/src/data/repositories/foods/inputs/food_input.dart';
-import 'package:myfitnesstale/src/utils/nullable.dart';
-import 'package:myfitnesstale/src/data/repositories/meal_plans/inputs/meal_plan_input.dart';
-import 'package:myfitnesstale/src/data/repositories/recipes/inputs/recipe_input.dart';
-
 import 'package:flutter_test/flutter_test.dart';
-
 import 'package:myfitnesstale/src/data/models/sqlite/day_macro_goal_model.dart';
-import 'package:myfitnesstale/src/data/utils/enums.dart';
 import 'package:myfitnesstale/src/data/models/sqlite/food_model.dart';
 import 'package:myfitnesstale/src/data/models/sqlite/food_portion_model.dart';
 import 'package:myfitnesstale/src/data/models/sqlite/meal_plan_record_model.dart';
 import 'package:myfitnesstale/src/data/models/sqlite/week_macro_goal_model.dart';
-import 'package:myfitnesstale/src/utils/errors.dart';
 import 'package:myfitnesstale/src/data/repositories/foods/food_repository.dart';
+import 'package:myfitnesstale/src/data/repositories/foods/inputs/food_input.dart';
+import 'package:myfitnesstale/src/data/repositories/foods/inputs/food_portion_input.dart';
+import 'package:myfitnesstale/src/data/repositories/macros/inputs/day_macro_goal_input.dart';
+import 'package:myfitnesstale/src/data/repositories/macros/inputs/week_macro_goal_input.dart';
 import 'package:myfitnesstale/src/data/repositories/macros/macro_tracking_repository.dart';
+import 'package:myfitnesstale/src/data/repositories/meal_plans/inputs/meal_plan_day_input.dart';
+import 'package:myfitnesstale/src/data/repositories/meal_plans/inputs/meal_plan_input.dart';
+import 'package:myfitnesstale/src/data/repositories/meal_plans/inputs/meal_plan_meal_input.dart';
+import 'package:myfitnesstale/src/data/repositories/meal_plans/inputs/meal_plan_meal_item_input.dart';
+import 'package:myfitnesstale/src/data/repositories/meal_plans/inputs/meal_plan_week_input.dart';
 import 'package:myfitnesstale/src/data/repositories/meal_plans/meal_plan_record_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/meal_plans/meal_plan_repository.dart';
+import 'package:myfitnesstale/src/data/repositories/recipes/inputs/recipe_input.dart';
 import 'package:myfitnesstale/src/data/repositories/recipes/recipe_repository.dart';
+import 'package:myfitnesstale/src/data/utils/enums.dart';
+import 'package:myfitnesstale/src/utils/errors.dart';
+import 'package:myfitnesstale/src/utils/nullable.dart';
 
 import '../../support/test_database.dart';
 
@@ -199,7 +203,7 @@ void main() {
     test('one active macro goal, and a meal log that get-or-creates the daily log and rolls totals up', () async {
       // 1. Create first goal (active)
       final goal1 = await macroTrackingService.createMacroGoal(
-        MacroGoalInput(
+        WeekMacroGoalInput(
           name: 'Bulk Goal',
           targetCalories: 3000,
           targetProtein: 200,
@@ -214,7 +218,7 @@ void main() {
 
       // Create second goal (active) -> clears first goal
       final goal2 = await macroTrackingService.createMacroGoal(
-        MacroGoalInput(
+        WeekMacroGoalInput(
           name: 'Cut Goal',
           targetCalories: 2000,
           targetProtein: 180,
@@ -280,7 +284,7 @@ void main() {
 
     test('creates calorie cycling goal with day groups, resolves date targets, and rejects incomplete week', () async {
       final cyclingResult = await macroTrackingService.createMacroGoal(
-        const MacroGoalInput(
+        const WeekMacroGoalInput(
           name: 'Weekend Refeed',
           goalType: MacroGoalType.calorieCycling,
           phase: WeightGoalPhase.cut,
@@ -331,7 +335,7 @@ void main() {
 
       // Incomplete 7-day coverage is rejected
       final invalidResult = await macroTrackingService.createMacroGoal(
-        const MacroGoalInput(
+        const WeekMacroGoalInput(
           name: 'Invalid Cycling',
           goalType: MacroGoalType.calorieCycling,
           days: [
@@ -351,7 +355,7 @@ void main() {
 
       // Flat goal with multiple day groups is rejected
       final invalidFlatResult = await macroTrackingService.createMacroGoal(
-        const MacroGoalInput(
+        const WeekMacroGoalInput(
           name: 'Invalid Flat',
           goalType: MacroGoalType.flat,
           days: [
@@ -395,7 +399,7 @@ void main() {
 
       // Overlapping days across groups is rejected
       final overlappingResult = await macroTrackingService.createMacroGoal(
-        const MacroGoalInput(
+        const WeekMacroGoalInput(
           name: 'Overlapping Days',
           goalType: MacroGoalType.calorieCycling,
           days: [
@@ -428,7 +432,7 @@ void main() {
       // Update cycling goal replaces day groups and syncs phase/isActive
       final updatedCyclingResult = await macroTrackingService.updateMacroGoal(
         cycling.id,
-        const MacroGoalInput(
+        const WeekMacroGoalInput(
           name: 'Updated Cycling',
           goalType: MacroGoalType.calorieCycling,
           phase: WeightGoalPhase.bulk,

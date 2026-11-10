@@ -15,18 +15,16 @@
 // You should have received a copy of the GNU General Public License
 // along with My Fitness Tale.  If not, see <https://www.gnu.org/licenses/>.
 
+import 'package:equatable/equatable.dart';
+
 import '../../../../utils/nullable.dart';
+import '../../../models/sqlite/food_model.dart';
 import '../../../utils/enums.dart';
 import '../../../utils/json_data.dart';
+import '../../core/inputs/input.dart';
+import 'food_portion_input.dart';
 
-final class FoodPortionInput {
-  final String portionName;
-  final int gramWeight;
-
-  const FoodPortionInput({required this.portionName, required this.gramWeight});
-}
-
-final class FoodInput {
+final class FoodInput extends Equatable implements ModelInput<Food> {
   final String name;
   final FoodCategory category;
   final Nullable<String> brand;
@@ -58,4 +56,22 @@ final class FoodInput {
     this.isFavorite = false,
     required this.portions,
   });
+
+  @override
+  List<Object?> get props => [
+    name,
+    category,
+    brand,
+    barcode,
+    servingSizeBaseGrams,
+    caloriesBase,
+    proteinBase,
+    carbsBase,
+    fatBase,
+    fiberBase,
+    sodiumBase,
+    micros,
+    isFavorite,
+    portions,
+  ];
 }

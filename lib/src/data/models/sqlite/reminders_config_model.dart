@@ -17,20 +17,25 @@
 
 import 'package:equatable/equatable.dart';
 
+import '../../utils/dates.dart';
 import 'model.dart';
 import 'profile_model.dart';
-import '../../utils/dates.dart';
 
 const String _table = 'reminders_configs';
 
-enum RemindersConfigColumns {
+enum RemindersConfigColumns with Columns {
   id("id"),
   workoutsOn("workouts_on"),
+  workoutsReminderTime("workouts_reminder_time"),
   weightRecordsOn("weight_records_on"),
+  weightRecordsReminderTime("weight_records_reminder_time"),
+  macroTrackingOn("macro_tracking_on"),
+  macroTrackingReminderTime("macro_tracking_reminder_time"),
   profileId("profile_id"),
   createdAt("created_at"),
   updatedAt("updated_at");
 
+  @override
   final String value;
 
   const RemindersConfigColumns(this.value);
@@ -40,7 +45,11 @@ final class RemindersConfig extends Equatable implements Model {
   @override
   final int? id;
   final bool workoutsOn;
+  final int workoutsReminderTime;
   final bool weightRecordsOn;
+  final int weightRecordsReminderTime;
+  final bool macroTrackingOn;
+  final int macroTrackingReminderTime;
   final int profileId;
   @override
   final int createdAt;
@@ -50,7 +59,11 @@ final class RemindersConfig extends Equatable implements Model {
   const RemindersConfig({
     this.id,
     required this.workoutsOn,
+    required this.workoutsReminderTime,
     required this.weightRecordsOn,
+    required this.weightRecordsReminderTime,
+    required this.macroTrackingOn,
+    required this.macroTrackingReminderTime,
     required this.profileId,
     required this.createdAt,
     required this.updatedAt,
@@ -62,7 +75,11 @@ final class RemindersConfig extends Equatable implements Model {
     CREATE TABLE IF NOT EXISTS $_table (
       ${RemindersConfigColumns.id.value} INTEGER PRIMARY KEY AUTOINCREMENT,
       ${RemindersConfigColumns.workoutsOn.value} INTEGER NOT NULL,
+      ${RemindersConfigColumns.workoutsReminderTime.value} INTEGER NOT NULL,
       ${RemindersConfigColumns.weightRecordsOn.value} INTEGER NOT NULL,
+      ${RemindersConfigColumns.weightRecordsReminderTime.value} INTEGER NOT NULL,
+      ${RemindersConfigColumns.macroTrackingOn.value} INTEGER NOT NULL,
+      ${RemindersConfigColumns.macroTrackingReminderTime.value} INTEGER NOT NULL,
       ${RemindersConfigColumns.profileId.value} INTEGER NOT NULL,
       ${RemindersConfigColumns.createdAt.value} INTEGER NOT NULL,
       ${RemindersConfigColumns.updatedAt.value} INTEGER NOT NULL,
@@ -78,7 +95,13 @@ final class RemindersConfig extends Equatable implements Model {
     return {
       RemindersConfigColumns.id.value: id,
       RemindersConfigColumns.workoutsOn.value: workoutsOn ? 1 : 0,
+      RemindersConfigColumns.workoutsReminderTime.value: workoutsReminderTime,
       RemindersConfigColumns.weightRecordsOn.value: weightRecordsOn ? 1 : 0,
+      RemindersConfigColumns.weightRecordsReminderTime.value:
+          weightRecordsReminderTime,
+      RemindersConfigColumns.macroTrackingOn.value: macroTrackingOn ? 1 : 0,
+      RemindersConfigColumns.macroTrackingReminderTime.value:
+          macroTrackingReminderTime,
       RemindersConfigColumns.profileId.value: profileId,
       RemindersConfigColumns.createdAt.value: createdAt,
       RemindersConfigColumns.updatedAt.value: updatedAt,
@@ -89,8 +112,16 @@ final class RemindersConfig extends Equatable implements Model {
     return RemindersConfig(
       id: map[RemindersConfigColumns.id.value] as int?,
       workoutsOn: map[RemindersConfigColumns.workoutsOn.value]! as int == 1,
+      workoutsReminderTime:
+          map[RemindersConfigColumns.workoutsReminderTime.value]! as int,
       weightRecordsOn:
           map[RemindersConfigColumns.weightRecordsOn.value]! as int == 1,
+      weightRecordsReminderTime:
+          map[RemindersConfigColumns.weightRecordsReminderTime.value]! as int,
+      macroTrackingOn:
+          map[RemindersConfigColumns.macroTrackingOn.value]! as int == 1,
+      macroTrackingReminderTime:
+          map[RemindersConfigColumns.macroTrackingReminderTime.value]! as int,
       profileId: map[RemindersConfigColumns.profileId.value]! as int,
       createdAt: map[RemindersConfigColumns.createdAt.value]! as int,
       updatedAt: map[RemindersConfigColumns.updatedAt.value]! as int,
@@ -102,6 +133,10 @@ final class RemindersConfig extends Equatable implements Model {
     int? id,
     bool? workoutsOn,
     bool? weightRecordsOn,
+    int? workoutsReminderTime,
+    int? weightRecordsReminderTime,
+    bool? macroTrackingOn,
+    int? macroTrackingReminderTime,
     int? profileId,
     int? createdAt,
     int? updatedAt,
@@ -109,7 +144,13 @@ final class RemindersConfig extends Equatable implements Model {
     return RemindersConfig(
       id: id ?? this.id,
       workoutsOn: workoutsOn ?? this.workoutsOn,
+      workoutsReminderTime: workoutsReminderTime ?? this.workoutsReminderTime,
       weightRecordsOn: weightRecordsOn ?? this.weightRecordsOn,
+      weightRecordsReminderTime:
+          weightRecordsReminderTime ?? this.weightRecordsReminderTime,
+      macroTrackingOn: macroTrackingOn ?? this.macroTrackingOn,
+      macroTrackingReminderTime:
+          macroTrackingReminderTime ?? this.macroTrackingReminderTime,
       profileId: profileId ?? this.profileId,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -119,13 +160,25 @@ final class RemindersConfig extends Equatable implements Model {
   factory RemindersConfig.create({
     required int profileId,
     required bool workoutsOn,
+    required DateTime workoutsReminderTime,
     required bool weightRecordsOn,
+    required DateTime weightRecordsReminderTime,
+    required bool macroTrackingOn,
+    required DateTime macroTrackingReminderTime,
   }) {
     final int now = DateUtilities.getNowUtcUnix();
     return RemindersConfig(
-      workoutsOn: workoutsOn,
-      weightRecordsOn: weightRecordsOn,
       profileId: profileId,
+      workoutsOn: workoutsOn,
+      workoutsReminderTime: DateUtilities.getDateUnix(workoutsReminderTime),
+      weightRecordsOn: weightRecordsOn,
+      weightRecordsReminderTime: DateUtilities.getDateUnix(
+        weightRecordsReminderTime,
+      ),
+      macroTrackingOn: macroTrackingOn,
+      macroTrackingReminderTime: DateUtilities.getDateUnix(
+        macroTrackingReminderTime,
+      ),
       createdAt: now,
       updatedAt: now,
     );
@@ -135,7 +188,11 @@ final class RemindersConfig extends Equatable implements Model {
   List<Object?> get props => [
     id,
     workoutsOn,
+    workoutsReminderTime,
     weightRecordsOn,
+    weightRecordsReminderTime,
+    macroTrackingOn,
+    macroTrackingReminderTime,
     profileId,
     createdAt,
     updatedAt,

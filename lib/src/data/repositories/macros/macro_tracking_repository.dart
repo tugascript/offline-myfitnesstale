@@ -38,8 +38,9 @@ import '../../../utils/nullable.dart';
 import '../../../utils/result.dart';
 import './dtos/macro_tracking_dto.dart';
 import '../core/dtos/paginated_dto.dart';
-import './inputs/macro_goal_input.dart';
-import './inputs/quick_food_log_input.dart';
+import 'inputs/day_macro_goal_input.dart';
+import 'inputs/week_macro_goal_input.dart';
+import 'inputs/quick_food_log_input.dart';
 import '../core/repository.dart';
 
 final class MacroTrackingRepository implements Repository {
@@ -112,7 +113,7 @@ final class MacroTrackingRepository implements Repository {
   }
 
   Result<List<DayMacroGoalInput>, ServiceError<SingleErrorTypes>>
-  _resolveAndValidateDayInputs(MacroGoalInput input) {
+  _resolveAndValidateDayInputs(WeekMacroGoalInput input) {
     final List<DayMacroGoalInput> dayInputs = input.days.isEmpty
         ? (input.goalType == MacroGoalType.flat
               ? [
@@ -277,7 +278,7 @@ final class MacroTrackingRepository implements Repository {
   }
 
   Future<Result<MacroGoalDto, ServiceError<SingleErrorTypes>>> createMacroGoal(
-    MacroGoalInput input,
+    WeekMacroGoalInput input,
   ) async {
     _logger.info('Creating macro goal: ${input.name}');
     try {
@@ -374,7 +375,7 @@ final class MacroTrackingRepository implements Repository {
 
   Future<Result<MacroGoalDto, ServiceError<SingleErrorTypes>>> updateMacroGoal(
     int id,
-    MacroGoalInput input,
+    WeekMacroGoalInput input,
   ) async {
     _logger.info('Updating macro goal: $id');
     try {

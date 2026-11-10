@@ -18,78 +18,11 @@
 import 'package:equatable/equatable.dart';
 
 import '../../../../utils/nullable.dart';
-import '../../../utils/enums.dart';
+import 'meal_plan_week_input.dart';
+import '../../core/inputs/input.dart';
+import '../../../models/sqlite/meal_plan_model.dart';
 
-final class MealPlanMealItemInput extends Equatable {
-  final int foodId;
-  final int? portionId;
-  final int amount;
-
-  const MealPlanMealItemInput({
-    required this.foodId,
-    this.portionId,
-    required this.amount,
-  });
-
-  @override
-  List<Object?> get props => [foodId, portionId, amount];
-}
-
-final class MealPlanMealInput extends Equatable {
-  final int position;
-  final String? timeOfDay;
-  final MealType mealType;
-  final String name;
-  final int? recipeId;
-  final List<MealPlanMealItemInput> items;
-
-  const MealPlanMealInput({
-    required this.position,
-    this.timeOfDay,
-    required this.mealType,
-    required this.name,
-    this.recipeId,
-    this.items = const [],
-  });
-
-  @override
-  List<Object?> get props => [
-    position,
-    timeOfDay,
-    mealType,
-    name,
-    recipeId,
-    items,
-  ];
-}
-
-final class MealPlanDayInput extends Equatable {
-  final int day;
-  final String? name;
-  final List<MealPlanMealInput> meals;
-
-  const MealPlanDayInput({required this.day, this.name, this.meals = const []});
-
-  @override
-  List<Object?> get props => [day, name, meals];
-}
-
-final class MealPlanWeekInput extends Equatable {
-  final int weekNumber;
-  final MealPlanPhase phase;
-  final List<MealPlanDayInput> days;
-
-  const MealPlanWeekInput({
-    required this.weekNumber,
-    required this.phase,
-    this.days = const [],
-  });
-
-  @override
-  List<Object?> get props => [weekNumber, phase, days];
-}
-
-final class MealPlanInput {
+final class MealPlanInput extends Equatable implements ModelInput<MealPlan> {
   final String name;
   final Nullable<String> description;
   final List<MealPlanWeekInput> weeks;
@@ -99,4 +32,7 @@ final class MealPlanInput {
     this.description = const Nullable(null),
     required this.weeks,
   });
+
+  @override
+  List<Object?> get props => [name, description, weeks];
 }

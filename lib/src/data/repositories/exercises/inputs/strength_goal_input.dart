@@ -15,10 +15,15 @@
 // You should have received a copy of the GNU General Public License
 // along with My Fitness Tale.  If not, see <https://www.gnu.org/licenses/>.
 
-import '../../../../utils/nullable.dart';
-import '../../../utils/enums.dart';
+import 'package:equatable/equatable.dart';
 
-final class StrengthGoalInput {
+import '../../../../utils/nullable.dart';
+import '../../../models/sqlite/strength_goal_model.dart';
+import '../../../utils/enums.dart';
+import '../../core/inputs/input.dart';
+
+final class StrengthGoalInput extends Equatable
+    implements ModelInput<StrengthGoal> {
   final int exerciseId;
   final String name;
   final int targetReps;
@@ -38,4 +43,16 @@ final class StrengthGoalInput {
     this.status = ProgressStatus.inProgress,
     this.completedAt = const Nullable(null),
   });
+
+  @override
+  List<Object?> get props => [
+    exerciseId,
+    name,
+    targetReps,
+    targetWeight,
+    targetMaxStrength,
+    startDate,
+    status,
+    completedAt,
+  ];
 }
