@@ -6,7 +6,8 @@ data ownership.
 
 ## Architectural Layers and Division of Responsibilities
 
-Follow the strict flow: `SQLite Model -> DAO -> Repository -> Cubit/ViewModel -> Screen/Widget`.
+Follow a strict MVVM flow aligned with the Flutter app architecture guide:
+`SQLite Model -> DAO -> Repository -> Cubit/ViewModel -> Screen/Widget`.
 
 - **Model (`lib/src/data/models`)**:
     - Defines SQLite table schemas (`tableCreate`, `Columns` enum).
@@ -48,7 +49,8 @@ Follow the strict flow: `SQLite Model -> DAO -> Repository -> Cubit/ViewModel ->
       under `lib/src/ui/<feature>/widgets/`. Keep the screen a compact composition of those widgets plus Cubit wiring.
     - Resolve layout sizes in the screen with `BreakPoint.fromContext(context)` and the matching class in
       `lib/src/ui/core/sizes` (usually `DataDisplaySizes.getDataDisplaySizes`). Pass that size list, and `ThemeData`
-      when needed, into child widgets. Do not hardcode padding, spacing, icon sizes, or font sizes in screens or widgets.
+      when needed, into child widgets. Do not hardcode padding, spacing, icon sizes, or font sizes in screens or
+      widgets.
 - **Application Root & Wiring (`lib/my_app.dart`)**:
     - Registers app-scoped Cubits using `MultiBlocProvider` and wires the router.
 
@@ -91,9 +93,12 @@ Follow the strict flow: `SQLite Model -> DAO -> Repository -> Cubit/ViewModel ->
 
 - Follow the [Flutter Style Guide](https://dart.dev/guides/language/effective-dart/style).
 - Use sound null safety; avoid `!` unless the invariant is clear.
-- Repository functions, even intermediate, return `Result<T, ServiceError<E>>`, never throw exceptions. Catch failures at
-  the repository boundary and map them to appropriate errors; do not let exceptions escape. Always prefer the use the
-  Columns mixin in `lib/src/data/models` to write SQL, only use RAW SQL when necessary.
+- Repository functions, even intermediate, return `Result<T, ServiceError<E>>`, never throw exceptions. Catch failures
+  at
+  the repository boundary and map them to appropriate errors; do not let exceptions escape. Always prefer the Columns
+  mixin in `lib/src/data/models` to write SQL; only use raw SQL when necessary.
+- Keep Cubit type names (`*Cubit`) even though they live under `view_models/`; do not invent hybrid names such as
+  `CubitViewModel`.
 - Keep screens focused on composition and Cubit wiring. Reuse existing widgets and extract cohesive UI components into
   `lib/src/ui/<feature>/widgets/` or `lib/src/ui/core/widgets/`.
 - Reuse existing helpers, components, widgets, repositories, and patterns consistently with surrounding code. Otherwise,
