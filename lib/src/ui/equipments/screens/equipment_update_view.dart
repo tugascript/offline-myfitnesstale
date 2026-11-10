@@ -2,16 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../common/nullable.dart';
-import '../../cubits/exercise_cubit.dart';
-import '../../cubits/states/exercise_state.dart';
-import '../../models/common.dart';
-import '../../routing/routing.dart';
-import '../../services/inputs/equipment_input.dart';
-import '../../ui/core/sizes/data_display_sizes.dart';
-import '../../ui/core/sizes/screen_size.dart';
-import '../../widgets/equipment/equipment_form.dart';
-import '../../widgets/layout/responsive_scaffold.dart';
+import '../../../common/nullable.dart';
+import '../../../cubits/exercise_cubit.dart';
+import '../../../cubits/states/exercise_state.dart';
+import '../../../models/common.dart';
+import '../../../routing/routing.dart';
+import '../../../services/inputs/equipment_input.dart';
+import '../../core/sizes/data_display_sizes.dart';
+import '../../core/sizes/screen_size.dart';
+import '../widgets/equipment_form.dart';
+import '../../../widgets/layout/responsive_scaffold.dart';
 
 class EquipmentUpdateView extends StatefulWidget {
   static const String name = 'equipment_update';

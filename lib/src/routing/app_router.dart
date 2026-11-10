@@ -1,10 +1,10 @@
 import 'package:go_router/go_router.dart';
 
 import '../views/create_profile_view.dart';
-import '../views/equipments/equipment_creation_view.dart';
-import '../views/equipments/equipment_details_view.dart';
-import '../views/equipments/equipment_update_view.dart';
-import '../views/equipments/equipments_view.dart';
+import '../ui/equipments/screens/equipment_creation_view.dart';
+import '../ui/equipments/screens/equipment_details_view.dart';
+import '../ui/equipments/screens/equipment_update_view.dart';
+import '../ui/equipments/screens/equipments_view.dart';
 import '../ui/exercises/screens/exercise_progress_view.dart';
 import '../ui/exercises/screens/exercise_creation_view.dart';
 import '../ui/exercises/screens/exercise_detail_view.dart';

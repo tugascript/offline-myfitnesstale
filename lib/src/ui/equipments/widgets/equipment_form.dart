@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
-import '../../ui/core/sizes/data_display_sizes.dart';
-import '../layout/app_elevated_button.dart';
-import '../layout/app_text_form_field.dart';
+import '../../core/sizes/data_display_sizes.dart';
+import '../../../widgets/layout/app_elevated_button.dart';
+import '../../../widgets/layout/app_text_form_field.dart';
 
 class EquipmentForm extends StatefulWidget {
   final ThemeData theme;

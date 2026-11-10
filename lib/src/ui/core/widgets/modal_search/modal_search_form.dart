@@ -162,9 +162,9 @@ class _SmallSearchButton extends StatelessWidget {
   const _SmallSearchButton({
     required this.widget,
     required this._formKey,
-    required _FormData data,
+    required this._data,
     required this.padding,
-  }) : _data = data;
+  });
 
   final ModalSearchForm widget;
   final GlobalKey<FormState> _formKey;
