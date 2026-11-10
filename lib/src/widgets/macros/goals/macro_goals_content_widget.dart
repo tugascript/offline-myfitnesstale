@@ -5,8 +5,8 @@ import '../../../cubits/macro_tracking_cubit.dart';
 import '../../../cubits/states/macro_tracking_state.dart';
 import '../../../models/enums.dart';
 import '../../../services/dtos/macro_tracking_dto.dart';
-import '../../../utilities/sizes/data_display_sizes.dart';
-import '../../common/confirmation_dialog.dart';
+import '../../../ui/core/sizes/data_display_sizes.dart';
+import '../../../ui/core/widgets/confirmation_dialog.dart';
 import 'macro_goal_chip.dart';
 import 'macro_goal_form_modal.dart';
 

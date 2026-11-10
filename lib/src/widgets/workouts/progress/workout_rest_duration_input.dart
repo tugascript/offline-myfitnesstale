@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
-import '../../../utilities/sizes/data_display_sizes.dart';
+import '../../../ui/core/sizes/data_display_sizes.dart';
 import '../../layout/app_text_form_field.dart';
 
 const int _maxMinutes = 60;

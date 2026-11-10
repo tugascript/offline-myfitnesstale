@@ -6,9 +6,9 @@ import '../../cubits/meal_plan_cubit.dart';
 import '../../cubits/meal_plan_record_cubit.dart';
 import '../../cubits/states/meal_plan_state.dart';
 import '../../routing/routing.dart';
-import '../../utilities/sizes/data_display_sizes.dart';
-import '../../utilities/sizes/screen_size.dart';
-import '../../widgets/common/search_favorite_form.dart';
+import '../../ui/core/sizes/data_display_sizes.dart';
+import '../../ui/core/sizes/screen_size.dart';
+import '../../ui/core/widgets/search_favorite_form.dart';
 import '../../widgets/layout/app_scaffold.dart';
 import '../../widgets/meal_plans/meal_plan_list_item_widget.dart';
 

@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 
 import '../../../models/enums.dart';
 import '../../../services/dtos/workout_dto.dart';
-import '../../../utilities/sizes/data_display_sizes.dart';
-import '../../common/base_details_header.dart';
-import '../../common/difficulty_badge.dart';
-import '../../common/muscles_carousel.dart';
-import '../../common/total_numeric_string.dart';
+import '../../../ui/core/sizes/data_display_sizes.dart';
+import '../../../ui/core/widgets/base_details_header.dart';
+import '../../../ui/core/widgets/difficulty_badge.dart';
+import '../../../ui/core/widgets/muscles_carousel.dart';
+import '../../../ui/core/widgets/total_numeric_string.dart';
 
 class WorkoutHeaderCard extends StatelessWidget {
   final DataDisplaySizesList sizes;

@@ -6,8 +6,8 @@ import '../cubits/profile_cubit.dart';
 import '../cubits/states/profile_state.dart';
 import '../models/enums.dart';
 import '../routing/routing.dart';
-import '../utilities/sizes/profile/onboarding_sizes.dart';
-import '../utilities/sizes/screen_size.dart';
+import '../ui/core/sizes/profile/onboarding_sizes.dart';
+import '../ui/core/sizes/screen_size.dart';
 import '../widgets/profile/onboarding_form.dart';
 import '../widgets/profile/onboarding_intro.dart';
 

@@ -4,8 +4,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../cubits/recipe_cubit.dart';
 import '../../cubits/states/recipe_state.dart';
-import '../../utilities/sizes/data_display_sizes.dart';
-import '../../utilities/sizes/screen_size.dart';
+import '../../ui/core/sizes/data_display_sizes.dart';
+import '../../ui/core/sizes/screen_size.dart';
 import '../../widgets/layout/app_scaffold.dart';
 import '../../widgets/recipes/recipe_form_widget.dart';
 import '../loading_view.dart';

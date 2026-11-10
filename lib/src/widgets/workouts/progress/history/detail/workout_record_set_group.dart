@@ -4,11 +4,11 @@ import '../../../../../models/enums.dart';
 import '../../../../../services/dtos/workout_set_dto.dart';
 import '../../../../../services/dtos/workout_set_exercise_record_dto.dart';
 import '../../../../../services/dtos/workout_set_record_dto.dart';
-import '../../../../../utilities/converters.dart';
-import '../../../../../utilities/formatters.dart';
-import '../../../../../utilities/sizes/data_display_sizes.dart';
-import '../../../../common/base_set_data.dart';
-import '../../../../common/detail_number.dart';
+import '../../../../../ui/core/utils/converters.dart';
+import '../../../../../ui/core/utils/formatters.dart';
+import '../../../../../ui/core/sizes/data_display_sizes.dart';
+import '../../../../../ui/core/widgets/base_set_data.dart';
+import '../../../../../ui/core/widgets/detail_number.dart';
 
 class WorkoutRecordSetGroup extends StatelessWidget {
   final DataDisplaySizesList sizes;

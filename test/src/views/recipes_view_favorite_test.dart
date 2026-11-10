@@ -9,9 +9,9 @@ import 'package:myfitnesstale/src/routing/routing.dart';
 import 'package:myfitnesstale/src/services/dtos/recipe_dto.dart';
 import 'package:myfitnesstale/src/views/recipes/recipe_details_view.dart';
 import 'package:myfitnesstale/src/views/recipes/recipes_view.dart';
-import 'package:myfitnesstale/src/widgets/common/favourite_checkbox.dart';
-import 'package:myfitnesstale/src/widgets/common/search_favorite_form.dart';
-import 'package:myfitnesstale/src/widgets/common/search_form_button.dart';
+import 'package:myfitnesstale/src/ui/core/widgets/favourite_checkbox.dart';
+import 'package:myfitnesstale/src/ui/core/widgets/search_favorite_form.dart';
+import 'package:myfitnesstale/src/ui/core/widgets/search_form_button.dart';
 
 class _FakeRecipeCubit extends RecipeCubit {
   int? toggledRecipeId;

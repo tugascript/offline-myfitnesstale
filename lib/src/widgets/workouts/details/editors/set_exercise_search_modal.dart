@@ -5,8 +5,8 @@ import '../../../../cubits/exercise_cubit.dart';
 import '../../../../cubits/states/exercise_state.dart';
 import '../../../../models/enums.dart';
 import '../../../../services/dtos/exercise_dto.dart';
-import '../../../../utilities/sizes/data_display_sizes.dart';
-import '../../../common/modal_search/modal_search_form.dart';
+import '../../../../ui/core/sizes/data_display_sizes.dart';
+import '../../../../ui/core/widgets/modal_search/modal_search_form.dart';
 import 'set_exercise_search_list.dart';
 
 class SetExerciseSearchModal extends StatefulWidget {

@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../cubits/profile_cubit.dart';
 import '../../services/dtos/reminders_config_dto.dart';
-import '../../utilities/sizes/data_display_sizes.dart';
+import '../../ui/core/sizes/data_display_sizes.dart';
 import '../layout/expanding_section.dart';
 
 class RemindersSettingsConfig extends StatelessWidget {

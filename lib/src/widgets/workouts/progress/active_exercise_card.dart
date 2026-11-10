@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../../models/common.dart';
-import '../../../utilities/formatters.dart';
-import '../../../utilities/sizes/data_display_sizes.dart';
+import '../../../ui/core/utils/formatters.dart';
+import '../../../ui/core/sizes/data_display_sizes.dart';
 
 class ActiveExerciseCard extends StatelessWidget {
   final DataDisplaySizesList sizes;

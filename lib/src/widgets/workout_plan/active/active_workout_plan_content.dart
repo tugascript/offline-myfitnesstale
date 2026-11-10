@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
 import '../../../cubits/states/workout_plan_record_state.dart';
-import '../../../utilities/sizes/data_display_sizes.dart';
+import '../../../ui/core/sizes/data_display_sizes.dart';
 import '../plan_statistics_widget.dart';
 import 'active_workout_plan_dummy_data.dart';
 import 'active_workout_plan_week_card.dart';

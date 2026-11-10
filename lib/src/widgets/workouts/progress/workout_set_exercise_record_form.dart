@@ -3,8 +3,8 @@ import 'package:flutter/services.dart';
 
 import '../../../models/common.dart';
 import '../../../models/enums.dart';
-import '../../../utilities/converters.dart';
-import '../../../utilities/sizes/data_display_sizes.dart';
+import '../../../ui/core/utils/converters.dart';
+import '../../../ui/core/sizes/data_display_sizes.dart';
 import '../../layout/app_text_form_field.dart';
 import '../workout_set_exercise_difficulty_input.dart';
 import 'workout_rest_duration_input.dart';

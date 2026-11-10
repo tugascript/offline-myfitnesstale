@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../utilities/sizes/app_bar_sizes.dart';
-import '../../utilities/sizes/screen_size.dart';
+import '../../ui/core/sizes/app_bar_sizes.dart';
+import '../../ui/core/sizes/screen_size.dart';
 import 'app_icon.dart';
 
 class AppScaffold extends StatelessWidget {

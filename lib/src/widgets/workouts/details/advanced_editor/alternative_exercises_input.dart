@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../cubits/exercise_cubit.dart';
 import '../../../../cubits/states/exercise_state.dart';
-import '../../../../utilities/sizes/data_display_sizes.dart';
+import '../../../../ui/core/sizes/data_display_sizes.dart';
 import '../../../layout/dynamic_list_input.dart';
 import '../../../layout/expanding_section.dart';
 import '../editors/set_exercise_search_modal.dart';

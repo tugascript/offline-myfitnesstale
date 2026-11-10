@@ -3,11 +3,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:myfitnesstale/src/models/common.dart';
 import 'package:myfitnesstale/src/models/enums.dart';
 import 'package:myfitnesstale/src/services/dtos/equipment_dto.dart';
-import 'package:myfitnesstale/src/utilities/sizes/data_display_sizes.dart';
-import 'package:myfitnesstale/src/utilities/sizes/screen_size.dart';
-import 'package:myfitnesstale/src/widgets/common/muscles_carousel.dart';
-import 'package:myfitnesstale/src/widgets/common/muscles_data.dart';
-import 'package:myfitnesstale/src/widgets/common/muscles_diagram.dart';
+import 'package:myfitnesstale/src/ui/core/sizes/data_display_sizes.dart';
+import 'package:myfitnesstale/src/ui/core/sizes/screen_size.dart';
+import 'package:myfitnesstale/src/ui/core/widgets/muscles_carousel.dart';
+import 'package:myfitnesstale/src/ui/core/widgets/muscles_data.dart';
+import 'package:myfitnesstale/src/ui/core/widgets/muscles_diagram.dart';
 
 void main() {
   final sizes = DataDisplaySizes.getDataDisplaySizes(ScreenSize.md);

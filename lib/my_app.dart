@@ -18,7 +18,7 @@ import 'src/cubits/workout_plan_cubit.dart';
 import 'src/cubits/workout_plan_record_cubit.dart';
 import 'src/cubits/workout_record_cubit.dart';
 import 'src/routing/app_router.dart';
-import 'src/utilities/theme_generator.dart';
+import 'src/ui/core/themes/theme_generator.dart';
 
 class MyApp extends StatelessWidget {
   final RouterConfig<Object>? routerConfig;

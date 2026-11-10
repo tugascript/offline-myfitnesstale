@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../services/dtos/macro_tracking_dto.dart';
-import '../../utilities/sizes/data_display_sizes.dart';
+import '../../ui/core/sizes/data_display_sizes.dart';
 import 'nutrition_hour_row.dart';
 
 class NutritionTimelineWidget extends StatelessWidget {

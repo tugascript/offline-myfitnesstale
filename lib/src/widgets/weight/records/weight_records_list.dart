@@ -5,10 +5,10 @@ import 'package:skeletonizer/skeletonizer.dart';
 import '../../../cubits/weight_record_cubit.dart';
 import '../../../models/enums.dart';
 import '../../../services/dtos/weight_record_dto.dart';
-import '../../../utilities/converters.dart';
-import '../../../utilities/formatters.dart';
-import '../../../utilities/sizes/data_display_sizes.dart';
-import '../../common/confirmation_dialog.dart';
+import '../../../ui/core/utils/converters.dart';
+import '../../../ui/core/utils/formatters.dart';
+import '../../../ui/core/sizes/data_display_sizes.dart';
+import '../../../ui/core/widgets/confirmation_dialog.dart';
 import 'editor/edit_weight_record_modal.dart';
 
 class WeightRecordsList extends StatelessWidget {

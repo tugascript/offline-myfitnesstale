@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import '../../../models/enums.dart';
 import '../../../models/utilities.dart';
 import '../../../services/dtos/workout_plan_week_dto.dart';
-import '../../../utilities/sizes/data_display_sizes.dart';
-import '../../common/detail_number.dart';
+import '../../../ui/core/sizes/data_display_sizes.dart';
+import '../../../ui/core/widgets/detail_number.dart';
 import 'workout_plan_day_card.dart';
 
 class WorkoutPlanWeekCard extends StatelessWidget {

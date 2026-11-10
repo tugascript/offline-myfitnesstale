@@ -4,8 +4,8 @@ import 'package:intl/intl.dart';
 
 import '../../../models/enums.dart';
 import '../../../services/dtos/weight_record_dto.dart';
-import '../../../utilities/converters.dart';
-import '../../../utilities/sizes/data_display_sizes.dart';
+import '../../../ui/core/utils/converters.dart';
+import '../../../ui/core/sizes/data_display_sizes.dart';
 import 'editor/weight_record_point_details_modal.dart';
 
 class WeightRecordsChart extends StatelessWidget {

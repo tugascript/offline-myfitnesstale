@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 
 import '../../../models/enums.dart';
 import '../../../services/dtos/workout_plan_dto.dart';
-import '../../../utilities/sizes/data_display_sizes.dart';
-import '../../common/base_details_header.dart';
-import '../../common/difficulty_badge.dart';
+import '../../../ui/core/sizes/data_display_sizes.dart';
+import '../../../ui/core/widgets/base_details_header.dart';
+import '../../../ui/core/widgets/difficulty_badge.dart';
 
 class WorkoutPlanHeader extends StatelessWidget {
   final DataDisplaySizesList sizes;

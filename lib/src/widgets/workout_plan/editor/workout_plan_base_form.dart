@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../models/enums.dart';
 import '../../../models/utilities.dart';
-import '../../../utilities/sizes/data_display_sizes.dart';
+import '../../../ui/core/sizes/data_display_sizes.dart';
 import '../../layout/app_dropdown.dart';
 import '../../layout/app_elevated_button.dart';
 import '../../layout/app_text_form_field.dart';

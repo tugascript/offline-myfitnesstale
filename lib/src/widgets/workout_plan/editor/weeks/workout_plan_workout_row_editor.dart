@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../models/enums.dart';
 import '../../../../models/utilities.dart';
 import '../../../../services/dtos/workout_dto.dart';
-import '../../../../utilities/sizes/data_display_sizes.dart';
+import '../../../../ui/core/sizes/data_display_sizes.dart';
 import '../../../layout/app_dropdown.dart';
 import 'workout_plan_editor_data.dart';
 import '../workout_search/workout_plan_workout_search_modal.dart';

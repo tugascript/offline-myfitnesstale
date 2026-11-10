@@ -3,9 +3,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../cubits/states/workout_state.dart';
 import '../../cubits/workout_cubit.dart';
-import '../../utilities/sizes/data_display_sizes.dart';
-import '../../utilities/sizes/screen_size.dart';
-import '../../widgets/common/base_common_search_form.dart';
+import '../../ui/core/sizes/data_display_sizes.dart';
+import '../../ui/core/sizes/screen_size.dart';
+import '../../ui/core/widgets/base_common_search_form.dart';
 import '../../widgets/layout/app_scaffold.dart';
 import '../../widgets/workouts/details/create_workout_modal.dart';
 import '../../widgets/workouts/workouts_list.dart';

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../../utilities/sizes/data_display_sizes.dart';
+import '../../../../ui/core/sizes/data_display_sizes.dart';
 import '../editors/exercise_selection_button.dart';
 import '../editors/reps_input.dart';
 import '../editors/rest_input.dart';

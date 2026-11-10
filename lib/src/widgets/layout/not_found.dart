@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../utilities/sizes/font_size.dart';
-import '../../utilities/sizes/screen_size.dart';
+import '../../ui/core/sizes/font_size.dart';
+import '../../ui/core/sizes/screen_size.dart';
 
 class NotFound extends StatelessWidget {
   const NotFound({super.key});

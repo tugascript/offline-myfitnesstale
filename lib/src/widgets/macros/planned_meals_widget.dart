@@ -9,7 +9,7 @@ import '../../cubits/states/meal_plan_record_state.dart';
 import '../../models/utilities.dart';
 import '../../services/dtos/meal_plan_dto.dart';
 import '../../services/dtos/meal_plan_record_dto.dart';
-import '../../utilities/sizes/data_display_sizes.dart';
+import '../../ui/core/sizes/data_display_sizes.dart';
 
 class PlannedMealsWidget extends StatelessWidget {
   final DataDisplaySizesList sizes;

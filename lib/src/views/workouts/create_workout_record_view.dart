@@ -6,8 +6,8 @@ import '../../cubits/states/profile_state.dart';
 import '../../cubits/states/workout_state.dart';
 import '../../cubits/workout_cubit.dart';
 import '../../models/enums.dart';
-import '../../utilities/sizes/data_display_sizes.dart';
-import '../../utilities/sizes/screen_size.dart';
+import '../../ui/core/sizes/data_display_sizes.dart';
+import '../../ui/core/sizes/screen_size.dart';
 import '../../widgets/layout/responsive_scaffold.dart';
 import '../../widgets/workouts/progress/create_workout_record_editor.dart';
 

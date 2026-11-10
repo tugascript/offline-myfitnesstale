@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../utilities/sizes/data_display_sizes.dart';
+import '../../ui/core/sizes/data_display_sizes.dart';
 
 /// Keeps fields usable when the available width or text scale changes.
 class ResponsiveFields extends StatelessWidget {

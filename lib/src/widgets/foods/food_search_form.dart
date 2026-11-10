@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../../models/enums.dart';
 import '../../models/utilities.dart';
-import '../common/favourite_checkbox.dart';
-import '../common/search_form_button.dart';
+import '../../ui/core/widgets/favourite_checkbox.dart';
+import '../../ui/core/widgets/search_form_button.dart';
 import '../layout/app_dropdown.dart';
 import '../layout/app_text_form_field.dart';
 

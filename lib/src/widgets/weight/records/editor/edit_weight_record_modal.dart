@@ -7,7 +7,7 @@ import '../../../../cubits/weight_record_cubit.dart';
 import '../../../../models/enums.dart';
 import '../../../../services/dtos/weight_record_dto.dart';
 import '../../../../services/inputs/weight_record_input.dart';
-import '../../../../utilities/sizes/data_display_sizes.dart';
+import '../../../../ui/core/sizes/data_display_sizes.dart';
 import '../../../layout/app_modal.dart';
 import 'weight_record_form.dart';
 

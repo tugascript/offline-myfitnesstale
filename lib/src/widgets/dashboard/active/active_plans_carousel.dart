@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../../utilities/sizes/data_display_sizes.dart';
-import '../../common/base_carousel.dart';
+import '../../../ui/core/sizes/data_display_sizes.dart';
+import '../../../ui/core/widgets/base_carousel.dart';
 import 'active_meal_plan_widget.dart';
 import 'active_plan_widget.dart';
 

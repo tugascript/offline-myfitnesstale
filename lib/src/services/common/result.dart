@@ -1,7 +1,3 @@
-Ok<T, E> ok<T, E>(T value) => Ok<T, E>(value);
-
-Err<T, E> err<T, E>(E error) => Err<T, E>(error);
-
 abstract interface class Result<T, E> {
   bool isOk() => throw UnimplementedError();
 
@@ -12,10 +8,10 @@ abstract interface class Result<T, E> {
   E get error => throw UnimplementedError();
 }
 
-class Ok<T, E> implements Result<T, E> {
+final class _Ok<T, E> implements Result<T, E> {
   final T _value;
 
-  const Ok(T value) : _value = value;
+  const _Ok(T value) : _value = value;
 
   @override
   bool isOk() => true;
@@ -30,10 +26,10 @@ class Ok<T, E> implements Result<T, E> {
   E get error => throw Exception("Cannot get error from Ok");
 }
 
-class Err<T, E> implements Result<T, E> {
+final class _Err<T, E> implements Result<T, E> {
   final E _error;
 
-  const Err(E error) : _error = error;
+  const _Err(E error) : _error = error;
 
   @override
   bool isOk() => false;
@@ -47,3 +43,7 @@ class Err<T, E> implements Result<T, E> {
   @override
   T get value => throw Exception("Cannot get value from Err");
 }
+
+Result<T, E> ok<T, E>(T value) => _Ok<T, E>(value);
+
+Result<T, E> err<T, E>(E error) => _Err<T, E>(error);

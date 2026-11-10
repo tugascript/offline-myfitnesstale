@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import '../../models/enums.dart';
 import '../../services/dtos/profile_dto.dart';
 import '../../services/dtos/system_dto.dart';
-import '../../utilities/converters.dart';
-import '../../utilities/sizes/data_display_sizes.dart';
+import '../../ui/core/utils/converters.dart';
+import '../../ui/core/sizes/data_display_sizes.dart';
 
 class ProfileInfo extends StatelessWidget {
   final DataDisplaySizesList sizes;

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../../../utilities/sizes/data_display_sizes.dart';
-import '../../../common/editors/expanding_dynamic_input_wrapper.dart';
+import '../../../../ui/core/sizes/data_display_sizes.dart';
+import '../../../../ui/core/widgets/editors/expanding_dynamic_input_wrapper.dart';
 import '../../../layout/dynamic_list_input.dart';
 import '../../../layout/sharp_switch.dart';
 import 'workout_plan_editor_data.dart';

@@ -5,9 +5,9 @@ import 'package:intl/intl.dart';
 import '../../../../cubits/states/workout_record_state.dart';
 import '../../../../cubits/workout_record_cubit.dart';
 import '../../../../models/enums.dart';
-import '../../../../utilities/sizes/data_display_sizes.dart';
-import '../../../../utilities/sizes/screen_size.dart';
-import '../../../common/not_found_list.dart';
+import '../../../../ui/core/sizes/data_display_sizes.dart';
+import '../../../../ui/core/sizes/screen_size.dart';
+import '../../../../ui/core/widgets/not_found_list.dart';
 import '../../../layout/app_text_form_field.dart';
 import 'single_workout_record_list.dart';
 

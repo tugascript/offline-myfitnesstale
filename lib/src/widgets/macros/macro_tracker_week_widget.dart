@@ -5,7 +5,7 @@ import 'package:intl/intl.dart';
 import '../../cubits/macro_tracking_cubit.dart';
 import '../../cubits/states/macro_tracking_state.dart';
 import '../../models/utilities.dart';
-import '../../utilities/sizes/data_display_sizes.dart';
+import '../../ui/core/sizes/data_display_sizes.dart';
 
 class MacroTrackerWeekWidget extends StatelessWidget {
   final DataDisplaySizesList sizes;

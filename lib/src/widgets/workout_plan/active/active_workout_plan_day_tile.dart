@@ -5,7 +5,7 @@ import '../../../models/enums.dart';
 import '../../../services/dtos/workout_plan_day_dto.dart';
 import '../../../services/dtos/workout_plan_workout_record_dto.dart';
 import '../../../services/dtos/workout_plan_workout_dto.dart';
-import '../../../utilities/sizes/data_display_sizes.dart';
+import '../../../ui/core/sizes/data_display_sizes.dart';
 
 enum DayProgressStatus { past, current, future }
 

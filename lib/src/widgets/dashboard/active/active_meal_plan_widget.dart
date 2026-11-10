@@ -7,7 +7,7 @@ import '../../../cubits/meal_plan_record_cubit.dart';
 import '../../../cubits/states/macro_tracking_state.dart';
 import '../../../cubits/states/meal_plan_record_state.dart';
 import '../../../routing/routing.dart';
-import '../../../utilities/sizes/data_display_sizes.dart';
+import '../../../ui/core/sizes/data_display_sizes.dart';
 import 'active_plan_frame.dart';
 
 class ActiveMealPlanWidget extends StatefulWidget {
