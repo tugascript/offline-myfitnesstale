@@ -5,7 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../view_models/states/workout_plan_record_state.dart';
 import '../view_models/workout_plan_record_cubit.dart';
 import '../../../data/utils/enums.dart';
-import '../../../routing/routing.dart';
+import '../../../routing/routes.dart';
 import '../../core/sizes/data_display_sizes.dart';
 import '../../core/sizes/screen_size.dart';
 import '../../core/widgets/layout/app_scaffold.dart';

@@ -6,7 +6,7 @@ import '../../../macros/view_models/macro_tracking_cubit.dart';
 import '../../../meal_plans/view_models/meal_plan_record_cubit.dart';
 import '../../../macros/view_models/states/macro_tracking_state.dart';
 import '../../../meal_plans/view_models/states/meal_plan_record_state.dart';
-import '../../../../routing/routing.dart';
+import '../../../../routing/routes.dart';
 import '../../../core/sizes/data_display_sizes.dart';
 import './active_plan_frame.dart';
 

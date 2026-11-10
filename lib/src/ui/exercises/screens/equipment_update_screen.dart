@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../utils/nullable.dart';
 import '../../../data/utils/json_data.dart';
-import '../../../routing/routing.dart';
+import '../../../routing/routes.dart';
 import '../../../data/repositories/exercises/inputs/equipment_input.dart';
 import '../../core/widgets/layout/responsive_scaffold.dart';
 import '../../core/sizes/data_display_sizes.dart';

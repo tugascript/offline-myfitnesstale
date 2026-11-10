@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../view_models/recipe_cubit.dart';
 import '../view_models/states/recipe_state.dart';
-import '../../../routing/routing.dart';
+import '../../../routing/routes.dart';
 import '../../core/sizes/data_display_sizes.dart';
 import '../../core/sizes/screen_size.dart';
 import '../../core/widgets/search_favorite_form.dart';
