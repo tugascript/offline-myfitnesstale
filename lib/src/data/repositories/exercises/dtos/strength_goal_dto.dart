@@ -18,12 +18,12 @@
 import 'package:equatable/equatable.dart';
 
 import '../../../../utils/nullable.dart';
-import '../../../utils/enums.dart';
 import '../../../models/sqlite/strength_goal_model.dart';
 import '../../../utils/dates.dart';
+import '../../../utils/enums.dart';
 import '../../core/dtos/dto.dart';
 
-class StrengthGoalDto extends Equatable implements Dto<StrengthGoal> {
+class StrengthGoalDto extends Equatable implements ModelDto<StrengthGoal> {
   @override
   final int id;
   final String name;

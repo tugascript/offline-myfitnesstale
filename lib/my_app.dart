@@ -79,7 +79,7 @@ class MyApp extends StatelessWidget {
         BlocProvider<ProfileCubit>(
           create: (BuildContext context) => ProfileCubit(
             profileRepository: profileRepository,
-            onboardingService: OnboardingRepository(
+            onboardingService: OnboardingRepository.create(
               profileService: profileRepository,
               exerciseService: exerciseRepository,
               workoutService: workoutRepository,

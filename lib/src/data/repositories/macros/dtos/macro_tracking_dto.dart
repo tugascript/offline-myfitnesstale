@@ -18,18 +18,17 @@
 import 'package:equatable/equatable.dart';
 
 import '../../../../utils/nullable.dart';
-import '../../../utils/json_data.dart';
 import '../../../models/sqlite/daily_nutrition_log_model.dart';
 import '../../../models/sqlite/day_macro_goal_model.dart';
-import '../../../utils/enums.dart';
 import '../../../models/sqlite/meal_log_item_model.dart';
 import '../../../models/sqlite/meal_log_model.dart';
-
 import '../../../models/sqlite/week_macro_goal_model.dart';
 import '../../../utils/dates.dart';
+import '../../../utils/enums.dart';
+import '../../../utils/json_data.dart';
 import '../../core/dtos/dto.dart';
 
-class DayMacroGoalDto extends Equatable implements Dto<DayMacroGoal> {
+class DayMacroGoalDto extends Equatable implements ModelDto<DayMacroGoal> {
   @override
   final int id;
   final int weekMacroGoalId;
@@ -134,7 +133,7 @@ class DayMacroGoalDto extends Equatable implements Dto<DayMacroGoal> {
   ];
 }
 
-class MacroGoalDto extends Equatable implements Dto<WeekMacroGoal> {
+class MacroGoalDto extends Equatable implements ModelDto<WeekMacroGoal> {
   @override
   final int id;
   final String name;
@@ -346,7 +345,7 @@ class MacroGoalDto extends Equatable implements Dto<WeekMacroGoal> {
 
 typedef WeekMacroGoalDto = MacroGoalDto;
 
-class MealLogItemDto extends Equatable implements Dto<MealLogItem> {
+class MealLogItemDto extends Equatable implements ModelDto<MealLogItem> {
   @override
   final int id;
   final int mealLogId;
@@ -443,7 +442,7 @@ class MealLogItemDto extends Equatable implements Dto<MealLogItem> {
   ];
 }
 
-class MealLogDto extends Equatable implements Dto<MealLog> {
+class MealLogDto extends Equatable implements ModelDto<MealLog> {
   @override
   final int id;
   final int dailyLogId;
@@ -535,7 +534,8 @@ class MealLogDto extends Equatable implements Dto<MealLog> {
   ];
 }
 
-class DailyNutritionLogDto extends Equatable implements Dto<DailyNutritionLog> {
+class DailyNutritionLogDto extends Equatable
+    implements ModelDto<DailyNutritionLog> {
   @override
   final int id;
   final int date; // YYYYMMDD

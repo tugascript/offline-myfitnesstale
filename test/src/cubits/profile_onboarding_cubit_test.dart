@@ -18,16 +18,21 @@
 import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
-
-import 'package:myfitnesstale/src/ui/home/view_models/profile_cubit.dart';
-import 'package:myfitnesstale/src/data/utils/enums.dart';
-import 'package:myfitnesstale/src/utils/errors.dart';
-import 'package:myfitnesstale/src/utils/result.dart';
+import 'package:myfitnesstale/src/data/models/sqlite/system_model.dart';
+import 'package:myfitnesstale/src/data/repositories/exercises/exercise_repository.dart';
+import 'package:myfitnesstale/src/data/repositories/onboarding/onboarding_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/profile/dtos/profile_dto.dart';
 import 'package:myfitnesstale/src/data/repositories/profile/dtos/reminders_config_dto.dart';
 import 'package:myfitnesstale/src/data/repositories/profile/dtos/system_dto.dart';
-import 'package:myfitnesstale/src/data/repositories/onboarding/onboarding_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/profile/profile_repository.dart';
+import 'package:myfitnesstale/src/data/repositories/workout_plans/workout_plan_repository.dart';
+import 'package:myfitnesstale/src/data/repositories/workouts/workout_repository.dart';
+import 'package:myfitnesstale/src/data/services/sqlite/dao.dart';
+import 'package:myfitnesstale/src/data/services/sqlite/database_helper.dart';
+import 'package:myfitnesstale/src/data/utils/enums.dart';
+import 'package:myfitnesstale/src/ui/home/view_models/profile_cubit.dart';
+import 'package:myfitnesstale/src/utils/errors.dart';
+import 'package:myfitnesstale/src/utils/result.dart';
 
 void main() {
   test(
@@ -118,17 +123,28 @@ void main() {
 }
 
 typedef OnboardingServiceResult =
-    Result<OnboardingResult, ServiceError<OperationErrorTypes>>;
+    Result<OnboardingDto, ServiceError<OperationErrorTypes>>;
 
 final class _OnboardingService extends OnboardingRepository {
   final List<Future<OnboardingServiceResult>> _responses;
-  final List<OnboardingRequest> requests = [];
+  final List<OnboardingInput> requests = [];
 
-  _OnboardingService(this._responses);
+  _OnboardingService(this._responses)
+    : super(
+        exerciseService: ExerciseRepository.create(),
+        profileService: ProfileRepository.create(),
+        workoutService: WorkoutRepository.create(),
+        workoutPlanService: WorkoutPlanRepository.create(),
+        systemDao: Dao<System>(
+          databaseHelper: DatabaseHelper(),
+          tableName: System.table,
+          fromMap: System.fromMap,
+        ),
+      );
 
   @override
-  Future<OnboardingServiceResult> onboard(OnboardingRequest request) {
-    requests.add(request);
+  Future<OnboardingServiceResult> onboard(OnboardingInput input) {
+    requests.add(input);
     return _responses.removeAt(0);
   }
 }
@@ -162,7 +178,7 @@ const _reminders = RemindersConfigDto(
   weightRecordsOn: false,
 );
 
-final _success = OnboardingResult(
+final _success = OnboardingDto(
   profile: _profile,
   system: _system,
   remindersConfig: _reminders,

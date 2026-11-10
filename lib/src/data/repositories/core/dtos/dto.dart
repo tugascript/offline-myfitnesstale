@@ -20,10 +20,15 @@
 /// Concrete DTOs should also declare:
 /// - `factory Foo.fromModel(T model, {...})`
 /// - `Foo copyWith({...})` returning the concrete type
-abstract interface class Dto<T> {
+abstract interface class ModelDto<T> {
   final int id;
 
-  const Dto({required this.id});
+  const ModelDto({required this.id});
 
-  Dto<T> copyWith();
+  ModelDto<T> copyWith();
+}
+
+/// Normal DTO
+abstract interface class Dto {
+  Dto copyWith();
 }

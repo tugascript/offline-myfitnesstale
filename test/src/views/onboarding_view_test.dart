@@ -19,18 +19,23 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
-
-import 'package:myfitnesstale/src/ui/home/view_models/profile_cubit.dart';
-import 'package:myfitnesstale/src/data/utils/enums.dart';
-import 'package:myfitnesstale/src/routing/routes.dart';
-import 'package:myfitnesstale/src/utils/errors.dart';
-import 'package:myfitnesstale/src/utils/result.dart';
+import 'package:myfitnesstale/src/data/models/sqlite/system_model.dart';
+import 'package:myfitnesstale/src/data/repositories/exercises/exercise_repository.dart';
+import 'package:myfitnesstale/src/data/repositories/onboarding/onboarding_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/profile/dtos/profile_dto.dart';
 import 'package:myfitnesstale/src/data/repositories/profile/dtos/reminders_config_dto.dart';
 import 'package:myfitnesstale/src/data/repositories/profile/dtos/system_dto.dart';
-import 'package:myfitnesstale/src/data/repositories/onboarding/onboarding_repository.dart';
-import 'package:myfitnesstale/src/ui/home/screens/profile/onboarding_screen.dart';
 import 'package:myfitnesstale/src/data/repositories/profile/profile_repository.dart';
+import 'package:myfitnesstale/src/data/repositories/workout_plans/workout_plan_repository.dart';
+import 'package:myfitnesstale/src/data/repositories/workouts/workout_repository.dart';
+import 'package:myfitnesstale/src/data/services/sqlite/dao.dart';
+import 'package:myfitnesstale/src/data/services/sqlite/database_helper.dart';
+import 'package:myfitnesstale/src/data/utils/enums.dart';
+import 'package:myfitnesstale/src/routing/routes.dart';
+import 'package:myfitnesstale/src/ui/home/screens/profile/onboarding_screen.dart';
+import 'package:myfitnesstale/src/ui/home/view_models/profile_cubit.dart';
+import 'package:myfitnesstale/src/utils/errors.dart';
+import 'package:myfitnesstale/src/utils/result.dart';
 
 void main() {
   testWidgets('shows persistent rollback feedback and retries unchanged form', (
@@ -116,29 +121,40 @@ void main() {
 }
 
 typedef OnboardingServiceResult =
-    Result<OnboardingResult, ServiceError<OperationErrorTypes>>;
+    Result<OnboardingDto, ServiceError<OperationErrorTypes>>;
 
 final class _OnboardingService extends OnboardingRepository {
   final List<OnboardingServiceResult> _responses;
-  final List<OnboardingRequest> requests = [];
+  final List<OnboardingInput> requests = [];
 
-  _OnboardingService(this._responses);
+  _OnboardingService(this._responses)
+    : super(
+        exerciseService: ExerciseRepository.create(),
+        profileService: ProfileRepository.create(),
+        workoutService: WorkoutRepository.create(),
+        workoutPlanService: WorkoutPlanRepository.create(),
+        systemDao: Dao<System>(
+          databaseHelper: DatabaseHelper(),
+          tableName: System.table,
+          fromMap: System.fromMap,
+        ),
+      );
 
   @override
-  Future<OnboardingServiceResult> onboard(OnboardingRequest request) async {
-    requests.add(request);
+  Future<OnboardingServiceResult> onboard(OnboardingInput input) async {
+    requests.add(input);
     return _responses.removeAt(0);
   }
 }
 
-final _failure = err<OnboardingResult, ServiceError<OperationErrorTypes>>(
+final _failure = err<OnboardingDto, ServiceError<OperationErrorTypes>>(
   const ServiceError(
     type: OperationErrorTypes.operationFailure,
     description: 'Setup failed. No data was saved. Please try again.',
   ),
 );
 
-final _success = OnboardingResult(
+final _success = OnboardingDto(
   profile: ProfileDto(
     id: 1,
     name: 'Navigation Tester',

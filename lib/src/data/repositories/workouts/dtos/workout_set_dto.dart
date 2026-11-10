@@ -18,12 +18,12 @@
 import 'package:equatable/equatable.dart';
 
 import '../../../../utils/nullable.dart';
-import '../../../utils/enums.dart';
 import '../../../models/sqlite/workout_set_model.dart';
+import '../../../utils/enums.dart';
 import '../../core/dtos/dto.dart';
 import './workout_set_exercise_dto.dart';
 
-class WorkoutSetDto extends Equatable implements Dto<WorkoutSet> {
+class WorkoutSetDto extends Equatable implements ModelDto<WorkoutSet> {
   @override
   final int id;
   final int position;
