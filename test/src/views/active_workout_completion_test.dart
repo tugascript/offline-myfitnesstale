@@ -4,7 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:myfitnesstale/src/ui/workouts/view_models/active_workout_cubit.dart';
 import 'package:myfitnesstale/src/ui/home/view_models/profile_cubit.dart';
-import 'package:myfitnesstale/src/ui/workouts/screens/active_workout_view.dart';
+import 'package:myfitnesstale/src/ui/workouts/screens/active_workout_screen.dart';
 import 'package:myfitnesstale/src/ui/workouts/widgets/details/complete_modal.dart';
 
 class _ActiveWorkoutCubit extends ActiveWorkoutCubit {
@@ -38,7 +38,7 @@ void main() {
           BlocProvider<ActiveWorkoutCubit>.value(value: cubit),
           BlocProvider<ProfileCubit>.value(value: profileCubit),
         ],
-        child: const MaterialApp(home: ActiveWorkoutView(workoutId: 1)),
+        child: const MaterialApp(home: ActiveWorkoutScreen(workoutId: 1)),
       ),
     );
 

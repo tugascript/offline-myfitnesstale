@@ -1,90 +1,90 @@
 import 'package:go_router/go_router.dart';
 
-import '../ui/exercises/screens/equipment_creation_view.dart';
-import '../ui/exercises/screens/equipment_details_view.dart';
-import '../ui/exercises/screens/equipment_update_view.dart';
-import '../ui/exercises/screens/equipments_view.dart';
-import '../ui/exercises/screens/exercise_creation_view.dart';
-import '../ui/exercises/screens/exercise_detail_view.dart';
-import '../ui/exercises/screens/exercise_progress_view.dart';
-import '../ui/exercises/screens/exercise_records_view.dart';
-import '../ui/exercises/screens/exercise_update_view.dart';
-import '../ui/exercises/screens/exercises_view.dart';
-import '../ui/exercises/screens/strength_goals_view.dart';
-import '../ui/home/screens/profile/create_profile_view.dart';
-import '../ui/foods/screens/food_creation_view.dart';
-import '../ui/foods/screens/food_details_view.dart';
-import '../ui/foods/screens/food_update_view.dart';
-import '../ui/foods/screens/foods_view.dart';
-import '../ui/home/screens/main_navigation_view.dart';
-import '../ui/macros/screens/macro_goals_view.dart';
-import '../ui/macros/screens/macro_tracker_view.dart';
-import '../ui/meal_plans/screens/meal_plan_creation_view.dart';
-import '../ui/meal_plans/screens/meal_plan_details_view.dart';
-import '../ui/meal_plans/screens/meal_plan_list_view.dart';
-import '../ui/meal_plans/screens/meal_plan_update_view.dart';
-import '../ui/core/screens/not_found_view.dart';
-import '../ui/home/screens/profile/onboarding_view.dart';
-import '../ui/home/screens/profile/reminder_preferences_view.dart';
-import '../ui/recipes/screens/recipe_creation_view.dart';
-import '../ui/recipes/screens/recipe_details_view.dart';
-import '../ui/recipes/screens/recipe_update_view.dart';
-import '../ui/recipes/screens/recipes_view.dart';
-import '../ui/weight/screens/weight_goals_view.dart';
-import '../ui/weight/screens/weight_records_view.dart';
-import '../ui/workout_plans/screens/active_workout_plan_view.dart';
-import '../ui/workout_plans/screens/workout_plan_detail_view.dart';
-import '../ui/workout_plans/screens/workout_plan_edit_view.dart';
-import '../ui/workout_plans/screens/workout_plan_history_view.dart';
-import '../ui/workout_plans/screens/workout_plan_list_view.dart';
-import '../ui/workouts/screens/active_workout_view.dart';
-import '../ui/workouts/screens/create_workout_record_view.dart';
-import '../ui/workouts/screens/update_workout_record_view.dart';
-import '../ui/workouts/screens/workout_detail_view.dart';
-import '../ui/workouts/screens/workout_edit_view.dart';
-import '../ui/workouts/screens/workout_history_detail_view.dart';
-import '../ui/workouts/screens/workout_history_view.dart';
-import '../ui/workouts/screens/workouts_view.dart';
+import '../ui/exercises/screens/equipment_creation_screen.dart';
+import '../ui/exercises/screens/equipment_details_screen.dart';
+import '../ui/exercises/screens/equipment_update_screen.dart';
+import '../ui/exercises/screens/equipments_screen.dart';
+import '../ui/exercises/screens/exercise_creation_screen.dart';
+import '../ui/exercises/screens/exercise_detail_screen.dart';
+import '../ui/exercises/screens/exercise_progress_screen.dart';
+import '../ui/exercises/screens/exercise_records_screen.dart';
+import '../ui/exercises/screens/exercise_update_screen.dart';
+import '../ui/exercises/screens/exercises_screen.dart';
+import '../ui/exercises/screens/strength_goals_screen.dart';
+import '../ui/home/screens/profile/create_profile_screen.dart';
+import '../ui/foods/screens/food_creation_screen.dart';
+import '../ui/foods/screens/food_details_screen.dart';
+import '../ui/foods/screens/food_update_screen.dart';
+import '../ui/foods/screens/foods_screen.dart';
+import '../ui/home/screens/main_navigation_screen.dart';
+import '../ui/macros/screens/macro_goals_screen.dart';
+import '../ui/macros/screens/macro_tracker_screen.dart';
+import '../ui/meal_plans/screens/meal_plan_creation_screen.dart';
+import '../ui/meal_plans/screens/meal_plan_details_screen.dart';
+import '../ui/meal_plans/screens/meal_plan_list_screen.dart';
+import '../ui/meal_plans/screens/meal_plan_update_screen.dart';
+import '../ui/core/screens/not_found_screen.dart';
+import '../ui/home/screens/profile/onboarding_screen.dart';
+import '../ui/home/screens/profile/reminder_preferences_screen.dart';
+import '../ui/recipes/screens/recipe_creation_screen.dart';
+import '../ui/recipes/screens/recipe_details_screen.dart';
+import '../ui/recipes/screens/recipe_update_screen.dart';
+import '../ui/recipes/screens/recipes_screen.dart';
+import '../ui/weight/screens/weight_goals_screen.dart';
+import '../ui/weight/screens/weight_records_screen.dart';
+import '../ui/workout_plans/screens/active_workout_plan_screen.dart';
+import '../ui/workout_plans/screens/workout_plan_detail_screen.dart';
+import '../ui/workout_plans/screens/workout_plan_edit_screen.dart';
+import '../ui/workout_plans/screens/workout_plan_history_screen.dart';
+import '../ui/workout_plans/screens/workout_plan_list_screen.dart';
+import '../ui/workouts/screens/active_workout_screen.dart';
+import '../ui/workouts/screens/create_workout_record_screen.dart';
+import '../ui/workouts/screens/update_workout_record_screen.dart';
+import '../ui/workouts/screens/workout_detail_screen.dart';
+import '../ui/workouts/screens/workout_edit_screen.dart';
+import '../ui/workouts/screens/workout_history_detail_screen.dart';
+import '../ui/workouts/screens/workout_history_screen.dart';
+import '../ui/workouts/screens/workouts_screen.dart';
 import './routing.dart';
 
 sealed class AppRouter {
   static final List<GoRoute> _routes = <GoRoute>[
     GoRoute(
       path: Routes.home.name,
-      builder: (context, state) => const MainNavigationView(),
+      builder: (context, state) => const MainNavigationScreen(),
     ),
     GoRoute(
       path: Routes.createProfile.name,
-      builder: (context, state) => const CreateProfileView(),
+      builder: (context, state) => const CreateProfileScreen(),
     ),
     GoRoute(
       path: Routes.onboarding.name,
-      builder: (context, state) => const OnboardingView(),
+      builder: (context, state) => const OnboardingScreen(),
     ),
     GoRoute(
       path: Routes.weightGoal.name,
-      builder: (context, state) => const WeightGoalView(),
+      builder: (context, state) => const WeightGoalScreen(),
     ),
     GoRoute(
       path: Routes.weightRecords.name,
-      builder: (context, state) => const WeightRecordsView(),
+      builder: (context, state) => const WeightRecordsScreen(),
     ),
     GoRoute(
       path: Routes.equipments.name,
-      builder: (context, state) => const EquipmentsView(),
+      builder: (context, state) => const EquipmentsScreen(),
     ),
     GoRoute(
       path: Routes.equipmentCreation.name,
-      builder: (context, state) => const EquipmentCreationView(),
+      builder: (context, state) => const EquipmentCreationScreen(),
     ),
     GoRoute(
       path: Routes.equipmentDetails.name,
       builder: (context, state) {
         final id = int.tryParse(state.pathParameters['id'] ?? '');
         if (id == null) {
-          return const NotFoundView();
+          return const NotFoundScreen();
         }
-        return EquipmentDetailsView(equipmentId: id);
+        return EquipmentDetailsScreen(equipmentId: id);
       },
     ),
     GoRoute(
@@ -92,31 +92,31 @@ sealed class AppRouter {
       builder: (context, state) {
         final id = int.tryParse(state.pathParameters['id'] ?? '');
         if (id == null) {
-          return const NotFoundView();
+          return const NotFoundScreen();
         }
-        return EquipmentUpdateView(equipmentId: id);
+        return EquipmentUpdateScreen(equipmentId: id);
       },
     ),
     GoRoute(
       path: Routes.exercises.name,
-      builder: (context, state) => const ExercisesView(),
+      builder: (context, state) => const ExercisesScreen(),
     ),
     GoRoute(
       path: Routes.exerciseCreation.name,
-      builder: (context, state) => const ExerciseCreationView(),
+      builder: (context, state) => const ExerciseCreationScreen(),
     ),
     GoRoute(
       path: Routes.exerciseProgress.name,
-      builder: (context, state) => const ExerciseProgressView(),
+      builder: (context, state) => const ExerciseProgressScreen(),
     ),
     GoRoute(
       path: Routes.exerciseDetail.name,
       builder: (context, state) {
         final id = int.tryParse(state.pathParameters['id'] ?? '');
         if (id == null) {
-          return const NotFoundView();
+          return const NotFoundScreen();
         }
-        return ExerciseDetailView(exerciseId: id);
+        return ExerciseDetailScreen(exerciseId: id);
       },
     ),
     GoRoute(
@@ -124,23 +124,23 @@ sealed class AppRouter {
       builder: (context, state) {
         final id = int.tryParse(state.pathParameters['id'] ?? '');
         if (id == null) {
-          return const NotFoundView();
+          return const NotFoundScreen();
         }
-        return ExerciseUpdateView(exerciseId: id);
+        return ExerciseUpdateScreen(exerciseId: id);
       },
     ),
     GoRoute(
       path: Routes.workouts.name,
-      builder: (context, state) => const WorkoutsView(),
+      builder: (context, state) => const WorkoutsScreen(),
     ),
     GoRoute(
       path: Routes.workoutEdit.name,
       builder: (context, state) {
         final id = int.tryParse(state.pathParameters['id'] ?? '');
         if (id == null) {
-          return const NotFoundView();
+          return const NotFoundScreen();
         }
-        return WorkoutEditView(workoutId: id);
+        return WorkoutEditScreen(workoutId: id);
       },
     ),
     GoRoute(
@@ -151,7 +151,7 @@ sealed class AppRouter {
         if (idParam != null) {
           workoutId = int.tryParse(idParam);
           if (workoutId == null) {
-            return const NotFoundView();
+            return const NotFoundScreen();
           }
         }
 
@@ -159,15 +159,15 @@ sealed class AppRouter {
         int? version;
         if (versionParam != null) {
           if (workoutId == null) {
-            return const NotFoundView();
+            return const NotFoundScreen();
           }
           version = int.tryParse(versionParam);
           if (version == null) {
-            return const NotFoundView();
+            return const NotFoundScreen();
           }
         }
 
-        return WorkoutHistoryView(workoutId: workoutId, version: version);
+        return WorkoutHistoryScreen(workoutId: workoutId, version: version);
       },
     ),
     GoRoute(
@@ -175,15 +175,15 @@ sealed class AppRouter {
       builder: (context, state) {
         final workoutId = int.tryParse(state.pathParameters['id'] ?? '');
         if (workoutId == null) {
-          return const NotFoundView();
+          return const NotFoundScreen();
         }
 
         final version = int.tryParse(state.pathParameters['version'] ?? '');
         if (version == null) {
-          return const NotFoundView();
+          return const NotFoundScreen();
         }
 
-        return CreateWorkoutRecordView(
+        return CreateWorkoutRecordScreen(
           workoutId: workoutId,
           version: version,
           workoutPlanRecordId: int.tryParse(
@@ -202,21 +202,21 @@ sealed class AppRouter {
       builder: (context, state) {
         final workoutId = int.tryParse(state.pathParameters['workoutId'] ?? '');
         if (workoutId == null) {
-          return const NotFoundView();
+          return const NotFoundScreen();
         }
 
         final version = int.tryParse(state.pathParameters['version'] ?? '');
         if (version == null) {
-          return const NotFoundView();
+          return const NotFoundScreen();
         }
 
         final workoutRecordId = int.tryParse(
           state.pathParameters['workoutRecordId'] ?? '',
         );
         if (workoutRecordId == null) {
-          return const NotFoundView();
+          return const NotFoundScreen();
         }
-        return WorkoutHistoryDetailView(
+        return WorkoutHistoryDetailScreen(
           workoutId: workoutId,
           workoutRecordId: workoutRecordId,
           version: version,
@@ -228,22 +228,22 @@ sealed class AppRouter {
       builder: (context, state) {
         final workoutId = int.tryParse(state.pathParameters['workoutId'] ?? '');
         if (workoutId == null) {
-          return const NotFoundView();
+          return const NotFoundScreen();
         }
 
         final version = int.tryParse(state.pathParameters['version'] ?? '');
         if (version == null) {
-          return const NotFoundView();
+          return const NotFoundScreen();
         }
 
         final workoutRecordId = int.tryParse(
           state.pathParameters['workoutRecordId'] ?? '',
         );
         if (workoutRecordId == null) {
-          return const NotFoundView();
+          return const NotFoundScreen();
         }
 
-        return UpdateWorkoutRecordView(
+        return UpdateWorkoutRecordScreen(
           workoutId: workoutId,
           workoutRecordId: workoutRecordId,
           version: version,
@@ -255,7 +255,7 @@ sealed class AppRouter {
       builder: (context, state) {
         final id = int.tryParse(state.pathParameters['id'] ?? '');
         if (id == null) {
-          return const NotFoundView();
+          return const NotFoundScreen();
         }
         final workoutPlanRecordId = int.tryParse(
           state.uri.queryParameters['workoutPlanRecordId'] ?? '',
@@ -265,7 +265,7 @@ sealed class AppRouter {
         final workoutPosition = int.tryParse(
           state.uri.queryParameters['workoutPosition'] ?? '',
         );
-        return ActiveWorkoutView(
+        return ActiveWorkoutScreen(
           workoutId: id,
           workoutPlanRecordId: workoutPlanRecordId,
           week: week,
@@ -279,9 +279,9 @@ sealed class AppRouter {
       builder: (context, state) {
         final id = int.tryParse(state.pathParameters['id'] ?? '');
         if (id == null) {
-          return const NotFoundView();
+          return const NotFoundScreen();
         }
-        return WorkoutDetailView(workoutId: id);
+        return WorkoutDetailScreen(workoutId: id);
       },
     ),
     GoRoute(
@@ -289,14 +289,14 @@ sealed class AppRouter {
       builder: (context, state) {
         final id = int.tryParse(state.pathParameters['id'] ?? '');
         if (id == null) {
-          return const NotFoundView();
+          return const NotFoundScreen();
         }
-        return ExerciseRecordsView(exerciseId: id);
+        return ExerciseRecordsScreen(exerciseId: id);
       },
     ),
     GoRoute(
       path: Routes.workoutPlanList.name,
-      builder: (context, state) => const WorkoutPlanListView(),
+      builder: (context, state) => const WorkoutPlanListScreen(),
     ),
     GoRoute(
       path: Routes.workoutPlanHistory.name,
@@ -306,10 +306,10 @@ sealed class AppRouter {
         if (idParam != null) {
           id = int.tryParse(idParam);
           if (id == null) {
-            return const NotFoundView();
+            return const NotFoundScreen();
           }
         }
-        return WorkoutPlanHistoryView(workoutPlanId: id);
+        return WorkoutPlanHistoryScreen(workoutPlanId: id);
       },
     ),
     GoRoute(
@@ -317,9 +317,9 @@ sealed class AppRouter {
       builder: (context, state) {
         final id = int.tryParse(state.pathParameters['id'] ?? '');
         if (id == null) {
-          return const NotFoundView();
+          return const NotFoundScreen();
         }
-        return WorkoutPlanEditView(workoutPlanId: id);
+        return WorkoutPlanEditScreen(workoutPlanId: id);
       },
     ),
     GoRoute(
@@ -327,9 +327,9 @@ sealed class AppRouter {
       builder: (context, state) {
         final id = int.tryParse(state.pathParameters['id'] ?? '');
         if (id == null) {
-          return const NotFoundView();
+          return const NotFoundScreen();
         }
-        return ActiveWorkoutPlanView(workoutPlanId: id);
+        return ActiveWorkoutPlanScreen(workoutPlanId: id);
       },
     ),
     GoRoute(
@@ -337,37 +337,37 @@ sealed class AppRouter {
       builder: (context, state) {
         final id = int.tryParse(state.pathParameters['id'] ?? '');
         if (id == null) {
-          return const NotFoundView();
+          return const NotFoundScreen();
         }
-        return WorkoutPlanDetailView(workoutPlanId: id);
+        return WorkoutPlanDetailScreen(workoutPlanId: id);
       },
     ),
     GoRoute(
       path: Routes.reminderPreferences.name,
-      builder: (context, state) => const ReminderPreferencesView(),
+      builder: (context, state) => const ReminderPreferencesScreen(),
     ),
     // Strength Goals
     GoRoute(
       path: Routes.strengthGoals.name,
-      builder: (context, state) => const StrengthGoalsView(),
+      builder: (context, state) => const StrengthGoalsScreen(),
     ),
     // Foods (static before dynamic)
     GoRoute(
       path: Routes.foods.name,
-      builder: (context, state) => const FoodsView(),
+      builder: (context, state) => const FoodsScreen(),
     ),
     GoRoute(
       path: Routes.foodCreation.name,
-      builder: (context, state) => const FoodCreationView(),
+      builder: (context, state) => const FoodCreationScreen(),
     ),
     GoRoute(
       path: Routes.foodUpdate.name,
       builder: (context, state) {
         final id = int.tryParse(state.pathParameters['id'] ?? '');
         if (id == null) {
-          return const NotFoundView();
+          return const NotFoundScreen();
         }
-        return FoodUpdateView(foodId: id);
+        return FoodUpdateScreen(foodId: id);
       },
     ),
     GoRoute(
@@ -375,28 +375,28 @@ sealed class AppRouter {
       builder: (context, state) {
         final id = int.tryParse(state.pathParameters['id'] ?? '');
         if (id == null) {
-          return const NotFoundView();
+          return const NotFoundScreen();
         }
-        return FoodDetailsView(foodId: id);
+        return FoodDetailsScreen(foodId: id);
       },
     ),
     // Recipes (static before dynamic)
     GoRoute(
       path: Routes.recipes.name,
-      builder: (context, state) => const RecipesView(),
+      builder: (context, state) => const RecipesScreen(),
     ),
     GoRoute(
       path: Routes.recipeCreation.name,
-      builder: (context, state) => const RecipeCreationView(),
+      builder: (context, state) => const RecipeCreationScreen(),
     ),
     GoRoute(
       path: Routes.recipeUpdate.name,
       builder: (context, state) {
         final id = int.tryParse(state.pathParameters['id'] ?? '');
         if (id == null) {
-          return const NotFoundView();
+          return const NotFoundScreen();
         }
-        return RecipeUpdateView(recipeId: id);
+        return RecipeUpdateScreen(recipeId: id);
       },
     ),
     GoRoute(
@@ -404,37 +404,37 @@ sealed class AppRouter {
       builder: (context, state) {
         final id = int.tryParse(state.pathParameters['id'] ?? '');
         if (id == null) {
-          return const NotFoundView();
+          return const NotFoundScreen();
         }
-        return RecipeDetailsView(recipeId: id);
+        return RecipeDetailsScreen(recipeId: id);
       },
     ),
     // Macro Goals & Tracker
     GoRoute(
       path: Routes.macroGoals.name,
-      builder: (context, state) => const MacroGoalsView(),
+      builder: (context, state) => const MacroGoalsScreen(),
     ),
     GoRoute(
       path: Routes.macroTracker.name,
-      builder: (context, state) => const MacroTrackerView(),
+      builder: (context, state) => const MacroTrackerScreen(),
     ),
     // Meal Plans (static before dynamic)
     GoRoute(
       path: Routes.mealPlanList.name,
-      builder: (context, state) => const MealPlanListView(),
+      builder: (context, state) => const MealPlanListScreen(),
     ),
     GoRoute(
       path: Routes.mealPlanCreation.name,
-      builder: (context, state) => const MealPlanCreationView(),
+      builder: (context, state) => const MealPlanCreationScreen(),
     ),
     GoRoute(
       path: Routes.mealPlanUpdate.name,
       builder: (context, state) {
         final id = int.tryParse(state.pathParameters['id'] ?? '');
         if (id == null) {
-          return const NotFoundView();
+          return const NotFoundScreen();
         }
-        return MealPlanUpdateView(mealPlanId: id);
+        return MealPlanUpdateScreen(mealPlanId: id);
       },
     ),
     GoRoute(
@@ -442,9 +442,9 @@ sealed class AppRouter {
       builder: (context, state) {
         final id = int.tryParse(state.pathParameters['id'] ?? '');
         if (id == null) {
-          return const NotFoundView();
+          return const NotFoundScreen();
         }
-        return MealPlanDetailsView(mealPlanId: id);
+        return MealPlanDetailsScreen(mealPlanId: id);
       },
     ),
   ];
@@ -453,7 +453,7 @@ sealed class AppRouter {
     return GoRouter(
       routes: _routes,
       initialLocation: initialLocation ?? Routes.home.name,
-      errorBuilder: (context, state) => const NotFoundView(),
+      errorBuilder: (context, state) => const NotFoundScreen(),
     );
   }
 

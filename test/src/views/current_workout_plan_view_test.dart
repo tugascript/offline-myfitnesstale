@@ -11,7 +11,7 @@ import 'package:myfitnesstale/src/ui/core/view_models/states/common_state.dart';
 import 'package:myfitnesstale/src/ui/workout_plans/view_models/states/workout_plan_record_state.dart';
 import 'package:myfitnesstale/src/ui/workout_plans/view_models/workout_plan_record_cubit.dart';
 import 'package:myfitnesstale/src/data/utils/enums.dart';
-import 'package:myfitnesstale/src/ui/workout_plans/screens/current_workout_plan_view.dart';
+import 'package:myfitnesstale/src/ui/workout_plans/screens/current_workout_plan_screen.dart';
 import 'package:myfitnesstale/src/ui/workout_plans/widgets/active/active_workout_plan_content.dart';
 import 'package:myfitnesstale/src/ui/workout_plans/widgets/active/active_workout_plan_dummy_data.dart';
 
@@ -65,11 +65,11 @@ void main() {
         GoRoute(
           path: '/',
           builder: (context, state) => visible == null
-              ? const CurrentWorkoutPlanView()
+              ? const CurrentWorkoutPlanScreen()
               : ValueListenableBuilder<bool>(
                   valueListenable: visible,
                   builder: (_, value, child) =>
-                      CurrentWorkoutPlanView(isVisible: value),
+                      CurrentWorkoutPlanScreen(isVisible: value),
                 ),
         ),
         GoRoute(

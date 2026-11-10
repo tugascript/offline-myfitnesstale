@@ -27,21 +27,21 @@ import 'package:myfitnesstale/src/data/repositories/recipes/dtos/recipe_dto.dart
 import 'package:myfitnesstale/src/data/repositories/exercises/dtos/strength_goal_dto.dart';
 import 'package:myfitnesstale/src/ui/core/sizes/data_display_sizes.dart';
 import 'package:myfitnesstale/src/ui/core/sizes/screen_size.dart';
-import 'package:myfitnesstale/src/ui/exercises/screens/strength_goals_view.dart';
-import 'package:myfitnesstale/src/ui/foods/screens/food_creation_view.dart';
-import 'package:myfitnesstale/src/ui/foods/screens/food_details_view.dart';
-import 'package:myfitnesstale/src/ui/foods/screens/food_update_view.dart';
-import 'package:myfitnesstale/src/ui/foods/screens/foods_view.dart';
-import 'package:myfitnesstale/src/ui/macros/screens/macro_goals_view.dart';
-import 'package:myfitnesstale/src/ui/macros/screens/macro_tracker_view.dart';
-import 'package:myfitnesstale/src/ui/meal_plans/screens/meal_plan_creation_view.dart';
-import 'package:myfitnesstale/src/ui/meal_plans/screens/meal_plan_details_view.dart';
-import 'package:myfitnesstale/src/ui/meal_plans/screens/meal_plan_list_view.dart';
-import 'package:myfitnesstale/src/ui/meal_plans/screens/meal_plan_update_view.dart';
-import 'package:myfitnesstale/src/ui/recipes/screens/recipe_creation_view.dart';
-import 'package:myfitnesstale/src/ui/recipes/screens/recipe_details_view.dart';
-import 'package:myfitnesstale/src/ui/recipes/screens/recipe_update_view.dart';
-import 'package:myfitnesstale/src/ui/recipes/screens/recipes_view.dart';
+import 'package:myfitnesstale/src/ui/exercises/screens/strength_goals_screen.dart';
+import 'package:myfitnesstale/src/ui/foods/screens/food_creation_screen.dart';
+import 'package:myfitnesstale/src/ui/foods/screens/food_details_screen.dart';
+import 'package:myfitnesstale/src/ui/foods/screens/food_update_screen.dart';
+import 'package:myfitnesstale/src/ui/foods/screens/foods_screen.dart';
+import 'package:myfitnesstale/src/ui/macros/screens/macro_goals_screen.dart';
+import 'package:myfitnesstale/src/ui/macros/screens/macro_tracker_screen.dart';
+import 'package:myfitnesstale/src/ui/meal_plans/screens/meal_plan_creation_screen.dart';
+import 'package:myfitnesstale/src/ui/meal_plans/screens/meal_plan_details_screen.dart';
+import 'package:myfitnesstale/src/ui/meal_plans/screens/meal_plan_list_screen.dart';
+import 'package:myfitnesstale/src/ui/meal_plans/screens/meal_plan_update_screen.dart';
+import 'package:myfitnesstale/src/ui/recipes/screens/recipe_creation_screen.dart';
+import 'package:myfitnesstale/src/ui/recipes/screens/recipe_details_screen.dart';
+import 'package:myfitnesstale/src/ui/recipes/screens/recipe_update_screen.dart';
+import 'package:myfitnesstale/src/ui/recipes/screens/recipes_screen.dart';
 import 'package:myfitnesstale/src/ui/home/widgets/active/active_plans_carousel.dart';
 import 'package:myfitnesstale/src/ui/home/widgets/quick_actions_widget.dart';
 import 'package:myfitnesstale/src/ui/exercises/widgets/strength_goal/strength_goal_form_modal.dart';
@@ -376,22 +376,22 @@ typedef _Content = Widget Function(DataDisplaySizesList sizes, ThemeData theme);
 
 void main() {
   final contents = <String, _Content>{
-    'foods screen': (_, _) => const FoodsView(),
-    'food creation screen': (_, _) => const FoodCreationView(),
-    'food update screen': (_, _) => const FoodUpdateView(foodId: 1),
-    'food details screen': (_, _) => const FoodDetailsView(foodId: 1),
-    'recipes screen': (_, _) => const RecipesView(),
-    'recipe creation screen': (_, _) => const RecipeCreationView(),
-    'recipe update screen': (_, _) => const RecipeUpdateView(recipeId: 1),
-    'recipe details screen': (_, _) => const RecipeDetailsView(recipeId: 1),
-    'meal-plans screen': (_, _) => const MealPlanListView(),
-    'meal-plan creation screen': (_, _) => const MealPlanCreationView(),
+    'foods screen': (_, _) => const FoodsScreen(),
+    'food creation screen': (_, _) => const FoodCreationScreen(),
+    'food update screen': (_, _) => const FoodUpdateScreen(foodId: 1),
+    'food details screen': (_, _) => const FoodDetailsScreen(foodId: 1),
+    'recipes screen': (_, _) => const RecipesScreen(),
+    'recipe creation screen': (_, _) => const RecipeCreationScreen(),
+    'recipe update screen': (_, _) => const RecipeUpdateScreen(recipeId: 1),
+    'recipe details screen': (_, _) => const RecipeDetailsScreen(recipeId: 1),
+    'meal-plans screen': (_, _) => const MealPlanListScreen(),
+    'meal-plan creation screen': (_, _) => const MealPlanCreationScreen(),
     'meal-plan update screen': (_, _) =>
-        const MealPlanUpdateView(mealPlanId: 1),
+        const MealPlanUpdateScreen(mealPlanId: 1),
     'meal-plan details screen': (_, _) =>
-        const MealPlanDetailsView(mealPlanId: 1),
-    'macro-goals screen': (_, _) => const MacroGoalsView(),
-    'macro-tracker screen': (_, _) => const MacroTrackerView(),
+        const MealPlanDetailsScreen(mealPlanId: 1),
+    'macro-goals screen': (_, _) => const MacroGoalsScreen(),
+    'macro-tracker screen': (_, _) => const MacroTrackerScreen(),
     'food editor': (sizes, theme) => FoodFormWidget(
       sizes: sizes,
       theme: theme,
@@ -444,7 +444,7 @@ void main() {
         ],
       ),
     ),
-    'populated strength screen': (sizes, theme) => const StrengthGoalsView(),
+    'populated strength screen': (sizes, theme) => const StrengthGoalsScreen(),
   };
   for (final entry in contents.entries) {
     for (final width in [320.0, 600.0, 1200.0]) {

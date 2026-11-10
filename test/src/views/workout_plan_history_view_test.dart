@@ -11,7 +11,7 @@ import 'package:myfitnesstale/src/data/utils/enums.dart';
 import 'package:myfitnesstale/src/routing/routing.dart';
 import 'package:myfitnesstale/src/data/repositories/workout_plans/dtos/workout_plan_dto.dart';
 import 'package:myfitnesstale/src/data/repositories/workout_plans/dtos/workout_plan_record_dto.dart';
-import 'package:myfitnesstale/src/ui/workout_plans/screens/workout_plan_history_view.dart';
+import 'package:myfitnesstale/src/ui/workout_plans/screens/workout_plan_history_screen.dart';
 
 class _WorkoutPlanRecordCubit extends WorkoutPlanRecordCubit {
   _WorkoutPlanRecordCubit(WorkoutPlanRecordState initialState) {
@@ -83,12 +83,12 @@ void main() {
     final cubit = _WorkoutPlanRecordCubit(state);
     addTearDown(cubit.close);
     final router = GoRouter(
-      initialLocation: WorkoutPlanHistoryView.location(workoutPlanId),
+      initialLocation: WorkoutPlanHistoryScreen.location(workoutPlanId),
       routes: [
         GoRoute(
           path: Routes.workoutPlanHistory.name,
           builder: (context, state) =>
-              WorkoutPlanHistoryView(workoutPlanId: workoutPlanId),
+              WorkoutPlanHistoryScreen(workoutPlanId: workoutPlanId),
         ),
       ],
     );

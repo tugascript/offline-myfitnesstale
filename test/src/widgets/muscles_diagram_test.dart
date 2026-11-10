@@ -14,7 +14,7 @@ import 'package:myfitnesstale/src/data/utils/json_data.dart';
 import 'package:myfitnesstale/src/ui/exercises/view_models/exercise_cubit.dart';
 import 'package:myfitnesstale/src/ui/core/sizes/data_display_sizes.dart';
 import 'package:myfitnesstale/src/ui/core/sizes/screen_size.dart';
-import 'package:myfitnesstale/src/ui/exercises/screens/exercise_detail_view.dart';
+import 'package:myfitnesstale/src/ui/exercises/screens/exercise_detail_screen.dart';
 import 'package:myfitnesstale/src/ui/core/widgets/muscles_diagram.dart';
 
 class _StubExerciseCubit extends ExerciseCubit {
@@ -130,9 +130,9 @@ void main() {
     );
   });
 
-  group('MusclesDiagram & ExerciseDetailView widget tests', () {
+  group('MusclesDiagram & ExerciseDetailScreen widget tests', () {
     testWidgets(
-      'renders MusclesDiagram in ExerciseDetailView at 320px width and 200% text scaling without overflow',
+      'renders MusclesDiagram in ExerciseDetailScreen at 320px width and 200% text scaling without overflow',
       (tester) async {
         tester.view.physicalSize = const Size(320, 800);
         tester.view.devicePixelRatio = 1.0;
@@ -169,7 +169,7 @@ void main() {
                     .copyWith(textScaler: const TextScaler.linear(2.0)),
                 child: child!,
               ),
-              home: const ExerciseDetailView(exerciseId: 1),
+              home: const ExerciseDetailScreen(exerciseId: 1),
             ),
           ),
         );

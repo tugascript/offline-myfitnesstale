@@ -11,7 +11,7 @@ import 'package:myfitnesstale/src/data/models/workout_plan_record_model.dart';
 import 'package:myfitnesstale/src/data/models/workout_plan_week_model.dart';
 import 'package:myfitnesstale/src/data/models/workout_plan_workout_model.dart';
 import 'package:myfitnesstale/src/data/models/workout_plan_workout_record_model.dart';
-import 'package:myfitnesstale/src/ui/workout_plans/screens/workout_plan_history_view.dart';
+import 'package:myfitnesstale/src/ui/workout_plans/screens/workout_plan_history_screen.dart';
 
 import 'support/device_test_harness.dart';
 
@@ -200,7 +200,7 @@ void main() {
 
       await harness.goAndWait(
         tester,
-        location: WorkoutPlanHistoryView.location(planId),
+        location: WorkoutPlanHistoryScreen.location(planId),
         destination: find.textContaining('Plan History'),
       );
       await harness.pumpUntilFound(tester, find.text('Completed'));
@@ -219,7 +219,7 @@ void main() {
       );
       await harness.goAndWait(
         tester,
-        location: WorkoutPlanHistoryView.location(planId),
+        location: WorkoutPlanHistoryScreen.location(planId),
         destination: find.textContaining('Plan History'),
       );
       await harness.pumpUntilFound(tester, find.text('Completed'));
