@@ -101,7 +101,8 @@ a strict MVVM flow:
 SQLite Model -> DAO -> Repository -> Cubit/ViewModel -> Screen/Widget
 ```
 
-- **Models** (`lib/src/data/models`) define SQLite tables and map database rows.
+- **Models** (`lib/src/data/models/sqlite`) define SQLite tables and map database rows;
+  seed/onboarding constants live in `lib/src/data/models/constants`.
 - **DAOs** (`lib/src/data/services/sqlite`) handle single-table CRUD against SQLite.
 - **Repositories** (`lib/src/data/repositories/<feature>`) own domain rules, multi-table transactions, DTOs, and
   `Result`/`ServiceError` returns.
@@ -121,9 +122,11 @@ SQLite Model -> DAO -> Repository -> Cubit/ViewModel -> Screen/Widget
 │   ├── my_app.dart              # Root app, providers, and router
 │   └── src/
 │       ├── data/
-│       │   ├── models/          # SQLite models and schema
+│       │   ├── models/
+│       │   │   ├── constants/   # Seed/onboarding constants
+│       │   │   └── sqlite/      # SQLite table models
 │       │   ├── repositories/    # Feature repositories, DTOs, inputs
-│       │   └── services/        # SQLite DAOs and DB helpers
+│       │   └── services/        # SQLite DAOs and DatabaseHelper
 │       ├── routing/             # GoRouter configuration
 │       ├── ui/
 │       │   ├── core/            # Shared screens, widgets, sizes, themes
@@ -139,8 +142,9 @@ weight, workouts, workout plans, foods, recipes, meal plans, and macros.
 
 ### Local data model
 
-`DatabaseHelper` in `lib/src/data/models` creates the SQLite schema and enables foreign-key enforcement. The diagram
-below intentionally shows domain relationships rather than every column; the model files are the authoritative schema
+`DatabaseHelper` in `lib/src/data/services/sqlite` creates the SQLite schema and enables
+foreign-key enforcement. The diagram below intentionally shows domain relationships rather than
+every column; the model files under `lib/src/data/models/sqlite` are the authoritative schema
 definition.
 
 <details>
