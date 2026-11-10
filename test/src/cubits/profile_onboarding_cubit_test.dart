@@ -1,4 +1,4 @@
-// Copyright (C) 2026 afonsobarracha
+// Copyright (C) 2026 Afonso Barracha
 //
 // This file is part of My Fitness Tale.
 //
