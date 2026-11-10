@@ -26,7 +26,16 @@ import '../../../data/repositories/workouts/workout_repository.dart';
 import '../../core/view_models/states/common_state.dart';
 import './states/workout_state.dart';
 
+export '../../../data/repositories/workouts/inputs/complex_set_exercise_input.dart';
+export '../../../data/repositories/workouts/inputs/complex_set_input.dart';
+export '../../../data/repositories/workouts/inputs/standard_set_input.dart';
 export '../../../data/repositories/workouts/inputs/workout_input.dart';
+export '../../../data/repositories/workouts/inputs/workout_registration_input.dart';
+export '../../../data/repositories/workouts/inputs/workout_set_exercise_input.dart';
+export '../../../data/repositories/workouts/inputs/workout_set_exercise_registration_input.dart';
+export '../../../data/repositories/workouts/inputs/workout_set_exercise_upsert_input.dart';
+export '../../../data/repositories/workouts/inputs/workout_set_registration_input.dart';
+export '../../../data/repositories/workouts/inputs/workout_set_upsert_input.dart';
 
 class WorkoutCubit extends Cubit<WorkoutState> {
   final WorkoutRepository _workoutService;

@@ -41,9 +41,21 @@ import './dtos/workout_dto.dart';
 import './dtos/workout_set_exercise_dto.dart';
 import './dtos/workout_set_exercise_option_dto.dart';
 import './inputs/workout_input.dart';
+import './inputs/workout_registration_input.dart';
+import './inputs/workout_set_exercise_upsert_input.dart';
+import './inputs/workout_set_upsert_input.dart';
 import '../core/repository.dart';
 
+export './inputs/complex_set_exercise_input.dart';
+export './inputs/complex_set_input.dart';
+export './inputs/standard_set_input.dart';
 export './inputs/workout_input.dart';
+export './inputs/workout_registration_input.dart';
+export './inputs/workout_set_exercise_input.dart';
+export './inputs/workout_set_exercise_registration_input.dart';
+export './inputs/workout_set_exercise_upsert_input.dart';
+export './inputs/workout_set_registration_input.dart';
+export './inputs/workout_set_upsert_input.dart';
 
 final class WorkoutRepository implements Repository {
   final Dao<Workout> _workoutDao;

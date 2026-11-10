@@ -15,10 +15,15 @@
 // You should have received a copy of the GNU General Public License
 // along with My Fitness Tale.  If not, see <https://www.gnu.org/licenses/>.
 
-import '../../../../utils/nullable.dart';
-import '../../../utils/enums.dart';
+import 'package:equatable/equatable.dart';
 
-final class WorkoutPlanRecordInput {
+import '../../../../utils/nullable.dart';
+import '../../../models/sqlite/workout_plan_record_model.dart';
+import '../../../utils/enums.dart';
+import '../../core/inputs/input.dart';
+
+final class WorkoutPlanRecordInput extends Equatable
+    implements ModelInput<WorkoutPlanRecord> {
   final int workoutPlanId;
   final ProgressStatus status;
   final DateTime? startedAt;
@@ -30,38 +35,7 @@ final class WorkoutPlanRecordInput {
     this.startedAt,
     this.completedAt = const Nullable<DateTime>(null),
   });
-}
 
-final class WorkoutPlanDayRecordInput {
-  final int workoutPlanRecordId;
-  final ProgressStatus status;
-  final int? week;
-  final int? weekDay;
-
-  const WorkoutPlanDayRecordInput({
-    required this.workoutPlanRecordId,
-    this.status = ProgressStatus.inProgress,
-    this.week,
-    this.weekDay,
-  });
-}
-
-final class WorkoutPlanWorkoutRecordInput {
-  final int workoutPlanRecordId;
-  final int workoutRecordId;
-  final ProgressStatus status;
-  final int? week;
-  final int? weekDay;
-  final int? workoutPosition;
-  final DateTime? startedAt;
-
-  const WorkoutPlanWorkoutRecordInput({
-    required this.workoutPlanRecordId,
-    required this.workoutRecordId,
-    this.status = ProgressStatus.inProgress,
-    this.week,
-    this.weekDay,
-    this.workoutPosition,
-    this.startedAt,
-  });
+  @override
+  List<Object?> get props => [workoutPlanId, status, startedAt, completedAt];
 }

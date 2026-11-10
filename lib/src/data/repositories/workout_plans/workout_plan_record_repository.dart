@@ -41,10 +41,14 @@ import './dtos/workout_plan_dto.dart';
 import './dtos/workout_plan_record_dto.dart';
 import './dtos/workout_plan_week_record_dto.dart';
 import './dtos/workout_plan_workout_record_dto.dart';
+import './inputs/workout_plan_day_record_input.dart';
 import './inputs/workout_plan_record_input.dart';
+import './inputs/workout_plan_workout_record_input.dart';
 import '../core/repository.dart';
 
+export './inputs/workout_plan_day_record_input.dart';
 export './inputs/workout_plan_record_input.dart';
+export './inputs/workout_plan_workout_record_input.dart';
 
 final class WorkoutPlanRecordRepository implements Repository {
   final Dao<WorkoutPlanRecord> _workoutPlanRecordDao;

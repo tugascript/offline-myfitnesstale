@@ -26,7 +26,9 @@ import '../../../data/repositories/workout_plans/workout_plan_repository.dart';
 import '../../core/view_models/states/common_state.dart';
 import './states/workout_plan_record_state.dart';
 
+export '../../../data/repositories/workout_plans/inputs/workout_plan_day_record_input.dart';
 export '../../../data/repositories/workout_plans/inputs/workout_plan_record_input.dart';
+export '../../../data/repositories/workout_plans/inputs/workout_plan_workout_record_input.dart';
 
 class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
   final WorkoutPlanRecordRepository _workoutPlanRecordService;

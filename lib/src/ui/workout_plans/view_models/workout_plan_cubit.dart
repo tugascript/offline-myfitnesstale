@@ -25,7 +25,17 @@ import '../../../data/repositories/workout_plans/workout_plan_repository.dart';
 import '../../core/view_models/states/common_state.dart';
 import './states/workout_plan_state.dart';
 
+export '../../../data/repositories/workout_plans/inputs/week_workout_input.dart';
+export '../../../data/repositories/workout_plans/inputs/workout_plan_day_batch_create_input.dart';
+export '../../../data/repositories/workout_plans/inputs/workout_plan_day_registration_input.dart';
 export '../../../data/repositories/workout_plans/inputs/workout_plan_input.dart';
+export '../../../data/repositories/workout_plans/inputs/workout_plan_registration_input.dart';
+export '../../../data/repositories/workout_plans/inputs/workout_plan_week_batch_create_input.dart';
+export '../../../data/repositories/workout_plans/inputs/workout_plan_week_input.dart';
+export '../../../data/repositories/workout_plans/inputs/workout_plan_week_registration_input.dart';
+export '../../../data/repositories/workout_plans/inputs/workout_plan_workout_batch_create_input.dart';
+export '../../../data/repositories/workout_plans/inputs/workout_plan_workout_input.dart';
+export '../../../data/repositories/workout_plans/inputs/workout_plan_workout_registration_input.dart';
 
 class WorkoutPlanCubit extends Cubit<WorkoutPlanState> {
   final WorkoutPlanRepository _workoutPlanService;

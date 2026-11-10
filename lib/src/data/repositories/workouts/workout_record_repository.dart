@@ -38,10 +38,19 @@ import './dtos/workout_dto.dart';
 import './dtos/workout_record_dto.dart';
 import './dtos/workout_set_exercise_record_dto.dart';
 import './dtos/workout_set_record_dto.dart';
+import './inputs/workout_record_batch_input.dart';
 import './inputs/workout_record_input.dart';
+import './inputs/workout_set_exercise_record_input.dart';
+import './inputs/workout_set_record_batch_input.dart';
+import './inputs/workout_set_record_input.dart';
 import '../core/repository.dart';
 
+export './inputs/workout_record_batch_input.dart';
 export './inputs/workout_record_input.dart';
+export './inputs/workout_set_exercise_record_batch_input.dart';
+export './inputs/workout_set_exercise_record_input.dart';
+export './inputs/workout_set_record_batch_input.dart';
+export './inputs/workout_set_record_input.dart';
 
 final class WorkoutRecordRepository implements Repository {
   final Dao<WorkoutRecord> _workoutRecordDao;

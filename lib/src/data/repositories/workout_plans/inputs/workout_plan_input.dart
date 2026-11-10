@@ -15,12 +15,16 @@
 // You should have received a copy of the GNU General Public License
 // along with My Fitness Tale.  If not, see <https://www.gnu.org/licenses/>.
 
+import 'package:equatable/equatable.dart';
+
 import '../../../../utils/nullable.dart';
+import '../../../models/sqlite/workout_plan_model.dart';
 import '../../../utils/enums.dart';
 import '../../../utils/json_data.dart';
-import '../../workouts/dtos/workout_dto.dart';
+import '../../core/inputs/input.dart';
 
-final class WorkoutPlanInput {
+final class WorkoutPlanInput extends Equatable
+    implements ModelInput<WorkoutPlan> {
   final String name;
   final Difficulty difficulty;
   final bool isFavorite;
@@ -38,127 +42,15 @@ final class WorkoutPlanInput {
     this.picture = const Nullable<PictureData>(null),
     this.video = const Nullable<VideoData>(null),
   });
-}
 
-final class WorkoutPlanWeekInput {
-  final int startWeek;
-  final int endWeek;
-  final Nullable<WorkoutPhase> phase;
-  final WorkoutPlanWeekScheduleMode scheduleMode;
-
-  const WorkoutPlanWeekInput({
-    required this.startWeek,
-    required this.endWeek,
-    this.phase = const Nullable<WorkoutPhase>(null),
-    this.scheduleMode = WorkoutPlanWeekScheduleMode.manual,
-  });
-}
-
-final class WorkoutPlanWorkoutInput {
-  final int workoutId;
-  final int? position;
-  final Nullable<WorkoutTimeOfDay> timeOfDay;
-
-  const WorkoutPlanWorkoutInput({
-    required this.workoutId,
-    this.position,
-    this.timeOfDay = const Nullable<WorkoutTimeOfDay>(null),
-  });
-}
-
-final class WeekWorkoutInput {
-  final int workoutId;
-  final WorkoutTimeOfDay? timeOfDay;
-
-  const WeekWorkoutInput({required this.workoutId, this.timeOfDay});
-}
-
-final class WorkoutPlanWorkoutBatchCreateInput {
-  final int workoutId;
-  final WorkoutTimeOfDay? timeOfDay;
-
-  const WorkoutPlanWorkoutBatchCreateInput({
-    required this.workoutId,
-    this.timeOfDay,
-  });
-}
-
-final class WorkoutPlanDayBatchCreateInput {
-  final int day;
-  final bool isRestDay;
-  final List<WorkoutPlanWorkoutBatchCreateInput> workouts;
-
-  const WorkoutPlanDayBatchCreateInput({
-    required this.day,
-    this.isRestDay = false,
-    required this.workouts,
-  });
-}
-
-final class WorkoutPlanWeekBatchCreateInput {
-  final int startWeek;
-  final int endWeek;
-  final WorkoutPhase? phase;
-  final WorkoutPlanWeekScheduleMode scheduleMode;
-  final List<WorkoutPlanDayBatchCreateInput> days;
-
-  const WorkoutPlanWeekBatchCreateInput({
-    required this.startWeek,
-    required this.endWeek,
-    this.phase,
-    this.scheduleMode = WorkoutPlanWeekScheduleMode.manual,
-    required this.days,
-  });
-}
-
-final class WorkoutPlanWorkoutRegistrationInput {
-  final WorkoutDto workout;
-  final WorkoutTimeOfDay timeOfDay;
-
-  const WorkoutPlanWorkoutRegistrationInput({
-    required this.workout,
-    required this.timeOfDay,
-  });
-}
-
-final class WorkoutPlanDayRegistrationInput {
-  final bool isRestDay;
-  final List<WorkoutPlanWorkoutRegistrationInput> workouts;
-
-  const WorkoutPlanDayRegistrationInput({
-    this.isRestDay = false,
-    required this.workouts,
-  });
-}
-
-final class WorkoutPlanWeekRegistrationInput {
-  final int startWeek;
-  final int endWeek;
-  final WorkoutPhase phase;
-  final List<WorkoutPlanDayRegistrationInput> days;
-
-  const WorkoutPlanWeekRegistrationInput({
-    required this.startWeek,
-    required this.endWeek,
-    required this.phase,
-    required this.days,
-  });
-}
-
-final class WorkoutPlanRegistrationInput {
-  final String name;
-  final String description;
-  final PictureData? picture;
-  final VideoData? video;
-  final Difficulty difficulty;
-  final List<WorkoutPlanWeekRegistrationInput> weeks;
-
-  const WorkoutPlanRegistrationInput({
-    required this.name,
-    required this.description,
-    this.picture,
-    this.video,
-    required this.difficulty,
-    required this.weeks,
-  });
+  @override
+  List<Object?> get props => [
+    name,
+    difficulty,
+    isFavorite,
+    totalWeeks,
+    description,
+    picture,
+    video,
+  ];
 }

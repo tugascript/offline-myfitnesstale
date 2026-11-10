@@ -39,9 +39,25 @@ import './dtos/workout_plan_day_dto.dart';
 import './dtos/workout_plan_dto.dart';
 import './dtos/workout_plan_week_dto.dart';
 import './dtos/workout_plan_workout_dto.dart';
+import './inputs/week_workout_input.dart';
+import './inputs/workout_plan_day_batch_create_input.dart';
 import './inputs/workout_plan_input.dart';
+import './inputs/workout_plan_registration_input.dart';
+import './inputs/workout_plan_week_batch_create_input.dart';
+import './inputs/workout_plan_week_input.dart';
+import './inputs/workout_plan_workout_input.dart';
 
+export './inputs/week_workout_input.dart';
+export './inputs/workout_plan_day_batch_create_input.dart';
+export './inputs/workout_plan_day_registration_input.dart';
 export './inputs/workout_plan_input.dart';
+export './inputs/workout_plan_registration_input.dart';
+export './inputs/workout_plan_week_batch_create_input.dart';
+export './inputs/workout_plan_week_input.dart';
+export './inputs/workout_plan_week_registration_input.dart';
+export './inputs/workout_plan_workout_batch_create_input.dart';
+export './inputs/workout_plan_workout_input.dart';
+export './inputs/workout_plan_workout_registration_input.dart';
 
 final class WorkoutPlanRepository implements Repository {
   final Dao<WorkoutPlan> _workoutPlanDao;
