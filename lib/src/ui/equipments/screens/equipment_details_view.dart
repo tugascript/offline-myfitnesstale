@@ -2,17 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../cubits/exercise_cubit.dart';
-import '../../cubits/states/exercise_state.dart';
-import '../../models/enums.dart';
-import '../../routing/routing.dart';
-import '../../ui/core/sizes/data_display_sizes.dart';
-import '../../ui/core/sizes/screen_size.dart';
-import '../../ui/core/widgets/confirmation_dialog.dart';
-import '../../ui/core/widgets/mutation_buttons.dart';
-import '../../ui/exercises/widgets/exercises_list.dart';
-import '../../widgets/layout/app_scaffold.dart';
-import '../loading_view.dart';
+import '../../../cubits/exercise_cubit.dart';
+import '../../../cubits/states/exercise_state.dart';
+import '../../../models/enums.dart';
+import '../../../routing/routing.dart';
+import '../../core/sizes/data_display_sizes.dart';
+import '../../core/sizes/screen_size.dart';
+import '../../core/widgets/confirmation_dialog.dart';
+import '../../core/widgets/mutation_buttons.dart';
+import '../../exercises/widgets/exercises_list.dart';
+import '../../../widgets/layout/app_scaffold.dart';
+import '../../../views/loading_view.dart';
 
 class EquipmentDetailsView extends StatefulWidget {
   static const name = 'equipment_details';

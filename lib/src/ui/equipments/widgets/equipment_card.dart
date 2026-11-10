@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
-import '../../services/dtos/equipment_dto.dart';
-import '../../ui/core/sizes/data_display_sizes.dart';
-import '../layout/list_card.dart';
+import '../../../services/dtos/equipment_dto.dart';
+import '../../core/sizes/data_display_sizes.dart';
+import '../../../widgets/layout/list_card.dart';
 
 class EquipmentCard extends StatelessWidget {
   final EquipmentDto equipment;
