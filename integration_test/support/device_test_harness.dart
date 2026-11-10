@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import 'package:myfitnesstale/my_app.dart';
 import 'package:myfitnesstale/src/models/db.dart';
-import 'package:myfitnesstale/src/utilities/app_router.dart';
+import 'package:myfitnesstale/src/routing/app_router.dart';
 
 final class DeviceTestHarness {
   GoRouter? _router;

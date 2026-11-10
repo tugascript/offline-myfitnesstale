@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
-
 import 'package:myfitnesstale/src/common/nullable.dart';
 import 'package:myfitnesstale/src/cubits/active_workout_cubit.dart';
 import 'package:myfitnesstale/src/cubits/exercise_cubit.dart';
@@ -20,6 +19,7 @@ import 'package:myfitnesstale/src/cubits/workout_plan_cubit.dart';
 import 'package:myfitnesstale/src/cubits/workout_plan_record_cubit.dart';
 import 'package:myfitnesstale/src/cubits/workout_record_cubit.dart';
 import 'package:myfitnesstale/src/models/enums.dart';
+import 'package:myfitnesstale/src/routing/routing.dart';
 import 'package:myfitnesstale/src/services/dtos/profile_dto.dart';
 import 'package:myfitnesstale/src/services/dtos/system_dto.dart';
 import 'package:myfitnesstale/src/services/dtos/workout_plan_dto.dart';
@@ -32,7 +32,6 @@ import 'package:myfitnesstale/src/views/home/main_navigation_view.dart';
 import 'package:myfitnesstale/src/views/macros/macro_goals_view.dart';
 import 'package:myfitnesstale/src/views/macros/macro_tracker_view.dart';
 import 'package:myfitnesstale/src/views/recipes/recipes_view.dart';
-import 'package:myfitnesstale/src/views/workout_plans/workout_plan_list_view.dart';
 import 'package:myfitnesstale/src/widgets/dashboard/active/active_meal_plan_widget.dart';
 import 'package:myfitnesstale/src/widgets/dashboard/active/active_plans_carousel.dart';
 import 'package:myfitnesstale/src/widgets/dashboard/quick_actions_widget.dart';
@@ -168,7 +167,7 @@ void main() {
       routes: [
         GoRoute(path: '/', builder: (context, state) => child),
         GoRoute(
-          path: WorkoutPlanListView.routeName,
+          path: Routes.workoutPlanList.name,
           builder: (context, state) => Scaffold(
             appBar: AppBar(title: const Text('Workout Plan Library')),
           ),

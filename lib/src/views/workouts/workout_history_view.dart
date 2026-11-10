@@ -9,16 +9,14 @@ import '../../cubits/states/workout_state.dart';
 import '../../cubits/workout_cubit.dart';
 import '../../cubits/workout_record_cubit.dart';
 import '../../models/enums.dart';
+import '../../routing/routing.dart';
 import '../../utilities/sizes/data_display_sizes.dart';
 import '../../utilities/sizes/screen_size.dart';
 import '../../widgets/layout/responsive_scaffold.dart';
 import '../../widgets/workouts/progress/history/latest_workout_record.dart';
 import '../../widgets/workouts/progress/history/workout_record_history.dart';
-import 'create_workout_record_view.dart';
 
 class WorkoutHistoryView extends StatefulWidget {
-  static const routeName = '/workouts/history';
-
   final int? workoutId;
   final int? version;
 
@@ -26,12 +24,12 @@ class WorkoutHistoryView extends StatefulWidget {
 
   static String location({int? workoutId, int? version}) {
     if (workoutId == null) {
-      return routeName;
+      return Routes.workoutHistory.name;
     }
     if (version == null) {
-      return '$routeName?id=$workoutId';
+      return '${Routes.workoutHistory.name}?id=$workoutId';
     }
-    return '$routeName?id=$workoutId&version=$version';
+    return '${Routes.workoutHistory.name}?id=$workoutId&version=$version';
   }
 
   @override
@@ -126,7 +124,7 @@ class _WorkoutHistoryViewState extends State<WorkoutHistoryView> {
                   elevation: sizes.elevation,
                   onPressed: () {
                     context.push(
-                      CreateWorkoutRecordView.routeName
+                      Routes.createWorkoutRecord.name
                           .replaceFirst(':id', widget.workoutId.toString())
                           .replaceFirst(
                             ':version',

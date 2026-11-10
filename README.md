@@ -121,7 +121,8 @@ SQLite model -> repository/service -> Cubit -> view/widget
 │       ├── cubits/         # Application state
 │       ├── models/         # SQLite models and repositories
 │       ├── services/       # Domain operations and DTOs
-│       ├── utilities/      # Routing, theme, conversion, and sizing
+│       ├── utilities/      # Theme, conversion, and sizing
+│       ├── routing/         # Routing
 │       ├── views/          # Route-level screens
 │       └── widgets/        # Feature UI components
 ├── test/                   # Unit and widget tests
@@ -143,64 +144,53 @@ the model files are the authoritative schema definition.
 
 ```mermaid
 erDiagram
-    profiles ||--|| systems : has
-    profiles ||--|| reminders_configs : has
-
-    weight_goals |o--o{ weight_records : groups
-
-    exercises ||--o{ exercise_equipment : uses
-    equipment ||--o{ exercise_equipment : supports
-    exercises ||--o{ exercise_records : records
-    exercises ||--o{ strength_goals : targets
-
-    workouts ||--o{ workout_sets : contains
-    workout_sets ||--o{ workout_set_exercises : contains
-    exercises ||--o{ workout_set_exercises : assigns
-    workout_set_exercises ||--o{ workout_set_exercise_options : offers
-    exercises ||--o{ workout_set_exercise_options : references
-
-    workouts ||--o{ workout_records : produces
-    workout_records ||--o{ workout_set_records : contains
-    workout_sets ||--o{ workout_set_records : instantiates
-    workout_set_records ||--o{ workout_set_exercise_records : contains
-    exercises ||--o{ workout_set_exercise_records : logs
-
-    workout_plans ||--o{ workout_plan_weeks : contains
-    workout_plan_weeks ||--o{ workout_plan_days : contains
-    workout_plan_days ||--o{ workout_plan_workouts : schedules
-    workouts ||--o{ workout_plan_workouts : references
-
-    workout_plans ||--o{ workout_plan_records : produces
-    workout_plan_records ||--o{ workout_plan_week_records : contains
-    workout_plan_week_records ||--o{ workout_plan_day_records : contains
-    workout_plan_day_records ||--o{ workout_plan_workout_records : contains
-    workout_records ||--o{ workout_plan_workout_records : completes
-
-    foods ||--o{ food_portions : offers
-    recipes ||--o{ recipe_items : contains
-    foods ||--o{ recipe_items : supplies
-    food_portions ||--o{ recipe_items : measures
-
-    week_macro_goals ||--|{ day_macro_goals : contains
-
-    daily_nutrition_logs ||--o{ meal_logs : contains
-    meal_logs ||--|{ meal_log_items : snapshots
-    foods |o--o{ meal_log_items : sources
-    food_portions |o--o{ meal_log_items : measures
-
-    meal_plans ||--o{ meal_plan_weeks : contains
-    meal_plan_weeks ||--o{ meal_plan_days : contains
-    meal_plan_days ||--o{ meal_plan_meals : schedules
-    recipes |o--o{ meal_plan_meals : supplies
-    meal_plan_meals ||--o{ meal_plan_meal_items : contains
-    foods |o--o{ meal_plan_meal_items : supplies
-    food_portions |o--o{ meal_plan_meal_items : measures
-
-    meal_plans ||--o{ meal_plan_records : produces
-    meal_plan_records ||--o{ meal_plan_week_records : contains
-    meal_plan_week_records ||--o{ meal_plan_day_records : contains
-    meal_plan_days ||--o{ meal_plan_day_records : instantiates
-    daily_nutrition_logs ||--o| meal_plan_day_records : tracks
+    profiles ||--|| systems: has
+    profiles ||--|| reminders_configs: has
+    weight_goals |o--o{ weight_records: groups
+    exercises ||--o{ exercise_equipment: uses
+    equipment ||--o{ exercise_equipment: supports
+    exercises ||--o{ exercise_records: records
+    exercises ||--o{ strength_goals: targets
+    workouts ||--o{ workout_sets: contains
+    workout_sets ||--o{ workout_set_exercises: contains
+    exercises ||--o{ workout_set_exercises: assigns
+    workout_set_exercises ||--o{ workout_set_exercise_options: offers
+    exercises ||--o{ workout_set_exercise_options: references
+    workouts ||--o{ workout_records: produces
+    workout_records ||--o{ workout_set_records: contains
+    workout_sets ||--o{ workout_set_records: instantiates
+    workout_set_records ||--o{ workout_set_exercise_records: contains
+    exercises ||--o{ workout_set_exercise_records: logs
+    workout_plans ||--o{ workout_plan_weeks: contains
+    workout_plan_weeks ||--o{ workout_plan_days: contains
+    workout_plan_days ||--o{ workout_plan_workouts: schedules
+    workouts ||--o{ workout_plan_workouts: references
+    workout_plans ||--o{ workout_plan_records: produces
+    workout_plan_records ||--o{ workout_plan_week_records: contains
+    workout_plan_week_records ||--o{ workout_plan_day_records: contains
+    workout_plan_day_records ||--o{ workout_plan_workout_records: contains
+    workout_records ||--o{ workout_plan_workout_records: completes
+    foods ||--o{ food_portions: offers
+    recipes ||--o{ recipe_items: contains
+    foods ||--o{ recipe_items: supplies
+    food_portions ||--o{ recipe_items: measures
+    week_macro_goals ||--|{ day_macro_goals: contains
+    daily_nutrition_logs ||--o{ meal_logs: contains
+    meal_logs ||--|{ meal_log_items: snapshots
+    foods |o--o{ meal_log_items: sources
+    food_portions |o--o{ meal_log_items: measures
+    meal_plans ||--o{ meal_plan_weeks: contains
+    meal_plan_weeks ||--o{ meal_plan_days: contains
+    meal_plan_days ||--o{ meal_plan_meals: schedules
+    recipes |o--o{ meal_plan_meals: supplies
+    meal_plan_meals ||--o{ meal_plan_meal_items: contains
+    foods |o--o{ meal_plan_meal_items: supplies
+    food_portions |o--o{ meal_plan_meal_items: measures
+    meal_plans ||--o{ meal_plan_records: produces
+    meal_plan_records ||--o{ meal_plan_week_records: contains
+    meal_plan_week_records ||--o{ meal_plan_day_records: contains
+    meal_plan_days ||--o{ meal_plan_day_records: instantiates
+    daily_nutrition_logs ||--o| meal_plan_day_records: tracks
 ```
 
 </details>

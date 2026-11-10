@@ -2,18 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
-
 import 'package:myfitnesstale/src/cubits/exercise_record_cubit.dart';
 import 'package:myfitnesstale/src/cubits/profile_cubit.dart';
 import 'package:myfitnesstale/src/cubits/states/exercise_record_state.dart';
 import 'package:myfitnesstale/src/cubits/states/profile_state.dart';
 import 'package:myfitnesstale/src/models/common.dart';
 import 'package:myfitnesstale/src/models/enums.dart';
+import 'package:myfitnesstale/src/routing/routing.dart';
 import 'package:myfitnesstale/src/services/dtos/exercise_dto.dart';
 import 'package:myfitnesstale/src/services/dtos/exercise_record_dto.dart';
 import 'package:myfitnesstale/src/services/dtos/system_dto.dart';
 import 'package:myfitnesstale/src/views/exercise_progress_view.dart';
-import 'package:myfitnesstale/src/views/exercises/exercise_records_view.dart';
 
 class _ExerciseRecordCubit extends ExerciseRecordCubit {
   _ExerciseRecordCubit(
@@ -132,14 +131,14 @@ void main() {
     profileCubit = _ProfileCubit(units);
 
     final router = GoRouter(
-      initialLocation: ExerciseProgressView.routeName,
+      initialLocation: Routes.exerciseProgress.name,
       routes: [
         GoRoute(
-          path: ExerciseProgressView.routeName,
+          path: Routes.exerciseProgress.name,
           builder: (context, state) => const ExerciseProgressView(),
         ),
         GoRoute(
-          path: ExerciseRecordsView.routeName,
+          path: Routes.exerciseRecords.name,
           builder: (context, state) => Scaffold(
             appBar: AppBar(),
             body: Text('Records for ${state.pathParameters['id']}'),

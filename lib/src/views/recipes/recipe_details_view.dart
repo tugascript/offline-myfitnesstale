@@ -1,5 +1,3 @@
-import '../../widgets/recipes/recipe_details_widget.dart';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -7,17 +5,16 @@ import 'package:go_router/go_router.dart';
 import '../../cubits/recipe_cubit.dart';
 import '../../cubits/states/recipe_state.dart';
 import '../../models/enums.dart';
+import '../../routing/routing.dart';
 import '../../utilities/sizes/data_display_sizes.dart';
 import '../../utilities/sizes/screen_size.dart';
 import '../../widgets/common/confirmation_dialog.dart';
 import '../../widgets/common/mutation_buttons.dart';
 import '../../widgets/layout/app_scaffold.dart';
+import '../../widgets/recipes/recipe_details_widget.dart';
 import '../loading_view.dart';
-import 'recipe_update_view.dart';
-import 'recipes_view.dart';
 
 class RecipeDetailsView extends StatefulWidget {
-  static const routeName = '/recipes/:id';
   static const name = 'recipe_details';
 
   final int recipeId;
@@ -143,7 +140,7 @@ class _RecipeDetailsViewState extends State<RecipeDetailsView> {
                     sizes: sizes,
                     onEdit: () {
                       context.push(
-                        RecipeUpdateView.routeName.replaceFirst(
+                        Routes.recipeUpdate.name.replaceFirst(
                           ':id',
                           recipe.id.toString(),
                         ),
@@ -160,7 +157,7 @@ class _RecipeDetailsViewState extends State<RecipeDetailsView> {
                             if (context.canPop()) {
                               context.pop();
                             } else {
-                              context.go(RecipesView.routeName);
+                              context.go(Routes.recipes.name);
                             }
                           },
                         ),

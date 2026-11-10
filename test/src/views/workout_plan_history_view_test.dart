@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
-
 import 'package:myfitnesstale/src/common/nullable.dart';
 import 'package:myfitnesstale/src/cubits/states/common_state.dart';
 import 'package:myfitnesstale/src/cubits/states/workout_plan_record_state.dart';
 import 'package:myfitnesstale/src/cubits/workout_plan_record_cubit.dart';
 import 'package:myfitnesstale/src/models/enums.dart';
+import 'package:myfitnesstale/src/routing/routing.dart';
 import 'package:myfitnesstale/src/services/dtos/workout_plan_dto.dart';
 import 'package:myfitnesstale/src/services/dtos/workout_plan_record_dto.dart';
 import 'package:myfitnesstale/src/views/workout_plans/workout_plan_history_view.dart';
@@ -85,7 +85,7 @@ void main() {
       initialLocation: WorkoutPlanHistoryView.location(workoutPlanId),
       routes: [
         GoRoute(
-          path: WorkoutPlanHistoryView.routeName,
+          path: Routes.workoutPlanHistory.name,
           builder: (context, state) =>
               WorkoutPlanHistoryView(workoutPlanId: workoutPlanId),
         ),

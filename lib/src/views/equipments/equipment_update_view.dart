@@ -6,15 +6,14 @@ import '../../common/nullable.dart';
 import '../../cubits/exercise_cubit.dart';
 import '../../cubits/states/exercise_state.dart';
 import '../../models/common.dart';
+import '../../routing/routing.dart';
 import '../../services/inputs/equipment_input.dart';
 import '../../utilities/sizes/data_display_sizes.dart';
 import '../../utilities/sizes/screen_size.dart';
 import '../../widgets/equipment/equipment_form.dart';
 import '../../widgets/layout/responsive_scaffold.dart';
-import 'equipments_view.dart';
 
 class EquipmentUpdateView extends StatefulWidget {
-  static const String routeName = '/equipments/:id/update';
   static const String name = 'equipment_update';
 
   final int equipmentId;
@@ -101,7 +100,7 @@ class _EquipmentUpdateViewState extends State<EquipmentUpdateView> {
                           return;
                         }
 
-                        context.go(EquipmentsView.routeName);
+                        context.go(Routes.equipments.name);
                       }
                     }
                   },

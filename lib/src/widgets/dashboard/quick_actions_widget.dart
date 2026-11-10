@@ -1,21 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../routing/routing.dart';
 import '../../utilities/sizes/data_display_sizes.dart';
-import '../../views/equipments/equipments_view.dart';
-import '../../views/exercise_progress_view.dart';
-import '../../views/exercises/exercises_view.dart';
-import '../../views/exercises/strength_goals_view.dart';
-import '../../views/foods/foods_view.dart';
-import '../../views/macros/macro_goals_view.dart';
-import '../../views/meal_plans/meal_plan_list_view.dart';
-import '../../views/recipes/recipes_view.dart';
-import '../../views/weight/weight_goals_view.dart';
-import '../../views/weight/weight_records_view.dart';
-import '../../views/workout_plans/workout_plan_history_view.dart';
-import '../../views/workout_plans/workout_plan_list_view.dart';
-import '../../views/workouts/workout_history_view.dart';
-import '../../views/workouts/workouts_view.dart';
 import 'quick_action_category.dart';
 import 'quick_action_category_card.dart';
 import 'quick_action_destination_sheet.dart';
@@ -30,7 +17,7 @@ class QuickActionsWidget extends StatelessWidget {
     required this.sizes,
   });
 
-  static const categories = [
+  static final categories = [
     QuickActionCategory(
       id: 'training',
       title: 'Workout Plans',
@@ -41,25 +28,25 @@ class QuickActionsWidget extends StatelessWidget {
           'workouts',
           'Workouts',
           Icons.fitness_center,
-          WorkoutsView.routeName,
+          Routes.workouts.name,
         ),
         QuickActionDestination(
           'workout-history',
           'Workout History',
           Icons.history,
-          WorkoutHistoryView.routeName,
+          Routes.workoutHistory.name,
         ),
         QuickActionDestination(
           'workout-plans',
           'Workout Plans',
           Icons.event_note,
-          WorkoutPlanListView.routeName,
+          Routes.workoutPlanList.name,
         ),
         QuickActionDestination(
           'workout-plan-history',
           'Workout Plan History',
           Icons.event_note_outlined,
-          WorkoutPlanHistoryView.routeName,
+          Routes.workoutPlanHistory.name,
         ),
       ],
     ),
@@ -73,13 +60,13 @@ class QuickActionsWidget extends StatelessWidget {
           'weight-records',
           'Weight Records',
           Icons.monitor_weight_outlined,
-          WeightRecordsView.routeName,
+          Routes.weightRecords.name,
         ),
         QuickActionDestination(
           'weight-goal',
           'Weight Goals',
           Icons.flag_outlined,
-          WeightGoalView.routeName,
+          Routes.weightGoal.name,
         ),
       ],
     ),
@@ -93,25 +80,25 @@ class QuickActionsWidget extends StatelessWidget {
           'exercises',
           'Exercises',
           Icons.sports_gymnastics,
-          ExercisesView.routeName,
+          Routes.exercises.name,
         ),
         QuickActionDestination(
           'exercise-progress',
           'Exercise Progress',
           Icons.trending_up,
-          ExerciseProgressView.routeName,
+          Routes.exerciseProgress.name,
         ),
         QuickActionDestination(
           'strength-goals',
           'Strength Goals',
           Icons.emoji_events_outlined,
-          StrengthGoalsView.routeName,
+          Routes.strengthGoals.name,
         ),
         QuickActionDestination(
           'equipments',
           'Equipment',
           Icons.build_outlined,
-          EquipmentsView.routeName,
+          Routes.equipments.name,
         ),
       ],
     ),
@@ -125,25 +112,25 @@ class QuickActionsWidget extends StatelessWidget {
           'macro-goals',
           'Macro Goals',
           Icons.pie_chart_outline,
-          MacroGoalsView.routeName,
+          Routes.macroGoals.name,
         ),
         QuickActionDestination(
           'meal-plans',
           'Meal Plans',
           Icons.restaurant_menu,
-          MealPlanListView.routeName,
+          Routes.mealPlanList.name,
         ),
         QuickActionDestination(
           'recipe',
           'Recipes',
           Icons.menu_book,
-          RecipesView.routeName,
+          Routes.recipes.name,
         ),
         QuickActionDestination(
           'food',
           'Foods',
           Icons.lunch_dining_outlined,
-          FoodsView.routeName,
+          Routes.foods.name,
         ),
       ],
     ),

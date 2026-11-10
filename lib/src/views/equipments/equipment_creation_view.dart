@@ -4,15 +4,14 @@ import 'package:go_router/go_router.dart';
 
 import '../../cubits/exercise_cubit.dart';
 import '../../cubits/states/exercise_state.dart';
+import '../../routing/routing.dart';
 import '../../services/inputs/equipment_input.dart';
 import '../../utilities/sizes/data_display_sizes.dart';
 import '../../utilities/sizes/screen_size.dart';
 import '../../widgets/equipment/equipment_form.dart';
 import '../../widgets/layout/responsive_scaffold.dart';
-import 'equipments_view.dart';
 
 class EquipmentCreationView extends StatelessWidget {
-  static const String routeName = '/equipments/create';
   static const String name = 'equipment_creation';
 
   const EquipmentCreationView({super.key});
@@ -46,7 +45,7 @@ class EquipmentCreationView extends StatelessWidget {
               if (context.canPop()) {
                 context.pop();
               } else {
-                context.go(EquipmentsView.routeName);
+                context.go(Routes.equipments.name);
               }
             }
           },

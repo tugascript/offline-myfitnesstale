@@ -15,8 +15,6 @@ import '../widgets/layout/app_scaffold.dart';
 import 'exercises/exercise_records_view.dart';
 
 class ExerciseProgressView extends StatefulWidget {
-  static const routeName = '/exercises/progress';
-
   const ExerciseProgressView({super.key});
 
   @override

@@ -1,6 +1,3 @@
-import '../../widgets/common/search_favorite_form.dart';
-import '../../widgets/meal_plans/meal_plan_list_item_widget.dart';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -8,15 +5,14 @@ import 'package:go_router/go_router.dart';
 import '../../cubits/meal_plan_cubit.dart';
 import '../../cubits/meal_plan_record_cubit.dart';
 import '../../cubits/states/meal_plan_state.dart';
+import '../../routing/routing.dart';
 import '../../utilities/sizes/data_display_sizes.dart';
 import '../../utilities/sizes/screen_size.dart';
+import '../../widgets/common/search_favorite_form.dart';
 import '../../widgets/layout/app_scaffold.dart';
-import '../macros/macro_tracker_view.dart';
-import 'meal_plan_creation_view.dart';
-import 'meal_plan_details_view.dart';
+import '../../widgets/meal_plans/meal_plan_list_item_widget.dart';
 
 class MealPlanListView extends StatefulWidget {
-  static const routeName = '/meal-plans';
   static const name = 'meal_plans';
 
   const MealPlanListView({super.key});
@@ -131,7 +127,7 @@ class _MealPlanListViewState extends State<MealPlanListView> {
                                         label: 'Tracker',
                                         onPressed: () {
                                           context.push(
-                                            MacroTrackerView.routeName,
+                                            Routes.macroTracker.name,
                                           );
                                         },
                                       ),
@@ -141,7 +137,7 @@ class _MealPlanListViewState extends State<MealPlanListView> {
                               },
                               onView: () {
                                 context.push(
-                                  MealPlanDetailsView.routeName.replaceFirst(
+                                  Routes.mealPlanDetails.name.replaceFirst(
                                     ':id',
                                     plan.id.toString(),
                                   ),
@@ -164,7 +160,7 @@ class _MealPlanListViewState extends State<MealPlanListView> {
       floatingActionButton: FloatingActionButton(
         key: const ValueKey('meal-plan-add-fab'),
         onPressed: () {
-          context.push(MealPlanCreationView.routeName);
+          context.push(Routes.mealPlanCreation.name);
         },
         child: Icon(Icons.add, size: sizes.buttonIconSize),
       ),

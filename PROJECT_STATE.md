@@ -91,8 +91,8 @@ exist.
 ### Equipment, exercises, and progress
 
 - Browses, searches, filters, favorites, creates, edits, and deletes equipment
-  and exercises using shared `EquipmentInput` and `ExerciseInput` PUT semantics
-  (`Nullable<T>` in `copyWith` clears omitted nullable fields and replaces
+  and exercises using shared `EquipmentInput` and `ExerciseInput` PUT semantics (`Nullable<T>` in `copyWith` clears
+  omitted nullable fields and replaces
   equipment links atomically).
 - Maintains exercise/equipment relationships.
 - Exercise details use a reusable, swipeable Diagram/Data carousel. Its clean
@@ -128,10 +128,12 @@ records. Media fields exist, but there is no picker, upload, or storage flow.
 
 ### Weight and goals
 
-- Creates, edits, deletes, and filters weight records using shared `WeightRecordInput` PUT semantics (`Nullable<T>` in `copyWith` clears omitted nullable fields).
+- Creates, edits, deletes, and filters weight records using shared `WeightRecordInput` PUT semantics (`Nullable<T>` in
+  `copyWith` clears omitted nullable fields).
 - Displays the latest value, a date-range chart, and selectable chart points.
 - Converts displayed values between metric and imperial units.
-- Creates, edits, completes, and deletes weight goals using shared `WeightGoalInput` PUT semantics, abandoning prior in-progress goals when creating or reopening an active goal, and displays goal history.
+- Creates, edits, completes, and deletes weight goals using shared `WeightGoalInput` PUT semantics, abandoning prior
+  in-progress goals when creating or reopening an active goal, and displays goal history.
 - Can associate weight records with a goal; deleting a goal keeps its weight
   records and clears their association.
 
@@ -179,10 +181,14 @@ layers. Historical plan summaries do not expose child-workout detail.
 
 ### Foods, recipes, and meal plans
 
-- Foods & portions: Full CRUD for user-authored foods and portions in a single transaction; filters by name, category, and favorite; prevents mutation/deletion of machine-authored foods (`CreatedBy.system`).
-- Recipes & items: Aggregates recipe items (pointing to foods and portions); calculates serving totals for calories, protein, carbs, fat, and micronutrients inside the transaction; prevents mutation/deletion of system-authored recipes.
-- Meal plans: Multi-week meal schedule aggregates (weeks, days, meals, items) created and versioned with transactions and denormalized total updates; supports favorites and system authoring protection.
-- Meal-plan records: Tracks execution of meal plans with week and day records; enforces single active meal-plan invariant; allows starting and advancing/completing days.
+- Foods & portions: Full CRUD for user-authored foods and portions in a single transaction; filters by name, category,
+  and favorite; prevents mutation/deletion of machine-authored foods (`CreatedBy.system`).
+- Recipes & items: Aggregates recipe items (pointing to foods and portions); calculates serving totals for calories,
+  protein, carbs, fat, and micronutrients inside the transaction; prevents mutation/deletion of system-authored recipes.
+- Meal plans: Multi-week meal schedule aggregates (weeks, days, meals, items) created and versioned with transactions
+  and denormalized total updates; supports favorites and system authoring protection.
+- Meal-plan records: Tracks execution of meal plans with week and day records; enforces single active meal-plan
+  invariant; allows starting and advancing/completing days.
 
 The 13 October 2026 refactor applies the food-service conventions across the
 PR's new nutrition and strength-goal flows. Create and update share complete
@@ -219,24 +225,59 @@ above a keyboard inset.
 
 ### Macro tracking and daily nutrition
 
-- Macro goals: Creates, updates, activates, and deletes weekly macro targets (`WeekMacroGoal` in `week_macro_goals` and child `DayMacroGoal` rows in `day_macro_goals`) supporting both flat week goals (`MacroGoalType.flat`) and custom calorie cycling schedules (`MacroGoalType.calorieCycling`) across day-of-week groups; enforces single active goal invariant with automatic deactivation of prior goals and resolves date-aware targets (`effectiveGoalForDate`).
-- Macro-goal forms default to a flat week mode with a checked "Calculate calories from macros" checkbox when creating a new goal, and allow switching to Calorie Cycling mode to configure at least two day-of-week groups with live weekly total and daily average calculations (`MacroGoalDayGroupCard`). Calories are calculated from macros (`Converters.macrosToCalories`: protein/carbs 4 kcal per gram, fat 9), remain read-only while checked, and allow manual editing when unchecked. When editing an existing goal or day group, the checkbox starts checked only if the saved calories match the macro formula, preserving manual calorie overrides without rewriting them on open.
-- Macro-goal calculation verification on 15 October 2026: 318 host tests passed, one skipped, including default/live calculation, create/update submission, manual override, invalid input, and existing responsive coverage. Dependency resolution, changed-file formatting, and `git diff --check` passed; analysis has no errors/warnings and one unrelated informational lint. The repository-wide format check still flags 340 other files.
-- Daily nutrition logs: Get-or-create per numeric local date (`YYYYMMDD`); each food or recipe submission retains its own timestamp and immutable nutrition snapshot, including submissions at identical times; recalculates meal and daily totals. Meal categories remain metadata for meal plans rather than diary grouping.
-- Daily diary: A square-edged 24-hour timeline groups all entries by local hour, orders entries by time, and offers an add action per hour. Logging prefills the selected date/hour, allows time adjustment, and requires no meal-category selection. Calories/macros, water controls, and scheduled plan meals remain above the timeline. Week/month views and date navigation remain available.
-- Existing diary entries retain their stored timestamps; older entries previously merged by category share the original meal timestamp because individual item times were never stored. No schema change or data reset is required.
-- Quick Add: The logging modal includes a third tab for a one-time name and total protein/carbs/fat, with calories calculated by default or entered manually. Standalone snapshots are saved atomically to the selected date/time without adding foods or recipes to the library. They appear in the hourly timeline, contribute to daily totals, and can be deleted like other entries. Drafts survive tab changes; invalid totals are rejected and failed saves leave the form available for retry. Uses existing schema version 1.
-- Quick Add verification on 15 October 2026: full host suite passed (324 tests, one skipped), including persistence/Cubit refresh, library isolation, validation, transaction rollback, deletion, manual calorie totals, selected times, draft retention, failed-save retry, successful dismissal, and 320px/200% text with keyboard coverage. Dependency resolution, changed-file formatting, and `git diff --check` passed. Analysis reports one unrelated informational lint and no errors/warnings. The repository-wide format check flags 339 other files; no device journey was run.
+- Macro goals: Creates, updates, activates, and deletes weekly macro targets (`WeekMacroGoal` in `week_macro_goals` and
+  child `DayMacroGoal` rows in `day_macro_goals`) supporting both flat week goals (`MacroGoalType.flat`) and custom
+  calorie cycling schedules (`MacroGoalType.calorieCycling`) across day-of-week groups; enforces single active goal
+  invariant with automatic deactivation of prior goals and resolves date-aware targets (`effectiveGoalForDate`).
+- Macro-goal forms default to a flat week mode with a checked "Calculate calories from macros" checkbox when creating a
+  new goal, and allow switching to Calorie Cycling mode to configure at least two day-of-week groups with live weekly
+  total and daily average calculations (`MacroGoalDayGroupCard`). Calories are calculated from macros
+  (`Converters.macrosToCalories`: protein/carbs 4 kcal per gram, fat 9), remain read-only while checked, and allow
+  manual editing when unchecked. When editing an existing goal or day group, the checkbox starts checked only if the
+  saved calories match the macro formula, preserving manual calorie overrides without rewriting them on open.
+- Macro-goal calculation verification on 15 October 2026: 318 host tests passed, one skipped, including default/live
+  calculation, create/update submission, manual override, invalid input, and existing responsive coverage. Dependency
+  resolution, changed-file formatting, and `git diff --check` passed; analysis has no errors/warnings and one unrelated
+  informational lint. The repository-wide format check still flags 340 other files.
+- Daily nutrition logs: Get-or-create per numeric local date (`YYYYMMDD`); each food or recipe submission retains its
+  own timestamp and immutable nutrition snapshot, including submissions at identical times; recalculates meal and daily
+  totals. Meal categories remain metadata for meal plans rather than diary grouping.
+- Daily diary: A square-edged 24-hour timeline groups all entries by local hour, orders entries by time, and offers an
+  add action per hour. Logging prefills the selected date/hour, allows time adjustment, and requires no meal-category
+  selection. Calories/macros, water controls, and scheduled plan meals remain above the timeline. Week/month views and
+  date navigation remain available.
+- Existing diary entries retain their stored timestamps; older entries previously merged by category share the original
+  meal timestamp because individual item times were never stored. No schema change or data reset is required.
+- Quick Add: The logging modal includes a third tab for a one-time name and total protein/carbs/fat, with calories
+  calculated by default or entered manually. Standalone snapshots are saved atomically to the selected date/time without
+  adding foods or recipes to the library. They appear in the hourly timeline, contribute to daily totals, and can be
+  deleted like other entries. Drafts survive tab changes; invalid totals are rejected and failed saves leave the form
+  available for retry. Uses existing schema version 1.
+- Quick Add verification on 15 October 2026: full host suite passed (324 tests, one skipped), including
+  persistence/Cubit refresh, library isolation, validation, transaction rollback, deletion, manual calorie totals,
+  selected times, draft retention, failed-save retry, successful dismissal, and 320px/200% text with keyboard coverage.
+  Dependency resolution, changed-file formatting, and `git diff --check` passed. Analysis reports one unrelated
+  informational lint and no errors/warnings. The repository-wide format check flags 339 other files; no device journey
+  was run.
 - Water intake: Updates daily water consumption with quick adjust controls.
-- Logging modal tabs (Food, Recipe, Quick Add) each occupy one third of the content width, with centered labels that wrap at large text scales. The selected underline spans the full tab width with square ends.
+- Logging modal tabs (Food, Recipe, Quick Add) each occupy one third of the content width, with centered labels that
+  wrap at large text scales. The selected underline spans the full tab width with square ends.
 - The Day/Week/Month selector has square corners and indicates selection through its themed fill without a tick icon.
-- Validation on 15 October 2026: full host suite passed (315 tests, one skipped), including new persistence and timeline interaction coverage for same-hour/identical-time entries, midnight, historical dates, food/recipe logging, time adjustment, deletion, totals, and 320px/200% text. Dependency resolution and `git diff --check` passed. Analysis reported only 30 existing informational lints; changed nutrition files have no analysis issues and pass formatting. The repository-wide format check still flags 357 other files under the current SDK; those files were left unchanged. No device nutrition journey was run.
-- UI: Day, Week, and Month tracker views; meal logging modal with portion calculator; the active plan's meals appear on their scheduled dates and can be logged into the diary; responsive layouts supporting 320px narrow screens and 200% font scaling.
+- Validation on 15 October 2026: full host suite passed (315 tests, one skipped), including new persistence and timeline
+  interaction coverage for same-hour/identical-time entries, midnight, historical dates, food/recipe logging, time
+  adjustment, deletion, totals, and 320px/200% text. Dependency resolution and `git diff --check` passed. Analysis
+  reported only 30 existing informational lints; changed nutrition files have no analysis issues and pass formatting.
+  The repository-wide format check still flags 357 other files under the current SDK; those files were left unchanged.
+  No device nutrition journey was run.
+- UI: Day, Week, and Month tracker views; meal logging modal with portion calculator; the active plan's meals appear on
+  their scheduled dates and can be logged into the diary; responsive layouts supporting 320px narrow screens and 200%
+  font scaling.
 
 ## Navigation
 
-`GoRouter` is configured in `lib/src/utilities/app_router.dart`. An
-`IndexedStack` preserves four primary destinations:
+`GoRouter` is configured in `lib/src/routing/app_router.dart`. Path strings live in
+the `Routes` enum (`lib/src/routing/routing.dart`); views no longer define
+`routeName`. An `IndexedStack` preserves four primary destinations:
 
 1. Home;
 2. Plans;
@@ -412,7 +453,8 @@ results above remain evidence from the earlier run.
 ## Known gaps and release blockers
 
 - No fitness-data import/export, backup/restore, cloud sync, or account system.
-- Meal, macro, food, recipe, and meal-plan tracking and execution flows are fully implemented offline. No local AI trainer.
+- Meal, macro, food, recipe, and meal-plan tracking and execution flows are fully implemented offline. No local AI
+  trainer.
 - No Apple Watch or Wear OS app.
 - Reminder preferences do not deliver notifications.
 - No physical-device, release-build, signing, or full accessibility evidence.

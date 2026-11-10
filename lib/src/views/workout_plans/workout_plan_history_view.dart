@@ -5,20 +5,20 @@ import 'package:intl/intl.dart';
 import '../../cubits/states/workout_plan_record_state.dart';
 import '../../cubits/workout_plan_record_cubit.dart';
 import '../../models/enums.dart';
+import '../../routing/routing.dart';
 import '../../services/dtos/workout_plan_record_dto.dart';
 import '../../utilities/sizes/data_display_sizes.dart';
 import '../../utilities/sizes/screen_size.dart';
 import '../../widgets/layout/app_scaffold.dart';
 
 class WorkoutPlanHistoryView extends StatefulWidget {
-  static const routeName = '/workout-plans/history';
-
   final int? workoutPlanId;
 
   const WorkoutPlanHistoryView({super.key, this.workoutPlanId});
 
-  static String location([int? workoutPlanId]) =>
-      workoutPlanId != null ? '$routeName?id=$workoutPlanId' : routeName;
+  static String location([int? workoutPlanId]) => workoutPlanId != null
+      ? '${Routes.workoutPlanHistory.name}?id=$workoutPlanId'
+      : Routes.workoutPlanHistory.name;
 
   @override
   State<WorkoutPlanHistoryView> createState() => _WorkoutPlanHistoryViewState();

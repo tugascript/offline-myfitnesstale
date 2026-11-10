@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
-
 import 'package:myfitnesstale/src/cubits/profile_cubit.dart';
 import 'package:myfitnesstale/src/models/enums.dart';
+import 'package:myfitnesstale/src/routing/routing.dart';
 import 'package:myfitnesstale/src/services/common/errors.dart';
 import 'package:myfitnesstale/src/services/common/result.dart';
 import 'package:myfitnesstale/src/services/dtos/profile_dto.dart';
@@ -56,10 +56,10 @@ void main() {
     final cubit = ProfileCubit(onboardingService: service);
     addTearDown(cubit.close);
     final router = GoRouter(
-      initialLocation: OnboardingView.routeName,
+      initialLocation: Routes.onboarding.name,
       routes: [
         GoRoute(
-          path: OnboardingView.routeName,
+          path: Routes.onboarding.name,
           builder: (context, state) => const OnboardingView(),
         ),
         GoRoute(

@@ -16,7 +16,6 @@ import '../../widgets/macros/log_food_modal.dart';
 enum TrackerScope { day, week, month }
 
 class MacroTrackerView extends StatefulWidget {
-  static const routeName = '/macro-tracker';
   static const name = 'macro_tracker';
 
   const MacroTrackerView({super.key});

@@ -50,7 +50,7 @@ Follow the strict flow: `SQLite Model -> Repository -> Service -> Cubit -> View/
 
 ## Navigation and UI Constraints
 
-- **Routing**: `GoRouter` configured in `lib/src/utilities/app_router.dart`. Register static routes before dynamic
+- **Routing**: `GoRouter` configured in `lib/src/routing/app_router.dart`. Register static routes before dynamic
   parameterized routes (e.g. `/exercises/progress` before `/exercises/:id/records`).
 - **Orientation**: Portrait mode is enforced at runtime.
 - **Responsiveness**: Ensure views handle narrow screens and 200% text scaling without layout or pixel overflow errors.

@@ -12,7 +12,6 @@ import '../../widgets/weight/records/latest_weight_record.dart';
 import '../../widgets/weight/records/weight_records_history.dart';
 
 class WeightRecordsView extends StatelessWidget {
-  static const routeName = "/weight-records";
   static const name = "weight-records";
 
   const WeightRecordsView({super.key});

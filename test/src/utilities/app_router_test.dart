@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
-
 import 'package:myfitnesstale/src/common/nullable.dart';
 import 'package:myfitnesstale/src/cubits/exercise_cubit.dart';
 import 'package:myfitnesstale/src/cubits/exercise_record_cubit.dart';
@@ -12,11 +11,12 @@ import 'package:myfitnesstale/src/cubits/workout_plan_record_cubit.dart';
 import 'package:myfitnesstale/src/cubits/workout_record_cubit.dart';
 import 'package:myfitnesstale/src/models/common.dart';
 import 'package:myfitnesstale/src/models/enums.dart';
+import 'package:myfitnesstale/src/routing/app_router.dart';
+import 'package:myfitnesstale/src/routing/routing.dart';
 import 'package:myfitnesstale/src/services/dtos/profile_dto.dart';
 import 'package:myfitnesstale/src/services/dtos/reminders_config_dto.dart';
 import 'package:myfitnesstale/src/services/dtos/system_dto.dart';
 import 'package:myfitnesstale/src/services/dtos/workout_dto.dart';
-import 'package:myfitnesstale/src/utilities/app_router.dart';
 import 'package:myfitnesstale/src/views/exercise_progress_view.dart';
 import 'package:myfitnesstale/src/views/exercises/exercise_records_view.dart';
 import 'package:myfitnesstale/src/views/not_found_view.dart';
@@ -159,13 +159,13 @@ void main() {
   testWidgets('exercise progress wins over the dynamic exercise ID route', (
     tester,
   ) async {
-    await pumpRoute(tester, ExerciseProgressView.routeName);
+    await pumpRoute(tester, Routes.exerciseProgress.name);
 
     expect(find.byType(ExerciseProgressView), findsOneWidget);
     expect(find.byType(NotFoundView), findsNothing);
   });
 
-  testWidgets('global and single plan history routes resolve', (tester) async {
+  testWidgets('global and single plan history routing resolve', (tester) async {
     await pumpRoute(tester, WorkoutPlanHistoryView.location());
 
     var view = tester.widget<WorkoutPlanHistoryView>(
@@ -187,7 +187,7 @@ void main() {
     expect(find.byType(NotFoundView), findsOneWidget);
   });
 
-  testWidgets('global and single workout history routes resolve', (
+  testWidgets('global and single workout history routing resolve', (
     tester,
   ) async {
     await pumpRoute(tester, WorkoutHistoryView.location());
@@ -245,7 +245,7 @@ void main() {
   });
 
   testWidgets('reminder preferences resolve', (tester) async {
-    await pumpRoute(tester, ReminderPreferencesView.routeName);
+    await pumpRoute(tester, Routes.reminderPreferences.name);
 
     expect(find.byType(ReminderPreferencesView), findsOneWidget);
   });

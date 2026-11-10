@@ -5,13 +5,12 @@ import 'package:go_router/go_router.dart';
 import '../cubits/profile_cubit.dart';
 import '../cubits/states/profile_state.dart';
 import '../models/enums.dart';
+import '../routing/routing.dart';
 import '../widgets/layout/responsive_scaffold.dart';
 import '../widgets/profile/profile_form.dart';
 import '../widgets/profile/system_form.dart';
-import 'home/home_view.dart';
 
 class CreateProfileView extends StatefulWidget {
-  static const routeName = "/setup/create-profile";
   static const name = "create_profile";
 
   const CreateProfileView({super.key});
@@ -60,7 +59,7 @@ class _CreateProfileViewState extends State<CreateProfileView> {
             );
           }
 
-          context.go(HomeView.routeName);
+          context.go(Routes.home.name);
         },
         builder: (context, state) {
           return ProfileForm(

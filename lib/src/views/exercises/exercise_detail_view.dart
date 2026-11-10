@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../cubits/exercise_cubit.dart';
 import '../../cubits/states/exercise_state.dart';
 import '../../models/enums.dart';
+import '../../routing/routing.dart';
 import '../../utilities/sizes/data_display_sizes.dart';
 import '../../utilities/sizes/screen_size.dart';
 import '../../widgets/common/confirmation_dialog.dart';
@@ -14,12 +15,8 @@ import '../../widgets/layout/app_elevated_button.dart';
 import '../../widgets/layout/app_scaffold.dart';
 import '../../widgets/layout/responsive_scaffold.dart';
 import '../loading_view.dart';
-import 'exercise_records_view.dart';
-import 'exercise_update_view.dart';
-import 'exercises_view.dart';
 
 class ExerciseDetailView extends StatefulWidget {
-  static const routeName = "/exercises/:id";
   static const name = "exercise-detail";
 
   final int exerciseId;
@@ -57,7 +54,7 @@ class _ExerciseDetailViewState extends State<ExerciseDetailView> {
           if (context.canPop()) {
             context.pop();
           } else {
-            context.go(ExercisesView.routeName);
+            context.go(Routes.exercises.name);
           }
         },
       ),
@@ -214,7 +211,7 @@ class _ExerciseDetailViewState extends State<ExerciseDetailView> {
                         sizes: sizes,
                         onPressed: () {
                           context.push(
-                            ExerciseRecordsView.routeName.replaceFirst(
+                            Routes.exerciseRecords.name.replaceFirst(
                               ":id",
                               exercise.id.toString(),
                             ),
@@ -237,7 +234,7 @@ class _ExerciseDetailViewState extends State<ExerciseDetailView> {
                           sizes: sizes,
                           onPressed: () {
                             context.push(
-                              ExerciseUpdateView.routeName.replaceFirst(
+                              Routes.exerciseUpdate.name.replaceFirst(
                                 ":id",
                                 exercise.id.toString(),
                               ),

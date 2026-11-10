@@ -11,7 +11,6 @@ import '../../widgets/meal_plans/meal_plan_form_widget.dart';
 import '../loading_view.dart';
 
 class MealPlanUpdateView extends StatefulWidget {
-  static const routeName = '/meal-plans/:id/edit';
   static const name = 'meal_plan_update';
 
   final int mealPlanId;

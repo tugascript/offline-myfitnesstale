@@ -19,7 +19,6 @@ import '../loading_view.dart';
 import 'workout_plan_history_view.dart';
 
 class WorkoutPlanDetailView extends StatefulWidget {
-  static const String routeName = "/workout-plans/:id";
   static const String name = 'workout-plan-detail';
 
   final int workoutPlanId;

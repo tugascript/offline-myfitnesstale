@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../cubits/states/workout_state.dart';
+import '../../routing/routing.dart';
 import '../../services/dtos/workout_dto.dart';
 import '../../utilities/sizes/data_display_sizes.dart';
-import '../../views/workouts/workout_detail_view.dart';
 import '../common/not_found_list.dart';
 import 'workout_card.dart';
 
@@ -50,7 +50,7 @@ class WorkoutsList extends StatelessWidget {
           workout: workout,
           sizes: sizes,
           onTap: () => context.push(
-            WorkoutDetailView.routeName.replaceFirst(
+            Routes.workoutDetail.name.replaceFirst(
               ":id",
               workout.id.toString(),
             ),

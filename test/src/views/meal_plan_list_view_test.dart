@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:myfitnesstale/src/cubits/meal_plan_cubit.dart';
 import 'package:myfitnesstale/src/cubits/meal_plan_record_cubit.dart';
 import 'package:myfitnesstale/src/models/enums.dart';
+import 'package:myfitnesstale/src/routing/routing.dart';
 import 'package:myfitnesstale/src/services/dtos/meal_plan_dto.dart';
 import 'package:myfitnesstale/src/views/meal_plans/meal_plan_list_view.dart';
 import 'package:myfitnesstale/src/widgets/common/favourite_checkbox.dart';
@@ -88,10 +89,10 @@ void main() {
       addTearDown(recordCubit.close);
 
       final router = GoRouter(
-        initialLocation: MealPlanListView.routeName,
+        initialLocation: Routes.mealPlanList.name,
         routes: [
           GoRoute(
-            path: MealPlanListView.routeName,
+            path: Routes.mealPlanList.name,
             builder: (_, _) => const MealPlanListView(),
           ),
         ],
@@ -134,10 +135,10 @@ void main() {
     addTearDown(recordCubit.close);
 
     final router = GoRouter(
-      initialLocation: MealPlanListView.routeName,
+      initialLocation: Routes.mealPlanList.name,
       routes: [
         GoRoute(
-          path: MealPlanListView.routeName,
+          path: Routes.mealPlanList.name,
           builder: (_, _) => const MealPlanListView(),
         ),
       ],

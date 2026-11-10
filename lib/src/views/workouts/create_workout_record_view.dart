@@ -12,8 +12,6 @@ import '../../widgets/layout/responsive_scaffold.dart';
 import '../../widgets/workouts/progress/create_workout_record_editor.dart';
 
 class CreateWorkoutRecordView extends StatefulWidget {
-  static const routeName = '/workouts/:id/history/:version/records/create';
-
   final int workoutId;
   final int version;
   final int? workoutPlanRecordId;
