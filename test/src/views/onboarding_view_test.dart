@@ -160,7 +160,11 @@ final class _OnboardingProfileCubit extends ProfileCubit {
         remindersConfig: RemindersConfigDto(
           id: 1,
           workoutsOn: notificationsOn,
+          workoutsReminderTime: DateTime(2026, 1, 1, 8),
           weightRecordsOn: notificationsOn,
+          weightRecordsReminderTime: DateTime(2026, 1, 1, 8),
+          macroTrackingOn: notificationsOn,
+          macroTrackingReminderTime: DateTime(2026, 1, 1, 8),
         ),
         isLoading: false,
         isInitiated: true,

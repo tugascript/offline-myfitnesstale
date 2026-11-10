@@ -98,12 +98,12 @@ final class Profile extends Equatable implements Model {
     );
   }
 
-  factory Profile.create(
-    String name,
-    int height,
-    Gender gender,
-    DateTime birthdate,
-  ) {
+  factory Profile.create({
+    required String name,
+    required int height,
+    required Gender gender,
+    required DateTime birthdate,
+  }) {
     final int now = DateUtilities.getNowUtcUnix();
     return Profile(
       name: name,

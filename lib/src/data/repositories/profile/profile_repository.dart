@@ -31,6 +31,9 @@ import './dtos/profile_dto.dart';
 import './dtos/reminders_config_dto.dart';
 import './dtos/system_dto.dart';
 import '../core/repository.dart';
+import 'inputs/profile_input.dart';
+import 'inputs/reminders_config_input.dart';
+import 'inputs/system_input.dart';
 
 final class ProfileRepository implements Repository {
   final Dao<Profile> _profileDao;
@@ -66,13 +69,10 @@ final class ProfileRepository implements Repository {
     );
   }
 
-  Future<Result<ProfileDto, ServiceError<OperationErrorTypes>>> upsertProfile({
-    required String name,
-    required int height,
-    required Gender gender,
-    required DateTime birthday,
+  Future<Result<ProfileDto, ServiceError<OperationErrorTypes>>> upsertProfile(
+    ProfileInput input, [
     Transaction? transaction,
-  }) async {
+  ]) async {
     _logger.info("Upserting profile...");
     try {
       final Profile? existingProfile = await _profileDao.selectLatest(
@@ -82,9 +82,10 @@ final class ProfileRepository implements Repository {
       if (existingProfile != null) {
         _logger.info('Profile already exists, updating...');
         final Profile updatedProfile = existingProfile.copyWith(
-          name: name,
-          height: height,
-          gender: gender,
+          name: input.name,
+          height: input.height,
+          gender: input.gender,
+          birthdate: DateUtilities.getNumericDate(input.birthday),
           updatedAt: DateUtilities.getNowUtcUnix(),
         );
         await _profileDao.update(updatedProfile, transaction);
@@ -92,7 +93,12 @@ final class ProfileRepository implements Repository {
         return ok(ProfileDto.fromModel(updatedProfile));
       }
 
-      final Profile profile = Profile.create(name, height, gender, birthday);
+      final Profile profile = Profile.create(
+        name: input.name,
+        height: input.height,
+        gender: input.gender,
+        birthdate: input.birthday,
+      );
       final int id = await _profileDao.insert(profile, transaction);
       _logger.info('Created profile with id $id');
       return ok(ProfileDto.fromModel(profile.copyWith(id: id)));
@@ -107,11 +113,9 @@ final class ProfileRepository implements Repository {
     }
   }
 
-  Future<Result<ProfileDto, ServiceError<SingleErrorTypes>>> updateProfile({
-    String? name,
-    int? height,
-    Gender? gender,
-  }) async {
+  Future<Result<ProfileDto, ServiceError<SingleErrorTypes>>> updateProfile(
+    ProfileInput input,
+  ) async {
     _logger.info("Updating profile...");
     try {
       final Profile? existingProfile = await _profileDao.selectLatest();
@@ -127,9 +131,10 @@ final class ProfileRepository implements Repository {
       }
 
       final Profile updatedProfile = existingProfile.copyWith(
-        name: name,
-        height: height,
-        gender: gender,
+        name: input.name,
+        height: input.height,
+        gender: input.gender,
+        birthdate: DateUtilities.getNumericDate(input.birthday),
         updatedAt: DateUtilities.getNowUtcUnix(),
       );
       await _profileDao.update(updatedProfile);
@@ -146,9 +151,9 @@ final class ProfileRepository implements Repository {
     }
   }
 
-  Future<Result<ProfileDto, ServiceError<SingleErrorTypes>>> selectProfile({
+  Future<Result<ProfileDto, ServiceError<SingleErrorTypes>>> selectProfile([
     Transaction? transaction,
-  }) async {
+  ]) async {
     _logger.info("Getting latest profile...");
     try {
       final Profile? profile = await _profileDao.selectLatest(transaction);
@@ -175,13 +180,11 @@ final class ProfileRepository implements Repository {
     }
   }
 
-  Future<Result<SystemDto, ServiceError<OperationErrorTypes>>> upsertSystem({
-    required ThemeType theme,
-    required Units units,
-    required int profileId,
-    required bool notificationsOn,
+  Future<Result<SystemDto, ServiceError<OperationErrorTypes>>> upsertSystem(
+    SystemInput input,
+    int profileId, [
     Transaction? transaction,
-  }) async {
+  ]) async {
     _logger.info('Upserting system...');
     try {
       final System? existingSystem = await _systemDao.selectLatest(transaction);
@@ -189,9 +192,9 @@ final class ProfileRepository implements Repository {
       if (existingSystem != null) {
         _logger.info('System already exists, updating...');
         final System updatedSystem = existingSystem.copyWith(
-          theme: theme,
-          units: units,
-          notificationsOn: notificationsOn,
+          theme: input.theme,
+          units: input.units,
+          notificationsOn: input.notificationsOn,
           updatedAt: DateUtilities.getNowUtcUnix(),
         );
         await _systemDao.update(updatedSystem, transaction);
@@ -201,9 +204,9 @@ final class ProfileRepository implements Repository {
 
       final System system = System.create(
         profileId: profileId,
-        theme: theme,
-        units: units,
-        notificationsOn: notificationsOn,
+        theme: input.theme,
+        units: input.units,
+        notificationsOn: input.notificationsOn,
       );
       final int id = await _systemDao.insert(system, transaction);
       _logger.info('System created successfully');
@@ -219,9 +222,45 @@ final class ProfileRepository implements Repository {
     }
   }
 
-  Future<Result<SystemDto, ServiceError<SingleErrorTypes>>> selectSystem({
+  Future<Result<SystemDto, ServiceError<SingleErrorTypes>>> updateSystem(
+    SystemInput input,
+  ) async {
+    _logger.info('Updating system...');
+    try {
+      final System? existingSystem = await _systemDao.selectLatest();
+      if (existingSystem == null) {
+        _logger.info('System does not exist');
+        return err(
+          const ServiceError(
+            type: SingleErrorTypes.notFound,
+            description: 'System does not exist',
+          ),
+        );
+      }
+
+      final System updatedSystem = existingSystem.copyWith(
+        theme: input.theme,
+        units: input.units,
+        notificationsOn: input.notificationsOn,
+        updatedAt: DateUtilities.getNowUtcUnix(),
+      );
+      await _systemDao.update(updatedSystem);
+      _logger.info('System updated successfully');
+      return ok(SystemDto.fromModel(updatedSystem));
+    } catch (e) {
+      _logger.severe('Failed to update system', e);
+      return err(
+        const ServiceError(
+          type: SingleErrorTypes.operationFailure,
+          description: 'Failed to update system',
+        ),
+      );
+    }
+  }
+
+  Future<Result<SystemDto, ServiceError<SingleErrorTypes>>> selectSystem([
     Transaction? transaction,
-  }) async {
+  ]) async {
     _logger.info('Selecting latest system...');
     try {
       final System? system = await _systemDao.selectLatest(transaction);
@@ -249,12 +288,11 @@ final class ProfileRepository implements Repository {
   }
 
   Future<Result<RemindersConfigDto, ServiceError<OperationErrorTypes>>>
-  upsertRemindersConfig({
-    required int profileId,
-    required bool workoutsOn,
-    required bool weightRecordsOn,
+  upsertRemindersConfig(
+    RemindersConfigInput input,
+    int profileId, [
     Transaction? transaction,
-  }) async {
+  ]) async {
     _logger.info('Upserting reminders config...');
     try {
       final RemindersConfig? existingConfig = await _remindersDao.selectLatest(
@@ -264,8 +302,18 @@ final class ProfileRepository implements Repository {
       if (existingConfig != null) {
         _logger.info('Reminders config exists, updating...');
         final RemindersConfig updatedConfig = existingConfig.copyWith(
-          workoutsOn: workoutsOn,
-          weightRecordsOn: weightRecordsOn,
+          workoutsOn: input.workoutsOn,
+          workoutsReminderTime: DateUtilities.getDateUnix(
+            input.workoutsReminderTime,
+          ),
+          weightRecordsOn: input.weightRecordsOn,
+          weightRecordsReminderTime: DateUtilities.getDateUnix(
+            input.weightRecordsReminderTime,
+          ),
+          macroTrackingOn: input.macroTrackingOn,
+          macroTrackingReminderTime: DateUtilities.getDateUnix(
+            input.macroTrackingReminderTime,
+          ),
           updatedAt: DateUtilities.getNowUtcUnix(),
         );
         await _remindersDao.update(updatedConfig, transaction);
@@ -274,8 +322,12 @@ final class ProfileRepository implements Repository {
       }
 
       final RemindersConfig remindersConfig = RemindersConfig.create(
-        workoutsOn: workoutsOn,
-        weightRecordsOn: weightRecordsOn,
+        workoutsOn: input.workoutsOn,
+        workoutsReminderTime: input.workoutsReminderTime,
+        weightRecordsOn: input.weightRecordsOn,
+        weightRecordsReminderTime: input.weightRecordsReminderTime,
+        macroTrackingOn: input.macroTrackingOn,
+        macroTrackingReminderTime: input.macroTrackingReminderTime,
         profileId: profileId,
       );
       final int id = await _remindersDao.insert(remindersConfig, transaction);
@@ -293,7 +345,7 @@ final class ProfileRepository implements Repository {
   }
 
   Future<Result<RemindersConfigDto, ServiceError<SingleErrorTypes>>>
-  selectRemindersConfig({Transaction? transaction}) async {
+  selectRemindersConfig([Transaction? transaction]) async {
     _logger.info('Selecting reminders config...');
     try {
       final RemindersConfig? remindersConfig = await _remindersDao.selectLatest(
@@ -323,7 +375,7 @@ final class ProfileRepository implements Repository {
   }
 
   Future<Result<RemindersConfigDto, ServiceError<SingleErrorTypes>>>
-  updateRemindersConfig({bool? workoutsOn, bool? weightRecordsOn}) async {
+  updateRemindersConfig(RemindersConfigInput input) async {
     _logger.info('Updating reminders config...');
     try {
       final RemindersConfig? remindersConfig = await _remindersDao
@@ -339,8 +391,18 @@ final class ProfileRepository implements Repository {
       }
 
       final RemindersConfig updatedConfig = remindersConfig.copyWith(
-        workoutsOn: workoutsOn,
-        weightRecordsOn: weightRecordsOn,
+        workoutsOn: input.workoutsOn,
+        workoutsReminderTime: DateUtilities.getDateUnix(
+          input.workoutsReminderTime,
+        ),
+        weightRecordsOn: input.weightRecordsOn,
+        weightRecordsReminderTime: DateUtilities.getDateUnix(
+          input.weightRecordsReminderTime,
+        ),
+        macroTrackingOn: input.macroTrackingOn,
+        macroTrackingReminderTime: DateUtilities.getDateUnix(
+          input.macroTrackingReminderTime,
+        ),
         updatedAt: DateUtilities.getNowUtcUnix(),
       );
       await _remindersDao.update(updatedConfig);

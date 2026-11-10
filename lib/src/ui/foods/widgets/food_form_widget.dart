@@ -19,6 +19,7 @@ import 'package:flutter/material.dart';
 
 import '../../../data/repositories/foods/dtos/food_dto.dart';
 import '../../../data/repositories/foods/inputs/food_input.dart';
+import '../../../data/repositories/foods/inputs/food_portion_input.dart';
 import '../../../data/utils/display_names.dart';
 import '../../../data/utils/enums.dart';
 import '../../../utils/nullable.dart';

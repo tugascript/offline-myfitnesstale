@@ -135,10 +135,14 @@ class _ProfileCubit extends ProfileCubit {
           initialSetup: SetUpStatus.completed,
           notificationsOn: false,
         ),
-        remindersConfig: const RemindersConfigDto(
+        remindersConfig: RemindersConfigDto(
           id: 1,
           workoutsOn: false,
+          workoutsReminderTime: DateTime(2026, 1, 1, 8),
           weightRecordsOn: false,
+          weightRecordsReminderTime: DateTime(2026, 1, 1, 8),
+          macroTrackingOn: false,
+          macroTrackingReminderTime: DateTime(2026, 1, 1, 8),
         ),
         isLoading: false,
         isInitiated: true,
@@ -150,6 +154,7 @@ class _ProfileCubit extends ProfileCubit {
   Future<void> updateRemindersConfig({
     bool? workoutsOn,
     bool? weightRecordsOn,
+    bool? macroTrackingOn,
   }) async {}
 }
 

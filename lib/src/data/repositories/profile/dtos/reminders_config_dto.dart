@@ -18,6 +18,7 @@
 import 'package:equatable/equatable.dart';
 
 import '../../../models/sqlite/reminders_config_model.dart';
+import '../../../utils/dates.dart';
 import '../../core/dtos/dto.dart';
 
 final class RemindersConfigDto extends Equatable
@@ -25,19 +26,37 @@ final class RemindersConfigDto extends Equatable
   @override
   final int id;
   final bool workoutsOn;
+  final DateTime workoutsReminderTime;
   final bool weightRecordsOn;
+  final DateTime weightRecordsReminderTime;
+  final bool macroTrackingOn;
+  final DateTime macroTrackingReminderTime;
 
   const RemindersConfigDto({
     required this.id,
     required this.workoutsOn,
+    required this.workoutsReminderTime,
     required this.weightRecordsOn,
+    required this.weightRecordsReminderTime,
+    required this.macroTrackingOn,
+    required this.macroTrackingReminderTime,
   });
 
   factory RemindersConfigDto.fromModel(RemindersConfig model) {
     return RemindersConfigDto(
       id: model.id!,
       workoutsOn: model.workoutsOn,
+      workoutsReminderTime: DateUtilities.getDateFromUnix(
+        model.workoutsReminderTime,
+      ),
       weightRecordsOn: model.weightRecordsOn,
+      weightRecordsReminderTime: DateUtilities.getDateFromUnix(
+        model.weightRecordsReminderTime,
+      ),
+      macroTrackingOn: model.macroTrackingOn,
+      macroTrackingReminderTime: DateUtilities.getDateFromUnix(
+        model.macroTrackingReminderTime,
+      ),
     );
   }
 
@@ -45,15 +64,33 @@ final class RemindersConfigDto extends Equatable
   RemindersConfigDto copyWith({
     int? id,
     bool? workoutsOn,
+    DateTime? workoutsReminderTime,
     bool? weightRecordsOn,
+    DateTime? weightRecordsReminderTime,
+    bool? macroTrackingOn,
+    DateTime? macroTrackingReminderTime,
   }) {
     return RemindersConfigDto(
       id: id ?? this.id,
       workoutsOn: workoutsOn ?? this.workoutsOn,
+      workoutsReminderTime: workoutsReminderTime ?? this.workoutsReminderTime,
       weightRecordsOn: weightRecordsOn ?? this.weightRecordsOn,
+      weightRecordsReminderTime:
+          weightRecordsReminderTime ?? this.weightRecordsReminderTime,
+      macroTrackingOn: macroTrackingOn ?? this.macroTrackingOn,
+      macroTrackingReminderTime:
+          macroTrackingReminderTime ?? this.macroTrackingReminderTime,
     );
   }
 
   @override
-  List<Object?> get props => [id, workoutsOn, weightRecordsOn];
+  List<Object?> get props => [
+    id,
+    workoutsOn,
+    workoutsReminderTime,
+    weightRecordsOn,
+    weightRecordsReminderTime,
+    macroTrackingOn,
+    macroTrackingReminderTime,
+  ];
 }

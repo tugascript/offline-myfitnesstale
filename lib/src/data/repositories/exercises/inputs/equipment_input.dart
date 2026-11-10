@@ -15,10 +15,14 @@
 // You should have received a copy of the GNU General Public License
 // along with My Fitness Tale.  If not, see <https://www.gnu.org/licenses/>.
 
-import '../../../../utils/nullable.dart';
-import '../../../utils/json_data.dart';
+import 'package:equatable/equatable.dart';
 
-final class EquipmentInput {
+import '../../../../utils/nullable.dart';
+import '../../../models/sqlite/equipment_model.dart';
+import '../../../utils/json_data.dart';
+import '../../core/inputs/input.dart';
+
+final class EquipmentInput extends Equatable implements ModelInput<Equipment> {
   final String name;
   final Nullable<PictureData> picture;
   final bool isFavorite;
@@ -28,4 +32,7 @@ final class EquipmentInput {
     this.picture = const Nullable<PictureData>(null),
     this.isFavorite = false,
   });
+
+  @override
+  List<Object?> get props => [name, picture, isFavorite];
 }

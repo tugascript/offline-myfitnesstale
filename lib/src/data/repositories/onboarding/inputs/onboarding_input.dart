@@ -1,8 +1,9 @@
 import 'package:equatable/equatable.dart';
 
 import '../../../utils/enums.dart';
+import '../../core/inputs/input.dart';
 
-final class OnboardingInput extends Equatable {
+final class OnboardingInput extends Equatable implements Input {
   final Units units;
   final ThemeType theme;
   final String name;

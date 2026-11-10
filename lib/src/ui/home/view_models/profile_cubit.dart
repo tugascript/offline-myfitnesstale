@@ -22,6 +22,9 @@ import '../../../data/utils/enums.dart';
 import '../../../utils/errors.dart';
 import '../../../data/repositories/profile/dtos/system_dto.dart';
 import '../../../data/repositories/onboarding/onboarding_repository.dart';
+import '../../../data/repositories/profile/inputs/profile_input.dart';
+import '../../../data/repositories/profile/inputs/reminders_config_input.dart';
+import '../../../data/repositories/profile/inputs/system_input.dart';
 import '../../../data/repositories/profile/profile_repository.dart';
 import '../../core/view_models/states/common_state.dart';
 import './states/profile_state.dart';
@@ -215,14 +218,28 @@ class ProfileCubit extends Cubit<ProfileState> {
     required int profileId,
     required bool workoutsOn,
     required bool weightRecordsOn,
+    bool? macroTrackingOn,
   }) async {
     _logger.info("Upserting reminders config for profile $profileId");
     emit(state.copyWith(isRemindersLoading: true));
 
+    final existing = state.remindersConfig;
     final result = await _profileService.upsertRemindersConfig(
-      profileId: profileId,
-      workoutsOn: workoutsOn,
-      weightRecordsOn: weightRecordsOn,
+      existing == null
+          ? RemindersConfigInput.withDefaultTimes(
+              workoutsOn: workoutsOn,
+              weightRecordsOn: weightRecordsOn,
+              macroTrackingOn: macroTrackingOn ?? workoutsOn,
+            )
+          : RemindersConfigInput(
+              workoutsOn: workoutsOn,
+              workoutsReminderTime: existing.workoutsReminderTime,
+              weightRecordsOn: weightRecordsOn,
+              weightRecordsReminderTime: existing.weightRecordsReminderTime,
+              macroTrackingOn: macroTrackingOn ?? existing.macroTrackingOn,
+              macroTrackingReminderTime: existing.macroTrackingReminderTime,
+            ),
+      profileId,
     );
     if (result.isErr()) {
       final error = result.error;
@@ -255,13 +272,26 @@ class ProfileCubit extends Cubit<ProfileState> {
   Future<void> updateRemindersConfig({
     bool? workoutsOn,
     bool? weightRecordsOn,
+    bool? macroTrackingOn,
   }) async {
     _logger.info("Updating reminders config");
+    final existing = state.remindersConfig;
+    if (existing == null) {
+      _logger.info("No reminders config loaded, skipping");
+      return;
+    }
+
     emit(state.copyWith(isRemindersLoading: true));
 
     final result = await _profileService.updateRemindersConfig(
-      workoutsOn: workoutsOn,
-      weightRecordsOn: weightRecordsOn,
+      RemindersConfigInput(
+        workoutsOn: workoutsOn ?? existing.workoutsOn,
+        workoutsReminderTime: existing.workoutsReminderTime,
+        weightRecordsOn: weightRecordsOn ?? existing.weightRecordsOn,
+        weightRecordsReminderTime: existing.weightRecordsReminderTime,
+        macroTrackingOn: macroTrackingOn ?? existing.macroTrackingOn,
+        macroTrackingReminderTime: existing.macroTrackingReminderTime,
+      ),
     );
     if (result.isErr()) {
       final error = result.error;
@@ -435,18 +465,23 @@ class ProfileCubit extends Cubit<ProfileState> {
     String? name,
     int? height,
     Gender? gender,
+    DateTime? birthday,
   }) async {
     _logger.info("Updating profile...");
-    if (state.profile == null) {
+    final existing = state.profile;
+    if (existing == null) {
       _logger.info("No profile loaded, skipping");
       return;
     }
 
     emit(state.copyWith(isLoading: true));
     final result = await _profileService.updateProfile(
-      name: name,
-      height: height,
-      gender: gender,
+      ProfileInput(
+        name: name ?? existing.name,
+        height: height ?? existing.height,
+        gender: gender ?? existing.gender,
+        birthday: birthday ?? existing.birthdate,
+      ),
     );
 
     if (result.isErr()) {
@@ -479,15 +514,19 @@ class ProfileCubit extends Cubit<ProfileState> {
 
   Future<void> updateSystem({Units? units, ThemeType? theme}) async {
     _logger.info("Updating system...");
-    if (state.system == null) {
+    final existing = state.system;
+    if (existing == null) {
       _logger.info("No system loaded, skipping");
       return;
     }
 
     emit(state.copyWith(isLoading: true));
-    final result = await _profileService.upgradeSystem(
-      units: units,
-      theme: theme,
+    final result = await _profileService.updateSystem(
+      SystemInput(
+        theme: theme ?? existing.theme,
+        units: units ?? existing.units,
+        notificationsOn: existing.notificationsOn,
+      ),
     );
 
     if (result.isErr()) {
@@ -550,10 +589,12 @@ class ProfileCubit extends Cubit<ProfileState> {
 
     emit(state.copyWith(isLoading: true));
     final profileResult = await _profileService.upsertProfile(
-      name: name,
-      height: height,
-      gender: gender,
-      birthday: birthday,
+      ProfileInput(
+        name: name,
+        height: height,
+        gender: gender,
+        birthday: birthday,
+      ),
     );
 
     if (profileResult.isErr()) {
@@ -597,10 +638,12 @@ class ProfileCubit extends Cubit<ProfileState> {
 
     emit(state.copyWith(isLoading: true));
     final systemResult = await _profileService.upsertSystem(
-      profileId: state.profile!.id,
-      theme: theme,
-      units: units,
-      notificationsOn: notificationsOn,
+      SystemInput(
+        theme: theme,
+        units: units,
+        notificationsOn: notificationsOn,
+      ),
+      state.profile!.id,
     );
 
     if (systemResult.isErr()) {

@@ -22,7 +22,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:myfitnesstale/src/ui/macros/view_models/macro_tracking_cubit.dart';
 import 'package:myfitnesstale/src/data/utils/enums.dart';
 import 'package:myfitnesstale/src/data/repositories/macros/dtos/macro_tracking_dto.dart';
-import 'package:myfitnesstale/src/data/repositories/macros/inputs/macro_goal_input.dart';
+import 'package:myfitnesstale/src/data/repositories/macros/inputs/week_macro_goal_input.dart';
 import 'package:myfitnesstale/src/ui/core/sizes/data_display_sizes.dart';
 import 'package:myfitnesstale/src/ui/core/sizes/screen_size.dart';
 import 'package:myfitnesstale/src/ui/macros/widgets/goals/macro_goal_form_modal.dart';
@@ -31,17 +31,17 @@ import 'package:myfitnesstale/src/data/repositories/macros/macro_tracking_reposi
 class _Macros extends MacroTrackingCubit {
   _Macros() : super(macroTrackingRepository: MacroTrackingRepository.create());
 
-  MacroGoalInput? submitted;
+  WeekMacroGoalInput? submitted;
   int? updatedId;
 
   @override
-  Future<bool> createMacroGoal(MacroGoalInput input) async {
+  Future<bool> createMacroGoal(WeekMacroGoalInput input) async {
     submitted = input;
     return true;
   }
 
   @override
-  Future<bool> updateMacroGoal(int id, MacroGoalInput input) async {
+  Future<bool> updateMacroGoal(int id, WeekMacroGoalInput input) async {
     submitted = input;
     updatedId = id;
     return true;

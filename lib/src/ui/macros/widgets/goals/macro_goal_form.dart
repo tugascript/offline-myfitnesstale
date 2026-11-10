@@ -17,10 +17,11 @@
 
 import 'package:flutter/material.dart';
 
+import '../../../../data/repositories/macros/inputs/day_macro_goal_input.dart';
 import '../../../../utils/nullable.dart';
 import '../../../../data/utils/enums.dart';
 import '../../../../data/repositories/macros/dtos/macro_tracking_dto.dart';
-import '../../../../data/repositories/macros/inputs/macro_goal_input.dart';
+import '../../../../data/repositories/macros/inputs/week_macro_goal_input.dart';
 import '../../../core/utils/converters.dart';
 import '../../../core/sizes/data_display_sizes.dart';
 import '../../../core/widgets/icons_switch.dart';
@@ -36,7 +37,7 @@ class MacroGoalForm extends StatefulWidget {
   final bool isLoading;
   final String? submitLabel;
   final IconData? submitIcon;
-  final void Function(MacroGoalInput input) onSubmit;
+  final void Function(WeekMacroGoalInput input) onSubmit;
 
   const MacroGoalForm({
     super.key,
@@ -431,7 +432,7 @@ class _MacroGoalFormState extends State<MacroGoalForm> {
       final preservedSodium =
           existingDay?.targetSodium ?? widget.existingGoal?.targetSodium;
 
-      final input = MacroGoalInput(
+      final input = WeekMacroGoalInput(
         name: name,
         targetCalories: calories,
         targetProtein: protein,
@@ -549,7 +550,7 @@ class _MacroGoalFormState extends State<MacroGoalForm> {
       );
     }
 
-    final input = MacroGoalInput(
+    final input = WeekMacroGoalInput(
       name: name,
       targetCalories: (totalCalories / 7).round(),
       targetProtein: (totalProtein / 7).round(),

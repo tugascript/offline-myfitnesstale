@@ -73,18 +73,19 @@ class MyApp extends StatelessWidget {
     final macroTrackingRepository = MacroTrackingRepository.create();
     final mealPlanRepository = MealPlanRepository.create();
     final mealPlanRecordRepository = MealPlanRecordRepository.create();
+    final onboardingRepository = OnboardingRepository.create(
+      profileService: profileRepository,
+      exerciseService: exerciseRepository,
+      workoutService: workoutRepository,
+      workoutPlanService: workoutPlanRepository,
+    );
 
     return MultiBlocProvider(
       providers: [
         BlocProvider<ProfileCubit>(
           create: (BuildContext context) => ProfileCubit(
             profileRepository: profileRepository,
-            onboardingService: OnboardingRepository.create(
-              profileService: profileRepository,
-              exerciseService: exerciseRepository,
-              workoutService: workoutRepository,
-              workoutPlanService: workoutPlanRepository,
-            ),
+            onboardingService: onboardingRepository,
           )..loadInitialData(),
           lazy: false,
         ),

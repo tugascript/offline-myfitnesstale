@@ -39,6 +39,9 @@ import '../exercises/dtos/equipment_dto.dart';
 import '../exercises/dtos/exercise_dto.dart';
 import '../exercises/exercise_repository.dart';
 import '../exercises/inputs/exercise_input.dart';
+import '../profile/inputs/profile_input.dart';
+import '../profile/inputs/reminders_config_input.dart';
+import '../profile/inputs/system_input.dart';
 import '../profile/profile_repository.dart';
 import '../workout_plans/workout_plan_repository.dart';
 import '../workouts/dtos/workout_dto.dart';
@@ -183,30 +186,37 @@ final class OnboardingRepository {
     await _stageCompleted(OnboardingStage.exercises);
 
     final profileResult = await _profileService.upsertProfile(
-      name: input.name,
-      height: input.height,
-      gender: input.gender,
-      birthday: input.birthday,
-      transaction: transaction,
+      ProfileInput(
+        name: input.name,
+        height: input.height,
+        gender: input.gender,
+        birthday: input.birthday,
+      ),
+      transaction,
     );
     final profile = _require(profileResult, OnboardingStage.profile);
     await _stageCompleted(OnboardingStage.profile);
 
     final systemResult = await _profileService.upsertSystem(
-      theme: input.theme,
-      units: input.units,
-      profileId: profile.id,
-      notificationsOn: input.notificationsOn,
-      transaction: transaction,
+      SystemInput(
+        theme: input.theme,
+        units: input.units,
+        notificationsOn: input.notificationsOn,
+      ),
+      profile.id,
+      transaction,
     );
     _require(systemResult, OnboardingStage.system);
     await _stageCompleted(OnboardingStage.system);
 
     final remindersResult = await _profileService.upsertRemindersConfig(
-      profileId: profile.id,
-      workoutsOn: input.notificationsOn,
-      weightRecordsOn: input.notificationsOn,
-      transaction: transaction,
+      RemindersConfigInput.withDefaultTimes(
+        workoutsOn: input.notificationsOn,
+        weightRecordsOn: input.notificationsOn,
+        macroTrackingOn: input.notificationsOn,
+      ),
+      profile.id,
+      transaction,
     );
     final reminders = _require(remindersResult, OnboardingStage.reminders);
     await _stageCompleted(OnboardingStage.reminders);
@@ -333,9 +343,7 @@ final class OnboardingRepository {
   Future<OnboardingDto?> _getCompletedOnboarding(
     Transaction transaction,
   ) async {
-    final systemResult = await _profileService.selectSystem(
-      transaction: transaction,
-    );
+    final systemResult = await _profileService.selectSystem(transaction);
     if (systemResult.isErr()) {
       if (systemResult.error.type == SingleErrorTypes.notFound) {
         return null;
@@ -350,11 +358,9 @@ final class OnboardingRepository {
       return null;
     }
 
-    final profileResult = await _profileService.selectProfile(
-      transaction: transaction,
-    );
+    final profileResult = await _profileService.selectProfile(transaction);
     final remindersResult = await _profileService.selectRemindersConfig(
-      transaction: transaction,
+      transaction,
     );
     if (profileResult.isErr() || remindersResult.isErr()) {
       throw const _OnboardingFailure(
@@ -372,13 +378,9 @@ final class OnboardingRepository {
   }
 
   Future<void> _rejectIncompleteState(Transaction transaction) async {
-    final profile = await _profileService.selectProfile(
-      transaction: transaction,
-    );
-    final system = await _profileService.selectSystem(transaction: transaction);
-    final reminders = await _profileService.selectRemindersConfig(
-      transaction: transaction,
-    );
+    final profile = await _profileService.selectProfile(transaction);
+    final system = await _profileService.selectSystem(transaction);
+    final reminders = await _profileService.selectRemindersConfig(transaction);
 
     final hasSeedData = await _containsAnyRows(transaction, const [
       Equipment.table,
