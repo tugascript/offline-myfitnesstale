@@ -4,8 +4,10 @@ import '../../../../utils/nullable.dart';
 import '../../../utils/enums.dart';
 import '../../../models/strength_goal_model.dart';
 import '../../../utils/dates.dart';
+import '../../core/dtos/dto.dart';
 
-class StrengthGoalDto extends Equatable {
+class StrengthGoalDto extends Equatable implements Dto<StrengthGoal> {
+  @override
   final int id;
   final String name;
   final int targetReps;
@@ -44,6 +46,7 @@ class StrengthGoalDto extends Equatable {
     );
   }
 
+  @override
   StrengthGoalDto copyWith({
     int? id,
     String? name,

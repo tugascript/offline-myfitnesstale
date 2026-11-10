@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import '../../../lib/src/ui/workouts/view_models/active_workout_cubit.dart';
-import '../../../lib/src/ui/home/view_models/profile_cubit.dart';
-import '../../../lib/src/ui/workouts/screens/active_workout_view.dart';
-import '../../../lib/src/ui/workouts/widgets/details/complete_modal.dart';
+import 'package:myfitnesstale/src/ui/workouts/view_models/active_workout_cubit.dart';
+import 'package:myfitnesstale/src/ui/home/view_models/profile_cubit.dart';
+import 'package:myfitnesstale/src/ui/workouts/screens/active_workout_view.dart';
+import 'package:myfitnesstale/src/ui/workouts/widgets/details/complete_modal.dart';
 
 class _ActiveWorkoutCubit extends ActiveWorkoutCubit {
   int completions = 0;

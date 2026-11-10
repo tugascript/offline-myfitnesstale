@@ -1,11 +1,11 @@
 import 'package:flutter_test/flutter_test.dart';
 
-import '../../../lib/src/data/utils/enums.dart';
-import '../../../lib/src/data/repositories/foods/food_repository.dart';
-import '../../../lib/src/data/repositories/foods/inputs/food_input.dart';
-import '../../../lib/src/data/repositories/recipes/inputs/recipe_input.dart';
-import '../../../lib/src/data/repositories/macros/macro_tracking_repository.dart';
-import '../../../lib/src/data/repositories/recipes/recipe_repository.dart';
+import 'package:myfitnesstale/src/data/utils/enums.dart';
+import 'package:myfitnesstale/src/data/repositories/foods/food_repository.dart';
+import 'package:myfitnesstale/src/data/repositories/foods/inputs/food_input.dart';
+import 'package:myfitnesstale/src/data/repositories/recipes/inputs/recipe_input.dart';
+import 'package:myfitnesstale/src/data/repositories/macros/macro_tracking_repository.dart';
+import 'package:myfitnesstale/src/data/repositories/recipes/recipe_repository.dart';
 
 import '../../support/test_database.dart';
 

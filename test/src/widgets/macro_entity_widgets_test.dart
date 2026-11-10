@@ -1,21 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import '../../../lib/src/data/utils/enums.dart';
-import '../../../lib/src/data/utils/json_data.dart';
-import '../../../lib/src/data/repositories/foods/inputs/food_input.dart';
-import '../../../lib/src/ui/foods/widgets/food_form_widget.dart';
-import '../../../lib/src/ui/macros/view_models/states/macro_tracking_state.dart';
-import '../../../lib/src/data/repositories/macros/dtos/macro_tracking_dto.dart';
-import '../../../lib/src/ui/macros/widgets/goals/macro_goals_content_widget.dart';
-import '../../../lib/src/data/repositories/foods/dtos/food_dto.dart';
-import '../../../lib/src/data/repositories/recipes/dtos/recipe_dto.dart';
-import '../../../lib/src/data/repositories/meal_plans/dtos/meal_plan_dto.dart';
-import '../../../lib/src/ui/core/sizes/data_display_sizes.dart';
-import '../../../lib/src/ui/core/sizes/screen_size.dart';
-import '../../../lib/src/ui/foods/widgets/food_details_widget.dart';
-import '../../../lib/src/ui/recipes/widgets/recipe_details_widget.dart';
-import '../../../lib/src/ui/meal_plans/widgets/meal_plan_schedule_widget.dart';
+import 'package:myfitnesstale/src/data/utils/enums.dart';
+import 'package:myfitnesstale/src/data/utils/json_data.dart';
+import 'package:myfitnesstale/src/data/repositories/foods/inputs/food_input.dart';
+import 'package:myfitnesstale/src/ui/foods/widgets/food_form_widget.dart';
+import 'package:myfitnesstale/src/ui/macros/view_models/states/macro_tracking_state.dart';
+import 'package:myfitnesstale/src/data/repositories/macros/dtos/macro_tracking_dto.dart';
+import 'package:myfitnesstale/src/ui/macros/widgets/goals/macro_goals_content_widget.dart';
+import 'package:myfitnesstale/src/data/repositories/foods/dtos/food_dto.dart';
+import 'package:myfitnesstale/src/data/repositories/recipes/dtos/recipe_dto.dart';
+import 'package:myfitnesstale/src/data/repositories/meal_plans/dtos/meal_plan_dto.dart';
+import 'package:myfitnesstale/src/ui/core/sizes/data_display_sizes.dart';
+import 'package:myfitnesstale/src/ui/core/sizes/screen_size.dart';
+import 'package:myfitnesstale/src/ui/foods/widgets/food_details_widget.dart';
+import 'package:myfitnesstale/src/ui/recipes/widgets/recipe_details_widget.dart';
+import 'package:myfitnesstale/src/ui/meal_plans/widgets/meal_plan_schedule_widget.dart';
 
 void main() {
   final sizes = DataDisplaySizes.getDataDisplaySizes(ScreenSize.xs);

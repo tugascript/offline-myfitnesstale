@@ -10,8 +10,10 @@ import '../../../models/meal_log_model.dart';
 
 import '../../../models/week_macro_goal_model.dart';
 import '../../../utils/dates.dart';
+import '../../core/dtos/dto.dart';
 
-class DayMacroGoalDto extends Equatable {
+class DayMacroGoalDto extends Equatable implements Dto<DayMacroGoal> {
+  @override
   final int id;
   final int weekMacroGoalId;
   final List<DayOfWeek> days;
@@ -60,6 +62,7 @@ class DayMacroGoalDto extends Equatable {
     );
   }
 
+  @override
   DayMacroGoalDto copyWith({
     int? id,
     int? weekMacroGoalId,
@@ -114,7 +117,8 @@ class DayMacroGoalDto extends Equatable {
   ];
 }
 
-class MacroGoalDto extends Equatable {
+class MacroGoalDto extends Equatable implements Dto<WeekMacroGoal> {
+  @override
   final int id;
   final String name;
   final int targetCalories;
@@ -241,6 +245,7 @@ class MacroGoalDto extends Equatable {
     );
   }
 
+  @override
   MacroGoalDto copyWith({
     int? id,
     String? name,
@@ -324,7 +329,8 @@ class MacroGoalDto extends Equatable {
 
 typedef WeekMacroGoalDto = MacroGoalDto;
 
-class MealLogItemDto extends Equatable {
+class MealLogItemDto extends Equatable implements Dto<MealLogItem> {
+  @override
   final int id;
   final int mealLogId;
   final int? foodId;
@@ -371,6 +377,39 @@ class MealLogItemDto extends Equatable {
   }
 
   @override
+  MealLogItemDto copyWith({
+    int? id,
+    int? mealLogId,
+    Nullable<int>? foodId,
+    Nullable<int>? portionId,
+    int? amount,
+    String? loggedFoodName,
+    int? loggedCalories,
+    int? loggedProtein,
+    int? loggedCarbs,
+    int? loggedFat,
+    Nullable<Micronutrients>? loggedMicros,
+    Nullable<String>? portionName,
+  }) {
+    return MealLogItemDto(
+      id: id ?? this.id,
+      mealLogId: mealLogId ?? this.mealLogId,
+      foodId: foodId != null ? foodId.value : this.foodId,
+      portionId: portionId != null ? portionId.value : this.portionId,
+      amount: amount ?? this.amount,
+      loggedFoodName: loggedFoodName ?? this.loggedFoodName,
+      loggedCalories: loggedCalories ?? this.loggedCalories,
+      loggedProtein: loggedProtein ?? this.loggedProtein,
+      loggedCarbs: loggedCarbs ?? this.loggedCarbs,
+      loggedFat: loggedFat ?? this.loggedFat,
+      loggedMicros: loggedMicros != null
+          ? loggedMicros.value
+          : this.loggedMicros,
+      portionName: portionName != null ? portionName.value : this.portionName,
+    );
+  }
+
+  @override
   List<Object?> get props => [
     id,
     mealLogId,
@@ -387,7 +426,8 @@ class MealLogItemDto extends Equatable {
   ];
 }
 
-class MealLogDto extends Equatable {
+class MealLogDto extends Equatable implements Dto<MealLog> {
+  @override
   final int id;
   final int dailyLogId;
   final MealType mealType;
@@ -434,6 +474,35 @@ class MealLogDto extends Equatable {
   }
 
   @override
+  MealLogDto copyWith({
+    int? id,
+    int? dailyLogId,
+    MealType? mealType,
+    Nullable<int>? recipeId,
+    DateTime? logTime,
+    int? totalCalories,
+    int? totalProtein,
+    int? totalCarbs,
+    int? totalFat,
+    Nullable<int>? totalFiber,
+    List<MealLogItemDto>? items,
+  }) {
+    return MealLogDto(
+      id: id ?? this.id,
+      dailyLogId: dailyLogId ?? this.dailyLogId,
+      mealType: mealType ?? this.mealType,
+      recipeId: recipeId != null ? recipeId.value : this.recipeId,
+      logTime: logTime ?? this.logTime,
+      totalCalories: totalCalories ?? this.totalCalories,
+      totalProtein: totalProtein ?? this.totalProtein,
+      totalCarbs: totalCarbs ?? this.totalCarbs,
+      totalFat: totalFat ?? this.totalFat,
+      totalFiber: totalFiber != null ? totalFiber.value : this.totalFiber,
+      items: items ?? this.items,
+    );
+  }
+
+  @override
   List<Object?> get props => [
     id,
     dailyLogId,
@@ -449,7 +518,8 @@ class MealLogDto extends Equatable {
   ];
 }
 
-class DailyNutritionLogDto extends Equatable {
+class DailyNutritionLogDto extends Equatable implements Dto<DailyNutritionLog> {
+  @override
   final int id;
   final int date; // YYYYMMDD
   final int waterIntakeMl;
@@ -503,6 +573,33 @@ class DailyNutritionLogDto extends Equatable {
       totalCarbs: carbs,
       totalFat: fat,
       totalFiber: fiber,
+    );
+  }
+
+  @override
+  DailyNutritionLogDto copyWith({
+    int? id,
+    int? date,
+    int? waterIntakeMl,
+    Nullable<String>? notes,
+    List<MealLogDto>? meals,
+    int? totalCalories,
+    int? totalProtein,
+    int? totalCarbs,
+    int? totalFat,
+    int? totalFiber,
+  }) {
+    return DailyNutritionLogDto(
+      id: id ?? this.id,
+      date: date ?? this.date,
+      waterIntakeMl: waterIntakeMl ?? this.waterIntakeMl,
+      notes: notes != null ? notes.value : this.notes,
+      meals: meals ?? this.meals,
+      totalCalories: totalCalories ?? this.totalCalories,
+      totalProtein: totalProtein ?? this.totalProtein,
+      totalCarbs: totalCarbs ?? this.totalCarbs,
+      totalFat: totalFat ?? this.totalFat,
+      totalFiber: totalFiber ?? this.totalFiber,
     );
   }
 

@@ -1,13 +1,17 @@
 import 'package:equatable/equatable.dart';
 
+import '../../../../utils/nullable.dart';
+
 import '../../../utils/enums.dart';
 import '../../../models/meal_plan_day_model.dart';
 import '../../../models/meal_plan_meal_item_model.dart';
 import '../../../models/meal_plan_meal_model.dart';
 import '../../../models/meal_plan_model.dart';
 import '../../../models/meal_plan_week_model.dart';
+import '../../core/dtos/dto.dart';
 
-class MealPlanMealItemDto extends Equatable {
+class MealPlanMealItemDto extends Equatable implements Dto<MealPlanMealItem> {
+  @override
   final int id;
   final int mealPlanMealId;
   final int foodId;
@@ -58,6 +62,37 @@ class MealPlanMealItemDto extends Equatable {
   }
 
   @override
+  MealPlanMealItemDto copyWith({
+    int? id,
+    int? mealPlanMealId,
+    int? foodId,
+    Nullable<int>? portionId,
+    int? amount,
+    int? totalCalories,
+    int? totalProtein,
+    int? totalCarbs,
+    int? totalFat,
+    Nullable<int>? totalFiber,
+    Nullable<String>? foodName,
+    Nullable<String>? portionName,
+  }) {
+    return MealPlanMealItemDto(
+      id: id ?? this.id,
+      mealPlanMealId: mealPlanMealId ?? this.mealPlanMealId,
+      foodId: foodId ?? this.foodId,
+      portionId: portionId != null ? portionId.value : this.portionId,
+      amount: amount ?? this.amount,
+      totalCalories: totalCalories ?? this.totalCalories,
+      totalProtein: totalProtein ?? this.totalProtein,
+      totalCarbs: totalCarbs ?? this.totalCarbs,
+      totalFat: totalFat ?? this.totalFat,
+      totalFiber: totalFiber != null ? totalFiber.value : this.totalFiber,
+      foodName: foodName != null ? foodName.value : this.foodName,
+      portionName: portionName != null ? portionName.value : this.portionName,
+    );
+  }
+
+  @override
   List<Object?> get props => [
     id,
     mealPlanMealId,
@@ -74,7 +109,8 @@ class MealPlanMealItemDto extends Equatable {
   ];
 }
 
-class MealPlanMealDto extends Equatable {
+class MealPlanMealDto extends Equatable implements Dto<MealPlanMeal> {
+  @override
   final int id;
   final int position;
   final String? timeOfDay;
@@ -143,6 +179,49 @@ class MealPlanMealDto extends Equatable {
   }
 
   @override
+  MealPlanMealDto copyWith({
+    int? id,
+    int? position,
+    Nullable<String>? timeOfDay,
+    int? mealPlanId,
+    int? mealPlanWeekId,
+    int? mealPlanDayId,
+    int? planVersion,
+    MealType? mealType,
+    int? totalCalories,
+    int? totalProtein,
+    int? totalCarbs,
+    int? totalFat,
+    Nullable<int>? totalFiber,
+    String? name,
+    Nullable<int>? recipeId,
+    Nullable<String>? recipeName,
+    CreatedBy? createdBy,
+    List<MealPlanMealItemDto>? items,
+  }) {
+    return MealPlanMealDto(
+      id: id ?? this.id,
+      position: position ?? this.position,
+      timeOfDay: timeOfDay != null ? timeOfDay.value : this.timeOfDay,
+      mealPlanId: mealPlanId ?? this.mealPlanId,
+      mealPlanWeekId: mealPlanWeekId ?? this.mealPlanWeekId,
+      mealPlanDayId: mealPlanDayId ?? this.mealPlanDayId,
+      planVersion: planVersion ?? this.planVersion,
+      mealType: mealType ?? this.mealType,
+      totalCalories: totalCalories ?? this.totalCalories,
+      totalProtein: totalProtein ?? this.totalProtein,
+      totalCarbs: totalCarbs ?? this.totalCarbs,
+      totalFat: totalFat ?? this.totalFat,
+      totalFiber: totalFiber != null ? totalFiber.value : this.totalFiber,
+      name: name ?? this.name,
+      recipeId: recipeId != null ? recipeId.value : this.recipeId,
+      recipeName: recipeName != null ? recipeName.value : this.recipeName,
+      createdBy: createdBy ?? this.createdBy,
+      items: items ?? this.items,
+    );
+  }
+
+  @override
   List<Object?> get props => [
     id,
     position,
@@ -165,7 +244,8 @@ class MealPlanMealDto extends Equatable {
   ];
 }
 
-class MealPlanDayDto extends Equatable {
+class MealPlanDayDto extends Equatable implements Dto<MealPlanDay> {
+  @override
   final int id;
   final int mealPlanId;
   final int mealPlanWeekId;
@@ -221,6 +301,41 @@ class MealPlanDayDto extends Equatable {
   }
 
   @override
+  MealPlanDayDto copyWith({
+    int? id,
+    int? mealPlanId,
+    int? mealPlanWeekId,
+    int? planVersion,
+    int? day,
+    Nullable<String>? name,
+    int? targetCalories,
+    int? targetProtein,
+    int? targetCarbs,
+    int? targetFat,
+    Nullable<int>? targetFiber,
+    int? totalMeals,
+    CreatedBy? createdBy,
+    List<MealPlanMealDto>? meals,
+  }) {
+    return MealPlanDayDto(
+      id: id ?? this.id,
+      mealPlanId: mealPlanId ?? this.mealPlanId,
+      mealPlanWeekId: mealPlanWeekId ?? this.mealPlanWeekId,
+      planVersion: planVersion ?? this.planVersion,
+      day: day ?? this.day,
+      name: name != null ? name.value : this.name,
+      targetCalories: targetCalories ?? this.targetCalories,
+      targetProtein: targetProtein ?? this.targetProtein,
+      targetCarbs: targetCarbs ?? this.targetCarbs,
+      targetFat: targetFat ?? this.targetFat,
+      targetFiber: targetFiber != null ? targetFiber.value : this.targetFiber,
+      totalMeals: totalMeals ?? this.totalMeals,
+      createdBy: createdBy ?? this.createdBy,
+      meals: meals ?? this.meals,
+    );
+  }
+
+  @override
   List<Object?> get props => [
     id,
     mealPlanId,
@@ -239,7 +354,8 @@ class MealPlanDayDto extends Equatable {
   ];
 }
 
-class MealPlanWeekDto extends Equatable {
+class MealPlanWeekDto extends Equatable implements Dto<MealPlanWeek> {
+  @override
   final int id;
   final int mealPlanId;
   final int planVersion;
@@ -295,6 +411,41 @@ class MealPlanWeekDto extends Equatable {
   }
 
   @override
+  MealPlanWeekDto copyWith({
+    int? id,
+    int? mealPlanId,
+    int? planVersion,
+    int? weekNumber,
+    MealPlanPhase? phase,
+    int? targetCalories,
+    int? targetProtein,
+    int? targetCarbs,
+    int? targetFat,
+    Nullable<int>? targetFiber,
+    int? totalDays,
+    int? totalMeals,
+    CreatedBy? createdBy,
+    List<MealPlanDayDto>? days,
+  }) {
+    return MealPlanWeekDto(
+      id: id ?? this.id,
+      mealPlanId: mealPlanId ?? this.mealPlanId,
+      planVersion: planVersion ?? this.planVersion,
+      weekNumber: weekNumber ?? this.weekNumber,
+      phase: phase ?? this.phase,
+      targetCalories: targetCalories ?? this.targetCalories,
+      targetProtein: targetProtein ?? this.targetProtein,
+      targetCarbs: targetCarbs ?? this.targetCarbs,
+      targetFat: targetFat ?? this.targetFat,
+      targetFiber: targetFiber != null ? targetFiber.value : this.targetFiber,
+      totalDays: totalDays ?? this.totalDays,
+      totalMeals: totalMeals ?? this.totalMeals,
+      createdBy: createdBy ?? this.createdBy,
+      days: days ?? this.days,
+    );
+  }
+
+  @override
   List<Object?> get props => [
     id,
     mealPlanId,
@@ -313,7 +464,8 @@ class MealPlanWeekDto extends Equatable {
   ];
 }
 
-class MealPlanDto extends Equatable {
+class MealPlanDto extends Equatable implements Dto<MealPlan> {
+  @override
   final int id;
   final String name;
   final String? description;
@@ -353,6 +505,33 @@ class MealPlanDto extends Equatable {
       isFavorite: model.isFavorite,
       createdBy: model.createdBy,
       weeks: weeks,
+    );
+  }
+
+  @override
+  MealPlanDto copyWith({
+    int? id,
+    String? name,
+    Nullable<String>? description,
+    int? version,
+    int? totalWeeks,
+    int? totalDays,
+    int? totalMeals,
+    bool? isFavorite,
+    CreatedBy? createdBy,
+    List<MealPlanWeekDto>? weeks,
+  }) {
+    return MealPlanDto(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      description: description != null ? description.value : this.description,
+      version: version ?? this.version,
+      totalWeeks: totalWeeks ?? this.totalWeeks,
+      totalDays: totalDays ?? this.totalDays,
+      totalMeals: totalMeals ?? this.totalMeals,
+      isFavorite: isFavorite ?? this.isFavorite,
+      createdBy: createdBy ?? this.createdBy,
+      weeks: weeks ?? this.weeks,
     );
   }
 

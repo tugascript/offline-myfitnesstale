@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 
-import '../../../lib/src/ui/weight/widgets/records/weight_records_history.dart';
+import 'package:myfitnesstale/src/ui/weight/widgets/records/weight_records_history.dart';
 
 void main() {
   test('weight history range accepts 365 days and rejects 366 days', () {

@@ -1,13 +1,12 @@
-abstract class Dto<T> {
+/// Domain DTO mapped from a SQLite model [T].
+///
+/// Concrete DTOs should also declare:
+/// - `factory Foo.fromModel(T model, {...})`
+/// - `Foo copyWith({...})` returning the concrete type
+abstract interface class Dto<T> {
   final int id;
 
   const Dto({required this.id});
 
-  factory Dto.fromModel(T model) {
-    throw UnimplementedError();
-  }
-
-  Dto<T> copyWith({int? id}) {
-    throw UnimplementedError();
-  }
+  Dto<T> copyWith();
 }

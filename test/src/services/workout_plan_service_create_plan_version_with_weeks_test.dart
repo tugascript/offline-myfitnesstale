@@ -1,16 +1,16 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite/sqflite.dart';
 
-import '../../../lib/src/data/utils/enums.dart';
-import '../../../lib/src/data/models/workout_model.dart';
-import '../../../lib/src/data/models/workout_plan_day_model.dart';
-import '../../../lib/src/data/models/workout_plan_model.dart';
-import '../../../lib/src/data/models/workout_plan_record_model.dart';
-import '../../../lib/src/data/models/workout_plan_week_model.dart';
-import '../../../lib/src/data/models/workout_plan_workout_model.dart';
-import '../../../lib/src/utils/errors.dart';
-import '../../../lib/src/data/repositories/workout_plans/workout_plan_record_repository.dart';
-import '../../../lib/src/data/repositories/workout_plans/workout_plan_repository.dart';
+import 'package:myfitnesstale/src/data/utils/enums.dart';
+import 'package:myfitnesstale/src/data/models/workout_model.dart';
+import 'package:myfitnesstale/src/data/models/workout_plan_day_model.dart';
+import 'package:myfitnesstale/src/data/models/workout_plan_model.dart';
+import 'package:myfitnesstale/src/data/models/workout_plan_record_model.dart';
+import 'package:myfitnesstale/src/data/models/workout_plan_week_model.dart';
+import 'package:myfitnesstale/src/data/models/workout_plan_workout_model.dart';
+import 'package:myfitnesstale/src/utils/errors.dart';
+import 'package:myfitnesstale/src/data/repositories/workout_plans/workout_plan_record_repository.dart';
+import 'package:myfitnesstale/src/data/repositories/workout_plans/workout_plan_repository.dart';
 
 import '../../support/test_database.dart';
 

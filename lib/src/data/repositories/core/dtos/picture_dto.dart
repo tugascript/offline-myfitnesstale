@@ -3,7 +3,7 @@ import 'package:equatable/equatable.dart';
 import '../../../utils/enums.dart';
 import '../../../utils/json_data.dart';
 
-class PictureDto extends Equatable {
+final class PictureDto extends Equatable {
   final PictureStorage storage;
   final String uri;
 

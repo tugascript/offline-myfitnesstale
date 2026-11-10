@@ -2,14 +2,14 @@ import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
 
-import '../../../lib/src/ui/home/view_models/profile_cubit.dart';
-import '../../../lib/src/data/utils/enums.dart';
-import '../../../lib/src/utils/errors.dart';
-import '../../../lib/src/utils/result.dart';
-import '../../../lib/src/data/repositories/profile/dtos/profile_dto.dart';
-import '../../../lib/src/data/repositories/profile/dtos/reminders_config_dto.dart';
-import '../../../lib/src/data/repositories/profile/dtos/system_dto.dart';
-import '../../../lib/src/data/repositories/onboarding/onboarding_repository.dart';
+import 'package:myfitnesstale/src/ui/home/view_models/profile_cubit.dart';
+import 'package:myfitnesstale/src/data/utils/enums.dart';
+import 'package:myfitnesstale/src/utils/errors.dart';
+import 'package:myfitnesstale/src/utils/result.dart';
+import 'package:myfitnesstale/src/data/repositories/profile/dtos/profile_dto.dart';
+import 'package:myfitnesstale/src/data/repositories/profile/dtos/reminders_config_dto.dart';
+import 'package:myfitnesstale/src/data/repositories/profile/dtos/system_dto.dart';
+import 'package:myfitnesstale/src/data/repositories/onboarding/onboarding_repository.dart';
 
 void main() {
   test(
