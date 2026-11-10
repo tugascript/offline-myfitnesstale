@@ -15,7 +15,7 @@ import '../data/utils/where_builder.dart';
 import '../utils/errors.dart';
 import '../utils/nullable.dart';
 import '../utils/result.dart';
-import 'dtos/paginated_dto.dart';
+import '../data/repositories/core/dtos/paginated_dto.dart';
 import 'dtos/workout_dto.dart';
 import 'dtos/workout_plan_day_dto.dart';
 import 'dtos/workout_plan_dto.dart';

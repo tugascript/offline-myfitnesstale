@@ -3,7 +3,7 @@ import 'package:equatable/equatable.dart';
 import '../../utils/nullable.dart';
 import '../../data/utils/enums.dart';
 import '../../data/models/workout_plan_model.dart';
-import 'dto.dart';
+import '../../data/repositories/core/dtos/dto.dart';
 import 'picture_dto.dart';
 import 'video_dto.dart';
 import 'workout_plan_week_dto.dart';

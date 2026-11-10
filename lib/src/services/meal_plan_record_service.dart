@@ -18,7 +18,7 @@ import '../utils/errors.dart';
 import '../utils/nullable.dart';
 import '../utils/result.dart';
 import 'dtos/meal_plan_record_dto.dart';
-import 'dtos/paginated_dto.dart';
+import '../data/repositories/core/dtos/paginated_dto.dart';
 
 class MealPlanRecordService {
   MealPlanRecordService._();

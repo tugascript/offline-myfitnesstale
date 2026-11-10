@@ -3,7 +3,7 @@ import 'package:equatable/equatable.dart';
 import '../../utils/nullable.dart';
 import '../../data/utils/enums.dart';
 import '../../data/models/workout_plan_week_model.dart';
-import 'dto.dart';
+import '../../data/repositories/core/dtos/dto.dart';
 import 'workout_plan_day_dto.dart';
 
 class WorkoutPlanWeekDto extends Equatable implements Dto<WorkoutPlanWeek> {

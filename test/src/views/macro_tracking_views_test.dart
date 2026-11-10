@@ -18,6 +18,7 @@ import 'package:myfitnesstale/src/cubits/workout_cubit.dart';
 import 'package:myfitnesstale/src/cubits/workout_plan_cubit.dart';
 import 'package:myfitnesstale/src/cubits/workout_plan_record_cubit.dart';
 import 'package:myfitnesstale/src/cubits/workout_record_cubit.dart';
+import 'package:myfitnesstale/src/data/repositories/exercises/exercise_repository.dart';
 import 'package:myfitnesstale/src/data/utils/enums.dart';
 import 'package:myfitnesstale/src/routing/routing.dart';
 import 'package:myfitnesstale/src/services/dtos/profile_dto.dart';
@@ -178,7 +179,9 @@ void main() {
     return MultiBlocProvider(
       providers: [
         BlocProvider<ProfileCubit>(create: (_) => _TestProfileCubit()),
-        BlocProvider<ExerciseCubit>(create: (_) => ExerciseCubit()),
+        BlocProvider<ExerciseCubit>(
+          create: (_) => ExerciseCubit(ExerciseRepository.create()),
+        ),
         BlocProvider<ExerciseRecordCubit>(
           create: (_) => _TestExerciseRecordCubit(),
         ),

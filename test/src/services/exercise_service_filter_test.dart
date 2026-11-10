@@ -1,24 +1,24 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:myfitnesstale/src/utils/nullable.dart';
-import 'package:myfitnesstale/src/ui/exercises/view_models/exercise_cubit.dart';
-import 'package:myfitnesstale/src/ui/exercises/view_models/exercise_record_cubit.dart';
-import 'package:myfitnesstale/src/data/utils/json_data.dart';
-import 'package:myfitnesstale/src/data/utils/enums.dart';
 import 'package:myfitnesstale/src/data/models/equipment_model.dart';
 import 'package:myfitnesstale/src/data/models/exercise_equipment_model.dart';
 import 'package:myfitnesstale/src/data/models/exercise_model.dart';
-import 'package:myfitnesstale/src/services/exercise_record_service.dart';
-import 'package:myfitnesstale/src/services/exercise_service.dart';
-import 'package:myfitnesstale/src/services/inputs/equipment_input.dart';
-import 'package:myfitnesstale/src/services/inputs/exercise_input.dart';
-import 'package:myfitnesstale/src/services/inputs/exercise_record_input.dart';
+import 'package:myfitnesstale/src/data/repositories/exercises/exercise_record_service.dart';
+import 'package:myfitnesstale/src/data/repositories/exercises/exercise_repository.dart';
+import 'package:myfitnesstale/src/data/repositories/exercises/inputs/equipment_input.dart';
+import 'package:myfitnesstale/src/data/repositories/exercises/inputs/exercise_input.dart';
+import 'package:myfitnesstale/src/data/repositories/exercises/inputs/exercise_record_input.dart';
+import 'package:myfitnesstale/src/data/utils/enums.dart';
+import 'package:myfitnesstale/src/data/utils/json_data.dart';
+import 'package:myfitnesstale/src/ui/exercises/view_models/exercise_cubit.dart';
+import 'package:myfitnesstale/src/ui/exercises/view_models/exercise_record_cubit.dart';
+import 'package:myfitnesstale/src/utils/nullable.dart';
 import 'package:sqflite/sqflite.dart';
 
 import '../../support/test_database.dart';
 
 void main() {
   final testDatabase = TestDatabase();
-  final service = ExerciseService();
+  final service = ExerciseRepository.create();
 
   Future<int> createExercise(
     Database db, {
@@ -117,7 +117,7 @@ void main() {
   );
 
   test('equipment, exercise, and exercise-record PUT replace fields and clear omitted nullable values', () async {
-    final exerciseCubit = ExerciseCubit();
+    final exerciseCubit = ExerciseCubit(ExerciseRepository.create());
     final recordCubit = ExerciseRecordCubit();
     addTearDown(exerciseCubit.close);
     addTearDown(recordCubit.close);

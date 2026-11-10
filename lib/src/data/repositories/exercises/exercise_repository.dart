@@ -1,59 +1,65 @@
 import 'package:logging/logging.dart';
 import 'package:sqflite/sqflite.dart';
 
-import '../data/models/equipment_model.dart';
-import '../data/models/exercise_equipment_model.dart';
-import '../data/models/exercise_model.dart';
-import '../data/services/common.dart';
-import '../data/services/sqlite/database_helper.dart';
-import '../data/services/sqlite/join_dao.dart';
-import '../data/services/sqlite/dao.dart';
-import '../data/utils/dates.dart';
-import '../data/utils/enums.dart';
-import '../data/utils/where_builder.dart';
-import '../utils/errors.dart';
-import '../utils/nullable.dart';
-import '../utils/result.dart';
+import '../../../utils/errors.dart';
+import '../../../utils/nullable.dart';
+import '../../../utils/result.dart';
+import '../../models/equipment_model.dart';
+import '../../models/exercise_equipment_model.dart';
+import '../../models/exercise_model.dart';
+import '../../services/common.dart';
+import '../../services/sqlite/dao.dart';
+import '../../services/sqlite/database_helper.dart';
+import '../../services/sqlite/join_dao.dart';
+import '../../utils/dates.dart';
+import '../../utils/enums.dart';
+import '../../utils/where_builder.dart';
+import '../core/dtos/paginated_dto.dart';
+import '../core/repository.dart';
 import 'dtos/equipment_dto.dart';
 import 'dtos/exercise_dto.dart';
-import 'dtos/paginated_dto.dart';
 import 'inputs/equipment_input.dart';
 import 'inputs/exercise_input.dart';
 
-class ExerciseService {
-  ExerciseService._();
+final class ExerciseRepository implements Repository {
+  final Dao<Exercise> _exerciseRepository;
+  final Dao<Equipment> _equipmentRepository;
+  final JoinDao<ExerciseEquipment, Equipment, Exercise>
+  _exerciseEquipmentRepository;
 
-  static final ExerciseService instance = ExerciseService._();
+  final Logger _logger = Logger('ExerciseRepository');
 
-  factory ExerciseService() => instance;
+  ExerciseRepository({
+    required this._exerciseRepository,
+    required this._equipmentRepository,
+    required this._exerciseEquipmentRepository,
+  });
 
-  final Logger _logger = Logger("Exercise Service");
-
-  final DatabaseHelper _databaseHelper = DatabaseHelper();
-
-  final _repository = Dao<Exercise>(
-    databaseHelper: DatabaseHelper(),
-    tableName: Exercise.table,
-    fromMap: Exercise.fromMap,
-  );
-
-  final _equipmentRepository = Dao<Equipment>(
-    databaseHelper: DatabaseHelper(),
-    tableName: Equipment.table,
-    fromMap: Equipment.fromMap,
-  );
-
-  final _exerciseEquipmentRepository =
-      JoinDao<ExerciseEquipment, Equipment, Exercise>(
-        databaseHelper: DatabaseHelper(),
+  factory ExerciseRepository.create([DatabaseHelper? databaseHelper]) {
+    final helper = databaseHelper ?? DatabaseHelper();
+    return ExerciseRepository(
+      exerciseRepository: Dao(
+        databaseHelper: helper,
+        tableName: Exercise.table,
+        fromMap: Exercise.fromMap,
+      ),
+      equipmentRepository: Dao(
+        databaseHelper: helper,
+        tableName: Equipment.table,
+        fromMap: Equipment.fromMap,
+      ),
+      exerciseEquipmentRepository: JoinDao(
+        databaseHelper: helper,
         tableName: ExerciseEquipment.table,
-        fromMap: ExerciseEquipment.fromMap,
         primaryKeys: ExerciseEquipment.primaryKeys,
+        fromMap: ExerciseEquipment.fromMap,
         joinTableName: Equipment.table,
         joinFromMap: Equipment.fromMap,
         reverseTableName: Exercise.table,
         reverseFromMap: Exercise.fromMap,
-      );
+      ),
+    );
+  }
 
   Future<
     Result<
@@ -97,14 +103,15 @@ class ExerciseService {
     }
 
     try {
-      final List<Exercise> exercises = await _repository.selectPaginated(
-        limit: limit,
-        offset: offset,
-        where: query.where,
-        whereArgs: query.args,
-        orderBy: [ExerciseColumns.name.orderCaseInsensitiveAsc],
-      );
-      final int total = await _repository.count(
+      final List<Exercise> exercises = await _exerciseRepository
+          .selectPaginated(
+            limit: limit,
+            offset: offset,
+            where: query.where,
+            whereArgs: query.args,
+            orderBy: [ExerciseColumns.name.orderCaseInsensitiveAsc],
+          );
+      final int total = await _exerciseRepository.count(
         where: query.where,
         whereArgs: query.args,
       );
@@ -149,7 +156,7 @@ class ExerciseService {
     }
 
     try {
-      final List<Exercise> exercises = await _repository.selectMany(
+      final List<Exercise> exercises = await _exerciseRepository.selectMany(
         where: query.where,
         whereArgs: query.args,
         orderBy: [ExerciseColumns.name.orderCaseInsensitiveAsc],
@@ -172,7 +179,7 @@ class ExerciseService {
   ) async {
     _logger.info("Getting exercise with id: $id");
     try {
-      final Exercise? exercise = await _repository.selectOne(id);
+      final Exercise? exercise = await _exerciseRepository.selectOne(id);
       if (exercise == null) {
         _logger.info("Exercise with id: $id not found");
         return err(
@@ -208,7 +215,7 @@ class ExerciseService {
   }
 
   Future<Map<int, Exercise>> getExercisesByIdsLoader(List<int> ids) async {
-    final List<Exercise> exercises = await _repository.selectMany(
+    final List<Exercise> exercises = await _exerciseRepository.selectMany(
       where: ExerciseColumns.id.inList(ids.length),
       whereArgs: ids,
     );
@@ -235,7 +242,7 @@ class ExerciseService {
 
     try {
       if (input.equipmentIds.isEmpty) {
-        final id = await _repository.insert(exercise);
+        final id = await _exerciseRepository.insert(exercise);
         return ok(
           ExerciseDto.fromModel(
             exercise.copyWith(id: Nullable(id)),
@@ -260,8 +267,8 @@ class ExerciseService {
         );
       }
 
-      final int id = await (await _databaseHelper.db).transaction((txn) async {
-        final int exerciseId = await _repository.insert(exercise, txn);
+      final int id = await _exerciseRepository.startTransaction((txn) async {
+        final int exerciseId = await _exerciseRepository.insert(exercise, txn);
         final List<ExerciseEquipment> exerciseEquipments = input.equipmentIds
             .map(
               (e) => ExerciseEquipment.create(
@@ -328,7 +335,7 @@ class ExerciseService {
             isFavorite: exerciseInput.isFavorite,
             createdBy: createdBy,
           );
-          final id = await _repository.insert(exercise, txn);
+          final id = await _exerciseRepository.insert(exercise, txn);
 
           if (exerciseInput.equipmentIds.isEmpty) {
             exercises.add(
@@ -363,7 +370,7 @@ class ExerciseService {
 
       final List<ExerciseDto> exercises = transaction != null
           ? await create(transaction)
-          : await (await _databaseHelper.db).transaction(create);
+          : await _exerciseRepository.startTransaction(create);
 
       return ok(exercises);
     } catch (e) {
@@ -383,7 +390,7 @@ class ExerciseService {
   ) async {
     _logger.info("Updating exercise with id: $id");
     try {
-      final Exercise? exercise = await _repository.selectOne(id);
+      final Exercise? exercise = await _exerciseRepository.selectOne(id);
       if (exercise == null) {
         _logger.info("Exercise with id: $id not found");
         return err(
@@ -407,8 +414,8 @@ class ExerciseService {
       );
 
       if (input.equipmentIds.isEmpty) {
-        await _repository.startTransaction((txn) async {
-          await _repository.update(updatedExercise, txn);
+        await _exerciseRepository.startTransaction((txn) async {
+          await _exerciseRepository.update(updatedExercise, txn);
           await _exerciseEquipmentRepository.deleteAllByPk1(id, txn);
         });
         _logger.info("Updated exercise with id: $id");
@@ -431,8 +438,8 @@ class ExerciseService {
         );
       }
 
-      await _repository.startTransaction((txn) async {
-        await _repository.update(updatedExercise, txn);
+      await _exerciseRepository.startTransaction((txn) async {
+        await _exerciseRepository.update(updatedExercise, txn);
         await _exerciseEquipmentRepository.deleteAllByPk1(id, txn);
         await _exerciseEquipmentRepository.insertMany(
           input.equipmentIds
@@ -465,7 +472,7 @@ class ExerciseService {
   updateExerciseFavorite(int id, bool isFavorite) async {
     _logger.info("Updating exercise favorite with id: $id");
     try {
-      final Exercise? exercise = await _repository.selectOne(id);
+      final Exercise? exercise = await _exerciseRepository.selectOne(id);
       if (exercise == null) {
         _logger.info("Exercise with id: $id not found");
         return err(
@@ -480,7 +487,7 @@ class ExerciseService {
         isFavorite: isFavorite,
         updatedAt: DateUtilities.getNowUtcUnix(),
       );
-      await _repository.update(updatedExercise);
+      await _exerciseRepository.update(updatedExercise);
       final List<Equipment> equipments = await _exerciseEquipmentRepository
           .selectJoined(id);
       return ok(
@@ -506,7 +513,7 @@ class ExerciseService {
     _logger.info("Deleting exercise with id: $id");
 
     try {
-      final bool deleted = await _repository.deleteOne(id);
+      final bool deleted = await _exerciseRepository.deleteOne(id);
       if (!deleted) {
         return err(
           const ServiceError(
@@ -701,7 +708,7 @@ class ExerciseService {
 
       final List<Equipment> equipments = transaction != null
           ? await create(transaction)
-          : await (await _databaseHelper.db).transaction(create);
+          : await _exerciseRepository.startTransaction(create);
 
       _logger.info('Created ${equipments.length} equipments');
       return ok(equipments.map((e) => EquipmentDto.fromModel(e)).toList());

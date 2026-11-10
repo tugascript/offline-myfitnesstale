@@ -4,7 +4,7 @@ import '../../utils/nullable.dart';
 import '../../data/utils/json_data.dart';
 import '../../data/utils/enums.dart';
 import '../../data/models/workout_model.dart';
-import 'dto.dart';
+import '../../data/repositories/core/dtos/dto.dart';
 import 'picture_dto.dart';
 import 'video_dto.dart';
 import 'workout_set_dto.dart';

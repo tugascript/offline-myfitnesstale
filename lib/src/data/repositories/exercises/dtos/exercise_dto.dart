@@ -1,13 +1,13 @@
 import 'package:equatable/equatable.dart';
 
-import '../../utils/nullable.dart';
-import '../../data/utils/json_data.dart';
-import '../../data/utils/enums.dart';
-import '../../data/models/exercise_model.dart';
-import 'dto.dart';
+import '../../../../utils/nullable.dart';
+import '../../../utils/json_data.dart';
+import '../../../utils/enums.dart';
+import '../../../models/exercise_model.dart';
+import '../../core/dtos/dto.dart';
 import 'equipment_dto.dart';
-import 'picture_dto.dart';
-import 'video_dto.dart';
+import '../../../../services/dtos/picture_dto.dart';
+import '../../../../services/dtos/video_dto.dart';
 
 class ExerciseDto extends Equatable implements Dto<Exercise> {
   @override

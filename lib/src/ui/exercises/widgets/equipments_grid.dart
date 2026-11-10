@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../services/dtos/equipment_dto.dart';
+import '../../../data/repositories/exercises/dtos/equipment_dto.dart';
 import '../../core/sizes/data_display_sizes.dart';
 import '../../core/widgets/not_found_list.dart';
 import 'equipment_card.dart';

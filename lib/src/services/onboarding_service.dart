@@ -7,23 +7,23 @@ import '../data/models/constants/equipment_constants.dart';
 import '../data/models/constants/exercise_constants.dart';
 import '../data/models/constants/workout_constants.dart';
 import '../data/models/constants/workout_plan_constants.dart';
-import '../data/services/sqlite/database_helper.dart';
-import '../data/utils/enums.dart';
 import '../data/models/equipment_model.dart';
 import '../data/models/exercise_model.dart';
 import '../data/models/workout_model.dart';
 import '../data/models/workout_plan_model.dart';
-import '../utils/nullable.dart';
+import '../data/repositories/exercises/dtos/equipment_dto.dart';
+import '../data/repositories/exercises/dtos/exercise_dto.dart';
+import '../data/repositories/exercises/exercise_repository.dart';
+import '../data/repositories/exercises/inputs/exercise_input.dart';
+import '../data/services/sqlite/database_helper.dart';
+import '../data/utils/enums.dart';
 import '../utils/errors.dart';
+import '../utils/nullable.dart';
 import '../utils/result.dart';
-import 'dtos/equipment_dto.dart';
-import 'dtos/exercise_dto.dart';
 import 'dtos/profile_dto.dart';
 import 'dtos/reminders_config_dto.dart';
 import 'dtos/system_dto.dart';
 import 'dtos/workout_dto.dart';
-import 'exercise_service.dart';
-import 'inputs/exercise_input.dart';
 import 'profile_service.dart';
 import 'workout_plan_service.dart';
 import 'workout_service.dart';
@@ -79,7 +79,7 @@ final class OnboardingResult {
 
 class OnboardingService {
   final DatabaseHelper _databaseHelper;
-  final ExerciseService _exerciseService;
+  final ExerciseRepository _exerciseService;
   final ProfileService _profileService;
   final WorkoutService _workoutService;
   final WorkoutPlanService _workoutPlanService;
@@ -88,13 +88,13 @@ class OnboardingService {
 
   OnboardingService({
     DatabaseHelper? databaseHelper,
-    ExerciseService? exerciseService,
+    ExerciseRepository? exerciseService,
     ProfileService? profileService,
     WorkoutService? workoutService,
     WorkoutPlanService? workoutPlanService,
     this._afterStage,
   }) : _databaseHelper = databaseHelper ?? DatabaseHelper(),
-       _exerciseService = exerciseService ?? ExerciseService(),
+       _exerciseService = exerciseService ?? ExerciseRepository.create(),
        _profileService = profileService ?? ProfileService(),
        _workoutService = workoutService ?? WorkoutService(),
        _workoutPlanService = workoutPlanService ?? WorkoutPlanService();

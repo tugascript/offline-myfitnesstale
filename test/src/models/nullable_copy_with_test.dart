@@ -23,9 +23,9 @@ import 'package:myfitnesstale/src/data/models/workout_set_exercise_option_model.
 import 'package:myfitnesstale/src/data/models/workout_set_exercise_record_model.dart';
 import 'package:myfitnesstale/src/data/models/workout_set_model.dart';
 import 'package:myfitnesstale/src/data/models/workout_set_record_model.dart';
-import 'package:myfitnesstale/src/services/dtos/equipment_dto.dart';
-import 'package:myfitnesstale/src/services/dtos/exercise_dto.dart';
-import 'package:myfitnesstale/src/services/dtos/exercise_record_dto.dart';
+import 'package:myfitnesstale/src/data/repositories/exercises/dtos/equipment_dto.dart';
+import 'package:myfitnesstale/src/data/repositories/exercises/dtos/exercise_dto.dart';
+import 'package:myfitnesstale/src/data/repositories/exercises/dtos/exercise_record_dto.dart';
 import 'package:myfitnesstale/src/services/dtos/strength_goal_dto.dart';
 import 'package:myfitnesstale/src/services/dtos/weight_goal_dto.dart';
 import 'package:myfitnesstale/src/services/dtos/weight_record_dto.dart';

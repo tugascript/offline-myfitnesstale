@@ -29,7 +29,7 @@ import '../utils/errors.dart';
 import '../utils/nullable.dart';
 import '../utils/result.dart';
 import 'dtos/food_dto.dart';
-import 'dtos/paginated_dto.dart';
+import '../data/repositories/core/dtos/paginated_dto.dart';
 import 'inputs/food_input.dart';
 
 class FoodService {

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../services/dtos/exercise_dto.dart';
+import '../../../data/repositories/exercises/dtos/exercise_dto.dart';
 import '../../core/sizes/data_display_sizes.dart';
 import '../../core/widgets/difficulty_badge.dart';
 import '../../core/widgets/modal_search/modal_search_entity_name.dart';

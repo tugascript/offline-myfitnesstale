@@ -1,7 +1,7 @@
 import '../../utils/nullable.dart';
 import '../../data/utils/json_data.dart';
 import '../../data/utils/enums.dart';
-import '../dtos/exercise_dto.dart';
+import '../../data/repositories/exercises/dtos/exercise_dto.dart';
 
 class WorkoutInput {
   final String name;

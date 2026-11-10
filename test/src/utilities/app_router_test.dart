@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:myfitnesstale/src/utils/nullable.dart';
+import 'package:myfitnesstale/src/cubits/profile_cubit.dart';
+import 'package:myfitnesstale/src/data/repositories/exercises/exercise_repository.dart';
 import 'package:myfitnesstale/src/ui/exercises/view_models/exercise_cubit.dart';
 import 'package:myfitnesstale/src/ui/exercises/view_models/exercise_record_cubit.dart';
-import 'package:myfitnesstale/src/cubits/profile_cubit.dart';
 import 'package:myfitnesstale/src/cubits/states/profile_state.dart';
 import 'package:myfitnesstale/src/cubits/workout_cubit.dart';
 import 'package:myfitnesstale/src/cubits/workout_plan_record_cubit.dart';
@@ -25,6 +26,8 @@ import 'package:myfitnesstale/src/views/workout_plans/workout_plan_history_view.
 import 'package:myfitnesstale/src/views/workouts/workout_history_view.dart';
 
 class _ExerciseCubit extends ExerciseCubit {
+  _ExerciseCubit() : super(ExerciseRepository.create());
+
   @override
   Future<void> getExercise(int id) async {}
 }

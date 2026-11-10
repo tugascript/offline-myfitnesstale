@@ -3,8 +3,8 @@ import 'package:equatable/equatable.dart';
 import '../../utils/nullable.dart';
 import '../../data/utils/json_data.dart';
 import '../../data/models/workout_set_exercise_model.dart';
-import 'dto.dart';
-import 'exercise_dto.dart';
+import '../../data/repositories/core/dtos/dto.dart';
+import '../../data/repositories/exercises/dtos/exercise_dto.dart';
 import 'workout_set_exercise_option_dto.dart';
 
 class WorkoutSetExerciseDto extends Equatable

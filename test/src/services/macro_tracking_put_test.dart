@@ -6,7 +6,7 @@ import 'package:myfitnesstale/src/data/models/exercise_model.dart';
 import 'package:myfitnesstale/src/cubits/food_cubit.dart';
 import 'package:myfitnesstale/src/cubits/meal_plan_cubit.dart';
 import 'package:myfitnesstale/src/cubits/weight_record_cubit.dart';
-import 'package:myfitnesstale/src/services/exercise_record_service.dart';
+import 'package:myfitnesstale/src/data/repositories/exercises/exercise_record_service.dart';
 import 'package:myfitnesstale/src/services/inputs/strength_goal_input.dart';
 import 'package:myfitnesstale/src/services/inputs/weight_goal_input.dart';
 import 'package:myfitnesstale/src/services/inputs/weight_record_input.dart';

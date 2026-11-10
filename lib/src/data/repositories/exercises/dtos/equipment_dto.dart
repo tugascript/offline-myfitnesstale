@@ -1,10 +1,10 @@
 import 'package:equatable/equatable.dart';
 
-import '../../utils/nullable.dart';
-import '../../data/utils/enums.dart';
-import '../../data/models/equipment_model.dart';
-import 'dto.dart';
-import 'picture_dto.dart';
+import '../../../../utils/nullable.dart';
+import '../../../utils/enums.dart';
+import '../../../models/equipment_model.dart';
+import '../../core/dtos/dto.dart';
+import '../../../../services/dtos/picture_dto.dart';
 
 class EquipmentDto extends Equatable implements Dto<Equipment> {
   @override
