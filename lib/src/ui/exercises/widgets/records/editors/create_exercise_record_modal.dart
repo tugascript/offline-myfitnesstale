@@ -4,7 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../view_models/exercise_record_cubit.dart';
 import '../../../view_models/states/exercise_record_state.dart';
 import '../../../../../data/utils/enums.dart';
-import '../../../../../services/inputs/exercise_record_input.dart';
+import '../../../../../data/repositories/exercises/inputs/exercise_record_input.dart';
 import '../../../../core/sizes/data_display_sizes.dart';
 import '../../../../../widgets/layout/app_modal.dart';
 import 'exercise_record_form.dart';

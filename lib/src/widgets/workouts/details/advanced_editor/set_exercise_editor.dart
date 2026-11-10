@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../data/utils/json_data.dart';
 import '../../../../data/utils/enums.dart';
-import '../../../../services/dtos/exercise_dto.dart';
+import '../../../../data/repositories/exercises/dtos/exercise_dto.dart';
 import '../../../../ui/core/sizes/data_display_sizes.dart';
 import '../../../layout/app_dropdown.dart';
 import '../../../layout/app_number_wheel.dart';

@@ -2,7 +2,7 @@ import 'package:equatable/equatable.dart';
 
 import '../../data/utils/enums.dart';
 import '../../data/models/system_model.dart';
-import 'dto.dart';
+import '../../data/repositories/core/dtos/dto.dart';
 
 class SystemDto extends Equatable implements Dto<System> {
   @override

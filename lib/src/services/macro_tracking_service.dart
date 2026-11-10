@@ -20,7 +20,7 @@ import '../utils/errors.dart';
 import '../utils/nullable.dart';
 import '../utils/result.dart';
 import 'dtos/macro_tracking_dto.dart';
-import 'dtos/paginated_dto.dart';
+import '../data/repositories/core/dtos/paginated_dto.dart';
 import 'inputs/macro_goal_input.dart';
 import 'inputs/quick_food_log_input.dart';
 

@@ -3,7 +3,7 @@ import 'package:equatable/equatable.dart';
 import '../../utils/nullable.dart';
 import '../../data/utils/enums.dart';
 import '../../data/models/workout_set_model.dart';
-import 'dto.dart';
+import '../../data/repositories/core/dtos/dto.dart';
 import 'workout_set_exercise_dto.dart';
 
 class WorkoutSetDto extends Equatable implements Dto<WorkoutSet> {

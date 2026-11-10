@@ -9,8 +9,8 @@ import 'package:myfitnesstale/src/cubits/states/profile_state.dart';
 import 'package:myfitnesstale/src/data/utils/json_data.dart';
 import 'package:myfitnesstale/src/data/utils/enums.dart';
 import 'package:myfitnesstale/src/routing/routing.dart';
-import 'package:myfitnesstale/src/services/dtos/exercise_dto.dart';
-import 'package:myfitnesstale/src/services/dtos/exercise_record_dto.dart';
+import 'package:myfitnesstale/src/data/repositories/exercises/dtos/exercise_dto.dart';
+import 'package:myfitnesstale/src/data/repositories/exercises/dtos/exercise_record_dto.dart';
 import 'package:myfitnesstale/src/services/dtos/system_dto.dart';
 import 'package:myfitnesstale/src/ui/exercises/screens/exercise_progress_view.dart';
 

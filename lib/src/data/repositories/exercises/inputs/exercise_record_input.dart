@@ -1,5 +1,5 @@
-import '../../utils/nullable.dart';
-import '../../data/utils/json_data.dart';
+import '../../../../utils/nullable.dart';
+import '../../../utils/json_data.dart';
 
 class ExerciseRecordInput {
   final int exerciseId;

@@ -5,18 +5,20 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:myfitnesstale/src/utils/nullable.dart';
-import 'package:myfitnesstale/src/ui/exercises/view_models/exercise_cubit.dart';
-import 'package:myfitnesstale/src/data/utils/json_data.dart';
+import 'package:myfitnesstale/src/data/repositories/exercises/dtos/equipment_dto.dart';
+import 'package:myfitnesstale/src/data/repositories/exercises/dtos/exercise_dto.dart';
+import 'package:myfitnesstale/src/data/repositories/exercises/exercise_repository.dart';
 import 'package:myfitnesstale/src/data/utils/enums.dart';
-import 'package:myfitnesstale/src/services/dtos/equipment_dto.dart';
-import 'package:myfitnesstale/src/services/dtos/exercise_dto.dart';
+import 'package:myfitnesstale/src/data/utils/json_data.dart';
+import 'package:myfitnesstale/src/ui/exercises/view_models/exercise_cubit.dart';
 import 'package:myfitnesstale/src/ui/core/sizes/data_display_sizes.dart';
 import 'package:myfitnesstale/src/ui/core/sizes/screen_size.dart';
 import 'package:myfitnesstale/src/ui/exercises/screens/exercise_detail_view.dart';
 import 'package:myfitnesstale/src/ui/core/widgets/muscles_diagram.dart';
 
 class _StubExerciseCubit extends ExerciseCubit {
-  _StubExerciseCubit(ExerciseDto exercise) {
+  _StubExerciseCubit(ExerciseDto exercise)
+    : super(ExerciseRepository.create()) {
     emit(state.copyWith(selectedExercise: Nullable(exercise)));
   }
 

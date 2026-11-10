@@ -3,8 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'src/cubits/active_workout_cubit.dart';
-import 'src/ui/exercises/view_models/exercise_cubit.dart';
-import 'src/ui/exercises/view_models/exercise_record_cubit.dart';
 import 'src/cubits/food_cubit.dart';
 import 'src/cubits/macro_tracking_cubit.dart';
 import 'src/cubits/meal_plan_cubit.dart';
@@ -17,8 +15,11 @@ import 'src/cubits/workout_cubit.dart';
 import 'src/cubits/workout_plan_cubit.dart';
 import 'src/cubits/workout_plan_record_cubit.dart';
 import 'src/cubits/workout_record_cubit.dart';
+import 'src/data/repositories/exercises/exercise_repository.dart';
 import 'src/routing/app_router.dart';
 import 'src/ui/core/themes/theme_generator.dart';
+import 'src/ui/exercises/view_models/exercise_cubit.dart';
+import 'src/ui/exercises/view_models/exercise_record_cubit.dart';
 
 class MyApp extends StatelessWidget {
   final RouterConfig<Object>? routerConfig;
@@ -35,7 +36,8 @@ class MyApp extends StatelessWidget {
           lazy: false,
         ),
         BlocProvider<ExerciseCubit>(
-          create: (BuildContext context) => ExerciseCubit(),
+          create: (BuildContext context) =>
+              ExerciseCubit(ExerciseRepository.create()),
         ),
         BlocProvider<ExerciseRecordCubit>(
           create: (BuildContext context) => ExerciseRecordCubit(),

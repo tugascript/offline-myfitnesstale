@@ -1,23 +1,23 @@
 import 'package:logging/logging.dart';
 
-import '../data/models/exercise_model.dart';
-import '../data/models/exercise_record_model.dart';
-import '../data/models/strength_goal_model.dart';
-import '../data/services/common.dart';
-import '../data/services/sqlite/database_helper.dart';
-import '../data/services/sqlite/dao.dart';
-import '../data/utils/dates.dart';
-import '../data/utils/enums.dart';
-import '../data/utils/where_builder.dart';
-import '../utils/errors.dart';
-import '../utils/nullable.dart';
-import '../utils/result.dart';
+import '../../models/exercise_model.dart';
+import '../../models/exercise_record_model.dart';
+import '../../models/strength_goal_model.dart';
+import '../../services/common.dart';
+import '../../services/sqlite/database_helper.dart';
+import '../../services/sqlite/dao.dart';
+import '../../utils/dates.dart';
+import '../../utils/enums.dart';
+import '../../utils/where_builder.dart';
+import '../../../utils/errors.dart';
+import '../../../utils/nullable.dart';
+import '../../../utils/result.dart';
 import 'dtos/exercise_dto.dart';
 import 'dtos/exercise_record_dto.dart';
-import 'dtos/paginated_dto.dart';
-import 'dtos/strength_goal_dto.dart';
+import '../core/dtos/paginated_dto.dart';
+import '../../../services/dtos/strength_goal_dto.dart';
 import 'inputs/exercise_record_input.dart';
-import 'inputs/strength_goal_input.dart';
+import '../../../services/inputs/strength_goal_input.dart';
 
 class ExerciseRecordService {
   ExerciseRecordService._();

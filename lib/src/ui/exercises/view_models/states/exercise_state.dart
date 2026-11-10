@@ -2,8 +2,8 @@ import 'package:equatable/equatable.dart';
 
 import '../../../../utils/nullable.dart';
 import '../../../../data/utils/enums.dart';
-import '../../../../services/dtos/equipment_dto.dart';
-import '../../../../services/dtos/exercise_dto.dart';
+import '../../../../data/repositories/exercises/dtos/equipment_dto.dart';
+import '../../../../data/repositories/exercises/dtos/exercise_dto.dart';
 import '../../../../cubits/states/common_state.dart';
 
 final class ExercisePagination extends Equatable {

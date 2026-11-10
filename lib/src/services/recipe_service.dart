@@ -14,7 +14,7 @@ import '../data/utils/where_builder.dart';
 import '../utils/errors.dart';
 import '../utils/nullable.dart';
 import '../utils/result.dart';
-import 'dtos/paginated_dto.dart';
+import '../data/repositories/core/dtos/paginated_dto.dart';
 import 'dtos/recipe_dto.dart';
 import 'inputs/recipe_input.dart';
 

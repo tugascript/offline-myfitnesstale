@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../services/dtos/equipment_dto.dart';
+import '../../../data/repositories/exercises/dtos/equipment_dto.dart';
 import '../../core/sizes/data_display_sizes.dart';
 import '../../../widgets/layout/list_card.dart';
 

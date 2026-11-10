@@ -11,7 +11,7 @@ import '../data/utils/where_builder.dart';
 import '../utils/errors.dart';
 import '../utils/nullable.dart';
 import '../utils/result.dart';
-import 'dtos/paginated_dto.dart';
+import '../data/repositories/core/dtos/paginated_dto.dart';
 import 'dtos/weight_goal_dto.dart';
 import 'dtos/weight_record_dto.dart';
 import 'inputs/weight_goal_input.dart';

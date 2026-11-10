@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../routing/routing.dart';
-import '../../../services/inputs/equipment_input.dart';
+import '../../../data/repositories/exercises/inputs/equipment_input.dart';
 import '../../../widgets/layout/responsive_scaffold.dart';
 import '../../core/sizes/data_display_sizes.dart';
 import '../../core/sizes/screen_size.dart';

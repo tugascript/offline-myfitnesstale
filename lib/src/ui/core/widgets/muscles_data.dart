@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../data/utils/json_data.dart';
 import '../../../data/utils/enums.dart';
-import '../../../services/dtos/equipment_dto.dart';
+import '../../../data/repositories/exercises/dtos/equipment_dto.dart';
 import '../sizes/data_display_sizes.dart';
 import 'muscle_group_badge.dart';
 import 'muscles_wrap.dart';

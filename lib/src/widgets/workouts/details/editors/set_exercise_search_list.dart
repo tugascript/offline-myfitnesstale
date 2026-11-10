@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../../services/dtos/exercise_dto.dart';
+import '../../../../data/repositories/exercises/dtos/exercise_dto.dart';
 import '../../../../ui/core/sizes/data_display_sizes.dart';
 import '../../../../ui/core/widgets/modal_search/modal_search_card.dart';
 import '../../../../ui/core/widgets/not_found_list.dart';
