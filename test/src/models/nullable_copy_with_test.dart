@@ -1,17 +1,17 @@
 // Copyright (C) 2026 afonsobarracha
-// 
+//
 // This file is part of My Fitness Tale.
-// 
+//
 // My Fitness Tale is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // My Fitness Tale is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with My Fitness Tale.  If not, see <https://www.gnu.org/licenses/>.
 
@@ -20,27 +20,27 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:myfitnesstale/src/utils/nullable.dart';
 import 'package:myfitnesstale/src/data/utils/json_data.dart';
 import 'package:myfitnesstale/src/data/utils/enums.dart';
-import 'package:myfitnesstale/src/data/models/equipment_model.dart';
-import 'package:myfitnesstale/src/data/models/exercise_model.dart';
-import 'package:myfitnesstale/src/data/models/exercise_record_model.dart';
-import 'package:myfitnesstale/src/data/models/food_model.dart';
-import 'package:myfitnesstale/src/data/models/weight_goal_model.dart';
-import 'package:myfitnesstale/src/data/models/weight_record_model.dart';
-import 'package:myfitnesstale/src/data/models/workout_model.dart';
-import 'package:myfitnesstale/src/data/models/workout_plan_day_model.dart';
-import 'package:myfitnesstale/src/data/models/workout_plan_day_record_model.dart';
-import 'package:myfitnesstale/src/data/models/workout_plan_model.dart';
-import 'package:myfitnesstale/src/data/models/workout_plan_record_model.dart';
-import 'package:myfitnesstale/src/data/models/workout_plan_week_model.dart';
-import 'package:myfitnesstale/src/data/models/workout_plan_week_record_model.dart';
-import 'package:myfitnesstale/src/data/models/workout_plan_workout_model.dart';
-import 'package:myfitnesstale/src/data/models/workout_plan_workout_record_model.dart';
-import 'package:myfitnesstale/src/data/models/workout_record_model.dart';
-import 'package:myfitnesstale/src/data/models/workout_set_exercise_model.dart';
-import 'package:myfitnesstale/src/data/models/workout_set_exercise_option_model.dart';
-import 'package:myfitnesstale/src/data/models/workout_set_exercise_record_model.dart';
-import 'package:myfitnesstale/src/data/models/workout_set_model.dart';
-import 'package:myfitnesstale/src/data/models/workout_set_record_model.dart';
+import 'package:myfitnesstale/src/data/models/sqlite/equipment_model.dart';
+import 'package:myfitnesstale/src/data/models/sqlite/exercise_model.dart';
+import 'package:myfitnesstale/src/data/models/sqlite/exercise_record_model.dart';
+import 'package:myfitnesstale/src/data/models/sqlite/food_model.dart';
+import 'package:myfitnesstale/src/data/models/sqlite/weight_goal_model.dart';
+import 'package:myfitnesstale/src/data/models/sqlite/weight_record_model.dart';
+import 'package:myfitnesstale/src/data/models/sqlite/workout_model.dart';
+import 'package:myfitnesstale/src/data/models/sqlite/workout_plan_day_model.dart';
+import 'package:myfitnesstale/src/data/models/sqlite/workout_plan_day_record_model.dart';
+import 'package:myfitnesstale/src/data/models/sqlite/workout_plan_model.dart';
+import 'package:myfitnesstale/src/data/models/sqlite/workout_plan_record_model.dart';
+import 'package:myfitnesstale/src/data/models/sqlite/workout_plan_week_model.dart';
+import 'package:myfitnesstale/src/data/models/sqlite/workout_plan_week_record_model.dart';
+import 'package:myfitnesstale/src/data/models/sqlite/workout_plan_workout_model.dart';
+import 'package:myfitnesstale/src/data/models/sqlite/workout_plan_workout_record_model.dart';
+import 'package:myfitnesstale/src/data/models/sqlite/workout_record_model.dart';
+import 'package:myfitnesstale/src/data/models/sqlite/workout_set_exercise_model.dart';
+import 'package:myfitnesstale/src/data/models/sqlite/workout_set_exercise_option_model.dart';
+import 'package:myfitnesstale/src/data/models/sqlite/workout_set_exercise_record_model.dart';
+import 'package:myfitnesstale/src/data/models/sqlite/workout_set_model.dart';
+import 'package:myfitnesstale/src/data/models/sqlite/workout_set_record_model.dart';
 import 'package:myfitnesstale/src/data/repositories/exercises/dtos/equipment_dto.dart';
 import 'package:myfitnesstale/src/data/repositories/exercises/dtos/exercise_dto.dart';
 import 'package:myfitnesstale/src/data/repositories/exercises/dtos/exercise_record_dto.dart';

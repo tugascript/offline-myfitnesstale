@@ -5,8 +5,8 @@ import 'package:sqflite/sqflite.dart';
 
 import 'package:myfitnesstale/src/data/services/sqlite/database_helper.dart';
 import 'package:myfitnesstale/src/data/utils/enums.dart';
-import 'package:myfitnesstale/src/data/models/weight_goal_model.dart';
-import 'package:myfitnesstale/src/data/models/weight_record_model.dart';
+import 'package:myfitnesstale/src/data/models/sqlite/weight_goal_model.dart';
+import 'package:myfitnesstale/src/data/models/sqlite/weight_record_model.dart';
 
 import 'support/device_test_harness.dart';
 

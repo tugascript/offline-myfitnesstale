@@ -1,0 +1,228 @@
+// Copyright (C) 2026 afonsobarracha
+//
+// This file is part of My Fitness Tale.
+//
+// My Fitness Tale is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// My Fitness Tale is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with My Fitness Tale.  If not, see <https://www.gnu.org/licenses/>.
+
+import 'package:equatable/equatable.dart';
+
+import '../../../utils/nullable.dart';
+import '../../utils/json_data.dart';
+import '../../utils/enums.dart';
+import 'model.dart';
+import '../../utils/dates.dart';
+
+const String _table = 'exercises';
+
+enum ExerciseColumns with Columns {
+  id("id"),
+  name("name"),
+  description("description"),
+  picture("picture"),
+  video("video"),
+  muscleGroup("muscle_group"),
+  muscles("muscles"),
+  isFavorite("is_favorite"),
+  difficulty("difficulty"),
+  createdBy("created_by"),
+  createdAt("created_at"),
+  updatedAt("updated_at");
+
+  @override
+  final String value;
+
+  const ExerciseColumns(this.value);
+}
+
+class Exercise extends Equatable implements Model {
+  @override
+  final int? id;
+  final String name;
+  final String? description;
+  final PictureData? picture;
+  final VideoData? video;
+  final MuscleGroup muscleGroup;
+  final TargetMuscles muscles;
+  final bool isFavorite;
+  final Difficulty? difficulty;
+  final CreatedBy createdBy;
+  @override
+  final int createdAt;
+  @override
+  final int updatedAt;
+
+  const Exercise({
+    this.id,
+    required this.name,
+    this.description,
+    this.picture,
+    this.video,
+    required this.muscleGroup,
+    required this.muscles,
+    this.isFavorite = false,
+    this.difficulty,
+    required this.createdBy,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+
+  static const String table = _table;
+  static final String tableCreate =
+      """
+  CREATE TABLE IF NOT EXISTS $_table (
+    ${ExerciseColumns.id.value} INTEGER PRIMARY KEY AUTOINCREMENT,
+    ${ExerciseColumns.name.value} TEXT NOT NULL,
+    ${ExerciseColumns.description.value} TEXT,
+    ${ExerciseColumns.picture.value} TEXT,
+    ${ExerciseColumns.video.value} TEXT,
+    ${ExerciseColumns.muscleGroup.value} TEXT NOT NULL,
+    ${ExerciseColumns.muscles.value} TEXT NOT NULL,
+    ${ExerciseColumns.isFavorite.value} INTEGER NOT NULL DEFAULT 0,
+    ${ExerciseColumns.difficulty.value} INTEGER,
+    ${ExerciseColumns.createdBy.value} TEXT NOT NULL,
+    ${ExerciseColumns.createdAt.value} INTEGER NOT NULL,
+    ${ExerciseColumns.updatedAt.value} INTEGER NOT NULL
+  );
+  
+  CREATE INDEX IF NOT EXISTS idx_exercises_muscle_group ON $_table (${ExerciseColumns.muscleGroup.value});
+  CREATE UNIQUE INDEX IF NOT EXISTS unique_idx_exercises_name_id ON $_table (${ExerciseColumns.name.value});
+  """;
+
+  @override
+  Map<String, Object?> toMap() {
+    return {
+      ExerciseColumns.id.value: id,
+      ExerciseColumns.name.value: name,
+      ExerciseColumns.description.value: description,
+      ExerciseColumns.picture.value: picture?.toJson(),
+      ExerciseColumns.video.value: video?.toJson(),
+      ExerciseColumns.muscleGroup.value: muscleGroup.value,
+      ExerciseColumns.muscles.value: muscles.toJson(),
+      ExerciseColumns.isFavorite.value: isFavorite ? 1 : 0,
+      ExerciseColumns.difficulty.value: difficulty?.value,
+      ExerciseColumns.createdBy.value: createdBy.value,
+      ExerciseColumns.createdAt.value: createdAt,
+      ExerciseColumns.updatedAt.value: updatedAt,
+    };
+  }
+
+  factory Exercise.fromMap(Map<String, Object?> map) {
+    return Exercise(
+      id: map[ExerciseColumns.id.value] as int?,
+      name: map[ExerciseColumns.name.value] as String,
+      description: map[ExerciseColumns.description.value] as String?,
+      picture: map[ExerciseColumns.picture.value] != null
+          ? PictureData.fromJson(map[ExerciseColumns.picture.value] as String)
+          : null,
+      video: map[ExerciseColumns.video.value] != null
+          ? VideoData.fromJson(map[ExerciseColumns.video.value] as String)
+          : null,
+      muscleGroup: MuscleGroup.fromValue(
+        map[ExerciseColumns.muscleGroup.value] as String,
+      ),
+      muscles: TargetMuscles.fromJson(
+        map[ExerciseColumns.muscles.value] as String? ??
+            '{"primary":[],"secondary":[]}',
+      ),
+      isFavorite: map[ExerciseColumns.isFavorite.value] as int == 1,
+      difficulty: map[ExerciseColumns.difficulty.value] != null
+          ? Difficulty.fromValue(map[ExerciseColumns.difficulty.value] as int)
+          : null,
+      createdBy: CreatedBy.fromValue(
+        map[ExerciseColumns.createdBy.value] as String,
+      ),
+      createdAt: map[ExerciseColumns.createdAt.value] as int,
+      updatedAt: map[ExerciseColumns.updatedAt.value] as int,
+    );
+  }
+
+  factory Exercise.create({
+    required String name,
+    required MuscleGroup muscleGroup,
+    required TargetMuscles muscles,
+    String? description,
+    PictureData? picture,
+    VideoData? video,
+    Difficulty? difficulty,
+    bool? isFavorite,
+    CreatedBy createdBy = CreatedBy.user,
+  }) {
+    final int now = DateUtilities.getNowUtcUnix();
+    return Exercise(
+      name: name,
+      muscleGroup: muscleGroup,
+      muscles: muscles,
+      description: description,
+      picture: picture,
+      video: video,
+      isFavorite: isFavorite ?? false,
+      difficulty: difficulty,
+      createdBy: createdBy,
+      createdAt: now,
+      updatedAt: now,
+    );
+  }
+
+  @override
+  Exercise copyWith({
+    Nullable<int>? id,
+    String? name,
+    Nullable<String>? description,
+    Nullable<PictureData>? picture,
+    Nullable<VideoData>? video,
+    MuscleGroup? muscleGroup,
+    TargetMuscles? muscles,
+    bool? isFavorite,
+    Nullable<Difficulty>? difficulty,
+    CreatedBy? createdBy,
+    int? createdAt,
+    int? updatedAt,
+  }) {
+    return Exercise(
+      id: id != null ? id.value : this.id,
+      name: name ?? this.name,
+      description: description != null ? description.value : this.description,
+      picture: picture != null ? picture.value : this.picture,
+      video: video != null ? video.value : this.video,
+      muscleGroup: muscleGroup ?? this.muscleGroup,
+      muscles: muscles ?? this.muscles,
+      isFavorite: isFavorite ?? this.isFavorite,
+      difficulty: difficulty != null ? difficulty.value : this.difficulty,
+      createdBy: createdBy ?? this.createdBy,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return 'Exercise{id: $id, name: $name, picture: $picture, video: $video, muscleGroup: $muscleGroup, muscles: $muscles, isFavorite: $isFavorite, difficulty: $difficulty, createdBy: $createdBy, createdAt: $createdAt, updatedAt: $updatedAt}';
+  }
+
+  @override
+  List<Object?> get props => [
+    id,
+    name,
+    description,
+    picture,
+    video,
+    muscleGroup,
+    muscles,
+    isFavorite,
+    difficulty,
+    createdBy,
+    createdAt,
+    updatedAt,
+  ];
+}

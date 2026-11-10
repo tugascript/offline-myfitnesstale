@@ -4,13 +4,13 @@ import 'package:integration_test/integration_test.dart';
 import 'package:sqflite/sqflite.dart';
 
 import 'package:myfitnesstale/src/data/services/sqlite/database_helper.dart';
-import 'package:myfitnesstale/src/data/models/workout_model.dart';
-import 'package:myfitnesstale/src/data/models/workout_plan_day_model.dart';
-import 'package:myfitnesstale/src/data/models/workout_plan_model.dart';
-import 'package:myfitnesstale/src/data/models/workout_plan_record_model.dart';
-import 'package:myfitnesstale/src/data/models/workout_plan_week_model.dart';
-import 'package:myfitnesstale/src/data/models/workout_plan_workout_model.dart';
-import 'package:myfitnesstale/src/data/models/workout_plan_workout_record_model.dart';
+import 'package:myfitnesstale/src/data/models/sqlite/workout_model.dart';
+import 'package:myfitnesstale/src/data/models/sqlite/workout_plan_day_model.dart';
+import 'package:myfitnesstale/src/data/models/sqlite/workout_plan_model.dart';
+import 'package:myfitnesstale/src/data/models/sqlite/workout_plan_record_model.dart';
+import 'package:myfitnesstale/src/data/models/sqlite/workout_plan_week_model.dart';
+import 'package:myfitnesstale/src/data/models/sqlite/workout_plan_workout_model.dart';
+import 'package:myfitnesstale/src/data/models/sqlite/workout_plan_workout_record_model.dart';
 import 'package:myfitnesstale/src/ui/workout_plans/screens/workout_plan_history_screen.dart';
 
 import 'support/device_test_harness.dart';

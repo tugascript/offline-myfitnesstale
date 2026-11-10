@@ -1,17 +1,17 @@
 // Copyright (C) 2026 afonsobarracha
-// 
+//
 // This file is part of My Fitness Tale.
-// 
+//
 // My Fitness Tale is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // My Fitness Tale is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with My Fitness Tale.  If not, see <https://www.gnu.org/licenses/>.
 
@@ -22,25 +22,25 @@ import 'package:path/path.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 import 'package:myfitnesstale/src/data/services/sqlite/database_helper.dart';
-import 'package:myfitnesstale/src/data/models/equipment_model.dart';
-import 'package:myfitnesstale/src/data/models/exercise_equipment_model.dart';
-import 'package:myfitnesstale/src/data/models/exercise_model.dart';
-import 'package:myfitnesstale/src/data/models/profile_model.dart';
-import 'package:myfitnesstale/src/data/models/reminders_config_model.dart';
-import 'package:myfitnesstale/src/data/models/system_model.dart';
-import 'package:myfitnesstale/src/data/models/workout_model.dart';
-import 'package:myfitnesstale/src/data/models/workout_plan_day_model.dart';
-import 'package:myfitnesstale/src/data/models/workout_plan_day_record_model.dart';
-import 'package:myfitnesstale/src/data/models/workout_plan_model.dart';
-import 'package:myfitnesstale/src/data/models/workout_plan_record_model.dart';
-import 'package:myfitnesstale/src/data/models/workout_plan_week_model.dart';
-import 'package:myfitnesstale/src/data/models/workout_plan_week_record_model.dart';
-import 'package:myfitnesstale/src/data/models/workout_plan_workout_model.dart';
-import 'package:myfitnesstale/src/data/models/workout_plan_workout_record_model.dart';
-import 'package:myfitnesstale/src/data/models/workout_set_exercise_model.dart';
-import 'package:myfitnesstale/src/data/models/workout_set_exercise_option_model.dart';
-import 'package:myfitnesstale/src/data/models/workout_set_model.dart';
-import 'package:myfitnesstale/src/data/models/workout_record_model.dart';
+import 'package:myfitnesstale/src/data/models/sqlite/equipment_model.dart';
+import 'package:myfitnesstale/src/data/models/sqlite/exercise_equipment_model.dart';
+import 'package:myfitnesstale/src/data/models/sqlite/exercise_model.dart';
+import 'package:myfitnesstale/src/data/models/sqlite/profile_model.dart';
+import 'package:myfitnesstale/src/data/models/sqlite/reminders_config_model.dart';
+import 'package:myfitnesstale/src/data/models/sqlite/system_model.dart';
+import 'package:myfitnesstale/src/data/models/sqlite/workout_model.dart';
+import 'package:myfitnesstale/src/data/models/sqlite/workout_plan_day_model.dart';
+import 'package:myfitnesstale/src/data/models/sqlite/workout_plan_day_record_model.dart';
+import 'package:myfitnesstale/src/data/models/sqlite/workout_plan_model.dart';
+import 'package:myfitnesstale/src/data/models/sqlite/workout_plan_record_model.dart';
+import 'package:myfitnesstale/src/data/models/sqlite/workout_plan_week_model.dart';
+import 'package:myfitnesstale/src/data/models/sqlite/workout_plan_week_record_model.dart';
+import 'package:myfitnesstale/src/data/models/sqlite/workout_plan_workout_model.dart';
+import 'package:myfitnesstale/src/data/models/sqlite/workout_plan_workout_record_model.dart';
+import 'package:myfitnesstale/src/data/models/sqlite/workout_set_exercise_model.dart';
+import 'package:myfitnesstale/src/data/models/sqlite/workout_set_exercise_option_model.dart';
+import 'package:myfitnesstale/src/data/models/sqlite/workout_set_model.dart';
+import 'package:myfitnesstale/src/data/models/sqlite/workout_record_model.dart';
 
 class TestDatabase {
   String? _originalDatabasesPath;

@@ -1,17 +1,17 @@
 // Copyright (C) 2026 afonsobarracha
-// 
+//
 // This file is part of My Fitness Tale.
-// 
+//
 // My Fitness Tale is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // My Fitness Tale is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with My Fitness Tale.  If not, see <https://www.gnu.org/licenses/>.
 
@@ -20,7 +20,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:myfitnesstale/src/ui/foods/view_models/food_cubit.dart';
 import 'package:myfitnesstale/src/ui/meal_plans/view_models/meal_plan_cubit.dart';
 import 'package:myfitnesstale/src/ui/weight/view_models/weight_record_cubit.dart';
-import 'package:myfitnesstale/src/data/models/exercise_model.dart';
+import 'package:myfitnesstale/src/data/models/sqlite/exercise_model.dart';
 import 'package:myfitnesstale/src/data/repositories/exercises/exercise_record_repository.dart';
 import 'package:myfitnesstale/src/data/utils/enums.dart';
 import 'package:myfitnesstale/src/data/utils/json_data.dart';

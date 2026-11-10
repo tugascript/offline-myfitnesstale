@@ -1,0 +1,253 @@
+// Copyright (C) 2026 afonsobarracha
+//
+// This file is part of My Fitness Tale.
+//
+// My Fitness Tale is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// My Fitness Tale is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with My Fitness Tale.  If not, see <https://www.gnu.org/licenses/>.
+
+import '../../../utils/nullable.dart';
+
+import 'package:equatable/equatable.dart';
+
+import '../../utils/enums.dart';
+import 'meal_plan_model.dart';
+import 'meal_plan_week_model.dart';
+import 'model.dart';
+import '../../utils/dates.dart';
+
+const String _table = 'meal_plan_days';
+
+enum MealPlanDayColumns with Columns {
+  id("id"),
+  mealPlanId("meal_plan_id"),
+  mealPlanWeekId("meal_plan_week_id"),
+  planVersion("plan_version"),
+  day("day"),
+  name("name"),
+  targetCalories("target_calories"),
+  targetProtein("target_protein"),
+  targetCarbs("target_carbs"),
+  targetFat("target_fat"),
+  targetFiber("target_fiber"),
+  totalMeals("total_meals"),
+  createdBy("created_by"),
+  createdAt("created_at"),
+  updatedAt("updated_at");
+
+  @override
+  final String value;
+
+  const MealPlanDayColumns(this.value);
+}
+
+class MealPlanDay extends Equatable implements Model {
+  @override
+  final int? id;
+  final int mealPlanId;
+  final int mealPlanWeekId;
+  final int planVersion;
+  final int day;
+  final String? name;
+  final int targetCalories;
+  final int targetProtein;
+  final int targetCarbs;
+  final int targetFat;
+  final int? targetFiber;
+  final int totalMeals;
+  final CreatedBy createdBy;
+  @override
+  final int createdAt;
+  @override
+  final int updatedAt;
+
+  const MealPlanDay({
+    this.id,
+    required this.mealPlanId,
+    required this.mealPlanWeekId,
+    this.planVersion = 1,
+    required this.day,
+    this.name,
+    required this.targetCalories,
+    required this.targetProtein,
+    required this.targetCarbs,
+    required this.targetFat,
+    this.targetFiber,
+    this.totalMeals = 0,
+    required this.createdBy,
+    required this.createdAt,
+    required this.updatedAt,
+  }) : assert(day >= 1 && day <= 7, 'day must be between 1 and 7');
+
+  static const String table = _table;
+
+  static final String tableCreate =
+      '''
+  CREATE TABLE IF NOT EXISTS $_table (
+    ${MealPlanDayColumns.id.value} INTEGER PRIMARY KEY AUTOINCREMENT,
+    ${MealPlanDayColumns.mealPlanId.value} INTEGER NOT NULL,
+    ${MealPlanDayColumns.mealPlanWeekId.value} INTEGER NOT NULL,
+    ${MealPlanDayColumns.planVersion.value} INTEGER NOT NULL DEFAULT 1,
+    ${MealPlanDayColumns.day.value} INTEGER NOT NULL CHECK (${MealPlanDayColumns.day.value} >= 1 AND ${MealPlanDayColumns.day.value} <= 7),
+    ${MealPlanDayColumns.name.value} TEXT,
+    ${MealPlanDayColumns.targetCalories.value} INTEGER NOT NULL,
+    ${MealPlanDayColumns.targetProtein.value} INTEGER NOT NULL,
+    ${MealPlanDayColumns.targetCarbs.value} INTEGER NOT NULL,
+    ${MealPlanDayColumns.targetFat.value} INTEGER NOT NULL,
+    ${MealPlanDayColumns.targetFiber.value} INTEGER,
+    ${MealPlanDayColumns.totalMeals.value} INTEGER NOT NULL DEFAULT 0,
+    ${MealPlanDayColumns.createdBy.value} TEXT NOT NULL,
+    ${MealPlanDayColumns.createdAt.value} INTEGER NOT NULL,
+    ${MealPlanDayColumns.updatedAt.value} INTEGER NOT NULL,
+    FOREIGN KEY (${MealPlanDayColumns.mealPlanId.value}) REFERENCES ${MealPlan.table} (${MealPlanColumns.id.value})
+      ON DELETE CASCADE,
+    FOREIGN KEY (${MealPlanDayColumns.mealPlanWeekId.value}) REFERENCES ${MealPlanWeek.table} (${MealPlanWeekColumns.id.value})
+      ON DELETE CASCADE
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_meal_plan_days_plan_id ON $_table (${MealPlanDayColumns.mealPlanId.value});
+  CREATE INDEX IF NOT EXISTS idx_meal_plan_days_week_id ON $_table (${MealPlanDayColumns.mealPlanWeekId.value});
+  CREATE UNIQUE INDEX IF NOT EXISTS unique_idx_meal_plan_days ON $_table (${MealPlanDayColumns.mealPlanWeekId.value}, ${MealPlanDayColumns.planVersion.value}, ${MealPlanDayColumns.day.value});
+  ''';
+
+  @override
+  Map<String, Object?> toMap() {
+    return {
+      MealPlanDayColumns.id.value: id,
+      MealPlanDayColumns.mealPlanId.value: mealPlanId,
+      MealPlanDayColumns.mealPlanWeekId.value: mealPlanWeekId,
+      MealPlanDayColumns.planVersion.value: planVersion,
+      MealPlanDayColumns.day.value: day,
+      MealPlanDayColumns.name.value: name,
+      MealPlanDayColumns.targetCalories.value: targetCalories,
+      MealPlanDayColumns.targetProtein.value: targetProtein,
+      MealPlanDayColumns.targetCarbs.value: targetCarbs,
+      MealPlanDayColumns.targetFat.value: targetFat,
+      MealPlanDayColumns.targetFiber.value: targetFiber,
+      MealPlanDayColumns.totalMeals.value: totalMeals,
+      MealPlanDayColumns.createdBy.value: createdBy.value,
+      MealPlanDayColumns.createdAt.value: createdAt,
+      MealPlanDayColumns.updatedAt.value: updatedAt,
+    };
+  }
+
+  factory MealPlanDay.fromMap(Map<String, Object?> map) {
+    return MealPlanDay(
+      id: map[MealPlanDayColumns.id.value] as int?,
+      mealPlanId: map[MealPlanDayColumns.mealPlanId.value] as int,
+      mealPlanWeekId: map[MealPlanDayColumns.mealPlanWeekId.value] as int,
+      planVersion: map[MealPlanDayColumns.planVersion.value] as int? ?? 1,
+      day: map[MealPlanDayColumns.day.value] as int,
+      name: map[MealPlanDayColumns.name.value] as String?,
+      totalMeals: map[MealPlanDayColumns.totalMeals.value] as int? ?? 0,
+      targetCalories: map[MealPlanDayColumns.targetCalories.value] as int,
+      targetProtein: map[MealPlanDayColumns.targetProtein.value] as int,
+      targetCarbs: map[MealPlanDayColumns.targetCarbs.value] as int,
+      targetFat: map[MealPlanDayColumns.targetFat.value] as int,
+      targetFiber: map[MealPlanDayColumns.targetFiber.value] as int?,
+      createdBy: CreatedBy.fromValue(
+        map[MealPlanDayColumns.createdBy.value] as String,
+      ),
+      createdAt: map[MealPlanDayColumns.createdAt.value] as int,
+      updatedAt: map[MealPlanDayColumns.updatedAt.value] as int,
+    );
+  }
+
+  factory MealPlanDay.create({
+    required int mealPlanId,
+    required int mealPlanWeekId,
+    int planVersion = 1,
+    required int day,
+    String? name,
+    required int targetCalories,
+    required int targetProtein,
+    required int targetCarbs,
+    required int targetFat,
+    int? targetFiber,
+    int totalMeals = 0,
+    CreatedBy createdBy = CreatedBy.user,
+  }) {
+    final int now = DateUtilities.getNowUtcUnix();
+    return MealPlanDay(
+      mealPlanId: mealPlanId,
+      mealPlanWeekId: mealPlanWeekId,
+      planVersion: planVersion,
+      day: day,
+      name: name,
+      targetCalories: targetCalories,
+      targetProtein: targetProtein,
+      targetCarbs: targetCarbs,
+      targetFat: targetFat,
+      targetFiber: targetFiber,
+      totalMeals: totalMeals,
+      createdBy: createdBy,
+      createdAt: now,
+      updatedAt: now,
+    );
+  }
+
+  @override
+  MealPlanDay copyWith({
+    Nullable<int>? id,
+    int? mealPlanId,
+    int? mealPlanWeekId,
+    int? planVersion,
+    int? day,
+    Nullable<String>? name,
+    int? targetCalories,
+    int? targetProtein,
+    int? targetCarbs,
+    int? targetFat,
+    Nullable<int>? targetFiber,
+    int? totalMeals,
+    CreatedBy? createdBy,
+    int? createdAt,
+    int? updatedAt,
+  }) {
+    return MealPlanDay(
+      id: id != null ? id.value : this.id,
+      mealPlanId: mealPlanId ?? this.mealPlanId,
+      mealPlanWeekId: mealPlanWeekId ?? this.mealPlanWeekId,
+      planVersion: planVersion ?? this.planVersion,
+      day: day ?? this.day,
+      name: name != null ? name.value : this.name,
+      targetCalories: targetCalories ?? this.targetCalories,
+      targetProtein: targetProtein ?? this.targetProtein,
+      targetCarbs: targetCarbs ?? this.targetCarbs,
+      targetFat: targetFat ?? this.targetFat,
+      targetFiber: targetFiber != null ? targetFiber.value : this.targetFiber,
+      totalMeals: totalMeals ?? this.totalMeals,
+      createdBy: createdBy ?? this.createdBy,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
+
+  @override
+  List<Object?> get props => [
+    id,
+    mealPlanId,
+    mealPlanWeekId,
+    planVersion,
+    day,
+    name,
+    targetCalories,
+    targetProtein,
+    targetCarbs,
+    targetFat,
+    targetFiber,
+    totalMeals,
+    createdBy,
+    createdAt,
+    updatedAt,
+  ];
+}

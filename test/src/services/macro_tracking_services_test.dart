@@ -1,17 +1,17 @@
 // Copyright (C) 2026 afonsobarracha
-// 
+//
 // This file is part of My Fitness Tale.
-// 
+//
 // My Fitness Tale is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // My Fitness Tale is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with My Fitness Tale.  If not, see <https://www.gnu.org/licenses/>.
 
@@ -23,12 +23,12 @@ import 'package:myfitnesstale/src/data/repositories/recipes/inputs/recipe_input.
 
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:myfitnesstale/src/data/models/day_macro_goal_model.dart';
+import 'package:myfitnesstale/src/data/models/sqlite/day_macro_goal_model.dart';
 import 'package:myfitnesstale/src/data/utils/enums.dart';
-import 'package:myfitnesstale/src/data/models/food_model.dart';
-import 'package:myfitnesstale/src/data/models/food_portion_model.dart';
-import 'package:myfitnesstale/src/data/models/meal_plan_record_model.dart';
-import 'package:myfitnesstale/src/data/models/week_macro_goal_model.dart';
+import 'package:myfitnesstale/src/data/models/sqlite/food_model.dart';
+import 'package:myfitnesstale/src/data/models/sqlite/food_portion_model.dart';
+import 'package:myfitnesstale/src/data/models/sqlite/meal_plan_record_model.dart';
+import 'package:myfitnesstale/src/data/models/sqlite/week_macro_goal_model.dart';
 import 'package:myfitnesstale/src/utils/errors.dart';
 import 'package:myfitnesstale/src/data/repositories/foods/food_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/macros/macro_tracking_repository.dart';
