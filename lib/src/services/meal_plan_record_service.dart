@@ -110,7 +110,7 @@ class MealPlanRecordService {
         // 1. Abandon existing in-progress meal plan record
         {
           final models = await _recordRepository.selectMany(
-            where: '${MealPlanRecordColumns.status.value} = ?',
+            where: MealPlanRecordColumns.status.equal,
             whereArgs: [ProgressStatus.inProgress.value],
             trx: txn,
           );
@@ -127,11 +127,13 @@ class MealPlanRecordService {
         }
 
         // 2. Load plan's weeks and days for targetVersion
+        final weekWhere = WhereBuilder()
+          ..and(MealPlanWeekColumns.mealPlanId.equal, mealPlanId)
+          ..and(MealPlanWeekColumns.planVersion.equal, targetVersion);
         final weekRows = await _mealPlanWeekRepository.selectMany(
-          where:
-              '${MealPlanWeekColumns.mealPlanId.value} = ? AND ${MealPlanWeekColumns.planVersion.value} = ?',
-          whereArgs: [mealPlanId, targetVersion],
-          orderBy: ['${MealPlanWeekColumns.weekNumber.value} ASC'],
+          where: weekWhere.where!,
+          whereArgs: weekWhere.args!,
+          orderBy: [MealPlanWeekColumns.weekNumber.orderAsc],
           trx: txn,
         );
 
@@ -171,9 +173,9 @@ class MealPlanRecordService {
           );
 
           final dayRows = await _mealPlanDayRepository.selectMany(
-            where: '${MealPlanDayColumns.mealPlanWeekId.value} = ?',
+            where: MealPlanDayColumns.mealPlanWeekId.equal,
             whereArgs: [w.id!],
-            orderBy: ['${MealPlanDayColumns.day.value} ASC'],
+            orderBy: [MealPlanDayColumns.day.orderAsc],
             trx: txn,
           );
 
@@ -193,7 +195,7 @@ class MealPlanRecordService {
 
             // Get or create DailyNutritionLog for that calendar day
             final existingLogRows = await _dailyLogRepository.selectMany(
-              where: '${DailyNutritionLogColumns.date.value} = ?',
+              where: DailyNutritionLogColumns.date.equal,
               whereArgs: [numericDate],
               limit: 1,
               trx: txn,
@@ -283,7 +285,7 @@ class MealPlanRecordService {
 
       // Load weeks and days
       final weekRecords = await _weekRecordRepository.selectMany(
-        where: '${MealPlanWeekRecordColumns.mealPlanRecordId.value} = ?',
+        where: MealPlanWeekRecordColumns.mealPlanRecordId.equal,
         whereArgs: [active.id!],
         orderBy: [MealPlanWeekRecordColumns.week.orderAsc],
       );
@@ -291,7 +293,7 @@ class MealPlanRecordService {
       final List<MealPlanWeekRecordDto> weekDtos = [];
       for (final wRec in weekRecords) {
         final dayRecords = await _dayRecordRepository.selectMany(
-          where: '${MealPlanDayRecordColumns.mealPlanWeekRecordId.value} = ?',
+          where: MealPlanDayRecordColumns.mealPlanWeekRecordId.equal,
           whereArgs: [wRec.id!],
           orderBy: [MealPlanDayRecordColumns.day.orderAsc],
         );
@@ -335,7 +337,7 @@ class MealPlanRecordService {
         Result<MealPlanRecordDto, ServiceError<SingleErrorTypes>>
       >((txn) async {
         final recordRows = await _recordRepository.selectMany(
-          where: '${MealPlanRecordColumns.id.value} = ?',
+          where: MealPlanRecordColumns.id.equal,
           whereArgs: [recordId],
           limit: 1,
           trx: txn,
@@ -355,10 +357,12 @@ class MealPlanRecordService {
         }
 
         // Find current week record
+        final weekRecWhere = WhereBuilder()
+          ..and(MealPlanWeekRecordColumns.mealPlanRecordId.equal, recordId)
+          ..and(MealPlanWeekRecordColumns.week.equal, record.currentWeek);
         final weekRecRows = await _weekRecordRepository.selectMany(
-          where:
-              '${MealPlanWeekRecordColumns.mealPlanRecordId.value} = ? AND ${MealPlanWeekRecordColumns.week.value} = ?',
-          whereArgs: [recordId, record.currentWeek],
+          where: weekRecWhere.where!,
+          whereArgs: weekRecWhere.args!,
           limit: 1,
           trx: txn,
         );
@@ -371,10 +375,15 @@ class MealPlanRecordService {
         final currentWeekRec = weekRecRows.first;
 
         // Find current day record
+        final dayRecWhere = WhereBuilder()
+          ..and(
+            MealPlanDayRecordColumns.mealPlanWeekRecordId.equal,
+            currentWeekRec.id!,
+          )
+          ..and(MealPlanDayRecordColumns.day.equal, record.currentDay);
         final dayRecRows = await _dayRecordRepository.selectMany(
-          where:
-              '${MealPlanDayRecordColumns.mealPlanWeekRecordId.value} = ? AND ${MealPlanDayRecordColumns.day.value} = ?',
-          whereArgs: [currentWeekRec.id!, record.currentDay],
+          where: dayRecWhere.where!,
+          whereArgs: dayRecWhere.args!,
           limit: 1,
           trx: txn,
         );
@@ -388,7 +397,7 @@ class MealPlanRecordService {
 
         // Roll up logged totals from DailyNutritionLog
         final mealLogRows = await _mealLogRepository.selectMany(
-          where: '${MealLogColumns.dailyLogId.value} = ?',
+          where: MealLogColumns.dailyLogId.equal,
           whereArgs: [currentDayRec.dailyLogId],
           trx: txn,
         );
@@ -425,9 +434,9 @@ class MealPlanRecordService {
 
         // Check if there is another day in this week
         final allDaysInWeekRows = await _dayRecordRepository.selectMany(
-          where: '${MealPlanDayRecordColumns.mealPlanWeekRecordId.value} = ?',
+          where: MealPlanDayRecordColumns.mealPlanWeekRecordId.equal,
           whereArgs: [currentWeekRec.id!],
-          orderBy: ['${MealPlanDayRecordColumns.day.value} ASC'],
+          orderBy: [MealPlanDayRecordColumns.day.orderAsc],
           trx: txn,
         );
         final allDaysInWeek = allDaysInWeekRows.map((r) => r).toList();
@@ -440,7 +449,7 @@ class MealPlanRecordService {
           // Advance day in same week
           {
             final models = await _dayRecordRepository.selectMany(
-              where: '${MealPlanDayRecordColumns.id.value} = ?',
+              where: MealPlanDayRecordColumns.id.equal,
               whereArgs: [nextDay.id!],
               trx: txn,
             );
@@ -457,7 +466,7 @@ class MealPlanRecordService {
 
           {
             final models = await _weekRecordRepository.selectMany(
-              where: '${MealPlanWeekRecordColumns.id.value} = ?',
+              where: MealPlanWeekRecordColumns.id.equal,
               whereArgs: [currentWeekRec.id!],
               trx: txn,
             );
@@ -471,7 +480,7 @@ class MealPlanRecordService {
 
           {
             final models = await _recordRepository.selectMany(
-              where: '${MealPlanRecordColumns.id.value} = ?',
+              where: MealPlanRecordColumns.id.equal,
               whereArgs: [recordId],
               trx: txn,
             );
@@ -508,7 +517,7 @@ class MealPlanRecordService {
 
           {
             final models = await _weekRecordRepository.selectMany(
-              where: '${MealPlanWeekRecordColumns.id.value} = ?',
+              where: MealPlanWeekRecordColumns.id.equal,
               whereArgs: [currentWeekRec.id!],
               trx: txn,
             );
@@ -531,9 +540,9 @@ class MealPlanRecordService {
 
           // Check if there is a next week
           final allWeeksRows = await _weekRecordRepository.selectMany(
-            where: '${MealPlanWeekRecordColumns.mealPlanRecordId.value} = ?',
+            where: MealPlanWeekRecordColumns.mealPlanRecordId.equal,
             whereArgs: [recordId],
-            orderBy: ['${MealPlanWeekRecordColumns.week.value} ASC'],
+            orderBy: [MealPlanWeekRecordColumns.week.orderAsc],
             trx: txn,
           );
           final allWeeks = allWeeksRows.map((r) => r).toList();
@@ -546,7 +555,7 @@ class MealPlanRecordService {
             // Advance to next week
             {
               final models = await _weekRecordRepository.selectMany(
-                where: '${MealPlanWeekRecordColumns.id.value} = ?',
+                where: MealPlanWeekRecordColumns.id.equal,
                 whereArgs: [nextWeek.id!],
                 trx: txn,
               );
@@ -563,17 +572,22 @@ class MealPlanRecordService {
             }
 
             // Find first day of next week
+            final firstDayWhere = WhereBuilder()
+              ..and(
+                MealPlanDayRecordColumns.mealPlanWeekRecordId.equal,
+                nextWeek.id!,
+              )
+              ..and(MealPlanDayRecordColumns.day.equal, 1);
             final nextWeekFirstDay = await _dayRecordRepository.selectMany(
-              where:
-                  '${MealPlanDayRecordColumns.mealPlanWeekRecordId.value} = ? AND ${MealPlanDayRecordColumns.day.value} = ?',
-              whereArgs: [nextWeek.id!, 1],
+              where: firstDayWhere.where!,
+              whereArgs: firstDayWhere.args!,
               limit: 1,
               trx: txn,
             );
             if (nextWeekFirstDay.isNotEmpty) {
               {
                 final models = await _dayRecordRepository.selectMany(
-                  where: '${MealPlanDayRecordColumns.id.value} = ?',
+                  where: MealPlanDayRecordColumns.id.equal,
                   whereArgs: [nextWeekFirstDay.first.id!],
                   trx: txn,
                 );
@@ -591,7 +605,7 @@ class MealPlanRecordService {
 
             {
               final models = await _recordRepository.selectMany(
-                where: '${MealPlanRecordColumns.id.value} = ?',
+                where: MealPlanRecordColumns.id.equal,
                 whereArgs: [recordId],
                 trx: txn,
               );
@@ -610,7 +624,7 @@ class MealPlanRecordService {
             // Complete entire meal plan record!
             {
               final models = await _recordRepository.selectMany(
-                where: '${MealPlanRecordColumns.id.value} = ?',
+                where: MealPlanRecordColumns.id.equal,
                 whereArgs: [recordId],
                 trx: txn,
               );
@@ -630,7 +644,7 @@ class MealPlanRecordService {
 
         // Reload record
         final updatedRecRows = await _recordRepository.selectMany(
-          where: '${MealPlanRecordColumns.id.value} = ?',
+          where: MealPlanRecordColumns.id.equal,
           whereArgs: [recordId],
           trx: txn,
         );

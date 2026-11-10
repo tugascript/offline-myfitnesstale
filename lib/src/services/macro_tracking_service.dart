@@ -282,7 +282,7 @@ class MacroTrackingService {
         (txn) async {
           if (input.isActive) {
             final activeWeeks = await _weekMacroGoalRepository.selectMany(
-              where: '${WeekMacroGoalColumns.isActive.value} = ?',
+              where: WeekMacroGoalColumns.isActive.equal,
               whereArgs: [1],
               trx: txn,
             );
@@ -293,7 +293,7 @@ class MacroTrackingService {
               );
             }
             final activeDays = await _dayMacroGoalRepository.selectMany(
-              where: '${DayMacroGoalColumns.isActive.value} = ?',
+              where: DayMacroGoalColumns.isActive.equal,
               whereArgs: [1],
               trx: txn,
             );
@@ -375,7 +375,7 @@ class MacroTrackingService {
       >((txn) async {
         if (input.isActive) {
           final models = await _weekMacroGoalRepository.selectMany(
-            where: '${WeekMacroGoalColumns.isActive.value} = ?',
+            where: WeekMacroGoalColumns.isActive.equal,
             whereArgs: [1],
             trx: txn,
           );
@@ -386,7 +386,7 @@ class MacroTrackingService {
             );
           }
           final activeDays = await _dayMacroGoalRepository.selectMany(
-            where: '${DayMacroGoalColumns.isActive.value} = ?',
+            where: DayMacroGoalColumns.isActive.equal,
             whereArgs: [1],
             trx: txn,
           );
@@ -415,7 +415,7 @@ class MacroTrackingService {
 
         await _weekMacroGoalRepository.update(updated, txn);
         await _dayMacroGoalRepository.deleteMany(
-          where: '${DayMacroGoalColumns.weekMacroGoalId.value} = ?',
+          where: DayMacroGoalColumns.weekMacroGoalId.equal,
           whereArgs: [id],
           trx: txn,
         );
@@ -473,7 +473,7 @@ class MacroTrackingService {
       >((txn) async {
         await _weekMacroGoalRepository.update(updated, txn);
         final dayGoals = await _dayMacroGoalRepository.selectMany(
-          where: '${DayMacroGoalColumns.weekMacroGoalId.value} = ?',
+          where: DayMacroGoalColumns.weekMacroGoalId.equal,
           whereArgs: [id],
           orderBy: [DayMacroGoalColumns.id.orderAsc],
           trx: txn,
@@ -543,7 +543,7 @@ class MacroTrackingService {
       }
       final activeWeek = goals.first;
       final dayGoals = await _dayMacroGoalRepository.selectMany(
-        where: '${DayMacroGoalColumns.weekMacroGoalId.value} = ?',
+        where: DayMacroGoalColumns.weekMacroGoalId.equal,
         whereArgs: [activeWeek.id],
         orderBy: [DayMacroGoalColumns.id.orderAsc],
       );
@@ -581,10 +581,8 @@ class MacroTrackingService {
       final dtos = <MacroGoalDto>[];
       if (goals.isNotEmpty) {
         final weekIds = goals.map((g) => g.id!).toList();
-        final placeholders = List.filled(weekIds.length, '?').join(', ');
         final allDayGoals = await _dayMacroGoalRepository.selectMany(
-          where:
-              '${DayMacroGoalColumns.weekMacroGoalId.value} IN ($placeholders)',
+          where: DayMacroGoalColumns.weekMacroGoalId.inList(weekIds.length),
           whereArgs: weekIds,
           orderBy: [DayMacroGoalColumns.id.orderAsc],
         );
@@ -630,7 +628,7 @@ class MacroTrackingService {
     int numericDate,
   ) async {
     final existingRows = await _dailyLogRepository.selectMany(
-      where: '${DailyNutritionLogColumns.date.value} = ?',
+      where: DailyNutritionLogColumns.date.equal,
       whereArgs: [numericDate],
       limit: 1,
       trx: txn,
@@ -672,9 +670,9 @@ class MacroTrackingService {
     int dailyLogId,
   ) async {
     final mealRows = await _mealLogRepository.selectMany(
-      where: '${MealLogColumns.dailyLogId.value} = ?',
+      where: MealLogColumns.dailyLogId.equal,
       whereArgs: [dailyLogId],
-      orderBy: ['${MealLogColumns.logTime.value} ASC'],
+      orderBy: [MealLogColumns.logTime.orderAsc],
       trx: txn,
     );
 
@@ -682,9 +680,9 @@ class MacroTrackingService {
     for (final mRow in mealRows) {
       final meal = mRow;
       final itemRows = await _mealLogItemRepository.selectMany(
-        where: '${MealLogItemColumns.mealLogId.value} = ?',
+        where: MealLogItemColumns.mealLogId.equal,
         whereArgs: [meal.id!],
-        orderBy: ['${MealLogItemColumns.createdAt.value} ASC'],
+        orderBy: [MealLogItemColumns.createdAt.orderAsc],
         trx: txn,
       );
 
@@ -694,7 +692,7 @@ class MacroTrackingService {
         String? portionName;
         if (item.portionId != null) {
           final pRows = await _foodPortionRepository.selectMany(
-            where: '${FoodPortionColumns.id.value} = ?',
+            where: FoodPortionColumns.id.equal,
             whereArgs: [item.portionId!],
             limit: 1,
             trx: txn,
@@ -720,11 +718,13 @@ class MacroTrackingService {
     try {
       final logs = await _dailyLogRepository
           .startTransaction<List<DailyNutritionLogDto>>((txn) async {
+            final rangeWhere = WhereBuilder()
+              ..and(DailyNutritionLogColumns.date.greaterThanOrEqual, startNum)
+              ..and(DailyNutritionLogColumns.date.lessThanOrEqual, endNum);
             final logRows = await _dailyLogRepository.selectMany(
-              where:
-                  '${DailyNutritionLogColumns.date.value} >= ? AND ${DailyNutritionLogColumns.date.value} <= ?',
-              whereArgs: [startNum, endNum],
-              orderBy: ['${DailyNutritionLogColumns.date.value} ASC'],
+              where: rangeWhere.where,
+              whereArgs: rangeWhere.args,
+              orderBy: [DailyNutritionLogColumns.date.orderAsc],
               trx: txn,
             );
 
@@ -799,7 +799,7 @@ class MacroTrackingService {
         Result<MealLogDto, ServiceError<SingleErrorTypes>>
       >((txn) async {
         final foodRows = await _foodRepository.selectMany(
-          where: '${FoodColumns.id.value} = ?',
+          where: FoodColumns.id.equal,
           whereArgs: [foodId],
           limit: 1,
           trx: txn,
@@ -817,10 +817,12 @@ class MacroTrackingService {
         double effectiveGrams = amount.toDouble();
         String? portionName;
         if (portionId != null) {
+          final portionWhere = WhereBuilder()
+            ..and(FoodPortionColumns.id.equal, portionId)
+            ..and(FoodPortionColumns.foodId.equal, foodId);
           final pRows = await _foodPortionRepository.selectMany(
-            where:
-                '${FoodPortionColumns.id.value} = ? AND ${FoodPortionColumns.foodId.value} = ?',
-            whereArgs: [portionId, foodId],
+            where: portionWhere.where,
+            whereArgs: portionWhere.args,
             limit: 1,
             trx: txn,
           );
@@ -1018,7 +1020,7 @@ class MacroTrackingService {
         Result<MealLogDto, ServiceError<SingleErrorTypes>>
       >((txn) async {
         final recipeRows = await _recipeRepository.selectMany(
-          where: '${RecipeColumns.id.value} = ?',
+          where: RecipeColumns.id.equal,
           whereArgs: [recipeId],
           limit: 1,
           trx: txn,

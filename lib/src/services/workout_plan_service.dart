@@ -1106,8 +1106,7 @@ class WorkoutPlanService {
 
       final workoutIds = planWorkouts.map((e) => e.workoutId).toSet();
       final workouts = await _workoutRepository.selectMany(
-        where:
-            "${WorkoutColumns.id.value} IN (${List.filled(workoutIds.length, '?').join(', ')})",
+        where: WorkoutColumns.id.inList(workoutIds.length),
         whereArgs: workoutIds.toList(),
       );
       if (workouts.length != workoutIds.length) {
@@ -1258,8 +1257,7 @@ class WorkoutPlanService {
 
       final workoutIds = planWorkouts.map((e) => e.workoutId).toSet();
       final workouts = await _workoutRepository.selectMany(
-        where:
-            "${WorkoutColumns.id.value} IN (${List.filled(workoutIds.length, '?').join(', ')})",
+        where: WorkoutColumns.id.inList(workoutIds.length),
         whereArgs: workoutIds.toList(),
       );
       if (workouts.length != workoutIds.length) {
@@ -1383,7 +1381,7 @@ class WorkoutPlanService {
       }
 
       final int daysCount = await _dayRepository.count(
-        where: "${WorkoutPlanDayColumns.workoutPlanWeekId.value} = ?",
+        where: WorkoutPlanDayColumns.workoutPlanWeekId.equal,
         whereArgs: [workoutPlanWeekId],
       );
       if (day == null && daysCount >= 7) {
@@ -1400,8 +1398,7 @@ class WorkoutPlanService {
       }
 
       final List<Workout> workoutModels = await _workoutRepository.selectMany(
-        where:
-            "${WorkoutColumns.id.value} IN (${List.filled(workouts.length, '?').join(', ')})",
+        where: WorkoutColumns.id.inList(workouts.length),
         whereArgs: workouts.map((e) => e.workoutId).toList(),
       );
       if (workoutModels.length != workouts.length) {
@@ -1531,7 +1528,7 @@ class WorkoutPlanService {
 
       final int oldDay = planDay.day;
       final int daysCount = await _dayRepository.count(
-        where: "${WorkoutPlanDayColumns.workoutPlanWeekId.value} = ?",
+        where: WorkoutPlanDayColumns.workoutPlanWeekId.equal,
         whereArgs: [planDay.workoutPlanWeekId],
       );
       final int dayInt = day > daysCount ? daysCount : day;
@@ -1556,7 +1553,7 @@ class WorkoutPlanService {
 
       final List<WorkoutPlanWorkout> planWorkouts = await _planWorkoutRepository
           .selectMany(
-            where: "${WorkoutPlanWorkoutColumns.workoutPlanDayId.value} = ?",
+            where: WorkoutPlanWorkoutColumns.workoutPlanDayId.equal,
             whereArgs: [workoutPlanDayId],
           );
       if (planWorkouts.isEmpty) {
@@ -1564,8 +1561,7 @@ class WorkoutPlanService {
       }
 
       final List<Workout> workouts = await _workoutRepository.selectMany(
-        where:
-            "${WorkoutColumns.id.value} IN (${List.filled(planWorkouts.length, '?').join(', ')})",
+        where: WorkoutColumns.id.inList(planWorkouts.length),
         whereArgs: planWorkouts.map((e) => e.workoutId).toList(),
       );
       if (workouts.length != planWorkouts.length) {
@@ -1631,7 +1627,7 @@ class WorkoutPlanService {
 
       final int day = planDay.day;
       final int daysCount = await _dayRepository.count(
-        where: "${WorkoutPlanDayColumns.workoutPlanWeekId.value} = ?",
+        where: WorkoutPlanDayColumns.workoutPlanWeekId.equal,
         whereArgs: [planDay.workoutPlanWeekId],
       );
       if (day < daysCount) {
@@ -1713,7 +1709,7 @@ class WorkoutPlanService {
 
       final List<WorkoutPlanWorkout> planWorkouts = await _planWorkoutRepository
           .selectMany(
-            where: "${WorkoutPlanWorkoutColumns.workoutPlanDayId.value} = ?",
+            where: WorkoutPlanWorkoutColumns.workoutPlanDayId.equal,
             whereArgs: [workoutPlanDayId],
           );
       if (planWorkouts.isEmpty) {
@@ -1721,8 +1717,7 @@ class WorkoutPlanService {
       }
 
       final List<Workout> workouts = await _workoutRepository.selectMany(
-        where:
-            "${WorkoutColumns.id.value} IN (${List.filled(planWorkouts.length, '?').join(', ')})",
+        where: WorkoutColumns.id.inList(planWorkouts.length),
         whereArgs: planWorkouts.map((e) => e.workoutId).toList(),
       );
       if (workouts.length != planWorkouts.length) {
@@ -1816,8 +1811,7 @@ class WorkoutPlanService {
       }
       final Set<int> workoutIds = planWorkouts.map((e) => e.workoutId).toSet();
       final List<Workout> workouts = await _workoutRepository.selectMany(
-        where:
-            "${WorkoutColumns.id.value} IN (${List.filled(workoutIds.length, '?').join(', ')})",
+        where: WorkoutColumns.id.inList(workoutIds.length),
         whereArgs: workoutIds.toList(),
       );
       if (workouts.length != workoutIds.length) {
@@ -1977,7 +1971,7 @@ class WorkoutPlanService {
       }
 
       final int count = await _planWorkoutRepository.count(
-        where: "${WorkoutPlanWorkoutColumns.workoutPlanDayId.value} = ?",
+        where: WorkoutPlanWorkoutColumns.workoutPlanDayId.equal,
         whereArgs: [workoutPlanDayId],
       );
       final int finalPosition = count + 1;
@@ -2102,7 +2096,7 @@ class WorkoutPlanService {
 
       final int oldPosition = planWorkout.position;
       final int finalPosition = await _planWorkoutRepository.count(
-        where: "${WorkoutPlanWorkoutColumns.workoutPlanDayId.value} = ?",
+        where: WorkoutPlanWorkoutColumns.workoutPlanDayId.equal,
         whereArgs: [planWorkout.workoutPlanDayId],
       );
       final int workoutPosition = requestedPosition > finalPosition
@@ -2196,7 +2190,7 @@ class WorkoutPlanService {
       }
 
       final int finalPosition = await _planWorkoutRepository.count(
-        where: "${WorkoutPlanWorkoutColumns.workoutPlanDayId.value} = ?",
+        where: WorkoutPlanWorkoutColumns.workoutPlanDayId.equal,
         whereArgs: [planWorkout.workoutPlanDayId],
       );
       if (finalPosition == 1) {

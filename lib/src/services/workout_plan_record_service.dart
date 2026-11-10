@@ -96,11 +96,11 @@ class WorkoutPlanRecordService {
     final WhereBuilder query = WhereBuilder();
 
     if (workoutPlanId != null) {
-      query.and('workout_plan_id = ?', workoutPlanId);
+      query.and(WorkoutPlanRecordColumns.workoutPlanId.equal, workoutPlanId);
     }
 
     if (status != null) {
-      query.and('status = ?', status.value);
+      query.and(WorkoutPlanRecordColumns.status.equal, status.value);
     }
 
     try {
@@ -336,6 +336,14 @@ class WorkoutPlanRecordService {
     int now, {
     int? exceptId,
   }) async {
+    final where = WhereBuilder()
+      ..and(
+        WorkoutPlanRecordColumns.status.equal,
+        ProgressStatus.inProgress.value,
+      );
+    if (exceptId != null) {
+      where.and(WorkoutPlanRecordColumns.id.notEqual, exceptId);
+    }
     await txn.update(
       WorkoutPlanRecord.table,
       {
@@ -343,10 +351,8 @@ class WorkoutPlanRecordService {
         WorkoutPlanRecordColumns.completedAt.value: now,
         WorkoutPlanRecordColumns.updatedAt.value: now,
       },
-      where:
-          '${WorkoutPlanRecordColumns.status.value} = ?'
-          '${exceptId == null ? '' : ' AND ${WorkoutPlanRecordColumns.id.value} != ?'}',
-      whereArgs: [ProgressStatus.inProgress.value, ?exceptId],
+      where: where.where!,
+      whereArgs: where.args!,
     );
   }
 
@@ -381,9 +387,15 @@ class WorkoutPlanRecordService {
   getActivePlanRecord(int workoutPlanId) async {
     _logger.info('Getting active plan record for workout plan $workoutPlanId');
     try {
+      final where = WhereBuilder()
+        ..and(WorkoutPlanRecordColumns.workoutPlanId.equal, workoutPlanId)
+        ..and(
+          WorkoutPlanRecordColumns.status.equal,
+          ProgressStatus.inProgress.value,
+        );
       final List<WorkoutPlanRecord> records = await _repository.selectMany(
-        where: 'workout_plan_id = ? AND status = ?',
-        whereArgs: [workoutPlanId, ProgressStatus.inProgress.value],
+        where: where.where!,
+        whereArgs: where.args!,
         orderBy: [WorkoutPlanRecordColumns.createdAt.orderDesc],
         limit: 1,
       );
@@ -1192,7 +1204,7 @@ class WorkoutPlanRecordService {
         final siblingWorkouts = await _workoutPlanWorkoutRecordRepository
             .selectMany(
               where:
-                  '${WorkoutPlanWorkoutRecordColumns.workoutPlanDayRecordId.value} = ?',
+                  WorkoutPlanWorkoutRecordColumns.workoutPlanDayRecordId.equal,
               whereArgs: [dayRecord.id!],
               trx: txn,
             );
@@ -1223,12 +1235,14 @@ class WorkoutPlanRecordService {
           );
           await _workoutPlanDayRecordRepository.update(updatedDayRecord, txn);
 
-          final weekWorkouts = await _workoutPlanWorkoutRecordRepository.selectMany(
-            where:
-                '${WorkoutPlanWorkoutRecordColumns.workoutPlanWeekRecordId.value} = ?',
-            whereArgs: [weekRecord.id!],
-            trx: txn,
-          );
+          final weekWorkouts = await _workoutPlanWorkoutRecordRepository
+              .selectMany(
+                where: WorkoutPlanWorkoutRecordColumns
+                    .workoutPlanWeekRecordId
+                    .equal,
+                whereArgs: [weekRecord.id!],
+                trx: txn,
+              );
           final scheduledWeek = await _workoutPlanWeekRepository.selectOne(
             weekRecord.workoutPlanWeekId,
             txn,
@@ -1261,8 +1275,9 @@ class WorkoutPlanRecordService {
             if (plan != null) {
               final planWorkouts = await _workoutPlanWorkoutRecordRepository
                   .selectMany(
-                    where:
-                        '${WorkoutPlanWorkoutRecordColumns.workoutPlanRecordId.value} = ?',
+                    where: WorkoutPlanWorkoutRecordColumns
+                        .workoutPlanRecordId
+                        .equal,
                     whereArgs: [workoutPlanRecordId],
                     trx: txn,
                   );
@@ -1377,11 +1392,18 @@ class WorkoutPlanRecordService {
     required int workoutRecordId,
   }) async {
     try {
+      final where = WhereBuilder()
+        ..and(
+          WorkoutPlanWorkoutRecordColumns.workoutPlanRecordId.equal,
+          workoutPlanRecordId,
+        )
+        ..and(
+          WorkoutPlanWorkoutRecordColumns.workoutRecordId.equal,
+          workoutRecordId,
+        );
       await _workoutPlanWorkoutRecordRepository.deleteMany(
-        where:
-            '${WorkoutPlanWorkoutRecordColumns.workoutPlanRecordId.value} = ? AND '
-            '${WorkoutPlanWorkoutRecordColumns.workoutRecordId.value} = ?',
-        whereArgs: [workoutPlanRecordId, workoutRecordId],
+        where: where.where!,
+        whereArgs: where.args!,
       );
       return ok(null);
     } catch (error) {

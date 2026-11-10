@@ -205,12 +205,9 @@ class ExerciseService {
   }
 
   Future<Map<int, Exercise>> getExercisesByIdsLoader(List<int> ids) async {
-    final WhereBuilder query = WhereBuilder();
-    query.and('${ExerciseColumns.id.value} IN (${ids.join(',')})');
-
     final List<Exercise> exercises = await _repository.selectMany(
-      where: query.where,
-      whereArgs: query.args,
+      where: ExerciseColumns.id.inList(ids.length),
+      whereArgs: ids,
     );
 
     return {for (final Exercise e in exercises) e.id!: e};

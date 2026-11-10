@@ -192,7 +192,7 @@ class ExerciseRecordService {
           );
         }
 
-        query.and('${ExerciseRecordColumns.exerciseId.value} = ?', exerciseId);
+        query.and(ExerciseRecordColumns.exerciseId.equal, exerciseId);
       }
 
       final List<ExerciseRecord> records = await _repository.selectPaginated(
@@ -227,8 +227,7 @@ class ExerciseRecordService {
           .map((record) => record.exerciseId)
           .toSet();
       final List<Exercise> exercises = await _exerciseRepository.selectMany(
-        where:
-            '${ExerciseColumns.id.value} IN (${List.filled(exerciseIds.length, '?').join(", ")})',
+        where: ExerciseColumns.id.inList(exerciseIds.length),
         whereArgs: exerciseIds.toList(),
       );
       if (exerciseIds.length != exercises.length) {

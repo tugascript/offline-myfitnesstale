@@ -900,12 +900,12 @@ class WorkoutRecordService {
       await _repository.startTransaction((trx) async {
         // Delete existing sets and exercises
         await _setExerciseRecordRepository.deleteMany(
-          where: '${WorkoutSetExerciseRecordColumns.workoutRecordId.value} = ?',
+          where: WorkoutSetExerciseRecordColumns.workoutRecordId.equal,
           whereArgs: [workoutRecordId],
           trx: trx,
         );
         await _setRecordRepository.deleteMany(
-          where: '${WorkoutSetRecordColumns.workoutRecordId.value} = ?',
+          where: WorkoutSetRecordColumns.workoutRecordId.equal,
           whereArgs: [workoutRecordId],
           trx: trx,
         );
