@@ -1,28 +1,29 @@
-import '../../widgets/macros/macro_progress_bar.dart';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../cubits/macro_tracking_cubit.dart';
 import '../../cubits/states/macro_tracking_state.dart';
+import '../../routing/routing.dart';
 import '../../utilities/sizes/data_display_sizes.dart';
 import '../../widgets/common/confirmation_dialog.dart';
 import '../../widgets/macros/log_food_modal.dart';
-import '../../views/macros/macro_goals_view.dart';
-import 'planned_meals_widget.dart';
+import '../../widgets/macros/macro_progress_bar.dart';
 import 'nutrition_timeline_widget.dart';
+import 'planned_meals_widget.dart';
 
 class MacroTrackerDayWidget extends StatelessWidget {
   final DataDisplaySizesList sizes;
   final ThemeData theme;
   final DateTime selectedDate;
+
   const MacroTrackerDayWidget({
     required this.theme,
     super.key,
     required this.sizes,
     required this.selectedDate,
   });
+
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<MacroTrackingCubit, MacroTrackingState>(
@@ -73,7 +74,7 @@ class MacroTrackerDayWidget extends StatelessWidget {
                         if (activeGoal == null)
                           TextButton(
                             onPressed: () =>
-                                context.push(MacroGoalsView.routeName),
+                                context.push(Routes.macroGoals.name),
                             child: Text(
                               'Set Goal',
                               style: TextStyle(fontSize: sizes.fontSize),

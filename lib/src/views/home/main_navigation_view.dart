@@ -4,9 +4,9 @@ import 'package:go_router/go_router.dart';
 
 import '../../cubits/profile_cubit.dart';
 import '../../cubits/states/profile_state.dart';
+import '../../routing/routing.dart';
 import '../create_profile_button_view.dart';
 import '../loading_view.dart';
-import '../onboarding_view.dart';
 import '../macros/macro_tracker_view.dart';
 import '../workout_plans/current_workout_plan_view.dart';
 import 'home_view.dart';
@@ -43,7 +43,6 @@ sealed class _PageBuilder {
 }
 
 class MainNavigationView extends StatefulWidget {
-  static const routeName = "/";
   static const name = "main_navigation";
 
   const MainNavigationView({super.key});
@@ -90,7 +89,7 @@ class _MainNavigationViewState extends State<MainNavigationView> {
         },
         listener: (context, state) {
           if (!state.isLoading && state.profile == null) {
-            context.go(OnboardingView.routeName);
+            context.go(Routes.onboarding.name);
           }
         },
       ),

@@ -7,15 +7,14 @@ import '../../cubits/exercise_cubit.dart';
 import '../../cubits/states/exercise_state.dart';
 import '../../models/common.dart';
 import '../../models/enums.dart';
+import '../../routing/routing.dart';
 import '../../services/inputs/exercise_input.dart';
 import '../../utilities/sizes/data_display_sizes.dart';
 import '../../utilities/sizes/screen_size.dart';
 import '../../widgets/exercises/details/exercise_form.dart';
 import '../../widgets/layout/responsive_scaffold.dart';
-import 'exercise_detail_view.dart';
 
 class ExerciseCreationView extends StatelessWidget {
-  static const routeName = '/exercises/create';
   static const name = 'exercise_creation';
 
   const ExerciseCreationView({super.key});
@@ -50,7 +49,7 @@ class ExerciseCreationView extends StatelessWidget {
 
                 if (state.selectedExercise != null) {
                   context.go(
-                    ExerciseDetailView.routeName.replaceFirst(
+                    Routes.exerciseDetail.name.replaceFirst(
                       ":id",
                       state.selectedExercise!.id.toString(),
                     ),

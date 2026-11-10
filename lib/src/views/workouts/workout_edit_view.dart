@@ -17,7 +17,6 @@ import '../../widgets/workouts/details/workout_header_edit_card.dart';
 
 class WorkoutEditView extends StatefulWidget {
   static const name = "workout_edit";
-  static const routeName = "/workouts/:id/edit";
 
   final int workoutId;
 

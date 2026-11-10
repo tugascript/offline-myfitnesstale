@@ -6,6 +6,7 @@ import '../../cubits/profile_cubit.dart';
 import '../../cubits/states/exercise_state.dart';
 import '../../cubits/states/profile_state.dart';
 import '../../models/enums.dart';
+import '../../routing/routing.dart';
 import '../../utilities/sizes/data_display_sizes.dart';
 import '../../utilities/sizes/screen_size.dart';
 import '../../widgets/exercises/records/editors/create_exercise_record_modal.dart';
@@ -16,7 +17,6 @@ import '../entity_error_view.dart';
 import '../loading_view.dart';
 
 class ExerciseRecordsView extends StatefulWidget {
-  static const routeName = "/exercises/:id/records";
   static const name = "exercises-records";
 
   final int exerciseId;
@@ -24,7 +24,7 @@ class ExerciseRecordsView extends StatefulWidget {
   const ExerciseRecordsView({super.key, required this.exerciseId});
 
   static String location(int exerciseId) =>
-      routeName.replaceFirst(':id', exerciseId.toString());
+      Routes.exerciseRecords.name.replaceFirst(':id', exerciseId.toString());
 
   @override
   State<ExerciseRecordsView> createState() => _ExerciseRecordsViewState();

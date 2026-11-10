@@ -10,7 +10,6 @@ import '../../widgets/layout/app_scaffold.dart';
 import '../../widgets/meal_plans/meal_plan_form_widget.dart';
 
 class MealPlanCreationView extends StatelessWidget {
-  static const routeName = '/meal-plans/create';
   static const name = 'meal_plan_creation';
 
   const MealPlanCreationView({super.key});

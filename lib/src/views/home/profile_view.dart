@@ -15,7 +15,6 @@ import '../../widgets/profile/profile_info.dart';
 import '../../widgets/profile/settings_config.dart';
 
 class ProfileView extends StatefulWidget {
-  static const routeName = "/profile";
   static const name = "profile";
 
   const ProfileView({super.key});

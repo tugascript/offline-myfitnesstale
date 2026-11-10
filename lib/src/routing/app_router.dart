@@ -45,39 +45,40 @@ import '../views/workouts/workout_edit_view.dart';
 import '../views/workouts/workout_history_detail_view.dart';
 import '../views/workouts/workout_history_view.dart';
 import '../views/workouts/workouts_view.dart';
+import 'routing.dart';
 
 sealed class AppRouter {
   static final List<GoRoute> _routes = <GoRoute>[
     GoRoute(
-      path: MainNavigationView.routeName,
+      path: Routes.home.name,
       builder: (context, state) => const MainNavigationView(),
     ),
     GoRoute(
-      path: CreateProfileView.routeName,
+      path: Routes.createProfile.name,
       builder: (context, state) => const CreateProfileView(),
     ),
     GoRoute(
-      path: OnboardingView.routeName,
+      path: Routes.onboarding.name,
       builder: (context, state) => const OnboardingView(),
     ),
     GoRoute(
-      path: WeightGoalView.routeName,
+      path: Routes.weightGoal.name,
       builder: (context, state) => const WeightGoalView(),
     ),
     GoRoute(
-      path: WeightRecordsView.routeName,
+      path: Routes.weightRecords.name,
       builder: (context, state) => const WeightRecordsView(),
     ),
     GoRoute(
-      path: EquipmentsView.routeName,
+      path: Routes.equipments.name,
       builder: (context, state) => const EquipmentsView(),
     ),
     GoRoute(
-      path: EquipmentCreationView.routeName,
+      path: Routes.equipmentCreation.name,
       builder: (context, state) => const EquipmentCreationView(),
     ),
     GoRoute(
-      path: EquipmentDetailsView.routeName,
+      path: Routes.equipmentDetails.name,
       builder: (context, state) {
         final id = int.tryParse(state.pathParameters['id'] ?? '');
         if (id == null) {
@@ -87,7 +88,7 @@ sealed class AppRouter {
       },
     ),
     GoRoute(
-      path: EquipmentUpdateView.routeName,
+      path: Routes.equipmentUpdate.name,
       builder: (context, state) {
         final id = int.tryParse(state.pathParameters['id'] ?? '');
         if (id == null) {
@@ -97,19 +98,19 @@ sealed class AppRouter {
       },
     ),
     GoRoute(
-      path: ExercisesView.routeName,
+      path: Routes.exercises.name,
       builder: (context, state) => const ExercisesView(),
     ),
     GoRoute(
-      path: ExerciseCreationView.routeName,
+      path: Routes.exerciseCreation.name,
       builder: (context, state) => const ExerciseCreationView(),
     ),
     GoRoute(
-      path: ExerciseProgressView.routeName,
+      path: Routes.exerciseProgress.name,
       builder: (context, state) => const ExerciseProgressView(),
     ),
     GoRoute(
-      path: ExerciseDetailView.routeName,
+      path: Routes.exerciseDetail.name,
       builder: (context, state) {
         final id = int.tryParse(state.pathParameters['id'] ?? '');
         if (id == null) {
@@ -119,7 +120,7 @@ sealed class AppRouter {
       },
     ),
     GoRoute(
-      path: ExerciseUpdateView.routeName,
+      path: Routes.exerciseUpdate.name,
       builder: (context, state) {
         final id = int.tryParse(state.pathParameters['id'] ?? '');
         if (id == null) {
@@ -129,11 +130,11 @@ sealed class AppRouter {
       },
     ),
     GoRoute(
-      path: WorkoutsView.routeName,
+      path: Routes.workouts.name,
       builder: (context, state) => const WorkoutsView(),
     ),
     GoRoute(
-      path: WorkoutEditView.routeName,
+      path: Routes.workoutEdit.name,
       builder: (context, state) {
         final id = int.tryParse(state.pathParameters['id'] ?? '');
         if (id == null) {
@@ -143,7 +144,7 @@ sealed class AppRouter {
       },
     ),
     GoRoute(
-      path: WorkoutHistoryView.routeName,
+      path: Routes.workoutHistory.name,
       builder: (context, state) {
         final idParam = state.uri.queryParameters['id'];
         int? workoutId;
@@ -170,7 +171,7 @@ sealed class AppRouter {
       },
     ),
     GoRoute(
-      path: CreateWorkoutRecordView.routeName,
+      path: Routes.createWorkoutRecord.name,
       builder: (context, state) {
         final workoutId = int.tryParse(state.pathParameters['id'] ?? '');
         if (workoutId == null) {
@@ -197,7 +198,7 @@ sealed class AppRouter {
       },
     ),
     GoRoute(
-      path: WorkoutHistoryDetailView.routeName,
+      path: Routes.workoutHistoryDetail.name,
       builder: (context, state) {
         final workoutId = int.tryParse(state.pathParameters['workoutId'] ?? '');
         if (workoutId == null) {
@@ -223,7 +224,7 @@ sealed class AppRouter {
       },
     ),
     GoRoute(
-      path: UpdateWorkoutRecordView.routeName,
+      path: Routes.updateWorkoutRecord.name,
       builder: (context, state) {
         final workoutId = int.tryParse(state.pathParameters['workoutId'] ?? '');
         if (workoutId == null) {
@@ -250,7 +251,7 @@ sealed class AppRouter {
       },
     ),
     GoRoute(
-      path: ActiveWorkoutView.routeName,
+      path: Routes.activeWorkout.name,
       builder: (context, state) {
         final id = int.tryParse(state.pathParameters['id'] ?? '');
         if (id == null) {
@@ -274,7 +275,7 @@ sealed class AppRouter {
       },
     ),
     GoRoute(
-      path: WorkoutDetailView.routeName,
+      path: Routes.workoutDetail.name,
       builder: (context, state) {
         final id = int.tryParse(state.pathParameters['id'] ?? '');
         if (id == null) {
@@ -284,7 +285,7 @@ sealed class AppRouter {
       },
     ),
     GoRoute(
-      path: ExerciseRecordsView.routeName,
+      path: Routes.exerciseRecords.name,
       builder: (context, state) {
         final id = int.tryParse(state.pathParameters['id'] ?? '');
         if (id == null) {
@@ -294,11 +295,11 @@ sealed class AppRouter {
       },
     ),
     GoRoute(
-      path: WorkoutPlanListView.routeName,
+      path: Routes.workoutPlanList.name,
       builder: (context, state) => const WorkoutPlanListView(),
     ),
     GoRoute(
-      path: WorkoutPlanHistoryView.routeName,
+      path: Routes.workoutPlanHistory.name,
       builder: (context, state) {
         final idParam = state.uri.queryParameters['id'];
         int? id;
@@ -312,7 +313,7 @@ sealed class AppRouter {
       },
     ),
     GoRoute(
-      path: WorkoutPlanEditView.routeName,
+      path: Routes.workoutPlanEdit.name,
       builder: (context, state) {
         final id = int.tryParse(state.pathParameters['id'] ?? '');
         if (id == null) {
@@ -322,7 +323,7 @@ sealed class AppRouter {
       },
     ),
     GoRoute(
-      path: ActiveWorkoutPlanView.routeName,
+      path: Routes.activeWorkoutPlan.name,
       builder: (context, state) {
         final id = int.tryParse(state.pathParameters['id'] ?? '');
         if (id == null) {
@@ -332,7 +333,7 @@ sealed class AppRouter {
       },
     ),
     GoRoute(
-      path: WorkoutPlanDetailView.routeName,
+      path: Routes.workoutPlanDetail.name,
       builder: (context, state) {
         final id = int.tryParse(state.pathParameters['id'] ?? '');
         if (id == null) {
@@ -342,25 +343,25 @@ sealed class AppRouter {
       },
     ),
     GoRoute(
-      path: ReminderPreferencesView.routeName,
+      path: Routes.reminderPreferences.name,
       builder: (context, state) => const ReminderPreferencesView(),
     ),
     // Strength Goals
     GoRoute(
-      path: StrengthGoalsView.routeName,
+      path: Routes.strengthGoals.name,
       builder: (context, state) => const StrengthGoalsView(),
     ),
     // Foods (static before dynamic)
     GoRoute(
-      path: FoodsView.routeName,
+      path: Routes.foods.name,
       builder: (context, state) => const FoodsView(),
     ),
     GoRoute(
-      path: FoodCreationView.routeName,
+      path: Routes.foodCreation.name,
       builder: (context, state) => const FoodCreationView(),
     ),
     GoRoute(
-      path: FoodUpdateView.routeName,
+      path: Routes.foodUpdate.name,
       builder: (context, state) {
         final id = int.tryParse(state.pathParameters['id'] ?? '');
         if (id == null) {
@@ -370,7 +371,7 @@ sealed class AppRouter {
       },
     ),
     GoRoute(
-      path: FoodDetailsView.routeName,
+      path: Routes.foodDetails.name,
       builder: (context, state) {
         final id = int.tryParse(state.pathParameters['id'] ?? '');
         if (id == null) {
@@ -381,15 +382,15 @@ sealed class AppRouter {
     ),
     // Recipes (static before dynamic)
     GoRoute(
-      path: RecipesView.routeName,
+      path: Routes.recipes.name,
       builder: (context, state) => const RecipesView(),
     ),
     GoRoute(
-      path: RecipeCreationView.routeName,
+      path: Routes.recipeCreation.name,
       builder: (context, state) => const RecipeCreationView(),
     ),
     GoRoute(
-      path: RecipeUpdateView.routeName,
+      path: Routes.recipeUpdate.name,
       builder: (context, state) {
         final id = int.tryParse(state.pathParameters['id'] ?? '');
         if (id == null) {
@@ -399,7 +400,7 @@ sealed class AppRouter {
       },
     ),
     GoRoute(
-      path: RecipeDetailsView.routeName,
+      path: Routes.recipeDetails.name,
       builder: (context, state) {
         final id = int.tryParse(state.pathParameters['id'] ?? '');
         if (id == null) {
@@ -410,24 +411,24 @@ sealed class AppRouter {
     ),
     // Macro Goals & Tracker
     GoRoute(
-      path: MacroGoalsView.routeName,
+      path: Routes.macroGoals.name,
       builder: (context, state) => const MacroGoalsView(),
     ),
     GoRoute(
-      path: MacroTrackerView.routeName,
+      path: Routes.macroTracker.name,
       builder: (context, state) => const MacroTrackerView(),
     ),
     // Meal Plans (static before dynamic)
     GoRoute(
-      path: MealPlanListView.routeName,
+      path: Routes.mealPlanList.name,
       builder: (context, state) => const MealPlanListView(),
     ),
     GoRoute(
-      path: MealPlanCreationView.routeName,
+      path: Routes.mealPlanCreation.name,
       builder: (context, state) => const MealPlanCreationView(),
     ),
     GoRoute(
-      path: MealPlanUpdateView.routeName,
+      path: Routes.mealPlanUpdate.name,
       builder: (context, state) {
         final id = int.tryParse(state.pathParameters['id'] ?? '');
         if (id == null) {
@@ -437,7 +438,7 @@ sealed class AppRouter {
       },
     ),
     GoRoute(
-      path: MealPlanDetailsView.routeName,
+      path: Routes.mealPlanDetails.name,
       builder: (context, state) {
         final id = int.tryParse(state.pathParameters['id'] ?? '');
         if (id == null) {
@@ -448,12 +449,10 @@ sealed class AppRouter {
     ),
   ];
 
-  static GoRouter createRouter({
-    String initialLocation = MainNavigationView.routeName,
-  }) {
+  static GoRouter createRouter({String? initialLocation}) {
     return GoRouter(
       routes: _routes,
-      initialLocation: initialLocation,
+      initialLocation: initialLocation ?? Routes.home.name,
       errorBuilder: (context, state) => const NotFoundView(),
     );
   }

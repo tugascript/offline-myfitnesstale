@@ -14,9 +14,6 @@ import '../../widgets/workouts/progress/update_workout_record_editor.dart';
 import '../not_found_view.dart';
 
 class UpdateWorkoutRecordView extends StatefulWidget {
-  static const routeName =
-      '/workouts/:workoutId/history/:version/records/:workoutRecordId/update';
-
   final int workoutId;
   final int workoutRecordId;
   final int version;

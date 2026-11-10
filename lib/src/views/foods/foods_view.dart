@@ -5,16 +5,14 @@ import 'package:go_router/go_router.dart';
 import '../../cubits/food_cubit.dart';
 import '../../cubits/states/food_state.dart';
 import '../../models/enums.dart';
+import '../../routing/routing.dart';
 import '../../utilities/sizes/data_display_sizes.dart';
 import '../../utilities/sizes/screen_size.dart';
 import '../../widgets/foods/food_list_item_widget.dart';
 import '../../widgets/foods/food_search_form.dart';
 import '../../widgets/layout/app_scaffold.dart';
-import 'food_creation_view.dart';
-import 'food_details_view.dart';
 
 class FoodsView extends StatefulWidget {
-  static const routeName = '/foods';
   static const name = 'foods';
 
   const FoodsView({super.key});
@@ -171,7 +169,7 @@ class _FoodsViewState extends State<FoodsView> {
                             sizes: sizes,
                             onTap: () {
                               context.push(
-                                FoodDetailsView.routeName.replaceFirst(
+                                Routes.foodDetails.name.replaceFirst(
                                   ':id',
                                   food.id.toString(),
                                 ),
@@ -194,7 +192,7 @@ class _FoodsViewState extends State<FoodsView> {
       floatingActionButton: FloatingActionButton(
         key: const ValueKey('foods-add-fab'),
         onPressed: () {
-          context.push(FoodCreationView.routeName);
+          context.push(Routes.foodCreation.name);
         },
         child: Icon(Icons.add, size: sizes.buttonIconSize),
       ),

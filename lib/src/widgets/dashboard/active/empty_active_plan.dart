@@ -1,10 +1,9 @@
-import 'active_plan_frame.dart';
-
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../routing/routing.dart';
 import '../../../utilities/sizes/data_display_sizes.dart';
-import '../../../views/workout_plans/workout_plan_list_view.dart';
+import 'active_plan_frame.dart';
 
 class EmptyActivePlan extends StatelessWidget {
   final DataDisplaySizesList sizes;
@@ -33,7 +32,7 @@ class EmptyActivePlan extends StatelessWidget {
           width: double.infinity,
           child: InkWell(
             onTap: () {
-              context.push(WorkoutPlanListView.routeName);
+              context.push(Routes.workoutPlanList.name);
             },
             child: Padding(
               padding: EdgeInsets.all(sizes.padding),
@@ -62,8 +61,7 @@ class EmptyActivePlan extends StatelessWidget {
                   SizedBox(height: sizes.spacing),
                   TextButton.icon(
                     key: const ValueKey('active-workout-plan-browse'),
-                    onPressed: () =>
-                        context.push(WorkoutPlanListView.routeName),
+                    onPressed: () => context.push(Routes.workoutPlanList.name),
                     icon: Icon(
                       Icons.book_outlined,
                       size: sizes.compactIconSize,

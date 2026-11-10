@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
-
 import 'package:myfitnesstale/src/cubits/profile_cubit.dart';
 import 'package:myfitnesstale/src/cubits/states/profile_state.dart';
 import 'package:myfitnesstale/src/models/enums.dart';
+import 'package:myfitnesstale/src/routing/routing.dart';
 import 'package:myfitnesstale/src/services/dtos/profile_dto.dart';
 import 'package:myfitnesstale/src/services/dtos/reminders_config_dto.dart';
 import 'package:myfitnesstale/src/services/dtos/system_dto.dart';
@@ -85,10 +85,10 @@ void main() {
     final cubit = _ProfileCubit();
     addTearDown(cubit.close);
     final router = GoRouter(
-      initialLocation: ReminderPreferencesView.routeName,
+      initialLocation: Routes.reminderPreferences.name,
       routes: [
         GoRoute(
-          path: ReminderPreferencesView.routeName,
+          path: Routes.reminderPreferences.name,
           builder: (context, state) => const ReminderPreferencesView(),
         ),
       ],
@@ -129,7 +129,7 @@ void main() {
             ),
           ),
           GoRoute(
-            path: ReminderPreferencesView.routeName,
+            path: Routes.reminderPreferences.name,
             builder: (context, state) =>
                 const Scaffold(body: Text('Reminder preferences destination')),
           ),

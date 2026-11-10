@@ -10,6 +10,7 @@ import '../../cubits/states/profile_state.dart';
 import '../../cubits/workout_plan_record_cubit.dart';
 import '../../models/common.dart';
 import '../../models/enums.dart';
+import '../../routing/routing.dart';
 import '../../utilities/converters.dart';
 import '../../utilities/sizes/data_display_sizes.dart';
 import '../../utilities/sizes/screen_size.dart';
@@ -23,11 +24,8 @@ import '../../widgets/workouts/progress/active_progress_bar.dart';
 import '../../widgets/workouts/progress/active_rest_timer.dart';
 import '../../widgets/workouts/progress/active_set_exercise_log.dart';
 import '../../widgets/workouts/progress/not_found_active_workout.dart';
-import 'workout_detail_view.dart';
 
 class ActiveWorkoutView extends StatefulWidget {
-  static const routeName = '/workouts/:id/active';
-
   final int workoutId;
   final int? workoutPlanRecordId;
   final int? week;
@@ -59,7 +57,7 @@ class _ActiveWorkoutViewState extends State<ActiveWorkoutView> {
       context.pop();
     } else {
       context.go(
-        WorkoutDetailView.routeName.replaceFirst(
+        Routes.workoutDetail.name.replaceFirst(
           ':id',
           widget.workoutId.toString(),
         ),

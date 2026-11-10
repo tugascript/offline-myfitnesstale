@@ -11,7 +11,6 @@ import '../../widgets/layout/app_scaffold.dart';
 import '../loading_view.dart';
 
 class FoodUpdateView extends StatefulWidget {
-  static const routeName = '/foods/:id/edit';
   static const name = 'food_update';
 
   final int foodId;

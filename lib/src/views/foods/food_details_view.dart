@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../cubits/food_cubit.dart';
 import '../../cubits/states/food_state.dart';
 import '../../models/enums.dart';
+import '../../routing/routing.dart';
 import '../../utilities/sizes/data_display_sizes.dart';
 import '../../utilities/sizes/screen_size.dart';
 import '../../widgets/common/confirmation_dialog.dart';
@@ -12,11 +13,8 @@ import '../../widgets/common/mutation_buttons.dart';
 import '../../widgets/foods/food_details_widget.dart';
 import '../../widgets/layout/app_scaffold.dart';
 import '../loading_view.dart';
-import 'food_update_view.dart';
-import 'foods_view.dart';
 
 class FoodDetailsView extends StatefulWidget {
-  static const routeName = '/foods/:id';
   static const name = 'food_details';
 
   final int foodId;
@@ -142,7 +140,7 @@ class _FoodDetailsViewState extends State<FoodDetailsView> {
                     sizes: sizes,
                     onEdit: () {
                       context.push(
-                        FoodUpdateView.routeName.replaceFirst(
+                        Routes.foodUpdate.name.replaceFirst(
                           ':id',
                           food.id.toString(),
                         ),
@@ -159,7 +157,7 @@ class _FoodDetailsViewState extends State<FoodDetailsView> {
                             if (context.canPop()) {
                               context.pop();
                             } else {
-                              context.go(FoodsView.routeName);
+                              context.go(Routes.foods.name);
                             }
                           },
                         ),

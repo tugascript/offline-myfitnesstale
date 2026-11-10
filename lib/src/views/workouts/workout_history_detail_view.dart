@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:myfitnesstale/src/routing/routing.dart';
 import 'package:myfitnesstale/src/widgets/common/confirmation_dialog.dart';
 
 import '../../cubits/profile_cubit.dart';
@@ -17,12 +18,8 @@ import '../../widgets/common/mutation_buttons.dart';
 import '../../widgets/layout/responsive_scaffold.dart';
 import '../../widgets/workouts/progress/history/detail/workout_record_head_card.dart';
 import '../../widgets/workouts/progress/history/detail/workout_record_sets.dart';
-import 'update_workout_record_view.dart';
 
 class WorkoutHistoryDetailView extends StatefulWidget {
-  static const routeName =
-      '/workouts/:workoutId/history/:version/records/:workoutRecordId';
-
   final int workoutId;
   final int workoutRecordId;
   final int version;
@@ -132,7 +129,7 @@ class _WorkoutHistoryDetailViewState extends State<WorkoutHistoryDetailView> {
                           isLoading: workoutRecordState.isLoading,
                           onEdit: () {
                             context.push(
-                              UpdateWorkoutRecordView.routeName
+                              Routes.updateWorkoutRecord.name
                                   .replaceFirst(
                                     ':workoutId',
                                     widget.workoutId.toString(),

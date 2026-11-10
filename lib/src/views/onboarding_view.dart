@@ -5,14 +5,13 @@ import 'package:go_router/go_router.dart';
 import '../cubits/profile_cubit.dart';
 import '../cubits/states/profile_state.dart';
 import '../models/enums.dart';
+import '../routing/routing.dart';
 import '../utilities/sizes/profile/onboarding_sizes.dart';
 import '../utilities/sizes/screen_size.dart';
 import '../widgets/profile/onboarding_form.dart';
 import '../widgets/profile/onboarding_intro.dart';
-import 'home/home_view.dart';
 
 class OnboardingView extends StatelessWidget {
-  static const routeName = "/onboarding";
   static const name = "onboarding";
 
   const OnboardingView({super.key});
@@ -46,7 +45,7 @@ class OnboardingView extends StatelessWidget {
                   if (state.profile != null &&
                       !state.isLoading &&
                       state.isInitiated) {
-                    context.go(HomeView.routeName);
+                    context.go(Routes.home.name);
                   }
                 },
                 child: BlocBuilder<ProfileCubit, ProfileState>(
@@ -91,7 +90,8 @@ class OnboardingView extends StatelessWidget {
                           initialUnits: Units.metric,
                           initialThemeMode: ThemeType.system,
                           initialName: "",
-                          initialHeight: 176, // average height for a male in cm
+                          initialHeight: 176,
+                          // average height for a male in cm
                           initialGender: Gender.male,
                           initialBirthday: DateTime.now().subtract(
                             Duration(days: (365.25 * 25).floor()),

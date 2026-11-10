@@ -9,8 +9,6 @@ import '../../widgets/layout/app_scaffold.dart';
 import '../../widgets/profile/reminders_settings_config.dart';
 
 class ReminderPreferencesView extends StatelessWidget {
-  static const routeName = '/settings/reminders';
-
   const ReminderPreferencesView({super.key});
 
   @override

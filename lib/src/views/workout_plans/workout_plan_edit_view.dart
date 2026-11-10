@@ -17,7 +17,6 @@ import '../../widgets/workout_plan/editor/weeks/workout_plan_weeks_editor.dart';
 
 class WorkoutPlanEditView extends StatefulWidget {
   static const String name = 'workout_plan_edit';
-  static const String routeName = '/workout-plans/:id/edit';
 
   final int workoutPlanId;
 

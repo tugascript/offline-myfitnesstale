@@ -10,7 +10,6 @@ import '../../widgets/layout/app_scaffold.dart';
 import '../../widgets/recipes/recipe_form_widget.dart';
 
 class RecipeCreationView extends StatelessWidget {
-  static const routeName = '/recipes/create';
   static const name = 'recipe_creation';
 
   const RecipeCreationView({super.key});

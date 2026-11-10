@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:myfitnesstale/src/cubits/exercise_cubit.dart';
 import 'package:myfitnesstale/src/models/enums.dart';
+import 'package:myfitnesstale/src/routing/routing.dart';
 import 'package:myfitnesstale/src/views/exercises/exercises_view.dart';
 
 class _ExerciseSearchCubit extends ExerciseCubit {
@@ -49,10 +50,10 @@ void main() {
     addTearDown(cubit.close);
 
     final router = GoRouter(
-      initialLocation: ExercisesView.routeName,
+      initialLocation: Routes.exercises.name,
       routes: [
         GoRoute(
-          path: ExercisesView.routeName,
+          path: Routes.exercises.name,
           builder: (_, _) => const ExercisesView(),
         ),
       ],

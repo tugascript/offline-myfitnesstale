@@ -11,7 +11,6 @@ import '../../widgets/recipes/recipe_form_widget.dart';
 import '../loading_view.dart';
 
 class RecipeUpdateView extends StatefulWidget {
-  static const routeName = '/recipes/:id/edit';
   static const name = 'recipe_update';
 
   final int recipeId;

@@ -3,9 +3,9 @@ import 'package:go_router/go_router.dart';
 
 import '../../../models/enums.dart';
 import '../../../models/utilities.dart';
+import '../../../routing/routing.dart';
 import '../../../services/dtos/workout_plan_workout_dto.dart';
 import '../../../utilities/sizes/data_display_sizes.dart';
-import '../../../views/workouts/workout_detail_view.dart';
 
 class WorkoutPlanWorkoutCard extends StatelessWidget {
   final bool isDarkTheme;
@@ -44,7 +44,7 @@ class WorkoutPlanWorkoutCard extends StatelessWidget {
       trailing: const Icon(Icons.chevron_right),
       onTap: () {
         context.push(
-          WorkoutDetailView.routeName.replaceFirst(
+          Routes.workoutDetail.name.replaceFirst(
             ":id",
             workoutPlanWorkout.workoutId.toString(),
           ),

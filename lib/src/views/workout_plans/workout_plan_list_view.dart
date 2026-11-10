@@ -12,8 +12,6 @@ import '../../widgets/workout_plan/workout_plan_search_form.dart';
 import '../../widgets/workout_plan/workout_plans_list.dart';
 
 class WorkoutPlanListView extends StatefulWidget {
-  static const routeName = '/workout-plans';
-
   const WorkoutPlanListView({super.key});
 
   @override

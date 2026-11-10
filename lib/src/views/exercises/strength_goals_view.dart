@@ -10,7 +10,6 @@ import '../../widgets/exercises/strength_goal/strength_goal_history_list.dart';
 import '../../widgets/layout/app_scaffold.dart';
 
 class StrengthGoalsView extends StatefulWidget {
-  static const routeName = '/strength-goals';
   static const name = 'strength-goals';
 
   const StrengthGoalsView({super.key});

@@ -1,5 +1,3 @@
-import 'active_plan_frame.dart';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -8,10 +6,9 @@ import '../../../cubits/macro_tracking_cubit.dart';
 import '../../../cubits/meal_plan_record_cubit.dart';
 import '../../../cubits/states/macro_tracking_state.dart';
 import '../../../cubits/states/meal_plan_record_state.dart';
+import '../../../routing/routing.dart';
 import '../../../utilities/sizes/data_display_sizes.dart';
-import '../../../views/macros/macro_goals_view.dart';
-import '../../../views/macros/macro_tracker_view.dart';
-import '../../../views/meal_plans/meal_plan_list_view.dart';
+import 'active_plan_frame.dart';
 
 class ActiveMealPlanWidget extends StatefulWidget {
   final DataDisplaySizesList sizes;
@@ -65,8 +62,8 @@ class _ActiveMealPlanWidgetState extends State<ActiveMealPlanWidget> {
                   ),
                   onTap: () => context.push(
                     isEmpty
-                        ? MealPlanListView.routeName
-                        : MacroTrackerView.routeName,
+                        ? Routes.mealPlanList.name
+                        : Routes.macroTracker.name,
                   ),
                   child: Padding(
                     padding: EdgeInsets.all(sizes.padding),
@@ -108,7 +105,7 @@ class _ActiveMealPlanWidgetState extends State<ActiveMealPlanWidget> {
                               children: [
                                 TextButton.icon(
                                   onPressed: () =>
-                                      context.push(MealPlanListView.routeName),
+                                      context.push(Routes.mealPlanList.name),
                                   icon: Icon(
                                     Icons.restaurant_menu,
                                     size: sizes.compactIconSize,
@@ -120,7 +117,7 @@ class _ActiveMealPlanWidgetState extends State<ActiveMealPlanWidget> {
                                 ),
                                 TextButton.icon(
                                   onPressed: () =>
-                                      context.push(MacroGoalsView.routeName),
+                                      context.push(Routes.macroGoals.name),
                                   icon: Icon(
                                     Icons.flag_outlined,
                                     size: sizes.compactIconSize,

@@ -8,7 +8,6 @@ import '../../widgets/dashboard/welcome_section.dart';
 import '../../widgets/layout/responsive_scaffold.dart';
 
 class HomeView extends StatelessWidget {
-  static const routeName = "/";
   static const name = "home";
 
   const HomeView({super.key});

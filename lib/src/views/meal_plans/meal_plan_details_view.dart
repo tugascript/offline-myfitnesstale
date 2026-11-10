@@ -1,5 +1,3 @@
-import '../../widgets/meal_plans/meal_plan_schedule_widget.dart';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -8,18 +6,16 @@ import '../../cubits/meal_plan_cubit.dart';
 import '../../cubits/meal_plan_record_cubit.dart';
 import '../../cubits/states/meal_plan_state.dart';
 import '../../models/enums.dart';
+import '../../routing/routing.dart';
 import '../../utilities/sizes/data_display_sizes.dart';
 import '../../utilities/sizes/screen_size.dart';
 import '../../widgets/common/confirmation_dialog.dart';
 import '../../widgets/common/mutation_buttons.dart';
 import '../../widgets/layout/app_scaffold.dart';
+import '../../widgets/meal_plans/meal_plan_schedule_widget.dart';
 import '../loading_view.dart';
-import '../macros/macro_tracker_view.dart';
-import 'meal_plan_list_view.dart';
-import 'meal_plan_update_view.dart';
 
 class MealPlanDetailsView extends StatefulWidget {
-  static const routeName = '/meal-plans/:id';
   static const name = 'meal_plan_details';
 
   final int mealPlanId;
@@ -146,7 +142,7 @@ class _MealPlanDetailsViewState extends State<MealPlanDetailsView> {
                           action: SnackBarAction(
                             label: 'Open Tracker',
                             onPressed: () {
-                              context.push(MacroTrackerView.routeName);
+                              context.push(Routes.macroTracker.name);
                             },
                           ),
                         ),
@@ -198,7 +194,7 @@ class _MealPlanDetailsViewState extends State<MealPlanDetailsView> {
                     sizes: sizes,
                     onEdit: () {
                       context.push(
-                        MealPlanUpdateView.routeName.replaceFirst(
+                        Routes.mealPlanUpdate.name.replaceFirst(
                           ':id',
                           plan.id.toString(),
                         ),
@@ -217,7 +213,7 @@ class _MealPlanDetailsViewState extends State<MealPlanDetailsView> {
                             if (context.canPop()) {
                               context.pop();
                             } else {
-                              context.go(MealPlanListView.routeName);
+                              context.go(Routes.mealPlanList.name);
                             }
                           },
                         ),

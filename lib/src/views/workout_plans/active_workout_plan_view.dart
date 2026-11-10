@@ -10,8 +10,6 @@ import '../../widgets/workout_plan/active/active_workout_plan_content.dart';
 import '../entity_error_view.dart';
 
 class ActiveWorkoutPlanView extends StatefulWidget {
-  static const routeName = '/workout-plans/:id/active';
-
   final int workoutPlanId;
 
   const ActiveWorkoutPlanView({super.key, required this.workoutPlanId});

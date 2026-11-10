@@ -5,15 +5,14 @@ import 'package:go_router/go_router.dart';
 import '../../cubits/exercise_cubit.dart';
 import '../../cubits/states/exercise_state.dart';
 import '../../models/enums.dart';
+import '../../routing/routing.dart';
 import '../../utilities/sizes/data_display_sizes.dart';
 import '../../utilities/sizes/screen_size.dart';
 import '../../widgets/common/base_common_search_form.dart';
 import '../../widgets/exercises/exercises_list.dart';
 import '../../widgets/layout/app_scaffold.dart';
-import 'exercise_creation_view.dart';
 
 class ExercisesView extends StatefulWidget {
-  static const routeName = "/exercises";
   static const name = "exercises";
 
   const ExercisesView({super.key});
@@ -152,7 +151,7 @@ class _ExercisesViewState extends State<ExercisesView> {
           key: const ValueKey('exercise-add'),
           elevation: sizes.elevation,
           onPressed: () {
-            context.push(ExerciseCreationView.routeName);
+            context.push(Routes.exerciseCreation.name);
           },
           shape: BeveledRectangleBorder(),
           child: Icon(Icons.add, size: sizes.buttonIconSize),

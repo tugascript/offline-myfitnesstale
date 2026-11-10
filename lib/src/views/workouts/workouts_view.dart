@@ -11,7 +11,6 @@ import '../../widgets/workouts/details/create_workout_modal.dart';
 import '../../widgets/workouts/workouts_list.dart';
 
 class WorkoutsView extends StatefulWidget {
-  static const routeName = "/workouts";
   static const name = "workouts";
 
   const WorkoutsView({super.key});

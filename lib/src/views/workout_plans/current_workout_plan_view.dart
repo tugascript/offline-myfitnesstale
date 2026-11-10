@@ -5,12 +5,12 @@ import 'package:go_router/go_router.dart';
 import '../../cubits/states/workout_plan_record_state.dart';
 import '../../cubits/workout_plan_record_cubit.dart';
 import '../../models/enums.dart';
+import '../../routing/routing.dart';
 import '../../utilities/sizes/data_display_sizes.dart';
 import '../../utilities/sizes/screen_size.dart';
 import '../../widgets/layout/app_scaffold.dart';
 import '../../widgets/workout_plan/active/active_workout_plan_content.dart';
 import '../../widgets/workout_plan/active/current_workout_plan_placeholder.dart';
-import 'workout_plan_list_view.dart';
 
 class CurrentWorkoutPlanView extends StatefulWidget {
   final bool isVisible;
@@ -71,7 +71,7 @@ class _CurrentWorkoutPlanViewState extends State<CurrentWorkoutPlanView> {
   }
 
   Future<void> _openAllPlans() async {
-    await context.push(WorkoutPlanListView.routeName);
+    await context.push(Routes.workoutPlanList.name);
     if (mounted) await _refresh();
   }
 

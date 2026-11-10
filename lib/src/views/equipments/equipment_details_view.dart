@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../cubits/exercise_cubit.dart';
 import '../../cubits/states/exercise_state.dart';
 import '../../models/enums.dart';
+import '../../routing/routing.dart';
 import '../../utilities/sizes/data_display_sizes.dart';
 import '../../utilities/sizes/screen_size.dart';
 import '../../widgets/common/confirmation_dialog.dart';
@@ -12,11 +13,8 @@ import '../../widgets/common/mutation_buttons.dart';
 import '../../widgets/exercises/exercises_list.dart';
 import '../../widgets/layout/app_scaffold.dart';
 import '../loading_view.dart';
-import 'equipment_update_view.dart';
-import 'equipments_view.dart';
 
 class EquipmentDetailsView extends StatefulWidget {
-  static const routeName = '/equipments/:id';
   static const name = 'equipment_details';
 
   final int equipmentId;
@@ -119,7 +117,7 @@ class _EquipmentDetailsViewState extends State<EquipmentDetailsView> {
                     sizes: sizes,
                     onEdit: () {
                       context.push(
-                        EquipmentUpdateView.routeName.replaceFirst(
+                        Routes.equipmentUpdate.name.replaceFirst(
                           ':id',
                           equipment.id.toString(),
                         ),
@@ -138,7 +136,7 @@ class _EquipmentDetailsViewState extends State<EquipmentDetailsView> {
                             if (context.canPop()) {
                               context.pop();
                             } else {
-                              context.go(EquipmentsView.routeName);
+                              context.go(Routes.equipments.name);
                             }
                           },
                         ),

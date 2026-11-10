@@ -10,7 +10,6 @@ import '../../widgets/macros/goals/macro_goal_form_modal.dart';
 import '../../widgets/macros/goals/macro_goals_content_widget.dart';
 
 class MacroGoalsView extends StatefulWidget {
-  static const routeName = '/macro-goals';
   static const name = 'macro_goals';
 
   const MacroGoalsView({super.key});

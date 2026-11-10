@@ -8,7 +8,6 @@ import '../../widgets/weight/goal/editor/create_weight_goal_modal.dart';
 import '../../widgets/weight/goal/history/weight_goal_history.dart';
 
 class WeightGoalView extends StatelessWidget {
-  static const routeName = "/weight-goal";
   static const name = "weight-goal";
 
   const WeightGoalView({super.key});

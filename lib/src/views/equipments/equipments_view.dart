@@ -11,7 +11,6 @@ import '../../widgets/equipment/equipments_search_form.dart';
 import '../../widgets/layout/app_scaffold.dart';
 
 class EquipmentsView extends StatefulWidget {
-  static const routeName = '/equipments';
   static const name = 'equipments';
 
   const EquipmentsView({super.key});

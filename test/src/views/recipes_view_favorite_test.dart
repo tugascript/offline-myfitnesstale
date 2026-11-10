@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:myfitnesstale/src/common/nullable.dart';
 import 'package:myfitnesstale/src/cubits/recipe_cubit.dart';
 import 'package:myfitnesstale/src/models/enums.dart';
+import 'package:myfitnesstale/src/routing/routing.dart';
 import 'package:myfitnesstale/src/services/dtos/recipe_dto.dart';
 import 'package:myfitnesstale/src/views/recipes/recipe_details_view.dart';
 import 'package:myfitnesstale/src/views/recipes/recipes_view.dart';
@@ -89,10 +90,10 @@ void main() {
       addTearDown(cubit.close);
 
       final router = GoRouter(
-        initialLocation: RecipesView.routeName,
+        initialLocation: Routes.recipes.name,
         routes: [
           GoRoute(
-            path: RecipesView.routeName,
+            path: Routes.recipes.name,
             builder: (_, _) => const RecipesView(),
           ),
         ],
@@ -129,10 +130,10 @@ void main() {
     addTearDown(cubit.close);
 
     final router = GoRouter(
-      initialLocation: RecipesView.routeName,
+      initialLocation: Routes.recipes.name,
       routes: [
         GoRoute(
-          path: RecipesView.routeName,
+          path: Routes.recipes.name,
           builder: (_, _) => const RecipesView(),
         ),
       ],
@@ -169,7 +170,7 @@ void main() {
       initialLocation: '/recipes/42',
       routes: [
         GoRoute(
-          path: RecipeDetailsView.routeName,
+          path: Routes.recipeDetails.name,
           builder: (_, _) => const RecipeDetailsView(recipeId: 42),
         ),
       ],
