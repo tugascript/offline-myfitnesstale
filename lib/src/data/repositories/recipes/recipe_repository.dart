@@ -37,39 +37,39 @@ import './inputs/recipe_input.dart';
 import '../core/repository.dart';
 
 final class RecipeRepository implements Repository {
-  final Dao<Recipe> _recipeRepository;
-  final Dao<RecipeItem> _itemRepository;
-  final Dao<Food> _foodRepository;
-  final Dao<FoodPortion> _portionRepository;
+  final Dao<Recipe> _recipeDao;
+  final Dao<RecipeItem> _itemDao;
+  final Dao<Food> _foodDao;
+  final Dao<FoodPortion> _portionDao;
 
   final Logger _logger = Logger('Recipe Repository');
 
   RecipeRepository({
-    required this._recipeRepository,
-    required this._itemRepository,
-    required this._foodRepository,
-    required this._portionRepository,
+    required this._recipeDao,
+    required this._itemDao,
+    required this._foodDao,
+    required this._portionDao,
   });
 
   factory RecipeRepository.create([DatabaseHelper? databaseHelper]) {
     final helper = databaseHelper ?? DatabaseHelper();
     return RecipeRepository(
-      recipeRepository: Dao<Recipe>(
+      recipeDao: Dao<Recipe>(
         databaseHelper: helper,
         tableName: Recipe.table,
         fromMap: Recipe.fromMap,
       ),
-      itemRepository: Dao<RecipeItem>(
+      itemDao: Dao<RecipeItem>(
         databaseHelper: helper,
         tableName: RecipeItem.table,
         fromMap: RecipeItem.fromMap,
       ),
-      foodRepository: Dao<Food>(
+      foodDao: Dao<Food>(
         databaseHelper: helper,
         tableName: Food.table,
         fromMap: Food.fromMap,
       ),
-      portionRepository: Dao<FoodPortion>(
+      portionDao: Dao<FoodPortion>(
         databaseHelper: helper,
         tableName: FoodPortion.table,
         fromMap: FoodPortion.fromMap,
@@ -90,7 +90,7 @@ final class RecipeRepository implements Repository {
     final actualYield = servingsYield < 1 ? 1 : servingsYield;
 
     try {
-      return await _recipeRepository.startTransaction<
+      return await _recipeDao.startTransaction<
         Result<RecipeDto, ServiceError<SingleErrorTypes>>
       >((txn) async {
         // Calculate item totals and recipe totals
@@ -105,7 +105,7 @@ final class RecipeRepository implements Repository {
         final Map<int, String> portionNames = {};
 
         for (final input in items) {
-          final foodRows = await _foodRepository.selectMany(
+          final foodRows = await _foodDao.selectMany(
             where: FoodColumns.id.equal,
             whereArgs: [input.foodId],
             limit: 1,
@@ -125,7 +125,7 @@ final class RecipeRepository implements Repository {
             final portionWhere = WhereBuilder()
               ..and(FoodPortionColumns.id.equal, input.portionId)
               ..and(FoodPortionColumns.foodId.equal, input.foodId);
-            final portionRows = await _portionRepository.selectMany(
+            final portionRows = await _portionDao.selectMany(
               where: portionWhere.where,
               whereArgs: portionWhere.args,
               limit: 1,
@@ -213,12 +213,12 @@ final class RecipeRepository implements Repository {
           createdBy: createdBy,
         );
 
-        final int recipeId = await _recipeRepository.insert(recipe, txn);
+        final int recipeId = await _recipeDao.insert(recipe, txn);
 
         final List<RecipeItemDto> itemDtos = [];
         for (final item in calculatedItems) {
           final withRecipeId = item.copyWith(recipeId: recipeId);
-          final int itemId = await _itemRepository.insert(withRecipeId, txn);
+          final int itemId = await _itemDao.insert(withRecipeId, txn);
           itemDtos.add(
             RecipeItemDto.fromModel(
               withRecipeId.copyWith(id: Nullable(itemId)),
@@ -256,7 +256,7 @@ final class RecipeRepository implements Repository {
   ) async {
     _logger.info('Getting recipe with id $id');
     try {
-      final Recipe? recipe = await _recipeRepository.selectOne(id);
+      final Recipe? recipe = await _recipeDao.selectOne(id);
       if (recipe == null) {
         return err(
           const ServiceError(
@@ -266,17 +266,17 @@ final class RecipeRepository implements Repository {
         );
       }
 
-      final List<RecipeItem> items = await _itemRepository.selectMany(
+      final List<RecipeItem> items = await _itemDao.selectMany(
         where: RecipeItemColumns.recipeId.equal,
         whereArgs: [id],
       );
 
       final List<RecipeItemDto> itemDtos = [];
       for (final item in items) {
-        final Food? food = await _foodRepository.selectOne(item.foodId);
+        final Food? food = await _foodDao.selectOne(item.foodId);
         String? portionName;
         if (item.portionId != null) {
-          final FoodPortion? portion = await _portionRepository.selectOne(
+          final FoodPortion? portion = await _portionDao.selectOne(
             item.portionId!,
           );
           portionName = portion?.portionName;
@@ -325,14 +325,14 @@ final class RecipeRepository implements Repository {
         where.and(RecipeColumns.isFavorite.equal, 1);
       }
 
-      final List<Recipe> recipes = await _recipeRepository.selectPaginated(
+      final List<Recipe> recipes = await _recipeDao.selectPaginated(
         where: where.where,
         whereArgs: where.args,
         limit: limit,
         offset: offset,
         orderBy: [RecipeColumns.name.orderAsc],
       );
-      final int total = await _recipeRepository.count(
+      final int total = await _recipeDao.count(
         where: where.where,
         whereArgs: where.args,
       );
@@ -371,7 +371,7 @@ final class RecipeRepository implements Repository {
 
     _logger.info('Updating recipe with id $id');
     try {
-      final Recipe? existing = await _recipeRepository.selectOne(id);
+      final Recipe? existing = await _recipeDao.selectOne(id);
       if (existing == null) {
         return err(
           const ServiceError(
@@ -391,7 +391,7 @@ final class RecipeRepository implements Repository {
         );
       }
 
-      return await _recipeRepository.startTransaction<
+      return await _recipeDao.startTransaction<
         Result<RecipeDto, ServiceError<SingleErrorTypes>>
       >((txn) async {
         final actualYield = servingsYield < 1 ? 1 : servingsYield;
@@ -404,7 +404,7 @@ final class RecipeRepository implements Repository {
         int servingF = existing.servingFat;
         Micronutrients? servingMicros = existing.servingMicros;
 
-        await _itemRepository.deleteMany(
+        await _itemDao.deleteMany(
           where: RecipeItemColumns.recipeId.equal,
           whereArgs: [id],
           trx: txn,
@@ -421,7 +421,7 @@ final class RecipeRepository implements Repository {
         final Map<int, String> portionNames = {};
 
         for (final input in items) {
-          final foodRows = await _foodRepository.selectMany(
+          final foodRows = await _foodDao.selectMany(
             where: FoodColumns.id.equal,
             whereArgs: [input.foodId],
             limit: 1,
@@ -441,7 +441,7 @@ final class RecipeRepository implements Repository {
             final portionWhere = WhereBuilder()
               ..and(FoodPortionColumns.id.equal, input.portionId)
               ..and(FoodPortionColumns.foodId.equal, input.foodId);
-            final portionRows = await _portionRepository.selectMany(
+            final portionRows = await _portionDao.selectMany(
               where: portionWhere.where,
               whereArgs: portionWhere.args,
               limit: 1,
@@ -518,7 +518,7 @@ final class RecipeRepository implements Repository {
         }
 
         for (final item in calculatedItems) {
-          final int itemId = await _itemRepository.insert(item, txn);
+          final int itemId = await _itemDao.insert(item, txn);
           itemDtos.add(
             RecipeItemDto.fromModel(
               item.copyWith(id: Nullable(itemId)),
@@ -542,7 +542,7 @@ final class RecipeRepository implements Repository {
           updatedAt: DateUtilities.getNowUtcUnix(),
         );
 
-        await _recipeRepository.update(updated, txn);
+        await _recipeDao.update(updated, txn);
         _logger.info('Updated recipe with id $id');
         return ok(RecipeDto.fromModel(updated, items: itemDtos));
       });
@@ -564,10 +564,10 @@ final class RecipeRepository implements Repository {
   ) async {
     _logger.info('Toggling favorite for recipe with id $id');
     try {
-      return await _recipeRepository.startTransaction<
+      return await _recipeDao.startTransaction<
         Result<RecipeDto, ServiceError<SingleErrorTypes>>
       >((txn) async {
-        final Recipe? recipe = await _recipeRepository.selectOne(id, txn);
+        final Recipe? recipe = await _recipeDao.selectOne(id, txn);
         if (recipe == null) {
           return err(
             const ServiceError(
@@ -581,9 +581,9 @@ final class RecipeRepository implements Repository {
           isFavorite: !recipe.isFavorite,
           updatedAt: DateUtilities.getNowUtcUnix(),
         );
-        await _recipeRepository.update(updated, txn);
+        await _recipeDao.update(updated, txn);
 
-        final List<RecipeItem> items = await _itemRepository.selectMany(
+        final List<RecipeItem> items = await _itemDao.selectMany(
           where: RecipeItemColumns.recipeId.equal,
           whereArgs: [id],
           trx: txn,
@@ -591,10 +591,10 @@ final class RecipeRepository implements Repository {
 
         final List<RecipeItemDto> itemDtos = [];
         for (final item in items) {
-          final Food? food = await _foodRepository.selectOne(item.foodId, txn);
+          final Food? food = await _foodDao.selectOne(item.foodId, txn);
           String? portionName;
           if (item.portionId != null) {
-            final FoodPortion? portion = await _portionRepository.selectOne(
+            final FoodPortion? portion = await _portionDao.selectOne(
               item.portionId!,
               txn,
             );
@@ -630,7 +630,7 @@ final class RecipeRepository implements Repository {
   ) async {
     _logger.info('Deleting recipe with id $id');
     try {
-      final Recipe? recipe = await _recipeRepository.selectOne(id);
+      final Recipe? recipe = await _recipeDao.selectOne(id);
       if (recipe == null) {
         return err(
           const ServiceError(
@@ -650,7 +650,7 @@ final class RecipeRepository implements Repository {
         );
       }
 
-      final bool deleted = await _recipeRepository.deleteOne(id);
+      final bool deleted = await _recipeDao.deleteOne(id);
       if (!deleted) {
         return err(
           const ServiceError(

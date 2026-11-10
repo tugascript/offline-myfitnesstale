@@ -44,46 +44,46 @@ import '../core/repository.dart';
 export './inputs/workout_record_input.dart';
 
 final class WorkoutRecordRepository implements Repository {
-  final Dao<WorkoutRecord> _repository;
-  final Dao<WorkoutSetRecord> _setRecordRepository;
-  final Dao<WorkoutSetExerciseRecord> _setExerciseRecordRepository;
-  final Dao<Workout> _workoutRepository;
-  final Dao<Exercise> _exerciseRepository;
+  final Dao<WorkoutRecord> _workoutRecordDao;
+  final Dao<WorkoutSetRecord> _setRecordDao;
+  final Dao<WorkoutSetExerciseRecord> _setExerciseRecordDao;
+  final Dao<Workout> _workoutDao;
+  final Dao<Exercise> _exerciseDao;
 
   final Logger _logger = Logger('Workout Record Repository');
 
   WorkoutRecordRepository({
-    required this._repository,
-    required this._setRecordRepository,
-    required this._setExerciseRecordRepository,
-    required this._workoutRepository,
-    required this._exerciseRepository,
+    required this._workoutRecordDao,
+    required this._setRecordDao,
+    required this._setExerciseRecordDao,
+    required this._workoutDao,
+    required this._exerciseDao,
   });
 
   factory WorkoutRecordRepository.create([DatabaseHelper? databaseHelper]) {
     final helper = databaseHelper ?? DatabaseHelper();
     return WorkoutRecordRepository(
-      repository: Dao<WorkoutRecord>(
+      workoutRecordDao: Dao<WorkoutRecord>(
         databaseHelper: helper,
         tableName: WorkoutRecord.table,
         fromMap: WorkoutRecord.fromMap,
       ),
-      setRecordRepository: Dao<WorkoutSetRecord>(
+      setRecordDao: Dao<WorkoutSetRecord>(
         databaseHelper: helper,
         tableName: WorkoutSetRecord.table,
         fromMap: WorkoutSetRecord.fromMap,
       ),
-      setExerciseRecordRepository: Dao<WorkoutSetExerciseRecord>(
+      setExerciseRecordDao: Dao<WorkoutSetExerciseRecord>(
         databaseHelper: helper,
         tableName: WorkoutSetExerciseRecord.table,
         fromMap: WorkoutSetExerciseRecord.fromMap,
       ),
-      workoutRepository: Dao<Workout>(
+      workoutDao: Dao<Workout>(
         databaseHelper: helper,
         tableName: Workout.table,
         fromMap: Workout.fromMap,
       ),
-      exerciseRepository: Dao<Exercise>(
+      exerciseDao: Dao<Exercise>(
         databaseHelper: helper,
         tableName: Exercise.table,
         fromMap: Exercise.fromMap,
@@ -107,7 +107,7 @@ final class WorkoutRecordRepository implements Repository {
     final WhereBuilder query = WhereBuilder();
 
     if (workoutId != null) {
-      final Workout? workout = await _workoutRepository.selectOne(workoutId);
+      final Workout? workout = await _workoutDao.selectOne(workoutId);
       if (workout == null) {
         return err(
           ServiceError(
@@ -149,14 +149,15 @@ final class WorkoutRecordRepository implements Repository {
     }
 
     try {
-      final List<WorkoutRecord> records = await _repository.selectPaginated(
-        limit: limit,
-        offset: offset,
-        where: query.where,
-        whereArgs: query.args,
-        orderBy: [WorkoutRecordColumns.startedAt.orderDesc],
-      );
-      final int total = await _repository.count(
+      final List<WorkoutRecord> records = await _workoutRecordDao
+          .selectPaginated(
+            limit: limit,
+            offset: offset,
+            where: query.where,
+            whereArgs: query.args,
+            orderBy: [WorkoutRecordColumns.startedAt.orderDesc],
+          );
+      final int total = await _workoutRecordDao.count(
         where: query.where,
         whereArgs: query.args,
       );
@@ -174,7 +175,7 @@ final class WorkoutRecordRepository implements Repository {
       }
 
       final Set<int> workoutIds = records.map((r) => r.workoutId).toSet();
-      final List<Workout> workouts = await _workoutRepository.selectMany(
+      final List<Workout> workouts = await _workoutDao.selectMany(
         where: WorkoutColumns.id.inList(workoutIds.length),
         whereArgs: workoutIds.toList(),
       );
@@ -210,7 +211,7 @@ final class WorkoutRecordRepository implements Repository {
   getWorkoutRecord(int id) async {
     _logger.info('Getting workout record with id $id');
     try {
-      final WorkoutRecord? record = await _repository.selectOne(id);
+      final WorkoutRecord? record = await _workoutRecordDao.selectOne(id);
       if (record == null) {
         return err(
           const ServiceError(
@@ -220,22 +221,21 @@ final class WorkoutRecordRepository implements Repository {
         );
       }
 
-      final List<WorkoutSetRecord> setRecords = await _setRecordRepository
-          .selectMany(
-            where: WorkoutSetRecordColumns.workoutRecordId.equal,
-            whereArgs: [id],
-            orderBy: [
-              WorkoutSetRecordColumns.workoutRecordId.orderAsc,
-              WorkoutSetRecordColumns.setNumber.orderAsc,
-            ],
-          );
+      final List<WorkoutSetRecord> setRecords = await _setRecordDao.selectMany(
+        where: WorkoutSetRecordColumns.workoutRecordId.equal,
+        whereArgs: [id],
+        orderBy: [
+          WorkoutSetRecordColumns.workoutRecordId.orderAsc,
+          WorkoutSetRecordColumns.setNumber.orderAsc,
+        ],
+      );
       if (setRecords.isEmpty) {
         _logger.info('Got workout record with id $id');
         return ok(WorkoutRecordDto.fromModel(record));
       }
 
       final List<WorkoutSetExerciseRecord> setExerciseRecords =
-          await _setExerciseRecordRepository.selectMany(
+          await _setExerciseRecordDao.selectMany(
             where: WorkoutSetExerciseRecordColumns.workoutRecordId.equal,
             whereArgs: [id],
             orderBy: [
@@ -256,7 +256,7 @@ final class WorkoutRecordRepository implements Repository {
       }
 
       final exercisesIds = setExerciseRecords.map((s) => s.exerciseId).toSet();
-      final exercises = await _exerciseRepository.selectMany(
+      final exercises = await _exerciseDao.selectMany(
         where: ExerciseColumns.id.inList(exercisesIds.length),
         whereArgs: exercisesIds.toList(),
       );
@@ -319,7 +319,7 @@ final class WorkoutRecordRepository implements Repository {
   getLatestWorkoutRecord([int? workoutId]) async {
     _logger.info('Getting latest workout record for workout $workoutId');
     try {
-      final List<WorkoutRecord> records = await _repository.selectMany(
+      final List<WorkoutRecord> records = await _workoutRecordDao.selectMany(
         where: workoutId != null ? WorkoutRecordColumns.workoutId.equal : null,
         whereArgs: workoutId != null ? [workoutId] : null,
         orderBy: [WorkoutRecordColumns.startedAt.orderDesc],
@@ -338,9 +338,7 @@ final class WorkoutRecordRepository implements Repository {
       final record = records.first;
       WorkoutDto? workoutDto;
       if (workoutId == null) {
-        final Workout? workout = await _workoutRepository.selectOne(
-          record.workoutId,
-        );
+        final Workout? workout = await _workoutDao.selectOne(record.workoutId);
         if (workout != null) {
           workoutDto = WorkoutDto.fromModel(workout);
         }
@@ -367,9 +365,7 @@ final class WorkoutRecordRepository implements Repository {
   getOrCreateWorkoutRecord(WorkoutRecordInput input) async {
     _logger.info('Creating workout record');
     try {
-      final Workout? workout = await _workoutRepository.selectOne(
-        input.workoutId,
-      );
+      final Workout? workout = await _workoutDao.selectOne(input.workoutId);
       if (workout == null) {
         return err(
           ServiceError(
@@ -385,7 +381,7 @@ final class WorkoutRecordRepository implements Repository {
         WorkoutRecordColumns.status.equal,
         ProgressStatus.inProgress.value,
       );
-      final List<WorkoutRecord> records = await _repository.selectMany(
+      final List<WorkoutRecord> records = await _workoutRecordDao.selectMany(
         where: where.where,
         whereArgs: where.args,
         limit: 1,
@@ -415,7 +411,7 @@ final class WorkoutRecordRepository implements Repository {
             : null,
         status: status,
       );
-      final int id = await _repository.insert(record);
+      final int id = await _workoutRecordDao.insert(record);
       _logger.info('Created workout record with id $id');
       return ok(WorkoutRecordDto.fromModel(record.copyWith(id: Nullable(id))));
     } catch (e) {
@@ -433,7 +429,7 @@ final class WorkoutRecordRepository implements Repository {
   updateWorkoutRecord(int id, WorkoutRecordInput input) async {
     _logger.info('Updating workout record with id $id');
     try {
-      final WorkoutRecord? record = await _repository.selectOne(id);
+      final WorkoutRecord? record = await _workoutRecordDao.selectOne(id);
       if (record == null) {
         return err(
           ServiceError(
@@ -463,7 +459,7 @@ final class WorkoutRecordRepository implements Repository {
             : ProgressStatus.inProgress,
         updatedAt: DateUtilities.getNowUtcUnix(),
       );
-      await _repository.update(updatedRecord);
+      await _workoutRecordDao.update(updatedRecord);
       _logger.info('Updated workout record with id $id');
       return ok(WorkoutRecordDto.fromModel(updatedRecord));
     } catch (e) {
@@ -482,7 +478,7 @@ final class WorkoutRecordRepository implements Repository {
   ) async {
     _logger.info('Deleting workout record with id $id');
     try {
-      final bool deleted = await _repository.deleteOne(id);
+      final bool deleted = await _workoutRecordDao.deleteOne(id);
       if (!deleted) {
         return err(
           ServiceError(
@@ -519,7 +515,7 @@ final class WorkoutRecordRepository implements Repository {
     whereBuild.and(WorkoutSetRecordColumns.setNumber.equal, input.setNumber);
 
     try {
-      final WorkoutRecord? workoutRecord = await _repository.selectOne(
+      final WorkoutRecord? workoutRecord = await _workoutRecordDao.selectOne(
         input.workoutRecordId,
       );
       if (workoutRecord == null) {
@@ -532,12 +528,11 @@ final class WorkoutRecordRepository implements Repository {
         );
       }
 
-      final List<WorkoutSetRecord> records = await _setRecordRepository
-          .selectMany(
-            where: whereBuild.where,
-            whereArgs: whereBuild.args,
-            limit: 1,
-          );
+      final List<WorkoutSetRecord> records = await _setRecordDao.selectMany(
+        where: whereBuild.where,
+        whereArgs: whereBuild.args,
+        limit: 1,
+      );
 
       if (records.isNotEmpty) {
         final WorkoutSetRecord record = records.first;
@@ -552,8 +547,8 @@ final class WorkoutRecordRepository implements Repository {
           ),
           updatedAt: DateUtilities.getNowUtcUnix(),
         );
-        await _repository.startTransaction((trx) async {
-          await _setRecordRepository.update(updatedRecord, trx);
+        await _workoutRecordDao.startTransaction((trx) async {
+          await _setRecordDao.update(updatedRecord, trx);
           final updatedWorkoutRecord = workoutRecord.copyWith(
             totalRestSecs:
                 workoutRecord.totalRestSecs +
@@ -561,7 +556,7 @@ final class WorkoutRecordRepository implements Repository {
                 (oldRest ?? 0),
             updatedAt: DateUtilities.getNowUtcUnix(),
           );
-          await _repository.update(updatedWorkoutRecord, trx);
+          await _workoutRecordDao.update(updatedWorkoutRecord, trx);
         });
 
         _logger.info('Updated workout set record with id ${record.id}');
@@ -578,8 +573,8 @@ final class WorkoutRecordRepository implements Repository {
             ? DateUtilities.getDateUnix(input.completedAt.value!)
             : null,
       );
-      final int id = await _repository.startTransaction((trx) async {
-        final int id = await _setRecordRepository.insert(record, trx);
+      final int id = await _workoutRecordDao.startTransaction((trx) async {
+        final int id = await _setRecordDao.insert(record, trx);
 
         final updatedWorkoutRecord = workoutRecord.copyWith(
           totalSets: workoutRecord.totalSets + 1,
@@ -589,7 +584,7 @@ final class WorkoutRecordRepository implements Repository {
           currentSetNumber: workoutRecord.currentSetNumber + 1,
           updatedAt: DateUtilities.getNowUtcUnix(),
         );
-        await _repository.update(updatedWorkoutRecord, trx);
+        await _workoutRecordDao.update(updatedWorkoutRecord, trx);
 
         return id;
       });
@@ -612,7 +607,7 @@ final class WorkoutRecordRepository implements Repository {
   upsertWorkoutSetExerciseRecord(WorkoutSetExerciseRecordInput input) async {
     _logger.info('Creating workout set exercise record');
     try {
-      final WorkoutRecord? workoutRecord = await _repository.selectOne(
+      final WorkoutRecord? workoutRecord = await _workoutRecordDao.selectOne(
         input.workoutRecordId,
       );
       if (workoutRecord == null) {
@@ -625,8 +620,9 @@ final class WorkoutRecordRepository implements Repository {
         );
       }
 
-      final WorkoutSetRecord? workoutSetRecord = await _setRecordRepository
-          .selectOne(input.workoutSetRecordId);
+      final WorkoutSetRecord? workoutSetRecord = await _setRecordDao.selectOne(
+        input.workoutSetRecordId,
+      );
       if (workoutSetRecord == null) {
         return err(
           ServiceError(
@@ -637,9 +633,7 @@ final class WorkoutRecordRepository implements Repository {
         );
       }
 
-      final Exercise? exercise = await _exerciseRepository.selectOne(
-        input.exerciseId,
-      );
+      final Exercise? exercise = await _exerciseDao.selectOne(input.exerciseId);
       if (exercise == null) {
         return err(
           ServiceError(
@@ -666,8 +660,8 @@ final class WorkoutRecordRepository implements Repository {
         WorkoutSetExerciseRecordColumns.position.equal,
         input.position,
       );
-      final List<WorkoutSetExerciseRecord> records =
-          await _setExerciseRecordRepository.selectMany(
+      final List<WorkoutSetExerciseRecord> records = await _setExerciseRecordDao
+          .selectMany(
             where: whereBuild.where,
             whereArgs: whereBuild.args,
             limit: 1,
@@ -683,8 +677,8 @@ final class WorkoutRecordRepository implements Repository {
           exerciseId: input.exerciseId,
           updatedAt: DateUtilities.getNowUtcUnix(),
         );
-        await _repository.startTransaction((trx) async {
-          await _setExerciseRecordRepository.update(updatedRecord, trx);
+        await _workoutRecordDao.startTransaction((trx) async {
+          await _setExerciseRecordDao.update(updatedRecord, trx);
           final updatedWorkoutRecord = workoutRecord.copyWith(
             totalReps: workoutRecord.totalReps + (input.reps - previousReps),
             totalVolume:
@@ -692,7 +686,7 @@ final class WorkoutRecordRepository implements Repository {
                 (input.reps * input.weight - previousVolume),
             updatedAt: DateUtilities.getNowUtcUnix(),
           );
-          await _repository.update(updatedWorkoutRecord, trx);
+          await _workoutRecordDao.update(updatedWorkoutRecord, trx);
         });
 
         return ok(WorkoutSetExerciseRecordDto.fromModel(updatedRecord));
@@ -708,8 +702,8 @@ final class WorkoutRecordRepository implements Repository {
         weightGrams: input.weight,
         difficulty: input.difficulty,
       );
-      final int id = await _repository.startTransaction((trx) async {
-        final int id = await _setExerciseRecordRepository.insert(record, trx);
+      final int id = await _workoutRecordDao.startTransaction((trx) async {
+        final int id = await _setExerciseRecordDao.insert(record, trx);
         final updatedWorkoutRecord = workoutRecord.copyWith(
           totalReps: workoutRecord.totalReps + input.reps,
           totalVolume: workoutRecord.totalVolume + (input.reps * input.weight),
@@ -718,7 +712,7 @@ final class WorkoutRecordRepository implements Repository {
           currentExercisePosition: workoutRecord.currentExercisePosition + 1,
           updatedAt: DateUtilities.getNowUtcUnix(),
         );
-        await _repository.update(updatedWorkoutRecord, trx);
+        await _workoutRecordDao.update(updatedWorkoutRecord, trx);
         return id;
       });
       _logger.info('Created workout set exercise record with id $id');
@@ -743,9 +737,7 @@ final class WorkoutRecordRepository implements Repository {
   batchCreateWorkoutRecord(WorkoutRecordBatchInput input) async {
     _logger.info('Batch creating workout record');
     try {
-      final Workout? workout = await _workoutRepository.selectOne(
-        input.workoutId,
-      );
+      final Workout? workout = await _workoutDao.selectOne(input.workoutId);
       if (workout == null) {
         return err(
           ServiceError(
@@ -760,14 +752,14 @@ final class WorkoutRecordRepository implements Repository {
         (int sum, WorkoutSetRecordBatchInput s) => sum + s.totalRestSecs,
       );
 
-      final result = await _repository.startTransaction((trx) async {
+      final result = await _workoutRecordDao.startTransaction((trx) async {
         // 1. Create WorkoutRecord
         final WorkoutRecord record = WorkoutRecord.create(
           version: workout.version,
           workoutId: input.workoutId,
           startedAt: DateUtilities.getDateUnix(input.startedAt),
         );
-        final int recordId = await _repository.insert(
+        final int recordId = await _workoutRecordDao.insert(
           record.copyWith(
             completedAt: Nullable(DateUtilities.getDateUnix(input.completedAt)),
             status: ProgressStatus.completed,
@@ -799,7 +791,7 @@ final class WorkoutRecordRepository implements Repository {
             .map((e) => e.exerciseId)
             .toSet();
         final List<Exercise> fetchedExercises = allExerciseIds.isNotEmpty
-            ? await _exerciseRepository.selectMany(
+            ? await _exerciseDao.selectMany(
                 where: ExerciseColumns.id.inList(allExerciseIds.length),
                 whereArgs: allExerciseIds.toList(),
                 trx: trx,
@@ -816,7 +808,7 @@ final class WorkoutRecordRepository implements Repository {
         }
 
         // Update record with gathered muscles
-        await _repository.update(
+        await _workoutRecordDao.update(
           record.copyWith(
             id: Nullable(recordId),
             completedAt: Nullable(DateUtilities.getDateUnix(input.completedAt)),
@@ -856,10 +848,7 @@ final class WorkoutRecordRepository implements Repository {
                 : null,
             totalRestSecs: setDto.totalRestSecs,
           );
-          final int setRecordId = await _setRecordRepository.insert(
-            setRecord,
-            trx,
-          );
+          final int setRecordId = await _setRecordDao.insert(setRecord, trx);
 
           for (final exDto in setDto.exercises) {
             final WorkoutSetExerciseRecord exRecord =
@@ -873,7 +862,7 @@ final class WorkoutRecordRepository implements Repository {
                   weightGrams: exDto.weight,
                   difficulty: exDto.difficulty,
                 );
-            await _setExerciseRecordRepository.insert(exRecord, trx);
+            await _setExerciseRecordDao.insert(exRecord, trx);
           }
         }
         return recordId;
@@ -908,7 +897,7 @@ final class WorkoutRecordRepository implements Repository {
   ) async {
     _logger.info('Batch updating workout record with id $workoutRecordId');
     try {
-      final WorkoutRecord? record = await _repository.selectOne(
+      final WorkoutRecord? record = await _workoutRecordDao.selectOne(
         workoutRecordId,
       );
       if (record == null) {
@@ -925,14 +914,14 @@ final class WorkoutRecordRepository implements Repository {
         (int sum, WorkoutSetRecordBatchInput s) => sum + s.totalRestSecs,
       );
 
-      await _repository.startTransaction((trx) async {
+      await _workoutRecordDao.startTransaction((trx) async {
         // Delete existing sets and exercises
-        await _setExerciseRecordRepository.deleteMany(
+        await _setExerciseRecordDao.deleteMany(
           where: WorkoutSetExerciseRecordColumns.workoutRecordId.equal,
           whereArgs: [workoutRecordId],
           trx: trx,
         );
-        await _setRecordRepository.deleteMany(
+        await _setRecordDao.deleteMany(
           where: WorkoutSetRecordColumns.workoutRecordId.equal,
           whereArgs: [workoutRecordId],
           trx: trx,
@@ -944,7 +933,7 @@ final class WorkoutRecordRepository implements Repository {
             .map((e) => e.exerciseId)
             .toSet();
         final List<Exercise> fetchedExercises = allExerciseIds.isNotEmpty
-            ? await _exerciseRepository.selectMany(
+            ? await _exerciseDao.selectMany(
                 where: ExerciseColumns.id.inList(allExerciseIds.length),
                 whereArgs: allExerciseIds.toList(),
                 trx: trx,
@@ -961,7 +950,7 @@ final class WorkoutRecordRepository implements Repository {
         }
 
         // Update record
-        await _repository.update(
+        await _workoutRecordDao.update(
           record.copyWith(
             workoutId: input.workoutId,
             version: input.version,
@@ -1005,10 +994,7 @@ final class WorkoutRecordRepository implements Repository {
                 : null,
             totalRestSecs: setDto.totalRestSecs,
           );
-          final int setRecordId = await _setRecordRepository.insert(
-            setRecord,
-            trx,
-          );
+          final int setRecordId = await _setRecordDao.insert(setRecord, trx);
 
           for (final exDto in setDto.exercises) {
             final WorkoutSetExerciseRecord exRecord =
@@ -1022,7 +1008,7 @@ final class WorkoutRecordRepository implements Repository {
                   weightGrams: exDto.weight,
                   difficulty: exDto.difficulty,
                 );
-            await _setExerciseRecordRepository.insert(exRecord, trx);
+            await _setExerciseRecordDao.insert(exRecord, trx);
           }
         }
       });
