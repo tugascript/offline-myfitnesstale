@@ -5,12 +5,12 @@ import 'package:myfitnesstale/src/services/inputs/meal_plan_input.dart';
 import 'package:myfitnesstale/src/services/inputs/recipe_input.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:myfitnesstale/src/models/day_macro_goal_model.dart';
-import 'package:myfitnesstale/src/models/enums.dart';
-import 'package:myfitnesstale/src/models/food_model.dart';
-import 'package:myfitnesstale/src/models/food_portion_model.dart';
-import 'package:myfitnesstale/src/models/meal_plan_record_model.dart';
-import 'package:myfitnesstale/src/models/week_macro_goal_model.dart';
+import 'package:myfitnesstale/src/data/models/day_macro_goal_model.dart';
+import 'package:myfitnesstale/src/data/utils/enums.dart';
+import 'package:myfitnesstale/src/data/models/food_model.dart';
+import 'package:myfitnesstale/src/data/models/food_portion_model.dart';
+import 'package:myfitnesstale/src/data/models/meal_plan_record_model.dart';
+import 'package:myfitnesstale/src/data/models/week_macro_goal_model.dart';
 import 'package:myfitnesstale/src/utils/errors.dart';
 import 'package:myfitnesstale/src/services/food_service.dart';
 import 'package:myfitnesstale/src/services/macro_tracking_service.dart';

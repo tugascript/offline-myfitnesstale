@@ -1,8 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
-import '../../../models/common.dart';
-import '../../../models/enums.dart';
+import '../../../data/utils/json_data.dart';
+import '../../../data/utils/enums.dart';
 import '../../../ui/core/sizes/data_display_sizes.dart';
 import '../../../ui/core/widgets/mutation_button.dart';
 import '../../layout/app_text_form_field.dart';

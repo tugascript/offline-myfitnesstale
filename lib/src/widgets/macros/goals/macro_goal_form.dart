@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../utils/nullable.dart';
-import '../../../models/enums.dart';
+import '../../../data/utils/enums.dart';
 import '../../../services/dtos/macro_tracking_dto.dart';
 import '../../../services/inputs/macro_goal_input.dart';
 import '../../../ui/core/utils/converters.dart';

@@ -1,7 +1,7 @@
 import 'package:equatable/equatable.dart';
 
-import '../../models/enums.dart';
-import '../../models/common.dart';
+import '../../data/utils/enums.dart';
+import '../../data/utils/json_data.dart';
 
 class PictureDto extends Equatable {
   final PictureStorage storage;

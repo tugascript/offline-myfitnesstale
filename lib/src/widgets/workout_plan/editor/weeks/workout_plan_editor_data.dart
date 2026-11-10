@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 
-import '../../../../models/enums.dart';
+import '../../../../data/utils/enums.dart';
 import '../../../../services/dtos/workout_plan_day_dto.dart';
 import '../../../../services/dtos/workout_plan_week_dto.dart';
 import '../../../../services/dtos/workout_plan_workout_dto.dart';

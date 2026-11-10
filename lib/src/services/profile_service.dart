@@ -1,18 +1,19 @@
 import 'package:logging/logging.dart';
 import 'package:sqflite/sqflite.dart';
 
-import '../models/db.dart';
-import '../models/enums.dart';
-import '../models/profile_model.dart';
-import '../models/reminders_config_model.dart';
-import '../models/repository.dart';
-import '../models/system_model.dart';
-import '../models/utilities.dart';
+import '../data/repositories/db.dart';
+import '../data/utils/enums.dart';
+import '../data/models/profile_model.dart';
+import '../data/models/reminders_config_model.dart';
+import '../data/repositories/repository.dart';
+import '../data/models/system_model.dart';
+
 import '../utils/errors.dart';
 import '../utils/result.dart';
 import 'dtos/profile_dto.dart';
 import 'dtos/reminders_config_dto.dart';
 import 'dtos/system_dto.dart';
+import '../data/utils/dates.dart';
 
 class ProfileService {
   ProfileService._();

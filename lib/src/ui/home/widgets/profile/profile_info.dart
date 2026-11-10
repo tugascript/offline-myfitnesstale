@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../../models/enums.dart';
+import '../../../../data/utils/enums.dart';
 import '../../../../services/dtos/profile_dto.dart';
 import '../../../../services/dtos/system_dto.dart';
 import '../../../core/utils/converters.dart';

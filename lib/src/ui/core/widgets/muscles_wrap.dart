@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../models/enums.dart';
+import '../../../data/utils/enums.dart';
 import '../sizes/data_display_sizes.dart';
 import 'muscle_badge.dart';
 

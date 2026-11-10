@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../models/enums.dart';
+import '../../data/utils/enums.dart';
 import '../../ui/core/sizes/data_display_sizes.dart';
 import '../layout/app_dropdown.dart';
 import '../layout/app_number_wheel.dart';

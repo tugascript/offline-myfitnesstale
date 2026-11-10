@@ -3,11 +3,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:sqflite/sqflite.dart';
 
-import 'package:myfitnesstale/src/models/db.dart';
-import 'package:myfitnesstale/src/models/enums.dart';
-import 'package:myfitnesstale/src/models/equipment_model.dart';
-import 'package:myfitnesstale/src/models/exercise_model.dart';
-import 'package:myfitnesstale/src/models/exercise_record_model.dart';
+import 'package:myfitnesstale/src/data/repositories/db.dart';
+import 'package:myfitnesstale/src/data/utils/enums.dart';
+import 'package:myfitnesstale/src/data/models/equipment_model.dart';
+import 'package:myfitnesstale/src/data/models/exercise_model.dart';
+import 'package:myfitnesstale/src/data/models/exercise_record_model.dart';
 
 import 'support/device_test_harness.dart';
 

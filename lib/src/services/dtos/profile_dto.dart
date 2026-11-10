@@ -1,9 +1,10 @@
 import 'package:equatable/equatable.dart';
 
-import '../../models/enums.dart';
-import '../../models/profile_model.dart';
-import '../../models/utilities.dart';
+import '../../data/utils/enums.dart';
+import '../../data/models/profile_model.dart';
+
 import 'dto.dart';
+import '../../data/utils/dates.dart';
 
 class ProfileDto extends Equatable implements Dto<Profile> {
   @override

@@ -4,7 +4,7 @@ import 'package:intl/intl.dart';
 
 import '../../../cubits/states/weight_record_state.dart';
 import '../../../cubits/weight_record_cubit.dart';
-import '../../../models/enums.dart';
+import '../../../data/utils/enums.dart';
 import '../../../ui/core/sizes/data_display_sizes.dart';
 import '../../../ui/core/sizes/screen_size.dart';
 import '../../../ui/core/widgets/icons_switch.dart';

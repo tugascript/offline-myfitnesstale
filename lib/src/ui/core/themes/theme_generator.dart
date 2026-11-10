@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../../models/enums.dart';
+import '../../../data/utils/enums.dart';
 
 const MaterialColor _orangeSwatch = MaterialColor(
   _orangePrimaryValue,

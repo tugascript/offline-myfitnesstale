@@ -1,16 +1,16 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:myfitnesstale/src/models/common.dart';
-import 'package:myfitnesstale/src/models/constants/equipment_constants.dart';
-import 'package:myfitnesstale/src/models/constants/exercise_constants.dart';
-import 'package:myfitnesstale/src/models/db.dart';
-import 'package:myfitnesstale/src/models/enums.dart';
-import 'package:myfitnesstale/src/models/equipment_model.dart';
-import 'package:myfitnesstale/src/models/exercise_equipment_model.dart';
-import 'package:myfitnesstale/src/models/exercise_model.dart';
-import 'package:myfitnesstale/src/models/profile_model.dart';
-import 'package:myfitnesstale/src/models/system_model.dart';
+import 'package:myfitnesstale/src/data/utils/json_data.dart';
+import 'package:myfitnesstale/src/data/models/constants/equipment_constants.dart';
+import 'package:myfitnesstale/src/data/models/constants/exercise_constants.dart';
+import 'package:myfitnesstale/src/data/repositories/db.dart';
+import 'package:myfitnesstale/src/data/utils/enums.dart';
+import 'package:myfitnesstale/src/data/models/equipment_model.dart';
+import 'package:myfitnesstale/src/data/models/exercise_equipment_model.dart';
+import 'package:myfitnesstale/src/data/models/exercise_model.dart';
+import 'package:myfitnesstale/src/data/models/profile_model.dart';
+import 'package:myfitnesstale/src/data/models/system_model.dart';
 import 'package:myfitnesstale/src/services/exercise_service.dart';
 import 'package:path/path.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';

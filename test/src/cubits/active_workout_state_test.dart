@@ -1,8 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:myfitnesstale/src/cubits/states/active_workout_state.dart';
 import 'package:myfitnesstale/src/utils/nullable.dart';
-import 'package:myfitnesstale/src/models/common.dart';
-import 'package:myfitnesstale/src/models/enums.dart';
+import 'package:myfitnesstale/src/data/utils/json_data.dart';
+import 'package:myfitnesstale/src/data/utils/enums.dart';
 import 'package:myfitnesstale/src/services/dtos/workout_dto.dart';
 import 'package:myfitnesstale/src/services/dtos/workout_record_dto.dart';
 import 'package:myfitnesstale/src/services/dtos/workout_set_dto.dart';

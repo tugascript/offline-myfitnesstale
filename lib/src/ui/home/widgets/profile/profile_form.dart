@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../../models/enums.dart';
+import '../../../../data/utils/enums.dart';
 import 'height_input.dart';
 
 final class _FormData {

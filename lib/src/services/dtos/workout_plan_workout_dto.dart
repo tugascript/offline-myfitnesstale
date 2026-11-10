@@ -1,8 +1,8 @@
 import 'package:equatable/equatable.dart';
 
 import '../../utils/nullable.dart';
-import '../../models/workout_plan_workout_model.dart';
-import '../../models/enums.dart';
+import '../../data/models/workout_plan_workout_model.dart';
+import '../../data/utils/enums.dart';
 import 'dto.dart';
 import 'workout_dto.dart';
 

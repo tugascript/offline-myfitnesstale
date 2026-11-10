@@ -135,7 +135,7 @@ foods, recipes, meal plans, and macro tracking.
 
 ### Local data model
 
-`DatabaseHelper` in `lib/src/models/db.dart` creates the SQLite schema and enables foreign-key
+`DatabaseHelper` in `lib/src/data/models` creates the SQLite schema and enables foreign-key
 enforcement. The diagram below intentionally shows domain relationships rather than every column;
 the model files are the authoritative schema definition.
 

@@ -1,7 +1,7 @@
 import 'package:equatable/equatable.dart';
 
 import '../../utils/nullable.dart';
-import '../../models/enums.dart';
+import '../../data/utils/enums.dart';
 
 class MealPlanMealItemInput extends Equatable {
   final int foodId;

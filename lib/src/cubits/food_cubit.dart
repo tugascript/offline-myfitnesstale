@@ -2,7 +2,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:logging/logging.dart';
 
 import '../utils/nullable.dart';
-import '../models/enums.dart';
+import '../data/utils/enums.dart';
 import '../services/dtos/food_dto.dart';
 import '../services/food_service.dart';
 import '../services/inputs/food_input.dart';

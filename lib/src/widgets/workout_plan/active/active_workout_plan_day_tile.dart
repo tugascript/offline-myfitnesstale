@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../models/enums.dart';
+import '../../../data/utils/enums.dart';
 import '../../../services/dtos/workout_plan_day_dto.dart';
 import '../../../services/dtos/workout_plan_workout_record_dto.dart';
 import '../../../services/dtos/workout_plan_workout_dto.dart';

@@ -2,7 +2,7 @@ import 'package:equatable/equatable.dart';
 import 'package:myfitnesstale/src/services/dtos/exercise_dto.dart';
 
 import '../../utils/nullable.dart';
-import '../../models/workout_set_exercise_option_model.dart';
+import '../../data/models/workout_set_exercise_option_model.dart';
 import 'dto.dart';
 
 class WorkoutSetExerciseOptionDto extends Equatable

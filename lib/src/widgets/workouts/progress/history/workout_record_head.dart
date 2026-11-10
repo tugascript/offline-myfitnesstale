@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
-import '../../../../models/enums.dart';
+import '../../../../data/utils/enums.dart';
 import '../../../../services/dtos/workout_record_dto.dart';
 import '../../../../ui/core/utils/converters.dart';
 import '../../../../ui/core/utils/formatters.dart';

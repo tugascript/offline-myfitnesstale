@@ -1,13 +1,13 @@
 import 'package:logging/logging.dart';
 
 import '../utils/nullable.dart';
-import '../models/db.dart';
-import '../models/enums.dart';
-import '../models/exercise_model.dart';
-import '../models/exercise_record_model.dart';
-import '../models/repository.dart';
-import '../models/strength_goal_model.dart';
-import '../models/utilities.dart';
+import '../data/repositories/db.dart';
+import '../data/utils/enums.dart';
+import '../data/models/exercise_model.dart';
+import '../data/models/exercise_record_model.dart';
+import '../data/repositories/repository.dart';
+import '../data/models/strength_goal_model.dart';
+
 import '../utils/errors.dart';
 import '../utils/result.dart';
 import 'dtos/exercise_dto.dart';
@@ -16,6 +16,9 @@ import 'dtos/paginated_dto.dart';
 import 'dtos/strength_goal_dto.dart';
 import 'inputs/exercise_record_input.dart';
 import 'inputs/strength_goal_input.dart';
+import '../data/utils/dates.dart';
+import '../data/utils/where_builder.dart';
+import '../data/repositories/common.dart';
 
 class ExerciseRecordService {
   ExerciseRecordService._();

@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../cubits/food_cubit.dart';
-import '../../models/enums.dart';
+import '../../data/utils/enums.dart';
 import '../../services/dtos/food_dto.dart';
 import '../../services/dtos/meal_plan_dto.dart';
 import '../../ui/core/sizes/data_display_sizes.dart';

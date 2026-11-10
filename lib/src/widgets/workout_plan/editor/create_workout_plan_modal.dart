@@ -5,7 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../utils/nullable.dart';
 import '../../../cubits/states/workout_plan_state.dart';
 import '../../../cubits/workout_plan_cubit.dart';
-import '../../../models/enums.dart';
+import '../../../data/utils/enums.dart';
 import '../../../ui/core/sizes/data_display_sizes.dart';
 import '../../layout/app_modal.dart';
 import 'workout_plan_base_form.dart';

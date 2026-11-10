@@ -1,8 +1,8 @@
 import 'package:equatable/equatable.dart';
 
 import '../../utils/nullable.dart';
-import '../../models/enums.dart';
-import '../../models/equipment_model.dart';
+import '../../data/utils/enums.dart';
+import '../../data/models/equipment_model.dart';
 import 'dto.dart';
 import 'picture_dto.dart';
 

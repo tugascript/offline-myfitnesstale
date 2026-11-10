@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
 
-import '../../models/reminders_config_model.dart';
+import '../../data/models/reminders_config_model.dart';
 import 'dto.dart';
 
 class RemindersConfigDto extends Equatable implements Dto<RemindersConfig> {

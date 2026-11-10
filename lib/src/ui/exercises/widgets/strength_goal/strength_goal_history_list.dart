@@ -5,7 +5,7 @@ import 'package:intl/intl.dart';
 import '../../view_models/exercise_record_cubit.dart';
 import '../../../../cubits/profile_cubit.dart';
 import '../../view_models/states/exercise_record_state.dart';
-import '../../../../models/enums.dart';
+import '../../../../data/utils/enums.dart';
 import '../../../core/utils/converters.dart';
 import '../../../core/sizes/data_display_sizes.dart';
 import '../../../core/widgets/confirmation_dialog.dart';

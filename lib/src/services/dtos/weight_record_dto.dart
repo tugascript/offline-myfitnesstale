@@ -1,7 +1,7 @@
 import 'package:equatable/equatable.dart';
 
 import '../../utils/nullable.dart';
-import '../../models/weight_record_model.dart';
+import '../../data/models/weight_record_model.dart';
 import 'dto.dart';
 
 class WeightRecordDto extends Equatable implements Dto<WeightRecord> {

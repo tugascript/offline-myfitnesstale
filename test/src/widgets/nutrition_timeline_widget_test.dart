@@ -5,7 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:myfitnesstale/src/cubits/food_cubit.dart';
 import 'package:myfitnesstale/src/cubits/macro_tracking_cubit.dart';
 import 'package:myfitnesstale/src/cubits/recipe_cubit.dart';
-import 'package:myfitnesstale/src/models/enums.dart';
+import 'package:myfitnesstale/src/data/utils/enums.dart';
 import 'package:myfitnesstale/src/services/dtos/food_dto.dart';
 import 'package:myfitnesstale/src/services/dtos/macro_tracking_dto.dart';
 import 'package:myfitnesstale/src/services/dtos/recipe_dto.dart';

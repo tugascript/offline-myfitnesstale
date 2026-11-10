@@ -1,28 +1,29 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:myfitnesstale/src/models/common.dart';
-import 'package:myfitnesstale/src/models/daily_nutrition_log_model.dart';
-import 'package:myfitnesstale/src/models/day_macro_goal_model.dart';
-import 'package:myfitnesstale/src/models/db.dart';
-import 'package:myfitnesstale/src/models/enums.dart';
-import 'package:myfitnesstale/src/models/food_model.dart';
-import 'package:myfitnesstale/src/models/food_portion_model.dart';
-import 'package:myfitnesstale/src/models/meal_log_item_model.dart';
-import 'package:myfitnesstale/src/models/meal_log_model.dart';
-import 'package:myfitnesstale/src/models/meal_plan_day_model.dart';
-import 'package:myfitnesstale/src/models/meal_plan_day_record_model.dart';
-import 'package:myfitnesstale/src/models/meal_plan_meal_item_model.dart';
-import 'package:myfitnesstale/src/models/meal_plan_meal_model.dart';
-import 'package:myfitnesstale/src/models/meal_plan_model.dart';
-import 'package:myfitnesstale/src/models/meal_plan_record_model.dart';
-import 'package:myfitnesstale/src/models/meal_plan_week_model.dart';
-import 'package:myfitnesstale/src/models/meal_plan_week_record_model.dart';
-import 'package:myfitnesstale/src/models/recipe_item_model.dart';
-import 'package:myfitnesstale/src/models/recipe_model.dart';
-import 'package:myfitnesstale/src/models/utilities.dart';
-import 'package:myfitnesstale/src/models/week_macro_goal_model.dart';
+import 'package:myfitnesstale/src/data/utils/json_data.dart';
+import 'package:myfitnesstale/src/data/models/daily_nutrition_log_model.dart';
+import 'package:myfitnesstale/src/data/models/day_macro_goal_model.dart';
+import 'package:myfitnesstale/src/data/repositories/db.dart';
+import 'package:myfitnesstale/src/data/utils/enums.dart';
+import 'package:myfitnesstale/src/data/models/food_model.dart';
+import 'package:myfitnesstale/src/data/models/food_portion_model.dart';
+import 'package:myfitnesstale/src/data/models/meal_log_item_model.dart';
+import 'package:myfitnesstale/src/data/models/meal_log_model.dart';
+import 'package:myfitnesstale/src/data/models/meal_plan_day_model.dart';
+import 'package:myfitnesstale/src/data/models/meal_plan_day_record_model.dart';
+import 'package:myfitnesstale/src/data/models/meal_plan_meal_item_model.dart';
+import 'package:myfitnesstale/src/data/models/meal_plan_meal_model.dart';
+import 'package:myfitnesstale/src/data/models/meal_plan_model.dart';
+import 'package:myfitnesstale/src/data/models/meal_plan_record_model.dart';
+import 'package:myfitnesstale/src/data/models/meal_plan_week_model.dart';
+import 'package:myfitnesstale/src/data/models/meal_plan_week_record_model.dart';
+import 'package:myfitnesstale/src/data/models/recipe_item_model.dart';
+import 'package:myfitnesstale/src/data/models/recipe_model.dart';
+
+import 'package:myfitnesstale/src/data/models/week_macro_goal_model.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:myfitnesstale/src/data/utils/dates.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

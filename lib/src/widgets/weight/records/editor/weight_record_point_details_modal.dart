@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../cubits/weight_record_cubit.dart';
-import '../../../../models/enums.dart';
+import '../../../../data/utils/enums.dart';
 import '../../../../services/dtos/weight_record_dto.dart';
 import '../../../../ui/core/utils/converters.dart';
 import '../../../../ui/core/utils/formatters.dart';

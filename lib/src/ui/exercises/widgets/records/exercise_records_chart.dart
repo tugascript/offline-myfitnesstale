@@ -2,7 +2,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-import '../../../../models/enums.dart';
+import '../../../../data/utils/enums.dart';
 import '../../../../services/dtos/exercise_dto.dart';
 import '../../../../services/dtos/exercise_record_dto.dart';
 import '../../../core/utils/converters.dart';

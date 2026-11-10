@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:myfitnesstale/src/cubits/macro_tracking_cubit.dart';
-import 'package:myfitnesstale/src/models/enums.dart';
+import 'package:myfitnesstale/src/data/utils/enums.dart';
 import 'package:myfitnesstale/src/services/dtos/macro_tracking_dto.dart';
 import 'package:myfitnesstale/src/services/inputs/macro_goal_input.dart';
 import 'package:myfitnesstale/src/ui/core/sizes/data_display_sizes.dart';

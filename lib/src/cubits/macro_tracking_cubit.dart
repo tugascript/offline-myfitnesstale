@@ -6,7 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:logging/logging.dart';
 
 import '../utils/nullable.dart';
-import '../models/enums.dart';
+import '../data/utils/enums.dart';
 import '../services/macro_tracking_service.dart';
 import 'states/common_state.dart';
 import 'states/macro_tracking_state.dart';

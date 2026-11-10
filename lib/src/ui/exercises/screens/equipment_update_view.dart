@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../utils/nullable.dart';
-import '../../../models/common.dart';
+import '../../../data/utils/json_data.dart';
 import '../../../routing/routing.dart';
 import '../../../services/inputs/equipment_input.dart';
 import '../../../widgets/layout/responsive_scaffold.dart';

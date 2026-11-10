@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../../../models/enums.dart';
+import '../../../../../data/utils/enums.dart';
 import '../../../../../services/dtos/workout_set_dto.dart';
 import '../../../../../services/dtos/workout_set_exercise_record_dto.dart';
 import '../../../../../services/dtos/workout_set_record_dto.dart';

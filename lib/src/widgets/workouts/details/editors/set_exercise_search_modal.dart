@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../ui/exercises/view_models/exercise_cubit.dart';
 import '../../../../ui/exercises/view_models/states/exercise_state.dart';
-import '../../../../models/enums.dart';
+import '../../../../data/utils/enums.dart';
 import '../../../../services/dtos/exercise_dto.dart';
 import '../../../../ui/core/sizes/data_display_sizes.dart';
 import '../../../../ui/core/widgets/modal_search/modal_search_form.dart';

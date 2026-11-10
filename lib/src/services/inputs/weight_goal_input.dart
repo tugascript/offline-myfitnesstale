@@ -1,5 +1,5 @@
 import '../../utils/nullable.dart';
-import '../../models/enums.dart';
+import '../../data/utils/enums.dart';
 
 class WeightGoalInput {
   final int targetWeight;
