@@ -85,33 +85,28 @@ final class WeightRecordRepository implements Repository {
         );
       }
 
-      final int weightCount = await _weightGoalDao.count(
-        where: WeightGoalColumns.status.equal,
-        whereArgs: [ProgressStatus.inProgress.value],
-      );
-
-      if (weightCount == 0) {
-        final int id = await _weightGoalDao.insert(weightGoal);
-        _logger.info('Created weight goal with id $id');
-        return ok(
-          WeightGoalDto.fromModel(weightGoal.copyWith(id: Nullable(id))),
-        );
-      }
-
       final int id = await _weightGoalDao.startTransaction((txn) async {
-        await txn.rawUpdate(
-          """
-          UPDATE ${WeightGoal.table} SET 
-            ${WeightGoalColumns.status.equal}, 
-            ${WeightGoalColumns.completedAt.equal}
-          WHERE ${WeightGoalColumns.status.equal};
-          """,
-          [
-            ProgressStatus.abandoned.value,
-            DateUtilities.getNowUtcUnix(),
-            ProgressStatus.inProgress.value,
-          ],
+        final weightCount = await _weightGoalDao.count(
+          where: WeightGoalColumns.status.equal,
+          whereArgs: [ProgressStatus.inProgress.value],
+          trx: txn,
         );
+
+        if (weightCount > 0) {
+          await txn.rawUpdate(
+            """
+            UPDATE ${WeightGoal.table} SET
+              ${WeightGoalColumns.status.equal},
+              ${WeightGoalColumns.completedAt.equal}
+            WHERE ${WeightGoalColumns.status.equal};
+            """,
+            [
+              ProgressStatus.abandoned.value,
+              DateUtilities.getNowUtcUnix(),
+              ProgressStatus.inProgress.value,
+            ],
+          );
+        }
         return await _weightGoalDao.insert(weightGoal, txn);
       });
       _logger.info('Created weight goal with id $id');
