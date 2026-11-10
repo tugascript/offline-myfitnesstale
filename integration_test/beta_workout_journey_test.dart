@@ -9,7 +9,7 @@ import 'package:myfitnesstale/src/data/models/workout_model.dart';
 import 'package:myfitnesstale/src/data/models/workout_record_model.dart';
 import 'package:myfitnesstale/src/data/models/workout_set_exercise_model.dart';
 import 'package:myfitnesstale/src/data/models/workout_set_model.dart';
-import 'package:myfitnesstale/src/ui/workouts/screens/workout_history_view.dart';
+import 'package:myfitnesstale/src/ui/workouts/screens/workout_history_screen.dart';
 
 import 'support/device_test_harness.dart';
 
@@ -177,7 +177,7 @@ void main() {
       );
       await harness.goAndWait(
         tester,
-        location: WorkoutHistoryView.location(
+        location: WorkoutHistoryScreen.location(
           workoutId: workoutId,
           version: version,
         ),

@@ -6,7 +6,7 @@ data ownership.
 
 ## Architectural Layers and Division of Responsibilities
 
-Follow the strict flow: `SQLite Model -> DAO -> Repository -> Cubit/ViewModel -> View/Widget`.
+Follow the strict flow: `SQLite Model -> DAO -> Repository -> Cubit/ViewModel -> Screen/Widget`.
 
 - **Model (`lib/src/data/models`)**:
     - Defines SQLite table schemas (`tableCreate`, `Columns` enum).
@@ -37,18 +37,18 @@ Follow the strict flow: `SQLite Model -> DAO -> Repository -> Cubit/ViewModel ->
       omitting an argument and deliberately setting a field to `null`.
     - Never interacts directly with `sqflite` or raw database models.
     - Has a pagination state inside each type of entity state.
-- **View & Widget (`lib/src/ui/<feature>/`)**:
-    - UI layer under feature folders: `screens/`, `widgets/`, and `view_models/`.
+- **Screen & Widget (`lib/src/ui/<feature>/`)**:
+    - UI layer under feature folders: `screens/` (`*_screen.dart` / `*Screen`), `widgets/`, and `view_models/`.
     - Shared UI lives in `lib/src/ui/core/` (`widgets/`, `widgets/layout/`, `sizes/`, `themes/`, `screens/`,
       `view_models/`).
     - Consumes Cubit states via `BlocBuilder` / `BlocConsumer` / `context.watch`.
     - Dispatches user intents to Cubit methods.
     - Never calls repositories or DAOs directly.
-    - When generating a view, reuse shared UI in `lib/src/ui/core/widgets/` (including `layout/`) and feature widgets
+    - When generating a screen, reuse shared UI in `lib/src/ui/core/widgets/` (including `layout/`) and feature widgets
       under `lib/src/ui/<feature>/widgets/`. Keep the screen a compact composition of those widgets plus Cubit wiring.
-    - Resolve layout sizes in the view with `BreakPoint.fromContext(context)` and the matching class in
+    - Resolve layout sizes in the screen with `BreakPoint.fromContext(context)` and the matching class in
       `lib/src/ui/core/sizes` (usually `DataDisplaySizes.getDataDisplaySizes`). Pass that size list, and `ThemeData`
-      when needed, into child widgets. Do not hardcode padding, spacing, icon sizes, or font sizes in views or widgets.
+      when needed, into child widgets. Do not hardcode padding, spacing, icon sizes, or font sizes in screens or widgets.
 - **Application Root & Wiring (`lib/my_app.dart`)**:
     - Registers app-scoped Cubits using `MultiBlocProvider` and wires the router.
 
@@ -57,7 +57,7 @@ Follow the strict flow: `SQLite Model -> DAO -> Repository -> Cubit/ViewModel ->
 - **Routing**: `GoRouter` configured in `lib/src/routing/app_router.dart`. Register static routes before dynamic
   parameterized routes (e.g. `/exercises/progress` before `/exercises/:id/records`).
 - **Orientation**: Portrait mode is enforced at runtime.
-- **Responsiveness**: Ensure views handle narrow screens and 200% text scaling without layout or pixel overflow errors.
+- **Responsiveness**: Ensure screens handle narrow widths and 200% text scaling without layout or pixel overflow errors.
 
 ## Data and Persistence Conventions
 

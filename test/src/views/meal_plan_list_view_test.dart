@@ -8,7 +8,7 @@ import 'package:myfitnesstale/src/ui/meal_plans/view_models/meal_plan_record_cub
 import 'package:myfitnesstale/src/data/utils/enums.dart';
 import 'package:myfitnesstale/src/routing/routing.dart';
 import 'package:myfitnesstale/src/data/repositories/meal_plans/dtos/meal_plan_dto.dart';
-import 'package:myfitnesstale/src/ui/meal_plans/screens/meal_plan_list_view.dart';
+import 'package:myfitnesstale/src/ui/meal_plans/screens/meal_plan_list_screen.dart';
 import 'package:myfitnesstale/src/ui/core/widgets/favourite_checkbox.dart';
 import 'package:myfitnesstale/src/ui/core/widgets/search_favorite_form.dart';
 import 'package:myfitnesstale/src/ui/core/widgets/search_form_button.dart';
@@ -81,7 +81,7 @@ void main() {
   );
 
   testWidgets(
-    'MealPlanListView renders SearchFavoriteForm and searches with favorite filter',
+    'MealPlanListScreen renders SearchFavoriteForm and searches with favorite filter',
     (tester) async {
       final cubit = _FakeMealPlanCubit([testPlan]);
       addTearDown(cubit.close);
@@ -94,7 +94,7 @@ void main() {
         routes: [
           GoRoute(
             path: Routes.mealPlanList.name,
-            builder: (_, _) => const MealPlanListView(),
+            builder: (_, _) => const MealPlanListScreen(),
           ),
         ],
       );
@@ -126,7 +126,7 @@ void main() {
     },
   );
 
-  testWidgets('MealPlanListView allows toggling favorite on meal plan item', (
+  testWidgets('MealPlanListScreen allows toggling favorite on meal plan item', (
     tester,
   ) async {
     final cubit = _FakeMealPlanCubit([testPlan]);
@@ -140,7 +140,7 @@ void main() {
       routes: [
         GoRoute(
           path: Routes.mealPlanList.name,
-          builder: (_, _) => const MealPlanListView(),
+          builder: (_, _) => const MealPlanListScreen(),
         ),
       ],
     );

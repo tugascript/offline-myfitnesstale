@@ -12,7 +12,7 @@ import 'package:myfitnesstale/src/data/repositories/profile/dtos/profile_dto.dar
 import 'package:myfitnesstale/src/data/repositories/profile/dtos/reminders_config_dto.dart';
 import 'package:myfitnesstale/src/data/repositories/profile/dtos/system_dto.dart';
 import 'package:myfitnesstale/src/data/repositories/onboarding/onboarding_repository.dart';
-import 'package:myfitnesstale/src/ui/home/screens/profile/onboarding_view.dart';
+import 'package:myfitnesstale/src/ui/home/screens/profile/onboarding_screen.dart';
 
 void main() {
   testWidgets('shows persistent rollback feedback and retries unchanged form', (
@@ -25,7 +25,7 @@ void main() {
     await tester.pumpWidget(
       BlocProvider<ProfileCubit>.value(
         value: cubit,
-        child: const MaterialApp(home: OnboardingView()),
+        child: const MaterialApp(home: OnboardingScreen()),
       ),
     );
     await tester.enterText(
@@ -61,7 +61,7 @@ void main() {
       routes: [
         GoRoute(
           path: Routes.onboarding.name,
-          builder: (context, state) => const OnboardingView(),
+          builder: (context, state) => const OnboardingScreen(),
         ),
         GoRoute(
           path: '/',

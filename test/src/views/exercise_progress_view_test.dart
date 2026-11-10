@@ -14,7 +14,7 @@ import 'package:myfitnesstale/src/routing/routing.dart';
 import 'package:myfitnesstale/src/ui/exercises/view_models/exercise_record_cubit.dart';
 import 'package:myfitnesstale/src/ui/exercises/view_models/states/exercise_record_state.dart';
 import 'package:myfitnesstale/src/data/repositories/profile/dtos/system_dto.dart';
-import 'package:myfitnesstale/src/ui/exercises/screens/exercise_progress_view.dart';
+import 'package:myfitnesstale/src/ui/exercises/screens/exercise_progress_screen.dart';
 
 class _ExerciseRecordCubit extends ExerciseRecordCubit {
   _ExerciseRecordCubit(ExerciseRecordState initialState, this.aggregateRecords)
@@ -135,7 +135,7 @@ void main() {
       routes: [
         GoRoute(
           path: Routes.exerciseProgress.name,
-          builder: (context, state) => const ExerciseProgressView(),
+          builder: (context, state) => const ExerciseProgressScreen(),
         ),
         GoRoute(
           path: Routes.exerciseRecords.name,

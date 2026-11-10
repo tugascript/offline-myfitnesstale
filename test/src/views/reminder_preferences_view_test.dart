@@ -11,7 +11,7 @@ import 'package:myfitnesstale/src/data/repositories/profile/dtos/profile_dto.dar
 import 'package:myfitnesstale/src/data/repositories/profile/dtos/reminders_config_dto.dart';
 import 'package:myfitnesstale/src/data/repositories/profile/dtos/system_dto.dart';
 import 'package:myfitnesstale/src/ui/core/sizes/data_display_sizes.dart';
-import 'package:myfitnesstale/src/ui/home/screens/profile/reminder_preferences_view.dart';
+import 'package:myfitnesstale/src/ui/home/screens/profile/reminder_preferences_screen.dart';
 import 'package:myfitnesstale/src/ui/home/widgets/quick_actions_widget.dart';
 
 class _ProfileCubit extends ProfileCubit {
@@ -90,7 +90,7 @@ void main() {
       routes: [
         GoRoute(
           path: Routes.reminderPreferences.name,
-          builder: (context, state) => const ReminderPreferencesView(),
+          builder: (context, state) => const ReminderPreferencesScreen(),
         ),
       ],
     );

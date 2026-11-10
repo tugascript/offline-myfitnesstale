@@ -20,12 +20,12 @@ import 'package:myfitnesstale/src/data/repositories/profile/dtos/profile_dto.dar
 import 'package:myfitnesstale/src/data/repositories/profile/dtos/reminders_config_dto.dart';
 import 'package:myfitnesstale/src/data/repositories/profile/dtos/system_dto.dart';
 import 'package:myfitnesstale/src/data/repositories/workouts/dtos/workout_dto.dart';
-import 'package:myfitnesstale/src/ui/exercises/screens/exercise_progress_view.dart';
-import 'package:myfitnesstale/src/ui/exercises/screens/exercise_records_view.dart';
-import 'package:myfitnesstale/src/ui/core/screens/not_found_view.dart';
-import 'package:myfitnesstale/src/ui/home/screens/profile/reminder_preferences_view.dart';
-import 'package:myfitnesstale/src/ui/workout_plans/screens/workout_plan_history_view.dart';
-import 'package:myfitnesstale/src/ui/workouts/screens/workout_history_view.dart';
+import 'package:myfitnesstale/src/ui/exercises/screens/exercise_progress_screen.dart';
+import 'package:myfitnesstale/src/ui/exercises/screens/exercise_records_screen.dart';
+import 'package:myfitnesstale/src/ui/core/screens/not_found_screen.dart';
+import 'package:myfitnesstale/src/ui/home/screens/profile/reminder_preferences_screen.dart';
+import 'package:myfitnesstale/src/ui/workout_plans/screens/workout_plan_history_screen.dart';
+import 'package:myfitnesstale/src/ui/workouts/screens/workout_history_screen.dart';
 
 class _ExerciseCubit extends ExerciseCubit {
   _ExerciseCubit() : super(ExerciseRepository.create());
@@ -168,22 +168,22 @@ void main() {
   ) async {
     await pumpRoute(tester, Routes.exerciseProgress.name);
 
-    expect(find.byType(ExerciseProgressView), findsOneWidget);
-    expect(find.byType(NotFoundView), findsNothing);
+    expect(find.byType(ExerciseProgressScreen), findsOneWidget);
+    expect(find.byType(NotFoundScreen), findsNothing);
   });
 
   testWidgets('global and single plan history routing resolve', (tester) async {
-    await pumpRoute(tester, WorkoutPlanHistoryView.location());
+    await pumpRoute(tester, WorkoutPlanHistoryScreen.location());
 
-    var view = tester.widget<WorkoutPlanHistoryView>(
-      find.byType(WorkoutPlanHistoryView),
+    var view = tester.widget<WorkoutPlanHistoryScreen>(
+      find.byType(WorkoutPlanHistoryScreen),
     );
     expect(view.workoutPlanId, isNull);
 
-    await pumpRoute(tester, WorkoutPlanHistoryView.location(42));
+    await pumpRoute(tester, WorkoutPlanHistoryScreen.location(42));
 
-    view = tester.widget<WorkoutPlanHistoryView>(
-      find.byType(WorkoutPlanHistoryView),
+    view = tester.widget<WorkoutPlanHistoryScreen>(
+      find.byType(WorkoutPlanHistoryScreen),
     );
     expect(view.workoutPlanId, 42);
   });
@@ -191,32 +191,34 @@ void main() {
   testWidgets('invalid plan history IDs show Not Found', (tester) async {
     await pumpRoute(tester, '/workout-plans/history?id=not-a-number');
 
-    expect(find.byType(NotFoundView), findsOneWidget);
+    expect(find.byType(NotFoundScreen), findsOneWidget);
   });
 
   testWidgets('global and single workout history routing resolve', (
     tester,
   ) async {
-    await pumpRoute(tester, WorkoutHistoryView.location());
+    await pumpRoute(tester, WorkoutHistoryScreen.location());
 
-    var view = tester.widget<WorkoutHistoryView>(
-      find.byType(WorkoutHistoryView),
+    var view = tester.widget<WorkoutHistoryScreen>(
+      find.byType(WorkoutHistoryScreen),
     );
     expect(view.workoutId, isNull);
     expect(view.version, isNull);
 
     await pumpRoute(
       tester,
-      WorkoutHistoryView.location(workoutId: 12, version: 3),
+      WorkoutHistoryScreen.location(workoutId: 12, version: 3),
     );
 
-    view = tester.widget<WorkoutHistoryView>(find.byType(WorkoutHistoryView));
+    view = tester.widget<WorkoutHistoryScreen>(
+      find.byType(WorkoutHistoryScreen),
+    );
     expect(view.workoutId, 12);
     expect(view.version, 3);
 
     final workoutCubit = await pumpRoute(
       tester,
-      WorkoutHistoryView.location(workoutId: 12),
+      WorkoutHistoryScreen.location(workoutId: 12),
       selectedWorkout: const WorkoutDto(
         id: 12,
         name: 'Cached Older Workout',
@@ -232,7 +234,9 @@ void main() {
       ),
     );
 
-    view = tester.widget<WorkoutHistoryView>(find.byType(WorkoutHistoryView));
+    view = tester.widget<WorkoutHistoryScreen>(
+      find.byType(WorkoutHistoryScreen),
+    );
     expect(view.workoutId, 12);
     expect(view.version, isNull);
     expect(workoutCubit.calls, [(12, null)]);
@@ -242,26 +246,26 @@ void main() {
     tester,
   ) async {
     await pumpRoute(tester, '/workouts/history?id=not-a-number');
-    expect(find.byType(NotFoundView), findsOneWidget);
+    expect(find.byType(NotFoundScreen), findsOneWidget);
 
     await pumpRoute(tester, '/workouts/history?version=3');
-    expect(find.byType(NotFoundView), findsOneWidget);
+    expect(find.byType(NotFoundScreen), findsOneWidget);
 
     await pumpRoute(tester, '/workouts/history?id=12&version=not-a-number');
-    expect(find.byType(NotFoundView), findsOneWidget);
+    expect(find.byType(NotFoundScreen), findsOneWidget);
   });
 
   testWidgets('reminder preferences resolve', (tester) async {
     await pumpRoute(tester, Routes.reminderPreferences.name);
 
-    expect(find.byType(ReminderPreferencesView), findsOneWidget);
+    expect(find.byType(ReminderPreferencesScreen), findsOneWidget);
   });
 
   testWidgets('exercise records resolve with a parsed ID', (tester) async {
-    await pumpRoute(tester, ExerciseRecordsView.location(17));
+    await pumpRoute(tester, ExerciseRecordsScreen.location(17));
 
-    final view = tester.widget<ExerciseRecordsView>(
-      find.byType(ExerciseRecordsView),
+    final view = tester.widget<ExerciseRecordsScreen>(
+      find.byType(ExerciseRecordsScreen),
     );
     expect(view.exerciseId, 17);
   });
@@ -269,6 +273,6 @@ void main() {
   testWidgets('unknown paths still show Not Found', (tester) async {
     await pumpRoute(tester, '/definitely-unknown');
 
-    expect(find.byType(NotFoundView), findsOneWidget);
+    expect(find.byType(NotFoundScreen), findsOneWidget);
   });
 }

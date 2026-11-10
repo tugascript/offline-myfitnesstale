@@ -8,8 +8,8 @@ import 'package:myfitnesstale/src/ui/recipes/view_models/recipe_cubit.dart';
 import 'package:myfitnesstale/src/data/utils/enums.dart';
 import 'package:myfitnesstale/src/routing/routing.dart';
 import 'package:myfitnesstale/src/data/repositories/recipes/dtos/recipe_dto.dart';
-import 'package:myfitnesstale/src/ui/recipes/screens/recipe_details_view.dart';
-import 'package:myfitnesstale/src/ui/recipes/screens/recipes_view.dart';
+import 'package:myfitnesstale/src/ui/recipes/screens/recipe_details_screen.dart';
+import 'package:myfitnesstale/src/ui/recipes/screens/recipes_screen.dart';
 import 'package:myfitnesstale/src/ui/core/widgets/favourite_checkbox.dart';
 import 'package:myfitnesstale/src/ui/core/widgets/search_favorite_form.dart';
 import 'package:myfitnesstale/src/ui/core/widgets/search_form_button.dart';
@@ -85,7 +85,7 @@ void main() {
   );
 
   testWidgets(
-    'RecipesView renders SearchFavoriteForm and allows search with favorite filter',
+    'RecipesScreen renders SearchFavoriteForm and allows search with favorite filter',
     (tester) async {
       final cubit = _FakeRecipeCubit([testRecipe]);
       addTearDown(cubit.close);
@@ -95,7 +95,7 @@ void main() {
         routes: [
           GoRoute(
             path: Routes.recipes.name,
-            builder: (_, _) => const RecipesView(),
+            builder: (_, _) => const RecipesScreen(),
           ),
         ],
       );
@@ -124,7 +124,7 @@ void main() {
     },
   );
 
-  testWidgets('RecipesView allows toggling favorite from list item', (
+  testWidgets('RecipesScreen allows toggling favorite from list item', (
     tester,
   ) async {
     final cubit = _FakeRecipeCubit([testRecipe]);
@@ -135,7 +135,7 @@ void main() {
       routes: [
         GoRoute(
           path: Routes.recipes.name,
-          builder: (_, _) => const RecipesView(),
+          builder: (_, _) => const RecipesScreen(),
         ),
       ],
     );
@@ -163,7 +163,7 @@ void main() {
     expect(cubit.state.recipes.first.isFavorite, isTrue);
   });
 
-  testWidgets('RecipeDetailsView allows toggling favorite', (tester) async {
+  testWidgets('RecipeDetailsScreen allows toggling favorite', (tester) async {
     final cubit = _FakeRecipeCubit([testRecipe]);
     addTearDown(cubit.close);
 
@@ -172,7 +172,7 @@ void main() {
       routes: [
         GoRoute(
           path: Routes.recipeDetails.name,
-          builder: (_, _) => const RecipeDetailsView(recipeId: 42),
+          builder: (_, _) => const RecipeDetailsScreen(recipeId: 42),
         ),
       ],
     );

@@ -28,13 +28,13 @@ import 'package:myfitnesstale/src/data/repositories/profile/dtos/system_dto.dart
 import 'package:myfitnesstale/src/data/repositories/workout_plans/dtos/workout_plan_dto.dart';
 import 'package:myfitnesstale/src/ui/core/sizes/data_display_sizes.dart';
 import 'package:myfitnesstale/src/ui/core/sizes/screen_size.dart';
-import 'package:myfitnesstale/src/ui/exercises/screens/strength_goals_view.dart';
-import 'package:myfitnesstale/src/ui/foods/screens/foods_view.dart';
-import 'package:myfitnesstale/src/ui/home/screens/home_view.dart';
-import 'package:myfitnesstale/src/ui/home/screens/main_navigation_view.dart';
-import 'package:myfitnesstale/src/ui/macros/screens/macro_goals_view.dart';
-import 'package:myfitnesstale/src/ui/macros/screens/macro_tracker_view.dart';
-import 'package:myfitnesstale/src/ui/recipes/screens/recipes_view.dart';
+import 'package:myfitnesstale/src/ui/exercises/screens/strength_goals_screen.dart';
+import 'package:myfitnesstale/src/ui/foods/screens/foods_screen.dart';
+import 'package:myfitnesstale/src/ui/home/screens/home_screen.dart';
+import 'package:myfitnesstale/src/ui/home/screens/main_navigation_screen.dart';
+import 'package:myfitnesstale/src/ui/macros/screens/macro_goals_screen.dart';
+import 'package:myfitnesstale/src/ui/macros/screens/macro_tracker_screen.dart';
+import 'package:myfitnesstale/src/ui/recipes/screens/recipes_screen.dart';
 import 'package:myfitnesstale/src/ui/home/widgets/active/active_meal_plan_widget.dart';
 import 'package:myfitnesstale/src/ui/home/widgets/active/active_plans_carousel.dart';
 import 'package:myfitnesstale/src/ui/home/widgets/quick_actions_widget.dart';
@@ -360,7 +360,7 @@ void main() {
       tester,
     ) async {
       await tester.pumpWidget(
-        buildAppHarness(child: const Scaffold(body: HomeView())),
+        buildAppHarness(child: const Scaffold(body: HomeScreen())),
       );
       await tester.pump();
 
@@ -379,13 +379,13 @@ void main() {
       'current plan tab keeps its cached page without reloading on revisits',
       (tester) async {
         await tester.pumpWidget(
-          buildAppHarness(child: const MainNavigationView()),
+          buildAppHarness(child: const MainNavigationScreen()),
         );
         await tester.pump();
         await tester.pump(const Duration(milliseconds: 300));
         final cubit =
             tester
-                    .element(find.byType(MainNavigationView))
+                    .element(find.byType(MainNavigationScreen))
                     .read<WorkoutPlanRecordCubit>()
                 as _TestWorkoutPlanRecordCubit;
         final initialLoads = cubit.loadCalls;
@@ -413,7 +413,7 @@ void main() {
 
     testWidgets('has Macros navigation tab instead of Meals', (tester) async {
       await tester.pumpWidget(
-        buildAppHarness(child: const MainNavigationView()),
+        buildAppHarness(child: const MainNavigationScreen()),
       );
       await tester.pump();
 
@@ -430,7 +430,7 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 300));
 
-      expect(find.byType(MacroTrackerView), findsOneWidget);
+      expect(find.byType(MacroTrackerScreen), findsOneWidget);
     });
 
     testWidgets('tracker tab fits large text and preserves its scope', (
@@ -442,16 +442,16 @@ void main() {
       await tester.pumpWidget(
         buildAppHarness(
           textScaler: const TextScaler.linear(2.0),
-          child: const MainNavigationView(),
+          child: const MainNavigationScreen(),
         ),
       );
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 300));
-      expect(find.byType(MacroTrackerView), findsNothing);
+      expect(find.byType(MacroTrackerScreen), findsNothing);
       await tester.tap(find.text('Macros'));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 300));
-      expect(find.byType(MacroTrackerView).hitTestable(), findsOneWidget);
+      expect(find.byType(MacroTrackerScreen).hitTestable(), findsOneWidget);
       expect(
         tester
             .widget<BottomNavigationBar>(find.byType(BottomNavigationBar))
@@ -480,7 +480,7 @@ void main() {
   });
 
   group('Responsive Narrow and Scaled Layouts', () {
-    testWidgets('MacroTrackerView renders narrow screen with large text', (
+    testWidgets('MacroTrackerScreen renders narrow screen with large text', (
       tester,
     ) async {
       tester.view.devicePixelRatio = 1;
@@ -490,7 +490,7 @@ void main() {
       await tester.pumpWidget(
         buildAppHarness(
           textScaler: const TextScaler.linear(2.0),
-          child: const MacroTrackerView(),
+          child: const MacroTrackerScreen(),
         ),
       );
       await tester.pump();
@@ -499,37 +499,37 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('FoodsView renders narrow screen', (tester) async {
+    testWidgets('FoodsScreen renders narrow screen', (tester) async {
       tester.view.devicePixelRatio = 1;
       tester.view.physicalSize = const Size(320, 640);
       addTearDown(tester.view.reset);
 
-      await tester.pumpWidget(buildAppHarness(child: const FoodsView()));
+      await tester.pumpWidget(buildAppHarness(child: const FoodsScreen()));
       await tester.pump();
 
       expect(find.textContaining('Foods'), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('RecipesView renders narrow screen', (tester) async {
+    testWidgets('RecipesScreen renders narrow screen', (tester) async {
       tester.view.devicePixelRatio = 1;
       tester.view.physicalSize = const Size(320, 640);
       addTearDown(tester.view.reset);
 
-      await tester.pumpWidget(buildAppHarness(child: const RecipesView()));
+      await tester.pumpWidget(buildAppHarness(child: const RecipesScreen()));
       await tester.pump();
 
       expect(find.textContaining('Recipes'), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('StrengthGoalsView renders narrow screen', (tester) async {
+    testWidgets('StrengthGoalsScreen renders narrow screen', (tester) async {
       tester.view.devicePixelRatio = 1;
       tester.view.physicalSize = const Size(320, 640);
       addTearDown(tester.view.reset);
 
       await tester.pumpWidget(
-        buildAppHarness(child: const StrengthGoalsView()),
+        buildAppHarness(child: const StrengthGoalsScreen()),
       );
       await tester.pump();
 
@@ -537,12 +537,12 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('MacroGoalsView renders narrow screen', (tester) async {
+    testWidgets('MacroGoalsScreen renders narrow screen', (tester) async {
       tester.view.devicePixelRatio = 1;
       tester.view.physicalSize = const Size(320, 640);
       addTearDown(tester.view.reset);
 
-      await tester.pumpWidget(buildAppHarness(child: const MacroGoalsView()));
+      await tester.pumpWidget(buildAppHarness(child: const MacroGoalsScreen()));
       await tester.pump();
 
       expect(find.textContaining('Macro Goals'), findsOneWidget);
