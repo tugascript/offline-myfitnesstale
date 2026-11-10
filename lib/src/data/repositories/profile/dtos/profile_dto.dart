@@ -1,10 +1,10 @@
 import 'package:equatable/equatable.dart';
 
-import 'package:myfitnesstale/src/data/utils/enums.dart';
-import 'package:myfitnesstale/src/data/models/profile_model.dart';
+import '../../../utils/enums.dart';
+import '../../../models/profile_model.dart';
 
-import 'package:myfitnesstale/src/data/repositories/core/dtos/dto.dart';
-import 'package:myfitnesstale/src/data/utils/dates.dart';
+import '../../core/dtos/dto.dart';
+import '../../../utils/dates.dart';
 
 class ProfileDto extends Equatable implements Dto<Profile> {
   @override

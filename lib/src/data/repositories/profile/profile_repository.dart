@@ -1,18 +1,18 @@
 import 'package:logging/logging.dart';
 import 'package:sqflite/sqflite.dart';
 
-import 'package:myfitnesstale/src/data/models/profile_model.dart';
-import 'package:myfitnesstale/src/data/models/reminders_config_model.dart';
-import 'package:myfitnesstale/src/data/models/system_model.dart';
-import 'package:myfitnesstale/src/data/services/sqlite/database_helper.dart';
-import 'package:myfitnesstale/src/data/services/sqlite/dao.dart';
-import 'package:myfitnesstale/src/data/utils/dates.dart';
-import 'package:myfitnesstale/src/data/utils/enums.dart';
-import 'package:myfitnesstale/src/utils/errors.dart';
-import 'package:myfitnesstale/src/utils/result.dart';
-import 'package:myfitnesstale/src/data/repositories/profile/dtos/profile_dto.dart';
-import 'package:myfitnesstale/src/data/repositories/profile/dtos/reminders_config_dto.dart';
-import 'package:myfitnesstale/src/data/repositories/profile/dtos/system_dto.dart';
+import '../../models/profile_model.dart';
+import '../../models/reminders_config_model.dart';
+import '../../models/system_model.dart';
+import '../../services/sqlite/database_helper.dart';
+import '../../services/sqlite/dao.dart';
+import '../../utils/dates.dart';
+import '../../utils/enums.dart';
+import '../../../utils/errors.dart';
+import '../../../utils/result.dart';
+import 'dtos/profile_dto.dart';
+import 'dtos/reminders_config_dto.dart';
+import 'dtos/system_dto.dart';
 
 class ProfileRepository {
   ProfileRepository._();

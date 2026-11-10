@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
 
-import 'package:myfitnesstale/src/utils/nullable.dart';
+import '../../../../utils/nullable.dart';
 
 class RecipeItemInput extends Equatable {
   final int foodId;

@@ -1,8 +1,8 @@
 import 'package:equatable/equatable.dart';
 
-import 'package:myfitnesstale/src/data/utils/enums.dart';
-import 'package:myfitnesstale/src/data/models/system_model.dart';
-import 'package:myfitnesstale/src/data/repositories/core/dtos/dto.dart';
+import '../../../utils/enums.dart';
+import '../../../models/system_model.dart';
+import '../../core/dtos/dto.dart';
 
 class SystemDto extends Equatable implements Dto<System> {
   @override

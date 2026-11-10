@@ -1,8 +1,8 @@
 import 'package:equatable/equatable.dart';
 
-import 'package:myfitnesstale/src/utils/nullable.dart';
-import 'package:myfitnesstale/src/data/models/workout_plan_day_model.dart';
-import 'package:myfitnesstale/src/data/repositories/core/dtos/dto.dart';
+import '../../../../utils/nullable.dart';
+import '../../../models/workout_plan_day_model.dart';
+import '../../core/dtos/dto.dart';
 import 'workout_plan_workout_dto.dart';
 
 class WorkoutPlanDayDto extends Equatable implements Dto<WorkoutPlanDay> {

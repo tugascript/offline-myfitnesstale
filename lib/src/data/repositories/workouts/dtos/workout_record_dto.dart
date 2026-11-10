@@ -1,13 +1,13 @@
 import 'package:equatable/equatable.dart';
 
-import 'package:myfitnesstale/src/utils/nullable.dart';
-import 'package:myfitnesstale/src/data/utils/json_data.dart';
+import '../../../../utils/nullable.dart';
+import '../../../utils/json_data.dart';
 
-import 'package:myfitnesstale/src/data/models/workout_record_model.dart';
-import 'package:myfitnesstale/src/data/repositories/core/dtos/dto.dart';
-import 'package:myfitnesstale/src/data/repositories/workouts/dtos/workout_dto.dart';
+import '../../../models/workout_record_model.dart';
+import '../../core/dtos/dto.dart';
+import 'workout_dto.dart';
 import 'workout_set_record_dto.dart';
-import 'package:myfitnesstale/src/data/utils/dates.dart';
+import '../../../utils/dates.dart';
 
 class WorkoutRecordDto extends Equatable implements Dto<WorkoutRecord> {
   @override

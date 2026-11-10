@@ -1,11 +1,11 @@
 import 'package:equatable/equatable.dart';
 
-import 'package:myfitnesstale/src/utils/nullable.dart';
-import 'package:myfitnesstale/src/data/utils/enums.dart';
-import 'package:myfitnesstale/src/data/models/workout_plan_model.dart';
-import 'package:myfitnesstale/src/data/repositories/core/dtos/dto.dart';
-import 'package:myfitnesstale/src/data/repositories/core/dtos/picture_dto.dart';
-import 'package:myfitnesstale/src/data/repositories/core/dtos/video_dto.dart';
+import '../../../../utils/nullable.dart';
+import '../../../utils/enums.dart';
+import '../../../models/workout_plan_model.dart';
+import '../../core/dtos/dto.dart';
+import '../../core/dtos/picture_dto.dart';
+import '../../core/dtos/video_dto.dart';
 import 'workout_plan_week_dto.dart';
 
 class WorkoutPlanDto extends Equatable implements Dto<WorkoutPlan> {

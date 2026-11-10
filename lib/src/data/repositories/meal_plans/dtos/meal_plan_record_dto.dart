@@ -1,10 +1,10 @@
 import 'package:equatable/equatable.dart';
 
-import 'package:myfitnesstale/src/data/utils/enums.dart';
-import 'package:myfitnesstale/src/data/models/meal_plan_day_record_model.dart';
-import 'package:myfitnesstale/src/data/models/meal_plan_record_model.dart';
-import 'package:myfitnesstale/src/data/models/meal_plan_week_record_model.dart';
-import 'package:myfitnesstale/src/data/utils/dates.dart';
+import '../../../utils/enums.dart';
+import '../../../models/meal_plan_day_record_model.dart';
+import '../../../models/meal_plan_record_model.dart';
+import '../../../models/meal_plan_week_record_model.dart';
+import '../../../utils/dates.dart';
 
 class MealPlanDayRecordDto extends Equatable {
   final int id;

@@ -1,9 +1,9 @@
 import 'package:equatable/equatable.dart';
 
-import 'package:myfitnesstale/src/utils/nullable.dart';
-import 'package:myfitnesstale/src/data/utils/enums.dart';
-import 'package:myfitnesstale/src/data/models/weight_goal_model.dart';
-import 'package:myfitnesstale/src/data/repositories/core/dtos/dto.dart';
+import '../../../../utils/nullable.dart';
+import '../../../utils/enums.dart';
+import '../../../models/weight_goal_model.dart';
+import '../../core/dtos/dto.dart';
 
 class WeightGoalDto extends Equatable implements Dto<WeightGoal> {
   @override

@@ -1,7 +1,7 @@
 import 'package:equatable/equatable.dart';
 
-import 'package:myfitnesstale/src/data/utils/json_data.dart';
-import 'package:myfitnesstale/src/data/utils/enums.dart';
+import '../../../utils/json_data.dart';
+import '../../../utils/enums.dart';
 
 class VideoDto extends Equatable {
   final String uri;
