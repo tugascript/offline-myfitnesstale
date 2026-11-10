@@ -22,7 +22,7 @@ import 'package:myfitnesstale/src/ui/workouts/view_models/workout_record_cubit.d
 import 'package:myfitnesstale/src/data/repositories/exercises/exercise_record_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/exercises/exercise_repository.dart';
 import 'package:myfitnesstale/src/data/utils/enums.dart';
-import 'package:myfitnesstale/src/routing/routing.dart';
+import 'package:myfitnesstale/src/routing/routes.dart';
 import 'package:myfitnesstale/src/data/repositories/profile/dtos/profile_dto.dart';
 import 'package:myfitnesstale/src/data/repositories/profile/dtos/system_dto.dart';
 import 'package:myfitnesstale/src/data/repositories/workout_plans/dtos/workout_plan_dto.dart';

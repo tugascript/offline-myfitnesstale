@@ -5,7 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import 'package:myfitnesstale/src/ui/home/view_models/profile_cubit.dart';
 import 'package:myfitnesstale/src/data/utils/enums.dart';
-import 'package:myfitnesstale/src/routing/routing.dart';
+import 'package:myfitnesstale/src/routing/routes.dart';
 import 'package:myfitnesstale/src/utils/errors.dart';
 import 'package:myfitnesstale/src/utils/result.dart';
 import 'package:myfitnesstale/src/data/repositories/profile/dtos/profile_dto.dart';

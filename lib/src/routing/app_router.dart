@@ -45,7 +45,7 @@ import '../ui/workouts/screens/workout_edit_screen.dart';
 import '../ui/workouts/screens/workout_history_detail_screen.dart';
 import '../ui/workouts/screens/workout_history_screen.dart';
 import '../ui/workouts/screens/workouts_screen.dart';
-import './routing.dart';
+import 'routes.dart';
 
 sealed class AppRouter {
   static final List<GoRoute> _routes = <GoRoute>[

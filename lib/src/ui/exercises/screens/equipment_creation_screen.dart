@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../routing/routing.dart';
+import '../../../routing/routes.dart';
 import '../../../data/repositories/exercises/inputs/equipment_input.dart';
 import '../../core/widgets/layout/responsive_scaffold.dart';
 import '../../core/sizes/data_display_sizes.dart';

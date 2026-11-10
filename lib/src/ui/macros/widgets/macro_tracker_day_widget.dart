@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../view_models/macro_tracking_cubit.dart';
 import '../view_models/states/macro_tracking_state.dart';
-import '../../../routing/routing.dart';
+import '../../../routing/routes.dart';
 import '../../core/sizes/data_display_sizes.dart';
 import '../../core/widgets/confirmation_dialog.dart';
 import './log_food_modal.dart';

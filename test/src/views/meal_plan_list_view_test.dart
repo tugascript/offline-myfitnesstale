@@ -6,7 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:myfitnesstale/src/ui/meal_plans/view_models/meal_plan_cubit.dart';
 import 'package:myfitnesstale/src/ui/meal_plans/view_models/meal_plan_record_cubit.dart';
 import 'package:myfitnesstale/src/data/utils/enums.dart';
-import 'package:myfitnesstale/src/routing/routing.dart';
+import 'package:myfitnesstale/src/routing/routes.dart';
 import 'package:myfitnesstale/src/data/repositories/meal_plans/dtos/meal_plan_dto.dart';
 import 'package:myfitnesstale/src/ui/meal_plans/screens/meal_plan_list_screen.dart';
 import 'package:myfitnesstale/src/ui/core/widgets/favourite_checkbox.dart';

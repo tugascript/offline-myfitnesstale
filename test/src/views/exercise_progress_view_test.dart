@@ -10,7 +10,7 @@ import 'package:myfitnesstale/src/data/repositories/exercises/dtos/exercise_reco
 import 'package:myfitnesstale/src/data/repositories/exercises/exercise_record_repository.dart';
 import 'package:myfitnesstale/src/data/utils/enums.dart';
 import 'package:myfitnesstale/src/data/utils/json_data.dart';
-import 'package:myfitnesstale/src/routing/routing.dart';
+import 'package:myfitnesstale/src/routing/routes.dart';
 import 'package:myfitnesstale/src/ui/exercises/view_models/exercise_record_cubit.dart';
 import 'package:myfitnesstale/src/ui/exercises/view_models/states/exercise_record_state.dart';
 import 'package:myfitnesstale/src/data/repositories/profile/dtos/system_dto.dart';

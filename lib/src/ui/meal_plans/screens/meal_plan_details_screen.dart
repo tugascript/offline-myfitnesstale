@@ -6,7 +6,7 @@ import '../view_models/meal_plan_cubit.dart';
 import '../view_models/meal_plan_record_cubit.dart';
 import '../view_models/states/meal_plan_state.dart';
 import '../../../data/utils/enums.dart';
-import '../../../routing/routing.dart';
+import '../../../routing/routes.dart';
 import '../../core/sizes/data_display_sizes.dart';
 import '../../core/sizes/screen_size.dart';
 import '../../core/widgets/confirmation_dialog.dart';

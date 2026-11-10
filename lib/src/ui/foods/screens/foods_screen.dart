@@ -5,7 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../view_models/food_cubit.dart';
 import '../view_models/states/food_state.dart';
 import '../../../data/utils/enums.dart';
-import '../../../routing/routing.dart';
+import '../../../routing/routes.dart';
 import '../../core/sizes/data_display_sizes.dart';
 import '../../core/sizes/screen_size.dart';
 import '../widgets/food_list_item_widget.dart';

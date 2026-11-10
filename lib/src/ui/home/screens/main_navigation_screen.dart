@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../view_models/profile_cubit.dart';
 import '../view_models/states/profile_state.dart';
-import '../../../routing/routing.dart';
+import '../../../routing/routes.dart';
 import './profile/create_profile_button_screen.dart';
 import '../../core/screens/loading_screen.dart';
 import '../../macros/screens/macro_tracker_screen.dart';

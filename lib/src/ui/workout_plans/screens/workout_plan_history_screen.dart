@@ -5,7 +5,7 @@ import 'package:intl/intl.dart';
 import '../view_models/states/workout_plan_record_state.dart';
 import '../view_models/workout_plan_record_cubit.dart';
 import '../../../data/utils/enums.dart';
-import '../../../routing/routing.dart';
+import '../../../routing/routes.dart';
 import '../../../data/repositories/workout_plans/dtos/workout_plan_record_dto.dart';
 import '../../core/sizes/data_display_sizes.dart';
 import '../../core/sizes/screen_size.dart';
