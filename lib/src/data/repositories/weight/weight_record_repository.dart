@@ -36,25 +36,25 @@ import './inputs/weight_record_input.dart';
 import '../core/repository.dart';
 
 final class WeightRecordRepository implements Repository {
-  final Dao<WeightRecord> _repository;
-  final Dao<WeightGoal> _weightGoalRepository;
+  final Dao<WeightRecord> _weightRecordDao;
+  final Dao<WeightGoal> _weightGoalDao;
 
   final Logger _logger = Logger('Weight Record Repository');
 
   WeightRecordRepository({
-    required this._repository,
-    required this._weightGoalRepository,
+    required this._weightRecordDao,
+    required this._weightGoalDao,
   });
 
   factory WeightRecordRepository.create([DatabaseHelper? databaseHelper]) {
     final helper = databaseHelper ?? DatabaseHelper();
     return WeightRecordRepository(
-      repository: Dao<WeightRecord>(
+      weightRecordDao: Dao<WeightRecord>(
         databaseHelper: helper,
         tableName: WeightRecord.table,
         fromMap: (map) => WeightRecord.fromMap(map),
       ),
-      weightGoalRepository: Dao<WeightGoal>(
+      weightGoalDao: Dao<WeightGoal>(
         databaseHelper: helper,
         tableName: WeightGoal.table,
         fromMap: (map) => WeightGoal.fromMap(map),
@@ -78,27 +78,27 @@ final class WeightRecordRepository implements Repository {
       );
 
       if (input.status != ProgressStatus.inProgress) {
-        final int id = await _weightGoalRepository.insert(weightGoal);
+        final int id = await _weightGoalDao.insert(weightGoal);
         _logger.info('Created weight goal with id $id');
         return ok(
           WeightGoalDto.fromModel(weightGoal.copyWith(id: Nullable(id))),
         );
       }
 
-      final int weightCount = await _weightGoalRepository.count(
+      final int weightCount = await _weightGoalDao.count(
         where: WeightGoalColumns.status.equal,
         whereArgs: [ProgressStatus.inProgress.value],
       );
 
       if (weightCount == 0) {
-        final int id = await _weightGoalRepository.insert(weightGoal);
+        final int id = await _weightGoalDao.insert(weightGoal);
         _logger.info('Created weight goal with id $id');
         return ok(
           WeightGoalDto.fromModel(weightGoal.copyWith(id: Nullable(id))),
         );
       }
 
-      final int id = await _weightGoalRepository.startTransaction((txn) async {
+      final int id = await _weightGoalDao.startTransaction((txn) async {
         await txn.rawUpdate(
           """
           UPDATE ${WeightGoal.table} SET 
@@ -112,7 +112,7 @@ final class WeightRecordRepository implements Repository {
             ProgressStatus.inProgress.value,
           ],
         );
-        return await _weightGoalRepository.insert(weightGoal, txn);
+        return await _weightGoalDao.insert(weightGoal, txn);
       });
       _logger.info('Created weight goal with id $id');
       return ok(WeightGoalDto.fromModel(weightGoal.copyWith(id: Nullable(id))));
@@ -148,15 +148,14 @@ final class WeightRecordRepository implements Repository {
         );
       }
 
-      final List<WeightGoal> goals = await _weightGoalRepository
-          .selectPaginated(
-            where: where.where,
-            whereArgs: where.args,
-            limit: limit,
-            offset: offset,
-            orderBy: [WeightGoalColumns.startDate.orderDesc],
-          );
-      final int total = await _weightGoalRepository.count(
+      final List<WeightGoal> goals = await _weightGoalDao.selectPaginated(
+        where: where.where,
+        whereArgs: where.args,
+        limit: limit,
+        offset: offset,
+        orderBy: [WeightGoalColumns.startDate.orderDesc],
+      );
+      final int total = await _weightGoalDao.count(
         where: where.where,
         whereArgs: where.args,
       );
@@ -186,7 +185,7 @@ final class WeightRecordRepository implements Repository {
   ) async {
     _logger.info('Getting weight goal with id $id');
     try {
-      final WeightGoal? weightGoal = await _weightGoalRepository.selectOne(id);
+      final WeightGoal? weightGoal = await _weightGoalDao.selectOne(id);
       if (weightGoal == null) {
         return err(
           const ServiceError(
@@ -212,7 +211,7 @@ final class WeightRecordRepository implements Repository {
   getActiveWeightGoal() async {
     _logger.info('Getting active weight goal');
     try {
-      final List<WeightGoal> goals = await _weightGoalRepository.selectMany(
+      final List<WeightGoal> goals = await _weightGoalDao.selectMany(
         where: WeightGoalColumns.status.equal,
         whereArgs: [ProgressStatus.inProgress.value],
         orderBy: [WeightGoalColumns.startDate.orderDesc],
@@ -244,7 +243,7 @@ final class WeightRecordRepository implements Repository {
   updateWeightGoal(int id, WeightGoalInput input) async {
     _logger.info('Updating weight goal with id $id');
     try {
-      final WeightGoal? weightGoal = await _weightGoalRepository.selectOne(id);
+      final WeightGoal? weightGoal = await _weightGoalDao.selectOne(id);
 
       if (weightGoal == null) {
         _logger.info('Weight goal with id $id not found');
@@ -270,9 +269,9 @@ final class WeightRecordRepository implements Repository {
         updatedAt: DateUtilities.getNowUtcUnix(),
       );
 
-      await _weightGoalRepository.startTransaction((txn) async {
+      await _weightGoalDao.startTransaction((txn) async {
         if (input.status == ProgressStatus.inProgress) {
-          final activeGoals = await _weightGoalRepository.selectMany(
+          final activeGoals = await _weightGoalDao.selectMany(
             where:
                 '${WeightGoalColumns.status.equal} AND ${WeightGoalColumns.id.value} != ?',
             whereArgs: [ProgressStatus.inProgress.value, id],
@@ -280,7 +279,7 @@ final class WeightRecordRepository implements Repository {
           );
           final now = DateUtilities.getNowUtcUnix();
           for (final activeGoal in activeGoals) {
-            await _weightGoalRepository.update(
+            await _weightGoalDao.update(
               activeGoal.copyWith(
                 status: ProgressStatus.abandoned,
                 completedAt: Nullable(now),
@@ -290,7 +289,7 @@ final class WeightRecordRepository implements Repository {
             );
           }
         }
-        await _weightGoalRepository.update(updatedWeightGoal, txn);
+        await _weightGoalDao.update(updatedWeightGoal, txn);
       });
 
       _logger.info('Updated weight goal with id $id');
@@ -311,7 +310,7 @@ final class WeightRecordRepository implements Repository {
   ) async {
     _logger.info('Deleting weight goal with id $id');
     try {
-      final bool deleted = await _weightGoalRepository.deleteOne(id);
+      final bool deleted = await _weightGoalDao.deleteOne(id);
       if (!deleted) {
         return err(
           const ServiceError(
@@ -337,7 +336,7 @@ final class WeightRecordRepository implements Repository {
   completeWeightGoal(int id, [DateTime? completedAt]) async {
     _logger.info('Completing weight goal with id $id');
     try {
-      final WeightGoal? weightGoal = await _weightGoalRepository.selectOne(id);
+      final WeightGoal? weightGoal = await _weightGoalDao.selectOne(id);
       if (weightGoal == null) {
         return err(
           const ServiceError(
@@ -355,7 +354,7 @@ final class WeightRecordRepository implements Repository {
         ),
         updatedAt: now,
       );
-      await _weightGoalRepository.update(updated);
+      await _weightGoalDao.update(updated);
       _logger.info('Completed weight goal with id $id');
       return ok(WeightGoalDto.fromModel(updated));
     } catch (e) {
@@ -373,7 +372,7 @@ final class WeightRecordRepository implements Repository {
   getWeightGoalsByStatus(ProgressStatus status) async {
     _logger.info('Getting weight goals by status $status');
     try {
-      final List<WeightGoal> goals = await _weightGoalRepository.selectMany(
+      final List<WeightGoal> goals = await _weightGoalDao.selectMany(
         where: WeightGoalColumns.status.equal,
         whereArgs: [status.value],
         orderBy: [WeightGoalColumns.id.orderDesc],
@@ -411,7 +410,7 @@ final class WeightRecordRepository implements Repository {
         pictureUri: input.pictureUri.value,
         weightGoalId: weightGoalIdResult.value,
       );
-      final int id = await _repository.insert(weightRecord);
+      final int id = await _weightRecordDao.insert(weightRecord);
       _logger.info('Created weight record with id $id');
       return ok(
         WeightRecordDto.fromModel(weightRecord.copyWith(id: Nullable(id))),
@@ -490,14 +489,14 @@ final class WeightRecordRepository implements Repository {
     }
 
     try {
-      final List<WeightRecord> records = await _repository.selectPaginated(
+      final List<WeightRecord> records = await _weightRecordDao.selectPaginated(
         limit: limit,
         offset: offset,
         where: query.where,
         whereArgs: query.args,
         orderBy: [WeightRecordColumns.recordDate.orderDesc],
       );
-      final int total = await _repository.count(
+      final int total = await _weightRecordDao.count(
         where: query.where,
         whereArgs: query.args,
       );
@@ -526,7 +525,7 @@ final class WeightRecordRepository implements Repository {
   getLatestRecorded() async {
     _logger.info('Getting latest weight record');
     try {
-      final List<WeightRecord> records = await _repository.selectMany(
+      final List<WeightRecord> records = await _weightRecordDao.selectMany(
         orderBy: [
           WeightRecordColumns.recordDate.orderDesc,
           WeightRecordColumns.id.orderDesc,
@@ -559,7 +558,7 @@ final class WeightRecordRepository implements Repository {
   getWeightRecordTotalCount() async {
     _logger.info('Getting weight record total count');
     try {
-      final int count = await _repository.count();
+      final int count = await _weightRecordDao.count();
       return ok(count);
     } catch (e) {
       _logger.severe('Failed to get weight record total count', e);
@@ -576,7 +575,7 @@ final class WeightRecordRepository implements Repository {
   getWeightRecord(int id) async {
     _logger.info('Getting weight record with id $id');
     try {
-      final WeightRecord? weightRecord = await _repository.selectOne(id);
+      final WeightRecord? weightRecord = await _weightRecordDao.selectOne(id);
       if (weightRecord == null) {
         return err(
           const ServiceError(
@@ -602,7 +601,7 @@ final class WeightRecordRepository implements Repository {
   updateWeightRecord(int id, WeightRecordInput input) async {
     _logger.info('Updating weight record with id $id');
     try {
-      final WeightRecord? weightRecord = await _repository.selectOne(id);
+      final WeightRecord? weightRecord = await _weightRecordDao.selectOne(id);
 
       if (weightRecord == null) {
         _logger.info('Weight record with id $id not found');
@@ -621,7 +620,7 @@ final class WeightRecordRepository implements Repository {
         pictureUri: input.pictureUri,
         updatedAt: DateUtilities.getNowUtcUnix(),
       );
-      await _repository.update(updatedWeightRecord);
+      await _weightRecordDao.update(updatedWeightRecord);
       _logger.info('Updated weight record with id $id');
       return ok(WeightRecordDto.fromModel(updatedWeightRecord));
     } catch (e) {
@@ -640,7 +639,7 @@ final class WeightRecordRepository implements Repository {
   ) async {
     _logger.info('Deleting weight record with id $id');
     try {
-      final bool deleted = await _repository.deleteOne(id);
+      final bool deleted = await _weightRecordDao.deleteOne(id);
       if (!deleted) {
         return err(
           const ServiceError(

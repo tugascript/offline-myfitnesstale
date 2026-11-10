@@ -46,53 +46,53 @@ import '../core/repository.dart';
 export './inputs/workout_input.dart';
 
 final class WorkoutRepository implements Repository {
-  final Dao<Workout> _repository;
-  final Dao<WorkoutSet> _setRepository;
-  final Dao<WorkoutSetExercise> _setExerciseRepository;
-  final Dao<WorkoutSetExerciseOption> _setExerciseOptionRepository;
-  final Dao<Exercise> _exerciseRepository;
-  final Dao<WorkoutRecord> _workoutRecordRepository;
+  final Dao<Workout> _workoutDao;
+  final Dao<WorkoutSet> _setDao;
+  final Dao<WorkoutSetExercise> _setExerciseDao;
+  final Dao<WorkoutSetExerciseOption> _setExerciseOptionDao;
+  final Dao<Exercise> _exerciseDao;
+  final Dao<WorkoutRecord> _workoutRecordDao;
 
   final Logger _logger = Logger('Workout Repository');
 
   WorkoutRepository({
-    required this._repository,
-    required this._setRepository,
-    required this._setExerciseRepository,
-    required this._setExerciseOptionRepository,
-    required this._exerciseRepository,
-    required this._workoutRecordRepository,
+    required this._workoutDao,
+    required this._setDao,
+    required this._setExerciseDao,
+    required this._setExerciseOptionDao,
+    required this._exerciseDao,
+    required this._workoutRecordDao,
   });
 
   factory WorkoutRepository.create([DatabaseHelper? databaseHelper]) {
     final helper = databaseHelper ?? DatabaseHelper();
     return WorkoutRepository(
-      repository: Dao<Workout>(
+      workoutDao: Dao<Workout>(
         databaseHelper: helper,
         tableName: Workout.table,
         fromMap: Workout.fromMap,
       ),
-      setRepository: Dao<WorkoutSet>(
+      setDao: Dao<WorkoutSet>(
         databaseHelper: helper,
         tableName: WorkoutSet.table,
         fromMap: WorkoutSet.fromMap,
       ),
-      setExerciseRepository: Dao<WorkoutSetExercise>(
+      setExerciseDao: Dao<WorkoutSetExercise>(
         databaseHelper: helper,
         tableName: WorkoutSetExercise.table,
         fromMap: WorkoutSetExercise.fromMap,
       ),
-      setExerciseOptionRepository: Dao<WorkoutSetExerciseOption>(
+      setExerciseOptionDao: Dao<WorkoutSetExerciseOption>(
         databaseHelper: helper,
         tableName: WorkoutSetExerciseOption.table,
         fromMap: WorkoutSetExerciseOption.fromMap,
       ),
-      exerciseRepository: Dao<Exercise>(
+      exerciseDao: Dao<Exercise>(
         databaseHelper: helper,
         tableName: Exercise.table,
         fromMap: Exercise.fromMap,
       ),
-      workoutRecordRepository: Dao<WorkoutRecord>(
+      workoutRecordDao: Dao<WorkoutRecord>(
         databaseHelper: helper,
         tableName: WorkoutRecord.table,
         fromMap: WorkoutRecord.fromMap,
@@ -131,14 +131,14 @@ final class WorkoutRepository implements Repository {
     }
 
     try {
-      final List<Workout> workouts = await _repository.selectPaginated(
+      final List<Workout> workouts = await _workoutDao.selectPaginated(
         limit: limit,
         offset: offset,
         where: query.where,
         whereArgs: query.args,
         orderBy: [WorkoutColumns.name.orderCaseInsensitiveAsc],
       );
-      final int total = await _repository.count(
+      final int total = await _workoutDao.count(
         where: query.where,
         whereArgs: query.args,
       );
@@ -185,7 +185,7 @@ final class WorkoutRepository implements Repository {
     }
 
     try {
-      final List<Workout> workouts = await _repository.selectMany(
+      final List<Workout> workouts = await _workoutDao.selectMany(
         where: query.where,
         whereArgs: query.args,
         orderBy: [WorkoutColumns.name.orderCaseInsensitiveAsc],
@@ -211,7 +211,7 @@ final class WorkoutRepository implements Repository {
   }) async {
     _logger.info('Getting workout with id $id');
     try {
-      final Workout? workout = await _repository.selectOne(id);
+      final Workout? workout = await _workoutDao.selectOne(id);
       if (workout == null) {
         _logger.warning('Workout with id $id not found');
         return err(
@@ -293,7 +293,7 @@ final class WorkoutRepository implements Repository {
         phase: input.phase.value,
         editorType: input.editorType,
       );
-      final int id = await _repository.insert(workout);
+      final int id = await _workoutDao.insert(workout);
       _logger.info('Created workout with id $id');
       return ok(WorkoutDto.fromModel(workout.copyWith(id: Nullable(id))));
     } catch (e) {
@@ -354,7 +354,7 @@ final class WorkoutRepository implements Repository {
             totalReps: totalReps,
           );
 
-          final int workoutId = await _repository.insert(workout, txn);
+          final int workoutId = await _workoutDao.insert(workout, txn);
           final List<WorkoutSetDto> createdSets = [];
 
           for (int i = 0; i < workoutInput.sets.length; i++) {
@@ -371,7 +371,7 @@ final class WorkoutRepository implements Repository {
               createdBy: createdBy,
             );
 
-            final int setId = await _setRepository.insert(set, txn);
+            final int setId = await _setDao.insert(set, txn);
             final List<WorkoutSetExerciseDto> createdSetExercises = [];
 
             for (int j = 0; j < setInput.exercises.length; j++) {
@@ -389,7 +389,7 @@ final class WorkoutRepository implements Repository {
                 createdBy: createdBy,
               );
 
-              final int setExerciseId = await _setExerciseRepository.insert(
+              final int setExerciseId = await _setExerciseDao.insert(
                 setExercise,
                 txn,
               );
@@ -412,7 +412,7 @@ final class WorkoutRepository implements Repository {
                   createdBy: createdBy,
                 );
 
-                final int optionKey = await _setExerciseOptionRepository.insert(
+                final int optionKey = await _setExerciseOptionDao.insert(
                   option,
                   txn,
                 );
@@ -455,7 +455,7 @@ final class WorkoutRepository implements Repository {
 
       final List<WorkoutDto> createdWorkouts = transaction != null
           ? await create(transaction)
-          : await _repository.startTransaction(create);
+          : await _workoutDao.startTransaction(create);
 
       _logger.info("Created ${createdWorkouts.length} workouts");
       return ok(createdWorkouts);
@@ -476,7 +476,7 @@ final class WorkoutRepository implements Repository {
   ) async {
     _logger.info('Updating workout with id $id');
     try {
-      final Workout? workout = await _repository.selectOne(id);
+      final Workout? workout = await _workoutDao.selectOne(id);
       if (workout == null) {
         _logger.info('Workout with id $id not found');
         return err(
@@ -498,7 +498,7 @@ final class WorkoutRepository implements Repository {
         editorType: input.editorType,
         updatedAt: DateUtilities.getNowUtcUnix(),
       );
-      await _repository.update(updatedWorkout);
+      await _workoutDao.update(updatedWorkout);
       _logger.info('Updated workout with id $id');
       return ok(WorkoutDto.fromModel(updatedWorkout));
     } catch (e) {
@@ -516,7 +516,7 @@ final class WorkoutRepository implements Repository {
   updateWorkoutFavorite(int id, bool isFavorite) async {
     _logger.info('Updating workout favorite status with id $id');
     try {
-      final Workout? workout = await _repository.selectOne(id);
+      final Workout? workout = await _workoutDao.selectOne(id);
       if (workout == null) {
         _logger.info('Workout with id $id not found');
         return err(
@@ -531,7 +531,7 @@ final class WorkoutRepository implements Repository {
         isFavorite: isFavorite,
         updatedAt: DateUtilities.getNowUtcUnix(),
       );
-      await _repository.update(updatedWorkout);
+      await _workoutDao.update(updatedWorkout);
       _logger.info('Updated workout favorite status with id $id');
       return ok(WorkoutDto.fromModel(updatedWorkout));
     } catch (e) {
@@ -550,7 +550,7 @@ final class WorkoutRepository implements Repository {
   ) async {
     _logger.info('Deleting workout with id $id');
     try {
-      final bool deleted = await _repository.deleteOne(id);
+      final bool deleted = await _workoutDao.deleteOne(id);
       if (!deleted) {
         return err(
           const ServiceError(
@@ -576,7 +576,7 @@ final class WorkoutRepository implements Repository {
   getWorkoutSets(int workoutId, {int? version}) async {
     _logger.info('Getting workout sets with workout id $workoutId');
     try {
-      final workout = await _repository.selectOne(workoutId);
+      final workout = await _workoutDao.selectOne(workoutId);
       if (workout == null) {
         return err(
           const ServiceError(
@@ -598,7 +598,7 @@ final class WorkoutRepository implements Repository {
       final setQuery = WhereBuilder()
         ..and(WorkoutSetColumns.workoutId.equal, workoutId)
         ..and(WorkoutSetColumns.workoutVersion.equal, resolvedVersion);
-      final List<WorkoutSet> workoutSets = await _setRepository.selectMany(
+      final List<WorkoutSet> workoutSets = await _setDao.selectMany(
         where: setQuery.where,
         whereArgs: setQuery.args,
         orderBy: [
@@ -614,7 +614,7 @@ final class WorkoutRepository implements Repository {
       final setExerciseQuery = WhereBuilder()
         ..and(WorkoutSetExerciseColumns.workoutId.equal, workoutId)
         ..and(WorkoutSetExerciseColumns.workoutVersion.equal, resolvedVersion);
-      final List<WorkoutSetExercise> setExercises = await _setExerciseRepository
+      final List<WorkoutSetExercise> setExercises = await _setExerciseDao
           .selectMany(
             where: setExerciseQuery.where,
             whereArgs: setExerciseQuery.args,
@@ -639,7 +639,7 @@ final class WorkoutRepository implements Repository {
           resolvedVersion,
         );
       final List<WorkoutSetExerciseOption> setExerciseOptions =
-          await _setExerciseOptionRepository.selectMany(
+          await _setExerciseOptionDao.selectMany(
             where: optionQuery.where,
             whereArgs: optionQuery.args,
             orderBy: [
@@ -676,7 +676,7 @@ final class WorkoutRepository implements Repository {
               return prevVal;
             },
           );
-      final List<Exercise> exercises = await _exerciseRepository.selectMany(
+      final List<Exercise> exercises = await _exerciseDao.selectMany(
         where: ExerciseColumns.id.inList(exerciseIds.length),
         whereArgs: exerciseIds.toList(),
       );
@@ -735,7 +735,7 @@ final class WorkoutRepository implements Repository {
       return previousValue;
     });
     try {
-      final workout = await _repository.selectOne(workoutId);
+      final workout = await _workoutDao.selectOne(workoutId);
       if (workout == null) {
         _logger.warning('Workout with id $workoutId not found');
         return err(
@@ -746,7 +746,7 @@ final class WorkoutRepository implements Repository {
         );
       }
 
-      final workoutRecords = await _workoutRecordRepository.count(
+      final workoutRecords = await _workoutRecordDao.count(
         where: WorkoutRecordColumns.workoutId.equal,
         whereArgs: [workoutId],
       );
@@ -754,7 +754,7 @@ final class WorkoutRepository implements Repository {
 
       final exercises = exerciseIds.isEmpty
           ? <Exercise>[]
-          : await _exerciseRepository.selectMany(
+          : await _exerciseDao.selectMany(
               where: ExerciseColumns.id.inList(exerciseIds.length),
               whereArgs: exerciseIds.toList(),
             );
@@ -781,7 +781,7 @@ final class WorkoutRepository implements Repository {
       final existingSetQuery = WhereBuilder()
         ..and(WorkoutSetColumns.workoutId.equal, workoutId)
         ..and(WorkoutSetColumns.workoutVersion.equal, workout.version);
-      final List<WorkoutSet> existingSets = await _setRepository.selectMany(
+      final List<WorkoutSet> existingSets = await _setDao.selectMany(
         where: existingSetQuery.where,
         whereArgs: existingSetQuery.args,
       );
@@ -810,7 +810,7 @@ final class WorkoutRepository implements Repository {
           ? <int>{}
           : existingSetIds.difference(setsToUpdate.map((e) => e.id!).toSet());
 
-      await _setRepository.startTransaction((txn) async {
+      await _setDao.startTransaction((txn) async {
         final int workoutVersion = updateVersion
             ? workout.version + 1
             : workout.version;
@@ -829,7 +829,7 @@ final class WorkoutRepository implements Repository {
         }
 
         for (final input in setsToUpdate) {
-          final workoutSet = await _setRepository.selectOne(input.id!, txn);
+          final workoutSet = await _setDao.selectOne(input.id!, txn);
           if (workoutSet == null) {
             _logger.warning('Workout set not found');
             continue;
@@ -874,7 +874,7 @@ final class WorkoutRepository implements Repository {
             }
           }
 
-          await _setRepository.update(updatedWorkoutSet, txn);
+          await _setDao.update(updatedWorkoutSet, txn);
 
           final (
             List<WorkoutSetExerciseUpsertInput> createSetExercises,
@@ -889,7 +889,7 @@ final class WorkoutRepository implements Repository {
           });
 
           final List<WorkoutSetExercise> existingSetExercises =
-              await _setExerciseRepository.selectMany(
+              await _setExerciseDao.selectMany(
                 where: WorkoutSetExerciseColumns.workoutSetId.equal,
                 whereArgs: [workoutSet.id!],
                 trx: txn,
@@ -910,10 +910,10 @@ final class WorkoutRepository implements Repository {
               where: WorkoutSetExerciseOptionColumns.workoutSetExerciseId.equal,
               whereArgs: [setExerciseId],
             );
-            await _setExerciseRepository.deleteOne(setExerciseId, txn);
+            await _setExerciseDao.deleteOne(setExerciseId, txn);
           }
 
-          final int setCount = await _setExerciseRepository.count(
+          final int setCount = await _setExerciseDao.count(
             where: WorkoutSetExerciseColumns.workoutSetId.equal,
             whereArgs: [workoutSet.id!],
             trx: txn,
@@ -959,7 +959,7 @@ final class WorkoutRepository implements Repository {
         final updatedSetQuery = WhereBuilder()
           ..and(WorkoutSetColumns.workoutId.equal, workoutId)
           ..and(WorkoutSetColumns.workoutVersion.equal, workoutVersion);
-        final List<WorkoutSet> updatedSets = await _setRepository.selectMany(
+        final List<WorkoutSet> updatedSets = await _setDao.selectMany(
           where: updatedSetQuery.where,
           whereArgs: updatedSetQuery.args,
           trx: txn,
@@ -977,7 +977,7 @@ final class WorkoutRepository implements Repository {
           ..and(WorkoutSetExerciseColumns.workoutId.equal, workoutId)
           ..and(WorkoutSetExerciseColumns.workoutVersion.equal, workoutVersion);
         final List<WorkoutSetExercise> updatedSetExercises =
-            await _setExerciseRepository.selectMany(
+            await _setExerciseDao.selectMany(
               where: updatedSetExerciseQuery.where,
               whereArgs: updatedSetExerciseQuery.args,
               trx: txn,
@@ -1009,7 +1009,7 @@ final class WorkoutRepository implements Repository {
           version: workoutVersion,
           updatedAt: DateUtilities.getNowUtcUnix(),
         );
-        await _repository.update(updatedWorkout, txn);
+        await _workoutDao.update(updatedWorkout, txn);
       });
       _logger.info('Batch upserting workout sets completed successfully');
       return ok(null);
@@ -1025,7 +1025,7 @@ final class WorkoutRepository implements Repository {
   }
 
   Future<void> _doBatchSetDelete(int id, Transaction txn) async {
-    final workoutSet = await _setRepository.selectOne(id, txn);
+    final workoutSet = await _setDao.selectOne(id, txn);
     if (workoutSet == null) {
       _logger.warning('Workout set with id $id not found');
       return;
@@ -1042,7 +1042,7 @@ final class WorkoutRepository implements Repository {
       where: WorkoutSetExerciseColumns.workoutSetId.equal,
       whereArgs: [id],
     );
-    await _setRepository.deleteOne(id, txn);
+    await _setDao.deleteOne(id, txn);
     await txn.rawUpdate(
       """
       UPDATE ${WorkoutSet.table}
@@ -1060,10 +1060,7 @@ final class WorkoutRepository implements Repository {
     required Transaction txn,
     required WorkoutSet workoutSet,
   }) async {
-    final setExercise = await _setExerciseRepository.selectOne(
-      exerciseInput.id!,
-      txn,
-    );
+    final setExercise = await _setExerciseDao.selectOne(exerciseInput.id!, txn);
     if (setExercise == null) {
       _logger.warning('Set exercise not found');
       throw Exception('Set exercise not found');
@@ -1130,14 +1127,11 @@ final class WorkoutRepository implements Repository {
           exerciseId: alternativeExerciseId,
           position: j + 1,
         );
-        await _setExerciseOptionRepository.insert(
-          workoutSetExerciseOption,
-          txn,
-        );
+        await _setExerciseOptionDao.insert(workoutSetExerciseOption, txn);
       }
     }
 
-    await _setExerciseRepository.update(updatedSetExercise, txn);
+    await _setExerciseDao.update(updatedSetExercise, txn);
   }
 
   Future<void> _batchCreateSetExercise({
@@ -1172,10 +1166,7 @@ final class WorkoutRepository implements Repository {
         [updatedWorkoutSet.id!, setExercisePosition],
       );
     }
-    final setExerciseId = await _setExerciseRepository.insert(
-      workoutSetExercise,
-      txn,
-    );
+    final setExerciseId = await _setExerciseDao.insert(workoutSetExercise, txn);
 
     if (exerciseInput.alternativeExerciseIds != null) {
       for (int j = 0; j < exerciseInput.alternativeExerciseIds!.length; j++) {
@@ -1188,7 +1179,7 @@ final class WorkoutRepository implements Repository {
           exerciseId: alternativeExerciseId,
           position: j + 1,
         );
-        await _setExerciseOptionRepository.insert(option, txn);
+        await _setExerciseOptionDao.insert(option, txn);
       }
     }
   }
@@ -1203,7 +1194,7 @@ final class WorkoutRepository implements Repository {
     final countQuery = WhereBuilder()
       ..and(WorkoutSetColumns.workoutId.equal, workoutId)
       ..and(WorkoutSetColumns.workoutVersion.equal, workoutVersion);
-    final int workoutSetsCount = await _setRepository.count(
+    final int workoutSetsCount = await _setDao.count(
       where: countQuery.where,
       whereArgs: countQuery.args,
       trx: txn,
@@ -1242,7 +1233,7 @@ final class WorkoutRepository implements Repository {
       totalExercises: input.exercises.length,
       totalReps: setTotalReps,
     );
-    final int setId = await _setRepository.insert(workoutSet, txn);
+    final int setId = await _setDao.insert(workoutSet, txn);
 
     for (int i = 0; i < input.exercises.length; i++) {
       final exerciseInput = input.exercises[i];
@@ -1257,7 +1248,7 @@ final class WorkoutRepository implements Repository {
         toMaxReps: exerciseInput.toMaxReps,
         difficulty: exerciseInput.difficulty,
       );
-      final setExerciseId = await _setExerciseRepository.insert(
+      final setExerciseId = await _setExerciseDao.insert(
         workoutSetExercise,
         txn,
       );
@@ -1277,10 +1268,7 @@ final class WorkoutRepository implements Repository {
             exerciseId: alternativeExerciseId,
             position: j + 1,
           );
-          await _setExerciseOptionRepository.insert(
-            workoutSetExerciseOption,
-            txn,
-          );
+          await _setExerciseOptionDao.insert(workoutSetExerciseOption, txn);
         }
       }
     }

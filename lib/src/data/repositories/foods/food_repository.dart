@@ -34,25 +34,22 @@ import './dtos/food_dto.dart';
 import './inputs/food_input.dart';
 
 final class FoodRepository implements Repository {
-  final Dao<Food> _foodRepository;
-  final Dao<FoodPortion> _portionRepository;
+  final Dao<Food> _foodDao;
+  final Dao<FoodPortion> _portionDao;
 
   final Logger _logger = Logger('Food Repository');
 
-  FoodRepository({
-    required this._foodRepository,
-    required this._portionRepository,
-  });
+  FoodRepository({required this._foodDao, required this._portionDao});
 
   factory FoodRepository.create([DatabaseHelper? databaseHelper]) {
     final helper = databaseHelper ?? DatabaseHelper();
     return FoodRepository(
-      foodRepository: Dao<Food>(
+      foodDao: Dao<Food>(
         databaseHelper: helper,
         tableName: Food.table,
         fromMap: Food.fromMap,
       ),
-      portionRepository: Dao<FoodPortion>(
+      portionDao: Dao<FoodPortion>(
         databaseHelper: helper,
         tableName: FoodPortion.table,
         fromMap: FoodPortion.fromMap,
@@ -85,14 +82,12 @@ final class FoodRepository implements Repository {
 
       if (input.portions.isEmpty) {
         _logger.info("No portions provided, creating food without portions");
-        final int foodId = await _foodRepository.insert(food);
+        final int foodId = await _foodDao.insert(food);
         return ok(FoodDto.fromModel(food.copyWith(id: Nullable(foodId))));
       }
 
-      final FoodDto createdDto = await _foodRepository.startTransaction((
-        txn,
-      ) async {
-        final int foodId = await _foodRepository.insert(food, txn);
+      final FoodDto createdDto = await _foodDao.startTransaction((txn) async {
+        final int foodId = await _foodDao.insert(food, txn);
         final List<FoodPortionDto> portionDtos = [];
 
         for (final portionInput in input.portions) {
@@ -101,7 +96,7 @@ final class FoodRepository implements Repository {
             portionName: portionInput.portionName,
             gramWeight: portionInput.gramWeight,
           );
-          final int portionId = await _portionRepository.insert(portion, txn);
+          final int portionId = await _portionDao.insert(portion, txn);
           portionDtos.add(
             FoodPortionDto.fromModel(portion.copyWith(id: Nullable(portionId))),
           );
@@ -131,7 +126,7 @@ final class FoodRepository implements Repository {
   ) async {
     _logger.info('Getting food with id $id');
     try {
-      final Food? food = await _foodRepository.selectOne(id);
+      final Food? food = await _foodDao.selectOne(id);
       if (food == null) {
         _logger.warning('Food not found with id $id');
         return err(
@@ -142,7 +137,7 @@ final class FoodRepository implements Repository {
         );
       }
 
-      final List<FoodPortion> portions = await _portionRepository.selectMany(
+      final List<FoodPortion> portions = await _portionDao.selectMany(
         where: FoodPortionColumns.foodId.equal,
         whereArgs: [id],
         orderBy: [FoodPortionColumns.portionName.orderAsc],
@@ -184,14 +179,14 @@ final class FoodRepository implements Repository {
         where.and(FoodColumns.isFavorite.equal, 1);
       }
 
-      final List<Food> foods = await _foodRepository.selectPaginated(
+      final List<Food> foods = await _foodDao.selectPaginated(
         where: where.where,
         whereArgs: where.args,
         limit: limit,
         offset: offset,
         orderBy: [FoodColumns.name.orderAsc],
       );
-      final int total = await _foodRepository.count(
+      final int total = await _foodDao.count(
         where: where.where,
         whereArgs: where.args,
       );
@@ -222,7 +217,7 @@ final class FoodRepository implements Repository {
   ) async {
     _logger.info('Updating food with id $id');
     try {
-      final Food? existing = await _foodRepository.selectOne(id);
+      final Food? existing = await _foodDao.selectOne(id);
       if (existing == null) {
         _logger.warning('Food not found with id $id');
         return err(
@@ -243,12 +238,11 @@ final class FoodRepository implements Repository {
         );
       }
 
-      final List<FoodPortion> currentPortions = await _portionRepository
-          .selectMany(
-            where: FoodPortionColumns.foodId.equal,
-            whereArgs: [id],
-            orderBy: [FoodPortionColumns.portionName.orderAsc],
-          );
+      final List<FoodPortion> currentPortions = await _portionDao.selectMany(
+        where: FoodPortionColumns.foodId.equal,
+        whereArgs: [id],
+        orderBy: [FoodPortionColumns.portionName.orderAsc],
+      );
       final Food updated = existing.copyWith(
         name: input.name,
         category: input.category,
@@ -268,7 +262,7 @@ final class FoodRepository implements Repository {
 
       if (_arePortionsEqual(currentPortions, input.portions)) {
         _logger.info('Portions are the same, only updating food');
-        await _foodRepository.update(updated);
+        await _foodDao.update(updated);
         return ok(
           FoodDto.fromModel(
             updated,
@@ -279,11 +273,9 @@ final class FoodRepository implements Repository {
         );
       }
 
-      final FoodDto updatedDto = await _foodRepository.startTransaction((
-        txn,
-      ) async {
-        await _foodRepository.update(updated, txn);
-        await _portionRepository.deleteMany(
+      final FoodDto updatedDto = await _foodDao.startTransaction((txn) async {
+        await _foodDao.update(updated, txn);
+        await _portionDao.deleteMany(
           where: FoodPortionColumns.foodId.equal,
           whereArgs: [id],
           trx: txn,
@@ -297,7 +289,7 @@ final class FoodRepository implements Repository {
               portionName: portionInput.portionName,
               gramWeight: portionInput.gramWeight,
             );
-            final int portionId = await _portionRepository.insert(portion, txn);
+            final int portionId = await _portionDao.insert(portion, txn);
             portionDtos.add(
               FoodPortionDto.fromModel(
                 portion.copyWith(id: Nullable(portionId)),
@@ -347,7 +339,7 @@ final class FoodRepository implements Repository {
   ) async {
     _logger.info('Toggling favorite for food with id $id');
     try {
-      final Food? food = await _foodRepository.selectOne(id);
+      final Food? food = await _foodDao.selectOne(id);
       if (food == null) {
         return err(
           const ServiceError(
@@ -361,9 +353,9 @@ final class FoodRepository implements Repository {
         isFavorite: !food.isFavorite,
         updatedAt: DateUtilities.getNowUtcUnix(),
       );
-      await _foodRepository.update(updated);
+      await _foodDao.update(updated);
 
-      final portions = await _portionRepository.selectMany(
+      final portions = await _portionDao.selectMany(
         where: FoodPortionColumns.foodId.equal,
         whereArgs: [id],
       );
@@ -390,7 +382,7 @@ final class FoodRepository implements Repository {
   ) async {
     _logger.info('Deleting food with id $id');
     try {
-      final Food? food = await _foodRepository.selectOne(id);
+      final Food? food = await _foodDao.selectOne(id);
       if (food == null) {
         _logger.warning('Food not found with id $id');
         return err(
@@ -411,7 +403,7 @@ final class FoodRepository implements Repository {
         );
       }
 
-      final bool deleted = await _foodRepository.deleteOne(id);
+      final bool deleted = await _foodDao.deleteOne(id);
       if (!deleted) {
         return err(
           const ServiceError(

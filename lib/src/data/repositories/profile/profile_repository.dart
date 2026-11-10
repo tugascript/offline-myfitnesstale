@@ -33,32 +33,32 @@ import './dtos/system_dto.dart';
 import '../core/repository.dart';
 
 final class ProfileRepository implements Repository {
-  final Dao<Profile> _repository;
-  final Dao<System> _systemRepository;
-  final Dao<RemindersConfig> _remindersRepository;
+  final Dao<Profile> _profileDao;
+  final Dao<System> _systemDao;
+  final Dao<RemindersConfig> _remindersDao;
 
   final Logger _logger = Logger("Profile Repository");
 
   ProfileRepository({
-    required this._repository,
-    required this._systemRepository,
-    required this._remindersRepository,
+    required this._profileDao,
+    required this._systemDao,
+    required this._remindersDao,
   });
 
   factory ProfileRepository.create([DatabaseHelper? databaseHelper]) {
     final helper = databaseHelper ?? DatabaseHelper();
     return ProfileRepository(
-      repository: Dao<Profile>(
+      profileDao: Dao<Profile>(
         databaseHelper: helper,
         tableName: Profile.table,
         fromMap: Profile.fromMap,
       ),
-      systemRepository: Dao<System>(
+      systemDao: Dao<System>(
         databaseHelper: helper,
         tableName: System.table,
         fromMap: System.fromMap,
       ),
-      remindersRepository: Dao<RemindersConfig>(
+      remindersDao: Dao<RemindersConfig>(
         databaseHelper: helper,
         tableName: RemindersConfig.table,
         fromMap: RemindersConfig.fromMap,
@@ -75,7 +75,7 @@ final class ProfileRepository implements Repository {
   }) async {
     _logger.info("Upserting profile...");
     try {
-      final Profile? existingProfile = await _repository.selectLatest(
+      final Profile? existingProfile = await _profileDao.selectLatest(
         transaction,
       );
 
@@ -87,13 +87,13 @@ final class ProfileRepository implements Repository {
           gender: gender,
           updatedAt: DateUtilities.getNowUtcUnix(),
         );
-        await _repository.update(updatedProfile, transaction);
+        await _profileDao.update(updatedProfile, transaction);
         _logger.info('Updated profile with id ${updatedProfile.id}');
         return ok(ProfileDto.fromModel(updatedProfile));
       }
 
       final Profile profile = Profile.create(name, height, gender, birthday);
-      final int id = await _repository.insert(profile, transaction);
+      final int id = await _profileDao.insert(profile, transaction);
       _logger.info('Created profile with id $id');
       return ok(ProfileDto.fromModel(profile.copyWith(id: id)));
     } catch (e) {
@@ -114,7 +114,7 @@ final class ProfileRepository implements Repository {
   }) async {
     _logger.info("Updating profile...");
     try {
-      final Profile? existingProfile = await _repository.selectLatest();
+      final Profile? existingProfile = await _profileDao.selectLatest();
 
       if (existingProfile == null) {
         _logger.info("Profile does not exist");
@@ -132,7 +132,7 @@ final class ProfileRepository implements Repository {
         gender: gender,
         updatedAt: DateUtilities.getNowUtcUnix(),
       );
-      await _repository.update(updatedProfile);
+      await _profileDao.update(updatedProfile);
       _logger.info('Updated profile with id ${updatedProfile.id}');
       return ok(ProfileDto.fromModel(updatedProfile));
     } catch (e) {
@@ -151,7 +151,7 @@ final class ProfileRepository implements Repository {
   }) async {
     _logger.info("Getting latest profile...");
     try {
-      final Profile? profile = await _repository.selectLatest(transaction);
+      final Profile? profile = await _profileDao.selectLatest(transaction);
       if (profile == null) {
         _logger.info("Profile does not exist");
         return err(
@@ -184,9 +184,7 @@ final class ProfileRepository implements Repository {
   }) async {
     _logger.info('Upserting system...');
     try {
-      final System? existingSystem = await _systemRepository.selectLatest(
-        transaction,
-      );
+      final System? existingSystem = await _systemDao.selectLatest(transaction);
 
       if (existingSystem != null) {
         _logger.info('System already exists, updating...');
@@ -196,7 +194,7 @@ final class ProfileRepository implements Repository {
           notificationsOn: notificationsOn,
           updatedAt: DateUtilities.getNowUtcUnix(),
         );
-        await _systemRepository.update(updatedSystem, transaction);
+        await _systemDao.update(updatedSystem, transaction);
         _logger.info('System updated successfully');
         return ok(SystemDto.fromModel(updatedSystem));
       }
@@ -207,7 +205,7 @@ final class ProfileRepository implements Repository {
         units: units,
         notificationsOn: notificationsOn,
       );
-      final int id = await _systemRepository.insert(system, transaction);
+      final int id = await _systemDao.insert(system, transaction);
       _logger.info('System created successfully');
       return ok(SystemDto.fromModel(system.copyWith(id: id)));
     } catch (e) {
@@ -226,7 +224,7 @@ final class ProfileRepository implements Repository {
   }) async {
     _logger.info('Selecting latest system...');
     try {
-      final System? system = await _systemRepository.selectLatest(transaction);
+      final System? system = await _systemDao.selectLatest(transaction);
       if (system == null) {
         _logger.info('No system found');
         return err(
@@ -259,8 +257,9 @@ final class ProfileRepository implements Repository {
   }) async {
     _logger.info('Upserting reminders config...');
     try {
-      final RemindersConfig? existingConfig = await _remindersRepository
-          .selectLatest(transaction);
+      final RemindersConfig? existingConfig = await _remindersDao.selectLatest(
+        transaction,
+      );
 
       if (existingConfig != null) {
         _logger.info('Reminders config exists, updating...');
@@ -269,7 +268,7 @@ final class ProfileRepository implements Repository {
           weightRecordsOn: weightRecordsOn,
           updatedAt: DateUtilities.getNowUtcUnix(),
         );
-        await _remindersRepository.update(updatedConfig, transaction);
+        await _remindersDao.update(updatedConfig, transaction);
         _logger.info('Updated reminders config with id ${updatedConfig.id}');
         return ok(RemindersConfigDto.fromModel(updatedConfig));
       }
@@ -279,10 +278,7 @@ final class ProfileRepository implements Repository {
         weightRecordsOn: weightRecordsOn,
         profileId: profileId,
       );
-      final int id = await _remindersRepository.insert(
-        remindersConfig,
-        transaction,
-      );
+      final int id = await _remindersDao.insert(remindersConfig, transaction);
       _logger.info('Created reminders config with id $id');
       return ok(RemindersConfigDto.fromModel(remindersConfig.copyWith(id: id)));
     } catch (e) {
@@ -300,8 +296,9 @@ final class ProfileRepository implements Repository {
   selectRemindersConfig({Transaction? transaction}) async {
     _logger.info('Selecting reminders config...');
     try {
-      final RemindersConfig? remindersConfig = await _remindersRepository
-          .selectLatest(transaction);
+      final RemindersConfig? remindersConfig = await _remindersDao.selectLatest(
+        transaction,
+      );
       if (remindersConfig == null) {
         _logger.info('Reminders config not found');
         return err(
@@ -329,7 +326,7 @@ final class ProfileRepository implements Repository {
   updateRemindersConfig({bool? workoutsOn, bool? weightRecordsOn}) async {
     _logger.info('Updating reminders config...');
     try {
-      final RemindersConfig? remindersConfig = await _remindersRepository
+      final RemindersConfig? remindersConfig = await _remindersDao
           .selectLatest();
       if (remindersConfig == null) {
         _logger.info('Reminders config not found');
@@ -346,7 +343,7 @@ final class ProfileRepository implements Repository {
         weightRecordsOn: weightRecordsOn,
         updatedAt: DateUtilities.getNowUtcUnix(),
       );
-      await _remindersRepository.update(updatedConfig);
+      await _remindersDao.update(updatedConfig);
       _logger.info('Updated reminders config with id ${updatedConfig.id}');
       return ok(RemindersConfigDto.fromModel(updatedConfig));
     } catch (e) {
@@ -371,9 +368,7 @@ final class ProfileRepository implements Repository {
   }) async {
     _logger.info('Upgrading system...');
     try {
-      final System? existingSystem = await _systemRepository.selectLatest(
-        transaction,
-      );
+      final System? existingSystem = await _systemDao.selectLatest(transaction);
       if (existingSystem == null) {
         _logger.info('System does not exist');
         return err(
@@ -390,7 +385,7 @@ final class ProfileRepository implements Repository {
         initialSetup: initialSetup,
         updatedAt: DateUtilities.getNowUtcUnix(),
       );
-      await _systemRepository.update(updatedSystem, transaction);
+      await _systemDao.update(updatedSystem, transaction);
       _logger.info('System upgraded successfully');
       return ok(SystemDto.fromModel(updatedSystem));
     } catch (e) {

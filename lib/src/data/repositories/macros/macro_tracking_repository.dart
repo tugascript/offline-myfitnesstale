@@ -43,67 +43,67 @@ import './inputs/quick_food_log_input.dart';
 import '../core/repository.dart';
 
 final class MacroTrackingRepository implements Repository {
-  final Dao<Food> _foodRepository;
-  final Dao<Recipe> _recipeRepository;
-  final Dao<FoodPortion> _foodPortionRepository;
-  final Dao<WeekMacroGoal> _weekMacroGoalRepository;
-  final Dao<DayMacroGoal> _dayMacroGoalRepository;
-  final Dao<DailyNutritionLog> _dailyLogRepository;
-  final Dao<MealLog> _mealLogRepository;
-  final Dao<MealLogItem> _mealLogItemRepository;
+  final Dao<Food> _foodDao;
+  final Dao<Recipe> _recipeDao;
+  final Dao<FoodPortion> _foodPortionDao;
+  final Dao<WeekMacroGoal> _weekMacroGoalDao;
+  final Dao<DayMacroGoal> _dayMacroGoalDao;
+  final Dao<DailyNutritionLog> _dailyLogDao;
+  final Dao<MealLog> _mealLogDao;
+  final Dao<MealLogItem> _mealLogItemDao;
 
   final Logger _logger = Logger('Macro Tracking Repository');
 
   MacroTrackingRepository({
-    required this._foodRepository,
-    required this._recipeRepository,
-    required this._foodPortionRepository,
-    required this._weekMacroGoalRepository,
-    required this._dayMacroGoalRepository,
-    required this._dailyLogRepository,
-    required this._mealLogRepository,
-    required this._mealLogItemRepository,
+    required this._foodDao,
+    required this._recipeDao,
+    required this._foodPortionDao,
+    required this._weekMacroGoalDao,
+    required this._dayMacroGoalDao,
+    required this._dailyLogDao,
+    required this._mealLogDao,
+    required this._mealLogItemDao,
   });
 
   factory MacroTrackingRepository.create([DatabaseHelper? databaseHelper]) {
     final helper = databaseHelper ?? DatabaseHelper();
     return MacroTrackingRepository(
-      foodRepository: Dao<Food>(
+      foodDao: Dao<Food>(
         databaseHelper: helper,
         tableName: Food.table,
         fromMap: Food.fromMap,
       ),
-      recipeRepository: Dao<Recipe>(
+      recipeDao: Dao<Recipe>(
         databaseHelper: helper,
         tableName: Recipe.table,
         fromMap: Recipe.fromMap,
       ),
-      foodPortionRepository: Dao<FoodPortion>(
+      foodPortionDao: Dao<FoodPortion>(
         databaseHelper: helper,
         tableName: FoodPortion.table,
         fromMap: FoodPortion.fromMap,
       ),
-      weekMacroGoalRepository: Dao<WeekMacroGoal>(
+      weekMacroGoalDao: Dao<WeekMacroGoal>(
         databaseHelper: helper,
         tableName: WeekMacroGoal.table,
         fromMap: WeekMacroGoal.fromMap,
       ),
-      dayMacroGoalRepository: Dao<DayMacroGoal>(
+      dayMacroGoalDao: Dao<DayMacroGoal>(
         databaseHelper: helper,
         tableName: DayMacroGoal.table,
         fromMap: DayMacroGoal.fromMap,
       ),
-      dailyLogRepository: Dao<DailyNutritionLog>(
+      dailyLogDao: Dao<DailyNutritionLog>(
         databaseHelper: helper,
         tableName: DailyNutritionLog.table,
         fromMap: DailyNutritionLog.fromMap,
       ),
-      mealLogRepository: Dao<MealLog>(
+      mealLogDao: Dao<MealLog>(
         databaseHelper: helper,
         tableName: MealLog.table,
         fromMap: MealLog.fromMap,
       ),
-      mealLogItemRepository: Dao<MealLogItem>(
+      mealLogItemDao: Dao<MealLogItem>(
         databaseHelper: helper,
         tableName: MealLogItem.table,
         fromMap: MealLogItem.fromMap,
@@ -303,61 +303,61 @@ final class MacroTrackingRepository implements Repository {
         isActive: input.isActive,
       );
 
-      final dto = await _weekMacroGoalRepository.startTransaction<MacroGoalDto>(
-        (txn) async {
-          if (input.isActive) {
-            final activeWeeks = await _weekMacroGoalRepository.selectMany(
-              where: WeekMacroGoalColumns.isActive.equal,
-              whereArgs: [1],
-              trx: txn,
-            );
-            for (final activeWeek in activeWeeks) {
-              await _weekMacroGoalRepository.update(
-                activeWeek.copyWith(isActive: false),
-                txn,
-              );
-            }
-            final activeDays = await _dayMacroGoalRepository.selectMany(
-              where: DayMacroGoalColumns.isActive.equal,
-              whereArgs: [1],
-              trx: txn,
-            );
-            for (final activeDay in activeDays) {
-              await _dayMacroGoalRepository.update(
-                activeDay.copyWith(isActive: false),
-                txn,
-              );
-            }
-          }
-
-          final weekId = await _weekMacroGoalRepository.insert(weekGoal, txn);
-          final createdDays = <DayMacroGoal>[];
-
-          for (final d in dayInputs) {
-            final dayModel = DayMacroGoal.create(
-              weekMacroGoalId: weekId,
-              days: d.days,
-              name: d.name,
-              targetCalories: d.targetCalories,
-              targetProtein: d.targetProtein,
-              targetCarbs: d.targetCarbs,
-              targetFat: d.targetFat,
-              targetFiber: d.targetFiber.value,
-              targetSodium: d.targetSodium.value,
-              targetWaterIntakeMl: d.targetWaterIntakeMl.value,
-              phase: d.phase ?? input.phase,
-              isActive: input.isActive,
-            );
-            final dayId = await _dayMacroGoalRepository.insert(dayModel, txn);
-            createdDays.add(dayModel.copyWith(id: Nullable(dayId)));
-          }
-
-          return MacroGoalDto.fromWeekModel(
-            weekGoal.copyWith(id: Nullable(weekId)),
-            createdDays,
+      final dto = await _weekMacroGoalDao.startTransaction<MacroGoalDto>((
+        txn,
+      ) async {
+        if (input.isActive) {
+          final activeWeeks = await _weekMacroGoalDao.selectMany(
+            where: WeekMacroGoalColumns.isActive.equal,
+            whereArgs: [1],
+            trx: txn,
           );
-        },
-      );
+          for (final activeWeek in activeWeeks) {
+            await _weekMacroGoalDao.update(
+              activeWeek.copyWith(isActive: false),
+              txn,
+            );
+          }
+          final activeDays = await _dayMacroGoalDao.selectMany(
+            where: DayMacroGoalColumns.isActive.equal,
+            whereArgs: [1],
+            trx: txn,
+          );
+          for (final activeDay in activeDays) {
+            await _dayMacroGoalDao.update(
+              activeDay.copyWith(isActive: false),
+              txn,
+            );
+          }
+        }
+
+        final weekId = await _weekMacroGoalDao.insert(weekGoal, txn);
+        final createdDays = <DayMacroGoal>[];
+
+        for (final d in dayInputs) {
+          final dayModel = DayMacroGoal.create(
+            weekMacroGoalId: weekId,
+            days: d.days,
+            name: d.name,
+            targetCalories: d.targetCalories,
+            targetProtein: d.targetProtein,
+            targetCarbs: d.targetCarbs,
+            targetFat: d.targetFat,
+            targetFiber: d.targetFiber.value,
+            targetSodium: d.targetSodium.value,
+            targetWaterIntakeMl: d.targetWaterIntakeMl.value,
+            phase: d.phase ?? input.phase,
+            isActive: input.isActive,
+          );
+          final dayId = await _dayMacroGoalDao.insert(dayModel, txn);
+          createdDays.add(dayModel.copyWith(id: Nullable(dayId)));
+        }
+
+        return MacroGoalDto.fromWeekModel(
+          weekGoal.copyWith(id: Nullable(weekId)),
+          createdDays,
+        );
+      });
 
       _logger.info('Created macro goal with id: ${dto.id}');
       return ok(dto);
@@ -378,7 +378,7 @@ final class MacroTrackingRepository implements Repository {
   ) async {
     _logger.info('Updating macro goal: $id');
     try {
-      final existing = await _weekMacroGoalRepository.selectOne(id);
+      final existing = await _weekMacroGoalDao.selectOne(id);
       if (existing == null) {
         return err(
           const ServiceError(
@@ -395,28 +395,28 @@ final class MacroTrackingRepository implements Repository {
       final dayInputs = dayInputsResult.value;
       final totals = _computeWeeklyTotals(dayInputs);
 
-      return await _weekMacroGoalRepository.startTransaction<
+      return await _weekMacroGoalDao.startTransaction<
         Result<MacroGoalDto, ServiceError<SingleErrorTypes>>
       >((txn) async {
         if (input.isActive) {
-          final models = await _weekMacroGoalRepository.selectMany(
+          final models = await _weekMacroGoalDao.selectMany(
             where: WeekMacroGoalColumns.isActive.equal,
             whereArgs: [1],
             trx: txn,
           );
           for (final model in models) {
-            await _weekMacroGoalRepository.update(
+            await _weekMacroGoalDao.update(
               model.copyWith(isActive: false),
               txn,
             );
           }
-          final activeDays = await _dayMacroGoalRepository.selectMany(
+          final activeDays = await _dayMacroGoalDao.selectMany(
             where: DayMacroGoalColumns.isActive.equal,
             whereArgs: [1],
             trx: txn,
           );
           for (final activeDay in activeDays) {
-            await _dayMacroGoalRepository.update(
+            await _dayMacroGoalDao.update(
               activeDay.copyWith(isActive: false),
               txn,
             );
@@ -438,8 +438,8 @@ final class MacroTrackingRepository implements Repository {
           updatedAt: DateUtilities.getNowUtcUnix(),
         );
 
-        await _weekMacroGoalRepository.update(updated, txn);
-        await _dayMacroGoalRepository.deleteMany(
+        await _weekMacroGoalDao.update(updated, txn);
+        await _dayMacroGoalDao.deleteMany(
           where: DayMacroGoalColumns.weekMacroGoalId.equal,
           whereArgs: [id],
           trx: txn,
@@ -461,7 +461,7 @@ final class MacroTrackingRepository implements Repository {
             phase: d.phase ?? input.phase,
             isActive: input.isActive,
           );
-          final dayId = await _dayMacroGoalRepository.insert(dayModel, txn);
+          final dayId = await _dayMacroGoalDao.insert(dayModel, txn);
           createdDays.add(dayModel.copyWith(id: Nullable(dayId)));
         }
 
@@ -482,7 +482,7 @@ final class MacroTrackingRepository implements Repository {
   completeMacroGoal(int id) async {
     _logger.info('Completing macro goal: $id');
     try {
-      final existing = await _weekMacroGoalRepository.selectOne(id);
+      final existing = await _weekMacroGoalDao.selectOne(id);
       if (existing == null) {
         return err(
           const ServiceError(
@@ -493,11 +493,11 @@ final class MacroTrackingRepository implements Repository {
       }
       final now = DateUtilities.getNowUtcUnix();
       final updated = existing.copyWith(isActive: false, updatedAt: now);
-      return await _weekMacroGoalRepository.startTransaction<
+      return await _weekMacroGoalDao.startTransaction<
         Result<MacroGoalDto, ServiceError<SingleErrorTypes>>
       >((txn) async {
-        await _weekMacroGoalRepository.update(updated, txn);
-        final dayGoals = await _dayMacroGoalRepository.selectMany(
+        await _weekMacroGoalDao.update(updated, txn);
+        final dayGoals = await _dayMacroGoalDao.selectMany(
           where: DayMacroGoalColumns.weekMacroGoalId.equal,
           whereArgs: [id],
           orderBy: [DayMacroGoalColumns.id.orderAsc],
@@ -506,7 +506,7 @@ final class MacroTrackingRepository implements Repository {
         final updatedDayGoals = <DayMacroGoal>[];
         for (final dayGoal in dayGoals) {
           final updatedDay = dayGoal.copyWith(isActive: false, updatedAt: now);
-          await _dayMacroGoalRepository.update(updatedDay, txn);
+          await _dayMacroGoalDao.update(updatedDay, txn);
           updatedDayGoals.add(updatedDay);
         }
         return ok(MacroGoalDto.fromWeekModel(updated, updatedDayGoals));
@@ -527,7 +527,7 @@ final class MacroTrackingRepository implements Repository {
   ) async {
     _logger.info('Deleting macro goal: $id');
     try {
-      final deleted = await _weekMacroGoalRepository.deleteOne(id);
+      final deleted = await _weekMacroGoalDao.deleteOne(id);
       if (!deleted) {
         return err(
           const ServiceError(
@@ -552,7 +552,7 @@ final class MacroTrackingRepository implements Repository {
   getActiveMacroGoal() async {
     _logger.info('Getting active macro goal');
     try {
-      final goals = await _weekMacroGoalRepository.selectMany(
+      final goals = await _weekMacroGoalDao.selectMany(
         where: WeekMacroGoalColumns.isActive.equal,
         whereArgs: [1],
         orderBy: [WeekMacroGoalColumns.createdAt.orderDesc],
@@ -567,7 +567,7 @@ final class MacroTrackingRepository implements Repository {
         );
       }
       final activeWeek = goals.first;
-      final dayGoals = await _dayMacroGoalRepository.selectMany(
+      final dayGoals = await _dayMacroGoalDao.selectMany(
         where: DayMacroGoalColumns.weekMacroGoalId.equal,
         whereArgs: [activeWeek.id],
         orderBy: [DayMacroGoalColumns.id.orderAsc],
@@ -596,17 +596,17 @@ final class MacroTrackingRepository implements Repository {
   }) async {
     _logger.info('Getting macro goals history');
     try {
-      final goals = await _weekMacroGoalRepository.selectPaginated(
+      final goals = await _weekMacroGoalDao.selectPaginated(
         limit: limit,
         offset: offset,
         orderBy: [WeekMacroGoalColumns.createdAt.orderDesc],
       );
-      final total = await _weekMacroGoalRepository.count();
+      final total = await _weekMacroGoalDao.count();
 
       final dtos = <MacroGoalDto>[];
       if (goals.isNotEmpty) {
         final weekIds = goals.map((g) => g.id!).toList();
-        final allDayGoals = await _dayMacroGoalRepository.selectMany(
+        final allDayGoals = await _dayMacroGoalDao.selectMany(
           where: DayMacroGoalColumns.weekMacroGoalId.inList(weekIds.length),
           whereArgs: weekIds,
           orderBy: [DayMacroGoalColumns.id.orderAsc],
@@ -652,7 +652,7 @@ final class MacroTrackingRepository implements Repository {
     Transaction txn,
     int numericDate,
   ) async {
-    final existingRows = await _dailyLogRepository.selectMany(
+    final existingRows = await _dailyLogDao.selectMany(
       where: DailyNutritionLogColumns.date.equal,
       whereArgs: [numericDate],
       limit: 1,
@@ -663,7 +663,7 @@ final class MacroTrackingRepository implements Repository {
     }
 
     final newLog = DailyNutritionLog.create(date: numericDate);
-    final id = await _dailyLogRepository.insert(newLog, txn);
+    final id = await _dailyLogDao.insert(newLog, txn);
     return newLog.copyWith(id: Nullable(id));
   }
 
@@ -672,7 +672,7 @@ final class MacroTrackingRepository implements Repository {
     final numericDate = DateUtilities.getNumericDate(localDate);
     _logger.info('Getting daily log for date $numericDate');
     try {
-      return await _dailyLogRepository.startTransaction<
+      return await _dailyLogDao.startTransaction<
         Result<DailyNutritionLogDto, ServiceError<SingleErrorTypes>>
       >((txn) async {
         final dailyLog = await _getOrCreateDailyLogInternal(txn, numericDate);
@@ -694,7 +694,7 @@ final class MacroTrackingRepository implements Repository {
     Transaction txn,
     int dailyLogId,
   ) async {
-    final mealRows = await _mealLogRepository.selectMany(
+    final mealRows = await _mealLogDao.selectMany(
       where: MealLogColumns.dailyLogId.equal,
       whereArgs: [dailyLogId],
       orderBy: [MealLogColumns.logTime.orderAsc],
@@ -704,7 +704,7 @@ final class MacroTrackingRepository implements Repository {
     final List<MealLogDto> mealDtos = [];
     for (final mRow in mealRows) {
       final meal = mRow;
-      final itemRows = await _mealLogItemRepository.selectMany(
+      final itemRows = await _mealLogItemDao.selectMany(
         where: MealLogItemColumns.mealLogId.equal,
         whereArgs: [meal.id!],
         orderBy: [MealLogItemColumns.createdAt.orderAsc],
@@ -716,7 +716,7 @@ final class MacroTrackingRepository implements Repository {
         final item = iRow;
         String? portionName;
         if (item.portionId != null) {
-          final pRows = await _foodPortionRepository.selectMany(
+          final pRows = await _foodPortionDao.selectMany(
             where: FoodPortionColumns.id.equal,
             whereArgs: [item.portionId!],
             limit: 1,
@@ -741,12 +741,12 @@ final class MacroTrackingRepository implements Repository {
     final endNum = DateUtilities.getNumericDate(end);
     _logger.info('Getting daily logs for range $startNum to $endNum');
     try {
-      final logs = await _dailyLogRepository
+      final logs = await _dailyLogDao
           .startTransaction<List<DailyNutritionLogDto>>((txn) async {
             final rangeWhere = WhereBuilder()
               ..and(DailyNutritionLogColumns.date.greaterThanOrEqual, startNum)
               ..and(DailyNutritionLogColumns.date.lessThanOrEqual, endNum);
-            final logRows = await _dailyLogRepository.selectMany(
+            final logRows = await _dailyLogDao.selectMany(
               where: rangeWhere.where,
               whereArgs: rangeWhere.args,
               orderBy: [DailyNutritionLogColumns.date.orderAsc],
@@ -784,7 +784,7 @@ final class MacroTrackingRepository implements Repository {
     final numericDate = DateUtilities.getNumericDate(date);
     _logger.info('Updating water intake for $numericDate to $waterIntakeMl ml');
     try {
-      return await _dailyLogRepository.startTransaction<
+      return await _dailyLogDao.startTransaction<
         Result<DailyNutritionLogDto, ServiceError<SingleErrorTypes>>
       >((txn) async {
         final dailyLog = await _getOrCreateDailyLogInternal(txn, numericDate);
@@ -792,7 +792,7 @@ final class MacroTrackingRepository implements Repository {
           waterIntakeMl: waterIntakeMl,
           updatedAt: DateUtilities.getNowUtcUnix(),
         );
-        await _dailyLogRepository.update(updated, txn);
+        await _dailyLogDao.update(updated, txn);
         final meals = await _loadMealsForDailyLog(txn, updated.id!);
         return ok(DailyNutritionLogDto.fromModel(updated, meals: meals));
       });
@@ -820,10 +820,10 @@ final class MacroTrackingRepository implements Repository {
 
     _logger.info('Logging food $foodId for meal $mealType at $numericDate');
     try {
-      return await _dailyLogRepository.startTransaction<
+      return await _dailyLogDao.startTransaction<
         Result<MealLogDto, ServiceError<SingleErrorTypes>>
       >((txn) async {
-        final foodRows = await _foodRepository.selectMany(
+        final foodRows = await _foodDao.selectMany(
           where: FoodColumns.id.equal,
           whereArgs: [foodId],
           limit: 1,
@@ -845,7 +845,7 @@ final class MacroTrackingRepository implements Repository {
           final portionWhere = WhereBuilder()
             ..and(FoodPortionColumns.id.equal, portionId)
             ..and(FoodPortionColumns.foodId.equal, foodId);
-          final pRows = await _foodPortionRepository.selectMany(
+          final pRows = await _foodPortionDao.selectMany(
             where: portionWhere.where,
             whereArgs: portionWhere.args,
             limit: 1,
@@ -897,7 +897,7 @@ final class MacroTrackingRepository implements Repository {
           totalCarbs: 0,
           totalFat: 0,
         );
-        final mealLogId = await _mealLogRepository.insert(newMeal, txn);
+        final mealLogId = await _mealLogDao.insert(newMeal, txn);
         final mealLog = newMeal.copyWith(id: Nullable(mealLogId));
 
         // Insert MealLogItem
@@ -913,10 +913,10 @@ final class MacroTrackingRepository implements Repository {
           loggedFat: itemFat,
           loggedMicros: itemMicros,
         );
-        await _mealLogItemRepository.insert(logItem, txn);
+        await _mealLogItemDao.insert(logItem, txn);
 
         // Recompute meal log totals from all items
-        final allItems = await _mealLogItemRepository.selectMany(
+        final allItems = await _mealLogItemDao.selectMany(
           where: MealLogItemColumns.mealLogId.equal,
           whereArgs: [mealLogId],
           trx: txn,
@@ -940,7 +940,7 @@ final class MacroTrackingRepository implements Repository {
           totalFat: sumFat,
           updatedAt: DateUtilities.getNowUtcUnix(),
         );
-        await _mealLogRepository.update(updatedMeal, txn);
+        await _mealLogDao.update(updatedMeal, txn);
 
         final List<MealLogItemDto> itemDtos = allItems.map((it) {
           return MealLogItemDto.fromModel(
@@ -981,7 +981,7 @@ final class MacroTrackingRepository implements Repository {
     }
     final time = (logTime ?? DateTime.now()).toLocal();
     try {
-      return await _dailyLogRepository.startTransaction<
+      return await _dailyLogDao.startTransaction<
         Result<MealLogDto, ServiceError<SingleErrorTypes>>
       >((txn) async {
         final dailyLog = await _getOrCreateDailyLogInternal(
@@ -997,7 +997,7 @@ final class MacroTrackingRepository implements Repository {
           totalCarbs: input.carbs,
           totalFat: input.fat,
         );
-        final mealId = await _mealLogRepository.insert(meal, txn);
+        final mealId = await _mealLogDao.insert(meal, txn);
         final item = MealLogItem.create(
           mealLogId: mealId,
           amount: 1,
@@ -1007,7 +1007,7 @@ final class MacroTrackingRepository implements Repository {
           loggedCarbs: input.carbs,
           loggedFat: input.fat,
         );
-        final itemId = await _mealLogItemRepository.insert(item, txn);
+        final itemId = await _mealLogItemDao.insert(item, txn);
         return ok(
           MealLogDto.fromModel(
             meal.copyWith(id: Nullable(mealId)),
@@ -1041,10 +1041,10 @@ final class MacroTrackingRepository implements Repository {
 
     _logger.info('Logging recipe $recipeId for meal $mealType');
     try {
-      return await _dailyLogRepository.startTransaction<
+      return await _dailyLogDao.startTransaction<
         Result<MealLogDto, ServiceError<SingleErrorTypes>>
       >((txn) async {
-        final recipeRows = await _recipeRepository.selectMany(
+        final recipeRows = await _recipeDao.selectMany(
           where: RecipeColumns.id.equal,
           whereArgs: [recipeId],
           limit: 1,
@@ -1089,7 +1089,7 @@ final class MacroTrackingRepository implements Repository {
           totalCarbs: 0,
           totalFat: 0,
         );
-        final mealLogId = await _mealLogRepository.insert(newMeal, txn);
+        final mealLogId = await _mealLogDao.insert(newMeal, txn);
         final mealLog = newMeal.copyWith(id: Nullable(mealLogId));
 
         final logItem = MealLogItem.create(
@@ -1103,9 +1103,9 @@ final class MacroTrackingRepository implements Repository {
           loggedFat: itemFat,
           loggedMicros: itemMicros,
         );
-        await _mealLogItemRepository.insert(logItem, txn);
+        await _mealLogItemDao.insert(logItem, txn);
 
-        final allItems = await _mealLogItemRepository.selectMany(
+        final allItems = await _mealLogItemDao.selectMany(
           where: MealLogItemColumns.mealLogId.equal,
           whereArgs: [mealLogId],
           trx: txn,
@@ -1130,7 +1130,7 @@ final class MacroTrackingRepository implements Repository {
           totalFat: sumFat,
           updatedAt: DateUtilities.getNowUtcUnix(),
         );
-        await _mealLogRepository.update(updatedMeal, txn);
+        await _mealLogDao.update(updatedMeal, txn);
 
         final List<MealLogItemDto> itemDtos = allItems
             .map((it) => MealLogItemDto.fromModel(it))
@@ -1154,7 +1154,7 @@ final class MacroTrackingRepository implements Repository {
   ) async {
     _logger.info('Deleting meal log: $mealLogId');
     try {
-      final deleted = await _mealLogRepository.deleteOne(mealLogId);
+      final deleted = await _mealLogDao.deleteOne(mealLogId);
       if (!deleted) {
         return err(
           const ServiceError(
@@ -1180,11 +1180,11 @@ final class MacroTrackingRepository implements Repository {
   ) async {
     _logger.info('Deleting meal log item: $itemId');
     try {
-      return await _dailyLogRepository
+      return await _dailyLogDao
           .startTransaction<Result<void, ServiceError<SingleErrorTypes>>>((
             txn,
           ) async {
-            final item = await _mealLogItemRepository.selectOne(itemId, txn);
+            final item = await _mealLogItemDao.selectOne(itemId, txn);
             if (item == null) {
               return err(
                 const ServiceError(
@@ -1195,16 +1195,16 @@ final class MacroTrackingRepository implements Repository {
             }
 
             final mealLogId = item.mealLogId;
-            await _mealLogItemRepository.deleteOne(itemId, txn);
+            await _mealLogItemDao.deleteOne(itemId, txn);
 
             // Recompute meal log totals
-            final remainingItems = await _mealLogItemRepository.selectMany(
+            final remainingItems = await _mealLogItemDao.selectMany(
               where: MealLogItemColumns.mealLogId.equal,
               whereArgs: [mealLogId],
               trx: txn,
             );
 
-            final mealLog = await _mealLogRepository.selectOne(mealLogId, txn);
+            final mealLog = await _mealLogDao.selectOne(mealLogId, txn);
             if (mealLog != null) {
               int sumCals = 0;
               int sumProtein = 0;
@@ -1224,7 +1224,7 @@ final class MacroTrackingRepository implements Repository {
                 totalFat: sumFat,
                 updatedAt: DateUtilities.getNowUtcUnix(),
               );
-              await _mealLogRepository.update(updatedMeal, txn);
+              await _mealLogDao.update(updatedMeal, txn);
             }
 
             return ok(null);

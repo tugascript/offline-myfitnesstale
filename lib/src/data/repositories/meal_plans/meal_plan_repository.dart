@@ -40,67 +40,67 @@ import './inputs/meal_plan_input.dart';
 import '../core/repository.dart';
 
 final class MealPlanRepository implements Repository {
-  final Dao<Food> _foodRepository;
-  final Dao<Recipe> _recipeRepository;
-  final Dao<FoodPortion> _foodPortionRepository;
-  final Dao<MealPlan> _mealPlanRepository;
-  final Dao<MealPlanWeek> _weekRepository;
-  final Dao<MealPlanDay> _dayRepository;
-  final Dao<MealPlanMeal> _mealRepository;
-  final Dao<MealPlanMealItem> _itemRepository;
+  final Dao<Food> _foodDao;
+  final Dao<Recipe> _recipeDao;
+  final Dao<FoodPortion> _foodPortionDao;
+  final Dao<MealPlan> _mealPlanDao;
+  final Dao<MealPlanWeek> _weekDao;
+  final Dao<MealPlanDay> _dayDao;
+  final Dao<MealPlanMeal> _mealDao;
+  final Dao<MealPlanMealItem> _itemDao;
 
   final Logger _logger = Logger('Meal Plan Repository');
 
   MealPlanRepository({
-    required this._foodRepository,
-    required this._recipeRepository,
-    required this._foodPortionRepository,
-    required this._mealPlanRepository,
-    required this._weekRepository,
-    required this._dayRepository,
-    required this._mealRepository,
-    required this._itemRepository,
+    required this._foodDao,
+    required this._recipeDao,
+    required this._foodPortionDao,
+    required this._mealPlanDao,
+    required this._weekDao,
+    required this._dayDao,
+    required this._mealDao,
+    required this._itemDao,
   });
 
   factory MealPlanRepository.create([DatabaseHelper? databaseHelper]) {
     final helper = databaseHelper ?? DatabaseHelper();
     return MealPlanRepository(
-      foodRepository: Dao<Food>(
+      foodDao: Dao<Food>(
         databaseHelper: helper,
         tableName: Food.table,
         fromMap: Food.fromMap,
       ),
-      recipeRepository: Dao<Recipe>(
+      recipeDao: Dao<Recipe>(
         databaseHelper: helper,
         tableName: Recipe.table,
         fromMap: Recipe.fromMap,
       ),
-      foodPortionRepository: Dao<FoodPortion>(
+      foodPortionDao: Dao<FoodPortion>(
         databaseHelper: helper,
         tableName: FoodPortion.table,
         fromMap: FoodPortion.fromMap,
       ),
-      mealPlanRepository: Dao<MealPlan>(
+      mealPlanDao: Dao<MealPlan>(
         databaseHelper: helper,
         tableName: MealPlan.table,
         fromMap: MealPlan.fromMap,
       ),
-      weekRepository: Dao<MealPlanWeek>(
+      weekDao: Dao<MealPlanWeek>(
         databaseHelper: helper,
         tableName: MealPlanWeek.table,
         fromMap: MealPlanWeek.fromMap,
       ),
-      dayRepository: Dao<MealPlanDay>(
+      dayDao: Dao<MealPlanDay>(
         databaseHelper: helper,
         tableName: MealPlanDay.table,
         fromMap: MealPlanDay.fromMap,
       ),
-      mealRepository: Dao<MealPlanMeal>(
+      mealDao: Dao<MealPlanMeal>(
         databaseHelper: helper,
         tableName: MealPlanMeal.table,
         fromMap: MealPlanMeal.fromMap,
       ),
-      itemRepository: Dao<MealPlanMealItem>(
+      itemDao: Dao<MealPlanMealItem>(
         databaseHelper: helper,
         tableName: MealPlanMealItem.table,
         fromMap: MealPlanMealItem.fromMap,
@@ -118,7 +118,7 @@ final class MealPlanRepository implements Repository {
 
     _logger.info('Creating meal plan: $name');
     try {
-      return await _mealPlanRepository.startTransaction<
+      return await _mealPlanDao.startTransaction<
         Result<MealPlanDto, ServiceError<SingleErrorTypes>>
       >((txn) async {
         // Pre-validate all referenced foods, portions, recipes
@@ -126,7 +126,7 @@ final class MealPlanRepository implements Repository {
           for (final d in w.days) {
             for (final m in d.meals) {
               if (m.recipeId != null) {
-                final rRows = await _recipeRepository.selectMany(
+                final rRows = await _recipeDao.selectMany(
                   where: RecipeColumns.id.equal,
                   whereArgs: [m.recipeId],
                   limit: 1,
@@ -140,7 +140,7 @@ final class MealPlanRepository implements Repository {
                 }
               }
               for (final item in m.items) {
-                final fRows = await _foodRepository.selectMany(
+                final fRows = await _foodDao.selectMany(
                   where: FoodColumns.id.equal,
                   whereArgs: [item.foodId],
                   limit: 1,
@@ -156,7 +156,7 @@ final class MealPlanRepository implements Repository {
                   final portionWhere = WhereBuilder()
                     ..and(FoodPortionColumns.id.equal, item.portionId)
                     ..and(FoodPortionColumns.foodId.equal, item.foodId);
-                  final pRows = await _foodPortionRepository.selectMany(
+                  final pRows = await _foodPortionDao.selectMany(
                     where: portionWhere.where!,
                     whereArgs: portionWhere.args!,
                     limit: 1,
@@ -193,7 +193,7 @@ final class MealPlanRepository implements Repository {
           totalMeals: planTotalMeals,
           createdBy: createdBy,
         );
-        final int planId = await _mealPlanRepository.insert(mealPlan, txn);
+        final int planId = await _mealPlanDao.insert(mealPlan, txn);
 
         final List<MealPlanWeekDto> weekDtos = [];
 
@@ -221,7 +221,7 @@ final class MealPlanRepository implements Repository {
             totalMeals: 0,
             createdBy: createdBy,
           );
-          final int weekId = await _weekRepository.insert(tempWeek, txn);
+          final int weekId = await _weekDao.insert(tempWeek, txn);
 
           for (final dInput in wInput.days) {
             int dayTotalCalories = 0;
@@ -245,7 +245,7 @@ final class MealPlanRepository implements Repository {
               totalMeals: dInput.meals.length,
               createdBy: createdBy,
             );
-            final int dayId = await _dayRepository.insert(tempDay, txn);
+            final int dayId = await _dayDao.insert(tempDay, txn);
 
             for (final mInput in dInput.meals) {
               int mealCalories = 0;
@@ -256,7 +256,7 @@ final class MealPlanRepository implements Repository {
               String? recipeName;
 
               if (mInput.recipeId != null) {
-                final rRows = await _recipeRepository.selectMany(
+                final rRows = await _recipeDao.selectMany(
                   where: RecipeColumns.id.equal,
                   whereArgs: [mInput.recipeId],
                   limit: 1,
@@ -290,10 +290,10 @@ final class MealPlanRepository implements Repository {
                 totalFat: 0,
                 createdBy: createdBy,
               );
-              final int mealId = await _mealRepository.insert(tempMeal, txn);
+              final int mealId = await _mealDao.insert(tempMeal, txn);
 
               for (final itemInput in mInput.items) {
-                final fRows = await _foodRepository.selectMany(
+                final fRows = await _foodDao.selectMany(
                   where: FoodColumns.id.equal,
                   whereArgs: [itemInput.foodId],
                   limit: 1,
@@ -304,7 +304,7 @@ final class MealPlanRepository implements Repository {
                 double effectiveGrams = itemInput.amount.toDouble();
                 String? portionName;
                 if (itemInput.portionId != null) {
-                  final pRows = await _foodPortionRepository.selectMany(
+                  final pRows = await _foodPortionDao.selectMany(
                     where: FoodPortionColumns.id.equal,
                     whereArgs: [itemInput.portionId],
                     limit: 1,
@@ -349,7 +349,7 @@ final class MealPlanRepository implements Repository {
                   totalFat: itemFat,
                   totalFiber: itemFiber,
                 );
-                final int itemId = await _itemRepository.insert(mealItem, txn);
+                final int itemId = await _itemDao.insert(mealItem, txn);
                 itemDtos.add(
                   MealPlanMealItemDto.fromModel(
                     mealItem.copyWith(id: Nullable(itemId)),
@@ -369,7 +369,7 @@ final class MealPlanRepository implements Repository {
                 totalFiber: Nullable(mealFiber),
                 updatedAt: DateUtilities.getNowUtcUnix(),
               );
-              await _mealRepository.update(updatedMeal, txn);
+              await _mealDao.update(updatedMeal, txn);
               mealDtos.add(
                 MealPlanMealDto.fromModel(
                   updatedMeal,
@@ -396,7 +396,7 @@ final class MealPlanRepository implements Repository {
               totalMeals: dInput.meals.length,
               updatedAt: DateUtilities.getNowUtcUnix(),
             );
-            await _dayRepository.update(updatedDay, txn);
+            await _dayDao.update(updatedDay, txn);
             dayDtos.add(MealPlanDayDto.fromModel(updatedDay, meals: mealDtos));
 
             weekTotalMeals += dInput.meals.length;
@@ -419,7 +419,7 @@ final class MealPlanRepository implements Repository {
             totalMeals: weekTotalMeals,
             updatedAt: DateUtilities.getNowUtcUnix(),
           );
-          await _weekRepository.update(updatedWeek, txn);
+          await _weekDao.update(updatedWeek, txn);
           weekDtos.add(MealPlanWeekDto.fromModel(updatedWeek, days: dayDtos));
         }
 
@@ -449,7 +449,7 @@ final class MealPlanRepository implements Repository {
   }) async {
     _logger.info('Getting meal plan with id $id');
     try {
-      final MealPlan? plan = await _mealPlanRepository.selectOne(id);
+      final MealPlan? plan = await _mealPlanDao.selectOne(id);
       if (plan == null) {
         return err(
           const ServiceError(
@@ -464,7 +464,7 @@ final class MealPlanRepository implements Repository {
       final weeksWhere = WhereBuilder()
         ..and(MealPlanWeekColumns.mealPlanId.equal, id)
         ..and(MealPlanWeekColumns.planVersion.equal, targetVersion);
-      final weeks = await _weekRepository.selectMany(
+      final weeks = await _weekDao.selectMany(
         where: weeksWhere.where!,
         whereArgs: weeksWhere.args!,
         orderBy: [MealPlanWeekColumns.weekNumber.orderAsc],
@@ -473,7 +473,7 @@ final class MealPlanRepository implements Repository {
       final List<MealPlanWeekDto> weekDtos = [];
 
       for (final w in weeks) {
-        final days = await _dayRepository.selectMany(
+        final days = await _dayDao.selectMany(
           where: MealPlanDayColumns.mealPlanWeekId.equal,
           whereArgs: [w.id!],
           orderBy: [MealPlanDayColumns.day.orderAsc],
@@ -481,7 +481,7 @@ final class MealPlanRepository implements Repository {
 
         final List<MealPlanDayDto> dayDtos = [];
         for (final d in days) {
-          final meals = await _mealRepository.selectMany(
+          final meals = await _mealDao.selectMany(
             where: MealPlanMealColumns.mealPlanDayId.equal,
             whereArgs: [d.id!],
             orderBy: [MealPlanMealColumns.position.orderAsc],
@@ -491,7 +491,7 @@ final class MealPlanRepository implements Repository {
           for (final m in meals) {
             String? recipeName;
             if (m.recipeId != null) {
-              final r = await _recipeRepository.selectMany(
+              final r = await _recipeDao.selectMany(
                 where: RecipeColumns.id.equal,
                 whereArgs: [m.recipeId],
                 limit: 1,
@@ -501,14 +501,14 @@ final class MealPlanRepository implements Repository {
               }
             }
 
-            final items = await _itemRepository.selectMany(
+            final items = await _itemDao.selectMany(
               where: MealPlanMealItemColumns.mealPlanMealId.equal,
               whereArgs: [m.id!],
             );
 
             final List<MealPlanMealItemDto> itemDtos = [];
             for (final it in items) {
-              final fRows = await _foodRepository.selectMany(
+              final fRows = await _foodDao.selectMany(
                 where: FoodColumns.id.equal,
                 whereArgs: [it.foodId],
                 limit: 1,
@@ -517,7 +517,7 @@ final class MealPlanRepository implements Repository {
 
               String? portionName;
               if (it.portionId != null) {
-                final pRows = await _foodPortionRepository.selectMany(
+                final pRows = await _foodPortionDao.selectMany(
                   where: FoodPortionColumns.id.equal,
                   whereArgs: [it.portionId],
                   limit: 1,
@@ -606,14 +606,14 @@ final class MealPlanRepository implements Repository {
         where.and(MealPlanColumns.isFavorite.equal, isFavorite ? 1 : 0);
       }
 
-      final List<MealPlan> plans = await _mealPlanRepository.selectPaginated(
+      final List<MealPlan> plans = await _mealPlanDao.selectPaginated(
         where: where.where,
         whereArgs: where.args,
         limit: limit,
         offset: offset,
         orderBy: [MealPlanColumns.name.orderAsc],
       );
-      final int total = await _mealPlanRepository.count(
+      final int total = await _mealPlanDao.count(
         where: where.where,
         whereArgs: where.args,
       );
@@ -647,7 +647,7 @@ final class MealPlanRepository implements Repository {
 
     _logger.info('Updating meal plan with id $id');
     try {
-      final MealPlan? existing = await _mealPlanRepository.selectOne(id);
+      final MealPlan? existing = await _mealPlanDao.selectOne(id);
       if (existing == null) {
         return err(
           const ServiceError(
@@ -667,7 +667,7 @@ final class MealPlanRepository implements Repository {
         );
       }
 
-      return await _mealPlanRepository.startTransaction<
+      return await _mealPlanDao.startTransaction<
         Result<MealPlanDto, ServiceError<SingleErrorTypes>>
       >((txn) async {
         // Pre-validate all referenced foods, portions, recipes
@@ -675,7 +675,7 @@ final class MealPlanRepository implements Repository {
           for (final d in w.days) {
             for (final m in d.meals) {
               if (m.recipeId != null) {
-                final rRows = await _recipeRepository.selectMany(
+                final rRows = await _recipeDao.selectMany(
                   where: RecipeColumns.id.equal,
                   whereArgs: [m.recipeId],
                   limit: 1,
@@ -689,7 +689,7 @@ final class MealPlanRepository implements Repository {
                 }
               }
               for (final item in m.items) {
-                final fRows = await _foodRepository.selectMany(
+                final fRows = await _foodDao.selectMany(
                   where: FoodColumns.id.equal,
                   whereArgs: [item.foodId],
                   limit: 1,
@@ -705,7 +705,7 @@ final class MealPlanRepository implements Repository {
                   final portionWhere = WhereBuilder()
                     ..and(FoodPortionColumns.id.equal, item.portionId)
                     ..and(FoodPortionColumns.foodId.equal, item.foodId);
-                  final pRows = await _foodPortionRepository.selectMany(
+                  final pRows = await _foodPortionDao.selectMany(
                     where: portionWhere.where!,
                     whereArgs: portionWhere.args!,
                     limit: 1,
@@ -760,7 +760,7 @@ final class MealPlanRepository implements Repository {
             totalMeals: 0,
             createdBy: existing.createdBy,
           );
-          final int weekId = await _weekRepository.insert(tempWeek, txn);
+          final int weekId = await _weekDao.insert(tempWeek, txn);
 
           for (final dInput in wInput.days) {
             int dayTotalCalories = 0;
@@ -784,7 +784,7 @@ final class MealPlanRepository implements Repository {
               totalMeals: dInput.meals.length,
               createdBy: existing.createdBy,
             );
-            final int dayId = await _dayRepository.insert(tempDay, txn);
+            final int dayId = await _dayDao.insert(tempDay, txn);
 
             for (final mInput in dInput.meals) {
               int mealCalories = 0;
@@ -795,7 +795,7 @@ final class MealPlanRepository implements Repository {
               String? recipeName;
 
               if (mInput.recipeId != null) {
-                final rRows = await _recipeRepository.selectMany(
+                final rRows = await _recipeDao.selectMany(
                   where: RecipeColumns.id.equal,
                   whereArgs: [mInput.recipeId],
                   limit: 1,
@@ -829,10 +829,10 @@ final class MealPlanRepository implements Repository {
                 totalFat: 0,
                 createdBy: existing.createdBy,
               );
-              final int mealId = await _mealRepository.insert(tempMeal, txn);
+              final int mealId = await _mealDao.insert(tempMeal, txn);
 
               for (final itemInput in mInput.items) {
-                final fRows = await _foodRepository.selectMany(
+                final fRows = await _foodDao.selectMany(
                   where: FoodColumns.id.equal,
                   whereArgs: [itemInput.foodId],
                   limit: 1,
@@ -843,7 +843,7 @@ final class MealPlanRepository implements Repository {
                 double effectiveGrams = itemInput.amount.toDouble();
                 String? portionName;
                 if (itemInput.portionId != null) {
-                  final pRows = await _foodPortionRepository.selectMany(
+                  final pRows = await _foodPortionDao.selectMany(
                     where: FoodPortionColumns.id.equal,
                     whereArgs: [itemInput.portionId],
                     limit: 1,
@@ -888,7 +888,7 @@ final class MealPlanRepository implements Repository {
                   totalFat: itemFat,
                   totalFiber: itemFiber,
                 );
-                final int itemId = await _itemRepository.insert(mealItem, txn);
+                final int itemId = await _itemDao.insert(mealItem, txn);
                 itemDtos.add(
                   MealPlanMealItemDto.fromModel(
                     mealItem.copyWith(id: Nullable(itemId)),
@@ -907,7 +907,7 @@ final class MealPlanRepository implements Repository {
                 totalFiber: Nullable(mealFiber),
                 updatedAt: DateUtilities.getNowUtcUnix(),
               );
-              await _mealRepository.update(updatedMeal, txn);
+              await _mealDao.update(updatedMeal, txn);
               mealDtos.add(
                 MealPlanMealDto.fromModel(
                   updatedMeal,
@@ -933,7 +933,7 @@ final class MealPlanRepository implements Repository {
               totalMeals: dInput.meals.length,
               updatedAt: DateUtilities.getNowUtcUnix(),
             );
-            await _dayRepository.update(updatedDay, txn);
+            await _dayDao.update(updatedDay, txn);
             dayDtos.add(MealPlanDayDto.fromModel(updatedDay, meals: mealDtos));
 
             weekTotalMeals += dInput.meals.length;
@@ -956,7 +956,7 @@ final class MealPlanRepository implements Repository {
             totalMeals: weekTotalMeals,
             updatedAt: DateUtilities.getNowUtcUnix(),
           );
-          await _weekRepository.update(updatedWeek, txn);
+          await _weekDao.update(updatedWeek, txn);
           weekDtos.add(MealPlanWeekDto.fromModel(updatedWeek, days: dayDtos));
         }
 
@@ -970,7 +970,7 @@ final class MealPlanRepository implements Repository {
           updatedAt: DateUtilities.getNowUtcUnix(),
         );
 
-        await _mealPlanRepository.update(updated, txn);
+        await _mealPlanDao.update(updated, txn);
         _logger.info('Updated meal plan with id $id');
         return ok(MealPlanDto.fromModel(updated, weeks: weekDtos));
       });
@@ -992,7 +992,7 @@ final class MealPlanRepository implements Repository {
   ) async {
     _logger.info('Toggling favorite for meal plan with id $id');
     try {
-      final MealPlan? plan = await _mealPlanRepository.selectOne(id);
+      final MealPlan? plan = await _mealPlanDao.selectOne(id);
       if (plan == null) {
         return err(
           const ServiceError(
@@ -1006,7 +1006,7 @@ final class MealPlanRepository implements Repository {
         isFavorite: !plan.isFavorite,
         updatedAt: DateUtilities.getNowUtcUnix(),
       );
-      await _mealPlanRepository.update(updated);
+      await _mealPlanDao.update(updated);
       return ok(MealPlanDto.fromModel(updated));
     } on ServiceError<SingleErrorTypes> catch (error) {
       return err(error);
@@ -1026,7 +1026,7 @@ final class MealPlanRepository implements Repository {
   ) async {
     _logger.info('Deleting meal plan with id $id');
     try {
-      final MealPlan? plan = await _mealPlanRepository.selectOne(id);
+      final MealPlan? plan = await _mealPlanDao.selectOne(id);
       if (plan == null) {
         return err(
           const ServiceError(
@@ -1046,7 +1046,7 @@ final class MealPlanRepository implements Repository {
         );
       }
 
-      final deleted = await _mealPlanRepository.deleteOne(id);
+      final deleted = await _mealPlanDao.deleteOne(id);
       if (!deleted) {
         return err(
           const ServiceError(
