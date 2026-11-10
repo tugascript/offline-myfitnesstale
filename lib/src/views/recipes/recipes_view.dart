@@ -5,9 +5,9 @@ import 'package:go_router/go_router.dart';
 import '../../cubits/recipe_cubit.dart';
 import '../../cubits/states/recipe_state.dart';
 import '../../routing/routing.dart';
-import '../../utilities/sizes/data_display_sizes.dart';
-import '../../utilities/sizes/screen_size.dart';
-import '../../widgets/common/search_favorite_form.dart';
+import '../../ui/core/sizes/data_display_sizes.dart';
+import '../../ui/core/sizes/screen_size.dart';
+import '../../ui/core/widgets/search_favorite_form.dart';
 import '../../widgets/layout/app_scaffold.dart';
 import '../../widgets/recipes/recipe_list_item_widget.dart';
 

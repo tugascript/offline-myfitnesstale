@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../utilities/sizes/data_display_sizes.dart';
+import '../ui/core/sizes/data_display_sizes.dart';
 import '../widgets/layout/app_scaffold.dart';
 
 class EntityErrorView extends StatelessWidget {

@@ -5,7 +5,7 @@ import '../../../../cubits/profile_cubit.dart';
 import '../../../../cubits/states/profile_state.dart';
 import '../../../../models/enums.dart';
 import '../../../../services/dtos/weight_goal_dto.dart';
-import '../../../../utilities/sizes/data_display_sizes.dart';
+import '../../../../ui/core/sizes/data_display_sizes.dart';
 import 'weight_goal_form.dart';
 
 class UpdateWeightGoalCard extends StatelessWidget {

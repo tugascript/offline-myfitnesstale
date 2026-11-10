@@ -10,10 +10,10 @@ import 'package:myfitnesstale/src/models/common.dart';
 import 'package:myfitnesstale/src/models/enums.dart';
 import 'package:myfitnesstale/src/services/dtos/equipment_dto.dart';
 import 'package:myfitnesstale/src/services/dtos/exercise_dto.dart';
-import 'package:myfitnesstale/src/utilities/sizes/data_display_sizes.dart';
-import 'package:myfitnesstale/src/utilities/sizes/screen_size.dart';
-import 'package:myfitnesstale/src/views/exercises/exercise_detail_view.dart';
-import 'package:myfitnesstale/src/widgets/common/muscles_diagram.dart';
+import 'package:myfitnesstale/src/ui/core/sizes/data_display_sizes.dart';
+import 'package:myfitnesstale/src/ui/core/sizes/screen_size.dart';
+import 'package:myfitnesstale/src/ui/exercises/screens/exercise_detail_view.dart';
+import 'package:myfitnesstale/src/ui/core/widgets/muscles_diagram.dart';
 
 class _StubExerciseCubit extends ExerciseCubit {
   _StubExerciseCubit(ExerciseDto exercise) {

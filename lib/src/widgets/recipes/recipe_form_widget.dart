@@ -6,7 +6,7 @@ import '../../cubits/food_cubit.dart';
 import '../../services/dtos/food_dto.dart';
 import '../../services/dtos/recipe_dto.dart';
 import '../../services/inputs/recipe_input.dart';
-import '../../utilities/sizes/data_display_sizes.dart';
+import '../../ui/core/sizes/data_display_sizes.dart';
 import '../layout/app_text_form_field.dart';
 import '../layout/responsive_fields.dart';
 

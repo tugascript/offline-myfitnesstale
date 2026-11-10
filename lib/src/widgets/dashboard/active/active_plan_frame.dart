@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../utilities/sizes/data_display_sizes.dart';
+import '../../../ui/core/sizes/data_display_sizes.dart';
 
 /// Lets carousel cards stretch while standalone cards keep their heading.
 class ActivePlanFrame extends StatelessWidget {

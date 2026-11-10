@@ -4,8 +4,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../cubits/exercise_cubit.dart';
 import '../../cubits/states/exercise_state.dart';
-import '../../utilities/sizes/data_display_sizes.dart';
-import '../../utilities/sizes/screen_size.dart';
+import '../../ui/core/sizes/data_display_sizes.dart';
+import '../../ui/core/sizes/screen_size.dart';
 import '../../widgets/equipment/equipments_grid.dart';
 import '../../widgets/equipment/equipments_search_form.dart';
 import '../../widgets/layout/app_scaffold.dart';

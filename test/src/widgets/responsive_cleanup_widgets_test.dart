@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:myfitnesstale/src/models/enums.dart';
-import 'package:myfitnesstale/src/widgets/common/base_common_search_form.dart';
-import 'package:myfitnesstale/src/widgets/common/confirmation_dialog.dart';
+import 'package:myfitnesstale/src/ui/core/widgets/base_common_search_form.dart';
+import 'package:myfitnesstale/src/ui/core/widgets/confirmation_dialog.dart';
 
 void main() {
   const phoneSize = Size(320, 568);

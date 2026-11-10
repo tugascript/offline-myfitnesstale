@@ -8,7 +8,7 @@ import '../../../../cubits/states/weight_record_state.dart';
 import '../../../../cubits/weight_record_cubit.dart';
 import '../../../../models/enums.dart';
 import '../../../../services/inputs/weight_goal_input.dart';
-import '../../../../utilities/sizes/data_display_sizes.dart';
+import '../../../../ui/core/sizes/data_display_sizes.dart';
 import '../../../layout/app_modal.dart';
 import 'weight_goal_form.dart';
 

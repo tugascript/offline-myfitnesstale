@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:myfitnesstale/src/models/enums.dart';
-import 'package:myfitnesstale/src/utilities/sizes/data_display_sizes.dart';
-import 'package:myfitnesstale/src/utilities/sizes/screen_size.dart';
-import 'package:myfitnesstale/src/widgets/common/muscles_wrap.dart';
+import 'package:myfitnesstale/src/ui/core/sizes/data_display_sizes.dart';
+import 'package:myfitnesstale/src/ui/core/sizes/screen_size.dart';
+import 'package:myfitnesstale/src/ui/core/widgets/muscles_wrap.dart';
 
 void main() {
   testWidgets('muscle groups render in a narrow workout column', (

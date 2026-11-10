@@ -11,7 +11,7 @@ import '../../cubits/macro_tracking_cubit.dart';
 import '../../cubits/recipe_cubit.dart';
 import '../../models/enums.dart';
 import '../../services/dtos/food_dto.dart';
-import '../../utilities/sizes/data_display_sizes.dart';
+import '../../ui/core/sizes/data_display_sizes.dart';
 
 class LogFoodModal extends StatefulWidget {
   final ThemeData theme;

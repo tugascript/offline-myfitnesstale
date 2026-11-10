@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../../utilities/sizes/data_display_sizes.dart';
+import '../../../../ui/core/sizes/data_display_sizes.dart';
 import '../editor/create_weight_goal_modal.dart';
 
 class EmptyWeightGoal extends StatelessWidget {

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../services/dtos/workout_plan_day_dto.dart';
-import '../../../utilities/sizes/data_display_sizes.dart';
+import '../../../ui/core/sizes/data_display_sizes.dart';
 import 'workout_plan_workout_card.dart';
 
 class WorkoutPlanDayCard extends StatelessWidget {

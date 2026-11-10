@@ -34,16 +34,16 @@ Follow the strict flow: `SQLite Model -> Repository -> Service -> Cubit -> View/
       omitting an argument and deliberately setting a field to `null`.
     - Never interacts directly with `sqflite` or raw database models.
     - Has a pagination state inside each type of entity state.
-- **View & Widget (`lib/src/views/`, `lib/src/widgets/`)**:
+- **View & Widget (`lib/src/views/`, `lib/src/ui/`, `lib/src/widgets/`)**:
     - UI layer rendering routed screens and components.
     - Consumes Cubit states via `BlocBuilder` / `BlocConsumer` / `context.watch`.
     - Dispatches user intents to Cubit methods.
     - Never calls services or repositories directly.
-    - When generating a view, reuse widgets in `lib/src/widgets/` (`common/`, `layout/`, and the matching feature
-      folder) and extract new UI there before writing the view. Keep the view a compact composition of those
-      widgets plus Cubit wiring.
+    - When generating a view, reuse shared UI in `lib/src/ui/core/widgets/` and `lib/src/widgets/layout/`, plus
+      feature widgets under `lib/src/ui/<feature>/widgets/` or `lib/src/widgets/<feature>/`. Keep the view a
+      compact composition of those widgets plus Cubit wiring.
     - Resolve layout sizes in the view with `BreakPoint.fromContext(context)` and the matching class in
-      `lib/src/utilities/sizes/` (usually `DataDisplaySizes.getDataDisplaySizes`). Pass that size list, and `ThemeData`
+      `lib/src/ui/core/sizes` (usually `DataDisplaySizes.getDataDisplaySizes`). Pass that size list, and `ThemeData`
       when needed, into child widgets. Do not hardcode padding, spacing, icon sizes, or font sizes in views or widgets.
 - **Application Root & Wiring (`lib/my_app.dart`)**:
     - Registers app-scoped Cubits using `MultiBlocProvider` and wires the router.
@@ -91,7 +91,7 @@ Follow the strict flow: `SQLite Model -> Repository -> Service -> Cubit -> View/
   the service boundary and map them to appropriate errors; do not let exceptions escape. Always prefer the use the
   Columns mixin in `lib/src/models/model.dart` to write SQL, only use RAW SQL when necessary.
 - Keep views focused on composition and Cubit wiring. Reuse existing widgets and extract cohesive UI components into
-  `lib/src/widgets/`.
+  `lib/src/ui/` or `lib/src/widgets/`.
 - Reuse existing helpers, components, widgets, services, and patterns consistently with surrounding code. Otherwise,
   write the simplest implementation that meets the requirements; avoid speculative abstractions.
 

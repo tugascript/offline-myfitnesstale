@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
 import '../../../../services/dtos/exercise_dto.dart';
-import '../../../../utilities/sizes/data_display_sizes.dart';
-import '../../../common/modal_search/modal_search_card.dart';
-import '../../../common/not_found_list.dart';
+import '../../../../ui/core/sizes/data_display_sizes.dart';
+import '../../../../ui/core/widgets/modal_search/modal_search_card.dart';
+import '../../../../ui/core/widgets/not_found_list.dart';
 
 class SetExerciseSearchList extends StatelessWidget {
   final DataDisplaySizesList sizes;

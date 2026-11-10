@@ -3,9 +3,9 @@ import 'package:go_router/go_router.dart';
 
 import '../../../services/dtos/workout_set_dto.dart';
 import '../../../services/dtos/workout_set_exercise_dto.dart';
-import '../../../utilities/sizes/data_display_sizes.dart';
-import '../../common/base_set_data.dart';
-import '../../common/detail_number.dart';
+import '../../../ui/core/sizes/data_display_sizes.dart';
+import '../../../ui/core/widgets/base_set_data.dart';
+import '../../../ui/core/widgets/detail_number.dart';
 
 class WorkoutSetCard extends StatelessWidget {
   final ThemeData theme;

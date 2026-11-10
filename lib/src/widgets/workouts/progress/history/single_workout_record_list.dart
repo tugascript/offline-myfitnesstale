@@ -5,11 +5,11 @@ import 'package:skeletonizer/skeletonizer.dart';
 import '../../../../cubits/states/workout_record_state.dart';
 import '../../../../models/enums.dart';
 import '../../../../services/dtos/workout_record_dto.dart';
-import '../../../../utilities/converters.dart';
-import '../../../../utilities/formatters.dart';
-import '../../../../utilities/sizes/data_display_sizes.dart';
-import '../../../common/not_found_list.dart';
-import '../../../common/total_numeric_string.dart';
+import '../../../../ui/core/utils/converters.dart';
+import '../../../../ui/core/utils/formatters.dart';
+import '../../../../ui/core/sizes/data_display_sizes.dart';
+import '../../../../ui/core/widgets/not_found_list.dart';
+import '../../../../ui/core/widgets/total_numeric_string.dart';
 import '../../../layout/list_card.dart';
 
 class SingleWorkoutRecordList extends StatelessWidget {

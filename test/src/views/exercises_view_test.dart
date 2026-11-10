@@ -7,7 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:myfitnesstale/src/cubits/exercise_cubit.dart';
 import 'package:myfitnesstale/src/models/enums.dart';
 import 'package:myfitnesstale/src/routing/routing.dart';
-import 'package:myfitnesstale/src/views/exercises/exercises_view.dart';
+import 'package:myfitnesstale/src/ui/exercises/screens/exercises_view.dart';
 
 class _ExerciseSearchCubit extends ExerciseCubit {
   int equipmentFetchCount = 0;

@@ -7,10 +7,10 @@ import 'package:myfitnesstale/src/models/enums.dart';
 import 'package:myfitnesstale/src/services/dtos/exercise_dto.dart';
 import 'package:myfitnesstale/src/services/dtos/workout_dto.dart';
 import 'package:myfitnesstale/src/services/dtos/workout_record_dto.dart';
-import 'package:myfitnesstale/src/utilities/formatters.dart';
-import 'package:myfitnesstale/src/utilities/sizes/data_display_sizes.dart';
-import 'package:myfitnesstale/src/utilities/sizes/screen_size.dart';
-import 'package:myfitnesstale/src/widgets/exercises/exercise_card.dart';
+import 'package:myfitnesstale/src/ui/core/utils/formatters.dart';
+import 'package:myfitnesstale/src/ui/core/sizes/data_display_sizes.dart';
+import 'package:myfitnesstale/src/ui/core/sizes/screen_size.dart';
+import 'package:myfitnesstale/src/ui/exercises/widgets/exercise_card.dart';
 import 'package:myfitnesstale/src/widgets/workouts/progress/history/single_workout_record_list.dart';
 import 'package:myfitnesstale/src/widgets/workouts/progress/history/workout_record_head.dart';
 

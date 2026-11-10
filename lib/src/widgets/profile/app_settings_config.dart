@@ -4,7 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../cubits/profile_cubit.dart';
 import '../../models/enums.dart';
 import '../../services/dtos/system_dto.dart';
-import '../../utilities/sizes/data_display_sizes.dart';
+import '../../ui/core/sizes/data_display_sizes.dart';
 import '../layout/expanding_section.dart';
 
 class AppSettingsConfig extends StatelessWidget {

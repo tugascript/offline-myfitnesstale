@@ -7,8 +7,8 @@ import '../../cubits/workout_plan_record_cubit.dart';
 import '../../models/enums.dart';
 import '../../routing/routing.dart';
 import '../../services/dtos/workout_plan_record_dto.dart';
-import '../../utilities/sizes/data_display_sizes.dart';
-import '../../utilities/sizes/screen_size.dart';
+import '../../ui/core/sizes/data_display_sizes.dart';
+import '../../ui/core/sizes/screen_size.dart';
 import '../../widgets/layout/app_scaffold.dart';
 
 class WorkoutPlanHistoryView extends StatefulWidget {

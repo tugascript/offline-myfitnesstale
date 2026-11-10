@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../models/enums.dart';
-import '../../utilities/sizes/profile/modal_form_sizes.dart';
-import '../../utilities/sizes/screen_size.dart';
+import '../../ui/core/sizes/profile/modal_form_sizes.dart';
+import '../../ui/core/sizes/screen_size.dart';
 
 final class _FormData {
   Units units;

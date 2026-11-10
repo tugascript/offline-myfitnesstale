@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../models/common.dart';
 import '../../../../models/enums.dart';
 import '../../../../services/dtos/exercise_dto.dart';
-import '../../../../utilities/sizes/data_display_sizes.dart';
+import '../../../../ui/core/sizes/data_display_sizes.dart';
 import '../../../layout/app_dropdown.dart';
 import '../../../layout/app_number_wheel.dart';
 import '../../../layout/app_text_form_field.dart';

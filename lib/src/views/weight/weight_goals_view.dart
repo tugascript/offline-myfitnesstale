@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../utilities/sizes/data_display_sizes.dart';
-import '../../utilities/sizes/screen_size.dart';
+import '../../ui/core/sizes/data_display_sizes.dart';
+import '../../ui/core/sizes/screen_size.dart';
 import '../../widgets/layout/app_scaffold.dart';
 import '../../widgets/weight/goal/active/active_weight_goal.dart';
 import '../../widgets/weight/goal/editor/create_weight_goal_modal.dart';

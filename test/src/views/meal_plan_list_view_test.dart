@@ -8,9 +8,9 @@ import 'package:myfitnesstale/src/models/enums.dart';
 import 'package:myfitnesstale/src/routing/routing.dart';
 import 'package:myfitnesstale/src/services/dtos/meal_plan_dto.dart';
 import 'package:myfitnesstale/src/views/meal_plans/meal_plan_list_view.dart';
-import 'package:myfitnesstale/src/widgets/common/favourite_checkbox.dart';
-import 'package:myfitnesstale/src/widgets/common/search_favorite_form.dart';
-import 'package:myfitnesstale/src/widgets/common/search_form_button.dart';
+import 'package:myfitnesstale/src/ui/core/widgets/favourite_checkbox.dart';
+import 'package:myfitnesstale/src/ui/core/widgets/search_favorite_form.dart';
+import 'package:myfitnesstale/src/ui/core/widgets/search_form_button.dart';
 
 class _FakeMealPlanCubit extends MealPlanCubit {
   int? toggledId;

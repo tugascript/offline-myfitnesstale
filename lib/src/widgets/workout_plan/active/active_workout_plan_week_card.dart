@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../services/dtos/workout_plan_week_dto.dart';
 import '../../../services/dtos/workout_plan_record_dto.dart';
-import '../../../utilities/sizes/data_display_sizes.dart';
+import '../../../ui/core/sizes/data_display_sizes.dart';
 import 'active_workout_plan_day_tile.dart';
 
 class ActiveWorkoutPlanWeekCard extends StatefulWidget {

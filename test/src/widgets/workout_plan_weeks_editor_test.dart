@@ -11,7 +11,7 @@ import 'package:myfitnesstale/src/services/dtos/workout_dto.dart';
 import 'package:myfitnesstale/src/services/dtos/workout_plan_day_dto.dart';
 import 'package:myfitnesstale/src/services/dtos/workout_plan_week_dto.dart';
 import 'package:myfitnesstale/src/services/dtos/workout_plan_workout_dto.dart';
-import 'package:myfitnesstale/src/utilities/sizes/data_display_sizes.dart';
+import 'package:myfitnesstale/src/ui/core/sizes/data_display_sizes.dart';
 import 'package:myfitnesstale/src/widgets/workout_plan/editor/weeks/workout_plan_weeks_editor.dart';
 import 'package:myfitnesstale/src/widgets/workout_plan/editor/weeks/workout_plan_week_editor.dart';
 import 'package:myfitnesstale/src/widgets/workout_plan/editor/weeks/workout_plan_day_editor.dart';

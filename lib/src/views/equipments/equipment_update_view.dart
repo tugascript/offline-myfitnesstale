@@ -8,8 +8,8 @@ import '../../cubits/states/exercise_state.dart';
 import '../../models/common.dart';
 import '../../routing/routing.dart';
 import '../../services/inputs/equipment_input.dart';
-import '../../utilities/sizes/data_display_sizes.dart';
-import '../../utilities/sizes/screen_size.dart';
+import '../../ui/core/sizes/data_display_sizes.dart';
+import '../../ui/core/sizes/screen_size.dart';
 import '../../widgets/equipment/equipment_form.dart';
 import '../../widgets/layout/responsive_scaffold.dart';
 

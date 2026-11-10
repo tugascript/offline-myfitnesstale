@@ -3,12 +3,12 @@ import 'package:skeletonizer/skeletonizer.dart';
 
 import '../../../../models/enums.dart';
 import '../../../../services/dtos/workout_record_dto.dart';
-import '../../../../utilities/converters.dart';
-import '../../../../utilities/formatters.dart';
-import '../../../../utilities/sizes/data_display_sizes.dart';
-import '../../../common/muscles_carousel.dart';
-import '../../../common/total_numeric_string.dart';
-import '../../../common/total_string.dart';
+import '../../../../ui/core/utils/converters.dart';
+import '../../../../ui/core/utils/formatters.dart';
+import '../../../../ui/core/sizes/data_display_sizes.dart';
+import '../../../../ui/core/widgets/muscles_carousel.dart';
+import '../../../../ui/core/widgets/total_numeric_string.dart';
+import '../../../../ui/core/widgets/total_string.dart';
 
 class WorkoutRecordHead extends StatelessWidget {
   final DataDisplaySizesList sizes;

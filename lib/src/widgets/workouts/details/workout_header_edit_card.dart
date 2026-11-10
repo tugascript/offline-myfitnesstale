@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../models/enums.dart';
 import '../../../services/dtos/workout_dto.dart';
-import '../../../utilities/sizes/data_display_sizes.dart';
+import '../../../ui/core/sizes/data_display_sizes.dart';
 import 'workout_base_form.dart';
 
 class WorkoutHeaderEditCard extends StatelessWidget {

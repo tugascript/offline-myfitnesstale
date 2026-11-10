@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../services/inputs/quick_food_log_input.dart';
-import '../../utilities/converters.dart';
-import '../../utilities/sizes/data_display_sizes.dart';
+import '../../ui/core/utils/converters.dart';
+import '../../ui/core/sizes/data_display_sizes.dart';
 import '../layout/app_text_form_field.dart';
 import '../layout/responsive_fields.dart';
 

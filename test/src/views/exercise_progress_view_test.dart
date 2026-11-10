@@ -12,7 +12,7 @@ import 'package:myfitnesstale/src/routing/routing.dart';
 import 'package:myfitnesstale/src/services/dtos/exercise_dto.dart';
 import 'package:myfitnesstale/src/services/dtos/exercise_record_dto.dart';
 import 'package:myfitnesstale/src/services/dtos/system_dto.dart';
-import 'package:myfitnesstale/src/views/exercise_progress_view.dart';
+import 'package:myfitnesstale/src/ui/exercises/screens/exercise_progress_view.dart';
 
 class _ExerciseRecordCubit extends ExerciseRecordCubit {
   _ExerciseRecordCubit(

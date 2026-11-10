@@ -4,7 +4,7 @@ import 'package:permission_handler/permission_handler.dart';
 
 import '../../cubits/profile_cubit.dart';
 import '../../models/enums.dart';
-import '../../utilities/sizes/profile/onboarding_sizes.dart';
+import '../../ui/core/sizes/profile/onboarding_sizes.dart';
 import '../layout/sharp_switch_title.dart';
 import 'height_input.dart';
 

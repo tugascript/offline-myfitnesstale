@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../utilities/sizes/data_display_sizes.dart';
-import '../../utilities/sizes/screen_size.dart';
+import '../../ui/core/sizes/data_display_sizes.dart';
+import '../../ui/core/sizes/screen_size.dart';
 import '../../widgets/dashboard/active/active_plans_carousel.dart';
 import '../../widgets/dashboard/quick_actions_widget.dart';
 import '../../widgets/dashboard/welcome_section.dart';

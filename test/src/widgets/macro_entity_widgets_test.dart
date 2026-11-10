@@ -10,8 +10,8 @@ import 'package:myfitnesstale/src/widgets/macros/goals/macro_goals_content_widge
 import 'package:myfitnesstale/src/services/dtos/food_dto.dart';
 import 'package:myfitnesstale/src/services/dtos/recipe_dto.dart';
 import 'package:myfitnesstale/src/services/dtos/meal_plan_dto.dart';
-import 'package:myfitnesstale/src/utilities/sizes/data_display_sizes.dart';
-import 'package:myfitnesstale/src/utilities/sizes/screen_size.dart';
+import 'package:myfitnesstale/src/ui/core/sizes/data_display_sizes.dart';
+import 'package:myfitnesstale/src/ui/core/sizes/screen_size.dart';
 import 'package:myfitnesstale/src/widgets/foods/food_details_widget.dart';
 import 'package:myfitnesstale/src/widgets/recipes/recipe_details_widget.dart';
 import 'package:myfitnesstale/src/widgets/meal_plans/meal_plan_schedule_widget.dart';

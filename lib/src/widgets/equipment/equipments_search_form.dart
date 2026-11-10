@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../utilities/sizes/data_display_sizes.dart';
-import '../common/search_form_button.dart';
+import '../../ui/core/sizes/data_display_sizes.dart';
+import '../../ui/core/widgets/search_form_button.dart';
 import '../layout/app_text_form_field.dart';
 
 class EquipmentsSearchForm extends StatefulWidget {

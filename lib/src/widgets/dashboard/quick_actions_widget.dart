@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../routing/routing.dart';
-import '../../utilities/sizes/data_display_sizes.dart';
+import '../../ui/core/sizes/data_display_sizes.dart';
 import 'quick_action_category.dart';
 import 'quick_action_category_card.dart';
 import 'quick_action_destination_sheet.dart';
