@@ -7,7 +7,7 @@ import '../../ui/core/sizes/data_display_sizes.dart';
 import '../../ui/core/sizes/screen_size.dart';
 import '../../widgets/layout/app_scaffold.dart';
 import '../../widgets/workout_plan/active/active_workout_plan_content.dart';
-import '../entity_error_view.dart';
+import '../../ui/core/screens/entity_error_view.dart';
 
 class ActiveWorkoutPlanView extends StatefulWidget {
   final int workoutPlanId;

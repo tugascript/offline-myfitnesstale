@@ -19,8 +19,8 @@ import 'package:myfitnesstale/src/services/dtos/system_dto.dart';
 import 'package:myfitnesstale/src/services/dtos/workout_dto.dart';
 import 'package:myfitnesstale/src/ui/exercises/screens/exercise_progress_view.dart';
 import 'package:myfitnesstale/src/ui/exercises/screens/exercise_records_view.dart';
-import 'package:myfitnesstale/src/views/not_found_view.dart';
-import 'package:myfitnesstale/src/views/profile/reminder_preferences_view.dart';
+import 'package:myfitnesstale/src/ui/core/screens/not_found_view.dart';
+import 'package:myfitnesstale/src/ui/home/screens/profile/reminder_preferences_view.dart';
 import 'package:myfitnesstale/src/views/workout_plans/workout_plan_history_view.dart';
 import 'package:myfitnesstale/src/views/workouts/workout_history_view.dart';
 

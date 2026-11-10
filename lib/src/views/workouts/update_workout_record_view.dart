@@ -11,7 +11,7 @@ import '../../ui/core/sizes/data_display_sizes.dart';
 import '../../ui/core/sizes/screen_size.dart';
 import '../../widgets/layout/responsive_scaffold.dart';
 import '../../widgets/workouts/progress/update_workout_record_editor.dart';
-import '../not_found_view.dart';
+import '../../ui/core/screens/not_found_view.dart';
 
 class UpdateWorkoutRecordView extends StatefulWidget {
   final int workoutId;

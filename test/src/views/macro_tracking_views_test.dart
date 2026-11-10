@@ -27,14 +27,14 @@ import 'package:myfitnesstale/src/ui/core/sizes/data_display_sizes.dart';
 import 'package:myfitnesstale/src/ui/core/sizes/screen_size.dart';
 import 'package:myfitnesstale/src/ui/exercises/screens/strength_goals_view.dart';
 import 'package:myfitnesstale/src/views/foods/foods_view.dart';
-import 'package:myfitnesstale/src/views/home/home_view.dart';
-import 'package:myfitnesstale/src/views/home/main_navigation_view.dart';
+import 'package:myfitnesstale/src/ui/home/screens/home_view.dart';
+import 'package:myfitnesstale/src/ui/home/screens/main_navigation_view.dart';
 import 'package:myfitnesstale/src/views/macros/macro_goals_view.dart';
 import 'package:myfitnesstale/src/views/macros/macro_tracker_view.dart';
 import 'package:myfitnesstale/src/views/recipes/recipes_view.dart';
-import 'package:myfitnesstale/src/widgets/dashboard/active/active_meal_plan_widget.dart';
-import 'package:myfitnesstale/src/widgets/dashboard/active/active_plans_carousel.dart';
-import 'package:myfitnesstale/src/widgets/dashboard/quick_actions_widget.dart';
+import 'package:myfitnesstale/src/ui/home/widgets/active/active_meal_plan_widget.dart';
+import 'package:myfitnesstale/src/ui/home/widgets/active/active_plans_carousel.dart';
+import 'package:myfitnesstale/src/ui/home/widgets/quick_actions_widget.dart';
 
 class _TestProfileCubit extends ProfileCubit {
   _TestProfileCubit() {

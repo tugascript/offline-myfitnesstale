@@ -13,8 +13,8 @@ import '../widgets/records/editors/create_exercise_record_modal.dart';
 import '../widgets/records/exercise_records_history.dart';
 import '../widgets/records/latest_exercise_record.dart';
 import '../../../widgets/layout/responsive_scaffold.dart';
-import '../../../views/entity_error_view.dart';
-import '../../../views/loading_view.dart';
+import '../../core/screens/entity_error_view.dart';
+import '../../core/screens/loading_view.dart';
 
 class ExerciseRecordsView extends StatefulWidget {
   static const name = "exercises-records";
