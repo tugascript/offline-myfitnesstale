@@ -7,8 +7,8 @@ import '../../../cubits/states/profile_state.dart';
 import '../../../routing/routing.dart';
 import 'profile/create_profile_button_view.dart';
 import '../../core/screens/loading_view.dart';
-import '../../../views/macros/macro_tracker_view.dart';
-import '../../../views/workout_plans/current_workout_plan_view.dart';
+import '../../macros/screens/macro_tracker_view.dart';
+import '../../workout_plans/screens/current_workout_plan_view.dart';
 import 'home_view.dart';
 import 'profile/profile_view.dart';
 

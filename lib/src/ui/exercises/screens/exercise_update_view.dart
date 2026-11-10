@@ -12,7 +12,7 @@ import '../../../data/repositories/exercises/inputs/exercise_input.dart';
 import '../../core/sizes/data_display_sizes.dart';
 import '../../core/sizes/screen_size.dart';
 import '../widgets/details/exercise_form.dart';
-import '../../../widgets/layout/responsive_scaffold.dart';
+import '../../core/widgets/layout/responsive_scaffold.dart';
 
 class ExerciseUpdateView extends StatefulWidget {
   static const name = 'exercise_update';

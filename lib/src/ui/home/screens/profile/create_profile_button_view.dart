@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../routing/routing.dart';
-import '../../../../widgets/layout/app_scaffold.dart';
+import '../../../core/widgets/layout/app_scaffold.dart';
 import '../../widgets/profile/create_profile_card.dart';
 
 class CreateProfileButtonView extends StatelessWidget {

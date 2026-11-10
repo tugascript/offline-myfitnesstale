@@ -5,7 +5,7 @@ import '../../core/sizes/screen_size.dart';
 import '../widgets/active/active_plans_carousel.dart';
 import '../widgets/quick_actions_widget.dart';
 import '../widgets/welcome_section.dart';
-import '../../../widgets/layout/responsive_scaffold.dart';
+import '../../core/widgets/layout/responsive_scaffold.dart';
 
 class HomeView extends StatelessWidget {
   static const name = "home";

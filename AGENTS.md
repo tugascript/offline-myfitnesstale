@@ -36,14 +36,14 @@ Follow the strict flow: `SQLite Model -> DAO -> Repository -> Cubit/ViewModel ->
       omitting an argument and deliberately setting a field to `null`.
     - Never interacts directly with `sqflite` or raw database models.
     - Has a pagination state inside each type of entity state.
-- **View & Widget (`lib/src/views/`, `lib/src/ui/`, `lib/src/widgets/`)**:
-    - UI layer rendering routed screens and components.
+- **View & Widget (`lib/src/ui/<feature>/`)**:
+    - UI layer under feature folders: `screens/`, `widgets/`, and optionally `view_models/`.
+    - Shared UI lives in `lib/src/ui/core/` (`widgets/`, `widgets/layout/`, `sizes/`, `themes/`, `screens/`).
     - Consumes Cubit states via `BlocBuilder` / `BlocConsumer` / `context.watch`.
     - Dispatches user intents to Cubit methods.
     - Never calls repositories or DAOs directly.
-    - When generating a view, reuse shared UI in `lib/src/ui/core/widgets/` and `lib/src/widgets/layout/`, plus
-      feature widgets under `lib/src/ui/<feature>/widgets/` or `lib/src/widgets/<feature>/`. Keep the view a
-      compact composition of those widgets plus Cubit wiring.
+    - When generating a view, reuse shared UI in `lib/src/ui/core/widgets/` (including `layout/`) and feature widgets
+      under `lib/src/ui/<feature>/widgets/`. Keep the screen a compact composition of those widgets plus Cubit wiring.
     - Resolve layout sizes in the view with `BreakPoint.fromContext(context)` and the matching class in
       `lib/src/ui/core/sizes` (usually `DataDisplaySizes.getDataDisplaySizes`). Pass that size list, and `ThemeData`
       when needed, into child widgets. Do not hardcode padding, spacing, icon sizes, or font sizes in views or widgets.
@@ -92,8 +92,8 @@ Follow the strict flow: `SQLite Model -> DAO -> Repository -> Cubit/ViewModel ->
 - Repository functions, even intermediate, return `Result<T, ServiceError<E>>`, never throw exceptions. Catch failures at
   the repository boundary and map them to appropriate errors; do not let exceptions escape. Always prefer the use the
   Columns mixin in `lib/src/data/models` to write SQL, only use RAW SQL when necessary.
-- Keep views focused on composition and Cubit wiring. Reuse existing widgets and extract cohesive UI components into
-  `lib/src/ui/` or `lib/src/widgets/`.
+- Keep screens focused on composition and Cubit wiring. Reuse existing widgets and extract cohesive UI components into
+  `lib/src/ui/<feature>/widgets/` or `lib/src/ui/core/widgets/`.
 - Reuse existing helpers, components, widgets, repositories, and patterns consistently with surrounding code. Otherwise,
   write the simplest implementation that meets the requirements; avoid speculative abstractions.
 

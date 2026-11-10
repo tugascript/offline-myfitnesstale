@@ -10,7 +10,7 @@ import '../../core/sizes/data_display_sizes.dart';
 import '../../core/sizes/screen_size.dart';
 import '../../core/widgets/base_common_search_form.dart';
 import '../widgets/exercises_list.dart';
-import '../../../widgets/layout/app_scaffold.dart';
+import '../../core/widgets/layout/app_scaffold.dart';
 
 class ExercisesView extends StatefulWidget {
   static const name = "exercises";

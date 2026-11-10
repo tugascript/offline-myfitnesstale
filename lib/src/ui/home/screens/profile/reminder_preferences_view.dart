@@ -5,7 +5,7 @@ import '../../../../cubits/profile_cubit.dart';
 import '../../../../cubits/states/profile_state.dart';
 import '../../../core/sizes/data_display_sizes.dart';
 import '../../../core/sizes/screen_size.dart';
-import '../../../../widgets/layout/app_scaffold.dart';
+import '../../../core/widgets/layout/app_scaffold.dart';
 import '../../widgets/profile/reminders_settings_config.dart';
 
 class ReminderPreferencesView extends StatelessWidget {

@@ -11,7 +11,7 @@ import '../../../data/repositories/exercises/dtos/exercise_dto.dart';
 import '../../../data/repositories/exercises/dtos/exercise_record_dto.dart';
 import '../../core/utils/converters.dart';
 import '../../core/utils/formatters.dart';
-import '../../../widgets/layout/app_scaffold.dart';
+import '../../core/widgets/layout/app_scaffold.dart';
 import 'exercise_records_view.dart';
 
 class ExerciseProgressView extends StatefulWidget {

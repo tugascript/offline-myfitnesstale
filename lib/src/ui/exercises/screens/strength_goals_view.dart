@@ -7,7 +7,7 @@ import '../../core/sizes/screen_size.dart';
 import '../widgets/strength_goal/active_strength_goal_card.dart';
 import '../widgets/strength_goal/strength_goal_form_modal.dart';
 import '../widgets/strength_goal/strength_goal_history_list.dart';
-import '../../../widgets/layout/app_scaffold.dart';
+import '../../core/widgets/layout/app_scaffold.dart';
 
 class StrengthGoalsView extends StatefulWidget {
   static const name = 'strength-goals';

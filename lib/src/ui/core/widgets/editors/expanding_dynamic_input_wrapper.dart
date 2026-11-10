@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:myfitnesstale/src/widgets/layout/app_text_form_field.dart';
+import '../layout/app_text_form_field.dart';
 
 import '../../sizes/data_display_sizes.dart';
 

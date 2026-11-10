@@ -5,8 +5,8 @@ import 'package:logging/logging.dart';
 
 import '../utils/nullable.dart';
 import '../data/utils/enums.dart';
-import 'package:myfitnesstale/src/data/repositories/meal_plans/dtos/meal_plan_record_dto.dart';
-import 'package:myfitnesstale/src/data/repositories/meal_plans/meal_plan_record_repository.dart';
+import '../data/repositories/meal_plans/dtos/meal_plan_record_dto.dart';
+import '../data/repositories/meal_plans/meal_plan_record_repository.dart';
 import 'states/common_state.dart';
 import 'states/meal_plan_record_state.dart';
 

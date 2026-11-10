@@ -6,7 +6,7 @@ import '../../../../cubits/profile_cubit.dart';
 import '../../../../cubits/states/profile_state.dart';
 import '../../../../data/utils/enums.dart';
 import '../../../../routing/routing.dart';
-import '../../../../widgets/layout/responsive_scaffold.dart';
+import '../../../core/widgets/layout/responsive_scaffold.dart';
 import '../../widgets/profile/profile_form.dart';
 import '../../widgets/profile/system_form.dart';
 

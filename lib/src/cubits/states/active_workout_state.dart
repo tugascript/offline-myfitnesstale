@@ -1,11 +1,11 @@
 import 'package:equatable/equatable.dart';
 
 import '../../utils/nullable.dart';
-import 'package:myfitnesstale/src/data/repositories/workouts/dtos/workout_dto.dart';
-import 'package:myfitnesstale/src/data/repositories/workouts/dtos/workout_record_dto.dart';
-import 'package:myfitnesstale/src/data/repositories/workouts/dtos/workout_set_dto.dart';
-import 'package:myfitnesstale/src/data/repositories/workouts/dtos/workout_set_exercise_dto.dart';
-import 'package:myfitnesstale/src/data/repositories/workouts/dtos/workout_set_exercise_record_dto.dart';
+import '../../data/repositories/workouts/dtos/workout_dto.dart';
+import '../../data/repositories/workouts/dtos/workout_record_dto.dart';
+import '../../data/repositories/workouts/dtos/workout_set_dto.dart';
+import '../../data/repositories/workouts/dtos/workout_set_exercise_dto.dart';
+import '../../data/repositories/workouts/dtos/workout_set_exercise_record_dto.dart';
 import 'common_state.dart';
 
 class ActiveWorkoutState extends Equatable {

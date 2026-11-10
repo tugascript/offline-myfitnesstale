@@ -11,9 +11,9 @@ import '../../core/sizes/screen_size.dart';
 import '../../core/widgets/confirmation_dialog.dart';
 import '../../core/widgets/mutation_button.dart';
 import '../widgets/details/exercise_header_card.dart';
-import '../../../widgets/layout/app_elevated_button.dart';
-import '../../../widgets/layout/app_scaffold.dart';
-import '../../../widgets/layout/responsive_scaffold.dart';
+import '../../core/widgets/layout/app_elevated_button.dart';
+import '../../core/widgets/layout/app_scaffold.dart';
+import '../../core/widgets/layout/responsive_scaffold.dart';
 import '../../core/screens/loading_view.dart';
 
 class ExerciseDetailView extends StatefulWidget {

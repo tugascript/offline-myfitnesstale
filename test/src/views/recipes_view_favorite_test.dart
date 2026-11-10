@@ -2,16 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
-import 'package:myfitnesstale/src/utils/nullable.dart';
-import 'package:myfitnesstale/src/cubits/recipe_cubit.dart';
-import 'package:myfitnesstale/src/data/utils/enums.dart';
-import 'package:myfitnesstale/src/routing/routing.dart';
-import 'package:myfitnesstale/src/data/repositories/recipes/dtos/recipe_dto.dart';
-import 'package:myfitnesstale/src/views/recipes/recipe_details_view.dart';
-import 'package:myfitnesstale/src/views/recipes/recipes_view.dart';
-import 'package:myfitnesstale/src/ui/core/widgets/favourite_checkbox.dart';
-import 'package:myfitnesstale/src/ui/core/widgets/search_favorite_form.dart';
-import 'package:myfitnesstale/src/ui/core/widgets/search_form_button.dart';
+import '../../../lib/src/utils/nullable.dart';
+import '../../../lib/src/cubits/recipe_cubit.dart';
+import '../../../lib/src/data/utils/enums.dart';
+import '../../../lib/src/routing/routing.dart';
+import '../../../lib/src/data/repositories/recipes/dtos/recipe_dto.dart';
+import '../../../lib/src/ui/recipes/screens/recipe_details_view.dart';
+import '../../../lib/src/ui/recipes/screens/recipes_view.dart';
+import '../../../lib/src/ui/core/widgets/favourite_checkbox.dart';
+import '../../../lib/src/ui/core/widgets/search_favorite_form.dart';
+import '../../../lib/src/ui/core/widgets/search_form_button.dart';
 
 class _FakeRecipeCubit extends RecipeCubit {
   int? toggledRecipeId;

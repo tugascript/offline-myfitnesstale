@@ -1,8 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:myfitnesstale/src/cubits/macro_tracking_cubit.dart';
-import 'package:myfitnesstale/src/utils/errors.dart';
-import 'package:myfitnesstale/src/data/repositories/macros/inputs/quick_food_log_input.dart';
-import 'package:myfitnesstale/src/data/repositories/macros/macro_tracking_repository.dart';
+import '../../../lib/src/cubits/macro_tracking_cubit.dart';
+import '../../../lib/src/utils/errors.dart';
+import '../../../lib/src/data/repositories/macros/inputs/quick_food_log_input.dart';
+import '../../../lib/src/data/repositories/macros/macro_tracking_repository.dart';
 
 import '../../support/test_database.dart';
 

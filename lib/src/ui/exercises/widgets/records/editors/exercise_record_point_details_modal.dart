@@ -10,7 +10,7 @@ import '../../../../core/utils/formatters.dart';
 import '../../../../core/sizes/data_display_sizes.dart';
 import '../../../../core/widgets/confirmation_dialog.dart';
 import '../../../../core/widgets/mutation_buttons.dart';
-import '../../../../../widgets/layout/app_modal.dart';
+import '../../../../core/widgets/layout/app_modal.dart';
 import '../exercise_record_reps.dart';
 import 'edit_exercise_record_modal.dart';
 

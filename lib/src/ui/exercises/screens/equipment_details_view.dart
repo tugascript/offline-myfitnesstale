@@ -11,7 +11,7 @@ import '../../core/sizes/screen_size.dart';
 import '../../core/widgets/confirmation_dialog.dart';
 import '../../core/widgets/mutation_buttons.dart';
 import '../widgets/exercises_list.dart';
-import '../../../widgets/layout/app_scaffold.dart';
+import '../../core/widgets/layout/app_scaffold.dart';
 import '../../core/screens/loading_view.dart';
 
 class EquipmentDetailsView extends StatefulWidget {

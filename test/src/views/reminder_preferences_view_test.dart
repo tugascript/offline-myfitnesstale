@@ -2,16 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
-import 'package:myfitnesstale/src/cubits/profile_cubit.dart';
-import 'package:myfitnesstale/src/cubits/states/profile_state.dart';
-import 'package:myfitnesstale/src/data/utils/enums.dart';
-import 'package:myfitnesstale/src/routing/routing.dart';
-import 'package:myfitnesstale/src/data/repositories/profile/dtos/profile_dto.dart';
-import 'package:myfitnesstale/src/data/repositories/profile/dtos/reminders_config_dto.dart';
-import 'package:myfitnesstale/src/data/repositories/profile/dtos/system_dto.dart';
-import 'package:myfitnesstale/src/ui/core/sizes/data_display_sizes.dart';
-import 'package:myfitnesstale/src/ui/home/screens/profile/reminder_preferences_view.dart';
-import 'package:myfitnesstale/src/ui/home/widgets/quick_actions_widget.dart';
+import '../../../lib/src/cubits/profile_cubit.dart';
+import '../../../lib/src/cubits/states/profile_state.dart';
+import '../../../lib/src/data/utils/enums.dart';
+import '../../../lib/src/routing/routing.dart';
+import '../../../lib/src/data/repositories/profile/dtos/profile_dto.dart';
+import '../../../lib/src/data/repositories/profile/dtos/reminders_config_dto.dart';
+import '../../../lib/src/data/repositories/profile/dtos/system_dto.dart';
+import '../../../lib/src/ui/core/sizes/data_display_sizes.dart';
+import '../../../lib/src/ui/home/screens/profile/reminder_preferences_view.dart';
+import '../../../lib/src/ui/home/widgets/quick_actions_widget.dart';
 
 class _ProfileCubit extends ProfileCubit {
   _ProfileCubit() {

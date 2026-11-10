@@ -2,18 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
-import 'package:myfitnesstale/src/cubits/profile_cubit.dart';
-import 'package:myfitnesstale/src/cubits/states/profile_state.dart';
-import 'package:myfitnesstale/src/data/repositories/exercises/dtos/exercise_dto.dart';
-import 'package:myfitnesstale/src/data/repositories/exercises/dtos/exercise_record_dto.dart';
-import 'package:myfitnesstale/src/data/repositories/exercises/exercise_record_repository.dart';
-import 'package:myfitnesstale/src/data/utils/enums.dart';
-import 'package:myfitnesstale/src/data/utils/json_data.dart';
-import 'package:myfitnesstale/src/routing/routing.dart';
-import 'package:myfitnesstale/src/ui/exercises/view_models/exercise_record_cubit.dart';
-import 'package:myfitnesstale/src/ui/exercises/view_models/states/exercise_record_state.dart';
-import 'package:myfitnesstale/src/data/repositories/profile/dtos/system_dto.dart';
-import 'package:myfitnesstale/src/ui/exercises/screens/exercise_progress_view.dart';
+import '../../../lib/src/cubits/profile_cubit.dart';
+import '../../../lib/src/cubits/states/profile_state.dart';
+import '../../../lib/src/data/repositories/exercises/dtos/exercise_dto.dart';
+import '../../../lib/src/data/repositories/exercises/dtos/exercise_record_dto.dart';
+import '../../../lib/src/data/repositories/exercises/exercise_record_repository.dart';
+import '../../../lib/src/data/utils/enums.dart';
+import '../../../lib/src/data/utils/json_data.dart';
+import '../../../lib/src/routing/routing.dart';
+import '../../../lib/src/ui/exercises/view_models/exercise_record_cubit.dart';
+import '../../../lib/src/ui/exercises/view_models/states/exercise_record_state.dart';
+import '../../../lib/src/data/repositories/profile/dtos/system_dto.dart';
+import '../../../lib/src/ui/exercises/screens/exercise_progress_view.dart';
 
 class _ExerciseRecordCubit extends ExerciseRecordCubit {
   _ExerciseRecordCubit(

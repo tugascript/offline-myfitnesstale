@@ -3,9 +3,9 @@ import 'package:logging/logging.dart';
 
 import '../data/utils/enums.dart';
 import '../utils/errors.dart';
-import 'package:myfitnesstale/src/data/repositories/profile/dtos/system_dto.dart';
-import 'package:myfitnesstale/src/data/repositories/onboarding/onboarding_repository.dart';
-import 'package:myfitnesstale/src/data/repositories/profile/profile_repository.dart';
+import '../data/repositories/profile/dtos/system_dto.dart';
+import '../data/repositories/onboarding/onboarding_repository.dart';
+import '../data/repositories/profile/profile_repository.dart';
 import 'states/common_state.dart';
 import 'states/profile_state.dart';
 

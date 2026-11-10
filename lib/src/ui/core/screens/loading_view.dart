@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../widgets/layout/app_scaffold.dart';
+import '../widgets/layout/app_scaffold.dart';
 
 class LoadingView extends StatelessWidget {
   final String? title;

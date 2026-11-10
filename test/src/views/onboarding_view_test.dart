@@ -2,16 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
-import 'package:myfitnesstale/src/cubits/profile_cubit.dart';
-import 'package:myfitnesstale/src/data/utils/enums.dart';
-import 'package:myfitnesstale/src/routing/routing.dart';
-import 'package:myfitnesstale/src/utils/errors.dart';
-import 'package:myfitnesstale/src/utils/result.dart';
-import 'package:myfitnesstale/src/data/repositories/profile/dtos/profile_dto.dart';
-import 'package:myfitnesstale/src/data/repositories/profile/dtos/reminders_config_dto.dart';
-import 'package:myfitnesstale/src/data/repositories/profile/dtos/system_dto.dart';
-import 'package:myfitnesstale/src/data/repositories/onboarding/onboarding_repository.dart';
-import 'package:myfitnesstale/src/ui/home/screens/profile/onboarding_view.dart';
+import '../../../lib/src/cubits/profile_cubit.dart';
+import '../../../lib/src/data/utils/enums.dart';
+import '../../../lib/src/routing/routing.dart';
+import '../../../lib/src/utils/errors.dart';
+import '../../../lib/src/utils/result.dart';
+import '../../../lib/src/data/repositories/profile/dtos/profile_dto.dart';
+import '../../../lib/src/data/repositories/profile/dtos/reminders_config_dto.dart';
+import '../../../lib/src/data/repositories/profile/dtos/system_dto.dart';
+import '../../../lib/src/data/repositories/onboarding/onboarding_repository.dart';
+import '../../../lib/src/ui/home/screens/profile/onboarding_view.dart';
 
 void main() {
   testWidgets('shows persistent rollback feedback and retries unchanged form', (

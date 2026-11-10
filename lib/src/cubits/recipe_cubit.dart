@@ -1,12 +1,12 @@
-import 'package:myfitnesstale/src/data/repositories/recipes/inputs/recipe_input.dart';
+import '../data/repositories/recipes/inputs/recipe_input.dart';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:logging/logging.dart';
 
 import '../utils/nullable.dart';
 import '../data/utils/enums.dart';
-import 'package:myfitnesstale/src/data/repositories/recipes/dtos/recipe_dto.dart';
-import 'package:myfitnesstale/src/data/repositories/recipes/recipe_repository.dart';
+import '../data/repositories/recipes/dtos/recipe_dto.dart';
+import '../data/repositories/recipes/recipe_repository.dart';
 import 'states/common_state.dart';
 import 'states/recipe_state.dart';
 

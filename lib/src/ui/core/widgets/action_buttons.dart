@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:myfitnesstale/src/ui/core/widgets/mutation_buttons.dart';
+import './mutation_buttons.dart';
 
 import '../sizes/data_display_sizes.dart';
-import '../../../widgets/layout/app_elevated_button.dart';
+import './layout/app_elevated_button.dart';
 
 class ActionButtons extends StatelessWidget {
   final ThemeData theme;

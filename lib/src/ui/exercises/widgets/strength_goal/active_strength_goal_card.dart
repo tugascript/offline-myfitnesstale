@@ -1,4 +1,4 @@
-import '../../../../widgets/layout/responsive_fields.dart';
+import '../../../core/widgets/layout/responsive_fields.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
