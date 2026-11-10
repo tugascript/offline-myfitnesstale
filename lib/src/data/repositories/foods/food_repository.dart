@@ -54,7 +54,7 @@ final class FoodRepository implements Repository {
   final Dao<Food> _foodRepository;
   final Dao<FoodPortion> _portionRepository;
 
-  final Logger _logger = Logger('Food Service');
+  final Logger _logger = Logger('Food Repository');
 
   FoodRepository({
     required this._foodRepository,

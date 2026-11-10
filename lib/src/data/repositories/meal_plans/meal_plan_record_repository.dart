@@ -48,7 +48,7 @@ final class MealPlanRecordRepository implements Repository {
   final Dao<MealPlan> _mealPlanRepository;
   final Dao<DailyNutritionLog> _dailyLogRepository;
 
-  final Logger _logger = Logger('Meal Plan Record Service');
+  final Logger _logger = Logger('Meal Plan Record Repository');
 
   MealPlanRecordRepository({
     required this._mealLogRepository,

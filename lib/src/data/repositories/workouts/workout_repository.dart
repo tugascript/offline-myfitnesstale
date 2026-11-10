@@ -53,7 +53,7 @@ final class WorkoutRepository implements Repository {
   final Dao<Exercise> _exerciseRepository;
   final Dao<WorkoutRecord> _workoutRecordRepository;
 
-  final Logger _logger = Logger('Workout Service');
+  final Logger _logger = Logger('Workout Repository');
 
   WorkoutRepository({
     required this._repository,

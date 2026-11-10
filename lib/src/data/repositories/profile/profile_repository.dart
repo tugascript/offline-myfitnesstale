@@ -37,7 +37,7 @@ final class ProfileRepository implements Repository {
   final Dao<System> _systemRepository;
   final Dao<RemindersConfig> _remindersRepository;
 
-  final Logger _logger = Logger("Profile Service");
+  final Logger _logger = Logger("Profile Repository");
 
   ProfileRepository({
     required this._repository,
