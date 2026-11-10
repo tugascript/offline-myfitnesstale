@@ -1,23 +1,23 @@
 import 'package:logging/logging.dart';
 
+import '../../../services/dtos/strength_goal_dto.dart';
+import '../../../services/inputs/strength_goal_input.dart';
+import '../../../utils/errors.dart';
+import '../../../utils/nullable.dart';
+import '../../../utils/result.dart';
 import '../../models/exercise_model.dart';
 import '../../models/exercise_record_model.dart';
 import '../../models/strength_goal_model.dart';
 import '../../services/common.dart';
-import '../../services/sqlite/database_helper.dart';
 import '../../services/sqlite/dao.dart';
+import '../../services/sqlite/database_helper.dart';
 import '../../utils/dates.dart';
 import '../../utils/enums.dart';
 import '../../utils/where_builder.dart';
-import '../../../utils/errors.dart';
-import '../../../utils/nullable.dart';
-import '../../../utils/result.dart';
+import '../core/dtos/paginated_dto.dart';
 import 'dtos/exercise_dto.dart';
 import 'dtos/exercise_record_dto.dart';
-import '../core/dtos/paginated_dto.dart';
-import '../../../services/dtos/strength_goal_dto.dart';
 import 'inputs/exercise_record_input.dart';
-import '../../../services/inputs/strength_goal_input.dart';
 
 class ExerciseRecordService {
   ExerciseRecordService._();
@@ -28,7 +28,7 @@ class ExerciseRecordService {
 
   final Logger _logger = Logger('Exercise Record Service');
 
-  final Dao<ExerciseRecord> _repository = Dao<ExerciseRecord>(
+  final Dao<ExerciseRecord> _exerciseRecordDao = Dao<ExerciseRecord>(
     databaseHelper: DatabaseHelper(),
     tableName: ExerciseRecord.table,
     fromMap: ExerciseRecord.fromMap,
@@ -71,7 +71,7 @@ class ExerciseRecordService {
         video: input.video.value,
         recordDate: DateUtilities.getDateUnix(input.recordDate),
       );
-      final int id = await _repository.insert(exerciseRecord);
+      final int id = await _exerciseRecordDao.insert(exerciseRecord);
       _logger.info('Created exercise record with id $id');
       return ok(
         ExerciseRecordDto.fromModel(
@@ -95,7 +95,9 @@ class ExerciseRecordService {
   getExerciseRecord(int id) async {
     _logger.info('Getting exercise record with id $id');
     try {
-      final ExerciseRecord? exerciseRecord = await _repository.selectOne(id);
+      final ExerciseRecord? exerciseRecord = await _exerciseRecordDao.selectOne(
+        id,
+      );
       if (exerciseRecord == null) {
         return err(
           ServiceError(
@@ -196,17 +198,18 @@ class ExerciseRecordService {
         query.and(ExerciseRecordColumns.exerciseId.equal, exerciseId);
       }
 
-      final List<ExerciseRecord> records = await _repository.selectPaginated(
-        limit: limit,
-        offset: offset,
-        where: query.where,
-        whereArgs: query.args,
-        orderBy: [
-          ExerciseRecordColumns.recordDate.orderDesc,
-          ExerciseRecordColumns.id.orderDesc,
-        ],
-      );
-      final int total = await _repository.count(
+      final List<ExerciseRecord> records = await _exerciseRecordDao
+          .selectPaginated(
+            limit: limit,
+            offset: offset,
+            where: query.where,
+            whereArgs: query.args,
+            orderBy: [
+              ExerciseRecordColumns.recordDate.orderDesc,
+              ExerciseRecordColumns.id.orderDesc,
+            ],
+          );
+      final int total = await _exerciseRecordDao.count(
         where: query.where,
         whereArgs: query.args,
       );
@@ -273,7 +276,7 @@ class ExerciseRecordService {
   getLatestRecord(int exerciseId) async {
     _logger.info('Getting latest record for exercise $exerciseId');
     try {
-      final List<ExerciseRecord> records = await _repository.selectMany(
+      final List<ExerciseRecord> records = await _exerciseRecordDao.selectMany(
         where: ExerciseRecordColumns.exerciseId.equal,
         whereArgs: [exerciseId],
         orderBy: [ExerciseRecordColumns.recordDate.orderDesc],
@@ -305,7 +308,9 @@ class ExerciseRecordService {
   updateExerciseRecord(int id, ExerciseRecordInput input) async {
     _logger.info('Updating exercise record with id $id');
     try {
-      final ExerciseRecord? exerciseRecord = await _repository.selectOne(id);
+      final ExerciseRecord? exerciseRecord = await _exerciseRecordDao.selectOne(
+        id,
+      );
 
       if (exerciseRecord == null) {
         _logger.info('Exercise record with id $id not found');
@@ -338,7 +343,7 @@ class ExerciseRecordService {
         recordDate: DateUtilities.getDateUnix(input.recordDate),
         updatedAt: DateUtilities.getNowUtcUnix(),
       );
-      await _repository.update(updatedExerciseRecord);
+      await _exerciseRecordDao.update(updatedExerciseRecord);
       _logger.info('Updated exercise record with id $id');
       return ok(
         ExerciseRecordDto.fromModel(
@@ -363,7 +368,7 @@ class ExerciseRecordService {
   ) async {
     _logger.info('Deleting exercise record with id $id');
     try {
-      final bool deleted = await _repository.deleteOne(id);
+      final bool deleted = await _exerciseRecordDao.deleteOne(id);
       if (!deleted) {
         return err(
           const ServiceError(

@@ -22,33 +22,33 @@ import 'inputs/equipment_input.dart';
 import 'inputs/exercise_input.dart';
 
 final class ExerciseRepository implements Repository {
-  final Dao<Exercise> _exerciseRepository;
-  final Dao<Equipment> _equipmentRepository;
+  final Dao<Exercise> _exerciseDao;
+  final Dao<Equipment> _equipmentDao;
   final JoinDao<ExerciseEquipment, Equipment, Exercise>
-  _exerciseEquipmentRepository;
+  _exerciseEquipmentJoinDao;
 
   final Logger _logger = Logger('ExerciseRepository');
 
   ExerciseRepository({
-    required this._exerciseRepository,
-    required this._equipmentRepository,
-    required this._exerciseEquipmentRepository,
+    required this._exerciseDao,
+    required this._equipmentDao,
+    required this._exerciseEquipmentJoinDao,
   });
 
   factory ExerciseRepository.create([DatabaseHelper? databaseHelper]) {
     final helper = databaseHelper ?? DatabaseHelper();
     return ExerciseRepository(
-      exerciseRepository: Dao(
+      exerciseDao: Dao(
         databaseHelper: helper,
         tableName: Exercise.table,
         fromMap: Exercise.fromMap,
       ),
-      equipmentRepository: Dao(
+      equipmentDao: Dao(
         databaseHelper: helper,
         tableName: Equipment.table,
         fromMap: Equipment.fromMap,
       ),
-      exerciseEquipmentRepository: JoinDao(
+      exerciseEquipmentJoinDao: JoinDao(
         databaseHelper: helper,
         tableName: ExerciseEquipment.table,
         primaryKeys: ExerciseEquipment.primaryKeys,
@@ -103,15 +103,14 @@ final class ExerciseRepository implements Repository {
     }
 
     try {
-      final List<Exercise> exercises = await _exerciseRepository
-          .selectPaginated(
-            limit: limit,
-            offset: offset,
-            where: query.where,
-            whereArgs: query.args,
-            orderBy: [ExerciseColumns.name.orderCaseInsensitiveAsc],
-          );
-      final int total = await _exerciseRepository.count(
+      final List<Exercise> exercises = await _exerciseDao.selectPaginated(
+        limit: limit,
+        offset: offset,
+        where: query.where,
+        whereArgs: query.args,
+        orderBy: [ExerciseColumns.name.orderCaseInsensitiveAsc],
+      );
+      final int total = await _exerciseDao.count(
         where: query.where,
         whereArgs: query.args,
       );
@@ -156,7 +155,7 @@ final class ExerciseRepository implements Repository {
     }
 
     try {
-      final List<Exercise> exercises = await _exerciseRepository.selectMany(
+      final List<Exercise> exercises = await _exerciseDao.selectMany(
         where: query.where,
         whereArgs: query.args,
         orderBy: [ExerciseColumns.name.orderCaseInsensitiveAsc],
@@ -179,7 +178,7 @@ final class ExerciseRepository implements Repository {
   ) async {
     _logger.info("Getting exercise with id: $id");
     try {
-      final Exercise? exercise = await _exerciseRepository.selectOne(id);
+      final Exercise? exercise = await _exerciseDao.selectOne(id);
       if (exercise == null) {
         _logger.info("Exercise with id: $id not found");
         return err(
@@ -193,7 +192,7 @@ final class ExerciseRepository implements Repository {
       _logger.info(
         "Found exercise with id: $id, Getting the equipments for the exercise",
       );
-      final List<Equipment> equipments = await _exerciseEquipmentRepository
+      final List<Equipment> equipments = await _exerciseEquipmentJoinDao
           .selectJoined(id);
       _logger.info("Found ${equipments.length} equipments");
 
@@ -215,7 +214,7 @@ final class ExerciseRepository implements Repository {
   }
 
   Future<Map<int, Exercise>> getExercisesByIdsLoader(List<int> ids) async {
-    final List<Exercise> exercises = await _exerciseRepository.selectMany(
+    final List<Exercise> exercises = await _exerciseDao.selectMany(
       where: ExerciseColumns.id.inList(ids.length),
       whereArgs: ids,
     );
@@ -242,7 +241,7 @@ final class ExerciseRepository implements Repository {
 
     try {
       if (input.equipmentIds.isEmpty) {
-        final id = await _exerciseRepository.insert(exercise);
+        final id = await _exerciseDao.insert(exercise);
         return ok(
           ExerciseDto.fromModel(
             exercise.copyWith(id: Nullable(id)),
@@ -251,7 +250,7 @@ final class ExerciseRepository implements Repository {
         );
       }
 
-      final List<Equipment> equipments = await _equipmentRepository.selectMany(
+      final List<Equipment> equipments = await _equipmentDao.selectMany(
         where: EquipmentColumns.id.inList(input.equipmentIds.length),
         whereArgs: input.equipmentIds.toList(),
       );
@@ -267,8 +266,8 @@ final class ExerciseRepository implements Repository {
         );
       }
 
-      final int id = await _exerciseRepository.startTransaction((txn) async {
-        final int exerciseId = await _exerciseRepository.insert(exercise, txn);
+      final int id = await _exerciseDao.startTransaction((txn) async {
+        final int exerciseId = await _exerciseDao.insert(exercise, txn);
         final List<ExerciseEquipment> exerciseEquipments = input.equipmentIds
             .map(
               (e) => ExerciseEquipment.create(
@@ -277,7 +276,7 @@ final class ExerciseRepository implements Repository {
               ),
             )
             .toList();
-        await _exerciseEquipmentRepository.insertMany(exerciseEquipments, txn);
+        await _exerciseEquipmentJoinDao.insertMany(exerciseEquipments, txn);
         return exerciseId;
       });
       _logger.info("Created exercise with id: $id");
@@ -313,7 +312,7 @@ final class ExerciseRepository implements Repository {
         };
         final Map<int, EquipmentDto> equipmentMap = {};
         if (allEquipmentIds.isNotEmpty) {
-          final fetched = await _equipmentRepository.selectMany(
+          final fetched = await _equipmentDao.selectMany(
             where: EquipmentColumns.id.inList(allEquipmentIds.length),
             whereArgs: allEquipmentIds.toList(),
             trx: txn,
@@ -335,7 +334,7 @@ final class ExerciseRepository implements Repository {
             isFavorite: exerciseInput.isFavorite,
             createdBy: createdBy,
           );
-          final id = await _exerciseRepository.insert(exercise, txn);
+          final id = await _exerciseDao.insert(exercise, txn);
 
           if (exerciseInput.equipmentIds.isEmpty) {
             exercises.add(
@@ -350,7 +349,7 @@ final class ExerciseRepository implements Repository {
               equipmentId: equipmentId,
               exerciseId: id,
             );
-            await _exerciseEquipmentRepository.insert(exerciseEquipment, txn);
+            await _exerciseEquipmentJoinDao.insert(exerciseEquipment, txn);
             final eqDto = equipmentMap[equipmentId];
             if (eqDto != null) {
               equipments.add(eqDto);
@@ -370,7 +369,7 @@ final class ExerciseRepository implements Repository {
 
       final List<ExerciseDto> exercises = transaction != null
           ? await create(transaction)
-          : await _exerciseRepository.startTransaction(create);
+          : await _exerciseDao.startTransaction(create);
 
       return ok(exercises);
     } catch (e) {
@@ -390,7 +389,7 @@ final class ExerciseRepository implements Repository {
   ) async {
     _logger.info("Updating exercise with id: $id");
     try {
-      final Exercise? exercise = await _exerciseRepository.selectOne(id);
+      final Exercise? exercise = await _exerciseDao.selectOne(id);
       if (exercise == null) {
         _logger.info("Exercise with id: $id not found");
         return err(
@@ -414,15 +413,15 @@ final class ExerciseRepository implements Repository {
       );
 
       if (input.equipmentIds.isEmpty) {
-        await _exerciseRepository.startTransaction((txn) async {
-          await _exerciseRepository.update(updatedExercise, txn);
-          await _exerciseEquipmentRepository.deleteAllByPk1(id, txn);
+        await _exerciseDao.startTransaction((txn) async {
+          await _exerciseDao.update(updatedExercise, txn);
+          await _exerciseEquipmentJoinDao.deleteAllByPk1(id, txn);
         });
         _logger.info("Updated exercise with id: $id");
         return ok(ExerciseDto.fromModel(updatedExercise, equipments: const []));
       }
 
-      final List<Equipment> equipments = await _equipmentRepository.selectMany(
+      final List<Equipment> equipments = await _equipmentDao.selectMany(
         where: EquipmentColumns.id.inList(input.equipmentIds.length),
         whereArgs: input.equipmentIds.toList(),
       );
@@ -438,10 +437,10 @@ final class ExerciseRepository implements Repository {
         );
       }
 
-      await _exerciseRepository.startTransaction((txn) async {
-        await _exerciseRepository.update(updatedExercise, txn);
-        await _exerciseEquipmentRepository.deleteAllByPk1(id, txn);
-        await _exerciseEquipmentRepository.insertMany(
+      await _exerciseDao.startTransaction((txn) async {
+        await _exerciseDao.update(updatedExercise, txn);
+        await _exerciseEquipmentJoinDao.deleteAllByPk1(id, txn);
+        await _exerciseEquipmentJoinDao.insertMany(
           input.equipmentIds
               .map(
                 (e) => ExerciseEquipment.create(exerciseId: id, equipmentId: e),
@@ -472,7 +471,7 @@ final class ExerciseRepository implements Repository {
   updateExerciseFavorite(int id, bool isFavorite) async {
     _logger.info("Updating exercise favorite with id: $id");
     try {
-      final Exercise? exercise = await _exerciseRepository.selectOne(id);
+      final Exercise? exercise = await _exerciseDao.selectOne(id);
       if (exercise == null) {
         _logger.info("Exercise with id: $id not found");
         return err(
@@ -487,8 +486,8 @@ final class ExerciseRepository implements Repository {
         isFavorite: isFavorite,
         updatedAt: DateUtilities.getNowUtcUnix(),
       );
-      await _exerciseRepository.update(updatedExercise);
-      final List<Equipment> equipments = await _exerciseEquipmentRepository
+      await _exerciseDao.update(updatedExercise);
+      final List<Equipment> equipments = await _exerciseEquipmentJoinDao
           .selectJoined(id);
       return ok(
         ExerciseDto.fromModel(
@@ -513,7 +512,7 @@ final class ExerciseRepository implements Repository {
     _logger.info("Deleting exercise with id: $id");
 
     try {
-      final bool deleted = await _exerciseRepository.deleteOne(id);
+      final bool deleted = await _exerciseDao.deleteOne(id);
       if (!deleted) {
         return err(
           const ServiceError(
@@ -555,15 +554,14 @@ final class ExerciseRepository implements Repository {
     }
 
     try {
-      final List<Equipment> equipments = await _equipmentRepository
-          .selectPaginated(
-            limit: limit,
-            offset: offset,
-            where: query.where,
-            whereArgs: query.args,
-            orderBy: [EquipmentColumns.name.orderCaseInsensitiveAsc],
-          );
-      final int total = await _equipmentRepository.count(
+      final List<Equipment> equipments = await _equipmentDao.selectPaginated(
+        limit: limit,
+        offset: offset,
+        where: query.where,
+        whereArgs: query.args,
+        orderBy: [EquipmentColumns.name.orderCaseInsensitiveAsc],
+      );
+      final int total = await _equipmentDao.count(
         where: query.where,
         whereArgs: query.args,
       );
@@ -592,7 +590,7 @@ final class ExerciseRepository implements Repository {
   getAllEquipments() async {
     _logger.info('Getting all equipments');
     try {
-      final List<Equipment> equipments = await _equipmentRepository.selectMany(
+      final List<Equipment> equipments = await _equipmentDao.selectMany(
         orderBy: [EquipmentColumns.name.orderCaseInsensitiveAsc],
       );
       _logger.info('Got ${equipments.length} equipments');
@@ -618,7 +616,7 @@ final class ExerciseRepository implements Repository {
     _logger.info('Getting equipment with id $id');
 
     try {
-      final Equipment? equipment = await _equipmentRepository.selectOne(id);
+      final Equipment? equipment = await _equipmentDao.selectOne(id);
       if (equipment == null) {
         return err(
           const ServiceError(
@@ -655,7 +653,7 @@ final class ExerciseRepository implements Repository {
     );
 
     try {
-      final int id = await _equipmentRepository.insert(equipment);
+      final int id = await _equipmentDao.insert(equipment);
       return ok(EquipmentDto.fromModel(equipment.copyWith(id: Nullable(id))));
     } catch (e) {
       _logger.severe("Failed to create equipment with name ${input.name}", e);
@@ -672,7 +670,7 @@ final class ExerciseRepository implements Repository {
   countEquipments() async {
     _logger.info('Counting equipments');
     try {
-      final int count = await _equipmentRepository.count();
+      final int count = await _equipmentDao.count();
       _logger.info('Counted $count equipments');
       return ok(count);
     } catch (e) {
@@ -699,7 +697,7 @@ final class ExerciseRepository implements Repository {
 
         for (final name in names) {
           final equipment = Equipment.create(name: name, createdBy: createdBy);
-          final id = await _equipmentRepository.insert(equipment, txn);
+          final id = await _equipmentDao.insert(equipment, txn);
           equipments.add(equipment.copyWith(id: Nullable(id)));
         }
 
@@ -708,7 +706,7 @@ final class ExerciseRepository implements Repository {
 
       final List<Equipment> equipments = transaction != null
           ? await create(transaction)
-          : await _exerciseRepository.startTransaction(create);
+          : await _exerciseDao.startTransaction(create);
 
       _logger.info('Created ${equipments.length} equipments');
       return ok(equipments.map((e) => EquipmentDto.fromModel(e)).toList());
@@ -728,7 +726,7 @@ final class ExerciseRepository implements Repository {
   ) async {
     _logger.info('Deleting equipment with id: $id');
     try {
-      final deleted = await _equipmentRepository.deleteOne(id);
+      final deleted = await _equipmentDao.deleteOne(id);
       if (!deleted) {
         _logger.info('Equipment with id: $id not found');
         return err(
@@ -758,7 +756,7 @@ final class ExerciseRepository implements Repository {
   ) async {
     _logger.info('Updating equipment with id: $id');
     try {
-      final Equipment? equipment = await _equipmentRepository.selectOne(id);
+      final Equipment? equipment = await _equipmentDao.selectOne(id);
       if (equipment == null) {
         _logger.info('Equipment with id: $id not found');
         return err(
@@ -775,7 +773,7 @@ final class ExerciseRepository implements Repository {
         isFavorite: input.isFavorite,
         updatedAt: DateUtilities.getNowUtcUnix(),
       );
-      await _equipmentRepository.update(updatedEquipment);
+      await _equipmentDao.update(updatedEquipment);
       _logger.info('Updated equipment with id: $id');
       return ok(EquipmentDto.fromModel(updatedEquipment));
     } catch (e) {
@@ -793,9 +791,7 @@ final class ExerciseRepository implements Repository {
   getExercisesByEquipmentId(int equipmentId) async {
     _logger.info('Getting exercises for equipment with id: $equipmentId');
     try {
-      final Equipment? equipment = await _equipmentRepository.selectOne(
-        equipmentId,
-      );
+      final Equipment? equipment = await _equipmentDao.selectOne(equipmentId);
       if (equipment == null) {
         _logger.info('Equipment with id: $equipmentId not found');
         return err(
@@ -806,7 +802,7 @@ final class ExerciseRepository implements Repository {
         );
       }
 
-      final List<Exercise> exercises = await _exerciseEquipmentRepository
+      final List<Exercise> exercises = await _exerciseEquipmentJoinDao
           .selectReverseJoined(equipmentId, [
             ExerciseColumns.name.orderCaseInsensitiveAsc,
           ]);
