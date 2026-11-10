@@ -10,7 +10,7 @@ import '../../../core/sizes/data_display_sizes.dart';
 import '../../../core/sizes/screen_size.dart';
 import '../../../core/widgets/icons_switch.dart';
 import '../../../core/widgets/not_found_list.dart';
-import '../../../../widgets/layout/app_text_form_field.dart';
+import '../../../core/widgets/layout/app_text_form_field.dart';
 import 'exercise_records_chart.dart';
 import 'exercise_records_list.dart';
 

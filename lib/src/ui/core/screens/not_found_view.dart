@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../../widgets/layout/not_found.dart';
-import '../../../widgets/layout/responsive_scaffold.dart';
+import '../widgets/layout/not_found.dart';
+import '../widgets/layout/responsive_scaffold.dart';
 
 class NotFoundView extends StatelessWidget {
   const NotFoundView({super.key});

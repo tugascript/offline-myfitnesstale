@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/sizes/profile/onboarding_sizes.dart';
-import '../../../../widgets/layout/app_icon.dart';
+import '../../../core/widgets/layout/app_icon.dart';
 
 class OnboardingIntro extends StatelessWidget {
   final OnboardingSizesList sizes;

@@ -3,12 +3,12 @@ import 'package:logging/logging.dart';
 
 import '../utils/nullable.dart';
 import '../utils/errors.dart';
-import 'package:myfitnesstale/src/data/repositories/workouts/dtos/workout_record_dto.dart';
-import 'package:myfitnesstale/src/data/repositories/workouts/workout_record_repository.dart';
+import '../data/repositories/workouts/dtos/workout_record_dto.dart';
+import '../data/repositories/workouts/workout_record_repository.dart';
 import 'states/common_state.dart';
 import 'states/workout_record_state.dart';
 
-export 'package:myfitnesstale/src/data/repositories/workouts/inputs/workout_record_input.dart';
+export '../data/repositories/workouts/inputs/workout_record_input.dart';
 
 class WorkoutRecordCubit extends Cubit<WorkoutRecordState> {
   final WorkoutRecordRepository _workoutRecordService = WorkoutRecordRepository();

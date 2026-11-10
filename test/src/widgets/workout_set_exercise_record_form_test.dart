@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:myfitnesstale/src/data/utils/json_data.dart';
-import 'package:myfitnesstale/src/data/utils/enums.dart';
-import 'package:myfitnesstale/src/ui/core/sizes/data_display_sizes.dart';
-import 'package:myfitnesstale/src/widgets/workouts/progress/workout_set_exercise_record_form.dart';
+import '../../../lib/src/data/utils/json_data.dart';
+import '../../../lib/src/data/utils/enums.dart';
+import '../../../lib/src/ui/core/sizes/data_display_sizes.dart';
+import '../../../lib/src/ui/workouts/widgets/progress/workout_set_exercise_record_form.dart';
 
 void main() {
   const sizes = DataDisplaySizesList(

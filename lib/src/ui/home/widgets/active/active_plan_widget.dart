@@ -8,7 +8,7 @@ import '../../../../cubits/profile_cubit.dart';
 import '../../../../cubits/states/profile_state.dart';
 import '../../../../cubits/states/workout_plan_record_state.dart';
 import '../../../../cubits/workout_plan_record_cubit.dart';
-import 'package:myfitnesstale/src/data/repositories/profile/dtos/profile_dto.dart';
+import '../../../../data/repositories/profile/dtos/profile_dto.dart';
 import '../../../core/sizes/data_display_sizes.dart';
 import '../../../core/widgets/difficulty_badge.dart';
 import 'empty_active_plan.dart';

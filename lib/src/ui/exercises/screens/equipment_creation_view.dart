@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../routing/routing.dart';
 import '../../../data/repositories/exercises/inputs/equipment_input.dart';
-import '../../../widgets/layout/responsive_scaffold.dart';
+import '../../core/widgets/layout/responsive_scaffold.dart';
 import '../../core/sizes/data_display_sizes.dart';
 import '../../core/sizes/screen_size.dart';
 import '../view_models/exercise_cubit.dart';

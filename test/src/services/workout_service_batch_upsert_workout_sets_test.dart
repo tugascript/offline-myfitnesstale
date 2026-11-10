@@ -1,16 +1,16 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:myfitnesstale/src/data/utils/json_data.dart';
+import '../../../lib/src/data/utils/json_data.dart';
 import 'package:sqflite/sqflite.dart';
 
-import 'package:myfitnesstale/src/data/utils/enums.dart';
-import 'package:myfitnesstale/src/data/models/exercise_model.dart';
-import 'package:myfitnesstale/src/data/models/workout_model.dart';
-import 'package:myfitnesstale/src/data/models/workout_record_model.dart';
-import 'package:myfitnesstale/src/data/models/workout_set_exercise_model.dart';
-import 'package:myfitnesstale/src/data/models/workout_set_exercise_option_model.dart';
-import 'package:myfitnesstale/src/data/models/workout_set_model.dart';
-import 'package:myfitnesstale/src/utils/errors.dart';
-import 'package:myfitnesstale/src/data/repositories/workouts/workout_repository.dart';
+import '../../../lib/src/data/utils/enums.dart';
+import '../../../lib/src/data/models/exercise_model.dart';
+import '../../../lib/src/data/models/workout_model.dart';
+import '../../../lib/src/data/models/workout_record_model.dart';
+import '../../../lib/src/data/models/workout_set_exercise_model.dart';
+import '../../../lib/src/data/models/workout_set_exercise_option_model.dart';
+import '../../../lib/src/data/models/workout_set_model.dart';
+import '../../../lib/src/utils/errors.dart';
+import '../../../lib/src/data/repositories/workouts/workout_repository.dart';
 
 import '../../support/test_database.dart';
 

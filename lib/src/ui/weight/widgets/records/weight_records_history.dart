@@ -1,0 +1,234 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl/intl.dart';
+
+import '../../../../cubits/states/weight_record_state.dart';
+import '../../../../cubits/weight_record_cubit.dart';
+import '../../../../data/utils/enums.dart';
+import '../../../core/sizes/data_display_sizes.dart';
+import '../../../core/sizes/screen_size.dart';
+import '../../../core/widgets/icons_switch.dart';
+import '../../../core/widgets/not_found_list.dart';
+import '../../../core/widgets/layout/app_text_form_field.dart';
+import 'weight_records_chart.dart';
+import 'weight_records_list.dart';
+
+const int maxWeightHistoryRangeDays = 365;
+
+bool isWeightHistoryRangeDaySelectable(
+  DateTime day,
+  DateTime? selectedStartDay,
+  DateTime? selectedEndDay,
+) {
+  final anchor = selectedStartDay ?? selectedEndDay;
+  if (anchor == null) return true;
+  return day.difference(anchor).inDays.abs() <= maxWeightHistoryRangeDays;
+}
+
+class WeightRecordsHistory extends StatefulWidget {
+  final ThemeData theme;
+  final BreakPoint breakPoint;
+  final DataDisplaySizesList sizes;
+  final Units units;
+
+  const WeightRecordsHistory({
+    super.key,
+    required this.theme,
+    required this.breakPoint,
+    required this.sizes,
+    required this.units,
+  });
+
+  @override
+  State<WeightRecordsHistory> createState() => _WeightRecordsHistoryState();
+}
+
+class _WeightRecordsHistoryState extends State<WeightRecordsHistory> {
+  bool _showList = false;
+  late DateTimeRange _dateRange;
+
+  @override
+  void initState() {
+    super.initState();
+
+    final cubit = context.read<WeightRecordCubit>();
+    final dateRange = cubit.state.recordPagination.dateRange;
+    final now = DateTime.now();
+    final initialRange = DateTimeRange(
+      start: dateRange?.$1 ?? now.subtract(const Duration(days: 90)),
+      end: dateRange?.$2 ?? now,
+    );
+    _dateRange = initialRange.duration.inDays <= maxWeightHistoryRangeDays
+        ? initialRange
+        : DateTimeRange(
+            start: initialRange.end.subtract(
+              const Duration(days: maxWeightHistoryRangeDays),
+            ),
+            end: initialRange.end,
+          );
+    if (cubit.state.weightRecords.isEmpty) {
+      cubit.getWeightRecords(
+        dateRange: (_dateRange.start, _dateRange.end),
+        limit: 1000,
+        offset: 0,
+      );
+    }
+  }
+
+  String _formatDate(DateTime date) {
+    switch (widget.units) {
+      case Units.metric:
+        return DateFormat("dd/MM/yyyy").format(date);
+      case Units.imperial:
+        return DateFormat("MM/dd/yyyy").format(date);
+    }
+  }
+
+  Future<void> _selectDateRange() async {
+    final DateTimeRange? picked = await showDateRangePicker(
+      context: context,
+      firstDate: DateTime(2025),
+      lastDate: DateTime.now(),
+      initialDateRange: _dateRange,
+      initialEntryMode: DatePickerEntryMode.calendarOnly,
+      selectableDayPredicate: isWeightHistoryRangeDaySelectable,
+      builder: (context, child) {
+        final bodyLarge = widget.theme.textTheme.bodyLarge;
+        return Theme(
+          data: widget.theme.copyWith(
+            textTheme: widget.theme.textTheme.copyWith(
+              displayLarge: bodyLarge,
+              displayMedium: bodyLarge,
+              displaySmall: bodyLarge,
+              headlineLarge: bodyLarge,
+              headlineMedium: bodyLarge,
+              headlineSmall: bodyLarge,
+              titleLarge: bodyLarge,
+              titleMedium: bodyLarge,
+            ),
+            datePickerTheme: widget.theme.datePickerTheme.copyWith(
+              rangePickerHeaderHeadlineStyle: bodyLarge,
+              headerHeadlineStyle: bodyLarge,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (picked != null && picked != _dateRange) {
+      setState(() {
+        _dateRange = picked;
+      });
+      if (mounted) {
+        await context.read<WeightRecordCubit>().getWeightRecords(
+          dateRange: (_dateRange.start, _dateRange.end),
+          limit: 1000,
+          offset: 0,
+        );
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final dateRangeText =
+        "${_formatDate(_dateRange.start)} - ${_formatDate(_dateRange.end)}";
+
+    return Column(
+      children: [
+        Row(
+          mainAxisSize: MainAxisSize.max,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              "Weight Logs History",
+              style: TextStyle(
+                fontSize: widget.sizes.titleFontSize,
+                fontWeight: FontWeight.bold,
+              ),
+              textAlign: TextAlign.start,
+              softWrap: true,
+              overflow: TextOverflow.ellipsis,
+            ),
+            IconsSwitch(
+              theme: widget.theme,
+              offIcon: Icons.show_chart,
+              onIcon: Icons.list,
+              switchOn: _showList,
+              spacing: widget.sizes.spacing / 2,
+              switchPadding: widget.sizes.padding / 4,
+              thumbSize: widget.sizes.subtitleFontSize * 1.1,
+              iconSize: widget.sizes.titleFontSize,
+              onChanged: (bool value) {
+                setState(() {
+                  _showList = value;
+                });
+              },
+            ),
+          ],
+        ),
+        SizedBox(height: widget.sizes.spacing),
+        AppTextFormField(
+          theme: widget.theme,
+          fontSize: widget.sizes.subtitleFontSize,
+          padding: widget.sizes.padding * 2,
+          isLoading: false,
+          readOnly: true,
+          hintText: dateRangeText,
+          suffixIconConstraints: BoxConstraints(
+            minWidth: widget.sizes.subtitleFontSize * 4,
+            minHeight: widget.sizes.subtitleFontSize * 1.5,
+          ),
+          suffixIcon: Icon(
+            Icons.date_range,
+            color: widget.theme.colorScheme.primary,
+            size: widget.sizes.subtitleFontSize * 2,
+          ),
+          onTap: _selectDateRange,
+        ),
+        SizedBox(height: widget.sizes.spacing),
+        BlocBuilder<WeightRecordCubit, WeightRecordState>(
+          builder: (context, state) {
+            if (!state.isLoading && state.weightRecords.isEmpty) {
+              return NotFoundList(
+                height: widget.breakPoint.height / 3,
+                sizes: widget.sizes,
+                message: "Empty history",
+                icon: _showList ? Icons.history : Icons.auto_graph,
+              );
+            }
+
+            return SizedBox(
+              height: widget.breakPoint.height / 2.35,
+              width: double.infinity,
+              child: _showList
+                  ? WeightRecordsList(
+                      theme: widget.theme,
+                      sizes: widget.sizes,
+                      units: widget.units,
+                      records: state.weightRecords,
+                      isLoading: state.isLoading,
+                    )
+                  : Card(
+                      margin: EdgeInsets.zero,
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: widget.sizes.padding,
+                          vertical: widget.sizes.padding * 2,
+                        ),
+                        child: WeightRecordsChart(
+                          records: state.weightRecords.reversed.toList(),
+                          units: widget.units,
+                          theme: widget.theme,
+                          sizes: widget.sizes,
+                        ),
+                      ),
+                    ),
+            );
+          },
+        ),
+      ],
+    );
+  }
+}

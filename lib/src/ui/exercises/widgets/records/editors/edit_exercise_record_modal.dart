@@ -9,7 +9,7 @@ import '../../../../../data/repositories/exercises/dtos/exercise_dto.dart';
 import '../../../../../data/repositories/exercises/dtos/exercise_record_dto.dart';
 import '../../../../../data/repositories/exercises/inputs/exercise_record_input.dart';
 import '../../../../core/sizes/data_display_sizes.dart';
-import '../../../../../widgets/layout/app_modal.dart';
+import '../../../../core/widgets/layout/app_modal.dart';
 import 'exercise_record_form.dart';
 
 class EditExerciseRecordModal extends StatelessWidget {

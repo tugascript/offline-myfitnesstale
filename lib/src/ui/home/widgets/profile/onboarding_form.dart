@@ -5,7 +5,7 @@ import 'package:permission_handler/permission_handler.dart';
 import '../../../../cubits/profile_cubit.dart';
 import '../../../../data/utils/enums.dart';
 import '../../../core/sizes/profile/onboarding_sizes.dart';
-import '../../../../widgets/layout/sharp_switch_title.dart';
+import '../../../core/widgets/layout/sharp_switch_title.dart';
 import 'height_input.dart';
 
 final class _FormData {

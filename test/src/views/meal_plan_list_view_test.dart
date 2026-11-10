@@ -2,15 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
-import 'package:myfitnesstale/src/cubits/meal_plan_cubit.dart';
-import 'package:myfitnesstale/src/cubits/meal_plan_record_cubit.dart';
-import 'package:myfitnesstale/src/data/utils/enums.dart';
-import 'package:myfitnesstale/src/routing/routing.dart';
-import 'package:myfitnesstale/src/data/repositories/meal_plans/dtos/meal_plan_dto.dart';
-import 'package:myfitnesstale/src/views/meal_plans/meal_plan_list_view.dart';
-import 'package:myfitnesstale/src/ui/core/widgets/favourite_checkbox.dart';
-import 'package:myfitnesstale/src/ui/core/widgets/search_favorite_form.dart';
-import 'package:myfitnesstale/src/ui/core/widgets/search_form_button.dart';
+import '../../../lib/src/cubits/meal_plan_cubit.dart';
+import '../../../lib/src/cubits/meal_plan_record_cubit.dart';
+import '../../../lib/src/data/utils/enums.dart';
+import '../../../lib/src/routing/routing.dart';
+import '../../../lib/src/data/repositories/meal_plans/dtos/meal_plan_dto.dart';
+import '../../../lib/src/ui/meal_plans/screens/meal_plan_list_view.dart';
+import '../../../lib/src/ui/core/widgets/favourite_checkbox.dart';
+import '../../../lib/src/ui/core/widgets/search_favorite_form.dart';
+import '../../../lib/src/ui/core/widgets/search_form_button.dart';
 
 class _FakeMealPlanCubit extends MealPlanCubit {
   int? toggledId;

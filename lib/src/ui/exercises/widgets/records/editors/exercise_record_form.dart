@@ -4,9 +4,9 @@ import '../../../../../data/utils/enums.dart';
 import '../../../../core/utils/converters.dart';
 import '../../../../core/utils/formatters.dart';
 import '../../../../core/sizes/data_display_sizes.dart';
-import '../../../../../widgets/layout/app_number_wheel.dart';
-import '../../../../../widgets/layout/app_elevated_button.dart';
-import '../../../../../widgets/layout/app_text_form_field.dart';
+import '../../../../core/widgets/layout/app_number_wheel.dart';
+import '../../../../core/widgets/layout/app_elevated_button.dart';
+import '../../../../core/widgets/layout/app_text_form_field.dart';
 
 class ExerciseRecordForm extends StatefulWidget {
   final ThemeData theme;

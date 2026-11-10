@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../widgets/layout/sharp_switch.dart';
+import './layout/sharp_switch.dart';
 
 class IconsSwitch extends StatelessWidget {
   final ThemeData theme;

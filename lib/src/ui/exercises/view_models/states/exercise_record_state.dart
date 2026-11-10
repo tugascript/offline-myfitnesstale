@@ -2,7 +2,7 @@ import 'package:equatable/equatable.dart';
 
 import '../../../../utils/nullable.dart';
 import '../../../../data/repositories/exercises/dtos/exercise_record_dto.dart';
-import 'package:myfitnesstale/src/data/repositories/exercises/dtos/strength_goal_dto.dart';
+import '../../../../data/repositories/exercises/dtos/strength_goal_dto.dart';
 import '../../../../cubits/states/common_state.dart';
 
 final class ExerciseRecordPagination extends Equatable {

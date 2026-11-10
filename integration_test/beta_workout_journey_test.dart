@@ -3,13 +3,13 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:sqflite/sqflite.dart';
 
-import 'package:myfitnesstale/src/data/services/sqlite/database_helper.dart';
-import 'package:myfitnesstale/src/data/models/exercise_model.dart';
-import 'package:myfitnesstale/src/data/models/workout_model.dart';
-import 'package:myfitnesstale/src/data/models/workout_record_model.dart';
-import 'package:myfitnesstale/src/data/models/workout_set_exercise_model.dart';
-import 'package:myfitnesstale/src/data/models/workout_set_model.dart';
-import 'package:myfitnesstale/src/views/workouts/workout_history_view.dart';
+import '../lib/src/data/services/sqlite/database_helper.dart';
+import '../lib/src/data/models/exercise_model.dart';
+import '../lib/src/data/models/workout_model.dart';
+import '../lib/src/data/models/workout_record_model.dart';
+import '../lib/src/data/models/workout_set_exercise_model.dart';
+import '../lib/src/data/models/workout_set_model.dart';
+import '../lib/src/ui/workouts/screens/workout_history_view.dart';
 
 import 'support/device_test_harness.dart';
 

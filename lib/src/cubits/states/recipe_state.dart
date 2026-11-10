@@ -1,7 +1,7 @@
 import 'package:equatable/equatable.dart';
 
 import '../../utils/nullable.dart';
-import 'package:myfitnesstale/src/data/repositories/recipes/dtos/recipe_dto.dart';
+import '../../data/repositories/recipes/dtos/recipe_dto.dart';
 import 'common_state.dart';
 
 final class RecipePagination extends Equatable {

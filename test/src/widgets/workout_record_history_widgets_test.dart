@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:myfitnesstale/src/utils/nullable.dart';
-import 'package:myfitnesstale/src/cubits/states/workout_record_state.dart';
-import 'package:myfitnesstale/src/data/utils/json_data.dart';
-import 'package:myfitnesstale/src/data/utils/enums.dart';
-import 'package:myfitnesstale/src/data/repositories/exercises/dtos/exercise_dto.dart';
-import 'package:myfitnesstale/src/data/repositories/workouts/dtos/workout_dto.dart';
-import 'package:myfitnesstale/src/data/repositories/workouts/dtos/workout_record_dto.dart';
-import 'package:myfitnesstale/src/ui/core/utils/formatters.dart';
-import 'package:myfitnesstale/src/ui/core/sizes/data_display_sizes.dart';
-import 'package:myfitnesstale/src/ui/core/sizes/screen_size.dart';
-import 'package:myfitnesstale/src/ui/exercises/widgets/exercise_card.dart';
-import 'package:myfitnesstale/src/widgets/workouts/progress/history/single_workout_record_list.dart';
-import 'package:myfitnesstale/src/widgets/workouts/progress/history/workout_record_head.dart';
+import '../../../lib/src/utils/nullable.dart';
+import '../../../lib/src/cubits/states/workout_record_state.dart';
+import '../../../lib/src/data/utils/json_data.dart';
+import '../../../lib/src/data/utils/enums.dart';
+import '../../../lib/src/data/repositories/exercises/dtos/exercise_dto.dart';
+import '../../../lib/src/data/repositories/workouts/dtos/workout_dto.dart';
+import '../../../lib/src/data/repositories/workouts/dtos/workout_record_dto.dart';
+import '../../../lib/src/ui/core/utils/formatters.dart';
+import '../../../lib/src/ui/core/sizes/data_display_sizes.dart';
+import '../../../lib/src/ui/core/sizes/screen_size.dart';
+import '../../../lib/src/ui/exercises/widgets/exercise_card.dart';
+import '../../../lib/src/ui/workouts/widgets/progress/history/single_workout_record_list.dart';
+import '../../../lib/src/ui/workouts/widgets/progress/history/workout_record_head.dart';
 
 void main() {
   WorkoutDto sampleWorkout(String name) => WorkoutDto(
