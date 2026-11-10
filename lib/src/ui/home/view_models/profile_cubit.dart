@@ -638,11 +638,7 @@ class ProfileCubit extends Cubit<ProfileState> {
 
     emit(state.copyWith(isLoading: true));
     final systemResult = await _profileService.upsertSystem(
-      SystemInput(
-        theme: theme,
-        units: units,
-        notificationsOn: notificationsOn,
-      ),
+      SystemInput(theme: theme, units: units, notificationsOn: notificationsOn),
       state.profile!.id,
     );
 

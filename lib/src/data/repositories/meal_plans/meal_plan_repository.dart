@@ -25,6 +25,7 @@ import '../../models/sqlite/meal_plan_meal_item_model.dart';
 import '../../models/sqlite/meal_plan_meal_model.dart';
 import '../../models/sqlite/meal_plan_model.dart';
 import '../../models/sqlite/meal_plan_week_model.dart';
+import '../../models/sqlite/model.dart';
 import '../../models/sqlite/recipe_model.dart';
 import '../../services/common.dart';
 import '../../services/sqlite/database_helper.dart';
@@ -42,6 +43,8 @@ import './inputs/meal_plan_week_input.dart';
 import '../core/repository.dart';
 
 final class MealPlanRepository implements Repository {
+  static const int _maxSqlVariables = 900;
+
   final Dao<Food> _foodDao;
   final Dao<Recipe> _recipeDao;
   final Dao<FoodPortion> _foodPortionDao;
@@ -110,89 +113,162 @@ final class MealPlanRepository implements Repository {
     );
   }
 
+  Future<Result<List<T>, ServiceError<SingleErrorTypes>>>
+  _selectManyInChunks<T extends Model>({
+    required Dao<T> dao,
+    required Columns column,
+    required Iterable<int> values,
+    List<String>? orderBy,
+    Transaction? trx,
+  }) async {
+    final valueList = values.toList();
+    if (valueList.isEmpty) {
+      return ok(<T>[]);
+    }
+
+    try {
+      final results = <T>[];
+      for (int i = 0; i < valueList.length; i += _maxSqlVariables) {
+        final end = i + _maxSqlVariables < valueList.length
+            ? i + _maxSqlVariables
+            : valueList.length;
+        final chunk = valueList.sublist(i, end);
+        final rows = await dao.selectMany(
+          where: column.inList(chunk.length),
+          whereArgs: chunk,
+          orderBy: orderBy,
+          trx: trx,
+        );
+        results.addAll(rows);
+      }
+      return ok(results);
+    } catch (e) {
+      _logger.severe('Failed to select ${column.value} in chunks', e);
+      return err(
+        const ServiceError(
+          type: SingleErrorTypes.operationFailure,
+          description: 'Failed to load meal plan references',
+        ),
+      );
+    }
+  }
+
   Future<
-    ({
-      Map<int, Recipe> recipes,
-      Map<int, Food> foods,
-      Map<int, FoodPortion> portions,
-    })
+    Result<
+      ({
+        Map<int, Recipe> recipes,
+        Map<int, Food> foods,
+        Map<int, FoodPortion> portions,
+      }),
+      ServiceError<SingleErrorTypes>
+    >
   >
   _loadMealPlanReferences(
     List<MealPlanWeekInput> weeks,
     Transaction txn,
   ) async {
-    final recipeIds = <int>{};
-    final foodIds = <int>{};
-    final portionIds = <int>{};
-    for (final week in weeks) {
-      for (final day in week.days) {
-        for (final meal in day.meals) {
-          if (meal.recipeId != null) recipeIds.add(meal.recipeId!);
-          for (final item in meal.items) {
-            foodIds.add(item.foodId);
-            if (item.portionId != null) portionIds.add(item.portionId!);
-          }
-        }
-      }
-    }
-
-    final recipes = recipeIds.isEmpty
-        ? <Recipe>[]
-        : await _recipeDao.selectMany(
-            where: RecipeColumns.id.inList(recipeIds.length),
-            whereArgs: recipeIds.toList(),
-            trx: txn,
-          );
-    final foods = foodIds.isEmpty
-        ? <Food>[]
-        : await _foodDao.selectMany(
-            where: FoodColumns.id.inList(foodIds.length),
-            whereArgs: foodIds.toList(),
-            trx: txn,
-          );
-    final portions = portionIds.isEmpty
-        ? <FoodPortion>[]
-        : await _foodPortionDao.selectMany(
-            where: FoodPortionColumns.id.inList(portionIds.length),
-            whereArgs: portionIds.toList(),
-            trx: txn,
-          );
-    final recipeById = {for (final recipe in recipes) recipe.id!: recipe};
-    final foodById = {for (final food in foods) food.id!: food};
-    final portionById = {for (final portion in portions) portion.id!: portion};
-
-    for (final recipeId in recipeIds) {
-      if (!recipeById.containsKey(recipeId)) {
-        throw ServiceError(
-          type: SingleErrorTypes.notFound,
-          description: 'Recipe $recipeId not found',
-        );
-      }
-    }
-    for (final week in weeks) {
-      for (final day in week.days) {
-        for (final meal in day.meals) {
-          for (final item in meal.items) {
-            if (!foodById.containsKey(item.foodId)) {
-              throw ServiceError(
-                type: SingleErrorTypes.notFound,
-                description: 'Food ${item.foodId} not found',
-              );
-            }
-            if (item.portionId != null &&
-                portionById[item.portionId]?.foodId != item.foodId) {
-              throw ServiceError(
-                type: SingleErrorTypes.notFound,
-                description:
-                    'Portion ${item.portionId} not found for food ${item.foodId}',
-              );
+    try {
+      final recipeIds = <int>{};
+      final foodIds = <int>{};
+      final portionIds = <int>{};
+      for (final week in weeks) {
+        for (final day in week.days) {
+          for (final meal in day.meals) {
+            if (meal.recipeId != null) recipeIds.add(meal.recipeId!);
+            for (final item in meal.items) {
+              foodIds.add(item.foodId);
+              if (item.portionId != null) portionIds.add(item.portionId!);
             }
           }
         }
       }
-    }
 
-    return (recipes: recipeById, foods: foodById, portions: portionById);
+      final recipesResult = await _selectManyInChunks(
+        dao: _recipeDao,
+        column: RecipeColumns.id,
+        values: recipeIds,
+        trx: txn,
+      );
+      if (recipesResult.isErr()) {
+        return err(recipesResult.error);
+      }
+
+      final foodsResult = await _selectManyInChunks(
+        dao: _foodDao,
+        column: FoodColumns.id,
+        values: foodIds,
+        trx: txn,
+      );
+      if (foodsResult.isErr()) {
+        return err(foodsResult.error);
+      }
+
+      final portionsResult = await _selectManyInChunks(
+        dao: _foodPortionDao,
+        column: FoodPortionColumns.id,
+        values: portionIds,
+        trx: txn,
+      );
+      if (portionsResult.isErr()) {
+        return err(portionsResult.error);
+      }
+
+      final recipes = recipesResult.value;
+      final foods = foodsResult.value;
+      final portions = portionsResult.value;
+      final recipeById = {for (final recipe in recipes) recipe.id!: recipe};
+      final foodById = {for (final food in foods) food.id!: food};
+      final portionById = {
+        for (final portion in portions) portion.id!: portion,
+      };
+
+      for (final recipeId in recipeIds) {
+        if (!recipeById.containsKey(recipeId)) {
+          return err(
+            ServiceError(
+              type: SingleErrorTypes.notFound,
+              description: 'Recipe $recipeId not found',
+            ),
+          );
+        }
+      }
+      for (final week in weeks) {
+        for (final day in week.days) {
+          for (final meal in day.meals) {
+            for (final item in meal.items) {
+              if (!foodById.containsKey(item.foodId)) {
+                return err(
+                  ServiceError(
+                    type: SingleErrorTypes.notFound,
+                    description: 'Food ${item.foodId} not found',
+                  ),
+                );
+              }
+              if (item.portionId != null &&
+                  portionById[item.portionId]?.foodId != item.foodId) {
+                return err(
+                  ServiceError(
+                    type: SingleErrorTypes.notFound,
+                    description:
+                        'Portion ${item.portionId} not found for food ${item.foodId}',
+                  ),
+                );
+              }
+            }
+          }
+        }
+      }
+
+      return ok((recipes: recipeById, foods: foodById, portions: portionById));
+    } catch (e) {
+      _logger.severe('Failed to load meal plan references', e);
+      return err(
+        const ServiceError(
+          type: SingleErrorTypes.operationFailure,
+          description: 'Failed to load meal plan references',
+        ),
+      );
+    }
   }
 
   Future<Result<MealPlanDto, ServiceError<SingleErrorTypes>>> createMealPlan(
@@ -208,7 +284,11 @@ final class MealPlanRepository implements Repository {
       return await _mealPlanDao.startTransaction<
         Result<MealPlanDto, ServiceError<SingleErrorTypes>>
       >((txn) async {
-        final references = await _loadMealPlanReferences(weeks, txn);
+        final referencesResult = await _loadMealPlanReferences(weeks, txn);
+        if (referencesResult.isErr()) {
+          return err(referencesResult.error);
+        }
+        final references = referencesResult.value;
 
         int planTotalMeals = 0;
         int planTotalDays = 0;
@@ -443,8 +523,6 @@ final class MealPlanRepository implements Repository {
         _logger.info('Created meal plan with id $planId');
         return ok(createdDto);
       });
-    } on ServiceError<SingleErrorTypes> catch (error) {
-      return err(error);
     } catch (e) {
       _logger.severe('Failed to create meal plan', e);
       return err(
@@ -484,60 +562,78 @@ final class MealPlanRepository implements Repository {
       );
 
       final weekIds = weeks.map((week) => week.id!).toList();
-      final days = weekIds.isEmpty
-          ? <MealPlanDay>[]
-          : await _dayDao.selectMany(
-              where: MealPlanDayColumns.mealPlanWeekId.inList(weekIds.length),
-              whereArgs: weekIds,
-              orderBy: [MealPlanDayColumns.day.orderAsc],
-            );
+      final daysResult = await _selectManyInChunks(
+        dao: _dayDao,
+        column: MealPlanDayColumns.mealPlanWeekId,
+        values: weekIds,
+        orderBy: [MealPlanDayColumns.day.orderAsc],
+      );
+      if (daysResult.isErr()) {
+        return err(daysResult.error);
+      }
+      final days = daysResult.value;
+
       final dayIds = days.map((day) => day.id!).toList();
-      final meals = dayIds.isEmpty
-          ? <MealPlanMeal>[]
-          : await _mealDao.selectMany(
-              where: MealPlanMealColumns.mealPlanDayId.inList(dayIds.length),
-              whereArgs: dayIds,
-              orderBy: [MealPlanMealColumns.position.orderAsc],
-            );
+      final mealsResult = await _selectManyInChunks(
+        dao: _mealDao,
+        column: MealPlanMealColumns.mealPlanDayId,
+        values: dayIds,
+        orderBy: [MealPlanMealColumns.position.orderAsc],
+      );
+      if (mealsResult.isErr()) {
+        return err(mealsResult.error);
+      }
+      final meals = mealsResult.value;
+
       final mealIds = meals.map((meal) => meal.id!).toList();
-      final items = mealIds.isEmpty
-          ? <MealPlanMealItem>[]
-          : await _itemDao.selectMany(
-              where: MealPlanMealItemColumns.mealPlanMealId.inList(
-                mealIds.length,
-              ),
-              whereArgs: mealIds,
-            );
+      final itemsResult = await _selectManyInChunks(
+        dao: _itemDao,
+        column: MealPlanMealItemColumns.mealPlanMealId,
+        values: mealIds,
+      );
+      if (itemsResult.isErr()) {
+        return err(itemsResult.error);
+      }
+      final items = itemsResult.value;
 
       final recipeIds = meals
           .map((meal) => meal.recipeId)
           .whereType<int>()
-          .toSet()
-          .toList();
-      final recipes = recipeIds.isEmpty
-          ? <Recipe>[]
-          : await _recipeDao.selectMany(
-              where: RecipeColumns.id.inList(recipeIds.length),
-              whereArgs: recipeIds,
-            );
-      final foodIds = items.map((item) => item.foodId).toSet().toList();
-      final foods = foodIds.isEmpty
-          ? <Food>[]
-          : await _foodDao.selectMany(
-              where: FoodColumns.id.inList(foodIds.length),
-              whereArgs: foodIds,
-            );
+          .toSet();
+      final recipesResult = await _selectManyInChunks(
+        dao: _recipeDao,
+        column: RecipeColumns.id,
+        values: recipeIds,
+      );
+      if (recipesResult.isErr()) {
+        return err(recipesResult.error);
+      }
+      final recipes = recipesResult.value;
+
+      final foodIds = items.map((item) => item.foodId).toSet();
+      final foodsResult = await _selectManyInChunks(
+        dao: _foodDao,
+        column: FoodColumns.id,
+        values: foodIds,
+      );
+      if (foodsResult.isErr()) {
+        return err(foodsResult.error);
+      }
+      final foods = foodsResult.value;
+
       final portionIds = items
           .map((item) => item.portionId)
           .whereType<int>()
-          .toSet()
-          .toList();
-      final portions = portionIds.isEmpty
-          ? <FoodPortion>[]
-          : await _foodPortionDao.selectMany(
-              where: FoodPortionColumns.id.inList(portionIds.length),
-              whereArgs: portionIds,
-            );
+          .toSet();
+      final portionsResult = await _selectManyInChunks(
+        dao: _foodPortionDao,
+        column: FoodPortionColumns.id,
+        values: portionIds,
+      );
+      if (portionsResult.isErr()) {
+        return err(portionsResult.error);
+      }
+      final portions = portionsResult.value;
 
       final recipeById = {for (final recipe in recipes) recipe.id!: recipe};
       final foodById = {for (final food in foods) food.id!: food};
@@ -609,8 +705,6 @@ final class MealPlanRepository implements Repository {
           weeks: weekDtos,
         ),
       );
-    } on ServiceError<SingleErrorTypes> catch (error) {
-      return err(error);
     } catch (e) {
       _logger.severe('Failed to get meal plan $id', e);
       return err(
@@ -708,7 +802,11 @@ final class MealPlanRepository implements Repository {
       return await _mealPlanDao.startTransaction<
         Result<MealPlanDto, ServiceError<SingleErrorTypes>>
       >((txn) async {
-        final references = await _loadMealPlanReferences(weeks, txn);
+        final referencesResult = await _loadMealPlanReferences(weeks, txn);
+        if (referencesResult.isErr()) {
+          return err(referencesResult.error);
+        }
+        final references = referencesResult.value;
 
         final nextVersion = existing.version + 1;
         final List<MealPlanWeekDto> weekDtos = [];
@@ -938,8 +1036,6 @@ final class MealPlanRepository implements Repository {
         _logger.info('Updated meal plan with id $id');
         return ok(MealPlanDto.fromModel(updated, weeks: weekDtos));
       });
-    } on ServiceError<SingleErrorTypes> catch (error) {
-      return err(error);
     } catch (e) {
       _logger.severe('Failed to update meal plan with id $id', e);
       return err(
@@ -972,8 +1068,6 @@ final class MealPlanRepository implements Repository {
       );
       await _mealPlanDao.update(updated);
       return ok(MealPlanDto.fromModel(updated));
-    } on ServiceError<SingleErrorTypes> catch (error) {
-      return err(error);
     } catch (e) {
       _logger.severe('Failed to toggle favorite for meal plan $id', e);
       return err(
@@ -1022,8 +1116,6 @@ final class MealPlanRepository implements Repository {
 
       _logger.info('Deleted meal plan with id $id');
       return ok(null);
-    } on ServiceError<SingleErrorTypes> catch (error) {
-      return err(error);
     } catch (e) {
       _logger.severe('Failed to delete meal plan with id $id', e);
       return err(

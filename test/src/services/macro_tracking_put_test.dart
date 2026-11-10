@@ -17,6 +17,7 @@
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:myfitnesstale/src/data/models/sqlite/exercise_model.dart';
+import 'package:myfitnesstale/src/data/models/sqlite/food_model.dart';
 import 'package:myfitnesstale/src/data/repositories/exercises/exercise_record_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/exercises/inputs/strength_goal_input.dart';
 import 'package:myfitnesstale/src/data/repositories/foods/food_repository.dart';
@@ -307,6 +308,11 @@ void main() {
         ),
       ];
       final service = MealPlanRepository.create();
+      final invalidCreate = await service.createMealPlan(
+        MealPlanInput(name: 'Invalid create', weeks: weeks(-1)),
+      );
+      expect(invalidCreate.error.type, SingleErrorTypes.notFound);
+
       final created = (await service.createMealPlan(
         MealPlanInput(
           name: 'Original',
@@ -343,6 +349,71 @@ void main() {
       expect(
         (await recordService.completeCurrentDay(recordId: active.id)).isOk(),
         isTrue,
+      );
+    },
+  );
+
+  test(
+    'meal-plan chunks reference queries when distinct IDs exceed SQLite limit',
+    () async {
+      final db = await database.db;
+      final batch = db.batch();
+      for (int i = 0; i < 1005; i++) {
+        batch.insert(
+          Food.table,
+          Food.create(
+            name: 'Bulk food $i',
+            category: FoodCategory.grainsAndCereals,
+            servingSizeBaseGrams: 100,
+            caloriesBase: 100,
+            proteinBase: 10,
+            carbsBase: 10,
+            fatBase: 2,
+          ).toMap(),
+        );
+      }
+      final insertedIds = (await batch.commit()).cast<int>();
+
+      final service = MealPlanRepository.create();
+      final items = [
+        for (final foodId in insertedIds)
+          MealPlanMealItemInput(foodId: foodId, amount: 10),
+      ];
+      final created = await service.createMealPlan(
+        MealPlanInput(
+          name: 'Large reference plan',
+          weeks: [
+            MealPlanWeekInput(
+              weekNumber: 1,
+              phase: MealPlanPhase.maintain,
+              days: [
+                MealPlanDayInput(
+                  day: 1,
+                  meals: [
+                    MealPlanMealInput(
+                      position: 1,
+                      mealType: MealType.breakfast,
+                      name: 'Mega breakfast',
+                      items: items,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
+      expect(created.isOk(), isTrue);
+      expect(
+        created.value.weeks.single.days.single.meals.single.items.length,
+        1005,
+      );
+
+      final fetched = await service.getMealPlan(created.value.id);
+      expect(fetched.isOk(), isTrue);
+      expect(
+        fetched.value.weeks.single.days.single.meals.single.items.length,
+        1005,
       );
     },
   );
