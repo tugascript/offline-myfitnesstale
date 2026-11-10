@@ -88,7 +88,8 @@ Follow the strict flow: `SQLite Model -> Repository -> Service -> Cubit -> View/
 - Follow the [Flutter Style Guide](https://dart.dev/guides/language/effective-dart/style).
 - Use sound null safety; avoid `!` unless the invariant is clear.
 - Services functions, even intermediate, return `Result<T, ServiceError<E>>`, never throw exceptions. Catch failures at
-  the service boundary and map them to appropriate errors; do not let exceptions escape.
+  the service boundary and map them to appropriate errors; do not let exceptions escape. Always prefer the use the
+  Columns mixin in `lib/src/models/model.dart` to write SQL, only use RAW SQL when necessary.
 - Keep views focused on composition and Cubit wiring. Reuse existing widgets and extract cohesive UI components into
   `lib/src/widgets/`.
 - Reuse existing helpers, components, widgets, services, and patterns consistently with surrounding code. Otherwise,
