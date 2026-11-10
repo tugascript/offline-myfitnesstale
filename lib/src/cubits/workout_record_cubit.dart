@@ -11,7 +11,8 @@ import 'states/workout_record_state.dart';
 export '../data/repositories/workouts/inputs/workout_record_input.dart';
 
 class WorkoutRecordCubit extends Cubit<WorkoutRecordState> {
-  final WorkoutRecordRepository _workoutRecordService = WorkoutRecordRepository();
+  final WorkoutRecordRepository _workoutRecordService =
+      WorkoutRecordRepository();
 
   WorkoutRecordCubit() : super(WorkoutRecordState.initial());
 

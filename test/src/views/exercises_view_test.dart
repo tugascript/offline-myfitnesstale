@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+
 import '../../../lib/src/data/repositories/exercises/exercise_repository.dart';
 import '../../../lib/src/data/utils/enums.dart';
 import '../../../lib/src/routing/routing.dart';

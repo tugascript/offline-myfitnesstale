@@ -1,7 +1,9 @@
 import '../../../lib/src/data/repositories/macros/inputs/quick_food_log_input.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
+
 import '../../../lib/src/cubits/food_cubit.dart';
 import '../../../lib/src/cubits/macro_tracking_cubit.dart';
 import '../../../lib/src/cubits/recipe_cubit.dart';

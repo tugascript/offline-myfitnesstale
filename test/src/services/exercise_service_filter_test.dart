@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+
 import '../../../lib/src/data/models/equipment_model.dart';
 import '../../../lib/src/data/models/exercise_equipment_model.dart';
 import '../../../lib/src/data/models/exercise_model.dart';
@@ -12,6 +13,7 @@ import '../../../lib/src/data/utils/json_data.dart';
 import '../../../lib/src/ui/exercises/view_models/exercise_cubit.dart';
 import '../../../lib/src/ui/exercises/view_models/exercise_record_cubit.dart';
 import '../../../lib/src/utils/nullable.dart';
+
 import 'package:sqflite/sqflite.dart';
 
 import '../../support/test_database.dart';
@@ -215,9 +217,7 @@ void main() {
     expect(
       (await ExerciseRecordRepository.create().getExerciseRecord(
         createdRecord.id,
-      ))
-          .value
-          .picture,
+      )).value.picture,
       isNull,
     );
   });
