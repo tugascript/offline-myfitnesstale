@@ -9,12 +9,13 @@ data ownership.
 Follow a strict MVVM flow aligned with the Flutter app architecture guide:
 `SQLite Model -> DAO -> Repository -> Cubit/ViewModel -> Screen/Widget`.
 
-- **Model (`lib/src/data/models`)**:
+- **Model (`lib/src/data/models/sqlite`)**:
     - Defines SQLite table schemas (`tableCreate`, `Columns` enum).
     - Maps database rows to Dart objects (`toMap()`, `fromMap()`).
     - Pure data container implementing `Model` and `Equatable`. Contains no business logic.
     - Uses `Nullable<T?>` wrappers (`lib/src/utils/nullable.dart`) in `copyWith` to differentiate between omitting an
       argument and deliberately setting a field to `null`.
+    - Seed/onboarding constants live in `lib/src/data/models/constants`.
 - **DAO (`Dao` / `JoinDao` in `lib/src/data/services/sqlite/`)**:
     - Generic table-level persistence layer communicating with SQLite via `DatabaseHelper`.
     - Handles single-table CRUD queries (`insert`, `update`, `delete`, `selectOne`, `selectMany`, `selectPaginated`,
@@ -96,7 +97,7 @@ Follow a strict MVVM flow aligned with the Flutter app architecture guide:
 - Repository functions, even intermediate, return `Result<T, ServiceError<E>>`, never throw exceptions. Catch failures
   at
   the repository boundary and map them to appropriate errors; do not let exceptions escape. Always prefer the Columns
-  mixin in `lib/src/data/models` to write SQL; only use raw SQL when necessary.
+  mixin in `lib/src/data/models/sqlite` to write SQL; only use raw SQL when necessary.
 - Keep Cubit type names (`*Cubit`) even though they live under `view_models/`; do not invent hybrid names such as
   `CubitViewModel`.
 - Keep screens focused on composition and Cubit wiring. Reuse existing widgets and extract cohesive UI components into

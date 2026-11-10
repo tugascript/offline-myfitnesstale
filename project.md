@@ -116,10 +116,12 @@ optional and must not silently weaken local ownership.
 ### Pre-release database policy
 
 The current development schema is version 1 and the app has not been released.
-Development databases may be cleared after schema changes. The first external
-beta establishes the compatibility baseline; after that, every schema change
-must include an ordered migration, upgrade fixtures, data-preservation checks,
-and foreign-key validation.
+SQLite table models live under `lib/src/data/models/sqlite`, with seed/onboarding
+constants in `lib/src/data/models/constants`. Development databases may be
+cleared after schema changes. The first external beta establishes the
+compatibility baseline; after that, every schema change must include an ordered
+migration, upgrade fixtures, data-preservation checks, and foreign-key
+validation.
 
 ### Onboarding must remain atomic
 

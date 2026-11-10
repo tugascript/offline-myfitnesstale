@@ -1,7 +1,7 @@
 # My Fitness Tale: Current Project State
 
 Reviewed on 10 November 2026 from branch
-`tugascript/refactor-code-architecture` at commit `ef13a5a`, including the
+`tugascript/refactor-code-architecture` at commit `db291c6`, including the
 current working tree. This file records what the code does now. See
 [README.md](README.md) for the product overview and [project.md](project.md)
 for planned work.
@@ -318,13 +318,17 @@ SQLite Model -> DAO -> Repository -> Cubit/ViewModel -> Screen/Widget
 
 Feature code is split under `lib/src/data` (models, DAOs, repositories) and
 `lib/src/ui/<feature>` (`screens/`, `view_models/`, `widgets/`), with shared UI
-in `lib/src/ui/core` and helpers in `lib/src/utils`.
+in `lib/src/ui/core` and helpers in `lib/src/utils`. SQLite table models live in
+`lib/src/data/models/sqlite`; seed/onboarding constants live in
+`lib/src/data/models/constants`. `DatabaseHelper` lives in
+`lib/src/data/services/sqlite`.
 
 - Flutter Material widgets provide the UI, including responsive components.
 - `go_router` provides a flat route table and parameter validation.
 - App-scoped `flutter_bloc` Cubits under `view_models/` provide state.
-- `sqflite`, models, DAOs (`lib/src/data/services/sqlite`), feature repositories,
-  and DTOs/inputs provide persistence and domain operations.
+- `sqflite`, models (`lib/src/data/models/sqlite`), DAOs
+  (`lib/src/data/services/sqlite`), feature repositories, and DTOs/inputs provide
+  persistence and domain operations.
 - `fl_chart` renders weight and exercise charts.
 - Android and iOS are the only configured platforms; portrait is forced at
   runtime.
