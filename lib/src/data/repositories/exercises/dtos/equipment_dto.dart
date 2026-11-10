@@ -18,12 +18,12 @@
 import 'package:equatable/equatable.dart';
 
 import '../../../../utils/nullable.dart';
-import '../../../utils/enums.dart';
 import '../../../models/sqlite/equipment_model.dart';
+import '../../../utils/enums.dart';
 import '../../core/dtos/dto.dart';
 import '../../core/dtos/picture_dto.dart';
 
-class EquipmentDto extends Equatable implements Dto<Equipment> {
+class EquipmentDto extends Equatable implements ModelDto<Equipment> {
   @override
   final int id;
   final String name;

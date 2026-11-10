@@ -18,15 +18,15 @@
 import 'package:equatable/equatable.dart';
 
 import '../../../../utils/nullable.dart';
-
-import '../../../utils/enums.dart';
 import '../../../models/sqlite/meal_plan_day_record_model.dart';
 import '../../../models/sqlite/meal_plan_record_model.dart';
 import '../../../models/sqlite/meal_plan_week_record_model.dart';
 import '../../../utils/dates.dart';
+import '../../../utils/enums.dart';
 import '../../core/dtos/dto.dart';
 
-class MealPlanDayRecordDto extends Equatable implements Dto<MealPlanDayRecord> {
+class MealPlanDayRecordDto extends Equatable
+    implements ModelDto<MealPlanDayRecord> {
   @override
   final int id;
   final int mealPlanRecordId;
@@ -136,7 +136,7 @@ class MealPlanDayRecordDto extends Equatable implements Dto<MealPlanDayRecord> {
 }
 
 class MealPlanWeekRecordDto extends Equatable
-    implements Dto<MealPlanWeekRecord> {
+    implements ModelDto<MealPlanWeekRecord> {
   @override
   final int id;
   final int mealPlanRecordId;
@@ -242,7 +242,7 @@ class MealPlanWeekRecordDto extends Equatable
   ];
 }
 
-class MealPlanRecordDto extends Equatable implements Dto<MealPlanRecord> {
+class MealPlanRecordDto extends Equatable implements ModelDto<MealPlanRecord> {
   @override
   final int id;
   final int mealPlanId;

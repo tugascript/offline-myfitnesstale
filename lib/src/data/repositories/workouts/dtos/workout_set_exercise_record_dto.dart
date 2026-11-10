@@ -18,13 +18,13 @@
 import 'package:equatable/equatable.dart';
 
 import '../../../../utils/nullable.dart';
-import '../../../utils/json_data.dart';
 import '../../../models/sqlite/workout_set_exercise_record_model.dart';
+import '../../../utils/json_data.dart';
 import '../../core/dtos/dto.dart';
 import '../../exercises/dtos/exercise_dto.dart';
 
 class WorkoutSetExerciseRecordDto extends Equatable
-    implements Dto<WorkoutSetExerciseRecord> {
+    implements ModelDto<WorkoutSetExerciseRecord> {
   @override
   final int id;
   final int workoutSetExerciseId;

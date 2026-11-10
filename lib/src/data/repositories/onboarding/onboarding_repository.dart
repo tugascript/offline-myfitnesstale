@@ -20,30 +20,34 @@ import 'dart:async';
 import 'package:logging/logging.dart';
 import 'package:sqflite/sqflite.dart';
 
+import '../../../utils/errors.dart';
+import '../../../utils/nullable.dart';
+import '../../../utils/result.dart';
 import '../../models/constants/equipment_constants.dart';
 import '../../models/constants/exercise_constants.dart';
 import '../../models/constants/workout_constants.dart';
 import '../../models/constants/workout_plan_constants.dart';
 import '../../models/sqlite/equipment_model.dart';
 import '../../models/sqlite/exercise_model.dart';
+import '../../models/sqlite/system_model.dart';
 import '../../models/sqlite/workout_model.dart';
 import '../../models/sqlite/workout_plan_model.dart';
+import '../../services/sqlite/dao.dart';
+import '../../services/sqlite/database_helper.dart';
+import '../../utils/enums.dart';
 import '../exercises/dtos/equipment_dto.dart';
 import '../exercises/dtos/exercise_dto.dart';
 import '../exercises/exercise_repository.dart';
 import '../exercises/inputs/exercise_input.dart';
-import '../../services/sqlite/database_helper.dart';
-import '../../utils/enums.dart';
-import '../../../utils/errors.dart';
-import '../../../utils/nullable.dart';
-import '../../../utils/result.dart';
-import '../profile/dtos/profile_dto.dart';
-import '../profile/dtos/reminders_config_dto.dart';
-import '../profile/dtos/system_dto.dart';
-import '../workouts/dtos/workout_dto.dart';
 import '../profile/profile_repository.dart';
 import '../workout_plans/workout_plan_repository.dart';
+import '../workouts/dtos/workout_dto.dart';
 import '../workouts/workout_repository.dart';
+import './dtos/onboarding_dto.dart';
+import './inputs/onboarding_input.dart';
+
+export './dtos/onboarding_dto.dart';
+export './inputs/onboarding_input.dart';
 
 enum OnboardingStage {
   equipments,
@@ -60,42 +64,8 @@ typedef OnboardingStageCallback = FutureOr<void> Function(
   OnboardingStage stage,
 );
 
-final class OnboardingRequest {
-  final Units units;
-  final ThemeType theme;
-  final String name;
-  final int height;
-  final Gender gender;
-  final DateTime birthday;
-  final bool createWorkouts;
-  final bool notificationsOn;
-
-  const OnboardingRequest({
-    required this.units,
-    required this.theme,
-    required this.name,
-    required this.height,
-    required this.gender,
-    required this.birthday,
-    required this.createWorkouts,
-    required this.notificationsOn,
-  });
-}
-
-final class OnboardingResult {
-  final ProfileDto profile;
-  final SystemDto system;
-  final RemindersConfigDto remindersConfig;
-
-  const OnboardingResult({
-    required this.profile,
-    required this.system,
-    required this.remindersConfig,
-  });
-}
-
 class OnboardingRepository {
-  final DatabaseHelper _databaseHelper;
+  final Dao<System> _systemDao;
   final ExerciseRepository _exerciseService;
   final ProfileRepository _profileService;
   final WorkoutRepository _workoutService;
@@ -104,25 +74,44 @@ class OnboardingRepository {
   final Logger _logger = Logger('OnboardingRepository');
 
   OnboardingRepository({
+    required this._exerciseService,
+    required this._profileService,
+    required this._workoutService,
+    required this._workoutPlanService,
+    required this._systemDao,
+    this._afterStage,
+  });
+
+  factory OnboardingRepository.create({
     DatabaseHelper? databaseHelper,
     ExerciseRepository? exerciseService,
     ProfileRepository? profileService,
     WorkoutRepository? workoutService,
     WorkoutPlanRepository? workoutPlanService,
-    this._afterStage,
-  }) : _databaseHelper = databaseHelper ?? DatabaseHelper(),
-       _exerciseService = exerciseService ?? ExerciseRepository.create(),
-       _profileService = profileService ?? ProfileRepository.create(),
-       _workoutService = workoutService ?? WorkoutRepository.create(),
-       _workoutPlanService =
-           workoutPlanService ?? WorkoutPlanRepository.create();
+    OnboardingStageCallback? afterStage,
+  }) {
+    final helper = databaseHelper ?? DatabaseHelper();
+    return OnboardingRepository(
+      exerciseService: exerciseService ?? ExerciseRepository.create(helper),
+      profileService: profileService ?? ProfileRepository.create(helper),
+      workoutService: workoutService ?? WorkoutRepository.create(helper),
+      workoutPlanService:
+          workoutPlanService ?? WorkoutPlanRepository.create(helper),
+      systemDao: Dao<System>(
+        databaseHelper: helper,
+        tableName: System.table,
+        fromMap: System.fromMap,
+      ),
+      afterStage: afterStage,
+    );
+  }
 
-  Future<Result<OnboardingResult, ServiceError<OperationErrorTypes>>> onboard(
-    OnboardingRequest request,
+  Future<Result<OnboardingDto, ServiceError<OperationErrorTypes>>> onboard(
+    OnboardingInput input,
   ) async {
     try {
-      final result = await (await _databaseHelper.db).transaction(
-        (transaction) => _onboard(transaction, request),
+      final result = await _systemDao.startTransaction(
+        (transaction) => _onboard(transaction, input),
       );
       return ok(result);
     } on _OnboardingFailure catch (error, stackTrace) {
@@ -150,9 +139,9 @@ class OnboardingRepository {
     }
   }
 
-  Future<OnboardingResult> _onboard(
+  Future<OnboardingDto> _onboard(
     Transaction transaction,
-    OnboardingRequest request,
+    OnboardingInput input,
   ) async {
     final existing = await _getCompletedOnboarding(transaction);
     if (existing != null) {
@@ -194,20 +183,20 @@ class OnboardingRepository {
     await _stageCompleted(OnboardingStage.exercises);
 
     final profileResult = await _profileService.upsertProfile(
-      name: request.name,
-      height: request.height,
-      gender: request.gender,
-      birthday: request.birthday,
+      name: input.name,
+      height: input.height,
+      gender: input.gender,
+      birthday: input.birthday,
       transaction: transaction,
     );
     final profile = _require(profileResult, OnboardingStage.profile);
     await _stageCompleted(OnboardingStage.profile);
 
     final systemResult = await _profileService.upsertSystem(
-      theme: request.theme,
-      units: request.units,
+      theme: input.theme,
+      units: input.units,
       profileId: profile.id,
-      notificationsOn: request.notificationsOn,
+      notificationsOn: input.notificationsOn,
       transaction: transaction,
     );
     _require(systemResult, OnboardingStage.system);
@@ -215,14 +204,14 @@ class OnboardingRepository {
 
     final remindersResult = await _profileService.upsertRemindersConfig(
       profileId: profile.id,
-      workoutsOn: request.notificationsOn,
-      weightRecordsOn: request.notificationsOn,
+      workoutsOn: input.notificationsOn,
+      weightRecordsOn: input.notificationsOn,
       transaction: transaction,
     );
     final reminders = _require(remindersResult, OnboardingStage.reminders);
     await _stageCompleted(OnboardingStage.reminders);
 
-    if (request.createWorkouts) {
+    if (input.createWorkouts) {
       final workouts = await _createWorkouts(transaction, exercises);
       await _stageCompleted(OnboardingStage.workouts);
       await _createWorkoutPlan(transaction, workouts);
@@ -239,7 +228,7 @@ class OnboardingRepository {
     );
     await _stageCompleted(OnboardingStage.completion);
 
-    return OnboardingResult(
+    return OnboardingDto(
       profile: profile,
       system: completedSystem,
       remindersConfig: reminders,
@@ -341,7 +330,7 @@ class OnboardingRepository {
     _require(result, OnboardingStage.workoutPlan);
   }
 
-  Future<OnboardingResult?> _getCompletedOnboarding(
+  Future<OnboardingDto?> _getCompletedOnboarding(
     Transaction transaction,
   ) async {
     final systemResult = await _profileService.selectSystem(
@@ -375,7 +364,7 @@ class OnboardingRepository {
       );
     }
 
-    return OnboardingResult(
+    return OnboardingDto(
       profile: profileResult.value,
       system: systemResult.value,
       remindersConfig: remindersResult.value,

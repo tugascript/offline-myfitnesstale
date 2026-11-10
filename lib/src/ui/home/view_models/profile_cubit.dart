@@ -38,7 +38,7 @@ class ProfileCubit extends Cubit<ProfileState> {
   }) : _profileService = profileRepository,
        _onboardingService =
            onboardingService ??
-           OnboardingRepository(profileService: profileRepository),
+           OnboardingRepository.create(profileService: profileRepository),
        super(ProfileState.initial());
 
   Future<void> loadInitialData() async {
@@ -344,7 +344,7 @@ class ProfileCubit extends Cubit<ProfileState> {
 
     emit(state.copyWith(isLoading: true, clearError: true));
     final result = await _onboardingService.onboard(
-      OnboardingRequest(
+      OnboardingInput(
         units: units,
         theme: theme,
         name: name,

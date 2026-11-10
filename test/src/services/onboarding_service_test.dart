@@ -60,7 +60,7 @@ void main() {
   ];
 
   final birthday = DateTime(1992, 6, 15);
-  final requestWithoutWorkouts = OnboardingRequest(
+  final requestWithoutWorkouts = OnboardingInput(
     units: Units.metric,
     theme: ThemeType.system,
     name: 'Atomic Tester',
@@ -71,7 +71,7 @@ void main() {
     notificationsOn: true,
   );
 
-  final requestWithWorkouts = OnboardingRequest(
+  final requestWithWorkouts = OnboardingInput(
     units: Units.imperial,
     theme: ThemeType.dark,
     name: 'Seed Tester',
@@ -121,7 +121,9 @@ void main() {
 
   test('commits core onboarding without optional workouts', () async {
     expect(kInitialExercises, hasLength(89));
-    final result = await OnboardingRepository().onboard(requestWithoutWorkouts);
+    final result = await OnboardingRepository.create().onboard(
+      requestWithoutWorkouts,
+    );
 
     expect(result.isOk(), isTrue);
     expect(result.value.profile.name, 'Atomic Tester');
@@ -141,7 +143,9 @@ void main() {
 
   test('commits the complete optional workout and plan seed', () async {
     expect(kStandardWorkouts, hasLength(16));
-    final result = await OnboardingRepository().onboard(requestWithWorkouts);
+    final result = await OnboardingRepository.create().onboard(
+      requestWithWorkouts,
+    );
 
     expect(result.isOk(), isTrue);
     expect(result.value.system.initialSetup, SetUpStatus.completed);
@@ -179,7 +183,7 @@ void main() {
   for (final failureStage in OnboardingStage.values) {
     test('rolls back and retries after ${failureStage.name}', () async {
       var injected = false;
-      final service = OnboardingRepository(
+      final service = OnboardingRepository.create(
         afterStage: (stage) {
           if (stage == failureStage && !injected) {
             injected = true;
@@ -206,13 +210,13 @@ void main() {
   }
 
   test('completed onboarding is idempotent', () async {
-    final service = OnboardingRepository();
+    final service = OnboardingRepository.create();
     final first = await service.onboard(requestWithWorkouts);
     expect(first.isOk(), isTrue);
     final originalCounts = await counts();
 
     final second = await service.onboard(
-      OnboardingRequest(
+      OnboardingInput(
         units: Units.metric,
         theme: ThemeType.light,
         name: 'Ignored retry values',
@@ -243,7 +247,9 @@ void main() {
       ).toMap(),
     );
 
-    final result = await OnboardingRepository().onboard(requestWithoutWorkouts);
+    final result = await OnboardingRepository.create().onboard(
+      requestWithoutWorkouts,
+    );
 
     expect(result.isErr(), isTrue);
     expect(result.error.description, contains('Clear app data'));

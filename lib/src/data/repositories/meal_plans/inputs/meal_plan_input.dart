@@ -20,7 +20,7 @@ import 'package:equatable/equatable.dart';
 import '../../../../utils/nullable.dart';
 import '../../../utils/enums.dart';
 
-class MealPlanMealItemInput extends Equatable {
+final class MealPlanMealItemInput extends Equatable {
   final int foodId;
   final int? portionId;
   final int amount;
@@ -93,6 +93,7 @@ class MealPlanInput {
   final String name;
   final Nullable<String> description;
   final List<MealPlanWeekInput> weeks;
+
   const MealPlanInput({
     required this.name,
     this.description = const Nullable(null),

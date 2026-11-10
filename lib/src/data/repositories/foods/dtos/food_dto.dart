@@ -18,13 +18,13 @@
 import 'package:equatable/equatable.dart';
 
 import '../../../../utils/nullable.dart';
-import '../../../utils/json_data.dart';
-import '../../../utils/enums.dart';
 import '../../../models/sqlite/food_model.dart';
 import '../../../models/sqlite/food_portion_model.dart';
+import '../../../utils/enums.dart';
+import '../../../utils/json_data.dart';
 import '../../core/dtos/dto.dart';
 
-class FoodPortionDto extends Equatable implements Dto<FoodPortion> {
+class FoodPortionDto extends Equatable implements ModelDto<FoodPortion> {
   @override
   final int id;
   final int foodId;
@@ -66,7 +66,7 @@ class FoodPortionDto extends Equatable implements Dto<FoodPortion> {
   List<Object?> get props => [id, foodId, portionName, gramWeight];
 }
 
-class FoodDto extends Equatable implements Dto<Food> {
+class FoodDto extends Equatable implements ModelDto<Food> {
   @override
   final int id;
   final String name;

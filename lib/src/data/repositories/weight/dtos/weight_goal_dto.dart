@@ -18,11 +18,11 @@
 import 'package:equatable/equatable.dart';
 
 import '../../../../utils/nullable.dart';
-import '../../../utils/enums.dart';
 import '../../../models/sqlite/weight_goal_model.dart';
+import '../../../utils/enums.dart';
 import '../../core/dtos/dto.dart';
 
-class WeightGoalDto extends Equatable implements Dto<WeightGoal> {
+class WeightGoalDto extends Equatable implements ModelDto<WeightGoal> {
   @override
   final int id;
   final int targetWeight;

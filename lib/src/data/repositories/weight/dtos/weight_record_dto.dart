@@ -21,7 +21,7 @@ import '../../../../utils/nullable.dart';
 import '../../../models/sqlite/weight_record_model.dart';
 import '../../core/dtos/dto.dart';
 
-class WeightRecordDto extends Equatable implements Dto<WeightRecord> {
+class WeightRecordDto extends Equatable implements ModelDto<WeightRecord> {
   @override
   final int id;
   final int weight;

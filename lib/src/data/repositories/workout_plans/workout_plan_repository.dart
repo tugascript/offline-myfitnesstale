@@ -18,28 +18,28 @@
 import 'package:logging/logging.dart';
 import 'package:sqflite/sqflite.dart';
 
+import '../../../utils/errors.dart';
+import '../../../utils/nullable.dart';
+import '../../../utils/result.dart';
 import '../../models/sqlite/workout_model.dart';
 import '../../models/sqlite/workout_plan_day_model.dart';
 import '../../models/sqlite/workout_plan_model.dart';
 import '../../models/sqlite/workout_plan_week_model.dart';
 import '../../models/sqlite/workout_plan_workout_model.dart';
 import '../../services/common.dart';
-import '../../services/sqlite/database_helper.dart';
 import '../../services/sqlite/dao.dart' show Dao;
+import '../../services/sqlite/database_helper.dart';
 import '../../utils/dates.dart';
 import '../../utils/enums.dart';
 import '../../utils/where_builder.dart';
-import '../../../utils/errors.dart';
-import '../../../utils/nullable.dart';
-import '../../../utils/result.dart';
 import '../core/dtos/paginated_dto.dart';
+import '../core/repository.dart';
 import '../workouts/dtos/workout_dto.dart';
 import './dtos/workout_plan_day_dto.dart';
 import './dtos/workout_plan_dto.dart';
 import './dtos/workout_plan_week_dto.dart';
 import './dtos/workout_plan_workout_dto.dart';
 import './inputs/workout_plan_input.dart';
-import '../core/repository.dart';
 
 export './inputs/workout_plan_input.dart';
 
@@ -49,7 +49,6 @@ final class WorkoutPlanRepository implements Repository {
   final Dao<WorkoutPlanDay> _dayDao;
   final Dao<WorkoutPlanWorkout> _planWorkoutDao;
   final Dao<Workout> _workoutDao;
-  final DatabaseHelper _databaseHelper;
 
   final Logger _logger = Logger('Workout Plan Repository');
 
@@ -59,7 +58,6 @@ final class WorkoutPlanRepository implements Repository {
     required this._dayDao,
     required this._planWorkoutDao,
     required this._workoutDao,
-    required this._databaseHelper,
   });
 
   factory WorkoutPlanRepository.create([DatabaseHelper? databaseHelper]) {
@@ -90,7 +88,6 @@ final class WorkoutPlanRepository implements Repository {
         tableName: Workout.table,
         fromMap: Workout.fromMap,
       ),
-      databaseHelper: helper,
     );
   }
 
@@ -841,7 +838,7 @@ final class WorkoutPlanRepository implements Repository {
 
       final List<WorkoutPlanDto> createdPlans = transaction != null
           ? await create(transaction)
-          : await (await _databaseHelper.db).transaction(create);
+          : await _workoutPlanDao.startTransaction(create);
 
       _logger.info('Created ${createdPlans.length} workout plans');
       return ok(createdPlans);
@@ -1455,7 +1452,7 @@ final class WorkoutPlanRepository implements Repository {
       final (
         int planDayId,
         List<WorkoutPlanWorkout> planWorkouts,
-      ) = await (await _databaseHelper.db).transaction((txn) async {
+      ) = await _dayDao.startTransaction((txn) async {
         final int planDayId = await _dayDao.insert(planDay, txn);
         final List<WorkoutPlanWorkout> planWorkouts = [];
 
@@ -1557,21 +1554,25 @@ final class WorkoutPlanRepository implements Repository {
       final int dayInt = day > daysCount ? daysCount : day;
 
       if (dayInt < oldDay) {
-        await (await _databaseHelper.db).rawUpdate(
-          """
+        await _dayDao.startTransaction((txn) async {
+          await txn.rawUpdate(
+            """
         UPDATE ${WorkoutPlanDay.table} SET ${WorkoutPlanDayColumns.day.value} = ${WorkoutPlanDayColumns.day.value} + 1
         WHERE ${WorkoutPlanDayColumns.workoutPlanWeekId.value} = ? AND ${WorkoutPlanDayColumns.day.value} >= ?
         """,
-          [planDay.workoutPlanWeekId, dayInt],
-        );
+            [planDay.workoutPlanWeekId, dayInt],
+          );
+        });
       } else if (dayInt > oldDay) {
-        await (await _databaseHelper.db).rawUpdate(
-          """
+        await _dayDao.startTransaction((txn) async {
+          await txn.rawUpdate(
+            """
         UPDATE ${WorkoutPlanDay.table} SET ${WorkoutPlanDayColumns.day.value} = ${WorkoutPlanDayColumns.day.value} - 1
         WHERE ${WorkoutPlanDayColumns.workoutPlanWeekId.value} = ? AND ${WorkoutPlanDayColumns.day.value} <= ?
         """,
-          [planDay.workoutPlanWeekId, dayInt],
-        );
+            [planDay.workoutPlanWeekId, dayInt],
+          );
+        });
       }
 
       final List<WorkoutPlanWorkout> planWorkouts = await _planWorkoutDao
@@ -1652,9 +1653,7 @@ final class WorkoutPlanRepository implements Repository {
         whereArgs: [planDay.workoutPlanWeekId],
       );
       if (day < daysCount) {
-        final result = await (await _databaseHelper.db).transaction((
-          txn,
-        ) async {
+        final result = await _dayDao.startTransaction((txn) async {
           final deleted = await _dayDao.deleteOne(workoutPlanDayId, txn);
           if (!deleted) {
             return false;
@@ -2018,7 +2017,7 @@ final class WorkoutPlanRepository implements Repository {
         );
       }
 
-      final int id = await (await _databaseHelper.db).transaction((txn) async {
+      final int id = await _planWorkoutDao.startTransaction((txn) async {
         await txn.rawUpdate(
           """
           UPDATE workout_plan_workouts
@@ -2123,7 +2122,7 @@ final class WorkoutPlanRepository implements Repository {
         timeOfDay: input.timeOfDay,
         updatedAt: DateUtilities.getNowUtcUnix(),
       );
-      await (await _databaseHelper.db).transaction((txn) async {
+      await _planWorkoutDao.startTransaction((txn) async {
         await _planWorkoutDao.update(updatedPlanWorkout, txn);
         if (workoutPosition > oldPosition) {
           await txn.rawUpdate(
@@ -2242,7 +2241,7 @@ final class WorkoutPlanRepository implements Repository {
         return ok(null);
       }
 
-      final deleted = await (await _databaseHelper.db).transaction((txn) async {
+      final deleted = await _planWorkoutDao.startTransaction((txn) async {
         final deleted = await _planWorkoutDao.deleteOne(
           workoutPlanWorkoutId,
           txn,

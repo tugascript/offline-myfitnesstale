@@ -18,12 +18,13 @@
 import 'package:equatable/equatable.dart';
 
 import '../../../../utils/nullable.dart';
-import '../../../utils/enums.dart';
 import '../../../models/sqlite/workout_plan_week_model.dart';
+import '../../../utils/enums.dart';
 import '../../core/dtos/dto.dart';
 import './workout_plan_day_dto.dart';
 
-class WorkoutPlanWeekDto extends Equatable implements Dto<WorkoutPlanWeek> {
+class WorkoutPlanWeekDto extends Equatable
+    implements ModelDto<WorkoutPlanWeek> {
   @override
   final int id;
   final int planVersion;

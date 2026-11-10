@@ -17,13 +17,12 @@
 
 import 'package:equatable/equatable.dart';
 
-import '../../../utils/enums.dart';
 import '../../../models/sqlite/profile_model.dart';
-
-import '../../core/dtos/dto.dart';
 import '../../../utils/dates.dart';
+import '../../../utils/enums.dart';
+import '../../core/dtos/dto.dart';
 
-class ProfileDto extends Equatable implements Dto<Profile> {
+class ProfileDto extends Equatable implements ModelDto<Profile> {
   @override
   final int id;
   final String name;

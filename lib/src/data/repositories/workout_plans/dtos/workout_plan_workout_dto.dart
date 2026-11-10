@@ -24,7 +24,7 @@ import '../../core/dtos/dto.dart';
 import '../../workouts/dtos/workout_dto.dart';
 
 class WorkoutPlanWorkoutDto extends Equatable
-    implements Dto<WorkoutPlanWorkout> {
+    implements ModelDto<WorkoutPlanWorkout> {
   @override
   final int id;
   final int planVersion;
