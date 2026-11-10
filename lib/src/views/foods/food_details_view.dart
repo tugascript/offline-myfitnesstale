@@ -12,7 +12,7 @@ import '../../ui/core/widgets/confirmation_dialog.dart';
 import '../../ui/core/widgets/mutation_buttons.dart';
 import '../../widgets/foods/food_details_widget.dart';
 import '../../widgets/layout/app_scaffold.dart';
-import '../loading_view.dart';
+import '../../ui/core/screens/loading_view.dart';
 
 class FoodDetailsView extends StatefulWidget {
   static const name = 'food_details';

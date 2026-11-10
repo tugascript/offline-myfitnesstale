@@ -10,8 +10,8 @@ import 'package:myfitnesstale/src/services/dtos/profile_dto.dart';
 import 'package:myfitnesstale/src/services/dtos/reminders_config_dto.dart';
 import 'package:myfitnesstale/src/services/dtos/system_dto.dart';
 import 'package:myfitnesstale/src/ui/core/sizes/data_display_sizes.dart';
-import 'package:myfitnesstale/src/views/profile/reminder_preferences_view.dart';
-import 'package:myfitnesstale/src/widgets/dashboard/quick_actions_widget.dart';
+import 'package:myfitnesstale/src/ui/home/screens/profile/reminder_preferences_view.dart';
+import 'package:myfitnesstale/src/ui/home/widgets/quick_actions_widget.dart';
 
 class _ProfileCubit extends ProfileCubit {
   _ProfileCubit() {

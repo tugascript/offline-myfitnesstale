@@ -11,7 +11,7 @@ import 'package:myfitnesstale/src/services/dtos/profile_dto.dart';
 import 'package:myfitnesstale/src/services/dtos/reminders_config_dto.dart';
 import 'package:myfitnesstale/src/services/dtos/system_dto.dart';
 import 'package:myfitnesstale/src/services/onboarding_service.dart';
-import 'package:myfitnesstale/src/views/onboarding_view.dart';
+import 'package:myfitnesstale/src/ui/home/screens/profile/onboarding_view.dart';
 
 void main() {
   testWidgets('shows persistent rollback feedback and retries unchanged form', (

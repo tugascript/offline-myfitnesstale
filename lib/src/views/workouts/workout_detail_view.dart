@@ -14,7 +14,7 @@ import '../../widgets/layout/responsive_scaffold.dart';
 import '../../widgets/workouts/details/empty_sets_card.dart';
 import '../../widgets/workouts/details/workout_header_card.dart';
 import '../../widgets/workouts/details/workout_set_card.dart';
-import '../loading_view.dart';
+import '../../ui/core/screens/loading_view.dart';
 import 'workout_history_view.dart';
 
 class WorkoutDetailView extends StatefulWidget {

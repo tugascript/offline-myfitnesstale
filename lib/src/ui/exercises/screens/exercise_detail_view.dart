@@ -14,7 +14,7 @@ import '../widgets/details/exercise_header_card.dart';
 import '../../../widgets/layout/app_elevated_button.dart';
 import '../../../widgets/layout/app_scaffold.dart';
 import '../../../widgets/layout/responsive_scaffold.dart';
-import '../../../views/loading_view.dart';
+import '../../core/screens/loading_view.dart';
 
 class ExerciseDetailView extends StatefulWidget {
   static const name = "exercise-detail";

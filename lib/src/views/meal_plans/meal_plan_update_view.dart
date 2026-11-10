@@ -8,7 +8,7 @@ import '../../ui/core/sizes/data_display_sizes.dart';
 import '../../ui/core/sizes/screen_size.dart';
 import '../../widgets/layout/app_scaffold.dart';
 import '../../widgets/meal_plans/meal_plan_form_widget.dart';
-import '../loading_view.dart';
+import '../../ui/core/screens/loading_view.dart';
 
 class MealPlanUpdateView extends StatefulWidget {
   static const name = 'meal_plan_update';
