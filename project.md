@@ -1,6 +1,6 @@
 # My Fitness Tale: Delivery Plan
 
-Last aligned with [README.md](README.md) on 9 November 2026. For the
+Last aligned with [README.md](README.md) on 10 November 2026. For the
 code-grounded implementation snapshot, see [PROJECT_STATE.md](PROJECT_STATE.md).
 
 ## Product objective
@@ -36,13 +36,13 @@ Remaining P1 work is verification and consolidation, not initial implementation:
 - add device-journey coverage for nutrition and meal-plan execution;
 - keep narrow-screen and 200% text-scale coverage current as shared widgets evolve;
 - consolidate duplicated date, progress, and nutrition calculations where a tested
-  domain helper can replace UI/service duplication.
+  domain helper can replace UI/repository duplication.
 
 #### P1 — Consolidate workout-plan calculations
 
 Move duplicated date mapping and progress calculations into a tested domain
-helper shared by the dashboard and active-plan views. Split the large plan
-services only where doing so makes transactions and invariants clearer.
+helper shared by the dashboard and active-plan screens. Split the large plan
+repositories only where doing so makes transactions and invariants clearer.
 
 #### P1 — Decide reminder scope
 

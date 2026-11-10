@@ -1,9 +1,10 @@
 # My Fitness Tale: Current Project State
 
-Reviewed on 9 November 2026 from branch `tugascript/update-docs` at commit
-`cd7f73b`, including the current working tree. This file records what the code
-does now. See [README.md](README.md) for the product overview and
-[project.md](project.md) for planned work.
+Reviewed on 10 November 2026 from branch
+`tugascript/refactor-code-architecture` at commit `ef13a5a`, including the
+current working tree. This file records what the code does now. See
+[README.md](README.md) for the product overview and [project.md](project.md)
+for planned work.
 
 ## At a glance
 
@@ -21,12 +22,12 @@ reminder preferences do not schedule notifications.
 
 Repository facts at this review:
 
-- 403 Dart source files under `lib/`;
+- 414 Dart source files under `lib/`;
 - 41 SQLite tables in the create schema, including strength goals;
 - database schema version 1;
 - 89 seeded exercises and 25 seeded equipment entries;
 - 16 optional starter workouts and one 16-week starter plan;
-- 42 host test files and five integration-test files;
+- 49 host test files and six integration-test Dart files;
 - no repository CI configuration;
 - no backend implementation in the current working tree.
 
@@ -168,7 +169,7 @@ There is no import/export, local backup, or broader weight analytics.
   `WorkoutPlanWorkoutRecordInput` PUT semantics.
 - Provides paginated, newest-first plan history filtered by plan and status.
 
-Date and progress calculations are still duplicated across UI and service
+Date and progress calculations are still duplicated across UI and repository
 layers. Historical plan summaries do not expose child-workout detail.
 
 ### Strength goals
@@ -190,13 +191,14 @@ layers. Historical plan summaries do not expose child-workout detail.
 - Meal-plan records: Tracks execution of meal plans with week and day records; enforces single active meal-plan
   invariant; allows starting and advancing/completing days.
 
-The 13 October 2026 refactor applies the food-service conventions across the
-PR's new nutrition and strength-goal flows. Create and update share complete
-inputs in `services/inputs/`; omitted nullable input fields clear their stored
-values. DTOs omit persistence timestamps, while execution dates and originating
-template versions remain domain data. Entity states contain their own pagination
-objects, including query filters, limits, offsets, and totals. Services use the
-existing repository API; the generic repository is unchanged.
+The 13 October 2026 refactor applies food/repository PUT conventions across the
+nutrition and strength-goal flows. Create and update share complete inputs under
+`lib/src/data/repositories/<feature>/inputs/`; omitted nullable input fields
+clear their stored values. DTOs omit persistence timestamps, while execution
+dates and originating template versions remain domain data. Entity states
+contain their own pagination objects, including query filters, limits, offsets,
+and totals. Feature repositories talk to DAOs (`Dao` / `JoinDao`); there is no
+separate generic `Repository<T>` layer.
 
 Recipe replacement rolls back on invalid ingredient references. Meal-plan
 replacement creates a new schedule version and retains previous weeks, days,
@@ -206,13 +208,13 @@ Schema version remains 1 under the pre-beta reset policy.
 
 Food and recipe details and list items, meal-plan schedules and list items,
 macro-goal content, and tracker day/week/month and planned-meal sections live
-in their entity widget folders. Views compose these widgets and dispatch Cubit
+in their entity widget folders. Screens compose these widgets and dispatch Cubit
 actions. Regression tests cover complete updates, nullable clearing, rollback,
 originating meal-plan versions, pagination/filter preservation, and populated
 entity widgets at 320px with 200% text scaling.
 
 The PR's nutrition and strength-goal screens resolve `DataDisplaySizesList`
-from their view breakpoints and pass it to child widgets. Padding, spacing,
+from their screen breakpoints and pass it to child widgets. Padding, spacing,
 icons, and typography use those size tokens. Editors reuse `AppTextFormField`;
 field groups and dashboard actions reflow according to available width and
 text scaling. Strength-goal content scrolls as a whole, and the meal-log dialog
@@ -276,8 +278,9 @@ above a keyboard inset.
 ## Navigation
 
 `GoRouter` is configured in `lib/src/routing/app_router.dart`. Path strings live in
-the `Routes` enum (`lib/src/routing/routing.dart`); views no longer define
-`routeName`. An `IndexedStack` preserves four primary destinations:
+the `Routes` enum (`lib/src/routing/routing.dart`); screens navigate via that
+enum rather than a separate `routeName` API. An `IndexedStack` preserves four
+primary destinations:
 
 1. Home;
 2. Plans;
@@ -303,28 +306,32 @@ Other notable routes include:
 - `/settings/reminders`.
 
 The static progress route is registered before the dynamic exercise-ID route.
-Invalid IDs and unknown locations render `NotFoundView`.
+Invalid IDs and unknown locations render `NotFoundScreen`.
 
 ## Architecture
 
 The main dependency flow is:
 
 ```text
-SQLite model -> Repository<T>/feature service -> Cubit -> view/widget
+SQLite Model -> DAO -> Repository -> Cubit/ViewModel -> Screen/Widget
 ```
+
+Feature code is split under `lib/src/data` (models, DAOs, repositories) and
+`lib/src/ui/<feature>` (`screens/`, `view_models/`, `widgets/`), with shared UI
+in `lib/src/ui/core` and helpers in `lib/src/utils`.
 
 - Flutter Material widgets provide the UI, including responsive components.
 - `go_router` provides a flat route table and parameter validation.
-- App-scoped `flutter_bloc` Cubits provide state.
-- `sqflite`, models, a generic repository, feature services, and DTOs provide
-  persistence and domain operations.
+- App-scoped `flutter_bloc` Cubits under `view_models/` provide state.
+- `sqflite`, models, DAOs (`lib/src/data/services/sqlite`), feature repositories,
+  and DTOs/inputs provide persistence and domain operations.
 - `fl_chart` renders weight and exercise charts.
 - Android and iOS are the only configured platforms; portrait is forced at
   runtime.
 
-This is a convention rather than a strict dependency boundary. Most repositories
-are still singletons and Cubits construct them directly, which can make
-replacement in tests difficult. `ProfileCubit` accepts an optional
+Wiring is still uneven. Many Cubits construct repositories internally;
+`ExerciseCubit` and `ExerciseRecordCubit` take repositories from `MyApp` via
+`*Repository.create()`. `ProfileCubit` accepts an optional
 `OnboardingRepository` for orchestration tests. `WorkoutPlanRepository` and
 `WorkoutPlanRecordRepository` remain large orchestration repositories.
 
@@ -373,7 +380,7 @@ its unfinished workout-history row.
 ## Test harness and recorded results
 
 The device harness selects `integration_test.db` before creating app Cubits or
-services. Fresh-install scenarios delete only that file; restart scenarios
+repositories. Fresh-install scenarios delete only that file; restart scenarios
 close and reopen it. Teardown removes fixture data and restores the production
 database configuration. The deletion API throws if production `app.db` is
 selected.
