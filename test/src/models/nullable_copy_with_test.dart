@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+
 import '../../../lib/src/utils/nullable.dart';
 import '../../../lib/src/data/utils/json_data.dart';
 import '../../../lib/src/data/utils/enums.dart';

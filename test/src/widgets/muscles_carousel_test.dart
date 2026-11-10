@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+
 import '../../../lib/src/data/utils/json_data.dart';
 import '../../../lib/src/data/utils/enums.dart';
 import '../../../lib/src/data/repositories/exercises/dtos/equipment_dto.dart';

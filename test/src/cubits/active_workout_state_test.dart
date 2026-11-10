@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+
 import '../../../lib/src/cubits/states/active_workout_state.dart';
 import '../../../lib/src/utils/nullable.dart';
 import '../../../lib/src/data/utils/json_data.dart';

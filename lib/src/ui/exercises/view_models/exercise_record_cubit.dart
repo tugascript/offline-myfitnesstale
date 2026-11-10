@@ -200,7 +200,10 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
   Future<void> updateExerciseRecord(int id, ExerciseRecordInput input) async {
     emit(state.copyWith(isLoading: true));
 
-    final result = await _exerciseRecordRepository.updateExerciseRecord(id, input);
+    final result = await _exerciseRecordRepository.updateExerciseRecord(
+      id,
+      input,
+    );
 
     if (result.isErr()) {
       final error = result.error;
@@ -448,7 +451,10 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
   Future<bool> updateStrengthGoal(int id, StrengthGoalInput input) async {
     _logger.info("Updating strength goal");
     emit(state.copyWith(isLoading: true));
-    final result = await _exerciseRecordRepository.updateStrengthGoal(id, input);
+    final result = await _exerciseRecordRepository.updateStrengthGoal(
+      id,
+      input,
+    );
     if (result.isErr()) {
       final error = result.error;
       _logger.warning("Failed to update strength goal", error);

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+
 import '../../../lib/src/ui/core/sizes/data_display_sizes.dart';
 import '../../../lib/src/ui/core/sizes/screen_size.dart';
 import '../../../lib/src/ui/core/widgets/base_carousel.dart';

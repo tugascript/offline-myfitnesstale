@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
+
 import '../../../lib/src/utils/nullable.dart';
 import '../../../lib/src/cubits/profile_cubit.dart';
 import '../../../lib/src/data/repositories/exercises/exercise_record_repository.dart';

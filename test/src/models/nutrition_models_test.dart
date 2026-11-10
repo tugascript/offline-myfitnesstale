@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+
 import '../../../lib/src/data/utils/json_data.dart';
 import '../../../lib/src/data/models/daily_nutrition_log_model.dart';
 import '../../../lib/src/data/models/day_macro_goal_model.dart';
@@ -22,7 +23,9 @@ import '../../../lib/src/data/models/recipe_item_model.dart';
 import '../../../lib/src/data/models/recipe_model.dart';
 
 import '../../../lib/src/data/models/week_macro_goal_model.dart';
+
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+
 import '../../../lib/src/data/utils/dates.dart';
 
 void main() {

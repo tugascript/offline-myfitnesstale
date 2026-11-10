@@ -16,7 +16,8 @@ import 'states/common_state.dart';
 
 class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
   final WorkoutRepository _workoutService = WorkoutRepository();
-  final WorkoutRecordRepository _workoutRecordService = WorkoutRecordRepository();
+  final WorkoutRecordRepository _workoutRecordService =
+      WorkoutRecordRepository();
   final Logger _logger = Logger("ActiveWorkoutCubit");
 
   ActiveWorkoutCubit() : super(ActiveWorkoutState.initial());

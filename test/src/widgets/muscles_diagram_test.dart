@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_test/flutter_test.dart';
+
 import '../../../lib/src/utils/nullable.dart';
 import '../../../lib/src/data/repositories/exercises/dtos/equipment_dto.dart';
 import '../../../lib/src/data/repositories/exercises/dtos/exercise_dto.dart';
