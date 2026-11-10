@@ -16,6 +16,7 @@
 // along with My Fitness Tale.  If not, see <https://www.gnu.org/licenses/>.
 
 import 'package:logging/logging.dart';
+import 'package:sqflite/sqflite.dart';
 
 import '../../models/sqlite/daily_nutrition_log_model.dart';
 import '../../models/sqlite/meal_log_model.dart';
@@ -25,6 +26,7 @@ import '../../models/sqlite/meal_plan_model.dart';
 import '../../models/sqlite/meal_plan_record_model.dart';
 import '../../models/sqlite/meal_plan_week_model.dart';
 import '../../models/sqlite/meal_plan_week_record_model.dart';
+import '../../models/sqlite/model.dart';
 import '../../services/common.dart';
 import '../../services/sqlite/database_helper.dart';
 import '../../services/sqlite/dao.dart';
@@ -39,6 +41,8 @@ import '../core/dtos/paginated_dto.dart';
 import '../core/repository.dart';
 
 final class MealPlanRecordRepository implements Repository {
+  static const int _maxSqlVariables = 900;
+
   final Dao<MealLog> _mealLogDao;
   final Dao<MealPlanDay> _mealPlanDayDao;
   final Dao<MealPlanWeek> _mealPlanWeekDao;
@@ -105,6 +109,46 @@ final class MealPlanRecordRepository implements Repository {
         fromMap: DailyNutritionLog.fromMap,
       ),
     );
+  }
+
+  Future<Result<List<T>, ServiceError<OperationErrorTypes>>>
+  _selectManyInChunks<T extends Model>({
+    required Dao<T> dao,
+    required Columns column,
+    required Iterable<int> values,
+    List<String>? orderBy,
+    Transaction? trx,
+  }) async {
+    final valueList = values.toList();
+    if (valueList.isEmpty) {
+      return ok(<T>[]);
+    }
+
+    try {
+      final results = <T>[];
+      for (int i = 0; i < valueList.length; i += _maxSqlVariables) {
+        final end = i + _maxSqlVariables < valueList.length
+            ? i + _maxSqlVariables
+            : valueList.length;
+        final chunk = valueList.sublist(i, end);
+        final rows = await dao.selectMany(
+          where: column.inList(chunk.length),
+          whereArgs: chunk,
+          orderBy: orderBy,
+          trx: trx,
+        );
+        results.addAll(rows);
+      }
+      return ok(results);
+    } catch (e) {
+      _logger.severe('Failed to select ${column.value} in chunks', e);
+      return err(
+        const ServiceError(
+          type: OperationErrorTypes.operationFailure,
+          description: 'Failed to get meal plan records',
+        ),
+      );
+    }
   }
 
   Future<Result<MealPlanRecordDto, ServiceError<SingleErrorTypes>>>
@@ -719,12 +763,15 @@ final class MealPlanRecordRepository implements Repository {
       );
 
       final planIds = records.map((record) => record.mealPlanId).toSet();
-      final plans = planIds.isEmpty
-          ? <MealPlan>[]
-          : await _mealPlanDao.selectMany(
-              where: MealPlanColumns.id.inList(planIds.length),
-              whereArgs: planIds.toList(),
-            );
+      final plansResult = await _selectManyInChunks(
+        dao: _mealPlanDao,
+        column: MealPlanColumns.id,
+        values: planIds,
+      );
+      if (plansResult.isErr()) {
+        return err(plansResult.error);
+      }
+      final plans = plansResult.value;
       final plansById = {for (final plan in plans) plan.id!: plan};
       final dtos = records.map((record) {
         final plan = plansById[record.mealPlanId];

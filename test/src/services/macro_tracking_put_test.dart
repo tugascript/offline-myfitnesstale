@@ -18,6 +18,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:myfitnesstale/src/data/models/sqlite/exercise_model.dart';
 import 'package:myfitnesstale/src/data/models/sqlite/food_model.dart';
+import 'package:myfitnesstale/src/data/models/sqlite/meal_plan_model.dart';
+import 'package:myfitnesstale/src/data/models/sqlite/meal_plan_record_model.dart';
 import 'package:myfitnesstale/src/data/repositories/exercises/exercise_record_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/exercises/inputs/strength_goal_input.dart';
 import 'package:myfitnesstale/src/data/repositories/foods/food_repository.dart';
@@ -415,6 +417,39 @@ void main() {
         fetched.value.weeks.single.days.single.meals.single.items.length,
         1005,
       );
+
+      final planBatch = db.batch();
+      for (int i = 0; i < 1005; i++) {
+        planBatch.insert(
+          MealPlan.table,
+          MealPlan.create(
+            name: 'Bulk plan $i',
+            version: 1,
+            totalWeeks: 1,
+            totalDays: 1,
+            totalMeals: 1,
+          ).toMap(),
+        );
+      }
+      final planIds = (await planBatch.commit()).cast<int>();
+      final recordBatch = db.batch();
+      for (final planId in planIds) {
+        recordBatch.insert(
+          MealPlanRecord.table,
+          MealPlanRecord.create(
+            mealPlanId: planId,
+            mealPlanVersion: 1,
+            status: ProgressStatus.completed,
+            startedAt: 1000,
+          ).toMap(),
+        );
+      }
+      await recordBatch.commit(noResult: true);
+
+      final recordsResult = await MealPlanRecordRepository.create()
+          .getMealPlanRecords(limit: 1005);
+      expect(recordsResult.isOk(), isTrue);
+      expect(recordsResult.value.data.length, 1005);
     },
   );
 
