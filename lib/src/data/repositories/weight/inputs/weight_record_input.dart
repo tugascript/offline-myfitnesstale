@@ -17,7 +17,7 @@
 
 import '../../../../utils/nullable.dart';
 
-class WeightRecordInput {
+final class WeightRecordInput {
   final int weight;
   final DateTime recordDate;
   final Nullable<int> fatPercentage;

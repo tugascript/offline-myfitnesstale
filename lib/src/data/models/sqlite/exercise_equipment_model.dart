@@ -15,10 +15,12 @@
 // You should have received a copy of the GNU General Public License
 // along with My Fitness Tale.  If not, see <https://www.gnu.org/licenses/>.
 
+import 'package:equatable/equatable.dart';
+
+import '../../utils/dates.dart';
 import 'equipment_model.dart';
 import 'exercise_model.dart';
 import 'model.dart';
-import '../../utils/dates.dart';
 
 const String _table = 'exercise_equipment';
 
@@ -33,7 +35,7 @@ enum ExerciseEquipmentColumns with Columns {
   const ExerciseEquipmentColumns(this.value);
 }
 
-class ExerciseEquipment implements JoinModel {
+final class ExerciseEquipment extends Equatable implements JoinModel {
   final int exerciseId;
   final int equipmentId;
   @override
@@ -109,4 +111,7 @@ class ExerciseEquipment implements JoinModel {
   String toString() {
     return 'ExerciseEquipment{exerciseId: $exerciseId, equipmentId: $equipmentId, createdAt: $createdAt}';
   }
+
+  @override
+  List<Object?> get props => [exerciseId, equipmentId, createdAt];
 }

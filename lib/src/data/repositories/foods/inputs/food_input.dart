@@ -16,17 +16,17 @@
 // along with My Fitness Tale.  If not, see <https://www.gnu.org/licenses/>.
 
 import '../../../../utils/nullable.dart';
-import '../../../utils/json_data.dart';
 import '../../../utils/enums.dart';
+import '../../../utils/json_data.dart';
 
-class FoodPortionInput {
+final class FoodPortionInput {
   final String portionName;
   final int gramWeight;
 
   const FoodPortionInput({required this.portionName, required this.gramWeight});
 }
 
-class FoodInput {
+final class FoodInput {
   final String name;
   final FoodCategory category;
   final Nullable<String> brand;

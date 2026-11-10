@@ -23,7 +23,8 @@ import '../../../utils/dates.dart';
 import '../../../utils/enums.dart';
 import '../../core/dtos/dto.dart';
 
-class StrengthGoalDto extends Equatable implements ModelDto<StrengthGoal> {
+final class StrengthGoalDto extends Equatable
+    implements ModelDto<StrengthGoal> {
   @override
   final int id;
   final String name;

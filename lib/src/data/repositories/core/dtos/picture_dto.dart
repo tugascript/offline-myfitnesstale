@@ -19,8 +19,9 @@ import 'package:equatable/equatable.dart';
 
 import '../../../utils/enums.dart';
 import '../../../utils/json_data.dart';
+import 'dto.dart';
 
-final class PictureDto extends Equatable {
+final class PictureDto extends Equatable implements Dto {
   final PictureStorage storage;
   final String uri;
 
@@ -30,6 +31,7 @@ final class PictureDto extends Equatable {
     return PictureDto(storage: picture.storage, uri: picture.uri);
   }
 
+  @override
   PictureDto copyWith({PictureStorage? storage, String? uri}) {
     return PictureDto(storage: storage ?? this.storage, uri: uri ?? this.uri);
   }

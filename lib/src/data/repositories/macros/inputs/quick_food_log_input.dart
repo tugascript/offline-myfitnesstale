@@ -16,7 +16,7 @@
 // along with My Fitness Tale.  If not, see <https://www.gnu.org/licenses/>.
 
 /// Nutrition totals for one diary entry, independent of the food library.
-class QuickFoodLogInput {
+final class QuickFoodLogInput {
   final String name;
   final int calories;
   final int protein;

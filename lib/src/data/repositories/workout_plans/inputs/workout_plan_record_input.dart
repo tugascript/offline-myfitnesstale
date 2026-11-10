@@ -18,7 +18,7 @@
 import '../../../../utils/nullable.dart';
 import '../../../utils/enums.dart';
 
-class WorkoutPlanRecordInput {
+final class WorkoutPlanRecordInput {
   final int workoutPlanId;
   final ProgressStatus status;
   final DateTime? startedAt;
@@ -32,7 +32,7 @@ class WorkoutPlanRecordInput {
   });
 }
 
-class WorkoutPlanDayRecordInput {
+final class WorkoutPlanDayRecordInput {
   final int workoutPlanRecordId;
   final ProgressStatus status;
   final int? week;
@@ -46,7 +46,7 @@ class WorkoutPlanDayRecordInput {
   });
 }
 
-class WorkoutPlanWorkoutRecordInput {
+final class WorkoutPlanWorkoutRecordInput {
   final int workoutPlanRecordId;
   final int workoutRecordId;
   final ProgressStatus status;

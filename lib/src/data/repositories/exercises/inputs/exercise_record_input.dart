@@ -18,7 +18,7 @@
 import '../../../../utils/nullable.dart';
 import '../../../utils/json_data.dart';
 
-class ExerciseRecordInput {
+final class ExerciseRecordInput {
   final int exerciseId;
   final int weight;
   final int reps;

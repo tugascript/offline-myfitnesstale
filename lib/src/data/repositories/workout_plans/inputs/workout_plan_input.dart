@@ -16,11 +16,11 @@
 // along with My Fitness Tale.  If not, see <https://www.gnu.org/licenses/>.
 
 import '../../../../utils/nullable.dart';
-import '../../../utils/json_data.dart';
 import '../../../utils/enums.dart';
+import '../../../utils/json_data.dart';
 import '../../workouts/dtos/workout_dto.dart';
 
-class WorkoutPlanInput {
+final class WorkoutPlanInput {
   final String name;
   final Difficulty difficulty;
   final bool isFavorite;
@@ -40,7 +40,7 @@ class WorkoutPlanInput {
   });
 }
 
-class WorkoutPlanWeekInput {
+final class WorkoutPlanWeekInput {
   final int startWeek;
   final int endWeek;
   final Nullable<WorkoutPhase> phase;
@@ -54,7 +54,7 @@ class WorkoutPlanWeekInput {
   });
 }
 
-class WorkoutPlanWorkoutInput {
+final class WorkoutPlanWorkoutInput {
   final int workoutId;
   final int? position;
   final Nullable<WorkoutTimeOfDay> timeOfDay;
@@ -66,14 +66,14 @@ class WorkoutPlanWorkoutInput {
   });
 }
 
-class WeekWorkoutInput {
+final class WeekWorkoutInput {
   final int workoutId;
   final WorkoutTimeOfDay? timeOfDay;
 
   const WeekWorkoutInput({required this.workoutId, this.timeOfDay});
 }
 
-class WorkoutPlanWorkoutBatchCreateInput {
+final class WorkoutPlanWorkoutBatchCreateInput {
   final int workoutId;
   final WorkoutTimeOfDay? timeOfDay;
 
@@ -83,7 +83,7 @@ class WorkoutPlanWorkoutBatchCreateInput {
   });
 }
 
-class WorkoutPlanDayBatchCreateInput {
+final class WorkoutPlanDayBatchCreateInput {
   final int day;
   final bool isRestDay;
   final List<WorkoutPlanWorkoutBatchCreateInput> workouts;
@@ -95,7 +95,7 @@ class WorkoutPlanDayBatchCreateInput {
   });
 }
 
-class WorkoutPlanWeekBatchCreateInput {
+final class WorkoutPlanWeekBatchCreateInput {
   final int startWeek;
   final int endWeek;
   final WorkoutPhase? phase;
@@ -111,7 +111,7 @@ class WorkoutPlanWeekBatchCreateInput {
   });
 }
 
-class WorkoutPlanWorkoutRegistrationInput {
+final class WorkoutPlanWorkoutRegistrationInput {
   final WorkoutDto workout;
   final WorkoutTimeOfDay timeOfDay;
 
@@ -121,7 +121,7 @@ class WorkoutPlanWorkoutRegistrationInput {
   });
 }
 
-class WorkoutPlanDayRegistrationInput {
+final class WorkoutPlanDayRegistrationInput {
   final bool isRestDay;
   final List<WorkoutPlanWorkoutRegistrationInput> workouts;
 
@@ -131,7 +131,7 @@ class WorkoutPlanDayRegistrationInput {
   });
 }
 
-class WorkoutPlanWeekRegistrationInput {
+final class WorkoutPlanWeekRegistrationInput {
   final int startWeek;
   final int endWeek;
   final WorkoutPhase phase;
@@ -145,7 +145,7 @@ class WorkoutPlanWeekRegistrationInput {
   });
 }
 
-class WorkoutPlanRegistrationInput {
+final class WorkoutPlanRegistrationInput {
   final String name;
   final String description;
   final PictureData? picture;

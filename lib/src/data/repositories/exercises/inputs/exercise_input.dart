@@ -16,10 +16,10 @@
 // along with My Fitness Tale.  If not, see <https://www.gnu.org/licenses/>.
 
 import '../../../../utils/nullable.dart';
-import '../../../utils/json_data.dart';
 import '../../../utils/enums.dart';
+import '../../../utils/json_data.dart';
 
-class ExerciseInput {
+final class ExerciseInput {
   final String name;
   final MuscleGroup muscleGroup;
   final TargetMuscles muscles;

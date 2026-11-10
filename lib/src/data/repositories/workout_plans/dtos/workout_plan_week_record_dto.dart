@@ -22,7 +22,7 @@ import '../../../models/sqlite/workout_plan_week_record_model.dart';
 import '../../core/dtos/dto.dart';
 import './workout_plan_day_record_dto.dart';
 
-class WorkoutPlanWeekRecordDto extends Equatable
+final class WorkoutPlanWeekRecordDto extends Equatable
     implements ModelDto<WorkoutPlanWeekRecord> {
   @override
   final int id;

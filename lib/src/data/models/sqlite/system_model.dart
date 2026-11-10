@@ -17,10 +17,10 @@
 
 import 'package:equatable/equatable.dart';
 
+import '../../utils/dates.dart';
 import '../../utils/enums.dart';
 import 'model.dart';
 import 'profile_model.dart';
-import '../../utils/dates.dart';
 
 const String _table = 'systems';
 
@@ -39,7 +39,7 @@ enum SystemColumns {
   const SystemColumns(this.value);
 }
 
-class System extends Equatable implements Model {
+final class System extends Equatable implements Model {
   @override
   final int? id;
   final ThemeType theme;

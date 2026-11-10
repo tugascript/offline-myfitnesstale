@@ -15,7 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with My Fitness Tale.  If not, see <https://www.gnu.org/licenses/>.
 
-final class PaginatedDto<T, U> {
+import 'package:equatable/equatable.dart';
+
+import 'dto.dart';
+
+final class PaginatedDto<T, U> extends Equatable implements Dto {
   final List<T> data;
   final int total;
   final int limit;
@@ -43,6 +47,7 @@ final class PaginatedDto<T, U> {
     );
   }
 
+  @override
   PaginatedDto<T, U> copyWith({
     List<T>? data,
     int? total,
@@ -56,4 +61,7 @@ final class PaginatedDto<T, U> {
       offset: offset ?? this.offset,
     );
   }
+
+  @override
+  List<Object?> get props => [data, total, limit, offset];
 }

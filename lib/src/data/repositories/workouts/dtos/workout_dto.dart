@@ -26,7 +26,7 @@ import '../../core/dtos/picture_dto.dart';
 import '../../core/dtos/video_dto.dart';
 import './workout_set_dto.dart';
 
-class WorkoutDto extends Equatable implements ModelDto<Workout> {
+final class WorkoutDto extends Equatable implements ModelDto<Workout> {
   @override
   final int id;
   final String name;

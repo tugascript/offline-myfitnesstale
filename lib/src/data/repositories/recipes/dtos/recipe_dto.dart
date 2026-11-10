@@ -24,7 +24,7 @@ import '../../../utils/enums.dart';
 import '../../../utils/json_data.dart';
 import '../../core/dtos/dto.dart';
 
-class RecipeItemDto extends Equatable implements ModelDto<RecipeItem> {
+final class RecipeItemDto extends Equatable implements ModelDto<RecipeItem> {
   @override
   final int id;
   final int recipeId;
@@ -123,7 +123,7 @@ class RecipeItemDto extends Equatable implements ModelDto<RecipeItem> {
   ];
 }
 
-class RecipeDto extends Equatable implements ModelDto<Recipe> {
+final class RecipeDto extends Equatable implements ModelDto<Recipe> {
   @override
   final int id;
   final String name;

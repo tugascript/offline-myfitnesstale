@@ -20,11 +20,10 @@ import 'dart:convert';
 import 'package:equatable/equatable.dart';
 
 import '../../../utils/nullable.dart';
+import '../../utils/dates.dart';
 import '../../utils/enums.dart';
 import 'model.dart';
-
 import 'week_macro_goal_model.dart';
-import '../../utils/dates.dart';
 
 const String _table = 'day_macro_goals';
 
@@ -51,7 +50,7 @@ enum DayMacroGoalColumns with Columns {
   const DayMacroGoalColumns(this.value);
 }
 
-class DayMacroGoal extends Equatable implements Model {
+final class DayMacroGoal extends Equatable implements Model {
   @override
   final int? id;
   final int weekMacroGoalId;

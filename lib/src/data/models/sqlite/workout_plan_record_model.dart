@@ -18,11 +18,10 @@
 import 'package:equatable/equatable.dart';
 
 import '../../../utils/nullable.dart';
+import '../../utils/dates.dart';
 import '../../utils/enums.dart';
 import 'model.dart';
-
 import 'workout_plan_model.dart';
-import '../../utils/dates.dart';
 
 const String _table = 'workout_plan_records';
 
@@ -45,7 +44,7 @@ enum WorkoutPlanRecordColumns with Columns {
   const WorkoutPlanRecordColumns(this.value);
 }
 
-class WorkoutPlanRecord extends Equatable implements Model {
+final class WorkoutPlanRecord extends Equatable implements Model {
   @override
   final int? id;
   final int workoutPlanId;
