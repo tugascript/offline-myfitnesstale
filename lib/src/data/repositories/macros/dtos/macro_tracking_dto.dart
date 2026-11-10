@@ -28,7 +28,8 @@ import '../../../utils/enums.dart';
 import '../../../utils/json_data.dart';
 import '../../core/dtos/dto.dart';
 
-class DayMacroGoalDto extends Equatable implements ModelDto<DayMacroGoal> {
+final class DayMacroGoalDto extends Equatable
+    implements ModelDto<DayMacroGoal> {
   @override
   final int id;
   final int weekMacroGoalId;
@@ -133,7 +134,7 @@ class DayMacroGoalDto extends Equatable implements ModelDto<DayMacroGoal> {
   ];
 }
 
-class MacroGoalDto extends Equatable implements ModelDto<WeekMacroGoal> {
+final class MacroGoalDto extends Equatable implements ModelDto<WeekMacroGoal> {
   @override
   final int id;
   final String name;
@@ -345,7 +346,7 @@ class MacroGoalDto extends Equatable implements ModelDto<WeekMacroGoal> {
 
 typedef WeekMacroGoalDto = MacroGoalDto;
 
-class MealLogItemDto extends Equatable implements ModelDto<MealLogItem> {
+final class MealLogItemDto extends Equatable implements ModelDto<MealLogItem> {
   @override
   final int id;
   final int mealLogId;
@@ -442,7 +443,7 @@ class MealLogItemDto extends Equatable implements ModelDto<MealLogItem> {
   ];
 }
 
-class MealLogDto extends Equatable implements ModelDto<MealLog> {
+final class MealLogDto extends Equatable implements ModelDto<MealLog> {
   @override
   final int id;
   final int dailyLogId;
@@ -534,7 +535,7 @@ class MealLogDto extends Equatable implements ModelDto<MealLog> {
   ];
 }
 
-class DailyNutritionLogDto extends Equatable
+final class DailyNutritionLogDto extends Equatable
     implements ModelDto<DailyNutritionLog> {
   @override
   final int id;

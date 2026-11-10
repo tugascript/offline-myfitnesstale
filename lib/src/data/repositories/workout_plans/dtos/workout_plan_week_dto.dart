@@ -23,7 +23,7 @@ import '../../../utils/enums.dart';
 import '../../core/dtos/dto.dart';
 import './workout_plan_day_dto.dart';
 
-class WorkoutPlanWeekDto extends Equatable
+final class WorkoutPlanWeekDto extends Equatable
     implements ModelDto<WorkoutPlanWeek> {
   @override
   final int id;

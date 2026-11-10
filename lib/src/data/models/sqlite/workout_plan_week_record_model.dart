@@ -41,7 +41,7 @@ enum WorkoutPlanWeekRecordColumns with Columns {
   const WorkoutPlanWeekRecordColumns(this.value);
 }
 
-class WorkoutPlanWeekRecord extends Equatable implements Model {
+final class WorkoutPlanWeekRecord extends Equatable implements Model {
   @override
   final int? id;
   final int workoutPlanRecordId;

@@ -17,9 +17,9 @@
 
 import 'package:equatable/equatable.dart';
 
+import '../../utils/dates.dart';
 import '../../utils/enums.dart';
 import 'model.dart';
-import '../../utils/dates.dart';
 
 const String _table = 'profiles';
 
@@ -37,7 +37,7 @@ enum ProfileColumns {
   const ProfileColumns(this.value);
 }
 
-class Profile extends Equatable implements Model {
+final class Profile extends Equatable implements Model {
   @override
   final int? id;
   final String name;

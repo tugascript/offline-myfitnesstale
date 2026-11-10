@@ -18,7 +18,7 @@
 import '../../../../utils/nullable.dart';
 import '../../../utils/enums.dart';
 
-class WeightGoalInput {
+final class WeightGoalInput {
   final int targetWeight;
   final Nullable<int> targetFatPercentage;
   final DateTime startDate;

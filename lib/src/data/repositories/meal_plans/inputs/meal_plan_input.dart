@@ -35,7 +35,7 @@ final class MealPlanMealItemInput extends Equatable {
   List<Object?> get props => [foodId, portionId, amount];
 }
 
-class MealPlanMealInput extends Equatable {
+final class MealPlanMealInput extends Equatable {
   final int position;
   final String? timeOfDay;
   final MealType mealType;
@@ -63,7 +63,7 @@ class MealPlanMealInput extends Equatable {
   ];
 }
 
-class MealPlanDayInput extends Equatable {
+final class MealPlanDayInput extends Equatable {
   final int day;
   final String? name;
   final List<MealPlanMealInput> meals;
@@ -74,7 +74,7 @@ class MealPlanDayInput extends Equatable {
   List<Object?> get props => [day, name, meals];
 }
 
-class MealPlanWeekInput extends Equatable {
+final class MealPlanWeekInput extends Equatable {
   final int weekNumber;
   final MealPlanPhase phase;
   final List<MealPlanDayInput> days;
@@ -89,7 +89,7 @@ class MealPlanWeekInput extends Equatable {
   List<Object?> get props => [weekNumber, phase, days];
 }
 
-class MealPlanInput {
+final class MealPlanInput {
   final String name;
   final Nullable<String> description;
   final List<MealPlanWeekInput> weeks;

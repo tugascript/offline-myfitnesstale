@@ -20,7 +20,7 @@ import 'package:equatable/equatable.dart';
 import '../../../models/sqlite/reminders_config_model.dart';
 import '../../core/dtos/dto.dart';
 
-class RemindersConfigDto extends Equatable
+final class RemindersConfigDto extends Equatable
     implements ModelDto<RemindersConfig> {
   @override
   final int id;

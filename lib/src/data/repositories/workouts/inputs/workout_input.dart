@@ -16,11 +16,11 @@
 // along with My Fitness Tale.  If not, see <https://www.gnu.org/licenses/>.
 
 import '../../../../utils/nullable.dart';
-import '../../../utils/json_data.dart';
 import '../../../utils/enums.dart';
+import '../../../utils/json_data.dart';
 import '../../exercises/dtos/exercise_dto.dart';
 
-class WorkoutInput {
+final class WorkoutInput {
   final String name;
   final Difficulty difficulty;
   final EditorType editorType;
@@ -42,7 +42,7 @@ class WorkoutInput {
   });
 }
 
-class WorkoutSetExerciseInput {
+final class WorkoutSetExerciseInput {
   final int exerciseId;
   final int minReps;
   final int? maxReps;
@@ -104,7 +104,7 @@ final class WorkoutSetUpsertInput {
   });
 }
 
-class WorkoutSetExerciseRegistrationInput {
+final class WorkoutSetExerciseRegistrationInput {
   final ExerciseDto exercise;
   final int minReps;
   final int? maxReps;
@@ -120,7 +120,7 @@ class WorkoutSetExerciseRegistrationInput {
   });
 }
 
-class WorkoutSetRegistrationInput {
+final class WorkoutSetRegistrationInput {
   final WorkoutSetType setType;
   final int minSets;
   final int? maxSets;
@@ -138,7 +138,7 @@ class WorkoutSetRegistrationInput {
   });
 }
 
-class WorkoutRegistrationInput {
+final class WorkoutRegistrationInput {
   final String name;
   final String description;
   final PictureData? picture;

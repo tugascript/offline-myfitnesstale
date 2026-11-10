@@ -22,7 +22,8 @@ import '../../../models/sqlite/workout_plan_day_model.dart';
 import '../../core/dtos/dto.dart';
 import './workout_plan_workout_dto.dart';
 
-class WorkoutPlanDayDto extends Equatable implements ModelDto<WorkoutPlanDay> {
+final class WorkoutPlanDayDto extends Equatable
+    implements ModelDto<WorkoutPlanDay> {
   @override
   final int id;
   final int planVersion;

@@ -53,7 +53,7 @@ enum MealPlanDayRecordColumns with Columns {
   const MealPlanDayRecordColumns(this.value);
 }
 
-class MealPlanDayRecord extends Equatable implements Model {
+final class MealPlanDayRecord extends Equatable implements Model {
   @override
   final int? id;
   final int mealPlanRecordId;

@@ -36,7 +36,7 @@ enum RemindersConfigColumns {
   const RemindersConfigColumns(this.value);
 }
 
-class RemindersConfig extends Equatable implements Model {
+final class RemindersConfig extends Equatable implements Model {
   @override
   final int? id;
   final bool workoutsOn;

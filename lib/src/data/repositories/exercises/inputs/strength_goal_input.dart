@@ -18,7 +18,7 @@
 import '../../../../utils/nullable.dart';
 import '../../../utils/enums.dart';
 
-class StrengthGoalInput {
+final class StrengthGoalInput {
   final int exerciseId;
   final String name;
   final int targetReps;
@@ -27,6 +27,7 @@ class StrengthGoalInput {
   final DateTime startDate;
   final ProgressStatus status;
   final Nullable<DateTime> completedAt;
+
   const StrengthGoalInput({
     required this.exerciseId,
     required this.name,

@@ -15,13 +15,12 @@
 // You should have received a copy of the GNU General Public License
 // along with My Fitness Tale.  If not, see <https://www.gnu.org/licenses/>.
 
-import '../../../utils/nullable.dart';
-
 import 'package:equatable/equatable.dart';
 
+import '../../../utils/nullable.dart';
+import '../../utils/dates.dart';
 import '../../utils/enums.dart';
 import 'model.dart';
-import '../../utils/dates.dart';
 
 const String _table = 'strength_goals';
 
@@ -44,7 +43,7 @@ enum StrengthGoalColumns with Columns {
   const StrengthGoalColumns(this.value);
 }
 
-class StrengthGoal extends Equatable implements Model {
+final class StrengthGoal extends Equatable implements Model {
   @override
   final int? id;
   final String name;

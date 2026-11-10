@@ -23,7 +23,7 @@ import '../../../utils/enums.dart';
 import '../../core/dtos/dto.dart';
 import '../../core/dtos/picture_dto.dart';
 
-class EquipmentDto extends Equatable implements ModelDto<Equipment> {
+final class EquipmentDto extends Equatable implements ModelDto<Equipment> {
   @override
   final int id;
   final String name;

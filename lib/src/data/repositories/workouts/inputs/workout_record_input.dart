@@ -18,7 +18,7 @@
 import '../../../../utils/nullable.dart';
 import '../../../utils/json_data.dart';
 
-class WorkoutRecordInput {
+final class WorkoutRecordInput {
   final int workoutId;
   final DateTime startedAt;
   final Nullable<DateTime> completedAt;
@@ -32,7 +32,7 @@ class WorkoutRecordInput {
   });
 }
 
-class WorkoutSetRecordInput {
+final class WorkoutSetRecordInput {
   final int workoutSetId;
   final int workoutRecordId;
   final int setNumber;
@@ -50,7 +50,7 @@ class WorkoutSetRecordInput {
   });
 }
 
-class WorkoutSetExerciseRecordInput {
+final class WorkoutSetExerciseRecordInput {
   final int workoutSetExerciseId;
   final int workoutRecordId;
   final int workoutSetRecordId;

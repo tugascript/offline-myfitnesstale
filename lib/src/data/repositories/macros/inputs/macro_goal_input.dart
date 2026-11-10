@@ -20,7 +20,7 @@ import 'package:equatable/equatable.dart';
 import '../../../../utils/nullable.dart';
 import '../../../utils/enums.dart';
 
-class DayMacroGoalInput extends Equatable {
+final class DayMacroGoalInput extends Equatable {
   final String? name;
   final List<DayOfWeek> days;
   final int targetCalories;
@@ -63,7 +63,7 @@ class DayMacroGoalInput extends Equatable {
   ];
 }
 
-class MacroGoalInput extends Equatable {
+final class MacroGoalInput extends Equatable {
   final String? name;
   final int targetCalories;
   final int targetProtein;

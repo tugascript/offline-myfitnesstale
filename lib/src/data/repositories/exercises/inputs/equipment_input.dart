@@ -18,7 +18,7 @@
 import '../../../../utils/nullable.dart';
 import '../../../utils/json_data.dart';
 
-class EquipmentInput {
+final class EquipmentInput {
   final String name;
   final Nullable<PictureData> picture;
   final bool isFavorite;

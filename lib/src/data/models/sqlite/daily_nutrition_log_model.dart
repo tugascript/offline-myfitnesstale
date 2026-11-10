@@ -15,12 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with My Fitness Tale.  If not, see <https://www.gnu.org/licenses/>.
 
-import '../../../utils/nullable.dart';
-
 import 'package:equatable/equatable.dart';
 
-import 'model.dart';
+import '../../../utils/nullable.dart';
 import '../../utils/dates.dart';
+import 'model.dart';
 
 const String _table = 'daily_nutrition_logs';
 
@@ -38,7 +37,7 @@ enum DailyNutritionLogColumns with Columns {
   const DailyNutritionLogColumns(this.value);
 }
 
-class DailyNutritionLog extends Equatable implements Model {
+final class DailyNutritionLog extends Equatable implements Model {
   @override
   final int? id;
 

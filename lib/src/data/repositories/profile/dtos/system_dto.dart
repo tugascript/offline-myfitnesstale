@@ -21,7 +21,7 @@ import '../../../models/sqlite/system_model.dart';
 import '../../../utils/enums.dart';
 import '../../core/dtos/dto.dart';
 
-class SystemDto extends Equatable implements ModelDto<System> {
+final class SystemDto extends Equatable implements ModelDto<System> {
   @override
   final int id;
   final Units units;

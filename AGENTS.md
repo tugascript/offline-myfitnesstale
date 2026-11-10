@@ -12,7 +12,8 @@ Follow a strict MVVM flow aligned with the Flutter app architecture guide:
 - **Model (`lib/src/data/models/sqlite`)**:
     - Defines SQLite table schemas (`tableCreate`, `Columns` enum).
     - Maps database rows to Dart objects (`toMap()`, `fromMap()`).
-    - Pure data container implementing `Model` and `Equatable`. Contains no business logic.
+    - Pure data container implementing `Model` and `Equatable`. Contains no business logic. All classes are final and
+      immutable.
     - Uses `Nullable<T?>` wrappers (`lib/src/utils/nullable.dart`) in `copyWith` to differentiate between omitting an
       argument and deliberately setting a field to `null`.
     - Seed/onboarding constants live in `lib/src/data/models/constants`.
@@ -26,7 +27,8 @@ Follow a strict MVVM flow aligned with the Flutter app architecture guide:
     - Interacts with one or more `Dao` / `JoinDao` instances and manages transactions for multi-step mutations.
     - Transforms raw database models into domain DTOs under feature `dtos/` (shared media DTOs in
       `repositories/core/dtos/`).
-        - DTOs are immutable, stripping metadata and implementing `Equatable` for value equality in the Bloc.
+        - DTOs are immutable, stripping metadata and implementing `Equatable` for value equality in the Bloc. Hence,
+          classes are final
     - Feature inputs live beside the repository under `inputs/`.
     - Returns functional `Result<T, ServiceError<E>>` objects (`lib/src/utils/result.dart`) instead of
       throwing unhandled exceptions or leaking database details.

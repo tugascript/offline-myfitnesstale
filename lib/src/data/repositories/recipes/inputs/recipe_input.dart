@@ -19,7 +19,7 @@ import 'package:equatable/equatable.dart';
 
 import '../../../../utils/nullable.dart';
 
-class RecipeItemInput extends Equatable {
+final class RecipeItemInput extends Equatable {
   final int foodId;
   final int? portionId;
   final int amount;
@@ -34,11 +34,12 @@ class RecipeItemInput extends Equatable {
   List<Object?> get props => [foodId, portionId, amount];
 }
 
-class RecipeInput {
+final class RecipeInput {
   final String name;
   final Nullable<String> description;
   final int servingsYield;
   final List<RecipeItemInput> items;
+
   const RecipeInput({
     required this.name,
     this.description = const Nullable(null),

@@ -15,15 +15,14 @@
 // You should have received a copy of the GNU General Public License
 // along with My Fitness Tale.  If not, see <https://www.gnu.org/licenses/>.
 
-import '../../../utils/nullable.dart';
-
 import 'package:equatable/equatable.dart';
 
+import '../../../utils/nullable.dart';
+import '../../utils/dates.dart';
 import 'food_model.dart';
 import 'food_portion_model.dart';
 import 'meal_plan_meal_model.dart';
 import 'model.dart';
-import '../../utils/dates.dart';
 
 const String _table = 'meal_plan_meal_items';
 
@@ -47,7 +46,7 @@ enum MealPlanMealItemColumns with Columns {
   const MealPlanMealItemColumns(this.value);
 }
 
-class MealPlanMealItem extends Equatable implements Model {
+final class MealPlanMealItem extends Equatable implements Model {
   @override
   final int? id;
   final int mealPlanMealId;

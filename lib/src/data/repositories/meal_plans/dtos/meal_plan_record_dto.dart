@@ -25,7 +25,7 @@ import '../../../utils/dates.dart';
 import '../../../utils/enums.dart';
 import '../../core/dtos/dto.dart';
 
-class MealPlanDayRecordDto extends Equatable
+final class MealPlanDayRecordDto extends Equatable
     implements ModelDto<MealPlanDayRecord> {
   @override
   final int id;
@@ -135,7 +135,7 @@ class MealPlanDayRecordDto extends Equatable
   ];
 }
 
-class MealPlanWeekRecordDto extends Equatable
+final class MealPlanWeekRecordDto extends Equatable
     implements ModelDto<MealPlanWeekRecord> {
   @override
   final int id;
@@ -242,7 +242,8 @@ class MealPlanWeekRecordDto extends Equatable
   ];
 }
 
-class MealPlanRecordDto extends Equatable implements ModelDto<MealPlanRecord> {
+final class MealPlanRecordDto extends Equatable
+    implements ModelDto<MealPlanRecord> {
   @override
   final int id;
   final int mealPlanId;

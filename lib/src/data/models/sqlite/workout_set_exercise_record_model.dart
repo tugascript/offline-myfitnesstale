@@ -18,14 +18,13 @@
 import 'package:equatable/equatable.dart';
 
 import '../../../utils/nullable.dart';
+import '../../utils/dates.dart';
 import '../../utils/json_data.dart';
 import 'exercise_model.dart';
 import 'model.dart';
-
 import 'workout_record_model.dart';
 import 'workout_set_exercise_model.dart';
 import 'workout_set_record_model.dart';
-import '../../utils/dates.dart';
 
 const String _table = 'workout_set_exercise_records';
 
@@ -48,7 +47,7 @@ enum WorkoutSetExerciseRecordColumns with Columns {
   const WorkoutSetExerciseRecordColumns(this.value);
 }
 
-class WorkoutSetExerciseRecord extends Equatable implements Model {
+final class WorkoutSetExerciseRecord extends Equatable implements Model {
   @override
   final int? id;
   final int workoutSetExerciseId;

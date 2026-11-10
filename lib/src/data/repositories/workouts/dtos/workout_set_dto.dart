@@ -23,7 +23,7 @@ import '../../../utils/enums.dart';
 import '../../core/dtos/dto.dart';
 import './workout_set_exercise_dto.dart';
 
-class WorkoutSetDto extends Equatable implements ModelDto<WorkoutSet> {
+final class WorkoutSetDto extends Equatable implements ModelDto<WorkoutSet> {
   @override
   final int id;
   final int position;

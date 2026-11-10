@@ -64,7 +64,7 @@ typedef OnboardingStageCallback = FutureOr<void> Function(
   OnboardingStage stage,
 );
 
-class OnboardingRepository {
+final class OnboardingRepository {
   final Dao<System> _systemDao;
   final ExerciseRepository _exerciseService;
   final ProfileRepository _profileService;

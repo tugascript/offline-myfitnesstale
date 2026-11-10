@@ -22,7 +22,7 @@ import '../../../models/sqlite/workout_set_record_model.dart';
 import '../../core/dtos/dto.dart';
 import './workout_set_exercise_record_dto.dart';
 
-class WorkoutSetRecordDto extends Equatable
+final class WorkoutSetRecordDto extends Equatable
     implements ModelDto<WorkoutSetRecord> {
   @override
   final int id;
