@@ -1,5 +1,5 @@
-import 'package:myfitnesstale/src/utils/nullable.dart';
-import 'package:myfitnesstale/src/data/utils/enums.dart';
+import '../../../../utils/nullable.dart';
+import '../../../utils/enums.dart';
 
 class WeightGoalInput {
   final int targetWeight;

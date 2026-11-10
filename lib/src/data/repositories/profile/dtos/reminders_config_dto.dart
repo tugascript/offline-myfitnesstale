@@ -1,7 +1,7 @@
 import 'package:equatable/equatable.dart';
 
-import 'package:myfitnesstale/src/data/models/reminders_config_model.dart';
-import 'package:myfitnesstale/src/data/repositories/core/dtos/dto.dart';
+import '../../../models/reminders_config_model.dart';
+import '../../core/dtos/dto.dart';
 
 class RemindersConfigDto extends Equatable implements Dto<RemindersConfig> {
   @override

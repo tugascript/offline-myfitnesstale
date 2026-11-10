@@ -1,5 +1,3 @@
-
-
 /// Base type for feature repositories.
 ///
 /// Concrete repositories should expose a factory that wires default DAOs:

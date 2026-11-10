@@ -1,10 +1,10 @@
 import 'package:equatable/equatable.dart';
 
-import 'package:myfitnesstale/src/utils/nullable.dart';
-import 'package:myfitnesstale/src/data/utils/json_data.dart';
-import 'package:myfitnesstale/src/data/utils/enums.dart';
-import 'package:myfitnesstale/src/data/models/food_model.dart';
-import 'package:myfitnesstale/src/data/models/food_portion_model.dart';
+import '../../../../utils/nullable.dart';
+import '../../../utils/json_data.dart';
+import '../../../utils/enums.dart';
+import '../../../models/food_model.dart';
+import '../../../models/food_portion_model.dart';
 
 class FoodPortionDto extends Equatable {
   final int id;

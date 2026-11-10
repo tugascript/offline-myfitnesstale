@@ -1,10 +1,10 @@
 import 'package:equatable/equatable.dart';
 
-import 'package:myfitnesstale/src/utils/nullable.dart';
-import 'package:myfitnesstale/src/data/utils/json_data.dart';
-import 'package:myfitnesstale/src/data/utils/enums.dart';
-import 'package:myfitnesstale/src/data/models/recipe_item_model.dart';
-import 'package:myfitnesstale/src/data/models/recipe_model.dart';
+import '../../../../utils/nullable.dart';
+import '../../../utils/json_data.dart';
+import '../../../utils/enums.dart';
+import '../../../models/recipe_item_model.dart';
+import '../../../models/recipe_model.dart';
 
 class RecipeItemDto extends Equatable {
   final int id;

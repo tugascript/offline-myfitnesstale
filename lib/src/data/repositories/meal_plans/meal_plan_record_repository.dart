@@ -1,29 +1,30 @@
 import 'package:logging/logging.dart';
 
-import 'package:myfitnesstale/src/data/models/daily_nutrition_log_model.dart';
-import 'package:myfitnesstale/src/data/models/meal_log_model.dart';
-import 'package:myfitnesstale/src/data/models/meal_plan_day_model.dart';
-import 'package:myfitnesstale/src/data/models/meal_plan_day_record_model.dart';
-import 'package:myfitnesstale/src/data/models/meal_plan_model.dart';
-import 'package:myfitnesstale/src/data/models/meal_plan_record_model.dart';
-import 'package:myfitnesstale/src/data/models/meal_plan_week_model.dart';
-import 'package:myfitnesstale/src/data/models/meal_plan_week_record_model.dart';
-import 'package:myfitnesstale/src/data/services/common.dart';
-import 'package:myfitnesstale/src/data/services/sqlite/database_helper.dart';
-import 'package:myfitnesstale/src/data/services/sqlite/dao.dart';
-import 'package:myfitnesstale/src/data/utils/dates.dart';
-import 'package:myfitnesstale/src/data/utils/enums.dart';
-import 'package:myfitnesstale/src/data/utils/where_builder.dart';
-import 'package:myfitnesstale/src/utils/errors.dart';
-import 'package:myfitnesstale/src/utils/nullable.dart';
-import 'package:myfitnesstale/src/utils/result.dart';
+import '../../models/daily_nutrition_log_model.dart';
+import '../../models/meal_log_model.dart';
+import '../../models/meal_plan_day_model.dart';
+import '../../models/meal_plan_day_record_model.dart';
+import '../../models/meal_plan_model.dart';
+import '../../models/meal_plan_record_model.dart';
+import '../../models/meal_plan_week_model.dart';
+import '../../models/meal_plan_week_record_model.dart';
+import '../../services/common.dart';
+import '../../services/sqlite/database_helper.dart';
+import '../../services/sqlite/dao.dart';
+import '../../utils/dates.dart';
+import '../../utils/enums.dart';
+import '../../utils/where_builder.dart';
+import '../../../utils/errors.dart';
+import '../../../utils/nullable.dart';
+import '../../../utils/result.dart';
 import 'dtos/meal_plan_record_dto.dart';
-import 'package:myfitnesstale/src/data/repositories/core/dtos/paginated_dto.dart';
+import '../core/dtos/paginated_dto.dart';
 
 class MealPlanRecordRepository {
   MealPlanRecordRepository._();
 
-  static final MealPlanRecordRepository _instance = MealPlanRecordRepository._();
+  static final MealPlanRecordRepository _instance =
+      MealPlanRecordRepository._();
 
   factory MealPlanRecordRepository() => _instance;
 

@@ -1,24 +1,24 @@
 import 'package:logging/logging.dart';
 import 'package:sqflite/sqflite.dart';
 
-import 'package:myfitnesstale/src/data/models/workout_plan_day_model.dart';
-import 'package:myfitnesstale/src/data/models/workout_plan_day_record_model.dart';
-import 'package:myfitnesstale/src/data/models/workout_plan_model.dart';
-import 'package:myfitnesstale/src/data/models/workout_plan_record_model.dart';
-import 'package:myfitnesstale/src/data/models/workout_plan_week_model.dart';
-import 'package:myfitnesstale/src/data/models/workout_plan_week_record_model.dart';
-import 'package:myfitnesstale/src/data/models/workout_plan_workout_model.dart';
-import 'package:myfitnesstale/src/data/models/workout_plan_workout_record_model.dart';
-import 'package:myfitnesstale/src/data/services/common.dart';
-import 'package:myfitnesstale/src/data/services/sqlite/database_helper.dart';
+import '../../models/workout_plan_day_model.dart';
+import '../../models/workout_plan_day_record_model.dart';
+import '../../models/workout_plan_model.dart';
+import '../../models/workout_plan_record_model.dart';
+import '../../models/workout_plan_week_model.dart';
+import '../../models/workout_plan_week_record_model.dart';
+import '../../models/workout_plan_workout_model.dart';
+import '../../models/workout_plan_workout_record_model.dart';
+import '../../services/common.dart';
+import '../../services/sqlite/database_helper.dart';
 import '../../services/sqlite/dao.dart' show Dao;
-import 'package:myfitnesstale/src/data/utils/dates.dart';
-import 'package:myfitnesstale/src/data/utils/enums.dart';
-import 'package:myfitnesstale/src/data/utils/where_builder.dart';
-import 'package:myfitnesstale/src/utils/errors.dart';
-import 'package:myfitnesstale/src/utils/nullable.dart';
-import 'package:myfitnesstale/src/utils/result.dart';
-import 'package:myfitnesstale/src/data/repositories/core/dtos/paginated_dto.dart';
+import '../../utils/dates.dart';
+import '../../utils/enums.dart';
+import '../../utils/where_builder.dart';
+import '../../../utils/errors.dart';
+import '../../../utils/nullable.dart';
+import '../../../utils/result.dart';
+import '../core/dtos/paginated_dto.dart';
 import 'dtos/workout_plan_day_record_dto.dart';
 import 'dtos/workout_plan_dto.dart';
 import 'dtos/workout_plan_record_dto.dart';
@@ -31,7 +31,8 @@ export 'inputs/workout_plan_record_input.dart';
 class WorkoutPlanRecordRepository {
   WorkoutPlanRecordRepository._();
 
-  static final WorkoutPlanRecordRepository instance = WorkoutPlanRecordRepository._();
+  static final WorkoutPlanRecordRepository instance =
+      WorkoutPlanRecordRepository._();
 
   factory WorkoutPlanRecordRepository() => instance;
 
