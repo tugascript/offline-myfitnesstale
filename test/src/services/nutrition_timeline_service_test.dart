@@ -16,6 +16,7 @@
 // along with My Fitness Tale.  If not, see <https://www.gnu.org/licenses/>.
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:myfitnesstale/src/data/repositories/recipes/inputs/recipe_item_input.dart';
 
 import 'package:myfitnesstale/src/data/utils/enums.dart';
 import 'package:myfitnesstale/src/data/repositories/foods/food_repository.dart';

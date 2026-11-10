@@ -32,6 +32,7 @@ import 'package:myfitnesstale/src/data/repositories/meal_plans/inputs/meal_plan_
 import 'package:myfitnesstale/src/data/repositories/meal_plans/meal_plan_record_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/meal_plans/meal_plan_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/recipes/inputs/recipe_input.dart';
+import 'package:myfitnesstale/src/data/repositories/recipes/inputs/recipe_item_input.dart';
 import 'package:myfitnesstale/src/data/repositories/recipes/recipe_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/weight/inputs/weight_goal_input.dart';
 import 'package:myfitnesstale/src/data/repositories/weight/inputs/weight_record_input.dart';

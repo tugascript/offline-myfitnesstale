@@ -15,10 +15,15 @@
 // You should have received a copy of the GNU General Public License
 // along with My Fitness Tale.  If not, see <https://www.gnu.org/licenses/>.
 
+import 'package:equatable/equatable.dart';
+
 import '../../../../utils/nullable.dart';
 import '../../../utils/enums.dart';
+import '../../../models/sqlite/weight_goal_model.dart';
+import '../../core/inputs/input.dart';
 
-final class WeightGoalInput {
+final class WeightGoalInput extends Equatable
+    implements ModelInput<WeightGoal> {
   final int targetWeight;
   final Nullable<int> targetFatPercentage;
   final DateTime startDate;
@@ -34,4 +39,14 @@ final class WeightGoalInput {
     this.status = ProgressStatus.inProgress,
     this.completedAt = const Nullable<DateTime>(null),
   });
+
+  @override
+  List<Object?> get props => [
+    targetWeight,
+    targetFatPercentage,
+    startDate,
+    phase,
+    status,
+    completedAt,
+  ];
 }

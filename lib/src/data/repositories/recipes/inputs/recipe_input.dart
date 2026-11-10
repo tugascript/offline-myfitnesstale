@@ -18,23 +18,11 @@
 import 'package:equatable/equatable.dart';
 
 import '../../../../utils/nullable.dart';
+import '../../../models/sqlite/recipe_model.dart';
+import '../../core/inputs/input.dart';
+import 'recipe_item_input.dart';
 
-final class RecipeItemInput extends Equatable {
-  final int foodId;
-  final int? portionId;
-  final int amount;
-
-  const RecipeItemInput({
-    required this.foodId,
-    this.portionId,
-    required this.amount,
-  });
-
-  @override
-  List<Object?> get props => [foodId, portionId, amount];
-}
-
-final class RecipeInput {
+final class RecipeInput extends Equatable implements ModelInput<Recipe> {
   final String name;
   final Nullable<String> description;
   final int servingsYield;
@@ -46,4 +34,7 @@ final class RecipeInput {
     required this.servingsYield,
     required this.items,
   });
+
+  @override
+  List<Object?> get props => [name, description, servingsYield, items];
 }
