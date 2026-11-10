@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../cubits/exercise_cubit.dart';
+import '../../../../ui/exercises/view_models/exercise_cubit.dart';
 import '../../../../cubits/states/workout_state.dart';
 import '../../../../cubits/workout_cubit.dart';
 import '../../../../models/enums.dart';

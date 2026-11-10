@@ -1,13 +1,13 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:logging/logging.dart';
 
-import '../common/nullable.dart';
-import '../models/repository.dart';
-import '../services/common/errors.dart';
-import '../services/exercise_record_service.dart';
-import '../services/inputs/exercise_record_input.dart';
-import '../services/inputs/strength_goal_input.dart';
-import 'states/common_state.dart';
+import '../../../common/nullable.dart';
+import '../../../models/repository.dart';
+import '../../../services/common/errors.dart';
+import '../../../services/exercise_record_service.dart';
+import '../../../services/inputs/exercise_record_input.dart';
+import '../../../services/inputs/strength_goal_input.dart';
+import '../../../cubits/states/common_state.dart';
 import 'states/exercise_record_state.dart';
 
 class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {

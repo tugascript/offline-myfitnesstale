@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../../common/nullable.dart';
-import '../../../../../cubits/exercise_record_cubit.dart';
+import '../../../view_models/exercise_record_cubit.dart';
 import '../../../../../models/common.dart';
 import '../../../../../models/enums.dart';
 import '../../../../../services/dtos/exercise_dto.dart';

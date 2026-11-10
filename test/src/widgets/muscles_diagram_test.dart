@@ -5,7 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:myfitnesstale/src/common/nullable.dart';
-import 'package:myfitnesstale/src/cubits/exercise_cubit.dart';
+import 'package:myfitnesstale/src/ui/exercises/view_models/exercise_cubit.dart';
 import 'package:myfitnesstale/src/models/common.dart';
 import 'package:myfitnesstale/src/models/enums.dart';
 import 'package:myfitnesstale/src/services/dtos/equipment_dto.dart';

@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../cubits/exercise_cubit.dart';
-import '../../../cubits/states/exercise_state.dart';
 import '../../../routing/routing.dart';
 import '../../../services/inputs/equipment_input.dart';
+import '../../../widgets/layout/responsive_scaffold.dart';
 import '../../core/sizes/data_display_sizes.dart';
 import '../../core/sizes/screen_size.dart';
+import '../view_models/exercise_cubit.dart';
+import '../view_models/states/exercise_state.dart';
 import '../widgets/equipment_form.dart';
-import '../../../widgets/layout/responsive_scaffold.dart';
 
 class EquipmentCreationView extends StatelessWidget {
   static const String name = 'equipment_creation';
