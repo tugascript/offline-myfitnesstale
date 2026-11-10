@@ -2,7 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:myfitnesstale/src/data/models/equipment_model.dart';
 import 'package:myfitnesstale/src/data/models/exercise_equipment_model.dart';
 import 'package:myfitnesstale/src/data/models/exercise_model.dart';
-import 'package:myfitnesstale/src/data/repositories/exercises/exercise_record_service.dart';
+import 'package:myfitnesstale/src/data/repositories/exercises/exercise_record_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/exercises/exercise_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/exercises/inputs/equipment_input.dart';
 import 'package:myfitnesstale/src/data/repositories/exercises/inputs/exercise_input.dart';
@@ -118,7 +118,7 @@ void main() {
 
   test('equipment, exercise, and exercise-record PUT replace fields and clear omitted nullable values', () async {
     final exerciseCubit = ExerciseCubit(ExerciseRepository.create());
-    final recordCubit = ExerciseRecordCubit();
+    final recordCubit = ExerciseRecordCubit(ExerciseRecordRepository.create());
     addTearDown(exerciseCubit.close);
     addTearDown(recordCubit.close);
 
@@ -213,7 +213,9 @@ void main() {
     expect(updatedRecord.reps, 6);
     expect(updatedRecord.picture, isNull);
     expect(
-      (await ExerciseRecordService().getExerciseRecord(createdRecord.id))
+      (await ExerciseRecordRepository.create().getExerciseRecord(
+        createdRecord.id,
+      ))
           .value
           .picture,
       isNull,
