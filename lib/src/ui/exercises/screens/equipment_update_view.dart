@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../common/nullable.dart';
+import '../../../utils/nullable.dart';
 import '../../../models/common.dart';
 import '../../../routing/routing.dart';
 import '../../../services/inputs/equipment_input.dart';

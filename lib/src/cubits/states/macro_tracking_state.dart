@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
 
-import '../../common/nullable.dart';
+import '../../utils/nullable.dart';
 import '../../services/dtos/macro_tracking_dto.dart';
 import 'common_state.dart';
 

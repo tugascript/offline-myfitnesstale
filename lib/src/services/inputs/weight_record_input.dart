@@ -1,4 +1,4 @@
-import '../../common/nullable.dart';
+import '../../utils/nullable.dart';
 
 class WeightRecordInput {
   final int weight;

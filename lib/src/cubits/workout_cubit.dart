@@ -1,9 +1,9 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:logging/logging.dart';
 
-import '../common/nullable.dart';
+import '../utils/nullable.dart';
 import '../models/enums.dart';
-import '../services/common/errors.dart';
+import '../utils/errors.dart';
 import '../services/dtos/workout_dto.dart';
 import '../services/workout_service.dart';
 import 'states/common_state.dart';

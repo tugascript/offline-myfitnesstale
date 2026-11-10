@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../common/nullable.dart';
+import '../../utils/nullable.dart';
 import '../../cubits/states/workout_state.dart';
 import '../../cubits/workout_cubit.dart';
 import '../../models/common.dart';

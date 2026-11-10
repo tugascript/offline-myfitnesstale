@@ -3,9 +3,9 @@ import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:logging/logging.dart';
 
-import '../common/nullable.dart';
+import '../utils/nullable.dart';
 import '../models/common.dart';
-import '../services/common/errors.dart';
+import '../utils/errors.dart';
 import '../services/dtos/workout_record_dto.dart';
 import '../services/workout_record_service.dart';
 import '../services/workout_service.dart';

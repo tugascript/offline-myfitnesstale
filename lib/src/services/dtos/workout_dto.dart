@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
 
-import '../../common/nullable.dart';
+import '../../utils/nullable.dart';
 import '../../models/common.dart';
 import '../../models/enums.dart';
 import '../../models/workout_model.dart';

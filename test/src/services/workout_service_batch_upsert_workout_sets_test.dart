@@ -9,7 +9,7 @@ import 'package:myfitnesstale/src/models/workout_record_model.dart';
 import 'package:myfitnesstale/src/models/workout_set_exercise_model.dart';
 import 'package:myfitnesstale/src/models/workout_set_exercise_option_model.dart';
 import 'package:myfitnesstale/src/models/workout_set_model.dart';
-import 'package:myfitnesstale/src/services/common/errors.dart';
+import 'package:myfitnesstale/src/utils/errors.dart';
 import 'package:myfitnesstale/src/services/workout_service.dart';
 
 import '../../support/test_database.dart';

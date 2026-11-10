@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
 
-import '../../../../common/nullable.dart';
+import '../../../../utils/nullable.dart';
 import '../../../../services/dtos/exercise_record_dto.dart';
 import '../../../../services/dtos/strength_goal_dto.dart';
 import '../../../../cubits/states/common_state.dart';

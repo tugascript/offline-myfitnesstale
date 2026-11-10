@@ -3,7 +3,7 @@ import '../services/inputs/meal_plan_input.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:logging/logging.dart';
 
-import '../common/nullable.dart';
+import '../utils/nullable.dart';
 import '../models/enums.dart';
 import '../services/dtos/meal_plan_dto.dart';
 import '../services/meal_plan_service.dart';

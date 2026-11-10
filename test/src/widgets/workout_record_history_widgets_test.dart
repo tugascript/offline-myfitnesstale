@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:myfitnesstale/src/common/nullable.dart';
+import 'package:myfitnesstale/src/utils/nullable.dart';
 import 'package:myfitnesstale/src/cubits/states/workout_record_state.dart';
 import 'package:myfitnesstale/src/models/common.dart';
 import 'package:myfitnesstale/src/models/enums.dart';

@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
 
-import '../../common/nullable.dart';
+import '../../utils/nullable.dart';
 import '../../models/common.dart';
 import '../../models/daily_nutrition_log_model.dart';
 import '../../models/day_macro_goal_model.dart';

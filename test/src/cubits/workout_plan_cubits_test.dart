@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite/sqflite.dart';
 
-import 'package:myfitnesstale/src/common/nullable.dart';
+import 'package:myfitnesstale/src/utils/nullable.dart';
 import 'package:myfitnesstale/src/cubits/workout_plan_cubit.dart';
 import 'package:myfitnesstale/src/cubits/workout_plan_record_cubit.dart';
 import 'package:myfitnesstale/src/models/enums.dart';
@@ -14,7 +14,7 @@ import 'package:myfitnesstale/src/models/workout_plan_week_model.dart';
 import 'package:myfitnesstale/src/models/workout_plan_workout_model.dart';
 import 'package:myfitnesstale/src/models/workout_plan_workout_record_model.dart';
 import 'package:myfitnesstale/src/models/workout_record_model.dart';
-import 'package:myfitnesstale/src/services/common/errors.dart';
+import 'package:myfitnesstale/src/utils/errors.dart';
 import 'package:myfitnesstale/src/services/workout_plan_service.dart';
 import 'package:myfitnesstale/src/services/workout_plan_record_service.dart';
 import 'package:myfitnesstale/src/services/workout_record_service.dart';

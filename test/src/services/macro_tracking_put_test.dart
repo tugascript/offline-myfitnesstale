@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:myfitnesstale/src/common/nullable.dart';
+import 'package:myfitnesstale/src/utils/nullable.dart';
 import 'package:myfitnesstale/src/models/common.dart';
 import 'package:myfitnesstale/src/models/enums.dart';
 import 'package:myfitnesstale/src/models/exercise_model.dart';
@@ -10,7 +10,7 @@ import 'package:myfitnesstale/src/services/exercise_record_service.dart';
 import 'package:myfitnesstale/src/services/inputs/strength_goal_input.dart';
 import 'package:myfitnesstale/src/services/inputs/weight_goal_input.dart';
 import 'package:myfitnesstale/src/services/inputs/weight_record_input.dart';
-import 'package:myfitnesstale/src/services/common/errors.dart';
+import 'package:myfitnesstale/src/utils/errors.dart';
 import 'package:myfitnesstale/src/services/food_service.dart';
 import 'package:myfitnesstale/src/services/recipe_service.dart';
 import 'package:myfitnesstale/src/services/meal_plan_service.dart';

@@ -1,6 +1,6 @@
 import 'package:myfitnesstale/src/services/inputs/macro_goal_input.dart';
 import 'package:myfitnesstale/src/services/inputs/food_input.dart';
-import 'package:myfitnesstale/src/common/nullable.dart';
+import 'package:myfitnesstale/src/utils/nullable.dart';
 import 'package:myfitnesstale/src/services/inputs/meal_plan_input.dart';
 import 'package:myfitnesstale/src/services/inputs/recipe_input.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -11,7 +11,7 @@ import 'package:myfitnesstale/src/models/food_model.dart';
 import 'package:myfitnesstale/src/models/food_portion_model.dart';
 import 'package:myfitnesstale/src/models/meal_plan_record_model.dart';
 import 'package:myfitnesstale/src/models/week_macro_goal_model.dart';
-import 'package:myfitnesstale/src/services/common/errors.dart';
+import 'package:myfitnesstale/src/utils/errors.dart';
 import 'package:myfitnesstale/src/services/food_service.dart';
 import 'package:myfitnesstale/src/services/macro_tracking_service.dart';
 import 'package:myfitnesstale/src/services/meal_plan_record_service.dart';

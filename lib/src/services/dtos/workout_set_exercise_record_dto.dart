@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
 
-import '../../common/nullable.dart';
+import '../../utils/nullable.dart';
 import '../../models/common.dart';
 import '../../models/workout_set_exercise_record_model.dart';
 import 'dto.dart';

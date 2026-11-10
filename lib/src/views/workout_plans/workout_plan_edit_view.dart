@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:myfitnesstale/src/widgets/workout_plan/editor/workout_plan_header_edit_card.dart';
 
-import '../../common/nullable.dart';
+import '../../utils/nullable.dart';
 import '../../cubits/states/workout_plan_state.dart';
 import '../../cubits/workout_plan_cubit.dart';
 import '../../models/common.dart';
