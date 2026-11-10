@@ -1,23 +1,23 @@
-import '../../../lib/src/data/repositories/macros/inputs/macro_goal_input.dart';
-import '../../../lib/src/data/repositories/foods/inputs/food_input.dart';
-import '../../../lib/src/utils/nullable.dart';
-import '../../../lib/src/data/repositories/meal_plans/inputs/meal_plan_input.dart';
-import '../../../lib/src/data/repositories/recipes/inputs/recipe_input.dart';
+import 'package:myfitnesstale/src/data/repositories/macros/inputs/macro_goal_input.dart';
+import 'package:myfitnesstale/src/data/repositories/foods/inputs/food_input.dart';
+import 'package:myfitnesstale/src/utils/nullable.dart';
+import 'package:myfitnesstale/src/data/repositories/meal_plans/inputs/meal_plan_input.dart';
+import 'package:myfitnesstale/src/data/repositories/recipes/inputs/recipe_input.dart';
 
 import 'package:flutter_test/flutter_test.dart';
 
-import '../../../lib/src/data/models/day_macro_goal_model.dart';
-import '../../../lib/src/data/utils/enums.dart';
-import '../../../lib/src/data/models/food_model.dart';
-import '../../../lib/src/data/models/food_portion_model.dart';
-import '../../../lib/src/data/models/meal_plan_record_model.dart';
-import '../../../lib/src/data/models/week_macro_goal_model.dart';
-import '../../../lib/src/utils/errors.dart';
-import '../../../lib/src/data/repositories/foods/food_repository.dart';
-import '../../../lib/src/data/repositories/macros/macro_tracking_repository.dart';
-import '../../../lib/src/data/repositories/meal_plans/meal_plan_record_repository.dart';
-import '../../../lib/src/data/repositories/meal_plans/meal_plan_repository.dart';
-import '../../../lib/src/data/repositories/recipes/recipe_repository.dart';
+import 'package:myfitnesstale/src/data/models/day_macro_goal_model.dart';
+import 'package:myfitnesstale/src/data/utils/enums.dart';
+import 'package:myfitnesstale/src/data/models/food_model.dart';
+import 'package:myfitnesstale/src/data/models/food_portion_model.dart';
+import 'package:myfitnesstale/src/data/models/meal_plan_record_model.dart';
+import 'package:myfitnesstale/src/data/models/week_macro_goal_model.dart';
+import 'package:myfitnesstale/src/utils/errors.dart';
+import 'package:myfitnesstale/src/data/repositories/foods/food_repository.dart';
+import 'package:myfitnesstale/src/data/repositories/macros/macro_tracking_repository.dart';
+import 'package:myfitnesstale/src/data/repositories/meal_plans/meal_plan_record_repository.dart';
+import 'package:myfitnesstale/src/data/repositories/meal_plans/meal_plan_repository.dart';
+import 'package:myfitnesstale/src/data/repositories/recipes/recipe_repository.dart';
 
 import '../../support/test_database.dart';
 

@@ -1,25 +1,25 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite/sqflite.dart';
 
-import '../../../lib/src/data/models/constants/exercise_constants.dart';
-import '../../../lib/src/data/models/constants/workout_constants.dart';
-import '../../../lib/src/data/models/constants/workout_plan_constants.dart';
-import '../../../lib/src/data/utils/enums.dart';
-import '../../../lib/src/data/models/equipment_model.dart';
-import '../../../lib/src/data/models/exercise_equipment_model.dart';
-import '../../../lib/src/data/models/exercise_model.dart';
-import '../../../lib/src/data/models/profile_model.dart';
-import '../../../lib/src/data/models/reminders_config_model.dart';
-import '../../../lib/src/data/models/system_model.dart';
-import '../../../lib/src/data/models/workout_model.dart';
-import '../../../lib/src/data/models/workout_plan_day_model.dart';
-import '../../../lib/src/data/models/workout_plan_model.dart';
-import '../../../lib/src/data/models/workout_plan_week_model.dart';
-import '../../../lib/src/data/models/workout_plan_workout_model.dart';
-import '../../../lib/src/data/models/workout_set_exercise_model.dart';
-import '../../../lib/src/data/models/workout_set_exercise_option_model.dart';
-import '../../../lib/src/data/models/workout_set_model.dart';
-import '../../../lib/src/data/repositories/onboarding/onboarding_repository.dart';
+import 'package:myfitnesstale/src/data/models/constants/exercise_constants.dart';
+import 'package:myfitnesstale/src/data/models/constants/workout_constants.dart';
+import 'package:myfitnesstale/src/data/models/constants/workout_plan_constants.dart';
+import 'package:myfitnesstale/src/data/utils/enums.dart';
+import 'package:myfitnesstale/src/data/models/equipment_model.dart';
+import 'package:myfitnesstale/src/data/models/exercise_equipment_model.dart';
+import 'package:myfitnesstale/src/data/models/exercise_model.dart';
+import 'package:myfitnesstale/src/data/models/profile_model.dart';
+import 'package:myfitnesstale/src/data/models/reminders_config_model.dart';
+import 'package:myfitnesstale/src/data/models/system_model.dart';
+import 'package:myfitnesstale/src/data/models/workout_model.dart';
+import 'package:myfitnesstale/src/data/models/workout_plan_day_model.dart';
+import 'package:myfitnesstale/src/data/models/workout_plan_model.dart';
+import 'package:myfitnesstale/src/data/models/workout_plan_week_model.dart';
+import 'package:myfitnesstale/src/data/models/workout_plan_workout_model.dart';
+import 'package:myfitnesstale/src/data/models/workout_set_exercise_model.dart';
+import 'package:myfitnesstale/src/data/models/workout_set_exercise_option_model.dart';
+import 'package:myfitnesstale/src/data/models/workout_set_model.dart';
+import 'package:myfitnesstale/src/data/repositories/onboarding/onboarding_repository.dart';
 
 import '../../support/test_database.dart';
 

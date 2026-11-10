@@ -1,18 +1,18 @@
 import 'package:flutter_test/flutter_test.dart';
 
-import '../../../lib/src/data/models/equipment_model.dart';
-import '../../../lib/src/data/models/exercise_equipment_model.dart';
-import '../../../lib/src/data/models/exercise_model.dart';
-import '../../../lib/src/data/repositories/exercises/exercise_record_repository.dart';
-import '../../../lib/src/data/repositories/exercises/exercise_repository.dart';
-import '../../../lib/src/data/repositories/exercises/inputs/equipment_input.dart';
-import '../../../lib/src/data/repositories/exercises/inputs/exercise_input.dart';
-import '../../../lib/src/data/repositories/exercises/inputs/exercise_record_input.dart';
-import '../../../lib/src/data/utils/enums.dart';
-import '../../../lib/src/data/utils/json_data.dart';
-import '../../../lib/src/ui/exercises/view_models/exercise_cubit.dart';
-import '../../../lib/src/ui/exercises/view_models/exercise_record_cubit.dart';
-import '../../../lib/src/utils/nullable.dart';
+import 'package:myfitnesstale/src/data/models/equipment_model.dart';
+import 'package:myfitnesstale/src/data/models/exercise_equipment_model.dart';
+import 'package:myfitnesstale/src/data/models/exercise_model.dart';
+import 'package:myfitnesstale/src/data/repositories/exercises/exercise_record_repository.dart';
+import 'package:myfitnesstale/src/data/repositories/exercises/exercise_repository.dart';
+import 'package:myfitnesstale/src/data/repositories/exercises/inputs/equipment_input.dart';
+import 'package:myfitnesstale/src/data/repositories/exercises/inputs/exercise_input.dart';
+import 'package:myfitnesstale/src/data/repositories/exercises/inputs/exercise_record_input.dart';
+import 'package:myfitnesstale/src/data/utils/enums.dart';
+import 'package:myfitnesstale/src/data/utils/json_data.dart';
+import 'package:myfitnesstale/src/ui/exercises/view_models/exercise_cubit.dart';
+import 'package:myfitnesstale/src/ui/exercises/view_models/exercise_record_cubit.dart';
+import 'package:myfitnesstale/src/utils/nullable.dart';
 
 import 'package:sqflite/sqflite.dart';
 

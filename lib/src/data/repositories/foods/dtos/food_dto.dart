@@ -5,8 +5,10 @@ import '../../../utils/json_data.dart';
 import '../../../utils/enums.dart';
 import '../../../models/food_model.dart';
 import '../../../models/food_portion_model.dart';
+import '../../core/dtos/dto.dart';
 
-class FoodPortionDto extends Equatable {
+class FoodPortionDto extends Equatable implements Dto<FoodPortion> {
+  @override
   final int id;
   final int foodId;
   final String portionName;
@@ -28,6 +30,7 @@ class FoodPortionDto extends Equatable {
     );
   }
 
+  @override
   FoodPortionDto copyWith({
     int? id,
     int? foodId,
@@ -46,7 +49,8 @@ class FoodPortionDto extends Equatable {
   List<Object?> get props => [id, foodId, portionName, gramWeight];
 }
 
-class FoodDto extends Equatable {
+class FoodDto extends Equatable implements Dto<Food> {
+  @override
   final int id;
   final String name;
   final FoodCategory category;
@@ -107,6 +111,7 @@ class FoodDto extends Equatable {
     );
   }
 
+  @override
   FoodDto copyWith({
     int? id,
     String? name,

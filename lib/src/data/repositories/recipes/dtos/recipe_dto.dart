@@ -5,8 +5,10 @@ import '../../../utils/json_data.dart';
 import '../../../utils/enums.dart';
 import '../../../models/recipe_item_model.dart';
 import '../../../models/recipe_model.dart';
+import '../../core/dtos/dto.dart';
 
-class RecipeItemDto extends Equatable {
+class RecipeItemDto extends Equatable implements Dto<RecipeItem> {
+  @override
   final int id;
   final int recipeId;
   final int foodId;
@@ -56,6 +58,7 @@ class RecipeItemDto extends Equatable {
     );
   }
 
+  @override
   RecipeItemDto copyWith({
     int? id,
     int? recipeId,
@@ -103,7 +106,8 @@ class RecipeItemDto extends Equatable {
   ];
 }
 
-class RecipeDto extends Equatable {
+class RecipeDto extends Equatable implements Dto<Recipe> {
+  @override
   final int id;
   final String name;
   final String? description;
@@ -153,6 +157,7 @@ class RecipeDto extends Equatable {
     );
   }
 
+  @override
   RecipeDto copyWith({
     int? id,
     String? name,

@@ -3,18 +3,18 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../lib/src/ui/workout_plans/view_models/workout_plan_cubit.dart';
-import '../../../lib/src/ui/workouts/view_models/workout_cubit.dart';
-import '../../../lib/src/data/utils/json_data.dart';
-import '../../../lib/src/data/utils/enums.dart';
-import '../../../lib/src/data/repositories/workouts/dtos/workout_dto.dart';
-import '../../../lib/src/data/repositories/workout_plans/dtos/workout_plan_day_dto.dart';
-import '../../../lib/src/data/repositories/workout_plans/dtos/workout_plan_week_dto.dart';
-import '../../../lib/src/data/repositories/workout_plans/dtos/workout_plan_workout_dto.dart';
-import '../../../lib/src/ui/core/sizes/data_display_sizes.dart';
-import '../../../lib/src/ui/workout_plans/widgets/editor/weeks/workout_plan_weeks_editor.dart';
-import '../../../lib/src/ui/workout_plans/widgets/editor/weeks/workout_plan_week_editor.dart';
-import '../../../lib/src/ui/workout_plans/widgets/editor/weeks/workout_plan_day_editor.dart';
+import 'package:myfitnesstale/src/ui/workout_plans/view_models/workout_plan_cubit.dart';
+import 'package:myfitnesstale/src/ui/workouts/view_models/workout_cubit.dart';
+import 'package:myfitnesstale/src/data/utils/json_data.dart';
+import 'package:myfitnesstale/src/data/utils/enums.dart';
+import 'package:myfitnesstale/src/data/repositories/workouts/dtos/workout_dto.dart';
+import 'package:myfitnesstale/src/data/repositories/workout_plans/dtos/workout_plan_day_dto.dart';
+import 'package:myfitnesstale/src/data/repositories/workout_plans/dtos/workout_plan_week_dto.dart';
+import 'package:myfitnesstale/src/data/repositories/workout_plans/dtos/workout_plan_workout_dto.dart';
+import 'package:myfitnesstale/src/ui/core/sizes/data_display_sizes.dart';
+import 'package:myfitnesstale/src/ui/workout_plans/widgets/editor/weeks/workout_plan_weeks_editor.dart';
+import 'package:myfitnesstale/src/ui/workout_plans/widgets/editor/weeks/workout_plan_week_editor.dart';
+import 'package:myfitnesstale/src/ui/workout_plans/widgets/editor/weeks/workout_plan_day_editor.dart';
 
 void main() {
   Future<WorkoutPlanWeekDto> createWeekDto({

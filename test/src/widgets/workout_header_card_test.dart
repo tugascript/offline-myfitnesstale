@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import '../../../lib/src/data/utils/json_data.dart';
-import '../../../lib/src/data/utils/enums.dart';
-import '../../../lib/src/data/repositories/workouts/dtos/workout_dto.dart';
-import '../../../lib/src/ui/core/sizes/data_display_sizes.dart';
-import '../../../lib/src/ui/core/sizes/screen_size.dart';
-import '../../../lib/src/ui/core/widgets/muscles_carousel.dart';
-import '../../../lib/src/ui/workouts/widgets/details/workout_header_card.dart';
+import 'package:myfitnesstale/src/data/utils/json_data.dart';
+import 'package:myfitnesstale/src/data/utils/enums.dart';
+import 'package:myfitnesstale/src/data/repositories/workouts/dtos/workout_dto.dart';
+import 'package:myfitnesstale/src/ui/core/sizes/data_display_sizes.dart';
+import 'package:myfitnesstale/src/ui/core/sizes/screen_size.dart';
+import 'package:myfitnesstale/src/ui/core/widgets/muscles_carousel.dart';
+import 'package:myfitnesstale/src/ui/workouts/widgets/details/workout_header_card.dart';
 
 void main() {
   final sizes = DataDisplaySizes.getDataDisplaySizes(ScreenSize.md);

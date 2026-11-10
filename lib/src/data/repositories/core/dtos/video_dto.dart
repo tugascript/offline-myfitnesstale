@@ -1,9 +1,9 @@
 import 'package:equatable/equatable.dart';
 
-import '../../../utils/json_data.dart';
 import '../../../utils/enums.dart';
+import '../../../utils/json_data.dart';
 
-class VideoDto extends Equatable {
+final class VideoDto extends Equatable {
   final String uri;
   final VideoPlatform platform;
 

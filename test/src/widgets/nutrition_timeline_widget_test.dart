@@ -1,21 +1,21 @@
-import '../../../lib/src/data/repositories/macros/inputs/quick_food_log_input.dart';
+import 'package:myfitnesstale/src/data/repositories/macros/inputs/quick_food_log_input.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import '../../../lib/src/ui/foods/view_models/food_cubit.dart';
-import '../../../lib/src/ui/macros/view_models/macro_tracking_cubit.dart';
-import '../../../lib/src/ui/recipes/view_models/recipe_cubit.dart';
-import '../../../lib/src/data/utils/enums.dart';
-import '../../../lib/src/data/repositories/foods/dtos/food_dto.dart';
-import '../../../lib/src/data/repositories/macros/dtos/macro_tracking_dto.dart';
-import '../../../lib/src/data/repositories/recipes/dtos/recipe_dto.dart';
-import '../../../lib/src/ui/core/sizes/data_display_sizes.dart';
-import '../../../lib/src/ui/core/sizes/screen_size.dart';
-import '../../../lib/src/ui/macros/widgets/log_food_modal.dart';
-import '../../../lib/src/ui/macros/widgets/nutrition_hour_row.dart';
-import '../../../lib/src/ui/macros/widgets/nutrition_timeline_widget.dart';
+import 'package:myfitnesstale/src/ui/foods/view_models/food_cubit.dart';
+import 'package:myfitnesstale/src/ui/macros/view_models/macro_tracking_cubit.dart';
+import 'package:myfitnesstale/src/ui/recipes/view_models/recipe_cubit.dart';
+import 'package:myfitnesstale/src/data/utils/enums.dart';
+import 'package:myfitnesstale/src/data/repositories/foods/dtos/food_dto.dart';
+import 'package:myfitnesstale/src/data/repositories/macros/dtos/macro_tracking_dto.dart';
+import 'package:myfitnesstale/src/data/repositories/recipes/dtos/recipe_dto.dart';
+import 'package:myfitnesstale/src/ui/core/sizes/data_display_sizes.dart';
+import 'package:myfitnesstale/src/ui/core/sizes/screen_size.dart';
+import 'package:myfitnesstale/src/ui/macros/widgets/log_food_modal.dart';
+import 'package:myfitnesstale/src/ui/macros/widgets/nutrition_hour_row.dart';
+import 'package:myfitnesstale/src/ui/macros/widgets/nutrition_timeline_widget.dart';
 
 class _Foods extends FoodCubit {
   _Foods() {

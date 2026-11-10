@@ -5,11 +5,11 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../lib/src/data/repositories/exercises/exercise_repository.dart';
-import '../../../lib/src/data/utils/enums.dart';
-import '../../../lib/src/routing/routing.dart';
-import '../../../lib/src/ui/exercises/screens/exercises_view.dart';
-import '../../../lib/src/ui/exercises/view_models/exercise_cubit.dart';
+import 'package:myfitnesstale/src/data/repositories/exercises/exercise_repository.dart';
+import 'package:myfitnesstale/src/data/utils/enums.dart';
+import 'package:myfitnesstale/src/routing/routing.dart';
+import 'package:myfitnesstale/src/ui/exercises/screens/exercises_view.dart';
+import 'package:myfitnesstale/src/ui/exercises/view_models/exercise_cubit.dart';
 
 class _ExerciseSearchCubit extends ExerciseCubit {
   int equipmentFetchCount = 0;

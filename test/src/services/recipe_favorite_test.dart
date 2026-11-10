@@ -1,8 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 
-import '../../../lib/src/ui/recipes/view_models/recipe_cubit.dart';
-import '../../../lib/src/data/models/recipe_model.dart';
-import '../../../lib/src/data/repositories/recipes/recipe_repository.dart';
+import 'package:myfitnesstale/src/ui/recipes/view_models/recipe_cubit.dart';
+import 'package:myfitnesstale/src/data/models/recipe_model.dart';
+import 'package:myfitnesstale/src/data/repositories/recipes/recipe_repository.dart';
 
 import '../../support/test_database.dart';
 

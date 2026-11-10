@@ -1,4 +1,4 @@
-class PaginatedDto<T, U> {
+final class PaginatedDto<T, U> {
   final List<T> data;
   final int total;
   final int limit;
