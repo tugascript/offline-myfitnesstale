@@ -3,7 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:myfitnesstale/my_app.dart';
-import 'package:myfitnesstale/src/data/repositories/db.dart';
+import 'package:myfitnesstale/src/data/services/sqlite/database_helper.dart';
 import 'package:myfitnesstale/src/routing/app_router.dart';
 
 final class DeviceTestHarness {

@@ -1,23 +1,22 @@
 import 'package:logging/logging.dart';
 
-import '../utils/nullable.dart';
-import '../data/utils/json_data.dart';
-import '../data/repositories/db.dart';
-import '../data/utils/enums.dart';
 import '../data/models/food_model.dart';
 import '../data/models/food_portion_model.dart';
 import '../data/models/recipe_item_model.dart';
 import '../data/models/recipe_model.dart';
-import '../data/repositories/repository.dart';
-
+import '../data/services/common.dart';
+import '../data/services/sqlite/database_helper.dart';
+import '../data/services/sqlite/dao.dart';
+import '../data/utils/dates.dart';
+import '../data/utils/enums.dart';
+import '../data/utils/json_data.dart';
+import '../data/utils/where_builder.dart';
 import '../utils/errors.dart';
+import '../utils/nullable.dart';
 import '../utils/result.dart';
 import 'dtos/paginated_dto.dart';
 import 'dtos/recipe_dto.dart';
 import 'inputs/recipe_input.dart';
-import '../data/utils/dates.dart';
-import '../data/utils/where_builder.dart';
-import '../data/repositories/common.dart';
 
 class RecipeService {
   RecipeService._();
@@ -28,25 +27,25 @@ class RecipeService {
 
   final Logger _logger = Logger('Recipe Service');
 
-  final Repository<Recipe> _recipeRepository = Repository<Recipe>(
+  final Dao<Recipe> _recipeRepository = Dao<Recipe>(
     databaseHelper: DatabaseHelper(),
     tableName: Recipe.table,
     fromMap: Recipe.fromMap,
   );
 
-  final Repository<RecipeItem> _itemRepository = Repository<RecipeItem>(
+  final Dao<RecipeItem> _itemRepository = Dao<RecipeItem>(
     databaseHelper: DatabaseHelper(),
     tableName: RecipeItem.table,
     fromMap: RecipeItem.fromMap,
   );
 
-  final Repository<Food> _foodRepository = Repository<Food>(
+  final Dao<Food> _foodRepository = Dao<Food>(
     databaseHelper: DatabaseHelper(),
     tableName: Food.table,
     fromMap: Food.fromMap,
   );
 
-  final Repository<FoodPortion> _portionRepository = Repository<FoodPortion>(
+  final Dao<FoodPortion> _portionRepository = Dao<FoodPortion>(
     databaseHelper: DatabaseHelper(),
     tableName: FoodPortion.table,
     fromMap: FoodPortion.fromMap,

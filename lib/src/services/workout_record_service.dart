@@ -1,18 +1,19 @@
 import 'package:logging/logging.dart';
 
-import '../utils/nullable.dart';
-import '../data/utils/json_data.dart';
-import '../data/repositories/db.dart';
-import '../data/utils/enums.dart';
 import '../data/models/exercise_model.dart';
-import '../data/repositories/repository.dart'
-    show Repository;
-
 import '../data/models/workout_model.dart';
 import '../data/models/workout_record_model.dart';
 import '../data/models/workout_set_exercise_record_model.dart';
 import '../data/models/workout_set_record_model.dart';
+import '../data/services/common.dart';
+import '../data/services/sqlite/database_helper.dart';
+import '../data/services/sqlite/dao.dart' show Dao;
+import '../data/utils/dates.dart';
+import '../data/utils/enums.dart';
+import '../data/utils/json_data.dart';
+import '../data/utils/where_builder.dart';
 import '../utils/errors.dart';
+import '../utils/nullable.dart';
 import '../utils/result.dart';
 import 'dtos/exercise_dto.dart';
 import 'dtos/paginated_dto.dart';
@@ -21,9 +22,6 @@ import 'dtos/workout_record_dto.dart';
 import 'dtos/workout_set_exercise_record_dto.dart';
 import 'dtos/workout_set_record_dto.dart';
 import 'inputs/workout_record_input.dart';
-import '../data/utils/dates.dart';
-import '../data/utils/where_builder.dart';
-import '../data/repositories/common.dart';
 
 export 'inputs/workout_record_input.dart';
 
@@ -36,31 +34,31 @@ class WorkoutRecordService {
 
   final Logger _logger = Logger('Workout Record Service');
 
-  final _repository = Repository<WorkoutRecord>(
+  final _repository = Dao<WorkoutRecord>(
     databaseHelper: DatabaseHelper(),
     tableName: WorkoutRecord.table,
     fromMap: WorkoutRecord.fromMap,
   );
 
-  final _setRecordRepository = Repository<WorkoutSetRecord>(
+  final _setRecordRepository = Dao<WorkoutSetRecord>(
     databaseHelper: DatabaseHelper(),
     tableName: WorkoutSetRecord.table,
     fromMap: WorkoutSetRecord.fromMap,
   );
 
-  final _setExerciseRecordRepository = Repository<WorkoutSetExerciseRecord>(
+  final _setExerciseRecordRepository = Dao<WorkoutSetExerciseRecord>(
     databaseHelper: DatabaseHelper(),
     tableName: WorkoutSetExerciseRecord.table,
     fromMap: WorkoutSetExerciseRecord.fromMap,
   );
 
-  final _workoutRepository = Repository<Workout>(
+  final _workoutRepository = Dao<Workout>(
     databaseHelper: DatabaseHelper(),
     tableName: Workout.table,
     fromMap: Workout.fromMap,
   );
 
-  final _exerciseRepository = Repository<Exercise>(
+  final _exerciseRepository = Dao<Exercise>(
     databaseHelper: DatabaseHelper(),
     tableName: Exercise.table,
     fromMap: Exercise.fromMap,

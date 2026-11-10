@@ -7,7 +7,7 @@ import '../data/models/constants/equipment_constants.dart';
 import '../data/models/constants/exercise_constants.dart';
 import '../data/models/constants/workout_constants.dart';
 import '../data/models/constants/workout_plan_constants.dart';
-import '../data/repositories/db.dart';
+import '../data/services/sqlite/database_helper.dart';
 import '../data/utils/enums.dart';
 import '../data/models/equipment_model.dart';
 import '../data/models/exercise_model.dart';

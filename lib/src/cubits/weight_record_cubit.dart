@@ -3,7 +3,7 @@ import 'package:logging/logging.dart';
 
 import '../utils/nullable.dart';
 import '../data/utils/enums.dart';
-import '../data/repositories/common.dart';
+import '../data/services/common.dart';
 import '../utils/errors.dart';
 import '../services/inputs/weight_goal_input.dart';
 import '../services/inputs/weight_record_input.dart';

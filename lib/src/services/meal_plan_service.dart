@@ -1,8 +1,5 @@
 import 'package:logging/logging.dart';
 
-import '../utils/nullable.dart';
-import '../data/repositories/db.dart';
-import '../data/utils/enums.dart';
 import '../data/models/food_model.dart';
 import '../data/models/food_portion_model.dart';
 import '../data/models/meal_plan_day_model.dart';
@@ -11,16 +8,18 @@ import '../data/models/meal_plan_meal_model.dart';
 import '../data/models/meal_plan_model.dart';
 import '../data/models/meal_plan_week_model.dart';
 import '../data/models/recipe_model.dart';
-import '../data/repositories/repository.dart';
-
+import '../data/services/common.dart';
+import '../data/services/sqlite/database_helper.dart';
+import '../data/services/sqlite/dao.dart';
+import '../data/utils/dates.dart';
+import '../data/utils/enums.dart';
+import '../data/utils/where_builder.dart';
 import '../utils/errors.dart';
+import '../utils/nullable.dart';
 import '../utils/result.dart';
 import 'dtos/meal_plan_dto.dart';
 import 'dtos/paginated_dto.dart';
 import 'inputs/meal_plan_input.dart';
-import '../data/utils/dates.dart';
-import '../data/utils/where_builder.dart';
-import '../data/repositories/common.dart';
 
 class MealPlanService {
   MealPlanService._();
@@ -29,57 +28,55 @@ class MealPlanService {
 
   factory MealPlanService() => _instance;
 
-  final Repository<Food> _foodRepository = Repository<Food>(
+  final Dao<Food> _foodRepository = Dao<Food>(
     databaseHelper: DatabaseHelper(),
     tableName: Food.table,
     fromMap: Food.fromMap,
   );
 
-  final Repository<Recipe> _recipeRepository = Repository<Recipe>(
+  final Dao<Recipe> _recipeRepository = Dao<Recipe>(
     databaseHelper: DatabaseHelper(),
     tableName: Recipe.table,
     fromMap: Recipe.fromMap,
   );
 
-  final Repository<FoodPortion> _foodPortionRepository =
-      Repository<FoodPortion>(
-        databaseHelper: DatabaseHelper(),
-        tableName: FoodPortion.table,
-        fromMap: FoodPortion.fromMap,
-      );
+  final Dao<FoodPortion> _foodPortionRepository = Dao<FoodPortion>(
+    databaseHelper: DatabaseHelper(),
+    tableName: FoodPortion.table,
+    fromMap: FoodPortion.fromMap,
+  );
 
   final Logger _logger = Logger('Meal Plan Service');
 
-  final Repository<MealPlan> _mealPlanRepository = Repository<MealPlan>(
+  final Dao<MealPlan> _mealPlanRepository = Dao<MealPlan>(
     databaseHelper: DatabaseHelper(),
     tableName: MealPlan.table,
     fromMap: MealPlan.fromMap,
   );
 
-  final Repository<MealPlanWeek> _weekRepository = Repository<MealPlanWeek>(
+  final Dao<MealPlanWeek> _weekRepository = Dao<MealPlanWeek>(
     databaseHelper: DatabaseHelper(),
     tableName: MealPlanWeek.table,
     fromMap: MealPlanWeek.fromMap,
   );
 
-  final Repository<MealPlanDay> _dayRepository = Repository<MealPlanDay>(
+  final Dao<MealPlanDay> _dayRepository = Dao<MealPlanDay>(
     databaseHelper: DatabaseHelper(),
     tableName: MealPlanDay.table,
     fromMap: MealPlanDay.fromMap,
   );
 
-  final Repository<MealPlanMeal> _mealRepository = Repository<MealPlanMeal>(
+  final Dao<MealPlanMeal> _mealRepository = Dao<MealPlanMeal>(
     databaseHelper: DatabaseHelper(),
     tableName: MealPlanMeal.table,
     fromMap: MealPlanMeal.fromMap,
   );
 
-  final Repository<MealPlanMealItem> _itemRepository =
-      Repository<MealPlanMealItem>(
-        databaseHelper: DatabaseHelper(),
-        tableName: MealPlanMealItem.table,
-        fromMap: MealPlanMealItem.fromMap,
-      );
+  final Dao<MealPlanMealItem> _itemRepository = Dao<MealPlanMealItem>(
+    databaseHelper: DatabaseHelper(),
+    tableName: MealPlanMealItem.table,
+    fromMap: MealPlanMealItem.fromMap,
+  );
 
   Future<Result<MealPlanDto, ServiceError<SingleErrorTypes>>> createMealPlan(
     MealPlanInput input, [

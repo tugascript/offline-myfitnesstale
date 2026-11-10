@@ -1,19 +1,18 @@
 import 'package:logging/logging.dart';
 import 'package:sqflite/sqflite.dart';
 
-import '../data/repositories/db.dart';
-import '../data/utils/enums.dart';
 import '../data/models/profile_model.dart';
 import '../data/models/reminders_config_model.dart';
-import '../data/repositories/repository.dart';
 import '../data/models/system_model.dart';
-
+import '../data/services/sqlite/database_helper.dart';
+import '../data/services/sqlite/dao.dart';
+import '../data/utils/dates.dart';
+import '../data/utils/enums.dart';
 import '../utils/errors.dart';
 import '../utils/result.dart';
 import 'dtos/profile_dto.dart';
 import 'dtos/reminders_config_dto.dart';
 import 'dtos/system_dto.dart';
-import '../data/utils/dates.dart';
 
 class ProfileService {
   ProfileService._();
@@ -24,19 +23,19 @@ class ProfileService {
 
   final Logger _logger = Logger("Profile Service");
 
-  final _repository = Repository<Profile>(
+  final _repository = Dao<Profile>(
     databaseHelper: DatabaseHelper(),
     tableName: Profile.table,
     fromMap: Profile.fromMap,
   );
 
-  final _systemRepository = Repository<System>(
+  final _systemRepository = Dao<System>(
     databaseHelper: DatabaseHelper(),
     tableName: System.table,
     fromMap: System.fromMap,
   );
 
-  final _remindersRepository = Repository<RemindersConfig>(
+  final _remindersRepository = Dao<RemindersConfig>(
     databaseHelper: DatabaseHelper(),
     tableName: RemindersConfig.table,
     fromMap: RemindersConfig.fromMap,

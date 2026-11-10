@@ -1,22 +1,21 @@
 import 'package:logging/logging.dart';
 
-import '../utils/nullable.dart';
-import '../data/repositories/db.dart';
-import '../data/utils/enums.dart';
-import '../data/repositories/repository.dart';
-
 import '../data/models/weight_goal_model.dart';
 import '../data/models/weight_record_model.dart';
+import '../data/services/common.dart';
+import '../data/services/sqlite/database_helper.dart';
+import '../data/services/sqlite/dao.dart';
+import '../data/utils/dates.dart';
+import '../data/utils/enums.dart';
+import '../data/utils/where_builder.dart';
 import '../utils/errors.dart';
+import '../utils/nullable.dart';
 import '../utils/result.dart';
 import 'dtos/paginated_dto.dart';
 import 'dtos/weight_goal_dto.dart';
 import 'dtos/weight_record_dto.dart';
 import 'inputs/weight_goal_input.dart';
 import 'inputs/weight_record_input.dart';
-import '../data/utils/dates.dart';
-import '../data/utils/where_builder.dart';
-import '../data/repositories/common.dart';
 
 class WeightRecordService {
   WeightRecordService._();
@@ -27,13 +26,13 @@ class WeightRecordService {
 
   final Logger _logger = Logger('Weight Record Service');
 
-  final Repository<WeightRecord> _repository = Repository<WeightRecord>(
+  final Dao<WeightRecord> _repository = Dao<WeightRecord>(
     databaseHelper: DatabaseHelper(),
     tableName: WeightRecord.table,
     fromMap: (map) => WeightRecord.fromMap(map),
   );
 
-  final Repository<WeightGoal> _weightGoalRepository = Repository<WeightGoal>(
+  final Dao<WeightGoal> _weightGoalRepository = Dao<WeightGoal>(
     databaseHelper: DatabaseHelper(),
     tableName: WeightGoal.table,
     fromMap: (map) => WeightGoal.fromMap(map),

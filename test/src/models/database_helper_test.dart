@@ -4,7 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:path/path.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
-import 'package:myfitnesstale/src/data/repositories/db.dart';
+import 'package:myfitnesstale/src/data/services/sqlite/database_helper.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

@@ -4,7 +4,7 @@ import 'package:integration_test/integration_test.dart';
 import 'package:sqflite/sqflite.dart';
 
 import 'package:myfitnesstale/src/data/models/constants/workout_plan_constants.dart';
-import 'package:myfitnesstale/src/data/repositories/db.dart';
+import 'package:myfitnesstale/src/data/services/sqlite/database_helper.dart';
 import 'package:myfitnesstale/src/data/models/workout_model.dart';
 import 'package:myfitnesstale/src/data/models/workout_plan_model.dart';
 import 'package:myfitnesstale/src/data/models/workout_plan_record_model.dart';
