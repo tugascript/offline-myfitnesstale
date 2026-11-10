@@ -333,9 +333,10 @@ in `lib/src/ui/core` and helpers in `lib/src/utils`. SQLite table models live in
 - Android and iOS are the only configured platforms; portrait is forced at
   runtime.
 
-Wiring is still uneven. Many Cubits construct repositories internally;
-`ExerciseCubit` and `ExerciseRecordCubit` take repositories from `MyApp` via
-`*Repository.create()`. `ProfileCubit` accepts an optional
+Feature repositories expose `*Repository.create([DatabaseHelper?])` factories
+and are no longer singletons. `MyApp` constructs repositories once and injects
+them into app-scoped Cubits. Cubit constructors still accept omitted repositories
+for tests by falling back to `create()`. `ProfileCubit` can take an optional
 `OnboardingRepository` for orchestration tests. `WorkoutPlanRepository` and
 `WorkoutPlanRecordRepository` remain large orchestration repositories.
 

@@ -32,11 +32,12 @@ import '../../utils/dates.dart';
 import '../../utils/enums.dart';
 import '../../utils/where_builder.dart';
 import '../core/dtos/paginated_dto.dart';
+import '../core/repository.dart';
 import './dtos/exercise_dto.dart';
 import './dtos/exercise_record_dto.dart';
 import './inputs/exercise_record_input.dart';
 
-class ExerciseRecordRepository {
+final class ExerciseRecordRepository implements Repository {
   final Dao<ExerciseRecord> _exerciseRecordDao;
   final Dao<Exercise> _exerciseDao;
   final Dao<StrengthGoal> _strengthGoalDao;

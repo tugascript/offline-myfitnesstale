@@ -29,10 +29,13 @@ import '../../core/view_models/states/common_state.dart';
 import './states/weight_record_state.dart';
 
 class WeightRecordCubit extends Cubit<WeightRecordState> {
-  final WeightRecordRepository _weightRecordService = WeightRecordRepository();
+  final WeightRecordRepository _weightRecordService;
   final Logger _logger = Logger("WeightRecordCubit");
 
-  WeightRecordCubit() : super(WeightRecordState.initial());
+  WeightRecordCubit([WeightRecordRepository? weightRecordService])
+    : _weightRecordService =
+          weightRecordService ?? WeightRecordRepository.create(),
+      super(WeightRecordState.initial());
 
   Future<void> getActiveWeightGoal() async {
     _logger.info("Getting active weight goal");

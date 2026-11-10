@@ -19,25 +19,37 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import 'src/ui/workouts/view_models/active_workout_cubit.dart';
-import 'src/ui/foods/view_models/food_cubit.dart';
-import 'src/ui/macros/view_models/macro_tracking_cubit.dart';
-import 'src/ui/meal_plans/view_models/meal_plan_cubit.dart';
-import 'src/ui/meal_plans/view_models/meal_plan_record_cubit.dart';
-import 'src/ui/home/view_models/profile_cubit.dart';
-import 'src/ui/recipes/view_models/recipe_cubit.dart';
-import 'src/ui/home/view_models/states/profile_state.dart';
-import 'src/ui/weight/view_models/weight_record_cubit.dart';
-import 'src/ui/workouts/view_models/workout_cubit.dart';
-import 'src/ui/workout_plans/view_models/workout_plan_cubit.dart';
-import 'src/ui/workout_plans/view_models/workout_plan_record_cubit.dart';
-import 'src/ui/workouts/view_models/workout_record_cubit.dart';
 import 'src/data/repositories/exercises/exercise_record_repository.dart';
 import 'src/data/repositories/exercises/exercise_repository.dart';
+import 'src/data/repositories/foods/food_repository.dart';
+import 'src/data/repositories/macros/macro_tracking_repository.dart';
+import 'src/data/repositories/meal_plans/meal_plan_record_repository.dart';
+import 'src/data/repositories/meal_plans/meal_plan_repository.dart';
+import 'src/data/repositories/onboarding/onboarding_repository.dart';
+import 'src/data/repositories/profile/profile_repository.dart';
+import 'src/data/repositories/recipes/recipe_repository.dart';
+import 'src/data/repositories/weight/weight_record_repository.dart';
+import 'src/data/repositories/workout_plans/workout_plan_record_repository.dart';
+import 'src/data/repositories/workout_plans/workout_plan_repository.dart';
+import 'src/data/repositories/workouts/workout_record_repository.dart';
+import 'src/data/repositories/workouts/workout_repository.dart';
 import 'src/routing/app_router.dart';
 import 'src/ui/core/themes/theme_generator.dart';
 import 'src/ui/exercises/view_models/exercise_cubit.dart';
 import 'src/ui/exercises/view_models/exercise_record_cubit.dart';
+import 'src/ui/foods/view_models/food_cubit.dart';
+import 'src/ui/home/view_models/profile_cubit.dart';
+import 'src/ui/home/view_models/states/profile_state.dart';
+import 'src/ui/macros/view_models/macro_tracking_cubit.dart';
+import 'src/ui/meal_plans/view_models/meal_plan_cubit.dart';
+import 'src/ui/meal_plans/view_models/meal_plan_record_cubit.dart';
+import 'src/ui/recipes/view_models/recipe_cubit.dart';
+import 'src/ui/weight/view_models/weight_record_cubit.dart';
+import 'src/ui/workout_plans/view_models/workout_plan_cubit.dart';
+import 'src/ui/workout_plans/view_models/workout_plan_record_cubit.dart';
+import 'src/ui/workouts/view_models/active_workout_cubit.dart';
+import 'src/ui/workouts/view_models/workout_cubit.dart';
+import 'src/ui/workouts/view_models/workout_record_cubit.dart';
 
 class MyApp extends StatelessWidget {
   final RouterConfig<Object>? routerConfig;
@@ -47,50 +59,86 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     GoogleFonts.config.allowRuntimeFetching = false;
+
+    final profileRepository = ProfileRepository.create();
+    final exerciseRepository = ExerciseRepository.create();
+    final exerciseRecordRepository = ExerciseRecordRepository.create();
+    final weightRecordRepository = WeightRecordRepository.create();
+    final workoutRepository = WorkoutRepository.create();
+    final workoutRecordRepository = WorkoutRecordRepository.create();
+    final workoutPlanRepository = WorkoutPlanRepository.create();
+    final workoutPlanRecordRepository = WorkoutPlanRecordRepository.create();
+    final foodRepository = FoodRepository.create();
+    final recipeRepository = RecipeRepository.create();
+    final macroTrackingRepository = MacroTrackingRepository.create();
+    final mealPlanRepository = MealPlanRepository.create();
+    final mealPlanRecordRepository = MealPlanRecordRepository.create();
+
     return MultiBlocProvider(
       providers: [
         BlocProvider<ProfileCubit>(
-          create: (BuildContext context) => ProfileCubit()..loadInitialData(),
+          create: (BuildContext context) => ProfileCubit(
+            profileRepository: profileRepository,
+            onboardingService: OnboardingRepository(
+              profileService: profileRepository,
+              exerciseService: exerciseRepository,
+              workoutService: workoutRepository,
+              workoutPlanService: workoutPlanRepository,
+            ),
+          )..loadInitialData(),
           lazy: false,
         ),
         BlocProvider<ExerciseCubit>(
-          create: (BuildContext context) =>
-              ExerciseCubit(ExerciseRepository.create()),
+          create: (BuildContext context) => ExerciseCubit(exerciseRepository),
         ),
         BlocProvider<ExerciseRecordCubit>(
           create: (BuildContext context) =>
-              ExerciseRecordCubit(ExerciseRecordRepository.create()),
+              ExerciseRecordCubit(exerciseRecordRepository),
         ),
         BlocProvider<WeightRecordCubit>(
-          create: (BuildContext context) => WeightRecordCubit(),
+          create: (BuildContext context) =>
+              WeightRecordCubit(weightRecordRepository),
         ),
         BlocProvider<WorkoutCubit>(
-          create: (BuildContext context) => WorkoutCubit(),
+          create: (BuildContext context) => WorkoutCubit(workoutRepository),
         ),
         BlocProvider<WorkoutRecordCubit>(
-          create: (BuildContext context) => WorkoutRecordCubit(),
+          create: (BuildContext context) =>
+              WorkoutRecordCubit(workoutRecordRepository),
         ),
         BlocProvider<WorkoutPlanCubit>(
-          create: (BuildContext context) => WorkoutPlanCubit(),
+          create: (BuildContext context) =>
+              WorkoutPlanCubit(workoutPlanRepository),
         ),
         BlocProvider<WorkoutPlanRecordCubit>(
-          create: (BuildContext context) => WorkoutPlanRecordCubit(),
+          create: (BuildContext context) => WorkoutPlanRecordCubit(
+            workoutPlanRecordRepository,
+            workoutPlanRepository,
+          ),
         ),
         BlocProvider<ActiveWorkoutCubit>(
-          create: (BuildContext context) => ActiveWorkoutCubit(),
+          create: (BuildContext context) => ActiveWorkoutCubit(
+            workoutRepository,
+            workoutRecordRepository,
+            workoutPlanRecordRepository,
+          ),
         ),
-        BlocProvider<FoodCubit>(create: (BuildContext context) => FoodCubit()),
+        BlocProvider<FoodCubit>(
+          create: (BuildContext context) => FoodCubit(foodRepository),
+        ),
         BlocProvider<RecipeCubit>(
-          create: (BuildContext context) => RecipeCubit(),
+          create: (BuildContext context) => RecipeCubit(recipeRepository),
         ),
         BlocProvider<MacroTrackingCubit>(
-          create: (BuildContext context) => MacroTrackingCubit(),
+          create: (BuildContext context) =>
+              MacroTrackingCubit(macroTrackingRepository),
         ),
         BlocProvider<MealPlanCubit>(
-          create: (BuildContext context) => MealPlanCubit(),
+          create: (BuildContext context) => MealPlanCubit(mealPlanRepository),
         ),
         BlocProvider<MealPlanRecordCubit>(
-          create: (BuildContext context) => MealPlanRecordCubit(),
+          create: (BuildContext context) =>
+              MealPlanRecordCubit(mealPlanRecordRepository),
         ),
       ],
       child: BlocBuilder<ProfileCubit, ProfileState>(

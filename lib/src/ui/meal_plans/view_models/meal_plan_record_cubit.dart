@@ -28,10 +28,12 @@ import '../../core/view_models/states/common_state.dart';
 import './states/meal_plan_record_state.dart';
 
 class MealPlanRecordCubit extends Cubit<MealPlanRecordState> {
-  final MealPlanRecordRepository _recordService = MealPlanRecordRepository();
+  final MealPlanRecordRepository _recordService;
   final Logger _logger = Logger('MealPlanRecordCubit');
 
-  MealPlanRecordCubit() : super(MealPlanRecordState.initial());
+  MealPlanRecordCubit([MealPlanRecordRepository? recordService])
+    : _recordService = recordService ?? MealPlanRecordRepository.create(),
+      super(MealPlanRecordState.initial());
 
   Future<void> getActiveMealPlanRecord() async {
     _logger.info('Getting active meal plan record');

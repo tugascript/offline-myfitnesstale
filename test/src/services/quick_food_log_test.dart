@@ -26,7 +26,7 @@ import '../../support/test_database.dart';
 
 void main() {
   final database = TestDatabase();
-  final service = MacroTrackingRepository();
+  final service = MacroTrackingRepository.create();
   setUp(database.initialize);
   tearDown(database.destroy);
 

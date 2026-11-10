@@ -27,10 +27,12 @@ import '../../core/view_models/states/common_state.dart';
 import './states/food_state.dart';
 
 class FoodCubit extends Cubit<FoodState> {
-  final FoodRepository _foodService = FoodRepository();
+  final FoodRepository _foodService;
   final Logger _logger = Logger('FoodCubit');
 
-  FoodCubit() : super(FoodState.initial());
+  FoodCubit([FoodRepository? foodService])
+    : _foodService = foodService ?? FoodRepository.create(),
+      super(FoodState.initial());
 
   Future<void> getFoods({
     String? search,

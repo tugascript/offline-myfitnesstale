@@ -28,10 +28,12 @@ import '../../core/view_models/states/common_state.dart';
 import './states/recipe_state.dart';
 
 class RecipeCubit extends Cubit<RecipeState> {
-  final RecipeRepository _recipeService = RecipeRepository();
+  final RecipeRepository _recipeService;
   final Logger _logger = Logger('RecipeCubit');
 
-  RecipeCubit() : super(RecipeState.initial());
+  RecipeCubit([RecipeRepository? recipeService])
+    : _recipeService = recipeService ?? RecipeRepository.create(),
+      super(RecipeState.initial());
 
   Future<void> getRecipes({
     String? search,

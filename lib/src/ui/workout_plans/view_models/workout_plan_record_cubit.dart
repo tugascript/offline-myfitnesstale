@@ -29,11 +29,17 @@ import './states/workout_plan_record_state.dart';
 export '../../../data/repositories/workout_plans/inputs/workout_plan_record_input.dart';
 
 class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
-  final WorkoutPlanRecordRepository _workoutPlanRecordService =
-      WorkoutPlanRecordRepository();
-  final WorkoutPlanRepository _workoutPlanService = WorkoutPlanRepository();
+  final WorkoutPlanRecordRepository _workoutPlanRecordService;
+  final WorkoutPlanRepository _workoutPlanService;
 
-  WorkoutPlanRecordCubit() : super(WorkoutPlanRecordState.initial());
+  WorkoutPlanRecordCubit([
+    WorkoutPlanRecordRepository? workoutPlanRecordService,
+    WorkoutPlanRepository? workoutPlanService,
+  ]) : _workoutPlanRecordService =
+           workoutPlanRecordService ?? WorkoutPlanRecordRepository.create(),
+       _workoutPlanService =
+           workoutPlanService ?? WorkoutPlanRepository.create(),
+       super(WorkoutPlanRecordState.initial());
 
   final Logger _logger = Logger('WorkoutPlanRecordCubit');
   int _historyRequestId = 0;

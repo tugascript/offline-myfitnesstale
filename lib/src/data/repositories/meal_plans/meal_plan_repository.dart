@@ -37,63 +37,76 @@ import '../../../utils/result.dart';
 import './dtos/meal_plan_dto.dart';
 import '../core/dtos/paginated_dto.dart';
 import './inputs/meal_plan_input.dart';
+import '../core/repository.dart';
 
-class MealPlanRepository {
-  MealPlanRepository._();
-
-  static final MealPlanRepository _instance = MealPlanRepository._();
-
-  factory MealPlanRepository() => _instance;
-
-  final Dao<Food> _foodRepository = Dao<Food>(
-    databaseHelper: DatabaseHelper(),
-    tableName: Food.table,
-    fromMap: Food.fromMap,
-  );
-
-  final Dao<Recipe> _recipeRepository = Dao<Recipe>(
-    databaseHelper: DatabaseHelper(),
-    tableName: Recipe.table,
-    fromMap: Recipe.fromMap,
-  );
-
-  final Dao<FoodPortion> _foodPortionRepository = Dao<FoodPortion>(
-    databaseHelper: DatabaseHelper(),
-    tableName: FoodPortion.table,
-    fromMap: FoodPortion.fromMap,
-  );
+final class MealPlanRepository implements Repository {
+  final Dao<Food> _foodRepository;
+  final Dao<Recipe> _recipeRepository;
+  final Dao<FoodPortion> _foodPortionRepository;
+  final Dao<MealPlan> _mealPlanRepository;
+  final Dao<MealPlanWeek> _weekRepository;
+  final Dao<MealPlanDay> _dayRepository;
+  final Dao<MealPlanMeal> _mealRepository;
+  final Dao<MealPlanMealItem> _itemRepository;
 
   final Logger _logger = Logger('Meal Plan Service');
 
-  final Dao<MealPlan> _mealPlanRepository = Dao<MealPlan>(
-    databaseHelper: DatabaseHelper(),
-    tableName: MealPlan.table,
-    fromMap: MealPlan.fromMap,
-  );
+  MealPlanRepository({
+    required this._foodRepository,
+    required this._recipeRepository,
+    required this._foodPortionRepository,
+    required this._mealPlanRepository,
+    required this._weekRepository,
+    required this._dayRepository,
+    required this._mealRepository,
+    required this._itemRepository,
+  });
 
-  final Dao<MealPlanWeek> _weekRepository = Dao<MealPlanWeek>(
-    databaseHelper: DatabaseHelper(),
-    tableName: MealPlanWeek.table,
-    fromMap: MealPlanWeek.fromMap,
-  );
-
-  final Dao<MealPlanDay> _dayRepository = Dao<MealPlanDay>(
-    databaseHelper: DatabaseHelper(),
-    tableName: MealPlanDay.table,
-    fromMap: MealPlanDay.fromMap,
-  );
-
-  final Dao<MealPlanMeal> _mealRepository = Dao<MealPlanMeal>(
-    databaseHelper: DatabaseHelper(),
-    tableName: MealPlanMeal.table,
-    fromMap: MealPlanMeal.fromMap,
-  );
-
-  final Dao<MealPlanMealItem> _itemRepository = Dao<MealPlanMealItem>(
-    databaseHelper: DatabaseHelper(),
-    tableName: MealPlanMealItem.table,
-    fromMap: MealPlanMealItem.fromMap,
-  );
+  factory MealPlanRepository.create([DatabaseHelper? databaseHelper]) {
+    final helper = databaseHelper ?? DatabaseHelper();
+    return MealPlanRepository(
+      foodRepository: Dao<Food>(
+        databaseHelper: helper,
+        tableName: Food.table,
+        fromMap: Food.fromMap,
+      ),
+      recipeRepository: Dao<Recipe>(
+        databaseHelper: helper,
+        tableName: Recipe.table,
+        fromMap: Recipe.fromMap,
+      ),
+      foodPortionRepository: Dao<FoodPortion>(
+        databaseHelper: helper,
+        tableName: FoodPortion.table,
+        fromMap: FoodPortion.fromMap,
+      ),
+      mealPlanRepository: Dao<MealPlan>(
+        databaseHelper: helper,
+        tableName: MealPlan.table,
+        fromMap: MealPlan.fromMap,
+      ),
+      weekRepository: Dao<MealPlanWeek>(
+        databaseHelper: helper,
+        tableName: MealPlanWeek.table,
+        fromMap: MealPlanWeek.fromMap,
+      ),
+      dayRepository: Dao<MealPlanDay>(
+        databaseHelper: helper,
+        tableName: MealPlanDay.table,
+        fromMap: MealPlanDay.fromMap,
+      ),
+      mealRepository: Dao<MealPlanMeal>(
+        databaseHelper: helper,
+        tableName: MealPlanMeal.table,
+        fromMap: MealPlanMeal.fromMap,
+      ),
+      itemRepository: Dao<MealPlanMealItem>(
+        databaseHelper: helper,
+        tableName: MealPlanMealItem.table,
+        fromMap: MealPlanMealItem.fromMap,
+      ),
+    );
+  }
 
   Future<Result<MealPlanDto, ServiceError<SingleErrorTypes>>> createMealPlan(
     MealPlanInput input, [

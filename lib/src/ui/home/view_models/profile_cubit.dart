@@ -27,14 +27,21 @@ import '../../core/view_models/states/common_state.dart';
 import './states/profile_state.dart';
 
 class ProfileCubit extends Cubit<ProfileState> {
-  final ProfileRepository _profileService = ProfileRepository();
+  final ProfileRepository _profileService;
   final OnboardingRepository _onboardingService;
 
   final Logger _logger = Logger("Profile Cubit");
 
-  ProfileCubit({OnboardingRepository? onboardingService})
-    : _onboardingService = onboardingService ?? OnboardingRepository(),
-      super(ProfileState.initial());
+  ProfileCubit({
+    ProfileRepository? profileRepository,
+    OnboardingRepository? onboardingService,
+  }) : _profileService = profileRepository ?? ProfileRepository.create(),
+       _onboardingService =
+           onboardingService ??
+           OnboardingRepository(
+             profileService: profileRepository ?? ProfileRepository.create(),
+           ),
+       super(ProfileState.initial());
 
   Future<void> loadInitialData() async {
     _logger.info("Loading initial data");

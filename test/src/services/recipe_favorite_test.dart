@@ -25,7 +25,7 @@ import '../../support/test_database.dart';
 
 void main() {
   final database = TestDatabase();
-  final service = RecipeRepository();
+  final service = RecipeRepository.create();
 
   setUp(database.initialize);
   tearDown(database.destroy);

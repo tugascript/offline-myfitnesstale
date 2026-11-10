@@ -29,11 +29,13 @@ import './states/workout_state.dart';
 export '../../../data/repositories/workouts/inputs/workout_input.dart';
 
 class WorkoutCubit extends Cubit<WorkoutState> {
-  final WorkoutRepository _workoutService = WorkoutRepository();
+  final WorkoutRepository _workoutService;
 
   final Logger _logger = Logger('WorkoutCubit');
 
-  WorkoutCubit() : super(WorkoutState.initial());
+  WorkoutCubit([WorkoutRepository? workoutService])
+    : _workoutService = workoutService ?? WorkoutRepository.create(),
+      super(WorkoutState.initial());
 
   Future<void> getWorkouts({
     String? name,

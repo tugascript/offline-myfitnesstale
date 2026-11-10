@@ -112,9 +112,10 @@ class OnboardingRepository {
     this._afterStage,
   }) : _databaseHelper = databaseHelper ?? DatabaseHelper(),
        _exerciseService = exerciseService ?? ExerciseRepository.create(),
-       _profileService = profileService ?? ProfileRepository(),
-       _workoutService = workoutService ?? WorkoutRepository(),
-       _workoutPlanService = workoutPlanService ?? WorkoutPlanRepository();
+       _profileService = profileService ?? ProfileRepository.create(),
+       _workoutService = workoutService ?? WorkoutRepository.create(),
+       _workoutPlanService =
+           workoutPlanService ?? WorkoutPlanRepository.create();
 
   Future<Result<OnboardingResult, ServiceError<OperationErrorTypes>>> onboard(
     OnboardingRequest request,
