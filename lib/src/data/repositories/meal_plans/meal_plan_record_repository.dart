@@ -718,18 +718,23 @@ final class MealPlanRecordRepository implements Repository {
         whereArgs: where.args,
       );
 
-      final List<MealPlanRecordDto> dtos = [];
-      for (final r in records) {
-        final plan = await _mealPlanDao.selectOne(r.mealPlanId);
-        dtos.add(
-          MealPlanRecordDto.fromModel(
-            r,
-            planName: plan?.name,
-            totalWeeks: plan?.totalWeeks ?? 1,
-            totalDays: plan?.totalDays ?? 7,
-          ),
+      final planIds = records.map((record) => record.mealPlanId).toSet();
+      final plans = planIds.isEmpty
+          ? <MealPlan>[]
+          : await _mealPlanDao.selectMany(
+              where: MealPlanColumns.id.inList(planIds.length),
+              whereArgs: planIds.toList(),
+            );
+      final plansById = {for (final plan in plans) plan.id!: plan};
+      final dtos = records.map((record) {
+        final plan = plansById[record.mealPlanId];
+        return MealPlanRecordDto.fromModel(
+          record,
+          planName: plan?.name,
+          totalWeeks: plan?.totalWeeks ?? 1,
+          totalDays: plan?.totalDays ?? 7,
         );
-      }
+      }).toList();
 
       return ok(
         PaginatedDto<MealPlanRecordDto, MealPlanRecord>(

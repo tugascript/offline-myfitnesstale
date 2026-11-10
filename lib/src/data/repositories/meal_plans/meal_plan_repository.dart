@@ -16,6 +16,7 @@
 // along with My Fitness Tale.  If not, see <https://www.gnu.org/licenses/>.
 
 import 'package:logging/logging.dart';
+import 'package:sqflite/sqflite.dart';
 
 import '../../models/sqlite/food_model.dart';
 import '../../models/sqlite/food_portion_model.dart';
@@ -37,6 +38,7 @@ import '../../../utils/result.dart';
 import './dtos/meal_plan_dto.dart';
 import '../core/dtos/paginated_dto.dart';
 import './inputs/meal_plan_input.dart';
+import './inputs/meal_plan_week_input.dart';
 import '../core/repository.dart';
 
 final class MealPlanRepository implements Repository {
@@ -108,6 +110,91 @@ final class MealPlanRepository implements Repository {
     );
   }
 
+  Future<
+    ({
+      Map<int, Recipe> recipes,
+      Map<int, Food> foods,
+      Map<int, FoodPortion> portions,
+    })
+  >
+  _loadMealPlanReferences(
+    List<MealPlanWeekInput> weeks,
+    Transaction txn,
+  ) async {
+    final recipeIds = <int>{};
+    final foodIds = <int>{};
+    final portionIds = <int>{};
+    for (final week in weeks) {
+      for (final day in week.days) {
+        for (final meal in day.meals) {
+          if (meal.recipeId != null) recipeIds.add(meal.recipeId!);
+          for (final item in meal.items) {
+            foodIds.add(item.foodId);
+            if (item.portionId != null) portionIds.add(item.portionId!);
+          }
+        }
+      }
+    }
+
+    final recipes = recipeIds.isEmpty
+        ? <Recipe>[]
+        : await _recipeDao.selectMany(
+            where: RecipeColumns.id.inList(recipeIds.length),
+            whereArgs: recipeIds.toList(),
+            trx: txn,
+          );
+    final foods = foodIds.isEmpty
+        ? <Food>[]
+        : await _foodDao.selectMany(
+            where: FoodColumns.id.inList(foodIds.length),
+            whereArgs: foodIds.toList(),
+            trx: txn,
+          );
+    final portions = portionIds.isEmpty
+        ? <FoodPortion>[]
+        : await _foodPortionDao.selectMany(
+            where: FoodPortionColumns.id.inList(portionIds.length),
+            whereArgs: portionIds.toList(),
+            trx: txn,
+          );
+    final recipeById = {for (final recipe in recipes) recipe.id!: recipe};
+    final foodById = {for (final food in foods) food.id!: food};
+    final portionById = {for (final portion in portions) portion.id!: portion};
+
+    for (final recipeId in recipeIds) {
+      if (!recipeById.containsKey(recipeId)) {
+        throw ServiceError(
+          type: SingleErrorTypes.notFound,
+          description: 'Recipe $recipeId not found',
+        );
+      }
+    }
+    for (final week in weeks) {
+      for (final day in week.days) {
+        for (final meal in day.meals) {
+          for (final item in meal.items) {
+            if (!foodById.containsKey(item.foodId)) {
+              throw ServiceError(
+                type: SingleErrorTypes.notFound,
+                description: 'Food ${item.foodId} not found',
+              );
+            }
+            if (item.portionId != null &&
+                portionById[item.portionId]?.foodId != item.foodId) {
+              throw ServiceError(
+                type: SingleErrorTypes.notFound,
+                description:
+                    'Portion ${item.portionId} not found for food ${item.foodId}',
+              );
+            }
+          }
+        }
+      }
+    }
+
+    return (recipes: recipeById, foods: foodById, portions: portionById);
+  }
+
   Future<Result<MealPlanDto, ServiceError<SingleErrorTypes>>> createMealPlan(
     MealPlanInput input, [
     CreatedBy createdBy = CreatedBy.user,
@@ -121,59 +208,7 @@ final class MealPlanRepository implements Repository {
       return await _mealPlanDao.startTransaction<
         Result<MealPlanDto, ServiceError<SingleErrorTypes>>
       >((txn) async {
-        // Pre-validate all referenced foods, portions, recipes
-        for (final w in weeks) {
-          for (final d in w.days) {
-            for (final m in d.meals) {
-              if (m.recipeId != null) {
-                final rRows = await _recipeDao.selectMany(
-                  where: RecipeColumns.id.equal,
-                  whereArgs: [m.recipeId],
-                  limit: 1,
-                  trx: txn,
-                );
-                if (rRows.isEmpty) {
-                  throw ServiceError(
-                    type: SingleErrorTypes.notFound,
-                    description: 'Recipe ${m.recipeId} not found',
-                  );
-                }
-              }
-              for (final item in m.items) {
-                final fRows = await _foodDao.selectMany(
-                  where: FoodColumns.id.equal,
-                  whereArgs: [item.foodId],
-                  limit: 1,
-                  trx: txn,
-                );
-                if (fRows.isEmpty) {
-                  throw ServiceError(
-                    type: SingleErrorTypes.notFound,
-                    description: 'Food ${item.foodId} not found',
-                  );
-                }
-                if (item.portionId != null) {
-                  final portionWhere = WhereBuilder()
-                    ..and(FoodPortionColumns.id.equal, item.portionId)
-                    ..and(FoodPortionColumns.foodId.equal, item.foodId);
-                  final pRows = await _foodPortionDao.selectMany(
-                    where: portionWhere.where!,
-                    whereArgs: portionWhere.args!,
-                    limit: 1,
-                    trx: txn,
-                  );
-                  if (pRows.isEmpty) {
-                    throw ServiceError(
-                      type: SingleErrorTypes.notFound,
-                      description:
-                          'Portion ${item.portionId} not found for food ${item.foodId}',
-                    );
-                  }
-                }
-              }
-            }
-          }
-        }
+        final references = await _loadMealPlanReferences(weeks, txn);
 
         int planTotalMeals = 0;
         int planTotalDays = 0;
@@ -256,20 +291,12 @@ final class MealPlanRepository implements Repository {
               String? recipeName;
 
               if (mInput.recipeId != null) {
-                final rRows = await _recipeDao.selectMany(
-                  where: RecipeColumns.id.equal,
-                  whereArgs: [mInput.recipeId],
-                  limit: 1,
-                  trx: txn,
-                );
-                if (rRows.isNotEmpty) {
-                  final r = rRows.first;
-                  recipeName = r.name;
-                  mealCalories += r.servingCalories;
-                  mealProtein += r.servingProtein;
-                  mealCarbs += r.servingCarbs;
-                  mealFat += r.servingFat;
-                }
+                final recipe = references.recipes[mInput.recipeId];
+                recipeName = recipe?.name;
+                mealCalories += recipe?.servingCalories ?? 0;
+                mealProtein += recipe?.servingProtein ?? 0;
+                mealCarbs += recipe?.servingCarbs ?? 0;
+                mealFat += recipe?.servingFat ?? 0;
               }
 
               final List<MealPlanMealItemDto> itemDtos = [];
@@ -293,29 +320,15 @@ final class MealPlanRepository implements Repository {
               final int mealId = await _mealDao.insert(tempMeal, txn);
 
               for (final itemInput in mInput.items) {
-                final fRows = await _foodDao.selectMany(
-                  where: FoodColumns.id.equal,
-                  whereArgs: [itemInput.foodId],
-                  limit: 1,
-                  trx: txn,
-                );
-                final food = fRows.first;
+                final food = references.foods[itemInput.foodId]!;
 
                 double effectiveGrams = itemInput.amount.toDouble();
                 String? portionName;
                 if (itemInput.portionId != null) {
-                  final pRows = await _foodPortionDao.selectMany(
-                    where: FoodPortionColumns.id.equal,
-                    whereArgs: [itemInput.portionId],
-                    limit: 1,
-                    trx: txn,
-                  );
-                  if (pRows.isNotEmpty) {
-                    final p = pRows.first;
-                    portionName = p.portionName;
-                    effectiveGrams = (itemInput.amount * p.gramWeight)
-                        .toDouble();
-                  }
+                  final portion = references.portions[itemInput.portionId]!;
+                  portionName = portion.portionName;
+                  effectiveGrams = (itemInput.amount * portion.gramWeight)
+                      .toDouble();
                 }
 
                 final double scale = food.servingSizeBaseGrams > 0
@@ -470,84 +483,109 @@ final class MealPlanRepository implements Repository {
         orderBy: [MealPlanWeekColumns.weekNumber.orderAsc],
       );
 
-      final List<MealPlanWeekDto> weekDtos = [];
-
-      for (final w in weeks) {
-        final days = await _dayDao.selectMany(
-          where: MealPlanDayColumns.mealPlanWeekId.equal,
-          whereArgs: [w.id!],
-          orderBy: [MealPlanDayColumns.day.orderAsc],
-        );
-
-        final List<MealPlanDayDto> dayDtos = [];
-        for (final d in days) {
-          final meals = await _mealDao.selectMany(
-            where: MealPlanMealColumns.mealPlanDayId.equal,
-            whereArgs: [d.id!],
-            orderBy: [MealPlanMealColumns.position.orderAsc],
-          );
-
-          final List<MealPlanMealDto> mealDtos = [];
-          for (final m in meals) {
-            String? recipeName;
-            if (m.recipeId != null) {
-              final r = await _recipeDao.selectMany(
-                where: RecipeColumns.id.equal,
-                whereArgs: [m.recipeId],
-                limit: 1,
-              );
-              if (r.isNotEmpty) {
-                recipeName = r.first.name;
-              }
-            }
-
-            final items = await _itemDao.selectMany(
-              where: MealPlanMealItemColumns.mealPlanMealId.equal,
-              whereArgs: [m.id!],
+      final weekIds = weeks.map((week) => week.id!).toList();
+      final days = weekIds.isEmpty
+          ? <MealPlanDay>[]
+          : await _dayDao.selectMany(
+              where: MealPlanDayColumns.mealPlanWeekId.inList(weekIds.length),
+              whereArgs: weekIds,
+              orderBy: [MealPlanDayColumns.day.orderAsc],
             );
-
-            final List<MealPlanMealItemDto> itemDtos = [];
-            for (final it in items) {
-              final fRows = await _foodDao.selectMany(
-                where: FoodColumns.id.equal,
-                whereArgs: [it.foodId],
-                limit: 1,
-              );
-              final foodName = fRows.isNotEmpty ? fRows.first.name : null;
-
-              String? portionName;
-              if (it.portionId != null) {
-                final pRows = await _foodPortionDao.selectMany(
-                  where: FoodPortionColumns.id.equal,
-                  whereArgs: [it.portionId],
-                  limit: 1,
-                );
-                portionName = pRows.isNotEmpty ? pRows.first.portionName : null;
-              }
-
-              itemDtos.add(
-                MealPlanMealItemDto.fromModel(
-                  it,
-                  foodName: foodName,
-                  portionName: portionName,
-                ),
-              );
-            }
-
-            mealDtos.add(
-              MealPlanMealDto.fromModel(
-                m,
-                recipeName: recipeName,
-                items: itemDtos,
+      final dayIds = days.map((day) => day.id!).toList();
+      final meals = dayIds.isEmpty
+          ? <MealPlanMeal>[]
+          : await _mealDao.selectMany(
+              where: MealPlanMealColumns.mealPlanDayId.inList(dayIds.length),
+              whereArgs: dayIds,
+              orderBy: [MealPlanMealColumns.position.orderAsc],
+            );
+      final mealIds = meals.map((meal) => meal.id!).toList();
+      final items = mealIds.isEmpty
+          ? <MealPlanMealItem>[]
+          : await _itemDao.selectMany(
+              where: MealPlanMealItemColumns.mealPlanMealId.inList(
+                mealIds.length,
               ),
+              whereArgs: mealIds,
             );
-          }
 
-          dayDtos.add(MealPlanDayDto.fromModel(d, meals: mealDtos));
-        }
+      final recipeIds = meals
+          .map((meal) => meal.recipeId)
+          .whereType<int>()
+          .toSet()
+          .toList();
+      final recipes = recipeIds.isEmpty
+          ? <Recipe>[]
+          : await _recipeDao.selectMany(
+              where: RecipeColumns.id.inList(recipeIds.length),
+              whereArgs: recipeIds,
+            );
+      final foodIds = items.map((item) => item.foodId).toSet().toList();
+      final foods = foodIds.isEmpty
+          ? <Food>[]
+          : await _foodDao.selectMany(
+              where: FoodColumns.id.inList(foodIds.length),
+              whereArgs: foodIds,
+            );
+      final portionIds = items
+          .map((item) => item.portionId)
+          .whereType<int>()
+          .toSet()
+          .toList();
+      final portions = portionIds.isEmpty
+          ? <FoodPortion>[]
+          : await _foodPortionDao.selectMany(
+              where: FoodPortionColumns.id.inList(portionIds.length),
+              whereArgs: portionIds,
+            );
 
-        weekDtos.add(MealPlanWeekDto.fromModel(w, days: dayDtos));
+      final recipeById = {for (final recipe in recipes) recipe.id!: recipe};
+      final foodById = {for (final food in foods) food.id!: food};
+      final portionById = {
+        for (final portion in portions) portion.id!: portion,
+      };
+      final itemsByMealId = <int, List<MealPlanMealItem>>{};
+      for (final item in items) {
+        itemsByMealId.putIfAbsent(item.mealPlanMealId, () => []).add(item);
       }
+      final mealsByDayId = <int, List<MealPlanMeal>>{};
+      for (final meal in meals) {
+        mealsByDayId.putIfAbsent(meal.mealPlanDayId, () => []).add(meal);
+      }
+      final daysByWeekId = <int, List<MealPlanDay>>{};
+      for (final day in days) {
+        daysByWeekId.putIfAbsent(day.mealPlanWeekId, () => []).add(day);
+      }
+
+      final weekDtos = weeks.map((week) {
+        final dayDtos = (daysByWeekId[week.id] ?? const <MealPlanDay>[]).map((
+          day,
+        ) {
+          final mealDtos = (mealsByDayId[day.id] ?? const <MealPlanMeal>[]).map(
+            (meal) {
+              final itemDtos =
+                  (itemsByMealId[meal.id] ?? const <MealPlanMealItem>[]).map((
+                    item,
+                  ) {
+                    return MealPlanMealItemDto.fromModel(
+                      item,
+                      foodName: foodById[item.foodId]?.name,
+                      portionName: item.portionId == null
+                          ? null
+                          : portionById[item.portionId]?.portionName,
+                    );
+                  }).toList();
+              return MealPlanMealDto.fromModel(
+                meal,
+                recipeName: recipeById[meal.recipeId]?.name,
+                items: itemDtos,
+              );
+            },
+          ).toList();
+          return MealPlanDayDto.fromModel(day, meals: mealDtos);
+        }).toList();
+        return MealPlanWeekDto.fromModel(week, days: dayDtos);
+      }).toList();
 
       return ok(
         MealPlanDto.fromModel(
@@ -670,59 +708,7 @@ final class MealPlanRepository implements Repository {
       return await _mealPlanDao.startTransaction<
         Result<MealPlanDto, ServiceError<SingleErrorTypes>>
       >((txn) async {
-        // Pre-validate all referenced foods, portions, recipes
-        for (final w in weeks) {
-          for (final d in w.days) {
-            for (final m in d.meals) {
-              if (m.recipeId != null) {
-                final rRows = await _recipeDao.selectMany(
-                  where: RecipeColumns.id.equal,
-                  whereArgs: [m.recipeId],
-                  limit: 1,
-                  trx: txn,
-                );
-                if (rRows.isEmpty) {
-                  throw ServiceError(
-                    type: SingleErrorTypes.notFound,
-                    description: 'Recipe ${m.recipeId} not found',
-                  );
-                }
-              }
-              for (final item in m.items) {
-                final fRows = await _foodDao.selectMany(
-                  where: FoodColumns.id.equal,
-                  whereArgs: [item.foodId],
-                  limit: 1,
-                  trx: txn,
-                );
-                if (fRows.isEmpty) {
-                  throw ServiceError(
-                    type: SingleErrorTypes.notFound,
-                    description: 'Food ${item.foodId} not found',
-                  );
-                }
-                if (item.portionId != null) {
-                  final portionWhere = WhereBuilder()
-                    ..and(FoodPortionColumns.id.equal, item.portionId)
-                    ..and(FoodPortionColumns.foodId.equal, item.foodId);
-                  final pRows = await _foodPortionDao.selectMany(
-                    where: portionWhere.where!,
-                    whereArgs: portionWhere.args!,
-                    limit: 1,
-                    trx: txn,
-                  );
-                  if (pRows.isEmpty) {
-                    throw ServiceError(
-                      type: SingleErrorTypes.notFound,
-                      description:
-                          'Portion ${item.portionId} not found for food ${item.foodId}',
-                    );
-                  }
-                }
-              }
-            }
-          }
-        }
+        final references = await _loadMealPlanReferences(weeks, txn);
 
         final nextVersion = existing.version + 1;
         final List<MealPlanWeekDto> weekDtos = [];
@@ -795,20 +781,12 @@ final class MealPlanRepository implements Repository {
               String? recipeName;
 
               if (mInput.recipeId != null) {
-                final rRows = await _recipeDao.selectMany(
-                  where: RecipeColumns.id.equal,
-                  whereArgs: [mInput.recipeId],
-                  limit: 1,
-                  trx: txn,
-                );
-                if (rRows.isNotEmpty) {
-                  final r = rRows.first;
-                  recipeName = r.name;
-                  mealCalories += r.servingCalories;
-                  mealProtein += r.servingProtein;
-                  mealCarbs += r.servingCarbs;
-                  mealFat += r.servingFat;
-                }
+                final recipe = references.recipes[mInput.recipeId];
+                recipeName = recipe?.name;
+                mealCalories += recipe?.servingCalories ?? 0;
+                mealProtein += recipe?.servingProtein ?? 0;
+                mealCarbs += recipe?.servingCarbs ?? 0;
+                mealFat += recipe?.servingFat ?? 0;
               }
 
               final List<MealPlanMealItemDto> itemDtos = [];
@@ -832,29 +810,15 @@ final class MealPlanRepository implements Repository {
               final int mealId = await _mealDao.insert(tempMeal, txn);
 
               for (final itemInput in mInput.items) {
-                final fRows = await _foodDao.selectMany(
-                  where: FoodColumns.id.equal,
-                  whereArgs: [itemInput.foodId],
-                  limit: 1,
-                  trx: txn,
-                );
-                final food = fRows.first;
+                final food = references.foods[itemInput.foodId]!;
 
                 double effectiveGrams = itemInput.amount.toDouble();
                 String? portionName;
                 if (itemInput.portionId != null) {
-                  final pRows = await _foodPortionDao.selectMany(
-                    where: FoodPortionColumns.id.equal,
-                    whereArgs: [itemInput.portionId],
-                    limit: 1,
-                    trx: txn,
-                  );
-                  if (pRows.isNotEmpty) {
-                    final p = pRows.first;
-                    portionName = p.portionName;
-                    effectiveGrams = (itemInput.amount * p.gramWeight)
-                        .toDouble();
-                  }
+                  final portion = references.portions[itemInput.portionId]!;
+                  portionName = portion.portionName;
+                  effectiveGrams = (itemInput.amount * portion.gramWeight)
+                      .toDouble();
                 }
 
                 final double scale = food.servingSizeBaseGrams > 0
