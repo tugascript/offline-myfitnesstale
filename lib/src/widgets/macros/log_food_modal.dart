@@ -1,5 +1,5 @@
 import '../layout/app_text_form_field.dart';
-import '../../services/inputs/quick_food_log_input.dart';
+import 'package:myfitnesstale/src/data/repositories/macros/inputs/quick_food_log_input.dart';
 import 'quick_add_food_form.dart';
 
 import 'package:flutter/material.dart';
@@ -10,7 +10,7 @@ import '../../cubits/food_cubit.dart';
 import '../../cubits/macro_tracking_cubit.dart';
 import '../../cubits/recipe_cubit.dart';
 import '../../data/utils/enums.dart';
-import '../../services/dtos/food_dto.dart';
+import 'package:myfitnesstale/src/data/repositories/foods/dtos/food_dto.dart';
 import '../../ui/core/sizes/data_display_sizes.dart';
 
 class LogFoodModal extends StatefulWidget {

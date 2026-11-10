@@ -7,7 +7,7 @@ import '../../../../cubits/states/profile_state.dart';
 import '../../../../cubits/states/weight_record_state.dart';
 import '../../../../cubits/weight_record_cubit.dart';
 import '../../../../data/utils/enums.dart';
-import '../../../../services/inputs/weight_goal_input.dart';
+import 'package:myfitnesstale/src/data/repositories/weight/inputs/weight_goal_input.dart';
 import '../../../../ui/core/sizes/data_display_sizes.dart';
 import '../../../layout/app_modal.dart';
 import 'weight_goal_form.dart';

@@ -3,7 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../cubits/states/workout_state.dart';
 import '../../routing/routing.dart';
-import '../../services/dtos/workout_dto.dart';
+import 'package:myfitnesstale/src/data/repositories/workouts/dtos/workout_dto.dart';
 import '../../ui/core/sizes/data_display_sizes.dart';
 import '../../ui/core/widgets/not_found_list.dart';
 import 'workout_card.dart';

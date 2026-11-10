@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../../../data/utils/enums.dart';
-import '../../../services/dtos/weight_record_dto.dart';
+import 'package:myfitnesstale/src/data/repositories/weight/dtos/weight_record_dto.dart';
 import '../../../ui/core/utils/converters.dart';
 import '../../../ui/core/sizes/data_display_sizes.dart';
 import 'editor/weight_record_point_details_modal.dart';

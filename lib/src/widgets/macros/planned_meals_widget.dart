@@ -7,8 +7,8 @@ import '../../cubits/meal_plan_record_cubit.dart';
 import '../../cubits/states/meal_plan_state.dart';
 import '../../cubits/states/meal_plan_record_state.dart';
 
-import '../../services/dtos/meal_plan_dto.dart';
-import '../../services/dtos/meal_plan_record_dto.dart';
+import 'package:myfitnesstale/src/data/repositories/meal_plans/dtos/meal_plan_dto.dart';
+import 'package:myfitnesstale/src/data/repositories/meal_plans/dtos/meal_plan_record_dto.dart';
 import '../../ui/core/sizes/data_display_sizes.dart';
 import '../../data/utils/dates.dart';
 

@@ -2,7 +2,7 @@ import 'package:equatable/equatable.dart';
 
 import '../../utils/nullable.dart';
 import '../../data/utils/enums.dart';
-import '../../services/dtos/meal_plan_record_dto.dart';
+import 'package:myfitnesstale/src/data/repositories/meal_plans/dtos/meal_plan_record_dto.dart';
 import 'common_state.dart';
 
 final class MealPlanRecordPagination extends Equatable {

@@ -15,9 +15,9 @@ import 'package:myfitnesstale/src/data/models/workout_plan_workout_model.dart';
 import 'package:myfitnesstale/src/data/models/workout_plan_workout_record_model.dart';
 import 'package:myfitnesstale/src/data/models/workout_record_model.dart';
 import 'package:myfitnesstale/src/utils/errors.dart';
-import 'package:myfitnesstale/src/services/workout_plan_service.dart';
-import 'package:myfitnesstale/src/services/workout_plan_record_service.dart';
-import 'package:myfitnesstale/src/services/workout_record_service.dart';
+import 'package:myfitnesstale/src/data/repositories/workout_plans/workout_plan_repository.dart';
+import 'package:myfitnesstale/src/data/repositories/workout_plans/workout_plan_record_repository.dart';
+import 'package:myfitnesstale/src/data/repositories/workouts/workout_record_repository.dart';
 
 import '../../support/test_database.dart';
 
@@ -74,7 +74,7 @@ void main() {
         expect(cubit.state.error, isNull);
       }
 
-      final countResult = await WorkoutPlanService().countWorkoutPlans(
+      final countResult = await WorkoutPlanRepository().countWorkoutPlans(
         createdBy: CreatedBy.user,
       );
       expect(countResult.isOk(), isTrue);
@@ -228,7 +228,7 @@ void main() {
     );
     await db.insert(WorkoutPlanWorkout.table, dayWorkout.toMap());
 
-    final recordService = WorkoutPlanRecordService();
+    final recordService = WorkoutPlanRecordRepository();
     final recordResult = await recordService.createWorkoutPlanRecord(
       WorkoutPlanRecordInput(workoutPlanId: planId),
     );
@@ -338,7 +338,7 @@ void main() {
     );
     await db.insert(WorkoutPlanWorkout.table, dayWorkout.toMap());
 
-    final recordService = WorkoutPlanRecordService();
+    final recordService = WorkoutPlanRecordRepository();
     final recordResult = await recordService.createWorkoutPlanRecord(
       WorkoutPlanRecordInput(workoutPlanId: planId),
     );
@@ -400,7 +400,7 @@ void main() {
   test('a completed workout is not reused as an active workout', () async {
     final db = await testDatabase.db;
     final workoutId = await createWorkout(db, uniqueName('lifecycle-workout'));
-    final service = WorkoutRecordService();
+    final service = WorkoutRecordRepository();
 
     final startedAt = DateTime.now().subtract(const Duration(hours: 1));
     final first = await service.getOrCreateWorkoutRecord(
@@ -439,7 +439,7 @@ void main() {
     final workoutId = await createWorkout(db, uniqueName('manual-workout'));
     final now = DateTime.now();
 
-    final result = await WorkoutRecordService().batchCreateWorkoutRecord(
+    final result = await WorkoutRecordRepository().batchCreateWorkoutRecord(
       WorkoutRecordBatchInput(
         workoutId: workoutId,
         version: 1,
@@ -570,7 +570,7 @@ void main() {
       );
     }
 
-    final service = WorkoutPlanRecordService();
+    final service = WorkoutPlanRecordRepository();
     final planRecord = await service.createWorkoutPlanRecord(
       WorkoutPlanRecordInput(workoutPlanId: planId),
     );

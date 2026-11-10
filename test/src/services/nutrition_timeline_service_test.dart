@@ -1,10 +1,10 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:myfitnesstale/src/data/utils/enums.dart';
-import 'package:myfitnesstale/src/services/food_service.dart';
-import 'package:myfitnesstale/src/services/inputs/food_input.dart';
-import 'package:myfitnesstale/src/services/inputs/recipe_input.dart';
-import 'package:myfitnesstale/src/services/macro_tracking_service.dart';
-import 'package:myfitnesstale/src/services/recipe_service.dart';
+import 'package:myfitnesstale/src/data/repositories/foods/food_repository.dart';
+import 'package:myfitnesstale/src/data/repositories/foods/inputs/food_input.dart';
+import 'package:myfitnesstale/src/data/repositories/recipes/inputs/recipe_input.dart';
+import 'package:myfitnesstale/src/data/repositories/macros/macro_tracking_repository.dart';
+import 'package:myfitnesstale/src/data/repositories/recipes/recipe_repository.dart';
 
 import '../../support/test_database.dart';
 
@@ -16,8 +16,8 @@ void main() {
   test(
     'timed submissions survive reload, roll up, and delete independently',
     () async {
-      final service = MacroTrackingService();
-      final food = (await FoodService().createFood(
+      final service = MacroTrackingRepository();
+      final food = (await FoodRepository().createFood(
         FoodInput(
           name: 'Timeline oats',
           category: FoodCategory.grainsAndCereals,
@@ -29,7 +29,7 @@ void main() {
           portions: const [],
         ),
       )).value;
-      final recipe = (await RecipeService().createRecipe(
+      final recipe = (await RecipeRepository().createRecipe(
         RecipeInput(
           name: 'Timeline recipe',
           servingsYield: 1,

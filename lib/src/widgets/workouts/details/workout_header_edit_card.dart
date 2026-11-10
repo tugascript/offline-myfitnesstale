@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../data/utils/enums.dart';
-import '../../../services/dtos/workout_dto.dart';
+import 'package:myfitnesstale/src/data/repositories/workouts/dtos/workout_dto.dart';
 import '../../../ui/core/sizes/data_display_sizes.dart';
 import 'workout_base_form.dart';
 

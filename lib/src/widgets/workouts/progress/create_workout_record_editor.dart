@@ -8,7 +8,7 @@ import '../../../cubits/workout_plan_record_cubit.dart';
 import '../../../cubits/workout_record_cubit.dart';
 import '../../../data/utils/json_data.dart';
 import '../../../data/utils/enums.dart';
-import '../../../services/dtos/workout_set_dto.dart';
+import 'package:myfitnesstale/src/data/repositories/workouts/dtos/workout_set_dto.dart';
 import '../../../ui/core/utils/converters.dart';
 import '../../../ui/core/utils/formatters.dart';
 import '../../../ui/core/sizes/data_display_sizes.dart';

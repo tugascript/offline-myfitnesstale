@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../cubits/profile_cubit.dart';
-import '../../../../services/dtos/reminders_config_dto.dart';
+import 'package:myfitnesstale/src/data/repositories/profile/dtos/reminders_config_dto.dart';
 import '../../../core/sizes/data_display_sizes.dart';
 import '../../../../widgets/layout/expanding_section.dart';
 

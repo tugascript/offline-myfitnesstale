@@ -1,7 +1,7 @@
 import 'package:equatable/equatable.dart';
 
 import '../../utils/nullable.dart';
-import '../../services/dtos/macro_tracking_dto.dart';
+import 'package:myfitnesstale/src/data/repositories/macros/dtos/macro_tracking_dto.dart';
 import 'common_state.dart';
 
 final class MacroGoalPagination extends Equatable {

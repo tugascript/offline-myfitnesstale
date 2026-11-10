@@ -5,7 +5,7 @@ import 'package:skeletonizer/skeletonizer.dart';
 import '../../../cubits/states/weight_record_state.dart';
 import '../../../cubits/weight_record_cubit.dart';
 import '../../../data/utils/enums.dart';
-import '../../../services/dtos/weight_record_dto.dart';
+import 'package:myfitnesstale/src/data/repositories/weight/dtos/weight_record_dto.dart';
 import '../../../ui/core/utils/converters.dart';
 import '../../../ui/core/utils/formatters.dart';
 import '../../../ui/core/sizes/data_display_sizes.dart';

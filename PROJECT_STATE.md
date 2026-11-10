@@ -322,11 +322,11 @@ SQLite model -> Repository<T>/feature service -> Cubit -> view/widget
 - Android and iOS are the only configured platforms; portrait is forced at
   runtime.
 
-This is a convention rather than a strict dependency boundary. Most services
-are singletons and Cubits construct them directly, which can make replacement
-in tests difficult. `ProfileCubit` accepts an optional `OnboardingService` for
-orchestration tests. `WorkoutPlanService` and `WorkoutPlanRecordService` remain
-large orchestration services.
+This is a convention rather than a strict dependency boundary. Most repositories
+are still singletons and Cubits construct them directly, which can make
+replacement in tests difficult. `ProfileCubit` accepts an optional
+`OnboardingRepository` for orchestration tests. `WorkoutPlanRepository` and
+`WorkoutPlanRecordRepository` remain large orchestration repositories.
 
 `MyApp` accepts an optional router so integration tests can launch isolated app
 instances. Production uses `AppRouter.router`. Used fonts are bundled under
@@ -345,7 +345,7 @@ instances. Production uses `AppRouter.router`. Used fonts are bundled under
 
 ### Onboarding invariants
 
-`OnboardingService` performs these stages in one SQLite transaction:
+`OnboardingRepository` performs these stages in one SQLite transaction:
 
 1. equipment;
 2. exercises and equipment links;

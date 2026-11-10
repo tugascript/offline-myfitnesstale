@@ -3,9 +3,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../utils/nullable.dart';
 import '../../cubits/food_cubit.dart';
-import '../../services/dtos/food_dto.dart';
-import '../../services/dtos/recipe_dto.dart';
-import '../../services/inputs/recipe_input.dart';
+import 'package:myfitnesstale/src/data/repositories/foods/dtos/food_dto.dart';
+import 'package:myfitnesstale/src/data/repositories/recipes/dtos/recipe_dto.dart';
+import 'package:myfitnesstale/src/data/repositories/recipes/inputs/recipe_input.dart';
 import '../../ui/core/sizes/data_display_sizes.dart';
 import '../layout/app_text_form_field.dart';
 import '../layout/responsive_fields.dart';

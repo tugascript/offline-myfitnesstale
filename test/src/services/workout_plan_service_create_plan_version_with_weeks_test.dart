@@ -9,15 +9,15 @@ import 'package:myfitnesstale/src/data/models/workout_plan_record_model.dart';
 import 'package:myfitnesstale/src/data/models/workout_plan_week_model.dart';
 import 'package:myfitnesstale/src/data/models/workout_plan_workout_model.dart';
 import 'package:myfitnesstale/src/utils/errors.dart';
-import 'package:myfitnesstale/src/services/workout_plan_record_service.dart';
-import 'package:myfitnesstale/src/services/workout_plan_service.dart';
+import 'package:myfitnesstale/src/data/repositories/workout_plans/workout_plan_record_repository.dart';
+import 'package:myfitnesstale/src/data/repositories/workout_plans/workout_plan_repository.dart';
 
 import '../../support/test_database.dart';
 
 void main() {
   final testDatabase = TestDatabase();
-  final workoutPlanService = WorkoutPlanService();
-  final workoutPlanRecordService = WorkoutPlanRecordService();
+  final workoutPlanService = WorkoutPlanRepository();
+  final workoutPlanRecordService = WorkoutPlanRecordRepository();
   int seedCounter = 0;
 
   String uniqueName(String prefix) => '$prefix-${seedCounter++}';

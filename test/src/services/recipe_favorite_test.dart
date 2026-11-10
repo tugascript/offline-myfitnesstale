@@ -1,18 +1,18 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:myfitnesstale/src/cubits/recipe_cubit.dart';
 import 'package:myfitnesstale/src/data/models/recipe_model.dart';
-import 'package:myfitnesstale/src/services/recipe_service.dart';
+import 'package:myfitnesstale/src/data/repositories/recipes/recipe_repository.dart';
 
 import '../../support/test_database.dart';
 
 void main() {
   final database = TestDatabase();
-  final service = RecipeService();
+  final service = RecipeRepository();
 
   setUp(database.initialize);
   tearDown(database.destroy);
 
-  test('RecipeService toggleFavorite toggles favorite flag', () async {
+  test('RecipeRepository toggleFavorite toggles favorite flag', () async {
     final db = await database.db;
     final id = await db.insert(
       Recipe.table,
@@ -50,7 +50,7 @@ void main() {
     expect(updatedRow2.first[RecipeColumns.isFavorite.value], 0);
   });
 
-  test('RecipeService getRecipes filters by isFavorite', () async {
+  test('RecipeRepository getRecipes filters by isFavorite', () async {
     final db = await database.db;
     await db.insert(
       Recipe.table,

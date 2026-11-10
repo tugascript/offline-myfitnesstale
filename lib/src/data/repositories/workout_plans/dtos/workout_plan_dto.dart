@@ -1,0 +1,117 @@
+import 'package:equatable/equatable.dart';
+
+import 'package:myfitnesstale/src/utils/nullable.dart';
+import 'package:myfitnesstale/src/data/utils/enums.dart';
+import 'package:myfitnesstale/src/data/models/workout_plan_model.dart';
+import 'package:myfitnesstale/src/data/repositories/core/dtos/dto.dart';
+import 'package:myfitnesstale/src/data/repositories/core/dtos/picture_dto.dart';
+import 'package:myfitnesstale/src/data/repositories/core/dtos/video_dto.dart';
+import 'workout_plan_week_dto.dart';
+
+class WorkoutPlanDto extends Equatable implements Dto<WorkoutPlan> {
+  @override
+  final int id;
+  final String name;
+  final String? description;
+  final int currentVersion;
+  final int totalWeeks;
+  final int totalDays;
+  final int totalWorkouts;
+  final PictureDto? picture;
+  final VideoDto? video;
+  final Difficulty difficulty;
+  final bool isFavorite;
+  final CreatedBy createdBy;
+
+  // Related data
+  final List<WorkoutPlanWeekDto>? weeks;
+
+  const WorkoutPlanDto({
+    required this.id,
+    required this.name,
+    this.description,
+    required this.currentVersion,
+    required this.totalWeeks,
+    required this.totalDays,
+    required this.totalWorkouts,
+    this.picture,
+    this.video,
+    required this.difficulty,
+    required this.isFavorite,
+    required this.createdBy,
+    this.weeks,
+  });
+
+  factory WorkoutPlanDto.fromModel(
+    WorkoutPlan model, {
+    List<WorkoutPlanWeekDto>? weeks,
+  }) {
+    return WorkoutPlanDto(
+      id: model.id!,
+      name: model.name,
+      description: model.description,
+      currentVersion: model.version,
+      totalWeeks: model.totalWeeks,
+      totalDays: model.totalDays,
+      totalWorkouts: model.totalWorkouts,
+      picture: model.picture != null
+          ? PictureDto.fromModel(model.picture!)
+          : null,
+      video: model.video != null ? VideoDto.fromModel(model.video!) : null,
+      difficulty: model.difficulty,
+      isFavorite: model.isFavorite,
+      createdBy: model.createdBy,
+      weeks: weeks,
+    );
+  }
+
+  @override
+  WorkoutPlanDto copyWith({
+    int? id,
+    String? name,
+    Nullable<String>? description,
+    int? currentVersion,
+    int? totalWeeks,
+    int? totalDays,
+    int? totalWorkouts,
+    Nullable<PictureDto>? picture,
+    Nullable<VideoDto>? video,
+    Difficulty? difficulty,
+    CreatedBy? createdBy,
+    bool? isFavorite,
+    Nullable<List<WorkoutPlanWeekDto>>? weeks,
+  }) {
+    return WorkoutPlanDto(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      description: description != null ? description.value : this.description,
+      currentVersion: currentVersion ?? this.currentVersion,
+      totalWeeks: totalWeeks ?? this.totalWeeks,
+      totalDays: totalDays ?? this.totalDays,
+      totalWorkouts: totalWorkouts ?? this.totalWorkouts,
+      picture: picture != null ? picture.value : this.picture,
+      video: video != null ? video.value : this.video,
+      difficulty: difficulty ?? this.difficulty,
+      createdBy: createdBy ?? this.createdBy,
+      isFavorite: isFavorite ?? this.isFavorite,
+      weeks: weeks != null ? weeks.value : this.weeks,
+    );
+  }
+
+  @override
+  List<Object?> get props => [
+    id,
+    name,
+    description,
+    currentVersion,
+    totalWeeks,
+    totalDays,
+    totalWorkouts,
+    picture,
+    video,
+    difficulty,
+    isFavorite,
+    createdBy,
+    weeks,
+  ];
+}

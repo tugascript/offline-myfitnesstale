@@ -1,5 +1,5 @@
-import '../../../../utils/nullable.dart';
-import '../../../utils/json_data.dart';
+import 'package:myfitnesstale/src/utils/nullable.dart';
+import 'package:myfitnesstale/src/data/utils/json_data.dart';
 
 class ExerciseRecordInput {
   final int exerciseId;

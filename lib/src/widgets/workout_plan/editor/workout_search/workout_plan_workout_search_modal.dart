@@ -4,7 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../cubits/states/workout_state.dart';
 import '../../../../cubits/workout_cubit.dart';
 import '../../../../data/utils/enums.dart';
-import '../../../../services/dtos/workout_dto.dart';
+import 'package:myfitnesstale/src/data/repositories/workouts/dtos/workout_dto.dart';
 import '../../../../ui/core/sizes/data_display_sizes.dart';
 import '../../../../ui/core/widgets/modal_search/modal_search_form.dart';
 import 'workout_plan_workout_search_list.dart';

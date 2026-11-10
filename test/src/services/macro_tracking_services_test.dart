@@ -1,8 +1,8 @@
-import 'package:myfitnesstale/src/services/inputs/macro_goal_input.dart';
-import 'package:myfitnesstale/src/services/inputs/food_input.dart';
+import 'package:myfitnesstale/src/data/repositories/macros/inputs/macro_goal_input.dart';
+import 'package:myfitnesstale/src/data/repositories/foods/inputs/food_input.dart';
 import 'package:myfitnesstale/src/utils/nullable.dart';
-import 'package:myfitnesstale/src/services/inputs/meal_plan_input.dart';
-import 'package:myfitnesstale/src/services/inputs/recipe_input.dart';
+import 'package:myfitnesstale/src/data/repositories/meal_plans/inputs/meal_plan_input.dart';
+import 'package:myfitnesstale/src/data/repositories/recipes/inputs/recipe_input.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:myfitnesstale/src/data/models/day_macro_goal_model.dart';
@@ -12,21 +12,21 @@ import 'package:myfitnesstale/src/data/models/food_portion_model.dart';
 import 'package:myfitnesstale/src/data/models/meal_plan_record_model.dart';
 import 'package:myfitnesstale/src/data/models/week_macro_goal_model.dart';
 import 'package:myfitnesstale/src/utils/errors.dart';
-import 'package:myfitnesstale/src/services/food_service.dart';
-import 'package:myfitnesstale/src/services/macro_tracking_service.dart';
-import 'package:myfitnesstale/src/services/meal_plan_record_service.dart';
-import 'package:myfitnesstale/src/services/meal_plan_service.dart';
-import 'package:myfitnesstale/src/services/recipe_service.dart';
+import 'package:myfitnesstale/src/data/repositories/foods/food_repository.dart';
+import 'package:myfitnesstale/src/data/repositories/macros/macro_tracking_repository.dart';
+import 'package:myfitnesstale/src/data/repositories/meal_plans/meal_plan_record_repository.dart';
+import 'package:myfitnesstale/src/data/repositories/meal_plans/meal_plan_repository.dart';
+import 'package:myfitnesstale/src/data/repositories/recipes/recipe_repository.dart';
 
 import '../../support/test_database.dart';
 
 void main() {
   final testDatabase = TestDatabase();
-  final foodService = FoodService();
-  final recipeService = RecipeService();
-  final macroTrackingService = MacroTrackingService();
-  final mealPlanService = MealPlanService();
-  final mealPlanRecordService = MealPlanRecordService();
+  final foodService = FoodRepository();
+  final recipeService = RecipeRepository();
+  final macroTrackingService = MacroTrackingRepository();
+  final mealPlanService = MealPlanRepository();
+  final mealPlanRecordService = MealPlanRecordRepository();
 
   setUpAll(() async {
     await testDatabase.initialize();
@@ -36,7 +36,7 @@ void main() {
     await testDatabase.destroy();
   });
 
-  group('FoodService', () {
+  group('FoodRepository', () {
     test('food create, search, and delete, including rejection of CreatedBy.system', () async {
       // 1. Create food with portion
       final createResult = await foodService.createFood(
@@ -114,7 +114,7 @@ void main() {
     });
   });
 
-  group('RecipeService', () {
+  group('RecipeRepository', () {
     test('recipe create with items and recomputed serving macros', () async {
       // Create ingredients
       final food1Result = await foodService.createFood(
@@ -177,7 +177,7 @@ void main() {
     });
   });
 
-  group('MacroTrackingService', () {
+  group('MacroTrackingRepository', () {
     test('one active macro goal, and a meal log that get-or-creates the daily log and rolls totals up', () async {
       // 1. Create first goal (active)
       final goal1 = await macroTrackingService.createMacroGoal(
@@ -492,7 +492,7 @@ void main() {
     });
   });
 
-  group('MealPlanService', () {
+  group('MealPlanRepository', () {
     test('meal-plan save of a week with a day, meal, and item', () async {
       final eggResult = await foodService.createFood(
         FoodInput(
@@ -559,7 +559,7 @@ void main() {
     });
   });
 
-  group('MealPlanRecordService', () {
+  group('MealPlanRecordRepository', () {
     test(
       'starting a second meal plan abandons the previous in-progress record',
       () async {

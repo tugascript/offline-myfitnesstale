@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../services/dtos/recipe_dto.dart';
+import 'package:myfitnesstale/src/data/repositories/recipes/dtos/recipe_dto.dart';
 import '../../ui/core/sizes/data_display_sizes.dart';
 
 class RecipeListItemWidget extends StatelessWidget {

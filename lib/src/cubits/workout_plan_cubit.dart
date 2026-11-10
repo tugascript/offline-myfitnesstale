@@ -4,14 +4,14 @@ import 'package:logging/logging.dart';
 import '../utils/nullable.dart';
 import '../data/utils/enums.dart';
 import '../utils/errors.dart';
-import '../services/workout_plan_service.dart';
+import 'package:myfitnesstale/src/data/repositories/workout_plans/workout_plan_repository.dart';
 import 'states/common_state.dart';
 import 'states/workout_plan_state.dart';
 
-export '../services/inputs/workout_plan_input.dart';
+export 'package:myfitnesstale/src/data/repositories/workout_plans/inputs/workout_plan_input.dart';
 
 class WorkoutPlanCubit extends Cubit<WorkoutPlanState> {
-  final WorkoutPlanService _workoutPlanService = WorkoutPlanService();
+  final WorkoutPlanRepository _workoutPlanService = WorkoutPlanRepository();
 
   WorkoutPlanCubit() : super(WorkoutPlanState.initial());
 

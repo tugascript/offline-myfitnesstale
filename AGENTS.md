@@ -6,7 +6,7 @@ data ownership.
 
 ## Architectural Layers and Division of Responsibilities
 
-Follow the strict flow: `SQLite Model -> Repository -> Service -> Cubit -> View/Widget`.
+Follow the strict flow: `SQLite Model -> DAO -> Repository -> Cubit/ViewModel -> View/Widget`.
 
 - **Model (`lib/src/data/models`)**:
     - Defines SQLite table schemas (`tableCreate`, `Columns` enum).
@@ -14,22 +14,24 @@ Follow the strict flow: `SQLite Model -> Repository -> Service -> Cubit -> View/
     - Pure data container implementing `Model` and `Equatable`. Contains no business logic.
     - Uses `Nullable<T?>` wrappers (`lib/src/utils/nullable.dart`) in `copyWith` to differentiate between omitting an
       argument and deliberately setting a field to `null`.
-- **Repository (`Repository<T extends Model>` in `lib/src/data/models`)**:
+- **DAO (`Dao` / `JoinDao` in `lib/src/data/services/sqlite/`)**:
     - Generic table-level persistence layer communicating with SQLite via `DatabaseHelper`.
     - Handles single-table CRUD queries (`insert`, `update`, `delete`, `selectOne`, `selectMany`, `selectPaginated`,
       `count`).
     - Accepts an optional `Transaction? trx` for atomic execution.
-- **Service (`lib/src/services/`)**:
+- **Repository (`lib/src/data/repositories/<feature>/`)**:
     - Encapsulates business logic, domain rules, and multi-table coordination.
-    - Interacts with one or more `Repository<T>` instances and manages transactions for multi-step mutations.
-    - Transforms raw database models into domain DTOs (`lib/src/services/dtos/`).
+    - Interacts with one or more `Dao` / `JoinDao` instances and manages transactions for multi-step mutations.
+    - Transforms raw database models into domain DTOs under feature `dtos/` (shared media DTOs in
+      `repositories/core/dtos/`).
         - DTOs are immutable, stripping metadata and implementing `Equatable` for value equality in the Bloc.
+    - Feature inputs live beside the repository under `inputs/`.
     - Returns functional `Result<T, ServiceError<E>>` objects (`lib/src/utils/result.dart`) instead of
       throwing unhandled exceptions or leaking database details.
     - Preference for CRUD where the UPDATE uses the same input as CREATE making a "PUT" system.
-- **Cubit (`lib/src/cubits/`)**:
+- **Cubit / ViewModel (`lib/src/cubits/`, `lib/src/ui/<feature>/view_models/`)**:
     - Feature and application state management (`flutter_bloc`).
-    - Invokes services, unpackages `Result` objects, and emits immutable states (`lib/src/cubits/states/`).
+    - Invokes repositories, unpackages `Result` objects, and emits immutable states.
     - Uses `Nullable<T?>` wrappers (`lib/src/utils/nullable.dart`) in state `copyWith` to differentiate between
       omitting an argument and deliberately setting a field to `null`.
     - Never interacts directly with `sqflite` or raw database models.
@@ -38,7 +40,7 @@ Follow the strict flow: `SQLite Model -> Repository -> Service -> Cubit -> View/
     - UI layer rendering routed screens and components.
     - Consumes Cubit states via `BlocBuilder` / `BlocConsumer` / `context.watch`.
     - Dispatches user intents to Cubit methods.
-    - Never calls services or repositories directly.
+    - Never calls repositories or DAOs directly.
     - When generating a view, reuse shared UI in `lib/src/ui/core/widgets/` and `lib/src/widgets/layout/`, plus
       feature widgets under `lib/src/ui/<feature>/widgets/` or `lib/src/widgets/<feature>/`. Keep the view a
       compact composition of those widgets plus Cubit wiring.
@@ -87,12 +89,12 @@ Follow the strict flow: `SQLite Model -> Repository -> Service -> Cubit -> View/
 
 - Follow the [Flutter Style Guide](https://dart.dev/guides/language/effective-dart/style).
 - Use sound null safety; avoid `!` unless the invariant is clear.
-- Services functions, even intermediate, return `Result<T, ServiceError<E>>`, never throw exceptions. Catch failures at
-  the service boundary and map them to appropriate errors; do not let exceptions escape. Always prefer the use the
+- Repository functions, even intermediate, return `Result<T, ServiceError<E>>`, never throw exceptions. Catch failures at
+  the repository boundary and map them to appropriate errors; do not let exceptions escape. Always prefer the use the
   Columns mixin in `lib/src/data/models` to write SQL, only use RAW SQL when necessary.
 - Keep views focused on composition and Cubit wiring. Reuse existing widgets and extract cohesive UI components into
   `lib/src/ui/` or `lib/src/widgets/`.
-- Reuse existing helpers, components, widgets, services, and patterns consistently with surrounding code. Otherwise,
+- Reuse existing helpers, components, widgets, repositories, and patterns consistently with surrounding code. Otherwise,
   write the simplest implementation that meets the requirements; avoid speculative abstractions.
 
 ## Testing and Verification Baseline

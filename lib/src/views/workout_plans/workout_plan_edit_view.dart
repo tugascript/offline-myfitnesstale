@@ -7,7 +7,7 @@ import '../../cubits/states/workout_plan_state.dart';
 import '../../cubits/workout_plan_cubit.dart';
 import '../../data/utils/json_data.dart';
 import '../../data/utils/enums.dart';
-import '../../services/dtos/workout_plan_dto.dart';
+import 'package:myfitnesstale/src/data/repositories/workout_plans/dtos/workout_plan_dto.dart';
 import '../../ui/core/sizes/data_display_sizes.dart';
 import '../../ui/core/sizes/screen_size.dart';
 import '../../widgets/layout/app_scaffold.dart';

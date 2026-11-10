@@ -1,17 +1,17 @@
-import '../services/inputs/meal_plan_input.dart';
+import 'package:myfitnesstale/src/data/repositories/meal_plans/inputs/meal_plan_input.dart';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:logging/logging.dart';
 
 import '../utils/nullable.dart';
 import '../data/utils/enums.dart';
-import '../services/dtos/meal_plan_dto.dart';
-import '../services/meal_plan_service.dart';
+import 'package:myfitnesstale/src/data/repositories/meal_plans/dtos/meal_plan_dto.dart';
+import 'package:myfitnesstale/src/data/repositories/meal_plans/meal_plan_repository.dart';
 import 'states/common_state.dart';
 import 'states/meal_plan_state.dart';
 
 class MealPlanCubit extends Cubit<MealPlanState> {
-  final MealPlanService _mealPlanService = MealPlanService();
+  final MealPlanRepository _mealPlanService = MealPlanRepository();
   final Logger _logger = Logger('MealPlanCubit');
 
   MealPlanCubit() : super(MealPlanState.initial());

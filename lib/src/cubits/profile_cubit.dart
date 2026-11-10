@@ -3,20 +3,20 @@ import 'package:logging/logging.dart';
 
 import '../data/utils/enums.dart';
 import '../utils/errors.dart';
-import '../services/dtos/system_dto.dart';
-import '../services/onboarding_service.dart';
-import '../services/profile_service.dart';
+import 'package:myfitnesstale/src/data/repositories/profile/dtos/system_dto.dart';
+import 'package:myfitnesstale/src/data/repositories/onboarding/onboarding_repository.dart';
+import 'package:myfitnesstale/src/data/repositories/profile/profile_repository.dart';
 import 'states/common_state.dart';
 import 'states/profile_state.dart';
 
 class ProfileCubit extends Cubit<ProfileState> {
-  final ProfileService _profileService = ProfileService();
-  final OnboardingService _onboardingService;
+  final ProfileRepository _profileService = ProfileRepository();
+  final OnboardingRepository _onboardingService;
 
   final Logger _logger = Logger("Profile Cubit");
 
-  ProfileCubit({OnboardingService? onboardingService})
-    : _onboardingService = onboardingService ?? OnboardingService(),
+  ProfileCubit({OnboardingRepository? onboardingService})
+    : _onboardingService = onboardingService ?? OnboardingRepository(),
       super(ProfileState.initial());
 
   Future<void> loadInitialData() async {

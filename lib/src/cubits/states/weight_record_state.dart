@@ -1,8 +1,8 @@
 import 'package:equatable/equatable.dart';
 
 import '../../utils/nullable.dart';
-import '../../services/dtos/weight_goal_dto.dart';
-import '../../services/dtos/weight_record_dto.dart';
+import 'package:myfitnesstale/src/data/repositories/weight/dtos/weight_goal_dto.dart';
+import 'package:myfitnesstale/src/data/repositories/weight/dtos/weight_record_dto.dart';
 import 'common_state.dart';
 
 final class WeightRecordPaginationState extends Equatable {

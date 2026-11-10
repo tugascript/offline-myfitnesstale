@@ -7,10 +7,10 @@ import 'package:myfitnesstale/src/data/utils/enums.dart';
 import 'package:myfitnesstale/src/routing/routing.dart';
 import 'package:myfitnesstale/src/utils/errors.dart';
 import 'package:myfitnesstale/src/utils/result.dart';
-import 'package:myfitnesstale/src/services/dtos/profile_dto.dart';
-import 'package:myfitnesstale/src/services/dtos/reminders_config_dto.dart';
-import 'package:myfitnesstale/src/services/dtos/system_dto.dart';
-import 'package:myfitnesstale/src/services/onboarding_service.dart';
+import 'package:myfitnesstale/src/data/repositories/profile/dtos/profile_dto.dart';
+import 'package:myfitnesstale/src/data/repositories/profile/dtos/reminders_config_dto.dart';
+import 'package:myfitnesstale/src/data/repositories/profile/dtos/system_dto.dart';
+import 'package:myfitnesstale/src/data/repositories/onboarding/onboarding_repository.dart';
 import 'package:myfitnesstale/src/ui/home/screens/profile/onboarding_view.dart';
 
 void main() {
@@ -93,7 +93,7 @@ void main() {
 typedef OnboardingServiceResult =
     Result<OnboardingResult, ServiceError<OperationErrorTypes>>;
 
-final class _OnboardingService extends OnboardingService {
+final class _OnboardingService extends OnboardingRepository {
   final List<OnboardingServiceResult> _responses;
   final List<OnboardingRequest> requests = [];
 

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../services/dtos/food_dto.dart';
+import 'package:myfitnesstale/src/data/repositories/foods/dtos/food_dto.dart';
 import '../../ui/core/sizes/data_display_sizes.dart';
 import 'food_macro_column.dart';
 

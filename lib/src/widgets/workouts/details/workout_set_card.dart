@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../services/dtos/workout_set_dto.dart';
-import '../../../services/dtos/workout_set_exercise_dto.dart';
+import 'package:myfitnesstale/src/data/repositories/workouts/dtos/workout_set_dto.dart';
+import 'package:myfitnesstale/src/data/repositories/workouts/dtos/workout_set_exercise_dto.dart';
 import '../../../ui/core/sizes/data_display_sizes.dart';
 import '../../../ui/core/widgets/base_set_data.dart';
 import '../../../ui/core/widgets/detail_number.dart';

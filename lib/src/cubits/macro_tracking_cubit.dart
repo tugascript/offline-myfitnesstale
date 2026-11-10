@@ -1,18 +1,18 @@
 import '../utils/errors.dart';
-import '../services/inputs/macro_goal_input.dart';
-import '../services/inputs/quick_food_log_input.dart';
+import 'package:myfitnesstale/src/data/repositories/macros/inputs/macro_goal_input.dart';
+import 'package:myfitnesstale/src/data/repositories/macros/inputs/quick_food_log_input.dart';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:logging/logging.dart';
 
 import '../utils/nullable.dart';
 import '../data/utils/enums.dart';
-import '../services/macro_tracking_service.dart';
+import 'package:myfitnesstale/src/data/repositories/macros/macro_tracking_repository.dart';
 import 'states/common_state.dart';
 import 'states/macro_tracking_state.dart';
 
 class MacroTrackingCubit extends Cubit<MacroTrackingState> {
-  final MacroTrackingService _macroService = MacroTrackingService();
+  final MacroTrackingRepository _macroService = MacroTrackingRepository();
   final Logger _logger = Logger('MacroTrackingCubit');
 
   MacroTrackingCubit() : super(MacroTrackingState.initial());

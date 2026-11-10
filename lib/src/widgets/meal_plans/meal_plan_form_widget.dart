@@ -1,15 +1,15 @@
 import '../layout/responsive_fields.dart';
 import '../layout/app_text_form_field.dart';
 import '../../utils/nullable.dart';
-import '../../services/inputs/meal_plan_input.dart';
+import 'package:myfitnesstale/src/data/repositories/meal_plans/inputs/meal_plan_input.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../cubits/food_cubit.dart';
 import '../../data/utils/enums.dart';
-import '../../services/dtos/food_dto.dart';
-import '../../services/dtos/meal_plan_dto.dart';
+import 'package:myfitnesstale/src/data/repositories/foods/dtos/food_dto.dart';
+import 'package:myfitnesstale/src/data/repositories/meal_plans/dtos/meal_plan_dto.dart';
 import '../../ui/core/sizes/data_display_sizes.dart';
 
 class MealPlanFormWidget extends StatefulWidget {

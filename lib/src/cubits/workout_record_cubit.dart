@@ -3,15 +3,15 @@ import 'package:logging/logging.dart';
 
 import '../utils/nullable.dart';
 import '../utils/errors.dart';
-import '../services/dtos/workout_record_dto.dart';
-import '../services/workout_record_service.dart';
+import 'package:myfitnesstale/src/data/repositories/workouts/dtos/workout_record_dto.dart';
+import 'package:myfitnesstale/src/data/repositories/workouts/workout_record_repository.dart';
 import 'states/common_state.dart';
 import 'states/workout_record_state.dart';
 
-export '../services/inputs/workout_record_input.dart';
+export 'package:myfitnesstale/src/data/repositories/workouts/inputs/workout_record_input.dart';
 
 class WorkoutRecordCubit extends Cubit<WorkoutRecordState> {
-  final WorkoutRecordService _workoutRecordService = WorkoutRecordService();
+  final WorkoutRecordRepository _workoutRecordService = WorkoutRecordRepository();
 
   WorkoutRecordCubit() : super(WorkoutRecordState.initial());
 

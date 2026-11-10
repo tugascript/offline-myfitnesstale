@@ -1,6 +1,6 @@
 import '../../../../widgets/layout/app_text_form_field.dart';
 import '../../../../utils/nullable.dart';
-import '../../../../services/inputs/strength_goal_input.dart';
+import 'package:myfitnesstale/src/data/repositories/exercises/inputs/strength_goal_input.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -9,7 +9,7 @@ import '../../view_models/exercise_cubit.dart';
 import '../../view_models/exercise_record_cubit.dart';
 import '../../../../cubits/profile_cubit.dart';
 import '../../../../data/utils/enums.dart';
-import '../../../../services/dtos/strength_goal_dto.dart';
+import 'package:myfitnesstale/src/data/repositories/exercises/dtos/strength_goal_dto.dart';
 import '../../../core/utils/converters.dart';
 import '../../../core/sizes/data_display_sizes.dart';
 
