@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import '../../../../cubits/profile_cubit.dart';
-import '../../../../models/enums.dart';
+import '../../../../data/utils/enums.dart';
 import '../../../core/sizes/profile/onboarding_sizes.dart';
 import '../../../../widgets/layout/sharp_switch_title.dart';
 import 'height_input.dart';

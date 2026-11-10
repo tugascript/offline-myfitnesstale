@@ -1,5 +1,5 @@
 import '../../utils/nullable.dart';
-import '../../models/common.dart';
+import '../../data/utils/json_data.dart';
 
 class EquipmentInput {
   final String name;

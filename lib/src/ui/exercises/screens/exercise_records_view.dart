@@ -5,7 +5,7 @@ import '../view_models/exercise_cubit.dart';
 import '../../../cubits/profile_cubit.dart';
 import '../view_models/states/exercise_state.dart';
 import '../../../cubits/states/profile_state.dart';
-import '../../../models/enums.dart';
+import '../../../data/utils/enums.dart';
 import '../../../routing/routing.dart';
 import '../../core/sizes/data_display_sizes.dart';
 import '../../core/sizes/screen_size.dart';

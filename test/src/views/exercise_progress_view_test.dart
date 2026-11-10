@@ -6,8 +6,8 @@ import 'package:myfitnesstale/src/ui/exercises/view_models/exercise_record_cubit
 import 'package:myfitnesstale/src/cubits/profile_cubit.dart';
 import 'package:myfitnesstale/src/ui/exercises/view_models/states/exercise_record_state.dart';
 import 'package:myfitnesstale/src/cubits/states/profile_state.dart';
-import 'package:myfitnesstale/src/models/common.dart';
-import 'package:myfitnesstale/src/models/enums.dart';
+import 'package:myfitnesstale/src/data/utils/json_data.dart';
+import 'package:myfitnesstale/src/data/utils/enums.dart';
 import 'package:myfitnesstale/src/routing/routing.dart';
 import 'package:myfitnesstale/src/services/dtos/exercise_dto.dart';
 import 'package:myfitnesstale/src/services/dtos/exercise_record_dto.dart';

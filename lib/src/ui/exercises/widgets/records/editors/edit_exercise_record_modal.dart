@@ -3,8 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../../utils/nullable.dart';
 import '../../../view_models/exercise_record_cubit.dart';
-import '../../../../../models/common.dart';
-import '../../../../../models/enums.dart';
+import '../../../../../data/utils/json_data.dart';
+import '../../../../../data/utils/enums.dart';
 import '../../../../../services/dtos/exercise_dto.dart';
 import '../../../../../services/dtos/exercise_record_dto.dart';
 import '../../../../../services/inputs/exercise_record_input.dart';

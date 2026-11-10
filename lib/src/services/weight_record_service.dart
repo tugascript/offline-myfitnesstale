@@ -1,12 +1,12 @@
 import 'package:logging/logging.dart';
 
 import '../utils/nullable.dart';
-import '../models/db.dart';
-import '../models/enums.dart';
-import '../models/repository.dart';
-import '../models/utilities.dart';
-import '../models/weight_goal_model.dart';
-import '../models/weight_record_model.dart';
+import '../data/repositories/db.dart';
+import '../data/utils/enums.dart';
+import '../data/repositories/repository.dart';
+
+import '../data/models/weight_goal_model.dart';
+import '../data/models/weight_record_model.dart';
 import '../utils/errors.dart';
 import '../utils/result.dart';
 import 'dtos/paginated_dto.dart';
@@ -14,6 +14,9 @@ import 'dtos/weight_goal_dto.dart';
 import 'dtos/weight_record_dto.dart';
 import 'inputs/weight_goal_input.dart';
 import 'inputs/weight_record_input.dart';
+import '../data/utils/dates.dart';
+import '../data/utils/where_builder.dart';
+import '../data/repositories/common.dart';
 
 class WeightRecordService {
   WeightRecordService._();

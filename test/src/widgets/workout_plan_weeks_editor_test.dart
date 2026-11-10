@@ -5,8 +5,8 @@ import 'package:go_router/go_router.dart';
 
 import 'package:myfitnesstale/src/cubits/workout_plan_cubit.dart';
 import 'package:myfitnesstale/src/cubits/workout_cubit.dart';
-import 'package:myfitnesstale/src/models/common.dart';
-import 'package:myfitnesstale/src/models/enums.dart';
+import 'package:myfitnesstale/src/data/utils/json_data.dart';
+import 'package:myfitnesstale/src/data/utils/enums.dart';
 import 'package:myfitnesstale/src/services/dtos/workout_dto.dart';
 import 'package:myfitnesstale/src/services/dtos/workout_plan_day_dto.dart';
 import 'package:myfitnesstale/src/services/dtos/workout_plan_week_dto.dart';

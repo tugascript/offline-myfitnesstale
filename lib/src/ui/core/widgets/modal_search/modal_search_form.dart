@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 
-import '../../../../models/enums.dart';
-import '../../../../models/utilities.dart';
+import '../../../../data/utils/enums.dart';
+
 import '../../sizes/data_display_sizes.dart';
 import '../favourite_checkbox.dart';
 import '../../../../widgets/layout/app_dropdown.dart';
 import '../../../../widgets/layout/app_text_form_field.dart';
+import '../../../../data/utils/display_names.dart';
 
 class ModalSearchForm extends StatefulWidget {
   final ThemeData theme;

@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:myfitnesstale/src/cubits/workout_plan_cubit.dart';
-import 'package:myfitnesstale/src/models/enums.dart';
-import 'package:myfitnesstale/src/models/workout_plan_model.dart';
+import 'package:myfitnesstale/src/data/utils/enums.dart';
+import 'package:myfitnesstale/src/data/models/workout_plan_model.dart';
 
 import '../../support/test_database.dart';
 

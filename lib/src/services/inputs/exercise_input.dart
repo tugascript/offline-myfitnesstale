@@ -1,6 +1,6 @@
 import '../../utils/nullable.dart';
-import '../../models/common.dart';
-import '../../models/enums.dart';
+import '../../data/utils/json_data.dart';
+import '../../data/utils/enums.dart';
 
 class ExerciseInput {
   final String name;

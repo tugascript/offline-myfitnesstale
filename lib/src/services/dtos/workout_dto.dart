@@ -1,9 +1,9 @@
 import 'package:equatable/equatable.dart';
 
 import '../../utils/nullable.dart';
-import '../../models/common.dart';
-import '../../models/enums.dart';
-import '../../models/workout_model.dart';
+import '../../data/utils/json_data.dart';
+import '../../data/utils/enums.dart';
+import '../../data/models/workout_model.dart';
 import 'dto.dart';
 import 'picture_dto.dart';
 import 'video_dto.dart';

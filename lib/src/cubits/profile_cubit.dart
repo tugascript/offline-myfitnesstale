@@ -1,7 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:logging/logging.dart';
 
-import '../models/enums.dart';
+import '../data/utils/enums.dart';
 import '../utils/errors.dart';
 import '../services/dtos/system_dto.dart';
 import '../services/onboarding_service.dart';

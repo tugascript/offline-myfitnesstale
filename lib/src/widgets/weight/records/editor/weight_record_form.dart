@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-import '../../../../models/enums.dart';
+import '../../../../data/utils/enums.dart';
 import '../../../../ui/core/utils/converters.dart';
 import '../../../../ui/core/sizes/data_display_sizes.dart';
 import '../../../layout/app_elevated_button.dart';

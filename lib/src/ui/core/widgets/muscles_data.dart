@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../../models/common.dart';
-import '../../../models/enums.dart';
+import '../../../data/utils/json_data.dart';
+import '../../../data/utils/enums.dart';
 import '../../../services/dtos/equipment_dto.dart';
 import '../sizes/data_display_sizes.dart';
 import 'muscle_group_badge.dart';

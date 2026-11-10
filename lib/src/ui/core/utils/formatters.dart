@@ -1,6 +1,6 @@
 import 'package:intl/intl.dart';
 
-import '../../../models/enums.dart';
+import '../../../data/utils/enums.dart';
 
 sealed class Formatters {
   static String formatDate(Units unit, DateTime date) {

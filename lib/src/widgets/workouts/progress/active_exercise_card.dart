@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../models/common.dart';
+import '../../../data/utils/json_data.dart';
 import '../../../ui/core/utils/formatters.dart';
 import '../../../ui/core/sizes/data_display_sizes.dart';
 

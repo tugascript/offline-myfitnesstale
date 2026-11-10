@@ -2,8 +2,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
-import '../../../models/common.dart';
-import '../../../models/enums.dart';
+import '../../../data/utils/json_data.dart';
+import '../../../data/utils/enums.dart';
 import '../sizes/data_display_sizes.dart';
 
 class MusclesDiagram extends StatelessWidget {

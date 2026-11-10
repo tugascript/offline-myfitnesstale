@@ -2,13 +2,13 @@ import 'package:logging/logging.dart';
 import 'package:sqflite/sqflite.dart';
 
 import '../utils/nullable.dart';
-import '../models/db.dart';
-import '../models/enums.dart';
-import '../models/equipment_model.dart';
-import '../models/exercise_equipment_model.dart';
-import '../models/exercise_model.dart';
-import '../models/repository.dart';
-import '../models/utilities.dart';
+import '../data/repositories/db.dart';
+import '../data/utils/enums.dart';
+import '../data/models/equipment_model.dart';
+import '../data/models/exercise_equipment_model.dart';
+import '../data/models/exercise_model.dart';
+import '../data/repositories/repository.dart';
+
 import '../utils/errors.dart';
 import '../utils/result.dart';
 import 'dtos/equipment_dto.dart';
@@ -16,6 +16,10 @@ import 'dtos/exercise_dto.dart';
 import 'dtos/paginated_dto.dart';
 import 'inputs/equipment_input.dart';
 import 'inputs/exercise_input.dart';
+import '../data/utils/dates.dart';
+import '../data/utils/where_builder.dart';
+import '../data/repositories/common.dart';
+import '../data/repositories/join_repository.dart';
 
 class ExerciseService {
   ExerciseService._();

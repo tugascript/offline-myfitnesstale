@@ -5,8 +5,8 @@ import 'package:myfitnesstale/src/widgets/workout_plan/editor/workout_plan_heade
 import '../../utils/nullable.dart';
 import '../../cubits/states/workout_plan_state.dart';
 import '../../cubits/workout_plan_cubit.dart';
-import '../../models/common.dart';
-import '../../models/enums.dart';
+import '../../data/utils/json_data.dart';
+import '../../data/utils/enums.dart';
 import '../../services/dtos/workout_plan_dto.dart';
 import '../../ui/core/sizes/data_display_sizes.dart';
 import '../../ui/core/sizes/screen_size.dart';

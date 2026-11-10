@@ -1,12 +1,13 @@
 import 'package:equatable/equatable.dart';
 
 import '../../utils/nullable.dart';
-import '../../models/exercise_record_model.dart';
-import '../../models/utilities.dart';
+import '../../data/models/exercise_record_model.dart';
+
 import 'dto.dart';
 import 'exercise_dto.dart';
 import 'picture_dto.dart';
 import 'video_dto.dart';
+import '../../data/utils/dates.dart';
 
 class ExerciseRecordDto extends Equatable implements Dto<ExerciseRecord> {
   @override

@@ -4,7 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:myfitnesstale/src/cubits/meal_plan_cubit.dart';
 import 'package:myfitnesstale/src/cubits/meal_plan_record_cubit.dart';
-import 'package:myfitnesstale/src/models/enums.dart';
+import 'package:myfitnesstale/src/data/utils/enums.dart';
 import 'package:myfitnesstale/src/routing/routing.dart';
 import 'package:myfitnesstale/src/services/dtos/meal_plan_dto.dart';
 import 'package:myfitnesstale/src/views/meal_plans/meal_plan_list_view.dart';

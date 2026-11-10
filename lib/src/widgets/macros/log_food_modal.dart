@@ -9,7 +9,7 @@ import 'package:intl/intl.dart';
 import '../../cubits/food_cubit.dart';
 import '../../cubits/macro_tracking_cubit.dart';
 import '../../cubits/recipe_cubit.dart';
-import '../../models/enums.dart';
+import '../../data/utils/enums.dart';
 import '../../services/dtos/food_dto.dart';
 import '../../ui/core/sizes/data_display_sizes.dart';
 

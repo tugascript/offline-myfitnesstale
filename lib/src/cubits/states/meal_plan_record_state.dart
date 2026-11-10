@@ -1,7 +1,7 @@
 import 'package:equatable/equatable.dart';
 
 import '../../utils/nullable.dart';
-import '../../models/enums.dart';
+import '../../data/utils/enums.dart';
 import '../../services/dtos/meal_plan_record_dto.dart';
 import 'common_state.dart';
 

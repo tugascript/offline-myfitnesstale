@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:myfitnesstale/src/cubits/profile_cubit.dart';
-import 'package:myfitnesstale/src/models/enums.dart';
+import 'package:myfitnesstale/src/data/utils/enums.dart';
 import 'package:myfitnesstale/src/utils/errors.dart';
 import 'package:myfitnesstale/src/utils/result.dart';
 import 'package:myfitnesstale/src/services/dtos/profile_dto.dart';

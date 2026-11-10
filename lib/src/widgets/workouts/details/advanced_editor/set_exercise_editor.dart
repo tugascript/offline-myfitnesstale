@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../../../models/common.dart';
-import '../../../../models/enums.dart';
+import '../../../../data/utils/json_data.dart';
+import '../../../../data/utils/enums.dart';
 import '../../../../services/dtos/exercise_dto.dart';
 import '../../../../ui/core/sizes/data_display_sizes.dart';
 import '../../../layout/app_dropdown.dart';

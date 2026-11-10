@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../cubits/profile_cubit.dart';
 import '../../cubits/states/profile_state.dart';
-import '../../models/enums.dart';
+import '../../data/utils/enums.dart';
 import '../../ui/core/sizes/data_display_sizes.dart';
 import '../../ui/core/sizes/screen_size.dart';
 import '../../widgets/layout/responsive_scaffold.dart';

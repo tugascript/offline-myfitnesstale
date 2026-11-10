@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../../models/enums.dart';
+import '../../../../data/utils/enums.dart';
 import '../../../core/sizes/profile/modal_form_sizes.dart';
 import '../../../core/sizes/screen_size.dart';
 

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:myfitnesstale/src/widgets/workout_plan/editor/workout_plan_base_form.dart';
 
-import '../../../models/enums.dart';
+import '../../../data/utils/enums.dart';
 import '../../../services/dtos/workout_plan_dto.dart';
 import '../../../ui/core/sizes/data_display_sizes.dart';
 

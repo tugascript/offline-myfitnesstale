@@ -3,7 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
 import '../../../../cubits/states/workout_record_state.dart';
-import '../../../../models/enums.dart';
+import '../../../../data/utils/enums.dart';
 import '../../../../services/dtos/workout_record_dto.dart';
 import '../../../../ui/core/utils/converters.dart';
 import '../../../../ui/core/utils/formatters.dart';

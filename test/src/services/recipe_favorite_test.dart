@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:myfitnesstale/src/cubits/recipe_cubit.dart';
-import 'package:myfitnesstale/src/models/recipe_model.dart';
+import 'package:myfitnesstale/src/data/models/recipe_model.dart';
 import 'package:myfitnesstale/src/services/recipe_service.dart';
 
 import '../../support/test_database.dart';

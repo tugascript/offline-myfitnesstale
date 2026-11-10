@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:myfitnesstale/src/models/enums.dart';
+import 'package:myfitnesstale/src/data/utils/enums.dart';
 import 'package:myfitnesstale/src/services/food_service.dart';
 import 'package:myfitnesstale/src/services/inputs/food_input.dart';
 import 'package:myfitnesstale/src/services/inputs/recipe_input.dart';

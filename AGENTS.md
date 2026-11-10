@@ -8,13 +8,13 @@ data ownership.
 
 Follow the strict flow: `SQLite Model -> Repository -> Service -> Cubit -> View/Widget`.
 
-- **Model (`lib/src/models/`)**:
+- **Model (`lib/src/data/models`)**:
     - Defines SQLite table schemas (`tableCreate`, `Columns` enum).
     - Maps database rows to Dart objects (`toMap()`, `fromMap()`).
     - Pure data container implementing `Model` and `Equatable`. Contains no business logic.
-    - Uses `Nullable<T?>` wrappers (`lib/src/common/nullable.dart`) in `copyWith` to differentiate between omitting an
+    - Uses `Nullable<T?>` wrappers (`lib/src/utils/nullable.dart`) in `copyWith` to differentiate between omitting an
       argument and deliberately setting a field to `null`.
-- **Repository (`Repository<T extends Model>` in `lib/src/models/repository.dart`)**:
+- **Repository (`Repository<T extends Model>` in `lib/src/data/models`)**:
     - Generic table-level persistence layer communicating with SQLite via `DatabaseHelper`.
     - Handles single-table CRUD queries (`insert`, `update`, `delete`, `selectOne`, `selectMany`, `selectPaginated`,
       `count`).
@@ -30,7 +30,7 @@ Follow the strict flow: `SQLite Model -> Repository -> Service -> Cubit -> View/
 - **Cubit (`lib/src/cubits/`)**:
     - Feature and application state management (`flutter_bloc`).
     - Invokes services, unpackages `Result` objects, and emits immutable states (`lib/src/cubits/states/`).
-    - Uses `Nullable<T?>` wrappers (`lib/src/common/nullable.dart`) in state `copyWith` to differentiate between
+    - Uses `Nullable<T?>` wrappers (`lib/src/utils/nullable.dart`) in state `copyWith` to differentiate between
       omitting an argument and deliberately setting a field to `null`.
     - Never interacts directly with `sqflite` or raw database models.
     - Has a pagination state inside each type of entity state.
@@ -89,7 +89,7 @@ Follow the strict flow: `SQLite Model -> Repository -> Service -> Cubit -> View/
 - Use sound null safety; avoid `!` unless the invariant is clear.
 - Services functions, even intermediate, return `Result<T, ServiceError<E>>`, never throw exceptions. Catch failures at
   the service boundary and map them to appropriate errors; do not let exceptions escape. Always prefer the use the
-  Columns mixin in `lib/src/models/model.dart` to write SQL, only use RAW SQL when necessary.
+  Columns mixin in `lib/src/data/models` to write SQL, only use RAW SQL when necessary.
 - Keep views focused on composition and Cubit wiring. Reuse existing widgets and extract cohesive UI components into
   `lib/src/ui/` or `lib/src/widgets/`.
 - Reuse existing helpers, components, widgets, services, and patterns consistently with surrounding code. Otherwise,

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:myfitnesstale/src/models/enums.dart';
-import 'package:myfitnesstale/src/models/common.dart';
+import 'package:myfitnesstale/src/data/utils/enums.dart';
+import 'package:myfitnesstale/src/data/utils/json_data.dart';
 import 'package:myfitnesstale/src/services/inputs/food_input.dart';
 import 'package:myfitnesstale/src/widgets/foods/food_form_widget.dart';
 import 'package:myfitnesstale/src/cubits/states/macro_tracking_state.dart';

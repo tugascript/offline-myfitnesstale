@@ -4,13 +4,13 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:logging/logging.dart';
 
 import '../utils/nullable.dart';
-import '../models/common.dart';
+import '../data/utils/json_data.dart';
 import '../utils/errors.dart';
 import '../services/dtos/workout_record_dto.dart';
 import '../services/workout_record_service.dart';
 import '../services/workout_service.dart';
 import '../services/workout_plan_record_service.dart';
-import '../models/enums.dart';
+import '../data/utils/enums.dart';
 import 'states/active_workout_state.dart';
 import 'states/common_state.dart';
 

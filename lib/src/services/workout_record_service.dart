@@ -1,17 +1,17 @@
 import 'package:logging/logging.dart';
 
 import '../utils/nullable.dart';
-import '../models/common.dart';
-import '../models/db.dart';
-import '../models/enums.dart';
-import '../models/exercise_model.dart';
-import '../models/repository.dart'
-    show Repository, kDefaultLimit, kDefaultOffset;
-import '../models/utilities.dart' show WhereBuilder, DateUtilities;
-import '../models/workout_model.dart';
-import '../models/workout_record_model.dart';
-import '../models/workout_set_exercise_record_model.dart';
-import '../models/workout_set_record_model.dart';
+import '../data/utils/json_data.dart';
+import '../data/repositories/db.dart';
+import '../data/utils/enums.dart';
+import '../data/models/exercise_model.dart';
+import '../data/repositories/repository.dart'
+    show Repository;
+
+import '../data/models/workout_model.dart';
+import '../data/models/workout_record_model.dart';
+import '../data/models/workout_set_exercise_record_model.dart';
+import '../data/models/workout_set_record_model.dart';
 import '../utils/errors.dart';
 import '../utils/result.dart';
 import 'dtos/exercise_dto.dart';
@@ -21,6 +21,9 @@ import 'dtos/workout_record_dto.dart';
 import 'dtos/workout_set_exercise_record_dto.dart';
 import 'dtos/workout_set_record_dto.dart';
 import 'inputs/workout_record_input.dart';
+import '../data/utils/dates.dart';
+import '../data/utils/where_builder.dart';
+import '../data/repositories/common.dart';
 
 export 'inputs/workout_record_input.dart';
 

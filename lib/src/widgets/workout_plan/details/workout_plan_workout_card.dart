@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../models/enums.dart';
-import '../../../models/utilities.dart';
+import '../../../data/utils/enums.dart';
+
 import '../../../routing/routing.dart';
 import '../../../services/dtos/workout_plan_workout_dto.dart';
 import '../../../ui/core/sizes/data_display_sizes.dart';
+import '../../../data/utils/display_names.dart';
 
 class WorkoutPlanWorkoutCard extends StatelessWidget {
   final bool isDarkTheme;

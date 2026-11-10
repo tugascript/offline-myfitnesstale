@@ -4,9 +4,9 @@ import 'package:sqflite/sqflite.dart';
 import 'package:myfitnesstale/src/utils/nullable.dart';
 import 'package:myfitnesstale/src/cubits/states/workout_plan_record_state.dart';
 import 'package:myfitnesstale/src/cubits/workout_plan_record_cubit.dart';
-import 'package:myfitnesstale/src/models/enums.dart';
-import 'package:myfitnesstale/src/models/workout_plan_model.dart';
-import 'package:myfitnesstale/src/models/workout_plan_record_model.dart';
+import 'package:myfitnesstale/src/data/utils/enums.dart';
+import 'package:myfitnesstale/src/data/models/workout_plan_model.dart';
+import 'package:myfitnesstale/src/data/models/workout_plan_record_model.dart';
 
 import '../../support/test_database.dart';
 

@@ -1,8 +1,8 @@
 import 'package:equatable/equatable.dart';
 
 import '../../utils/nullable.dart';
-import '../../models/enums.dart';
-import '../../models/weight_goal_model.dart';
+import '../../data/utils/enums.dart';
+import '../../data/models/weight_goal_model.dart';
 import 'dto.dart';
 
 class WeightGoalDto extends Equatable implements Dto<WeightGoal> {

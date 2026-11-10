@@ -6,7 +6,7 @@ import '../../../../cubits/profile_cubit.dart';
 import '../../../../cubits/states/profile_state.dart';
 import '../../../../cubits/states/weight_record_state.dart';
 import '../../../../cubits/weight_record_cubit.dart';
-import '../../../../models/enums.dart';
+import '../../../../data/utils/enums.dart';
 import '../../../../services/dtos/weight_goal_dto.dart';
 import '../../../../ui/core/sizes/data_display_sizes.dart';
 import '../../../../ui/core/widgets/not_found_list.dart';

@@ -2,25 +2,28 @@ import 'package:logging/logging.dart';
 import 'package:sqflite/sqflite.dart';
 
 import '../utils/nullable.dart';
-import '../models/common.dart';
-import '../models/daily_nutrition_log_model.dart';
-import '../models/day_macro_goal_model.dart';
-import '../models/db.dart';
-import '../models/enums.dart';
-import '../models/food_model.dart';
-import '../models/food_portion_model.dart';
-import '../models/meal_log_item_model.dart';
-import '../models/meal_log_model.dart';
-import '../models/recipe_model.dart';
-import '../models/repository.dart';
-import '../models/utilities.dart';
-import '../models/week_macro_goal_model.dart';
+import '../data/utils/json_data.dart';
+import '../data/models/daily_nutrition_log_model.dart';
+import '../data/models/day_macro_goal_model.dart';
+import '../data/repositories/db.dart';
+import '../data/utils/enums.dart';
+import '../data/models/food_model.dart';
+import '../data/models/food_portion_model.dart';
+import '../data/models/meal_log_item_model.dart';
+import '../data/models/meal_log_model.dart';
+import '../data/models/recipe_model.dart';
+import '../data/repositories/repository.dart';
+
+import '../data/models/week_macro_goal_model.dart';
 import '../utils/errors.dart';
 import '../utils/result.dart';
 import 'dtos/macro_tracking_dto.dart';
 import 'dtos/paginated_dto.dart';
 import 'inputs/macro_goal_input.dart';
 import 'inputs/quick_food_log_input.dart';
+import '../data/utils/dates.dart';
+import '../data/utils/where_builder.dart';
+import '../data/repositories/common.dart';
 
 class MacroTrackingService {
   MacroTrackingService._();

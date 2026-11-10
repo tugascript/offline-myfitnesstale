@@ -1,8 +1,8 @@
 import 'package:equatable/equatable.dart';
 
 import '../../utils/nullable.dart';
-import '../../models/enums.dart';
-import '../../models/workout_plan_workout_record_model.dart';
+import '../../data/utils/enums.dart';
+import '../../data/models/workout_plan_workout_record_model.dart';
 import 'dto.dart';
 
 class WorkoutPlanWorkoutRecordDto extends Equatable

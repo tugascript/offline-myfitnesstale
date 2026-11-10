@@ -1,10 +1,10 @@
 import 'package:equatable/equatable.dart';
 
 import '../../utils/nullable.dart';
-import '../../models/common.dart';
-import '../../models/enums.dart';
-import '../../models/recipe_item_model.dart';
-import '../../models/recipe_model.dart';
+import '../../data/utils/json_data.dart';
+import '../../data/utils/enums.dart';
+import '../../data/models/recipe_item_model.dart';
+import '../../data/models/recipe_model.dart';
 
 class RecipeItemDto extends Equatable {
   final int id;

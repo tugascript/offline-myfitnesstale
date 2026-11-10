@@ -6,8 +6,8 @@ import 'package:myfitnesstale/src/widgets/layout/app_text_form_field.dart';
 
 import '../../../cubits/states/workout_record_state.dart';
 import '../../../cubits/workout_record_cubit.dart';
-import '../../../models/common.dart';
-import '../../../models/enums.dart';
+import '../../../data/utils/json_data.dart';
+import '../../../data/utils/enums.dart';
 import '../../../services/dtos/workout_set_dto.dart';
 import '../../../services/dtos/workout_set_exercise_record_dto.dart';
 import '../../../ui/core/utils/converters.dart';

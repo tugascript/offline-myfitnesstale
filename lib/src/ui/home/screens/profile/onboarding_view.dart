@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../cubits/profile_cubit.dart';
 import '../../../../cubits/states/profile_state.dart';
-import '../../../../models/enums.dart';
+import '../../../../data/utils/enums.dart';
 import '../../../../routing/routing.dart';
 import '../../../core/sizes/profile/onboarding_sizes.dart';
 import '../../../core/sizes/screen_size.dart';

@@ -1,6 +1,6 @@
 import '../../../cubits/states/workout_plan_record_state.dart';
-import '../../../models/common.dart';
-import '../../../models/enums.dart';
+import '../../../data/utils/json_data.dart';
+import '../../../data/utils/enums.dart';
 import '../../../services/dtos/workout_dto.dart';
 import '../../../services/dtos/workout_plan_day_dto.dart';
 import '../../../services/dtos/workout_plan_dto.dart';

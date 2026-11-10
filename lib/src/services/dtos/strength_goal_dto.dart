@@ -1,9 +1,9 @@
 import 'package:equatable/equatable.dart';
 
 import '../../utils/nullable.dart';
-import '../../models/enums.dart';
-import '../../models/strength_goal_model.dart';
-import '../../models/utilities.dart';
+import '../../data/utils/enums.dart';
+import '../../data/models/strength_goal_model.dart';
+import '../../data/utils/dates.dart';
 
 class StrengthGoalDto extends Equatable {
   final int id;

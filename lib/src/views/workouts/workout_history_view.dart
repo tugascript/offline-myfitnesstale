@@ -8,7 +8,7 @@ import '../../cubits/states/workout_record_state.dart';
 import '../../cubits/states/workout_state.dart';
 import '../../cubits/workout_cubit.dart';
 import '../../cubits/workout_record_cubit.dart';
-import '../../models/enums.dart';
+import '../../data/utils/enums.dart';
 import '../../routing/routing.dart';
 import '../../ui/core/sizes/data_display_sizes.dart';
 import '../../ui/core/sizes/screen_size.dart';

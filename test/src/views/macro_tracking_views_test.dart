@@ -18,7 +18,7 @@ import 'package:myfitnesstale/src/cubits/workout_cubit.dart';
 import 'package:myfitnesstale/src/cubits/workout_plan_cubit.dart';
 import 'package:myfitnesstale/src/cubits/workout_plan_record_cubit.dart';
 import 'package:myfitnesstale/src/cubits/workout_record_cubit.dart';
-import 'package:myfitnesstale/src/models/enums.dart';
+import 'package:myfitnesstale/src/data/utils/enums.dart';
 import 'package:myfitnesstale/src/routing/routing.dart';
 import 'package:myfitnesstale/src/services/dtos/profile_dto.dart';
 import 'package:myfitnesstale/src/services/dtos/system_dto.dart';

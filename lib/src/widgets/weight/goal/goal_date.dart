@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../models/enums.dart';
+import '../../../data/utils/enums.dart';
 
 class GoalDate extends StatelessWidget {
   final Units units;

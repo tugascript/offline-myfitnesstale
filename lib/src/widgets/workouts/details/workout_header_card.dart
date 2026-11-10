@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../models/enums.dart';
+import '../../../data/utils/enums.dart';
 import '../../../services/dtos/workout_dto.dart';
 import '../../../ui/core/sizes/data_display_sizes.dart';
 import '../../../ui/core/widgets/base_details_header.dart';

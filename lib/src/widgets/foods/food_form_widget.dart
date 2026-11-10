@@ -5,7 +5,7 @@ import '../../services/inputs/food_input.dart';
 
 import 'package:flutter/material.dart';
 
-import '../../models/enums.dart';
+import '../../data/utils/enums.dart';
 import '../../services/dtos/food_dto.dart';
 import '../../ui/core/sizes/data_display_sizes.dart';
 

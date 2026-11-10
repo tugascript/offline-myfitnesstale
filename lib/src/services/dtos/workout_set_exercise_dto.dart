@@ -1,8 +1,8 @@
 import 'package:equatable/equatable.dart';
 
 import '../../utils/nullable.dart';
-import '../../models/common.dart';
-import '../../models/workout_set_exercise_model.dart';
+import '../../data/utils/json_data.dart';
+import '../../data/models/workout_set_exercise_model.dart';
 import 'dto.dart';
 import 'exercise_dto.dart';
 import 'workout_set_exercise_option_dto.dart';

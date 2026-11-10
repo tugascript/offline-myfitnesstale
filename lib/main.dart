@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:logging/logging.dart';
 
 import 'my_app.dart';
-import 'src/models/db.dart';
+import 'src/data/repositories/db.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

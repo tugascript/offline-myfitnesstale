@@ -4,7 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:logging/logging.dart';
 
 import '../utils/nullable.dart';
-import '../models/enums.dart';
+import '../data/utils/enums.dart';
 import '../services/dtos/recipe_dto.dart';
 import '../services/recipe_service.dart';
 import 'states/common_state.dart';

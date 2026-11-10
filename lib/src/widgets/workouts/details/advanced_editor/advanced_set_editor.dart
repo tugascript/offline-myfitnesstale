@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
-import '../../../../models/common.dart';
-import '../../../../models/enums.dart';
-import '../../../../models/utilities.dart';
+import '../../../../data/utils/json_data.dart';
+import '../../../../data/utils/enums.dart';
+
 import '../../../../ui/core/sizes/data_display_sizes.dart';
 import '../../../layout/app_dropdown.dart';
 import '../../../layout/dynamic_list_input.dart';
@@ -12,6 +12,7 @@ import '../editors/set_exercise_search_modal.dart';
 import '../editors/sets_input.dart';
 import 'complex_set_editor_data.dart';
 import 'set_exercise_editor.dart';
+import '../../../../data/utils/display_names.dart';
 
 class AdvancedSetEditor extends StatefulWidget {
   final ComplexSetEditorData setData;

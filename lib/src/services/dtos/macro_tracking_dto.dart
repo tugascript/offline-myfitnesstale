@@ -1,14 +1,15 @@
 import 'package:equatable/equatable.dart';
 
 import '../../utils/nullable.dart';
-import '../../models/common.dart';
-import '../../models/daily_nutrition_log_model.dart';
-import '../../models/day_macro_goal_model.dart';
-import '../../models/enums.dart';
-import '../../models/meal_log_item_model.dart';
-import '../../models/meal_log_model.dart';
-import '../../models/utilities.dart';
-import '../../models/week_macro_goal_model.dart';
+import '../../data/utils/json_data.dart';
+import '../../data/models/daily_nutrition_log_model.dart';
+import '../../data/models/day_macro_goal_model.dart';
+import '../../data/utils/enums.dart';
+import '../../data/models/meal_log_item_model.dart';
+import '../../data/models/meal_log_model.dart';
+
+import '../../data/models/week_macro_goal_model.dart';
+import '../../data/utils/dates.dart';
 
 class DayMacroGoalDto extends Equatable {
   final int id;

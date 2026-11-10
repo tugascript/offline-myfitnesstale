@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../../models/enums.dart';
-import '../../../models/utilities.dart';
+import '../../../data/utils/enums.dart';
+import '../../../data/utils/display_names.dart';
 
 class MuscleBadge extends StatelessWidget {
   final Muscle muscle;
