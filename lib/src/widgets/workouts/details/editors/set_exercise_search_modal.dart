@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../../cubits/exercise_cubit.dart';
-import '../../../../cubits/states/exercise_state.dart';
+import '../../../../ui/exercises/view_models/exercise_cubit.dart';
+import '../../../../ui/exercises/view_models/states/exercise_state.dart';
 import '../../../../models/enums.dart';
 import '../../../../services/dtos/exercise_dto.dart';
 import '../../../../ui/core/sizes/data_display_sizes.dart';

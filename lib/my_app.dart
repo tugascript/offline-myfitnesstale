@@ -3,8 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'src/cubits/active_workout_cubit.dart';
-import 'src/cubits/exercise_cubit.dart';
-import 'src/cubits/exercise_record_cubit.dart';
+import 'src/ui/exercises/view_models/exercise_cubit.dart';
+import 'src/ui/exercises/view_models/exercise_record_cubit.dart';
 import 'src/cubits/food_cubit.dart';
 import 'src/cubits/macro_tracking_cubit.dart';
 import 'src/cubits/meal_plan_cubit.dart';

@@ -4,9 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 
-import '../../../../cubits/exercise_record_cubit.dart';
+import '../../view_models/exercise_record_cubit.dart';
 import '../../../../cubits/profile_cubit.dart';
-import '../../../../cubits/states/exercise_record_state.dart';
+import '../../view_models/states/exercise_record_state.dart';
 import '../../../../models/enums.dart';
 import '../../../core/utils/converters.dart';
 import '../../../core/sizes/data_display_sizes.dart';
