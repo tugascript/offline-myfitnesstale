@@ -1,0 +1,202 @@
+// Copyright (C) 2026 afonsobarracha
+//
+// This file is part of My Fitness Tale.
+//
+// My Fitness Tale is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// My Fitness Tale is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with My Fitness Tale.  If not, see <https://www.gnu.org/licenses/>.
+
+import 'package:equatable/equatable.dart';
+
+import '../../../utils/nullable.dart';
+import '../../utils/json_data.dart';
+import 'exercise_model.dart';
+import 'model.dart';
+import '../../utils/dates.dart';
+import '../../utils/max_strength_calculator.dart';
+
+const String _table = 'exercise_records';
+
+enum ExerciseRecordColumns with Columns {
+  id("id"),
+  exerciseId("exercise_id"),
+  weight("weight"),
+  reps("reps"),
+  maxStrength("max_strength"),
+  picture("picture"),
+  video("video"),
+  recordDate("record_date"),
+  createdAt("created_at"),
+  updatedAt("updated_at");
+
+  @override
+  final String value;
+
+  const ExerciseRecordColumns(this.value);
+}
+
+class ExerciseRecord extends Equatable implements Model {
+  @override
+  final int? id;
+  final int exerciseId;
+  final int weight;
+  final int reps;
+  final int maxStrength;
+  final PictureData? picture;
+  final VideoData? video;
+  final int recordDate;
+  @override
+  final int createdAt;
+  @override
+  final int updatedAt;
+
+  const ExerciseRecord({
+    this.id,
+    required this.exerciseId,
+    required this.weight,
+    required this.reps,
+    required this.maxStrength,
+    this.picture,
+    this.video,
+    required this.recordDate,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+
+  static const String table = _table;
+  static final String tableCreate =
+      """
+  CREATE TABLE IF NOT EXISTS $_table (
+    ${ExerciseRecordColumns.id.value} INTEGER PRIMARY KEY AUTOINCREMENT,
+    ${ExerciseRecordColumns.exerciseId.value} INTEGER NOT NULL,
+    ${ExerciseRecordColumns.weight.value} INTEGER NOT NULL,
+    ${ExerciseRecordColumns.reps.value} INTEGER NOT NULL,
+    ${ExerciseRecordColumns.maxStrength.value} INTEGER NOT NULL,
+    ${ExerciseRecordColumns.picture.value} TEXT,
+    ${ExerciseRecordColumns.video.value} TEXT,
+    ${ExerciseRecordColumns.recordDate.value} INTEGER NOT NULL,
+    ${ExerciseRecordColumns.createdAt.value} INTEGER NOT NULL,
+    ${ExerciseRecordColumns.updatedAt.value} INTEGER NOT NULL,
+    FOREIGN KEY (${ExerciseRecordColumns.exerciseId.value}) REFERENCES ${Exercise.table} (id)
+      ON DELETE CASCADE
+  );
+  
+  CREATE INDEX IF NOT EXISTS idx_exercise_records_exercise_id ON $_table (${ExerciseRecordColumns.exerciseId.value});
+  """;
+
+  @override
+  Map<String, Object?> toMap() {
+    return {
+      ExerciseRecordColumns.id.value: id,
+      ExerciseRecordColumns.exerciseId.value: exerciseId,
+      ExerciseRecordColumns.weight.value: weight,
+      ExerciseRecordColumns.reps.value: reps,
+      ExerciseRecordColumns.maxStrength.value: maxStrength,
+      ExerciseRecordColumns.picture.value: picture?.toJson(),
+      ExerciseRecordColumns.video.value: video?.toJson(),
+      ExerciseRecordColumns.recordDate.value: recordDate,
+      ExerciseRecordColumns.createdAt.value: createdAt,
+      ExerciseRecordColumns.updatedAt.value: updatedAt,
+    };
+  }
+
+  factory ExerciseRecord.fromMap(Map<String, Object?> map) {
+    return ExerciseRecord(
+      id: map[ExerciseRecordColumns.id.value] as int?,
+      exerciseId: map[ExerciseRecordColumns.exerciseId.value] as int,
+      weight: map[ExerciseRecordColumns.weight.value] as int,
+      reps: map[ExerciseRecordColumns.reps.value] as int,
+      maxStrength: map[ExerciseRecordColumns.maxStrength.value] as int,
+      picture: map[ExerciseRecordColumns.picture.value] != null
+          ? PictureData.fromJson(
+              map[ExerciseRecordColumns.picture.value] as String,
+            )
+          : null,
+      video: map[ExerciseRecordColumns.video.value] != null
+          ? VideoData.fromJson(map[ExerciseRecordColumns.video.value] as String)
+          : null,
+      recordDate: map[ExerciseRecordColumns.recordDate.value] as int,
+      createdAt: map[ExerciseRecordColumns.createdAt.value] as int,
+      updatedAt: map[ExerciseRecordColumns.updatedAt.value] as int,
+    );
+  }
+
+  factory ExerciseRecord.create({
+    required int exerciseId,
+    required int weight,
+    required int reps,
+    required int recordDate,
+    PictureData? picture,
+    VideoData? video,
+  }) {
+    final int now = DateUtilities.getNowUtcUnix();
+    return ExerciseRecord(
+      exerciseId: exerciseId,
+      weight: weight,
+      reps: reps,
+      maxStrength: MaxStrengthCalculator.calculateMaxStrength(reps, weight),
+      picture: picture,
+      video: video,
+      recordDate: recordDate,
+      createdAt: now,
+      updatedAt: now,
+    );
+  }
+
+  @override
+  ExerciseRecord copyWith({
+    Nullable<int>? id,
+    int? exerciseId,
+    int? weight,
+    int? reps,
+    Nullable<PictureData>? picture,
+    Nullable<VideoData>? video,
+    int? recordDate,
+    int? createdAt,
+    int? updatedAt,
+  }) {
+    return ExerciseRecord(
+      id: id != null ? id.value : this.id,
+      exerciseId: exerciseId ?? this.exerciseId,
+      weight: weight ?? this.weight,
+      reps: reps ?? this.reps,
+      maxStrength: MaxStrengthCalculator.calculateMaxStrength(
+        reps ?? this.reps,
+        weight ?? this.weight,
+      ),
+      picture: picture != null ? picture.value : this.picture,
+      video: video != null ? video.value : this.video,
+      recordDate: recordDate ?? this.recordDate,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return 'ExerciseRecord{id: $id, exerciseId: $exerciseId, weight: $weight, reps: $reps, maxStrength: $maxStrength, createdAt: $createdAt, updatedAt: $updatedAt}';
+  }
+
+  @override
+  List<Object?> get props => [
+    id,
+    exerciseId,
+    weight,
+    reps,
+    maxStrength,
+    picture,
+    video,
+    recordDate,
+    createdAt,
+    updatedAt,
+  ];
+}

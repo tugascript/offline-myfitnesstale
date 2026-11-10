@@ -1,0 +1,219 @@
+// Copyright (C) 2026 afonsobarracha
+//
+// This file is part of My Fitness Tale.
+//
+// My Fitness Tale is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// My Fitness Tale is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with My Fitness Tale.  If not, see <https://www.gnu.org/licenses/>.
+
+import 'package:equatable/equatable.dart';
+
+import '../../../utils/nullable.dart';
+import '../../utils/enums.dart';
+import 'model.dart';
+
+import 'workout_plan_day_model.dart';
+import 'workout_plan_record_model.dart';
+import 'workout_plan_week_record_model.dart';
+import '../../utils/dates.dart';
+
+const String _table = 'workout_plan_day_records';
+
+enum WorkoutPlanDayRecordColumns with Columns {
+  id("id"),
+  workoutPlanRecordId("workout_plan_record_id"),
+  workoutPlanWeekRecordId("workout_plan_week_record_id"),
+  workoutPlanDayId("workout_plan_day_id"),
+  week("week"),
+  day("day"),
+  currentWorkoutPosition("current_workout_position"),
+  status("status"),
+  completedAt("completed_at"),
+  createdAt("created_at"),
+  updatedAt("updated_at");
+
+  @override
+  final String value;
+
+  const WorkoutPlanDayRecordColumns(this.value);
+}
+
+class WorkoutPlanDayRecord extends Equatable implements Model {
+  @override
+  final int? id;
+  final int workoutPlanRecordId;
+  final int workoutPlanWeekRecordId;
+  final int workoutPlanDayId;
+  final int day;
+  final int week;
+  final int currentWorkoutPosition;
+  final ProgressStatus status;
+  final int? completedAt;
+  @override
+  final int createdAt;
+  @override
+  final int updatedAt;
+
+  const WorkoutPlanDayRecord({
+    this.id,
+    required this.workoutPlanRecordId,
+    required this.workoutPlanWeekRecordId,
+    required this.workoutPlanDayId,
+    required this.day,
+    required this.week,
+    required this.status,
+    required this.currentWorkoutPosition,
+    this.completedAt,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+
+  static const String table = _table;
+  static final String tableCreate =
+      '''
+  CREATE TABLE IF NOT EXISTS $_table (
+    ${WorkoutPlanDayRecordColumns.id.value} INTEGER PRIMARY KEY AUTOINCREMENT,
+    ${WorkoutPlanDayRecordColumns.workoutPlanRecordId.value} INTEGER NOT NULL,
+    ${WorkoutPlanDayRecordColumns.workoutPlanWeekRecordId.value} INTEGER NOT NULL,
+    ${WorkoutPlanDayRecordColumns.workoutPlanDayId.value} INTEGER NOT NULL,
+    ${WorkoutPlanDayRecordColumns.week.value} INTEGER NOT NULL,
+    ${WorkoutPlanDayRecordColumns.day.value} INTEGER NOT NULL,
+    ${WorkoutPlanDayRecordColumns.currentWorkoutPosition.value} INTEGER NOT NULL,
+    ${WorkoutPlanDayRecordColumns.status.value} TEXT NOT NULL,
+    ${WorkoutPlanDayRecordColumns.completedAt.value} INTEGER,
+    ${WorkoutPlanDayRecordColumns.createdAt.value} INTEGER NOT NULL,
+    ${WorkoutPlanDayRecordColumns.updatedAt.value} INTEGER NOT NULL,
+    FOREIGN KEY (${WorkoutPlanDayRecordColumns.workoutPlanRecordId.value}) REFERENCES ${WorkoutPlanRecord.table} (id) 
+      ON DELETE CASCADE,
+    FOREIGN KEY (${WorkoutPlanDayRecordColumns.workoutPlanWeekRecordId.value}) REFERENCES ${WorkoutPlanWeekRecord.table} (id)
+      ON DELETE CASCADE,
+    FOREIGN KEY (${WorkoutPlanDayRecordColumns.workoutPlanDayId.value}) REFERENCES ${WorkoutPlanDay.table} (id)
+      ON DELETE CASCADE
+  );
+  
+  CREATE INDEX IF NOT EXISTS idx_workout_plan_day_records_plan_record_id ON $_table (${WorkoutPlanDayRecordColumns.workoutPlanRecordId.value});
+  CREATE INDEX IF NOT EXISTS idx_workout_plan_day_records_plan_week_record_id ON $_table (${WorkoutPlanDayRecordColumns.workoutPlanWeekRecordId.value});
+  CREATE INDEX IF NOT EXISTS idx_workout_plan_day_records_plan_day_id ON $_table (${WorkoutPlanDayRecordColumns.workoutPlanDayId.value});
+  ''';
+
+  @override
+  Map<String, Object?> toMap() {
+    return {
+      WorkoutPlanDayRecordColumns.id.value: id,
+      WorkoutPlanDayRecordColumns.workoutPlanRecordId.value:
+          workoutPlanRecordId,
+      WorkoutPlanDayRecordColumns.workoutPlanWeekRecordId.value:
+          workoutPlanWeekRecordId,
+      WorkoutPlanDayRecordColumns.workoutPlanDayId.value: workoutPlanDayId,
+      WorkoutPlanDayRecordColumns.day.value: day,
+      WorkoutPlanDayRecordColumns.week.value: week,
+      WorkoutPlanDayRecordColumns.status.value: status.value,
+      WorkoutPlanDayRecordColumns.currentWorkoutPosition.value:
+          currentWorkoutPosition,
+      WorkoutPlanDayRecordColumns.completedAt.value: completedAt,
+      WorkoutPlanDayRecordColumns.createdAt.value: createdAt,
+      WorkoutPlanDayRecordColumns.updatedAt.value: updatedAt,
+    };
+  }
+
+  factory WorkoutPlanDayRecord.fromMap(Map<String, Object?> map) {
+    return WorkoutPlanDayRecord(
+      id: map[WorkoutPlanDayRecordColumns.id.value] as int?,
+      workoutPlanRecordId:
+          map[WorkoutPlanDayRecordColumns.workoutPlanRecordId.value]! as int,
+      workoutPlanWeekRecordId:
+          map[WorkoutPlanDayRecordColumns.workoutPlanWeekRecordId.value]!
+              as int,
+      workoutPlanDayId:
+          map[WorkoutPlanDayRecordColumns.workoutPlanDayId.value]! as int,
+      day: map[WorkoutPlanDayRecordColumns.day.value]! as int,
+      week: map[WorkoutPlanDayRecordColumns.week.value]! as int,
+      status: ProgressStatus.fromValue(
+        map[WorkoutPlanDayRecordColumns.status.value]! as String,
+      ),
+      currentWorkoutPosition:
+          map[WorkoutPlanDayRecordColumns.currentWorkoutPosition.value]! as int,
+      completedAt: map[WorkoutPlanDayRecordColumns.completedAt.value] as int?,
+      createdAt: map[WorkoutPlanDayRecordColumns.createdAt.value]! as int,
+      updatedAt: map[WorkoutPlanDayRecordColumns.updatedAt.value]! as int,
+    );
+  }
+
+  factory WorkoutPlanDayRecord.create({
+    required int workoutPlanRecordId,
+    required int workoutPlanWeekRecordId,
+    required int workoutPlanDayId,
+    int? day,
+    ProgressStatus? status,
+    int? week,
+    int? currentWorkoutPosition,
+  }) {
+    final int now = DateUtilities.getNowUtcUnix();
+    return WorkoutPlanDayRecord(
+      workoutPlanRecordId: workoutPlanRecordId,
+      workoutPlanWeekRecordId: workoutPlanWeekRecordId,
+      workoutPlanDayId: workoutPlanDayId,
+      day: day ?? 1,
+      week: week ?? 1,
+      status: status ?? ProgressStatus.inProgress,
+      currentWorkoutPosition: currentWorkoutPosition ?? 1,
+      createdAt: now,
+      updatedAt: now,
+    );
+  }
+
+  @override
+  WorkoutPlanDayRecord copyWith({
+    Nullable<int>? id,
+    int? workoutPlanRecordId,
+    int? workoutPlanWeekRecordId,
+    int? workoutPlanDayId,
+    Nullable<int>? completedAt,
+    int? week,
+    int? createdAt,
+    int? updatedAt,
+    int? day,
+    ProgressStatus? status,
+    int? currentWorkoutPosition,
+  }) {
+    return WorkoutPlanDayRecord(
+      id: id != null ? id.value : this.id,
+      workoutPlanRecordId: workoutPlanRecordId ?? this.workoutPlanRecordId,
+      workoutPlanWeekRecordId:
+          workoutPlanWeekRecordId ?? this.workoutPlanWeekRecordId,
+      workoutPlanDayId: workoutPlanDayId ?? this.workoutPlanDayId,
+      day: day ?? this.day,
+      week: week ?? this.week,
+      status: status ?? this.status,
+      completedAt: completedAt != null ? completedAt.value : this.completedAt,
+      currentWorkoutPosition:
+          currentWorkoutPosition ?? this.currentWorkoutPosition,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
+
+  @override
+  List<Object?> get props => [
+    id,
+    workoutPlanRecordId,
+    workoutPlanWeekRecordId,
+    workoutPlanDayId,
+    completedAt,
+    week,
+    currentWorkoutPosition,
+    createdAt,
+    updatedAt,
+    day,
+    status,
+  ];
+}

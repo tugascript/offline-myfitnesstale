@@ -1,0 +1,183 @@
+// Copyright (C) 2026 afonsobarracha
+//
+// This file is part of My Fitness Tale.
+//
+// My Fitness Tale is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// My Fitness Tale is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with My Fitness Tale.  If not, see <https://www.gnu.org/licenses/>.
+
+import 'package:equatable/equatable.dart';
+
+import '../../../utils/nullable.dart';
+import '../../utils/enums.dart';
+import 'model.dart';
+import '../../utils/dates.dart';
+
+const String _table = 'weight_goals';
+
+enum WeightGoalColumns with Columns {
+  id("id"),
+  targetWeight("target_weight"),
+  targetFatPercentage("target_fat_percentage"),
+  startDate("start_date"),
+  completedAt("completed_at"),
+  status("status"),
+  phase("phase"),
+  createdAt("created_at"),
+  updatedAt("updated_at");
+
+  @override
+  final String value;
+
+  const WeightGoalColumns(this.value);
+}
+
+class WeightGoal extends Equatable implements Model {
+  @override
+  final int? id;
+  final int targetWeight;
+  final int? targetFatPercentage;
+  final int startDate;
+  final int? completedAt;
+  final ProgressStatus status;
+  final WeightGoalPhase phase;
+  @override
+  final int createdAt;
+  @override
+  final int updatedAt;
+
+  const WeightGoal({
+    this.id,
+    required this.targetWeight,
+    this.targetFatPercentage,
+    required this.startDate,
+    this.completedAt,
+    required this.status,
+    required this.phase,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+
+  static const String table = _table;
+  static final String tableCreate =
+      '''
+  CREATE TABLE IF NOT EXISTS $_table (
+    ${WeightGoalColumns.id.value} INTEGER PRIMARY KEY AUTOINCREMENT,
+    ${WeightGoalColumns.targetWeight.value} INTEGER NOT NULL,
+    ${WeightGoalColumns.targetFatPercentage.value} INTEGER,
+    ${WeightGoalColumns.startDate.value} INTEGER NOT NULL,
+    ${WeightGoalColumns.completedAt.value} INTEGER,
+    ${WeightGoalColumns.status.value} TEXT NOT NULL,
+    ${WeightGoalColumns.phase.value} TEXT NOT NULL,
+    ${WeightGoalColumns.createdAt.value} INTEGER NOT NULL,
+    ${WeightGoalColumns.updatedAt.value} INTEGER NOT NULL
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_weight_goal_start_date ON $_table (${WeightGoalColumns.startDate.value});
+  CREATE INDEX IF NOT EXISTS idx_weight_goal_status ON $_table (${WeightGoalColumns.status.value});
+''';
+
+  @override
+  Map<String, Object?> toMap() {
+    return {
+      WeightGoalColumns.id.value: id,
+      WeightGoalColumns.targetWeight.value: targetWeight,
+      WeightGoalColumns.targetFatPercentage.value: targetFatPercentage,
+      WeightGoalColumns.startDate.value: startDate,
+      WeightGoalColumns.completedAt.value: completedAt,
+      WeightGoalColumns.status.value: status.value,
+      WeightGoalColumns.phase.value: phase.value,
+      WeightGoalColumns.createdAt.value: createdAt,
+      WeightGoalColumns.updatedAt.value: updatedAt,
+    };
+  }
+
+  factory WeightGoal.fromMap(Map<String, Object?> map) {
+    return WeightGoal(
+      id: map[WeightGoalColumns.id.value] as int?,
+      targetWeight: map[WeightGoalColumns.targetWeight.value] as int,
+      targetFatPercentage:
+          map[WeightGoalColumns.targetFatPercentage.value] as int?,
+      startDate: map[WeightGoalColumns.startDate.value] as int,
+      completedAt: map[WeightGoalColumns.completedAt.value] as int?,
+      status: ProgressStatus.fromValue(
+        map[WeightGoalColumns.status.value] as String,
+      ),
+      phase: WeightGoalPhase.fromValue(
+        map[WeightGoalColumns.phase.value] as String,
+      ),
+      createdAt: map[WeightGoalColumns.createdAt.value] as int,
+      updatedAt: map[WeightGoalColumns.updatedAt.value] as int,
+    );
+  }
+
+  factory WeightGoal.create({
+    required int targetWeight,
+    int? targetFatPercentage,
+    required int startDate,
+    required WeightGoalPhase phase,
+    ProgressStatus status = ProgressStatus.inProgress,
+    int? completedAt,
+  }) {
+    final int now = DateUtilities.getNowUtcUnix();
+    return WeightGoal(
+      targetWeight: targetWeight,
+      targetFatPercentage: targetFatPercentage,
+      startDate: startDate,
+      completedAt: completedAt,
+      phase: phase,
+      status: status,
+      createdAt: now,
+      updatedAt: now,
+    );
+  }
+
+  @override
+  WeightGoal copyWith({
+    Nullable<int>? id,
+    int? targetWeight,
+    Nullable<int>? targetFatPercentage,
+    int? startDate,
+    ProgressStatus? status,
+    WeightGoalPhase? phase,
+    Nullable<int>? completedAt,
+    int? createdAt,
+    int? updatedAt,
+  }) {
+    return WeightGoal(
+      id: id != null ? id.value : this.id,
+      targetWeight: targetWeight ?? this.targetWeight,
+      targetFatPercentage: targetFatPercentage != null
+          ? targetFatPercentage.value
+          : this.targetFatPercentage,
+      startDate: startDate ?? this.startDate,
+      status: status ?? this.status,
+      completedAt: completedAt != null ? completedAt.value : this.completedAt,
+      phase: phase ?? this.phase,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
+
+  @override
+  List<Object?> get props => [
+    id,
+    targetWeight,
+    targetFatPercentage,
+    startDate,
+    completedAt,
+    status,
+    phase,
+    createdAt,
+    updatedAt,
+  ];
+}

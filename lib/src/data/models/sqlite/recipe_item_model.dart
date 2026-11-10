@@ -1,0 +1,219 @@
+// Copyright (C) 2026 afonsobarracha
+//
+// This file is part of My Fitness Tale.
+//
+// My Fitness Tale is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// My Fitness Tale is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with My Fitness Tale.  If not, see <https://www.gnu.org/licenses/>.
+
+import '../../../utils/nullable.dart';
+
+import 'package:equatable/equatable.dart';
+
+import 'food_model.dart';
+import 'food_portion_model.dart';
+import 'model.dart';
+import 'recipe_model.dart';
+import '../../utils/dates.dart';
+
+const String _table = 'recipe_items';
+
+enum RecipeItemColumns with Columns {
+  id("id"),
+  recipeId("recipe_id"),
+  foodId("food_id"),
+  portionId("portion_id"),
+  amount("amount"),
+  totalCalories("total_calories"),
+  totalProtein("total_protein"),
+  totalCarbs("total_carbs"),
+  totalFat("total_fat"),
+  totalFiber("total_fiber"),
+  createdAt("created_at"),
+  updatedAt("updated_at");
+
+  @override
+  final String value;
+
+  const RecipeItemColumns(this.value);
+}
+
+class RecipeItem extends Equatable implements Model {
+  @override
+  final int? id;
+  final int recipeId;
+  final int foodId;
+  final int? portionId;
+  final int amount;
+  final int totalCalories;
+  final int totalProtein;
+  final int totalCarbs;
+  final int totalFat;
+  final int? totalFiber;
+  @override
+  final int createdAt;
+  @override
+  final int updatedAt;
+
+  const RecipeItem({
+    this.id,
+    required this.recipeId,
+    required this.foodId,
+    this.portionId,
+    required this.amount,
+    required this.totalCalories,
+    required this.totalProtein,
+    required this.totalCarbs,
+    required this.totalFat,
+    this.totalFiber,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+
+  static const String table = _table;
+
+  static final String tableCreate =
+      '''
+  CREATE TABLE IF NOT EXISTS $_table (
+    ${RecipeItemColumns.id.value} INTEGER PRIMARY KEY AUTOINCREMENT,
+    ${RecipeItemColumns.recipeId.value} INTEGER NOT NULL,
+    ${RecipeItemColumns.foodId.value} INTEGER NOT NULL,
+    ${RecipeItemColumns.portionId.value} INTEGER,
+    ${RecipeItemColumns.amount.value} INTEGER NOT NULL,
+    ${RecipeItemColumns.totalCalories.value} INTEGER NOT NULL,
+    ${RecipeItemColumns.totalProtein.value} INTEGER NOT NULL,
+    ${RecipeItemColumns.totalCarbs.value} INTEGER NOT NULL,
+    ${RecipeItemColumns.totalFat.value} INTEGER NOT NULL,
+    ${RecipeItemColumns.totalFiber.value} INTEGER,
+    ${RecipeItemColumns.createdAt.value} INTEGER NOT NULL,
+    ${RecipeItemColumns.updatedAt.value} INTEGER NOT NULL,
+    FOREIGN KEY (${RecipeItemColumns.recipeId.value}) REFERENCES ${Recipe.table} (${RecipeColumns.id.value})
+      ON DELETE CASCADE,
+    FOREIGN KEY (${RecipeItemColumns.foodId.value}) REFERENCES ${Food.table} (${FoodColumns.id.value})
+      ON DELETE RESTRICT,
+    FOREIGN KEY (${RecipeItemColumns.portionId.value}) REFERENCES ${FoodPortion.table} (${FoodPortionColumns.id.value})
+      ON DELETE SET NULL
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_recipe_items_recipe_id ON $_table (${RecipeItemColumns.recipeId.value});
+  CREATE INDEX IF NOT EXISTS idx_recipe_items_food_id ON $_table (${RecipeItemColumns.foodId.value});
+  ''';
+
+  @override
+  Map<String, Object?> toMap() {
+    return {
+      RecipeItemColumns.id.value: id,
+      RecipeItemColumns.recipeId.value: recipeId,
+      RecipeItemColumns.foodId.value: foodId,
+      RecipeItemColumns.portionId.value: portionId,
+      RecipeItemColumns.amount.value: amount,
+      RecipeItemColumns.totalCalories.value: totalCalories,
+      RecipeItemColumns.totalProtein.value: totalProtein,
+      RecipeItemColumns.totalCarbs.value: totalCarbs,
+      RecipeItemColumns.totalFat.value: totalFat,
+      RecipeItemColumns.totalFiber.value: totalFiber,
+      RecipeItemColumns.createdAt.value: createdAt,
+      RecipeItemColumns.updatedAt.value: updatedAt,
+    };
+  }
+
+  factory RecipeItem.fromMap(Map<String, Object?> map) {
+    return RecipeItem(
+      id: map[RecipeItemColumns.id.value] as int?,
+      recipeId: map[RecipeItemColumns.recipeId.value] as int,
+      foodId: map[RecipeItemColumns.foodId.value] as int,
+      portionId: map[RecipeItemColumns.portionId.value] as int?,
+      amount: map[RecipeItemColumns.amount.value] as int,
+      totalCalories: map[RecipeItemColumns.totalCalories.value] as int,
+      totalProtein: map[RecipeItemColumns.totalProtein.value] as int,
+      totalCarbs: map[RecipeItemColumns.totalCarbs.value] as int,
+      totalFat: map[RecipeItemColumns.totalFat.value] as int,
+      totalFiber: map[RecipeItemColumns.totalFiber.value] as int?,
+      createdAt: map[RecipeItemColumns.createdAt.value] as int,
+      updatedAt: map[RecipeItemColumns.updatedAt.value] as int,
+    );
+  }
+
+  factory RecipeItem.create({
+    required int recipeId,
+    required int foodId,
+    int? portionId,
+    required int amount,
+    required int totalCalories,
+    required int totalProtein,
+    required int totalCarbs,
+    required int totalFat,
+    int? totalFiber,
+  }) {
+    final int now = DateUtilities.getNowUtcUnix();
+    return RecipeItem(
+      recipeId: recipeId,
+      foodId: foodId,
+      portionId: portionId,
+      amount: amount,
+      totalCalories: totalCalories,
+      totalProtein: totalProtein,
+      totalCarbs: totalCarbs,
+      totalFat: totalFat,
+      totalFiber: totalFiber,
+      createdAt: now,
+      updatedAt: now,
+    );
+  }
+
+  @override
+  RecipeItem copyWith({
+    Nullable<int>? id,
+    int? recipeId,
+    int? foodId,
+    Nullable<int>? portionId,
+    int? amount,
+    int? totalCalories,
+    int? totalProtein,
+    int? totalCarbs,
+    int? totalFat,
+    Nullable<int>? totalFiber,
+    int? createdAt,
+    int? updatedAt,
+  }) {
+    return RecipeItem(
+      id: id != null ? id.value : this.id,
+      recipeId: recipeId ?? this.recipeId,
+      foodId: foodId ?? this.foodId,
+      portionId: portionId != null ? portionId.value : this.portionId,
+      amount: amount ?? this.amount,
+      totalCalories: totalCalories ?? this.totalCalories,
+      totalProtein: totalProtein ?? this.totalProtein,
+      totalCarbs: totalCarbs ?? this.totalCarbs,
+      totalFat: totalFat ?? this.totalFat,
+      totalFiber: totalFiber != null ? totalFiber.value : this.totalFiber,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
+
+  @override
+  List<Object?> get props => [
+    id,
+    recipeId,
+    foodId,
+    portionId,
+    amount,
+    totalCalories,
+    totalProtein,
+    totalCarbs,
+    totalFat,
+    totalFiber,
+    createdAt,
+    updatedAt,
+  ];
+}

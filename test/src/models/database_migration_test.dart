@@ -1,17 +1,17 @@
 // Copyright (C) 2026 afonsobarracha
-// 
+//
 // This file is part of My Fitness Tale.
-// 
+//
 // My Fitness Tale is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // My Fitness Tale is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with My Fitness Tale.  If not, see <https://www.gnu.org/licenses/>.
 
@@ -21,11 +21,11 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:myfitnesstale/src/data/models/constants/equipment_constants.dart';
 import 'package:myfitnesstale/src/data/models/constants/exercise_constants.dart';
-import 'package:myfitnesstale/src/data/models/equipment_model.dart';
-import 'package:myfitnesstale/src/data/models/exercise_equipment_model.dart';
-import 'package:myfitnesstale/src/data/models/exercise_model.dart';
-import 'package:myfitnesstale/src/data/models/profile_model.dart';
-import 'package:myfitnesstale/src/data/models/system_model.dart';
+import 'package:myfitnesstale/src/data/models/sqlite/equipment_model.dart';
+import 'package:myfitnesstale/src/data/models/sqlite/exercise_equipment_model.dart';
+import 'package:myfitnesstale/src/data/models/sqlite/exercise_model.dart';
+import 'package:myfitnesstale/src/data/models/sqlite/profile_model.dart';
+import 'package:myfitnesstale/src/data/models/sqlite/system_model.dart';
 import 'package:myfitnesstale/src/data/repositories/exercises/exercise_repository.dart';
 import 'package:myfitnesstale/src/data/services/sqlite/database_helper.dart';
 import 'package:myfitnesstale/src/data/utils/enums.dart';

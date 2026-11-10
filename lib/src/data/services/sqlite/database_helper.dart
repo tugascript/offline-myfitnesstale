@@ -1,17 +1,17 @@
 // Copyright (C) 2026 afonsobarracha
-// 
+//
 // This file is part of My Fitness Tale.
-// 
+//
 // My Fitness Tale is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // My Fitness Tale is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with My Fitness Tale.  If not, see <https://www.gnu.org/licenses/>.
 
@@ -20,48 +20,48 @@ import 'package:logging/logging.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
-import '../../models/daily_nutrition_log_model.dart';
-import '../../models/day_macro_goal_model.dart';
-import '../../models/equipment_model.dart';
-import '../../models/exercise_equipment_model.dart';
-import '../../models/exercise_model.dart';
-import '../../models/exercise_record_model.dart';
-import '../../models/food_model.dart';
-import '../../models/food_portion_model.dart';
-import '../../models/meal_log_item_model.dart';
-import '../../models/meal_log_model.dart';
-import '../../models/meal_plan_day_model.dart';
-import '../../models/meal_plan_day_record_model.dart';
-import '../../models/meal_plan_meal_item_model.dart';
-import '../../models/meal_plan_meal_model.dart';
-import '../../models/meal_plan_model.dart';
-import '../../models/meal_plan_record_model.dart';
-import '../../models/meal_plan_week_model.dart';
-import '../../models/meal_plan_week_record_model.dart';
-import '../../models/profile_model.dart';
-import '../../models/recipe_item_model.dart';
-import '../../models/recipe_model.dart';
-import '../../models/reminders_config_model.dart';
-import '../../models/strength_goal_model.dart';
-import '../../models/system_model.dart';
-import '../../models/week_macro_goal_model.dart';
-import '../../models/weight_goal_model.dart';
-import '../../models/weight_record_model.dart';
-import '../../models/workout_model.dart';
-import '../../models/workout_plan_day_model.dart';
-import '../../models/workout_plan_day_record_model.dart';
-import '../../models/workout_plan_model.dart';
-import '../../models/workout_plan_record_model.dart';
-import '../../models/workout_plan_week_model.dart';
-import '../../models/workout_plan_week_record_model.dart';
-import '../../models/workout_plan_workout_model.dart';
-import '../../models/workout_plan_workout_record_model.dart';
-import '../../models/workout_record_model.dart';
-import '../../models/workout_set_exercise_model.dart';
-import '../../models/workout_set_exercise_option_model.dart';
-import '../../models/workout_set_exercise_record_model.dart';
-import '../../models/workout_set_model.dart';
-import '../../models/workout_set_record_model.dart';
+import '../../models/sqlite/daily_nutrition_log_model.dart';
+import '../../models/sqlite/day_macro_goal_model.dart';
+import '../../models/sqlite/equipment_model.dart';
+import '../../models/sqlite/exercise_equipment_model.dart';
+import '../../models/sqlite/exercise_model.dart';
+import '../../models/sqlite/exercise_record_model.dart';
+import '../../models/sqlite/food_model.dart';
+import '../../models/sqlite/food_portion_model.dart';
+import '../../models/sqlite/meal_log_item_model.dart';
+import '../../models/sqlite/meal_log_model.dart';
+import '../../models/sqlite/meal_plan_day_model.dart';
+import '../../models/sqlite/meal_plan_day_record_model.dart';
+import '../../models/sqlite/meal_plan_meal_item_model.dart';
+import '../../models/sqlite/meal_plan_meal_model.dart';
+import '../../models/sqlite/meal_plan_model.dart';
+import '../../models/sqlite/meal_plan_record_model.dart';
+import '../../models/sqlite/meal_plan_week_model.dart';
+import '../../models/sqlite/meal_plan_week_record_model.dart';
+import '../../models/sqlite/profile_model.dart';
+import '../../models/sqlite/recipe_item_model.dart';
+import '../../models/sqlite/recipe_model.dart';
+import '../../models/sqlite/reminders_config_model.dart';
+import '../../models/sqlite/strength_goal_model.dart';
+import '../../models/sqlite/system_model.dart';
+import '../../models/sqlite/week_macro_goal_model.dart';
+import '../../models/sqlite/weight_goal_model.dart';
+import '../../models/sqlite/weight_record_model.dart';
+import '../../models/sqlite/workout_model.dart';
+import '../../models/sqlite/workout_plan_day_model.dart';
+import '../../models/sqlite/workout_plan_day_record_model.dart';
+import '../../models/sqlite/workout_plan_model.dart';
+import '../../models/sqlite/workout_plan_record_model.dart';
+import '../../models/sqlite/workout_plan_week_model.dart';
+import '../../models/sqlite/workout_plan_week_record_model.dart';
+import '../../models/sqlite/workout_plan_workout_model.dart';
+import '../../models/sqlite/workout_plan_workout_record_model.dart';
+import '../../models/sqlite/workout_record_model.dart';
+import '../../models/sqlite/workout_set_exercise_model.dart';
+import '../../models/sqlite/workout_set_exercise_option_model.dart';
+import '../../models/sqlite/workout_set_exercise_record_model.dart';
+import '../../models/sqlite/workout_set_model.dart';
+import '../../models/sqlite/workout_set_record_model.dart';
 
 const String _productionDatabaseName = "app.db";
 const String _integrationTestDatabaseName = "integration_test.db";
