@@ -30,8 +30,8 @@ class FoodCubit extends Cubit<FoodState> {
   final FoodRepository _foodService;
   final Logger _logger = Logger('FoodCubit');
 
-  FoodCubit([FoodRepository? foodService])
-    : _foodService = foodService ?? FoodRepository.create(),
+  FoodCubit({required FoodRepository foodRepository})
+    : _foodService = foodRepository,
       super(FoodState.initial());
 
   Future<void> getFoods({

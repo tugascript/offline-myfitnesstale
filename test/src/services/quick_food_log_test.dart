@@ -44,7 +44,9 @@ void main() {
       final db = await database.db;
       final foodsBefore = await db.query('foods');
       final recipesBefore = await db.query('recipes');
-      final cubit = MacroTrackingCubit();
+      final cubit = MacroTrackingCubit(
+        macroTrackingRepository: MacroTrackingRepository.create(),
+      );
       addTearDown(cubit.close);
       final time = DateTime(2025, 1, 10, 8, 30);
       await cubit.getDailyLog(time);
@@ -123,7 +125,9 @@ void main() {
           fat: -1,
         ),
       ];
-      final cubit = MacroTrackingCubit();
+      final cubit = MacroTrackingCubit(
+        macroTrackingRepository: MacroTrackingRepository.create(),
+      );
       addTearDown(cubit.close);
       for (final entry in invalid) {
         final result = await service.logQuickFood(entry);

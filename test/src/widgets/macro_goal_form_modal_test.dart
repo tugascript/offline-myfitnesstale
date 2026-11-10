@@ -26,8 +26,11 @@ import 'package:myfitnesstale/src/data/repositories/macros/inputs/macro_goal_inp
 import 'package:myfitnesstale/src/ui/core/sizes/data_display_sizes.dart';
 import 'package:myfitnesstale/src/ui/core/sizes/screen_size.dart';
 import 'package:myfitnesstale/src/ui/macros/widgets/goals/macro_goal_form_modal.dart';
+import 'package:myfitnesstale/src/data/repositories/macros/macro_tracking_repository.dart';
 
 class _Macros extends MacroTrackingCubit {
+  _Macros() : super(macroTrackingRepository: MacroTrackingRepository.create());
+
   MacroGoalInput? submitted;
   int? updatedId;
 

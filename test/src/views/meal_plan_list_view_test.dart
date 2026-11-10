@@ -29,13 +29,16 @@ import 'package:myfitnesstale/src/ui/meal_plans/screens/meal_plan_list_screen.da
 import 'package:myfitnesstale/src/ui/core/widgets/favourite_checkbox.dart';
 import 'package:myfitnesstale/src/ui/core/widgets/search_favorite_form.dart';
 import 'package:myfitnesstale/src/ui/core/widgets/search_form_button.dart';
+import 'package:myfitnesstale/src/data/repositories/meal_plans/meal_plan_repository.dart';
+import 'package:myfitnesstale/src/data/repositories/meal_plans/meal_plan_record_repository.dart';
 
 class _FakeMealPlanCubit extends MealPlanCubit {
   int? toggledId;
   String? lastSearch;
   bool? lastIsFavorite;
 
-  _FakeMealPlanCubit(List<MealPlanDto> plans) {
+  _FakeMealPlanCubit(List<MealPlanDto> plans)
+    : super(mealPlanRepository: MealPlanRepository.create()) {
     emit(state.copyWith(mealPlans: plans));
   }
 
@@ -76,6 +79,9 @@ class _FakeMealPlanCubit extends MealPlanCubit {
 }
 
 class _FakeMealPlanRecordCubit extends MealPlanRecordCubit {
+  _FakeMealPlanRecordCubit()
+    : super(mealPlanRecordRepository: MealPlanRecordRepository.create());
+
   @override
   Future<bool> startMealPlan({
     required int mealPlanId,

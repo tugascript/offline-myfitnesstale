@@ -32,9 +32,8 @@ class WeightRecordCubit extends Cubit<WeightRecordState> {
   final WeightRecordRepository _weightRecordService;
   final Logger _logger = Logger("WeightRecordCubit");
 
-  WeightRecordCubit([WeightRecordRepository? weightRecordService])
-    : _weightRecordService =
-          weightRecordService ?? WeightRecordRepository.create(),
+  WeightRecordCubit({required WeightRecordRepository weightRecordRepository})
+    : _weightRecordService = weightRecordRepository,
       super(WeightRecordState.initial());
 
   Future<void> getActiveWeightGoal() async {

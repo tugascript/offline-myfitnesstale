@@ -31,8 +31,8 @@ class MealPlanCubit extends Cubit<MealPlanState> {
   final MealPlanRepository _mealPlanService;
   final Logger _logger = Logger('MealPlanCubit');
 
-  MealPlanCubit([MealPlanRepository? mealPlanService])
-    : _mealPlanService = mealPlanService ?? MealPlanRepository.create(),
+  MealPlanCubit({required MealPlanRepository mealPlanRepository})
+    : _mealPlanService = mealPlanRepository,
       super(MealPlanState.initial());
 
   Future<void> getMealPlans({

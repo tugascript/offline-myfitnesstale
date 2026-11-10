@@ -63,7 +63,7 @@ void main() {
     () async {
       await FoodRepository.create().createFood(foodInput);
       await FoodRepository.create().createFood(foodInput);
-      final cubit = FoodCubit();
+      final cubit = FoodCubit(foodRepository: FoodRepository.create());
       addTearDown(cubit.close);
       await cubit.getFoods(
         search: 'Oats',
@@ -94,7 +94,9 @@ void main() {
       const MealPlanInput(name: 'Favorite paging plan', weeks: []),
     )).value;
     await service.toggleFavorite(plan.id);
-    final cubit = MealPlanCubit();
+    final cubit = MealPlanCubit(
+      mealPlanRepository: MealPlanRepository.create(),
+    );
     addTearDown(cubit.close);
     await cubit.getMealPlans(isFavorite: true, limit: 1);
     expect(
@@ -425,7 +427,9 @@ void main() {
         ProgressStatus.abandoned,
       );
 
-      final cubit = WeightRecordCubit();
+      final cubit = WeightRecordCubit(
+        weightRecordRepository: WeightRecordRepository.create(),
+      );
       addTearDown(cubit.close);
       await cubit.createWeightRecord(
         WeightRecordInput(

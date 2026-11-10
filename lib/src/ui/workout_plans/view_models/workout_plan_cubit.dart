@@ -30,9 +30,8 @@ export '../../../data/repositories/workout_plans/inputs/workout_plan_input.dart'
 class WorkoutPlanCubit extends Cubit<WorkoutPlanState> {
   final WorkoutPlanRepository _workoutPlanService;
 
-  WorkoutPlanCubit([WorkoutPlanRepository? workoutPlanService])
-    : _workoutPlanService =
-          workoutPlanService ?? WorkoutPlanRepository.create(),
+  WorkoutPlanCubit({required WorkoutPlanRepository workoutPlanRepository})
+    : _workoutPlanService = workoutPlanRepository,
       super(WorkoutPlanState.initial());
 
   final Logger _logger = Logger('WorkoutPlanCubit');

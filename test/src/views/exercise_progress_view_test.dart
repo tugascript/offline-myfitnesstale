@@ -32,10 +32,11 @@ import 'package:myfitnesstale/src/ui/exercises/view_models/exercise_record_cubit
 import 'package:myfitnesstale/src/ui/exercises/view_models/states/exercise_record_state.dart';
 import 'package:myfitnesstale/src/data/repositories/profile/dtos/system_dto.dart';
 import 'package:myfitnesstale/src/ui/exercises/screens/exercise_progress_screen.dart';
+import 'package:myfitnesstale/src/data/repositories/profile/profile_repository.dart';
 
 class _ExerciseRecordCubit extends ExerciseRecordCubit {
   _ExerciseRecordCubit(ExerciseRecordState initialState, this.aggregateRecords)
-    : super(ExerciseRecordRepository.create()) {
+    : super(exerciseRecordRepository: ExerciseRecordRepository.create()) {
     emit(initialState);
   }
 
@@ -67,7 +68,8 @@ class _ExerciseRecordCubit extends ExerciseRecordCubit {
 }
 
 class _ProfileCubit extends ProfileCubit {
-  _ProfileCubit(Units units) {
+  _ProfileCubit(Units units)
+    : super(profileRepository: ProfileRepository.create()) {
     setUnits(units);
   }
 

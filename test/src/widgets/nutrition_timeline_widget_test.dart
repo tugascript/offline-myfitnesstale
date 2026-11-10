@@ -33,9 +33,12 @@ import 'package:myfitnesstale/src/ui/core/sizes/screen_size.dart';
 import 'package:myfitnesstale/src/ui/macros/widgets/log_food_modal.dart';
 import 'package:myfitnesstale/src/ui/macros/widgets/nutrition_hour_row.dart';
 import 'package:myfitnesstale/src/ui/macros/widgets/nutrition_timeline_widget.dart';
+import 'package:myfitnesstale/src/data/repositories/foods/food_repository.dart';
+import 'package:myfitnesstale/src/data/repositories/recipes/recipe_repository.dart';
+import 'package:myfitnesstale/src/data/repositories/macros/macro_tracking_repository.dart';
 
 class _Foods extends FoodCubit {
-  _Foods() {
+  _Foods() : super(foodRepository: FoodRepository.create()) {
     emit(
       state.copyWith(
         foods: const [
@@ -58,7 +61,7 @@ class _Foods extends FoodCubit {
 }
 
 class _Recipes extends RecipeCubit {
-  _Recipes() {
+  _Recipes() : super(recipeRepository: RecipeRepository.create()) {
     emit(
       state.copyWith(
         recipes: const [
@@ -79,6 +82,8 @@ class _Recipes extends RecipeCubit {
 }
 
 class _Macros extends MacroTrackingCubit {
+  _Macros() : super(macroTrackingRepository: MacroTrackingRepository.create());
+
   QuickFoodLogInput? quickInput;
   bool quickSuccess = false;
   int quickSaves = 0;

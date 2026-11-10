@@ -33,7 +33,8 @@ class _ExerciseSearchCubit extends ExerciseCubit {
   final equipmentFetchStarted = Completer<void>();
   final releaseEquipmentFetch = Completer<void>();
 
-  _ExerciseSearchCubit() : super(ExerciseRepository.create()) {
+  _ExerciseSearchCubit()
+    : super(exerciseRepository: ExerciseRepository.create()) {
     emit(state.copyWith(equipmentSelection: const {1: 'Barbell'}));
   }
 

@@ -77,7 +77,9 @@ void main() {
   test(
     'users can create more than 3 workout plans without restriction',
     () async {
-      final cubit = WorkoutPlanCubit();
+      final cubit = WorkoutPlanCubit(
+        workoutPlanRepository: WorkoutPlanRepository.create(),
+      );
 
       for (var i = 0; i < 4; i++) {
         await cubit.createWorkoutPlan(
@@ -91,9 +93,8 @@ void main() {
         expect(cubit.state.error, isNull);
       }
 
-      final countResult = await WorkoutPlanRepository.create().countWorkoutPlans(
-        createdBy: CreatedBy.user,
-      );
+      final countResult = await WorkoutPlanRepository.create()
+          .countWorkoutPlans(createdBy: CreatedBy.user);
       expect(countResult.isOk(), isTrue);
       expect(countResult.value, 4);
 
@@ -187,7 +188,10 @@ void main() {
     );
     await db.insert(WorkoutPlanRecord.table, record.toMap());
 
-    final cubit = WorkoutPlanRecordCubit();
+    final cubit = WorkoutPlanRecordCubit(
+      workoutPlanRecordRepository: WorkoutPlanRecordRepository.create(),
+      workoutPlanRepository: WorkoutPlanRepository.create(),
+    );
     await cubit.getOrCreateActivePlanRecord(planId);
 
     final todaysWorkouts = cubit.state.currentPlanRecord.todaysWorkouts;
@@ -456,15 +460,16 @@ void main() {
     final workoutId = await createWorkout(db, uniqueName('manual-workout'));
     final now = DateTime.now();
 
-    final result = await WorkoutRecordRepository.create().batchCreateWorkoutRecord(
-      WorkoutRecordBatchInput(
-        workoutId: workoutId,
-        version: 1,
-        startedAt: now.subtract(const Duration(hours: 1)),
-        completedAt: now,
-        sets: const [],
-      ),
-    );
+    final result = await WorkoutRecordRepository.create()
+        .batchCreateWorkoutRecord(
+          WorkoutRecordBatchInput(
+            workoutId: workoutId,
+            version: 1,
+            startedAt: now.subtract(const Duration(hours: 1)),
+            completedAt: now,
+            sets: const [],
+          ),
+        );
     expect(result.isOk(), isTrue);
 
     final stored = WorkoutRecord.fromMap(
@@ -482,7 +487,10 @@ void main() {
     'starting a plan updates cached details and abandons the previous plan',
     () async {
       final db = await testDatabase.db;
-      final cubit = WorkoutPlanRecordCubit();
+      final cubit = WorkoutPlanRecordCubit(
+        workoutPlanRecordRepository: WorkoutPlanRecordRepository.create(),
+        workoutPlanRepository: WorkoutPlanRepository.create(),
+      );
       addTearDown(cubit.close);
       final planIds = <int>[];
 

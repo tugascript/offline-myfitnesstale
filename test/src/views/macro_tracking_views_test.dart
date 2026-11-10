@@ -55,9 +55,20 @@ import 'package:myfitnesstale/src/ui/recipes/screens/recipes_screen.dart';
 import 'package:myfitnesstale/src/ui/home/widgets/active/active_meal_plan_widget.dart';
 import 'package:myfitnesstale/src/ui/home/widgets/active/active_plans_carousel.dart';
 import 'package:myfitnesstale/src/ui/home/widgets/quick_actions_widget.dart';
+import 'package:myfitnesstale/src/data/repositories/foods/food_repository.dart';
+import 'package:myfitnesstale/src/data/repositories/recipes/recipe_repository.dart';
+import 'package:myfitnesstale/src/data/repositories/macros/macro_tracking_repository.dart';
+import 'package:myfitnesstale/src/data/repositories/meal_plans/meal_plan_repository.dart';
+import 'package:myfitnesstale/src/data/repositories/meal_plans/meal_plan_record_repository.dart';
+import 'package:myfitnesstale/src/data/repositories/weight/weight_record_repository.dart';
+import 'package:myfitnesstale/src/data/repositories/workouts/workout_repository.dart';
+import 'package:myfitnesstale/src/data/repositories/workouts/workout_record_repository.dart';
+import 'package:myfitnesstale/src/data/repositories/workout_plans/workout_plan_repository.dart';
+import 'package:myfitnesstale/src/data/repositories/workout_plans/workout_plan_record_repository.dart';
+import 'package:myfitnesstale/src/data/repositories/profile/profile_repository.dart';
 
 class _TestProfileCubit extends ProfileCubit {
-  _TestProfileCubit() {
+  _TestProfileCubit() : super(profileRepository: ProfileRepository.create()) {
     emit(
       ProfileState(
         profile: ProfileDto(
@@ -82,6 +93,8 @@ class _TestProfileCubit extends ProfileCubit {
 }
 
 class _TestFoodCubit extends FoodCubit {
+  _TestFoodCubit() : super(foodRepository: FoodRepository.create());
+
   @override
   Future<void> getFoods({
     String? search,
@@ -93,6 +106,8 @@ class _TestFoodCubit extends FoodCubit {
 }
 
 class _TestRecipeCubit extends RecipeCubit {
+  _TestRecipeCubit() : super(recipeRepository: RecipeRepository.create());
+
   @override
   Future<void> getRecipes({
     String? search,
@@ -103,6 +118,8 @@ class _TestRecipeCubit extends RecipeCubit {
 }
 
 class _TestMealPlanCubit extends MealPlanCubit {
+  _TestMealPlanCubit() : super(mealPlanRepository: MealPlanRepository.create());
+
   @override
   Future<void> getMealPlans({
     String? search,
@@ -113,11 +130,17 @@ class _TestMealPlanCubit extends MealPlanCubit {
 }
 
 class _TestMealPlanRecordCubit extends MealPlanRecordCubit {
+  _TestMealPlanRecordCubit()
+    : super(mealPlanRecordRepository: MealPlanRecordRepository.create());
+
   @override
   Future<void> getActiveMealPlanRecord() async {}
 }
 
 class _TestMacroTrackingCubit extends MacroTrackingCubit {
+  _TestMacroTrackingCubit()
+    : super(macroTrackingRepository: MacroTrackingRepository.create());
+
   @override
   Future<void> getActiveMacroGoal() async {}
 
@@ -135,7 +158,8 @@ class _TestMacroTrackingCubit extends MacroTrackingCubit {
 }
 
 class _TestExerciseRecordCubit extends ExerciseRecordCubit {
-  _TestExerciseRecordCubit() : super(ExerciseRecordRepository.create());
+  _TestExerciseRecordCubit()
+    : super(exerciseRecordRepository: ExerciseRecordRepository.create());
 
   @override
   Future<void> getActiveStrengthGoal({int? exerciseId}) async {}
@@ -150,6 +174,12 @@ class _TestExerciseRecordCubit extends ExerciseRecordCubit {
 }
 
 class _TestWorkoutPlanRecordCubit extends WorkoutPlanRecordCubit {
+  _TestWorkoutPlanRecordCubit()
+    : super(
+        workoutPlanRecordRepository: WorkoutPlanRecordRepository.create(),
+        workoutPlanRepository: WorkoutPlanRepository.create(),
+      );
+
   int loadCalls = 0;
 
   void showPlan() {
@@ -201,19 +231,41 @@ void main() {
       providers: [
         BlocProvider<ProfileCubit>(create: (_) => _TestProfileCubit()),
         BlocProvider<ExerciseCubit>(
-          create: (_) => ExerciseCubit(ExerciseRepository.create()),
+          create: (_) =>
+              ExerciseCubit(exerciseRepository: ExerciseRepository.create()),
         ),
         BlocProvider<ExerciseRecordCubit>(
           create: (_) => _TestExerciseRecordCubit(),
         ),
-        BlocProvider<WeightRecordCubit>(create: (_) => WeightRecordCubit()),
-        BlocProvider<WorkoutCubit>(create: (_) => WorkoutCubit()),
-        BlocProvider<WorkoutRecordCubit>(create: (_) => WorkoutRecordCubit()),
-        BlocProvider<WorkoutPlanCubit>(create: (_) => WorkoutPlanCubit()),
+        BlocProvider<WeightRecordCubit>(
+          create: (_) => WeightRecordCubit(
+            weightRecordRepository: WeightRecordRepository.create(),
+          ),
+        ),
+        BlocProvider<WorkoutCubit>(
+          create: (_) =>
+              WorkoutCubit(workoutRepository: WorkoutRepository.create()),
+        ),
+        BlocProvider<WorkoutRecordCubit>(
+          create: (_) => WorkoutRecordCubit(
+            workoutRecordRepository: WorkoutRecordRepository.create(),
+          ),
+        ),
+        BlocProvider<WorkoutPlanCubit>(
+          create: (_) => WorkoutPlanCubit(
+            workoutPlanRepository: WorkoutPlanRepository.create(),
+          ),
+        ),
         BlocProvider<WorkoutPlanRecordCubit>(
           create: (_) => _TestWorkoutPlanRecordCubit(),
         ),
-        BlocProvider<ActiveWorkoutCubit>(create: (_) => ActiveWorkoutCubit()),
+        BlocProvider<ActiveWorkoutCubit>(
+          create: (_) => ActiveWorkoutCubit(
+            workoutRepository: WorkoutRepository.create(),
+            workoutRecordRepository: WorkoutRecordRepository.create(),
+            workoutPlanRecordRepository: WorkoutPlanRecordRepository.create(),
+          ),
+        ),
         BlocProvider<FoodCubit>(create: (_) => _TestFoodCubit()),
         BlocProvider<RecipeCubit>(create: (_) => _TestRecipeCubit()),
         BlocProvider<MacroTrackingCubit>(

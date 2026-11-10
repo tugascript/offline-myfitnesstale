@@ -36,7 +36,7 @@ import 'package:myfitnesstale/src/ui/core/widgets/muscles_diagram.dart';
 
 class _StubExerciseCubit extends ExerciseCubit {
   _StubExerciseCubit(ExerciseDto exercise)
-    : super(ExerciseRepository.create()) {
+    : super(exerciseRepository: ExerciseRepository.create()) {
     emit(state.copyWith(selectedExercise: Nullable(exercise)));
   }
 

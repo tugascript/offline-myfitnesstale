@@ -27,6 +27,9 @@ import 'package:myfitnesstale/src/data/models/sqlite/workout_plan_record_model.d
 
 import '../../support/test_database.dart';
 
+import 'package:myfitnesstale/src/data/repositories/workout_plans/workout_plan_repository.dart';
+import 'package:myfitnesstale/src/data/repositories/workout_plans/workout_plan_record_repository.dart';
+
 void main() {
   final testDatabase = TestDatabase();
 
@@ -94,7 +97,10 @@ void main() {
         status: ProgressStatus.completed,
         timestamp: 300,
       );
-      final cubit = WorkoutPlanRecordCubit();
+      final cubit = WorkoutPlanRecordCubit(
+        workoutPlanRecordRepository: WorkoutPlanRecordRepository.create(),
+        workoutPlanRepository: WorkoutPlanRepository.create(),
+      );
       addTearDown(cubit.close);
 
       await cubit.getWorkoutPlanRecords(
@@ -166,7 +172,10 @@ void main() {
       status: ProgressStatus.completed,
       timestamp: 100,
     );
-    final cubit = WorkoutPlanRecordCubit();
+    final cubit = WorkoutPlanRecordCubit(
+      workoutPlanRecordRepository: WorkoutPlanRecordRepository.create(),
+      workoutPlanRepository: WorkoutPlanRepository.create(),
+    );
     addTearDown(cubit.close);
 
     await cubit.getWorkoutPlanRecords(workoutPlanId: firstPlanId);

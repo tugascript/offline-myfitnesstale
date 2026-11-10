@@ -335,10 +335,10 @@ in `lib/src/ui/core` and helpers in `lib/src/utils`. SQLite table models live in
 
 Feature repositories expose `*Repository.create([DatabaseHelper?])` factories
 and are no longer singletons. `MyApp` constructs repositories once and injects
-them into app-scoped Cubits. Cubit constructors still accept omitted repositories
-for tests by falling back to `create()`. `ProfileCubit` can take an optional
-`OnboardingRepository` for orchestration tests. `WorkoutPlanRepository` and
-`WorkoutPlanRecordRepository` remain large orchestration repositories.
+them into app-scoped Cubits via required named constructor parameters.
+`ProfileCubit` can take an optional named `OnboardingRepository` for
+orchestration tests. `WorkoutPlanRepository` and `WorkoutPlanRecordRepository`
+remain large orchestration repositories.
 
 `MyApp` accepts an optional router so integration tests can launch isolated app
 instances. Production uses `AppRouter.router`. Used fonts are bundled under

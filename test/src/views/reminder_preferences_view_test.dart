@@ -30,9 +30,10 @@ import 'package:myfitnesstale/src/data/repositories/profile/dtos/system_dto.dart
 import 'package:myfitnesstale/src/ui/core/sizes/data_display_sizes.dart';
 import 'package:myfitnesstale/src/ui/home/screens/profile/reminder_preferences_screen.dart';
 import 'package:myfitnesstale/src/ui/home/widgets/quick_actions_widget.dart';
+import 'package:myfitnesstale/src/data/repositories/profile/profile_repository.dart';
 
 class _ProfileCubit extends ProfileCubit {
-  _ProfileCubit() {
+  _ProfileCubit() : super(profileRepository: ProfileRepository.create()) {
     emit(
       ProfileState(
         profile: ProfileDto(
