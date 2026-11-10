@@ -15,16 +15,18 @@
 // You should have received a copy of the GNU General Public License
 // along with My Fitness Tale.  If not, see <https://www.gnu.org/licenses/>.
 
-import '../../core/widgets/layout/responsive_fields.dart';
-import '../../core/widgets/layout/app_text_form_field.dart';
-import '../../../utils/nullable.dart';
-import '../../../data/repositories/foods/inputs/food_input.dart';
-
 import 'package:flutter/material.dart';
 
-import '../../../data/utils/enums.dart';
 import '../../../data/repositories/foods/dtos/food_dto.dart';
+import '../../../data/repositories/foods/inputs/food_input.dart';
+import '../../../data/utils/display_names.dart';
+import '../../../data/utils/enums.dart';
+import '../../../utils/nullable.dart';
 import '../../core/sizes/data_display_sizes.dart';
+import '../../core/widgets/layout/app_dropdown.dart';
+import '../../core/widgets/layout/app_elevated_button.dart';
+import '../../core/widgets/layout/app_text_form_field.dart';
+import '../../core/widgets/layout/responsive_fields.dart';
 
 class FoodFormWidget extends StatefulWidget {
   final ThemeData theme;
@@ -62,46 +64,45 @@ class _FoodPortionRow {
 
 class _FoodFormWidgetState extends State<FoodFormWidget> {
   final _formKey = GlobalKey<FormState>();
+  final _nameController = TextEditingController();
+  final _brandController = TextEditingController();
+  final _servingSizeController = TextEditingController();
+  final _caloriesController = TextEditingController();
+  final _proteinController = TextEditingController();
+  final _carbsController = TextEditingController();
+  final _fatController = TextEditingController();
+  final _fiberController = TextEditingController();
+  final _sodiumController = TextEditingController();
 
-  late TextEditingController _nameController;
-  late TextEditingController _brandController;
-  late TextEditingController _servingSizeController;
-  late TextEditingController _caloriesController;
-  late TextEditingController _proteinController;
-  late TextEditingController _carbsController;
-  late TextEditingController _fatController;
-  late TextEditingController _fiberController;
-  late TextEditingController _sodiumController;
-
-  late FoodCategory _selectedCategory;
+  late final _FormData _data;
   final List<_FoodPortionRow> _portionRows = [];
 
   @override
   void initState() {
     super.initState();
     final f = widget.initialFood;
-    _nameController = TextEditingController(text: f?.name ?? '');
-    _brandController = TextEditingController(text: f?.brand ?? '');
-    _servingSizeController = TextEditingController(
-      text: f?.servingSizeBaseGrams.toString() ?? '100',
+    _data = _FormData(
+      name: f?.name ?? '',
+      brand: f?.brand ?? '',
+      category: f?.category ?? FoodCategory.other,
+      servingSizeBaseGrams: f?.servingSizeBaseGrams.toString() ?? '100',
+      caloriesBase: f?.caloriesBase.toString() ?? '0',
+      proteinBase: f?.proteinBase.toString() ?? '0',
+      carbsBase: f?.carbsBase.toString() ?? '0',
+      fatBase: f?.fatBase.toString() ?? '0',
+      fiberBase: f?.fiberBase?.toString() ?? '',
+      sodiumBase: f?.sodiumBase?.toString() ?? '',
+      isFavorite: f?.isFavorite ?? false,
     );
-    _caloriesController = TextEditingController(
-      text: f?.caloriesBase.toString() ?? '0',
-    );
-    _proteinController = TextEditingController(
-      text: f?.proteinBase.toString() ?? '0',
-    );
-    _carbsController = TextEditingController(
-      text: f?.carbsBase.toString() ?? '0',
-    );
-    _fatController = TextEditingController(text: f?.fatBase.toString() ?? '0');
-    _fiberController = TextEditingController(
-      text: f?.fiberBase?.toString() ?? '',
-    );
-    _sodiumController = TextEditingController(
-      text: f?.sodiumBase?.toString() ?? '',
-    );
-    _selectedCategory = f?.category ?? FoodCategory.other;
+    _nameController.text = _data.name;
+    _brandController.text = _data.brand;
+    _servingSizeController.text = _data.servingSizeBaseGrams;
+    _caloriesController.text = _data.caloriesBase;
+    _proteinController.text = _data.proteinBase;
+    _carbsController.text = _data.carbsBase;
+    _fatController.text = _data.fatBase;
+    _fiberController.text = _data.fiberBase;
+    _sodiumController.text = _data.sodiumBase;
 
     if (f != null && f.portions.isNotEmpty) {
       for (final p in f.portions) {
@@ -134,8 +135,8 @@ class _FoodFormWidgetState extends State<FoodFormWidget> {
       _portionRows.add(
         _FoodPortionRow(
           name: 'Serving',
-          grams: _servingSizeController.text.isNotEmpty
-              ? _servingSizeController.text
+          grams: _data.servingSizeBaseGrams.isNotEmpty
+              ? _data.servingSizeBaseGrams
               : '100',
         ),
       );
@@ -163,286 +164,429 @@ class _FoodFormWidgetState extends State<FoodFormWidget> {
 
     widget.onSubmit(
       FoodInput(
-        name: _nameController.text.trim(),
-        brand: Nullable(
-          _brandController.text.trim().isEmpty
-              ? null
-              : _brandController.text.trim(),
-        ),
-        category: _selectedCategory,
-        servingSizeBaseGrams: int.tryParse(_servingSizeController.text) ?? 100,
-        caloriesBase: int.tryParse(_caloriesController.text) ?? 0,
-        proteinBase: int.tryParse(_proteinController.text) ?? 0,
-        carbsBase: int.tryParse(_carbsController.text) ?? 0,
-        fatBase: int.tryParse(_fatController.text) ?? 0,
-        fiberBase: Nullable(int.tryParse(_fiberController.text)),
+        name: _data.name.trim(),
+        brand: Nullable(_data.brand.trim().isEmpty ? null : _data.brand.trim()),
+        category: _data.category,
+        servingSizeBaseGrams: int.tryParse(_data.servingSizeBaseGrams) ?? 100,
+        caloriesBase: int.tryParse(_data.caloriesBase) ?? 0,
+        proteinBase: int.tryParse(_data.proteinBase) ?? 0,
+        carbsBase: int.tryParse(_data.carbsBase) ?? 0,
+        fatBase: int.tryParse(_data.fatBase) ?? 0,
+        fiberBase: Nullable(int.tryParse(_data.fiberBase)),
         portions: portions,
-        sodiumBase: Nullable(int.tryParse(_sodiumController.text)),
+        sodiumBase: Nullable(int.tryParse(_data.sodiumBase)),
         barcode: Nullable(widget.initialFood?.barcode),
         micros: Nullable(widget.initialFood?.micros),
-        isFavorite: widget.initialFood?.isFavorite ?? false,
+        isFavorite: _data.isFavorite,
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final fontSize = widget.sizes.subtitleFontSize;
+
     return Form(
       key: _formKey,
-      child: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            AppTextFormField(
-              theme: widget.theme,
-              fontSize: widget.sizes.fontSize,
-              padding: widget.sizes.padding,
-              isLoading: widget.isLoading,
-              key: const ValueKey('food-form-name-input'),
-              controller: _nameController,
-              labelText: 'Food Name *',
-              validator: (val) =>
-                  val == null || val.trim().isEmpty ? 'Required' : null,
-            ),
-            SizedBox(height: widget.sizes.spacing),
-            AppTextFormField(
-              theme: widget.theme,
-              fontSize: widget.sizes.fontSize,
-              padding: widget.sizes.padding,
-              isLoading: widget.isLoading,
-              key: const ValueKey('food-form-brand-input'),
-              controller: _brandController,
-              labelText: 'Brand (optional)',
-            ),
-            SizedBox(height: widget.sizes.spacing),
-            DropdownButtonFormField<FoodCategory>(
-              isExpanded: true,
-              itemHeight: null,
-              iconSize: widget.sizes.buttonIconSize,
-              style: TextStyle(
-                fontSize: widget.sizes.fontSize,
-                color: widget.theme.textTheme.bodyMedium?.color,
-              ),
-              key: const ValueKey('food-form-category-dropdown'),
-              initialValue: _selectedCategory,
-              decoration: const InputDecoration(
-                labelText: 'Category',
-                border: OutlineInputBorder(),
-              ),
-              items: FoodCategory.values.map((cat) {
-                return DropdownMenuItem<FoodCategory>(
-                  value: cat,
-                  child: Text(
-                    cat.value[0].toUpperCase() + cat.value.substring(1),
-                    style: TextStyle(fontSize: widget.sizes.fontSize),
-                  ),
-                );
-              }).toList(),
-              onChanged: (val) {
-                if (val != null) {
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          AppTextFormField(
+            key: const ValueKey('food-form-name-input'),
+            filled: true,
+            theme: widget.theme,
+            maxLines: 1,
+            fontSize: fontSize,
+            padding: widget.sizes.padding,
+            isLoading: widget.isLoading,
+            controller: _nameController,
+            labelText: 'Name',
+            hintText: 'Enter food name',
+            onChanged: (value) {
+              setState(() {
+                _data.name = value;
+              });
+            },
+            onSaved: (value) {
+              if (value != null) {
+                setState(() {
+                  _data.name = value;
+                });
+              }
+            },
+            validator: (val) => val == null || val.trim().isEmpty
+                ? 'Please enter a name'
+                : null,
+          ),
+          SizedBox(height: widget.sizes.spacing),
+          AppTextFormField(
+            key: const ValueKey('food-form-brand-input'),
+            filled: true,
+            theme: widget.theme,
+            maxLines: 1,
+            fontSize: fontSize,
+            padding: widget.sizes.padding,
+            isLoading: widget.isLoading,
+            controller: _brandController,
+            labelText: 'Brand',
+            hintText: 'Enter brand (optional)',
+            onChanged: (value) {
+              setState(() {
+                _data.brand = value;
+              });
+            },
+            onSaved: (value) {
+              if (value != null) {
+                setState(() {
+                  _data.brand = value;
+                });
+              }
+            },
+          ),
+          SizedBox(height: widget.sizes.spacing),
+          AppDropdown<FoodCategory>(
+            key: const ValueKey('food-form-category-dropdown'),
+            value: _data.category,
+            filled: true,
+            emptyLabel: 'Category',
+            showEmptyValue: false,
+            items: FoodCategory.values,
+            fontSize: fontSize,
+            padding: widget.sizes.padding,
+            labelBuilder: EnumDisplayNames.getFoodCategoryDisplayName,
+            onChanged: (value) {
+              if (value != null) {
+                setState(() {
+                  _data.category = value;
+                });
+              }
+            },
+            onSaved: (value) {
+              if (value != null) {
+                setState(() {
+                  _data.category = value;
+                });
+              }
+            },
+          ),
+          SizedBox(height: widget.sizes.spacing),
+          AppTextFormField(
+            key: const ValueKey('food-form-serving-size-input'),
+            filled: true,
+            theme: widget.theme,
+            maxLines: 1,
+            fontSize: fontSize,
+            padding: widget.sizes.padding,
+            isLoading: widget.isLoading,
+            controller: _servingSizeController,
+            keyboardType: TextInputType.number,
+            labelText: 'Serving Size (grams)',
+            hintText: 'Enter serving size',
+            onChanged: (value) {
+              setState(() {
+                _data.servingSizeBaseGrams = value;
+              });
+            },
+            onSaved: (value) {
+              if (value != null) {
+                setState(() {
+                  _data.servingSizeBaseGrams = value;
+                });
+              }
+            },
+            validator: (val) {
+              if (val == null || val.isEmpty) return 'Required';
+              final n = int.tryParse(val);
+              if (n == null || n <= 0) return 'Must be positive';
+              return null;
+            },
+          ),
+          SizedBox(height: widget.sizes.spacing),
+          Text(
+            'Nutrition per Serving',
+            style: TextStyle(fontSize: fontSize, fontWeight: FontWeight.w600),
+          ),
+          SizedBox(height: widget.sizes.spacing),
+          ResponsiveFields(
+            sizes: widget.sizes,
+            children: [
+              AppTextFormField(
+                key: const ValueKey('food-form-calories-input'),
+                filled: true,
+                theme: widget.theme,
+                maxLines: 1,
+                fontSize: fontSize,
+                padding: widget.sizes.padding,
+                isLoading: widget.isLoading,
+                controller: _caloriesController,
+                keyboardType: TextInputType.number,
+                labelText: 'Calories (kcal)',
+                onChanged: (value) {
                   setState(() {
-                    _selectedCategory = val;
+                    _data.caloriesBase = value;
                   });
-                }
-              },
-            ),
-            SizedBox(height: widget.sizes.spacing),
-            AppTextFormField(
-              theme: widget.theme,
-              fontSize: widget.sizes.fontSize,
-              padding: widget.sizes.padding,
-              isLoading: widget.isLoading,
-              key: const ValueKey('food-form-serving-size-input'),
-              controller: _servingSizeController,
-              keyboardType: TextInputType.number,
-              labelText: 'Serving Size (grams) *',
-              validator: (val) {
-                if (val == null || val.isEmpty) return 'Required';
-                final n = int.tryParse(val);
-                if (n == null || n <= 0) return 'Must be positive';
-                return null;
-              },
-            ),
-            SizedBox(height: widget.sizes.spacing),
-            Text(
-              'Nutrition per Serving',
-              style: TextStyle(
-                fontSize: widget.sizes.subtitleFontSize,
-                fontWeight: FontWeight.bold,
+                },
+                onSaved: (value) {
+                  if (value != null) {
+                    setState(() {
+                      _data.caloriesBase = value;
+                    });
+                  }
+                },
+                validator: (v) => v == null || v.isEmpty ? 'Required' : null,
+              ),
+              AppTextFormField(
+                key: const ValueKey('food-form-protein-input'),
+                filled: true,
+                theme: widget.theme,
+                maxLines: 1,
+                fontSize: fontSize,
+                padding: widget.sizes.padding,
+                isLoading: widget.isLoading,
+                controller: _proteinController,
+                keyboardType: TextInputType.number,
+                labelText: 'Protein (g)',
+                onChanged: (value) {
+                  setState(() {
+                    _data.proteinBase = value;
+                  });
+                },
+                onSaved: (value) {
+                  if (value != null) {
+                    setState(() {
+                      _data.proteinBase = value;
+                    });
+                  }
+                },
+                validator: (v) => v == null || v.isEmpty ? 'Required' : null,
+              ),
+            ],
+          ),
+          SizedBox(height: widget.sizes.spacing),
+          ResponsiveFields(
+            sizes: widget.sizes,
+            children: [
+              AppTextFormField(
+                key: const ValueKey('food-form-carbs-input'),
+                filled: true,
+                theme: widget.theme,
+                maxLines: 1,
+                fontSize: fontSize,
+                padding: widget.sizes.padding,
+                isLoading: widget.isLoading,
+                controller: _carbsController,
+                keyboardType: TextInputType.number,
+                labelText: 'Carbs (g)',
+                onChanged: (value) {
+                  setState(() {
+                    _data.carbsBase = value;
+                  });
+                },
+                onSaved: (value) {
+                  if (value != null) {
+                    setState(() {
+                      _data.carbsBase = value;
+                    });
+                  }
+                },
+                validator: (v) => v == null || v.isEmpty ? 'Required' : null,
+              ),
+              AppTextFormField(
+                key: const ValueKey('food-form-fat-input'),
+                filled: true,
+                theme: widget.theme,
+                maxLines: 1,
+                fontSize: fontSize,
+                padding: widget.sizes.padding,
+                isLoading: widget.isLoading,
+                controller: _fatController,
+                keyboardType: TextInputType.number,
+                labelText: 'Fat (g)',
+                onChanged: (value) {
+                  setState(() {
+                    _data.fatBase = value;
+                  });
+                },
+                onSaved: (value) {
+                  if (value != null) {
+                    setState(() {
+                      _data.fatBase = value;
+                    });
+                  }
+                },
+                validator: (v) => v == null || v.isEmpty ? 'Required' : null,
+              ),
+            ],
+          ),
+          SizedBox(height: widget.sizes.spacing),
+          ResponsiveFields(
+            sizes: widget.sizes,
+            children: [
+              AppTextFormField(
+                key: const ValueKey('food-form-fiber-input'),
+                filled: true,
+                theme: widget.theme,
+                maxLines: 1,
+                fontSize: fontSize,
+                padding: widget.sizes.padding,
+                isLoading: widget.isLoading,
+                controller: _fiberController,
+                keyboardType: TextInputType.number,
+                labelText: 'Fiber (g)',
+                onChanged: (value) {
+                  setState(() {
+                    _data.fiberBase = value;
+                  });
+                },
+                onSaved: (value) {
+                  if (value != null) {
+                    setState(() {
+                      _data.fiberBase = value;
+                    });
+                  }
+                },
+              ),
+              AppTextFormField(
+                key: const ValueKey('food-form-sodium-input'),
+                filled: true,
+                theme: widget.theme,
+                maxLines: 1,
+                fontSize: fontSize,
+                padding: widget.sizes.padding,
+                isLoading: widget.isLoading,
+                controller: _sodiumController,
+                keyboardType: TextInputType.number,
+                labelText: 'Sodium (mg)',
+                onChanged: (value) {
+                  setState(() {
+                    _data.sodiumBase = value;
+                  });
+                },
+                onSaved: (value) {
+                  if (value != null) {
+                    setState(() {
+                      _data.sodiumBase = value;
+                    });
+                  }
+                },
+              ),
+            ],
+          ),
+          SizedBox(height: widget.sizes.spacing),
+          Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: widget.sizes.spacing / 2,
+            runSpacing: widget.sizes.spacing / 2,
+            children: [
+              Text(
+                'Portions',
+                style: TextStyle(
+                  fontSize: fontSize,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              TextButton.icon(
+                key: const ValueKey('food-form-add-portion-btn'),
+                icon: Icon(Icons.add, size: widget.sizes.buttonIconSize),
+                label: Text(
+                  'Add Portion',
+                  style: TextStyle(fontSize: fontSize),
+                ),
+                onPressed: _addPortion,
+              ),
+            ],
+          ),
+          if (_portionRows.isEmpty)
+            Padding(
+              padding: EdgeInsets.symmetric(vertical: widget.sizes.padding),
+              child: Text(
+                'No additional portions defined. Default serving size will be used.',
+                style: TextStyle(fontSize: fontSize * 0.9, color: Colors.grey),
               ),
             ),
-            SizedBox(height: widget.sizes.spacing / 2),
-            ResponsiveFields(
-              sizes: widget.sizes,
-              children: [
-                AppTextFormField(
-                  theme: widget.theme,
-                  fontSize: widget.sizes.fontSize,
-                  padding: widget.sizes.padding,
-                  isLoading: widget.isLoading,
-                  key: const ValueKey('food-form-calories-input'),
-                  controller: _caloriesController,
-                  keyboardType: TextInputType.number,
-                  labelText: 'Calories (kcal) *',
-                  validator: (v) => v == null || v.isEmpty ? 'Required' : null,
-                ),
-                AppTextFormField(
-                  theme: widget.theme,
-                  fontSize: widget.sizes.fontSize,
-                  padding: widget.sizes.padding,
-                  isLoading: widget.isLoading,
-                  key: const ValueKey('food-form-protein-input'),
-                  controller: _proteinController,
-                  keyboardType: TextInputType.number,
-                  labelText: 'Protein (g) *',
-                  validator: (v) => v == null || v.isEmpty ? 'Required' : null,
-                ),
-              ],
-            ),
-            SizedBox(height: widget.sizes.spacing),
-            ResponsiveFields(
-              sizes: widget.sizes,
-              children: [
-                AppTextFormField(
-                  theme: widget.theme,
-                  fontSize: widget.sizes.fontSize,
-                  padding: widget.sizes.padding,
-                  isLoading: widget.isLoading,
-                  key: const ValueKey('food-form-carbs-input'),
-                  controller: _carbsController,
-                  keyboardType: TextInputType.number,
-                  labelText: 'Carbs (g) *',
-                  validator: (v) => v == null || v.isEmpty ? 'Required' : null,
-                ),
-                AppTextFormField(
-                  theme: widget.theme,
-                  fontSize: widget.sizes.fontSize,
-                  padding: widget.sizes.padding,
-                  isLoading: widget.isLoading,
-                  key: const ValueKey('food-form-fat-input'),
-                  controller: _fatController,
-                  keyboardType: TextInputType.number,
-                  labelText: 'Fat (g) *',
-                  validator: (v) => v == null || v.isEmpty ? 'Required' : null,
-                ),
-              ],
-            ),
-            SizedBox(height: widget.sizes.spacing),
-            ResponsiveFields(
-              sizes: widget.sizes,
-              children: [
-                AppTextFormField(
-                  theme: widget.theme,
-                  fontSize: widget.sizes.fontSize,
-                  padding: widget.sizes.padding,
-                  isLoading: widget.isLoading,
-                  key: const ValueKey('food-form-fiber-input'),
-                  controller: _fiberController,
-                  keyboardType: TextInputType.number,
-                  labelText: 'Fiber (g)',
-                ),
-                AppTextFormField(
-                  theme: widget.theme,
-                  fontSize: widget.sizes.fontSize,
-                  padding: widget.sizes.padding,
-                  isLoading: widget.isLoading,
-                  key: const ValueKey('food-form-sodium-input'),
-                  controller: _sodiumController,
-                  keyboardType: TextInputType.number,
-                  labelText: 'Sodium (mg)',
-                ),
-              ],
-            ),
-            SizedBox(height: widget.sizes.spacing * 1.5),
-            Wrap(
-              alignment: WrapAlignment.spaceBetween,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              spacing: widget.sizes.spacing / 2,
-              runSpacing: widget.sizes.spacing / 2,
-              children: [
-                Text(
-                  'Portions',
-                  style: TextStyle(
-                    fontSize: widget.sizes.subtitleFontSize,
-                    fontWeight: FontWeight.bold,
+          ..._portionRows.asMap().entries.map((entry) {
+            final idx = entry.key;
+            final row = entry.value;
+            return Padding(
+              padding: EdgeInsets.only(bottom: widget.sizes.padding / 2),
+              child: ResponsiveFields(
+                sizes: widget.sizes,
+                children: [
+                  AppTextFormField(
+                    filled: true,
+                    theme: widget.theme,
+                    maxLines: 1,
+                    fontSize: fontSize,
+                    padding: widget.sizes.padding,
+                    isLoading: widget.isLoading,
+                    controller: row.nameController,
+                    labelText: 'Portion Name',
+                    hintText: 'e.g. 1 slice, 1 cup',
                   ),
-                ),
-                TextButton.icon(
-                  key: const ValueKey('food-form-add-portion-btn'),
-                  icon: Icon(Icons.add, size: widget.sizes.buttonIconSize),
-                  label: Text(
-                    'Add Portion',
-                    style: TextStyle(fontSize: widget.sizes.fontSize),
+                  AppTextFormField(
+                    filled: true,
+                    theme: widget.theme,
+                    maxLines: 1,
+                    fontSize: fontSize,
+                    padding: widget.sizes.padding,
+                    isLoading: widget.isLoading,
+                    controller: row.gramsController,
+                    keyboardType: TextInputType.number,
+                    labelText: 'Grams',
                   ),
-                  onPressed: _addPortion,
-                ),
-              ],
-            ),
-            if (_portionRows.isEmpty)
-              Padding(
-                padding: EdgeInsets.symmetric(vertical: widget.sizes.padding),
-                child: Text(
-                  'No additional portions defined. Default serving size will be used.',
-                  style: TextStyle(
-                    fontSize: widget.sizes.fontSize * 0.9,
-                    color: Colors.grey,
+                  IconButton(
+                    icon: Icon(
+                      Icons.remove_circle_outline,
+                      color: Colors.red,
+                      size: widget.sizes.buttonIconSize,
+                    ),
+                    onPressed: () => _removePortion(idx),
                   ),
-                ),
+                ],
               ),
-            ..._portionRows.asMap().entries.map((entry) {
-              final idx = entry.key;
-              final row = entry.value;
-              return Padding(
-                padding: EdgeInsets.only(bottom: widget.sizes.padding / 2),
-                child: ResponsiveFields(
-                  sizes: widget.sizes,
-                  children: [
-                    AppTextFormField(
-                      theme: widget.theme,
-                      fontSize: widget.sizes.fontSize,
-                      padding: widget.sizes.padding,
-                      isLoading: widget.isLoading,
-                      controller: row.nameController,
-                      labelText: 'Portion Name',
-                      hintText: 'e.g. 1 slice, 1 cup',
-                    ),
-                    AppTextFormField(
-                      theme: widget.theme,
-                      fontSize: widget.sizes.fontSize,
-                      padding: widget.sizes.padding,
-                      isLoading: widget.isLoading,
-                      controller: row.gramsController,
-                      keyboardType: TextInputType.number,
-                      labelText: 'Grams',
-                    ),
-                    IconButton(
-                      icon: Icon(
-                        Icons.remove_circle_outline,
-                        color: Colors.red,
-                        size: widget.sizes.buttonIconSize,
-                      ),
-                      onPressed: () => _removePortion(idx),
-                    ),
-                  ],
-                ),
-              );
-            }),
-            SizedBox(height: widget.sizes.spacing * 2),
-            ElevatedButton(
-              key: const ValueKey('food-form-save-btn'),
-              onPressed: widget.isLoading ? null : _submit,
-              child: widget.isLoading
-                  ? const CircularProgressIndicator.adaptive()
-                  : Text(
-                      widget.initialFood != null
-                          ? 'Update Food'
-                          : 'Create Food',
-                      style: TextStyle(fontSize: widget.sizes.fontSize),
-                    ),
-            ),
-          ],
-        ),
+            );
+          }),
+          SizedBox(height: widget.sizes.spacing),
+          AppElevatedButton(
+            key: const ValueKey('food-form-save-btn'),
+            theme: widget.theme,
+            isLoading: widget.isLoading,
+            sizes: widget.sizes,
+            onPressed: _submit,
+            label: widget.initialFood != null ? 'Update Food' : 'Create Food',
+            icon: Icons.save,
+          ),
+        ],
       ),
     );
   }
+}
+
+final class _FormData {
+  String name;
+  String brand;
+  FoodCategory category;
+  String servingSizeBaseGrams;
+  String caloriesBase;
+  String proteinBase;
+  String carbsBase;
+  String fatBase;
+  String fiberBase;
+  String sodiumBase;
+  bool isFavorite;
+
+  _FormData({
+    required this.name,
+    required this.brand,
+    required this.category,
+    required this.servingSizeBaseGrams,
+    required this.caloriesBase,
+    required this.proteinBase,
+    required this.carbsBase,
+    required this.fatBase,
+    required this.fiberBase,
+    required this.sodiumBase,
+    required this.isFavorite,
+  });
 }
