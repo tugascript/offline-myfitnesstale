@@ -23,6 +23,8 @@ import 'package:myfitnesstale/src/data/models/sqlite/workout_plan_model.dart';
 
 import '../../support/test_database.dart';
 
+import 'package:myfitnesstale/src/data/repositories/workout_plans/workout_plan_repository.dart';
+
 void main() {
   final testDatabase = TestDatabase();
 
@@ -48,7 +50,9 @@ void main() {
       await db.insert(WorkoutPlan.table, plan.toMap());
     }
 
-    final cubit = WorkoutPlanCubit();
+    final cubit = WorkoutPlanCubit(
+      workoutPlanRepository: WorkoutPlanRepository.create(),
+    );
     addTearDown(cubit.close);
     await cubit.getWorkoutPlans(
       difficulty: Difficulty.beginner,

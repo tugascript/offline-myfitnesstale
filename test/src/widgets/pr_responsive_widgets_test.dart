@@ -70,6 +70,14 @@ import 'package:myfitnesstale/src/ui/macros/widgets/macro_tracker_month_widget.d
 import 'package:myfitnesstale/src/ui/macros/widgets/macro_tracker_week_widget.dart';
 import 'package:myfitnesstale/src/ui/meal_plans/widgets/meal_plan_form_widget.dart';
 import 'package:myfitnesstale/src/ui/recipes/widgets/recipe_form_widget.dart';
+import 'package:myfitnesstale/src/data/repositories/foods/food_repository.dart';
+import 'package:myfitnesstale/src/data/repositories/recipes/recipe_repository.dart';
+import 'package:myfitnesstale/src/data/repositories/macros/macro_tracking_repository.dart';
+import 'package:myfitnesstale/src/data/repositories/meal_plans/meal_plan_repository.dart';
+import 'package:myfitnesstale/src/data/repositories/meal_plans/meal_plan_record_repository.dart';
+import 'package:myfitnesstale/src/data/repositories/workout_plans/workout_plan_repository.dart';
+import 'package:myfitnesstale/src/data/repositories/workout_plans/workout_plan_record_repository.dart';
+import 'package:myfitnesstale/src/data/repositories/profile/profile_repository.dart';
 
 const _food = FoodDto(
   id: 1,
@@ -213,7 +221,7 @@ final _strengthGoal = StrengthGoalDto(
 );
 
 class _Foods extends FoodCubit {
-  _Foods() {
+  _Foods() : super(foodRepository: FoodRepository.create()) {
     emit(state.copyWith(foods: [_food], selectedFood: const Nullable(_food)));
   }
 
@@ -231,7 +239,7 @@ class _Foods extends FoodCubit {
 }
 
 class _Recipes extends RecipeCubit {
-  _Recipes() {
+  _Recipes() : super(recipeRepository: RecipeRepository.create()) {
     emit(
       state.copyWith(
         recipes: [_recipe],
@@ -253,7 +261,7 @@ class _Recipes extends RecipeCubit {
 }
 
 class _Exercises extends ExerciseCubit {
-  _Exercises() : super(ExerciseRepository.create()) {
+  _Exercises() : super(exerciseRepository: ExerciseRepository.create()) {
     emit(
       state.copyWith(
         exercises: [
@@ -271,7 +279,8 @@ class _Exercises extends ExerciseCubit {
 }
 
 class _Goals extends ExerciseRecordCubit {
-  _Goals() : super(ExerciseRecordRepository.create()) {
+  _Goals()
+    : super(exerciseRecordRepository: ExerciseRecordRepository.create()) {
     emit(
       state.copyWith(
         activeStrengthGoal: Nullable(_strengthGoal),
@@ -295,7 +304,7 @@ class _Goals extends ExerciseRecordCubit {
 }
 
 class _Macros extends MacroTrackingCubit {
-  _Macros() {
+  _Macros() : super(macroTrackingRepository: MacroTrackingRepository.create()) {
     emit(
       state.copyWith(
         activeGoal: const Nullable(_macroGoal),
@@ -344,7 +353,7 @@ class _Macros extends MacroTrackingCubit {
 }
 
 class _Plans extends MealPlanCubit {
-  _Plans() {
+  _Plans() : super(mealPlanRepository: MealPlanRepository.create()) {
     emit(
       state.copyWith(
         mealPlans: [_plan],
@@ -366,7 +375,8 @@ class _Plans extends MealPlanCubit {
 }
 
 class _Records extends MealPlanRecordCubit {
-  _Records() {
+  _Records()
+    : super(mealPlanRecordRepository: MealPlanRecordRepository.create()) {
     emit(
       state.copyWith(
         activeRecord: Nullable(
@@ -480,9 +490,17 @@ void main() {
                 BlocProvider<RecipeCubit>(create: (_) => _Recipes()),
                 BlocProvider<ExerciseCubit>(create: (_) => _Exercises()),
                 BlocProvider<ExerciseRecordCubit>(create: (_) => _Goals()),
-                BlocProvider<ProfileCubit>(create: (_) => ProfileCubit()),
+                BlocProvider<ProfileCubit>(
+                  create: (_) => ProfileCubit(
+                    profileRepository: ProfileRepository.create(),
+                  ),
+                ),
                 BlocProvider<WorkoutPlanRecordCubit>(
-                  create: (_) => WorkoutPlanRecordCubit(),
+                  create: (_) => WorkoutPlanRecordCubit(
+                    workoutPlanRecordRepository:
+                        WorkoutPlanRecordRepository.create(),
+                    workoutPlanRepository: WorkoutPlanRepository.create(),
+                  ),
                 ),
                 BlocProvider<MacroTrackingCubit>(create: (_) => _Macros()),
                 BlocProvider<MealPlanCubit>(create: (_) => _Plans()),

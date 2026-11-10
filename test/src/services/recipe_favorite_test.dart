@@ -122,7 +122,7 @@ void main() {
         ).toMap(),
       );
 
-      final cubit = RecipeCubit();
+      final cubit = RecipeCubit(recipeRepository: RecipeRepository.create());
       addTearDown(cubit.close);
 
       await cubit.getRecipes();

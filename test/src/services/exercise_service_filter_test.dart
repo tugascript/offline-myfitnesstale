@@ -136,8 +136,12 @@ void main() {
   );
 
   test('equipment, exercise, and exercise-record PUT replace fields and clear omitted nullable values', () async {
-    final exerciseCubit = ExerciseCubit(ExerciseRepository.create());
-    final recordCubit = ExerciseRecordCubit(ExerciseRecordRepository.create());
+    final exerciseCubit = ExerciseCubit(
+      exerciseRepository: ExerciseRepository.create(),
+    );
+    final recordCubit = ExerciseRecordCubit(
+      exerciseRecordRepository: ExerciseRecordRepository.create(),
+    );
     addTearDown(exerciseCubit.close);
     addTearDown(recordCubit.close);
 

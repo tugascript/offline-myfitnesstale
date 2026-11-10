@@ -33,14 +33,12 @@ class ProfileCubit extends Cubit<ProfileState> {
   final Logger _logger = Logger("Profile Cubit");
 
   ProfileCubit({
-    ProfileRepository? profileRepository,
+    required ProfileRepository profileRepository,
     OnboardingRepository? onboardingService,
-  }) : _profileService = profileRepository ?? ProfileRepository.create(),
+  }) : _profileService = profileRepository,
        _onboardingService =
            onboardingService ??
-           OnboardingRepository(
-             profileService: profileRepository ?? ProfileRepository.create(),
-           ),
+           OnboardingRepository(profileService: profileRepository),
        super(ProfileState.initial());
 
   Future<void> loadInitialData() async {

@@ -30,13 +30,17 @@ import 'package:myfitnesstale/src/data/repositories/profile/dtos/reminders_confi
 import 'package:myfitnesstale/src/data/repositories/profile/dtos/system_dto.dart';
 import 'package:myfitnesstale/src/data/repositories/onboarding/onboarding_repository.dart';
 import 'package:myfitnesstale/src/ui/home/screens/profile/onboarding_screen.dart';
+import 'package:myfitnesstale/src/data/repositories/profile/profile_repository.dart';
 
 void main() {
   testWidgets('shows persistent rollback feedback and retries unchanged form', (
     tester,
   ) async {
     final service = _OnboardingService([_failure, _failure]);
-    final cubit = ProfileCubit(onboardingService: service);
+    final cubit = ProfileCubit(
+      profileRepository: ProfileRepository.create(),
+      onboardingService: service,
+    );
     addTearDown(cubit.close);
 
     await tester.pumpWidget(
@@ -71,7 +75,10 @@ void main() {
 
   testWidgets('navigates home only after onboarding succeeds', (tester) async {
     final service = _OnboardingService([ok(_success)]);
-    final cubit = ProfileCubit(onboardingService: service);
+    final cubit = ProfileCubit(
+      profileRepository: ProfileRepository.create(),
+      onboardingService: service,
+    );
     addTearDown(cubit.close);
     final router = GoRouter(
       initialLocation: Routes.onboarding.name,

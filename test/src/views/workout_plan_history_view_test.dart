@@ -29,9 +29,15 @@ import 'package:myfitnesstale/src/routing/routes.dart';
 import 'package:myfitnesstale/src/data/repositories/workout_plans/dtos/workout_plan_dto.dart';
 import 'package:myfitnesstale/src/data/repositories/workout_plans/dtos/workout_plan_record_dto.dart';
 import 'package:myfitnesstale/src/ui/workout_plans/screens/workout_plan_history_screen.dart';
+import 'package:myfitnesstale/src/data/repositories/workout_plans/workout_plan_repository.dart';
+import 'package:myfitnesstale/src/data/repositories/workout_plans/workout_plan_record_repository.dart';
 
 class _WorkoutPlanRecordCubit extends WorkoutPlanRecordCubit {
-  _WorkoutPlanRecordCubit(WorkoutPlanRecordState initialState) {
+  _WorkoutPlanRecordCubit(WorkoutPlanRecordState initialState)
+    : super(
+        workoutPlanRecordRepository: WorkoutPlanRecordRepository.create(),
+        workoutPlanRepository: WorkoutPlanRepository.create(),
+      ) {
     emit(initialState);
   }
 

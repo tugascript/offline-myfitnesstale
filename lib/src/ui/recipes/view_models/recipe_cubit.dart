@@ -31,8 +31,8 @@ class RecipeCubit extends Cubit<RecipeState> {
   final RecipeRepository _recipeService;
   final Logger _logger = Logger('RecipeCubit');
 
-  RecipeCubit([RecipeRepository? recipeService])
-    : _recipeService = recipeService ?? RecipeRepository.create(),
+  RecipeCubit({required RecipeRepository recipeRepository})
+    : _recipeService = recipeRepository,
       super(RecipeState.initial());
 
   Future<void> getRecipes({

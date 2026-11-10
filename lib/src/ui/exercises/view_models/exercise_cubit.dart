@@ -29,11 +29,13 @@ import '../../../utils/nullable.dart';
 import './states/exercise_state.dart';
 
 class ExerciseCubit extends Cubit<ExerciseState> {
-  final ExerciseRepository _exerciseRepository;
+  final ExerciseRepository _exerciseService;
 
   final Logger _logger = Logger("ExerciseCubit");
 
-  ExerciseCubit(this._exerciseRepository) : super(ExerciseState.initial());
+  ExerciseCubit({required ExerciseRepository exerciseRepository})
+    : _exerciseService = exerciseRepository,
+      super(ExerciseState.initial());
 
   Future<void> getExercises({
     String? name,
@@ -49,7 +51,7 @@ class ExerciseCubit extends Cubit<ExerciseState> {
 
     emit(state.copyWith(isLoading: true));
 
-    final result = await _exerciseRepository.getExercises(
+    final result = await _exerciseService.getExercises(
       name: name,
       muscleGroup: muscleGroup,
       isFavorite: isFavourite,
@@ -113,7 +115,7 @@ class ExerciseCubit extends Cubit<ExerciseState> {
     _logger.info('getExercise: getting exercise by id: $id');
     emit(state.copyWith(isLoading: true));
 
-    final result = await _exerciseRepository.getExercise(id);
+    final result = await _exerciseService.getExercise(id);
     if (result.isErr()) {
       final error = result.error;
       _logger.warning("Failed to get exercise, error: $error");
@@ -164,7 +166,7 @@ class ExerciseCubit extends Cubit<ExerciseState> {
   ]) async {
     _logger.info('createExercise: creating exercise');
     emit(state.copyWith(isLoading: true));
-    final result = await _exerciseRepository.createExercise(input, createdBy);
+    final result = await _exerciseService.createExercise(input, createdBy);
 
     if (result.isErr()) {
       final error = result.error;
@@ -213,7 +215,7 @@ class ExerciseCubit extends Cubit<ExerciseState> {
   Future<void> updateExercise(int id, ExerciseInput input) async {
     _logger.info('updateExercise: updating exercise by id: $id');
     emit(state.copyWith(isLoading: true));
-    final result = await _exerciseRepository.updateExercise(id, input);
+    final result = await _exerciseService.updateExercise(id, input);
 
     if (result.isErr()) {
       final error = result.error;
@@ -275,7 +277,7 @@ class ExerciseCubit extends Cubit<ExerciseState> {
       'updateExerciseFavorite: updating exercise favorite by id: $id',
     );
     emit(state.copyWith(isLoading: true));
-    final result = await _exerciseRepository.updateExerciseFavorite(
+    final result = await _exerciseService.updateExerciseFavorite(
       id,
       isFavorite,
     );
@@ -324,7 +326,7 @@ class ExerciseCubit extends Cubit<ExerciseState> {
   Future<void> deleteExercise(int id) async {
     _logger.info('deleteExercise: deleting exercise by id: $id');
     emit(state.copyWith(isLoading: true));
-    final result = await _exerciseRepository.deleteExercise(id);
+    final result = await _exerciseService.deleteExercise(id);
     if (result.isErr()) {
       final error = result.error;
       _logger.warning("Failed to delete exercise, error: $error");
@@ -381,7 +383,7 @@ class ExerciseCubit extends Cubit<ExerciseState> {
     _logger.info('getEquipments: fetching equipments');
     emit(state.copyWith(isLoading: true));
 
-    final result = await _exerciseRepository.getEquipments(
+    final result = await _exerciseService.getEquipments(
       name: name,
       limit: limit,
       offset: offset,
@@ -426,7 +428,7 @@ class ExerciseCubit extends Cubit<ExerciseState> {
     _logger.info('getEquipment: getting equipment by id: $id');
     emit(state.copyWith(isLoading: true));
 
-    final result = await _exerciseRepository.getEquipment(id);
+    final result = await _exerciseService.getEquipment(id);
     if (result.isErr()) {
       final error = result.error;
       _logger.warning("Failed to get equipment, error: $error");
@@ -462,7 +464,7 @@ class ExerciseCubit extends Cubit<ExerciseState> {
     }
 
     final equipment = result.value;
-    final exercisesResult = await _exerciseRepository.getExercisesByEquipmentId(
+    final exercisesResult = await _exerciseService.getExercisesByEquipmentId(
       id,
     );
     if (exercisesResult.isErr()) {
@@ -504,7 +506,7 @@ class ExerciseCubit extends Cubit<ExerciseState> {
     _logger.info('createEquipment: creating equipment');
     emit(state.copyWith(isLoading: true));
 
-    final result = await _exerciseRepository.createEquipment(input, createdBy);
+    final result = await _exerciseService.createEquipment(input, createdBy);
     if (result.isErr()) {
       final error = result.error;
       _logger.warning('Failed to create equipment, error: $error');
@@ -527,7 +529,7 @@ class ExerciseCubit extends Cubit<ExerciseState> {
     }
 
     final pagination = state.equipmentPagination;
-    final equipmentsResult = await _exerciseRepository.getEquipments(
+    final equipmentsResult = await _exerciseService.getEquipments(
       name: pagination.name,
       limit: pagination.limit,
       offset: 0,
@@ -573,7 +575,7 @@ class ExerciseCubit extends Cubit<ExerciseState> {
     _logger.info('deleteEquipment: deleting equipment');
     emit(state.copyWith(isLoading: true));
 
-    final result = await _exerciseRepository.deleteEquipment(id);
+    final result = await _exerciseService.deleteEquipment(id);
     if (result.isErr()) {
       final error = result.error;
       _logger.warning('Failed to delete equipment, error: $error');
@@ -627,7 +629,7 @@ class ExerciseCubit extends Cubit<ExerciseState> {
     _logger.info('updateEquipment: updating equipment');
     emit(state.copyWith(isLoading: true));
 
-    final result = await _exerciseRepository.updateEquipment(id, input);
+    final result = await _exerciseService.updateEquipment(id, input);
     if (result.isErr()) {
       final error = result.error;
       _logger.warning('Failed to update equipment, error: $error');
@@ -662,7 +664,7 @@ class ExerciseCubit extends Cubit<ExerciseState> {
       }
     }
 
-    final exercisesResult = await _exerciseRepository.getExercisesByEquipmentId(
+    final exercisesResult = await _exerciseService.getExercisesByEquipmentId(
       id,
     );
     if (exercisesResult.isErr()) {
@@ -683,7 +685,7 @@ class ExerciseCubit extends Cubit<ExerciseState> {
     }
 
     final pagination = state.equipmentPagination;
-    final equipmentsResult = await _exerciseRepository.getEquipments(
+    final equipmentsResult = await _exerciseService.getEquipments(
       name: pagination.name,
       limit: pagination.limit,
       offset: 0,
@@ -730,7 +732,7 @@ class ExerciseCubit extends Cubit<ExerciseState> {
 
   Future<void> getSelectionEquipments() async {
     emit(state.copyWith(isLoading: true));
-    final equipmentsResult = await _exerciseRepository.getAllEquipments();
+    final equipmentsResult = await _exerciseService.getAllEquipments();
     if (equipmentsResult.isErr()) {
       final error = equipmentsResult.error;
       _logger.warning("Failed to get equipments, error: $error");
@@ -768,7 +770,7 @@ class ExerciseCubit extends Cubit<ExerciseState> {
     bool isFavorite = false,
   }) async {
     emit(state.copyWith(isLoading: true));
-    final exercisesResult = await _exerciseRepository.getAllExercises(
+    final exercisesResult = await _exerciseService.getAllExercises(
       muscleGroup: muscleGroup,
       name: name,
       isFavorite: isFavorite,

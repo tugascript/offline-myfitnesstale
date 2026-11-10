@@ -31,9 +31,10 @@ class MealPlanRecordCubit extends Cubit<MealPlanRecordState> {
   final MealPlanRecordRepository _recordService;
   final Logger _logger = Logger('MealPlanRecordCubit');
 
-  MealPlanRecordCubit([MealPlanRecordRepository? recordService])
-    : _recordService = recordService ?? MealPlanRecordRepository.create(),
-      super(MealPlanRecordState.initial());
+  MealPlanRecordCubit({
+    required MealPlanRecordRepository mealPlanRecordRepository,
+  }) : _recordService = mealPlanRecordRepository,
+       super(MealPlanRecordState.initial());
 
   Future<void> getActiveMealPlanRecord() async {
     _logger.info('Getting active meal plan record');

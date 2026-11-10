@@ -27,6 +27,7 @@ import 'package:myfitnesstale/src/data/repositories/profile/dtos/profile_dto.dar
 import 'package:myfitnesstale/src/data/repositories/profile/dtos/reminders_config_dto.dart';
 import 'package:myfitnesstale/src/data/repositories/profile/dtos/system_dto.dart';
 import 'package:myfitnesstale/src/data/repositories/onboarding/onboarding_repository.dart';
+import 'package:myfitnesstale/src/data/repositories/profile/profile_repository.dart';
 
 void main() {
   test(
@@ -35,7 +36,10 @@ void main() {
       final first = Completer<OnboardingServiceResult>();
       final retry = Completer<OnboardingServiceResult>();
       final service = _OnboardingService([first.future, retry.future]);
-      final cubit = ProfileCubit(onboardingService: service);
+      final cubit = ProfileCubit(
+        profileRepository: ProfileRepository.create(),
+        onboardingService: service,
+      );
       addTearDown(cubit.close);
 
       final firstCall = cubit.onboardProfile(
@@ -88,7 +92,10 @@ void main() {
       'passes createWorkouts=$createWorkouts to the onboarding service',
       () async {
         final service = _OnboardingService([Future.value(ok(_success))]);
-        final cubit = ProfileCubit(onboardingService: service);
+        final cubit = ProfileCubit(
+          profileRepository: ProfileRepository.create(),
+          onboardingService: service,
+        );
         addTearDown(cubit.close);
 
         await cubit.onboardProfile(

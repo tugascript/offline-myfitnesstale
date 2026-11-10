@@ -31,8 +31,16 @@ import 'package:myfitnesstale/src/data/utils/enums.dart';
 import 'package:myfitnesstale/src/ui/workout_plans/screens/current_workout_plan_screen.dart';
 import 'package:myfitnesstale/src/ui/workout_plans/widgets/active/active_workout_plan_content.dart';
 import 'package:myfitnesstale/src/ui/workout_plans/widgets/active/active_workout_plan_dummy_data.dart';
+import 'package:myfitnesstale/src/data/repositories/workout_plans/workout_plan_repository.dart';
+import 'package:myfitnesstale/src/data/repositories/workout_plans/workout_plan_record_repository.dart';
 
 class _Cubit extends WorkoutPlanRecordCubit {
+  _Cubit()
+    : super(
+        workoutPlanRecordRepository: WorkoutPlanRecordRepository.create(),
+        workoutPlanRepository: WorkoutPlanRepository.create(),
+      );
+
   int loads = 0;
   WorkoutPlanRecordState nextState = WorkoutPlanRecordState.initial();
   Completer<void>? pending;

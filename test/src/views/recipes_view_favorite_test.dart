@@ -30,13 +30,15 @@ import 'package:myfitnesstale/src/ui/recipes/screens/recipes_screen.dart';
 import 'package:myfitnesstale/src/ui/core/widgets/favourite_checkbox.dart';
 import 'package:myfitnesstale/src/ui/core/widgets/search_favorite_form.dart';
 import 'package:myfitnesstale/src/ui/core/widgets/search_form_button.dart';
+import 'package:myfitnesstale/src/data/repositories/recipes/recipe_repository.dart';
 
 class _FakeRecipeCubit extends RecipeCubit {
   int? toggledRecipeId;
   String? lastSearch;
   bool? lastIsFavorite;
 
-  _FakeRecipeCubit(List<RecipeDto> recipes) {
+  _FakeRecipeCubit(List<RecipeDto> recipes)
+    : super(recipeRepository: RecipeRepository.create()) {
     emit(
       state.copyWith(
         recipes: recipes,

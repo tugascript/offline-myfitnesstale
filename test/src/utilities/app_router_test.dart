@@ -43,16 +43,22 @@ import 'package:myfitnesstale/src/ui/core/screens/not_found_screen.dart';
 import 'package:myfitnesstale/src/ui/home/screens/profile/reminder_preferences_screen.dart';
 import 'package:myfitnesstale/src/ui/workout_plans/screens/workout_plan_history_screen.dart';
 import 'package:myfitnesstale/src/ui/workouts/screens/workout_history_screen.dart';
+import 'package:myfitnesstale/src/data/repositories/workouts/workout_repository.dart';
+import 'package:myfitnesstale/src/data/repositories/workouts/workout_record_repository.dart';
+import 'package:myfitnesstale/src/data/repositories/workout_plans/workout_plan_repository.dart';
+import 'package:myfitnesstale/src/data/repositories/workout_plans/workout_plan_record_repository.dart';
+import 'package:myfitnesstale/src/data/repositories/profile/profile_repository.dart';
 
 class _ExerciseCubit extends ExerciseCubit {
-  _ExerciseCubit() : super(ExerciseRepository.create());
+  _ExerciseCubit() : super(exerciseRepository: ExerciseRepository.create());
 
   @override
   Future<void> getExercise(int id) async {}
 }
 
 class _ExerciseRecordCubit extends ExerciseRecordCubit {
-  _ExerciseRecordCubit() : super(ExerciseRecordRepository.create());
+  _ExerciseRecordCubit()
+    : super(exerciseRecordRepository: ExerciseRecordRepository.create());
 
   @override
   Future<void> getExerciseRecords({
@@ -66,7 +72,8 @@ class _ExerciseRecordCubit extends ExerciseRecordCubit {
 class _WorkoutCubit extends WorkoutCubit {
   final List<(int, int?)> calls = [];
 
-  _WorkoutCubit({WorkoutDto? selectedWorkout}) {
+  _WorkoutCubit({WorkoutDto? selectedWorkout})
+    : super(workoutRepository: WorkoutRepository.create()) {
     if (selectedWorkout != null) {
       emit(state.copyWith(selectedWorkout: Nullable(selectedWorkout)));
     }
@@ -79,6 +86,9 @@ class _WorkoutCubit extends WorkoutCubit {
 }
 
 class _WorkoutRecordCubit extends WorkoutRecordCubit {
+  _WorkoutRecordCubit()
+    : super(workoutRecordRepository: WorkoutRecordRepository.create());
+
   @override
   Future<void> getLatestWorkoutRecord([int? workoutId]) async {}
 
@@ -92,6 +102,12 @@ class _WorkoutRecordCubit extends WorkoutRecordCubit {
 }
 
 class _WorkoutPlanRecordCubit extends WorkoutPlanRecordCubit {
+  _WorkoutPlanRecordCubit()
+    : super(
+        workoutPlanRecordRepository: WorkoutPlanRecordRepository.create(),
+        workoutPlanRepository: WorkoutPlanRepository.create(),
+      );
+
   @override
   Future<void> getWorkoutPlanRecords({
     int? workoutPlanId,
@@ -102,7 +118,7 @@ class _WorkoutPlanRecordCubit extends WorkoutPlanRecordCubit {
 }
 
 class _ProfileCubit extends ProfileCubit {
-  _ProfileCubit() {
+  _ProfileCubit() : super(profileRepository: ProfileRepository.create()) {
     emit(
       ProfileState(
         profile: ProfileDto(

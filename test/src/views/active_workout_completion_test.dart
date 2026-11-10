@@ -23,8 +23,19 @@ import 'package:myfitnesstale/src/ui/workouts/view_models/active_workout_cubit.d
 import 'package:myfitnesstale/src/ui/home/view_models/profile_cubit.dart';
 import 'package:myfitnesstale/src/ui/workouts/screens/active_workout_screen.dart';
 import 'package:myfitnesstale/src/ui/workouts/widgets/details/complete_modal.dart';
+import 'package:myfitnesstale/src/data/repositories/workouts/workout_repository.dart';
+import 'package:myfitnesstale/src/data/repositories/workouts/workout_record_repository.dart';
+import 'package:myfitnesstale/src/data/repositories/workout_plans/workout_plan_record_repository.dart';
+import 'package:myfitnesstale/src/data/repositories/profile/profile_repository.dart';
 
 class _ActiveWorkoutCubit extends ActiveWorkoutCubit {
+  _ActiveWorkoutCubit()
+    : super(
+        workoutRepository: WorkoutRepository.create(),
+        workoutRecordRepository: WorkoutRecordRepository.create(),
+        workoutPlanRecordRepository: WorkoutPlanRecordRepository.create(),
+      );
+
   int completions = 0;
 
   @override
@@ -45,7 +56,9 @@ class _ActiveWorkoutCubit extends ActiveWorkoutCubit {
 void main() {
   testWidgets('manual completion requires confirmation', (tester) async {
     final cubit = _ActiveWorkoutCubit();
-    final profileCubit = ProfileCubit();
+    final profileCubit = ProfileCubit(
+      profileRepository: ProfileRepository.create(),
+    );
     addTearDown(cubit.close);
     addTearDown(profileCubit.close);
 

@@ -89,56 +89,65 @@ class MyApp extends StatelessWidget {
           lazy: false,
         ),
         BlocProvider<ExerciseCubit>(
-          create: (BuildContext context) => ExerciseCubit(exerciseRepository),
+          create: (BuildContext context) =>
+              ExerciseCubit(exerciseRepository: exerciseRepository),
         ),
         BlocProvider<ExerciseRecordCubit>(
-          create: (BuildContext context) =>
-              ExerciseRecordCubit(exerciseRecordRepository),
+          create: (BuildContext context) => ExerciseRecordCubit(
+            exerciseRecordRepository: exerciseRecordRepository,
+          ),
         ),
         BlocProvider<WeightRecordCubit>(
           create: (BuildContext context) =>
-              WeightRecordCubit(weightRecordRepository),
+              WeightRecordCubit(weightRecordRepository: weightRecordRepository),
         ),
         BlocProvider<WorkoutCubit>(
-          create: (BuildContext context) => WorkoutCubit(workoutRepository),
+          create: (BuildContext context) =>
+              WorkoutCubit(workoutRepository: workoutRepository),
         ),
         BlocProvider<WorkoutRecordCubit>(
-          create: (BuildContext context) =>
-              WorkoutRecordCubit(workoutRecordRepository),
+          create: (BuildContext context) => WorkoutRecordCubit(
+            workoutRecordRepository: workoutRecordRepository,
+          ),
         ),
         BlocProvider<WorkoutPlanCubit>(
           create: (BuildContext context) =>
-              WorkoutPlanCubit(workoutPlanRepository),
+              WorkoutPlanCubit(workoutPlanRepository: workoutPlanRepository),
         ),
         BlocProvider<WorkoutPlanRecordCubit>(
           create: (BuildContext context) => WorkoutPlanRecordCubit(
-            workoutPlanRecordRepository,
-            workoutPlanRepository,
+            workoutPlanRecordRepository: workoutPlanRecordRepository,
+            workoutPlanRepository: workoutPlanRepository,
           ),
         ),
         BlocProvider<ActiveWorkoutCubit>(
           create: (BuildContext context) => ActiveWorkoutCubit(
-            workoutRepository,
-            workoutRecordRepository,
-            workoutPlanRecordRepository,
+            workoutRepository: workoutRepository,
+            workoutRecordRepository: workoutRecordRepository,
+            workoutPlanRecordRepository: workoutPlanRecordRepository,
           ),
         ),
         BlocProvider<FoodCubit>(
-          create: (BuildContext context) => FoodCubit(foodRepository),
+          create: (BuildContext context) =>
+              FoodCubit(foodRepository: foodRepository),
         ),
         BlocProvider<RecipeCubit>(
-          create: (BuildContext context) => RecipeCubit(recipeRepository),
+          create: (BuildContext context) =>
+              RecipeCubit(recipeRepository: recipeRepository),
         ),
         BlocProvider<MacroTrackingCubit>(
-          create: (BuildContext context) =>
-              MacroTrackingCubit(macroTrackingRepository),
+          create: (BuildContext context) => MacroTrackingCubit(
+            macroTrackingRepository: macroTrackingRepository,
+          ),
         ),
         BlocProvider<MealPlanCubit>(
-          create: (BuildContext context) => MealPlanCubit(mealPlanRepository),
+          create: (BuildContext context) =>
+              MealPlanCubit(mealPlanRepository: mealPlanRepository),
         ),
         BlocProvider<MealPlanRecordCubit>(
-          create: (BuildContext context) =>
-              MealPlanRecordCubit(mealPlanRecordRepository),
+          create: (BuildContext context) => MealPlanRecordCubit(
+            mealPlanRecordRepository: mealPlanRecordRepository,
+          ),
         ),
       ],
       child: BlocBuilder<ProfileCubit, ProfileState>(

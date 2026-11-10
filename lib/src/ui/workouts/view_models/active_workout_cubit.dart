@@ -37,15 +37,13 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
   final WorkoutPlanRecordRepository _workoutPlanRecordService;
   final Logger _logger = Logger("ActiveWorkoutCubit");
 
-  ActiveWorkoutCubit([
-    WorkoutRepository? workoutService,
-    WorkoutRecordRepository? workoutRecordService,
-    WorkoutPlanRecordRepository? workoutPlanRecordService,
-  ]) : _workoutService = workoutService ?? WorkoutRepository.create(),
-       _workoutRecordService =
-           workoutRecordService ?? WorkoutRecordRepository.create(),
-       _workoutPlanRecordService =
-           workoutPlanRecordService ?? WorkoutPlanRecordRepository.create(),
+  ActiveWorkoutCubit({
+    required WorkoutRepository workoutRepository,
+    required WorkoutRecordRepository workoutRecordRepository,
+    required WorkoutPlanRecordRepository workoutPlanRecordRepository,
+  }) : _workoutService = workoutRepository,
+       _workoutRecordService = workoutRecordRepository,
+       _workoutPlanRecordService = workoutPlanRecordRepository,
        super(ActiveWorkoutState.initial());
 
   Future<void> startWorkout(

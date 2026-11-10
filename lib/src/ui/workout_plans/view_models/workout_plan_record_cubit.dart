@@ -32,13 +32,11 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
   final WorkoutPlanRecordRepository _workoutPlanRecordService;
   final WorkoutPlanRepository _workoutPlanService;
 
-  WorkoutPlanRecordCubit([
-    WorkoutPlanRecordRepository? workoutPlanRecordService,
-    WorkoutPlanRepository? workoutPlanService,
-  ]) : _workoutPlanRecordService =
-           workoutPlanRecordService ?? WorkoutPlanRecordRepository.create(),
-       _workoutPlanService =
-           workoutPlanService ?? WorkoutPlanRepository.create(),
+  WorkoutPlanRecordCubit({
+    required WorkoutPlanRecordRepository workoutPlanRecordRepository,
+    required WorkoutPlanRepository workoutPlanRepository,
+  }) : _workoutPlanRecordService = workoutPlanRecordRepository,
+       _workoutPlanService = workoutPlanRepository,
        super(WorkoutPlanRecordState.initial());
 
   final Logger _logger = Logger('WorkoutPlanRecordCubit');

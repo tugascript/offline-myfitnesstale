@@ -32,6 +32,8 @@ import 'package:myfitnesstale/src/ui/core/sizes/data_display_sizes.dart';
 import 'package:myfitnesstale/src/ui/workout_plans/widgets/editor/weeks/workout_plan_weeks_editor.dart';
 import 'package:myfitnesstale/src/ui/workout_plans/widgets/editor/weeks/workout_plan_week_editor.dart';
 import 'package:myfitnesstale/src/ui/workout_plans/widgets/editor/weeks/workout_plan_day_editor.dart';
+import 'package:myfitnesstale/src/data/repositories/workouts/workout_repository.dart';
+import 'package:myfitnesstale/src/data/repositories/workout_plans/workout_plan_repository.dart';
 
 void main() {
   Future<WorkoutPlanWeekDto> createWeekDto({
@@ -123,7 +125,11 @@ void main() {
             body: MultiBlocProvider(
               providers: [
                 BlocProvider.value(value: cubit),
-                BlocProvider(create: (_) => WorkoutCubit()),
+                BlocProvider(
+                  create: (_) => WorkoutCubit(
+                    workoutRepository: WorkoutRepository.create(),
+                  ),
+                ),
               ],
               child: Builder(
                 builder: (context) {
@@ -151,7 +157,9 @@ void main() {
   }
 
   testWidgets('renders initial structure from initialWeeks', (tester) async {
-    final cubit = WorkoutPlanCubit();
+    final cubit = WorkoutPlanCubit(
+      workoutPlanRepository: WorkoutPlanRepository.create(),
+    );
     final week = await createWeekDto();
 
     await tester.pumpWidget(
@@ -172,7 +180,9 @@ void main() {
   testWidgets('invalid structure blocks save with validation message', (
     tester,
   ) async {
-    final cubit = WorkoutPlanCubit();
+    final cubit = WorkoutPlanCubit(
+      workoutPlanRepository: WorkoutPlanRepository.create(),
+    );
     final invalidWeek = await createWeekDto(isRestDay: false, workouts: []);
 
     await tester.pumpWidget(
@@ -196,7 +206,9 @@ void main() {
   });
 
   testWidgets('no-op save returns to plan details', (tester) async {
-    final cubit = WorkoutPlanCubit();
+    final cubit = WorkoutPlanCubit(
+      workoutPlanRepository: WorkoutPlanRepository.create(),
+    );
     final week = await createWeekDto();
 
     await tester.pumpWidget(
@@ -217,7 +229,9 @@ void main() {
   });
 
   testWidgets('cancel returns without saving', (tester) async {
-    final cubit = WorkoutPlanCubit();
+    final cubit = WorkoutPlanCubit(
+      workoutPlanRepository: WorkoutPlanRepository.create(),
+    );
     final week = await createWeekDto();
 
     await tester.pumpWidget(

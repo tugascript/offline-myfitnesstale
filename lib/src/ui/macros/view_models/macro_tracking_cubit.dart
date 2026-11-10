@@ -32,8 +32,8 @@ class MacroTrackingCubit extends Cubit<MacroTrackingState> {
   final MacroTrackingRepository _macroService;
   final Logger _logger = Logger('MacroTrackingCubit');
 
-  MacroTrackingCubit([MacroTrackingRepository? macroService])
-    : _macroService = macroService ?? MacroTrackingRepository.create(),
+  MacroTrackingCubit({required MacroTrackingRepository macroTrackingRepository})
+    : _macroService = macroTrackingRepository,
       super(MacroTrackingState.initial());
 
   Future<void> getActiveMacroGoal() async {
