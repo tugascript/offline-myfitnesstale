@@ -1,6 +1,6 @@
 import '../layout/responsive_fields.dart';
 import '../layout/app_text_form_field.dart';
-import '../../common/nullable.dart';
+import '../../utils/nullable.dart';
 import '../../services/inputs/meal_plan_input.dart';
 
 import 'package:flutter/material.dart';

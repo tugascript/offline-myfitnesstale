@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
 
-import '../../common/nullable.dart';
+import '../../utils/nullable.dart';
 import '../../models/enums.dart';
 import '../../models/strength_goal_model.dart';
 import '../../models/utilities.dart';

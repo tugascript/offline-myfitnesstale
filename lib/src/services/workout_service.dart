@@ -1,7 +1,7 @@
 import 'package:logging/logging.dart';
 import 'package:sqflite/sqflite.dart';
 
-import '../common/nullable.dart';
+import '../utils/nullable.dart';
 import '../models/common.dart';
 import '../models/db.dart';
 import '../models/enums.dart';
@@ -14,8 +14,8 @@ import '../models/workout_set_exercise_model.dart';
 import '../models/workout_set_exercise_option_model.dart';
 import '../models/workout_set_model.dart';
 import '../services/dtos/workout_set_dto.dart';
-import 'common/errors.dart';
-import 'common/result.dart';
+import '../utils/errors.dart';
+import '../utils/result.dart';
 import 'dtos/exercise_dto.dart';
 import 'dtos/paginated_dto.dart';
 import 'dtos/workout_dto.dart';

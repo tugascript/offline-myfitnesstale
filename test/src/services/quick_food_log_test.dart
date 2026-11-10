@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:myfitnesstale/src/cubits/macro_tracking_cubit.dart';
-import 'package:myfitnesstale/src/services/common/errors.dart';
+import 'package:myfitnesstale/src/utils/errors.dart';
 import 'package:myfitnesstale/src/services/inputs/quick_food_log_input.dart';
 import 'package:myfitnesstale/src/services/macro_tracking_service.dart';
 

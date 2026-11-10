@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
 
-import '../common/nullable.dart';
+import '../utils/nullable.dart';
 import 'model.dart';
 import 'utilities.dart';
 import 'weight_goal_model.dart';

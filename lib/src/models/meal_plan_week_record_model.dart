@@ -1,4 +1,4 @@
-import '../common/nullable.dart';
+import '../utils/nullable.dart';
 
 import 'package:equatable/equatable.dart';
 

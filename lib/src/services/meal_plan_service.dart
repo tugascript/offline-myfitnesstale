@@ -1,6 +1,6 @@
 import 'package:logging/logging.dart';
 
-import '../common/nullable.dart';
+import '../utils/nullable.dart';
 import '../models/db.dart';
 import '../models/enums.dart';
 import '../models/food_model.dart';
@@ -13,8 +13,8 @@ import '../models/meal_plan_week_model.dart';
 import '../models/recipe_model.dart';
 import '../models/repository.dart';
 import '../models/utilities.dart';
-import 'common/errors.dart';
-import 'common/result.dart';
+import '../utils/errors.dart';
+import '../utils/result.dart';
 import 'dtos/meal_plan_dto.dart';
 import 'dtos/paginated_dto.dart';
 import 'inputs/meal_plan_input.dart';

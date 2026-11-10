@@ -1,14 +1,14 @@
 import 'package:logging/logging.dart';
 
-import '../common/nullable.dart';
+import '../utils/nullable.dart';
 import '../models/db.dart';
 import '../models/enums.dart';
 import '../models/repository.dart';
 import '../models/utilities.dart';
 import '../models/weight_goal_model.dart';
 import '../models/weight_record_model.dart';
-import 'common/errors.dart';
-import 'common/result.dart';
+import '../utils/errors.dart';
+import '../utils/result.dart';
 import 'dtos/paginated_dto.dart';
 import 'dtos/weight_goal_dto.dart';
 import 'dtos/weight_record_dto.dart';

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../common/nullable.dart';
+import '../../utils/nullable.dart';
 import '../../cubits/food_cubit.dart';
 import '../../services/dtos/food_dto.dart';
 import '../../services/dtos/recipe_dto.dart';

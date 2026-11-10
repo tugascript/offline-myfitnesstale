@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:logging/logging.dart';
 import 'package:sqflite/sqflite.dart';
 
-import '../common/nullable.dart';
 import '../models/constants/equipment_constants.dart';
 import '../models/constants/exercise_constants.dart';
 import '../models/constants/workout_constants.dart';
@@ -14,8 +13,9 @@ import '../models/equipment_model.dart';
 import '../models/exercise_model.dart';
 import '../models/workout_model.dart';
 import '../models/workout_plan_model.dart';
-import 'common/errors.dart';
-import 'common/result.dart';
+import '../utils/nullable.dart';
+import '../utils/errors.dart';
+import '../utils/result.dart';
 import 'dtos/equipment_dto.dart';
 import 'dtos/exercise_dto.dart';
 import 'dtos/profile_dto.dart';
@@ -401,7 +401,10 @@ class OnboardingService {
     return false;
   }
 
-  T _require<T, E>(Result<T, ServiceError<E>> result, OnboardingStage stage) {
+  T _require<T, E extends ErrorTypes>(
+    Result<T, ServiceError<E>> result,
+    OnboardingStage stage,
+  ) {
     if (result.isErr()) {
       throw _OnboardingFailure(stage, result.error.description);
     }

@@ -3,7 +3,7 @@ import '../services/inputs/recipe_input.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:logging/logging.dart';
 
-import '../common/nullable.dart';
+import '../utils/nullable.dart';
 import '../models/enums.dart';
 import '../services/dtos/recipe_dto.dart';
 import '../services/recipe_service.dart';

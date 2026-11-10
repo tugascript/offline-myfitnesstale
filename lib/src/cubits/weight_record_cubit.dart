@@ -1,10 +1,10 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:logging/logging.dart';
 
-import '../common/nullable.dart';
+import '../utils/nullable.dart';
 import '../models/enums.dart';
 import '../models/repository.dart';
-import '../services/common/errors.dart';
+import '../utils/errors.dart';
 import '../services/inputs/weight_goal_input.dart';
 import '../services/inputs/weight_record_input.dart';
 import '../services/weight_record_service.dart';

@@ -24,7 +24,7 @@ Follow the strict flow: `SQLite Model -> Repository -> Service -> Cubit -> View/
     - Interacts with one or more `Repository<T>` instances and manages transactions for multi-step mutations.
     - Transforms raw database models into domain DTOs (`lib/src/services/dtos/`).
         - DTOs are immutable, stripping metadata and implementing `Equatable` for value equality in the Bloc.
-    - Returns functional `Result<T, ServiceError<E>>` objects (`lib/src/services/common/result.dart`) instead of
+    - Returns functional `Result<T, ServiceError<E>>` objects (`lib/src/utils/result.dart`) instead of
       throwing unhandled exceptions or leaking database details.
     - Preference for CRUD where the UPDATE uses the same input as CREATE making a "PUT" system.
 - **Cubit (`lib/src/cubits/`)**:

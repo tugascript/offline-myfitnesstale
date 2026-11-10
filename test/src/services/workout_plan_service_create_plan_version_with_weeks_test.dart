@@ -8,7 +8,7 @@ import 'package:myfitnesstale/src/models/workout_plan_model.dart';
 import 'package:myfitnesstale/src/models/workout_plan_record_model.dart';
 import 'package:myfitnesstale/src/models/workout_plan_week_model.dart';
 import 'package:myfitnesstale/src/models/workout_plan_workout_model.dart';
-import 'package:myfitnesstale/src/services/common/errors.dart';
+import 'package:myfitnesstale/src/utils/errors.dart';
 import 'package:myfitnesstale/src/services/workout_plan_record_service.dart';
 import 'package:myfitnesstale/src/services/workout_plan_service.dart';
 

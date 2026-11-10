@@ -1,6 +1,6 @@
 import 'package:logging/logging.dart';
 
-import '../common/nullable.dart';
+import '../utils/nullable.dart';
 import '../models/common.dart';
 import '../models/db.dart';
 import '../models/enums.dart';
@@ -10,8 +10,8 @@ import '../models/recipe_item_model.dart';
 import '../models/recipe_model.dart';
 import '../models/repository.dart';
 import '../models/utilities.dart';
-import 'common/errors.dart';
-import 'common/result.dart';
+import '../utils/errors.dart';
+import '../utils/result.dart';
 import 'dtos/paginated_dto.dart';
 import 'dtos/recipe_dto.dart';
 import 'inputs/recipe_input.dart';
