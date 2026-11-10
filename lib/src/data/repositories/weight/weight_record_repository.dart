@@ -39,7 +39,7 @@ final class WeightRecordRepository implements Repository {
   final Dao<WeightRecord> _repository;
   final Dao<WeightGoal> _weightGoalRepository;
 
-  final Logger _logger = Logger('Weight Record Service');
+  final Logger _logger = Logger('Weight Record Repository');
 
   WeightRecordRepository({
     required this._repository,

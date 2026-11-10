@@ -49,7 +49,7 @@ final class MealPlanRepository implements Repository {
   final Dao<MealPlanMeal> _mealRepository;
   final Dao<MealPlanMealItem> _itemRepository;
 
-  final Logger _logger = Logger('Meal Plan Service');
+  final Logger _logger = Logger('Meal Plan Repository');
 
   MealPlanRepository({
     required this._foodRepository,

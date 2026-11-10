@@ -52,7 +52,7 @@ final class MacroTrackingRepository implements Repository {
   final Dao<MealLog> _mealLogRepository;
   final Dao<MealLogItem> _mealLogItemRepository;
 
-  final Logger _logger = Logger('Macro Tracking Service');
+  final Logger _logger = Logger('Macro Tracking Repository');
 
   MacroTrackingRepository({
     required this._foodRepository,

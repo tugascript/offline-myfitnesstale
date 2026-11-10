@@ -42,7 +42,7 @@ final class ExerciseRecordRepository implements Repository {
   final Dao<Exercise> _exerciseDao;
   final Dao<StrengthGoal> _strengthGoalDao;
 
-  final Logger _logger = Logger('Exercise Record Service');
+  final Logger _logger = Logger('Exercise Record Repository');
 
   ExerciseRecordRepository({
     required this._exerciseRecordDao,
