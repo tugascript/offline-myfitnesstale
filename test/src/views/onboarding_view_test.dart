@@ -19,33 +19,21 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
-import 'package:myfitnesstale/src/data/models/sqlite/system_model.dart';
-import 'package:myfitnesstale/src/data/repositories/exercises/exercise_repository.dart';
-import 'package:myfitnesstale/src/data/repositories/onboarding/onboarding_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/profile/dtos/profile_dto.dart';
 import 'package:myfitnesstale/src/data/repositories/profile/dtos/reminders_config_dto.dart';
 import 'package:myfitnesstale/src/data/repositories/profile/dtos/system_dto.dart';
 import 'package:myfitnesstale/src/data/repositories/profile/profile_repository.dart';
-import 'package:myfitnesstale/src/data/repositories/workout_plans/workout_plan_repository.dart';
-import 'package:myfitnesstale/src/data/repositories/workouts/workout_repository.dart';
-import 'package:myfitnesstale/src/data/services/sqlite/dao.dart';
-import 'package:myfitnesstale/src/data/services/sqlite/database_helper.dart';
 import 'package:myfitnesstale/src/data/utils/enums.dart';
 import 'package:myfitnesstale/src/routing/routes.dart';
+import 'package:myfitnesstale/src/ui/core/view_models/states/common_state.dart';
 import 'package:myfitnesstale/src/ui/home/screens/profile/onboarding_screen.dart';
 import 'package:myfitnesstale/src/ui/home/view_models/profile_cubit.dart';
-import 'package:myfitnesstale/src/utils/errors.dart';
-import 'package:myfitnesstale/src/utils/result.dart';
 
 void main() {
   testWidgets('shows persistent rollback feedback and retries unchanged form', (
     tester,
   ) async {
-    final service = _OnboardingService([_failure, _failure]);
-    final cubit = ProfileCubit(
-      profileRepository: ProfileRepository.create(),
-      onboardingService: service,
-    );
+    final cubit = _OnboardingProfileCubit(succeedOnAttempt: 100);
     addTearDown(cubit.close);
 
     await tester.pumpWidget(
@@ -67,23 +55,18 @@ void main() {
     expect(find.byKey(const ValueKey('onboarding-error')), findsOneWidget);
     expect(find.textContaining('No data was saved'), findsOneWidget);
     expect(find.text('Widget Tester'), findsOneWidget);
-    expect(service.requests, hasLength(1));
+    expect(cubit.attempts, 1);
 
     await tester.ensureVisible(submit);
     await tester.tap(submit);
     await tester.pumpAndSettle();
 
-    expect(service.requests, hasLength(2));
-    expect(service.requests.first.name, 'Widget Tester');
-    expect(service.requests.last.name, 'Widget Tester');
+    expect(cubit.attempts, 2);
+    expect(find.text('Widget Tester'), findsOneWidget);
   });
 
   testWidgets('navigates home only after onboarding succeeds', (tester) async {
-    final service = _OnboardingService([ok(_success)]);
-    final cubit = ProfileCubit(
-      profileRepository: ProfileRepository.create(),
-      onboardingService: service,
-    );
+    final cubit = _OnboardingProfileCubit(succeedOnAttempt: 1);
     addTearDown(cubit.close);
     final router = GoRouter(
       initialLocation: Routes.onboarding.name,
@@ -120,58 +103,69 @@ void main() {
   });
 }
 
-typedef OnboardingServiceResult =
-    Result<OnboardingDto, ServiceError<OperationErrorTypes>>;
+final class _OnboardingProfileCubit extends ProfileCubit {
+  final int succeedOnAttempt;
+  int attempts = 0;
 
-final class _OnboardingService extends OnboardingRepository {
-  final List<OnboardingServiceResult> _responses;
-  final List<OnboardingInput> requests = [];
-
-  _OnboardingService(this._responses)
-    : super(
-        exerciseService: ExerciseRepository.create(),
-        profileService: ProfileRepository.create(),
-        workoutService: WorkoutRepository.create(),
-        workoutPlanService: WorkoutPlanRepository.create(),
-        systemDao: Dao<System>(
-          databaseHelper: DatabaseHelper(),
-          tableName: System.table,
-          fromMap: System.fromMap,
-        ),
-      );
+  _OnboardingProfileCubit({required this.succeedOnAttempt})
+    : super(profileRepository: ProfileRepository.create());
 
   @override
-  Future<OnboardingServiceResult> onboard(OnboardingInput input) async {
-    requests.add(input);
-    return _responses.removeAt(0);
+  Future<void> onboardProfile({
+    required Units units,
+    required ThemeType theme,
+    required String name,
+    required int height,
+    required Gender gender,
+    required DateTime birthday,
+    required bool createWorkouts,
+    required bool notificationsOn,
+  }) async {
+    if (state.isLoading || state.profile != null) {
+      return;
+    }
+
+    attempts++;
+    emit(state.copyWith(isLoading: true, clearError: true));
+
+    if (attempts < succeedOnAttempt) {
+      emit(
+        state.copyWith(
+          error: const ErrorState(
+            type: 'operationFailure',
+            description: 'Setup failed. No data was saved. Please try again.',
+          ),
+          isLoading: false,
+        ),
+      );
+      return;
+    }
+
+    emit(
+      state.copyWith(
+        profile: ProfileDto(
+          id: 1,
+          name: name,
+          height: height,
+          gender: gender,
+          birthdate: birthday,
+        ),
+        system: SystemDto(
+          id: 1,
+          units: units,
+          theme: theme,
+          initialSetup: SetUpStatus.completed,
+          notificationsOn: notificationsOn,
+        ),
+        remindersConfig: RemindersConfigDto(
+          id: 1,
+          workoutsOn: notificationsOn,
+          weightRecordsOn: notificationsOn,
+        ),
+        isLoading: false,
+        isInitiated: true,
+        clearError: true,
+      ),
+    );
   }
 }
-
-final _failure = err<OnboardingDto, ServiceError<OperationErrorTypes>>(
-  const ServiceError(
-    type: OperationErrorTypes.operationFailure,
-    description: 'Setup failed. No data was saved. Please try again.',
-  ),
-);
-
-final _success = OnboardingDto(
-  profile: ProfileDto(
-    id: 1,
-    name: 'Navigation Tester',
-    height: 175,
-    gender: Gender.other,
-    birthdate: DateTime(1990),
-  ),
-  system: const SystemDto(
-    id: 1,
-    units: Units.metric,
-    theme: ThemeType.system,
-    initialSetup: SetUpStatus.completed,
-    notificationsOn: false,
-  ),
-  remindersConfig: const RemindersConfigDto(
-    id: 1,
-    workoutsOn: false,
-    weightRecordsOn: false,
-  ),
-);

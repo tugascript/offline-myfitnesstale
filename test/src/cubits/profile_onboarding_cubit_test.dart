@@ -18,29 +18,39 @@
 import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:myfitnesstale/src/data/models/sqlite/system_model.dart';
-import 'package:myfitnesstale/src/data/repositories/exercises/exercise_repository.dart';
+import 'package:myfitnesstale/src/data/models/sqlite/workout_model.dart';
 import 'package:myfitnesstale/src/data/repositories/onboarding/onboarding_repository.dart';
-import 'package:myfitnesstale/src/data/repositories/profile/dtos/profile_dto.dart';
-import 'package:myfitnesstale/src/data/repositories/profile/dtos/reminders_config_dto.dart';
-import 'package:myfitnesstale/src/data/repositories/profile/dtos/system_dto.dart';
 import 'package:myfitnesstale/src/data/repositories/profile/profile_repository.dart';
-import 'package:myfitnesstale/src/data/repositories/workout_plans/workout_plan_repository.dart';
-import 'package:myfitnesstale/src/data/repositories/workouts/workout_repository.dart';
-import 'package:myfitnesstale/src/data/services/sqlite/dao.dart';
-import 'package:myfitnesstale/src/data/services/sqlite/database_helper.dart';
 import 'package:myfitnesstale/src/data/utils/enums.dart';
 import 'package:myfitnesstale/src/ui/home/view_models/profile_cubit.dart';
-import 'package:myfitnesstale/src/utils/errors.dart';
-import 'package:myfitnesstale/src/utils/result.dart';
+import 'package:sqflite/sqflite.dart';
+
+import '../../support/test_database.dart';
 
 void main() {
+  final testDatabase = TestDatabase();
+
+  setUpAll(testDatabase.initialize);
+  tearDown(testDatabase.clearOnboardingTables);
+  tearDownAll(testDatabase.destroy);
+
   test(
     'coordinates loading, failure feedback, stale-error clearing, and retry',
     () async {
-      final first = Completer<OnboardingServiceResult>();
-      final retry = Completer<OnboardingServiceResult>();
-      final service = _OnboardingService([first.future, retry.future]);
+      final gate = Completer<void>();
+      var attempts = 0;
+      final service = OnboardingRepository.create(
+        afterStage: (stage) async {
+          if (stage != OnboardingStage.equipments) {
+            return;
+          }
+          attempts++;
+          if (attempts == 1) {
+            await gate.future;
+            throw StateError('Injected failure');
+          }
+        },
+      );
       final cubit = ProfileCubit(
         profileRepository: ProfileRepository.create(),
         onboardingService: service,
@@ -61,7 +71,7 @@ void main() {
       expect(cubit.state.isLoading, isTrue);
       expect(cubit.state.error, isNull);
 
-      first.complete(_failure());
+      gate.complete();
       await firstCall;
       expect(cubit.state.isLoading, isFalse);
       expect(cubit.state.profile, isNull);
@@ -81,13 +91,12 @@ void main() {
       expect(cubit.state.isLoading, isTrue);
       expect(cubit.state.error, isNull);
 
-      retry.complete(ok(_success));
       await retryCall;
       expect(cubit.state.isLoading, isFalse);
       expect(cubit.state.isInitiated, isTrue);
-      expect(cubit.state.profile, _profile);
+      expect(cubit.state.profile?.name, 'Retry Tester');
       expect(cubit.state.system?.initialSetup, SetUpStatus.completed);
-      expect(cubit.state.remindersConfig, _reminders);
+      expect(cubit.state.remindersConfig, isNotNull);
       expect(cubit.state.error, isNull);
     },
   );
@@ -96,10 +105,9 @@ void main() {
     test(
       'passes createWorkouts=$createWorkouts to the onboarding service',
       () async {
-        final service = _OnboardingService([Future.value(ok(_success))]);
         final cubit = ProfileCubit(
           profileRepository: ProfileRepository.create(),
-          onboardingService: service,
+          onboardingService: OnboardingRepository.create(),
         );
         addTearDown(cubit.close);
 
@@ -114,72 +122,19 @@ void main() {
           notificationsOn: true,
         );
 
-        expect(service.requests, hasLength(1));
-        expect(service.requests.single.createWorkouts, createWorkouts);
-        expect(service.requests.single.notificationsOn, isTrue);
+        expect(cubit.state.profile?.name, 'Choice Tester');
+        expect(cubit.state.system?.notificationsOn, isTrue);
+        expect(cubit.state.remindersConfig?.workoutsOn, isTrue);
+
+        final workoutCount =
+            Sqflite.firstIntValue(
+              await (await testDatabase.db).rawQuery(
+                'SELECT COUNT(*) FROM ${Workout.table}',
+              ),
+            ) ??
+            0;
+        expect(workoutCount, createWorkouts ? 16 : 0);
       },
     );
   }
 }
-
-typedef OnboardingServiceResult =
-    Result<OnboardingDto, ServiceError<OperationErrorTypes>>;
-
-final class _OnboardingService extends OnboardingRepository {
-  final List<Future<OnboardingServiceResult>> _responses;
-  final List<OnboardingInput> requests = [];
-
-  _OnboardingService(this._responses)
-    : super(
-        exerciseService: ExerciseRepository.create(),
-        profileService: ProfileRepository.create(),
-        workoutService: WorkoutRepository.create(),
-        workoutPlanService: WorkoutPlanRepository.create(),
-        systemDao: Dao<System>(
-          databaseHelper: DatabaseHelper(),
-          tableName: System.table,
-          fromMap: System.fromMap,
-        ),
-      );
-
-  @override
-  Future<OnboardingServiceResult> onboard(OnboardingInput input) {
-    requests.add(input);
-    return _responses.removeAt(0);
-  }
-}
-
-OnboardingServiceResult _failure() => err(
-  const ServiceError(
-    type: OperationErrorTypes.operationFailure,
-    description: 'Setup failed. No data was saved. Please try again.',
-  ),
-);
-
-final _profile = ProfileDto(
-  id: 1,
-  name: 'Retry Tester',
-  height: 175,
-  gender: Gender.other,
-  birthdate: DateTime(1990),
-);
-
-const _system = SystemDto(
-  id: 1,
-  units: Units.metric,
-  theme: ThemeType.system,
-  initialSetup: SetUpStatus.completed,
-  notificationsOn: false,
-);
-
-const _reminders = RemindersConfigDto(
-  id: 1,
-  workoutsOn: false,
-  weightRecordsOn: false,
-);
-
-final _success = OnboardingDto(
-  profile: _profile,
-  system: _system,
-  remindersConfig: _reminders,
-);
