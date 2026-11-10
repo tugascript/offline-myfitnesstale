@@ -1,26 +1,26 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:myfitnesstale/src/utils/nullable.dart';
-import 'package:myfitnesstale/src/data/utils/json_data.dart';
-import 'package:myfitnesstale/src/data/utils/enums.dart';
-import 'package:myfitnesstale/src/data/models/exercise_model.dart';
 import 'package:myfitnesstale/src/cubits/food_cubit.dart';
 import 'package:myfitnesstale/src/cubits/meal_plan_cubit.dart';
 import 'package:myfitnesstale/src/cubits/weight_record_cubit.dart';
-import 'package:myfitnesstale/src/data/repositories/exercises/exercise_record_service.dart';
+import 'package:myfitnesstale/src/data/models/exercise_model.dart';
+import 'package:myfitnesstale/src/data/repositories/exercises/exercise_record_repository.dart';
+import 'package:myfitnesstale/src/data/utils/enums.dart';
+import 'package:myfitnesstale/src/data/utils/json_data.dart';
+import 'package:myfitnesstale/src/services/food_service.dart';
+import 'package:myfitnesstale/src/services/inputs/food_input.dart';
+import 'package:myfitnesstale/src/services/inputs/macro_goal_input.dart';
+import 'package:myfitnesstale/src/services/inputs/meal_plan_input.dart';
+import 'package:myfitnesstale/src/services/inputs/recipe_input.dart';
 import 'package:myfitnesstale/src/services/inputs/strength_goal_input.dart';
 import 'package:myfitnesstale/src/services/inputs/weight_goal_input.dart';
 import 'package:myfitnesstale/src/services/inputs/weight_record_input.dart';
-import 'package:myfitnesstale/src/utils/errors.dart';
-import 'package:myfitnesstale/src/services/food_service.dart';
-import 'package:myfitnesstale/src/services/recipe_service.dart';
-import 'package:myfitnesstale/src/services/meal_plan_service.dart';
-import 'package:myfitnesstale/src/services/meal_plan_record_service.dart';
 import 'package:myfitnesstale/src/services/macro_tracking_service.dart';
+import 'package:myfitnesstale/src/services/meal_plan_record_service.dart';
+import 'package:myfitnesstale/src/services/meal_plan_service.dart';
+import 'package:myfitnesstale/src/services/recipe_service.dart';
 import 'package:myfitnesstale/src/services/weight_record_service.dart';
-import 'package:myfitnesstale/src/services/inputs/food_input.dart';
-import 'package:myfitnesstale/src/services/inputs/recipe_input.dart';
-import 'package:myfitnesstale/src/services/inputs/meal_plan_input.dart';
-import 'package:myfitnesstale/src/services/inputs/macro_goal_input.dart';
+import 'package:myfitnesstale/src/utils/errors.dart';
+import 'package:myfitnesstale/src/utils/nullable.dart';
 
 import '../../support/test_database.dart';
 
@@ -101,7 +101,7 @@ void main() {
         muscles: const TargetMuscles(primary: {}, secondary: {}),
       );
       final exerciseId = await db.insert(Exercise.table, exercise.toMap());
-      final service = ExerciseRecordService();
+      final service = ExerciseRecordRepository.create();
       final created = await service.createStrengthGoal(
         StrengthGoalInput(
           exerciseId: exerciseId,

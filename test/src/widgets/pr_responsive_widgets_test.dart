@@ -16,6 +16,7 @@ import 'package:myfitnesstale/src/data/utils/json_data.dart';
 import 'package:myfitnesstale/src/data/utils/enums.dart';
 import 'package:myfitnesstale/src/data/models/exercise_model.dart';
 import 'package:myfitnesstale/src/data/repositories/exercises/dtos/exercise_dto.dart';
+import 'package:myfitnesstale/src/data/repositories/exercises/exercise_record_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/exercises/exercise_repository.dart';
 import 'package:myfitnesstale/src/services/dtos/food_dto.dart';
 import 'package:myfitnesstale/src/services/dtos/macro_tracking_dto.dart';
@@ -252,7 +253,7 @@ class _Exercises extends ExerciseCubit {
 }
 
 class _Goals extends ExerciseRecordCubit {
-  _Goals() {
+  _Goals() : super(ExerciseRecordRepository.create()) {
     emit(
       state.copyWith(
         activeStrengthGoal: Nullable(_strengthGoal),

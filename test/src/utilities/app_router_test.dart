@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:myfitnesstale/src/utils/nullable.dart';
 import 'package:myfitnesstale/src/cubits/profile_cubit.dart';
+import 'package:myfitnesstale/src/data/repositories/exercises/exercise_record_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/exercises/exercise_repository.dart';
 import 'package:myfitnesstale/src/ui/exercises/view_models/exercise_cubit.dart';
 import 'package:myfitnesstale/src/ui/exercises/view_models/exercise_record_cubit.dart';
@@ -33,6 +34,8 @@ class _ExerciseCubit extends ExerciseCubit {
 }
 
 class _ExerciseRecordCubit extends ExerciseRecordCubit {
+  _ExerciseRecordCubit() : super(ExerciseRecordRepository.create());
+
   @override
   Future<void> getExerciseRecords({
     int limit = 25,

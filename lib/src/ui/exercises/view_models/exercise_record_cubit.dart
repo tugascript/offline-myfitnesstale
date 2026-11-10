@@ -1,20 +1,21 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:logging/logging.dart';
 
-import '../../../utils/nullable.dart';
-import '../../../data/services/common.dart';
-import '../../../utils/errors.dart';
-import '../../../data/repositories/exercises/exercise_record_service.dart';
-import '../../../data/repositories/exercises/inputs/exercise_record_input.dart';
-import '../../../services/inputs/strength_goal_input.dart';
 import '../../../cubits/states/common_state.dart';
+import '../../../data/repositories/exercises/exercise_record_repository.dart';
+import '../../../data/repositories/exercises/inputs/exercise_record_input.dart';
+import '../../../data/services/common.dart';
+import '../../../services/inputs/strength_goal_input.dart';
+import '../../../utils/errors.dart';
+import '../../../utils/nullable.dart';
 import 'states/exercise_record_state.dart';
 
 class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
-  final ExerciseRecordService _exerciseRecordService = ExerciseRecordService();
+  final ExerciseRecordRepository _exerciseRecordRepository;
   final Logger _logger = Logger("ExerciseRecordCubit");
 
-  ExerciseRecordCubit() : super(ExerciseRecordState.initial());
+  ExerciseRecordCubit(this._exerciseRecordRepository)
+    : super(ExerciseRecordState.initial());
 
   Future<void> getExerciseRecords({
     int limit = kDefaultLimit,
@@ -25,7 +26,7 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
     _logger.info("Getting exercise records");
     emit(state.copyWith(isLoading: true));
 
-    final result = await _exerciseRecordService.getExerciseRecords(
+    final result = await _exerciseRecordRepository.getExerciseRecords(
       limit: limit,
       offset: offset,
       exerciseId: exerciseId,
@@ -76,7 +77,7 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
     _logger.info("Getting latest exercise record for exercise $exerciseId");
     emit(state.copyWith(isLoading: true));
 
-    final result = await _exerciseRecordService.getLatestRecord(exerciseId);
+    final result = await _exerciseRecordRepository.getLatestRecord(exerciseId);
 
     if (result.isErr()) {
       final error = result.error;
@@ -119,7 +120,7 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
   Future<void> createExerciseRecord(ExerciseRecordInput input) async {
     emit(state.copyWith(isLoading: true));
 
-    final result = await _exerciseRecordService.createExerciseRecord(input);
+    final result = await _exerciseRecordRepository.createExerciseRecord(input);
 
     if (result.isErr()) {
       final error = result.error;
@@ -144,7 +145,7 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
     }
 
     final currentPagination = state.recordPagination;
-    final recordsResult = await _exerciseRecordService.getExerciseRecords(
+    final recordsResult = await _exerciseRecordRepository.getExerciseRecords(
       exerciseId: input.exerciseId,
       limit: currentPagination.limit,
       dateRange: currentPagination.dateRange,
@@ -199,7 +200,7 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
   Future<void> updateExerciseRecord(int id, ExerciseRecordInput input) async {
     emit(state.copyWith(isLoading: true));
 
-    final result = await _exerciseRecordService.updateExerciseRecord(id, input);
+    final result = await _exerciseRecordRepository.updateExerciseRecord(id, input);
 
     if (result.isErr()) {
       final error = result.error;
@@ -226,7 +227,7 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
     _logger.info("Exercise record updated successfully");
     final exerciseRecord = result.value;
     final currentPagination = state.recordPagination;
-    final recordsResult = await _exerciseRecordService.getExerciseRecords(
+    final recordsResult = await _exerciseRecordRepository.getExerciseRecords(
       exerciseId: exerciseRecord.exerciseId,
       limit: currentPagination.limit,
       dateRange: currentPagination.dateRange,
@@ -273,7 +274,7 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
   Future<void> deleteExerciseRecord(int id) async {
     emit(state.copyWith(isLoading: true));
 
-    final result = await _exerciseRecordService.deleteExerciseRecord(id);
+    final result = await _exerciseRecordRepository.deleteExerciseRecord(id);
 
     if (result.isErr()) {
       final error = result.error;
@@ -335,7 +336,7 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
   Future<void> getActiveStrengthGoal({int? exerciseId}) async {
     _logger.info("Getting active strength goal");
     emit(state.copyWith(isLoading: true));
-    final result = await _exerciseRecordService.getActiveStrengthGoal(
+    final result = await _exerciseRecordRepository.getActiveStrengthGoal(
       exerciseId: exerciseId,
     );
     if (result.isErr()) {
@@ -378,7 +379,7 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
   }) async {
     _logger.info("Getting strength goals");
     emit(state.copyWith(isLoading: true));
-    final result = await _exerciseRecordService.getStrengthGoals(
+    final result = await _exerciseRecordRepository.getStrengthGoals(
       exerciseId: exerciseId,
       skipInProgress: skipInProgress,
       limit: limit,
@@ -418,7 +419,7 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
   Future<bool> createStrengthGoal(StrengthGoalInput input) async {
     _logger.info("Creating strength goal");
     emit(state.copyWith(isLoading: true));
-    final result = await _exerciseRecordService.createStrengthGoal(input);
+    final result = await _exerciseRecordRepository.createStrengthGoal(input);
     if (result.isErr()) {
       final error = result.error;
       _logger.warning("Failed to create strength goal", error);
@@ -447,7 +448,7 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
   Future<bool> updateStrengthGoal(int id, StrengthGoalInput input) async {
     _logger.info("Updating strength goal");
     emit(state.copyWith(isLoading: true));
-    final result = await _exerciseRecordService.updateStrengthGoal(id, input);
+    final result = await _exerciseRecordRepository.updateStrengthGoal(id, input);
     if (result.isErr()) {
       final error = result.error;
       _logger.warning("Failed to update strength goal", error);
@@ -476,7 +477,7 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
   Future<bool> completeStrengthGoal(int id) async {
     _logger.info("Completing strength goal");
     emit(state.copyWith(isLoading: true));
-    final result = await _exerciseRecordService.completeStrengthGoal(id);
+    final result = await _exerciseRecordRepository.completeStrengthGoal(id);
     if (result.isErr()) {
       final error = result.error;
       _logger.warning("Failed to complete strength goal", error);
@@ -505,7 +506,7 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
   Future<bool> deleteStrengthGoal(int id) async {
     _logger.info("Deleting strength goal");
     emit(state.copyWith(isLoading: true));
-    final result = await _exerciseRecordService.deleteStrengthGoal(id);
+    final result = await _exerciseRecordRepository.deleteStrengthGoal(id);
     if (result.isErr()) {
       final error = result.error;
       _logger.warning("Failed to delete strength goal", error);

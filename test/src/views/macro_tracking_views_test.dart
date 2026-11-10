@@ -18,6 +18,7 @@ import 'package:myfitnesstale/src/cubits/workout_cubit.dart';
 import 'package:myfitnesstale/src/cubits/workout_plan_cubit.dart';
 import 'package:myfitnesstale/src/cubits/workout_plan_record_cubit.dart';
 import 'package:myfitnesstale/src/cubits/workout_record_cubit.dart';
+import 'package:myfitnesstale/src/data/repositories/exercises/exercise_record_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/exercises/exercise_repository.dart';
 import 'package:myfitnesstale/src/data/utils/enums.dart';
 import 'package:myfitnesstale/src/routing/routing.dart';
@@ -116,6 +117,8 @@ class _TestMacroTrackingCubit extends MacroTrackingCubit {
 }
 
 class _TestExerciseRecordCubit extends ExerciseRecordCubit {
+  _TestExerciseRecordCubit() : super(ExerciseRecordRepository.create());
+
   @override
   Future<void> getActiveStrengthGoal({int? exerciseId}) async {}
 

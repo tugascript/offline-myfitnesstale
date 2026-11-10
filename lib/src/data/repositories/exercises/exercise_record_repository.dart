@@ -19,40 +19,45 @@ import 'dtos/exercise_dto.dart';
 import 'dtos/exercise_record_dto.dart';
 import 'inputs/exercise_record_input.dart';
 
-class ExerciseRecordService {
-  ExerciseRecordService._();
-
-  static final ExerciseRecordService _instance = ExerciseRecordService._();
-
-  factory ExerciseRecordService() => _instance;
+class ExerciseRecordRepository {
+  final Dao<ExerciseRecord> _exerciseRecordDao;
+  final Dao<Exercise> _exerciseDao;
+  final Dao<StrengthGoal> _strengthGoalDao;
 
   final Logger _logger = Logger('Exercise Record Service');
 
-  final Dao<ExerciseRecord> _exerciseRecordDao = Dao<ExerciseRecord>(
-    databaseHelper: DatabaseHelper(),
-    tableName: ExerciseRecord.table,
-    fromMap: ExerciseRecord.fromMap,
-  );
+  ExerciseRecordRepository({
+    required this._exerciseRecordDao,
+    required this._exerciseDao,
+    required this._strengthGoalDao,
+  });
 
-  final Dao<Exercise> _exerciseRepository = Dao<Exercise>(
-    databaseHelper: DatabaseHelper(),
-    tableName: Exercise.table,
-    fromMap: Exercise.fromMap,
-  );
-
-  final Dao<StrengthGoal> _strengthGoalRepository = Dao<StrengthGoal>(
-    databaseHelper: DatabaseHelper(),
-    tableName: StrengthGoal.table,
-    fromMap: StrengthGoal.fromMap,
-  );
+  factory ExerciseRecordRepository.create([DatabaseHelper? databaseHelper]) {
+    final helper = databaseHelper ?? DatabaseHelper();
+    return ExerciseRecordRepository(
+      exerciseRecordDao: Dao(
+        databaseHelper: helper,
+        tableName: ExerciseRecord.table,
+        fromMap: ExerciseRecord.fromMap,
+      ),
+      exerciseDao: Dao(
+        databaseHelper: helper,
+        tableName: Exercise.table,
+        fromMap: Exercise.fromMap,
+      ),
+      strengthGoalDao: Dao(
+        databaseHelper: helper,
+        tableName: StrengthGoal.table,
+        fromMap: StrengthGoal.fromMap,
+      ),
+    );
+  }
 
   Future<Result<ExerciseRecordDto, ServiceError<SingleErrorTypes>>>
   createExerciseRecord(ExerciseRecordInput input) async {
     _logger.info('Creating exercise record for exercise ${input.exerciseId}');
     try {
-      final Exercise? exercise = await _exerciseRepository.selectOne(
-        input.exerciseId,
-      );
+      final Exercise? exercise = await _exerciseDao.selectOne(input.exerciseId);
       if (exercise == null) {
         _logger.warning("Exercise with id: ${input.exerciseId} not found");
         return err(
@@ -107,7 +112,7 @@ class ExerciseRecordService {
         );
       }
 
-      final Exercise? exercise = await _exerciseRepository.selectOne(
+      final Exercise? exercise = await _exerciseDao.selectOne(
         exerciseRecord.exerciseId,
       );
       if (exercise == null) {
@@ -183,9 +188,7 @@ class ExerciseRecordService {
 
     try {
       if (exerciseId != null) {
-        final Exercise? exercise = await _exerciseRepository.selectOne(
-          exerciseId,
-        );
+        final Exercise? exercise = await _exerciseDao.selectOne(exerciseId);
         if (exercise == null) {
           return err(
             ServiceError(
@@ -230,7 +233,7 @@ class ExerciseRecordService {
       final Set<int> exerciseIds = records
           .map((record) => record.exerciseId)
           .toSet();
-      final List<Exercise> exercises = await _exerciseRepository.selectMany(
+      final List<Exercise> exercises = await _exerciseDao.selectMany(
         where: ExerciseColumns.id.inList(exerciseIds.length),
         whereArgs: exerciseIds.toList(),
       );
@@ -322,9 +325,7 @@ class ExerciseRecordService {
         );
       }
 
-      final Exercise? exercise = await _exerciseRepository.selectOne(
-        input.exerciseId,
-      );
+      final Exercise? exercise = await _exerciseDao.selectOne(input.exerciseId);
       if (exercise == null) {
         return err(
           ServiceError(
@@ -394,9 +395,7 @@ class ExerciseRecordService {
   createStrengthGoal(StrengthGoalInput input) async {
     _logger.info('Creating strength goal for exercise ${input.exerciseId}');
     try {
-      final Exercise? exercise = await _exerciseRepository.selectOne(
-        input.exerciseId,
-      );
+      final Exercise? exercise = await _exerciseDao.selectOne(input.exerciseId);
       if (exercise == null) {
         _logger.warning('Exercise with id ${input.exerciseId} not found');
         return err(
@@ -421,15 +420,13 @@ class ExerciseRecordService {
       );
 
       if (input.status != ProgressStatus.inProgress) {
-        final int id = await _strengthGoalRepository.insert(goal);
+        final int id = await _strengthGoalDao.insert(goal);
         _logger.info('Created strength goal with id $id');
         return ok(StrengthGoalDto.fromModel(goal.copyWith(id: Nullable(id))));
       }
 
-      final int id = await _strengthGoalRepository.startTransaction((
-        txn,
-      ) async {
-        final activeGoals = await _strengthGoalRepository.selectMany(
+      final int id = await _strengthGoalDao.startTransaction((txn) async {
+        final activeGoals = await _strengthGoalDao.selectMany(
           where:
               '${StrengthGoalColumns.exerciseId.equal} AND ${StrengthGoalColumns.status.equal}',
           whereArgs: [input.exerciseId, ProgressStatus.inProgress.value],
@@ -437,7 +434,7 @@ class ExerciseRecordService {
         );
         final now = DateUtilities.getNowUtcUnix();
         for (final activeGoal in activeGoals) {
-          await _strengthGoalRepository.update(
+          await _strengthGoalDao.update(
             activeGoal.copyWith(
               status: ProgressStatus.abandoned,
               completedAt: Nullable(now),
@@ -446,7 +443,7 @@ class ExerciseRecordService {
             txn,
           );
         }
-        return await _strengthGoalRepository.insert(goal, txn);
+        return await _strengthGoalDao.insert(goal, txn);
       });
       _logger.info('Created strength goal with id $id');
       return ok(StrengthGoalDto.fromModel(goal.copyWith(id: Nullable(id))));
@@ -486,18 +483,17 @@ class ExerciseRecordService {
         );
       }
 
-      final List<StrengthGoal> goals = await _strengthGoalRepository
-          .selectPaginated(
-            where: where.where,
-            whereArgs: where.args,
-            limit: limit,
-            offset: offset,
-            orderBy: [
-              StrengthGoalColumns.startDate.orderDesc,
-              StrengthGoalColumns.createdAt.orderDesc,
-            ],
-          );
-      final int total = await _strengthGoalRepository.count(
+      final List<StrengthGoal> goals = await _strengthGoalDao.selectPaginated(
+        where: where.where,
+        whereArgs: where.args,
+        limit: limit,
+        offset: offset,
+        orderBy: [
+          StrengthGoalColumns.startDate.orderDesc,
+          StrengthGoalColumns.createdAt.orderDesc,
+        ],
+      );
+      final int total = await _strengthGoalDao.count(
         where: where.where,
         whereArgs: where.args,
       );
@@ -535,7 +531,7 @@ class ExerciseRecordService {
         where.and(StrengthGoalColumns.exerciseId.equal, exerciseId);
       }
 
-      final List<StrengthGoal> goals = await _strengthGoalRepository.selectMany(
+      final List<StrengthGoal> goals = await _strengthGoalDao.selectMany(
         where: where.where,
         whereArgs: where.args,
         orderBy: [
@@ -569,7 +565,7 @@ class ExerciseRecordService {
   getStrengthGoal(int id) async {
     _logger.info('Getting strength goal with id $id');
     try {
-      final StrengthGoal? goal = await _strengthGoalRepository.selectOne(id);
+      final StrengthGoal? goal = await _strengthGoalDao.selectOne(id);
       if (goal == null) {
         return err(
           const ServiceError(
@@ -594,7 +590,7 @@ class ExerciseRecordService {
   updateStrengthGoal(int id, StrengthGoalInput input) async {
     _logger.info('Updating strength goal with id $id');
     try {
-      final StrengthGoal? goal = await _strengthGoalRepository.selectOne(id);
+      final StrengthGoal? goal = await _strengthGoalDao.selectOne(id);
       if (goal == null) {
         return err(
           const ServiceError(
@@ -604,7 +600,7 @@ class ExerciseRecordService {
         );
       }
 
-      final exercise = await _exerciseRepository.selectOne(input.exerciseId);
+      final exercise = await _exerciseDao.selectOne(input.exerciseId);
       if (exercise == null) {
         return err(
           const ServiceError(
@@ -628,9 +624,9 @@ class ExerciseRecordService {
         ),
         updatedAt: DateUtilities.getNowUtcUnix(),
       );
-      await _strengthGoalRepository.startTransaction((txn) async {
+      await _strengthGoalDao.startTransaction((txn) async {
         if (input.status == ProgressStatus.inProgress) {
-          final activeGoals = await _strengthGoalRepository.selectMany(
+          final activeGoals = await _strengthGoalDao.selectMany(
             where:
                 '${StrengthGoalColumns.exerciseId.equal} AND ${StrengthGoalColumns.status.equal} AND ${StrengthGoalColumns.id.value} != ?',
             whereArgs: [input.exerciseId, ProgressStatus.inProgress.value, id],
@@ -638,7 +634,7 @@ class ExerciseRecordService {
           );
           final now = DateUtilities.getNowUtcUnix();
           for (final activeGoal in activeGoals) {
-            await _strengthGoalRepository.update(
+            await _strengthGoalDao.update(
               activeGoal.copyWith(
                 status: ProgressStatus.abandoned,
                 completedAt: Nullable(now),
@@ -648,7 +644,7 @@ class ExerciseRecordService {
             );
           }
         }
-        await _strengthGoalRepository.update(updated, txn);
+        await _strengthGoalDao.update(updated, txn);
       });
       _logger.info('Updated strength goal with id $id');
       return ok(StrengthGoalDto.fromModel(updated));
@@ -667,7 +663,7 @@ class ExerciseRecordService {
   completeStrengthGoal(int id) async {
     _logger.info('Completing strength goal with id $id');
     try {
-      final StrengthGoal? goal = await _strengthGoalRepository.selectOne(id);
+      final StrengthGoal? goal = await _strengthGoalDao.selectOne(id);
       if (goal == null) {
         return err(
           const ServiceError(
@@ -682,7 +678,7 @@ class ExerciseRecordService {
         completedAt: Nullable(DateUtilities.getNowUtcUnix()),
         updatedAt: DateUtilities.getNowUtcUnix(),
       );
-      await _strengthGoalRepository.update(updated);
+      await _strengthGoalDao.update(updated);
       _logger.info('Completed strength goal with id $id');
       return ok(StrengthGoalDto.fromModel(updated));
     } catch (e) {
@@ -701,7 +697,7 @@ class ExerciseRecordService {
   ) async {
     _logger.info('Deleting strength goal with id $id');
     try {
-      final bool deleted = await _strengthGoalRepository.deleteOne(id);
+      final bool deleted = await _strengthGoalDao.deleteOne(id);
       if (!deleted) {
         return err(
           const ServiceError(
