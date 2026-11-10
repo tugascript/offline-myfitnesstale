@@ -91,7 +91,7 @@ void main() {
         expect(cubit.state.error, isNull);
       }
 
-      final countResult = await WorkoutPlanRepository().countWorkoutPlans(
+      final countResult = await WorkoutPlanRepository.create().countWorkoutPlans(
         createdBy: CreatedBy.user,
       );
       expect(countResult.isOk(), isTrue);
@@ -245,7 +245,7 @@ void main() {
     );
     await db.insert(WorkoutPlanWorkout.table, dayWorkout.toMap());
 
-    final recordService = WorkoutPlanRecordRepository();
+    final recordService = WorkoutPlanRecordRepository.create();
     final recordResult = await recordService.createWorkoutPlanRecord(
       WorkoutPlanRecordInput(workoutPlanId: planId),
     );
@@ -355,7 +355,7 @@ void main() {
     );
     await db.insert(WorkoutPlanWorkout.table, dayWorkout.toMap());
 
-    final recordService = WorkoutPlanRecordRepository();
+    final recordService = WorkoutPlanRecordRepository.create();
     final recordResult = await recordService.createWorkoutPlanRecord(
       WorkoutPlanRecordInput(workoutPlanId: planId),
     );
@@ -417,7 +417,7 @@ void main() {
   test('a completed workout is not reused as an active workout', () async {
     final db = await testDatabase.db;
     final workoutId = await createWorkout(db, uniqueName('lifecycle-workout'));
-    final service = WorkoutRecordRepository();
+    final service = WorkoutRecordRepository.create();
 
     final startedAt = DateTime.now().subtract(const Duration(hours: 1));
     final first = await service.getOrCreateWorkoutRecord(
@@ -456,7 +456,7 @@ void main() {
     final workoutId = await createWorkout(db, uniqueName('manual-workout'));
     final now = DateTime.now();
 
-    final result = await WorkoutRecordRepository().batchCreateWorkoutRecord(
+    final result = await WorkoutRecordRepository.create().batchCreateWorkoutRecord(
       WorkoutRecordBatchInput(
         workoutId: workoutId,
         version: 1,
@@ -587,7 +587,7 @@ void main() {
       );
     }
 
-    final service = WorkoutPlanRecordRepository();
+    final service = WorkoutPlanRecordRepository.create();
     final planRecord = await service.createWorkoutPlanRecord(
       WorkoutPlanRecordInput(workoutPlanId: planId),
     );

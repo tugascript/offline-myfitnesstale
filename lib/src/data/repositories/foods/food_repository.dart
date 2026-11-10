@@ -48,27 +48,34 @@ import '../../../utils/result.dart';
 import './dtos/food_dto.dart';
 import '../core/dtos/paginated_dto.dart';
 import './inputs/food_input.dart';
+import '../core/repository.dart';
 
-class FoodRepository {
-  FoodRepository._();
-
-  static final FoodRepository _instance = FoodRepository._();
-
-  factory FoodRepository() => _instance;
+final class FoodRepository implements Repository {
+  final Dao<Food> _foodRepository;
+  final Dao<FoodPortion> _portionRepository;
 
   final Logger _logger = Logger('Food Service');
 
-  final Dao<Food> _foodRepository = Dao<Food>(
-    databaseHelper: DatabaseHelper(),
-    tableName: Food.table,
-    fromMap: Food.fromMap,
-  );
+  FoodRepository({
+    required this._foodRepository,
+    required this._portionRepository,
+  });
 
-  final Dao<FoodPortion> _portionRepository = Dao<FoodPortion>(
-    databaseHelper: DatabaseHelper(),
-    tableName: FoodPortion.table,
-    fromMap: FoodPortion.fromMap,
-  );
+  factory FoodRepository.create([DatabaseHelper? databaseHelper]) {
+    final helper = databaseHelper ?? DatabaseHelper();
+    return FoodRepository(
+      foodRepository: Dao<Food>(
+        databaseHelper: helper,
+        tableName: Food.table,
+        fromMap: Food.fromMap,
+      ),
+      portionRepository: Dao<FoodPortion>(
+        databaseHelper: helper,
+        tableName: FoodPortion.table,
+        fromMap: FoodPortion.fromMap,
+      ),
+    );
+  }
 
   Future<Result<FoodDto, ServiceError<SingleErrorTypes>>> createFood(
     FoodInput input, [

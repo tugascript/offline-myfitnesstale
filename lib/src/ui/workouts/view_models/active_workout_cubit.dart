@@ -32,12 +32,21 @@ import './states/active_workout_state.dart';
 import '../../core/view_models/states/common_state.dart';
 
 class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
-  final WorkoutRepository _workoutService = WorkoutRepository();
-  final WorkoutRecordRepository _workoutRecordService =
-      WorkoutRecordRepository();
+  final WorkoutRepository _workoutService;
+  final WorkoutRecordRepository _workoutRecordService;
+  final WorkoutPlanRecordRepository _workoutPlanRecordService;
   final Logger _logger = Logger("ActiveWorkoutCubit");
 
-  ActiveWorkoutCubit() : super(ActiveWorkoutState.initial());
+  ActiveWorkoutCubit([
+    WorkoutRepository? workoutService,
+    WorkoutRecordRepository? workoutRecordService,
+    WorkoutPlanRecordRepository? workoutPlanRecordService,
+  ]) : _workoutService = workoutService ?? WorkoutRepository.create(),
+       _workoutRecordService =
+           workoutRecordService ?? WorkoutRecordRepository.create(),
+       _workoutPlanRecordService =
+           workoutPlanRecordService ?? WorkoutPlanRecordRepository.create(),
+       super(ActiveWorkoutState.initial());
 
   Future<void> startWorkout(
     int workoutId, {
@@ -104,7 +113,7 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
         week != null &&
         day != null &&
         workoutPosition != null) {
-      final planRecordService = WorkoutPlanRecordRepository();
+      final planRecordService = _workoutPlanRecordService;
       final planWorkoutResult = await planRecordService
           .upsertWorkoutPlanWorkoutRecord(
             WorkoutPlanWorkoutRecordInput(
@@ -385,7 +394,7 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
   Future<void> cancelWorkout() async {
     if (state.workoutRecord != null) {
       if (state.workoutPlanRecordId != null) {
-        await WorkoutPlanRecordRepository().removeWorkoutPlanWorkoutRecord(
+        await _workoutPlanRecordService.removeWorkoutPlanWorkoutRecord(
           workoutPlanRecordId: state.workoutPlanRecordId!,
           workoutRecordId: state.workoutRecord!.id,
         );
@@ -418,7 +427,7 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
           week != null &&
           day != null &&
           position != null) {
-        final planRecordService = WorkoutPlanRecordRepository();
+        final planRecordService = _workoutPlanRecordService;
         final planResult = await planRecordService
             .updateWorkoutPlanWorkoutRecordStatus(
               WorkoutPlanWorkoutRecordInput(

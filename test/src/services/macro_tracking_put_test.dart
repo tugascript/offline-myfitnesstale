@@ -61,8 +61,8 @@ void main() {
   test(
     'food Cubit keeps paging and clears nullable category filters',
     () async {
-      await FoodRepository().createFood(foodInput);
-      await FoodRepository().createFood(foodInput);
+      await FoodRepository.create().createFood(foodInput);
+      await FoodRepository.create().createFood(foodInput);
       final cubit = FoodCubit();
       addTearDown(cubit.close);
       await cubit.getFoods(
@@ -89,7 +89,7 @@ void main() {
   );
 
   test('meal-plan Cubit preserves favorite filters after a PUT', () async {
-    final service = MealPlanRepository();
+    final service = MealPlanRepository.create();
     final plan = (await service.createMealPlan(
       const MealPlanInput(name: 'Favorite paging plan', weeks: []),
     )).value;
@@ -172,7 +172,7 @@ void main() {
   test(
     'food PUT clears nullable fields and accepts immutable portions',
     () async {
-      final service = FoodRepository();
+      final service = FoodRepository.create();
       final created = await service.createFood(
         const FoodInput(
           name: 'Oats',
@@ -222,7 +222,7 @@ void main() {
   test(
     'recipe PUT recalculates yield, clears fields, and rolls back failure',
     () async {
-      final food = (await FoodRepository().createFood(
+      final food = (await FoodRepository.create().createFood(
         const FoodInput(
           name: 'Fortified oats',
           category: FoodCategory.grainsAndCereals,
@@ -235,7 +235,7 @@ void main() {
           portions: [],
         ),
       )).value;
-      final service = RecipeRepository();
+      final service = RecipeRepository.create();
       final created = await service.createRecipe(
         RecipeInput(
           name: 'Porridge',
@@ -279,7 +279,7 @@ void main() {
   test(
     'meal-plan PUT keeps originating versions and rolls back invalid input',
     () async {
-      final food = (await FoodRepository().createFood(foodInput)).value;
+      final food = (await FoodRepository.create().createFood(foodInput)).value;
       List<MealPlanWeekInput> weeks(int foodId) => [
         MealPlanWeekInput(
           weekNumber: 1,
@@ -299,7 +299,7 @@ void main() {
           ],
         ),
       ];
-      final service = MealPlanRepository();
+      final service = MealPlanRepository.create();
       final created = (await service.createMealPlan(
         MealPlanInput(
           name: 'Original',
@@ -307,7 +307,7 @@ void main() {
           weeks: weeks(food.id),
         ),
       )).value;
-      final recordService = MealPlanRecordRepository();
+      final recordService = MealPlanRecordRepository.create();
       final started = await recordService.startMealPlan(mealPlanId: created.id);
       expect(started.isOk(), isTrue);
       final originalDayId = started.value.weeks.first.days.first.mealPlanDayId;
@@ -343,7 +343,7 @@ void main() {
   test(
     'macro-goal PUT clears water and preserves a single active goal',
     () async {
-      final service = MacroTrackingRepository();
+      final service = MacroTrackingRepository.create();
       final first = (await service.createMacroGoal(
         const MacroGoalInput(
           name: 'First',
@@ -386,7 +386,7 @@ void main() {
   test(
     'weight-goal and weight-record PUT share inputs and clear nullable fields',
     () async {
-      final service = WeightRecordRepository();
+      final service = WeightRecordRepository.create();
       final createdGoal = await service.createWeightGoal(
         WeightGoalInput(
           targetWeight: 75000,

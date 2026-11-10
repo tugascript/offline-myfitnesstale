@@ -29,10 +29,12 @@ import '../../core/view_models/states/common_state.dart';
 import './states/macro_tracking_state.dart';
 
 class MacroTrackingCubit extends Cubit<MacroTrackingState> {
-  final MacroTrackingRepository _macroService = MacroTrackingRepository();
+  final MacroTrackingRepository _macroService;
   final Logger _logger = Logger('MacroTrackingCubit');
 
-  MacroTrackingCubit() : super(MacroTrackingState.initial());
+  MacroTrackingCubit([MacroTrackingRepository? macroService])
+    : _macroService = macroService ?? MacroTrackingRepository.create(),
+      super(MacroTrackingState.initial());
 
   Future<void> getActiveMacroGoal() async {
     _logger.info('Getting active macro goal');

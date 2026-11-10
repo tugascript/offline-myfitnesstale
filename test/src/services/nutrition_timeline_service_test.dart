@@ -34,8 +34,8 @@ void main() {
   test(
     'timed submissions survive reload, roll up, and delete independently',
     () async {
-      final service = MacroTrackingRepository();
-      final food = (await FoodRepository().createFood(
+      final service = MacroTrackingRepository.create();
+      final food = (await FoodRepository.create().createFood(
         FoodInput(
           name: 'Timeline oats',
           category: FoodCategory.grainsAndCereals,
@@ -47,7 +47,7 @@ void main() {
           portions: const [],
         ),
       )).value;
-      final recipe = (await RecipeRepository().createRecipe(
+      final recipe = (await RecipeRepository.create().createRecipe(
         RecipeInput(
           name: 'Timeline recipe',
           servingsYield: 1,

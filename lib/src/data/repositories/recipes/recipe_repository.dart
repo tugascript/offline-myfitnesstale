@@ -34,39 +34,48 @@ import '../../../utils/result.dart';
 import '../core/dtos/paginated_dto.dart';
 import './dtos/recipe_dto.dart';
 import './inputs/recipe_input.dart';
+import '../core/repository.dart';
 
-class RecipeRepository {
-  RecipeRepository._();
-
-  static final RecipeRepository _instance = RecipeRepository._();
-
-  factory RecipeRepository() => _instance;
+final class RecipeRepository implements Repository {
+  final Dao<Recipe> _recipeRepository;
+  final Dao<RecipeItem> _itemRepository;
+  final Dao<Food> _foodRepository;
+  final Dao<FoodPortion> _portionRepository;
 
   final Logger _logger = Logger('Recipe Service');
 
-  final Dao<Recipe> _recipeRepository = Dao<Recipe>(
-    databaseHelper: DatabaseHelper(),
-    tableName: Recipe.table,
-    fromMap: Recipe.fromMap,
-  );
+  RecipeRepository({
+    required this._recipeRepository,
+    required this._itemRepository,
+    required this._foodRepository,
+    required this._portionRepository,
+  });
 
-  final Dao<RecipeItem> _itemRepository = Dao<RecipeItem>(
-    databaseHelper: DatabaseHelper(),
-    tableName: RecipeItem.table,
-    fromMap: RecipeItem.fromMap,
-  );
-
-  final Dao<Food> _foodRepository = Dao<Food>(
-    databaseHelper: DatabaseHelper(),
-    tableName: Food.table,
-    fromMap: Food.fromMap,
-  );
-
-  final Dao<FoodPortion> _portionRepository = Dao<FoodPortion>(
-    databaseHelper: DatabaseHelper(),
-    tableName: FoodPortion.table,
-    fromMap: FoodPortion.fromMap,
-  );
+  factory RecipeRepository.create([DatabaseHelper? databaseHelper]) {
+    final helper = databaseHelper ?? DatabaseHelper();
+    return RecipeRepository(
+      recipeRepository: Dao<Recipe>(
+        databaseHelper: helper,
+        tableName: Recipe.table,
+        fromMap: Recipe.fromMap,
+      ),
+      itemRepository: Dao<RecipeItem>(
+        databaseHelper: helper,
+        tableName: RecipeItem.table,
+        fromMap: RecipeItem.fromMap,
+      ),
+      foodRepository: Dao<Food>(
+        databaseHelper: helper,
+        tableName: Food.table,
+        fromMap: Food.fromMap,
+      ),
+      portionRepository: Dao<FoodPortion>(
+        databaseHelper: helper,
+        tableName: FoodPortion.table,
+        fromMap: FoodPortion.fromMap,
+      ),
+    );
+  }
 
   Future<Result<RecipeDto, ServiceError<SingleErrorTypes>>> createRecipe(
     RecipeInput input, [

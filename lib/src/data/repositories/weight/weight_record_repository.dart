@@ -33,27 +33,34 @@ import './dtos/weight_goal_dto.dart';
 import './dtos/weight_record_dto.dart';
 import './inputs/weight_goal_input.dart';
 import './inputs/weight_record_input.dart';
+import '../core/repository.dart';
 
-class WeightRecordRepository {
-  WeightRecordRepository._();
-
-  static final WeightRecordRepository _instance = WeightRecordRepository._();
-
-  factory WeightRecordRepository() => _instance;
+final class WeightRecordRepository implements Repository {
+  final Dao<WeightRecord> _repository;
+  final Dao<WeightGoal> _weightGoalRepository;
 
   final Logger _logger = Logger('Weight Record Service');
 
-  final Dao<WeightRecord> _repository = Dao<WeightRecord>(
-    databaseHelper: DatabaseHelper(),
-    tableName: WeightRecord.table,
-    fromMap: (map) => WeightRecord.fromMap(map),
-  );
+  WeightRecordRepository({
+    required this._repository,
+    required this._weightGoalRepository,
+  });
 
-  final Dao<WeightGoal> _weightGoalRepository = Dao<WeightGoal>(
-    databaseHelper: DatabaseHelper(),
-    tableName: WeightGoal.table,
-    fromMap: (map) => WeightGoal.fromMap(map),
-  );
+  factory WeightRecordRepository.create([DatabaseHelper? databaseHelper]) {
+    final helper = databaseHelper ?? DatabaseHelper();
+    return WeightRecordRepository(
+      repository: Dao<WeightRecord>(
+        databaseHelper: helper,
+        tableName: WeightRecord.table,
+        fromMap: (map) => WeightRecord.fromMap(map),
+      ),
+      weightGoalRepository: Dao<WeightGoal>(
+        databaseHelper: helper,
+        tableName: WeightGoal.table,
+        fromMap: (map) => WeightGoal.fromMap(map),
+      ),
+    );
+  }
 
   Future<Result<WeightGoalDto, ServiceError<OperationErrorTypes>>>
   createWeightGoal(WeightGoalInput input) async {

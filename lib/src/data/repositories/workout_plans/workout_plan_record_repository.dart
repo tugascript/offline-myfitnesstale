@@ -42,61 +42,78 @@ import './dtos/workout_plan_record_dto.dart';
 import './dtos/workout_plan_week_record_dto.dart';
 import './dtos/workout_plan_workout_record_dto.dart';
 import './inputs/workout_plan_record_input.dart';
+import '../core/repository.dart';
 
 export './inputs/workout_plan_record_input.dart';
 
-class WorkoutPlanRecordRepository {
-  WorkoutPlanRecordRepository._();
-
-  static final WorkoutPlanRecordRepository instance =
-      WorkoutPlanRecordRepository._();
-
-  factory WorkoutPlanRecordRepository() => instance;
+final class WorkoutPlanRecordRepository implements Repository {
+  final Dao<WorkoutPlanRecord> _repository;
+  final Dao<WorkoutPlanWeekRecord> _workoutPlanWeekRecordRepository;
+  final Dao<WorkoutPlanDayRecord> _workoutPlanDayRecordRepository;
+  final Dao<WorkoutPlanWorkoutRecord> _workoutPlanWorkoutRecordRepository;
+  final Dao<WorkoutPlan> _workoutPlanRepository;
+  final Dao<WorkoutPlanWeek> _workoutPlanWeekRepository;
+  final Dao<WorkoutPlanDay> _workoutPlanDayRepository;
+  final Dao<WorkoutPlanWorkout> _workoutPlanWorkoutRepository;
 
   final Logger _logger = Logger('Workout Plan Record Service');
 
-  final _repository = Dao<WorkoutPlanRecord>(
-    databaseHelper: DatabaseHelper(),
-    tableName: WorkoutPlanRecord.table,
-    fromMap: (map) => WorkoutPlanRecord.fromMap(map),
-  );
+  WorkoutPlanRecordRepository({
+    required this._repository,
+    required this._workoutPlanWeekRecordRepository,
+    required this._workoutPlanDayRecordRepository,
+    required this._workoutPlanWorkoutRecordRepository,
+    required this._workoutPlanRepository,
+    required this._workoutPlanWeekRepository,
+    required this._workoutPlanDayRepository,
+    required this._workoutPlanWorkoutRepository,
+  });
 
-  final _workoutPlanWeekRecordRepository = Dao<WorkoutPlanWeekRecord>(
-    databaseHelper: DatabaseHelper(),
-    tableName: WorkoutPlanWeekRecord.table,
-    fromMap: (map) => WorkoutPlanWeekRecord.fromMap(map),
-  );
-  final _workoutPlanDayRecordRepository = Dao<WorkoutPlanDayRecord>(
-    databaseHelper: DatabaseHelper(),
-    tableName: WorkoutPlanDayRecord.table,
-    fromMap: (map) => WorkoutPlanDayRecord.fromMap(map),
-  );
-  final _workoutPlanWorkoutRecordRepository = Dao<WorkoutPlanWorkoutRecord>(
-    databaseHelper: DatabaseHelper(),
-    tableName: WorkoutPlanWorkoutRecord.table,
-    fromMap: (map) => WorkoutPlanWorkoutRecord.fromMap(map),
-  );
-
-  final _workoutPlanRepository = Dao<WorkoutPlan>(
-    databaseHelper: DatabaseHelper(),
-    tableName: WorkoutPlan.table,
-    fromMap: (map) => WorkoutPlan.fromMap(map),
-  );
-  final _workoutPlanWeekRepository = Dao<WorkoutPlanWeek>(
-    databaseHelper: DatabaseHelper(),
-    tableName: WorkoutPlanWeek.table,
-    fromMap: (map) => WorkoutPlanWeek.fromMap(map),
-  );
-  final _workoutPlanDayRepository = Dao<WorkoutPlanDay>(
-    databaseHelper: DatabaseHelper(),
-    tableName: WorkoutPlanDay.table,
-    fromMap: (map) => WorkoutPlanDay.fromMap(map),
-  );
-  final _workoutPlanWorkoutRepository = Dao<WorkoutPlanWorkout>(
-    databaseHelper: DatabaseHelper(),
-    tableName: WorkoutPlanWorkout.table,
-    fromMap: (map) => WorkoutPlanWorkout.fromMap(map),
-  );
+  factory WorkoutPlanRecordRepository.create([DatabaseHelper? databaseHelper]) {
+    final helper = databaseHelper ?? DatabaseHelper();
+    return WorkoutPlanRecordRepository(
+      repository: Dao<WorkoutPlanRecord>(
+        databaseHelper: helper,
+        tableName: WorkoutPlanRecord.table,
+        fromMap: (map) => WorkoutPlanRecord.fromMap(map),
+      ),
+      workoutPlanWeekRecordRepository: Dao<WorkoutPlanWeekRecord>(
+        databaseHelper: helper,
+        tableName: WorkoutPlanWeekRecord.table,
+        fromMap: (map) => WorkoutPlanWeekRecord.fromMap(map),
+      ),
+      workoutPlanDayRecordRepository: Dao<WorkoutPlanDayRecord>(
+        databaseHelper: helper,
+        tableName: WorkoutPlanDayRecord.table,
+        fromMap: (map) => WorkoutPlanDayRecord.fromMap(map),
+      ),
+      workoutPlanWorkoutRecordRepository: Dao<WorkoutPlanWorkoutRecord>(
+        databaseHelper: helper,
+        tableName: WorkoutPlanWorkoutRecord.table,
+        fromMap: (map) => WorkoutPlanWorkoutRecord.fromMap(map),
+      ),
+      workoutPlanRepository: Dao<WorkoutPlan>(
+        databaseHelper: helper,
+        tableName: WorkoutPlan.table,
+        fromMap: (map) => WorkoutPlan.fromMap(map),
+      ),
+      workoutPlanWeekRepository: Dao<WorkoutPlanWeek>(
+        databaseHelper: helper,
+        tableName: WorkoutPlanWeek.table,
+        fromMap: (map) => WorkoutPlanWeek.fromMap(map),
+      ),
+      workoutPlanDayRepository: Dao<WorkoutPlanDay>(
+        databaseHelper: helper,
+        tableName: WorkoutPlanDay.table,
+        fromMap: (map) => WorkoutPlanDay.fromMap(map),
+      ),
+      workoutPlanWorkoutRepository: Dao<WorkoutPlanWorkout>(
+        databaseHelper: helper,
+        tableName: WorkoutPlanWorkout.table,
+        fromMap: (map) => WorkoutPlanWorkout.fromMap(map),
+      ),
+    );
+  }
 
   Future<
     Result<

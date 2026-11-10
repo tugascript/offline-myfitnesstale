@@ -40,11 +40,11 @@ import '../../support/test_database.dart';
 
 void main() {
   final testDatabase = TestDatabase();
-  final foodService = FoodRepository();
-  final recipeService = RecipeRepository();
-  final macroTrackingService = MacroTrackingRepository();
-  final mealPlanService = MealPlanRepository();
-  final mealPlanRecordService = MealPlanRecordRepository();
+  final foodService = FoodRepository.create();
+  final recipeService = RecipeRepository.create();
+  final macroTrackingService = MacroTrackingRepository.create();
+  final mealPlanService = MealPlanRepository.create();
+  final mealPlanRecordService = MealPlanRecordRepository.create();
 
   setUpAll(() async {
     await testDatabase.initialize();

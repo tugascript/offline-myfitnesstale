@@ -30,33 +30,41 @@ import '../../../utils/result.dart';
 import './dtos/profile_dto.dart';
 import './dtos/reminders_config_dto.dart';
 import './dtos/system_dto.dart';
+import '../core/repository.dart';
 
-class ProfileRepository {
-  ProfileRepository._();
-
-  static final ProfileRepository _instance = ProfileRepository._();
-
-  factory ProfileRepository() => _instance;
+final class ProfileRepository implements Repository {
+  final Dao<Profile> _repository;
+  final Dao<System> _systemRepository;
+  final Dao<RemindersConfig> _remindersRepository;
 
   final Logger _logger = Logger("Profile Service");
 
-  final _repository = Dao<Profile>(
-    databaseHelper: DatabaseHelper(),
-    tableName: Profile.table,
-    fromMap: Profile.fromMap,
-  );
+  ProfileRepository({
+    required this._repository,
+    required this._systemRepository,
+    required this._remindersRepository,
+  });
 
-  final _systemRepository = Dao<System>(
-    databaseHelper: DatabaseHelper(),
-    tableName: System.table,
-    fromMap: System.fromMap,
-  );
-
-  final _remindersRepository = Dao<RemindersConfig>(
-    databaseHelper: DatabaseHelper(),
-    tableName: RemindersConfig.table,
-    fromMap: RemindersConfig.fromMap,
-  );
+  factory ProfileRepository.create([DatabaseHelper? databaseHelper]) {
+    final helper = databaseHelper ?? DatabaseHelper();
+    return ProfileRepository(
+      repository: Dao<Profile>(
+        databaseHelper: helper,
+        tableName: Profile.table,
+        fromMap: Profile.fromMap,
+      ),
+      systemRepository: Dao<System>(
+        databaseHelper: helper,
+        tableName: System.table,
+        fromMap: System.fromMap,
+      ),
+      remindersRepository: Dao<RemindersConfig>(
+        databaseHelper: helper,
+        tableName: RemindersConfig.table,
+        fromMap: RemindersConfig.fromMap,
+      ),
+    );
+  }
 
   Future<Result<ProfileDto, ServiceError<OperationErrorTypes>>> upsertProfile({
     required String name,

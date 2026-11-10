@@ -33,8 +33,8 @@ import '../../support/test_database.dart';
 
 void main() {
   final testDatabase = TestDatabase();
-  final workoutPlanService = WorkoutPlanRepository();
-  final workoutPlanRecordService = WorkoutPlanRecordRepository();
+  final workoutPlanService = WorkoutPlanRepository.create();
+  final workoutPlanRecordService = WorkoutPlanRecordRepository.create();
   int seedCounter = 0;
 
   String uniqueName(String prefix) => '$prefix-${seedCounter++}';

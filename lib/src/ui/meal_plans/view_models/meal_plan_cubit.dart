@@ -28,10 +28,12 @@ import '../../core/view_models/states/common_state.dart';
 import './states/meal_plan_state.dart';
 
 class MealPlanCubit extends Cubit<MealPlanState> {
-  final MealPlanRepository _mealPlanService = MealPlanRepository();
+  final MealPlanRepository _mealPlanService;
   final Logger _logger = Logger('MealPlanCubit');
 
-  MealPlanCubit() : super(MealPlanState.initial());
+  MealPlanCubit([MealPlanRepository? mealPlanService])
+    : _mealPlanService = mealPlanService ?? MealPlanRepository.create(),
+      super(MealPlanState.initial());
 
   Future<void> getMealPlans({
     String? search,

@@ -41,53 +41,64 @@ import './dtos/workout_dto.dart';
 import './dtos/workout_set_exercise_dto.dart';
 import './dtos/workout_set_exercise_option_dto.dart';
 import './inputs/workout_input.dart';
+import '../core/repository.dart';
 
 export './inputs/workout_input.dart';
 
-class WorkoutRepository {
-  WorkoutRepository._();
-
-  static final WorkoutRepository instance = WorkoutRepository._();
-
-  factory WorkoutRepository() => instance;
+final class WorkoutRepository implements Repository {
+  final Dao<Workout> _repository;
+  final Dao<WorkoutSet> _setRepository;
+  final Dao<WorkoutSetExercise> _setExerciseRepository;
+  final Dao<WorkoutSetExerciseOption> _setExerciseOptionRepository;
+  final Dao<Exercise> _exerciseRepository;
+  final Dao<WorkoutRecord> _workoutRecordRepository;
 
   final Logger _logger = Logger('Workout Service');
 
-  final _repository = Dao<Workout>(
-    databaseHelper: DatabaseHelper(),
-    tableName: Workout.table,
-    fromMap: Workout.fromMap,
-  );
+  WorkoutRepository({
+    required this._repository,
+    required this._setRepository,
+    required this._setExerciseRepository,
+    required this._setExerciseOptionRepository,
+    required this._exerciseRepository,
+    required this._workoutRecordRepository,
+  });
 
-  final _setRepository = Dao<WorkoutSet>(
-    databaseHelper: DatabaseHelper(),
-    tableName: WorkoutSet.table,
-    fromMap: WorkoutSet.fromMap,
-  );
-
-  final _setExerciseRepository = Dao<WorkoutSetExercise>(
-    databaseHelper: DatabaseHelper(),
-    tableName: WorkoutSetExercise.table,
-    fromMap: WorkoutSetExercise.fromMap,
-  );
-
-  final _setExerciseOptionRepository = Dao<WorkoutSetExerciseOption>(
-    databaseHelper: DatabaseHelper(),
-    tableName: WorkoutSetExerciseOption.table,
-    fromMap: WorkoutSetExerciseOption.fromMap,
-  );
-
-  final _exerciseRepository = Dao<Exercise>(
-    databaseHelper: DatabaseHelper(),
-    tableName: Exercise.table,
-    fromMap: Exercise.fromMap,
-  );
-
-  final _workoutRecordRepository = Dao<WorkoutRecord>(
-    databaseHelper: DatabaseHelper(),
-    tableName: WorkoutRecord.table,
-    fromMap: WorkoutRecord.fromMap,
-  );
+  factory WorkoutRepository.create([DatabaseHelper? databaseHelper]) {
+    final helper = databaseHelper ?? DatabaseHelper();
+    return WorkoutRepository(
+      repository: Dao<Workout>(
+        databaseHelper: helper,
+        tableName: Workout.table,
+        fromMap: Workout.fromMap,
+      ),
+      setRepository: Dao<WorkoutSet>(
+        databaseHelper: helper,
+        tableName: WorkoutSet.table,
+        fromMap: WorkoutSet.fromMap,
+      ),
+      setExerciseRepository: Dao<WorkoutSetExercise>(
+        databaseHelper: helper,
+        tableName: WorkoutSetExercise.table,
+        fromMap: WorkoutSetExercise.fromMap,
+      ),
+      setExerciseOptionRepository: Dao<WorkoutSetExerciseOption>(
+        databaseHelper: helper,
+        tableName: WorkoutSetExerciseOption.table,
+        fromMap: WorkoutSetExerciseOption.fromMap,
+      ),
+      exerciseRepository: Dao<Exercise>(
+        databaseHelper: helper,
+        tableName: Exercise.table,
+        fromMap: Exercise.fromMap,
+      ),
+      workoutRecordRepository: Dao<WorkoutRecord>(
+        databaseHelper: helper,
+        tableName: WorkoutRecord.table,
+        fromMap: WorkoutRecord.fromMap,
+      ),
+    );
+  }
 
   Future<
     Result<PaginatedDto<WorkoutDto, Workout>, ServiceError<OperationErrorTypes>>
