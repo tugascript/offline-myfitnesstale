@@ -15,9 +15,14 @@
 // You should have received a copy of the GNU General Public License
 // along with My Fitness Tale.  If not, see <https://www.gnu.org/licenses/>.
 
-import '../../../../utils/nullable.dart';
+import 'package:equatable/equatable.dart';
 
-final class WeightRecordInput {
+import '../../../../utils/nullable.dart';
+import '../../../models/sqlite/weight_record_model.dart';
+import '../../core/inputs/input.dart';
+
+final class WeightRecordInput extends Equatable
+    implements ModelInput<WeightRecord> {
   final int weight;
   final DateTime recordDate;
   final Nullable<int> fatPercentage;
@@ -29,4 +34,7 @@ final class WeightRecordInput {
     this.fatPercentage = const Nullable<int>(null),
     this.pictureUri = const Nullable<String>(null),
   });
+
+  @override
+  List<Object?> get props => [weight, recordDate, fatPercentage, pictureUri];
 }
