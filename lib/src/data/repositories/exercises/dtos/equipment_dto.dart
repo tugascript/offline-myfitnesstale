@@ -1,10 +1,10 @@
 import 'package:equatable/equatable.dart';
 
-import '../../../../utils/nullable.dart';
-import '../../../utils/enums.dart';
-import '../../../models/equipment_model.dart';
-import '../../core/dtos/dto.dart';
-import '../../../../services/dtos/picture_dto.dart';
+import 'package:myfitnesstale/src/utils/nullable.dart';
+import 'package:myfitnesstale/src/data/utils/enums.dart';
+import 'package:myfitnesstale/src/data/models/equipment_model.dart';
+import 'package:myfitnesstale/src/data/repositories/core/dtos/dto.dart';
+import 'package:myfitnesstale/src/data/repositories/core/dtos/picture_dto.dart';
 
 class EquipmentDto extends Equatable implements Dto<Equipment> {
   @override

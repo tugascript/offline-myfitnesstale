@@ -6,7 +6,7 @@ import '../../../../ui/exercises/view_models/exercise_cubit.dart';
 import '../../../../cubits/states/workout_state.dart';
 import '../../../../cubits/workout_cubit.dart';
 import '../../../../data/utils/enums.dart';
-import '../../../../services/dtos/workout_set_dto.dart';
+import 'package:myfitnesstale/src/data/repositories/workouts/dtos/workout_set_dto.dart';
 import '../../../../ui/core/sizes/data_display_sizes.dart';
 import '../../../../ui/core/sizes/screen_size.dart';
 import '../../../../ui/core/widgets/editors/save_buttons.dart';

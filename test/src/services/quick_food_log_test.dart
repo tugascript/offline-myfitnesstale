@@ -1,14 +1,14 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:myfitnesstale/src/cubits/macro_tracking_cubit.dart';
 import 'package:myfitnesstale/src/utils/errors.dart';
-import 'package:myfitnesstale/src/services/inputs/quick_food_log_input.dart';
-import 'package:myfitnesstale/src/services/macro_tracking_service.dart';
+import 'package:myfitnesstale/src/data/repositories/macros/inputs/quick_food_log_input.dart';
+import 'package:myfitnesstale/src/data/repositories/macros/macro_tracking_repository.dart';
 
 import '../../support/test_database.dart';
 
 void main() {
   final database = TestDatabase();
-  final service = MacroTrackingService();
+  final service = MacroTrackingRepository();
   setUp(database.initialize);
   tearDown(database.destroy);
 

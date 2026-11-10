@@ -22,9 +22,9 @@ import 'package:myfitnesstale/src/data/repositories/exercises/exercise_record_re
 import 'package:myfitnesstale/src/data/repositories/exercises/exercise_repository.dart';
 import 'package:myfitnesstale/src/data/utils/enums.dart';
 import 'package:myfitnesstale/src/routing/routing.dart';
-import 'package:myfitnesstale/src/services/dtos/profile_dto.dart';
-import 'package:myfitnesstale/src/services/dtos/system_dto.dart';
-import 'package:myfitnesstale/src/services/dtos/workout_plan_dto.dart';
+import 'package:myfitnesstale/src/data/repositories/profile/dtos/profile_dto.dart';
+import 'package:myfitnesstale/src/data/repositories/profile/dtos/system_dto.dart';
+import 'package:myfitnesstale/src/data/repositories/workout_plans/dtos/workout_plan_dto.dart';
 import 'package:myfitnesstale/src/ui/core/sizes/data_display_sizes.dart';
 import 'package:myfitnesstale/src/ui/core/sizes/screen_size.dart';
 import 'package:myfitnesstale/src/ui/exercises/screens/strength_goals_view.dart';

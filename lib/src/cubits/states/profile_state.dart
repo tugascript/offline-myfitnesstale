@@ -1,8 +1,8 @@
 import 'package:equatable/equatable.dart';
 
-import '../../services/dtos/profile_dto.dart';
-import '../../services/dtos/reminders_config_dto.dart';
-import '../../services/dtos/system_dto.dart';
+import 'package:myfitnesstale/src/data/repositories/profile/dtos/profile_dto.dart';
+import 'package:myfitnesstale/src/data/repositories/profile/dtos/reminders_config_dto.dart';
+import 'package:myfitnesstale/src/data/repositories/profile/dtos/system_dto.dart';
 import 'common_state.dart';
 
 final class ProfileState extends Equatable {

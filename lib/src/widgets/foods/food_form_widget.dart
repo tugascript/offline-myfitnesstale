@@ -1,12 +1,12 @@
 import '../layout/responsive_fields.dart';
 import '../layout/app_text_form_field.dart';
 import '../../utils/nullable.dart';
-import '../../services/inputs/food_input.dart';
+import 'package:myfitnesstale/src/data/repositories/foods/inputs/food_input.dart';
 
 import 'package:flutter/material.dart';
 
 import '../../data/utils/enums.dart';
-import '../../services/dtos/food_dto.dart';
+import 'package:myfitnesstale/src/data/repositories/foods/dtos/food_dto.dart';
 import '../../ui/core/sizes/data_display_sizes.dart';
 
 class FoodFormWidget extends StatefulWidget {

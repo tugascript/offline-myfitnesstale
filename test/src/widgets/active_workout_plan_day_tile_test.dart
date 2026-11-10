@@ -3,10 +3,10 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:myfitnesstale/src/data/utils/json_data.dart';
 import 'package:myfitnesstale/src/data/utils/enums.dart';
-import 'package:myfitnesstale/src/services/dtos/workout_dto.dart';
-import 'package:myfitnesstale/src/services/dtos/workout_plan_day_dto.dart';
-import 'package:myfitnesstale/src/services/dtos/workout_plan_workout_dto.dart';
-import 'package:myfitnesstale/src/services/dtos/workout_plan_workout_record_dto.dart';
+import 'package:myfitnesstale/src/data/repositories/workouts/dtos/workout_dto.dart';
+import 'package:myfitnesstale/src/data/repositories/workout_plans/dtos/workout_plan_day_dto.dart';
+import 'package:myfitnesstale/src/data/repositories/workout_plans/dtos/workout_plan_workout_dto.dart';
+import 'package:myfitnesstale/src/data/repositories/workout_plans/dtos/workout_plan_workout_record_dto.dart';
 import 'package:myfitnesstale/src/ui/core/sizes/data_display_sizes.dart';
 import 'package:myfitnesstale/src/widgets/workout_plan/active/active_workout_plan_day_tile.dart';
 

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../services/dtos/workout_plan_dto.dart';
+import 'package:myfitnesstale/src/data/repositories/workout_plans/dtos/workout_plan_dto.dart';
 import '../../ui/core/sizes/data_display_sizes.dart';
 import '../../ui/core/widgets/difficulty_badge.dart';
 import '../../ui/core/widgets/total_numeric_string.dart';

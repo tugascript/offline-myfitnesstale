@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../../../../data/utils/enums.dart';
 
-import '../../../../services/dtos/profile_dto.dart';
-import '../../../../services/dtos/system_dto.dart';
+import 'package:myfitnesstale/src/data/repositories/profile/dtos/profile_dto.dart';
+import 'package:myfitnesstale/src/data/repositories/profile/dtos/system_dto.dart';
 import '../../../core/utils/converters.dart';
 import '../../../core/sizes/data_display_sizes.dart';
 import '../../../../data/utils/display_names.dart';

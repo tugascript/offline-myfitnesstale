@@ -6,7 +6,7 @@ import 'package:myfitnesstale/src/utils/nullable.dart';
 import 'package:myfitnesstale/src/cubits/recipe_cubit.dart';
 import 'package:myfitnesstale/src/data/utils/enums.dart';
 import 'package:myfitnesstale/src/routing/routing.dart';
-import 'package:myfitnesstale/src/services/dtos/recipe_dto.dart';
+import 'package:myfitnesstale/src/data/repositories/recipes/dtos/recipe_dto.dart';
 import 'package:myfitnesstale/src/views/recipes/recipe_details_view.dart';
 import 'package:myfitnesstale/src/views/recipes/recipes_view.dart';
 import 'package:myfitnesstale/src/ui/core/widgets/favourite_checkbox.dart';

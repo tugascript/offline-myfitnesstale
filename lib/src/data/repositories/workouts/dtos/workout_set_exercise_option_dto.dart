@@ -1,0 +1,65 @@
+import 'package:equatable/equatable.dart';
+import 'package:myfitnesstale/src/data/repositories/exercises/dtos/exercise_dto.dart';
+
+import 'package:myfitnesstale/src/utils/nullable.dart';
+import 'package:myfitnesstale/src/data/models/workout_set_exercise_option_model.dart';
+import 'package:myfitnesstale/src/data/repositories/core/dtos/dto.dart';
+
+class WorkoutSetExerciseOptionDto extends Equatable
+    implements Dto<WorkoutSetExerciseOption> {
+  @override
+  final int id;
+  final int workoutSetExerciseId;
+  final int exerciseId;
+  final int position;
+
+  // related data
+  final ExerciseDto? exercise;
+
+  const WorkoutSetExerciseOptionDto({
+    required this.id,
+    required this.workoutSetExerciseId,
+    required this.exerciseId,
+    required this.position,
+    this.exercise,
+  });
+
+  factory WorkoutSetExerciseOptionDto.fromModel(
+    WorkoutSetExerciseOption model, {
+    ExerciseDto? exercise,
+  }) {
+    return WorkoutSetExerciseOptionDto(
+      id: model.id!,
+      workoutSetExerciseId: model.workoutSetExerciseId,
+      exerciseId: model.exerciseId,
+      position: model.position,
+      exercise: exercise,
+    );
+  }
+
+  @override
+  WorkoutSetExerciseOptionDto copyWith({
+    int? id,
+    int? workoutSetExerciseId,
+    int? exerciseId,
+    int? position,
+    Nullable<ExerciseDto>? exercise,
+  }) {
+    return WorkoutSetExerciseOptionDto(
+      id: id ?? this.id,
+      workoutSetExerciseId: workoutSetExerciseId ?? this.workoutSetExerciseId,
+      exerciseId: exerciseId ?? this.exerciseId,
+      position: position ?? this.position,
+      exercise: exercise != null ? exercise.value : this.exercise,
+    );
+  }
+
+  @override
+  List<Object?> get props => [
+    id,
+    workoutSetExerciseId,
+    exerciseId,
+    position,
+    exercise,
+  ];
+}

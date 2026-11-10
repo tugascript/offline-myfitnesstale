@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../services/dtos/workout_plan_day_dto.dart';
+import 'package:myfitnesstale/src/data/repositories/workout_plans/dtos/workout_plan_day_dto.dart';
 import '../../../ui/core/sizes/data_display_sizes.dart';
 import 'workout_plan_workout_card.dart';
 

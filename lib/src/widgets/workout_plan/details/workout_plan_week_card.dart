@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../data/utils/enums.dart';
 
-import '../../../services/dtos/workout_plan_week_dto.dart';
+import 'package:myfitnesstale/src/data/repositories/workout_plans/dtos/workout_plan_week_dto.dart';
 import '../../../ui/core/sizes/data_display_sizes.dart';
 import '../../../ui/core/widgets/detail_number.dart';
 import 'workout_plan_day_card.dart';

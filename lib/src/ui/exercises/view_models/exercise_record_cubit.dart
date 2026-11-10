@@ -5,7 +5,7 @@ import '../../../cubits/states/common_state.dart';
 import '../../../data/repositories/exercises/exercise_record_repository.dart';
 import '../../../data/repositories/exercises/inputs/exercise_record_input.dart';
 import '../../../data/services/common.dart';
-import '../../../services/inputs/strength_goal_input.dart';
+import 'package:myfitnesstale/src/data/repositories/exercises/inputs/strength_goal_input.dart';
 import '../../../utils/errors.dart';
 import '../../../utils/nullable.dart';
 import 'states/exercise_record_state.dart';

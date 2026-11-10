@@ -4,17 +4,17 @@ import 'package:logging/logging.dart';
 import '../utils/nullable.dart';
 import '../data/utils/enums.dart';
 import '../utils/errors.dart';
-import '../services/workout_plan_record_service.dart';
-import '../services/workout_plan_service.dart';
+import 'package:myfitnesstale/src/data/repositories/workout_plans/workout_plan_record_repository.dart';
+import 'package:myfitnesstale/src/data/repositories/workout_plans/workout_plan_repository.dart';
 import 'states/common_state.dart';
 import 'states/workout_plan_record_state.dart';
 
-export '../services/inputs/workout_plan_record_input.dart';
+export 'package:myfitnesstale/src/data/repositories/workout_plans/inputs/workout_plan_record_input.dart';
 
 class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
-  final WorkoutPlanRecordService _workoutPlanRecordService =
-      WorkoutPlanRecordService();
-  final WorkoutPlanService _workoutPlanService = WorkoutPlanService();
+  final WorkoutPlanRecordRepository _workoutPlanRecordService =
+      WorkoutPlanRecordRepository();
+  final WorkoutPlanRepository _workoutPlanService = WorkoutPlanRepository();
 
   WorkoutPlanRecordCubit() : super(WorkoutPlanRecordState.initial());
 

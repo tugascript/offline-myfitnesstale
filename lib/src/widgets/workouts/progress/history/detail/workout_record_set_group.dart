@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
 import '../../../../../data/utils/enums.dart';
-import '../../../../../services/dtos/workout_set_dto.dart';
-import '../../../../../services/dtos/workout_set_exercise_record_dto.dart';
-import '../../../../../services/dtos/workout_set_record_dto.dart';
+import 'package:myfitnesstale/src/data/repositories/workouts/dtos/workout_set_dto.dart';
+import 'package:myfitnesstale/src/data/repositories/workouts/dtos/workout_set_exercise_record_dto.dart';
+import 'package:myfitnesstale/src/data/repositories/workouts/dtos/workout_set_record_dto.dart';
 import '../../../../../ui/core/utils/converters.dart';
 import '../../../../../ui/core/utils/formatters.dart';
 import '../../../../../ui/core/sizes/data_display_sizes.dart';

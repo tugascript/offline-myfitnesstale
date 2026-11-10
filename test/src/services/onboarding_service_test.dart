@@ -19,7 +19,7 @@ import 'package:myfitnesstale/src/data/models/workout_plan_workout_model.dart';
 import 'package:myfitnesstale/src/data/models/workout_set_exercise_model.dart';
 import 'package:myfitnesstale/src/data/models/workout_set_exercise_option_model.dart';
 import 'package:myfitnesstale/src/data/models/workout_set_model.dart';
-import 'package:myfitnesstale/src/services/onboarding_service.dart';
+import 'package:myfitnesstale/src/data/repositories/onboarding/onboarding_repository.dart';
 
 import '../../support/test_database.dart';
 
@@ -104,7 +104,7 @@ void main() {
 
   test('commits core onboarding without optional workouts', () async {
     expect(kInitialExercises, hasLength(89));
-    final result = await OnboardingService().onboard(requestWithoutWorkouts);
+    final result = await OnboardingRepository().onboard(requestWithoutWorkouts);
 
     expect(result.isOk(), isTrue);
     expect(result.value.profile.name, 'Atomic Tester');
@@ -124,7 +124,7 @@ void main() {
 
   test('commits the complete optional workout and plan seed', () async {
     expect(kStandardWorkouts, hasLength(16));
-    final result = await OnboardingService().onboard(requestWithWorkouts);
+    final result = await OnboardingRepository().onboard(requestWithWorkouts);
 
     expect(result.isOk(), isTrue);
     expect(result.value.system.initialSetup, SetUpStatus.completed);
@@ -162,7 +162,7 @@ void main() {
   for (final failureStage in OnboardingStage.values) {
     test('rolls back and retries after ${failureStage.name}', () async {
       var injected = false;
-      final service = OnboardingService(
+      final service = OnboardingRepository(
         afterStage: (stage) {
           if (stage == failureStage && !injected) {
             injected = true;
@@ -189,7 +189,7 @@ void main() {
   }
 
   test('completed onboarding is idempotent', () async {
-    final service = OnboardingService();
+    final service = OnboardingRepository();
     final first = await service.onboard(requestWithWorkouts);
     expect(first.isOk(), isTrue);
     final originalCounts = await counts();
@@ -226,7 +226,7 @@ void main() {
       ).toMap(),
     );
 
-    final result = await OnboardingService().onboard(requestWithoutWorkouts);
+    final result = await OnboardingRepository().onboard(requestWithoutWorkouts);
 
     expect(result.isErr(), isTrue);
     expect(result.error.description, contains('Clear app data'));

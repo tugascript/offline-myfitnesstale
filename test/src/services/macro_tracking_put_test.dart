@@ -6,19 +6,19 @@ import 'package:myfitnesstale/src/data/models/exercise_model.dart';
 import 'package:myfitnesstale/src/data/repositories/exercises/exercise_record_repository.dart';
 import 'package:myfitnesstale/src/data/utils/enums.dart';
 import 'package:myfitnesstale/src/data/utils/json_data.dart';
-import 'package:myfitnesstale/src/services/food_service.dart';
-import 'package:myfitnesstale/src/services/inputs/food_input.dart';
-import 'package:myfitnesstale/src/services/inputs/macro_goal_input.dart';
-import 'package:myfitnesstale/src/services/inputs/meal_plan_input.dart';
-import 'package:myfitnesstale/src/services/inputs/recipe_input.dart';
-import 'package:myfitnesstale/src/services/inputs/strength_goal_input.dart';
-import 'package:myfitnesstale/src/services/inputs/weight_goal_input.dart';
-import 'package:myfitnesstale/src/services/inputs/weight_record_input.dart';
-import 'package:myfitnesstale/src/services/macro_tracking_service.dart';
-import 'package:myfitnesstale/src/services/meal_plan_record_service.dart';
-import 'package:myfitnesstale/src/services/meal_plan_service.dart';
-import 'package:myfitnesstale/src/services/recipe_service.dart';
-import 'package:myfitnesstale/src/services/weight_record_service.dart';
+import 'package:myfitnesstale/src/data/repositories/foods/food_repository.dart';
+import 'package:myfitnesstale/src/data/repositories/foods/inputs/food_input.dart';
+import 'package:myfitnesstale/src/data/repositories/macros/inputs/macro_goal_input.dart';
+import 'package:myfitnesstale/src/data/repositories/meal_plans/inputs/meal_plan_input.dart';
+import 'package:myfitnesstale/src/data/repositories/recipes/inputs/recipe_input.dart';
+import 'package:myfitnesstale/src/data/repositories/exercises/inputs/strength_goal_input.dart';
+import 'package:myfitnesstale/src/data/repositories/weight/inputs/weight_goal_input.dart';
+import 'package:myfitnesstale/src/data/repositories/weight/inputs/weight_record_input.dart';
+import 'package:myfitnesstale/src/data/repositories/macros/macro_tracking_repository.dart';
+import 'package:myfitnesstale/src/data/repositories/meal_plans/meal_plan_record_repository.dart';
+import 'package:myfitnesstale/src/data/repositories/meal_plans/meal_plan_repository.dart';
+import 'package:myfitnesstale/src/data/repositories/recipes/recipe_repository.dart';
+import 'package:myfitnesstale/src/data/repositories/weight/weight_record_repository.dart';
 import 'package:myfitnesstale/src/utils/errors.dart';
 import 'package:myfitnesstale/src/utils/nullable.dart';
 
@@ -43,8 +43,8 @@ void main() {
   test(
     'food Cubit keeps paging and clears nullable category filters',
     () async {
-      await FoodService().createFood(foodInput);
-      await FoodService().createFood(foodInput);
+      await FoodRepository().createFood(foodInput);
+      await FoodRepository().createFood(foodInput);
       final cubit = FoodCubit();
       addTearDown(cubit.close);
       await cubit.getFoods(
@@ -71,7 +71,7 @@ void main() {
   );
 
   test('meal-plan Cubit preserves favorite filters after a PUT', () async {
-    final service = MealPlanService();
+    final service = MealPlanRepository();
     final plan = (await service.createMealPlan(
       const MealPlanInput(name: 'Favorite paging plan', weeks: []),
     )).value;
@@ -154,7 +154,7 @@ void main() {
   test(
     'food PUT clears nullable fields and accepts immutable portions',
     () async {
-      final service = FoodService();
+      final service = FoodRepository();
       final created = await service.createFood(
         const FoodInput(
           name: 'Oats',
@@ -204,7 +204,7 @@ void main() {
   test(
     'recipe PUT recalculates yield, clears fields, and rolls back failure',
     () async {
-      final food = (await FoodService().createFood(
+      final food = (await FoodRepository().createFood(
         const FoodInput(
           name: 'Fortified oats',
           category: FoodCategory.grainsAndCereals,
@@ -217,7 +217,7 @@ void main() {
           portions: [],
         ),
       )).value;
-      final service = RecipeService();
+      final service = RecipeRepository();
       final created = await service.createRecipe(
         RecipeInput(
           name: 'Porridge',
@@ -261,7 +261,7 @@ void main() {
   test(
     'meal-plan PUT keeps originating versions and rolls back invalid input',
     () async {
-      final food = (await FoodService().createFood(foodInput)).value;
+      final food = (await FoodRepository().createFood(foodInput)).value;
       List<MealPlanWeekInput> weeks(int foodId) => [
         MealPlanWeekInput(
           weekNumber: 1,
@@ -281,7 +281,7 @@ void main() {
           ],
         ),
       ];
-      final service = MealPlanService();
+      final service = MealPlanRepository();
       final created = (await service.createMealPlan(
         MealPlanInput(
           name: 'Original',
@@ -289,7 +289,7 @@ void main() {
           weeks: weeks(food.id),
         ),
       )).value;
-      final recordService = MealPlanRecordService();
+      final recordService = MealPlanRecordRepository();
       final started = await recordService.startMealPlan(mealPlanId: created.id);
       expect(started.isOk(), isTrue);
       final originalDayId = started.value.weeks.first.days.first.mealPlanDayId;
@@ -325,7 +325,7 @@ void main() {
   test(
     'macro-goal PUT clears water and preserves a single active goal',
     () async {
-      final service = MacroTrackingService();
+      final service = MacroTrackingRepository();
       final first = (await service.createMacroGoal(
         const MacroGoalInput(
           name: 'First',
@@ -368,7 +368,7 @@ void main() {
   test(
     'weight-goal and weight-record PUT share inputs and clear nullable fields',
     () async {
-      final service = WeightRecordService();
+      final service = WeightRecordRepository();
       final createdGoal = await service.createWeightGoal(
         WeightGoalInput(
           targetWeight: 75000,

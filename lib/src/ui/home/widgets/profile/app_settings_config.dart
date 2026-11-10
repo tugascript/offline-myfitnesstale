@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../cubits/profile_cubit.dart';
 import '../../../../data/utils/enums.dart';
-import '../../../../services/dtos/system_dto.dart';
+import 'package:myfitnesstale/src/data/repositories/profile/dtos/system_dto.dart';
 import '../../../core/sizes/data_display_sizes.dart';
 import '../../../../widgets/layout/expanding_section.dart';
 

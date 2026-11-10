@@ -4,7 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../utils/nullable.dart';
 import '../../../../cubits/states/weight_record_state.dart';
 import '../../../../cubits/weight_record_cubit.dart';
-import '../../../../services/inputs/weight_goal_input.dart';
+import 'package:myfitnesstale/src/data/repositories/weight/inputs/weight_goal_input.dart';
 import '../../../../ui/core/sizes/data_display_sizes.dart';
 import '../editor/update_weight_goal_card.dart';
 import 'current_weight_goal.dart';

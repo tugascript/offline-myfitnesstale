@@ -10,13 +10,13 @@ import 'package:myfitnesstale/src/data/models/workout_set_exercise_model.dart';
 import 'package:myfitnesstale/src/data/models/workout_set_exercise_option_model.dart';
 import 'package:myfitnesstale/src/data/models/workout_set_model.dart';
 import 'package:myfitnesstale/src/utils/errors.dart';
-import 'package:myfitnesstale/src/services/workout_service.dart';
+import 'package:myfitnesstale/src/data/repositories/workouts/workout_repository.dart';
 
 import '../../support/test_database.dart';
 
 void main() {
   final testDatabase = TestDatabase();
-  final workoutService = WorkoutService();
+  final workoutService = WorkoutRepository();
   int seedCounter = 0;
 
   String uniqueName(String prefix) => '$prefix-${seedCounter++}';

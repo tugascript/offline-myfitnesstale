@@ -1,12 +1,12 @@
 import '../../../cubits/states/workout_plan_record_state.dart';
 import '../../../data/utils/json_data.dart';
 import '../../../data/utils/enums.dart';
-import '../../../services/dtos/workout_dto.dart';
-import '../../../services/dtos/workout_plan_day_dto.dart';
-import '../../../services/dtos/workout_plan_dto.dart';
-import '../../../services/dtos/workout_plan_record_dto.dart';
-import '../../../services/dtos/workout_plan_week_dto.dart';
-import '../../../services/dtos/workout_plan_workout_dto.dart';
+import 'package:myfitnesstale/src/data/repositories/workouts/dtos/workout_dto.dart';
+import 'package:myfitnesstale/src/data/repositories/workout_plans/dtos/workout_plan_day_dto.dart';
+import 'package:myfitnesstale/src/data/repositories/workout_plans/dtos/workout_plan_dto.dart';
+import 'package:myfitnesstale/src/data/repositories/workout_plans/dtos/workout_plan_record_dto.dart';
+import 'package:myfitnesstale/src/data/repositories/workout_plans/dtos/workout_plan_week_dto.dart';
+import 'package:myfitnesstale/src/data/repositories/workout_plans/dtos/workout_plan_workout_dto.dart';
 
 class ActiveWorkoutPlanDummyData {
   static CurrentWorkoutPlanRecordState get dummyState {

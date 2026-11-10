@@ -1,0 +1,72 @@
+import 'package:equatable/equatable.dart';
+
+import 'package:myfitnesstale/src/utils/nullable.dart';
+import 'package:myfitnesstale/src/data/models/workout_plan_workout_model.dart';
+import 'package:myfitnesstale/src/data/utils/enums.dart';
+import 'package:myfitnesstale/src/data/repositories/core/dtos/dto.dart';
+import 'package:myfitnesstale/src/data/repositories/workouts/dtos/workout_dto.dart';
+
+class WorkoutPlanWorkoutDto extends Equatable
+    implements Dto<WorkoutPlanWorkout> {
+  @override
+  final int id;
+  final int planVersion;
+  final int position;
+  final WorkoutTimeOfDay? timeOfDay;
+  final int workoutId;
+
+  // Related data
+  final WorkoutDto? workout;
+
+  const WorkoutPlanWorkoutDto({
+    required this.id,
+    required this.planVersion,
+    required this.position,
+    this.timeOfDay,
+    required this.workoutId,
+    this.workout,
+  });
+
+  factory WorkoutPlanWorkoutDto.fromModel(
+    WorkoutPlanWorkout model, {
+    WorkoutDto? workout,
+  }) {
+    return WorkoutPlanWorkoutDto(
+      id: model.id!,
+      planVersion: model.planVersion,
+      position: model.position,
+      timeOfDay: model.timeOfDay,
+      workoutId: model.workoutId,
+      workout: workout,
+    );
+  }
+
+  @override
+  WorkoutPlanWorkoutDto copyWith({
+    int? id,
+    int? planVersion,
+    int? position,
+    Nullable<WorkoutTimeOfDay>? timeOfDay,
+    int? workoutId,
+    Nullable<WorkoutDto>? workout,
+  }) {
+    return WorkoutPlanWorkoutDto(
+      id: id ?? this.id,
+      planVersion: planVersion ?? this.planVersion,
+      position: position ?? this.position,
+      timeOfDay: timeOfDay != null ? timeOfDay.value : this.timeOfDay,
+      workoutId: workoutId ?? this.workoutId,
+      workout: workout != null ? workout.value : this.workout,
+    );
+  }
+
+  @override
+  List<Object?> get props => [
+    id,
+    planVersion,
+    position,
+    timeOfDay,
+    workoutId,
+    workout,
+  ];
+}

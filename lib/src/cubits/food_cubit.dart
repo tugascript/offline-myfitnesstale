@@ -3,14 +3,14 @@ import 'package:logging/logging.dart';
 
 import '../utils/nullable.dart';
 import '../data/utils/enums.dart';
-import '../services/dtos/food_dto.dart';
-import '../services/food_service.dart';
-import '../services/inputs/food_input.dart';
+import 'package:myfitnesstale/src/data/repositories/foods/dtos/food_dto.dart';
+import 'package:myfitnesstale/src/data/repositories/foods/food_repository.dart';
+import 'package:myfitnesstale/src/data/repositories/foods/inputs/food_input.dart';
 import 'states/common_state.dart';
 import 'states/food_state.dart';
 
 class FoodCubit extends Cubit<FoodState> {
-  final FoodService _foodService = FoodService();
+  final FoodRepository _foodService = FoodRepository();
   final Logger _logger = Logger('FoodCubit');
 
   FoodCubit() : super(FoodState.initial());

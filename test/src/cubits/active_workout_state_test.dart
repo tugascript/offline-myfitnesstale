@@ -3,12 +3,12 @@ import 'package:myfitnesstale/src/cubits/states/active_workout_state.dart';
 import 'package:myfitnesstale/src/utils/nullable.dart';
 import 'package:myfitnesstale/src/data/utils/json_data.dart';
 import 'package:myfitnesstale/src/data/utils/enums.dart';
-import 'package:myfitnesstale/src/services/dtos/workout_dto.dart';
-import 'package:myfitnesstale/src/services/dtos/workout_record_dto.dart';
-import 'package:myfitnesstale/src/services/dtos/workout_set_dto.dart';
-import 'package:myfitnesstale/src/services/dtos/workout_set_exercise_dto.dart';
-import 'package:myfitnesstale/src/services/dtos/workout_set_exercise_record_dto.dart';
-import 'package:myfitnesstale/src/services/dtos/workout_set_record_dto.dart';
+import 'package:myfitnesstale/src/data/repositories/workouts/dtos/workout_dto.dart';
+import 'package:myfitnesstale/src/data/repositories/workouts/dtos/workout_record_dto.dart';
+import 'package:myfitnesstale/src/data/repositories/workouts/dtos/workout_set_dto.dart';
+import 'package:myfitnesstale/src/data/repositories/workouts/dtos/workout_set_exercise_dto.dart';
+import 'package:myfitnesstale/src/data/repositories/workouts/dtos/workout_set_exercise_record_dto.dart';
+import 'package:myfitnesstale/src/data/repositories/workouts/dtos/workout_set_record_dto.dart';
 
 void main() {
   const difficulty = WorkoutSetExerciseDifficulty(

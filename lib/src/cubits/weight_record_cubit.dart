@@ -5,14 +5,14 @@ import '../utils/nullable.dart';
 import '../data/utils/enums.dart';
 import '../data/services/common.dart';
 import '../utils/errors.dart';
-import '../services/inputs/weight_goal_input.dart';
-import '../services/inputs/weight_record_input.dart';
-import '../services/weight_record_service.dart';
+import 'package:myfitnesstale/src/data/repositories/weight/inputs/weight_goal_input.dart';
+import 'package:myfitnesstale/src/data/repositories/weight/inputs/weight_record_input.dart';
+import 'package:myfitnesstale/src/data/repositories/weight/weight_record_repository.dart';
 import 'states/common_state.dart';
 import 'states/weight_record_state.dart';
 
 class WeightRecordCubit extends Cubit<WeightRecordState> {
-  final WeightRecordService _weightRecordService = WeightRecordService();
+  final WeightRecordRepository _weightRecordService = WeightRecordRepository();
   final Logger _logger = Logger("WeightRecordCubit");
 
   WeightRecordCubit() : super(WeightRecordState.initial());

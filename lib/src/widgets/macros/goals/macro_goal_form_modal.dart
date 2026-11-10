@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../cubits/macro_tracking_cubit.dart';
-import '../../../services/dtos/macro_tracking_dto.dart';
+import 'package:myfitnesstale/src/data/repositories/macros/dtos/macro_tracking_dto.dart';
 import '../../../ui/core/sizes/data_display_sizes.dart';
 import 'macro_goal_form.dart';
 
