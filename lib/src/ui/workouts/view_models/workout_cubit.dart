@@ -29,10 +29,11 @@ import '../../../data/repositories/workouts/workout_repository.dart';
 import '../../../data/utils/enums.dart';
 import '../../../utils/errors.dart';
 import '../../../utils/nullable.dart';
+import '../../core/view_models/favorite_request_serializer.dart';
 import '../../core/view_models/states/common_state.dart';
 import './states/workout_state.dart';
 
-class WorkoutCubit extends Cubit<WorkoutState> {
+class WorkoutCubit extends Cubit<WorkoutState> with FavoriteRequestSerializer {
   final WorkoutRepository _workoutService;
 
   final Logger _logger = Logger('WorkoutCubit');
@@ -282,64 +283,71 @@ class WorkoutCubit extends Cubit<WorkoutState> {
     );
   }
 
-  Future<void> updateWorkoutFavorite(int id, bool isFavorite) async {
-    _logger.info('Updating workout favorite status with id $id');
-    emit(state.copyWith(isLoading: true));
+  Future<void> updateWorkoutFavorite(int id, bool isFavorite) {
+    return serializeFavorite(() async {
+      if (isClosed) return;
+      _logger.info('Updating workout favorite status with id $id');
+      emit(state.copyWith(isLoading: true));
 
-    final result = await _workoutService.updateWorkoutFavorite(id, isFavorite);
-    if (result.isErr()) {
-      final error = result.error;
-      _logger.warning("Failed to update workout favorite status", error);
+      final result = await _workoutService.updateWorkoutFavorite(
+        id,
+        isFavorite,
+      );
+      if (result.isErr()) {
+        if (isClosed) return;
+        final error = result.error;
+        _logger.warning("Failed to update workout favorite status", error);
 
-      switch (error.type) {
-        case SingleErrorTypes.invalidInput:
-        case SingleErrorTypes.notFound:
-          emit(
-            state.copyWith(
-              error: Nullable(
-                ErrorState(
-                  type: error.type.name,
-                  description: error.description,
+        switch (error.type) {
+          case SingleErrorTypes.invalidInput:
+          case SingleErrorTypes.notFound:
+            emit(
+              state.copyWith(
+                error: Nullable(
+                  ErrorState(
+                    type: error.type.name,
+                    description: error.description,
+                  ),
                 ),
+                isLoading: false,
               ),
-              isLoading: false,
-            ),
-          );
-          return;
-        case SingleErrorTypes.operationFailure:
-          emit(
-            state.copyWith(
-              error: Nullable(
-                ErrorState(
-                  type: error.type.name,
-                  description: "Failed to update workout",
+            );
+            return;
+          case SingleErrorTypes.operationFailure:
+            emit(
+              state.copyWith(
+                error: Nullable(
+                  ErrorState(
+                    type: error.type.name,
+                    description: "Failed to update workout",
+                  ),
                 ),
+                isLoading: false,
               ),
-              isLoading: false,
-            ),
-          );
-          return;
+            );
+            return;
+        }
       }
-    }
 
-    _logger.info("Workout favorite status updated successfully");
-    final workout = result.value.copyWith(
-      sets: Nullable(
-        state.selectedWorkout?.id == id
-            ? state.selectedWorkout?.sets
-            : result.value.sets,
-      ),
-    );
-    if (isClosed) return;
-    await _refreshWorkouts(
-      state.copyWith(
-        selectedWorkout: state.selectedWorkout?.id == id
-            ? Nullable(workout)
-            : null,
-        isLoading: false,
-        error: const Nullable(null),
-      ),
-    );
+      _logger.info("Workout favorite status updated successfully");
+      final workout = result.value.copyWith(
+        sets: Nullable(
+          state.selectedWorkout?.id == id
+              ? state.selectedWorkout?.sets
+              : result.value.sets,
+        ),
+      );
+      if (isClosed) return;
+      await _refreshWorkouts(
+        state.copyWith(
+          selectedWorkout: state.selectedWorkout?.id == id
+              ? Nullable(workout)
+              : null,
+          isLoading: false,
+          error: const Nullable(null),
+        ),
+      );
+    });
   }
 
   Future<void> deleteWorkout(int id) async {

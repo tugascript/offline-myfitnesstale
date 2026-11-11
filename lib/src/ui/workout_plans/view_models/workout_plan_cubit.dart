@@ -26,10 +26,12 @@ import '../../../data/repositories/workout_plans/workout_plan_repository.dart';
 import '../../../data/utils/enums.dart';
 import '../../../utils/errors.dart';
 import '../../../utils/nullable.dart';
+import '../../core/view_models/favorite_request_serializer.dart';
 import '../../core/view_models/states/common_state.dart';
 import './states/workout_plan_state.dart';
 
-class WorkoutPlanCubit extends Cubit<WorkoutPlanState> {
+class WorkoutPlanCubit extends Cubit<WorkoutPlanState>
+    with FavoriteRequestSerializer {
   final WorkoutPlanRepository _workoutPlanService;
 
   WorkoutPlanCubit({required WorkoutPlanRepository workoutPlanRepository})
@@ -286,47 +288,51 @@ class WorkoutPlanCubit extends Cubit<WorkoutPlanState> {
     );
   }
 
-  Future<void> updateWorkoutPlanFavorite(int id, bool isFavorite) async {
-    _logger.info('Updating workout plan favorite $id');
-    emit(state.copyWith(isLoading: true));
+  Future<void> updateWorkoutPlanFavorite(int id, bool isFavorite) {
+    return serializeFavorite(() async {
+      if (isClosed) return;
+      _logger.info('Updating workout plan favorite $id');
+      emit(state.copyWith(isLoading: true));
 
-    final result = await _workoutPlanService.updateWorkoutPlanFavorite(
-      id,
-      isFavorite,
-    );
+      final result = await _workoutPlanService.updateWorkoutPlanFavorite(
+        id,
+        isFavorite,
+      );
 
-    if (result.isErr()) {
-      final error = result.error;
-      _logger.warning("Failed to update workout plan favorite $id", error);
-      emit(
-        state.copyWith(
-          error: Nullable(
-            ErrorState(type: error.type.name, description: error.description),
+      if (result.isErr()) {
+        if (isClosed) return;
+        final error = result.error;
+        _logger.warning("Failed to update workout plan favorite $id", error);
+        emit(
+          state.copyWith(
+            error: Nullable(
+              ErrorState(type: error.type.name, description: error.description),
+            ),
+            isLoading: false,
           ),
-          isLoading: false,
+        );
+        return;
+      }
+
+      _logger.info('Workout plan favorite $id updated successfully');
+      final updatedPlan = result.value.copyWith(
+        weeks: Nullable(
+          state.selectedWorkoutPlan?.id == id
+              ? state.selectedWorkoutPlan?.weeks
+              : result.value.weeks,
         ),
       );
-      return;
-    }
-
-    _logger.info('Workout plan favorite $id updated successfully');
-    final updatedPlan = result.value.copyWith(
-      weeks: Nullable(
-        state.selectedWorkoutPlan?.id == id
-            ? state.selectedWorkoutPlan?.weeks
-            : result.value.weeks,
-      ),
-    );
-    if (isClosed) return;
-    await _refreshWorkoutPlans(
-      state.copyWith(
-        selectedWorkoutPlan: state.selectedWorkoutPlan?.id == id
-            ? Nullable(updatedPlan)
-            : null,
-        isLoading: false,
-        error: const Nullable(null),
-      ),
-    );
+      if (isClosed) return;
+      await _refreshWorkoutPlans(
+        state.copyWith(
+          selectedWorkoutPlan: state.selectedWorkoutPlan?.id == id
+              ? Nullable(updatedPlan)
+              : null,
+          isLoading: false,
+          error: const Nullable(null),
+        ),
+      );
+    });
   }
 
   Future<void> deleteWorkoutPlan(int id) async {

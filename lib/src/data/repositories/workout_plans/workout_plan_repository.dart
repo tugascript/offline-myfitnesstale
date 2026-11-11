@@ -874,24 +874,28 @@ final class WorkoutPlanRepository implements Repository {
   updateWorkoutPlanFavorite(int id, bool isFavorite) async {
     _logger.info('Updating workout plan favorite with id $id');
     try {
-      final WorkoutPlan? plan = await _workoutPlanDao.selectOne(id);
-      if (plan == null) {
-        _logger.info('Workout plan with id $id not found');
-        return err(
-          const ServiceError(
-            type: SingleErrorTypes.notFound,
-            description: 'Workout plan not found',
-          ),
-        );
-      }
+      return await _workoutPlanDao.startTransaction<
+        Result<WorkoutPlanDto, ServiceError<SingleErrorTypes>>
+      >((txn) async {
+        final WorkoutPlan? plan = await _workoutPlanDao.selectOne(id, txn);
+        if (plan == null) {
+          _logger.info('Workout plan with id $id not found');
+          return err(
+            const ServiceError(
+              type: SingleErrorTypes.notFound,
+              description: 'Workout plan not found',
+            ),
+          );
+        }
 
-      final WorkoutPlan updatedPlan = plan.copyWith(
-        isFavorite: isFavorite,
-        updatedAt: DateUtilities.getNowUtcUnix(),
-      );
-      await _workoutPlanDao.update(updatedPlan);
-      _logger.info('Updated workout plan favorite with id $id');
-      return ok(WorkoutPlanDto.fromModel(updatedPlan));
+        final WorkoutPlan updatedPlan = plan.copyWith(
+          isFavorite: isFavorite,
+          updatedAt: DateUtilities.getNowUtcUnix(),
+        );
+        await _workoutPlanDao.update(updatedPlan, txn);
+        _logger.info('Updated workout plan favorite with id $id');
+        return ok(WorkoutPlanDto.fromModel(updatedPlan));
+      });
     } catch (e) {
       _logger.severe('Failed to update workout plan favorite with id $id', e);
       return err(

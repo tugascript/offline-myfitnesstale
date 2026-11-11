@@ -333,30 +333,34 @@ final class RecipeRepository implements Repository {
   ) async {
     _logger.info('Toggling favorite for recipe with id $id');
     try {
-      final Recipe? recipe = await _recipeDao.selectOne(id);
-      if (recipe == null) {
-        return err(
-          const ServiceError(
-            type: SingleErrorTypes.notFound,
-            description: 'Recipe not found',
-          ),
+      return await _recipeDao.startTransaction<
+        Result<RecipeDto, ServiceError<SingleErrorTypes>>
+      >((txn) async {
+        final Recipe? recipe = await _recipeDao.selectOne(id, txn);
+        if (recipe == null) {
+          return err(
+            const ServiceError(
+              type: SingleErrorTypes.notFound,
+              description: 'Recipe not found',
+            ),
+          );
+        }
+
+        final itemsResult = await _loadRecipeItemDtos(id, trx: txn);
+        if (itemsResult.isErr()) return err(itemsResult.error);
+        final itemDtos = itemsResult.value;
+
+        final updated = recipe.copyWith(
+          isFavorite: !recipe.isFavorite,
+          updatedAt: DateUtilities.getNowUtcUnix(),
         );
-      }
+        await _recipeDao.update(updated, txn);
 
-      final itemsResult = await _loadRecipeItemDtos(id);
-      if (itemsResult.isErr()) return err(itemsResult.error);
-      final itemDtos = itemsResult.value;
-
-      final updated = recipe.copyWith(
-        isFavorite: !recipe.isFavorite,
-        updatedAt: DateUtilities.getNowUtcUnix(),
-      );
-      await _recipeDao.update(updated);
-
-      _logger.info(
-        'Toggled favorite for recipe with id $id to ${updated.isFavorite}',
-      );
-      return ok(RecipeDto.fromModel(updated, items: itemDtos));
+        _logger.info(
+          'Toggled favorite for recipe with id $id to ${updated.isFavorite}',
+        );
+        return ok(RecipeDto.fromModel(updated, items: itemDtos));
+      });
     } catch (e) {
       _logger.severe('Failed to toggle favorite for recipe with id $id', e);
       return err(
@@ -602,11 +606,12 @@ final class RecipeRepository implements Repository {
   }
 
   Future<Result<List<RecipeItemDto>, ServiceError<SingleErrorTypes>>>
-  _loadRecipeItemDtos(int recipeId) async {
+  _loadRecipeItemDtos(int recipeId, {Transaction? trx}) async {
     try {
       final List<RecipeItem> items = await _itemDao.selectMany(
         where: RecipeItemColumns.recipeId.equal,
         whereArgs: [recipeId],
+        trx: trx,
       );
       if (items.isEmpty) {
         return ok([]);
@@ -623,12 +628,14 @@ final class RecipeRepository implements Repository {
           dao: _foodDao,
           column: FoodColumns.id,
           values: foodIds,
+          trx: trx,
         ),
         selectManyInChunks(
           failureType: SingleErrorTypes.operationFailure,
           dao: _portionDao,
           column: FoodPortionColumns.id,
           values: portionIds,
+          trx: trx,
         ),
       ).wait;
       if (foods.isErr()) return err(foods.error);

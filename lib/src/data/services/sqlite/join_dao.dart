@@ -140,11 +140,15 @@ final class JoinDao<T extends JoinModel, J extends Model, R extends Model> {
     return _fromMap(maps.first);
   }
 
-  Future<List<J>> selectJoined(int pk1, [List<String>? orderBy]) async {
+  Future<List<J>> selectJoined(
+    int pk1, [
+    List<String>? orderBy,
+    Transaction? trx,
+  ]) async {
     _logger.info('selectJoined: $pk1, $orderBy');
     final (String key1, String key2) = _primaryKeys;
 
-    final DatabaseExecutor db = await _databaseHelper.db;
+    final DatabaseExecutor db = trx ?? await _databaseHelper.db;
     final List<Map<String, dynamic>> maps = await db.rawQuery(
       """
       SELECT j.* FROM $_tableName m

@@ -505,7 +505,18 @@ PR #36 review follow-up:
   including diary lookups, workout-set writes, workout-plan record reads and
   counts, and onboarding seed checks. Transactions roll back when a helper
   fails after earlier writes.
-- The host suite passed 424 tests with the existing migration test skipped.
+- Favorite toggles and favorite updates across `RecipeRepository`,
+  `FoodRepository`, `MealPlanRepository`, `ExerciseRepository`,
+  `WorkoutRepository`, and `WorkoutPlanRepository` run atomically inside
+  SQLite transactions (including transaction-bound item/portion/equipment
+  reads via `JoinDao.selectJoined` and `RecipeRepository._loadRecipeItemDtos`).
+- `FavoriteRequestSerializer` serializes concurrent favorite requests across
+  `RecipeCubit`, `FoodCubit`, `MealPlanCubit`, `ExerciseCubit`, `WorkoutCubit`,
+  and `WorkoutPlanCubit` with `isClosed` checks, while `ExerciseDetailScreen`,
+  `WorkoutDetailScreen`, and `WorkoutPlanDetailScreen` ignore duplicate favorite
+  taps during loading and `WorkoutDetailScreen` surfaces favorite error
+  snackbars.
+- The host suite passed 438 tests with the existing migration test skipped.
   Device integration tests were not run.
 
 ## Known gaps and release blockers

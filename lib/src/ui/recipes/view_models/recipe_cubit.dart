@@ -24,10 +24,11 @@ import '../../../data/repositories/recipes/inputs/recipe_input.dart';
 import '../../../data/repositories/recipes/recipe_repository.dart';
 import '../../../data/utils/enums.dart';
 import '../../../utils/nullable.dart';
+import '../../core/view_models/favorite_request_serializer.dart';
 import '../../core/view_models/states/common_state.dart';
 import './states/recipe_state.dart';
 
-class RecipeCubit extends Cubit<RecipeState> {
+class RecipeCubit extends Cubit<RecipeState> with FavoriteRequestSerializer {
   final RecipeRepository _recipeService;
   final Logger _logger = Logger('RecipeCubit');
 
@@ -210,33 +211,37 @@ class RecipeCubit extends Cubit<RecipeState> {
     return true;
   }
 
-  Future<bool> toggleFavorite(int id) async {
-    _logger.info('Toggling favorite for recipe $id');
-    final result = await _recipeService.toggleFavorite(id);
-    if (result.isErr()) {
-      final error = result.error;
-      _logger.warning('Failed to toggle favorite', error);
-      emit(
-        state.copyWith(
-          error: Nullable(
-            ErrorState(type: error.type.name, description: error.description),
+  Future<bool> toggleFavorite(int id) {
+    return serializeFavorite(() async {
+      if (isClosed) return false;
+      _logger.info('Toggling favorite for recipe $id');
+      final result = await _recipeService.toggleFavorite(id);
+      if (result.isErr()) {
+        if (isClosed) return false;
+        final error = result.error;
+        _logger.warning('Failed to toggle favorite', error);
+        emit(
+          state.copyWith(
+            error: Nullable(
+              ErrorState(type: error.type.name, description: error.description),
+            ),
           ),
+        );
+        return false;
+      }
+
+      final updated = result.value;
+      if (isClosed) return true;
+      await _refreshRecipes(
+        state.copyWith(
+          selectedRecipe: state.selectedRecipe?.id == id
+              ? Nullable(updated)
+              : null,
+          error: const Nullable(null),
         ),
       );
-      return false;
-    }
-
-    final updated = result.value;
-    if (isClosed) return true;
-    await _refreshRecipes(
-      state.copyWith(
-        selectedRecipe: state.selectedRecipe?.id == id
-            ? Nullable(updated)
-            : null,
-        error: const Nullable(null),
-      ),
-    );
-    return true;
+      return true;
+    });
   }
 
   Future<bool> deleteRecipe(int id) async {

@@ -61,8 +61,9 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
 
     return BlocConsumer<WorkoutCubit, WorkoutState>(
       listenWhen: (previous, current) =>
-          previous.selectedWorkout != current.selectedWorkout &&
-          previous.isLoading != current.isLoading,
+          (previous.selectedWorkout != current.selectedWorkout &&
+              previous.isLoading != current.isLoading) ||
+          (previous.error != current.error && current.error != null),
       listener: (context, workoutState) {
         if (workoutState.isLoading) {
           return;
@@ -122,6 +123,7 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
                   sizes: sizes,
                   workoutDto: workout,
                   actionButtonPress: () {
+                    if (workoutState.isLoading) return;
                     context.read<WorkoutCubit>().updateWorkoutFavorite(
                       workout.id,
                       !workout.isFavorite,

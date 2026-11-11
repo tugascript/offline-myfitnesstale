@@ -535,24 +535,29 @@ final class WorkoutRepository implements Repository {
   updateWorkoutFavorite(int id, bool isFavorite) async {
     _logger.info('Updating workout favorite status with id $id');
     try {
-      final Workout? workout = await _workoutDao.selectOne(id);
-      if (workout == null) {
-        _logger.info('Workout with id $id not found');
-        return err(
-          const ServiceError(
-            type: SingleErrorTypes.notFound,
-            description: 'Workout not found',
-          ),
-        );
-      }
+      return await _workoutDao
+          .startTransaction<Result<WorkoutDto, ServiceError<SingleErrorTypes>>>(
+            (txn) async {
+              final Workout? workout = await _workoutDao.selectOne(id, txn);
+              if (workout == null) {
+                _logger.info('Workout with id $id not found');
+                return err(
+                  const ServiceError(
+                    type: SingleErrorTypes.notFound,
+                    description: 'Workout not found',
+                  ),
+                );
+              }
 
-      final Workout updatedWorkout = workout.copyWith(
-        isFavorite: isFavorite,
-        updatedAt: DateUtilities.getNowUtcUnix(),
-      );
-      await _workoutDao.update(updatedWorkout);
-      _logger.info('Updated workout favorite status with id $id');
-      return ok(WorkoutDto.fromModel(updatedWorkout));
+              final Workout updatedWorkout = workout.copyWith(
+                isFavorite: isFavorite,
+                updatedAt: DateUtilities.getNowUtcUnix(),
+              );
+              await _workoutDao.update(updatedWorkout, txn);
+              _logger.info('Updated workout favorite status with id $id');
+              return ok(WorkoutDto.fromModel(updatedWorkout));
+            },
+          );
     } catch (e) {
       _logger.severe('Failed to update workout favorite status with id $id', e);
       return err(
