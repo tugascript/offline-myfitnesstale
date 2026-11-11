@@ -278,65 +278,88 @@ final class MacroTrackingRepository implements Repository {
     );
   }
 
-  Future<void> _deactivateActiveMacroGoals(
-    Transaction txn, {
-    int? excludeWeekId,
-  }) async {
-    final now = DateUtilities.getNowUtcUnix();
-    final weekWhere = WhereBuilder()
-      ..and(WeekMacroGoalColumns.isActive.equal, 1);
-    final dayWhere = WhereBuilder()..and(DayMacroGoalColumns.isActive.equal, 1);
-    if (excludeWeekId != null) {
-      weekWhere.and(WeekMacroGoalColumns.id.notEqual, excludeWeekId);
-      dayWhere.and(DayMacroGoalColumns.weekMacroGoalId.notEqual, excludeWeekId);
-    }
+  Future<Result<void, ServiceError<SingleErrorTypes>>>
+  _deactivateActiveMacroGoals(Transaction txn, {int? excludeWeekId}) async {
+    const failure = ServiceError(
+      type: SingleErrorTypes.operationFailure,
+      description: 'Failed to deactivate active macro goals',
+    );
+    try {
+      final now = DateUtilities.getNowUtcUnix();
+      final weekWhere = WhereBuilder()
+        ..and(WeekMacroGoalColumns.isActive.equal, 1);
+      final dayWhere = WhereBuilder()
+        ..and(DayMacroGoalColumns.isActive.equal, 1);
+      if (excludeWeekId != null) {
+        weekWhere.and(WeekMacroGoalColumns.id.notEqual, excludeWeekId);
+        dayWhere.and(
+          DayMacroGoalColumns.weekMacroGoalId.notEqual,
+          excludeWeekId,
+        );
+      }
 
-    await txn.update(
-      WeekMacroGoal.table,
-      {
-        WeekMacroGoalColumns.isActive.value: 0,
-        WeekMacroGoalColumns.updatedAt.value: now,
-      },
-      where: weekWhere.where,
-      whereArgs: weekWhere.args,
-    );
-    await txn.update(
-      DayMacroGoal.table,
-      {
-        DayMacroGoalColumns.isActive.value: 0,
-        DayMacroGoalColumns.updatedAt.value: now,
-      },
-      where: dayWhere.where,
-      whereArgs: dayWhere.args,
-    );
+      await txn.update(
+        WeekMacroGoal.table,
+        {
+          WeekMacroGoalColumns.isActive.value: 0,
+          WeekMacroGoalColumns.updatedAt.value: now,
+        },
+        where: weekWhere.where,
+        whereArgs: weekWhere.args,
+      );
+      await txn.update(
+        DayMacroGoal.table,
+        {
+          DayMacroGoalColumns.isActive.value: 0,
+          DayMacroGoalColumns.updatedAt.value: now,
+        },
+        where: dayWhere.where,
+        whereArgs: dayWhere.args,
+      );
+      return ok(null);
+    } catch (error, stackTrace) {
+      _logger.severe(failure.description, error, stackTrace);
+      return err(failure);
+    }
   }
 
-  Future<List<DayMacroGoal>> _insertDayMacroGoals(
+  Future<Result<List<DayMacroGoal>, ServiceError<SingleErrorTypes>>>
+  _insertDayMacroGoals(
     Transaction txn,
     int weekId,
     WeekMacroGoalInput input,
     List<DayMacroGoalInput> dayInputs,
   ) async {
-    final createdDays = <DayMacroGoal>[];
-    for (final d in dayInputs) {
-      final dayModel = DayMacroGoal.create(
-        weekMacroGoalId: weekId,
-        days: d.days,
-        name: d.name,
-        targetCalories: d.targetCalories,
-        targetProtein: d.targetProtein,
-        targetCarbs: d.targetCarbs,
-        targetFat: d.targetFat,
-        targetFiber: d.targetFiber.value,
-        targetSodium: d.targetSodium.value,
-        targetWaterIntakeMl: d.targetWaterIntakeMl.value,
-        phase: d.phase ?? input.phase,
-        isActive: input.isActive,
-      );
-      final dayId = await _dayMacroGoalDao.insert(dayModel, txn);
-      createdDays.add(dayModel.copyWith(id: Nullable(dayId)));
+    const failure = ServiceError(
+      type: SingleErrorTypes.operationFailure,
+      description: 'Failed to save daily macro goals',
+    );
+    try {
+      final createdDays = <DayMacroGoal>[];
+      for (final d in dayInputs) {
+        final dayModel = DayMacroGoal.create(
+          weekMacroGoalId: weekId,
+          days: d.days,
+          name: d.name,
+          targetCalories: d.targetCalories,
+          targetProtein: d.targetProtein,
+          targetCarbs: d.targetCarbs,
+          targetFat: d.targetFat,
+          targetFiber: d.targetFiber.value,
+          targetSodium: d.targetSodium.value,
+          targetWaterIntakeMl: d.targetWaterIntakeMl.value,
+          phase: d.phase ?? input.phase,
+          isActive: input.isActive,
+        );
+        final dayId = await _dayMacroGoalDao.insert(dayModel, txn);
+        if (dayId <= 0) return err(failure);
+        createdDays.add(dayModel.copyWith(id: Nullable(dayId)));
+      }
+      return ok(createdDays);
+    } catch (error, stackTrace) {
+      _logger.severe(failure.description, error, stackTrace);
+      return err(failure);
     }
-    return createdDays;
   }
 
   Future<Result<MacroGoalDto, ServiceError<SingleErrorTypes>>> createMacroGoal(
@@ -370,25 +393,31 @@ final class MacroTrackingRepository implements Repository {
         txn,
       ) async {
         if (input.isActive) {
-          await _deactivateActiveMacroGoals(txn);
+          final deactivation = await _deactivateActiveMacroGoals(txn);
+          // A daily goal update can fail after the weekly goals were updated.
+          if (deactivation.isErr()) throw deactivation.error;
         }
 
         final weekId = await _weekMacroGoalDao.insert(weekGoal, txn);
-        final createdDays = await _insertDayMacroGoals(
+        final daysResult = await _insertDayMacroGoals(
           txn,
           weekId,
           input,
           dayInputs,
         );
+        // Roll back the parent write and any changes to existing goals.
+        if (daysResult.isErr()) throw daysResult.error;
 
         return MacroGoalDto.fromWeekModel(
           weekGoal.copyWith(id: Nullable(weekId)),
-          createdDays,
+          daysResult.value,
         );
       });
 
       _logger.info('Created macro goal with id: ${dto.id}');
       return ok(dto);
+    } on ServiceError<SingleErrorTypes> catch (error) {
+      return err(error);
     } catch (e) {
       _logger.severe('Failed to create macro goal', e);
       return err(
@@ -427,7 +456,12 @@ final class MacroTrackingRepository implements Repository {
         Result<MacroGoalDto, ServiceError<SingleErrorTypes>>
       >((txn) async {
         if (input.isActive) {
-          await _deactivateActiveMacroGoals(txn, excludeWeekId: id);
+          final deactivation = await _deactivateActiveMacroGoals(
+            txn,
+            excludeWeekId: id,
+          );
+          // A daily goal update can fail after the weekly goals were updated.
+          if (deactivation.isErr()) throw deactivation.error;
         }
 
         final updated = existing.copyWith(
@@ -452,15 +486,19 @@ final class MacroTrackingRepository implements Repository {
           trx: txn,
         );
 
-        final createdDays = await _insertDayMacroGoals(
+        final daysResult = await _insertDayMacroGoals(
           txn,
           id,
           input,
           dayInputs,
         );
+        // Roll back the parent write and any changes to existing goals.
+        if (daysResult.isErr()) throw daysResult.error;
 
-        return ok(MacroGoalDto.fromWeekModel(updated, createdDays));
+        return ok(MacroGoalDto.fromWeekModel(updated, daysResult.value));
       });
+    } on ServiceError<SingleErrorTypes> catch (error) {
+      return err(error);
     } catch (e) {
       _logger.severe('Failed to update macro goal with id $id', e);
       return err(
