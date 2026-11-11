@@ -19,14 +19,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 
-import '../view_models/states/workout_plan_record_state.dart';
-import '../view_models/workout_plan_record_cubit.dart';
+import '../../../data/repositories/workout_plans/dtos/workout_plan_record_dto.dart';
 import '../../../data/utils/enums.dart';
 import '../../../routing/routes.dart';
-import '../../../data/repositories/workout_plans/dtos/workout_plan_record_dto.dart';
 import '../../core/sizes/data_display_sizes.dart';
 import '../../core/sizes/screen_size.dart';
 import '../../core/widgets/layout/app_scaffold.dart';
+import '../view_models/states/workout_plan_record_state.dart';
+import '../view_models/workout_plan_record_cubit.dart';
 
 class WorkoutPlanHistoryScreen extends StatefulWidget {
   final int? workoutPlanId;

@@ -26,6 +26,10 @@ import 'package:myfitnesstale/src/data/models/sqlite/workout_plan_record_model.d
 import 'package:myfitnesstale/src/data/models/sqlite/workout_plan_week_model.dart';
 import 'package:myfitnesstale/src/data/models/sqlite/workout_plan_workout_model.dart';
 import 'package:myfitnesstale/src/utils/errors.dart';
+import 'package:myfitnesstale/src/data/repositories/workout_plans/inputs/workout_plan_day_batch_create_input.dart';
+import 'package:myfitnesstale/src/data/repositories/workout_plans/inputs/workout_plan_record_input.dart';
+import 'package:myfitnesstale/src/data/repositories/workout_plans/inputs/workout_plan_week_batch_create_input.dart';
+import 'package:myfitnesstale/src/data/repositories/workout_plans/inputs/workout_plan_workout_batch_create_input.dart';
 import 'package:myfitnesstale/src/data/repositories/workout_plans/workout_plan_record_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/workout_plans/workout_plan_repository.dart';
 

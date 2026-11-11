@@ -18,20 +18,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../view_models/exercise_cubit.dart';
-import '../../home/view_models/profile_cubit.dart';
-import '../view_models/states/exercise_state.dart';
-import '../../home/view_models/states/profile_state.dart';
 import '../../../data/utils/enums.dart';
 import '../../../routing/routes.dart';
+import '../../core/screens/entity_error_screen.dart';
+import '../../core/screens/loading_screen.dart';
 import '../../core/sizes/data_display_sizes.dart';
 import '../../core/sizes/screen_size.dart';
+import '../../core/widgets/layout/responsive_scaffold.dart';
+import '../../home/view_models/profile_cubit.dart';
+import '../../home/view_models/states/profile_state.dart';
+import '../view_models/exercise_cubit.dart';
+import '../view_models/states/exercise_state.dart';
 import '../widgets/records/editors/create_exercise_record_modal.dart';
 import '../widgets/records/exercise_records_history.dart';
 import '../widgets/records/latest_exercise_record.dart';
-import '../../core/widgets/layout/responsive_scaffold.dart';
-import '../../core/screens/entity_error_screen.dart';
-import '../../core/screens/loading_screen.dart';
 
 class ExerciseRecordsScreen extends StatefulWidget {
   static const name = "exercises-records";

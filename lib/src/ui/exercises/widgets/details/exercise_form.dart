@@ -18,16 +18,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../view_models/exercise_cubit.dart';
-import '../../view_models/states/exercise_state.dart';
+import '../../../../data/utils/display_names.dart';
 import '../../../../data/utils/enums.dart';
-
 import '../../../core/sizes/data_display_sizes.dart';
 import '../../../core/widgets/layout/app_dropdown.dart';
 import '../../../core/widgets/layout/app_elevated_button.dart';
 import '../../../core/widgets/layout/app_text_form_field.dart';
 import '../../../core/widgets/layout/dynamic_list_input.dart';
-import '../../../../data/utils/display_names.dart';
+import '../../view_models/exercise_cubit.dart';
+import '../../view_models/states/exercise_state.dart';
 
 class ExerciseForm extends StatefulWidget {
   final ThemeData theme;

@@ -17,9 +17,9 @@
 
 import 'package:equatable/equatable.dart';
 
-import '../../../../utils/nullable.dart';
-import '../../../../data/utils/enums.dart';
 import '../../../../data/repositories/foods/dtos/food_dto.dart';
+import '../../../../data/utils/enums.dart';
+import '../../../../utils/nullable.dart';
 import '../../../core/view_models/states/common_state.dart';
 
 final class FoodPagination extends Equatable {
@@ -73,6 +73,7 @@ final class FoodState extends Equatable {
 
   bool get isLoading => _isLoading || pendingFoodsQuery != null;
   final ErrorState? error;
+
   const FoodState({
     this.foodsRequestId = 0,
     this.pendingFoodsQuery,
@@ -82,7 +83,9 @@ final class FoodState extends Equatable {
     this._isLoading = false,
     this.error,
   });
+
   factory FoodState.initial() => const FoodState();
+
   FoodState copyWith({
     int? foodsRequestId,
     List<FoodDto>? foods,
@@ -102,6 +105,7 @@ final class FoodState extends Equatable {
         : this.pendingFoodsQuery,
     error: error != null ? error.value : this.error,
   );
+
   @override
   List<Object?> get props => [
     foodsRequestId,

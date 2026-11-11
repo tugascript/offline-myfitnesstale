@@ -18,11 +18,11 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../view_models/states/workout_state.dart';
-import '../../../routing/routes.dart';
 import '../../../data/repositories/workouts/dtos/workout_dto.dart';
+import '../../../routing/routes.dart';
 import '../../core/sizes/data_display_sizes.dart';
 import '../../core/widgets/not_found_list.dart';
+import '../view_models/states/workout_state.dart';
 import './workout_card.dart';
 
 class WorkoutsList extends StatelessWidget {

@@ -29,6 +29,8 @@ import 'package:myfitnesstale/src/data/models/sqlite/workout_set_exercise_model.
 import 'package:myfitnesstale/src/data/models/sqlite/workout_set_exercise_option_model.dart';
 import 'package:myfitnesstale/src/data/models/sqlite/workout_set_model.dart';
 import 'package:myfitnesstale/src/utils/errors.dart';
+import 'package:myfitnesstale/src/data/repositories/workouts/inputs/workout_set_exercise_upsert_input.dart';
+import 'package:myfitnesstale/src/data/repositories/workouts/inputs/workout_set_upsert_input.dart';
 import 'package:myfitnesstale/src/data/repositories/workouts/workout_repository.dart';
 
 import '../../support/test_database.dart';

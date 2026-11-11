@@ -18,20 +18,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../widgets/editor/workout_plan_header_edit_card.dart';
-
-import '../../../utils/nullable.dart';
-import '../view_models/states/workout_plan_state.dart';
-import '../view_models/workout_plan_cubit.dart';
-import '../../../data/utils/json_data.dart';
-import '../../../data/utils/enums.dart';
 import '../../../data/repositories/workout_plans/dtos/workout_plan_dto.dart';
+import '../../../data/repositories/workout_plans/inputs/workout_plan_input.dart';
+import '../../../data/utils/enums.dart';
+import '../../../data/utils/json_data.dart';
+import '../../../utils/nullable.dart';
 import '../../core/sizes/data_display_sizes.dart';
 import '../../core/sizes/screen_size.dart';
 import '../../core/widgets/layout/app_scaffold.dart';
 import '../../core/widgets/layout/responsive_scaffold.dart';
+import '../view_models/states/workout_plan_state.dart';
+import '../view_models/workout_plan_cubit.dart';
 import '../widgets/details/workout_plan_header.dart';
 import '../widgets/editor/weeks/workout_plan_weeks_editor.dart';
+import '../widgets/editor/workout_plan_header_edit_card.dart';
 
 class WorkoutPlanEditScreen extends StatefulWidget {
   static const String name = 'workout_plan_edit';

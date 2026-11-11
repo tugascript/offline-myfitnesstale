@@ -17,10 +17,10 @@
 
 import 'package:equatable/equatable.dart';
 
-import '../../../../utils/nullable.dart';
 import '../../../../data/repositories/profile/dtos/profile_dto.dart';
 import '../../../../data/repositories/profile/dtos/reminders_config_dto.dart';
 import '../../../../data/repositories/profile/dtos/system_dto.dart';
+import '../../../../utils/nullable.dart';
 import '../../../core/view_models/states/common_state.dart';
 
 final class ProfileState extends Equatable {

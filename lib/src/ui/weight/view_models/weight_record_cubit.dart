@@ -18,13 +18,13 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:logging/logging.dart';
 
-import '../../../utils/nullable.dart';
-import '../../../data/utils/enums.dart';
-import '../../../data/services/common.dart';
-import '../../../utils/errors.dart';
 import '../../../data/repositories/weight/inputs/weight_goal_input.dart';
 import '../../../data/repositories/weight/inputs/weight_record_input.dart';
 import '../../../data/repositories/weight/weight_record_repository.dart';
+import '../../../data/services/common.dart';
+import '../../../data/utils/enums.dart';
+import '../../../utils/errors.dart';
+import '../../../utils/nullable.dart';
 import '../../core/view_models/states/common_state.dart';
 import './states/weight_record_state.dart';
 

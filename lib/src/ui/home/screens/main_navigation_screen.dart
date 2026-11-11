@@ -19,14 +19,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import '../view_models/profile_cubit.dart';
-import '../view_models/states/profile_state.dart';
 import '../../../routing/routes.dart';
-import './profile/create_profile_button_screen.dart';
 import '../../core/screens/loading_screen.dart';
 import '../../macros/screens/macro_tracker_screen.dart';
 import '../../workout_plans/screens/current_workout_plan_screen.dart';
+import '../view_models/profile_cubit.dart';
+import '../view_models/states/profile_state.dart';
 import './home_screen.dart';
+import './profile/create_profile_button_screen.dart';
 import './profile/profile_screen.dart';
 
 sealed class _PageBuilder {

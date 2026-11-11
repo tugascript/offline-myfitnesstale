@@ -19,15 +19,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import '../view_models/food_cubit.dart';
-import '../view_models/states/food_state.dart';
 import '../../../data/utils/enums.dart';
 import '../../../routing/routes.dart';
 import '../../core/sizes/data_display_sizes.dart';
 import '../../core/sizes/screen_size.dart';
+import '../../core/widgets/layout/app_scaffold.dart';
+import '../view_models/food_cubit.dart';
+import '../view_models/states/food_state.dart';
 import '../widgets/food_list_item_widget.dart';
 import '../widgets/food_search_form.dart';
-import '../../core/widgets/layout/app_scaffold.dart';
 
 class FoodsScreen extends StatefulWidget {
   static const name = 'foods';

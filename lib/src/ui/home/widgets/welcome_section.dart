@@ -18,9 +18,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../core/sizes/data_display_sizes.dart';
 import '../view_models/profile_cubit.dart';
 import '../view_models/states/profile_state.dart';
-import '../../core/sizes/data_display_sizes.dart';
 
 class WelcomeSection extends StatelessWidget {
   final DataDisplaySizesList sizes;

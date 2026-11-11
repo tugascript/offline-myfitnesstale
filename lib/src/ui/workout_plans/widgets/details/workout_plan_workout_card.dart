@@ -18,12 +18,11 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../data/utils/enums.dart';
-
-import '../../../../routing/routes.dart';
 import '../../../../data/repositories/workout_plans/dtos/workout_plan_workout_dto.dart';
-import '../../../core/sizes/data_display_sizes.dart';
 import '../../../../data/utils/display_names.dart';
+import '../../../../data/utils/enums.dart';
+import '../../../../routing/routes.dart';
+import '../../../core/sizes/data_display_sizes.dart';
 
 class WorkoutPlanWorkoutCard extends StatelessWidget {
   final bool isDarkTheme;

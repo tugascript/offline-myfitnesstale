@@ -17,9 +17,9 @@
 
 import 'package:equatable/equatable.dart';
 
-import '../../../../utils/nullable.dart';
-import '../../../../data/utils/enums.dart';
 import '../../../../data/repositories/meal_plans/dtos/meal_plan_record_dto.dart';
+import '../../../../data/utils/enums.dart';
+import '../../../../utils/nullable.dart';
 import '../../../core/view_models/states/common_state.dart';
 
 final class MealPlanRecordPagination extends Equatable {
@@ -28,6 +28,7 @@ final class MealPlanRecordPagination extends Equatable {
   final int total;
   final int limit;
   final int offset;
+
   const MealPlanRecordPagination({
     this.mealPlanId,
     this.status,
@@ -35,8 +36,10 @@ final class MealPlanRecordPagination extends Equatable {
     this.limit = 20,
     this.offset = 0,
   });
+
   factory MealPlanRecordPagination.initial() =>
       const MealPlanRecordPagination();
+
   MealPlanRecordPagination copyWith({
     Nullable<int>? mealPlanId,
     Nullable<ProgressStatus>? status,
@@ -64,6 +67,7 @@ final class MealPlanRecordState extends Equatable {
   final MealPlanRecordPagination mealPlanRecordPagination;
   final bool isLoading;
   final ErrorState? error;
+
   const MealPlanRecordState({
     this.recordsRequestId = 0,
     this.records = const [],
@@ -72,7 +76,9 @@ final class MealPlanRecordState extends Equatable {
     this.isLoading = false,
     this.error,
   });
+
   factory MealPlanRecordState.initial() => const MealPlanRecordState();
+
   MealPlanRecordState copyWith({
     int? recordsRequestId,
     List<MealPlanRecordDto>? records,
@@ -89,6 +95,7 @@ final class MealPlanRecordState extends Equatable {
     isLoading: isLoading ?? this.isLoading,
     error: error != null ? error.value : this.error,
   );
+
   @override
   List<Object?> get props => [
     recordsRequestId,

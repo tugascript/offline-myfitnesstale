@@ -47,10 +47,6 @@ import './inputs/workout_plan_day_record_input.dart';
 import './inputs/workout_plan_record_input.dart';
 import './inputs/workout_plan_workout_record_input.dart';
 
-export './inputs/workout_plan_day_record_input.dart';
-export './inputs/workout_plan_record_input.dart';
-export './inputs/workout_plan_workout_record_input.dart';
-
 final class WorkoutPlanRecordRepository implements Repository {
   final Dao<WorkoutPlanRecord> _workoutPlanRecordDao;
   final Dao<WorkoutPlanWeekRecord> _workoutPlanWeekRecordDao;

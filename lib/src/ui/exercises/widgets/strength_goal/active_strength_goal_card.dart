@@ -15,19 +15,18 @@
 // You should have received a copy of the GNU General Public License
 // along with My Fitness Tale.  If not, see <https://www.gnu.org/licenses/>.
 
-import '../../../core/widgets/layout/responsive_fields.dart';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 
-import '../../view_models/exercise_record_cubit.dart';
-import '../../../home/view_models/profile_cubit.dart';
-import '../../view_models/states/exercise_record_state.dart';
 import '../../../../data/utils/enums.dart';
-import '../../../core/utils/converters.dart';
 import '../../../core/sizes/data_display_sizes.dart';
+import '../../../core/utils/converters.dart';
 import '../../../core/widgets/confirmation_dialog.dart';
+import '../../../core/widgets/layout/responsive_fields.dart';
+import '../../../home/view_models/profile_cubit.dart';
+import '../../view_models/exercise_record_cubit.dart';
+import '../../view_models/states/exercise_record_state.dart';
 import './strength_goal_form_modal.dart';
 
 class ActiveStrengthGoalCard extends StatelessWidget {

@@ -17,8 +17,8 @@
 
 import 'package:equatable/equatable.dart';
 
-import '../../../../utils/nullable.dart';
 import '../../../../data/repositories/meal_plans/dtos/meal_plan_dto.dart';
+import '../../../../utils/nullable.dart';
 import '../../../core/view_models/states/common_state.dart';
 
 final class MealPlanPagination extends Equatable {
@@ -27,6 +27,7 @@ final class MealPlanPagination extends Equatable {
   final int total;
   final int limit;
   final int offset;
+
   const MealPlanPagination({
     this.search,
     this.isFavorite,
@@ -34,7 +35,9 @@ final class MealPlanPagination extends Equatable {
     this.limit = 20,
     this.offset = 0,
   });
+
   factory MealPlanPagination.initial() => const MealPlanPagination();
+
   MealPlanPagination copyWith({
     Nullable<String>? search,
     Nullable<bool>? isFavorite,
@@ -65,6 +68,7 @@ final class MealPlanState extends Equatable {
 
   bool get isLoading => _isLoading || pendingMealPlansQuery != null;
   final ErrorState? error;
+
   const MealPlanState({
     this.mealPlansRequestId = 0,
     this.pendingMealPlansQuery,
@@ -74,7 +78,9 @@ final class MealPlanState extends Equatable {
     this._isLoading = false,
     this.error,
   });
+
   factory MealPlanState.initial() => const MealPlanState();
+
   MealPlanState copyWith({
     int? mealPlansRequestId,
     List<MealPlanDto>? mealPlans,
@@ -96,6 +102,7 @@ final class MealPlanState extends Equatable {
         : this.pendingMealPlansQuery,
     error: error != null ? error.value : this.error,
   );
+
   @override
   List<Object?> get props => [
     mealPlansRequestId,

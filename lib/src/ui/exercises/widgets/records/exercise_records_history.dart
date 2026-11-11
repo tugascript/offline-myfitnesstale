@@ -18,16 +18,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../view_models/exercise_record_cubit.dart';
-import '../../view_models/states/exercise_record_state.dart';
-import '../../../../data/utils/enums.dart';
 import '../../../../data/repositories/exercises/dtos/exercise_dto.dart';
-import '../../../core/utils/formatters.dart';
+import '../../../../data/utils/enums.dart';
 import '../../../core/sizes/data_display_sizes.dart';
 import '../../../core/sizes/screen_size.dart';
+import '../../../core/utils/formatters.dart';
 import '../../../core/widgets/icons_switch.dart';
-import '../../../core/widgets/not_found_list.dart';
 import '../../../core/widgets/layout/app_text_form_field.dart';
+import '../../../core/widgets/not_found_list.dart';
+import '../../view_models/exercise_record_cubit.dart';
+import '../../view_models/states/exercise_record_state.dart';
 import './exercise_records_chart.dart';
 import './exercise_records_list.dart';
 

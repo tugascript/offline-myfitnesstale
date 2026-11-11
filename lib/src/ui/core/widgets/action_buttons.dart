@@ -17,10 +17,9 @@
 
 import 'package:flutter/material.dart';
 
-import './mutation_buttons.dart';
-
 import '../sizes/data_display_sizes.dart';
 import './layout/app_elevated_button.dart';
+import './mutation_buttons.dart';
 
 class ActionButtons extends StatelessWidget {
   final ThemeData theme;

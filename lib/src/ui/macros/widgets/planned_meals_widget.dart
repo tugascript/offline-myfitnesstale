@@ -18,25 +18,26 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../view_models/macro_tracking_cubit.dart';
-import '../../meal_plans/view_models/meal_plan_cubit.dart';
-import '../../meal_plans/view_models/meal_plan_record_cubit.dart';
-import '../../meal_plans/view_models/states/meal_plan_state.dart';
-import '../../meal_plans/view_models/states/meal_plan_record_state.dart';
-
 import '../../../data/repositories/meal_plans/dtos/meal_plan_dto.dart';
 import '../../../data/repositories/meal_plans/dtos/meal_plan_record_dto.dart';
-import '../../core/sizes/data_display_sizes.dart';
 import '../../../data/utils/dates.dart';
+import '../../core/sizes/data_display_sizes.dart';
+import '../../meal_plans/view_models/meal_plan_cubit.dart';
+import '../../meal_plans/view_models/meal_plan_record_cubit.dart';
+import '../../meal_plans/view_models/states/meal_plan_record_state.dart';
+import '../../meal_plans/view_models/states/meal_plan_state.dart';
+import '../view_models/macro_tracking_cubit.dart';
 
 class PlannedMealsWidget extends StatelessWidget {
   final DataDisplaySizesList sizes;
   final DateTime selectedDate;
+
   const PlannedMealsWidget({
     super.key,
     required this.sizes,
     required this.selectedDate,
   });
+
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<MealPlanRecordCubit, MealPlanRecordState>(

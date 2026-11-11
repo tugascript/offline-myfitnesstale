@@ -17,11 +17,11 @@
 
 import 'package:equatable/equatable.dart';
 
-import '../../../../utils/nullable.dart';
-import '../../../../data/utils/enums.dart';
-import '../../../../data/repositories/workouts/dtos/workout_dto.dart';
 import '../../../../data/repositories/workout_plans/dtos/workout_plan_dto.dart';
 import '../../../../data/repositories/workout_plans/dtos/workout_plan_record_dto.dart';
+import '../../../../data/repositories/workouts/dtos/workout_dto.dart';
+import '../../../../data/utils/enums.dart';
+import '../../../../utils/nullable.dart';
 import '../../../core/view_models/states/common_state.dart';
 
 final class WorkoutPlanRecordPagination extends Equatable {

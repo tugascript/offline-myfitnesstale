@@ -18,12 +18,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../view_models/states/workout_plan_state.dart';
-import '../view_models/workout_plan_cubit.dart';
 import '../../../data/utils/enums.dart';
 import '../../core/sizes/data_display_sizes.dart';
 import '../../core/sizes/screen_size.dart';
 import '../../core/widgets/layout/app_scaffold.dart';
+import '../view_models/states/workout_plan_state.dart';
+import '../view_models/workout_plan_cubit.dart';
 import '../widgets/editor/create_workout_plan_modal.dart';
 import '../widgets/workout_plan_search_form.dart';
 import '../widgets/workout_plans_list.dart';

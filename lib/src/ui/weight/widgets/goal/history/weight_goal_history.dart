@@ -19,14 +19,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
+import '../../../../../data/repositories/weight/dtos/weight_goal_dto.dart';
+import '../../../../../data/utils/enums.dart';
+import '../../../../core/sizes/data_display_sizes.dart';
+import '../../../../core/widgets/not_found_list.dart';
 import '../../../../home/view_models/profile_cubit.dart';
 import '../../../../home/view_models/states/profile_state.dart';
 import '../../../view_models/states/weight_record_state.dart';
 import '../../../view_models/weight_record_cubit.dart';
-import '../../../../../data/utils/enums.dart';
-import '../../../../../data/repositories/weight/dtos/weight_goal_dto.dart';
-import '../../../../core/sizes/data_display_sizes.dart';
-import '../../../../core/widgets/not_found_list.dart';
 import './weight_goal_card.dart';
 
 class WeightGoalHistory extends StatefulWidget {

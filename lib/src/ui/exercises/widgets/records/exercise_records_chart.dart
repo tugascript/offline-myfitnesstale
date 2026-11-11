@@ -19,11 +19,11 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-import '../../../../data/utils/enums.dart';
 import '../../../../data/repositories/exercises/dtos/exercise_dto.dart';
 import '../../../../data/repositories/exercises/dtos/exercise_record_dto.dart';
-import '../../../core/utils/converters.dart';
+import '../../../../data/utils/enums.dart';
 import '../../../core/sizes/data_display_sizes.dart';
+import '../../../core/utils/converters.dart';
 import './editors/exercise_record_point_details_modal.dart';
 
 class ExerciseRecordsChart extends StatelessWidget {

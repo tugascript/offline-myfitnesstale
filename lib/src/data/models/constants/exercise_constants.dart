@@ -15,8 +15,8 @@
 // You should have received a copy of the GNU General Public License
 // along with My Fitness Tale.  If not, see <https://www.gnu.org/licenses/>.
 
-import '../../utils/json_data.dart';
 import '../../utils/enums.dart';
+import '../../utils/json_data.dart';
 import './equipment_constants.dart';
 
 class ExerciseData {

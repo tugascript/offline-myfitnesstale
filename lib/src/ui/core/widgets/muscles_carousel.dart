@@ -17,9 +17,9 @@
 
 import 'package:flutter/material.dart';
 
-import '../../../data/utils/json_data.dart';
-import '../../../data/utils/enums.dart';
 import '../../../data/repositories/exercises/dtos/equipment_dto.dart';
+import '../../../data/utils/enums.dart';
+import '../../../data/utils/json_data.dart';
 import '../sizes/data_display_sizes.dart';
 import './base_carousel.dart';
 import './muscles_data.dart';

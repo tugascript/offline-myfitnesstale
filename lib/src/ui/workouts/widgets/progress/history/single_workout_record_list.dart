@@ -19,15 +19,15 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
-import '../../../view_models/states/workout_record_state.dart';
-import '../../../../../data/utils/enums.dart';
 import '../../../../../data/repositories/workouts/dtos/workout_record_dto.dart';
+import '../../../../../data/utils/enums.dart';
+import '../../../../core/sizes/data_display_sizes.dart';
 import '../../../../core/utils/converters.dart';
 import '../../../../core/utils/formatters.dart';
-import '../../../../core/sizes/data_display_sizes.dart';
+import '../../../../core/widgets/layout/list_card.dart';
 import '../../../../core/widgets/not_found_list.dart';
 import '../../../../core/widgets/total_numeric_string.dart';
-import '../../../../core/widgets/layout/list_card.dart';
+import '../../../view_models/states/workout_record_state.dart';
 
 class SingleWorkoutRecordList extends StatelessWidget {
   final DataDisplaySizesList sizes;
@@ -99,6 +99,7 @@ class _SingleWorkoutRecordCard extends StatelessWidget {
   final WorkoutRecordDto workoutRecord;
   final int? workoutId;
   final int? workoutVersion;
+
   const _SingleWorkoutRecordCard({
     required this.sizes,
     required this.units,

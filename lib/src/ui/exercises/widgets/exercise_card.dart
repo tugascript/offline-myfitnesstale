@@ -20,9 +20,9 @@ import 'package:flutter/material.dart';
 import '../../../data/repositories/exercises/dtos/exercise_dto.dart';
 import '../../core/sizes/data_display_sizes.dart';
 import '../../core/widgets/difficulty_badge.dart';
+import '../../core/widgets/layout/list_card.dart';
 import '../../core/widgets/modal_search/modal_search_entity_name.dart';
 import '../../core/widgets/muscle_group_badge.dart';
-import '../../core/widgets/layout/list_card.dart';
 
 class ExerciseCard extends StatelessWidget {
   final ThemeData theme;

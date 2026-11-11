@@ -19,16 +19,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import '../view_models/exercise_record_cubit.dart';
-import '../../home/view_models/profile_cubit.dart';
-import '../view_models/states/exercise_record_state.dart';
-import '../../home/view_models/states/profile_state.dart';
-import '../../../data/utils/enums.dart';
 import '../../../data/repositories/exercises/dtos/exercise_dto.dart';
 import '../../../data/repositories/exercises/dtos/exercise_record_dto.dart';
+import '../../../data/utils/enums.dart';
 import '../../core/utils/converters.dart';
 import '../../core/utils/formatters.dart';
 import '../../core/widgets/layout/app_scaffold.dart';
+import '../../home/view_models/profile_cubit.dart';
+import '../../home/view_models/states/profile_state.dart';
+import '../view_models/exercise_record_cubit.dart';
+import '../view_models/states/exercise_record_state.dart';
 import './exercise_records_screen.dart';
 
 class ExerciseProgressScreen extends StatefulWidget {

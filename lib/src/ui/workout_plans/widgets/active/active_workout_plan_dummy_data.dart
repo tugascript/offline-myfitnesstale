@@ -15,15 +15,15 @@
 // You should have received a copy of the GNU General Public License
 // along with My Fitness Tale.  If not, see <https://www.gnu.org/licenses/>.
 
-import '../../view_models/states/workout_plan_record_state.dart';
-import '../../../../data/utils/json_data.dart';
-import '../../../../data/utils/enums.dart';
-import '../../../../data/repositories/workouts/dtos/workout_dto.dart';
 import '../../../../data/repositories/workout_plans/dtos/workout_plan_day_dto.dart';
 import '../../../../data/repositories/workout_plans/dtos/workout_plan_dto.dart';
 import '../../../../data/repositories/workout_plans/dtos/workout_plan_record_dto.dart';
 import '../../../../data/repositories/workout_plans/dtos/workout_plan_week_dto.dart';
 import '../../../../data/repositories/workout_plans/dtos/workout_plan_workout_dto.dart';
+import '../../../../data/repositories/workouts/dtos/workout_dto.dart';
+import '../../../../data/utils/enums.dart';
+import '../../../../data/utils/json_data.dart';
+import '../../view_models/states/workout_plan_record_state.dart';
 
 class ActiveWorkoutPlanDummyData {
   static CurrentWorkoutPlanRecordState get dummyState {
@@ -96,7 +96,8 @@ class ActiveWorkoutPlanDummyData {
       workoutPlanId: 0,
       workoutPlanVersion: 1,
       status: ProgressStatus.inProgress,
-      startedAt: now.subtract(const Duration(days: 2)), // 2 days ago
+      startedAt: now.subtract(const Duration(days: 2)),
+      // 2 days ago
       currentWeek: 1,
       currentDay: 1,
       currentWorkoutPosition: 1,

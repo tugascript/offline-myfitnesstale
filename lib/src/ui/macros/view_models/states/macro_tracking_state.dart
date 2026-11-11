@@ -17,21 +17,24 @@
 
 import 'package:equatable/equatable.dart';
 
-import '../../../../utils/nullable.dart';
 import '../../../../data/repositories/macros/dtos/macro_tracking_dto.dart';
+import '../../../../utils/nullable.dart';
 import '../../../core/view_models/states/common_state.dart';
 
 final class MacroGoalPagination extends Equatable {
   final int total;
   final int limit;
   final int offset;
+
   const MacroGoalPagination({this.total = 0, this.limit = 20, this.offset = 0});
+
   MacroGoalPagination copyWith({int? total, int? limit, int? offset}) =>
       MacroGoalPagination(
         total: total ?? this.total,
         limit: limit ?? this.limit,
         offset: offset ?? this.offset,
       );
+
   @override
   List<Object?> get props => [total, limit, offset];
 }

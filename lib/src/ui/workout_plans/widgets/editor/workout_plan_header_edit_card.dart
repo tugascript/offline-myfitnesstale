@@ -17,11 +17,10 @@
 
 import 'package:flutter/material.dart';
 
-import './workout_plan_base_form.dart';
-
-import '../../../../data/utils/enums.dart';
 import '../../../../data/repositories/workout_plans/dtos/workout_plan_dto.dart';
+import '../../../../data/utils/enums.dart';
 import '../../../core/sizes/data_display_sizes.dart';
+import './workout_plan_base_form.dart';
 
 class WorkoutPlanHeaderEditCard extends StatelessWidget {
   final ThemeData theme;

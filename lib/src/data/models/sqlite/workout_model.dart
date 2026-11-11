@@ -20,10 +20,10 @@ import 'dart:convert';
 import 'package:equatable/equatable.dart';
 
 import '../../../utils/nullable.dart';
-import '../../utils/json_data.dart';
-import '../../utils/enums.dart';
-import 'model.dart';
 import '../../utils/dates.dart';
+import '../../utils/enums.dart';
+import '../../utils/json_data.dart';
+import 'model.dart';
 
 const String _table = 'workouts';
 

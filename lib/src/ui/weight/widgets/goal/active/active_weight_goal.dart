@@ -18,11 +18,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../../data/repositories/weight/inputs/weight_goal_input.dart';
 import '../../../../../utils/nullable.dart';
+import '../../../../core/sizes/data_display_sizes.dart';
 import '../../../view_models/states/weight_record_state.dart';
 import '../../../view_models/weight_record_cubit.dart';
-import '../../../../../data/repositories/weight/inputs/weight_goal_input.dart';
-import '../../../../core/sizes/data_display_sizes.dart';
 import '../editor/update_weight_goal_card.dart';
 import './current_weight_goal.dart';
 import './empty_weight_goal.dart';

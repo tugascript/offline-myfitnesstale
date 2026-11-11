@@ -17,9 +17,9 @@
 
 import 'package:equatable/equatable.dart';
 
-import '../../core/inputs/input.dart';
 import '../../../models/sqlite/meal_plan_week_model.dart';
 import '../../../utils/enums.dart';
+import '../../core/inputs/input.dart';
 import 'meal_plan_day_input.dart';
 
 final class MealPlanWeekInput extends Equatable

@@ -17,8 +17,8 @@
 
 import 'package:flutter/material.dart';
 
-import '../../../data/utils/enums.dart';
 import '../../../data/utils/display_names.dart';
+import '../../../data/utils/enums.dart';
 
 class MuscleGroupBadge extends StatelessWidget {
   final MuscleGroup muscleGroup;

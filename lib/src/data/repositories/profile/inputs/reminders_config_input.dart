@@ -17,8 +17,8 @@
 
 import 'package:equatable/equatable.dart';
 
-import '../../core/inputs/input.dart';
 import '../../../models/sqlite/reminders_config_model.dart';
+import '../../core/inputs/input.dart';
 
 final class RemindersConfigInput extends Equatable
     implements ModelInput<RemindersConfig> {

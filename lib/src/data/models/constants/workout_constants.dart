@@ -15,8 +15,8 @@
 // You should have received a copy of the GNU General Public License
 // along with My Fitness Tale.  If not, see <https://www.gnu.org/licenses/>.
 
-import '../../utils/json_data.dart';
 import '../../utils/enums.dart';
+import '../../utils/json_data.dart';
 import './exercise_constants.dart';
 
 final class WorkoutSetExerciseData {
@@ -61,6 +61,7 @@ final class WorkoutData {
   final Difficulty difficulty;
   final WorkoutPhase? phase;
   final List<WorkoutSetData> sets;
+
   const WorkoutData({
     required this.name,
     required this.description,

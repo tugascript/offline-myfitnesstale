@@ -17,9 +17,9 @@
 
 import 'package:flutter/material.dart';
 
-import '../../../../../../data/utils/enums.dart';
 import '../../../../../../data/repositories/workouts/dtos/workout_set_dto.dart';
 import '../../../../../../data/repositories/workouts/dtos/workout_set_record_dto.dart';
+import '../../../../../../data/utils/enums.dart';
 import '../../../../../core/sizes/data_display_sizes.dart';
 import './workout_record_set_group.dart';
 

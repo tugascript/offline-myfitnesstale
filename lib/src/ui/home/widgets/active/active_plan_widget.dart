@@ -15,19 +15,18 @@
 // You should have received a copy of the GNU General Public License
 // along with My Fitness Tale.  If not, see <https://www.gnu.org/licenses/>.
 
-import './active_plan_frame.dart';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../view_models/profile_cubit.dart';
-import '../../view_models/states/profile_state.dart';
-import '../../../workout_plans/view_models/states/workout_plan_record_state.dart';
-import '../../../workout_plans/view_models/workout_plan_record_cubit.dart';
 import '../../../../data/repositories/profile/dtos/profile_dto.dart';
 import '../../../core/sizes/data_display_sizes.dart';
 import '../../../core/widgets/difficulty_badge.dart';
+import '../../../workout_plans/view_models/states/workout_plan_record_state.dart';
+import '../../../workout_plans/view_models/workout_plan_record_cubit.dart';
+import '../../view_models/profile_cubit.dart';
+import '../../view_models/states/profile_state.dart';
+import './active_plan_frame.dart';
 import './empty_active_plan.dart';
 
 class ActivePlanWidget extends StatefulWidget {

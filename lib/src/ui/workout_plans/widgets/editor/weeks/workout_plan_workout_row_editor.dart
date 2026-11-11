@@ -17,15 +17,14 @@
 
 import 'package:flutter/material.dart';
 
-import '../../../../../data/utils/enums.dart';
-
 import '../../../../../data/repositories/workouts/dtos/workout_dto.dart';
+import '../../../../../data/utils/display_names.dart';
+import '../../../../../data/utils/enums.dart';
 import '../../../../core/sizes/data_display_sizes.dart';
 import '../../../../core/widgets/layout/app_dropdown.dart';
-import './workout_plan_editor_data.dart';
 import '../workout_search/workout_plan_workout_search_modal.dart';
 import '../workout_selection_button.dart';
-import '../../../../../data/utils/display_names.dart';
+import './workout_plan_editor_data.dart';
 
 class WorkoutPlanWorkoutRowEditor extends StatefulWidget {
   final ThemeData theme;

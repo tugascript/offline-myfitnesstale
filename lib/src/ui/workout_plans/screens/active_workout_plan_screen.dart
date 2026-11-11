@@ -18,13 +18,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../view_models/states/workout_plan_record_state.dart';
-import '../view_models/workout_plan_record_cubit.dart';
+import '../../core/screens/entity_error_screen.dart';
 import '../../core/sizes/data_display_sizes.dart';
 import '../../core/sizes/screen_size.dart';
 import '../../core/widgets/layout/app_scaffold.dart';
+import '../view_models/states/workout_plan_record_state.dart';
+import '../view_models/workout_plan_record_cubit.dart';
 import '../widgets/active/active_workout_plan_content.dart';
-import '../../core/screens/entity_error_screen.dart';
 
 class ActiveWorkoutPlanScreen extends StatefulWidget {
   final int workoutPlanId;

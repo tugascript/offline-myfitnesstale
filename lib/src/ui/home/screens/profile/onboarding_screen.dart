@@ -19,12 +19,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../view_models/profile_cubit.dart';
-import '../../view_models/states/profile_state.dart';
 import '../../../../data/utils/enums.dart';
 import '../../../../routing/routes.dart';
 import '../../../core/sizes/profile/onboarding_sizes.dart';
 import '../../../core/sizes/screen_size.dart';
+import '../../view_models/profile_cubit.dart';
+import '../../view_models/states/profile_state.dart';
 import '../../widgets/profile/onboarding_form.dart';
 import '../../widgets/profile/onboarding_intro.dart';
 
