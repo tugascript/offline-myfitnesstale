@@ -143,6 +143,7 @@ final class CurrentWorkoutPlanRecordState extends Equatable {
 }
 
 final class WorkoutPlanRecordState extends Equatable {
+  final int historyRequestId;
   final CurrentWorkoutPlanRecordState currentPlanRecord;
   final List<WorkoutPlanRecordDto> planRecords;
   final WorkoutPlanRecordPagination pagination;
@@ -150,6 +151,7 @@ final class WorkoutPlanRecordState extends Equatable {
   final ErrorState? error;
 
   const WorkoutPlanRecordState({
+    this.historyRequestId = 0,
     required this.currentPlanRecord,
     required this.planRecords,
     required this.pagination,
@@ -167,6 +169,7 @@ final class WorkoutPlanRecordState extends Equatable {
   }
 
   WorkoutPlanRecordState copyWith({
+    int? historyRequestId,
     CurrentWorkoutPlanRecordState? currentPlanRecord,
     List<WorkoutPlanRecordDto>? planRecords,
     WorkoutPlanRecordPagination? pagination,
@@ -174,6 +177,7 @@ final class WorkoutPlanRecordState extends Equatable {
     Nullable<ErrorState>? error,
   }) {
     return WorkoutPlanRecordState(
+      historyRequestId: historyRequestId ?? this.historyRequestId,
       currentPlanRecord: currentPlanRecord ?? this.currentPlanRecord,
       planRecords: planRecords ?? this.planRecords,
       pagination: pagination ?? this.pagination,
@@ -184,6 +188,7 @@ final class WorkoutPlanRecordState extends Equatable {
 
   @override
   List<Object?> get props => [
+    historyRequestId,
     currentPlanRecord,
     planRecords,
     pagination,

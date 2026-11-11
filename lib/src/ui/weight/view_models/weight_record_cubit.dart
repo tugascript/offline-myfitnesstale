@@ -31,8 +31,6 @@ import './states/weight_record_state.dart';
 class WeightRecordCubit extends Cubit<WeightRecordState> {
   final WeightRecordRepository _weightRecordService;
   final Logger _logger = Logger("WeightRecordCubit");
-  int _recordsRequestId = 0;
-  int _goalsRequestId = 0;
 
   WeightRecordCubit({required WeightRecordRepository weightRecordRepository})
     : _weightRecordService = weightRecordRepository,
@@ -282,14 +280,14 @@ class WeightRecordCubit extends Cubit<WeightRecordState> {
     int limit = kDefaultLimit,
     int offset = kDefaultOffset,
   }) async {
-    final requestId = ++_goalsRequestId;
-    emit(state.copyWith(isLoading: true));
+    final requestId = state.goalsRequestId + 1;
+    emit(state.copyWith(goalsRequestId: requestId, isLoading: true));
     final result = await _weightRecordService.getWeightGoals(
       skipInProgress: skipInProgress,
       limit: limit,
       offset: offset,
     );
-    if (requestId != _goalsRequestId) return;
+    if (isClosed || requestId != state.goalsRequestId) return;
     if (result.isErr()) {
       final error = result.error;
       _logger.warning("Failed to get weight goals", error);
@@ -330,15 +328,15 @@ class WeightRecordCubit extends Cubit<WeightRecordState> {
     int offset = kDefaultOffset,
   }) async {
     _logger.info("Getting weight records");
-    final requestId = ++_recordsRequestId;
-    emit(state.copyWith(isLoading: true));
+    final requestId = state.recordsRequestId + 1;
+    emit(state.copyWith(recordsRequestId: requestId, isLoading: true));
     _logger.info("Fetching paginated weight records");
     final result = await _weightRecordService.getWeightRecords(
       dateRange: dateRange,
       limit: limit,
       offset: offset,
     );
-    if (requestId != _recordsRequestId) return;
+    if (isClosed || requestId != state.recordsRequestId) return;
     if (result.isErr()) {
       final error = result.error;
       _logger.warning("Failed to get weight records", error);

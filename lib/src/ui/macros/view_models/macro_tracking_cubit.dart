@@ -32,7 +32,6 @@ import './states/macro_tracking_state.dart';
 class MacroTrackingCubit extends Cubit<MacroTrackingState> {
   final MacroTrackingRepository _macroService;
   final Logger _logger = Logger('MacroTrackingCubit');
-  int _goalsRequestId = 0;
 
   MacroTrackingCubit({required MacroTrackingRepository macroTrackingRepository})
     : _macroService = macroTrackingRepository,
@@ -78,14 +77,14 @@ class MacroTrackingCubit extends Cubit<MacroTrackingState> {
 
   Future<void> getMacroGoals({int limit = 20, int offset = 0}) async {
     _logger.info('Getting macro goals');
-    final requestId = ++_goalsRequestId;
-    emit(state.copyWith(isLoading: true));
+    final requestId = state.goalsRequestId + 1;
+    emit(state.copyWith(goalsRequestId: requestId, isLoading: true));
 
     final result = await _macroService.getMacroGoals(
       limit: limit,
       offset: offset,
     );
-    if (requestId != _goalsRequestId) return;
+    if (isClosed || requestId != state.goalsRequestId) return;
     if (result.isErr()) {
       final error = result.error;
       _logger.warning('Failed to get macro goals', error);
@@ -212,14 +211,15 @@ class MacroTrackingCubit extends Cubit<MacroTrackingState> {
 
   Future<void> _refreshMacroGoals() async {
     final limit = state.goalPagination.limit;
-    final requestId = ++_goalsRequestId;
+    final requestId = state.goalsRequestId + 1;
+    emit(state.copyWith(goalsRequestId: requestId));
 
     final activeFuture = _macroService.getActiveMacroGoal();
     final historyFuture = _macroService.getMacroGoals(limit: limit, offset: 0);
 
     final activeResult = await activeFuture;
     final historyResult = await historyFuture;
-    if (requestId != _goalsRequestId) return;
+    if (isClosed || requestId != state.goalsRequestId) return;
 
     Nullable<MacroGoalDto>? activeGoal;
     ErrorState? error;

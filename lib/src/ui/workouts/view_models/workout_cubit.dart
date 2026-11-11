@@ -15,13 +15,14 @@
 // You should have received a copy of the GNU General Public License
 // along with My Fitness Tale.  If not, see <https://www.gnu.org/licenses/>.
 
+import 'dart:math';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:logging/logging.dart';
 
 import '../../../utils/nullable.dart';
 import '../../../data/utils/enums.dart';
 import '../../../utils/errors.dart';
-import '../../../data/repositories/workouts/dtos/workout_dto.dart';
 import '../../../data/repositories/workouts/workout_repository.dart';
 import '../../core/view_models/states/common_state.dart';
 import './states/workout_state.dart';
@@ -41,8 +42,6 @@ class WorkoutCubit extends Cubit<WorkoutState> {
   final WorkoutRepository _workoutService;
 
   final Logger _logger = Logger('WorkoutCubit');
-  int _workoutsRequestId = 0;
-  int _selectionWorkoutsRequestId = 0;
 
   WorkoutCubit({required WorkoutRepository workoutRepository})
     : _workoutService = workoutRepository,
@@ -55,25 +54,44 @@ class WorkoutCubit extends Cubit<WorkoutState> {
     int? limit,
     int? offset,
     bool isFavorite = false,
-  }) async {
-    _logger.info('Getting workouts');
-    final requestId = ++_workoutsRequestId;
-    final isLoadMore = (offset ?? state.pagination.offset) > 0;
-
-    // Only set loading to true if not loading more to avoid flickering or full screen loader?
-    // Usually for infinite scroll we might want a different loading state or just check isLoading in UI
-    // For now let's keep it simple, but we might check this in UI to show bottom loader vs full loader
-    emit(state.copyWith(isLoading: true));
-
-    final result = await _workoutService.getWorkouts(
-      name: name,
+  }) => _loadWorkouts(
+    WorkoutPagination(
+      name: name ?? '',
       difficulty: difficulty,
       muscleGroup: muscleGroup,
       isFavorite: isFavorite,
       limit: limit ?? state.pagination.limit,
       offset: offset ?? state.pagination.offset,
+      total: 0,
+    ),
+  );
+
+  Future<void> _loadWorkouts(
+    WorkoutPagination query, {
+    WorkoutState? afterWrite,
+  }) async {
+    final refresh = afterWrite != null;
+    _logger.info('Getting workouts');
+    final requestId = state.workoutsRequestId + 1;
+    final limit = refresh ? query.offset + query.limit : query.limit;
+    final offset = refresh ? 0 : query.offset;
+    emit(
+      (afterWrite ?? state).copyWith(
+        workoutsRequestId: requestId,
+        pendingWorkoutsQuery: Nullable(query),
+      ),
     );
-    if (requestId != _workoutsRequestId) return;
+
+    final result = await _workoutService.getWorkouts(
+      name: query.name,
+      difficulty: query.difficulty,
+      muscleGroup: query.muscleGroup,
+      isFavorite: query.isFavorite,
+      limit: limit,
+      offset: offset,
+    );
+    if (isClosed || requestId != state.workoutsRequestId) return;
+
     if (result.isErr()) {
       final error = result.error;
       _logger.warning("Failed to get workouts", error);
@@ -89,39 +107,36 @@ class WorkoutCubit extends Cubit<WorkoutState> {
                   description: "Failed to get workouts",
                 ),
               ),
-              isLoading: false,
+              pendingWorkoutsQuery: const Nullable(null),
+              workouts: refresh ? const [] : null,
+              pagination: refresh
+                  ? state.pagination.copyWith(total: 0, offset: 0)
+                  : null,
             ),
           );
           return;
       }
     }
 
-    _logger.info("Got workouts successfully");
-    final paginatedData = result.value;
-
-    late final List<WorkoutDto> updatedWorkouts;
-    if (isLoadMore) {
-      updatedWorkouts = [...state.workouts, ...paginatedData.data];
-    } else {
-      updatedWorkouts = paginatedData.data;
-    }
-
+    final page = result.value;
     emit(
       state.copyWith(
-        workouts: updatedWorkouts,
-        pagination: state.pagination.copyWith(
-          name: name,
-          muscleGroup: Nullable(muscleGroup),
-          difficulty: Nullable(difficulty),
-          limit: paginatedData.limit,
-          offset: paginatedData.offset,
-          total: paginatedData.total,
-          isFavorite: isFavorite,
-        ),
+        workouts: offset > 0 ? [...state.workouts, ...page.data] : page.data,
+        pagination: query.copyWith(offset: page.offset, total: page.total),
+        pendingWorkoutsQuery: const Nullable(null),
         error: const Nullable(null),
-        isLoading: false,
       ),
     );
+  }
+
+  Future<void> _refreshWorkouts(WorkoutState afterWrite) {
+    // A write can shift page boundaries. Reload the prefix for the latest query.
+    final query =
+        state.pendingWorkoutsQuery ??
+        state.pagination.copyWith(
+          offset: max(0, state.workouts.length - state.pagination.limit),
+        );
+    return _loadWorkouts(query, afterWrite: afterWrite);
   }
 
   Future<void> createWorkout(WorkoutInput input) async {
@@ -153,15 +168,12 @@ class WorkoutCubit extends Cubit<WorkoutState> {
 
     _logger.info("Workout created successfully");
     final workout = result.value;
-    emit(
+    if (isClosed) return;
+    await _refreshWorkouts(
       state.copyWith(
-        workouts: [workout, ...state.workouts],
         selectedWorkout: Nullable(workout),
-        pagination: state.pagination.copyWith(
-          total: state.pagination.total + 1,
-        ),
-        error: const Nullable(null),
         isLoading: false,
+        error: const Nullable(null),
       ),
     );
   }
@@ -266,12 +278,12 @@ class WorkoutCubit extends Cubit<WorkoutState> {
             : result.value.sets,
       ),
     );
-    emit(
+    if (isClosed) return;
+    await _refreshWorkouts(
       state.copyWith(
         selectedWorkout: Nullable(workout),
-        workouts: state.workouts.map((w) => w.id == id ? workout : w).toList(),
-        error: const Nullable(null),
         isLoading: false,
+        error: const Nullable(null),
       ),
     );
   }
@@ -324,23 +336,14 @@ class WorkoutCubit extends Cubit<WorkoutState> {
             : result.value.sets,
       ),
     );
-    final removeFromFavoritesList =
-        state.pagination.isFavorite && !workout.isFavorite;
-    final updatedWorkouts = removeFromFavoritesList
-        ? state.workouts.where((w) => w.id != id).toList()
-        : state.workouts.map((w) => w.id == id ? workout : w).toList();
-    final updatedTotal = removeFromFavoritesList
-        ? (state.pagination.total > 0 ? state.pagination.total - 1 : 0)
-        : state.pagination.total;
-    emit(
+    if (isClosed) return;
+    await _refreshWorkouts(
       state.copyWith(
         selectedWorkout: state.selectedWorkout?.id == id
             ? Nullable(workout)
             : null,
-        workouts: updatedWorkouts,
-        pagination: state.pagination.copyWith(total: updatedTotal),
-        error: const Nullable(null),
         isLoading: false,
+        error: const Nullable(null),
       ),
     );
   }
@@ -386,15 +389,12 @@ class WorkoutCubit extends Cubit<WorkoutState> {
     }
 
     _logger.info("Workout deleted successfully");
-    emit(
+    if (isClosed) return;
+    await _refreshWorkouts(
       state.copyWith(
-        workouts: state.workouts.where((w) => w.id != id).toList(),
         selectedWorkout: const Nullable(null),
-        pagination: state.pagination.copyWith(
-          total: state.pagination.total - 1,
-        ),
-        error: const Nullable(null),
         isLoading: false,
+        error: const Nullable(null),
       ),
     );
   }
@@ -565,15 +565,17 @@ class WorkoutCubit extends Cubit<WorkoutState> {
     String name = "",
     bool isFavorite = false,
   }) async {
-    final requestId = ++_selectionWorkoutsRequestId;
-    emit(state.copyWith(isLoading: true));
+    final requestId = state.selectionWorkoutsRequestId + 1;
+    emit(
+      state.copyWith(selectionWorkoutsRequestId: requestId, isLoading: true),
+    );
 
     final result = await _workoutService.getAllWorkouts(
       muscleGroup: muscleGroup,
       name: name,
       isFavorite: isFavorite,
     );
-    if (requestId != _selectionWorkoutsRequestId) return;
+    if (isClosed || requestId != state.selectionWorkoutsRequestId) return;
 
     if (result.isErr()) {
       final error = result.error;

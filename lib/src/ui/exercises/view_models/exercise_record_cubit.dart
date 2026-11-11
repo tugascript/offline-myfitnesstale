@@ -31,8 +31,6 @@ import './states/exercise_record_state.dart';
 class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
   final ExerciseRecordRepository _exerciseRecordService;
   final Logger _logger = Logger("ExerciseRecordCubit");
-  int _recordsRequestId = 0;
-  int _goalsRequestId = 0;
 
   ExerciseRecordCubit({
     required ExerciseRecordRepository exerciseRecordRepository,
@@ -46,8 +44,8 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
     int? exerciseId,
   }) async {
     _logger.info("Getting exercise records");
-    final requestId = ++_recordsRequestId;
-    emit(state.copyWith(isLoading: true));
+    final requestId = state.recordsRequestId + 1;
+    emit(state.copyWith(recordsRequestId: requestId, isLoading: true));
 
     final result = await _exerciseRecordService.getExerciseRecords(
       limit: limit,
@@ -55,7 +53,7 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
       exerciseId: exerciseId,
       dateRange: dateRange,
     );
-    if (requestId != _recordsRequestId) return;
+    if (isClosed || requestId != state.recordsRequestId) return;
 
     if (result.isErr()) {
       final error = result.error;
@@ -407,15 +405,15 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
     int offset = 0,
   }) async {
     _logger.info("Getting strength goals");
-    final requestId = ++_goalsRequestId;
-    emit(state.copyWith(isLoading: true));
+    final requestId = state.goalsRequestId + 1;
+    emit(state.copyWith(goalsRequestId: requestId, isLoading: true));
     final result = await _exerciseRecordService.getStrengthGoals(
       exerciseId: exerciseId,
       skipInProgress: skipInProgress,
       limit: limit,
       offset: offset,
     );
-    if (requestId != _goalsRequestId) return;
+    if (isClosed || requestId != state.goalsRequestId) return;
     if (result.isErr()) {
       final error = result.error;
       _logger.warning("Failed to get strength goals", error);
@@ -539,7 +537,8 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
     final exerciseId = state.strengthGoalPagination.exerciseId;
     final skipInProgress = state.strengthGoalPagination.skipInProgress;
     final limit = state.strengthGoalPagination.limit;
-    final requestId = ++_goalsRequestId;
+    final requestId = state.goalsRequestId + 1;
+    emit(state.copyWith(goalsRequestId: requestId));
 
     final activeFuture = _exerciseRecordService.getActiveStrengthGoal(
       exerciseId: exerciseId,
@@ -553,7 +552,7 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
 
     final activeResult = await activeFuture;
     final listResult = await listFuture;
-    if (requestId != _goalsRequestId) return;
+    if (isClosed || requestId != state.goalsRequestId) return;
 
     Nullable<StrengthGoalDto>? activeStrengthGoal;
     ErrorState? error;

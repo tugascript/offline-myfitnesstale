@@ -15,12 +15,13 @@
 // You should have received a copy of the GNU General Public License
 // along with My Fitness Tale.  If not, see <https://www.gnu.org/licenses/>.
 
+import 'dart:math';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:logging/logging.dart';
 
 import '../../../utils/nullable.dart';
 import '../../../data/utils/enums.dart';
-import '../../../data/repositories/foods/dtos/food_dto.dart';
 import '../../../data/repositories/foods/food_repository.dart';
 import '../../../data/repositories/foods/inputs/food_input.dart';
 import '../../core/view_models/states/common_state.dart';
@@ -29,7 +30,6 @@ import './states/food_state.dart';
 class FoodCubit extends Cubit<FoodState> {
   final FoodRepository _foodService;
   final Logger _logger = Logger('FoodCubit');
-  int _foodsRequestId = 0;
 
   FoodCubit({required FoodRepository foodRepository})
     : _foodService = foodRepository,
@@ -41,19 +41,37 @@ class FoodCubit extends Cubit<FoodState> {
     bool? isFavorite,
     int limit = 20,
     int offset = 0,
-  }) async {
-    _logger.info('Getting foods');
-    final requestId = ++_foodsRequestId;
-    emit(state.copyWith(isLoading: true));
-
-    final result = await _foodService.getFoods(
-      name: search,
+  }) => _loadFoods(
+    FoodPagination(
+      name: search ?? '',
       category: category,
       isFavorite: isFavorite ?? false,
       limit: limit,
       offset: offset,
+    ),
+  );
+
+  Future<void> _loadFoods(FoodPagination query, {FoodState? afterWrite}) async {
+    final refresh = afterWrite != null;
+    _logger.info('Getting foods');
+    final requestId = state.foodsRequestId + 1;
+    final limit = refresh ? query.offset + query.limit : query.limit;
+    final offset = refresh ? 0 : query.offset;
+    emit(
+      (afterWrite ?? state).copyWith(
+        foodsRequestId: requestId,
+        pendingFoodsQuery: Nullable(query),
+      ),
     );
-    if (requestId != _foodsRequestId) return;
+
+    final result = await _foodService.getFoods(
+      name: query.name,
+      category: query.category,
+      isFavorite: query.isFavorite,
+      limit: limit,
+      offset: offset,
+    );
+    if (isClosed || requestId != state.foodsRequestId) return;
 
     if (result.isErr()) {
       final error = result.error;
@@ -63,32 +81,35 @@ class FoodCubit extends Cubit<FoodState> {
           error: Nullable(
             ErrorState(type: error.type.name, description: error.description),
           ),
-          isLoading: false,
+          pendingFoodsQuery: const Nullable(null),
+          foods: refresh ? const [] : null,
+          foodPagination: refresh
+              ? state.foodPagination.copyWith(total: 0, offset: 0)
+              : null,
         ),
       );
       return;
     }
 
-    final paginated = result.value;
-    final List<FoodDto> foods = offset > 0
-        ? [...state.foods, ...paginated.data]
-        : paginated.data;
-
+    final page = result.value;
     emit(
       state.copyWith(
-        foodPagination: state.foodPagination.copyWith(
-          limit: paginated.limit,
-          offset: paginated.offset,
-          total: paginated.total,
-          name: search ?? '',
-          category: Nullable(category),
-          isFavorite: isFavorite ?? false,
-        ),
-        foods: foods,
-        isLoading: false,
+        foods: offset > 0 ? [...state.foods, ...page.data] : page.data,
+        foodPagination: query.copyWith(offset: page.offset, total: page.total),
+        pendingFoodsQuery: const Nullable(null),
         error: const Nullable(null),
       ),
     );
+  }
+
+  Future<void> _refreshFoods(FoodState afterWrite) {
+    // A write can shift page boundaries. Reload the prefix for the latest query.
+    final query =
+        state.pendingFoodsQuery ??
+        state.foodPagination.copyWith(
+          offset: max(0, state.foods.length - state.foodPagination.limit),
+        );
+    return _loadFoods(query, afterWrite: afterWrite);
   }
 
   Future<void> getFood(int id) async {
@@ -142,18 +163,11 @@ class FoodCubit extends Cubit<FoodState> {
       return false;
     }
 
-    _foodsRequestId++;
     final created = result.value;
-    final matchesFilter = _matchesFoodFilter(created);
-    emit(
+    if (isClosed) return true;
+    await _refreshFoods(
       state.copyWith(
         selectedFood: Nullable(created),
-        foods: matchesFilter ? [created, ...state.foods] : state.foods,
-        foodPagination: matchesFilter
-            ? state.foodPagination.copyWith(
-                total: state.foodPagination.total + 1,
-              )
-            : null,
         isLoading: false,
         error: const Nullable(null),
       ),
@@ -181,22 +195,11 @@ class FoodCubit extends Cubit<FoodState> {
       return false;
     }
 
-    _foodsRequestId++;
     final updated = result.value;
-    final matchesFilter = _matchesFoodFilter(updated);
-    final wasInList = state.foods.any((f) => f.id == id);
-    final updatedList = wasInList && !matchesFilter
-        ? state.foods.where((f) => f.id != id).toList()
-        : state.foods.map((f) => f.id == id ? updated : f).toList();
-    final updatedTotal = wasInList && !matchesFilter
-        ? (state.foodPagination.total > 0 ? state.foodPagination.total - 1 : 0)
-        : state.foodPagination.total;
-
-    emit(
+    if (isClosed) return true;
+    await _refreshFoods(
       state.copyWith(
         selectedFood: Nullable(updated),
-        foods: updatedList,
-        foodPagination: state.foodPagination.copyWith(total: updatedTotal),
         isLoading: false,
         error: const Nullable(null),
       ),
@@ -220,40 +223,14 @@ class FoodCubit extends Cubit<FoodState> {
       return false;
     }
 
-    _foodsRequestId++;
     final updated = result.value;
-    final removeFromFavoritesList =
-        state.foodPagination.isFavorite && !updated.isFavorite;
-    final updatedList = removeFromFavoritesList
-        ? state.foods.where((f) => f.id != id).toList()
-        : state.foods.map((f) => f.id == id ? updated : f).toList();
-    final updatedTotal = removeFromFavoritesList
-        ? (state.foodPagination.total > 0 ? state.foodPagination.total - 1 : 0)
-        : state.foodPagination.total;
-
-    emit(
+    if (isClosed) return true;
+    await _refreshFoods(
       state.copyWith(
-        foods: updatedList,
-        foodPagination: state.foodPagination.copyWith(total: updatedTotal),
         selectedFood: state.selectedFood?.id == id ? Nullable(updated) : null,
         error: const Nullable(null),
       ),
     );
-    return true;
-  }
-
-  bool _matchesFoodFilter(FoodDto food) {
-    final search = state.foodPagination.name.trim().toLowerCase();
-    if (search.isNotEmpty && !food.name.toLowerCase().contains(search)) {
-      return false;
-    }
-    final category = state.foodPagination.category;
-    if (category != null && food.category != category) {
-      return false;
-    }
-    if (state.foodPagination.isFavorite && !food.isFavorite) {
-      return false;
-    }
     return true;
   }
 
@@ -276,15 +253,9 @@ class FoodCubit extends Cubit<FoodState> {
       return false;
     }
 
-    final updatedList = state.foods.where((f) => f.id != id).toList();
-    emit(
+    if (isClosed) return true;
+    await _refreshFoods(
       state.copyWith(
-        foodPagination: state.foodPagination.copyWith(
-          total: state.foodPagination.total > 0
-              ? state.foodPagination.total - 1
-              : 0,
-        ),
-        foods: updatedList,
         selectedFood: state.selectedFood?.id == id
             ? const Nullable(null)
             : null,

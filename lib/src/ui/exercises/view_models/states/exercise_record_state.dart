@@ -92,6 +92,8 @@ final class StrengthGoalPagination extends Equatable {
 }
 
 final class ExerciseRecordState extends Equatable {
+  final int recordsRequestId;
+  final int goalsRequestId;
   final List<ExerciseRecordDto> exerciseRecords;
   final ExerciseRecordDto? selectedExerciseRecord;
   final ExerciseRecordDto? latestExerciseRecord;
@@ -104,6 +106,8 @@ final class ExerciseRecordState extends Equatable {
   final ErrorState? error;
 
   const ExerciseRecordState({
+    this.recordsRequestId = 0,
+    this.goalsRequestId = 0,
     required this.exerciseRecords,
     this.selectedExerciseRecord,
     this.latestExerciseRecord,
@@ -127,6 +131,8 @@ final class ExerciseRecordState extends Equatable {
   }
 
   ExerciseRecordState copyWith({
+    int? recordsRequestId,
+    int? goalsRequestId,
     List<ExerciseRecordDto>? exerciseRecords,
     Nullable<ExerciseRecordDto>? selectedExerciseRecord,
     Nullable<ExerciseRecordDto>? latestExerciseRecord,
@@ -139,6 +145,8 @@ final class ExerciseRecordState extends Equatable {
     Nullable<ErrorState>? error,
   }) {
     return ExerciseRecordState(
+      recordsRequestId: recordsRequestId ?? this.recordsRequestId,
+      goalsRequestId: goalsRequestId ?? this.goalsRequestId,
       exerciseRecords: exerciseRecords ?? this.exerciseRecords,
       selectedExerciseRecord: selectedExerciseRecord != null
           ? selectedExerciseRecord.value
@@ -163,6 +171,8 @@ final class ExerciseRecordState extends Equatable {
 
   @override
   List<Object?> get props => [
+    recordsRequestId,
+    goalsRequestId,
     exerciseRecords,
     selectedExerciseRecord,
     latestExerciseRecord,

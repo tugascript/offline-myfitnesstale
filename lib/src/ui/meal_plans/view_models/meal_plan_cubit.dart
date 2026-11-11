@@ -17,12 +17,13 @@
 
 import '../../../data/repositories/meal_plans/inputs/meal_plan_input.dart';
 
+import 'dart:math';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:logging/logging.dart';
 
 import '../../../utils/nullable.dart';
 import '../../../data/utils/enums.dart';
-import '../../../data/repositories/meal_plans/dtos/meal_plan_dto.dart';
 import '../../../data/repositories/meal_plans/meal_plan_repository.dart';
 import '../../core/view_models/states/common_state.dart';
 import './states/meal_plan_state.dart';
@@ -30,7 +31,6 @@ import './states/meal_plan_state.dart';
 class MealPlanCubit extends Cubit<MealPlanState> {
   final MealPlanRepository _mealPlanService;
   final Logger _logger = Logger('MealPlanCubit');
-  int _mealPlansRequestId = 0;
 
   MealPlanCubit({required MealPlanRepository mealPlanRepository})
     : _mealPlanService = mealPlanRepository,
@@ -41,18 +41,38 @@ class MealPlanCubit extends Cubit<MealPlanState> {
     bool? isFavorite,
     int limit = 20,
     int offset = 0,
-  }) async {
-    _logger.info('Getting meal plans');
-    final requestId = ++_mealPlansRequestId;
-    emit(state.copyWith(isLoading: true));
-
-    final result = await _mealPlanService.getMealPlans(
+  }) => _loadMealPlans(
+    MealPlanPagination(
       search: search,
       isFavorite: isFavorite,
       limit: limit,
       offset: offset,
+    ),
+  );
+
+  Future<void> _loadMealPlans(
+    MealPlanPagination query, {
+    MealPlanState? afterWrite,
+  }) async {
+    final refresh = afterWrite != null;
+    _logger.info('Getting meal plans');
+    final requestId = state.mealPlansRequestId + 1;
+    final limit = refresh ? query.offset + query.limit : query.limit;
+    final offset = refresh ? 0 : query.offset;
+    emit(
+      (afterWrite ?? state).copyWith(
+        mealPlansRequestId: requestId,
+        pendingMealPlansQuery: Nullable(query),
+      ),
     );
-    if (requestId != _mealPlansRequestId) return;
+
+    final result = await _mealPlanService.getMealPlans(
+      search: query.search,
+      isFavorite: query.isFavorite,
+      limit: limit,
+      offset: offset,
+    );
+    if (isClosed || requestId != state.mealPlansRequestId) return;
 
     if (result.isErr()) {
       final error = result.error;
@@ -62,31 +82,41 @@ class MealPlanCubit extends Cubit<MealPlanState> {
           error: Nullable(
             ErrorState(type: error.type.name, description: error.description),
           ),
-          isLoading: false,
+          pendingMealPlansQuery: const Nullable(null),
+          mealPlans: refresh ? const [] : null,
+          mealPlanPagination: refresh
+              ? state.mealPlanPagination.copyWith(total: 0, offset: 0)
+              : null,
         ),
       );
       return;
     }
 
-    final paginated = result.value;
-    final List<MealPlanDto> plans = offset > 0
-        ? [...state.mealPlans, ...paginated.data]
-        : paginated.data;
-
+    final page = result.value;
     emit(
       state.copyWith(
-        mealPlanPagination: state.mealPlanPagination.copyWith(
-          limit: paginated.limit,
-          offset: paginated.offset,
-          total: paginated.total,
-          search: Nullable(search),
-          isFavorite: Nullable(isFavorite),
+        mealPlans: offset > 0 ? [...state.mealPlans, ...page.data] : page.data,
+        mealPlanPagination: query.copyWith(
+          offset: page.offset,
+          total: page.total,
         ),
-        mealPlans: plans,
-        isLoading: false,
+        pendingMealPlansQuery: const Nullable(null),
         error: const Nullable(null),
       ),
     );
+  }
+
+  Future<void> _refreshMealPlans(MealPlanState afterWrite) {
+    // A write can shift page boundaries. Reload the prefix for the latest query.
+    final query =
+        state.pendingMealPlansQuery ??
+        state.mealPlanPagination.copyWith(
+          offset: max(
+            0,
+            state.mealPlans.length - state.mealPlanPagination.limit,
+          ),
+        );
+    return _loadMealPlans(query, afterWrite: afterWrite);
   }
 
   Future<void> getMealPlan(int id, {int? version}) async {
@@ -140,20 +170,11 @@ class MealPlanCubit extends Cubit<MealPlanState> {
       return false;
     }
 
-    _mealPlansRequestId++;
     final created = result.value;
-    final matchesFilter = _matchesMealPlanFilter(created);
-    emit(
+    if (isClosed) return true;
+    await _refreshMealPlans(
       state.copyWith(
         selectedMealPlan: Nullable(created),
-        mealPlans: matchesFilter
-            ? [created, ...state.mealPlans]
-            : state.mealPlans,
-        mealPlanPagination: matchesFilter
-            ? state.mealPlanPagination.copyWith(
-                total: state.mealPlanPagination.total + 1,
-              )
-            : null,
         isLoading: false,
         error: const Nullable(null),
       ),
@@ -181,26 +202,11 @@ class MealPlanCubit extends Cubit<MealPlanState> {
       return false;
     }
 
-    _mealPlansRequestId++;
     final updated = result.value;
-    final matchesFilter = _matchesMealPlanFilter(updated);
-    final wasInList = state.mealPlans.any((p) => p.id == id);
-    final updatedList = wasInList && !matchesFilter
-        ? state.mealPlans.where((p) => p.id != id).toList()
-        : state.mealPlans.map((p) => p.id == id ? updated : p).toList();
-    final updatedTotal = wasInList && !matchesFilter
-        ? (state.mealPlanPagination.total > 0
-              ? state.mealPlanPagination.total - 1
-              : 0)
-        : state.mealPlanPagination.total;
-
-    emit(
+    if (isClosed) return true;
+    await _refreshMealPlans(
       state.copyWith(
         selectedMealPlan: Nullable(updated),
-        mealPlans: updatedList,
-        mealPlanPagination: state.mealPlanPagination.copyWith(
-          total: updatedTotal,
-        ),
         isLoading: false,
         error: const Nullable(null),
       ),
@@ -224,44 +230,16 @@ class MealPlanCubit extends Cubit<MealPlanState> {
       return false;
     }
 
-    _mealPlansRequestId++;
     final updated = result.value;
-    final removeByFavoriteFilter =
-        state.mealPlanPagination.isFavorite != null &&
-        updated.isFavorite != state.mealPlanPagination.isFavorite;
-    final updatedList = removeByFavoriteFilter
-        ? state.mealPlans.where((p) => p.id != id).toList()
-        : state.mealPlans.map((p) => p.id == id ? updated : p).toList();
-    final updatedTotal = removeByFavoriteFilter
-        ? (state.mealPlanPagination.total > 0
-              ? state.mealPlanPagination.total - 1
-              : 0)
-        : state.mealPlanPagination.total;
-
-    emit(
+    if (isClosed) return true;
+    await _refreshMealPlans(
       state.copyWith(
-        mealPlans: updatedList,
-        mealPlanPagination: state.mealPlanPagination.copyWith(
-          total: updatedTotal,
-        ),
         selectedMealPlan: state.selectedMealPlan?.id == id
             ? Nullable(updated)
             : null,
         error: const Nullable(null),
       ),
     );
-    return true;
-  }
-
-  bool _matchesMealPlanFilter(MealPlanDto plan) {
-    final search = state.mealPlanPagination.search?.trim().toLowerCase() ?? '';
-    if (search.isNotEmpty && !plan.name.toLowerCase().contains(search)) {
-      return false;
-    }
-    final isFavoriteFilter = state.mealPlanPagination.isFavorite;
-    if (isFavoriteFilter != null && plan.isFavorite != isFavoriteFilter) {
-      return false;
-    }
     return true;
   }
 
@@ -284,15 +262,9 @@ class MealPlanCubit extends Cubit<MealPlanState> {
       return false;
     }
 
-    final updated = state.mealPlans.where((p) => p.id != id).toList();
-    emit(
+    if (isClosed) return true;
+    await _refreshMealPlans(
       state.copyWith(
-        mealPlanPagination: state.mealPlanPagination.copyWith(
-          total: state.mealPlanPagination.total > 0
-              ? state.mealPlanPagination.total - 1
-              : 0,
-        ),
-        mealPlans: updated,
         selectedMealPlan: state.selectedMealPlan?.id == id
             ? const Nullable(null)
             : null,

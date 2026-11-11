@@ -45,7 +45,6 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
        super(WorkoutPlanRecordState.initial());
 
   final Logger _logger = Logger('WorkoutPlanRecordCubit');
-  int _historyRequestId = 0;
 
   Future<void> getWorkoutPlanRecords({
     int? workoutPlanId,
@@ -54,7 +53,7 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
     int offset = 0,
   }) async {
     _logger.info('Getting workout plan record history');
-    final requestId = ++_historyRequestId;
+    final requestId = state.historyRequestId + 1;
     final filtersChanged =
         state.pagination.workoutPlanId != workoutPlanId ||
         state.pagination.progressStatus != progressStatus;
@@ -62,6 +61,7 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
 
     emit(
       state.copyWith(
+        historyRequestId: requestId,
         planRecords: clearStaleRecords ? const [] : null,
         pagination: clearStaleRecords
             ? state.pagination.copyWith(
@@ -83,7 +83,7 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
       limit: limit,
       offset: offset,
     );
-    if (requestId != _historyRequestId) {
+    if (isClosed || requestId != state.historyRequestId) {
       return;
     }
 

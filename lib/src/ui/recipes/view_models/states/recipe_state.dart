@@ -59,44 +59,58 @@ final class RecipePagination extends Equatable {
 }
 
 final class RecipeState extends Equatable {
+  final int recipesRequestId;
   final List<RecipeDto> recipes;
   final RecipeDto? selectedRecipe;
   final RecipePagination recipePagination;
-  final bool isLoading;
+  final RecipePagination? pendingRecipesQuery;
+  final bool _isLoading;
+
+  bool get isLoading => _isLoading || pendingRecipesQuery != null;
   final ErrorState? error;
 
   const RecipeState({
+    this.recipesRequestId = 0,
+    this.pendingRecipesQuery,
     this.recipes = const [],
     this.selectedRecipe,
     this.recipePagination = const RecipePagination(),
-    this.isLoading = false,
+    this._isLoading = false,
     this.error,
   });
 
   factory RecipeState.initial() => const RecipeState();
 
   RecipeState copyWith({
+    int? recipesRequestId,
     List<RecipeDto>? recipes,
     Nullable<RecipeDto>? selectedRecipe,
     RecipePagination? recipePagination,
     bool? isLoading,
+    Nullable<RecipePagination>? pendingRecipesQuery,
     Nullable<ErrorState>? error,
   }) => RecipeState(
+    recipesRequestId: recipesRequestId ?? this.recipesRequestId,
     recipes: recipes ?? this.recipes,
     selectedRecipe: selectedRecipe != null
         ? selectedRecipe.value
         : this.selectedRecipe,
     recipePagination: recipePagination ?? this.recipePagination,
-    isLoading: isLoading ?? this.isLoading,
+    isLoading: isLoading ?? _isLoading,
+    pendingRecipesQuery: pendingRecipesQuery != null
+        ? pendingRecipesQuery.value
+        : this.pendingRecipesQuery,
     error: error != null ? error.value : this.error,
   );
 
   @override
   List<Object?> get props => [
+    recipesRequestId,
     recipes,
     selectedRecipe,
     recipePagination,
-    isLoading,
+    _isLoading,
+    pendingRecipesQuery,
     error,
   ];
 }

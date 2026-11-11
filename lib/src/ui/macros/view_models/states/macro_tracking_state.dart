@@ -37,6 +37,7 @@ final class MacroGoalPagination extends Equatable {
 }
 
 final class MacroTrackingState extends Equatable {
+  final int goalsRequestId;
   final MacroGoalDto? activeGoal;
   final List<MacroGoalDto> goalHistory;
   final MacroGoalPagination goalPagination;
@@ -47,6 +48,7 @@ final class MacroTrackingState extends Equatable {
   final ErrorState? error;
 
   const MacroTrackingState({
+    this.goalsRequestId = 0,
     this.activeGoal,
     this.goalHistory = const [],
     this.goalPagination = const MacroGoalPagination(),
@@ -69,6 +71,7 @@ final class MacroTrackingState extends Equatable {
   }
 
   MacroTrackingState copyWith({
+    int? goalsRequestId,
     Nullable<MacroGoalDto>? activeGoal,
     List<MacroGoalDto>? goalHistory,
     MacroGoalPagination? goalPagination,
@@ -79,6 +82,7 @@ final class MacroTrackingState extends Equatable {
     Nullable<ErrorState>? error,
   }) {
     return MacroTrackingState(
+      goalsRequestId: goalsRequestId ?? this.goalsRequestId,
       activeGoal: activeGoal != null ? activeGoal.value : this.activeGoal,
       goalHistory: goalHistory ?? this.goalHistory,
       goalPagination: goalPagination ?? this.goalPagination,
@@ -100,6 +104,7 @@ final class MacroTrackingState extends Equatable {
 
   @override
   List<Object?> get props => [
+    goalsRequestId,
     activeGoal,
     goalHistory,
     goalPagination,

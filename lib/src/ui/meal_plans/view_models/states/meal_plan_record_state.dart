@@ -58,12 +58,14 @@ final class MealPlanRecordPagination extends Equatable {
 }
 
 final class MealPlanRecordState extends Equatable {
+  final int recordsRequestId;
   final List<MealPlanRecordDto> records;
   final MealPlanRecordDto? activeRecord;
   final MealPlanRecordPagination mealPlanRecordPagination;
   final bool isLoading;
   final ErrorState? error;
   const MealPlanRecordState({
+    this.recordsRequestId = 0,
     this.records = const [],
     this.activeRecord,
     this.mealPlanRecordPagination = const MealPlanRecordPagination(),
@@ -72,12 +74,14 @@ final class MealPlanRecordState extends Equatable {
   });
   factory MealPlanRecordState.initial() => const MealPlanRecordState();
   MealPlanRecordState copyWith({
+    int? recordsRequestId,
     List<MealPlanRecordDto>? records,
     Nullable<MealPlanRecordDto>? activeRecord,
     MealPlanRecordPagination? mealPlanRecordPagination,
     bool? isLoading,
     Nullable<ErrorState>? error,
   }) => MealPlanRecordState(
+    recordsRequestId: recordsRequestId ?? this.recordsRequestId,
     records: records ?? this.records,
     activeRecord: activeRecord != null ? activeRecord.value : this.activeRecord,
     mealPlanRecordPagination:
@@ -87,6 +91,7 @@ final class MealPlanRecordState extends Equatable {
   );
   @override
   List<Object?> get props => [
+    recordsRequestId,
     records,
     activeRecord,
     mealPlanRecordPagination,
