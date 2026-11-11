@@ -30,6 +30,7 @@ import '../../utils/enums.dart';
 import '../../utils/where_builder.dart';
 import '../core/dtos/paginated_dto.dart';
 import '../core/repository.dart';
+import '../core/repository_helpers.dart';
 import './dtos/food_dto.dart';
 import './inputs/food_input.dart';
 import 'inputs/food_portion_input.dart';
@@ -180,22 +181,20 @@ final class FoodRepository implements Repository {
         where.and(FoodColumns.isFavorite.equal, 1);
       }
 
-      final List<Food> foods = await _foodDao.selectPaginated(
-        where: where.where,
-        whereArgs: where.args,
+      final (List<Food> foods, int total) = await fetchPaginatedWithTotal<Food>(
+        dao: _foodDao,
         limit: limit,
         offset: offset,
-        orderBy: [FoodColumns.name.orderAsc],
-      );
-      final int total = await _foodDao.count(
         where: where.where,
         whereArgs: where.args,
+        orderBy: [FoodColumns.name.orderCaseInsensitiveAsc],
       );
 
       _logger.info('Retrieved ${foods.length} foods');
       return ok(
-        PaginatedDto<FoodDto, Food>(
-          data: foods.map((f) => FoodDto.fromModel(f)).toList(),
+        PaginatedDto<FoodDto, Food>.mapData(
+          data: foods,
+          mapper: FoodDto.fromModel,
           total: total,
           limit: limit,
           offset: offset,
@@ -359,6 +358,7 @@ final class FoodRepository implements Repository {
       final portions = await _portionDao.selectMany(
         where: FoodPortionColumns.foodId.equal,
         whereArgs: [id],
+        orderBy: [FoodPortionColumns.portionName.orderAsc],
       );
 
       return ok(

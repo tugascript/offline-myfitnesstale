@@ -17,23 +17,24 @@
 
 import 'package:logging/logging.dart';
 
-import '../../models/sqlite/weight_goal_model.dart';
-import '../../models/sqlite/weight_record_model.dart';
-import '../../services/common.dart';
-import '../../services/sqlite/database_helper.dart';
-import '../../services/sqlite/dao.dart';
-import '../../utils/dates.dart';
-import '../../utils/enums.dart';
-import '../../utils/where_builder.dart';
 import '../../../utils/errors.dart';
 import '../../../utils/nullable.dart';
 import '../../../utils/result.dart';
+import '../../models/sqlite/weight_goal_model.dart';
+import '../../models/sqlite/weight_record_model.dart';
+import '../../services/common.dart';
+import '../../services/sqlite/dao.dart';
+import '../../services/sqlite/database_helper.dart';
+import '../../utils/dates.dart';
+import '../../utils/enums.dart';
+import '../../utils/where_builder.dart';
 import '../core/dtos/paginated_dto.dart';
+import '../core/repository.dart';
+import '../core/repository_helpers.dart';
 import './dtos/weight_goal_dto.dart';
 import './dtos/weight_record_dto.dart';
 import './inputs/weight_goal_input.dart';
 import './inputs/weight_record_input.dart';
-import '../core/repository.dart';
 
 final class WeightRecordRepository implements Repository {
   final Dao<WeightRecord> _weightRecordDao;
@@ -85,30 +86,23 @@ final class WeightRecordRepository implements Repository {
         );
       }
 
-      final int id = await _weightGoalDao.startTransaction((txn) async {
-        final weightCount = await _weightGoalDao.count(
-          where: WeightGoalColumns.status.equal,
-          whereArgs: [ProgressStatus.inProgress.value],
-          trx: txn,
-        );
-
-        if (weightCount > 0) {
-          await txn.rawUpdate(
-            """
-            UPDATE ${WeightGoal.table} SET
-              ${WeightGoalColumns.status.equal},
-              ${WeightGoalColumns.completedAt.equal}
-            WHERE ${WeightGoalColumns.status.equal};
-            """,
-            [
-              ProgressStatus.abandoned.value,
-              DateUtilities.getNowUtcUnix(),
-              ProgressStatus.inProgress.value,
-            ],
-          );
-        }
-        return await _weightGoalDao.insert(weightGoal, txn);
-      });
+      final int id = input.status == ProgressStatus.inProgress
+          ? await _weightGoalDao.startTransaction((txn) async {
+              final now = DateUtilities.getNowUtcUnix();
+              await txn.update(
+                WeightGoal.table,
+                {
+                  WeightGoalColumns.status.value:
+                      ProgressStatus.abandoned.value,
+                  WeightGoalColumns.completedAt.value: now,
+                  WeightGoalColumns.updatedAt.value: now,
+                },
+                where: WeightGoalColumns.status.equal,
+                whereArgs: [ProgressStatus.inProgress.value],
+              );
+              return await _weightGoalDao.insert(weightGoal, txn);
+            })
+          : await _weightGoalDao.insert(weightGoal);
       _logger.info('Created weight goal with id $id');
       return ok(WeightGoalDto.fromModel(weightGoal.copyWith(id: Nullable(id))));
     } catch (e) {
@@ -143,16 +137,13 @@ final class WeightRecordRepository implements Repository {
         );
       }
 
-      final List<WeightGoal> goals = await _weightGoalDao.selectPaginated(
+      final (goals, total) = await fetchPaginatedWithTotal(
+        dao: _weightGoalDao,
         where: where.where,
         whereArgs: where.args,
         limit: limit,
         offset: offset,
         orderBy: [WeightGoalColumns.startDate.orderDesc],
-      );
-      final int total = await _weightGoalDao.count(
-        where: where.where,
-        whereArgs: where.args,
       );
       _logger.info('Got ${goals.length} weight goals');
       return ok(
@@ -264,28 +255,25 @@ final class WeightRecordRepository implements Repository {
         updatedAt: DateUtilities.getNowUtcUnix(),
       );
 
-      await _weightGoalDao.startTransaction((txn) async {
-        if (input.status == ProgressStatus.inProgress) {
-          final activeGoals = await _weightGoalDao.selectMany(
+      if (input.status == ProgressStatus.inProgress) {
+        final now = DateUtilities.getNowUtcUnix();
+        await _weightGoalDao.startTransaction((txn) async {
+          await txn.update(
+            WeightGoal.table,
+            {
+              WeightGoalColumns.status.value: ProgressStatus.abandoned.value,
+              WeightGoalColumns.completedAt.value: now,
+              WeightGoalColumns.updatedAt.value: now,
+            },
             where:
-                '${WeightGoalColumns.status.equal} AND ${WeightGoalColumns.id.value} != ?',
+                '${WeightGoalColumns.status.equal} AND ${WeightGoalColumns.id.notEqual}',
             whereArgs: [ProgressStatus.inProgress.value, id],
-            trx: txn,
           );
-          final now = DateUtilities.getNowUtcUnix();
-          for (final activeGoal in activeGoals) {
-            await _weightGoalDao.update(
-              activeGoal.copyWith(
-                status: ProgressStatus.abandoned,
-                completedAt: Nullable(now),
-                updatedAt: now,
-              ),
-              txn,
-            );
-          }
-        }
-        await _weightGoalDao.update(updatedWeightGoal, txn);
-      });
+          await _weightGoalDao.update(updatedWeightGoal, txn);
+        });
+      } else {
+        await _weightGoalDao.update(updatedWeightGoal);
+      }
 
       _logger.info('Updated weight goal with id $id');
       return ok(WeightGoalDto.fromModel(updatedWeightGoal));
@@ -484,16 +472,13 @@ final class WeightRecordRepository implements Repository {
     }
 
     try {
-      final List<WeightRecord> records = await _weightRecordDao.selectPaginated(
+      final (records, total) = await fetchPaginatedWithTotal(
+        dao: _weightRecordDao,
         limit: limit,
         offset: offset,
         where: query.where,
         whereArgs: query.args,
         orderBy: [WeightRecordColumns.recordDate.orderDesc],
-      );
-      final int total = await _weightRecordDao.count(
-        where: query.where,
-        whereArgs: query.args,
       );
       _logger.info('Got ${records.length} weight records');
       return ok(

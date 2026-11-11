@@ -197,8 +197,12 @@ nutrition and strength-goal flows. Create and update share complete inputs under
 clear their stored values. DTOs omit persistence timestamps, while execution
 dates and originating template versions remain domain data. Entity states
 contain their own pagination objects, including query filters, limits, offsets,
-and totals. Feature repositories talk to DAOs (`Dao` / `JoinDao`); there is no
-separate generic `Repository<T>` layer.
+and totals. Feature repositories talk to DAOs (`Dao` / `JoinDao`) and share query helpers
+in `lib/src/data/repositories/core/repository_helpers.dart`
+(`fetchPaginatedWithTotal`, `selectManyInChunks`, `deleteManyInChunks`); there is
+no separate generic `Repository<T>` layer. `Dao.rawCount` supports integer
+aggregate queries on custom SQLite helpers, and `WorkoutPlanRecordRepository`
+progress count/percentage methods return `Result` values rather than throwing.
 
 Recipe replacement rolls back on invalid ingredient references. Meal-plan
 replacement creates a new schedule version and retains previous weeks, days,
@@ -465,6 +469,23 @@ including switching between plan executions with matching cached template data.
 The subsequent Android plan-journey rerun built successfully but stalled during
 native app startup before Flutter connected; it was stopped. The Android journey
 results above remain evidence from the earlier run.
+
+Repository audit follow-up on 12 November 2026:
+
+- Repositories share pagination and chunked SQLite queries where applicable.
+  Nutrition writes preload reference data, and daily log lookups open a
+  transaction only when the date is missing. Creating a log and saving water
+  intake coordinate on the same date row.
+- Workout and meal plan version allocation happens in the write transaction.
+  Workout-plan completion uses the recorded version and counts repeated weeks.
+  Day edits preserve valid slots when a workout week has gaps.
+- Batch workout saves retain the originating version and match the read order
+  of sets and exercises. Favoriting a meal plan retains its open schedule.
+- Host regressions for these flows live in
+  `test/src/services/repository_audit_regression_test.dart`.
+- Offline dependency resolution, formatting, analysis, and `git diff --check`
+  passed. The host suite passed 414 tests with the existing migration test
+  skipped. Device integration tests were not run.
 
 ## Known gaps and release blockers
 

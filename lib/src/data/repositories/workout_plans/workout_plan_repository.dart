@@ -34,6 +34,7 @@ import '../../utils/enums.dart';
 import '../../utils/where_builder.dart';
 import '../core/dtos/paginated_dto.dart';
 import '../core/repository.dart';
+import '../core/repository_helpers.dart';
 import '../workouts/dtos/workout_dto.dart';
 import './dtos/workout_plan_day_dto.dart';
 import './dtos/workout_plan_dto.dart';
@@ -46,18 +47,6 @@ import './inputs/workout_plan_registration_input.dart';
 import './inputs/workout_plan_week_batch_create_input.dart';
 import './inputs/workout_plan_week_input.dart';
 import './inputs/workout_plan_workout_input.dart';
-
-export './inputs/week_workout_input.dart';
-export './inputs/workout_plan_day_batch_create_input.dart';
-export './inputs/workout_plan_day_registration_input.dart';
-export './inputs/workout_plan_input.dart';
-export './inputs/workout_plan_registration_input.dart';
-export './inputs/workout_plan_week_batch_create_input.dart';
-export './inputs/workout_plan_week_input.dart';
-export './inputs/workout_plan_week_registration_input.dart';
-export './inputs/workout_plan_workout_batch_create_input.dart';
-export './inputs/workout_plan_workout_input.dart';
-export './inputs/workout_plan_workout_registration_input.dart';
 
 final class WorkoutPlanRepository implements Repository {
   final Dao<WorkoutPlan> _workoutPlanDao;
@@ -136,16 +125,16 @@ final class WorkoutPlanRepository implements Repository {
     }
 
     try {
-      final List<WorkoutPlan> plans = await _workoutPlanDao.selectPaginated(
+      final (
+        List<WorkoutPlan> plans,
+        int total,
+      ) = await fetchPaginatedWithTotal<WorkoutPlan>(
+        dao: _workoutPlanDao,
         limit: limit,
         offset: offset,
         where: query.where,
         whereArgs: query.args,
-        orderBy: [WorkoutPlanColumns.name.orderAsc],
-      );
-      final int total = await _workoutPlanDao.count(
-        where: query.where,
-        whereArgs: query.args,
+        orderBy: [WorkoutPlanColumns.name.orderCaseInsensitiveAsc],
       );
       _logger.info('Got ${plans.length} workout plans');
       return ok(
@@ -209,27 +198,48 @@ final class WorkoutPlanRepository implements Repository {
         );
       }
       final int resolvedPlanVersion = planVersion ?? plan.version;
+      final weekWhere = WhereBuilder()
+        ..and(WorkoutPlanWeekColumns.workoutPlanId.equal, plan.id)
+        ..and(WorkoutPlanWeekColumns.planVersion.equal, resolvedPlanVersion);
+      final dayWhere = WhereBuilder()
+        ..and(WorkoutPlanDayColumns.workoutPlanId.equal, plan.id)
+        ..and(WorkoutPlanDayColumns.planVersion.equal, resolvedPlanVersion);
+      final planWorkoutWhere = WhereBuilder()
+        ..and(WorkoutPlanWorkoutColumns.workoutPlanId.equal, plan.id)
+        ..and(WorkoutPlanWorkoutColumns.planVersion.equal, resolvedPlanVersion);
 
-      final List<WorkoutPlanWeek> weeks = await _weekDao.selectMany(
-        where:
-            '${WorkoutPlanWeekColumns.workoutPlanId.equal} AND ${WorkoutPlanWeekColumns.planVersion.equal}',
-        whereArgs: [plan.id, resolvedPlanVersion],
-        orderBy: [WorkoutPlanWeekColumns.startWeek.orderAsc],
-      );
+      final treeResults = await Future.wait([
+        _weekDao.selectMany(
+          where: weekWhere.where,
+          whereArgs: weekWhere.args,
+          orderBy: [WorkoutPlanWeekColumns.startWeek.orderAsc],
+        ),
+        _dayDao.selectMany(
+          where: dayWhere.where,
+          whereArgs: dayWhere.args,
+          orderBy: [
+            WorkoutPlanDayColumns.workoutPlanWeekId.orderAsc,
+            WorkoutPlanDayColumns.day.orderAsc,
+          ],
+        ),
+        _planWorkoutDao.selectMany(
+          where: planWorkoutWhere.where,
+          whereArgs: planWorkoutWhere.args,
+          orderBy: [
+            WorkoutPlanWorkoutColumns.workoutPlanDayId.orderAsc,
+            WorkoutPlanWorkoutColumns.position.orderAsc,
+          ],
+        ),
+      ]);
+
+      final List<WorkoutPlanWeek> weeks =
+          treeResults[0] as List<WorkoutPlanWeek>;
       if (weeks.isEmpty) {
         _logger.info('No weeks found, got workout plan with id $id');
         return ok(WorkoutPlanDto.fromModel(plan));
       }
 
-      final List<WorkoutPlanDay> days = await _dayDao.selectMany(
-        where:
-            '${WorkoutPlanDayColumns.workoutPlanId.equal} AND ${WorkoutPlanDayColumns.planVersion.equal}',
-        whereArgs: [plan.id, resolvedPlanVersion],
-        orderBy: [
-          WorkoutPlanDayColumns.workoutPlanWeekId.orderAsc,
-          WorkoutPlanDayColumns.day.orderAsc,
-        ],
-      );
+      final List<WorkoutPlanDay> days = treeResults[1] as List<WorkoutPlanDay>;
       if (days.isEmpty) {
         _logger.info('No days found, got workout plan with id $id');
         return ok(
@@ -240,103 +250,24 @@ final class WorkoutPlanRepository implements Repository {
         );
       }
 
-      final List<WorkoutPlanWorkout>
-      planWorkouts = await _planWorkoutDao.selectMany(
-        where:
-            '${WorkoutPlanWorkoutColumns.workoutPlanId.equal} AND ${WorkoutPlanWorkoutColumns.planVersion.equal}',
-        whereArgs: [plan.id, resolvedPlanVersion],
-        orderBy: [
-          WorkoutPlanWorkoutColumns.workoutPlanDayId.orderAsc,
-          WorkoutPlanWorkoutColumns.position.orderAsc,
-        ],
+      final List<WorkoutPlanWorkout> planWorkouts =
+          treeResults[2] as List<WorkoutPlanWorkout>;
+      final dayDtosResult = await _buildDayDtos(
+        days,
+        planWorkouts,
+        missingWorkoutsMessage: 'Some workouts were not found',
       );
-      if (planWorkouts.isEmpty) {
-        _logger.info('No plan workouts found, got workout plan with id $id');
-        final Map<int, List<WorkoutPlanDayDto>> daysMap = days.fold(
-          {},
-          (map, d) => map
-            ..update(
-              d.workoutPlanWeekId,
-              (value) => value..add(WorkoutPlanDayDto.fromModel(d)),
-              ifAbsent: () => [WorkoutPlanDayDto.fromModel(d)],
-            ),
-        );
-        return ok(
-          WorkoutPlanDto.fromModel(
-            plan,
-            weeks: weeks
-                .map(
-                  (we) =>
-                      WorkoutPlanWeekDto.fromModel(we, days: daysMap[we.id]),
-                )
-                .toList(),
-          ),
-        );
+      if (dayDtosResult.isErr()) {
+        return err(dayDtosResult.error);
       }
 
-      final Set<int> workoutIds = planWorkouts.map((w) => w.workoutId).toSet();
-      final List<Workout> workouts = await _workoutDao.selectMany(
-        where: WorkoutColumns.id.inList(workoutIds.length),
-        whereArgs: workoutIds.toList(),
-      );
-      if (workouts.isEmpty || workouts.length != workoutIds.length) {
-        _logger.warning(
-          'Some workouts not found, got workout plan with id $id',
-        );
-        return err(
-          ServiceError(
-            type: SingleErrorTypes.notFound,
-            description: 'Some workouts were not found',
-          ),
-        );
+      final Map<int, List<WorkoutPlanDayDto>> daysMap = {};
+      final dayDtos = dayDtosResult.value;
+      for (int i = 0; i < days.length; i++) {
+        daysMap
+            .putIfAbsent(days[i].workoutPlanWeekId, () => [])
+            .add(dayDtos[i]);
       }
-
-      final Map<int, WorkoutDto> workoutsMap = workouts.fold({}, (map, w) {
-        map[w.id!] = WorkoutDto.fromModel(w);
-        return map;
-      });
-
-      final Map<int, List<WorkoutPlanWorkoutDto>> planWorkoutsMap = planWorkouts
-          .fold(
-            {},
-            (map, pw) => map
-              ..update(
-                pw.workoutPlanDayId,
-                (value) => value
-                  ..add(
-                    WorkoutPlanWorkoutDto.fromModel(
-                      pw,
-                      workout: workoutsMap[pw.workoutId],
-                    ),
-                  ),
-                ifAbsent: () => [
-                  WorkoutPlanWorkoutDto.fromModel(
-                    pw,
-                    workout: workoutsMap[pw.workoutId],
-                  ),
-                ],
-              ),
-          );
-      final Map<int, List<WorkoutPlanDayDto>> daysMap = days.fold(
-        {},
-        (map, d) => map
-          ..update(
-            d.workoutPlanWeekId,
-            (value) => value
-              ..add(
-                WorkoutPlanDayDto.fromModel(
-                  d,
-                  planWorkouts: planWorkoutsMap[d.id],
-                ),
-              ),
-            ifAbsent: () => [
-              WorkoutPlanDayDto.fromModel(
-                d,
-                planWorkouts: planWorkoutsMap[d.id],
-              ),
-            ],
-          ),
-      );
 
       _logger.info('Got workout plan with id $id with all data');
       return ok(
@@ -564,27 +495,16 @@ final class WorkoutPlanRepository implements Repository {
     }
 
     try {
-      final plan = await _workoutPlanDao.selectOne(workoutPlanId);
-      if (plan == null) {
-        return err(
-          const ServiceError(
-            type: SingleErrorTypes.notFound,
-            description: 'Workout plan not found',
-          ),
-        );
-      }
-
       final workoutIds = sortedWeeks
           .expand((week) => week.days)
           .expand((day) => day.workouts)
           .map((workout) => workout.workoutId)
           .toSet();
-      final workouts = workoutIds.isEmpty
-          ? <Workout>[]
-          : await _workoutDao.selectMany(
-              where: WorkoutColumns.id.inList(workoutIds.length),
-              whereArgs: workoutIds.toList(),
-            );
+      final workouts = await selectManyInChunks(
+        dao: _workoutDao,
+        column: WorkoutColumns.id,
+        values: workoutIds,
+      );
       if (workouts.length != workoutIds.length) {
         return err(
           const ServiceError(
@@ -599,16 +519,29 @@ final class WorkoutPlanRepository implements Repository {
           workout.id!: WorkoutDto.fromModel(workout),
       };
 
-      final currentVersionWeekCount = await _weekDao.count(
-        where:
-            '${WorkoutPlanWeekColumns.workoutPlanId.equal} AND ${WorkoutPlanWeekColumns.planVersion.equal}',
-        whereArgs: [workoutPlanId, plan.version],
-      );
-      final targetVersion = currentVersionWeekCount == 0
-          ? plan.version
-          : plan.version + 1;
-
       return await _workoutPlanDao.startTransaction((txn) async {
+        final plan = await _workoutPlanDao.selectOne(workoutPlanId, txn);
+        if (plan == null) {
+          return err(
+            const ServiceError(
+              type: SingleErrorTypes.notFound,
+              description: 'Workout plan not found',
+            ),
+          );
+        }
+
+        final weekCountWhere = WhereBuilder()
+          ..and(WorkoutPlanWeekColumns.workoutPlanId.equal, workoutPlanId)
+          ..and(WorkoutPlanWeekColumns.planVersion.equal, plan.version);
+        final currentVersionWeekCount = await _weekDao.count(
+          where: weekCountWhere.where,
+          whereArgs: weekCountWhere.args,
+          trx: txn,
+        );
+        final targetVersion = currentVersionWeekCount == 0
+            ? plan.version
+            : plan.version + 1;
+
         final List<WorkoutPlanWeekDto> createdWeeks = [];
         int totalWeeks = 0;
         int totalDays = 0;
@@ -739,13 +672,21 @@ final class WorkoutPlanRepository implements Repository {
           int totalWeeks = 0;
           int totalWorkouts = 0;
           int totalDays = 0;
+          final List<({int totalDays, int totalWorkouts})> weekTotals = [];
           for (final weekInput in planInput.weeks) {
             totalWeeks += weekInput.endWeek - weekInput.startWeek + 1;
-
+            int totalDaysInWeek = 0;
+            int totalWorkoutsInWeek = 0;
             for (final dayInput in weekInput.days) {
-              totalDays += dayInput.isRestDay ? 0 : 1;
-              totalWorkouts += dayInput.workouts.length;
+              totalDaysInWeek += dayInput.isRestDay ? 0 : 1;
+              totalWorkoutsInWeek += dayInput.workouts.length;
             }
+            totalDays += totalDaysInWeek;
+            totalWorkouts += totalWorkoutsInWeek;
+            weekTotals.add((
+              totalDays: totalDaysInWeek,
+              totalWorkouts: totalWorkoutsInWeek,
+            ));
           }
 
           final plan = WorkoutPlan.create(
@@ -763,21 +704,17 @@ final class WorkoutPlanRepository implements Repository {
           final int planId = await _workoutPlanDao.insert(plan, txn);
           final List<WorkoutPlanWeekDto> createdWeeks = [];
 
-          for (final weekInput in planInput.weeks) {
-            int totalDaysInWeek = 0;
-            int totalWorkoutsInWeek = 0;
-            for (final dayInput in weekInput.days) {
-              totalDaysInWeek += dayInput.isRestDay ? 0 : 1;
-              totalWorkoutsInWeek += dayInput.workouts.length;
-            }
+          for (int wIdx = 0; wIdx < planInput.weeks.length; wIdx++) {
+            final weekInput = planInput.weeks[wIdx];
+            final weekMetric = weekTotals[wIdx];
             final week = WorkoutPlanWeek.create(
               workoutPlanId: planId,
               planVersion: plan.version,
               startWeek: weekInput.startWeek,
               endWeek: weekInput.endWeek,
               phase: weekInput.phase,
-              totalDays: totalDaysInWeek,
-              totalWorkouts: totalWorkoutsInWeek,
+              totalDays: weekMetric.totalDays,
+              totalWorkouts: weekMetric.totalWorkouts,
               createdBy: createdBy,
             );
 
@@ -1114,96 +1051,49 @@ final class WorkoutPlanRepository implements Repository {
         );
       }
 
-      final List<WorkoutPlanDay> days = await _dayDao.selectMany(
-        where:
-            '${WorkoutPlanDayColumns.workoutPlanWeekId.equal} AND ${WorkoutPlanDayColumns.planVersion.equal}',
-        whereArgs: [weekId, week.planVersion],
-      );
+      final dayWhere = WhereBuilder()
+        ..and(WorkoutPlanDayColumns.workoutPlanWeekId.equal, weekId)
+        ..and(WorkoutPlanDayColumns.planVersion.equal, week.planVersion);
+      final planWorkoutWhere = WhereBuilder()
+        ..and(WorkoutPlanWorkoutColumns.workoutPlanWeekId.equal, weekId)
+        ..and(WorkoutPlanWorkoutColumns.planVersion.equal, week.planVersion);
+
+      final treeResults = await Future.wait([
+        _dayDao.selectMany(
+          where: dayWhere.where,
+          whereArgs: dayWhere.args,
+          orderBy: [WorkoutPlanDayColumns.day.orderAsc],
+        ),
+        _planWorkoutDao.selectMany(
+          where: planWorkoutWhere.where,
+          whereArgs: planWorkoutWhere.args,
+          orderBy: [
+            WorkoutPlanWorkoutColumns.workoutPlanDayId.orderAsc,
+            WorkoutPlanWorkoutColumns.position.orderAsc,
+          ],
+        ),
+      ]);
+
+      final List<WorkoutPlanDay> days = treeResults[0] as List<WorkoutPlanDay>;
       if (days.isEmpty) {
         _logger.info('No days found for workout plan week with id $weekId');
         return ok(WorkoutPlanWeekDto.fromModel(week));
       }
 
-      final List<WorkoutPlanWorkout>
-      planWorkouts = await _planWorkoutDao.selectMany(
-        where:
-            '${WorkoutPlanWorkoutColumns.workoutPlanWeekId.equal} AND ${WorkoutPlanWorkoutColumns.planVersion.equal}',
-        whereArgs: [weekId, week.planVersion],
-        orderBy: [
-          WorkoutPlanWorkoutColumns.workoutPlanDayId.orderAsc,
-          WorkoutPlanWorkoutColumns.position.orderAsc,
-        ],
+      final List<WorkoutPlanWorkout> planWorkouts =
+          treeResults[1] as List<WorkoutPlanWorkout>;
+      final dayDtosResult = await _buildDayDtos(
+        days,
+        planWorkouts,
+        missingWorkoutsMessage:
+            'Not all workouts found for workout plan week with id $weekId',
       );
-      if (planWorkouts.isEmpty) {
-        _logger.info('No workouts found for workout plan week with id $weekId');
-        return ok(
-          WorkoutPlanWeekDto.fromModel(
-            week,
-            days: days.map((day) => WorkoutPlanDayDto.fromModel(day)).toList(),
-          ),
-        );
+      if (dayDtosResult.isErr()) {
+        return err(dayDtosResult.error);
       }
-
-      final workoutIds = planWorkouts.map((e) => e.workoutId).toSet();
-      final workouts = await _workoutDao.selectMany(
-        where: WorkoutColumns.id.inList(workoutIds.length),
-        whereArgs: workoutIds.toList(),
-      );
-      if (workouts.length != workoutIds.length) {
-        _logger.warning(
-          'Not all workouts found for workout plan week with id $weekId',
-        );
-        return err(
-          ServiceError(
-            type: SingleErrorTypes.notFound,
-            description:
-                'Not all workouts found for workout plan week with id $weekId',
-          ),
-        );
-      }
-
-      final workoutMap = workouts.fold<Map<int, WorkoutDto>>({}, (
-        map,
-        workout,
-      ) {
-        map[workout.id!] = WorkoutDto.fromModel(workout);
-        return map;
-      });
-      final workoutPlans = planWorkouts
-          .fold<Map<int, List<WorkoutPlanWorkoutDto>>>({}, (map, sw) {
-            map.update(
-              sw.workoutPlanDayId,
-              (list) => list
-                ..add(
-                  WorkoutPlanWorkoutDto.fromModel(
-                    sw,
-                    workout: workoutMap[sw.workoutId],
-                  ),
-                ),
-              ifAbsent: () => [
-                WorkoutPlanWorkoutDto.fromModel(
-                  sw,
-                  workout: workoutMap[sw.workoutId],
-                ),
-              ],
-            );
-            return map;
-          });
 
       _logger.info('Got workout plan week with id $weekId');
-      return ok(
-        WorkoutPlanWeekDto.fromModel(
-          week,
-          days: days
-              .map(
-                (day) => WorkoutPlanDayDto.fromModel(
-                  day,
-                  planWorkouts: workoutPlans[day.id],
-                ),
-              )
-              .toList(),
-        ),
-      );
+      return ok(WorkoutPlanWeekDto.fromModel(week, days: dayDtosResult.value));
     } catch (e) {
       _logger.severe('Failed to get workout plan week with id $weekId', e);
       return err(
@@ -1232,26 +1122,48 @@ final class WorkoutPlanRepository implements Repository {
       }
       final int resolvedPlanVersion = planVersion ?? plan.version;
 
-      final List<WorkoutPlanWeek> weeks = await _weekDao.selectMany(
-        where:
-            '${WorkoutPlanWeekColumns.workoutPlanId.equal} AND ${WorkoutPlanWeekColumns.planVersion.equal}',
-        whereArgs: [workoutPlanId, resolvedPlanVersion],
-        orderBy: [WorkoutPlanWeekColumns.startWeek.orderAsc],
-      );
+      final weekWhere = WhereBuilder()
+        ..and(WorkoutPlanWeekColumns.workoutPlanId.equal, workoutPlanId)
+        ..and(WorkoutPlanWeekColumns.planVersion.equal, resolvedPlanVersion);
+      final dayWhere = WhereBuilder()
+        ..and(WorkoutPlanDayColumns.workoutPlanId.equal, workoutPlanId)
+        ..and(WorkoutPlanDayColumns.planVersion.equal, resolvedPlanVersion);
+      final planWorkoutWhere = WhereBuilder()
+        ..and(WorkoutPlanWorkoutColumns.workoutPlanId.equal, workoutPlanId)
+        ..and(WorkoutPlanWorkoutColumns.planVersion.equal, resolvedPlanVersion);
+
+      final treeResults = await Future.wait([
+        _weekDao.selectMany(
+          where: weekWhere.where,
+          whereArgs: weekWhere.args,
+          orderBy: [WorkoutPlanWeekColumns.startWeek.orderAsc],
+        ),
+        _dayDao.selectMany(
+          where: dayWhere.where,
+          whereArgs: dayWhere.args,
+          orderBy: [
+            WorkoutPlanDayColumns.workoutPlanWeekId.orderAsc,
+            WorkoutPlanDayColumns.day.orderAsc,
+          ],
+        ),
+        _planWorkoutDao.selectMany(
+          where: planWorkoutWhere.where,
+          whereArgs: planWorkoutWhere.args,
+          orderBy: [
+            WorkoutPlanWorkoutColumns.workoutPlanDayId.orderAsc,
+            WorkoutPlanWorkoutColumns.position.orderAsc,
+          ],
+        ),
+      ]);
+
+      final List<WorkoutPlanWeek> weeks =
+          treeResults[0] as List<WorkoutPlanWeek>;
       if (weeks.isEmpty) {
         _logger.info('No weeks found for workout plan with id $workoutPlanId');
         return ok([]);
       }
 
-      final List<WorkoutPlanDay> days = await _dayDao.selectMany(
-        where:
-            '${WorkoutPlanDayColumns.workoutPlanId.equal} AND ${WorkoutPlanDayColumns.planVersion.equal}',
-        whereArgs: [workoutPlanId, resolvedPlanVersion],
-        orderBy: [
-          WorkoutPlanDayColumns.workoutPlanWeekId.orderAsc,
-          WorkoutPlanDayColumns.day.orderAsc,
-        ],
-      );
+      final List<WorkoutPlanDay> days = treeResults[1] as List<WorkoutPlanDay>;
       if (days.isEmpty) {
         _logger.info('No days found for workout plan with id $workoutPlanId');
         return ok(
@@ -1259,87 +1171,25 @@ final class WorkoutPlanRepository implements Repository {
         );
       }
 
-      final daysMap = days.fold<Map<int, List<WorkoutPlanDayDto>>>({}, (
-        map,
-        day,
-      ) {
-        map.update(
-          day.workoutPlanWeekId,
-          (list) => list..add(WorkoutPlanDayDto.fromModel(day)),
-          ifAbsent: () => [WorkoutPlanDayDto.fromModel(day)],
-        );
-        return map;
-      });
-
-      final List<WorkoutPlanWorkout>
-      planWorkouts = await _planWorkoutDao.selectMany(
-        where:
-            '${WorkoutPlanWorkoutColumns.workoutPlanId.equal} AND ${WorkoutPlanWorkoutColumns.planVersion.equal}',
-        whereArgs: [workoutPlanId, resolvedPlanVersion],
-        orderBy: [
-          WorkoutPlanWorkoutColumns.workoutPlanDayId.orderAsc,
-          WorkoutPlanWorkoutColumns.position.orderAsc,
-        ],
+      final List<WorkoutPlanWorkout> planWorkouts =
+          treeResults[2] as List<WorkoutPlanWorkout>;
+      final dayDtosResult = await _buildDayDtos(
+        days,
+        planWorkouts,
+        missingWorkoutsMessage:
+            'Not all workouts found for workout plan with id $workoutPlanId',
       );
-      if (planWorkouts.isEmpty) {
-        _logger.info(
-          'No workouts found for workout plan with id $workoutPlanId',
-        );
-        return ok(
-          weeks
-              .map(
-                (week) =>
-                    WorkoutPlanWeekDto.fromModel(week, days: daysMap[week.id]),
-              )
-              .toList(),
-        );
+      if (dayDtosResult.isErr()) {
+        return err(dayDtosResult.error);
       }
 
-      final workoutIds = planWorkouts.map((e) => e.workoutId).toSet();
-      final workouts = await _workoutDao.selectMany(
-        where: WorkoutColumns.id.inList(workoutIds.length),
-        whereArgs: workoutIds.toList(),
-      );
-      if (workouts.length != workoutIds.length) {
-        _logger.warning(
-          'Not all workouts found for workout plan with id $workoutPlanId',
-        );
-        return err(
-          ServiceError(
-            type: SingleErrorTypes.notFound,
-            description:
-                'Not all workouts found for workout plan with id $workoutPlanId',
-          ),
-        );
+      final daysMap = <int, List<WorkoutPlanDayDto>>{};
+      final dayDtos = dayDtosResult.value;
+      for (int i = 0; i < days.length; i++) {
+        daysMap
+            .putIfAbsent(days[i].workoutPlanWeekId, () => [])
+            .add(dayDtos[i]);
       }
-
-      final workoutMap = workouts.fold<Map<int, WorkoutDto>>({}, (
-        map,
-        workout,
-      ) {
-        map[workout.id!] = WorkoutDto.fromModel(workout);
-        return map;
-      });
-      final workoutPlans = planWorkouts
-          .fold<Map<int, List<WorkoutPlanWorkoutDto>>>({}, (map, sw) {
-            map.update(
-              sw.workoutPlanDayId,
-              (list) => list
-                ..add(
-                  WorkoutPlanWorkoutDto.fromModel(
-                    sw,
-                    workout: workoutMap[sw.workoutId],
-                  ),
-                ),
-              ifAbsent: () => [
-                WorkoutPlanWorkoutDto.fromModel(
-                  sw,
-                  workout: workoutMap[sw.workoutId],
-                ),
-              ],
-            );
-            return map;
-          });
 
       _logger.info(
         'Got workout plan weeks for workout plan with id $workoutPlanId',
@@ -1347,16 +1197,8 @@ final class WorkoutPlanRepository implements Repository {
       return ok(
         weeks
             .map(
-              (week) => WorkoutPlanWeekDto.fromModel(
-                week,
-                days: daysMap[week.id]
-                    ?.map(
-                      (day) => day.copyWith(
-                        planWorkouts: Nullable(workoutPlans[day.id]),
-                      ),
-                    )
-                    .toList(),
-              ),
+              (week) =>
+                  WorkoutPlanWeekDto.fromModel(week, days: daysMap[week.id]),
             )
             .toList(),
       );
@@ -1384,7 +1226,7 @@ final class WorkoutPlanRepository implements Repository {
       'Creating workout plan day for workout week with id $workoutPlanWeekId',
     );
 
-    if (day != null && day > 7) {
+    if (day != null && (day < 1 || day > 7)) {
       _logger.warning('Day must be between 1 and 7');
       return err(
         const ServiceError(
@@ -1418,28 +1260,13 @@ final class WorkoutPlanRepository implements Repository {
         );
       }
 
-      final int daysCount = await _dayDao.count(
-        where: WorkoutPlanDayColumns.workoutPlanWeekId.equal,
-        whereArgs: [workoutPlanWeekId],
+      final uniqueWorkoutIds = workouts.map((e) => e.workoutId).toSet();
+      final workoutModels = await selectManyInChunks(
+        dao: _workoutDao,
+        column: WorkoutColumns.id,
+        values: uniqueWorkoutIds,
       );
-      if (day == null && daysCount >= 7) {
-        _logger.warning(
-          'Workout plan week with id $workoutPlanWeekId already has 7 days',
-        );
-        return err(
-          ServiceError(
-            type: SingleErrorTypes.operationFailure,
-            description:
-                'Workout plan week with id $workoutPlanWeekId already has 7 days',
-          ),
-        );
-      }
-
-      final List<Workout> workoutModels = await _workoutDao.selectMany(
-        where: WorkoutColumns.id.inList(workouts.length),
-        whereArgs: workouts.map((e) => e.workoutId).toList(),
-      );
-      if (workoutModels.length != workouts.length) {
+      if (workoutModels.length != uniqueWorkoutIds.length) {
         _logger.warning('Not all workouts found');
         return err(
           const ServiceError(
@@ -1457,18 +1284,60 @@ final class WorkoutPlanRepository implements Repository {
         return map;
       });
 
-      final int dayInt = day ?? daysCount + 1;
-      final WorkoutPlanDay planDay = WorkoutPlanDay.create(
-        workoutPlanId: week.workoutPlanId,
-        workoutPlanWeekId: workoutPlanWeekId,
-        planVersion: week.planVersion,
-        day: dayInt > daysCount ? daysCount + 1 : dayInt,
-      );
+      return await _dayDao.startTransaction((txn) async {
+        final siblings = await _dayDao.selectMany(
+          where: WorkoutPlanDayColumns.workoutPlanWeekId.equal,
+          whereArgs: [workoutPlanWeekId],
+          trx: txn,
+        );
+        final occupiedDays = siblings.map((sibling) => sibling.day).toSet();
+        final firstFreeDay = Iterable<int>.generate(
+          7,
+          (index) => index + 1,
+        ).where((day) => !occupiedDays.contains(day)).firstOrNull;
+        if (firstFreeDay == null) {
+          return err(
+            const ServiceError(
+              type: SingleErrorTypes.invalidInput,
+              description: 'Workout plan week already has 7 days',
+            ),
+          );
+        }
+        final dayInt = day ?? firstFreeDay;
+        int shiftUntil = dayInt;
+        while (occupiedDays.contains(shiftUntil)) {
+          shiftUntil++;
+        }
+        if (shiftUntil > 7) {
+          return err(
+            const ServiceError(
+              type: SingleErrorTypes.invalidInput,
+              description: 'No available day at or after the requested day',
+            ),
+          );
+        }
+        final planDay = WorkoutPlanDay.create(
+          workoutPlanId: week.workoutPlanId,
+          workoutPlanWeekId: workoutPlanWeekId,
+          planVersion: week.planVersion,
+          day: dayInt,
+          totalWorkouts: workouts.length,
+        );
+        if (shiftUntil > dayInt) {
+          final now = DateUtilities.getNowUtcUnix();
+          await txn.rawUpdate(
+            '''
+            UPDATE ${WorkoutPlanDay.table}
+            SET ${WorkoutPlanDayColumns.day.value} = ${WorkoutPlanDayColumns.day.value} + 1,
+                ${WorkoutPlanDayColumns.updatedAt.value} = ?
+            WHERE ${WorkoutPlanDayColumns.workoutPlanWeekId.equal}
+              AND ${WorkoutPlanDayColumns.day.greaterThanOrEqual}
+              AND ${WorkoutPlanDayColumns.day.lessThan}
+            ''',
+            [now, workoutPlanWeekId, dayInt, shiftUntil],
+          );
+        }
 
-      final (
-        int planDayId,
-        List<WorkoutPlanWorkout> planWorkouts,
-      ) = await _dayDao.startTransaction((txn) async {
         final int planDayId = await _dayDao.insert(planDay, txn);
         final List<WorkoutPlanWorkout> planWorkouts = [];
 
@@ -1490,32 +1359,21 @@ final class WorkoutPlanRepository implements Repository {
           planWorkouts.add(planWorkout.copyWith(id: Nullable(planWorkoutId)));
         }
 
-        if (planDay.day < daysCount) {
-          await txn.rawUpdate(
-            """
-              UPDATE ${WorkoutPlanDay.table} SET ${WorkoutPlanDayColumns.day.value} = ${WorkoutPlanDayColumns.day.value} + 1 
-              WHERE ${WorkoutPlanDayColumns.workoutPlanWeekId.value} = ? AND ${WorkoutPlanDayColumns.day.value} >= ?
-              """,
-            [workoutPlanWeekId, planDay.day],
-          );
-        }
-        return (planDayId, planWorkouts);
+        _logger.info('Created workout plan day with id $planDayId');
+        return ok(
+          WorkoutPlanDayDto.fromModel(
+            planDay.copyWith(id: Nullable(planDayId)),
+            planWorkouts: planWorkouts
+                .map(
+                  (e) => WorkoutPlanWorkoutDto.fromModel(
+                    e,
+                    workout: workoutMap[e.workoutId],
+                  ),
+                )
+                .toList(),
+          ),
+        );
       });
-
-      _logger.info('Created workout plan day with id $planDayId');
-      return ok(
-        WorkoutPlanDayDto.fromModel(
-          planDay.copyWith(id: Nullable(planDayId)),
-          planWorkouts: planWorkouts
-              .map(
-                (e) => WorkoutPlanWorkoutDto.fromModel(
-                  e,
-                  workout: workoutMap[e.workoutId],
-                ),
-              )
-              .toList(),
-        ),
-      );
     } catch (e) {
       _logger.severe(
         'Failed to create workout plan day for workout week with id $workoutPlanWeekId and day $day',
@@ -1540,7 +1398,7 @@ final class WorkoutPlanRepository implements Repository {
       'Updating workout plan day with id $workoutPlanDayId and day $day',
     );
 
-    if (day > 7) {
+    if (day < 1 || day > 7) {
       _logger.warning('Day must be between 1 and 7');
       return err(
         const ServiceError(
@@ -1551,87 +1409,81 @@ final class WorkoutPlanRepository implements Repository {
     }
 
     try {
-      final WorkoutPlanDay? planDay = await _dayDao.selectOne(workoutPlanDayId);
-      if (planDay == null) {
-        _logger.warning('Workout plan day with id $workoutPlanDayId not found');
-        return err(
-          ServiceError(
-            type: SingleErrorTypes.notFound,
-            description: 'Workout plan day with id $workoutPlanDayId not found',
-          ),
+      return await _dayDao.startTransaction((txn) async {
+        final WorkoutPlanDay? planDay = await _dayDao.selectOne(
+          workoutPlanDayId,
+          txn,
         );
-      }
-
-      final int oldDay = planDay.day;
-      final int daysCount = await _dayDao.count(
-        where: WorkoutPlanDayColumns.workoutPlanWeekId.equal,
-        whereArgs: [planDay.workoutPlanWeekId],
-      );
-      final int dayInt = day > daysCount ? daysCount : day;
-
-      if (dayInt < oldDay) {
-        await _dayDao.startTransaction((txn) async {
-          await txn.rawUpdate(
-            """
-        UPDATE ${WorkoutPlanDay.table} SET ${WorkoutPlanDayColumns.day.value} = ${WorkoutPlanDayColumns.day.value} + 1
-        WHERE ${WorkoutPlanDayColumns.workoutPlanWeekId.value} = ? AND ${WorkoutPlanDayColumns.day.value} >= ?
-        """,
-            [planDay.workoutPlanWeekId, dayInt],
+        if (planDay == null) {
+          _logger.warning(
+            'Workout plan day with id $workoutPlanDayId not found',
           );
-        });
-      } else if (dayInt > oldDay) {
-        await _dayDao.startTransaction((txn) async {
-          await txn.rawUpdate(
-            """
-        UPDATE ${WorkoutPlanDay.table} SET ${WorkoutPlanDayColumns.day.value} = ${WorkoutPlanDayColumns.day.value} - 1
-        WHERE ${WorkoutPlanDayColumns.workoutPlanWeekId.value} = ? AND ${WorkoutPlanDayColumns.day.value} <= ?
-        """,
-            [planDay.workoutPlanWeekId, dayInt],
+          return err(
+            ServiceError(
+              type: SingleErrorTypes.notFound,
+              description:
+                  'Workout plan day with id $workoutPlanDayId not found',
+            ),
           );
-        });
-      }
+        }
 
-      final List<WorkoutPlanWorkout> planWorkouts = await _planWorkoutDao
-          .selectMany(
-            where: WorkoutPlanWorkoutColumns.workoutPlanDayId.equal,
-            whereArgs: [workoutPlanDayId],
-          );
-      if (planWorkouts.isEmpty) {
-        return ok(WorkoutPlanDayDto.fromModel(planDay.copyWith(day: dayInt)));
-      }
-
-      final List<Workout> workouts = await _workoutDao.selectMany(
-        where: WorkoutColumns.id.inList(planWorkouts.length),
-        whereArgs: planWorkouts.map((e) => e.workoutId).toList(),
-      );
-      if (workouts.length != planWorkouts.length) {
-        _logger.warning('Workout plan day with id $workoutPlanDayId not found');
-        return err(
-          ServiceError(
-            type: SingleErrorTypes.notFound,
-            description: 'Workout plan day with id $workoutPlanDayId not found',
-          ),
+        final int oldDay = planDay.day;
+        final planWorkouts = await _planWorkoutDao.selectMany(
+          where: WorkoutPlanWorkoutColumns.workoutPlanDayId.equal,
+          whereArgs: [workoutPlanDayId],
+          orderBy: [WorkoutPlanWorkoutColumns.position.orderAsc],
+          trx: txn,
         );
-      }
 
-      final Map<int, WorkoutDto> workoutMap = workouts.fold({}, (map, workout) {
-        map[workout.id!] = WorkoutDto.fromModel(workout);
-        return map;
+        final now = DateUtilities.getNowUtcUnix();
+        final resolvedPlanDay = day == oldDay
+            ? planDay
+            : planDay.copyWith(day: day, updatedAt: now);
+        final dayDtosResult = await _buildDayDtos(
+          [resolvedPlanDay],
+          planWorkouts,
+          txn: txn,
+          missingWorkoutsMessage:
+              'Workout plan day with id $workoutPlanDayId not found',
+        );
+        if (dayDtosResult.isErr()) {
+          return err(dayDtosResult.error);
+        }
+
+        if (day != oldDay) {
+          if (day < oldDay) {
+            await txn.rawUpdate(
+              '''
+              UPDATE ${WorkoutPlanDay.table}
+              SET ${WorkoutPlanDayColumns.day.value} = ${WorkoutPlanDayColumns.day.value} + 1,
+                  ${WorkoutPlanDayColumns.updatedAt.value} = ?
+              WHERE ${WorkoutPlanDayColumns.workoutPlanWeekId.equal}
+                AND ${WorkoutPlanDayColumns.day.greaterThanOrEqual}
+                AND ${WorkoutPlanDayColumns.day.lessThan}
+                AND ${WorkoutPlanDayColumns.id.notEqual}
+              ''',
+              [now, planDay.workoutPlanWeekId, day, oldDay, workoutPlanDayId],
+            );
+          } else {
+            await txn.rawUpdate(
+              '''
+              UPDATE ${WorkoutPlanDay.table}
+              SET ${WorkoutPlanDayColumns.day.value} = ${WorkoutPlanDayColumns.day.value} - 1,
+                  ${WorkoutPlanDayColumns.updatedAt.value} = ?
+              WHERE ${WorkoutPlanDayColumns.workoutPlanWeekId.equal}
+                AND ${WorkoutPlanDayColumns.day.greaterThan}
+                AND ${WorkoutPlanDayColumns.day.lessThanOrEqual}
+                AND ${WorkoutPlanDayColumns.id.notEqual}
+              ''',
+              [now, planDay.workoutPlanWeekId, oldDay, day, workoutPlanDayId],
+            );
+          }
+          await _dayDao.update(resolvedPlanDay, txn);
+        }
+
+        _logger.info('Updated workout plan day with id $workoutPlanDayId');
+        return ok(dayDtosResult.value.first);
       });
-      _logger.info('Updated workout plan day with id $workoutPlanDayId');
-      return ok(
-        WorkoutPlanDayDto.fromModel(
-          planDay.copyWith(day: dayInt),
-          planWorkouts: planWorkouts
-              .map(
-                (e) => WorkoutPlanWorkoutDto.fromModel(
-                  e,
-                  workout: workoutMap[e.workoutId],
-                ),
-              )
-              .toList(),
-        ),
-      );
     } catch (e) {
       _logger.severe(
         'Failed to update workout plan day with id $workoutPlanDayId',
@@ -1669,6 +1521,7 @@ final class WorkoutPlanRepository implements Repository {
         whereArgs: [planDay.workoutPlanWeekId],
       );
       if (day < daysCount) {
+        final now = DateUtilities.getNowUtcUnix();
         final result = await _dayDao.startTransaction((txn) async {
           final deleted = await _dayDao.deleteOne(workoutPlanDayId, txn);
           if (!deleted) {
@@ -1676,11 +1529,14 @@ final class WorkoutPlanRepository implements Repository {
           }
 
           await txn.rawUpdate(
-            """
-            UPDATE ${WorkoutPlanDay.table} SET ${WorkoutPlanDayColumns.day.value} = ${WorkoutPlanDayColumns.day.value} - 1
-            WHERE ${WorkoutPlanDayColumns.workoutPlanWeekId.value} = ? AND ${WorkoutPlanDayColumns.day.value} > ?
-            """,
-            [planDay.workoutPlanWeekId, day],
+            '''
+            UPDATE ${WorkoutPlanDay.table}
+            SET ${WorkoutPlanDayColumns.day.value} = ${WorkoutPlanDayColumns.day.value} - 1,
+                ${WorkoutPlanDayColumns.updatedAt.value} = ?
+            WHERE ${WorkoutPlanDayColumns.workoutPlanWeekId.equal}
+              AND ${WorkoutPlanDayColumns.day.greaterThan}
+            ''',
+            [now, planDay.workoutPlanWeekId, day],
           );
           return true;
         });
@@ -1745,43 +1601,20 @@ final class WorkoutPlanRepository implements Repository {
           .selectMany(
             where: WorkoutPlanWorkoutColumns.workoutPlanDayId.equal,
             whereArgs: [workoutPlanDayId],
+            orderBy: [WorkoutPlanWorkoutColumns.position.orderAsc],
           );
-      if (planWorkouts.isEmpty) {
-        return ok(WorkoutPlanDayDto.fromModel(planDay));
-      }
-
-      final List<Workout> workouts = await _workoutDao.selectMany(
-        where: WorkoutColumns.id.inList(planWorkouts.length),
-        whereArgs: planWorkouts.map((e) => e.workoutId).toList(),
+      final dayDtosResult = await _buildDayDtos(
+        [planDay],
+        planWorkouts,
+        missingWorkoutsMessage:
+            'Workout plan day with id $workoutPlanDayId not found',
       );
-      if (workouts.length != planWorkouts.length) {
-        _logger.warning('Workout plan day with id $workoutPlanDayId not found');
-        return err(
-          ServiceError(
-            type: SingleErrorTypes.notFound,
-            description: 'Workout plan day with id $workoutPlanDayId not found',
-          ),
-        );
+      if (dayDtosResult.isErr()) {
+        return err(dayDtosResult.error);
       }
 
-      final Map<int, WorkoutDto> workoutMap = workouts.fold({}, (map, workout) {
-        map[workout.id!] = WorkoutDto.fromModel(workout);
-        return map;
-      });
       _logger.info('Got workout plan day with id $workoutPlanDayId');
-      return ok(
-        WorkoutPlanDayDto.fromModel(
-          planDay,
-          planWorkouts: planWorkouts
-              .map(
-                (e) => WorkoutPlanWorkoutDto.fromModel(
-                  e,
-                  workout: workoutMap[e.workoutId],
-                ),
-              )
-              .toList(),
-        ),
-      );
+      return ok(dayDtosResult.value.first);
     } catch (e) {
       _logger.severe(
         'Failed to get workout plan day with id $workoutPlanDayId',
@@ -1819,87 +1652,54 @@ final class WorkoutPlanRepository implements Repository {
         );
       }
       final int resolvedPlanVersion = planVersion ?? planWeek.planVersion;
+      final dayWhere = WhereBuilder()
+        ..and(WorkoutPlanDayColumns.workoutPlanWeekId.equal, workoutPlanWeekId)
+        ..and(WorkoutPlanDayColumns.planVersion.equal, resolvedPlanVersion);
+      final planWorkoutWhere = WhereBuilder()
+        ..and(
+          WorkoutPlanWorkoutColumns.workoutPlanWeekId.equal,
+          workoutPlanWeekId,
+        )
+        ..and(WorkoutPlanWorkoutColumns.planVersion.equal, resolvedPlanVersion);
 
-      final List<WorkoutPlanDay> planDays = await _dayDao.selectMany(
-        where:
-            '${WorkoutPlanDayColumns.workoutPlanWeekId.equal} AND ${WorkoutPlanDayColumns.planVersion.equal}',
-        whereArgs: [workoutPlanWeekId, resolvedPlanVersion],
-        orderBy: [WorkoutPlanDayColumns.day.orderAsc],
-      );
+      final treeResults = await Future.wait([
+        _dayDao.selectMany(
+          where: dayWhere.where,
+          whereArgs: dayWhere.args,
+          orderBy: [WorkoutPlanDayColumns.day.orderAsc],
+        ),
+        _planWorkoutDao.selectMany(
+          where: planWorkoutWhere.where,
+          whereArgs: planWorkoutWhere.args,
+          orderBy: [
+            WorkoutPlanWorkoutColumns.workoutPlanDayId.orderAsc,
+            WorkoutPlanWorkoutColumns.position.orderAsc,
+          ],
+        ),
+      ]);
+
+      final List<WorkoutPlanDay> planDays =
+          treeResults[0] as List<WorkoutPlanDay>;
       if (planDays.isEmpty) {
         return ok([]);
       }
 
-      final List<WorkoutPlanWorkout>
-      planWorkouts = await _planWorkoutDao.selectMany(
-        where:
-            '${WorkoutPlanWorkoutColumns.workoutPlanWeekId.equal} AND ${WorkoutPlanWorkoutColumns.planVersion.equal}',
-        whereArgs: [workoutPlanWeekId, resolvedPlanVersion],
-        orderBy: [
-          WorkoutPlanWorkoutColumns.workoutPlanDayId.orderAsc,
-          WorkoutPlanWorkoutColumns.position.orderAsc,
-        ],
+      final List<WorkoutPlanWorkout> planWorkouts =
+          treeResults[1] as List<WorkoutPlanWorkout>;
+      final dayDtosResult = await _buildDayDtos(
+        planDays,
+        planWorkouts,
+        missingWorkoutsMessage:
+            'Workout plan week with id $workoutPlanWeekId not found',
       );
-      if (planWorkouts.isEmpty) {
-        return ok(planDays.map((e) => WorkoutPlanDayDto.fromModel(e)).toList());
+      if (dayDtosResult.isErr()) {
+        return err(dayDtosResult.error);
       }
-      final Set<int> workoutIds = planWorkouts.map((e) => e.workoutId).toSet();
-      final List<Workout> workouts = await _workoutDao.selectMany(
-        where: WorkoutColumns.id.inList(workoutIds.length),
-        whereArgs: workoutIds.toList(),
-      );
-      if (workouts.length != workoutIds.length) {
-        _logger.warning(
-          'Workout plan week with id $workoutPlanWeekId not found',
-        );
-        return err(
-          ServiceError(
-            type: SingleErrorTypes.notFound,
-            description:
-                'Workout plan week with id $workoutPlanWeekId not found',
-          ),
-        );
-      }
-
-      final Map<int, WorkoutDto> workoutMap = workouts.fold({}, (map, workout) {
-        map[workout.id!] = WorkoutDto.fromModel(workout);
-        return map;
-      });
-      final Map<int, List<WorkoutPlanWorkoutDto>> planWorkoutMap = planWorkouts
-          .fold(
-            {},
-            (map, planWorkout) => map
-              ..update(
-                planWorkout.workoutPlanDayId,
-                (value) => value
-                  ..add(
-                    WorkoutPlanWorkoutDto.fromModel(
-                      planWorkout,
-                      workout: workoutMap[planWorkout.workoutId],
-                    ),
-                  ),
-                ifAbsent: () => [
-                  WorkoutPlanWorkoutDto.fromModel(
-                    planWorkout,
-                    workout: workoutMap[planWorkout.workoutId],
-                  ),
-                ],
-              ),
-          );
 
       _logger.info(
         'Got workout plan days with workout plan week id $workoutPlanWeekId',
       );
-      return ok(
-        planDays
-            .map(
-              (e) => WorkoutPlanDayDto.fromModel(
-                e,
-                planWorkouts: planWorkoutMap[e.id],
-              ),
-            )
-            .toList(),
-      );
+      return ok(dayDtosResult.value);
     } catch (e) {
       _logger.severe(
         'Failed to get workout plan days with workout plan week id $workoutPlanWeekId',
@@ -1979,7 +1779,15 @@ final class WorkoutPlanRepository implements Repository {
       "Creating workout plan workout for workout plan day with id $workoutPlanDayId",
     );
     try {
-      final WorkoutPlanDay? planDay = await _dayDao.selectOne(workoutPlanDayId);
+      final preloadResults = await Future.wait([
+        _dayDao.selectOne(workoutPlanDayId),
+        _workoutDao.selectOne(input.workoutId),
+        _planWorkoutDao.count(
+          where: WorkoutPlanWorkoutColumns.workoutPlanDayId.equal,
+          whereArgs: [workoutPlanDayId],
+        ),
+      ]);
+      final WorkoutPlanDay? planDay = preloadResults[0] as WorkoutPlanDay?;
       if (planDay == null) {
         _logger.warning('Workout plan day with id $workoutPlanDayId not found');
         return err(
@@ -1990,7 +1798,7 @@ final class WorkoutPlanRepository implements Repository {
         );
       }
 
-      final Workout? workout = await _workoutDao.selectOne(input.workoutId);
+      final Workout? workout = preloadResults[1] as Workout?;
       if (workout == null) {
         _logger.warning('Workout with id ${input.workoutId} not found');
         return err(
@@ -2001,10 +1809,7 @@ final class WorkoutPlanRepository implements Repository {
         );
       }
 
-      final int count = await _planWorkoutDao.count(
-        where: WorkoutPlanWorkoutColumns.workoutPlanDayId.equal,
-        whereArgs: [workoutPlanDayId],
-      );
+      final int count = preloadResults[2] as int;
       final int finalPosition = count + 1;
       final int intPosition = input.position ?? finalPosition;
       final int workoutPosition = intPosition > finalPosition
@@ -2033,18 +1838,19 @@ final class WorkoutPlanRepository implements Repository {
         );
       }
 
+      final now = DateUtilities.getNowUtcUnix();
       final int id = await _planWorkoutDao.startTransaction((txn) async {
         await txn.rawUpdate(
-          """
-          UPDATE workout_plan_workouts
-          SET position = position + 1
-          WHERE workout_plan_day_id = ?
-          AND position >= ?
-        """,
-          [workoutPlanDayId, workoutPosition],
+          '''
+          UPDATE ${WorkoutPlanWorkout.table}
+          SET ${WorkoutPlanWorkoutColumns.position.value} = ${WorkoutPlanWorkoutColumns.position.value} + 1,
+              ${WorkoutPlanWorkoutColumns.updatedAt.value} = ?
+          WHERE ${WorkoutPlanWorkoutColumns.workoutPlanDayId.equal}
+            AND ${WorkoutPlanWorkoutColumns.position.greaterThanOrEqual}
+          ''',
+          [now, workoutPlanDayId, workoutPosition],
         );
-        final int id = await _planWorkoutDao.insert(planWorkout, txn);
-        return id;
+        return await _planWorkoutDao.insert(planWorkout, txn);
       });
 
       _logger.info(
@@ -2078,9 +1884,12 @@ final class WorkoutPlanRepository implements Repository {
   ) async {
     _logger.info('Updating workout plan workout with id $workoutPlanWorkoutId');
     try {
-      final WorkoutPlanWorkout? planWorkout = await _planWorkoutDao.selectOne(
-        workoutPlanWorkoutId,
-      );
+      final preloadResults = await Future.wait([
+        _planWorkoutDao.selectOne(workoutPlanWorkoutId),
+        _workoutDao.selectOne(input.workoutId),
+      ]);
+      final WorkoutPlanWorkout? planWorkout =
+          preloadResults[0] as WorkoutPlanWorkout?;
       if (planWorkout == null) {
         _logger.warning(
           'Workout plan workout with id $workoutPlanWorkoutId not found',
@@ -2094,7 +1903,7 @@ final class WorkoutPlanRepository implements Repository {
         );
       }
 
-      final Workout? workout = await _workoutDao.selectOne(input.workoutId);
+      final Workout? workout = preloadResults[1] as Workout?;
       if (workout == null) {
         _logger.warning('Workout with id ${input.workoutId} not found');
         return err(
@@ -2132,25 +1941,28 @@ final class WorkoutPlanRepository implements Repository {
       final int workoutPosition = requestedPosition > finalPosition
           ? finalPosition
           : requestedPosition;
+      final now = DateUtilities.getNowUtcUnix();
       final WorkoutPlanWorkout updatedPlanWorkout = planWorkout.copyWith(
         workoutId: input.workoutId,
         position: workoutPosition,
         timeOfDay: input.timeOfDay,
-        updatedAt: DateUtilities.getNowUtcUnix(),
+        updatedAt: now,
       );
       await _planWorkoutDao.startTransaction((txn) async {
         await _planWorkoutDao.update(updatedPlanWorkout, txn);
         if (workoutPosition > oldPosition) {
           await txn.rawUpdate(
-            """
-            UPDATE workout_plan_workouts
-            SET position = position - 1
-            WHERE workout_plan_day_id = ?
-            AND position > ?
-            AND position <= ?
-            AND id != ?
-          """,
+            '''
+            UPDATE ${WorkoutPlanWorkout.table}
+            SET ${WorkoutPlanWorkoutColumns.position.value} = ${WorkoutPlanWorkoutColumns.position.value} - 1,
+                ${WorkoutPlanWorkoutColumns.updatedAt.value} = ?
+            WHERE ${WorkoutPlanWorkoutColumns.workoutPlanDayId.equal}
+              AND ${WorkoutPlanWorkoutColumns.position.greaterThan}
+              AND ${WorkoutPlanWorkoutColumns.position.lessThanOrEqual}
+              AND ${WorkoutPlanWorkoutColumns.id.notEqual}
+            ''',
             [
+              now,
               planWorkout.workoutPlanDayId,
               oldPosition,
               workoutPosition,
@@ -2159,15 +1971,17 @@ final class WorkoutPlanRepository implements Repository {
           );
         } else {
           await txn.rawUpdate(
-            """
-            UPDATE workout_plan_workouts
-            SET position = position + 1
-            WHERE workout_plan_day_id = ?
-            AND position >= ?
-            AND position < ?
-            AND id != ?
-          """,
+            '''
+            UPDATE ${WorkoutPlanWorkout.table}
+            SET ${WorkoutPlanWorkoutColumns.position.value} = ${WorkoutPlanWorkoutColumns.position.value} + 1,
+                ${WorkoutPlanWorkoutColumns.updatedAt.value} = ?
+            WHERE ${WorkoutPlanWorkoutColumns.workoutPlanDayId.equal}
+              AND ${WorkoutPlanWorkoutColumns.position.greaterThanOrEqual}
+              AND ${WorkoutPlanWorkoutColumns.position.lessThan}
+              AND ${WorkoutPlanWorkoutColumns.id.notEqual}
+            ''',
             [
+              now,
               planWorkout.workoutPlanDayId,
               workoutPosition,
               oldPosition,
@@ -2257,6 +2071,7 @@ final class WorkoutPlanRepository implements Repository {
         return ok(null);
       }
 
+      final now = DateUtilities.getNowUtcUnix();
       final deleted = await _planWorkoutDao.startTransaction((txn) async {
         final deleted = await _planWorkoutDao.deleteOne(
           workoutPlanWorkoutId,
@@ -2267,11 +2082,14 @@ final class WorkoutPlanRepository implements Repository {
         }
 
         await txn.rawUpdate(
-          """
-          UPDATE workout_plan_workouts SET position = position - 1
-          WHERE workout_plan_day_id = ? AND position > ?
-        """,
-          [planWorkout.workoutPlanDayId, planWorkout.position],
+          '''
+          UPDATE ${WorkoutPlanWorkout.table}
+          SET ${WorkoutPlanWorkoutColumns.position.value} = ${WorkoutPlanWorkoutColumns.position.value} - 1,
+              ${WorkoutPlanWorkoutColumns.updatedAt.value} = ?
+          WHERE ${WorkoutPlanWorkoutColumns.workoutPlanDayId.equal}
+            AND ${WorkoutPlanWorkoutColumns.position.greaterThan}
+          ''',
+          [now, planWorkout.workoutPlanDayId, planWorkout.position],
         );
         return true;
       });
@@ -2306,5 +2124,61 @@ final class WorkoutPlanRepository implements Repository {
         ),
       );
     }
+  }
+
+  Future<Result<List<WorkoutPlanDayDto>, ServiceError<SingleErrorTypes>>>
+  _buildDayDtos(
+    List<WorkoutPlanDay> days,
+    List<WorkoutPlanWorkout> planWorkouts, {
+    required String missingWorkoutsMessage,
+    Transaction? txn,
+  }) async {
+    if (planWorkouts.isEmpty) {
+      return ok(days.map((d) => WorkoutPlanDayDto.fromModel(d)).toList());
+    }
+
+    final workoutIds = planWorkouts.map((pw) => pw.workoutId).toSet();
+    final workouts = await selectManyInChunks<Workout>(
+      dao: _workoutDao,
+      column: WorkoutColumns.id,
+      values: workoutIds,
+      trx: txn,
+    );
+    if (workouts.length != workoutIds.length) {
+      _logger.warning(missingWorkoutsMessage);
+      return err(
+        ServiceError(
+          type: SingleErrorTypes.notFound,
+          description: missingWorkoutsMessage,
+        ),
+      );
+    }
+
+    final workoutMap = <int, WorkoutDto>{
+      for (final workout in workouts)
+        workout.id!: WorkoutDto.fromModel(workout),
+    };
+    final planWorkoutsMap = <int, List<WorkoutPlanWorkoutDto>>{};
+    for (final pw in planWorkouts) {
+      planWorkoutsMap
+          .putIfAbsent(pw.workoutPlanDayId, () => [])
+          .add(
+            WorkoutPlanWorkoutDto.fromModel(
+              pw,
+              workout: workoutMap[pw.workoutId],
+            ),
+          );
+    }
+
+    return ok(
+      days
+          .map(
+            (day) => WorkoutPlanDayDto.fromModel(
+              day,
+              planWorkouts: planWorkoutsMap[day.id],
+            ),
+          )
+          .toList(),
+    );
   }
 }

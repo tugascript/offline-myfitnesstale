@@ -18,14 +18,14 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:logging/logging.dart';
 
-import '../../../utils/nullable.dart';
-import '../../../data/utils/enums.dart';
-import '../../../utils/errors.dart';
 import '../../../data/repositories/workout_plans/dtos/workout_plan_dto.dart';
 import '../../../data/repositories/workout_plans/dtos/workout_plan_record_dto.dart';
 import '../../../data/repositories/workout_plans/workout_plan_record_repository.dart';
 import '../../../data/repositories/workout_plans/workout_plan_repository.dart';
 import '../../../data/repositories/workouts/dtos/workout_dto.dart';
+import '../../../data/utils/enums.dart';
+import '../../../utils/errors.dart';
+import '../../../utils/nullable.dart';
 import '../../core/view_models/states/common_state.dart';
 import './states/workout_plan_record_state.dart';
 
@@ -564,7 +564,12 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
           workoutPlanVersion: record.workoutPlanVersion,
         ),
       ]);
-      return (results[0], results[1]);
+      final completedResult = results[0];
+      final totalResult = results[1];
+      if (completedResult.isErr() || totalResult.isErr()) {
+        return null;
+      }
+      return (completedResult.value, totalResult.value);
     } catch (e) {
       _logger.warning("Failed to refresh progress", e);
       return null;

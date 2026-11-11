@@ -16,8 +16,10 @@
 // along with My Fitness Tale.  If not, see <https://www.gnu.org/licenses/>.
 
 import 'package:logging/logging.dart';
-import 'package:sqflite/sqflite.dart';
 
+import '../../../utils/errors.dart';
+import '../../../utils/nullable.dart';
+import '../../../utils/result.dart';
 import '../../models/sqlite/daily_nutrition_log_model.dart';
 import '../../models/sqlite/meal_log_model.dart';
 import '../../models/sqlite/meal_plan_day_model.dart';
@@ -26,23 +28,18 @@ import '../../models/sqlite/meal_plan_model.dart';
 import '../../models/sqlite/meal_plan_record_model.dart';
 import '../../models/sqlite/meal_plan_week_model.dart';
 import '../../models/sqlite/meal_plan_week_record_model.dart';
-import '../../models/sqlite/model.dart';
 import '../../services/common.dart';
-import '../../services/sqlite/database_helper.dart';
 import '../../services/sqlite/dao.dart';
+import '../../services/sqlite/database_helper.dart';
 import '../../utils/dates.dart';
 import '../../utils/enums.dart';
 import '../../utils/where_builder.dart';
-import '../../../utils/errors.dart';
-import '../../../utils/nullable.dart';
-import '../../../utils/result.dart';
-import './dtos/meal_plan_record_dto.dart';
 import '../core/dtos/paginated_dto.dart';
 import '../core/repository.dart';
+import '../core/repository_helpers.dart';
+import './dtos/meal_plan_record_dto.dart';
 
 final class MealPlanRecordRepository implements Repository {
-  static const int _maxSqlVariables = 900;
-
   final Dao<MealLog> _mealLogDao;
   final Dao<MealPlanDay> _mealPlanDayDao;
   final Dao<MealPlanWeek> _mealPlanWeekDao;
@@ -111,46 +108,6 @@ final class MealPlanRecordRepository implements Repository {
     );
   }
 
-  Future<Result<List<T>, ServiceError<OperationErrorTypes>>>
-  _selectManyInChunks<T extends Model>({
-    required Dao<T> dao,
-    required Columns column,
-    required Iterable<int> values,
-    List<String>? orderBy,
-    Transaction? trx,
-  }) async {
-    final valueList = values.toList();
-    if (valueList.isEmpty) {
-      return ok(<T>[]);
-    }
-
-    try {
-      final results = <T>[];
-      for (int i = 0; i < valueList.length; i += _maxSqlVariables) {
-        final end = i + _maxSqlVariables < valueList.length
-            ? i + _maxSqlVariables
-            : valueList.length;
-        final chunk = valueList.sublist(i, end);
-        final rows = await dao.selectMany(
-          where: column.inList(chunk.length),
-          whereArgs: chunk,
-          orderBy: orderBy,
-          trx: trx,
-        );
-        results.addAll(rows);
-      }
-      return ok(results);
-    } catch (e) {
-      _logger.severe('Failed to select ${column.value} in chunks', e);
-      return err(
-        const ServiceError(
-          type: OperationErrorTypes.operationFailure,
-          description: 'Failed to get meal plan records',
-        ),
-      );
-    }
-  }
-
   Future<Result<MealPlanRecordDto, ServiceError<SingleErrorTypes>>>
   startMealPlan({
     required int mealPlanId,
@@ -174,45 +131,72 @@ final class MealPlanRecordRepository implements Repository {
       final baseDate = DateTime(startDt.year, startDt.month, startDt.day);
       final int startUnix = DateUtilities.getDateUnix(baseDate);
 
+      final weekWhere = WhereBuilder()
+        ..and(MealPlanWeekColumns.mealPlanId.equal, mealPlanId)
+        ..and(MealPlanWeekColumns.planVersion.equal, targetVersion);
+      final weekRows = await _mealPlanWeekDao.selectMany(
+        where: weekWhere.where!,
+        whereArgs: weekWhere.args!,
+        orderBy: [MealPlanWeekColumns.weekNumber.orderAsc],
+      );
+      if (weekRows.isEmpty) {
+        return err(
+          const ServiceError(
+            type: SingleErrorTypes.invalidInput,
+            description: 'Meal plan has no configured weeks',
+          ),
+        );
+      }
+
+      final weekIds = weekRows.map((w) => w.id!).toList();
+      final allDayRows = await selectManyInChunks<MealPlanDay>(
+        dao: _mealPlanDayDao,
+        column: MealPlanDayColumns.mealPlanWeekId,
+        values: weekIds,
+        orderBy: [MealPlanDayColumns.day.orderAsc],
+      );
+      final daysByWeekId = <int, List<MealPlanDay>>{};
+      for (final day in allDayRows) {
+        daysByWeekId.putIfAbsent(day.mealPlanWeekId, () => []).add(day);
+      }
+
+      final neededDates = <int>{};
+      for (final w in weekRows) {
+        for (final d in daysByWeekId[w.id!] ?? const <MealPlanDay>[]) {
+          final int offsetDays = (w.weekNumber - 1) * 7 + (d.day - 1);
+          final DateTime dayCalendarDate = baseDate.add(
+            Duration(days: offsetDays),
+          );
+          neededDates.add(DateUtilities.getNumericDate(dayCalendarDate));
+        }
+      }
+
       return await _recordDao.startTransaction<
         Result<MealPlanRecordDto, ServiceError<SingleErrorTypes>>
       >((txn) async {
-        // 1. Abandon existing in-progress meal plan record
-        {
-          final models = await _recordDao.selectMany(
-            where: MealPlanRecordColumns.status.equal,
-            whereArgs: [ProgressStatus.inProgress.value],
-            trx: txn,
-          );
-          for (final model in models) {
-            await _recordDao.update(
-              model.copyWith(
-                status: ProgressStatus.abandoned,
-                completedAt: Nullable(DateUtilities.getNowUtcUnix()),
-                updatedAt: DateUtilities.getNowUtcUnix(),
-              ),
-              txn,
-            );
-          }
-        }
-
-        // 2. Load plan's weeks and days for targetVersion
-        final weekWhere = WhereBuilder()
-          ..and(MealPlanWeekColumns.mealPlanId.equal, mealPlanId)
-          ..and(MealPlanWeekColumns.planVersion.equal, targetVersion);
-        final weekRows = await _mealPlanWeekDao.selectMany(
-          where: weekWhere.where!,
-          whereArgs: weekWhere.args!,
-          orderBy: [MealPlanWeekColumns.weekNumber.orderAsc],
-          trx: txn,
+        final now = DateUtilities.getNowUtcUnix();
+        // 1. Abandon existing in-progress meal plan records in a single update
+        await txn.update(
+          MealPlanRecord.table,
+          {
+            MealPlanRecordColumns.status.value: ProgressStatus.abandoned.value,
+            MealPlanRecordColumns.completedAt.value: now,
+            MealPlanRecordColumns.updatedAt.value: now,
+          },
+          where: MealPlanRecordColumns.status.equal,
+          whereArgs: [ProgressStatus.inProgress.value],
         );
 
-        if (weekRows.isEmpty) {
-          throw const ServiceError(
-            type: SingleErrorTypes.invalidInput,
-            description: 'Meal plan has no configured weeks',
-          );
-        }
+        // 2. Preload existing DailyNutritionLog entries for all target dates
+        final existingLogs = await selectManyInChunks<DailyNutritionLog>(
+          dao: _dailyLogDao,
+          column: DailyNutritionLogColumns.date,
+          values: neededDates,
+          trx: txn,
+        );
+        final dailyLogIdByDate = <int, int>{
+          for (final log in existingLogs) log.date: log.id!,
+        };
 
         // 3. Create active MealPlanRecord
         final record = MealPlanRecord.create(
@@ -227,9 +211,7 @@ final class MealPlanRecordRepository implements Repository {
 
         final List<MealPlanWeekRecordDto> weekRecordDtos = [];
 
-        for (final wRow in weekRows) {
-          final w = wRow;
-
+        for (final w in weekRows) {
           final weekRecord = MealPlanWeekRecord.create(
             mealPlanRecordId: recordId,
             mealPlanWeekId: w.id!,
@@ -239,19 +221,10 @@ final class MealPlanRecordRepository implements Repository {
           );
           final int weekRecordId = await _weekRecordDao.insert(weekRecord, txn);
 
-          final dayRows = await _mealPlanDayDao.selectMany(
-            where: MealPlanDayColumns.mealPlanWeekId.equal,
-            whereArgs: [w.id!],
-            orderBy: [MealPlanDayColumns.day.orderAsc],
-            trx: txn,
-          );
-
+          final dayRows = daysByWeekId[w.id!] ?? const <MealPlanDay>[];
           final List<MealPlanDayRecordDto> dayRecordDtos = [];
 
-          for (final dRow in dayRows) {
-            final d = dRow;
-
-            // Compute calendar date for this week and day
+          for (final d in dayRows) {
             final int offsetDays = (w.weekNumber - 1) * 7 + (d.day - 1);
             final DateTime dayCalendarDate = baseDate.add(
               Duration(days: offsetDays),
@@ -260,20 +233,11 @@ final class MealPlanRecordRepository implements Repository {
               dayCalendarDate,
             );
 
-            // Get or create DailyNutritionLog for that calendar day
-            final existingLogRows = await _dailyLogDao.selectMany(
-              where: DailyNutritionLogColumns.date.equal,
-              whereArgs: [numericDate],
-              limit: 1,
-              trx: txn,
-            );
-
-            int dailyLogId;
-            if (existingLogRows.isNotEmpty) {
-              dailyLogId = existingLogRows.first.id!;
-            } else {
+            int? dailyLogId = dailyLogIdByDate[numericDate];
+            if (dailyLogId == null) {
               final newDailyLog = DailyNutritionLog.create(date: numericDate);
               dailyLogId = await _dailyLogDao.insert(newDailyLog, txn);
+              dailyLogIdByDate[numericDate] = dailyLogId;
             }
 
             final dayRecord = MealPlanDayRecord.create(
@@ -345,31 +309,38 @@ final class MealPlanRecordRepository implements Repository {
       }
 
       final active = records.first;
-      final plan = await _mealPlanDao.selectOne(active.mealPlanId);
-
-      // Load weeks and days
-      final weekRecords = await _weekRecordDao.selectMany(
-        where: MealPlanWeekRecordColumns.mealPlanRecordId.equal,
-        whereArgs: [active.id!],
-        orderBy: [MealPlanWeekRecordColumns.week.orderAsc],
-      );
-
-      final List<MealPlanWeekRecordDto> weekDtos = [];
-      for (final wRec in weekRecords) {
-        final dayRecords = await _dayRecordDao.selectMany(
-          where: MealPlanDayRecordColumns.mealPlanWeekRecordId.equal,
-          whereArgs: [wRec.id!],
+      final treeResults = await Future.wait([
+        _mealPlanDao.selectOne(active.mealPlanId),
+        _weekRecordDao.selectMany(
+          where: MealPlanWeekRecordColumns.mealPlanRecordId.equal,
+          whereArgs: [active.id!],
+          orderBy: [MealPlanWeekRecordColumns.week.orderAsc],
+        ),
+        _dayRecordDao.selectMany(
+          where: MealPlanDayRecordColumns.mealPlanRecordId.equal,
+          whereArgs: [active.id!],
           orderBy: [MealPlanDayRecordColumns.day.orderAsc],
-        );
-        weekDtos.add(
-          MealPlanWeekRecordDto.fromModel(
-            wRec,
-            days: dayRecords
-                .map((d) => MealPlanDayRecordDto.fromModel(d))
-                .toList(),
-          ),
-        );
+        ),
+      ]);
+      final plan = treeResults[0] as MealPlan?;
+      final weekRecords = treeResults[1] as List<MealPlanWeekRecord>;
+      final dayRecords = treeResults[2] as List<MealPlanDayRecord>;
+
+      final daysByWeekRecordId = <int, List<MealPlanDayRecordDto>>{};
+      for (final day in dayRecords) {
+        daysByWeekRecordId
+            .putIfAbsent(day.mealPlanWeekRecordId, () => [])
+            .add(MealPlanDayRecordDto.fromModel(day));
       }
+
+      final weekDtos = weekRecords
+          .map(
+            (wRec) => MealPlanWeekRecordDto.fromModel(
+              wRec,
+              days: daysByWeekRecordId[wRec.id!] ?? const [],
+            ),
+          )
+          .toList();
 
       return ok(
         MealPlanRecordDto.fromModel(
@@ -509,52 +480,22 @@ final class MealPlanRecordRepository implements Repository {
             .where((d) => d.day > record.currentDay)
             .firstOrNull;
 
+        late final MealPlanRecord updatedRecord;
         if (nextDay != null) {
           // Advance day in same week
-          {
-            final models = await _dayRecordDao.selectMany(
-              where: MealPlanDayRecordColumns.id.equal,
-              whereArgs: [nextDay.id!],
-              trx: txn,
-            );
-            for (final model in models) {
-              await _dayRecordDao.update(
-                model.copyWith(
-                  status: ProgressStatus.inProgress,
-                  updatedAt: now,
-                ),
-                txn,
-              );
-            }
-          }
-
-          {
-            final models = await _weekRecordDao.selectMany(
-              where: MealPlanWeekRecordColumns.id.equal,
-              whereArgs: [currentWeekRec.id!],
-              trx: txn,
-            );
-            for (final model in models) {
-              await _weekRecordDao.update(
-                model.copyWith(currentDay: nextDay.day, updatedAt: now),
-                txn,
-              );
-            }
-          }
-
-          {
-            final models = await _recordDao.selectMany(
-              where: MealPlanRecordColumns.id.equal,
-              whereArgs: [recordId],
-              trx: txn,
-            );
-            for (final model in models) {
-              await _recordDao.update(
-                model.copyWith(currentDay: nextDay.day, updatedAt: now),
-                txn,
-              );
-            }
-          }
+          await _dayRecordDao.update(
+            nextDay.copyWith(status: ProgressStatus.inProgress, updatedAt: now),
+            txn,
+          );
+          await _weekRecordDao.update(
+            currentWeekRec.copyWith(currentDay: nextDay.day, updatedAt: now),
+            txn,
+          );
+          updatedRecord = record.copyWith(
+            currentDay: nextDay.day,
+            updatedAt: now,
+          );
+          await _recordDao.update(updatedRecord, txn);
         } else {
           // Complete current week
           int weekCals = 0;
@@ -579,28 +520,19 @@ final class MealPlanRecordRepository implements Repository {
             }
           }
 
-          {
-            final models = await _weekRecordDao.selectMany(
-              where: MealPlanWeekRecordColumns.id.equal,
-              whereArgs: [currentWeekRec.id!],
-              trx: txn,
-            );
-            for (final model in models) {
-              await _weekRecordDao.update(
-                model.copyWith(
-                  status: ProgressStatus.completed,
-                  completedAt: Nullable(now),
-                  totalCalories: weekCals,
-                  totalProtein: weekProtein,
-                  totalCarbs: weekCarbs,
-                  totalFat: weekFat,
-                  totalFiber: Nullable(weekFiber),
-                  updatedAt: now,
-                ),
-                txn,
-              );
-            }
-          }
+          await _weekRecordDao.update(
+            currentWeekRec.copyWith(
+              status: ProgressStatus.completed,
+              completedAt: Nullable(now),
+              totalCalories: weekCals,
+              totalProtein: weekProtein,
+              totalCarbs: weekCarbs,
+              totalFat: weekFat,
+              totalFiber: Nullable(weekFiber),
+              updatedAt: now,
+            ),
+            txn,
+          );
 
           // Check if there is a next week
           final allWeeksRows = await _weekRecordDao.selectMany(
@@ -609,31 +541,21 @@ final class MealPlanRecordRepository implements Repository {
             orderBy: [MealPlanWeekRecordColumns.week.orderAsc],
             trx: txn,
           );
-          final allWeeks = allWeeksRows.map((r) => r).toList();
 
-          final nextWeek = allWeeks
+          final nextWeek = allWeeksRows
               .where((w) => w.week > record.currentWeek)
               .firstOrNull;
 
           if (nextWeek != null) {
             // Advance to next week
-            {
-              final models = await _weekRecordDao.selectMany(
-                where: MealPlanWeekRecordColumns.id.equal,
-                whereArgs: [nextWeek.id!],
-                trx: txn,
-              );
-              for (final model in models) {
-                await _weekRecordDao.update(
-                  model.copyWith(
-                    status: ProgressStatus.inProgress,
-                    currentDay: 1,
-                    updatedAt: now,
-                  ),
-                  txn,
-                );
-              }
-            }
+            await _weekRecordDao.update(
+              nextWeek.copyWith(
+                status: ProgressStatus.inProgress,
+                currentDay: 1,
+                updatedAt: now,
+              ),
+              txn,
+            );
 
             // Find first day of next week
             final firstDayWhere = WhereBuilder()
@@ -649,70 +571,32 @@ final class MealPlanRecordRepository implements Repository {
               trx: txn,
             );
             if (nextWeekFirstDay.isNotEmpty) {
-              {
-                final models = await _dayRecordDao.selectMany(
-                  where: MealPlanDayRecordColumns.id.equal,
-                  whereArgs: [nextWeekFirstDay.first.id!],
-                  trx: txn,
-                );
-                for (final model in models) {
-                  await _dayRecordDao.update(
-                    model.copyWith(
-                      status: ProgressStatus.inProgress,
-                      updatedAt: now,
-                    ),
-                    txn,
-                  );
-                }
-              }
+              await _dayRecordDao.update(
+                nextWeekFirstDay.first.copyWith(
+                  status: ProgressStatus.inProgress,
+                  updatedAt: now,
+                ),
+                txn,
+              );
             }
 
-            {
-              final models = await _recordDao.selectMany(
-                where: MealPlanRecordColumns.id.equal,
-                whereArgs: [recordId],
-                trx: txn,
-              );
-              for (final model in models) {
-                await _recordDao.update(
-                  model.copyWith(
-                    currentWeek: nextWeek.week,
-                    currentDay: 1,
-                    updatedAt: now,
-                  ),
-                  txn,
-                );
-              }
-            }
+            updatedRecord = record.copyWith(
+              currentWeek: nextWeek.week,
+              currentDay: 1,
+              updatedAt: now,
+            );
+            await _recordDao.update(updatedRecord, txn);
           } else {
             // Complete entire meal plan record!
-            {
-              final models = await _recordDao.selectMany(
-                where: MealPlanRecordColumns.id.equal,
-                whereArgs: [recordId],
-                trx: txn,
-              );
-              for (final model in models) {
-                await _recordDao.update(
-                  model.copyWith(
-                    status: ProgressStatus.completed,
-                    completedAt: Nullable(now),
-                    updatedAt: now,
-                  ),
-                  txn,
-                );
-              }
-            }
+            updatedRecord = record.copyWith(
+              status: ProgressStatus.completed,
+              completedAt: Nullable(now),
+              updatedAt: now,
+            );
+            await _recordDao.update(updatedRecord, txn);
           }
         }
 
-        // Reload record
-        final updatedRecRows = await _recordDao.selectMany(
-          where: MealPlanRecordColumns.id.equal,
-          whereArgs: [recordId],
-          trx: txn,
-        );
-        final updatedRecord = updatedRecRows.first;
         return ok(MealPlanRecordDto.fromModel(updatedRecord));
       });
     } on ServiceError<SingleErrorTypes> catch (error) {
@@ -750,28 +634,21 @@ final class MealPlanRecordRepository implements Repository {
         where.and(MealPlanRecordColumns.status.equal, status.value);
       }
 
-      final records = await _recordDao.selectPaginated(
-        where: where.where,
-        whereArgs: where.args,
+      final (records, total) = await fetchPaginatedWithTotal<MealPlanRecord>(
+        dao: _recordDao,
         limit: limit,
         offset: offset,
-        orderBy: [MealPlanRecordColumns.startedAt.orderDesc],
-      );
-      final total = await _recordDao.count(
         where: where.where,
         whereArgs: where.args,
+        orderBy: [MealPlanRecordColumns.startedAt.orderDesc],
       );
 
       final planIds = records.map((record) => record.mealPlanId).toSet();
-      final plansResult = await _selectManyInChunks(
+      final plans = await selectManyInChunks<MealPlan>(
         dao: _mealPlanDao,
         column: MealPlanColumns.id,
         values: planIds,
       );
-      if (plansResult.isErr()) {
-        return err(plansResult.error);
-      }
-      final plans = plansResult.value;
       final plansById = {for (final plan in plans) plan.id!: plan};
       final dtos = records.map((record) {
         final plan = plansById[record.mealPlanId];

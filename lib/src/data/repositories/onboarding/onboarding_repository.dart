@@ -35,6 +35,7 @@ import '../../models/sqlite/workout_plan_model.dart';
 import '../../services/sqlite/dao.dart';
 import '../../services/sqlite/database_helper.dart';
 import '../../utils/enums.dart';
+import '../core/repository.dart';
 import '../exercises/dtos/equipment_dto.dart';
 import '../exercises/dtos/exercise_dto.dart';
 import '../exercises/exercise_repository.dart';
@@ -48,9 +49,6 @@ import '../workouts/dtos/workout_dto.dart';
 import '../workouts/workout_repository.dart';
 import './dtos/onboarding_dto.dart';
 import './inputs/onboarding_input.dart';
-
-export './dtos/onboarding_dto.dart';
-export './inputs/onboarding_input.dart';
 
 enum OnboardingStage {
   equipments,
@@ -67,7 +65,7 @@ typedef OnboardingStageCallback = FutureOr<void> Function(
   OnboardingStage stage,
 );
 
-final class OnboardingRepository {
+final class OnboardingRepository implements Repository {
   final Dao<System> _systemDao;
   final ExerciseRepository _exerciseService;
   final ProfileRepository _profileService;
@@ -146,12 +144,10 @@ final class OnboardingRepository {
     Transaction transaction,
     OnboardingInput input,
   ) async {
-    final existing = await _getCompletedOnboarding(transaction);
+    final existing = await _resolveExistingOrRejectIncomplete(transaction);
     if (existing != null) {
       return existing;
     }
-
-    await _rejectIncompleteState(transaction);
 
     final equipmentResult = await _exerciseService.createEquipments(
       kEquipmentNames.toList(),
@@ -340,46 +336,46 @@ final class OnboardingRepository {
     _require(result, OnboardingStage.workoutPlan);
   }
 
-  Future<OnboardingDto?> _getCompletedOnboarding(
+  Future<OnboardingDto?> _resolveExistingOrRejectIncomplete(
     Transaction transaction,
   ) async {
     final systemResult = await _profileService.selectSystem(transaction);
-    if (systemResult.isErr()) {
-      if (systemResult.error.type == SingleErrorTypes.notFound) {
-        return null;
+    if (systemResult.isOk()) {
+      if (systemResult.value.initialSetup != SetUpStatus.completed) {
+        throw const _OnboardingFailure(
+          OnboardingStage.profile,
+          'An incomplete development onboarding state already exists. Clear app data and try again.',
+          requiresReset: true,
+        );
       }
+
+      final profileResult = await _profileService.selectProfile(transaction);
+      final remindersResult = await _profileService.selectRemindersConfig(
+        transaction,
+      );
+      if (profileResult.isErr() || remindersResult.isErr()) {
+        throw const _OnboardingFailure(
+          OnboardingStage.completion,
+          'Completed onboarding data is inconsistent',
+          requiresReset: true,
+        );
+      }
+
+      return OnboardingDto(
+        profile: profileResult.value,
+        system: systemResult.value,
+        remindersConfig: remindersResult.value,
+      );
+    }
+
+    if (systemResult.error.type != SingleErrorTypes.notFound) {
       throw _OnboardingFailure(
         OnboardingStage.system,
         systemResult.error.description,
       );
     }
 
-    if (systemResult.value.initialSetup != SetUpStatus.completed) {
-      return null;
-    }
-
-    final profileResult = await _profileService.selectProfile(transaction);
-    final remindersResult = await _profileService.selectRemindersConfig(
-      transaction,
-    );
-    if (profileResult.isErr() || remindersResult.isErr()) {
-      throw const _OnboardingFailure(
-        OnboardingStage.completion,
-        'Completed onboarding data is inconsistent',
-        requiresReset: true,
-      );
-    }
-
-    return OnboardingDto(
-      profile: profileResult.value,
-      system: systemResult.value,
-      remindersConfig: remindersResult.value,
-    );
-  }
-
-  Future<void> _rejectIncompleteState(Transaction transaction) async {
     final profile = await _profileService.selectProfile(transaction);
-    final system = await _profileService.selectSystem(transaction);
     final reminders = await _profileService.selectRemindersConfig(transaction);
 
     final hasSeedData = await _containsAnyRows(transaction, const [
@@ -389,13 +385,15 @@ final class OnboardingRepository {
       WorkoutPlan.table,
     ]);
 
-    if (profile.isOk() || system.isOk() || reminders.isOk() || hasSeedData) {
+    if (profile.isOk() || reminders.isOk() || hasSeedData) {
       throw const _OnboardingFailure(
         OnboardingStage.profile,
         'An incomplete development onboarding state already exists. Clear app data and try again.',
         requiresReset: true,
       );
     }
+
+    return null;
   }
 
   Future<bool> _containsAnyRows(
@@ -403,7 +401,11 @@ final class OnboardingRepository {
     List<String> tables,
   ) async {
     for (final table in tables) {
-      if ((await transaction.query(table, limit: 1)).isNotEmpty) {
+      if ((await transaction.query(
+        table,
+        columns: const ['1'],
+        limit: 1,
+      )).isNotEmpty) {
         return true;
       }
     }

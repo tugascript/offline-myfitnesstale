@@ -16,24 +16,27 @@
 // along with My Fitness Tale.  If not, see <https://www.gnu.org/licenses/>.
 
 import 'package:logging/logging.dart';
+import 'package:sqflite/sqflite.dart';
 
+import '../../../utils/errors.dart';
+import '../../../utils/nullable.dart';
+import '../../../utils/result.dart';
 import '../../models/sqlite/exercise_model.dart';
 import '../../models/sqlite/workout_model.dart';
 import '../../models/sqlite/workout_record_model.dart';
 import '../../models/sqlite/workout_set_exercise_record_model.dart';
 import '../../models/sqlite/workout_set_record_model.dart';
 import '../../services/common.dart';
-import '../../services/sqlite/database_helper.dart';
 import '../../services/sqlite/dao.dart' show Dao;
+import '../../services/sqlite/database_helper.dart';
 import '../../utils/dates.dart';
 import '../../utils/enums.dart';
 import '../../utils/json_data.dart';
 import '../../utils/where_builder.dart';
-import '../../../utils/errors.dart';
-import '../../../utils/nullable.dart';
-import '../../../utils/result.dart';
-import '../exercises/dtos/exercise_dto.dart';
 import '../core/dtos/paginated_dto.dart';
+import '../core/repository.dart';
+import '../core/repository_helpers.dart';
+import '../exercises/dtos/exercise_dto.dart';
 import './dtos/workout_dto.dart';
 import './dtos/workout_record_dto.dart';
 import './dtos/workout_set_exercise_record_dto.dart';
@@ -43,14 +46,6 @@ import './inputs/workout_record_input.dart';
 import './inputs/workout_set_exercise_record_input.dart';
 import './inputs/workout_set_record_batch_input.dart';
 import './inputs/workout_set_record_input.dart';
-import '../core/repository.dart';
-
-export './inputs/workout_record_batch_input.dart';
-export './inputs/workout_record_input.dart';
-export './inputs/workout_set_exercise_record_batch_input.dart';
-export './inputs/workout_set_exercise_record_input.dart';
-export './inputs/workout_set_record_batch_input.dart';
-export './inputs/workout_set_record_input.dart';
 
 final class WorkoutRecordRepository implements Repository {
   final Dao<WorkoutRecord> _workoutRecordDao;
@@ -115,20 +110,6 @@ final class WorkoutRecordRepository implements Repository {
     _logger.info('Getting workout records');
     final WhereBuilder query = WhereBuilder();
 
-    if (workoutId != null) {
-      final Workout? workout = await _workoutDao.selectOne(workoutId);
-      if (workout == null) {
-        return err(
-          ServiceError(
-            type: SingleErrorTypes.notFound,
-            description: 'Workout with id: $workoutId not found',
-          ),
-        );
-      }
-
-      query.and(WorkoutRecordColumns.workoutId.equal, workoutId);
-    }
-
     if (dateRange != null) {
       final startOfDay = DateTime(
         dateRange.$1.year,
@@ -158,17 +139,27 @@ final class WorkoutRecordRepository implements Repository {
     }
 
     try {
-      final List<WorkoutRecord> records = await _workoutRecordDao
-          .selectPaginated(
-            limit: limit,
-            offset: offset,
-            where: query.where,
-            whereArgs: query.args,
-            orderBy: [WorkoutRecordColumns.startedAt.orderDesc],
+      if (workoutId != null) {
+        final Workout? workout = await _workoutDao.selectOne(workoutId);
+        if (workout == null) {
+          return err(
+            ServiceError(
+              type: SingleErrorTypes.notFound,
+              description: 'Workout with id: $workoutId not found',
+            ),
           );
-      final int total = await _workoutRecordDao.count(
+        }
+
+        query.and(WorkoutRecordColumns.workoutId.equal, workoutId);
+      }
+
+      final (records, total) = await fetchPaginatedWithTotal(
+        dao: _workoutRecordDao,
+        limit: limit,
+        offset: offset,
         where: query.where,
         whereArgs: query.args,
+        orderBy: [WorkoutRecordColumns.startedAt.orderDesc],
       );
       _logger.info('Got ${records.length} workout records');
       if (workoutId != null || records.isEmpty) {
@@ -183,10 +174,10 @@ final class WorkoutRecordRepository implements Repository {
         );
       }
 
-      final Set<int> workoutIds = records.map((r) => r.workoutId).toSet();
-      final List<Workout> workouts = await _workoutDao.selectMany(
-        where: WorkoutColumns.id.inList(workoutIds.length),
-        whereArgs: workoutIds.toList(),
+      final List<Workout> workouts = await selectManyInChunks(
+        dao: _workoutDao,
+        column: WorkoutColumns.id,
+        values: records.map((r) => r.workoutId),
       );
       final Map<int, WorkoutDto> workoutMap = {
         for (final workout in workouts)
@@ -230,28 +221,34 @@ final class WorkoutRecordRepository implements Repository {
         );
       }
 
-      final List<WorkoutSetRecord> setRecords = await _setRecordDao.selectMany(
-        where: WorkoutSetRecordColumns.workoutRecordId.equal,
-        whereArgs: [id],
-        orderBy: [
-          WorkoutSetRecordColumns.workoutRecordId.orderAsc,
-          WorkoutSetRecordColumns.setNumber.orderAsc,
-        ],
-      );
+      final childResults = await Future.wait([
+        _setRecordDao.selectMany(
+          where: WorkoutSetRecordColumns.workoutRecordId.equal,
+          whereArgs: [id],
+          orderBy: [
+            WorkoutSetRecordColumns.workoutRecordId.orderAsc,
+            WorkoutSetRecordColumns.setNumber.orderAsc,
+            WorkoutSetRecordColumns.id.orderAsc,
+          ],
+        ),
+        _setExerciseRecordDao.selectMany(
+          where: WorkoutSetExerciseRecordColumns.workoutRecordId.equal,
+          whereArgs: [id],
+          orderBy: [
+            WorkoutSetExerciseRecordColumns.workoutSetRecordId.orderAsc,
+            WorkoutSetExerciseRecordColumns.position.orderAsc,
+            WorkoutSetExerciseRecordColumns.id.orderAsc,
+          ],
+        ),
+      ]);
+      final setRecords = childResults[0] as List<WorkoutSetRecord>;
       if (setRecords.isEmpty) {
         _logger.info('Got workout record with id $id');
         return ok(WorkoutRecordDto.fromModel(record));
       }
 
-      final List<WorkoutSetExerciseRecord> setExerciseRecords =
-          await _setExerciseRecordDao.selectMany(
-            where: WorkoutSetExerciseRecordColumns.workoutRecordId.equal,
-            whereArgs: [id],
-            orderBy: [
-              WorkoutSetExerciseRecordColumns.workoutSetRecordId.orderAsc,
-              WorkoutSetExerciseRecordColumns.position.orderAsc,
-            ],
-          );
+      final setExerciseRecords =
+          childResults[1] as List<WorkoutSetExerciseRecord>;
       if (setExerciseRecords.isEmpty) {
         _logger.info('Got workout record with id $id');
         return ok(
@@ -264,10 +261,10 @@ final class WorkoutRecordRepository implements Repository {
         );
       }
 
-      final exercisesIds = setExerciseRecords.map((s) => s.exerciseId).toSet();
-      final exercises = await _exerciseDao.selectMany(
-        where: ExerciseColumns.id.inList(exercisesIds.length),
-        whereArgs: exercisesIds.toList(),
+      final exercises = await selectManyInChunks(
+        dao: _exerciseDao,
+        column: ExerciseColumns.id,
+        values: setExerciseRecords.map((s) => s.exerciseId),
       );
 
       final exercisesMap = exercises.fold<Map<int, ExerciseDto>>(
@@ -616,9 +613,31 @@ final class WorkoutRecordRepository implements Repository {
   upsertWorkoutSetExerciseRecord(WorkoutSetExerciseRecordInput input) async {
     _logger.info('Creating workout set exercise record');
     try {
-      final WorkoutRecord? workoutRecord = await _workoutRecordDao.selectOne(
-        input.workoutRecordId,
-      );
+      final whereBuild = WhereBuilder()
+        ..and(
+          WorkoutSetExerciseRecordColumns.workoutSetExerciseId.equal,
+          input.workoutSetExerciseId,
+        )
+        ..and(
+          WorkoutSetExerciseRecordColumns.workoutRecordId.equal,
+          input.workoutRecordId,
+        )
+        ..and(
+          WorkoutSetExerciseRecordColumns.workoutSetRecordId.equal,
+          input.workoutSetRecordId,
+        )
+        ..and(WorkoutSetExerciseRecordColumns.position.equal, input.position);
+      final preloads = await Future.wait([
+        _workoutRecordDao.selectOne(input.workoutRecordId),
+        _setRecordDao.selectOne(input.workoutSetRecordId),
+        _exerciseDao.selectOne(input.exerciseId),
+        _setExerciseRecordDao.selectMany(
+          where: whereBuild.where,
+          whereArgs: whereBuild.args,
+          limit: 1,
+        ),
+      ]);
+      final WorkoutRecord? workoutRecord = preloads[0] as WorkoutRecord?;
       if (workoutRecord == null) {
         return err(
           ServiceError(
@@ -629,9 +648,8 @@ final class WorkoutRecordRepository implements Repository {
         );
       }
 
-      final WorkoutSetRecord? workoutSetRecord = await _setRecordDao.selectOne(
-        input.workoutSetRecordId,
-      );
+      final WorkoutSetRecord? workoutSetRecord =
+          preloads[1] as WorkoutSetRecord?;
       if (workoutSetRecord == null) {
         return err(
           ServiceError(
@@ -642,7 +660,7 @@ final class WorkoutRecordRepository implements Repository {
         );
       }
 
-      final Exercise? exercise = await _exerciseDao.selectOne(input.exerciseId);
+      final Exercise? exercise = preloads[2] as Exercise?;
       if (exercise == null) {
         return err(
           ServiceError(
@@ -652,29 +670,8 @@ final class WorkoutRecordRepository implements Repository {
         );
       }
 
-      final whereBuild = WhereBuilder();
-      whereBuild.and(
-        WorkoutSetExerciseRecordColumns.workoutSetExerciseId.equal,
-        input.workoutSetExerciseId,
-      );
-      whereBuild.and(
-        WorkoutSetExerciseRecordColumns.workoutRecordId.equal,
-        input.workoutRecordId,
-      );
-      whereBuild.and(
-        WorkoutSetExerciseRecordColumns.workoutSetRecordId.equal,
-        input.workoutSetRecordId,
-      );
-      whereBuild.and(
-        WorkoutSetExerciseRecordColumns.position.equal,
-        input.position,
-      );
-      final List<WorkoutSetExerciseRecord> records = await _setExerciseRecordDao
-          .selectMany(
-            where: whereBuild.where,
-            whereArgs: whereBuild.args,
-            limit: 1,
-          );
+      final List<WorkoutSetExerciseRecord> records =
+          preloads[3] as List<WorkoutSetExerciseRecord>;
       if (records.isNotEmpty) {
         final WorkoutSetExerciseRecord record = records.first;
         final int previousReps = record.reps;
@@ -716,7 +713,7 @@ final class WorkoutRecordRepository implements Repository {
         final updatedWorkoutRecord = workoutRecord.copyWith(
           totalReps: workoutRecord.totalReps + input.reps,
           totalVolume: workoutRecord.totalVolume + (input.reps * input.weight),
-          muscleGroups: workoutRecord.muscleGroups..add(exercise.muscleGroup),
+          muscleGroups: {...workoutRecord.muscleGroups, exercise.muscleGroup},
           muscles: workoutRecord.muscles.addOther(exercise.muscles),
           currentExercisePosition: workoutRecord.currentExercisePosition + 1,
           updatedAt: DateUtilities.getNowUtcUnix(),
@@ -742,6 +739,126 @@ final class WorkoutRecordRepository implements Repository {
     }
   }
 
+  Future<
+    ({
+      int totalRestSecs,
+      int totalReps,
+      int totalVolume,
+      Set<MuscleGroup> muscleGroups,
+      TargetMuscles muscles,
+      Map<int, ExerciseDto> exerciseMap,
+    })
+  >
+  _prepareBatchRecordData(WorkoutRecordBatchInput input) async {
+    int totalRestSecs = 0;
+    int totalReps = 0;
+    int totalVolume = 0;
+    final Set<int> allExerciseIds = {};
+
+    for (final set in input.sets) {
+      totalRestSecs += set.totalRestSecs;
+      for (final ex in set.exercises) {
+        totalReps += ex.reps;
+        totalVolume += ex.reps * ex.weight;
+        allExerciseIds.add(ex.exerciseId);
+      }
+    }
+
+    final fetchedExercises = await selectManyInChunks(
+      dao: _exerciseDao,
+      column: ExerciseColumns.id,
+      values: allExerciseIds,
+    );
+    final Set<MuscleGroup> muscleGroups = {};
+    TargetMuscles muscles = const TargetMuscles(
+      primary: <Muscle>{},
+      secondary: <Muscle>{},
+    );
+    final exerciseMap = <int, ExerciseDto>{};
+    for (final exercise in fetchedExercises) {
+      muscleGroups.add(exercise.muscleGroup);
+      muscles = muscles.addOther(exercise.muscles);
+      if (exercise.id != null) {
+        exerciseMap[exercise.id!] = ExerciseDto.fromModel(exercise);
+      }
+    }
+
+    return (
+      totalRestSecs: totalRestSecs,
+      totalReps: totalReps,
+      totalVolume: totalVolume,
+      muscleGroups: muscleGroups,
+      muscles: muscles,
+      exerciseMap: exerciseMap,
+    );
+  }
+
+  Future<List<WorkoutSetRecordDto>> _insertBatchSetsAndExercises({
+    required Transaction trx,
+    required int workoutRecordId,
+    required List<WorkoutSetRecordBatchInput> sets,
+    required Map<int, ExerciseDto> exerciseMap,
+  }) async {
+    final List<WorkoutSetRecordDto> setRecordDtos = [];
+    for (final setDto in sets) {
+      final WorkoutSetRecord setRecord = WorkoutSetRecord.create(
+        workoutSetId: setDto.workoutSetId,
+        workoutRecordId: workoutRecordId,
+        setNumber: setDto.setNumber,
+        startedAt: DateUtilities.getDateUnix(setDto.startedAt),
+        completedAt: setDto.completedAt != null
+            ? DateUtilities.getDateUnix(setDto.completedAt!)
+            : null,
+        totalRestSecs: setDto.totalRestSecs,
+      );
+      final int setRecordId = await _setRecordDao.insert(setRecord, trx);
+
+      final exercises = <(int, WorkoutSetExerciseRecordDto)>[];
+      for (final exDto in setDto.exercises) {
+        final WorkoutSetExerciseRecord exRecord =
+            WorkoutSetExerciseRecord.create(
+              workoutSetExerciseId: exDto.workoutSetExerciseId,
+              workoutRecordId: workoutRecordId,
+              workoutSetRecordId: setRecordId,
+              exerciseId: exDto.exerciseId,
+              position: exDto.position,
+              reps: exDto.reps,
+              weightGrams: exDto.weight,
+              difficulty: exDto.difficulty,
+            );
+        final int exRecordId = await _setExerciseRecordDao.insert(
+          exRecord,
+          trx,
+        );
+        exercises.add((
+          exDto.position,
+          WorkoutSetExerciseRecordDto.fromModel(
+            exRecord.copyWith(id: Nullable(exRecordId)),
+            exercise: exerciseMap[exDto.exerciseId],
+          ),
+        ));
+      }
+
+      exercises.sort((a, b) {
+        final byPosition = a.$1.compareTo(b.$1);
+        return byPosition == 0 ? a.$2.id.compareTo(b.$2.id) : byPosition;
+      });
+      setRecordDtos.add(
+        WorkoutSetRecordDto.fromModel(
+          setRecord.copyWith(id: Nullable(setRecordId)),
+          setExerciseRecords: exercises.isEmpty
+              ? null
+              : exercises.map((exercise) => exercise.$2).toList(),
+        ),
+      );
+    }
+    setRecordDtos.sort((a, b) {
+      final bySetNumber = a.setNumber.compareTo(b.setNumber);
+      return bySetNumber == 0 ? a.id.compareTo(b.id) : bySetNumber;
+    });
+    return setRecordDtos;
+  }
+
   Future<Result<WorkoutRecordDto, ServiceError<OperationErrorTypes>>>
   batchCreateWorkoutRecord(WorkoutRecordBatchInput input) async {
     _logger.info('Batch creating workout record');
@@ -756,138 +873,36 @@ final class WorkoutRecordRepository implements Repository {
         );
       }
 
-      final int batchTotalRestSecs = input.sets.fold<int>(
-        0,
-        (int sum, WorkoutSetRecordBatchInput s) => sum + s.totalRestSecs,
+      final prepared = await _prepareBatchRecordData(input);
+      final WorkoutRecord baseRecord = WorkoutRecord.create(
+        version: input.version,
+        workoutId: input.workoutId,
+        startedAt: DateUtilities.getDateUnix(input.startedAt),
+        completedAt: DateUtilities.getDateUnix(input.completedAt),
+        status: ProgressStatus.completed,
+        totalSets: input.sets.length,
+        totalRestSecs: prepared.totalRestSecs,
+        totalReps: prepared.totalReps,
+        totalVolume: prepared.totalVolume,
+        muscleGroups: prepared.muscleGroups,
+        muscles: prepared.muscles,
       );
 
-      final result = await _workoutRecordDao.startTransaction((trx) async {
-        // 1. Create WorkoutRecord
-        final WorkoutRecord record = WorkoutRecord.create(
-          version: workout.version,
-          workoutId: input.workoutId,
-          startedAt: DateUtilities.getDateUnix(input.startedAt),
+      final createdDto = await _workoutRecordDao.startTransaction((trx) async {
+        final int recordId = await _workoutRecordDao.insert(baseRecord, trx);
+        final setRecordDtos = await _insertBatchSetsAndExercises(
+          trx: trx,
+          workoutRecordId: recordId,
+          sets: input.sets,
+          exerciseMap: prepared.exerciseMap,
         );
-        final int recordId = await _workoutRecordDao.insert(
-          record.copyWith(
-            completedAt: Nullable(DateUtilities.getDateUnix(input.completedAt)),
-            status: ProgressStatus.completed,
-            totalSets: input.sets.length,
-            totalRestSecs: batchTotalRestSecs,
-            // Calculate total reps and volume
-            totalReps: input.sets.fold<int>(
-              0,
-              (int sum, set) =>
-                  sum +
-                  set.exercises.fold<int>(0, (int sum, ex) => sum + ex.reps),
-            ),
-            totalVolume: input.sets.fold<int>(
-              0,
-              (int sum, set) =>
-                  sum +
-                  set.exercises.fold<int>(
-                    0,
-                    (int sum, ex) => sum + (ex.reps * ex.weight),
-                  ),
-            ),
-          ),
-          trx,
+        return WorkoutRecordDto.fromModel(
+          baseRecord.copyWith(id: Nullable(recordId)),
+          setRecords: setRecordDtos.isEmpty ? null : setRecordDtos,
         );
-
-        // Fetch all exercises to update muscles mapping
-        final Set<int> allExerciseIds = input.sets
-            .expand((s) => s.exercises)
-            .map((e) => e.exerciseId)
-            .toSet();
-        final List<Exercise> fetchedExercises = allExerciseIds.isNotEmpty
-            ? await _exerciseDao.selectMany(
-                where: ExerciseColumns.id.inList(allExerciseIds.length),
-                whereArgs: allExerciseIds.toList(),
-                trx: trx,
-              )
-            : [];
-        final Set<MuscleGroup> muscleGroups = {};
-        TargetMuscles muscles = const TargetMuscles(
-          primary: <Muscle>{},
-          secondary: <Muscle>{},
-        );
-        for (var e in fetchedExercises) {
-          muscleGroups.add(e.muscleGroup);
-          muscles = muscles.addOther(e.muscles);
-        }
-
-        // Update record with gathered muscles
-        await _workoutRecordDao.update(
-          record.copyWith(
-            id: Nullable(recordId),
-            completedAt: Nullable(DateUtilities.getDateUnix(input.completedAt)),
-            status: ProgressStatus.completed,
-            totalSets: input.sets.length,
-            totalRestSecs: batchTotalRestSecs,
-            totalReps: input.sets.fold<int>(
-              0,
-              (int sum, set) =>
-                  sum +
-                  set.exercises.fold<int>(0, (int sum, ex) => sum + ex.reps),
-            ),
-            totalVolume: input.sets.fold<int>(
-              0,
-              (int sum, set) =>
-                  sum +
-                  set.exercises.fold<int>(
-                    0,
-                    (int sum, ex) => sum + (ex.reps * ex.weight),
-                  ),
-            ),
-            muscleGroups: muscleGroups,
-            muscles: muscles,
-          ),
-          trx,
-        );
-
-        // 2. Insert Sets & Exercises
-        for (final setDto in input.sets) {
-          final WorkoutSetRecord setRecord = WorkoutSetRecord.create(
-            workoutSetId: setDto.workoutSetId,
-            workoutRecordId: recordId,
-            setNumber: setDto.setNumber,
-            startedAt: DateUtilities.getDateUnix(setDto.startedAt),
-            completedAt: setDto.completedAt != null
-                ? DateUtilities.getDateUnix(setDto.completedAt!)
-                : null,
-            totalRestSecs: setDto.totalRestSecs,
-          );
-          final int setRecordId = await _setRecordDao.insert(setRecord, trx);
-
-          for (final exDto in setDto.exercises) {
-            final WorkoutSetExerciseRecord exRecord =
-                WorkoutSetExerciseRecord.create(
-                  workoutSetExerciseId: exDto.workoutSetExerciseId,
-                  workoutRecordId: recordId,
-                  workoutSetRecordId: setRecordId,
-                  exerciseId: exDto.exerciseId,
-                  position: exDto.position,
-                  reps: exDto.reps,
-                  weightGrams: exDto.weight,
-                  difficulty: exDto.difficulty,
-                );
-            await _setExerciseRecordDao.insert(exRecord, trx);
-          }
-        }
-        return recordId;
       });
-      _logger.info('Batch created workout record with id $result');
-
-      final newRecordRes = await getWorkoutRecord(result);
-      if (newRecordRes.isErr()) {
-        return err(
-          const ServiceError(
-            type: OperationErrorTypes.operationFailure,
-            description: 'Failed to retrieve batch created workout record',
-          ),
-        );
-      }
-      return ok(newRecordRes.value);
+      _logger.info('Batch created workout record with id ${createdDto.id}');
+      return ok(createdDto);
     } catch (e) {
       _logger.severe('Failed to batch create workout record', e);
       return err(
@@ -918,13 +933,24 @@ final class WorkoutRecordRepository implements Repository {
         );
       }
 
-      final int batchTotalRestSecs = input.sets.fold<int>(
-        0,
-        (int sum, WorkoutSetRecordBatchInput s) => sum + s.totalRestSecs,
+      final prepared = await _prepareBatchRecordData(input);
+      final updatedRecord = record.copyWith(
+        workoutId: input.workoutId,
+        version: input.version,
+        startedAt: DateUtilities.getDateUnix(input.startedAt),
+        completedAt: Nullable(DateUtilities.getDateUnix(input.completedAt)),
+        droppedAt: const Nullable(null),
+        status: ProgressStatus.completed,
+        totalSets: input.sets.length,
+        totalRestSecs: prepared.totalRestSecs,
+        totalReps: prepared.totalReps,
+        totalVolume: prepared.totalVolume,
+        muscleGroups: prepared.muscleGroups,
+        muscles: prepared.muscles,
+        updatedAt: DateUtilities.getNowUtcUnix(),
       );
 
-      await _workoutRecordDao.startTransaction((trx) async {
-        // Delete existing sets and exercises
+      final updatedDto = await _workoutRecordDao.startTransaction((trx) async {
         await _setExerciseRecordDao.deleteMany(
           where: WorkoutSetExerciseRecordColumns.workoutRecordId.equal,
           whereArgs: [workoutRecordId],
@@ -935,104 +961,21 @@ final class WorkoutRecordRepository implements Repository {
           whereArgs: [workoutRecordId],
           trx: trx,
         );
+        await _workoutRecordDao.update(updatedRecord, trx);
 
-        // Fetch all exercises to update muscles mapping
-        final Set<int> allExerciseIds = input.sets
-            .expand((s) => s.exercises)
-            .map((e) => e.exerciseId)
-            .toSet();
-        final List<Exercise> fetchedExercises = allExerciseIds.isNotEmpty
-            ? await _exerciseDao.selectMany(
-                where: ExerciseColumns.id.inList(allExerciseIds.length),
-                whereArgs: allExerciseIds.toList(),
-                trx: trx,
-              )
-            : [];
-        final Set<MuscleGroup> muscleGroups = {};
-        TargetMuscles muscles = const TargetMuscles(
-          primary: <Muscle>{},
-          secondary: <Muscle>{},
+        final setRecordDtos = await _insertBatchSetsAndExercises(
+          trx: trx,
+          workoutRecordId: workoutRecordId,
+          sets: input.sets,
+          exerciseMap: prepared.exerciseMap,
         );
-        for (var e in fetchedExercises) {
-          muscleGroups.add(e.muscleGroup);
-          muscles = muscles.addOther(e.muscles);
-        }
-
-        // Update record
-        await _workoutRecordDao.update(
-          record.copyWith(
-            workoutId: input.workoutId,
-            version: input.version,
-            startedAt: DateUtilities.getDateUnix(input.startedAt),
-            completedAt: Nullable(DateUtilities.getDateUnix(input.completedAt)),
-            droppedAt: const Nullable(null),
-            status: ProgressStatus.completed,
-            totalSets: input.sets.length,
-            totalRestSecs: batchTotalRestSecs,
-            totalReps: input.sets.fold<int>(
-              0,
-              (int sum, set) =>
-                  sum +
-                  set.exercises.fold<int>(0, (int sum, ex) => sum + ex.reps),
-            ),
-            totalVolume: input.sets.fold<int>(
-              0,
-              (int sum, set) =>
-                  sum +
-                  set.exercises.fold<int>(
-                    0,
-                    (int sum, ex) => sum + (ex.reps * ex.weight),
-                  ),
-            ),
-            muscleGroups: muscleGroups,
-            muscles: muscles,
-            updatedAt: DateUtilities.getNowUtcUnix(),
-          ),
-          trx,
+        return WorkoutRecordDto.fromModel(
+          updatedRecord,
+          setRecords: setRecordDtos.isEmpty ? null : setRecordDtos,
         );
-
-        // Insert Sets & Exercises
-        for (final setDto in input.sets) {
-          final WorkoutSetRecord setRecord = WorkoutSetRecord.create(
-            workoutSetId: setDto.workoutSetId,
-            workoutRecordId: workoutRecordId,
-            setNumber: setDto.setNumber,
-            startedAt: DateUtilities.getDateUnix(setDto.startedAt),
-            completedAt: setDto.completedAt != null
-                ? DateUtilities.getDateUnix(setDto.completedAt!)
-                : null,
-            totalRestSecs: setDto.totalRestSecs,
-          );
-          final int setRecordId = await _setRecordDao.insert(setRecord, trx);
-
-          for (final exDto in setDto.exercises) {
-            final WorkoutSetExerciseRecord exRecord =
-                WorkoutSetExerciseRecord.create(
-                  workoutSetExerciseId: exDto.workoutSetExerciseId,
-                  workoutRecordId: workoutRecordId,
-                  workoutSetRecordId: setRecordId,
-                  exerciseId: exDto.exerciseId,
-                  position: exDto.position,
-                  reps: exDto.reps,
-                  weightGrams: exDto.weight,
-                  difficulty: exDto.difficulty,
-                );
-            await _setExerciseRecordDao.insert(exRecord, trx);
-          }
-        }
       });
       _logger.info('Batch updated workout record with id $workoutRecordId');
-
-      final newRecordRes = await getWorkoutRecord(workoutRecordId);
-      if (newRecordRes.isErr()) {
-        return err(
-          const ServiceError(
-            type: OperationErrorTypes.operationFailure,
-            description: 'Failed to retrieve batch updated workout record',
-          ),
-        );
-      }
-      return ok(newRecordRes.value);
+      return ok(updatedDto);
     } catch (e) {
       _logger.severe('Failed to batch update workout record', e);
       return err(

@@ -115,6 +115,19 @@ final class Dao<T extends Model> {
     return Sqflite.firstIntValue(maps) ?? 0;
   }
 
+  /// Executes an integer aggregate query such as a joined `COUNT(*)` against
+  /// this DAO's configured database helper or active transaction.
+  Future<int> rawCount(
+    String query, [
+    List<Object?>? arguments,
+    Transaction? trx,
+  ]) async {
+    _logger.info("rawCount: $query, $arguments");
+    final DatabaseExecutor db = trx ?? await _databaseHelper.db;
+    final List<Map<String, dynamic>> maps = await db.rawQuery(query, arguments);
+    return Sqflite.firstIntValue(maps) ?? 0;
+  }
+
   Future<int> insert(T model, [Transaction? trx]) async {
     final DatabaseExecutor db = trx ?? await _databaseHelper.db;
     final modelMap = model.toMap();
