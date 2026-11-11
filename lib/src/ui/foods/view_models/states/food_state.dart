@@ -64,38 +64,52 @@ final class FoodPagination extends Equatable {
 }
 
 final class FoodState extends Equatable {
+  final int foodsRequestId;
   final List<FoodDto> foods;
   final FoodDto? selectedFood;
   final FoodPagination foodPagination;
-  final bool isLoading;
+  final FoodPagination? pendingFoodsQuery;
+  final bool _isLoading;
+
+  bool get isLoading => _isLoading || pendingFoodsQuery != null;
   final ErrorState? error;
   const FoodState({
+    this.foodsRequestId = 0,
+    this.pendingFoodsQuery,
     this.foods = const [],
     this.selectedFood,
     this.foodPagination = const FoodPagination(),
-    this.isLoading = false,
+    this._isLoading = false,
     this.error,
   });
   factory FoodState.initial() => const FoodState();
   FoodState copyWith({
+    int? foodsRequestId,
     List<FoodDto>? foods,
     Nullable<FoodDto>? selectedFood,
     FoodPagination? foodPagination,
     bool? isLoading,
+    Nullable<FoodPagination>? pendingFoodsQuery,
     Nullable<ErrorState>? error,
   }) => FoodState(
+    foodsRequestId: foodsRequestId ?? this.foodsRequestId,
     foods: foods ?? this.foods,
     selectedFood: selectedFood != null ? selectedFood.value : this.selectedFood,
     foodPagination: foodPagination ?? this.foodPagination,
-    isLoading: isLoading ?? this.isLoading,
+    isLoading: isLoading ?? _isLoading,
+    pendingFoodsQuery: pendingFoodsQuery != null
+        ? pendingFoodsQuery.value
+        : this.pendingFoodsQuery,
     error: error != null ? error.value : this.error,
   );
   @override
   List<Object?> get props => [
+    foodsRequestId,
     foods,
     selectedFood,
     foodPagination,
-    isLoading,
+    _isLoading,
+    pendingFoodsQuery,
     error,
   ];
 }

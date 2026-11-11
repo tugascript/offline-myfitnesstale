@@ -17,12 +17,13 @@
 
 import '../../../data/repositories/recipes/inputs/recipe_input.dart';
 
+import 'dart:math';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:logging/logging.dart';
 
 import '../../../utils/nullable.dart';
 import '../../../data/utils/enums.dart';
-import '../../../data/repositories/recipes/dtos/recipe_dto.dart';
 import '../../../data/repositories/recipes/recipe_repository.dart';
 import '../../core/view_models/states/common_state.dart';
 import './states/recipe_state.dart';
@@ -30,7 +31,6 @@ import './states/recipe_state.dart';
 class RecipeCubit extends Cubit<RecipeState> {
   final RecipeRepository _recipeService;
   final Logger _logger = Logger('RecipeCubit');
-  int _recipesRequestId = 0;
 
   RecipeCubit({required RecipeRepository recipeRepository})
     : _recipeService = recipeRepository,
@@ -41,18 +41,38 @@ class RecipeCubit extends Cubit<RecipeState> {
     bool isFavorite = false,
     int limit = 20,
     int offset = 0,
-  }) async {
-    _logger.info('Getting recipes');
-    final requestId = ++_recipesRequestId;
-    emit(state.copyWith(isLoading: true));
-
-    final result = await _recipeService.getRecipes(
+  }) => _loadRecipes(
+    RecipePagination(
       search: search,
       isFavorite: isFavorite,
       limit: limit,
       offset: offset,
+    ),
+  );
+
+  Future<void> _loadRecipes(
+    RecipePagination query, {
+    RecipeState? afterWrite,
+  }) async {
+    final refresh = afterWrite != null;
+    _logger.info('Getting recipes');
+    final requestId = state.recipesRequestId + 1;
+    final limit = refresh ? query.offset + query.limit : query.limit;
+    final offset = refresh ? 0 : query.offset;
+    emit(
+      (afterWrite ?? state).copyWith(
+        recipesRequestId: requestId,
+        pendingRecipesQuery: Nullable(query),
+      ),
     );
-    if (requestId != _recipesRequestId) return;
+
+    final result = await _recipeService.getRecipes(
+      search: query.search,
+      isFavorite: query.isFavorite,
+      limit: limit,
+      offset: offset,
+    );
+    if (isClosed || requestId != state.recipesRequestId) return;
 
     if (result.isErr()) {
       final error = result.error;
@@ -62,31 +82,38 @@ class RecipeCubit extends Cubit<RecipeState> {
           error: Nullable(
             ErrorState(type: error.type.name, description: error.description),
           ),
-          isLoading: false,
+          pendingRecipesQuery: const Nullable(null),
+          recipes: refresh ? const [] : null,
+          recipePagination: refresh
+              ? state.recipePagination.copyWith(total: 0, offset: 0)
+              : null,
         ),
       );
       return;
     }
 
-    final paginated = result.value;
-    final List<RecipeDto> recipes = offset > 0
-        ? [...state.recipes, ...paginated.data]
-        : paginated.data;
-
+    final page = result.value;
     emit(
       state.copyWith(
-        recipePagination: state.recipePagination.copyWith(
-          limit: paginated.limit,
-          offset: paginated.offset,
-          total: paginated.total,
-          search: Nullable(search),
-          isFavorite: isFavorite,
+        recipes: offset > 0 ? [...state.recipes, ...page.data] : page.data,
+        recipePagination: query.copyWith(
+          offset: page.offset,
+          total: page.total,
         ),
-        recipes: recipes,
-        isLoading: false,
+        pendingRecipesQuery: const Nullable(null),
         error: const Nullable(null),
       ),
     );
+  }
+
+  Future<void> _refreshRecipes(RecipeState afterWrite) {
+    // A write can shift page boundaries. Reload the prefix for the latest query.
+    final query =
+        state.pendingRecipesQuery ??
+        state.recipePagination.copyWith(
+          offset: max(0, state.recipes.length - state.recipePagination.limit),
+        );
+    return _loadRecipes(query, afterWrite: afterWrite);
   }
 
   Future<void> getRecipe(int id) async {
@@ -140,18 +167,11 @@ class RecipeCubit extends Cubit<RecipeState> {
       return false;
     }
 
-    _recipesRequestId++;
     final created = result.value;
-    final matchesFilter = _matchesRecipeFilter(created);
-    emit(
+    if (isClosed) return true;
+    await _refreshRecipes(
       state.copyWith(
         selectedRecipe: Nullable(created),
-        recipes: matchesFilter ? [created, ...state.recipes] : state.recipes,
-        recipePagination: matchesFilter
-            ? state.recipePagination.copyWith(
-                total: state.recipePagination.total + 1,
-              )
-            : null,
         isLoading: false,
         error: const Nullable(null),
       ),
@@ -179,24 +199,11 @@ class RecipeCubit extends Cubit<RecipeState> {
       return false;
     }
 
-    _recipesRequestId++;
     final updated = result.value;
-    final matchesFilter = _matchesRecipeFilter(updated);
-    final wasInList = state.recipes.any((r) => r.id == id);
-    final updatedList = wasInList && !matchesFilter
-        ? state.recipes.where((r) => r.id != id).toList()
-        : state.recipes.map((r) => r.id == id ? updated : r).toList();
-    final updatedTotal = wasInList && !matchesFilter
-        ? (state.recipePagination.total > 0
-              ? state.recipePagination.total - 1
-              : 0)
-        : state.recipePagination.total;
-
-    emit(
+    if (isClosed) return true;
+    await _refreshRecipes(
       state.copyWith(
         selectedRecipe: Nullable(updated),
-        recipes: updatedList,
-        recipePagination: state.recipePagination.copyWith(total: updatedTotal),
         isLoading: false,
         error: const Nullable(null),
       ),
@@ -220,40 +227,16 @@ class RecipeCubit extends Cubit<RecipeState> {
       return false;
     }
 
-    _recipesRequestId++;
     final updated = result.value;
-    final removeFromFavoritesList =
-        state.recipePagination.isFavorite && !updated.isFavorite;
-    final updatedList = removeFromFavoritesList
-        ? state.recipes.where((r) => r.id != id).toList()
-        : state.recipes.map((r) => r.id == id ? updated : r).toList();
-    final updatedTotal = removeFromFavoritesList
-        ? (state.recipePagination.total > 0
-              ? state.recipePagination.total - 1
-              : 0)
-        : state.recipePagination.total;
-
-    emit(
+    if (isClosed) return true;
+    await _refreshRecipes(
       state.copyWith(
-        recipes: updatedList,
-        recipePagination: state.recipePagination.copyWith(total: updatedTotal),
         selectedRecipe: state.selectedRecipe?.id == id
             ? Nullable(updated)
             : null,
         error: const Nullable(null),
       ),
     );
-    return true;
-  }
-
-  bool _matchesRecipeFilter(RecipeDto recipe) {
-    final search = state.recipePagination.search?.trim().toLowerCase() ?? '';
-    if (search.isNotEmpty && !recipe.name.toLowerCase().contains(search)) {
-      return false;
-    }
-    if (state.recipePagination.isFavorite && !recipe.isFavorite) {
-      return false;
-    }
     return true;
   }
 
@@ -276,15 +259,9 @@ class RecipeCubit extends Cubit<RecipeState> {
       return false;
     }
 
-    final updated = state.recipes.where((r) => r.id != id).toList();
-    emit(
+    if (isClosed) return true;
+    await _refreshRecipes(
       state.copyWith(
-        recipePagination: state.recipePagination.copyWith(
-          total: state.recipePagination.total > 0
-              ? state.recipePagination.total - 1
-              : 0,
-        ),
-        recipes: updated,
         selectedRecipe: state.selectedRecipe?.id == id
             ? const Nullable(null)
             : null,

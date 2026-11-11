@@ -104,6 +104,8 @@ final class WeightGoalPaginationState extends Equatable {
 }
 
 final class WeightRecordState extends Equatable {
+  final int recordsRequestId;
+  final int goalsRequestId;
   final List<WeightRecordDto> weightRecords;
   final WeightRecordDto? selectedWeightRecord;
   final WeightRecordDto? latestWeightRecord;
@@ -116,6 +118,8 @@ final class WeightRecordState extends Equatable {
   final ErrorState? error;
 
   const WeightRecordState({
+    this.recordsRequestId = 0,
+    this.goalsRequestId = 0,
     required this.weightRecords,
     this.selectedWeightRecord,
     this.latestWeightRecord,
@@ -139,6 +143,8 @@ final class WeightRecordState extends Equatable {
   }
 
   WeightRecordState copyWith({
+    int? recordsRequestId,
+    int? goalsRequestId,
     List<WeightRecordDto>? weightRecords,
     Nullable<WeightRecordDto>? selectedWeightRecord,
     Nullable<WeightRecordDto>? latestWeightRecord,
@@ -151,6 +157,8 @@ final class WeightRecordState extends Equatable {
     Nullable<ErrorState>? error,
   }) {
     return WeightRecordState(
+      recordsRequestId: recordsRequestId ?? this.recordsRequestId,
+      goalsRequestId: goalsRequestId ?? this.goalsRequestId,
       weightRecords: weightRecords ?? this.weightRecords,
       selectedWeightRecord: selectedWeightRecord != null
           ? selectedWeightRecord.value
@@ -174,6 +182,8 @@ final class WeightRecordState extends Equatable {
 
   @override
   List<Object?> get props => [
+    recordsRequestId,
+    goalsRequestId,
     weightRecords,
     selectedWeightRecord,
     latestWeightRecord,

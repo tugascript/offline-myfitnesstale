@@ -79,17 +79,23 @@ final class WorkoutPlanPagination extends Equatable {
 }
 
 final class WorkoutPlanState extends Equatable {
+  final int plansRequestId;
   final List<WorkoutPlanDto> workoutPlans;
   final WorkoutPlanPagination pagination;
   final WorkoutPlanDto? selectedWorkoutPlan;
-  final bool isLoading;
+  final WorkoutPlanPagination? pendingWorkoutPlansQuery;
+  final bool _isLoading;
+
+  bool get isLoading => _isLoading || pendingWorkoutPlansQuery != null;
   final ErrorState? error;
 
   const WorkoutPlanState({
+    this.plansRequestId = 0,
+    this.pendingWorkoutPlansQuery,
     required this.workoutPlans,
     required this.pagination,
     this.selectedWorkoutPlan,
-    required this.isLoading,
+    required this._isLoading,
     this.error,
   });
 
@@ -102,29 +108,37 @@ final class WorkoutPlanState extends Equatable {
   }
 
   WorkoutPlanState copyWith({
+    int? plansRequestId,
     List<WorkoutPlanDto>? workoutPlans,
     WorkoutPlanPagination? pagination,
     Nullable<WorkoutPlanDto>? selectedWorkoutPlan,
     bool? isLoading,
+    Nullable<WorkoutPlanPagination>? pendingWorkoutPlansQuery,
     Nullable<ErrorState>? error,
   }) {
     return WorkoutPlanState(
+      plansRequestId: plansRequestId ?? this.plansRequestId,
       workoutPlans: workoutPlans ?? this.workoutPlans,
       pagination: pagination ?? this.pagination,
       selectedWorkoutPlan: selectedWorkoutPlan != null
           ? selectedWorkoutPlan.value
           : this.selectedWorkoutPlan,
-      isLoading: isLoading ?? this.isLoading,
+      isLoading: isLoading ?? _isLoading,
+      pendingWorkoutPlansQuery: pendingWorkoutPlansQuery != null
+          ? pendingWorkoutPlansQuery.value
+          : this.pendingWorkoutPlansQuery,
       error: error != null ? error.value : this.error,
     );
   }
 
   @override
   List<Object?> get props => [
+    plansRequestId,
     workoutPlans,
     pagination,
     selectedWorkoutPlan,
-    isLoading,
+    _isLoading,
+    pendingWorkoutPlansQuery,
     error,
   ];
 }

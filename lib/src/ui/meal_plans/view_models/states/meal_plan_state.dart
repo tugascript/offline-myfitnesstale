@@ -56,40 +56,54 @@ final class MealPlanPagination extends Equatable {
 }
 
 final class MealPlanState extends Equatable {
+  final int mealPlansRequestId;
   final List<MealPlanDto> mealPlans;
   final MealPlanDto? selectedMealPlan;
   final MealPlanPagination mealPlanPagination;
-  final bool isLoading;
+  final MealPlanPagination? pendingMealPlansQuery;
+  final bool _isLoading;
+
+  bool get isLoading => _isLoading || pendingMealPlansQuery != null;
   final ErrorState? error;
   const MealPlanState({
+    this.mealPlansRequestId = 0,
+    this.pendingMealPlansQuery,
     this.mealPlans = const [],
     this.selectedMealPlan,
     this.mealPlanPagination = const MealPlanPagination(),
-    this.isLoading = false,
+    this._isLoading = false,
     this.error,
   });
   factory MealPlanState.initial() => const MealPlanState();
   MealPlanState copyWith({
+    int? mealPlansRequestId,
     List<MealPlanDto>? mealPlans,
     Nullable<MealPlanDto>? selectedMealPlan,
     MealPlanPagination? mealPlanPagination,
     bool? isLoading,
+    Nullable<MealPlanPagination>? pendingMealPlansQuery,
     Nullable<ErrorState>? error,
   }) => MealPlanState(
+    mealPlansRequestId: mealPlansRequestId ?? this.mealPlansRequestId,
     mealPlans: mealPlans ?? this.mealPlans,
     selectedMealPlan: selectedMealPlan != null
         ? selectedMealPlan.value
         : this.selectedMealPlan,
     mealPlanPagination: mealPlanPagination ?? this.mealPlanPagination,
-    isLoading: isLoading ?? this.isLoading,
+    isLoading: isLoading ?? _isLoading,
+    pendingMealPlansQuery: pendingMealPlansQuery != null
+        ? pendingMealPlansQuery.value
+        : this.pendingMealPlansQuery,
     error: error != null ? error.value : this.error,
   );
   @override
   List<Object?> get props => [
+    mealPlansRequestId,
     mealPlans,
     selectedMealPlan,
     mealPlanPagination,
-    isLoading,
+    _isLoading,
+    pendingMealPlansQuery,
     error,
   ];
 }

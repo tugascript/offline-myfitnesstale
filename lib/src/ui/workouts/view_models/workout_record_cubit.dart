@@ -40,7 +40,6 @@ class WorkoutRecordCubit extends Cubit<WorkoutRecordState> {
       super(WorkoutRecordState.initial());
 
   final Logger _logger = Logger('WorkoutRecordCubit');
-  int _recordsRequestId = 0;
 
   Future<void> getWorkoutRecords({
     int? workoutId,
@@ -49,9 +48,9 @@ class WorkoutRecordCubit extends Cubit<WorkoutRecordState> {
     int? offset,
   }) async {
     _logger.info('Getting workout records');
-    final requestId = ++_recordsRequestId;
+    final requestId = state.recordsRequestId + 1;
     final isLoadMore = (offset ?? state.pagination.offset) > 0;
-    emit(state.copyWith(isLoading: true));
+    emit(state.copyWith(recordsRequestId: requestId, isLoading: true));
 
     final result = await _workoutRecordService.getWorkoutRecords(
       workoutId: workoutId,
@@ -59,7 +58,7 @@ class WorkoutRecordCubit extends Cubit<WorkoutRecordState> {
       limit: limit ?? state.pagination.limit,
       offset: offset ?? state.pagination.offset,
     );
-    if (requestId != _recordsRequestId) return;
+    if (isClosed || requestId != state.recordsRequestId) return;
     if (result.isErr()) {
       final error = result.error;
       _logger.warning("Failed to get workout records", error);

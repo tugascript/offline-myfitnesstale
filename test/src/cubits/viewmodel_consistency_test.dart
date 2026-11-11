@@ -829,5 +829,67 @@ void main() {
       expect(cubit.state.foods.any((food) => food.id == chickenId), isFalse);
       expect(cubit.state.foodPagination.total, 1);
     });
+
+    FoodInput foodInput(String name, {bool isFavorite = false}) => FoodInput(
+      name: name,
+      category: FoodCategory.fruits,
+      servingSizeBaseGrams: 100,
+      caloriesBase: 60,
+      proteinBase: 1,
+      carbsBase: 14,
+      fatBase: 0,
+      isFavorite: isFavorite,
+      portions: const [],
+    );
+
+    test('Food creation preserves the sorted pagination boundary', () async {
+      final repository = FoodRepository.create();
+      for (final name in ['Apple', 'Banana', 'Cherry']) {
+        expect((await repository.createFood(foodInput(name))).isOk(), isTrue);
+      }
+      final cubit = FoodCubit(foodRepository: repository);
+      addTearDown(cubit.close);
+
+      await cubit.getFoods(limit: 1);
+      await cubit.getFoods(limit: 1, offset: cubit.state.foods.length);
+      expect(await cubit.createFood(foodInput('Zucchini')), isTrue);
+      expect(cubit.state.foods.map((food) => food.name), ['Apple', 'Banana']);
+      expect(cubit.state.foodPagination.total, 4);
+
+      await cubit.getFoods(limit: 2, offset: cubit.state.foods.length);
+      expect(cubit.state.foods.map((food) => food.name), [
+        'Apple',
+        'Banana',
+        'Cherry',
+        'Zucchini',
+      ]);
+    });
+
+    test(
+      'Food search overlapping a favorite write settles the latest query',
+      () async {
+        final repository = FoodRepository.create();
+        final apple = await repository.createFood(
+          foodInput('Apple', isFavorite: true),
+        );
+        await repository.createFood(foodInput('Apricot', isFavorite: true));
+        await repository.createFood(foodInput('Banana', isFavorite: true));
+        final cubit = FoodCubit(foodRepository: repository);
+        addTearDown(cubit.close);
+        await cubit.getFoods();
+
+        final toggle = cubit.toggleFavorite(apple.value.id);
+        final search = cubit.getFoods(search: 'Ap', isFavorite: true, limit: 1);
+        expect(cubit.state.isLoading, isTrue);
+        expect(await toggle, isTrue);
+        await search;
+
+        expect(cubit.state.isLoading, isFalse);
+        expect(cubit.state.foodPagination.name, 'Ap');
+        expect(cubit.state.foodPagination.isFavorite, isTrue);
+        expect(cubit.state.foodPagination.total, 1);
+        expect(cubit.state.foods.map((food) => food.name), ['Apricot']);
+      },
+    );
   });
 }

@@ -148,6 +148,9 @@ final class SelectedEquipment extends Equatable {
 }
 
 final class ExerciseState extends Equatable {
+  final int exercisesRequestId;
+  final int equipmentsRequestId;
+  final int selectionExercisesRequestId;
   final List<ExerciseDto> exercises;
   final ExercisePagination exercisePagination;
   final ExerciseDto? selectedExercise;
@@ -156,14 +159,21 @@ final class ExerciseState extends Equatable {
   final Map<int, String> equipmentSelection;
   final SelectedEquipment? selectedEquipment;
   final List<ExerciseDto> exerciseSelection;
-  final bool isLoading;
+  final ExercisePagination? pendingExercisesQuery;
+  final bool _isLoading;
+
+  bool get isLoading => _isLoading || pendingExercisesQuery != null;
   final ErrorState? error;
 
   const ExerciseState({
+    this.exercisesRequestId = 0,
+    this.pendingExercisesQuery,
+    this.equipmentsRequestId = 0,
+    this.selectionExercisesRequestId = 0,
     required this.exercises,
     required this.exercisePagination,
     this.selectedExercise,
-    required this.isLoading,
+    required this._isLoading,
     required this.equipments,
     this.selectedEquipment,
     required this.equipmentPagination,
@@ -185,10 +195,14 @@ final class ExerciseState extends Equatable {
   }
 
   ExerciseState copyWith({
+    int? exercisesRequestId,
+    int? equipmentsRequestId,
+    int? selectionExercisesRequestId,
     List<ExerciseDto>? exercises,
     ExercisePagination? exercisePagination,
     Nullable<ExerciseDto>? selectedExercise,
     bool? isLoading,
+    Nullable<ExercisePagination>? pendingExercisesQuery,
     Nullable<ErrorState>? error,
     List<EquipmentDto>? equipments,
     EquipmentPagination? equipmentPagination,
@@ -197,13 +211,20 @@ final class ExerciseState extends Equatable {
     List<ExerciseDto>? exerciseSelection,
   }) {
     return ExerciseState(
+      exercisesRequestId: exercisesRequestId ?? this.exercisesRequestId,
+      equipmentsRequestId: equipmentsRequestId ?? this.equipmentsRequestId,
+      selectionExercisesRequestId:
+          selectionExercisesRequestId ?? this.selectionExercisesRequestId,
       exerciseSelection: exerciseSelection ?? this.exerciseSelection,
       exercises: exercises ?? this.exercises,
       exercisePagination: exercisePagination ?? this.exercisePagination,
       selectedExercise: selectedExercise != null
           ? selectedExercise.value
           : this.selectedExercise,
-      isLoading: isLoading ?? this.isLoading,
+      isLoading: isLoading ?? _isLoading,
+      pendingExercisesQuery: pendingExercisesQuery != null
+          ? pendingExercisesQuery.value
+          : this.pendingExercisesQuery,
       error: error != null ? error.value : this.error,
       equipments: equipments ?? this.equipments,
       equipmentPagination: equipmentPagination ?? this.equipmentPagination,
@@ -216,7 +237,11 @@ final class ExerciseState extends Equatable {
 
   @override
   List<Object?> get props => [
-    isLoading,
+    exercisesRequestId,
+    equipmentsRequestId,
+    selectionExercisesRequestId,
+    _isLoading,
+    pendingExercisesQuery,
     error,
     exercises,
     selectedExercise,

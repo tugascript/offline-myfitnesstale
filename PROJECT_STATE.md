@@ -326,6 +326,10 @@ in `lib/src/ui/core` and helpers in `lib/src/utils`. SQLite table models live in
 - Flutter Material widgets provide the UI, including responsive components.
 - `go_router` provides a flat route table and parameter validation.
 - App-scoped `flutter_bloc` Cubits under `view_models/` provide state.
+- Paginated reads tracked by request ID keep those IDs in immutable Cubit
+  state and discard superseded responses. Food, recipe, meal plan, exercise,
+  workout, and workout plan mutations reload the loaded prefix using the
+  latest list filters so the next page starts at the correct offset.
 - `sqflite`, models (`lib/src/data/models/sqlite`), DAOs
   (`lib/src/data/services/sqlite`), feature repositories, and DTOs/inputs provide
   persistence and domain operations.

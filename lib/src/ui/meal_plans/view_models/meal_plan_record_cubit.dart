@@ -30,7 +30,6 @@ import './states/meal_plan_record_state.dart';
 class MealPlanRecordCubit extends Cubit<MealPlanRecordState> {
   final MealPlanRecordRepository _recordService;
   final Logger _logger = Logger('MealPlanRecordCubit');
-  int _recordsRequestId = 0;
 
   MealPlanRecordCubit({
     required MealPlanRecordRepository mealPlanRecordRepository,
@@ -82,8 +81,8 @@ class MealPlanRecordCubit extends Cubit<MealPlanRecordState> {
     int offset = 0,
   }) async {
     _logger.info('Getting meal plan records');
-    final requestId = ++_recordsRequestId;
-    emit(state.copyWith(isLoading: true));
+    final requestId = state.recordsRequestId + 1;
+    emit(state.copyWith(recordsRequestId: requestId, isLoading: true));
 
     final result = await _recordService.getMealPlanRecords(
       mealPlanId: mealPlanId,
@@ -91,7 +90,7 @@ class MealPlanRecordCubit extends Cubit<MealPlanRecordState> {
       limit: limit,
       offset: offset,
     );
-    if (requestId != _recordsRequestId) return;
+    if (isClosed || requestId != state.recordsRequestId) return;
 
     if (result.isErr()) {
       final error = result.error;
@@ -159,7 +158,8 @@ class MealPlanRecordCubit extends Cubit<MealPlanRecordState> {
     final filterMealPlanId = state.mealPlanRecordPagination.mealPlanId;
     final filterStatus = state.mealPlanRecordPagination.status;
     final limit = state.mealPlanRecordPagination.limit;
-    final requestId = ++_recordsRequestId;
+    final requestId = state.recordsRequestId + 1;
+    emit(state.copyWith(recordsRequestId: requestId));
 
     final listResult = await _recordService.getMealPlanRecords(
       mealPlanId: filterMealPlanId,
@@ -167,7 +167,7 @@ class MealPlanRecordCubit extends Cubit<MealPlanRecordState> {
       limit: limit,
       offset: 0,
     );
-    if (requestId != _recordsRequestId) return true;
+    if (isClosed || requestId != state.recordsRequestId) return true;
 
     emit(
       state.copyWith(
@@ -244,7 +244,8 @@ class MealPlanRecordCubit extends Cubit<MealPlanRecordState> {
     final mealPlanId = state.mealPlanRecordPagination.mealPlanId;
     final status = state.mealPlanRecordPagination.status;
     final limit = state.mealPlanRecordPagination.limit;
-    final requestId = ++_recordsRequestId;
+    final requestId = state.recordsRequestId + 1;
+    emit(state.copyWith(recordsRequestId: requestId));
 
     final activeFuture = _recordService.getActiveMealPlanRecord();
     final listFuture = _recordService.getMealPlanRecords(
@@ -256,7 +257,7 @@ class MealPlanRecordCubit extends Cubit<MealPlanRecordState> {
 
     final activeResult = await activeFuture;
     final listResult = await listFuture;
-    if (requestId != _recordsRequestId) return;
+    if (isClosed || requestId != state.recordsRequestId) return;
 
     Nullable<MealPlanRecordDto>? activeRecord;
     ErrorState? error;

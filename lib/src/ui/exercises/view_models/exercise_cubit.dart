@@ -15,11 +15,12 @@
 // You should have received a copy of the GNU General Public License
 // along with My Fitness Tale.  If not, see <https://www.gnu.org/licenses/>.
 
+import 'dart:math';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:logging/logging.dart';
 
 import '../../core/view_models/states/common_state.dart';
-import '../../../data/repositories/exercises/dtos/exercise_dto.dart';
 import '../../../data/repositories/exercises/exercise_repository.dart';
 import '../../../data/repositories/exercises/inputs/equipment_input.dart';
 import '../../../data/repositories/exercises/inputs/exercise_input.dart';
@@ -32,9 +33,6 @@ class ExerciseCubit extends Cubit<ExerciseState> {
   final ExerciseRepository _exerciseService;
 
   final Logger _logger = Logger("ExerciseCubit");
-  int _exercisesRequestId = 0;
-  int _equipmentsRequestId = 0;
-  int _selectionExercisesRequestId = 0;
 
   ExerciseCubit({required ExerciseRepository exerciseRepository})
     : _exerciseService = exerciseRepository,
@@ -48,23 +46,45 @@ class ExerciseCubit extends Cubit<ExerciseState> {
     int? limit,
     int? offset,
     bool isFavourite = false,
-  }) async {
-    _logger.info('Getting exercises');
-    final requestId = ++_exercisesRequestId;
-    final isLoadMore = (offset ?? state.exercisePagination.offset) > 0;
-
-    emit(state.copyWith(isLoading: true));
-
-    final result = await _exerciseService.getExercises(
-      name: name,
+  }) => _loadExercises(
+    ExercisePagination(
+      name: name ?? '',
       muscleGroup: muscleGroup,
-      isFavorite: isFavourite,
       difficulty: difficulty,
       equipmentId: equipmentId,
+      isFavorite: isFavourite,
       limit: limit ?? state.exercisePagination.limit,
       offset: offset ?? state.exercisePagination.offset,
+      total: 0,
+    ),
+  );
+
+  Future<void> _loadExercises(
+    ExercisePagination query, {
+    ExerciseState? afterWrite,
+  }) async {
+    final refresh = afterWrite != null;
+    _logger.info('Getting exercises');
+    final requestId = state.exercisesRequestId + 1;
+    final limit = refresh ? query.offset + query.limit : query.limit;
+    final offset = refresh ? 0 : query.offset;
+    emit(
+      (afterWrite ?? state).copyWith(
+        exercisesRequestId: requestId,
+        pendingExercisesQuery: Nullable(query),
+      ),
     );
-    if (requestId != _exercisesRequestId) return;
+
+    final result = await _exerciseService.getExercises(
+      name: query.name,
+      muscleGroup: query.muscleGroup,
+      isFavorite: query.isFavorite,
+      difficulty: query.difficulty,
+      equipmentId: query.equipmentId,
+      limit: limit,
+      offset: offset,
+    );
+    if (isClosed || requestId != state.exercisesRequestId) return;
 
     if (result.isErr()) {
       final error = result.error;
@@ -80,40 +100,42 @@ class ExerciseCubit extends Cubit<ExerciseState> {
                   description: "Failed to get exercises",
                 ),
               ),
-              isLoading: false,
+              pendingExercisesQuery: const Nullable(null),
+              exercises: refresh ? const [] : null,
+              exercisePagination: refresh
+                  ? state.exercisePagination.copyWith(total: 0, offset: 0)
+                  : null,
             ),
           );
           return;
       }
     }
 
-    _logger.info('Exercises retrieved successfully');
-    final paginatedData = result.value;
-    late final List<ExerciseDto> updatedExercises;
-
-    if (isLoadMore) {
-      updatedExercises = [...state.exercises, ...paginatedData.data];
-    } else {
-      updatedExercises = paginatedData.data;
-    }
-
+    final page = result.value;
     emit(
       state.copyWith(
-        exercises: updatedExercises,
-        exercisePagination: state.exercisePagination.copyWith(
-          name: name,
-          muscleGroup: Nullable(muscleGroup),
-          difficulty: Nullable(difficulty),
-          equipmentId: Nullable(equipmentId),
-          isFavorite: isFavourite,
-          total: paginatedData.total,
-          limit: paginatedData.limit,
-          offset: paginatedData.offset,
+        exercises: offset > 0 ? [...state.exercises, ...page.data] : page.data,
+        exercisePagination: query.copyWith(
+          offset: page.offset,
+          total: page.total,
         ),
-        isLoading: false,
+        pendingExercisesQuery: const Nullable(null),
         error: const Nullable(null),
       ),
     );
+  }
+
+  Future<void> _refreshExercises(ExerciseState afterWrite) {
+    // A write can shift page boundaries. Reload the prefix for the latest query.
+    final query =
+        state.pendingExercisesQuery ??
+        state.exercisePagination.copyWith(
+          offset: max(
+            0,
+            state.exercises.length - state.exercisePagination.limit,
+          ),
+        );
+    return _loadExercises(query, afterWrite: afterWrite);
   }
 
   Future<void> getExercise(int id) async {
@@ -208,7 +230,8 @@ class ExerciseCubit extends Cubit<ExerciseState> {
     }
 
     _logger.info('Exercise created successfully');
-    emit(
+    if (isClosed) return;
+    await _refreshExercises(
       state.copyWith(
         selectedExercise: Nullable(result.value),
         isLoading: false,
@@ -255,26 +278,14 @@ class ExerciseCubit extends Cubit<ExerciseState> {
           return;
       }
     }
-    emit(
+    if (isClosed) return;
+    await _refreshExercises(
       state.copyWith(
         selectedExercise: Nullable(result.value),
         isLoading: false,
         error: const Nullable(null),
       ),
     );
-
-    // Refresh exercises list if the updated exercise is in it
-    if (state.exercises.any((e) => e.id == id)) {
-      await getExercises(
-        name: state.exercisePagination.name,
-        muscleGroup: state.exercisePagination.muscleGroup,
-        difficulty: state.exercisePagination.difficulty,
-        equipmentId: state.exercisePagination.equipmentId,
-        isFavourite: state.exercisePagination.isFavorite,
-        limit: state.exercisePagination.limit,
-        offset: state.exercisePagination.offset,
-      );
-    }
   }
 
   Future<void> updateExerciseFavorite(int id, bool isFavorite) async {
@@ -320,24 +331,12 @@ class ExerciseCubit extends Cubit<ExerciseState> {
       }
     }
     final updatedExercise = result.value;
-    final removeFromFavoritesList =
-        state.exercisePagination.isFavorite && !updatedExercise.isFavorite;
-    final updatedExercises = removeFromFavoritesList
-        ? state.exercises.where((e) => e.id != id).toList()
-        : state.exercises.map((e) => e.id == id ? updatedExercise : e).toList();
-    final updatedTotal = removeFromFavoritesList
-        ? (state.exercisePagination.total > 0
-              ? state.exercisePagination.total - 1
-              : 0)
-        : state.exercisePagination.total;
-
-    emit(
+    if (isClosed) return;
+    await _refreshExercises(
       state.copyWith(
-        selectedExercise: Nullable(updatedExercise),
-        exercises: updatedExercises,
-        exercisePagination: state.exercisePagination.copyWith(
-          total: updatedTotal,
-        ),
+        selectedExercise: state.selectedExercise?.id == id
+            ? Nullable(updatedExercise)
+            : null,
         isLoading: false,
         error: const Nullable(null),
       ),
@@ -382,11 +381,9 @@ class ExerciseCubit extends Cubit<ExerciseState> {
       }
     }
 
-    // Remove from current exercises list
-    final updatedExercises = state.exercises.where((e) => e.id != id).toList();
-    emit(
+    if (isClosed) return;
+    await _refreshExercises(
       state.copyWith(
-        exercises: updatedExercises,
         selectedExercise: state.selectedExercise?.id == id
             ? const Nullable(null)
             : null,
@@ -402,15 +399,15 @@ class ExerciseCubit extends Cubit<ExerciseState> {
     required int offset,
   }) async {
     _logger.info('getEquipments: fetching equipments');
-    final requestId = ++_equipmentsRequestId;
-    emit(state.copyWith(isLoading: true));
+    final requestId = state.equipmentsRequestId + 1;
+    emit(state.copyWith(equipmentsRequestId: requestId, isLoading: true));
 
     final result = await _exerciseService.getEquipments(
       name: name,
       limit: limit,
       offset: offset,
     );
-    if (requestId != _equipmentsRequestId) return;
+    if (isClosed || requestId != state.equipmentsRequestId) return;
 
     if (result.isErr()) {
       final error = result.error;
@@ -792,14 +789,16 @@ class ExerciseCubit extends Cubit<ExerciseState> {
     String name = "",
     bool isFavorite = false,
   }) async {
-    final requestId = ++_selectionExercisesRequestId;
-    emit(state.copyWith(isLoading: true));
+    final requestId = state.selectionExercisesRequestId + 1;
+    emit(
+      state.copyWith(selectionExercisesRequestId: requestId, isLoading: true),
+    );
     final exercisesResult = await _exerciseService.getAllExercises(
       muscleGroup: muscleGroup,
       name: name,
       isFavorite: isFavorite,
     );
-    if (requestId != _selectionExercisesRequestId) return;
+    if (isClosed || requestId != state.selectionExercisesRequestId) return;
     if (exercisesResult.isErr()) {
       final error = exercisesResult.error;
       _logger.warning("Failed to get exercises, error: $error");

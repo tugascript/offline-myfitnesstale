@@ -15,6 +15,8 @@
 // You should have received a copy of the GNU General Public License
 // along with My Fitness Tale.  If not, see <https://www.gnu.org/licenses/>.
 
+import 'dart:math';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:logging/logging.dart';
 
@@ -45,7 +47,6 @@ class WorkoutPlanCubit extends Cubit<WorkoutPlanState> {
       super(WorkoutPlanState.initial());
 
   final Logger _logger = Logger('WorkoutPlanCubit');
-  int _plansRequestId = 0;
 
   Future<void> getWorkoutPlans({
     String? name,
@@ -53,21 +54,42 @@ class WorkoutPlanCubit extends Cubit<WorkoutPlanState> {
     bool isFavorite = false,
     int? limit,
     int? offset,
-  }) async {
-    _logger.info('Getting workout plans');
-    final requestId = ++_plansRequestId;
-    final resolvedOffset = offset ?? state.pagination.offset;
-    final isLoadMore = resolvedOffset > 0;
-    emit(state.copyWith(isLoading: true));
-
-    final result = await _workoutPlanService.getWorkoutPlans(
-      name: name,
+  }) => _loadWorkoutPlans(
+    WorkoutPlanPagination(
+      name: name ?? '',
       difficulty: difficulty,
       isFavorite: isFavorite,
       limit: limit ?? state.pagination.limit,
-      offset: resolvedOffset,
+      offset: offset ?? state.pagination.offset,
+      total: 0,
+    ),
+  );
+
+  Future<void> _loadWorkoutPlans(
+    WorkoutPlanPagination query, {
+    WorkoutPlanState? afterWrite,
+  }) async {
+    final refresh = afterWrite != null;
+    _logger.info('Getting workout plans');
+    final requestId = state.plansRequestId + 1;
+    final limit = refresh ? query.offset + query.limit : query.limit;
+    final offset = refresh ? 0 : query.offset;
+    emit(
+      (afterWrite ?? state).copyWith(
+        plansRequestId: requestId,
+        pendingWorkoutPlansQuery: Nullable(query),
+      ),
     );
-    if (requestId != _plansRequestId) return;
+
+    final result = await _workoutPlanService.getWorkoutPlans(
+      name: query.name,
+      difficulty: query.difficulty,
+      isFavorite: query.isFavorite,
+      limit: limit,
+      offset: offset,
+    );
+    if (isClosed || requestId != state.plansRequestId) return;
+
     if (result.isErr()) {
       final error = result.error;
       _logger.warning("Failed to get workout plans", error);
@@ -82,32 +104,38 @@ class WorkoutPlanCubit extends Cubit<WorkoutPlanState> {
                   description: "Failed to get workout plans",
                 ),
               ),
-              isLoading: false,
+              pendingWorkoutPlansQuery: const Nullable(null),
+              workoutPlans: refresh ? const [] : null,
+              pagination: refresh
+                  ? state.pagination.copyWith(total: 0, offset: 0)
+                  : null,
             ),
           );
           return;
       }
     }
 
-    _logger.info('Workout plans retrieved successfully');
-    final paginatedData = result.value;
+    final page = result.value;
     emit(
       state.copyWith(
-        workoutPlans: isLoadMore
-            ? [...state.workoutPlans, ...paginatedData.data]
-            : paginatedData.data,
-        pagination: state.pagination.copyWith(
-          name: name,
-          difficulty: Nullable(difficulty),
-          isFavorite: isFavorite,
-          limit: paginatedData.limit,
-          offset: paginatedData.offset,
-          total: paginatedData.total,
-        ),
-        isLoading: false,
+        workoutPlans: offset > 0
+            ? [...state.workoutPlans, ...page.data]
+            : page.data,
+        pagination: query.copyWith(offset: page.offset, total: page.total),
+        pendingWorkoutPlansQuery: const Nullable(null),
         error: const Nullable(null),
       ),
     );
+  }
+
+  Future<void> _refreshWorkoutPlans(WorkoutPlanState afterWrite) {
+    // A write can shift page boundaries. Reload the prefix for the latest query.
+    final query =
+        state.pendingWorkoutPlansQuery ??
+        state.pagination.copyWith(
+          offset: max(0, state.workoutPlans.length - state.pagination.limit),
+        );
+    return _loadWorkoutPlans(query, afterWrite: afterWrite);
   }
 
   Future<void> getWorkoutPlan(int id, {bool isRefresh = false}) async {
@@ -189,12 +217,10 @@ class WorkoutPlanCubit extends Cubit<WorkoutPlanState> {
     }
 
     final updatedPlan = result.value;
-    emit(
+    if (isClosed) return;
+    await _refreshWorkoutPlans(
       state.copyWith(
         selectedWorkoutPlan: Nullable(updatedPlan),
-        workoutPlans: state.workoutPlans
-            .map((p) => p.id == workoutPlanId ? updatedPlan : p)
-            .toList(),
         isLoading: false,
         error: const Nullable(null),
       ),
@@ -222,12 +248,9 @@ class WorkoutPlanCubit extends Cubit<WorkoutPlanState> {
 
     _logger.info('Workout plan created successfully');
     final newPlan = result.value;
-    emit(
+    if (isClosed) return;
+    await _refreshWorkoutPlans(
       state.copyWith(
-        workoutPlans: [newPlan, ...state.workoutPlans],
-        pagination: state.pagination.copyWith(
-          total: state.pagination.total + 1,
-        ),
         selectedWorkoutPlan: Nullable(newPlan),
         isLoading: false,
         error: const Nullable(null),
@@ -263,12 +286,10 @@ class WorkoutPlanCubit extends Cubit<WorkoutPlanState> {
             : result.value.weeks,
       ),
     );
-    emit(
+    if (isClosed) return;
+    await _refreshWorkoutPlans(
       state.copyWith(
         selectedWorkoutPlan: Nullable(updatedPlan),
-        workoutPlans: state.workoutPlans
-            .map((p) => p.id == id ? updatedPlan : p)
-            .toList(),
         isLoading: false,
         error: const Nullable(null),
       ),
@@ -306,21 +327,12 @@ class WorkoutPlanCubit extends Cubit<WorkoutPlanState> {
             : result.value.weeks,
       ),
     );
-    final removeFromFavoritesList =
-        state.pagination.isFavorite && !updatedPlan.isFavorite;
-    final updatedPlans = removeFromFavoritesList
-        ? state.workoutPlans.where((p) => p.id != id).toList()
-        : state.workoutPlans.map((p) => p.id == id ? updatedPlan : p).toList();
-    final updatedTotal = removeFromFavoritesList
-        ? (state.pagination.total > 0 ? state.pagination.total - 1 : 0)
-        : state.pagination.total;
-    emit(
+    if (isClosed) return;
+    await _refreshWorkoutPlans(
       state.copyWith(
         selectedWorkoutPlan: state.selectedWorkoutPlan?.id == id
             ? Nullable(updatedPlan)
             : null,
-        workoutPlans: updatedPlans,
-        pagination: state.pagination.copyWith(total: updatedTotal),
         isLoading: false,
         error: const Nullable(null),
       ),
@@ -348,15 +360,12 @@ class WorkoutPlanCubit extends Cubit<WorkoutPlanState> {
     }
 
     _logger.info('Workout plan $id deleted successfully');
-    emit(
+    if (isClosed) return;
+    await _refreshWorkoutPlans(
       state.copyWith(
-        workoutPlans: state.workoutPlans.where((p) => p.id != id).toList(),
         selectedWorkoutPlan: state.selectedWorkoutPlan?.id == id
             ? const Nullable(null)
             : null,
-        pagination: state.pagination.copyWith(
-          total: state.pagination.total > 0 ? state.pagination.total - 1 : 0,
-        ),
         isLoading: false,
         error: const Nullable(null),
       ),
