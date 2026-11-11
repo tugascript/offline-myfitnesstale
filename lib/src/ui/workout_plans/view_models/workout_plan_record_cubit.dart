@@ -21,8 +21,11 @@ import 'package:logging/logging.dart';
 import '../../../utils/nullable.dart';
 import '../../../data/utils/enums.dart';
 import '../../../utils/errors.dart';
+import '../../../data/repositories/workout_plans/dtos/workout_plan_dto.dart';
+import '../../../data/repositories/workout_plans/dtos/workout_plan_record_dto.dart';
 import '../../../data/repositories/workout_plans/workout_plan_record_repository.dart';
 import '../../../data/repositories/workout_plans/workout_plan_repository.dart';
+import '../../../data/repositories/workouts/dtos/workout_dto.dart';
 import '../../core/view_models/states/common_state.dart';
 import './states/workout_plan_record_state.dart';
 
@@ -178,20 +181,29 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
       return;
     }
 
+    final plan = planResult.value;
+    final countsFuture = _loadProgressCounts(record, plan);
+    final todaysWorkoutsFuture = _resolveTodaysWorkouts(record, plan);
+    final counts = await countsFuture;
+    final todaysWorkouts = await todaysWorkoutsFuture;
+
     emit(
       state.copyWith(
         currentPlanRecord: state.currentPlanRecord.copyWith(
           currentPlanRecord: Nullable(record),
-          workoutPlan: Nullable(planResult.value),
+          workoutPlan: Nullable(plan),
+          completedWorkouts: counts?.$1,
+          totalWorkouts: counts?.$2,
+          todaysWorkouts:
+              todaysWorkouts ??
+              (state.currentPlanRecord.currentPlanRecord?.id == record.id
+                  ? state.currentPlanRecord.todaysWorkouts
+                  : const []),
         ),
         isLoading: false,
         error: const Nullable(null),
       ),
     );
-
-    // Refresh progress and today's workouts after loading plan
-    await refreshProgress();
-    await getTodaysWorkout();
   }
 
   Future<void> startPlanWorkout({
@@ -252,18 +264,30 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
     }
 
     final updatedRecord = workoutResult.value;
+    final plan = state.currentPlanRecord.workoutPlan;
+    (int, int)? counts;
+    List<WorkoutDto>? todaysWorkouts;
+    if (plan != null) {
+      final countsFuture = _loadProgressCounts(updatedRecord, plan);
+      final todaysWorkoutsFuture = _resolveTodaysWorkouts(updatedRecord, plan);
+      counts = await countsFuture;
+      todaysWorkouts = await todaysWorkoutsFuture;
+    }
+
     emit(
       state.copyWith(
         currentPlanRecord: state.currentPlanRecord.copyWith(
           currentPlanRecord: Nullable(updatedRecord),
           currentWeek: updatedRecord.currentWeek,
           currentDay: updatedRecord.currentDay,
+          completedWorkouts: counts?.$1,
+          totalWorkouts: counts?.$2,
+          todaysWorkouts: todaysWorkouts,
         ),
         isLoading: false,
+        error: const Nullable(null),
       ),
     );
-    await refreshProgress();
-    await getTodaysWorkout();
     return;
   }
 
@@ -324,16 +348,23 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
       return false;
     }
 
+    final updatedRecord = result.value;
+    final plan = state.currentPlanRecord.workoutPlan;
+    final counts = plan != null
+        ? await _loadProgressCounts(updatedRecord, plan)
+        : null;
+
     emit(
       state.copyWith(
         isLoading: false,
         error: const Nullable(null),
         currentPlanRecord: state.currentPlanRecord.copyWith(
-          currentPlanRecord: Nullable(result.value),
+          currentPlanRecord: Nullable(updatedRecord),
+          completedWorkouts: counts?.$1,
+          totalWorkouts: counts?.$2,
         ),
       ),
     );
-    await refreshProgress();
     return true;
   }
 
@@ -391,20 +422,29 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
       return;
     }
 
+    final plan = planResult.value;
+    final countsFuture = _loadProgressCounts(record, plan);
+    final todaysWorkoutsFuture = _resolveTodaysWorkouts(record, plan);
+    final counts = await countsFuture;
+    final todaysWorkouts = await todaysWorkoutsFuture;
+
     emit(
       state.copyWith(
         currentPlanRecord: state.currentPlanRecord.copyWith(
           currentPlanRecord: Nullable(record),
-          workoutPlan: Nullable(planResult.value),
+          workoutPlan: Nullable(plan),
+          completedWorkouts: counts?.$1,
+          totalWorkouts: counts?.$2,
+          todaysWorkouts:
+              todaysWorkouts ??
+              (state.currentPlanRecord.currentPlanRecord?.id == record.id
+                  ? state.currentPlanRecord.todaysWorkouts
+                  : const []),
         ),
         isLoading: false,
         error: const Nullable(null),
       ),
     );
-
-    // Refresh progress and today's workouts after loading plan
-    await refreshProgress();
-    await getTodaysWorkout();
   }
 
   Future<void> getTodaysWorkout() async {
@@ -416,90 +456,15 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
       return;
     }
 
-    try {
-      final now = DateTime.now();
-      final startedAt = record.startedAt;
-      final difference = now.difference(startedAt);
-
-      // Calculate current week (1-based)
-      final daysSinceStart = difference.inDays;
-      final currentWeekNum = (daysSinceStart / 7).floor() + 1;
-
-      if (currentWeekNum > plan.totalWeeks) {
-        _logger.info('Plan completed (time-wise)');
-        // Optionally handle finished plan logic
-        return;
-      }
-
-      // Get weekday (1=Mon, 7=Sun)
-      final relativeDayIndex = (daysSinceStart % 7) + 1;
-
-      // Find the corresponding week in the plan
-      final weeksResult = await _workoutPlanService.getWorkoutPlanWeeks(
-        plan.id,
-        planVersion: record.workoutPlanVersion,
+    final todaysWorkouts = await _resolveTodaysWorkouts(record, plan);
+    if (todaysWorkouts != null) {
+      emit(
+        state.copyWith(
+          currentPlanRecord: state.currentPlanRecord.copyWith(
+            todaysWorkouts: todaysWorkouts,
+          ),
+        ),
       );
-      if (weeksResult.isErr()) return;
-
-      final weeks = weeksResult.value;
-      final week = weeks
-          .where(
-            (w) => currentWeekNum >= w.startWeek && currentWeekNum <= w.endWeek,
-          )
-          .firstOrNull;
-      if (week == null) {
-        emit(
-          state.copyWith(
-            currentPlanRecord: state.currentPlanRecord.copyWith(
-              todaysWorkouts: [],
-            ),
-          ),
-        );
-        return;
-      }
-
-      var todaysDay = week.days
-          .where((d) => d.day == relativeDayIndex)
-          .firstOrNull;
-      if (todaysDay == null) {
-        final daysResult = await _workoutPlanService.getWorkoutPlanWeek(
-          week.id,
-          planVersion: record.workoutPlanVersion,
-        );
-        if (daysResult.isErr()) return;
-        todaysDay = daysResult.value.days
-            .where((d) => d.day == relativeDayIndex)
-            .firstOrNull;
-      }
-
-      if (todaysDay == null) {
-        emit(
-          state.copyWith(
-            currentPlanRecord: state.currentPlanRecord.copyWith(
-              todaysWorkouts: [],
-            ),
-          ),
-        );
-        return;
-      }
-
-      if (todaysDay.planWorkouts != null) {
-        final workouts = todaysDay.planWorkouts!
-            .map((pw) => pw.workout)
-            .where((w) => w != null)
-            .map((w) => w!)
-            .toList();
-
-        emit(
-          state.copyWith(
-            currentPlanRecord: state.currentPlanRecord.copyWith(
-              todaysWorkouts: workouts,
-            ),
-          ),
-        );
-      }
-    } catch (e) {
-      _logger.warning("Error calculating today's workout", e);
     }
   }
 
@@ -508,24 +473,101 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
     final plan = state.currentPlanRecord.workoutPlan;
     if (record == null || plan == null) return;
 
-    try {
-      final completed = await _workoutPlanRecordService
-          .getCompletedWorkoutsCount(record.id);
-      final total = await _workoutPlanRecordService.getTotalWorkoutsCount(
-        plan.id,
-        workoutPlanVersion: record.workoutPlanVersion,
-      );
+    final counts = await _loadProgressCounts(record, plan);
+    if (counts == null) return;
 
-      emit(
-        state.copyWith(
-          currentPlanRecord: state.currentPlanRecord.copyWith(
-            completedWorkouts: completed,
-            totalWorkouts: total,
-          ),
+    emit(
+      state.copyWith(
+        currentPlanRecord: state.currentPlanRecord.copyWith(
+          completedWorkouts: counts.$1,
+          totalWorkouts: counts.$2,
         ),
-      );
+      ),
+    );
+  }
+
+  Future<List<WorkoutDto>?> _resolveTodaysWorkouts(
+    WorkoutPlanRecordDto record,
+    WorkoutPlanDto plan,
+  ) async {
+    try {
+      final daysSinceStart = DateTime.now().difference(record.startedAt).inDays;
+      final currentWeekNum = (daysSinceStart / 7).floor() + 1;
+
+      if (currentWeekNum > plan.totalWeeks) {
+        _logger.info('Plan completed (time-wise)');
+        return null;
+      }
+
+      // Get weekday (1=Mon, 7=Sun)
+      final relativeDayIndex = (daysSinceStart % 7) + 1;
+
+      var weeks = plan.weeks;
+      if (weeks == null) {
+        final weeksResult = await _workoutPlanService.getWorkoutPlanWeeks(
+          plan.id,
+          planVersion: record.workoutPlanVersion,
+        );
+        if (weeksResult.isErr()) return null;
+        weeks = weeksResult.value;
+      }
+
+      final week = weeks
+          .where(
+            (w) => currentWeekNum >= w.startWeek && currentWeekNum <= w.endWeek,
+          )
+          .firstOrNull;
+      if (week == null) {
+        return const [];
+      }
+
+      var todaysDay = week.days
+          .where((d) => d.day == relativeDayIndex)
+          .firstOrNull;
+      if (todaysDay == null && plan.weeks == null) {
+        final daysResult = await _workoutPlanService.getWorkoutPlanWeek(
+          week.id,
+          planVersion: record.workoutPlanVersion,
+        );
+        if (daysResult.isErr()) return null;
+        todaysDay = daysResult.value.days
+            .where((d) => d.day == relativeDayIndex)
+            .firstOrNull;
+      }
+
+      if (todaysDay == null) {
+        return const [];
+      }
+
+      final planWorkouts = todaysDay.planWorkouts;
+      if (planWorkouts == null) return null;
+
+      return planWorkouts
+          .map((pw) => pw.workout)
+          .whereType<WorkoutDto>()
+          .toList();
+    } catch (e) {
+      _logger.warning("Error calculating today's workout", e);
+      return null;
+    }
+  }
+
+  Future<(int, int)?> _loadProgressCounts(
+    WorkoutPlanRecordDto record,
+    WorkoutPlanDto plan,
+  ) async {
+    try {
+      final results = await Future.wait([
+        _workoutPlanRecordService.getCompletedWorkoutsCount(record.id),
+        _workoutPlanRecordService.getTotalWorkoutsCount(
+          plan.id,
+          workoutPlanVersion: record.workoutPlanVersion,
+        ),
+      ]);
+      return (results[0], results[1]);
     } catch (e) {
       _logger.warning("Failed to refresh progress", e);
+      return null;
     }
   }
 

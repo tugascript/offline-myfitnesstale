@@ -30,6 +30,7 @@ import './states/meal_plan_state.dart';
 class MealPlanCubit extends Cubit<MealPlanState> {
   final MealPlanRepository _mealPlanService;
   final Logger _logger = Logger('MealPlanCubit');
+  int _mealPlansRequestId = 0;
 
   MealPlanCubit({required MealPlanRepository mealPlanRepository})
     : _mealPlanService = mealPlanRepository,
@@ -42,17 +43,8 @@ class MealPlanCubit extends Cubit<MealPlanState> {
     int offset = 0,
   }) async {
     _logger.info('Getting meal plans');
-    emit(
-      state.copyWith(
-        mealPlanPagination: state.mealPlanPagination.copyWith(
-          limit: limit,
-          offset: offset,
-          search: Nullable(search),
-          isFavorite: Nullable(isFavorite),
-        ),
-        isLoading: true,
-      ),
-    );
+    final requestId = ++_mealPlansRequestId;
+    emit(state.copyWith(isLoading: true));
 
     final result = await _mealPlanService.getMealPlans(
       search: search,
@@ -60,6 +52,7 @@ class MealPlanCubit extends Cubit<MealPlanState> {
       limit: limit,
       offset: offset,
     );
+    if (requestId != _mealPlansRequestId) return;
 
     if (result.isErr()) {
       final error = result.error;
@@ -83,7 +76,11 @@ class MealPlanCubit extends Cubit<MealPlanState> {
     emit(
       state.copyWith(
         mealPlanPagination: state.mealPlanPagination.copyWith(
+          limit: paginated.limit,
+          offset: paginated.offset,
           total: paginated.total,
+          search: Nullable(search),
+          isFavorite: Nullable(isFavorite),
         ),
         mealPlans: plans,
         isLoading: false,
@@ -143,18 +140,23 @@ class MealPlanCubit extends Cubit<MealPlanState> {
       return false;
     }
 
+    _mealPlansRequestId++;
+    final created = result.value;
+    final matchesFilter = _matchesMealPlanFilter(created);
     emit(
       state.copyWith(
-        selectedMealPlan: Nullable(result.value),
+        selectedMealPlan: Nullable(created),
+        mealPlans: matchesFilter
+            ? [created, ...state.mealPlans]
+            : state.mealPlans,
+        mealPlanPagination: matchesFilter
+            ? state.mealPlanPagination.copyWith(
+                total: state.mealPlanPagination.total + 1,
+              )
+            : null,
         isLoading: false,
         error: const Nullable(null),
       ),
-    );
-    await getMealPlans(
-      search: state.mealPlanPagination.search,
-      isFavorite: state.mealPlanPagination.isFavorite,
-      limit: state.mealPlanPagination.limit,
-      offset: 0,
     );
     return true;
   }
@@ -179,18 +181,29 @@ class MealPlanCubit extends Cubit<MealPlanState> {
       return false;
     }
 
+    _mealPlansRequestId++;
+    final updated = result.value;
+    final matchesFilter = _matchesMealPlanFilter(updated);
+    final wasInList = state.mealPlans.any((p) => p.id == id);
+    final updatedList = wasInList && !matchesFilter
+        ? state.mealPlans.where((p) => p.id != id).toList()
+        : state.mealPlans.map((p) => p.id == id ? updated : p).toList();
+    final updatedTotal = wasInList && !matchesFilter
+        ? (state.mealPlanPagination.total > 0
+              ? state.mealPlanPagination.total - 1
+              : 0)
+        : state.mealPlanPagination.total;
+
     emit(
       state.copyWith(
-        selectedMealPlan: Nullable(result.value),
+        selectedMealPlan: Nullable(updated),
+        mealPlans: updatedList,
+        mealPlanPagination: state.mealPlanPagination.copyWith(
+          total: updatedTotal,
+        ),
         isLoading: false,
         error: const Nullable(null),
       ),
-    );
-    await getMealPlans(
-      search: state.mealPlanPagination.search,
-      isFavorite: state.mealPlanPagination.isFavorite,
-      limit: state.mealPlanPagination.limit,
-      offset: 0,
     );
     return true;
   }
@@ -211,19 +224,44 @@ class MealPlanCubit extends Cubit<MealPlanState> {
       return false;
     }
 
+    _mealPlansRequestId++;
     final updated = result.value;
-    final updatedList = state.mealPlans
-        .map((p) => p.id == id ? updated : p)
-        .toList();
+    final removeByFavoriteFilter =
+        state.mealPlanPagination.isFavorite != null &&
+        updated.isFavorite != state.mealPlanPagination.isFavorite;
+    final updatedList = removeByFavoriteFilter
+        ? state.mealPlans.where((p) => p.id != id).toList()
+        : state.mealPlans.map((p) => p.id == id ? updated : p).toList();
+    final updatedTotal = removeByFavoriteFilter
+        ? (state.mealPlanPagination.total > 0
+              ? state.mealPlanPagination.total - 1
+              : 0)
+        : state.mealPlanPagination.total;
+
     emit(
       state.copyWith(
         mealPlans: updatedList,
+        mealPlanPagination: state.mealPlanPagination.copyWith(
+          total: updatedTotal,
+        ),
         selectedMealPlan: state.selectedMealPlan?.id == id
             ? Nullable(updated)
             : null,
         error: const Nullable(null),
       ),
     );
+    return true;
+  }
+
+  bool _matchesMealPlanFilter(MealPlanDto plan) {
+    final search = state.mealPlanPagination.search?.trim().toLowerCase() ?? '';
+    if (search.isNotEmpty && !plan.name.toLowerCase().contains(search)) {
+      return false;
+    }
+    final isFavoriteFilter = state.mealPlanPagination.isFavorite;
+    if (isFavoriteFilter != null && plan.isFavorite != isFavoriteFilter) {
+      return false;
+    }
     return true;
   }
 

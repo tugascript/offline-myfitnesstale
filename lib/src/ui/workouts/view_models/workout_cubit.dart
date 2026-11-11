@@ -41,6 +41,8 @@ class WorkoutCubit extends Cubit<WorkoutState> {
   final WorkoutRepository _workoutService;
 
   final Logger _logger = Logger('WorkoutCubit');
+  int _workoutsRequestId = 0;
+  int _selectionWorkoutsRequestId = 0;
 
   WorkoutCubit({required WorkoutRepository workoutRepository})
     : _workoutService = workoutRepository,
@@ -55,6 +57,7 @@ class WorkoutCubit extends Cubit<WorkoutState> {
     bool isFavorite = false,
   }) async {
     _logger.info('Getting workouts');
+    final requestId = ++_workoutsRequestId;
     final isLoadMore = (offset ?? state.pagination.offset) > 0;
 
     // Only set loading to true if not loading more to avoid flickering or full screen loader?
@@ -70,6 +73,7 @@ class WorkoutCubit extends Cubit<WorkoutState> {
       limit: limit ?? state.pagination.limit,
       offset: offset ?? state.pagination.offset,
     );
+    if (requestId != _workoutsRequestId) return;
     if (result.isErr()) {
       final error = result.error;
       _logger.warning("Failed to get workouts", error);
@@ -320,12 +324,21 @@ class WorkoutCubit extends Cubit<WorkoutState> {
             : result.value.sets,
       ),
     );
+    final removeFromFavoritesList =
+        state.pagination.isFavorite && !workout.isFavorite;
+    final updatedWorkouts = removeFromFavoritesList
+        ? state.workouts.where((w) => w.id != id).toList()
+        : state.workouts.map((w) => w.id == id ? workout : w).toList();
+    final updatedTotal = removeFromFavoritesList
+        ? (state.pagination.total > 0 ? state.pagination.total - 1 : 0)
+        : state.pagination.total;
     emit(
       state.copyWith(
         selectedWorkout: state.selectedWorkout?.id == id
             ? Nullable(workout)
             : null,
-        workouts: state.workouts.map((w) => w.id == id ? workout : w).toList(),
+        workouts: updatedWorkouts,
+        pagination: state.pagination.copyWith(total: updatedTotal),
         error: const Nullable(null),
         isLoading: false,
       ),
@@ -552,6 +565,7 @@ class WorkoutCubit extends Cubit<WorkoutState> {
     String name = "",
     bool isFavorite = false,
   }) async {
+    final requestId = ++_selectionWorkoutsRequestId;
     emit(state.copyWith(isLoading: true));
 
     final result = await _workoutService.getAllWorkouts(
@@ -559,6 +573,7 @@ class WorkoutCubit extends Cubit<WorkoutState> {
       name: name,
       isFavorite: isFavorite,
     );
+    if (requestId != _selectionWorkoutsRequestId) return;
 
     if (result.isErr()) {
       final error = result.error;

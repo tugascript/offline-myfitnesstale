@@ -17,6 +17,7 @@
 
 import 'package:equatable/equatable.dart';
 
+import '../../../../data/services/common.dart';
 import '../../../../utils/nullable.dart';
 import '../../../../data/repositories/weight/dtos/weight_goal_dto.dart';
 import '../../../../data/repositories/weight/dtos/weight_record_dto.dart';
@@ -52,7 +53,7 @@ final class WeightRecordPaginationState extends Equatable {
   factory WeightRecordPaginationState.initial() {
     return const WeightRecordPaginationState(
       dateRange: null,
-      limit: 0,
+      limit: kDefaultLimit,
       offset: 0,
       total: 0,
     );
@@ -92,7 +93,7 @@ final class WeightGoalPaginationState extends Equatable {
   factory WeightGoalPaginationState.initial() {
     return const WeightGoalPaginationState(
       skipInProgress: false,
-      limit: 0,
+      limit: kDefaultLimit,
       offset: 0,
       total: 0,
     );

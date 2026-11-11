@@ -23,7 +23,6 @@ import 'package:logging/logging.dart';
 import '../../../utils/nullable.dart';
 import '../../../data/utils/json_data.dart';
 import '../../../utils/errors.dart';
-import '../../../data/repositories/workouts/dtos/workout_record_dto.dart';
 import '../../../data/repositories/workouts/workout_record_repository.dart';
 import '../../../data/repositories/workouts/workout_repository.dart';
 import '../../../data/repositories/workout_plans/workout_plan_record_repository.dart';
@@ -186,6 +185,7 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
         currentSetNumber: 1,
         currentSetStartedAt: startedAt,
         isLoading: false,
+        error: const Nullable(null),
       ),
     );
   }
@@ -228,8 +228,16 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
     );
 
     if (setRecordResult.isErr()) {
+      final error = setRecordResult.error;
       _logger.warning("Failed to create set record");
-      emit(state.copyWith(isLoading: false));
+      emit(
+        state.copyWith(
+          isLoading: false,
+          error: Nullable(
+            ErrorState(type: error.type.name, description: error.description),
+          ),
+        ),
+      );
       return;
     }
 
@@ -250,8 +258,16 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
         );
 
     if (exerciseRecordResult.isErr()) {
+      final error = exerciseRecordResult.error;
       _logger.warning("Failed to create exercise record");
-      emit(state.copyWith(isLoading: false));
+      emit(
+        state.copyWith(
+          isLoading: false,
+          error: Nullable(
+            ErrorState(type: error.type.name, description: error.description),
+          ),
+        ),
+      );
       return;
     }
 
@@ -259,13 +275,26 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
     final updatedRecordResult = await _workoutRecordService.getWorkoutRecord(
       state.workoutRecord!.id,
     );
-    WorkoutRecordDto? updatedRecord;
-    if (updatedRecordResult.isOk()) {
-      updatedRecord = updatedRecordResult.value;
+    if (updatedRecordResult.isErr()) {
+      final error = updatedRecordResult.error;
+      _logger.warning("Failed to refresh workout record");
+      emit(
+        state.copyWith(
+          isLoading: false,
+          error: Nullable(
+            ErrorState(type: error.type.name, description: error.description),
+          ),
+        ),
+      );
+      return;
     }
 
     emit(
-      state.copyWith(workoutRecord: Nullable(updatedRecord), isLoading: false),
+      state.copyWith(
+        workoutRecord: Nullable(updatedRecordResult.value),
+        isLoading: false,
+        error: const Nullable(null),
+      ),
     );
   }
 
@@ -460,17 +489,16 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
           isCompleted: true,
           isLoading: false,
           isResting: false,
+          error: const Nullable(null),
         ),
       );
     } else {
+      final error = result.error;
       emit(
         state.copyWith(
           isLoading: false,
           error: Nullable(
-            ErrorState(
-              type: 'CompletionError',
-              description: 'Failed to complete workout',
-            ),
+            ErrorState(type: error.type.name, description: error.description),
           ),
         ),
       );

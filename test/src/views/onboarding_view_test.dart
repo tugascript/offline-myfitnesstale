@@ -26,6 +26,7 @@ import 'package:myfitnesstale/src/data/repositories/profile/profile_repository.d
 import 'package:myfitnesstale/src/data/utils/enums.dart';
 import 'package:myfitnesstale/src/routing/routes.dart';
 import 'package:myfitnesstale/src/ui/core/view_models/states/common_state.dart';
+import 'package:myfitnesstale/src/utils/nullable.dart';
 import 'package:myfitnesstale/src/ui/home/screens/profile/onboarding_screen.dart';
 import 'package:myfitnesstale/src/ui/home/view_models/profile_cubit.dart';
 
@@ -126,14 +127,16 @@ final class _OnboardingProfileCubit extends ProfileCubit {
     }
 
     attempts++;
-    emit(state.copyWith(isLoading: true, clearError: true));
+    emit(state.copyWith(isLoading: true, error: const Nullable(null)));
 
     if (attempts < succeedOnAttempt) {
       emit(
         state.copyWith(
-          error: const ErrorState(
-            type: 'operationFailure',
-            description: 'Setup failed. No data was saved. Please try again.',
+          error: const Nullable(
+            ErrorState(
+              type: 'operationFailure',
+              description: 'Setup failed. No data was saved. Please try again.',
+            ),
           ),
           isLoading: false,
         ),
@@ -143,32 +146,38 @@ final class _OnboardingProfileCubit extends ProfileCubit {
 
     emit(
       state.copyWith(
-        profile: ProfileDto(
-          id: 1,
-          name: name,
-          height: height,
-          gender: gender,
-          birthdate: birthday,
+        profile: Nullable(
+          ProfileDto(
+            id: 1,
+            name: name,
+            height: height,
+            gender: gender,
+            birthdate: birthday,
+          ),
         ),
-        system: SystemDto(
-          id: 1,
-          units: units,
-          theme: theme,
-          initialSetup: SetUpStatus.completed,
-          notificationsOn: notificationsOn,
+        system: Nullable(
+          SystemDto(
+            id: 1,
+            units: units,
+            theme: theme,
+            initialSetup: SetUpStatus.completed,
+            notificationsOn: notificationsOn,
+          ),
         ),
-        remindersConfig: RemindersConfigDto(
-          id: 1,
-          workoutsOn: notificationsOn,
-          workoutsReminderTime: DateTime(2026, 1, 1, 8),
-          weightRecordsOn: notificationsOn,
-          weightRecordsReminderTime: DateTime(2026, 1, 1, 8),
-          macroTrackingOn: notificationsOn,
-          macroTrackingReminderTime: DateTime(2026, 1, 1, 8),
+        remindersConfig: Nullable(
+          RemindersConfigDto(
+            id: 1,
+            workoutsOn: notificationsOn,
+            workoutsReminderTime: DateTime(2026, 1, 1, 8),
+            weightRecordsOn: notificationsOn,
+            weightRecordsReminderTime: DateTime(2026, 1, 1, 8),
+            macroTrackingOn: notificationsOn,
+            macroTrackingReminderTime: DateTime(2026, 1, 1, 8),
+          ),
         ),
         isLoading: false,
         isInitiated: true,
-        clearError: true,
+        error: const Nullable(null),
       ),
     );
   }

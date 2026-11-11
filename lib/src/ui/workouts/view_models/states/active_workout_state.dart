@@ -84,36 +84,41 @@ class ActiveWorkoutState extends Equatable {
     final records = workoutRecord?.setRecords;
     if (set == null || exercise == null || records == null) return null;
 
-    final relevantSetRecords =
-        records
-            .where(
-              (record) =>
-                  record.workoutSetId == set.id &&
-                  record.setNumber <= currentSetNumber,
-            )
-            .toList()
-          ..sort((a, b) => b.setNumber.compareTo(a.setNumber));
+    WorkoutSetExerciseRecordDto? latestMatch;
+    var latestSetNumber = -1;
 
-    // Prefer the exact current entry when returning to or resuming an
-    // exercise, even if this set group contains the same exercise twice.
-    for (final setRecord in relevantSetRecords.where(
-      (record) => record.setNumber == currentSetNumber,
-    )) {
-      for (final record in setRecord.setExerciseRecords ?? const []) {
-        if (record.workoutSetExerciseId == exercise.id) return record;
+    for (final setRecord in records) {
+      if (setRecord.workoutSetId != set.id ||
+          setRecord.setNumber > currentSetNumber) {
+        continue;
+      }
+
+      final exerciseRecords = setRecord.setExerciseRecords;
+      if (exerciseRecords == null || exerciseRecords.isEmpty) continue;
+
+      // Prefer the exact current entry when returning to or resuming an
+      // exercise, even if this set group contains the same exercise twice.
+      if (setRecord.setNumber == currentSetNumber) {
+        for (final record in exerciseRecords) {
+          if (record.workoutSetExerciseId == exercise.id) return record;
+        }
+      }
+
+      if (latestMatch != null && setRecord.setNumber <= latestSetNumber) {
+        continue;
+      }
+
+      for (var i = exerciseRecords.length - 1; i >= 0; i--) {
+        final record = exerciseRecords[i];
+        if (record.exerciseId == exercise.exerciseId) {
+          latestMatch = record;
+          latestSetNumber = setRecord.setNumber;
+          break;
+        }
       }
     }
 
-    for (final setRecord in relevantSetRecords) {
-      final exerciseRecords = setRecord.setExerciseRecords?.reversed;
-      if (exerciseRecords == null) continue;
-
-      for (final record in exerciseRecords) {
-        if (record.exerciseId != exercise.exerciseId) continue;
-        return record;
-      }
-    }
-    return null;
+    return latestMatch;
   }
 
   int get totalSets {
@@ -128,9 +133,11 @@ class ActiveWorkoutState extends Equatable {
         : currentSetPosition > sets.length
         ? sets.length
         : currentSetPosition;
-    final precedingSetCount = sets
-        .take(boundedPosition)
-        .fold<int>(0, (total, set) => total + (set.maxSets ?? set.minSets));
+    var precedingSetCount = 0;
+    for (var i = 0; i < boundedPosition; i++) {
+      final set = sets[i];
+      precedingSetCount += set.maxSets ?? set.minSets;
+    }
     return precedingSetCount + currentSetNumber;
   }
 
@@ -190,8 +197,8 @@ class ActiveWorkoutState extends Equatable {
 
   @override
   List<Object?> get props => [
-    workout?.id,
-    workoutRecord?.id,
+    workout,
+    workoutRecord,
     currentSetPosition,
     currentExercisePosition,
     currentSetNumber,

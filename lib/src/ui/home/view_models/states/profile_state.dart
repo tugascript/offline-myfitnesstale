@@ -17,6 +17,7 @@
 
 import 'package:equatable/equatable.dart';
 
+import '../../../../utils/nullable.dart';
 import '../../../../data/repositories/profile/dtos/profile_dto.dart';
 import '../../../../data/repositories/profile/dtos/reminders_config_dto.dart';
 import '../../../../data/repositories/profile/dtos/system_dto.dart';
@@ -44,23 +45,22 @@ final class ProfileState extends Equatable {
   }
 
   ProfileState copyWith({
-    ProfileDto? profile,
-    SystemDto? system,
-    RemindersConfigDto? remindersConfig,
+    Nullable<ProfileDto?>? profile,
+    Nullable<SystemDto?>? system,
+    Nullable<RemindersConfigDto?>? remindersConfig,
     bool? isLoading,
-    bool? isRemindersLoading,
     bool? isInitiated,
-    ErrorState? error,
-    bool clearError = false,
-    ErrorState? remindersError,
+    Nullable<ErrorState?>? error,
   }) {
     return ProfileState(
-      profile: profile ?? this.profile,
-      system: system ?? this.system,
-      remindersConfig: remindersConfig ?? this.remindersConfig,
+      profile: profile != null ? profile.value : this.profile,
+      system: system != null ? system.value : this.system,
+      remindersConfig: remindersConfig != null
+          ? remindersConfig.value
+          : this.remindersConfig,
       isLoading: isLoading ?? this.isLoading,
       isInitiated: isInitiated ?? this.isInitiated,
-      error: clearError ? null : error ?? this.error,
+      error: error != null ? error.value : this.error,
     );
   }
 

@@ -24,6 +24,7 @@ import 'package:logging/logging.dart';
 
 import '../../../utils/nullable.dart';
 import '../../../data/utils/enums.dart';
+import '../../../data/repositories/macros/dtos/macro_tracking_dto.dart';
 import '../../../data/repositories/macros/macro_tracking_repository.dart';
 import '../../core/view_models/states/common_state.dart';
 import './states/macro_tracking_state.dart';
@@ -31,6 +32,7 @@ import './states/macro_tracking_state.dart';
 class MacroTrackingCubit extends Cubit<MacroTrackingState> {
   final MacroTrackingRepository _macroService;
   final Logger _logger = Logger('MacroTrackingCubit');
+  int _goalsRequestId = 0;
 
   MacroTrackingCubit({required MacroTrackingRepository macroTrackingRepository})
     : _macroService = macroTrackingRepository,
@@ -76,12 +78,14 @@ class MacroTrackingCubit extends Cubit<MacroTrackingState> {
 
   Future<void> getMacroGoals({int limit = 20, int offset = 0}) async {
     _logger.info('Getting macro goals');
+    final requestId = ++_goalsRequestId;
     emit(state.copyWith(isLoading: true));
 
     final result = await _macroService.getMacroGoals(
       limit: limit,
       offset: offset,
     );
+    if (requestId != _goalsRequestId) return;
     if (result.isErr()) {
       final error = result.error;
       _logger.warning('Failed to get macro goals', error);
@@ -132,8 +136,7 @@ class MacroTrackingCubit extends Cubit<MacroTrackingState> {
       return false;
     }
 
-    await getActiveMacroGoal();
-    await getMacroGoals(limit: state.goalPagination.limit);
+    await _refreshMacroGoals();
     return true;
   }
 
@@ -157,8 +160,7 @@ class MacroTrackingCubit extends Cubit<MacroTrackingState> {
       return false;
     }
 
-    await getActiveMacroGoal();
-    await getMacroGoals(limit: state.goalPagination.limit);
+    await _refreshMacroGoals();
     return true;
   }
 
@@ -181,8 +183,7 @@ class MacroTrackingCubit extends Cubit<MacroTrackingState> {
       return false;
     }
 
-    await getActiveMacroGoal();
-    await getMacroGoals(limit: state.goalPagination.limit);
+    await _refreshMacroGoals();
     return true;
   }
 
@@ -205,9 +206,61 @@ class MacroTrackingCubit extends Cubit<MacroTrackingState> {
       return false;
     }
 
-    await getActiveMacroGoal();
-    await getMacroGoals(limit: state.goalPagination.limit);
+    await _refreshMacroGoals();
     return true;
+  }
+
+  Future<void> _refreshMacroGoals() async {
+    final limit = state.goalPagination.limit;
+    final requestId = ++_goalsRequestId;
+
+    final activeFuture = _macroService.getActiveMacroGoal();
+    final historyFuture = _macroService.getMacroGoals(limit: limit, offset: 0);
+
+    final activeResult = await activeFuture;
+    final historyResult = await historyFuture;
+    if (requestId != _goalsRequestId) return;
+
+    Nullable<MacroGoalDto>? activeGoal;
+    ErrorState? error;
+
+    if (activeResult.isErr()) {
+      if (activeResult.error.type == SingleErrorTypes.notFound) {
+        activeGoal = const Nullable(null);
+      } else {
+        _logger.warning('Failed to load active entity', activeResult.error);
+        error = ErrorState(
+          type: activeResult.error.type.name,
+          description: activeResult.error.description,
+        );
+      }
+    } else {
+      activeGoal = Nullable(activeResult.value);
+    }
+
+    if (historyResult.isErr()) {
+      _logger.warning('Failed to get macro goals', historyResult.error);
+      error ??= ErrorState(
+        type: historyResult.error.type.name,
+        description: historyResult.error.description,
+      );
+    }
+
+    emit(
+      state.copyWith(
+        activeGoal: activeGoal,
+        goalHistory: historyResult.isOk() ? historyResult.value.data : null,
+        goalPagination: historyResult.isOk()
+            ? MacroGoalPagination(
+                total: historyResult.value.total,
+                limit: limit,
+                offset: 0,
+              )
+            : null,
+        isLoading: false,
+        error: Nullable(error),
+      ),
+    );
   }
 
   Future<void> setSelectedDate(DateTime date) async {
@@ -351,6 +404,7 @@ class MacroTrackingCubit extends Cubit<MacroTrackingState> {
     DateTime? logTime,
     MealType mealType = MealType.snack,
   }) async {
+    _logger.info('Logging quick food: ${input.name}');
     emit(state.copyWith(isLoading: true, error: const Nullable(null)));
     final time = (logTime ?? state.selectedDate).toLocal();
     final result = await _macroService.logQuickFood(
@@ -360,6 +414,7 @@ class MacroTrackingCubit extends Cubit<MacroTrackingState> {
     );
     if (result.isErr()) {
       final error = result.error;
+      _logger.warning('Failed to log quick food', error);
       emit(
         state.copyWith(
           isLoading: false,
