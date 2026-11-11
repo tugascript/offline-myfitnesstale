@@ -133,7 +133,8 @@ final class WorkoutRepository implements Repository {
     }
 
     try {
-      final (workouts, total) = await fetchPaginatedWithTotal(
+      final pageResult = await fetchPaginatedWithTotal(
+        failureType: OperationErrorTypes.operationFailure,
         dao: _workoutDao,
         limit: limit,
         offset: offset,
@@ -141,6 +142,8 @@ final class WorkoutRepository implements Repository {
         whereArgs: query.args,
         orderBy: [WorkoutColumns.name.orderCaseInsensitiveAsc],
       );
+      if (pageResult.isErr()) return err(pageResult.error);
+      final (workouts, total) = pageResult.value;
       _logger.info('Got ${workouts.length} workouts');
       return ok(
         PaginatedDto<WorkoutDto, Workout>.mapData(
@@ -231,7 +234,13 @@ final class WorkoutRepository implements Repository {
         );
       }
 
-      final sets = await _loadWorkoutSets(id, resolvedVersion);
+      final setsResult = await _loadWorkoutSets(
+        id,
+        resolvedVersion,
+        SingleErrorTypes.operationFailure,
+      );
+      if (setsResult.isErr()) return err(setsResult.error);
+      final sets = setsResult.value;
       final Set<MuscleGroup> muscleGroups = {};
       final muscles = TargetMuscles(primary: <Muscle>{}, secondary: <Muscle>{});
       for (final set in sets) {
@@ -584,7 +593,11 @@ final class WorkoutRepository implements Repository {
         );
       }
 
-      return ok(await _loadWorkoutSets(workoutId, resolvedVersion));
+      return await _loadWorkoutSets(
+        workoutId,
+        resolvedVersion,
+        OperationErrorTypes.operationFailure,
+      );
     } catch (e) {
       _logger.severe('Error getting workout sets', e);
       return err(
@@ -596,111 +609,129 @@ final class WorkoutRepository implements Repository {
     }
   }
 
-  Future<List<WorkoutSetDto>> _loadWorkoutSets(
-    int workoutId,
-    int resolvedVersion,
-  ) async {
-    final setQuery = WhereBuilder()
-      ..and(WorkoutSetColumns.workoutId.equal, workoutId)
-      ..and(WorkoutSetColumns.workoutVersion.equal, resolvedVersion);
-    final List<WorkoutSet> workoutSets = await _setDao.selectMany(
-      where: setQuery.where,
-      whereArgs: setQuery.args,
-      orderBy: [
-        WorkoutSetColumns.workoutId.orderAsc,
-        WorkoutSetColumns.position.orderAsc,
-      ],
-    );
-    if (workoutSets.isEmpty) {
-      _logger.info('No workout sets found for workout id $workoutId');
-      return [];
-    }
-
-    final setExerciseQuery = WhereBuilder()
-      ..and(WorkoutSetExerciseColumns.workoutId.equal, workoutId)
-      ..and(WorkoutSetExerciseColumns.workoutVersion.equal, resolvedVersion);
-    final optionQuery = WhereBuilder()
-      ..and(WorkoutSetExerciseOptionColumns.workoutId.equal, workoutId)
-      ..and(
-        WorkoutSetExerciseOptionColumns.workoutVersion.equal,
-        resolvedVersion,
+  Future<Result<List<WorkoutSetDto>, ServiceError<E>>> _loadWorkoutSets<
+    E extends ErrorTypes
+  >(int workoutId, int resolvedVersion, E failureType) async {
+    try {
+      final setQuery = WhereBuilder()
+        ..and(WorkoutSetColumns.workoutId.equal, workoutId)
+        ..and(WorkoutSetColumns.workoutVersion.equal, resolvedVersion);
+      final List<WorkoutSet> workoutSets = await _setDao.selectMany(
+        where: setQuery.where,
+        whereArgs: setQuery.args,
+        orderBy: [
+          WorkoutSetColumns.workoutId.orderAsc,
+          WorkoutSetColumns.position.orderAsc,
+        ],
       );
-    final childResults = await Future.wait([
-      _setExerciseDao.selectMany(
-        where: setExerciseQuery.where,
-        whereArgs: setExerciseQuery.args,
-        orderBy: [
-          WorkoutSetExerciseColumns.workoutSetId.orderAsc,
-          WorkoutSetExerciseColumns.position.orderAsc,
-        ],
-      ),
-      _setExerciseOptionDao.selectMany(
-        where: optionQuery.where,
-        whereArgs: optionQuery.args,
-        orderBy: [
-          WorkoutSetExerciseOptionColumns.workoutSetExerciseId.orderAsc,
-          WorkoutSetExerciseOptionColumns.position.orderAsc,
-        ],
-      ),
-    ]);
-    final setExercises = childResults[0] as List<WorkoutSetExercise>;
-    if (setExercises.isEmpty) {
-      _logger.info('No workout set exercises found for workout id $workoutId');
-      return workoutSets.map((ws) => WorkoutSetDto.fromModel(ws)).toList();
+      if (workoutSets.isEmpty) {
+        _logger.info('No workout sets found for workout id $workoutId');
+        return ok([]);
+      }
+
+      final setExerciseQuery = WhereBuilder()
+        ..and(WorkoutSetExerciseColumns.workoutId.equal, workoutId)
+        ..and(WorkoutSetExerciseColumns.workoutVersion.equal, resolvedVersion);
+      final optionQuery = WhereBuilder()
+        ..and(WorkoutSetExerciseOptionColumns.workoutId.equal, workoutId)
+        ..and(
+          WorkoutSetExerciseOptionColumns.workoutVersion.equal,
+          resolvedVersion,
+        );
+      final childResults = await Future.wait([
+        _setExerciseDao.selectMany(
+          where: setExerciseQuery.where,
+          whereArgs: setExerciseQuery.args,
+          orderBy: [
+            WorkoutSetExerciseColumns.workoutSetId.orderAsc,
+            WorkoutSetExerciseColumns.position.orderAsc,
+          ],
+        ),
+        _setExerciseOptionDao.selectMany(
+          where: optionQuery.where,
+          whereArgs: optionQuery.args,
+          orderBy: [
+            WorkoutSetExerciseOptionColumns.workoutSetExerciseId.orderAsc,
+            WorkoutSetExerciseOptionColumns.position.orderAsc,
+          ],
+        ),
+      ]);
+      final setExercises = childResults[0] as List<WorkoutSetExercise>;
+      if (setExercises.isEmpty) {
+        _logger.info(
+          'No workout set exercises found for workout id $workoutId',
+        );
+        return ok(
+          workoutSets.map((ws) => WorkoutSetDto.fromModel(ws)).toList(),
+        );
+      }
+      final setExerciseOptions =
+          childResults[1] as List<WorkoutSetExerciseOption>;
+
+      final Set<int> exerciseIds = <int>{
+        ...setExercises.map((e) => e.exerciseId),
+        ...setExerciseOptions.map((e) => e.exerciseId),
+      };
+      final Map<int, List<WorkoutSetExercise>> setExerciseMap = setExercises
+          .fold<Map<int, List<WorkoutSetExercise>>>({}, (prevVal, se) {
+            prevVal.putIfAbsent(se.workoutSetId, () => []).add(se);
+            return prevVal;
+          });
+
+      final Map<int, List<WorkoutSetExerciseOption>> setExerciseOptionsMap =
+          setExerciseOptions.fold<Map<int, List<WorkoutSetExerciseOption>>>(
+            {},
+            (prevVal, seo) {
+              prevVal.putIfAbsent(seo.workoutSetExerciseId, () => []).add(seo);
+              return prevVal;
+            },
+          );
+      final exercisesResult = await selectManyInChunks(
+        failureType: failureType,
+        dao: _exerciseDao,
+        column: ExerciseColumns.id,
+        values: exerciseIds,
+      );
+      if (exercisesResult.isErr()) return err(exercisesResult.error);
+      final exercises = exercisesResult.value;
+      final Map<int, ExerciseDto> exerciseMap = Map.fromEntries(
+        exercises.map((e) => MapEntry(e.id!, ExerciseDto.fromModel(e))),
+      );
+
+      return ok(
+        workoutSets
+            .map(
+              (ws) => WorkoutSetDto.fromModel(
+                ws,
+                exercises: setExerciseMap[ws.id!]
+                    ?.map(
+                      (se) => WorkoutSetExerciseDto.fromModel(
+                        se,
+                        exercise: exerciseMap[se.exerciseId],
+                        options: setExerciseOptionsMap[se.id]
+                            ?.map(
+                              (so) => WorkoutSetExerciseOptionDto.fromModel(
+                                so,
+                                exercise: exerciseMap[so.exerciseId],
+                              ),
+                            )
+                            .toList(),
+                      ),
+                    )
+                    .toList(),
+              ),
+            )
+            .toList(),
+      );
+    } catch (error, stackTrace) {
+      _logger.severe('Failed to load workout sets', error, stackTrace);
+      return err(
+        ServiceError(
+          type: failureType,
+          description: 'Failed to load workout sets',
+        ),
+      );
     }
-    final setExerciseOptions =
-        childResults[1] as List<WorkoutSetExerciseOption>;
-
-    final Set<int> exerciseIds = <int>{
-      ...setExercises.map((e) => e.exerciseId),
-      ...setExerciseOptions.map((e) => e.exerciseId),
-    };
-    final Map<int, List<WorkoutSetExercise>> setExerciseMap = setExercises
-        .fold<Map<int, List<WorkoutSetExercise>>>({}, (prevVal, se) {
-          prevVal.putIfAbsent(se.workoutSetId, () => []).add(se);
-          return prevVal;
-        });
-
-    final Map<int, List<WorkoutSetExerciseOption>> setExerciseOptionsMap =
-        setExerciseOptions.fold<Map<int, List<WorkoutSetExerciseOption>>>({}, (
-          prevVal,
-          seo,
-        ) {
-          prevVal.putIfAbsent(seo.workoutSetExerciseId, () => []).add(seo);
-          return prevVal;
-        });
-    final List<Exercise> exercises = await selectManyInChunks(
-      dao: _exerciseDao,
-      column: ExerciseColumns.id,
-      values: exerciseIds,
-    );
-    final Map<int, ExerciseDto> exerciseMap = Map.fromEntries(
-      exercises.map((e) => MapEntry(e.id!, ExerciseDto.fromModel(e))),
-    );
-
-    return workoutSets
-        .map(
-          (ws) => WorkoutSetDto.fromModel(
-            ws,
-            exercises: setExerciseMap[ws.id!]
-                ?.map(
-                  (se) => WorkoutSetExerciseDto.fromModel(
-                    se,
-                    exercise: exerciseMap[se.exerciseId],
-                    options: setExerciseOptionsMap[se.id]
-                        ?.map(
-                          (so) => WorkoutSetExerciseOptionDto.fromModel(
-                            so,
-                            exercise: exerciseMap[so.exerciseId],
-                          ),
-                        )
-                        .toList(),
-                  ),
-                )
-                .toList(),
-          ),
-        )
-        .toList();
   }
 
   Future<Result<void, ServiceError<SingleErrorTypes>>> batchUpsertWorkoutSets({
@@ -718,40 +749,14 @@ final class WorkoutRepository implements Repository {
       return previousValue;
     });
     try {
-      final workout = await _workoutDao.selectOne(workoutId);
-      if (workout == null) {
-        _logger.warning('Workout with id $workoutId not found');
-        return err(
-          const ServiceError(
-            type: SingleErrorTypes.notFound,
-            description: 'Workout not found',
-          ),
-        );
-      }
-
-      final existingSetQuery = WhereBuilder()
-        ..and(WorkoutSetColumns.workoutId.equal, workoutId)
-        ..and(WorkoutSetColumns.workoutVersion.equal, workout.version);
-      final preloadResults = await Future.wait([
-        _workoutRecordDao.count(
-          where: WorkoutRecordColumns.workoutId.equal,
-          whereArgs: [workoutId],
-        ),
-        selectManyInChunks(
-          dao: _exerciseDao,
-          column: ExerciseColumns.id,
-          values: exerciseIds,
-        ),
-        _setDao.selectMany(
-          where: existingSetQuery.where,
-          whereArgs: existingSetQuery.args,
-        ),
-      ]);
-      final workoutRecords = preloadResults[0] as int;
-      final bool updateVersion = workoutRecords > 0;
-      final exercises = preloadResults[1] as List<Exercise>;
-      final List<WorkoutSet> existingSets =
-          preloadResults[2] as List<WorkoutSet>;
+      final exercisesResult = await selectManyInChunks(
+        failureType: SingleErrorTypes.operationFailure,
+        dao: _exerciseDao,
+        column: ExerciseColumns.id,
+        values: exerciseIds,
+      );
+      if (exercisesResult.isErr()) return err(exercisesResult.error);
+      final exercises = exercisesResult.value;
       if (exercises.length != exerciseIds.length) {
         _logger.warning(
           'Not all exercises found, ${exercises.length} found, ${exerciseIds.length} expected',
@@ -771,32 +776,59 @@ final class WorkoutRepository implements Repository {
         previousValue[element.id!] = ExerciseDto.fromModel(element);
         return previousValue;
       });
-      final Set<int> existingSetIds = existingSets
-          .map((set) => set.id!)
-          .toSet();
-
-      final (
-        List<WorkoutSetUpsertInput> setsToCreate,
-        List<WorkoutSetUpsertInput> setsToUpdate,
-      ) = inputs.fold(([], []), (previousValue, element) {
-        if (element.id == null || updateVersion) {
-          previousValue.$1.add(element);
-          return previousValue;
+      return await _setDao.startTransaction<
+        Result<void, ServiceError<SingleErrorTypes>>
+      >((txn) async {
+        final workout = await _workoutDao.selectOne(workoutId, txn);
+        if (workout == null) {
+          _logger.warning('Workout with id $workoutId not found');
+          return err(
+            const ServiceError(
+              type: SingleErrorTypes.notFound,
+              description: 'Workout not found',
+            ),
+          );
         }
 
-        if (existingSetIds.contains(element.id) && !updateVersion) {
-          previousValue.$2.add(element);
+        final existingSetQuery = WhereBuilder()
+          ..and(WorkoutSetColumns.workoutId.equal, workoutId)
+          ..and(WorkoutSetColumns.workoutVersion.equal, workout.version);
+        final workoutRecords = await _workoutRecordDao.count(
+          where: WorkoutRecordColumns.workoutId.equal,
+          whereArgs: [workoutId],
+          trx: txn,
+        );
+        final bool updateVersion = workoutRecords > 0;
+        final existingSets = await _setDao.selectMany(
+          where: existingSetQuery.where,
+          whereArgs: existingSetQuery.args,
+          trx: txn,
+        );
+        final Set<int> existingSetIds = existingSets
+            .map((set) => set.id!)
+            .toSet();
+
+        final (
+          List<WorkoutSetUpsertInput> setsToCreate,
+          List<WorkoutSetUpsertInput> setsToUpdate,
+        ) = inputs.fold(([], []), (previousValue, element) {
+          if (element.id == null || updateVersion) {
+            previousValue.$1.add(element);
+            return previousValue;
+          }
+
+          if (existingSetIds.contains(element.id) && !updateVersion) {
+            previousValue.$2.add(element);
+            return previousValue;
+          }
+
           return previousValue;
-        }
+        });
 
-        return previousValue;
-      });
+        final Set<int> idsToDelete = updateVersion
+            ? <int>{}
+            : existingSetIds.difference(setsToUpdate.map((e) => e.id!).toSet());
 
-      final Set<int> idsToDelete = updateVersion
-          ? <int>{}
-          : existingSetIds.difference(setsToUpdate.map((e) => e.id!).toSet());
-
-      await _setDao.startTransaction((txn) async {
         final int workoutVersion = updateVersion
             ? workout.version + 1
             : workout.version;
@@ -902,18 +934,22 @@ final class WorkoutRepository implements Repository {
               .toList();
 
           if (setExerciseIdsToDelete.isNotEmpty) {
-            await deleteManyInChunks(
+            final optionsDeleted = await deleteManyInChunks(
+              failureType: SingleErrorTypes.operationFailure,
               dao: _setExerciseOptionDao,
               column: WorkoutSetExerciseOptionColumns.workoutSetExerciseId,
               values: setExerciseIdsToDelete,
               trx: txn,
             );
-            await deleteManyInChunks(
+            if (optionsDeleted.isErr()) throw optionsDeleted.error;
+            final exercisesDeleted = await deleteManyInChunks(
+              failureType: SingleErrorTypes.operationFailure,
               dao: _setExerciseDao,
               column: WorkoutSetExerciseColumns.id,
               values: setExerciseIdsToDelete,
               trx: txn,
             );
+            if (exercisesDeleted.isErr()) throw exercisesDeleted.error;
           }
 
           if (createSetExercises.isNotEmpty) {
@@ -1009,9 +1045,11 @@ final class WorkoutRepository implements Repository {
           updatedAt: DateUtilities.getNowUtcUnix(),
         );
         await _workoutDao.update(updatedWorkout, txn);
+        _logger.info('Batch upserting workout sets completed successfully');
+        return ok(null);
       });
-      _logger.info('Batch upserting workout sets completed successfully');
-      return ok(null);
+    } on ServiceError<SingleErrorTypes> catch (error) {
+      return err(error);
     } catch (e) {
       _logger.severe('Error batch upserting workout sets', e);
       return err(

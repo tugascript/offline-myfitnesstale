@@ -17,6 +17,10 @@
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:myfitnesstale/src/data/models/sqlite/day_macro_goal_model.dart';
+import 'package:myfitnesstale/src/data/repositories/meal_plans/meal_plan_record_repository.dart';
+import 'package:myfitnesstale/src/data/repositories/meal_plans/inputs/meal_plan_day_input.dart';
+import 'package:myfitnesstale/src/data/repositories/core/repository_helpers.dart';
+import 'package:myfitnesstale/src/data/models/sqlite/meal_plan_day_record_model.dart';
 import 'package:myfitnesstale/src/data/models/sqlite/recipe_item_model.dart';
 import 'package:myfitnesstale/src/data/models/sqlite/week_macro_goal_model.dart';
 import 'package:myfitnesstale/src/data/models/sqlite/weight_goal_model.dart';
@@ -441,6 +445,98 @@ void main() {
       expect(saved.weeks.single.id, result.value.weeks.single.id);
     }
   });
+
+  test('query helpers return typed failures for SQLite errors', () async {
+    final dao = Dao<Workout>(
+      databaseHelper: DatabaseHelper(),
+      tableName: 'missing_workout_table',
+      fromMap: Workout.fromMap,
+    );
+    final page = await fetchPaginatedWithTotal(
+      dao: dao,
+      failureType: OperationErrorTypes.operationFailure,
+      limit: 10,
+      offset: 10,
+    );
+    final rows = await selectManyInChunks(
+      dao: dao,
+      failureType: SingleErrorTypes.operationFailure,
+      column: WorkoutColumns.id,
+      values: [1],
+    );
+    expect(page.error.type, OperationErrorTypes.operationFailure);
+    expect(rows.error.type, SingleErrorTypes.operationFailure);
+  });
+
+  test(
+    'starting an older meal plan version uses its schedule and totals',
+    () async {
+      final plans = MealPlanRepository.create();
+      final records = MealPlanRecordRepository.create();
+      MealPlanInput input(List<MealPlanDayInput> days) => MealPlanInput(
+        name: uniqueName('Versioned meal plan'),
+        weeks: [
+          MealPlanWeekInput(
+            weekNumber: 1,
+            phase: MealPlanPhase.maintain,
+            days: days,
+          ),
+        ],
+      );
+      final original = (await plans.createMealPlan(
+        input(const [MealPlanDayInput(day: 1)]),
+      )).value;
+      final edited = (await plans.updateMealPlan(
+        original.id,
+        input(const [MealPlanDayInput(day: 1), MealPlanDayInput(day: 2)]),
+      )).value;
+      expect(edited.totalDays, 2);
+
+      final started = (await records.startMealPlan(
+        mealPlanId: original.id,
+        version: original.version,
+      )).value;
+      final active = (await records.getActiveMealPlanRecord()).value;
+      expect(started.totalDays, 1);
+      expect(active.totalDays, 1);
+      expect(
+        active.weeks.single.days.single.mealPlanDayId,
+        original.weeks.single.days.single.id,
+      );
+    },
+  );
+
+  test(
+    'starting a replacement meal plan rolls back when a day fails to save',
+    () async {
+      final plans = MealPlanRepository.create();
+      final records = MealPlanRecordRepository.create();
+      final plan = (await plans.createMealPlan(
+        MealPlanInput(
+          name: uniqueName('Meal plan with one day'),
+          weeks: const [
+            MealPlanWeekInput(
+              weekNumber: 1,
+              phase: MealPlanPhase.maintain,
+              days: [MealPlanDayInput(day: 1)],
+            ),
+          ],
+        ),
+      )).value;
+      final active = (await records.startMealPlan(mealPlanId: plan.id)).value;
+      final db = await testDatabase.db;
+      await db.execute("""
+      CREATE TEMP TRIGGER fail_meal_plan_day_record
+      BEFORE INSERT ON ${MealPlanDayRecord.table}
+      BEGIN SELECT RAISE(ABORT, 'forced test failure'); END
+    """);
+      addTearDown(() => db.execute('DROP TRIGGER fail_meal_plan_day_record'));
+
+      final failed = await records.startMealPlan(mealPlanId: plan.id);
+      expect(failed.error.type, SingleErrorTypes.operationFailure);
+      expect((await records.getActiveMealPlanRecord()).value.id, active.id);
+    },
+  );
 
   test('favoriting an open meal plan preserves its loaded weeks', () async {
     final repo = MealPlanRepository.create();

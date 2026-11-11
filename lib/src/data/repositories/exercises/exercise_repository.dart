@@ -121,7 +121,8 @@ final class ExerciseRepository implements Repository {
     }
 
     try {
-      final (exercises, total) = await fetchPaginatedWithTotal(
+      final pageResult = await fetchPaginatedWithTotal(
+        failureType: OperationErrorTypes.operationFailure,
         dao: _exerciseDao,
         limit: limit,
         offset: offset,
@@ -129,6 +130,8 @@ final class ExerciseRepository implements Repository {
         whereArgs: query.args,
         orderBy: [ExerciseColumns.name.orderCaseInsensitiveAsc],
       );
+      if (pageResult.isErr()) return err(pageResult.error);
+      final (exercises, total) = pageResult.value;
       _logger.info("Found ${exercises.length} exercises");
       return ok(
         PaginatedDto<ExerciseDto, Exercise>.mapData(
@@ -228,14 +231,17 @@ final class ExerciseRepository implements Repository {
     }
   }
 
-  Future<Map<int, Exercise>> getExercisesByIdsLoader(List<int> ids) async {
-    final List<Exercise> exercises = await selectManyInChunks(
+  Future<Result<Map<int, Exercise>, ServiceError<OperationErrorTypes>>>
+  getExercisesByIdsLoader(List<int> ids) async {
+    final exercises = await selectManyInChunks(
+      failureType: OperationErrorTypes.operationFailure,
       dao: _exerciseDao,
       column: ExerciseColumns.id,
       values: ids,
     );
+    if (exercises.isErr()) return err(exercises.error);
 
-    return {for (final Exercise e in exercises) e.id!: e};
+    return ok({for (final exercise in exercises.value) exercise.id!: exercise});
   }
 
   Future<Result<ExerciseDto, ServiceError<SingleErrorTypes>>> createExercise(
@@ -266,11 +272,14 @@ final class ExerciseRepository implements Repository {
         );
       }
 
-      final List<Equipment> equipments = await selectManyInChunks(
+      final equipmentsResult = await selectManyInChunks(
+        failureType: SingleErrorTypes.operationFailure,
         dao: _equipmentDao,
         column: EquipmentColumns.id,
         values: input.equipmentIds,
       );
+      if (equipmentsResult.isErr()) return err(equipmentsResult.error);
+      final List<Equipment> equipments = equipmentsResult.value;
       if (equipments.length != input.equipmentIds.length) {
         _logger.info(
           "Not all equipments were found, ${equipments.length} equipments found, ${input.equipmentIds.length} equipments expected",
@@ -322,19 +331,23 @@ final class ExerciseRepository implements Repository {
   }) async {
     _logger.info("Creating ${exerciseInputs.length} exercises...");
     try {
-      Future<List<ExerciseDto>> create(Transaction txn) async {
+      Future<Result<List<ExerciseDto>, ServiceError<OperationErrorTypes>>>
+      create(Transaction txn) async {
         final List<ExerciseDto> exercises = [];
         final Set<int> allEquipmentIds = {
           for (final input in exerciseInputs) ...input.equipmentIds,
         };
         final Map<int, EquipmentDto> equipmentMap = {};
         if (allEquipmentIds.isNotEmpty) {
-          final fetched = await selectManyInChunks(
+          final fetchedResult = await selectManyInChunks(
+            failureType: OperationErrorTypes.operationFailure,
             dao: _equipmentDao,
             column: EquipmentColumns.id,
             values: allEquipmentIds,
             trx: txn,
           );
+          if (fetchedResult.isErr()) return err(fetchedResult.error);
+          final fetched = fetchedResult.value;
           for (final eq in fetched) {
             equipmentMap[eq.id!] = EquipmentDto.fromModel(eq);
           }
@@ -388,14 +401,12 @@ final class ExerciseRepository implements Repository {
           await _exerciseEquipmentJoinDao.insertMany(allJoinRows, txn);
         }
 
-        return exercises;
+        return ok(exercises);
       }
 
-      final List<ExerciseDto> exercises = transaction != null
+      return transaction != null
           ? await create(transaction)
           : await _exerciseDao.startTransaction(create);
-
-      return ok(exercises);
     } catch (e) {
       _logger.severe("Failed to creates exercises", e);
       return err(
@@ -445,11 +456,14 @@ final class ExerciseRepository implements Repository {
         return ok(ExerciseDto.fromModel(updatedExercise, equipments: const []));
       }
 
-      final List<Equipment> equipments = await selectManyInChunks(
+      final equipmentsResult = await selectManyInChunks(
+        failureType: SingleErrorTypes.operationFailure,
         dao: _equipmentDao,
         column: EquipmentColumns.id,
         values: input.equipmentIds,
       );
+      if (equipmentsResult.isErr()) return err(equipmentsResult.error);
+      final List<Equipment> equipments = equipmentsResult.value;
       if (equipments.length != input.equipmentIds.length) {
         _logger.info(
           "Not all equipments were found, ${equipments.length} equipments found, ${input.equipmentIds.length} equipments expected",
@@ -579,7 +593,8 @@ final class ExerciseRepository implements Repository {
     }
 
     try {
-      final (equipments, total) = await fetchPaginatedWithTotal(
+      final pageResult = await fetchPaginatedWithTotal(
+        failureType: OperationErrorTypes.operationFailure,
         dao: _equipmentDao,
         limit: limit,
         offset: offset,
@@ -587,6 +602,8 @@ final class ExerciseRepository implements Repository {
         whereArgs: query.args,
         orderBy: [EquipmentColumns.name.orderCaseInsensitiveAsc],
       );
+      if (pageResult.isErr()) return err(pageResult.error);
+      final (equipments, total) = pageResult.value;
       _logger.info('Got ${equipments.length} equipments');
       return ok(
         PaginatedDto<EquipmentDto, Equipment>.mapData(

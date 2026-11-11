@@ -137,7 +137,8 @@ final class WeightRecordRepository implements Repository {
         );
       }
 
-      final (goals, total) = await fetchPaginatedWithTotal(
+      final pageResult = await fetchPaginatedWithTotal(
+        failureType: OperationErrorTypes.operationFailure,
         dao: _weightGoalDao,
         where: where.where,
         whereArgs: where.args,
@@ -145,6 +146,8 @@ final class WeightRecordRepository implements Repository {
         offset: offset,
         orderBy: [WeightGoalColumns.startDate.orderDesc],
       );
+      if (pageResult.isErr()) return err(pageResult.error);
+      final (goals, total) = pageResult.value;
       _logger.info('Got ${goals.length} weight goals');
       return ok(
         PaginatedDto<WeightGoalDto, WeightGoal>.mapData(
@@ -472,7 +475,8 @@ final class WeightRecordRepository implements Repository {
     }
 
     try {
-      final (records, total) = await fetchPaginatedWithTotal(
+      final pageResult = await fetchPaginatedWithTotal(
+        failureType: OperationErrorTypes.operationFailure,
         dao: _weightRecordDao,
         limit: limit,
         offset: offset,
@@ -480,6 +484,8 @@ final class WeightRecordRepository implements Repository {
         whereArgs: query.args,
         orderBy: [WeightRecordColumns.recordDate.orderDesc],
       );
+      if (pageResult.isErr()) return err(pageResult.error);
+      final (records, total) = pageResult.value;
       _logger.info('Got ${records.length} weight records');
       return ok(
         PaginatedDto<WeightRecordDto, WeightRecord>.mapData(

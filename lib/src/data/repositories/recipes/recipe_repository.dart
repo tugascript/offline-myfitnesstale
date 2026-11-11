@@ -15,6 +15,8 @@
 // You should have received a copy of the GNU General Public License
 // along with My Fitness Tale.  If not, see <https://www.gnu.org/licenses/>.
 
+import 'dart:async';
+
 import 'package:logging/logging.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -163,7 +165,9 @@ final class RecipeRepository implements Repository {
         );
       }
 
-      final itemDtos = await _loadRecipeItemDtos(id);
+      final itemsResult = await _loadRecipeItemDtos(id);
+      if (itemsResult.isErr()) return err(itemsResult.error);
+      final itemDtos = itemsResult.value;
       return ok(RecipeDto.fromModel(recipe, items: itemDtos));
     } on ServiceError<SingleErrorTypes> catch (error) {
       return err(error);
@@ -199,10 +203,8 @@ final class RecipeRepository implements Repository {
         where.and(RecipeColumns.isFavorite.equal, 1);
       }
 
-      final (
-        List<Recipe> recipes,
-        int total,
-      ) = await fetchPaginatedWithTotal<Recipe>(
+      final pageResult = await fetchPaginatedWithTotal(
+        failureType: OperationErrorTypes.operationFailure,
         dao: _recipeDao,
         limit: limit,
         offset: offset,
@@ -210,6 +212,8 @@ final class RecipeRepository implements Repository {
         whereArgs: where.args,
         orderBy: [RecipeColumns.name.orderCaseInsensitiveAsc],
       );
+      if (pageResult.isErr()) return err(pageResult.error);
+      final (List<Recipe> recipes, int total) = pageResult.value;
 
       return ok(
         PaginatedDto<RecipeDto, Recipe>.mapData(
@@ -333,12 +337,15 @@ final class RecipeRepository implements Repository {
         );
       }
 
+      final itemsResult = await _loadRecipeItemDtos(id);
+      if (itemsResult.isErr()) return err(itemsResult.error);
+      final itemDtos = itemsResult.value;
+
       final updated = recipe.copyWith(
         isFavorite: !recipe.isFavorite,
         updatedAt: DateUtilities.getNowUtcUnix(),
       );
       await _recipeDao.update(updated);
-      final itemDtos = await _loadRecipeItemDtos(id);
 
       _logger.info(
         'Toggled favorite for recipe with id $id to ${updated.isFavorite}',
@@ -430,24 +437,27 @@ final class RecipeRepository implements Repository {
         .whereType<int>()
         .toSet();
 
-    final preloadResults = await Future.wait([
-      selectManyInChunks<Food>(
+    final (foods, portions) = await (
+      selectManyInChunks(
+        failureType: SingleErrorTypes.operationFailure,
         dao: _foodDao,
         column: FoodColumns.id,
         values: foodIds,
       ),
-      selectManyInChunks<FoodPortion>(
+      selectManyInChunks(
+        failureType: SingleErrorTypes.operationFailure,
         dao: _portionDao,
         column: FoodPortionColumns.id,
         values: portionIds,
       ),
-    ]);
+    ).wait;
+    if (foods.isErr()) return err(foods.error);
+    if (portions.isErr()) return err(portions.error);
     final foodById = <int, Food>{
-      for (final food in preloadResults[0] as List<Food>) food.id!: food,
+      for (final food in foods.value) food.id!: food,
     };
     final portionById = <int, FoodPortion>{
-      for (final portion in preloadResults[1] as List<FoodPortion>)
-        portion.id!: portion,
+      for (final portion in portions.value) portion.id!: portion,
     };
 
     int totalCals = 0;
@@ -574,51 +584,67 @@ final class RecipeRepository implements Repository {
     return itemDtos;
   }
 
-  Future<List<RecipeItemDto>> _loadRecipeItemDtos(int recipeId) async {
-    final List<RecipeItem> items = await _itemDao.selectMany(
-      where: RecipeItemColumns.recipeId.equal,
-      whereArgs: [recipeId],
-    );
-    if (items.isEmpty) {
-      return [];
+  Future<Result<List<RecipeItemDto>, ServiceError<SingleErrorTypes>>>
+  _loadRecipeItemDtos(int recipeId) async {
+    try {
+      final List<RecipeItem> items = await _itemDao.selectMany(
+        where: RecipeItemColumns.recipeId.equal,
+        whereArgs: [recipeId],
+      );
+      if (items.isEmpty) {
+        return ok([]);
+      }
+
+      final foodIds = items.map((item) => item.foodId).toSet();
+      final portionIds = items
+          .map((item) => item.portionId)
+          .whereType<int>()
+          .toSet();
+      final (foods, portions) = await (
+        selectManyInChunks(
+          failureType: SingleErrorTypes.operationFailure,
+          dao: _foodDao,
+          column: FoodColumns.id,
+          values: foodIds,
+        ),
+        selectManyInChunks(
+          failureType: SingleErrorTypes.operationFailure,
+          dao: _portionDao,
+          column: FoodPortionColumns.id,
+          values: portionIds,
+        ),
+      ).wait;
+      if (foods.isErr()) return err(foods.error);
+      if (portions.isErr()) return err(portions.error);
+
+      final foodNames = <int, String>{
+        for (final food in foods.value) food.id!: food.name,
+      };
+      final portionNames = <int, String>{
+        for (final portion in portions.value) portion.id!: portion.portionName,
+      };
+
+      return ok(
+        items
+            .map(
+              (item) => RecipeItemDto.fromModel(
+                item,
+                foodName: foodNames[item.foodId],
+                portionName: item.portionId != null
+                    ? portionNames[item.portionId]
+                    : null,
+              ),
+            )
+            .toList(),
+      );
+    } catch (error, stackTrace) {
+      _logger.severe('Failed to load recipe items', error, stackTrace);
+      return err(
+        const ServiceError(
+          type: SingleErrorTypes.operationFailure,
+          description: 'Failed to load recipe items',
+        ),
+      );
     }
-
-    final foodIds = items.map((item) => item.foodId).toSet();
-    final portionIds = items
-        .map((item) => item.portionId)
-        .whereType<int>()
-        .toSet();
-    final results = await Future.wait([
-      selectManyInChunks<Food>(
-        dao: _foodDao,
-        column: FoodColumns.id,
-        values: foodIds,
-      ),
-      selectManyInChunks<FoodPortion>(
-        dao: _portionDao,
-        column: FoodPortionColumns.id,
-        values: portionIds,
-      ),
-    ]);
-
-    final foodNames = <int, String>{
-      for (final food in results[0] as List<Food>) food.id!: food.name,
-    };
-    final portionNames = <int, String>{
-      for (final portion in results[1] as List<FoodPortion>)
-        portion.id!: portion.portionName,
-    };
-
-    return items
-        .map(
-          (item) => RecipeItemDto.fromModel(
-            item,
-            foodName: foodNames[item.foodId],
-            portionName: item.portionId != null
-                ? portionNames[item.portionId]
-                : null,
-          ),
-        )
-        .toList();
   }
 }

@@ -15,6 +15,8 @@
 // You should have received a copy of the GNU General Public License
 // along with My Fitness Tale.  If not, see <https://www.gnu.org/licenses/>.
 
+import 'dart:async';
+
 import 'package:logging/logging.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -190,27 +192,33 @@ final class MealPlanRepository implements Repository {
         }
       }
 
-      final results = await Future.wait([
-        selectManyInChunks<Recipe>(
+      final (recipesResult, foodsResult, portionsResult) = await (
+        selectManyInChunks(
+          failureType: SingleErrorTypes.operationFailure,
           dao: _recipeDao,
           column: RecipeColumns.id,
           values: recipeIds,
         ),
-        selectManyInChunks<Food>(
+        selectManyInChunks(
+          failureType: SingleErrorTypes.operationFailure,
           dao: _foodDao,
           column: FoodColumns.id,
           values: foodIds,
         ),
-        selectManyInChunks<FoodPortion>(
+        selectManyInChunks(
+          failureType: SingleErrorTypes.operationFailure,
           dao: _foodPortionDao,
           column: FoodPortionColumns.id,
           values: portionIds,
         ),
-      ]);
+      ).wait;
+      if (recipesResult.isErr()) return err(recipesResult.error);
+      if (foodsResult.isErr()) return err(foodsResult.error);
+      if (portionsResult.isErr()) return err(portionsResult.error);
 
-      final recipes = results[0] as List<Recipe>;
-      final foods = results[1] as List<Food>;
-      final portions = results[2] as List<FoodPortion>;
+      final recipes = recipesResult.value;
+      final foods = foodsResult.value;
+      final portions = portionsResult.value;
       final recipeById = {for (final recipe in recipes) recipe.id!: recipe};
       final foodById = {for (final food in foods) food.id!: food};
       final portionById = {
@@ -639,27 +647,36 @@ final class MealPlanRepository implements Repository {
       }
 
       final weekIds = weeks.map((week) => week.id!).toList();
-      final days = await selectManyInChunks<MealPlanDay>(
+      final daysResult = await selectManyInChunks(
+        failureType: SingleErrorTypes.operationFailure,
         dao: _dayDao,
         column: MealPlanDayColumns.mealPlanWeekId,
         values: weekIds,
         orderBy: [MealPlanDayColumns.day.orderAsc],
       );
+      if (daysResult.isErr()) return err(daysResult.error);
+      final days = daysResult.value;
 
       final dayIds = days.map((day) => day.id!).toList();
-      final meals = await selectManyInChunks<MealPlanMeal>(
+      final mealsResult = await selectManyInChunks(
+        failureType: SingleErrorTypes.operationFailure,
         dao: _mealDao,
         column: MealPlanMealColumns.mealPlanDayId,
         values: dayIds,
         orderBy: [MealPlanMealColumns.position.orderAsc],
       );
+      if (mealsResult.isErr()) return err(mealsResult.error);
+      final meals = mealsResult.value;
 
       final mealIds = meals.map((meal) => meal.id!).toList();
-      final items = await selectManyInChunks<MealPlanMealItem>(
+      final itemsResult = await selectManyInChunks(
+        failureType: SingleErrorTypes.operationFailure,
         dao: _itemDao,
         column: MealPlanMealItemColumns.mealPlanMealId,
         values: mealIds,
       );
+      if (itemsResult.isErr()) return err(itemsResult.error);
+      final items = itemsResult.value;
 
       final recipeIds = meals
           .map((meal) => meal.recipeId)
@@ -671,26 +688,32 @@ final class MealPlanRepository implements Repository {
           .whereType<int>()
           .toSet();
 
-      final referenceResults = await Future.wait([
-        selectManyInChunks<Recipe>(
+      final (recipesResult, foodsResult, portionsResult) = await (
+        selectManyInChunks(
+          failureType: SingleErrorTypes.operationFailure,
           dao: _recipeDao,
           column: RecipeColumns.id,
           values: recipeIds,
         ),
-        selectManyInChunks<Food>(
+        selectManyInChunks(
+          failureType: SingleErrorTypes.operationFailure,
           dao: _foodDao,
           column: FoodColumns.id,
           values: foodIds,
         ),
-        selectManyInChunks<FoodPortion>(
+        selectManyInChunks(
+          failureType: SingleErrorTypes.operationFailure,
           dao: _foodPortionDao,
           column: FoodPortionColumns.id,
           values: portionIds,
         ),
-      ]);
-      final recipes = referenceResults[0] as List<Recipe>;
-      final foods = referenceResults[1] as List<Food>;
-      final portions = referenceResults[2] as List<FoodPortion>;
+      ).wait;
+      if (recipesResult.isErr()) return err(recipesResult.error);
+      if (foodsResult.isErr()) return err(foodsResult.error);
+      if (portionsResult.isErr()) return err(portionsResult.error);
+      final recipes = recipesResult.value;
+      final foods = foodsResult.value;
+      final portions = portionsResult.value;
 
       final recipeById = {for (final recipe in recipes) recipe.id!: recipe};
       final foodById = {for (final food in foods) food.id!: food};
@@ -795,10 +818,8 @@ final class MealPlanRepository implements Repository {
         where.and(MealPlanColumns.isFavorite.equal, isFavorite ? 1 : 0);
       }
 
-      final (
-        List<MealPlan> plans,
-        int total,
-      ) = await fetchPaginatedWithTotal<MealPlan>(
+      final pageResult = await fetchPaginatedWithTotal(
+        failureType: OperationErrorTypes.operationFailure,
         dao: _mealPlanDao,
         limit: limit,
         offset: offset,
@@ -806,6 +827,8 @@ final class MealPlanRepository implements Repository {
         whereArgs: where.args,
         orderBy: [MealPlanColumns.name.orderCaseInsensitiveAsc],
       );
+      if (pageResult.isErr()) return err(pageResult.error);
+      final (List<MealPlan> plans, int total) = pageResult.value;
 
       return ok(
         PaginatedDto<MealPlanDto, MealPlan>.mapData(

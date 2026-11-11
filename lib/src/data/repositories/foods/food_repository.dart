@@ -181,7 +181,8 @@ final class FoodRepository implements Repository {
         where.and(FoodColumns.isFavorite.equal, 1);
       }
 
-      final (List<Food> foods, int total) = await fetchPaginatedWithTotal<Food>(
+      final pageResult = await fetchPaginatedWithTotal(
+        failureType: OperationErrorTypes.operationFailure,
         dao: _foodDao,
         limit: limit,
         offset: offset,
@@ -189,6 +190,8 @@ final class FoodRepository implements Repository {
         whereArgs: where.args,
         orderBy: [FoodColumns.name.orderCaseInsensitiveAsc],
       );
+      if (pageResult.isErr()) return err(pageResult.error);
+      final (List<Food> foods, int total) = pageResult.value;
 
       _logger.info('Retrieved ${foods.length} foods');
       return ok(

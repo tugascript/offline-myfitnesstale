@@ -153,7 +153,8 @@ final class WorkoutRecordRepository implements Repository {
         query.and(WorkoutRecordColumns.workoutId.equal, workoutId);
       }
 
-      final (records, total) = await fetchPaginatedWithTotal(
+      final pageResult = await fetchPaginatedWithTotal(
+        failureType: SingleErrorTypes.operationFailure,
         dao: _workoutRecordDao,
         limit: limit,
         offset: offset,
@@ -161,6 +162,8 @@ final class WorkoutRecordRepository implements Repository {
         whereArgs: query.args,
         orderBy: [WorkoutRecordColumns.startedAt.orderDesc],
       );
+      if (pageResult.isErr()) return err(pageResult.error);
+      final (records, total) = pageResult.value;
       _logger.info('Got ${records.length} workout records');
       if (workoutId != null || records.isEmpty) {
         return ok(
@@ -174,11 +177,14 @@ final class WorkoutRecordRepository implements Repository {
         );
       }
 
-      final List<Workout> workouts = await selectManyInChunks(
+      final workoutsResult = await selectManyInChunks(
+        failureType: SingleErrorTypes.operationFailure,
         dao: _workoutDao,
         column: WorkoutColumns.id,
         values: records.map((r) => r.workoutId),
       );
+      if (workoutsResult.isErr()) return err(workoutsResult.error);
+      final List<Workout> workouts = workoutsResult.value;
       final Map<int, WorkoutDto> workoutMap = {
         for (final workout in workouts)
           workout.id!: WorkoutDto.fromModel(workout),
@@ -261,11 +267,14 @@ final class WorkoutRecordRepository implements Repository {
         );
       }
 
-      final exercises = await selectManyInChunks(
+      final exercisesResult = await selectManyInChunks(
+        failureType: SingleErrorTypes.operationFailure,
         dao: _exerciseDao,
         column: ExerciseColumns.id,
         values: setExerciseRecords.map((s) => s.exerciseId),
       );
+      if (exercisesResult.isErr()) return err(exercisesResult.error);
+      final exercises = exercisesResult.value;
 
       final exercisesMap = exercises.fold<Map<int, ExerciseDto>>(
         {},
@@ -740,14 +749,17 @@ final class WorkoutRecordRepository implements Repository {
   }
 
   Future<
-    ({
-      int totalRestSecs,
-      int totalReps,
-      int totalVolume,
-      Set<MuscleGroup> muscleGroups,
-      TargetMuscles muscles,
-      Map<int, ExerciseDto> exerciseMap,
-    })
+    Result<
+      ({
+        int totalRestSecs,
+        int totalReps,
+        int totalVolume,
+        Set<MuscleGroup> muscleGroups,
+        TargetMuscles muscles,
+        Map<int, ExerciseDto> exerciseMap,
+      }),
+      ServiceError<OperationErrorTypes>
+    >
   >
   _prepareBatchRecordData(WorkoutRecordBatchInput input) async {
     int totalRestSecs = 0;
@@ -764,11 +776,16 @@ final class WorkoutRecordRepository implements Repository {
       }
     }
 
-    final fetchedExercises = await selectManyInChunks(
+    final fetchedExercisesResult = await selectManyInChunks(
+      failureType: OperationErrorTypes.operationFailure,
       dao: _exerciseDao,
       column: ExerciseColumns.id,
       values: allExerciseIds,
     );
+    if (fetchedExercisesResult.isErr()) {
+      return err(fetchedExercisesResult.error);
+    }
+    final fetchedExercises = fetchedExercisesResult.value;
     final Set<MuscleGroup> muscleGroups = {};
     TargetMuscles muscles = const TargetMuscles(
       primary: <Muscle>{},
@@ -783,14 +800,14 @@ final class WorkoutRecordRepository implements Repository {
       }
     }
 
-    return (
+    return ok((
       totalRestSecs: totalRestSecs,
       totalReps: totalReps,
       totalVolume: totalVolume,
       muscleGroups: muscleGroups,
       muscles: muscles,
       exerciseMap: exerciseMap,
-    );
+    ));
   }
 
   Future<List<WorkoutSetRecordDto>> _insertBatchSetsAndExercises({
@@ -873,7 +890,9 @@ final class WorkoutRecordRepository implements Repository {
         );
       }
 
-      final prepared = await _prepareBatchRecordData(input);
+      final preparedResult = await _prepareBatchRecordData(input);
+      if (preparedResult.isErr()) return err(preparedResult.error);
+      final prepared = preparedResult.value;
       final WorkoutRecord baseRecord = WorkoutRecord.create(
         version: input.version,
         workoutId: input.workoutId,
@@ -933,7 +952,9 @@ final class WorkoutRecordRepository implements Repository {
         );
       }
 
-      final prepared = await _prepareBatchRecordData(input);
+      final preparedResult = await _prepareBatchRecordData(input);
+      if (preparedResult.isErr()) return err(preparedResult.error);
+      final prepared = preparedResult.value;
       final updatedRecord = record.copyWith(
         workoutId: input.workoutId,
         version: input.version,

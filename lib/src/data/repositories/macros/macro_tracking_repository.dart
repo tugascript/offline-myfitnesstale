@@ -598,22 +598,28 @@ final class MacroTrackingRepository implements Repository {
   }) async {
     _logger.info('Getting macro goals history');
     try {
-      final (goals, total) = await fetchPaginatedWithTotal<WeekMacroGoal>(
+      final pageResult = await fetchPaginatedWithTotal(
+        failureType: OperationErrorTypes.operationFailure,
         dao: _weekMacroGoalDao,
         limit: limit,
         offset: offset,
         orderBy: [WeekMacroGoalColumns.createdAt.orderDesc],
       );
+      if (pageResult.isErr()) return err(pageResult.error);
+      final (goals, total) = pageResult.value;
 
       final dayGoalsByWeekId = <int, List<DayMacroGoal>>{};
       if (goals.isNotEmpty) {
         final weekIds = goals.map((g) => g.id!).toList();
-        final allDayGoals = await selectManyInChunks<DayMacroGoal>(
+        final allDayGoalsResult = await selectManyInChunks(
+          failureType: OperationErrorTypes.operationFailure,
           dao: _dayMacroGoalDao,
           column: DayMacroGoalColumns.weekMacroGoalId,
           values: weekIds,
           orderBy: [DayMacroGoalColumns.id.orderAsc],
         );
+        if (allDayGoalsResult.isErr()) return err(allDayGoalsResult.error);
+        final allDayGoals = allDayGoalsResult.value;
         for (final dayGoal in allDayGoals) {
           dayGoalsByWeekId
               .putIfAbsent(dayGoal.weekMacroGoalId, () => <DayMacroGoal>[])
@@ -701,25 +707,31 @@ final class MacroTrackingRepository implements Repository {
     return Micronutrients.fromMap(scaledMap);
   }
 
-  Future<Map<int, List<MealLogDto>>> _loadMealsByDailyLogIds(
+  Future<Result<Map<int, List<MealLogDto>>, ServiceError<E>>>
+  _loadMealsByDailyLogIds<E extends ErrorTypes>(
     List<int> dailyLogIds,
+    E failureType,
   ) async {
     if (dailyLogIds.isEmpty) {
-      return const {};
+      return ok(const {});
     }
 
-    final mealRows = await selectManyInChunks<MealLog>(
+    final mealRowsResult = await selectManyInChunks(
+      failureType: failureType,
       dao: _mealLogDao,
       column: MealLogColumns.dailyLogId,
       values: dailyLogIds,
       orderBy: [MealLogColumns.logTime.orderAsc, MealLogColumns.id.orderAsc],
     );
+    if (mealRowsResult.isErr()) return err(mealRowsResult.error);
+    final mealRows = mealRowsResult.value;
     if (mealRows.isEmpty) {
-      return const {};
+      return ok(const {});
     }
 
     final mealIds = mealRows.map((m) => m.id!).toList();
-    final itemRows = await selectManyInChunks<MealLogItem>(
+    final itemRowsResult = await selectManyInChunks(
+      failureType: failureType,
       dao: _mealLogItemDao,
       column: MealLogItemColumns.mealLogId,
       values: mealIds,
@@ -728,6 +740,8 @@ final class MacroTrackingRepository implements Repository {
         MealLogItemColumns.id.orderAsc,
       ],
     );
+    if (itemRowsResult.isErr()) return err(itemRowsResult.error);
+    final itemRows = itemRowsResult.value;
 
     final portionIds = itemRows
         .map((item) => item.portionId)
@@ -736,11 +750,14 @@ final class MacroTrackingRepository implements Repository {
         .toList();
     final portionNamesById = <int, String>{};
     if (portionIds.isNotEmpty) {
-      final portions = await selectManyInChunks<FoodPortion>(
+      final portionsResult = await selectManyInChunks(
+        failureType: failureType,
         dao: _foodPortionDao,
         column: FoodPortionColumns.id,
         values: portionIds,
       );
+      if (portionsResult.isErr()) return err(portionsResult.error);
+      final portions = portionsResult.value;
       for (final portion in portions) {
         portionNamesById[portion.id!] = portion.portionName;
       }
@@ -768,12 +785,7 @@ final class MacroTrackingRepository implements Repository {
           );
     }
 
-    return mealsByDailyLogId;
-  }
-
-  Future<List<MealLogDto>> _loadMealsForDailyLog(int dailyLogId) async {
-    final byId = await _loadMealsByDailyLogIds([dailyLogId]);
-    return byId[dailyLogId] ?? const <MealLogDto>[];
+    return ok(mealsByDailyLogId);
   }
 
   Future<Result<DailyNutritionLogDto, ServiceError<SingleErrorTypes>>>
@@ -786,7 +798,11 @@ final class MacroTrackingRepository implements Repository {
           await _dailyLogDao.startTransaction<DailyNutritionLog>(
             (txn) => _getOrCreateDailyLogInternal(txn, numericDate),
           );
-      final meals = await _loadMealsForDailyLog(dailyLog.id!);
+      final mealsResult = await _loadMealsByDailyLogIds([
+        dailyLog.id!,
+      ], SingleErrorTypes.operationFailure);
+      if (mealsResult.isErr()) return err(mealsResult.error);
+      final meals = mealsResult.value[dailyLog.id!] ?? const <MealLogDto>[];
       return ok(DailyNutritionLogDto.fromModel(dailyLog, meals: meals));
     } catch (e) {
       _logger.severe('Failed to get daily log for date $numericDate', e);
@@ -817,9 +833,12 @@ final class MacroTrackingRepository implements Repository {
         return ok(const []);
       }
 
-      final mealsByDailyLogId = await _loadMealsByDailyLogIds(
+      final mealsResult = await _loadMealsByDailyLogIds(
         logRows.map((row) => row.id!).toList(),
+        OperationErrorTypes.operationFailure,
       );
+      if (mealsResult.isErr()) return err(mealsResult.error);
+      final mealsByDailyLogId = mealsResult.value;
       final logs = logRows
           .map(
             (row) => DailyNutritionLogDto.fromModel(
@@ -867,7 +886,11 @@ final class MacroTrackingRepository implements Repository {
         await _dailyLogDao.update(updated, txn);
         return updated;
       });
-      final meals = await _loadMealsForDailyLog(updated.id!);
+      final mealsResult = await _loadMealsByDailyLogIds([
+        updated.id!,
+      ], SingleErrorTypes.operationFailure);
+      if (mealsResult.isErr()) return err(mealsResult.error);
+      final meals = mealsResult.value[updated.id!] ?? const <MealLogDto>[];
       return ok(DailyNutritionLogDto.fromModel(updated, meals: meals));
     } catch (e) {
       _logger.severe('Failed to update water intake', e);
