@@ -33,6 +33,7 @@ import '../../utils/enums.dart';
 import '../../utils/where_builder.dart';
 import '../core/dtos/paginated_dto.dart';
 import '../core/repository.dart';
+import '../core/repository_helpers.dart';
 import './dtos/equipment_dto.dart';
 import './dtos/exercise_dto.dart';
 import './inputs/equipment_input.dart';
@@ -120,16 +121,13 @@ final class ExerciseRepository implements Repository {
     }
 
     try {
-      final List<Exercise> exercises = await _exerciseDao.selectPaginated(
+      final (exercises, total) = await fetchPaginatedWithTotal(
+        dao: _exerciseDao,
         limit: limit,
         offset: offset,
         where: query.where,
         whereArgs: query.args,
         orderBy: [ExerciseColumns.name.orderCaseInsensitiveAsc],
-      );
-      final int total = await _exerciseDao.count(
-        where: query.where,
-        whereArgs: query.args,
       );
       _logger.info("Found ${exercises.length} exercises");
       return ok(
@@ -231,9 +229,10 @@ final class ExerciseRepository implements Repository {
   }
 
   Future<Map<int, Exercise>> getExercisesByIdsLoader(List<int> ids) async {
-    final List<Exercise> exercises = await _exerciseDao.selectMany(
-      where: ExerciseColumns.id.inList(ids.length),
-      whereArgs: ids,
+    final List<Exercise> exercises = await selectManyInChunks(
+      dao: _exerciseDao,
+      column: ExerciseColumns.id,
+      values: ids,
     );
 
     return {for (final Exercise e in exercises) e.id!: e};
@@ -267,9 +266,10 @@ final class ExerciseRepository implements Repository {
         );
       }
 
-      final List<Equipment> equipments = await _equipmentDao.selectMany(
-        where: EquipmentColumns.id.inList(input.equipmentIds.length),
-        whereArgs: input.equipmentIds.toList(),
+      final List<Equipment> equipments = await selectManyInChunks(
+        dao: _equipmentDao,
+        column: EquipmentColumns.id,
+        values: input.equipmentIds,
       );
       if (equipments.length != input.equipmentIds.length) {
         _logger.info(
@@ -329,9 +329,10 @@ final class ExerciseRepository implements Repository {
         };
         final Map<int, EquipmentDto> equipmentMap = {};
         if (allEquipmentIds.isNotEmpty) {
-          final fetched = await _equipmentDao.selectMany(
-            where: EquipmentColumns.id.inList(allEquipmentIds.length),
-            whereArgs: allEquipmentIds.toList(),
+          final fetched = await selectManyInChunks(
+            dao: _equipmentDao,
+            column: EquipmentColumns.id,
+            values: allEquipmentIds,
             trx: txn,
           );
           for (final eq in fetched) {
@@ -339,6 +340,7 @@ final class ExerciseRepository implements Repository {
           }
         }
 
+        final List<ExerciseEquipment> allJoinRows = [];
         for (final exerciseInput in exerciseInputs) {
           final exercise = Exercise.create(
             name: exerciseInput.name,
@@ -362,11 +364,12 @@ final class ExerciseRepository implements Repository {
 
           final List<EquipmentDto> equipments = [];
           for (final equipmentId in exerciseInput.equipmentIds) {
-            final exerciseEquipment = ExerciseEquipment.create(
-              equipmentId: equipmentId,
-              exerciseId: id,
+            allJoinRows.add(
+              ExerciseEquipment.create(
+                equipmentId: equipmentId,
+                exerciseId: id,
+              ),
             );
-            await _exerciseEquipmentJoinDao.insert(exerciseEquipment, txn);
             final eqDto = equipmentMap[equipmentId];
             if (eqDto != null) {
               equipments.add(eqDto);
@@ -379,6 +382,10 @@ final class ExerciseRepository implements Repository {
               equipments: equipments,
             ),
           );
+        }
+
+        if (allJoinRows.isNotEmpty) {
+          await _exerciseEquipmentJoinDao.insertMany(allJoinRows, txn);
         }
 
         return exercises;
@@ -438,9 +445,10 @@ final class ExerciseRepository implements Repository {
         return ok(ExerciseDto.fromModel(updatedExercise, equipments: const []));
       }
 
-      final List<Equipment> equipments = await _equipmentDao.selectMany(
-        where: EquipmentColumns.id.inList(input.equipmentIds.length),
-        whereArgs: input.equipmentIds.toList(),
+      final List<Equipment> equipments = await selectManyInChunks(
+        dao: _equipmentDao,
+        column: EquipmentColumns.id,
+        values: input.equipmentIds,
       );
       if (equipments.length != input.equipmentIds.length) {
         _logger.info(
@@ -571,16 +579,13 @@ final class ExerciseRepository implements Repository {
     }
 
     try {
-      final List<Equipment> equipments = await _equipmentDao.selectPaginated(
+      final (equipments, total) = await fetchPaginatedWithTotal(
+        dao: _equipmentDao,
         limit: limit,
         offset: offset,
         where: query.where,
         whereArgs: query.args,
         orderBy: [EquipmentColumns.name.orderCaseInsensitiveAsc],
-      );
-      final int total = await _equipmentDao.count(
-        where: query.where,
-        whereArgs: query.args,
       );
       _logger.info('Got ${equipments.length} equipments');
       return ok(

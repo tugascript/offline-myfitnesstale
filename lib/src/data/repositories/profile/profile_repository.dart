@@ -18,19 +18,19 @@
 import 'package:logging/logging.dart';
 import 'package:sqflite/sqflite.dart';
 
+import '../../../utils/errors.dart';
+import '../../../utils/result.dart';
 import '../../models/sqlite/profile_model.dart';
 import '../../models/sqlite/reminders_config_model.dart';
 import '../../models/sqlite/system_model.dart';
-import '../../services/sqlite/database_helper.dart';
 import '../../services/sqlite/dao.dart';
+import '../../services/sqlite/database_helper.dart';
 import '../../utils/dates.dart';
 import '../../utils/enums.dart';
-import '../../../utils/errors.dart';
-import '../../../utils/result.dart';
+import '../core/repository.dart';
 import './dtos/profile_dto.dart';
 import './dtos/reminders_config_dto.dart';
 import './dtos/system_dto.dart';
-import '../core/repository.dart';
 import 'inputs/profile_input.dart';
 import 'inputs/reminders_config_input.dart';
 import 'inputs/system_input.dart';
@@ -69,6 +69,46 @@ final class ProfileRepository implements Repository {
     );
   }
 
+  Profile _applyProfileInput(Profile existing, ProfileInput input) {
+    return existing.copyWith(
+      name: input.name,
+      height: input.height,
+      gender: input.gender,
+      birthdate: DateUtilities.getNumericDate(input.birthday),
+      updatedAt: DateUtilities.getNowUtcUnix(),
+    );
+  }
+
+  System _applySystemInput(System existing, SystemInput input) {
+    return existing.copyWith(
+      theme: input.theme,
+      units: input.units,
+      notificationsOn: input.notificationsOn,
+      updatedAt: DateUtilities.getNowUtcUnix(),
+    );
+  }
+
+  RemindersConfig _applyRemindersInput(
+    RemindersConfig existing,
+    RemindersConfigInput input,
+  ) {
+    return existing.copyWith(
+      workoutsOn: input.workoutsOn,
+      workoutsReminderTime: DateUtilities.getDateUnix(
+        input.workoutsReminderTime,
+      ),
+      weightRecordsOn: input.weightRecordsOn,
+      weightRecordsReminderTime: DateUtilities.getDateUnix(
+        input.weightRecordsReminderTime,
+      ),
+      macroTrackingOn: input.macroTrackingOn,
+      macroTrackingReminderTime: DateUtilities.getDateUnix(
+        input.macroTrackingReminderTime,
+      ),
+      updatedAt: DateUtilities.getNowUtcUnix(),
+    );
+  }
+
   Future<Result<ProfileDto, ServiceError<OperationErrorTypes>>> upsertProfile(
     ProfileInput input, [
     Transaction? transaction,
@@ -81,12 +121,9 @@ final class ProfileRepository implements Repository {
 
       if (existingProfile != null) {
         _logger.info('Profile already exists, updating...');
-        final Profile updatedProfile = existingProfile.copyWith(
-          name: input.name,
-          height: input.height,
-          gender: input.gender,
-          birthdate: DateUtilities.getNumericDate(input.birthday),
-          updatedAt: DateUtilities.getNowUtcUnix(),
+        final Profile updatedProfile = _applyProfileInput(
+          existingProfile,
+          input,
         );
         await _profileDao.update(updatedProfile, transaction);
         _logger.info('Updated profile with id ${updatedProfile.id}');
@@ -130,13 +167,7 @@ final class ProfileRepository implements Repository {
         );
       }
 
-      final Profile updatedProfile = existingProfile.copyWith(
-        name: input.name,
-        height: input.height,
-        gender: input.gender,
-        birthdate: DateUtilities.getNumericDate(input.birthday),
-        updatedAt: DateUtilities.getNowUtcUnix(),
-      );
+      final Profile updatedProfile = _applyProfileInput(existingProfile, input);
       await _profileDao.update(updatedProfile);
       _logger.info('Updated profile with id ${updatedProfile.id}');
       return ok(ProfileDto.fromModel(updatedProfile));
@@ -191,12 +222,7 @@ final class ProfileRepository implements Repository {
 
       if (existingSystem != null) {
         _logger.info('System already exists, updating...');
-        final System updatedSystem = existingSystem.copyWith(
-          theme: input.theme,
-          units: input.units,
-          notificationsOn: input.notificationsOn,
-          updatedAt: DateUtilities.getNowUtcUnix(),
-        );
+        final System updatedSystem = _applySystemInput(existingSystem, input);
         await _systemDao.update(updatedSystem, transaction);
         _logger.info('System updated successfully');
         return ok(SystemDto.fromModel(updatedSystem));
@@ -238,12 +264,7 @@ final class ProfileRepository implements Repository {
         );
       }
 
-      final System updatedSystem = existingSystem.copyWith(
-        theme: input.theme,
-        units: input.units,
-        notificationsOn: input.notificationsOn,
-        updatedAt: DateUtilities.getNowUtcUnix(),
-      );
+      final System updatedSystem = _applySystemInput(existingSystem, input);
       await _systemDao.update(updatedSystem);
       _logger.info('System updated successfully');
       return ok(SystemDto.fromModel(updatedSystem));
@@ -301,20 +322,9 @@ final class ProfileRepository implements Repository {
 
       if (existingConfig != null) {
         _logger.info('Reminders config exists, updating...');
-        final RemindersConfig updatedConfig = existingConfig.copyWith(
-          workoutsOn: input.workoutsOn,
-          workoutsReminderTime: DateUtilities.getDateUnix(
-            input.workoutsReminderTime,
-          ),
-          weightRecordsOn: input.weightRecordsOn,
-          weightRecordsReminderTime: DateUtilities.getDateUnix(
-            input.weightRecordsReminderTime,
-          ),
-          macroTrackingOn: input.macroTrackingOn,
-          macroTrackingReminderTime: DateUtilities.getDateUnix(
-            input.macroTrackingReminderTime,
-          ),
-          updatedAt: DateUtilities.getNowUtcUnix(),
+        final RemindersConfig updatedConfig = _applyRemindersInput(
+          existingConfig,
+          input,
         );
         await _remindersDao.update(updatedConfig, transaction);
         _logger.info('Updated reminders config with id ${updatedConfig.id}');
@@ -390,20 +400,9 @@ final class ProfileRepository implements Repository {
         );
       }
 
-      final RemindersConfig updatedConfig = remindersConfig.copyWith(
-        workoutsOn: input.workoutsOn,
-        workoutsReminderTime: DateUtilities.getDateUnix(
-          input.workoutsReminderTime,
-        ),
-        weightRecordsOn: input.weightRecordsOn,
-        weightRecordsReminderTime: DateUtilities.getDateUnix(
-          input.weightRecordsReminderTime,
-        ),
-        macroTrackingOn: input.macroTrackingOn,
-        macroTrackingReminderTime: DateUtilities.getDateUnix(
-          input.macroTrackingReminderTime,
-        ),
-        updatedAt: DateUtilities.getNowUtcUnix(),
+      final RemindersConfig updatedConfig = _applyRemindersInput(
+        remindersConfig,
+        input,
       );
       await _remindersDao.update(updatedConfig);
       _logger.info('Updated reminders config with id ${updatedConfig.id}');

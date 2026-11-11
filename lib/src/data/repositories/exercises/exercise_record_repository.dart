@@ -17,8 +17,6 @@
 
 import 'package:logging/logging.dart';
 
-import './dtos/strength_goal_dto.dart';
-import './inputs/strength_goal_input.dart';
 import '../../../utils/errors.dart';
 import '../../../utils/nullable.dart';
 import '../../../utils/result.dart';
@@ -33,9 +31,12 @@ import '../../utils/enums.dart';
 import '../../utils/where_builder.dart';
 import '../core/dtos/paginated_dto.dart';
 import '../core/repository.dart';
+import '../core/repository_helpers.dart';
 import './dtos/exercise_dto.dart';
 import './dtos/exercise_record_dto.dart';
+import './dtos/strength_goal_dto.dart';
 import './inputs/exercise_record_input.dart';
+import './inputs/strength_goal_input.dart';
 
 final class ExerciseRecordRepository implements Repository {
   final Dao<ExerciseRecord> _exerciseRecordDao;
@@ -219,24 +220,20 @@ final class ExerciseRecordRepository implements Repository {
         query.and(ExerciseRecordColumns.exerciseId.equal, exerciseId);
       }
 
-      final List<ExerciseRecord> records = await _exerciseRecordDao
-          .selectPaginated(
-            limit: limit,
-            offset: offset,
-            where: query.where,
-            whereArgs: query.args,
-            orderBy: [
-              ExerciseRecordColumns.recordDate.orderDesc,
-              ExerciseRecordColumns.id.orderDesc,
-            ],
-          );
-      final int total = await _exerciseRecordDao.count(
+      final (records, total) = await fetchPaginatedWithTotal(
+        dao: _exerciseRecordDao,
+        limit: limit,
+        offset: offset,
         where: query.where,
         whereArgs: query.args,
+        orderBy: [
+          ExerciseRecordColumns.recordDate.orderDesc,
+          ExerciseRecordColumns.id.orderDesc,
+        ],
       );
       _logger.info('Got ${records.length} exercise records');
 
-      if (exerciseId != null) {
+      if (exerciseId != null || records.isEmpty) {
         return ok(
           PaginatedDto<ExerciseRecordDto, ExerciseRecord>.mapData(
             data: records,
@@ -251,9 +248,10 @@ final class ExerciseRecordRepository implements Repository {
       final Set<int> exerciseIds = records
           .map((record) => record.exerciseId)
           .toSet();
-      final List<Exercise> exercises = await _exerciseDao.selectMany(
-        where: ExerciseColumns.id.inList(exerciseIds.length),
-        whereArgs: exerciseIds.toList(),
+      final List<Exercise> exercises = await selectManyInChunks(
+        dao: _exerciseDao,
+        column: ExerciseColumns.id,
+        values: exerciseIds,
       );
       if (exerciseIds.length != exercises.length) {
         _logger.warning("Not all exercises were found");
@@ -443,26 +441,24 @@ final class ExerciseRecordRepository implements Repository {
         return ok(StrengthGoalDto.fromModel(goal.copyWith(id: Nullable(id))));
       }
 
-      final int id = await _strengthGoalDao.startTransaction((txn) async {
-        final activeGoals = await _strengthGoalDao.selectMany(
-          where:
-              '${StrengthGoalColumns.exerciseId.equal} AND ${StrengthGoalColumns.status.equal}',
-          whereArgs: [input.exerciseId, ProgressStatus.inProgress.value],
-          trx: txn,
-        );
-        final now = DateUtilities.getNowUtcUnix();
-        for (final activeGoal in activeGoals) {
-          await _strengthGoalDao.update(
-            activeGoal.copyWith(
-              status: ProgressStatus.abandoned,
-              completedAt: Nullable(now),
-              updatedAt: now,
-            ),
-            txn,
-          );
-        }
-        return await _strengthGoalDao.insert(goal, txn);
-      });
+      final int id = input.status == ProgressStatus.inProgress
+          ? await _strengthGoalDao.startTransaction((txn) async {
+              final now = DateUtilities.getNowUtcUnix();
+              await txn.update(
+                StrengthGoal.table,
+                {
+                  StrengthGoalColumns.status.value:
+                      ProgressStatus.abandoned.value,
+                  StrengthGoalColumns.completedAt.value: now,
+                  StrengthGoalColumns.updatedAt.value: now,
+                },
+                where:
+                    '${StrengthGoalColumns.exerciseId.equal} AND ${StrengthGoalColumns.status.equal}',
+                whereArgs: [input.exerciseId, ProgressStatus.inProgress.value],
+              );
+              return await _strengthGoalDao.insert(goal, txn);
+            })
+          : await _strengthGoalDao.insert(goal);
       _logger.info('Created strength goal with id $id');
       return ok(StrengthGoalDto.fromModel(goal.copyWith(id: Nullable(id))));
     } catch (e) {
@@ -501,19 +497,16 @@ final class ExerciseRecordRepository implements Repository {
         );
       }
 
-      final List<StrengthGoal> goals = await _strengthGoalDao.selectPaginated(
-        where: where.where,
-        whereArgs: where.args,
+      final (goals, total) = await fetchPaginatedWithTotal(
+        dao: _strengthGoalDao,
         limit: limit,
         offset: offset,
+        where: where.where,
+        whereArgs: where.args,
         orderBy: [
           StrengthGoalColumns.startDate.orderDesc,
           StrengthGoalColumns.createdAt.orderDesc,
         ],
-      );
-      final int total = await _strengthGoalDao.count(
-        where: where.where,
-        whereArgs: where.args,
       );
       _logger.info('Got ${goals.length} strength goals');
       return ok(
@@ -618,14 +611,16 @@ final class ExerciseRecordRepository implements Repository {
         );
       }
 
-      final exercise = await _exerciseDao.selectOne(input.exerciseId);
-      if (exercise == null) {
-        return err(
-          const ServiceError(
-            type: SingleErrorTypes.notFound,
-            description: 'Exercise not found',
-          ),
-        );
+      if (input.exerciseId != goal.exerciseId) {
+        final exercise = await _exerciseDao.selectOne(input.exerciseId);
+        if (exercise == null) {
+          return err(
+            const ServiceError(
+              type: SingleErrorTypes.notFound,
+              description: 'Exercise not found',
+            ),
+          );
+        }
       }
       final StrengthGoal updated = goal.copyWith(
         exerciseId: input.exerciseId,
@@ -642,28 +637,25 @@ final class ExerciseRecordRepository implements Repository {
         ),
         updatedAt: DateUtilities.getNowUtcUnix(),
       );
-      await _strengthGoalDao.startTransaction((txn) async {
-        if (input.status == ProgressStatus.inProgress) {
-          final activeGoals = await _strengthGoalDao.selectMany(
+      if (input.status == ProgressStatus.inProgress) {
+        final now = DateUtilities.getNowUtcUnix();
+        await _strengthGoalDao.startTransaction((txn) async {
+          await txn.update(
+            StrengthGoal.table,
+            {
+              StrengthGoalColumns.status.value: ProgressStatus.abandoned.value,
+              StrengthGoalColumns.completedAt.value: now,
+              StrengthGoalColumns.updatedAt.value: now,
+            },
             where:
-                '${StrengthGoalColumns.exerciseId.equal} AND ${StrengthGoalColumns.status.equal} AND ${StrengthGoalColumns.id.value} != ?',
+                '${StrengthGoalColumns.exerciseId.equal} AND ${StrengthGoalColumns.status.equal} AND ${StrengthGoalColumns.id.notEqual}',
             whereArgs: [input.exerciseId, ProgressStatus.inProgress.value, id],
-            trx: txn,
           );
-          final now = DateUtilities.getNowUtcUnix();
-          for (final activeGoal in activeGoals) {
-            await _strengthGoalDao.update(
-              activeGoal.copyWith(
-                status: ProgressStatus.abandoned,
-                completedAt: Nullable(now),
-                updatedAt: now,
-              ),
-              txn,
-            );
-          }
-        }
-        await _strengthGoalDao.update(updated, txn);
-      });
+          await _strengthGoalDao.update(updated, txn);
+        });
+      } else {
+        await _strengthGoalDao.update(updated);
+      }
       _logger.info('Updated strength goal with id $id');
       return ok(StrengthGoalDto.fromModel(updated));
     } catch (e) {

@@ -18,6 +18,9 @@
 import 'package:logging/logging.dart';
 import 'package:sqflite/sqflite.dart';
 
+import '../../../utils/errors.dart';
+import '../../../utils/nullable.dart';
+import '../../../utils/result.dart';
 import '../../models/sqlite/food_model.dart';
 import '../../models/sqlite/food_portion_model.dart';
 import '../../models/sqlite/meal_plan_day_model.dart';
@@ -25,26 +28,73 @@ import '../../models/sqlite/meal_plan_meal_item_model.dart';
 import '../../models/sqlite/meal_plan_meal_model.dart';
 import '../../models/sqlite/meal_plan_model.dart';
 import '../../models/sqlite/meal_plan_week_model.dart';
-import '../../models/sqlite/model.dart';
 import '../../models/sqlite/recipe_model.dart';
 import '../../services/common.dart';
-import '../../services/sqlite/database_helper.dart';
 import '../../services/sqlite/dao.dart';
+import '../../services/sqlite/database_helper.dart';
 import '../../utils/dates.dart';
 import '../../utils/enums.dart';
 import '../../utils/where_builder.dart';
-import '../../../utils/errors.dart';
-import '../../../utils/nullable.dart';
-import '../../../utils/result.dart';
-import './dtos/meal_plan_dto.dart';
 import '../core/dtos/paginated_dto.dart';
+import '../core/repository.dart';
+import '../core/repository_helpers.dart';
+import './dtos/meal_plan_dto.dart';
 import './inputs/meal_plan_input.dart';
 import './inputs/meal_plan_week_input.dart';
-import '../core/repository.dart';
+
+typedef _PreparedPlanItem = ({
+  int foodId,
+  int? portionId,
+  int amount,
+  int totalCalories,
+  int totalProtein,
+  int totalCarbs,
+  int totalFat,
+  int? totalFiber,
+  String foodName,
+  String? portionName,
+});
+
+typedef _PreparedPlanMeal = ({
+  int position,
+  String? timeOfDay,
+  MealType mealType,
+  String name,
+  int? recipeId,
+  String? recipeName,
+  int totalCalories,
+  int totalProtein,
+  int totalCarbs,
+  int totalFat,
+  int totalFiber,
+  List<_PreparedPlanItem> items,
+});
+
+typedef _PreparedPlanDay = ({
+  int day,
+  String? name,
+  int targetCalories,
+  int targetProtein,
+  int targetCarbs,
+  int targetFat,
+  int targetFiber,
+  List<_PreparedPlanMeal> meals,
+});
+
+typedef _PreparedPlanWeek = ({
+  int weekNumber,
+  MealPlanPhase phase,
+  int targetCalories,
+  int targetProtein,
+  int targetCarbs,
+  int targetFat,
+  int targetFiber,
+  int totalDays,
+  int totalMeals,
+  List<_PreparedPlanDay> days,
+});
 
 final class MealPlanRepository implements Repository {
-  static const int _maxSqlVariables = 900;
-
   final Dao<Food> _foodDao;
   final Dao<Recipe> _recipeDao;
   final Dao<FoodPortion> _foodPortionDao;
@@ -113,46 +163,6 @@ final class MealPlanRepository implements Repository {
     );
   }
 
-  Future<Result<List<T>, ServiceError<SingleErrorTypes>>>
-  _selectManyInChunks<T extends Model>({
-    required Dao<T> dao,
-    required Columns column,
-    required Iterable<int> values,
-    List<String>? orderBy,
-    Transaction? trx,
-  }) async {
-    final valueList = values.toList();
-    if (valueList.isEmpty) {
-      return ok(<T>[]);
-    }
-
-    try {
-      final results = <T>[];
-      for (int i = 0; i < valueList.length; i += _maxSqlVariables) {
-        final end = i + _maxSqlVariables < valueList.length
-            ? i + _maxSqlVariables
-            : valueList.length;
-        final chunk = valueList.sublist(i, end);
-        final rows = await dao.selectMany(
-          where: column.inList(chunk.length),
-          whereArgs: chunk,
-          orderBy: orderBy,
-          trx: trx,
-        );
-        results.addAll(rows);
-      }
-      return ok(results);
-    } catch (e) {
-      _logger.severe('Failed to select ${column.value} in chunks', e);
-      return err(
-        const ServiceError(
-          type: SingleErrorTypes.operationFailure,
-          description: 'Failed to load meal plan references',
-        ),
-      );
-    }
-  }
-
   Future<
     Result<
       ({
@@ -163,10 +173,7 @@ final class MealPlanRepository implements Repository {
       ServiceError<SingleErrorTypes>
     >
   >
-  _loadMealPlanReferences(
-    List<MealPlanWeekInput> weeks,
-    Transaction txn,
-  ) async {
+  _loadMealPlanReferences(List<MealPlanWeekInput> weeks) async {
     try {
       final recipeIds = <int>{};
       final foodIds = <int>{};
@@ -183,39 +190,27 @@ final class MealPlanRepository implements Repository {
         }
       }
 
-      final recipesResult = await _selectManyInChunks(
-        dao: _recipeDao,
-        column: RecipeColumns.id,
-        values: recipeIds,
-        trx: txn,
-      );
-      if (recipesResult.isErr()) {
-        return err(recipesResult.error);
-      }
+      final results = await Future.wait([
+        selectManyInChunks<Recipe>(
+          dao: _recipeDao,
+          column: RecipeColumns.id,
+          values: recipeIds,
+        ),
+        selectManyInChunks<Food>(
+          dao: _foodDao,
+          column: FoodColumns.id,
+          values: foodIds,
+        ),
+        selectManyInChunks<FoodPortion>(
+          dao: _foodPortionDao,
+          column: FoodPortionColumns.id,
+          values: portionIds,
+        ),
+      ]);
 
-      final foodsResult = await _selectManyInChunks(
-        dao: _foodDao,
-        column: FoodColumns.id,
-        values: foodIds,
-        trx: txn,
-      );
-      if (foodsResult.isErr()) {
-        return err(foodsResult.error);
-      }
-
-      final portionsResult = await _selectManyInChunks(
-        dao: _foodPortionDao,
-        column: FoodPortionColumns.id,
-        values: portionIds,
-        trx: txn,
-      );
-      if (portionsResult.isErr()) {
-        return err(portionsResult.error);
-      }
-
-      final recipes = recipesResult.value;
-      final foods = foodsResult.value;
-      final portions = portionsResult.value;
+      final recipes = results[0] as List<Recipe>;
+      final foods = results[1] as List<Food>;
+      final portions = results[2] as List<FoodPortion>;
       final recipeById = {for (final recipe in recipes) recipe.id!: recipe};
       final foodById = {for (final food in foods) food.id!: food};
       final portionById = {
@@ -271,6 +266,282 @@ final class MealPlanRepository implements Repository {
     }
   }
 
+  ({List<_PreparedPlanWeek> weeks, int totalDays, int totalMeals})
+  _prepareMealPlanTree(
+    List<MealPlanWeekInput> weeks,
+    ({
+      Map<int, Recipe> recipes,
+      Map<int, Food> foods,
+      Map<int, FoodPortion> portions,
+    })
+    references,
+  ) {
+    int planTotalDays = 0;
+    int planTotalMeals = 0;
+    final preparedWeeks = <_PreparedPlanWeek>[];
+
+    for (final wInput in weeks) {
+      int weekTotalMeals = 0;
+      int weekTotalCalories = 0;
+      int weekTotalProtein = 0;
+      int weekTotalCarbs = 0;
+      int weekTotalFat = 0;
+      int weekTotalFiber = 0;
+      final preparedDays = <_PreparedPlanDay>[];
+
+      for (final dInput in wInput.days) {
+        int dayTotalCalories = 0;
+        int dayTotalProtein = 0;
+        int dayTotalCarbs = 0;
+        int dayTotalFat = 0;
+        int dayTotalFiber = 0;
+        final preparedMeals = <_PreparedPlanMeal>[];
+
+        for (final mInput in dInput.meals) {
+          int mealCalories = 0;
+          int mealProtein = 0;
+          int mealCarbs = 0;
+          int mealFat = 0;
+          int mealFiber = 0;
+          String? recipeName;
+
+          if (mInput.recipeId != null) {
+            final recipe = references.recipes[mInput.recipeId];
+            recipeName = recipe?.name;
+            mealCalories += recipe?.servingCalories ?? 0;
+            mealProtein += recipe?.servingProtein ?? 0;
+            mealCarbs += recipe?.servingCarbs ?? 0;
+            mealFat += recipe?.servingFat ?? 0;
+          }
+
+          final preparedItems = <_PreparedPlanItem>[];
+          for (final itemInput in mInput.items) {
+            final food = references.foods[itemInput.foodId]!;
+            double effectiveGrams = itemInput.amount.toDouble();
+            String? portionName;
+            if (itemInput.portionId != null) {
+              final portion = references.portions[itemInput.portionId]!;
+              portionName = portion.portionName;
+              effectiveGrams = (itemInput.amount * portion.gramWeight)
+                  .toDouble();
+            }
+
+            final double scale = food.servingSizeBaseGrams > 0
+                ? effectiveGrams / food.servingSizeBaseGrams
+                : 1.0;
+
+            final itemCals = (food.caloriesBase * scale).round();
+            final itemProt = (food.proteinBase * scale).round();
+            final itemCarbs = (food.carbsBase * scale).round();
+            final itemFat = (food.fatBase * scale).round();
+            final itemFiber = food.fiberBase != null
+                ? (food.fiberBase! * scale).round()
+                : null;
+
+            mealCalories += itemCals;
+            mealProtein += itemProt;
+            mealCarbs += itemCarbs;
+            mealFat += itemFat;
+            if (itemFiber != null) {
+              mealFiber += itemFiber;
+            }
+
+            preparedItems.add((
+              foodId: itemInput.foodId,
+              portionId: itemInput.portionId,
+              amount: itemInput.amount,
+              totalCalories: itemCals,
+              totalProtein: itemProt,
+              totalCarbs: itemCarbs,
+              totalFat: itemFat,
+              totalFiber: itemFiber,
+              foodName: food.name,
+              portionName: portionName,
+            ));
+          }
+
+          preparedMeals.add((
+            position: mInput.position,
+            timeOfDay: mInput.timeOfDay,
+            mealType: mInput.mealType,
+            name: mInput.name,
+            recipeId: mInput.recipeId,
+            recipeName: recipeName,
+            totalCalories: mealCalories,
+            totalProtein: mealProtein,
+            totalCarbs: mealCarbs,
+            totalFat: mealFat,
+            totalFiber: mealFiber,
+            items: preparedItems,
+          ));
+
+          dayTotalCalories += mealCalories;
+          dayTotalProtein += mealProtein;
+          dayTotalCarbs += mealCarbs;
+          dayTotalFat += mealFat;
+          dayTotalFiber += mealFiber;
+        }
+
+        preparedDays.add((
+          day: dInput.day,
+          name: dInput.name,
+          targetCalories: dayTotalCalories,
+          targetProtein: dayTotalProtein,
+          targetCarbs: dayTotalCarbs,
+          targetFat: dayTotalFat,
+          targetFiber: dayTotalFiber,
+          meals: preparedMeals,
+        ));
+
+        weekTotalMeals += dInput.meals.length;
+        weekTotalCalories += dayTotalCalories;
+        weekTotalProtein += dayTotalProtein;
+        weekTotalCarbs += dayTotalCarbs;
+        weekTotalFat += dayTotalFat;
+        weekTotalFiber += dayTotalFiber;
+      }
+
+      final dayCount = wInput.days.isNotEmpty ? wInput.days.length : 1;
+      preparedWeeks.add((
+        weekNumber: wInput.weekNumber,
+        phase: wInput.phase,
+        targetCalories: (weekTotalCalories / dayCount).round(),
+        targetProtein: (weekTotalProtein / dayCount).round(),
+        targetCarbs: (weekTotalCarbs / dayCount).round(),
+        targetFat: (weekTotalFat / dayCount).round(),
+        targetFiber: (weekTotalFiber / dayCount).round(),
+        totalDays: wInput.days.length,
+        totalMeals: weekTotalMeals,
+        days: preparedDays,
+      ));
+
+      planTotalDays += wInput.days.length;
+      planTotalMeals += weekTotalMeals;
+    }
+
+    return (
+      weeks: preparedWeeks,
+      totalDays: planTotalDays,
+      totalMeals: planTotalMeals,
+    );
+  }
+
+  Future<List<MealPlanWeekDto>> _insertMealPlanTree({
+    required Transaction txn,
+    required int mealPlanId,
+    required int planVersion,
+    required CreatedBy createdBy,
+    required List<_PreparedPlanWeek> preparedWeeks,
+  }) async {
+    final List<MealPlanWeekDto> weekDtos = [];
+
+    for (final w in preparedWeeks) {
+      final week = MealPlanWeek.create(
+        mealPlanId: mealPlanId,
+        planVersion: planVersion,
+        weekNumber: w.weekNumber,
+        phase: w.phase,
+        targetCalories: w.targetCalories,
+        targetProtein: w.targetProtein,
+        targetCarbs: w.targetCarbs,
+        targetFat: w.targetFat,
+        targetFiber: w.targetFiber,
+        totalDays: w.totalDays,
+        totalMeals: w.totalMeals,
+        createdBy: createdBy,
+      );
+      final int weekId = await _weekDao.insert(week, txn);
+      final List<MealPlanDayDto> dayDtos = [];
+
+      for (final d in w.days) {
+        final day = MealPlanDay.create(
+          mealPlanId: mealPlanId,
+          mealPlanWeekId: weekId,
+          planVersion: planVersion,
+          day: d.day,
+          name: d.name,
+          targetCalories: d.targetCalories,
+          targetProtein: d.targetProtein,
+          targetCarbs: d.targetCarbs,
+          targetFat: d.targetFat,
+          targetFiber: d.targetFiber,
+          totalMeals: d.meals.length,
+          createdBy: createdBy,
+        );
+        final int dayId = await _dayDao.insert(day, txn);
+        final List<MealPlanMealDto> mealDtos = [];
+
+        for (final m in d.meals) {
+          final meal = MealPlanMeal.create(
+            mealPlanId: mealPlanId,
+            mealPlanWeekId: weekId,
+            mealPlanDayId: dayId,
+            planVersion: planVersion,
+            position: m.position,
+            timeOfDay: m.timeOfDay,
+            mealType: m.mealType,
+            name: m.name,
+            recipeId: m.recipeId,
+            totalCalories: m.totalCalories,
+            totalProtein: m.totalProtein,
+            totalCarbs: m.totalCarbs,
+            totalFat: m.totalFat,
+            totalFiber: m.totalFiber,
+            createdBy: createdBy,
+          );
+          final int mealId = await _mealDao.insert(meal, txn);
+          final List<MealPlanMealItemDto> itemDtos = [];
+
+          for (final item in m.items) {
+            final mealItem = MealPlanMealItem.create(
+              mealPlanMealId: mealId,
+              foodId: item.foodId,
+              portionId: item.portionId,
+              amount: item.amount,
+              totalCalories: item.totalCalories,
+              totalProtein: item.totalProtein,
+              totalCarbs: item.totalCarbs,
+              totalFat: item.totalFat,
+              totalFiber: item.totalFiber,
+            );
+            final int itemId = await _itemDao.insert(mealItem, txn);
+            itemDtos.add(
+              MealPlanMealItemDto.fromModel(
+                mealItem.copyWith(id: Nullable(itemId)),
+                foodName: item.foodName,
+                portionName: item.portionName,
+              ),
+            );
+          }
+
+          mealDtos.add(
+            MealPlanMealDto.fromModel(
+              meal.copyWith(id: Nullable(mealId)),
+              recipeName: m.recipeName,
+              items: itemDtos,
+            ),
+          );
+        }
+
+        dayDtos.add(
+          MealPlanDayDto.fromModel(
+            day.copyWith(id: Nullable(dayId)),
+            meals: mealDtos,
+          ),
+        );
+      }
+
+      weekDtos.add(
+        MealPlanWeekDto.fromModel(
+          week.copyWith(id: Nullable(weekId)),
+          days: dayDtos,
+        ),
+      );
+    }
+
+    return weekDtos;
+  }
+
   Future<Result<MealPlanDto, ServiceError<SingleErrorTypes>>> createMealPlan(
     MealPlanInput input, [
     CreatedBy createdBy = CreatedBy.user,
@@ -281,240 +552,33 @@ final class MealPlanRepository implements Repository {
 
     _logger.info('Creating meal plan: $name');
     try {
+      final referencesResult = await _loadMealPlanReferences(weeks);
+      if (referencesResult.isErr()) {
+        return err(referencesResult.error);
+      }
+      final prepared = _prepareMealPlanTree(weeks, referencesResult.value);
+
       return await _mealPlanDao.startTransaction<
         Result<MealPlanDto, ServiceError<SingleErrorTypes>>
       >((txn) async {
-        final referencesResult = await _loadMealPlanReferences(weeks, txn);
-        if (referencesResult.isErr()) {
-          return err(referencesResult.error);
-        }
-        final references = referencesResult.value;
-
-        int planTotalMeals = 0;
-        int planTotalDays = 0;
-        for (final w in weeks) {
-          planTotalDays += w.days.length;
-          for (final d in w.days) {
-            planTotalMeals += d.meals.length;
-          }
-        }
-
         final mealPlan = MealPlan.create(
           name: name,
           description: description,
           version: 1,
           totalWeeks: weeks.length,
-          totalDays: planTotalDays,
-          totalMeals: planTotalMeals,
+          totalDays: prepared.totalDays,
+          totalMeals: prepared.totalMeals,
           createdBy: createdBy,
         );
         final int planId = await _mealPlanDao.insert(mealPlan, txn);
 
-        final List<MealPlanWeekDto> weekDtos = [];
-
-        for (final wInput in weeks) {
-          int weekTotalMeals = 0;
-          int weekTotalCalories = 0;
-          int weekTotalProtein = 0;
-          int weekTotalCarbs = 0;
-          int weekTotalFat = 0;
-          int weekTotalFiber = 0;
-
-          final List<MealPlanDayDto> dayDtos = [];
-
-          // We will insert week after computing totals
-          final tempWeek = MealPlanWeek.create(
-            mealPlanId: planId,
-            planVersion: 1,
-            weekNumber: wInput.weekNumber,
-            phase: wInput.phase,
-            targetCalories: 0,
-            targetProtein: 0,
-            targetCarbs: 0,
-            targetFat: 0,
-            totalDays: wInput.days.length,
-            totalMeals: 0,
-            createdBy: createdBy,
-          );
-          final int weekId = await _weekDao.insert(tempWeek, txn);
-
-          for (final dInput in wInput.days) {
-            int dayTotalCalories = 0;
-            int dayTotalProtein = 0;
-            int dayTotalCarbs = 0;
-            int dayTotalFat = 0;
-            int dayTotalFiber = 0;
-
-            final List<MealPlanMealDto> mealDtos = [];
-
-            final tempDay = MealPlanDay.create(
-              mealPlanId: planId,
-              mealPlanWeekId: weekId,
-              planVersion: 1,
-              day: dInput.day,
-              name: dInput.name,
-              targetCalories: 0,
-              targetProtein: 0,
-              targetCarbs: 0,
-              targetFat: 0,
-              totalMeals: dInput.meals.length,
-              createdBy: createdBy,
-            );
-            final int dayId = await _dayDao.insert(tempDay, txn);
-
-            for (final mInput in dInput.meals) {
-              int mealCalories = 0;
-              int mealProtein = 0;
-              int mealCarbs = 0;
-              int mealFat = 0;
-              int mealFiber = 0;
-              String? recipeName;
-
-              if (mInput.recipeId != null) {
-                final recipe = references.recipes[mInput.recipeId];
-                recipeName = recipe?.name;
-                mealCalories += recipe?.servingCalories ?? 0;
-                mealProtein += recipe?.servingProtein ?? 0;
-                mealCarbs += recipe?.servingCarbs ?? 0;
-                mealFat += recipe?.servingFat ?? 0;
-              }
-
-              final List<MealPlanMealItemDto> itemDtos = [];
-
-              final tempMeal = MealPlanMeal.create(
-                mealPlanId: planId,
-                mealPlanWeekId: weekId,
-                mealPlanDayId: dayId,
-                planVersion: 1,
-                position: mInput.position,
-                timeOfDay: mInput.timeOfDay,
-                mealType: mInput.mealType,
-                name: mInput.name,
-                recipeId: mInput.recipeId,
-                totalCalories: 0,
-                totalProtein: 0,
-                totalCarbs: 0,
-                totalFat: 0,
-                createdBy: createdBy,
-              );
-              final int mealId = await _mealDao.insert(tempMeal, txn);
-
-              for (final itemInput in mInput.items) {
-                final food = references.foods[itemInput.foodId]!;
-
-                double effectiveGrams = itemInput.amount.toDouble();
-                String? portionName;
-                if (itemInput.portionId != null) {
-                  final portion = references.portions[itemInput.portionId]!;
-                  portionName = portion.portionName;
-                  effectiveGrams = (itemInput.amount * portion.gramWeight)
-                      .toDouble();
-                }
-
-                final double scale = food.servingSizeBaseGrams > 0
-                    ? effectiveGrams / food.servingSizeBaseGrams
-                    : 1.0;
-
-                final itemCals = (food.caloriesBase * scale).round();
-                final itemProt = (food.proteinBase * scale).round();
-                final itemCarbs = (food.carbsBase * scale).round();
-                final itemFat = (food.fatBase * scale).round();
-                final itemFiber = food.fiberBase != null
-                    ? (food.fiberBase! * scale).round()
-                    : null;
-
-                mealCalories += itemCals;
-                mealProtein += itemProt;
-                mealCarbs += itemCarbs;
-                mealFat += itemFat;
-                if (itemFiber != null) {
-                  mealFiber += itemFiber;
-                }
-
-                final mealItem = MealPlanMealItem.create(
-                  mealPlanMealId: mealId,
-                  foodId: itemInput.foodId,
-                  portionId: itemInput.portionId,
-                  amount: itemInput.amount,
-                  totalCalories: itemCals,
-                  totalProtein: itemProt,
-                  totalCarbs: itemCarbs,
-                  totalFat: itemFat,
-                  totalFiber: itemFiber,
-                );
-                final int itemId = await _itemDao.insert(mealItem, txn);
-                itemDtos.add(
-                  MealPlanMealItemDto.fromModel(
-                    mealItem.copyWith(id: Nullable(itemId)),
-                    foodName: food.name,
-                    portionName: portionName,
-                  ),
-                );
-              }
-
-              // Update Meal totals
-              final updatedMeal = tempMeal.copyWith(
-                id: Nullable(mealId),
-                totalCalories: mealCalories,
-                totalProtein: mealProtein,
-                totalCarbs: mealCarbs,
-                totalFat: mealFat,
-                totalFiber: Nullable(mealFiber),
-                updatedAt: DateUtilities.getNowUtcUnix(),
-              );
-              await _mealDao.update(updatedMeal, txn);
-              mealDtos.add(
-                MealPlanMealDto.fromModel(
-                  updatedMeal,
-                  recipeName: recipeName,
-                  items: itemDtos,
-                ),
-              );
-
-              dayTotalCalories += mealCalories;
-              dayTotalProtein += mealProtein;
-              dayTotalCarbs += mealCarbs;
-              dayTotalFat += mealFat;
-              dayTotalFiber += mealFiber;
-            }
-
-            // Update Day totals
-            final updatedDay = tempDay.copyWith(
-              id: Nullable(dayId),
-              targetCalories: dayTotalCalories,
-              targetProtein: dayTotalProtein,
-              targetCarbs: dayTotalCarbs,
-              targetFat: dayTotalFat,
-              targetFiber: Nullable(dayTotalFiber),
-              totalMeals: dInput.meals.length,
-              updatedAt: DateUtilities.getNowUtcUnix(),
-            );
-            await _dayDao.update(updatedDay, txn);
-            dayDtos.add(MealPlanDayDto.fromModel(updatedDay, meals: mealDtos));
-
-            weekTotalMeals += dInput.meals.length;
-            weekTotalCalories += dayTotalCalories;
-            weekTotalProtein += dayTotalProtein;
-            weekTotalCarbs += dayTotalCarbs;
-            weekTotalFat += dayTotalFat;
-            weekTotalFiber += dayTotalFiber;
-          }
-
-          final dayCount = wInput.days.isNotEmpty ? wInput.days.length : 1;
-          final updatedWeek = tempWeek.copyWith(
-            id: Nullable(weekId),
-            targetCalories: (weekTotalCalories / dayCount).round(),
-            targetProtein: (weekTotalProtein / dayCount).round(),
-            targetCarbs: (weekTotalCarbs / dayCount).round(),
-            targetFat: (weekTotalFat / dayCount).round(),
-            targetFiber: Nullable((weekTotalFiber / dayCount).round()),
-            totalDays: wInput.days.length,
-            totalMeals: weekTotalMeals,
-            updatedAt: DateUtilities.getNowUtcUnix(),
-          );
-          await _weekDao.update(updatedWeek, txn);
-          weekDtos.add(MealPlanWeekDto.fromModel(updatedWeek, days: dayDtos));
-        }
+        final weekDtos = await _insertMealPlanTree(
+          txn: txn,
+          mealPlanId: planId,
+          planVersion: 1,
+          createdBy: createdBy,
+          preparedWeeks: prepared.weeks,
+        );
 
         final createdDto = MealPlanDto.fromModel(
           mealPlan.copyWith(id: Nullable(planId)),
@@ -560,80 +624,73 @@ final class MealPlanRepository implements Repository {
         whereArgs: weeksWhere.args!,
         orderBy: [MealPlanWeekColumns.weekNumber.orderAsc],
       );
+      if (weeks.isEmpty) {
+        return ok(
+          MealPlanDto.fromModel(
+            plan.copyWith(
+              version: targetVersion,
+              totalWeeks: 0,
+              totalDays: 0,
+              totalMeals: 0,
+            ),
+            weeks: const [],
+          ),
+        );
+      }
 
       final weekIds = weeks.map((week) => week.id!).toList();
-      final daysResult = await _selectManyInChunks(
+      final days = await selectManyInChunks<MealPlanDay>(
         dao: _dayDao,
         column: MealPlanDayColumns.mealPlanWeekId,
         values: weekIds,
         orderBy: [MealPlanDayColumns.day.orderAsc],
       );
-      if (daysResult.isErr()) {
-        return err(daysResult.error);
-      }
-      final days = daysResult.value;
 
       final dayIds = days.map((day) => day.id!).toList();
-      final mealsResult = await _selectManyInChunks(
+      final meals = await selectManyInChunks<MealPlanMeal>(
         dao: _mealDao,
         column: MealPlanMealColumns.mealPlanDayId,
         values: dayIds,
         orderBy: [MealPlanMealColumns.position.orderAsc],
       );
-      if (mealsResult.isErr()) {
-        return err(mealsResult.error);
-      }
-      final meals = mealsResult.value;
 
       final mealIds = meals.map((meal) => meal.id!).toList();
-      final itemsResult = await _selectManyInChunks(
+      final items = await selectManyInChunks<MealPlanMealItem>(
         dao: _itemDao,
         column: MealPlanMealItemColumns.mealPlanMealId,
         values: mealIds,
       );
-      if (itemsResult.isErr()) {
-        return err(itemsResult.error);
-      }
-      final items = itemsResult.value;
 
       final recipeIds = meals
           .map((meal) => meal.recipeId)
           .whereType<int>()
           .toSet();
-      final recipesResult = await _selectManyInChunks(
-        dao: _recipeDao,
-        column: RecipeColumns.id,
-        values: recipeIds,
-      );
-      if (recipesResult.isErr()) {
-        return err(recipesResult.error);
-      }
-      final recipes = recipesResult.value;
-
       final foodIds = items.map((item) => item.foodId).toSet();
-      final foodsResult = await _selectManyInChunks(
-        dao: _foodDao,
-        column: FoodColumns.id,
-        values: foodIds,
-      );
-      if (foodsResult.isErr()) {
-        return err(foodsResult.error);
-      }
-      final foods = foodsResult.value;
-
       final portionIds = items
           .map((item) => item.portionId)
           .whereType<int>()
           .toSet();
-      final portionsResult = await _selectManyInChunks(
-        dao: _foodPortionDao,
-        column: FoodPortionColumns.id,
-        values: portionIds,
-      );
-      if (portionsResult.isErr()) {
-        return err(portionsResult.error);
-      }
-      final portions = portionsResult.value;
+
+      final referenceResults = await Future.wait([
+        selectManyInChunks<Recipe>(
+          dao: _recipeDao,
+          column: RecipeColumns.id,
+          values: recipeIds,
+        ),
+        selectManyInChunks<Food>(
+          dao: _foodDao,
+          column: FoodColumns.id,
+          values: foodIds,
+        ),
+        selectManyInChunks<FoodPortion>(
+          dao: _foodPortionDao,
+          column: FoodPortionColumns.id,
+          values: portionIds,
+        ),
+      ]);
+      final recipes = referenceResults[0] as List<Recipe>;
+      final foods = referenceResults[1] as List<Food>;
+      final portions = referenceResults[2] as List<FoodPortion>;
 
       final recipeById = {for (final recipe in recipes) recipe.id!: recipe};
       final foodById = {for (final food in foods) food.id!: food};
@@ -738,16 +795,16 @@ final class MealPlanRepository implements Repository {
         where.and(MealPlanColumns.isFavorite.equal, isFavorite ? 1 : 0);
       }
 
-      final List<MealPlan> plans = await _mealPlanDao.selectPaginated(
-        where: where.where,
-        whereArgs: where.args,
+      final (
+        List<MealPlan> plans,
+        int total,
+      ) = await fetchPaginatedWithTotal<MealPlan>(
+        dao: _mealPlanDao,
         limit: limit,
         offset: offset,
-        orderBy: [MealPlanColumns.name.orderAsc],
-      );
-      final int total = await _mealPlanDao.count(
         where: where.where,
         whereArgs: where.args,
+        orderBy: [MealPlanColumns.name.orderCaseInsensitiveAsc],
       );
 
       return ok(
@@ -779,256 +836,51 @@ final class MealPlanRepository implements Repository {
 
     _logger.info('Updating meal plan with id $id');
     try {
-      final MealPlan? existing = await _mealPlanDao.selectOne(id);
-      if (existing == null) {
-        return err(
-          const ServiceError(
-            type: SingleErrorTypes.notFound,
-            description: 'Meal plan not found',
-          ),
-        );
+      final referencesResult = await _loadMealPlanReferences(weeks);
+      if (referencesResult.isErr()) {
+        return err(referencesResult.error);
       }
-
-      if (existing.createdBy == CreatedBy.system) {
-        _logger.warning('Attempted to modify machine-authored meal plan $id');
-        return err(
-          const ServiceError(
-            type: SingleErrorTypes.invalidInput,
-            description: 'Cannot modify machine-authored meal plan',
-          ),
-        );
-      }
+      final prepared = _prepareMealPlanTree(weeks, referencesResult.value);
 
       return await _mealPlanDao.startTransaction<
         Result<MealPlanDto, ServiceError<SingleErrorTypes>>
       >((txn) async {
-        final referencesResult = await _loadMealPlanReferences(weeks, txn);
-        if (referencesResult.isErr()) {
-          return err(referencesResult.error);
+        final MealPlan? existing = await _mealPlanDao.selectOne(id, txn);
+        if (existing == null) {
+          return err(
+            const ServiceError(
+              type: SingleErrorTypes.notFound,
+              description: 'Meal plan not found',
+            ),
+          );
         }
-        final references = referencesResult.value;
+
+        if (existing.createdBy == CreatedBy.system) {
+          _logger.warning('Attempted to modify machine-authored meal plan $id');
+          return err(
+            const ServiceError(
+              type: SingleErrorTypes.invalidInput,
+              description: 'Cannot modify machine-authored meal plan',
+            ),
+          );
+        }
 
         final nextVersion = existing.version + 1;
-        final List<MealPlanWeekDto> weekDtos = [];
-        // Rebuild
-        int planTotalMeals = 0;
-        int planTotalDays = 0;
-        final int planTotalWeeks = weeks.length;
-        for (final w in weeks) {
-          planTotalDays += w.days.length;
-          for (final d in w.days) {
-            planTotalMeals += d.meals.length;
-          }
-        }
-
-        for (final wInput in weeks) {
-          int weekTotalMeals = 0;
-          int weekTotalCalories = 0;
-          int weekTotalProtein = 0;
-          int weekTotalCarbs = 0;
-          int weekTotalFat = 0;
-          int weekTotalFiber = 0;
-
-          final List<MealPlanDayDto> dayDtos = [];
-
-          final tempWeek = MealPlanWeek.create(
-            mealPlanId: id,
-            planVersion: nextVersion,
-            weekNumber: wInput.weekNumber,
-            phase: wInput.phase,
-            targetCalories: 0,
-            targetProtein: 0,
-            targetCarbs: 0,
-            targetFat: 0,
-            totalDays: wInput.days.length,
-            totalMeals: 0,
-            createdBy: existing.createdBy,
-          );
-          final int weekId = await _weekDao.insert(tempWeek, txn);
-
-          for (final dInput in wInput.days) {
-            int dayTotalCalories = 0;
-            int dayTotalProtein = 0;
-            int dayTotalCarbs = 0;
-            int dayTotalFat = 0;
-            int dayTotalFiber = 0;
-
-            final List<MealPlanMealDto> mealDtos = [];
-
-            final tempDay = MealPlanDay.create(
-              mealPlanId: id,
-              mealPlanWeekId: weekId,
-              planVersion: nextVersion,
-              day: dInput.day,
-              name: dInput.name,
-              targetCalories: 0,
-              targetProtein: 0,
-              targetCarbs: 0,
-              targetFat: 0,
-              totalMeals: dInput.meals.length,
-              createdBy: existing.createdBy,
-            );
-            final int dayId = await _dayDao.insert(tempDay, txn);
-
-            for (final mInput in dInput.meals) {
-              int mealCalories = 0;
-              int mealProtein = 0;
-              int mealCarbs = 0;
-              int mealFat = 0;
-              int mealFiber = 0;
-              String? recipeName;
-
-              if (mInput.recipeId != null) {
-                final recipe = references.recipes[mInput.recipeId];
-                recipeName = recipe?.name;
-                mealCalories += recipe?.servingCalories ?? 0;
-                mealProtein += recipe?.servingProtein ?? 0;
-                mealCarbs += recipe?.servingCarbs ?? 0;
-                mealFat += recipe?.servingFat ?? 0;
-              }
-
-              final List<MealPlanMealItemDto> itemDtos = [];
-
-              final tempMeal = MealPlanMeal.create(
-                mealPlanId: id,
-                mealPlanWeekId: weekId,
-                mealPlanDayId: dayId,
-                planVersion: nextVersion,
-                position: mInput.position,
-                timeOfDay: mInput.timeOfDay,
-                mealType: mInput.mealType,
-                name: mInput.name,
-                recipeId: mInput.recipeId,
-                totalCalories: 0,
-                totalProtein: 0,
-                totalCarbs: 0,
-                totalFat: 0,
-                createdBy: existing.createdBy,
-              );
-              final int mealId = await _mealDao.insert(tempMeal, txn);
-
-              for (final itemInput in mInput.items) {
-                final food = references.foods[itemInput.foodId]!;
-
-                double effectiveGrams = itemInput.amount.toDouble();
-                String? portionName;
-                if (itemInput.portionId != null) {
-                  final portion = references.portions[itemInput.portionId]!;
-                  portionName = portion.portionName;
-                  effectiveGrams = (itemInput.amount * portion.gramWeight)
-                      .toDouble();
-                }
-
-                final double scale = food.servingSizeBaseGrams > 0
-                    ? effectiveGrams / food.servingSizeBaseGrams
-                    : 1.0;
-
-                final itemCals = (food.caloriesBase * scale).round();
-                final itemProt = (food.proteinBase * scale).round();
-                final itemCarbs = (food.carbsBase * scale).round();
-                final itemFat = (food.fatBase * scale).round();
-                final itemFiber = food.fiberBase != null
-                    ? (food.fiberBase! * scale).round()
-                    : null;
-
-                mealCalories += itemCals;
-                mealProtein += itemProt;
-                mealCarbs += itemCarbs;
-                mealFat += itemFat;
-                if (itemFiber != null) {
-                  mealFiber += itemFiber;
-                }
-
-                final mealItem = MealPlanMealItem.create(
-                  mealPlanMealId: mealId,
-                  foodId: itemInput.foodId,
-                  portionId: itemInput.portionId,
-                  amount: itemInput.amount,
-                  totalCalories: itemCals,
-                  totalProtein: itemProt,
-                  totalCarbs: itemCarbs,
-                  totalFat: itemFat,
-                  totalFiber: itemFiber,
-                );
-                final int itemId = await _itemDao.insert(mealItem, txn);
-                itemDtos.add(
-                  MealPlanMealItemDto.fromModel(
-                    mealItem.copyWith(id: Nullable(itemId)),
-                    foodName: food.name,
-                    portionName: portionName,
-                  ),
-                );
-              }
-
-              final updatedMeal = tempMeal.copyWith(
-                id: Nullable(mealId),
-                totalCalories: mealCalories,
-                totalProtein: mealProtein,
-                totalCarbs: mealCarbs,
-                totalFat: mealFat,
-                totalFiber: Nullable(mealFiber),
-                updatedAt: DateUtilities.getNowUtcUnix(),
-              );
-              await _mealDao.update(updatedMeal, txn);
-              mealDtos.add(
-                MealPlanMealDto.fromModel(
-                  updatedMeal,
-                  recipeName: recipeName,
-                  items: itemDtos,
-                ),
-              );
-
-              dayTotalCalories += mealCalories;
-              dayTotalProtein += mealProtein;
-              dayTotalCarbs += mealCarbs;
-              dayTotalFat += mealFat;
-              dayTotalFiber += mealFiber;
-            }
-
-            final updatedDay = tempDay.copyWith(
-              id: Nullable(dayId),
-              targetCalories: dayTotalCalories,
-              targetProtein: dayTotalProtein,
-              targetCarbs: dayTotalCarbs,
-              targetFat: dayTotalFat,
-              targetFiber: Nullable(dayTotalFiber),
-              totalMeals: dInput.meals.length,
-              updatedAt: DateUtilities.getNowUtcUnix(),
-            );
-            await _dayDao.update(updatedDay, txn);
-            dayDtos.add(MealPlanDayDto.fromModel(updatedDay, meals: mealDtos));
-
-            weekTotalMeals += dInput.meals.length;
-            weekTotalCalories += dayTotalCalories;
-            weekTotalProtein += dayTotalProtein;
-            weekTotalCarbs += dayTotalCarbs;
-            weekTotalFat += dayTotalFat;
-            weekTotalFiber += dayTotalFiber;
-          }
-
-          final dayCount = wInput.days.isNotEmpty ? wInput.days.length : 1;
-          final updatedWeek = tempWeek.copyWith(
-            id: Nullable(weekId),
-            targetCalories: (weekTotalCalories / dayCount).round(),
-            targetProtein: (weekTotalProtein / dayCount).round(),
-            targetCarbs: (weekTotalCarbs / dayCount).round(),
-            targetFat: (weekTotalFat / dayCount).round(),
-            targetFiber: Nullable((weekTotalFiber / dayCount).round()),
-            totalDays: wInput.days.length,
-            totalMeals: weekTotalMeals,
-            updatedAt: DateUtilities.getNowUtcUnix(),
-          );
-          await _weekDao.update(updatedWeek, txn);
-          weekDtos.add(MealPlanWeekDto.fromModel(updatedWeek, days: dayDtos));
-        }
+        final weekDtos = await _insertMealPlanTree(
+          txn: txn,
+          mealPlanId: id,
+          planVersion: nextVersion,
+          createdBy: existing.createdBy,
+          preparedWeeks: prepared.weeks,
+        );
 
         final updated = existing.copyWith(
           name: name,
           version: nextVersion,
           description: input.description,
-          totalWeeks: planTotalWeeks,
-          totalDays: planTotalDays,
-          totalMeals: planTotalMeals,
+          totalWeeks: weeks.length,
+          totalDays: prepared.totalDays,
+          totalMeals: prepared.totalMeals,
           updatedAt: DateUtilities.getNowUtcUnix(),
         );
 

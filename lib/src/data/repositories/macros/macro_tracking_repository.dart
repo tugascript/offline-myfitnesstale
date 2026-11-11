@@ -18,6 +18,9 @@
 import 'package:logging/logging.dart';
 import 'package:sqflite/sqflite.dart';
 
+import '../../../utils/errors.dart';
+import '../../../utils/nullable.dart';
+import '../../../utils/result.dart';
 import '../../models/sqlite/daily_nutrition_log_model.dart';
 import '../../models/sqlite/day_macro_goal_model.dart';
 import '../../models/sqlite/food_model.dart';
@@ -27,21 +30,19 @@ import '../../models/sqlite/meal_log_model.dart';
 import '../../models/sqlite/recipe_model.dart';
 import '../../models/sqlite/week_macro_goal_model.dart';
 import '../../services/common.dart';
-import '../../services/sqlite/database_helper.dart';
 import '../../services/sqlite/dao.dart';
+import '../../services/sqlite/database_helper.dart';
 import '../../utils/dates.dart';
 import '../../utils/enums.dart';
 import '../../utils/json_data.dart';
 import '../../utils/where_builder.dart';
-import '../../../utils/errors.dart';
-import '../../../utils/nullable.dart';
-import '../../../utils/result.dart';
-import './dtos/macro_tracking_dto.dart';
 import '../core/dtos/paginated_dto.dart';
-import 'inputs/day_macro_goal_input.dart';
-import 'inputs/week_macro_goal_input.dart';
-import 'inputs/quick_food_log_input.dart';
 import '../core/repository.dart';
+import '../core/repository_helpers.dart';
+import './dtos/macro_tracking_dto.dart';
+import 'inputs/day_macro_goal_input.dart';
+import 'inputs/quick_food_log_input.dart';
+import 'inputs/week_macro_goal_input.dart';
 
 final class MacroTrackingRepository implements Repository {
   final Dao<Food> _foodDao;
@@ -277,6 +278,67 @@ final class MacroTrackingRepository implements Repository {
     );
   }
 
+  Future<void> _deactivateActiveMacroGoals(
+    Transaction txn, {
+    int? excludeWeekId,
+  }) async {
+    final now = DateUtilities.getNowUtcUnix();
+    final weekWhere = WhereBuilder()
+      ..and(WeekMacroGoalColumns.isActive.equal, 1);
+    final dayWhere = WhereBuilder()..and(DayMacroGoalColumns.isActive.equal, 1);
+    if (excludeWeekId != null) {
+      weekWhere.and(WeekMacroGoalColumns.id.notEqual, excludeWeekId);
+      dayWhere.and(DayMacroGoalColumns.weekMacroGoalId.notEqual, excludeWeekId);
+    }
+
+    await txn.update(
+      WeekMacroGoal.table,
+      {
+        WeekMacroGoalColumns.isActive.value: 0,
+        WeekMacroGoalColumns.updatedAt.value: now,
+      },
+      where: weekWhere.where,
+      whereArgs: weekWhere.args,
+    );
+    await txn.update(
+      DayMacroGoal.table,
+      {
+        DayMacroGoalColumns.isActive.value: 0,
+        DayMacroGoalColumns.updatedAt.value: now,
+      },
+      where: dayWhere.where,
+      whereArgs: dayWhere.args,
+    );
+  }
+
+  Future<List<DayMacroGoal>> _insertDayMacroGoals(
+    Transaction txn,
+    int weekId,
+    WeekMacroGoalInput input,
+    List<DayMacroGoalInput> dayInputs,
+  ) async {
+    final createdDays = <DayMacroGoal>[];
+    for (final d in dayInputs) {
+      final dayModel = DayMacroGoal.create(
+        weekMacroGoalId: weekId,
+        days: d.days,
+        name: d.name,
+        targetCalories: d.targetCalories,
+        targetProtein: d.targetProtein,
+        targetCarbs: d.targetCarbs,
+        targetFat: d.targetFat,
+        targetFiber: d.targetFiber.value,
+        targetSodium: d.targetSodium.value,
+        targetWaterIntakeMl: d.targetWaterIntakeMl.value,
+        phase: d.phase ?? input.phase,
+        isActive: input.isActive,
+      );
+      final dayId = await _dayMacroGoalDao.insert(dayModel, txn);
+      createdDays.add(dayModel.copyWith(id: Nullable(dayId)));
+    }
+    return createdDays;
+  }
+
   Future<Result<MacroGoalDto, ServiceError<SingleErrorTypes>>> createMacroGoal(
     WeekMacroGoalInput input,
   ) async {
@@ -308,51 +370,16 @@ final class MacroTrackingRepository implements Repository {
         txn,
       ) async {
         if (input.isActive) {
-          final activeWeeks = await _weekMacroGoalDao.selectMany(
-            where: WeekMacroGoalColumns.isActive.equal,
-            whereArgs: [1],
-            trx: txn,
-          );
-          for (final activeWeek in activeWeeks) {
-            await _weekMacroGoalDao.update(
-              activeWeek.copyWith(isActive: false),
-              txn,
-            );
-          }
-          final activeDays = await _dayMacroGoalDao.selectMany(
-            where: DayMacroGoalColumns.isActive.equal,
-            whereArgs: [1],
-            trx: txn,
-          );
-          for (final activeDay in activeDays) {
-            await _dayMacroGoalDao.update(
-              activeDay.copyWith(isActive: false),
-              txn,
-            );
-          }
+          await _deactivateActiveMacroGoals(txn);
         }
 
         final weekId = await _weekMacroGoalDao.insert(weekGoal, txn);
-        final createdDays = <DayMacroGoal>[];
-
-        for (final d in dayInputs) {
-          final dayModel = DayMacroGoal.create(
-            weekMacroGoalId: weekId,
-            days: d.days,
-            name: d.name,
-            targetCalories: d.targetCalories,
-            targetProtein: d.targetProtein,
-            targetCarbs: d.targetCarbs,
-            targetFat: d.targetFat,
-            targetFiber: d.targetFiber.value,
-            targetSodium: d.targetSodium.value,
-            targetWaterIntakeMl: d.targetWaterIntakeMl.value,
-            phase: d.phase ?? input.phase,
-            isActive: input.isActive,
-          );
-          final dayId = await _dayMacroGoalDao.insert(dayModel, txn);
-          createdDays.add(dayModel.copyWith(id: Nullable(dayId)));
-        }
+        final createdDays = await _insertDayMacroGoals(
+          txn,
+          weekId,
+          input,
+          dayInputs,
+        );
 
         return MacroGoalDto.fromWeekModel(
           weekGoal.copyWith(id: Nullable(weekId)),
@@ -400,28 +427,7 @@ final class MacroTrackingRepository implements Repository {
         Result<MacroGoalDto, ServiceError<SingleErrorTypes>>
       >((txn) async {
         if (input.isActive) {
-          final models = await _weekMacroGoalDao.selectMany(
-            where: WeekMacroGoalColumns.isActive.equal,
-            whereArgs: [1],
-            trx: txn,
-          );
-          for (final model in models) {
-            await _weekMacroGoalDao.update(
-              model.copyWith(isActive: false),
-              txn,
-            );
-          }
-          final activeDays = await _dayMacroGoalDao.selectMany(
-            where: DayMacroGoalColumns.isActive.equal,
-            whereArgs: [1],
-            trx: txn,
-          );
-          for (final activeDay in activeDays) {
-            await _dayMacroGoalDao.update(
-              activeDay.copyWith(isActive: false),
-              txn,
-            );
-          }
+          await _deactivateActiveMacroGoals(txn, excludeWeekId: id);
         }
 
         final updated = existing.copyWith(
@@ -446,25 +452,12 @@ final class MacroTrackingRepository implements Repository {
           trx: txn,
         );
 
-        final createdDays = <DayMacroGoal>[];
-        for (final d in dayInputs) {
-          final dayModel = DayMacroGoal.create(
-            weekMacroGoalId: id,
-            days: d.days,
-            name: d.name,
-            targetCalories: d.targetCalories,
-            targetProtein: d.targetProtein,
-            targetCarbs: d.targetCarbs,
-            targetFat: d.targetFat,
-            targetFiber: d.targetFiber.value,
-            targetSodium: d.targetSodium.value,
-            targetWaterIntakeMl: d.targetWaterIntakeMl.value,
-            phase: d.phase ?? input.phase,
-            isActive: input.isActive,
-          );
-          final dayId = await _dayMacroGoalDao.insert(dayModel, txn);
-          createdDays.add(dayModel.copyWith(id: Nullable(dayId)));
-        }
+        final createdDays = await _insertDayMacroGoals(
+          txn,
+          id,
+          input,
+          dayInputs,
+        );
 
         return ok(MacroGoalDto.fromWeekModel(updated, createdDays));
       });
@@ -497,19 +490,27 @@ final class MacroTrackingRepository implements Repository {
       return await _weekMacroGoalDao.startTransaction<
         Result<MacroGoalDto, ServiceError<SingleErrorTypes>>
       >((txn) async {
-        await _weekMacroGoalDao.update(updated, txn);
         final dayGoals = await _dayMacroGoalDao.selectMany(
           where: DayMacroGoalColumns.weekMacroGoalId.equal,
           whereArgs: [id],
           orderBy: [DayMacroGoalColumns.id.orderAsc],
           trx: txn,
         );
-        final updatedDayGoals = <DayMacroGoal>[];
-        for (final dayGoal in dayGoals) {
-          final updatedDay = dayGoal.copyWith(isActive: false, updatedAt: now);
-          await _dayMacroGoalDao.update(updatedDay, txn);
-          updatedDayGoals.add(updatedDay);
+        await _weekMacroGoalDao.update(updated, txn);
+        if (dayGoals.isNotEmpty) {
+          await txn.update(
+            DayMacroGoal.table,
+            {
+              DayMacroGoalColumns.isActive.value: 0,
+              DayMacroGoalColumns.updatedAt.value: now,
+            },
+            where: DayMacroGoalColumns.weekMacroGoalId.equal,
+            whereArgs: [id],
+          );
         }
+        final updatedDayGoals = dayGoals
+            .map((dayGoal) => dayGoal.copyWith(isActive: false, updatedAt: now))
+            .toList();
         return ok(MacroGoalDto.fromWeekModel(updated, updatedDayGoals));
       });
     } catch (e) {
@@ -597,40 +598,39 @@ final class MacroTrackingRepository implements Repository {
   }) async {
     _logger.info('Getting macro goals history');
     try {
-      final goals = await _weekMacroGoalDao.selectPaginated(
+      final (goals, total) = await fetchPaginatedWithTotal<WeekMacroGoal>(
+        dao: _weekMacroGoalDao,
         limit: limit,
         offset: offset,
         orderBy: [WeekMacroGoalColumns.createdAt.orderDesc],
       );
-      final total = await _weekMacroGoalDao.count();
 
-      final dtos = <MacroGoalDto>[];
+      final dayGoalsByWeekId = <int, List<DayMacroGoal>>{};
       if (goals.isNotEmpty) {
         final weekIds = goals.map((g) => g.id!).toList();
-        final allDayGoals = await _dayMacroGoalDao.selectMany(
-          where: DayMacroGoalColumns.weekMacroGoalId.inList(weekIds.length),
-          whereArgs: weekIds,
+        final allDayGoals = await selectManyInChunks<DayMacroGoal>(
+          dao: _dayMacroGoalDao,
+          column: DayMacroGoalColumns.weekMacroGoalId,
+          values: weekIds,
           orderBy: [DayMacroGoalColumns.id.orderAsc],
         );
-        final dayGoalsByWeekId = <int, List<DayMacroGoal>>{};
         for (final dayGoal in allDayGoals) {
           dayGoalsByWeekId
               .putIfAbsent(dayGoal.weekMacroGoalId, () => <DayMacroGoal>[])
               .add(dayGoal);
         }
-        for (final g in goals) {
-          dtos.add(
-            MacroGoalDto.fromWeekModel(
-              g,
-              dayGoalsByWeekId[g.id] ?? const <DayMacroGoal>[],
-            ),
-          );
-        }
       }
 
       return ok(
         PaginatedDto<MacroGoalDto, WeekMacroGoal>(
-          data: dtos,
+          data: goals
+              .map(
+                (g) => MacroGoalDto.fromWeekModel(
+                  g,
+                  dayGoalsByWeekId[g.id] ?? const <DayMacroGoal>[],
+                ),
+              )
+              .toList(),
           total: total,
           limit: limit,
           offset: offset,
@@ -649,18 +649,26 @@ final class MacroTrackingRepository implements Repository {
 
   // ==================== DAILY LOGS & MEALS ====================
 
-  Future<DailyNutritionLog> _getOrCreateDailyLogInternal(
-    Transaction txn,
-    int numericDate,
-  ) async {
-    final existingRows = await _dailyLogDao.selectMany(
+  Future<DailyNutritionLog?> _findDailyLog(
+    int numericDate, [
+    Transaction? txn,
+  ]) async {
+    final rows = await _dailyLogDao.selectMany(
       where: DailyNutritionLogColumns.date.equal,
       whereArgs: [numericDate],
       limit: 1,
       trx: txn,
     );
-    if (existingRows.isNotEmpty) {
-      return existingRows.first;
+    return rows.firstOrNull;
+  }
+
+  Future<DailyNutritionLog> _getOrCreateDailyLogInternal(
+    Transaction txn,
+    int numericDate,
+  ) async {
+    final existing = await _findDailyLog(numericDate, txn);
+    if (existing != null) {
+      return existing;
     }
 
     final newLog = DailyNutritionLog.create(date: numericDate);
@@ -668,18 +676,118 @@ final class MacroTrackingRepository implements Repository {
     return newLog.copyWith(id: Nullable(id));
   }
 
+  Future<FoodPortion?> _loadPortionForFood(int foodId, int portionId) async {
+    final portionWhere = WhereBuilder()
+      ..and(FoodPortionColumns.id.equal, portionId)
+      ..and(FoodPortionColumns.foodId.equal, foodId);
+    final rows = await _foodPortionDao.selectMany(
+      where: portionWhere.where,
+      whereArgs: portionWhere.args,
+      limit: 1,
+    );
+    return rows.isEmpty ? null : rows.first;
+  }
+
+  Micronutrients? _scaleMicronutrients(Micronutrients? micros, num scale) {
+    if (micros == null) {
+      return null;
+    }
+    final Map<String, dynamic> scaledMap = {};
+    for (final entry in micros.toMap().entries) {
+      if (entry.value is num) {
+        scaledMap[entry.key] = ((entry.value as num) * scale).round();
+      }
+    }
+    return Micronutrients.fromMap(scaledMap);
+  }
+
+  Future<Map<int, List<MealLogDto>>> _loadMealsByDailyLogIds(
+    List<int> dailyLogIds,
+  ) async {
+    if (dailyLogIds.isEmpty) {
+      return const {};
+    }
+
+    final mealRows = await selectManyInChunks<MealLog>(
+      dao: _mealLogDao,
+      column: MealLogColumns.dailyLogId,
+      values: dailyLogIds,
+      orderBy: [MealLogColumns.logTime.orderAsc, MealLogColumns.id.orderAsc],
+    );
+    if (mealRows.isEmpty) {
+      return const {};
+    }
+
+    final mealIds = mealRows.map((m) => m.id!).toList();
+    final itemRows = await selectManyInChunks<MealLogItem>(
+      dao: _mealLogItemDao,
+      column: MealLogItemColumns.mealLogId,
+      values: mealIds,
+      orderBy: [
+        MealLogItemColumns.createdAt.orderAsc,
+        MealLogItemColumns.id.orderAsc,
+      ],
+    );
+
+    final portionIds = itemRows
+        .map((item) => item.portionId)
+        .whereType<int>()
+        .toSet()
+        .toList();
+    final portionNamesById = <int, String>{};
+    if (portionIds.isNotEmpty) {
+      final portions = await selectManyInChunks<FoodPortion>(
+        dao: _foodPortionDao,
+        column: FoodPortionColumns.id,
+        values: portionIds,
+      );
+      for (final portion in portions) {
+        portionNamesById[portion.id!] = portion.portionName;
+      }
+    }
+
+    final itemsByMealId = <int, List<MealLogItemDto>>{};
+    for (final item in itemRows) {
+      final portionName = item.portionId != null
+          ? portionNamesById[item.portionId!]
+          : null;
+      itemsByMealId
+          .putIfAbsent(item.mealLogId, () => <MealLogItemDto>[])
+          .add(MealLogItemDto.fromModel(item, portionName: portionName));
+    }
+
+    final mealsByDailyLogId = <int, List<MealLogDto>>{};
+    for (final meal in mealRows) {
+      mealsByDailyLogId
+          .putIfAbsent(meal.dailyLogId, () => <MealLogDto>[])
+          .add(
+            MealLogDto.fromModel(
+              meal,
+              items: itemsByMealId[meal.id!] ?? const <MealLogItemDto>[],
+            ),
+          );
+    }
+
+    return mealsByDailyLogId;
+  }
+
+  Future<List<MealLogDto>> _loadMealsForDailyLog(int dailyLogId) async {
+    final byId = await _loadMealsByDailyLogIds([dailyLogId]);
+    return byId[dailyLogId] ?? const <MealLogDto>[];
+  }
+
   Future<Result<DailyNutritionLogDto, ServiceError<SingleErrorTypes>>>
   getDailyLogByDate(DateTime localDate) async {
     final numericDate = DateUtilities.getNumericDate(localDate);
     _logger.info('Getting daily log for date $numericDate');
     try {
-      return await _dailyLogDao.startTransaction<
-        Result<DailyNutritionLogDto, ServiceError<SingleErrorTypes>>
-      >((txn) async {
-        final dailyLog = await _getOrCreateDailyLogInternal(txn, numericDate);
-        final meals = await _loadMealsForDailyLog(txn, dailyLog.id!);
-        return ok(DailyNutritionLogDto.fromModel(dailyLog, meals: meals));
-      });
+      final dailyLog =
+          await _findDailyLog(numericDate) ??
+          await _dailyLogDao.startTransaction<DailyNutritionLog>(
+            (txn) => _getOrCreateDailyLogInternal(txn, numericDate),
+          );
+      final meals = await _loadMealsForDailyLog(dailyLog.id!);
+      return ok(DailyNutritionLogDto.fromModel(dailyLog, meals: meals));
     } catch (e) {
       _logger.severe('Failed to get daily log for date $numericDate', e);
       return err(
@@ -691,79 +799,35 @@ final class MacroTrackingRepository implements Repository {
     }
   }
 
-  Future<List<MealLogDto>> _loadMealsForDailyLog(
-    Transaction txn,
-    int dailyLogId,
-  ) async {
-    final mealRows = await _mealLogDao.selectMany(
-      where: MealLogColumns.dailyLogId.equal,
-      whereArgs: [dailyLogId],
-      orderBy: [MealLogColumns.logTime.orderAsc],
-      trx: txn,
-    );
-
-    final List<MealLogDto> mealDtos = [];
-    for (final mRow in mealRows) {
-      final meal = mRow;
-      final itemRows = await _mealLogItemDao.selectMany(
-        where: MealLogItemColumns.mealLogId.equal,
-        whereArgs: [meal.id!],
-        orderBy: [MealLogItemColumns.createdAt.orderAsc],
-        trx: txn,
-      );
-
-      final List<MealLogItemDto> itemDtos = [];
-      for (final iRow in itemRows) {
-        final item = iRow;
-        String? portionName;
-        if (item.portionId != null) {
-          final pRows = await _foodPortionDao.selectMany(
-            where: FoodPortionColumns.id.equal,
-            whereArgs: [item.portionId!],
-            limit: 1,
-            trx: txn,
-          );
-          if (pRows.isNotEmpty) {
-            portionName = pRows.first.portionName;
-          }
-        }
-        itemDtos.add(MealLogItemDto.fromModel(item, portionName: portionName));
-      }
-
-      mealDtos.add(MealLogDto.fromModel(meal, items: itemDtos));
-    }
-
-    return mealDtos;
-  }
-
   Future<Result<List<DailyNutritionLogDto>, ServiceError<OperationErrorTypes>>>
   getDailyLogsForRange({required DateTime start, required DateTime end}) async {
     final startNum = DateUtilities.getNumericDate(start);
     final endNum = DateUtilities.getNumericDate(end);
     _logger.info('Getting daily logs for range $startNum to $endNum');
     try {
-      final logs = await _dailyLogDao
-          .startTransaction<List<DailyNutritionLogDto>>((txn) async {
-            final rangeWhere = WhereBuilder()
-              ..and(DailyNutritionLogColumns.date.greaterThanOrEqual, startNum)
-              ..and(DailyNutritionLogColumns.date.lessThanOrEqual, endNum);
-            final logRows = await _dailyLogDao.selectMany(
-              where: rangeWhere.where,
-              whereArgs: rangeWhere.args,
-              orderBy: [DailyNutritionLogColumns.date.orderAsc],
-              trx: txn,
-            );
+      final rangeWhere = WhereBuilder()
+        ..and(DailyNutritionLogColumns.date.greaterThanOrEqual, startNum)
+        ..and(DailyNutritionLogColumns.date.lessThanOrEqual, endNum);
+      final logRows = await _dailyLogDao.selectMany(
+        where: rangeWhere.where,
+        whereArgs: rangeWhere.args,
+        orderBy: [DailyNutritionLogColumns.date.orderAsc],
+      );
+      if (logRows.isEmpty) {
+        return ok(const []);
+      }
 
-            final List<DailyNutritionLogDto> result = [];
-            for (final row in logRows) {
-              final dailyLog = row;
-              final meals = await _loadMealsForDailyLog(txn, dailyLog.id!);
-              result.add(
-                DailyNutritionLogDto.fromModel(dailyLog, meals: meals),
-              );
-            }
-            return result;
-          });
+      final mealsByDailyLogId = await _loadMealsByDailyLogIds(
+        logRows.map((row) => row.id!).toList(),
+      );
+      final logs = logRows
+          .map(
+            (row) => DailyNutritionLogDto.fromModel(
+              row,
+              meals: mealsByDailyLogId[row.id!] ?? const <MealLogDto>[],
+            ),
+          )
+          .toList();
 
       return ok(logs);
     } catch (e) {
@@ -785,18 +849,26 @@ final class MacroTrackingRepository implements Repository {
     final numericDate = DateUtilities.getNumericDate(date);
     _logger.info('Updating water intake for $numericDate to $waterIntakeMl ml');
     try {
-      return await _dailyLogDao.startTransaction<
-        Result<DailyNutritionLogDto, ServiceError<SingleErrorTypes>>
-      >((txn) async {
-        final dailyLog = await _getOrCreateDailyLogInternal(txn, numericDate);
-        final updated = dailyLog.copyWith(
+      final updated = await _dailyLogDao.startTransaction((txn) async {
+        final existing = await _findDailyLog(numericDate, txn);
+        if (existing == null) {
+          final newLog = DailyNutritionLog.create(
+            date: numericDate,
+            waterIntakeMl: waterIntakeMl,
+          );
+          final id = await _dailyLogDao.insert(newLog, txn);
+          return newLog.copyWith(id: Nullable(id));
+        }
+
+        final updated = existing.copyWith(
           waterIntakeMl: waterIntakeMl,
           updatedAt: DateUtilities.getNowUtcUnix(),
         );
         await _dailyLogDao.update(updated, txn);
-        final meals = await _loadMealsForDailyLog(txn, updated.id!);
-        return ok(DailyNutritionLogDto.fromModel(updated, meals: meals));
+        return updated;
       });
+      final meals = await _loadMealsForDailyLog(updated.id!);
+      return ok(DailyNutritionLogDto.fromModel(updated, meals: meals));
     } catch (e) {
       _logger.severe('Failed to update water intake', e);
       return err(
@@ -821,71 +893,53 @@ final class MacroTrackingRepository implements Repository {
 
     _logger.info('Logging food $foodId for meal $mealType at $numericDate');
     try {
-      return await _dailyLogDao.startTransaction<
-        Result<MealLogDto, ServiceError<SingleErrorTypes>>
-      >((txn) async {
-        final foodRows = await _foodDao.selectMany(
-          where: FoodColumns.id.equal,
-          whereArgs: [foodId],
-          limit: 1,
-          trx: txn,
+      final foodFuture = _foodDao.selectOne(foodId);
+      final portionFuture = portionId != null
+          ? _loadPortionForFood(foodId, portionId)
+          : Future<FoodPortion?>.value(null);
+      final (food, portion) = await (foodFuture, portionFuture).wait;
+
+      if (food == null) {
+        return err(
+          ServiceError(
+            type: SingleErrorTypes.notFound,
+            description: 'Food with id $foodId not found',
+          ),
         );
-        if (foodRows.isEmpty) {
+      }
+
+      double effectiveGrams = amount.toDouble();
+      String? portionName;
+      if (portionId != null) {
+        if (portion == null) {
           return err(
             ServiceError(
               type: SingleErrorTypes.notFound,
-              description: 'Food with id $foodId not found',
+              description:
+                  'Portion with id $portionId not found for food $foodId',
             ),
           );
         }
-        final food = foodRows.first;
+        portionName = portion.portionName;
+        effectiveGrams = (amount * portion.gramWeight).toDouble();
+      }
 
-        double effectiveGrams = amount.toDouble();
-        String? portionName;
-        if (portionId != null) {
-          final portionWhere = WhereBuilder()
-            ..and(FoodPortionColumns.id.equal, portionId)
-            ..and(FoodPortionColumns.foodId.equal, foodId);
-          final pRows = await _foodPortionDao.selectMany(
-            where: portionWhere.where,
-            whereArgs: portionWhere.args,
-            limit: 1,
-            trx: txn,
-          );
-          if (pRows.isEmpty) {
-            return err(
-              ServiceError(
-                type: SingleErrorTypes.notFound,
-                description:
-                    'Portion with id $portionId not found for food $foodId',
-              ),
-            );
-          }
-          final portion = pRows.first;
-          portionName = portion.portionName;
-          effectiveGrams = (amount * portion.gramWeight).toDouble();
-        }
+      final double scale = food.servingSizeBaseGrams > 0
+          ? effectiveGrams / food.servingSizeBaseGrams
+          : 1.0;
 
-        final double scale = food.servingSizeBaseGrams > 0
-            ? effectiveGrams / food.servingSizeBaseGrams
-            : 1.0;
+      final int itemCals = (food.caloriesBase * scale).round();
+      final int itemProtein = (food.proteinBase * scale).round();
+      final int itemCarbs = (food.carbsBase * scale).round();
+      final int itemFat = (food.fatBase * scale).round();
+      final Micronutrients? itemMicros = _scaleMicronutrients(
+        food.micros,
+        scale,
+      );
 
-        final int itemCals = (food.caloriesBase * scale).round();
-        final int itemProtein = (food.proteinBase * scale).round();
-        final int itemCarbs = (food.carbsBase * scale).round();
-        final int itemFat = (food.fatBase * scale).round();
-
-        Micronutrients? itemMicros;
-        if (food.micros != null) {
-          final Map<String, dynamic> scaledMap = {};
-          for (final entry in food.micros!.toMap().entries) {
-            if (entry.value is num) {
-              scaledMap[entry.key] = ((entry.value as num) * scale).round();
-            }
-          }
-          itemMicros = Micronutrients.fromMap(scaledMap);
-        }
-
+      return await _dailyLogDao.startTransaction<
+        Result<MealLogDto, ServiceError<SingleErrorTypes>>
+      >((txn) async {
         final dailyLog = await _getOrCreateDailyLogInternal(txn, numericDate);
 
         // Each submission retains its own time and nutrition snapshot.
@@ -893,15 +947,14 @@ final class MacroTrackingRepository implements Repository {
           dailyLogId: dailyLog.id!,
           mealType: mealType,
           logTime: logUnix,
-          totalCalories: 0,
-          totalProtein: 0,
-          totalCarbs: 0,
-          totalFat: 0,
+          totalCalories: itemCals,
+          totalProtein: itemProtein,
+          totalCarbs: itemCarbs,
+          totalFat: itemFat,
         );
         final mealLogId = await _mealLogDao.insert(newMeal, txn);
-        final mealLog = newMeal.copyWith(id: Nullable(mealLogId));
+        final savedMeal = newMeal.copyWith(id: Nullable(mealLogId));
 
-        // Insert MealLogItem
         final logItem = MealLogItem.create(
           mealLogId: mealLogId,
           foodId: foodId,
@@ -914,43 +967,19 @@ final class MacroTrackingRepository implements Repository {
           loggedFat: itemFat,
           loggedMicros: itemMicros,
         );
-        await _mealLogItemDao.insert(logItem, txn);
+        final itemId = await _mealLogItemDao.insert(logItem, txn);
 
-        // Recompute meal log totals from all items
-        final allItems = await _mealLogItemDao.selectMany(
-          where: MealLogItemColumns.mealLogId.equal,
-          whereArgs: [mealLogId],
-          trx: txn,
+        return ok(
+          MealLogDto.fromModel(
+            savedMeal,
+            items: [
+              MealLogItemDto.fromModel(
+                logItem.copyWith(id: Nullable(itemId)),
+                portionName: portionName,
+              ),
+            ],
+          ),
         );
-
-        int sumCals = 0;
-        int sumProtein = 0;
-        int sumCarbs = 0;
-        int sumFat = 0;
-        for (final it in allItems) {
-          sumCals += it.loggedCalories;
-          sumProtein += it.loggedProtein;
-          sumCarbs += it.loggedCarbs;
-          sumFat += it.loggedFat;
-        }
-
-        final updatedMeal = mealLog.copyWith(
-          totalCalories: sumCals,
-          totalProtein: sumProtein,
-          totalCarbs: sumCarbs,
-          totalFat: sumFat,
-          updatedAt: DateUtilities.getNowUtcUnix(),
-        );
-        await _mealLogDao.update(updatedMeal, txn);
-
-        final List<MealLogItemDto> itemDtos = allItems.map((it) {
-          return MealLogItemDto.fromModel(
-            it,
-            portionName: it.id == logItem.id ? portionName : null,
-          );
-        }).toList();
-
-        return ok(MealLogDto.fromModel(updatedMeal, items: itemDtos));
       });
     } catch (e) {
       _logger.severe('Failed to log food item', e);
@@ -1042,42 +1071,28 @@ final class MacroTrackingRepository implements Repository {
 
     _logger.info('Logging recipe $recipeId for meal $mealType');
     try {
+      final recipe = await _recipeDao.selectOne(recipeId);
+      if (recipe == null) {
+        return err(
+          ServiceError(
+            type: SingleErrorTypes.notFound,
+            description: 'Recipe with id $recipeId not found',
+          ),
+        );
+      }
+
+      final itemCals = recipe.servingCalories * actualServings;
+      final itemProtein = recipe.servingProtein * actualServings;
+      final itemCarbs = recipe.servingCarbs * actualServings;
+      final itemFat = recipe.servingFat * actualServings;
+      final itemMicros = _scaleMicronutrients(
+        recipe.servingMicros,
+        actualServings,
+      );
+
       return await _dailyLogDao.startTransaction<
         Result<MealLogDto, ServiceError<SingleErrorTypes>>
       >((txn) async {
-        final recipeRows = await _recipeDao.selectMany(
-          where: RecipeColumns.id.equal,
-          whereArgs: [recipeId],
-          limit: 1,
-          trx: txn,
-        );
-        if (recipeRows.isEmpty) {
-          return err(
-            ServiceError(
-              type: SingleErrorTypes.notFound,
-              description: 'Recipe with id $recipeId not found',
-            ),
-          );
-        }
-        final recipe = recipeRows.first;
-
-        final itemCals = recipe.servingCalories * actualServings;
-        final itemProtein = recipe.servingProtein * actualServings;
-        final itemCarbs = recipe.servingCarbs * actualServings;
-        final itemFat = recipe.servingFat * actualServings;
-
-        Micronutrients? itemMicros;
-        if (recipe.servingMicros != null) {
-          final Map<String, dynamic> scaled = {};
-          for (final entry in recipe.servingMicros!.toMap().entries) {
-            if (entry.value is num) {
-              scaled[entry.key] = ((entry.value as num) * actualServings)
-                  .round();
-            }
-          }
-          itemMicros = Micronutrients.fromMap(scaled);
-        }
-
         final dailyLog = await _getOrCreateDailyLogInternal(txn, numericDate);
 
         final newMeal = MealLog.create(
@@ -1085,13 +1100,13 @@ final class MacroTrackingRepository implements Repository {
           mealType: mealType,
           recipeId: recipeId,
           logTime: logUnix,
-          totalCalories: 0,
-          totalProtein: 0,
-          totalCarbs: 0,
-          totalFat: 0,
+          totalCalories: itemCals,
+          totalProtein: itemProtein,
+          totalCarbs: itemCarbs,
+          totalFat: itemFat,
         );
         final mealLogId = await _mealLogDao.insert(newMeal, txn);
-        final mealLog = newMeal.copyWith(id: Nullable(mealLogId));
+        final savedMeal = newMeal.copyWith(id: Nullable(mealLogId));
 
         final logItem = MealLogItem.create(
           mealLogId: mealLogId,
@@ -1104,40 +1119,16 @@ final class MacroTrackingRepository implements Repository {
           loggedFat: itemFat,
           loggedMicros: itemMicros,
         );
-        await _mealLogItemDao.insert(logItem, txn);
+        final itemId = await _mealLogItemDao.insert(logItem, txn);
 
-        final allItems = await _mealLogItemDao.selectMany(
-          where: MealLogItemColumns.mealLogId.equal,
-          whereArgs: [mealLogId],
-          trx: txn,
+        return ok(
+          MealLogDto.fromModel(
+            savedMeal,
+            items: [
+              MealLogItemDto.fromModel(logItem.copyWith(id: Nullable(itemId))),
+            ],
+          ),
         );
-
-        int sumCals = 0;
-        int sumProtein = 0;
-        int sumCarbs = 0;
-        int sumFat = 0;
-        for (final it in allItems) {
-          sumCals += it.loggedCalories;
-          sumProtein += it.loggedProtein;
-          sumCarbs += it.loggedCarbs;
-          sumFat += it.loggedFat;
-        }
-
-        final updatedMeal = mealLog.copyWith(
-          recipeId: Nullable(recipeId),
-          totalCalories: sumCals,
-          totalProtein: sumProtein,
-          totalCarbs: sumCarbs,
-          totalFat: sumFat,
-          updatedAt: DateUtilities.getNowUtcUnix(),
-        );
-        await _mealLogDao.update(updatedMeal, txn);
-
-        final List<MealLogItemDto> itemDtos = allItems
-            .map((it) => MealLogItemDto.fromModel(it))
-            .toList();
-
-        return ok(MealLogDto.fromModel(updatedMeal, items: itemDtos));
       });
     } catch (e) {
       _logger.severe('Failed to log recipe', e);
