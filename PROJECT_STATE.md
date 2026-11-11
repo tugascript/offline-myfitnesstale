@@ -497,7 +497,9 @@ PR #36 review follow-up:
 - Workout plan starts validate the template inside the write transaction.
   Workout edits also check for records and allocate template versions inside
   the write transaction so concurrent edits preserve distinct versions.
-- The host suite passed 418 tests with the existing migration test skipped.
+- Recipe item, meal-plan schedule, and workout record set inserts return typed
+  errors. Rejected child inserts roll back the full create or update.
+- The host suite passed 419 tests with the existing migration test skipped.
   Device integration tests were not run.
 
 ## Known gaps and release blockers

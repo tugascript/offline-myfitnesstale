@@ -121,13 +121,16 @@ final class RecipeRepository implements Repository {
             );
 
             final int recipeId = await _recipeDao.insert(recipe, txn);
-            final itemDtos = await _insertRecipeItems(
+            final savedChildren = await _insertRecipeItems(
               recipeId: recipeId,
               items: prepared.calculatedItems,
               foodNames: prepared.foodNames,
               portionNames: prepared.portionNames,
               txn: txn,
             );
+            // Throw inside the transaction to roll back earlier writes.
+            if (savedChildren.isErr()) throw savedChildren.error;
+            final itemDtos = savedChildren.value;
 
             _logger.info('Created recipe with id $recipeId');
             return ok(
@@ -285,13 +288,16 @@ final class RecipeRepository implements Repository {
               trx: txn,
             );
 
-            final itemDtos = await _insertRecipeItems(
+            final savedChildren = await _insertRecipeItems(
               recipeId: id,
               items: prepared.calculatedItems,
               foodNames: prepared.foodNames,
               portionNames: prepared.portionNames,
               txn: txn,
             );
+            // Throw inside the transaction to roll back earlier writes.
+            if (savedChildren.isErr()) throw savedChildren.error;
+            final itemDtos = savedChildren.value;
 
             final updated = existing.copyWith(
               name: name,
@@ -560,28 +566,39 @@ final class RecipeRepository implements Repository {
     ));
   }
 
-  Future<List<RecipeItemDto>> _insertRecipeItems({
+  Future<Result<List<RecipeItemDto>, ServiceError<SingleErrorTypes>>>
+  _insertRecipeItems({
     required int recipeId,
     required List<RecipeItem> items,
     required Map<int, String> foodNames,
     required Map<int, String> portionNames,
     required Transaction txn,
   }) async {
-    final List<RecipeItemDto> itemDtos = [];
-    for (final item in items) {
-      final withRecipeId = item.copyWith(recipeId: recipeId);
-      final int itemId = await _itemDao.insert(withRecipeId, txn);
-      itemDtos.add(
-        RecipeItemDto.fromModel(
-          withRecipeId.copyWith(id: Nullable(itemId)),
-          foodName: foodNames[item.foodId],
-          portionName: item.portionId != null
-              ? portionNames[item.portionId]
-              : null,
-        ),
-      );
+    const failure = ServiceError(
+      type: SingleErrorTypes.operationFailure,
+      description: 'Failed to save recipe items',
+    );
+    try {
+      final List<RecipeItemDto> itemDtos = [];
+      for (final item in items) {
+        final withRecipeId = item.copyWith(recipeId: recipeId);
+        final int itemId = await _itemDao.insert(withRecipeId, txn);
+        if (itemId <= 0) return err(failure);
+        itemDtos.add(
+          RecipeItemDto.fromModel(
+            withRecipeId.copyWith(id: Nullable(itemId)),
+            foodName: foodNames[item.foodId],
+            portionName: item.portionId != null
+                ? portionNames[item.portionId]
+                : null,
+          ),
+        );
+      }
+      return ok(itemDtos);
+    } catch (error, stackTrace) {
+      _logger.severe('Failed to save recipe items', error, stackTrace);
+      return err(failure);
     }
-    return itemDtos;
   }
 
   Future<Result<List<RecipeItemDto>, ServiceError<SingleErrorTypes>>>

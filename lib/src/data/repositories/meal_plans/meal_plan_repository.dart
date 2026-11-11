@@ -434,120 +434,134 @@ final class MealPlanRepository implements Repository {
     );
   }
 
-  Future<List<MealPlanWeekDto>> _insertMealPlanTree({
+  Future<Result<List<MealPlanWeekDto>, ServiceError<SingleErrorTypes>>>
+  _insertMealPlanTree({
     required Transaction txn,
     required int mealPlanId,
     required int planVersion,
     required CreatedBy createdBy,
     required List<_PreparedPlanWeek> preparedWeeks,
   }) async {
-    final List<MealPlanWeekDto> weekDtos = [];
+    const failure = ServiceError(
+      type: SingleErrorTypes.operationFailure,
+      description: 'Failed to save meal plan schedule',
+    );
+    try {
+      final List<MealPlanWeekDto> weekDtos = [];
 
-    for (final w in preparedWeeks) {
-      final week = MealPlanWeek.create(
-        mealPlanId: mealPlanId,
-        planVersion: planVersion,
-        weekNumber: w.weekNumber,
-        phase: w.phase,
-        targetCalories: w.targetCalories,
-        targetProtein: w.targetProtein,
-        targetCarbs: w.targetCarbs,
-        targetFat: w.targetFat,
-        targetFiber: w.targetFiber,
-        totalDays: w.totalDays,
-        totalMeals: w.totalMeals,
-        createdBy: createdBy,
-      );
-      final int weekId = await _weekDao.insert(week, txn);
-      final List<MealPlanDayDto> dayDtos = [];
-
-      for (final d in w.days) {
-        final day = MealPlanDay.create(
+      for (final w in preparedWeeks) {
+        final week = MealPlanWeek.create(
           mealPlanId: mealPlanId,
-          mealPlanWeekId: weekId,
           planVersion: planVersion,
-          day: d.day,
-          name: d.name,
-          targetCalories: d.targetCalories,
-          targetProtein: d.targetProtein,
-          targetCarbs: d.targetCarbs,
-          targetFat: d.targetFat,
-          targetFiber: d.targetFiber,
-          totalMeals: d.meals.length,
+          weekNumber: w.weekNumber,
+          phase: w.phase,
+          targetCalories: w.targetCalories,
+          targetProtein: w.targetProtein,
+          targetCarbs: w.targetCarbs,
+          targetFat: w.targetFat,
+          targetFiber: w.targetFiber,
+          totalDays: w.totalDays,
+          totalMeals: w.totalMeals,
           createdBy: createdBy,
         );
-        final int dayId = await _dayDao.insert(day, txn);
-        final List<MealPlanMealDto> mealDtos = [];
+        final int weekId = await _weekDao.insert(week, txn);
+        if (weekId <= 0) return err(failure);
+        final List<MealPlanDayDto> dayDtos = [];
 
-        for (final m in d.meals) {
-          final meal = MealPlanMeal.create(
+        for (final d in w.days) {
+          final day = MealPlanDay.create(
             mealPlanId: mealPlanId,
             mealPlanWeekId: weekId,
-            mealPlanDayId: dayId,
             planVersion: planVersion,
-            position: m.position,
-            timeOfDay: m.timeOfDay,
-            mealType: m.mealType,
-            name: m.name,
-            recipeId: m.recipeId,
-            totalCalories: m.totalCalories,
-            totalProtein: m.totalProtein,
-            totalCarbs: m.totalCarbs,
-            totalFat: m.totalFat,
-            totalFiber: m.totalFiber,
+            day: d.day,
+            name: d.name,
+            targetCalories: d.targetCalories,
+            targetProtein: d.targetProtein,
+            targetCarbs: d.targetCarbs,
+            targetFat: d.targetFat,
+            targetFiber: d.targetFiber,
+            totalMeals: d.meals.length,
             createdBy: createdBy,
           );
-          final int mealId = await _mealDao.insert(meal, txn);
-          final List<MealPlanMealItemDto> itemDtos = [];
+          final int dayId = await _dayDao.insert(day, txn);
+          if (dayId <= 0) return err(failure);
+          final List<MealPlanMealDto> mealDtos = [];
 
-          for (final item in m.items) {
-            final mealItem = MealPlanMealItem.create(
-              mealPlanMealId: mealId,
-              foodId: item.foodId,
-              portionId: item.portionId,
-              amount: item.amount,
-              totalCalories: item.totalCalories,
-              totalProtein: item.totalProtein,
-              totalCarbs: item.totalCarbs,
-              totalFat: item.totalFat,
-              totalFiber: item.totalFiber,
+          for (final m in d.meals) {
+            final meal = MealPlanMeal.create(
+              mealPlanId: mealPlanId,
+              mealPlanWeekId: weekId,
+              mealPlanDayId: dayId,
+              planVersion: planVersion,
+              position: m.position,
+              timeOfDay: m.timeOfDay,
+              mealType: m.mealType,
+              name: m.name,
+              recipeId: m.recipeId,
+              totalCalories: m.totalCalories,
+              totalProtein: m.totalProtein,
+              totalCarbs: m.totalCarbs,
+              totalFat: m.totalFat,
+              totalFiber: m.totalFiber,
+              createdBy: createdBy,
             );
-            final int itemId = await _itemDao.insert(mealItem, txn);
-            itemDtos.add(
-              MealPlanMealItemDto.fromModel(
-                mealItem.copyWith(id: Nullable(itemId)),
-                foodName: item.foodName,
-                portionName: item.portionName,
+            final int mealId = await _mealDao.insert(meal, txn);
+            if (mealId <= 0) return err(failure);
+            final List<MealPlanMealItemDto> itemDtos = [];
+
+            for (final item in m.items) {
+              final mealItem = MealPlanMealItem.create(
+                mealPlanMealId: mealId,
+                foodId: item.foodId,
+                portionId: item.portionId,
+                amount: item.amount,
+                totalCalories: item.totalCalories,
+                totalProtein: item.totalProtein,
+                totalCarbs: item.totalCarbs,
+                totalFat: item.totalFat,
+                totalFiber: item.totalFiber,
+              );
+              final int itemId = await _itemDao.insert(mealItem, txn);
+              if (itemId <= 0) return err(failure);
+              itemDtos.add(
+                MealPlanMealItemDto.fromModel(
+                  mealItem.copyWith(id: Nullable(itemId)),
+                  foodName: item.foodName,
+                  portionName: item.portionName,
+                ),
+              );
+            }
+
+            mealDtos.add(
+              MealPlanMealDto.fromModel(
+                meal.copyWith(id: Nullable(mealId)),
+                recipeName: m.recipeName,
+                items: itemDtos,
               ),
             );
           }
 
-          mealDtos.add(
-            MealPlanMealDto.fromModel(
-              meal.copyWith(id: Nullable(mealId)),
-              recipeName: m.recipeName,
-              items: itemDtos,
+          dayDtos.add(
+            MealPlanDayDto.fromModel(
+              day.copyWith(id: Nullable(dayId)),
+              meals: mealDtos,
             ),
           );
         }
 
-        dayDtos.add(
-          MealPlanDayDto.fromModel(
-            day.copyWith(id: Nullable(dayId)),
-            meals: mealDtos,
+        weekDtos.add(
+          MealPlanWeekDto.fromModel(
+            week.copyWith(id: Nullable(weekId)),
+            days: dayDtos,
           ),
         );
       }
 
-      weekDtos.add(
-        MealPlanWeekDto.fromModel(
-          week.copyWith(id: Nullable(weekId)),
-          days: dayDtos,
-        ),
-      );
+      return ok(weekDtos);
+    } catch (error, stackTrace) {
+      _logger.severe('Failed to save meal plan schedule', error, stackTrace);
+      return err(failure);
     }
-
-    return weekDtos;
   }
 
   Future<Result<MealPlanDto, ServiceError<SingleErrorTypes>>> createMealPlan(
@@ -580,13 +594,16 @@ final class MealPlanRepository implements Repository {
         );
         final int planId = await _mealPlanDao.insert(mealPlan, txn);
 
-        final weekDtos = await _insertMealPlanTree(
+        final savedChildren = await _insertMealPlanTree(
           txn: txn,
           mealPlanId: planId,
           planVersion: 1,
           createdBy: createdBy,
           preparedWeeks: prepared.weeks,
         );
+        // Throw inside the transaction to roll back earlier writes.
+        if (savedChildren.isErr()) throw savedChildren.error;
+        final weekDtos = savedChildren.value;
 
         final createdDto = MealPlanDto.fromModel(
           mealPlan.copyWith(id: Nullable(planId)),
@@ -595,6 +612,8 @@ final class MealPlanRepository implements Repository {
         _logger.info('Created meal plan with id $planId');
         return ok(createdDto);
       });
+    } on ServiceError<SingleErrorTypes> catch (error) {
+      return err(error);
     } catch (e) {
       _logger.severe('Failed to create meal plan', e);
       return err(
@@ -889,13 +908,16 @@ final class MealPlanRepository implements Repository {
         }
 
         final nextVersion = existing.version + 1;
-        final weekDtos = await _insertMealPlanTree(
+        final savedChildren = await _insertMealPlanTree(
           txn: txn,
           mealPlanId: id,
           planVersion: nextVersion,
           createdBy: existing.createdBy,
           preparedWeeks: prepared.weeks,
         );
+        // Throw inside the transaction to roll back earlier writes.
+        if (savedChildren.isErr()) throw savedChildren.error;
+        final weekDtos = savedChildren.value;
 
         final updated = existing.copyWith(
           name: name,
@@ -911,6 +933,8 @@ final class MealPlanRepository implements Repository {
         _logger.info('Updated meal plan with id $id');
         return ok(MealPlanDto.fromModel(updated, weeks: weekDtos));
       });
+    } on ServiceError<SingleErrorTypes> catch (error) {
+      return err(error);
     } catch (e) {
       _logger.severe('Failed to update meal plan with id $id', e);
       return err(

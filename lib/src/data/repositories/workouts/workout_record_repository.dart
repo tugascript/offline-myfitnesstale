@@ -810,70 +810,82 @@ final class WorkoutRecordRepository implements Repository {
     ));
   }
 
-  Future<List<WorkoutSetRecordDto>> _insertBatchSetsAndExercises({
+  Future<Result<List<WorkoutSetRecordDto>, ServiceError<OperationErrorTypes>>>
+  _insertBatchSetsAndExercises({
     required Transaction trx,
     required int workoutRecordId,
     required List<WorkoutSetRecordBatchInput> sets,
     required Map<int, ExerciseDto> exerciseMap,
   }) async {
-    final List<WorkoutSetRecordDto> setRecordDtos = [];
-    for (final setDto in sets) {
-      final WorkoutSetRecord setRecord = WorkoutSetRecord.create(
-        workoutSetId: setDto.workoutSetId,
-        workoutRecordId: workoutRecordId,
-        setNumber: setDto.setNumber,
-        startedAt: DateUtilities.getDateUnix(setDto.startedAt),
-        completedAt: setDto.completedAt != null
-            ? DateUtilities.getDateUnix(setDto.completedAt!)
-            : null,
-        totalRestSecs: setDto.totalRestSecs,
-      );
-      final int setRecordId = await _setRecordDao.insert(setRecord, trx);
-
-      final exercises = <(int, WorkoutSetExerciseRecordDto)>[];
-      for (final exDto in setDto.exercises) {
-        final WorkoutSetExerciseRecord exRecord =
-            WorkoutSetExerciseRecord.create(
-              workoutSetExerciseId: exDto.workoutSetExerciseId,
-              workoutRecordId: workoutRecordId,
-              workoutSetRecordId: setRecordId,
-              exerciseId: exDto.exerciseId,
-              position: exDto.position,
-              reps: exDto.reps,
-              weightGrams: exDto.weight,
-              difficulty: exDto.difficulty,
-            );
-        final int exRecordId = await _setExerciseRecordDao.insert(
-          exRecord,
-          trx,
+    const failure = ServiceError(
+      type: OperationErrorTypes.operationFailure,
+      description: 'Failed to save workout record sets',
+    );
+    try {
+      final List<WorkoutSetRecordDto> setRecordDtos = [];
+      for (final setDto in sets) {
+        final WorkoutSetRecord setRecord = WorkoutSetRecord.create(
+          workoutSetId: setDto.workoutSetId,
+          workoutRecordId: workoutRecordId,
+          setNumber: setDto.setNumber,
+          startedAt: DateUtilities.getDateUnix(setDto.startedAt),
+          completedAt: setDto.completedAt != null
+              ? DateUtilities.getDateUnix(setDto.completedAt!)
+              : null,
+          totalRestSecs: setDto.totalRestSecs,
         );
-        exercises.add((
-          exDto.position,
-          WorkoutSetExerciseRecordDto.fromModel(
-            exRecord.copyWith(id: Nullable(exRecordId)),
-            exercise: exerciseMap[exDto.exerciseId],
-          ),
-        ));
-      }
+        final int setRecordId = await _setRecordDao.insert(setRecord, trx);
+        if (setRecordId <= 0) return err(failure);
 
-      exercises.sort((a, b) {
-        final byPosition = a.$1.compareTo(b.$1);
-        return byPosition == 0 ? a.$2.id.compareTo(b.$2.id) : byPosition;
+        final exercises = <(int, WorkoutSetExerciseRecordDto)>[];
+        for (final exDto in setDto.exercises) {
+          final WorkoutSetExerciseRecord exRecord =
+              WorkoutSetExerciseRecord.create(
+                workoutSetExerciseId: exDto.workoutSetExerciseId,
+                workoutRecordId: workoutRecordId,
+                workoutSetRecordId: setRecordId,
+                exerciseId: exDto.exerciseId,
+                position: exDto.position,
+                reps: exDto.reps,
+                weightGrams: exDto.weight,
+                difficulty: exDto.difficulty,
+              );
+          final int exRecordId = await _setExerciseRecordDao.insert(
+            exRecord,
+            trx,
+          );
+          if (exRecordId <= 0) return err(failure);
+          exercises.add((
+            exDto.position,
+            WorkoutSetExerciseRecordDto.fromModel(
+              exRecord.copyWith(id: Nullable(exRecordId)),
+              exercise: exerciseMap[exDto.exerciseId],
+            ),
+          ));
+        }
+
+        exercises.sort((a, b) {
+          final byPosition = a.$1.compareTo(b.$1);
+          return byPosition == 0 ? a.$2.id.compareTo(b.$2.id) : byPosition;
+        });
+        setRecordDtos.add(
+          WorkoutSetRecordDto.fromModel(
+            setRecord.copyWith(id: Nullable(setRecordId)),
+            setExerciseRecords: exercises.isEmpty
+                ? null
+                : exercises.map((exercise) => exercise.$2).toList(),
+          ),
+        );
+      }
+      setRecordDtos.sort((a, b) {
+        final bySetNumber = a.setNumber.compareTo(b.setNumber);
+        return bySetNumber == 0 ? a.id.compareTo(b.id) : bySetNumber;
       });
-      setRecordDtos.add(
-        WorkoutSetRecordDto.fromModel(
-          setRecord.copyWith(id: Nullable(setRecordId)),
-          setExerciseRecords: exercises.isEmpty
-              ? null
-              : exercises.map((exercise) => exercise.$2).toList(),
-        ),
-      );
+      return ok(setRecordDtos);
+    } catch (error, stackTrace) {
+      _logger.severe('Failed to save workout record sets', error, stackTrace);
+      return err(failure);
     }
-    setRecordDtos.sort((a, b) {
-      final bySetNumber = a.setNumber.compareTo(b.setNumber);
-      return bySetNumber == 0 ? a.id.compareTo(b.id) : bySetNumber;
-    });
-    return setRecordDtos;
   }
 
   Future<Result<WorkoutRecordDto, ServiceError<OperationErrorTypes>>>
@@ -909,12 +921,15 @@ final class WorkoutRecordRepository implements Repository {
 
       final createdDto = await _workoutRecordDao.startTransaction((trx) async {
         final int recordId = await _workoutRecordDao.insert(baseRecord, trx);
-        final setRecordDtos = await _insertBatchSetsAndExercises(
+        final savedChildren = await _insertBatchSetsAndExercises(
           trx: trx,
           workoutRecordId: recordId,
           sets: input.sets,
           exerciseMap: prepared.exerciseMap,
         );
+        // Throw inside the transaction to roll back earlier writes.
+        if (savedChildren.isErr()) throw savedChildren.error;
+        final setRecordDtos = savedChildren.value;
         return WorkoutRecordDto.fromModel(
           baseRecord.copyWith(id: Nullable(recordId)),
           setRecords: setRecordDtos.isEmpty ? null : setRecordDtos,
@@ -922,6 +937,8 @@ final class WorkoutRecordRepository implements Repository {
       });
       _logger.info('Batch created workout record with id ${createdDto.id}');
       return ok(createdDto);
+    } on ServiceError<OperationErrorTypes> catch (error) {
+      return err(error);
     } catch (e) {
       _logger.severe('Failed to batch create workout record', e);
       return err(
@@ -984,12 +1001,15 @@ final class WorkoutRecordRepository implements Repository {
         );
         await _workoutRecordDao.update(updatedRecord, trx);
 
-        final setRecordDtos = await _insertBatchSetsAndExercises(
+        final savedChildren = await _insertBatchSetsAndExercises(
           trx: trx,
           workoutRecordId: workoutRecordId,
           sets: input.sets,
           exerciseMap: prepared.exerciseMap,
         );
+        // Throw inside the transaction to roll back earlier writes.
+        if (savedChildren.isErr()) throw savedChildren.error;
+        final setRecordDtos = savedChildren.value;
         return WorkoutRecordDto.fromModel(
           updatedRecord,
           setRecords: setRecordDtos.isEmpty ? null : setRecordDtos,
@@ -997,6 +1017,8 @@ final class WorkoutRecordRepository implements Repository {
       });
       _logger.info('Batch updated workout record with id $workoutRecordId');
       return ok(updatedDto);
+    } on ServiceError<OperationErrorTypes> catch (error) {
+      return err(error);
     } catch (e) {
       _logger.severe('Failed to batch update workout record', e);
       return err(
