@@ -21,6 +21,7 @@ import 'package:myfitnesstale/src/data/repositories/meal_plans/meal_plan_record_
 import 'package:myfitnesstale/src/data/repositories/meal_plans/inputs/meal_plan_day_input.dart';
 import 'package:myfitnesstale/src/data/repositories/core/repository_helpers.dart';
 import 'package:myfitnesstale/src/data/models/sqlite/meal_plan_day_record_model.dart';
+import 'package:myfitnesstale/src/data/models/sqlite/meal_plan_week_model.dart';
 import 'package:myfitnesstale/src/data/models/sqlite/recipe_item_model.dart';
 import 'package:myfitnesstale/src/data/models/sqlite/week_macro_goal_model.dart';
 import 'package:myfitnesstale/src/data/models/sqlite/weight_goal_model.dart';
@@ -30,6 +31,7 @@ import 'package:myfitnesstale/src/data/models/sqlite/workout_plan_model.dart';
 import 'package:myfitnesstale/src/data/models/sqlite/workout_plan_week_model.dart';
 import 'package:myfitnesstale/src/data/models/sqlite/workout_record_model.dart';
 import 'package:myfitnesstale/src/data/models/sqlite/workout_set_model.dart';
+import 'package:myfitnesstale/src/data/models/sqlite/workout_set_record_model.dart';
 import 'package:myfitnesstale/src/data/repositories/exercises/exercise_record_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/foods/food_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/foods/inputs/food_input.dart';
@@ -538,6 +540,36 @@ void main() {
     },
   );
 
+  test(
+    'a rejected schedule row rolls back the entire meal plan version',
+    () async {
+      final plans = MealPlanRepository.create();
+      MealPlanInput input(int day) => MealPlanInput(
+        name: uniqueName('Meal plan schedule'),
+        weeks: [
+          MealPlanWeekInput(
+            weekNumber: 1,
+            phase: MealPlanPhase.maintain,
+            days: [MealPlanDayInput(day: day)],
+          ),
+        ],
+      );
+      final plan = (await plans.createMealPlan(input(1))).value;
+
+      final failed = await plans.updateMealPlan(plan.id, input(8));
+
+      expect(failed.error.type, SingleErrorTypes.operationFailure);
+      expect((await plans.getMealPlan(plan.id)).value.version, plan.version);
+      final db = await testDatabase.db;
+      final weeks = await db.query(
+        MealPlanWeek.table,
+        where: MealPlanWeekColumns.mealPlanId.equal,
+        whereArgs: [plan.id],
+      );
+      expect(weeks.single[MealPlanWeekColumns.planVersion.value], plan.version);
+    },
+  );
+
   test('favoriting an open meal plan preserves its loaded weeks', () async {
     final repo = MealPlanRepository.create();
     final plan = (await repo.createMealPlan(
@@ -580,23 +612,22 @@ void main() {
     );
     final now = DateTime.now();
     final repo = WorkoutRecordRepository.create();
-    final saved = (await repo.batchCreateWorkoutRecord(
-      WorkoutRecordBatchInput(
-        workoutId: workoutId,
-        version: 1,
-        startedAt: now,
-        completedAt: now,
-        sets: [
-          for (final number in [2, 1])
-            WorkoutSetRecordBatchInput(
-              workoutSetId: workoutSetId,
-              setNumber: number,
-              startedAt: now,
-              exercises: const [],
-            ),
-        ],
-      ),
-    )).value;
+    final input = WorkoutRecordBatchInput(
+      workoutId: workoutId,
+      version: 1,
+      startedAt: now,
+      completedAt: now,
+      sets: [
+        for (final number in [2, 1])
+          WorkoutSetRecordBatchInput(
+            workoutSetId: workoutSetId,
+            setNumber: number,
+            startedAt: now,
+            exercises: const [],
+          ),
+      ],
+    );
+    final saved = (await repo.batchCreateWorkoutRecord(input)).value;
 
     final fetched = (await repo.getWorkoutRecord(saved.id)).value;
     expect(saved.version, 1);
@@ -607,6 +638,21 @@ void main() {
       null,
       null,
     ]);
+
+    await db.execute("""
+      CREATE TEMP TRIGGER fail_second_workout_set_record
+      BEFORE INSERT ON ${WorkoutSetRecord.table}
+      WHEN NEW.${WorkoutSetRecordColumns.setNumber.value} = 1
+      BEGIN SELECT RAISE(ABORT, 'forced test failure'); END
+    """);
+    addTearDown(
+      () => db.execute('DROP TRIGGER fail_second_workout_set_record'),
+    );
+
+    final failed = await repo.batchUpdateWorkoutRecord(saved.id, input);
+    expect(failed.error.type, OperationErrorTypes.operationFailure);
+    final afterFailure = (await repo.getWorkoutRecord(saved.id)).value;
+    expect(afterFailure.setRecords, fetched.setRecords);
   });
 
   test('RecipeRepository preserves existing items on failed update and toggleFavorite leaves items intact', () async {
@@ -660,6 +706,26 @@ void main() {
       whereArgs: [recipe.id],
     );
     expect(remainingItems, hasLength(1));
+
+    await db.execute("""
+      CREATE TEMP TRIGGER fail_recipe_item
+      BEFORE INSERT ON ${RecipeItem.table}
+      BEGIN SELECT RAISE(ABORT, 'forced test failure'); END
+    """);
+    addTearDown(() => db.execute('DROP TRIGGER fail_recipe_item'));
+
+    final failedInsert = await recipeRepo.updateRecipe(
+      recipe.id,
+      RecipeInput(
+        name: uniqueName('Replacement Smoothie'),
+        servingsYield: 1,
+        items: [RecipeItemInput(foodId: food.id, amount: 100)],
+      ),
+    );
+    expect(failedInsert.error.type, SingleErrorTypes.operationFailure);
+    final afterFailure = (await recipeRepo.getRecipe(recipe.id)).value;
+    expect(afterFailure.name, recipe.name);
+    expect(afterFailure.items, recipe.items);
 
     final toggledOn = await recipeRepo.toggleFavorite(recipe.id);
     expect(toggledOn.isOk(), isTrue);
