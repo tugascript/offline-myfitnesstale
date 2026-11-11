@@ -20,6 +20,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:myfitnesstale/src/utils/nullable.dart';
 import 'package:myfitnesstale/src/ui/home/view_models/profile_cubit.dart';
 import 'package:myfitnesstale/src/ui/home/view_models/states/profile_state.dart';
 import 'package:myfitnesstale/src/data/utils/enums.dart';
@@ -78,9 +79,11 @@ class _ProfileCubit extends ProfileCubit {
     updatedWeightRecordsOn = weightRecordsOn;
     emit(
       state.copyWith(
-        remindersConfig: state.remindersConfig!.copyWith(
-          workoutsOn: workoutsOn,
-          weightRecordsOn: weightRecordsOn,
+        remindersConfig: Nullable(
+          state.remindersConfig!.copyWith(
+            workoutsOn: workoutsOn,
+            weightRecordsOn: weightRecordsOn,
+          ),
         ),
       ),
     );

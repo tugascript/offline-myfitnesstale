@@ -19,6 +19,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:logging/logging.dart';
 
 import '../../core/view_models/states/common_state.dart';
+import '../../../data/repositories/exercises/dtos/strength_goal_dto.dart';
 import '../../../data/repositories/exercises/exercise_record_repository.dart';
 import '../../../data/repositories/exercises/inputs/exercise_record_input.dart';
 import '../../../data/services/common.dart';
@@ -30,6 +31,8 @@ import './states/exercise_record_state.dart';
 class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
   final ExerciseRecordRepository _exerciseRecordService;
   final Logger _logger = Logger("ExerciseRecordCubit");
+  int _recordsRequestId = 0;
+  int _goalsRequestId = 0;
 
   ExerciseRecordCubit({
     required ExerciseRecordRepository exerciseRecordRepository,
@@ -43,6 +46,7 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
     int? exerciseId,
   }) async {
     _logger.info("Getting exercise records");
+    final requestId = ++_recordsRequestId;
     emit(state.copyWith(isLoading: true));
 
     final result = await _exerciseRecordService.getExerciseRecords(
@@ -51,6 +55,7 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
       exerciseId: exerciseId,
       dateRange: dateRange,
     );
+    if (requestId != _recordsRequestId) return;
 
     if (result.isErr()) {
       final error = result.error;
@@ -78,12 +83,14 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
     final exerciseRecords = paginatedData.data;
     emit(
       state.copyWith(
-        exerciseRecords: offset >= state.recordPagination.offset + limit
+        exerciseRecords: offset > 0
             ? [...state.exerciseRecords, ...exerciseRecords]
             : exerciseRecords,
         recordPagination: state.recordPagination.copyWith(
-          limit: limit,
-          offset: offset,
+          exerciseId: Nullable(exerciseId),
+          dateRange: Nullable(dateRange),
+          limit: paginatedData.limit,
+          offset: paginatedData.offset,
           total: paginatedData.total,
         ),
         isLoading: false,
@@ -340,7 +347,9 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
               : state.selectedExerciseRecord,
         ),
         recordPagination: state.recordPagination.copyWith(
-          total: state.recordPagination.total - 1,
+          total: state.recordPagination.total > 0
+              ? state.recordPagination.total - 1
+              : 0,
         ),
         latestExerciseRecord: Nullable(
           state.latestExerciseRecord?.id == id
@@ -348,6 +357,7 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
               : state.latestExerciseRecord,
         ),
         isLoading: false,
+        error: const Nullable(null),
       ),
     );
   }
@@ -397,6 +407,7 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
     int offset = 0,
   }) async {
     _logger.info("Getting strength goals");
+    final requestId = ++_goalsRequestId;
     emit(state.copyWith(isLoading: true));
     final result = await _exerciseRecordService.getStrengthGoals(
       exerciseId: exerciseId,
@@ -404,6 +415,7 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
       limit: limit,
       offset: offset,
     );
+    if (requestId != _goalsRequestId) return;
     if (result.isErr()) {
       final error = result.error;
       _logger.warning("Failed to get strength goals", error);
@@ -453,14 +465,7 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
       return false;
     }
 
-    await getActiveStrengthGoal(
-      exerciseId: state.strengthGoalPagination.exerciseId,
-    );
-    await getStrengthGoals(
-      exerciseId: state.strengthGoalPagination.exerciseId,
-      skipInProgress: state.strengthGoalPagination.skipInProgress,
-      limit: state.strengthGoalPagination.limit,
-    );
+    await _refreshStrengthGoals();
     return true;
   }
 
@@ -482,14 +487,7 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
       return false;
     }
 
-    await getActiveStrengthGoal(
-      exerciseId: state.strengthGoalPagination.exerciseId,
-    );
-    await getStrengthGoals(
-      exerciseId: state.strengthGoalPagination.exerciseId,
-      skipInProgress: state.strengthGoalPagination.skipInProgress,
-      limit: state.strengthGoalPagination.limit,
-    );
+    await _refreshStrengthGoals();
     return true;
   }
 
@@ -511,14 +509,7 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
       return false;
     }
 
-    await getActiveStrengthGoal(
-      exerciseId: state.strengthGoalPagination.exerciseId,
-    );
-    await getStrengthGoals(
-      exerciseId: state.strengthGoalPagination.exerciseId,
-      skipInProgress: state.strengthGoalPagination.skipInProgress,
-      limit: state.strengthGoalPagination.limit,
-    );
+    await _refreshStrengthGoals();
     return true;
   }
 
@@ -540,14 +531,71 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
       return false;
     }
 
-    await getActiveStrengthGoal(
-      exerciseId: state.strengthGoalPagination.exerciseId,
-    );
-    await getStrengthGoals(
-      exerciseId: state.strengthGoalPagination.exerciseId,
-      skipInProgress: state.strengthGoalPagination.skipInProgress,
-      limit: state.strengthGoalPagination.limit,
-    );
+    await _refreshStrengthGoals();
     return true;
+  }
+
+  Future<void> _refreshStrengthGoals() async {
+    final exerciseId = state.strengthGoalPagination.exerciseId;
+    final skipInProgress = state.strengthGoalPagination.skipInProgress;
+    final limit = state.strengthGoalPagination.limit;
+    final requestId = ++_goalsRequestId;
+
+    final activeFuture = _exerciseRecordService.getActiveStrengthGoal(
+      exerciseId: exerciseId,
+    );
+    final listFuture = _exerciseRecordService.getStrengthGoals(
+      exerciseId: exerciseId,
+      skipInProgress: skipInProgress,
+      limit: limit,
+      offset: 0,
+    );
+
+    final activeResult = await activeFuture;
+    final listResult = await listFuture;
+    if (requestId != _goalsRequestId) return;
+
+    Nullable<StrengthGoalDto>? activeStrengthGoal;
+    ErrorState? error;
+
+    if (activeResult.isErr()) {
+      if (activeResult.error.type == SingleErrorTypes.notFound) {
+        activeStrengthGoal = const Nullable(null);
+      } else {
+        _logger.warning('Failed to load active entity', activeResult.error);
+        error = ErrorState(
+          type: activeResult.error.type.name,
+          description: activeResult.error.description,
+        );
+      }
+    } else {
+      activeStrengthGoal = Nullable(activeResult.value);
+    }
+
+    if (listResult.isErr()) {
+      _logger.warning("Failed to get strength goals", listResult.error);
+      error ??= ErrorState(
+        type: listResult.error.type.name,
+        description: listResult.error.description,
+      );
+    }
+
+    emit(
+      state.copyWith(
+        activeStrengthGoal: activeStrengthGoal,
+        strengthGoals: listResult.isOk() ? listResult.value.data : null,
+        strengthGoalPagination: listResult.isOk()
+            ? StrengthGoalPagination(
+                exerciseId: exerciseId,
+                skipInProgress: skipInProgress,
+                total: listResult.value.total,
+                limit: limit,
+                offset: 0,
+              )
+            : null,
+        isLoading: false,
+        error: Nullable(error),
+      ),
+    );
   }
 }

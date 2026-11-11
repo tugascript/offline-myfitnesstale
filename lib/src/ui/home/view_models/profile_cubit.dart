@@ -20,6 +20,7 @@ import 'package:logging/logging.dart';
 
 import '../../../data/utils/enums.dart';
 import '../../../utils/errors.dart';
+import '../../../utils/nullable.dart';
 import '../../../data/repositories/profile/dtos/system_dto.dart';
 import '../../../data/repositories/onboarding/onboarding_repository.dart';
 import '../../../data/repositories/profile/inputs/profile_input.dart';
@@ -55,22 +56,39 @@ class ProfileCubit extends Cubit<ProfileState> {
     emit(state.copyWith(isLoading: true));
 
     _logger.info("Loading initial data");
+    final profileFuture = _profileService.selectProfile();
+    final systemFuture = _profileService.selectSystem();
+    final remindersConfigFuture = _profileService.selectRemindersConfig();
+
     _logger.info("Selecting profile");
-    final profileResult = await _profileService.selectProfile();
+    final profileResult = await profileFuture;
+    _logger.info("Selecting system");
+    final systemResult = await systemFuture;
+    _logger.info("Selecting reminders config");
+    final remindersConfigResult = await remindersConfigFuture;
+
     if (profileResult.isErr()) {
       final error = profileResult.error;
       _logger.warning("Failed to load profile", error);
       switch (error.type) {
         case SingleErrorTypes.invalidInput:
         case SingleErrorTypes.notFound:
-          emit(state.copyWith(isInitiated: true, isLoading: false));
+          emit(
+            state.copyWith(
+              isInitiated: true,
+              isLoading: false,
+              error: const Nullable(null),
+            ),
+          );
           return;
         case SingleErrorTypes.operationFailure:
           emit(
             state.copyWith(
-              error: ErrorState(
-                type: SingleErrorTypes.operationFailure.name,
-                description: 'Failed to load profile',
+              error: Nullable(
+                ErrorState(
+                  type: SingleErrorTypes.operationFailure.name,
+                  description: 'Failed to load profile',
+                ),
               ),
               isLoading: false,
               isInitiated: false,
@@ -80,8 +98,6 @@ class ProfileCubit extends Cubit<ProfileState> {
       }
     }
 
-    _logger.info("Selecting system");
-    final systemResult = await _profileService.selectSystem();
     if (systemResult.isErr()) {
       final error = systemResult.error;
       _logger.warning("Failed to load system", error);
@@ -90,9 +106,11 @@ class ProfileCubit extends Cubit<ProfileState> {
         case SingleErrorTypes.notFound:
           emit(
             state.copyWith(
-              error: ErrorState(
-                type: SingleErrorTypes.notFound.name,
-                description: 'System not found',
+              error: Nullable(
+                ErrorState(
+                  type: SingleErrorTypes.notFound.name,
+                  description: 'System not found',
+                ),
               ),
               isInitiated: true,
               isLoading: false,
@@ -102,9 +120,11 @@ class ProfileCubit extends Cubit<ProfileState> {
         case SingleErrorTypes.operationFailure:
           emit(
             state.copyWith(
-              error: ErrorState(
-                type: SingleErrorTypes.operationFailure.name,
-                description: 'Failed to load system',
+              error: Nullable(
+                ErrorState(
+                  type: SingleErrorTypes.operationFailure.name,
+                  description: 'Failed to load system',
+                ),
               ),
               isLoading: false,
               isInitiated: false,
@@ -114,8 +134,6 @@ class ProfileCubit extends Cubit<ProfileState> {
       }
     }
 
-    _logger.info("Selecting reminders config");
-    final remindersConfigResult = await _profileService.selectRemindersConfig();
     if (remindersConfigResult.isErr()) {
       final error = remindersConfigResult.error;
       _logger.warning("Failed to load reminders config", error);
@@ -124,9 +142,11 @@ class ProfileCubit extends Cubit<ProfileState> {
         case SingleErrorTypes.notFound:
           emit(
             state.copyWith(
-              error: ErrorState(
-                type: SingleErrorTypes.notFound.name,
-                description: 'Reminders config not found',
+              error: Nullable(
+                ErrorState(
+                  type: SingleErrorTypes.notFound.name,
+                  description: 'Reminders config not found',
+                ),
               ),
               isInitiated: true,
               isLoading: false,
@@ -136,9 +156,11 @@ class ProfileCubit extends Cubit<ProfileState> {
         case SingleErrorTypes.operationFailure:
           emit(
             state.copyWith(
-              error: ErrorState(
-                type: SingleErrorTypes.operationFailure.name,
-                description: 'Failed to load reminders config',
+              error: Nullable(
+                ErrorState(
+                  type: SingleErrorTypes.operationFailure.name,
+                  description: 'Failed to load reminders config',
+                ),
               ),
               isLoading: false,
               isInitiated: false,
@@ -152,9 +174,11 @@ class ProfileCubit extends Cubit<ProfileState> {
       _logger.warning('Existing onboarding data is incomplete');
       emit(
         state.copyWith(
-          error: ErrorState(
-            type: SingleErrorTypes.operationFailure.name,
-            description: 'Existing development setup is incomplete. Clear app data and try again.',
+          error: Nullable(
+            ErrorState(
+              type: SingleErrorTypes.operationFailure.name,
+              description: 'Existing development setup is incomplete. Clear app data and try again.',
+            ),
           ),
           isInitiated: true,
           isLoading: false,
@@ -166,19 +190,19 @@ class ProfileCubit extends Cubit<ProfileState> {
     _logger.info("Loading initial data completed");
     emit(
       state.copyWith(
-        profile: profileResult.value,
-        system: systemResult.value,
-        remindersConfig: remindersConfigResult.value,
+        profile: Nullable(profileResult.value),
+        system: Nullable(systemResult.value),
+        remindersConfig: Nullable(remindersConfigResult.value),
         isInitiated: true,
         isLoading: false,
-        clearError: true,
+        error: const Nullable(null),
       ),
     );
   }
 
   Future<void> getRemindersConfig() async {
     _logger.info("Getting reminders config");
-    emit(state.copyWith(isRemindersLoading: true));
+    emit(state.copyWith(isLoading: true));
 
     final result = await _profileService.selectRemindersConfig();
     if (result.isErr()) {
@@ -187,18 +211,24 @@ class ProfileCubit extends Cubit<ProfileState> {
       switch (error.type) {
         case SingleErrorTypes.notFound:
           emit(
-            state.copyWith(remindersConfig: null, isRemindersLoading: false),
+            state.copyWith(
+              remindersConfig: const Nullable(null),
+              isLoading: false,
+              error: const Nullable(null),
+            ),
           );
           return;
         case SingleErrorTypes.invalidInput:
         case SingleErrorTypes.operationFailure:
           emit(
             state.copyWith(
-              remindersError: ErrorState(
-                type: error.type.name,
-                description: "Failed to get reminders config",
+              error: Nullable(
+                ErrorState(
+                  type: error.type.name,
+                  description: "Failed to get reminders config",
+                ),
               ),
-              isRemindersLoading: false,
+              isLoading: false,
             ),
           );
           return;
@@ -207,9 +237,9 @@ class ProfileCubit extends Cubit<ProfileState> {
 
     emit(
       state.copyWith(
-        remindersConfig: result.value,
-        isRemindersLoading: false,
-        remindersError: null,
+        remindersConfig: Nullable(result.value),
+        isLoading: false,
+        error: const Nullable(null),
       ),
     );
   }
@@ -221,7 +251,7 @@ class ProfileCubit extends Cubit<ProfileState> {
     bool? macroTrackingOn,
   }) async {
     _logger.info("Upserting reminders config for profile $profileId");
-    emit(state.copyWith(isRemindersLoading: true));
+    emit(state.copyWith(isLoading: true));
 
     final existing = state.remindersConfig;
     final result = await _profileService.upsertRemindersConfig(
@@ -249,11 +279,13 @@ class ProfileCubit extends Cubit<ProfileState> {
         case OperationErrorTypes.operationFailure:
           emit(
             state.copyWith(
-              remindersError: ErrorState(
-                type: error.type.name,
-                description: "Failed to upsert reminders config",
+              error: Nullable(
+                ErrorState(
+                  type: error.type.name,
+                  description: "Failed to upsert reminders config",
+                ),
               ),
-              isRemindersLoading: false,
+              isLoading: false,
             ),
           );
           return;
@@ -262,9 +294,9 @@ class ProfileCubit extends Cubit<ProfileState> {
 
     emit(
       state.copyWith(
-        remindersConfig: result.value,
-        isRemindersLoading: false,
-        remindersError: null,
+        remindersConfig: Nullable(result.value),
+        isLoading: false,
+        error: const Nullable(null),
       ),
     );
   }
@@ -281,7 +313,7 @@ class ProfileCubit extends Cubit<ProfileState> {
       return;
     }
 
-    emit(state.copyWith(isRemindersLoading: true));
+    emit(state.copyWith(isLoading: true));
 
     final result = await _profileService.updateRemindersConfig(
       RemindersConfigInput(
@@ -300,11 +332,13 @@ class ProfileCubit extends Cubit<ProfileState> {
         case SingleErrorTypes.notFound:
           emit(
             state.copyWith(
-              remindersError: ErrorState(
-                type: error.type.name,
-                description: error.description,
+              error: Nullable(
+                ErrorState(
+                  type: error.type.name,
+                  description: error.description,
+                ),
               ),
-              isRemindersLoading: false,
+              isLoading: false,
             ),
           );
           return;
@@ -312,11 +346,13 @@ class ProfileCubit extends Cubit<ProfileState> {
         case SingleErrorTypes.operationFailure:
           emit(
             state.copyWith(
-              remindersError: ErrorState(
-                type: error.type.name,
-                description: "Failed to update reminders config",
+              error: Nullable(
+                ErrorState(
+                  type: error.type.name,
+                  description: "Failed to update reminders config",
+                ),
               ),
-              isRemindersLoading: false,
+              isLoading: false,
             ),
           );
           return;
@@ -325,9 +361,9 @@ class ProfileCubit extends Cubit<ProfileState> {
 
     emit(
       state.copyWith(
-        remindersConfig: result.value,
-        isRemindersLoading: false,
-        remindersError: null,
+        remindersConfig: Nullable(result.value),
+        isLoading: false,
+        error: const Nullable(null),
       ),
     );
   }
@@ -339,19 +375,20 @@ class ProfileCubit extends Cubit<ProfileState> {
   }) {
     emit(
       state.copyWith(
-        system:
-            state.system?.copyWith(
-              theme: theme,
-              units: units,
-              notificationsOn: notificationsOn,
-            ) ??
-            SystemDto(
-              id: 0,
-              initialSetup: SetUpStatus.notStarted,
-              theme: theme,
-              units: units,
-              notificationsOn: notificationsOn,
-            ),
+        system: Nullable(
+          state.system?.copyWith(
+                theme: theme,
+                units: units,
+                notificationsOn: notificationsOn,
+              ) ??
+              SystemDto(
+                id: 0,
+                initialSetup: SetUpStatus.notStarted,
+                theme: theme,
+                units: units,
+                notificationsOn: notificationsOn,
+              ),
+        ),
       ),
     );
   }
@@ -372,7 +409,7 @@ class ProfileCubit extends Cubit<ProfileState> {
       return;
     }
 
-    emit(state.copyWith(isLoading: true, clearError: true));
+    emit(state.copyWith(isLoading: true, error: const Nullable(null)));
     final result = await _onboardingService.onboard(
       OnboardingInput(
         units: units,
@@ -390,9 +427,11 @@ class ProfileCubit extends Cubit<ProfileState> {
       _logger.severe("Failed to onboard profile", result.error);
       emit(
         state.copyWith(
-          error: ErrorState(
-            type: result.error.type.name,
-            description: result.error.description,
+          error: Nullable(
+            ErrorState(
+              type: result.error.type.name,
+              description: result.error.description,
+            ),
           ),
           isLoading: false,
         ),
@@ -404,12 +443,12 @@ class ProfileCubit extends Cubit<ProfileState> {
     _logger.info("Onboarding profile completed");
     emit(
       state.copyWith(
-        profile: onboarding.profile,
-        system: onboarding.system,
-        remindersConfig: onboarding.remindersConfig,
+        profile: Nullable(onboarding.profile),
+        system: Nullable(onboarding.system),
+        remindersConfig: Nullable(onboarding.remindersConfig),
         isLoading: false,
         isInitiated: true,
-        clearError: true,
+        error: const Nullable(null),
       ),
     );
   }
@@ -432,9 +471,11 @@ class ProfileCubit extends Cubit<ProfileState> {
           _logger.info("System not found");
           emit(
             state.copyWith(
-              error: ErrorState(
-                type: SingleErrorTypes.notFound.name,
-                description: error.description,
+              error: Nullable(
+                ErrorState(
+                  type: SingleErrorTypes.notFound.name,
+                  description: error.description,
+                ),
               ),
               isLoading: false,
             ),
@@ -444,9 +485,11 @@ class ProfileCubit extends Cubit<ProfileState> {
           _logger.severe("Failed to load system", systemResult.error);
           emit(
             state.copyWith(
-              error: ErrorState(
-                type: SingleErrorTypes.operationFailure.name,
-                description: 'Failed to load system',
+              error: Nullable(
+                ErrorState(
+                  type: SingleErrorTypes.operationFailure.name,
+                  description: 'Failed to load system',
+                ),
               ),
               isLoading: false,
             ),
@@ -457,7 +500,11 @@ class ProfileCubit extends Cubit<ProfileState> {
 
     _logger.info("System loaded successfully");
     emit(
-      state.copyWith(system: systemResult.value, isLoading: false, error: null),
+      state.copyWith(
+        system: Nullable(systemResult.value),
+        isLoading: false,
+        error: const Nullable(null),
+      ),
     );
   }
 
@@ -491,15 +538,27 @@ class ProfileCubit extends Cubit<ProfileState> {
         case SingleErrorTypes.invalidInput:
         case SingleErrorTypes.notFound:
           _logger.info("Profile not found");
-          emit(state.copyWith(isLoading: false, error: null));
+          emit(
+            state.copyWith(
+              error: Nullable(
+                ErrorState(
+                  type: error.type.name,
+                  description: error.description,
+                ),
+              ),
+              isLoading: false,
+            ),
+          );
           return;
         case SingleErrorTypes.operationFailure:
           _logger.severe("Failed to update profile", result.error);
           emit(
             state.copyWith(
-              error: ErrorState(
-                type: SingleErrorTypes.operationFailure.name,
-                description: 'Failed to update profile',
+              error: Nullable(
+                ErrorState(
+                  type: SingleErrorTypes.operationFailure.name,
+                  description: 'Failed to update profile',
+                ),
               ),
               isLoading: false,
             ),
@@ -509,7 +568,13 @@ class ProfileCubit extends Cubit<ProfileState> {
     }
 
     _logger.info("Profile updated successfully");
-    emit(state.copyWith(profile: result.value, isLoading: false, error: null));
+    emit(
+      state.copyWith(
+        profile: Nullable(result.value),
+        isLoading: false,
+        error: const Nullable(null),
+      ),
+    );
   }
 
   Future<void> updateSystem({Units? units, ThemeType? theme}) async {
@@ -536,15 +601,27 @@ class ProfileCubit extends Cubit<ProfileState> {
         case SingleErrorTypes.invalidInput:
         case SingleErrorTypes.notFound:
           _logger.info("System not found");
-          emit(state.copyWith(isLoading: false, error: null));
+          emit(
+            state.copyWith(
+              error: Nullable(
+                ErrorState(
+                  type: error.type.name,
+                  description: error.description,
+                ),
+              ),
+              isLoading: false,
+            ),
+          );
           return;
         case SingleErrorTypes.operationFailure:
           _logger.severe("Failed to update system", result.error);
           emit(
             state.copyWith(
-              error: ErrorState(
-                type: SingleErrorTypes.operationFailure.name,
-                description: 'Failed to update system',
+              error: Nullable(
+                ErrorState(
+                  type: SingleErrorTypes.operationFailure.name,
+                  description: 'Failed to update system',
+                ),
               ),
               isLoading: false,
             ),
@@ -554,7 +631,13 @@ class ProfileCubit extends Cubit<ProfileState> {
     }
 
     _logger.info("System updated successfully");
-    emit(state.copyWith(system: result.value, isLoading: false, error: null));
+    emit(
+      state.copyWith(
+        system: Nullable(result.value),
+        isLoading: false,
+        error: const Nullable(null),
+      ),
+    );
   }
 
   Future<void> createProfile({
@@ -601,9 +684,11 @@ class ProfileCubit extends Cubit<ProfileState> {
       _logger.severe("Failed to upsert profile", profileResult.error);
       emit(
         state.copyWith(
-          error: ErrorState(
-            type: SingleErrorTypes.operationFailure.name,
-            description: 'Failed to create profile',
+          error: Nullable(
+            ErrorState(
+              type: SingleErrorTypes.operationFailure.name,
+              description: 'Failed to create profile',
+            ),
           ),
           isLoading: false,
         ),
@@ -614,9 +699,9 @@ class ProfileCubit extends Cubit<ProfileState> {
     _logger.info("Profile upserted successfully");
     emit(
       state.copyWith(
-        profile: profileResult.value,
+        profile: Nullable(profileResult.value),
         isLoading: false,
-        error: null,
+        error: const Nullable(null),
       ),
     );
   }
@@ -646,9 +731,11 @@ class ProfileCubit extends Cubit<ProfileState> {
       _logger.severe("Failed to create system", systemResult.error);
       emit(
         state.copyWith(
-          error: ErrorState(
-            type: SingleErrorTypes.operationFailure.name,
-            description: 'Failed to create system',
+          error: Nullable(
+            ErrorState(
+              type: SingleErrorTypes.operationFailure.name,
+              description: 'Failed to create system',
+            ),
           ),
           isLoading: false,
         ),
@@ -658,7 +745,11 @@ class ProfileCubit extends Cubit<ProfileState> {
 
     _logger.info("System created successfully");
     emit(
-      state.copyWith(system: systemResult.value, isLoading: false, error: null),
+      state.copyWith(
+        system: Nullable(systemResult.value),
+        isLoading: false,
+        error: const Nullable(null),
+      ),
     );
   }
 }

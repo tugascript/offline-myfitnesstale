@@ -30,6 +30,7 @@ import './states/meal_plan_record_state.dart';
 class MealPlanRecordCubit extends Cubit<MealPlanRecordState> {
   final MealPlanRecordRepository _recordService;
   final Logger _logger = Logger('MealPlanRecordCubit');
+  int _recordsRequestId = 0;
 
   MealPlanRecordCubit({
     required MealPlanRecordRepository mealPlanRecordRepository,
@@ -81,17 +82,8 @@ class MealPlanRecordCubit extends Cubit<MealPlanRecordState> {
     int offset = 0,
   }) async {
     _logger.info('Getting meal plan records');
-    emit(
-      state.copyWith(
-        mealPlanRecordPagination: state.mealPlanRecordPagination.copyWith(
-          limit: limit,
-          offset: offset,
-          mealPlanId: Nullable(mealPlanId),
-          status: Nullable(status),
-        ),
-        isLoading: true,
-      ),
-    );
+    final requestId = ++_recordsRequestId;
+    emit(state.copyWith(isLoading: true));
 
     final result = await _recordService.getMealPlanRecords(
       mealPlanId: mealPlanId,
@@ -99,6 +91,7 @@ class MealPlanRecordCubit extends Cubit<MealPlanRecordState> {
       limit: limit,
       offset: offset,
     );
+    if (requestId != _recordsRequestId) return;
 
     if (result.isErr()) {
       final error = result.error;
@@ -122,7 +115,11 @@ class MealPlanRecordCubit extends Cubit<MealPlanRecordState> {
     emit(
       state.copyWith(
         mealPlanRecordPagination: state.mealPlanRecordPagination.copyWith(
+          limit: paginated.limit,
+          offset: paginated.offset,
           total: paginated.total,
+          mealPlanId: Nullable(mealPlanId),
+          status: Nullable(status),
         ),
         records: records,
         isLoading: false,
@@ -159,16 +156,40 @@ class MealPlanRecordCubit extends Cubit<MealPlanRecordState> {
       return false;
     }
 
+    final filterMealPlanId = state.mealPlanRecordPagination.mealPlanId;
+    final filterStatus = state.mealPlanRecordPagination.status;
+    final limit = state.mealPlanRecordPagination.limit;
+    final requestId = ++_recordsRequestId;
+
+    final listResult = await _recordService.getMealPlanRecords(
+      mealPlanId: filterMealPlanId,
+      status: filterStatus,
+      limit: limit,
+      offset: 0,
+    );
+    if (requestId != _recordsRequestId) return true;
+
     emit(
       state.copyWith(
         activeRecord: Nullable(result.value),
+        records: listResult.isOk() ? listResult.value.data : null,
+        mealPlanRecordPagination: listResult.isOk()
+            ? state.mealPlanRecordPagination.copyWith(
+                limit: listResult.value.limit,
+                offset: listResult.value.offset,
+                total: listResult.value.total,
+              )
+            : null,
         isLoading: false,
-        error: const Nullable(null),
+        error: listResult.isErr()
+            ? Nullable(
+                ErrorState(
+                  type: listResult.error.type.name,
+                  description: listResult.error.description,
+                ),
+              )
+            : const Nullable(null),
       ),
-    );
-    await getMealPlanRecords(
-      limit: state.mealPlanRecordPagination.limit,
-      offset: 0,
     );
     return true;
   }
@@ -192,11 +213,7 @@ class MealPlanRecordCubit extends Cubit<MealPlanRecordState> {
       return false;
     }
 
-    await getActiveMealPlanRecord();
-    await getMealPlanRecords(
-      limit: state.mealPlanRecordPagination.limit,
-      offset: 0,
-    );
+    await _refreshMealPlanRecords();
     return true;
   }
 
@@ -219,11 +236,67 @@ class MealPlanRecordCubit extends Cubit<MealPlanRecordState> {
       return false;
     }
 
-    await getActiveMealPlanRecord();
-    await getMealPlanRecords(
-      limit: state.mealPlanRecordPagination.limit,
+    await _refreshMealPlanRecords();
+    return true;
+  }
+
+  Future<void> _refreshMealPlanRecords() async {
+    final mealPlanId = state.mealPlanRecordPagination.mealPlanId;
+    final status = state.mealPlanRecordPagination.status;
+    final limit = state.mealPlanRecordPagination.limit;
+    final requestId = ++_recordsRequestId;
+
+    final activeFuture = _recordService.getActiveMealPlanRecord();
+    final listFuture = _recordService.getMealPlanRecords(
+      mealPlanId: mealPlanId,
+      status: status,
+      limit: limit,
       offset: 0,
     );
-    return true;
+
+    final activeResult = await activeFuture;
+    final listResult = await listFuture;
+    if (requestId != _recordsRequestId) return;
+
+    Nullable<MealPlanRecordDto>? activeRecord;
+    ErrorState? error;
+
+    if (activeResult.isErr()) {
+      if (activeResult.error.type == SingleErrorTypes.notFound) {
+        activeRecord = const Nullable(null);
+      } else {
+        _logger.warning('Failed to load active entity', activeResult.error);
+        error = ErrorState(
+          type: activeResult.error.type.name,
+          description: activeResult.error.description,
+        );
+      }
+    } else {
+      activeRecord = Nullable(activeResult.value);
+    }
+
+    if (listResult.isErr()) {
+      _logger.warning('Failed to get meal plan records', listResult.error);
+      error ??= ErrorState(
+        type: listResult.error.type.name,
+        description: listResult.error.description,
+      );
+    }
+
+    emit(
+      state.copyWith(
+        activeRecord: activeRecord,
+        records: listResult.isOk() ? listResult.value.data : null,
+        mealPlanRecordPagination: listResult.isOk()
+            ? state.mealPlanRecordPagination.copyWith(
+                limit: listResult.value.limit,
+                offset: listResult.value.offset,
+                total: listResult.value.total,
+              )
+            : null,
+        isLoading: false,
+        error: Nullable(error),
+      ),
+    );
   }
 }

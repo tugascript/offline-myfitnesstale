@@ -29,6 +29,7 @@ import './states/food_state.dart';
 class FoodCubit extends Cubit<FoodState> {
   final FoodRepository _foodService;
   final Logger _logger = Logger('FoodCubit');
+  int _foodsRequestId = 0;
 
   FoodCubit({required FoodRepository foodRepository})
     : _foodService = foodRepository,
@@ -42,18 +43,8 @@ class FoodCubit extends Cubit<FoodState> {
     int offset = 0,
   }) async {
     _logger.info('Getting foods');
-    emit(
-      state.copyWith(
-        foodPagination: state.foodPagination.copyWith(
-          limit: limit,
-          offset: offset,
-          name: search ?? '',
-          category: Nullable(category),
-          isFavorite: isFavorite ?? false,
-        ),
-        isLoading: true,
-      ),
-    );
+    final requestId = ++_foodsRequestId;
+    emit(state.copyWith(isLoading: true));
 
     final result = await _foodService.getFoods(
       name: search,
@@ -62,6 +53,7 @@ class FoodCubit extends Cubit<FoodState> {
       limit: limit,
       offset: offset,
     );
+    if (requestId != _foodsRequestId) return;
 
     if (result.isErr()) {
       final error = result.error;
@@ -84,7 +76,14 @@ class FoodCubit extends Cubit<FoodState> {
 
     emit(
       state.copyWith(
-        foodPagination: state.foodPagination.copyWith(total: paginated.total),
+        foodPagination: state.foodPagination.copyWith(
+          limit: paginated.limit,
+          offset: paginated.offset,
+          total: paginated.total,
+          name: search ?? '',
+          category: Nullable(category),
+          isFavorite: isFavorite ?? false,
+        ),
         foods: foods,
         isLoading: false,
         error: const Nullable(null),
@@ -143,19 +142,21 @@ class FoodCubit extends Cubit<FoodState> {
       return false;
     }
 
+    _foodsRequestId++;
+    final created = result.value;
+    final matchesFilter = _matchesFoodFilter(created);
     emit(
       state.copyWith(
-        selectedFood: Nullable(result.value),
+        selectedFood: Nullable(created),
+        foods: matchesFilter ? [created, ...state.foods] : state.foods,
+        foodPagination: matchesFilter
+            ? state.foodPagination.copyWith(
+                total: state.foodPagination.total + 1,
+              )
+            : null,
         isLoading: false,
         error: const Nullable(null),
       ),
-    );
-    await getFoods(
-      search: state.foodPagination.name,
-      category: state.foodPagination.category,
-      isFavorite: state.foodPagination.isFavorite,
-      limit: state.foodPagination.limit,
-      offset: 0,
     );
     return true;
   }
@@ -180,19 +181,25 @@ class FoodCubit extends Cubit<FoodState> {
       return false;
     }
 
+    _foodsRequestId++;
+    final updated = result.value;
+    final matchesFilter = _matchesFoodFilter(updated);
+    final wasInList = state.foods.any((f) => f.id == id);
+    final updatedList = wasInList && !matchesFilter
+        ? state.foods.where((f) => f.id != id).toList()
+        : state.foods.map((f) => f.id == id ? updated : f).toList();
+    final updatedTotal = wasInList && !matchesFilter
+        ? (state.foodPagination.total > 0 ? state.foodPagination.total - 1 : 0)
+        : state.foodPagination.total;
+
     emit(
       state.copyWith(
-        selectedFood: Nullable(result.value),
+        selectedFood: Nullable(updated),
+        foods: updatedList,
+        foodPagination: state.foodPagination.copyWith(total: updatedTotal),
         isLoading: false,
         error: const Nullable(null),
       ),
-    );
-    await getFoods(
-      search: state.foodPagination.name,
-      category: state.foodPagination.category,
-      isFavorite: state.foodPagination.isFavorite,
-      limit: state.foodPagination.limit,
-      offset: 0,
     );
     return true;
   }
@@ -213,17 +220,40 @@ class FoodCubit extends Cubit<FoodState> {
       return false;
     }
 
+    _foodsRequestId++;
     final updated = result.value;
-    final updatedList = state.foods
-        .map((f) => f.id == id ? updated : f)
-        .toList();
+    final removeFromFavoritesList =
+        state.foodPagination.isFavorite && !updated.isFavorite;
+    final updatedList = removeFromFavoritesList
+        ? state.foods.where((f) => f.id != id).toList()
+        : state.foods.map((f) => f.id == id ? updated : f).toList();
+    final updatedTotal = removeFromFavoritesList
+        ? (state.foodPagination.total > 0 ? state.foodPagination.total - 1 : 0)
+        : state.foodPagination.total;
+
     emit(
       state.copyWith(
         foods: updatedList,
+        foodPagination: state.foodPagination.copyWith(total: updatedTotal),
         selectedFood: state.selectedFood?.id == id ? Nullable(updated) : null,
         error: const Nullable(null),
       ),
     );
+    return true;
+  }
+
+  bool _matchesFoodFilter(FoodDto food) {
+    final search = state.foodPagination.name.trim().toLowerCase();
+    if (search.isNotEmpty && !food.name.toLowerCase().contains(search)) {
+      return false;
+    }
+    final category = state.foodPagination.category;
+    if (category != null && food.category != category) {
+      return false;
+    }
+    if (state.foodPagination.isFavorite && !food.isFavorite) {
+      return false;
+    }
     return true;
   }
 

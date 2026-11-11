@@ -45,6 +45,7 @@ class WorkoutPlanCubit extends Cubit<WorkoutPlanState> {
       super(WorkoutPlanState.initial());
 
   final Logger _logger = Logger('WorkoutPlanCubit');
+  int _plansRequestId = 0;
 
   Future<void> getWorkoutPlans({
     String? name,
@@ -54,6 +55,7 @@ class WorkoutPlanCubit extends Cubit<WorkoutPlanState> {
     int? offset,
   }) async {
     _logger.info('Getting workout plans');
+    final requestId = ++_plansRequestId;
     final resolvedOffset = offset ?? state.pagination.offset;
     final isLoadMore = resolvedOffset > 0;
     emit(state.copyWith(isLoading: true));
@@ -65,6 +67,7 @@ class WorkoutPlanCubit extends Cubit<WorkoutPlanState> {
       limit: limit ?? state.pagination.limit,
       offset: resolvedOffset,
     );
+    if (requestId != _plansRequestId) return;
     if (result.isErr()) {
       final error = result.error;
       _logger.warning("Failed to get workout plans", error);
@@ -102,6 +105,7 @@ class WorkoutPlanCubit extends Cubit<WorkoutPlanState> {
           total: paginatedData.total,
         ),
         isLoading: false,
+        error: const Nullable(null),
       ),
     );
   }
@@ -153,6 +157,7 @@ class WorkoutPlanCubit extends Cubit<WorkoutPlanState> {
       state.copyWith(
         selectedWorkoutPlan: Nullable(result.value),
         isLoading: false,
+        error: const Nullable(null),
       ),
     );
   }
@@ -183,7 +188,17 @@ class WorkoutPlanCubit extends Cubit<WorkoutPlanState> {
       return;
     }
 
-    await getWorkoutPlan(workoutPlanId, isRefresh: true);
+    final updatedPlan = result.value;
+    emit(
+      state.copyWith(
+        selectedWorkoutPlan: Nullable(updatedPlan),
+        workoutPlans: state.workoutPlans
+            .map((p) => p.id == workoutPlanId ? updatedPlan : p)
+            .toList(),
+        isLoading: false,
+        error: const Nullable(null),
+      ),
+    );
   }
 
   Future<void> createWorkoutPlan(WorkoutPlanInput input) async {
@@ -215,6 +230,7 @@ class WorkoutPlanCubit extends Cubit<WorkoutPlanState> {
         ),
         selectedWorkoutPlan: Nullable(newPlan),
         isLoading: false,
+        error: const Nullable(null),
       ),
     );
   }
@@ -240,7 +256,23 @@ class WorkoutPlanCubit extends Cubit<WorkoutPlanState> {
     }
 
     _logger.info('Workout plan $id updated successfully');
-    await getWorkoutPlan(id, isRefresh: true);
+    final updatedPlan = result.value.copyWith(
+      weeks: Nullable(
+        state.selectedWorkoutPlan?.id == id
+            ? state.selectedWorkoutPlan?.weeks
+            : result.value.weeks,
+      ),
+    );
+    emit(
+      state.copyWith(
+        selectedWorkoutPlan: Nullable(updatedPlan),
+        workoutPlans: state.workoutPlans
+            .map((p) => p.id == id ? updatedPlan : p)
+            .toList(),
+        isLoading: false,
+        error: const Nullable(null),
+      ),
+    );
   }
 
   Future<void> updateWorkoutPlanFavorite(int id, bool isFavorite) async {
@@ -267,7 +299,32 @@ class WorkoutPlanCubit extends Cubit<WorkoutPlanState> {
     }
 
     _logger.info('Workout plan favorite $id updated successfully');
-    await getWorkoutPlan(id, isRefresh: true);
+    final updatedPlan = result.value.copyWith(
+      weeks: Nullable(
+        state.selectedWorkoutPlan?.id == id
+            ? state.selectedWorkoutPlan?.weeks
+            : result.value.weeks,
+      ),
+    );
+    final removeFromFavoritesList =
+        state.pagination.isFavorite && !updatedPlan.isFavorite;
+    final updatedPlans = removeFromFavoritesList
+        ? state.workoutPlans.where((p) => p.id != id).toList()
+        : state.workoutPlans.map((p) => p.id == id ? updatedPlan : p).toList();
+    final updatedTotal = removeFromFavoritesList
+        ? (state.pagination.total > 0 ? state.pagination.total - 1 : 0)
+        : state.pagination.total;
+    emit(
+      state.copyWith(
+        selectedWorkoutPlan: state.selectedWorkoutPlan?.id == id
+            ? Nullable(updatedPlan)
+            : null,
+        workoutPlans: updatedPlans,
+        pagination: state.pagination.copyWith(total: updatedTotal),
+        isLoading: false,
+        error: const Nullable(null),
+      ),
+    );
   }
 
   Future<void> deleteWorkoutPlan(int id) async {
@@ -298,9 +355,10 @@ class WorkoutPlanCubit extends Cubit<WorkoutPlanState> {
             ? const Nullable(null)
             : null,
         pagination: state.pagination.copyWith(
-          total: state.pagination.total - 1,
+          total: state.pagination.total > 0 ? state.pagination.total - 1 : 0,
         ),
         isLoading: false,
+        error: const Nullable(null),
       ),
     );
   }

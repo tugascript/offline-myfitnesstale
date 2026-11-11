@@ -32,6 +32,9 @@ class ExerciseCubit extends Cubit<ExerciseState> {
   final ExerciseRepository _exerciseService;
 
   final Logger _logger = Logger("ExerciseCubit");
+  int _exercisesRequestId = 0;
+  int _equipmentsRequestId = 0;
+  int _selectionExercisesRequestId = 0;
 
   ExerciseCubit({required ExerciseRepository exerciseRepository})
     : _exerciseService = exerciseRepository,
@@ -47,6 +50,7 @@ class ExerciseCubit extends Cubit<ExerciseState> {
     bool isFavourite = false,
   }) async {
     _logger.info('Getting exercises');
+    final requestId = ++_exercisesRequestId;
     final isLoadMore = (offset ?? state.exercisePagination.offset) > 0;
 
     emit(state.copyWith(isLoading: true));
@@ -60,6 +64,7 @@ class ExerciseCubit extends Cubit<ExerciseState> {
       limit: limit ?? state.exercisePagination.limit,
       offset: offset ?? state.exercisePagination.offset,
     );
+    if (requestId != _exercisesRequestId) return;
 
     if (result.isErr()) {
       final error = result.error;
@@ -314,9 +319,25 @@ class ExerciseCubit extends Cubit<ExerciseState> {
           return;
       }
     }
+    final updatedExercise = result.value;
+    final removeFromFavoritesList =
+        state.exercisePagination.isFavorite && !updatedExercise.isFavorite;
+    final updatedExercises = removeFromFavoritesList
+        ? state.exercises.where((e) => e.id != id).toList()
+        : state.exercises.map((e) => e.id == id ? updatedExercise : e).toList();
+    final updatedTotal = removeFromFavoritesList
+        ? (state.exercisePagination.total > 0
+              ? state.exercisePagination.total - 1
+              : 0)
+        : state.exercisePagination.total;
+
     emit(
       state.copyWith(
-        selectedExercise: Nullable(result.value),
+        selectedExercise: Nullable(updatedExercise),
+        exercises: updatedExercises,
+        exercisePagination: state.exercisePagination.copyWith(
+          total: updatedTotal,
+        ),
         isLoading: false,
         error: const Nullable(null),
       ),
@@ -381,6 +402,7 @@ class ExerciseCubit extends Cubit<ExerciseState> {
     required int offset,
   }) async {
     _logger.info('getEquipments: fetching equipments');
+    final requestId = ++_equipmentsRequestId;
     emit(state.copyWith(isLoading: true));
 
     final result = await _exerciseService.getEquipments(
@@ -388,6 +410,7 @@ class ExerciseCubit extends Cubit<ExerciseState> {
       limit: limit,
       offset: offset,
     );
+    if (requestId != _equipmentsRequestId) return;
 
     if (result.isErr()) {
       final error = result.error;
@@ -410,7 +433,7 @@ class ExerciseCubit extends Cubit<ExerciseState> {
     emit(
       state.copyWith(
         equipments: offset > 0
-            ? [...paginatedData.data, ...state.equipments]
+            ? [...state.equipments, ...paginatedData.data]
             : paginatedData.data,
         equipmentPagination: state.equipmentPagination.copyWith(
           name: name,
@@ -769,12 +792,14 @@ class ExerciseCubit extends Cubit<ExerciseState> {
     String name = "",
     bool isFavorite = false,
   }) async {
+    final requestId = ++_selectionExercisesRequestId;
     emit(state.copyWith(isLoading: true));
     final exercisesResult = await _exerciseService.getAllExercises(
       muscleGroup: muscleGroup,
       name: name,
       isFavorite: isFavorite,
     );
+    if (requestId != _selectionExercisesRequestId) return;
     if (exercisesResult.isErr()) {
       final error = exercisesResult.error;
       _logger.warning("Failed to get exercises, error: $error");

@@ -30,6 +30,7 @@ import './states/recipe_state.dart';
 class RecipeCubit extends Cubit<RecipeState> {
   final RecipeRepository _recipeService;
   final Logger _logger = Logger('RecipeCubit');
+  int _recipesRequestId = 0;
 
   RecipeCubit({required RecipeRepository recipeRepository})
     : _recipeService = recipeRepository,
@@ -42,17 +43,8 @@ class RecipeCubit extends Cubit<RecipeState> {
     int offset = 0,
   }) async {
     _logger.info('Getting recipes');
-    emit(
-      state.copyWith(
-        recipePagination: state.recipePagination.copyWith(
-          limit: limit,
-          offset: offset,
-          search: Nullable(search),
-          isFavorite: isFavorite,
-        ),
-        isLoading: true,
-      ),
-    );
+    final requestId = ++_recipesRequestId;
+    emit(state.copyWith(isLoading: true));
 
     final result = await _recipeService.getRecipes(
       search: search,
@@ -60,6 +52,7 @@ class RecipeCubit extends Cubit<RecipeState> {
       limit: limit,
       offset: offset,
     );
+    if (requestId != _recipesRequestId) return;
 
     if (result.isErr()) {
       final error = result.error;
@@ -83,7 +76,11 @@ class RecipeCubit extends Cubit<RecipeState> {
     emit(
       state.copyWith(
         recipePagination: state.recipePagination.copyWith(
+          limit: paginated.limit,
+          offset: paginated.offset,
           total: paginated.total,
+          search: Nullable(search),
+          isFavorite: isFavorite,
         ),
         recipes: recipes,
         isLoading: false,
@@ -143,18 +140,21 @@ class RecipeCubit extends Cubit<RecipeState> {
       return false;
     }
 
+    _recipesRequestId++;
+    final created = result.value;
+    final matchesFilter = _matchesRecipeFilter(created);
     emit(
       state.copyWith(
-        selectedRecipe: Nullable(result.value),
+        selectedRecipe: Nullable(created),
+        recipes: matchesFilter ? [created, ...state.recipes] : state.recipes,
+        recipePagination: matchesFilter
+            ? state.recipePagination.copyWith(
+                total: state.recipePagination.total + 1,
+              )
+            : null,
         isLoading: false,
         error: const Nullable(null),
       ),
-    );
-    await getRecipes(
-      search: state.recipePagination.search,
-      isFavorite: state.recipePagination.isFavorite,
-      limit: state.recipePagination.limit,
-      offset: 0,
     );
     return true;
   }
@@ -179,18 +179,27 @@ class RecipeCubit extends Cubit<RecipeState> {
       return false;
     }
 
+    _recipesRequestId++;
+    final updated = result.value;
+    final matchesFilter = _matchesRecipeFilter(updated);
+    final wasInList = state.recipes.any((r) => r.id == id);
+    final updatedList = wasInList && !matchesFilter
+        ? state.recipes.where((r) => r.id != id).toList()
+        : state.recipes.map((r) => r.id == id ? updated : r).toList();
+    final updatedTotal = wasInList && !matchesFilter
+        ? (state.recipePagination.total > 0
+              ? state.recipePagination.total - 1
+              : 0)
+        : state.recipePagination.total;
+
     emit(
       state.copyWith(
-        selectedRecipe: Nullable(result.value),
+        selectedRecipe: Nullable(updated),
+        recipes: updatedList,
+        recipePagination: state.recipePagination.copyWith(total: updatedTotal),
         isLoading: false,
         error: const Nullable(null),
       ),
-    );
-    await getRecipes(
-      search: state.recipePagination.search,
-      isFavorite: state.recipePagination.isFavorite,
-      limit: state.recipePagination.limit,
-      offset: 0,
     );
     return true;
   }
@@ -211,37 +220,40 @@ class RecipeCubit extends Cubit<RecipeState> {
       return false;
     }
 
+    _recipesRequestId++;
     final updated = result.value;
-    if (state.recipePagination.isFavorite) {
-      emit(
-        state.copyWith(
-          selectedRecipe: state.selectedRecipe?.id == id
-              ? Nullable(updated)
-              : null,
-          error: const Nullable(null),
-        ),
-      );
-      await getRecipes(
-        search: state.recipePagination.search,
-        isFavorite: state.recipePagination.isFavorite,
-        limit: state.recipePagination.limit,
-        offset: 0,
-      );
-      return true;
-    }
+    final removeFromFavoritesList =
+        state.recipePagination.isFavorite && !updated.isFavorite;
+    final updatedList = removeFromFavoritesList
+        ? state.recipes.where((r) => r.id != id).toList()
+        : state.recipes.map((r) => r.id == id ? updated : r).toList();
+    final updatedTotal = removeFromFavoritesList
+        ? (state.recipePagination.total > 0
+              ? state.recipePagination.total - 1
+              : 0)
+        : state.recipePagination.total;
 
-    final updatedList = state.recipes
-        .map((r) => r.id == id ? updated : r)
-        .toList();
     emit(
       state.copyWith(
         recipes: updatedList,
+        recipePagination: state.recipePagination.copyWith(total: updatedTotal),
         selectedRecipe: state.selectedRecipe?.id == id
             ? Nullable(updated)
             : null,
         error: const Nullable(null),
       ),
     );
+    return true;
+  }
+
+  bool _matchesRecipeFilter(RecipeDto recipe) {
+    final search = state.recipePagination.search?.trim().toLowerCase() ?? '';
+    if (search.isNotEmpty && !recipe.name.toLowerCase().contains(search)) {
+      return false;
+    }
+    if (state.recipePagination.isFavorite && !recipe.isFavorite) {
+      return false;
+    }
     return true;
   }
 
