@@ -874,6 +874,92 @@ void main() {
     );
   });
 
+  group('Macro goal transaction rollback', () {
+    final repo = MacroTrackingRepository.create();
+
+    WeekMacroGoalInput goal(String name, {bool active = true}) {
+      return WeekMacroGoalInput(
+        name: uniqueName(name),
+        targetCalories: 2000,
+        targetProtein: 150,
+        targetCarbs: 200,
+        targetFat: 60,
+        phase: WeightGoalPhase.maintain,
+        isActive: active,
+      );
+    }
+
+    test(
+      'failed daily deactivation preserves the active weekly goal',
+      () async {
+        final existing = (await repo.createMacroGoal(goal('Active'))).value;
+        final db = await testDatabase.db;
+        await db.execute("""
+        CREATE TEMP TRIGGER reject_macro_goal_deactivation
+        BEFORE UPDATE OF ${DayMacroGoalColumns.isActive.value} ON ${DayMacroGoal.table}
+        WHEN NEW.${DayMacroGoalColumns.isActive.value} = 0
+        BEGIN SELECT RAISE(ABORT, 'forced test failure'); END
+      """);
+        addTearDown(
+          () => db.execute('DROP TRIGGER reject_macro_goal_deactivation'),
+        );
+
+        final failed = await repo.createMacroGoal(goal('Replacement'));
+
+        expect(failed.error.type, SingleErrorTypes.operationFailure);
+        final active = (await repo.getActiveMacroGoal()).value;
+        expect(active.id, existing.id);
+        expect(active.days, existing.days);
+      },
+    );
+
+    test(
+      'a skipped daily insert rolls back the goal update and activation',
+      () async {
+        final existing = (await repo.createMacroGoal(goal('Active'))).value;
+        final original = (await repo.createMacroGoal(
+          goal('Inactive', active: false),
+        )).value;
+        final db = await testDatabase.db;
+        final originalDays = await db.query(
+          DayMacroGoal.table,
+          where: DayMacroGoalColumns.weekMacroGoalId.equal,
+          whereArgs: [original.id],
+        );
+        await db.execute("""
+        CREATE TEMP TRIGGER skip_macro_goal_day_insert
+        BEFORE INSERT ON ${DayMacroGoal.table}
+        BEGIN SELECT RAISE(IGNORE); END
+      """);
+        addTearDown(
+          () => db.execute('DROP TRIGGER skip_macro_goal_day_insert'),
+        );
+
+        final failed = await repo.updateMacroGoal(original.id, goal('Edited'));
+
+        expect(failed.error.type, SingleErrorTypes.operationFailure);
+        final active = (await repo.getActiveMacroGoal()).value;
+        expect(active.id, existing.id);
+        expect(active.days, existing.days);
+        final unchanged = (await db.query(
+          WeekMacroGoal.table,
+          where: WeekMacroGoalColumns.id.equal,
+          whereArgs: [original.id],
+        )).single;
+        expect(unchanged[WeekMacroGoalColumns.name.value], original.name);
+        expect(unchanged[WeekMacroGoalColumns.isActive.value], 0);
+        expect(
+          await db.query(
+            DayMacroGoal.table,
+            where: DayMacroGoalColumns.weekMacroGoalId.equal,
+            whereArgs: [original.id],
+          ),
+          originalDays,
+        );
+      },
+    );
+  });
+
   test('WeightRecordRepository updates status, completedAt, and updatedAt when replacing active goal', () async {
     final weightRepo = WeightRecordRepository.create();
     final db = await testDatabase.db;

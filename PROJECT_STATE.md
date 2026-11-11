@@ -499,7 +499,9 @@ PR #36 review follow-up:
   the write transaction so concurrent edits preserve distinct versions.
 - Recipe item, meal-plan schedule, and workout record set inserts return typed
   errors. Rejected child inserts roll back the full create or update.
-- The host suite passed 419 tests with the existing migration test skipped.
+- Macro-goal deactivation and daily goal inserts return typed errors. Failed
+  replacements preserve the previous weekly and daily goals.
+- The host suite passed 421 tests with the existing migration test skipped.
   Device integration tests were not run.
 
 ## Known gaps and release blockers
