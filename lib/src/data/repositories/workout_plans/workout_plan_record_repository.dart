@@ -140,10 +140,8 @@ final class WorkoutPlanRecordRepository implements Repository {
     }
 
     try {
-      final (
-        List<WorkoutPlanRecord> records,
-        int total,
-      ) = await fetchPaginatedWithTotal<WorkoutPlanRecord>(
+      final pageResult = await fetchPaginatedWithTotal(
+        failureType: OperationErrorTypes.operationFailure,
         dao: _workoutPlanRecordDao,
         limit: limit,
         offset: offset,
@@ -151,6 +149,8 @@ final class WorkoutPlanRecordRepository implements Repository {
         whereArgs: query.args,
         orderBy: [WorkoutPlanRecordColumns.createdAt.orderDesc],
       );
+      if (pageResult.isErr()) return err(pageResult.error);
+      final (List<WorkoutPlanRecord> records, int total) = pageResult.value;
       _logger.info('Got ${records.length} workout plan records');
       if (workoutPlanId != null || records.isEmpty) {
         return ok(
@@ -165,11 +165,14 @@ final class WorkoutPlanRecordRepository implements Repository {
       }
 
       final Set<int> planIds = records.map((r) => r.workoutPlanId).toSet();
-      final List<WorkoutPlan> plans = await selectManyInChunks<WorkoutPlan>(
+      final plansResult = await selectManyInChunks(
+        failureType: OperationErrorTypes.operationFailure,
         dao: _workoutPlanDao,
         column: WorkoutPlanColumns.id,
         values: planIds,
       );
+      if (plansResult.isErr()) return err(plansResult.error);
+      final List<WorkoutPlan> plans = plansResult.value;
       final Map<int, WorkoutPlanDto> planMap = {
         for (final plan in plans) plan.id!: WorkoutPlanDto.fromModel(plan),
       };
@@ -229,71 +232,74 @@ final class WorkoutPlanRecordRepository implements Repository {
   createWorkoutPlanRecord(WorkoutPlanRecordInput input) async {
     _logger.info('Creating workout plan record');
     try {
-      final workoutPlan = await _workoutPlanDao.selectOne(input.workoutPlanId);
-      if (workoutPlan == null) {
-        return err(
-          const ServiceError(
-            type: SingleErrorTypes.notFound,
-            description: 'Workout plan not found',
-          ),
+      return await _workoutPlanRecordDao.startTransaction<
+        Result<WorkoutPlanRecordDto, ServiceError<SingleErrorTypes>>
+      >((txn) async {
+        final workoutPlan = await _workoutPlanDao.selectOne(
+          input.workoutPlanId,
+          txn,
         );
-      }
+        if (workoutPlan == null) {
+          return err(
+            const ServiceError(
+              type: SingleErrorTypes.notFound,
+              description: 'Workout plan not found',
+            ),
+          );
+        }
 
-      final weekWhere = WhereBuilder();
-      weekWhere.and(
-        WorkoutPlanWeekColumns.workoutPlanId.equal,
-        input.workoutPlanId,
-      );
-      weekWhere.and(
-        WorkoutPlanWeekColumns.planVersion.equal,
-        workoutPlan.version,
-      );
-      final List<WorkoutPlanWeek> weeks = await _workoutPlanWeekDao.selectMany(
-        where: weekWhere.where,
-        whereArgs: weekWhere.args,
-        orderBy: [WorkoutPlanWeekColumns.startWeek.orderAsc],
-        limit: 1,
-      );
-      if (weeks.isEmpty) {
-        _logger.info('No weeks found for workout plan ${input.workoutPlanId}');
-        return err(
-          const ServiceError(
-            type: SingleErrorTypes.notFound,
-            description: 'No weeks found for workout plan',
-          ),
+        final weekWhere = WhereBuilder();
+        weekWhere.and(
+          WorkoutPlanWeekColumns.workoutPlanId.equal,
+          input.workoutPlanId,
         );
-      }
+        weekWhere.and(
+          WorkoutPlanWeekColumns.planVersion.equal,
+          workoutPlan.version,
+        );
+        final List<WorkoutPlanWeek> weeks = await _workoutPlanWeekDao
+            .selectMany(
+              where: weekWhere.where,
+              whereArgs: weekWhere.args,
+              orderBy: [WorkoutPlanWeekColumns.startWeek.orderAsc],
+              limit: 1,
+              trx: txn,
+            );
+        if (weeks.isEmpty) {
+          _logger.info(
+            'No weeks found for workout plan ${input.workoutPlanId}',
+          );
+          return err(
+            const ServiceError(
+              type: SingleErrorTypes.notFound,
+              description: 'No weeks found for workout plan',
+            ),
+          );
+        }
 
-      final WorkoutPlanRecord record = WorkoutPlanRecord.create(
-        input.workoutPlanId,
-        workoutPlanVersion: workoutPlan.version,
-        status: input.status,
-        startedAt: input.startedAt != null
-            ? DateUtilities.getDateUnix(input.startedAt!)
-            : DateUtilities.getNowUtcUnix(),
-        completedAt: input.completedAt.value != null
-            ? DateUtilities.getDateUnix(input.completedAt.value!)
-            : null,
-        currentWeek: 1,
-        currentDay: 1,
-        currentWorkoutPosition: 1,
-      );
-      if (input.status != ProgressStatus.inProgress) {
-        final int id = await _workoutPlanRecordDao.insert(record);
+        final WorkoutPlanRecord record = WorkoutPlanRecord.create(
+          input.workoutPlanId,
+          workoutPlanVersion: workoutPlan.version,
+          status: input.status,
+          startedAt: input.startedAt != null
+              ? DateUtilities.getDateUnix(input.startedAt!)
+              : DateUtilities.getNowUtcUnix(),
+          completedAt: input.completedAt.value != null
+              ? DateUtilities.getDateUnix(input.completedAt.value!)
+              : null,
+          currentWeek: 1,
+          currentDay: 1,
+          currentWorkoutPosition: 1,
+        );
+        if (input.status == ProgressStatus.inProgress) {
+          await _abandonOtherActiveRecords(txn, DateUtilities.getNowUtcUnix());
+        }
+        final id = await _workoutPlanRecordDao.insert(record, txn);
         _logger.info('Created workout plan record with id $id');
         return ok(
           WorkoutPlanRecordDto.fromModel(record.copyWith(id: Nullable(id))),
         );
-      }
-
-      final int id = await _workoutPlanRecordDao.startTransaction((txn) async {
-        await _abandonOtherActiveRecords(txn, DateUtilities.getNowUtcUnix());
-        return await _workoutPlanRecordDao.insert(record, txn);
       });
-      _logger.info('Created workout plan record with id $id');
-      return ok(
-        WorkoutPlanRecordDto.fromModel(record.copyWith(id: Nullable(id))),
-      );
     } catch (e) {
       _logger.severe('Failed to create workout plan record', e);
       return err(

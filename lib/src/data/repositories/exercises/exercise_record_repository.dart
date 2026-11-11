@@ -220,7 +220,8 @@ final class ExerciseRecordRepository implements Repository {
         query.and(ExerciseRecordColumns.exerciseId.equal, exerciseId);
       }
 
-      final (records, total) = await fetchPaginatedWithTotal(
+      final pageResult = await fetchPaginatedWithTotal(
+        failureType: SingleErrorTypes.operationFailure,
         dao: _exerciseRecordDao,
         limit: limit,
         offset: offset,
@@ -231,6 +232,8 @@ final class ExerciseRecordRepository implements Repository {
           ExerciseRecordColumns.id.orderDesc,
         ],
       );
+      if (pageResult.isErr()) return err(pageResult.error);
+      final (records, total) = pageResult.value;
       _logger.info('Got ${records.length} exercise records');
 
       if (exerciseId != null || records.isEmpty) {
@@ -248,11 +251,14 @@ final class ExerciseRecordRepository implements Repository {
       final Set<int> exerciseIds = records
           .map((record) => record.exerciseId)
           .toSet();
-      final List<Exercise> exercises = await selectManyInChunks(
+      final exercisesResult = await selectManyInChunks(
+        failureType: SingleErrorTypes.operationFailure,
         dao: _exerciseDao,
         column: ExerciseColumns.id,
         values: exerciseIds,
       );
+      if (exercisesResult.isErr()) return err(exercisesResult.error);
+      final List<Exercise> exercises = exercisesResult.value;
       if (exerciseIds.length != exercises.length) {
         _logger.warning("Not all exercises were found");
         return err(
@@ -497,7 +503,8 @@ final class ExerciseRecordRepository implements Repository {
         );
       }
 
-      final (goals, total) = await fetchPaginatedWithTotal(
+      final pageResult = await fetchPaginatedWithTotal(
+        failureType: OperationErrorTypes.operationFailure,
         dao: _strengthGoalDao,
         limit: limit,
         offset: offset,
@@ -508,6 +515,8 @@ final class ExerciseRecordRepository implements Repository {
           StrengthGoalColumns.createdAt.orderDesc,
         ],
       );
+      if (pageResult.isErr()) return err(pageResult.error);
+      final (goals, total) = pageResult.value;
       _logger.info('Got ${goals.length} strength goals');
       return ok(
         PaginatedDto<StrengthGoalDto, StrengthGoal>.mapData(

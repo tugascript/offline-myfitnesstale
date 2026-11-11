@@ -487,6 +487,19 @@ Repository audit follow-up on 12 November 2026:
   passed. The host suite passed 414 tests with the existing migration test
   skipped. Device integration tests were not run.
 
+PR #36 review follow-up:
+
+- Shared pagination and chunked SQLite helpers return typed service errors.
+  A chunked delete failure rolls back the enclosing workout edit.
+- Starting a meal plan reads the selected version and its schedule in the same
+  transaction that creates the execution. The active execution reports week
+  and day totals from its saved schedule, including when an older version runs.
+- Workout plan starts validate the template inside the write transaction.
+  Workout edits also check for records and allocate template versions inside
+  the write transaction so concurrent edits preserve distinct versions.
+- The host suite passed 418 tests with the existing migration test skipped.
+  Device integration tests were not run.
+
 ## Known gaps and release blockers
 
 - No fitness-data import/export, backup/restore, cloud sync, or account system.

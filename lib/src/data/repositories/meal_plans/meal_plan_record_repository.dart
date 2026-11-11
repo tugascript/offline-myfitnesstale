@@ -116,66 +116,84 @@ final class MealPlanRecordRepository implements Repository {
   }) async {
     _logger.info('Starting meal plan $mealPlanId');
     try {
-      final MealPlan? plan = await _mealPlanDao.selectOne(mealPlanId);
-      if (plan == null) {
-        return err(
-          const ServiceError(
-            type: SingleErrorTypes.notFound,
-            description: 'Meal plan not found',
-          ),
-        );
-      }
-
-      final int targetVersion = version ?? plan.version;
-      final startDt = startDate ?? DateTime.now();
-      final baseDate = DateTime(startDt.year, startDt.month, startDt.day);
-      final int startUnix = DateUtilities.getDateUnix(baseDate);
-
-      final weekWhere = WhereBuilder()
-        ..and(MealPlanWeekColumns.mealPlanId.equal, mealPlanId)
-        ..and(MealPlanWeekColumns.planVersion.equal, targetVersion);
-      final weekRows = await _mealPlanWeekDao.selectMany(
-        where: weekWhere.where!,
-        whereArgs: weekWhere.args!,
-        orderBy: [MealPlanWeekColumns.weekNumber.orderAsc],
-      );
-      if (weekRows.isEmpty) {
-        return err(
-          const ServiceError(
-            type: SingleErrorTypes.invalidInput,
-            description: 'Meal plan has no configured weeks',
-          ),
-        );
-      }
-
-      final weekIds = weekRows.map((w) => w.id!).toList();
-      final allDayRows = await selectManyInChunks<MealPlanDay>(
-        dao: _mealPlanDayDao,
-        column: MealPlanDayColumns.mealPlanWeekId,
-        values: weekIds,
-        orderBy: [MealPlanDayColumns.day.orderAsc],
-      );
-      final daysByWeekId = <int, List<MealPlanDay>>{};
-      for (final day in allDayRows) {
-        daysByWeekId.putIfAbsent(day.mealPlanWeekId, () => []).add(day);
-      }
-
-      final neededDates = <int>{};
-      for (final w in weekRows) {
-        for (final d in daysByWeekId[w.id!] ?? const <MealPlanDay>[]) {
-          final int offsetDays = (w.weekNumber - 1) * 7 + (d.day - 1);
-          final DateTime dayCalendarDate = baseDate.add(
-            Duration(days: offsetDays),
-          );
-          neededDates.add(DateUtilities.getNumericDate(dayCalendarDate));
-        }
-      }
-
       return await _recordDao.startTransaction<
         Result<MealPlanRecordDto, ServiceError<SingleErrorTypes>>
       >((txn) async {
+        final MealPlan? plan = await _mealPlanDao.selectOne(mealPlanId, txn);
+        if (plan == null) {
+          return err(
+            const ServiceError(
+              type: SingleErrorTypes.notFound,
+              description: 'Meal plan not found',
+            ),
+          );
+        }
+
+        final int targetVersion = version ?? plan.version;
+        final startDt = startDate ?? DateTime.now();
+        final baseDate = DateTime(startDt.year, startDt.month, startDt.day);
+        final int startUnix = DateUtilities.getDateUnix(baseDate);
+
+        final weekWhere = WhereBuilder()
+          ..and(MealPlanWeekColumns.mealPlanId.equal, mealPlanId)
+          ..and(MealPlanWeekColumns.planVersion.equal, targetVersion);
+        final weekRows = await _mealPlanWeekDao.selectMany(
+          where: weekWhere.where!,
+          whereArgs: weekWhere.args!,
+          orderBy: [MealPlanWeekColumns.weekNumber.orderAsc],
+          trx: txn,
+        );
+        if (weekRows.isEmpty) {
+          return err(
+            const ServiceError(
+              type: SingleErrorTypes.invalidInput,
+              description: 'Meal plan has no configured weeks',
+            ),
+          );
+        }
+
+        final weekIds = weekRows.map((w) => w.id!).toList();
+        final allDayRowsResult = await selectManyInChunks(
+          failureType: SingleErrorTypes.operationFailure,
+          dao: _mealPlanDayDao,
+          column: MealPlanDayColumns.mealPlanWeekId,
+          values: weekIds,
+          orderBy: [MealPlanDayColumns.day.orderAsc],
+          trx: txn,
+        );
+        if (allDayRowsResult.isErr()) return err(allDayRowsResult.error);
+        final allDayRows = allDayRowsResult.value;
+        final daysByWeekId = <int, List<MealPlanDay>>{};
+        for (final day in allDayRows) {
+          daysByWeekId.putIfAbsent(day.mealPlanWeekId, () => []).add(day);
+        }
+
+        final neededDates = <int>{};
+        for (final w in weekRows) {
+          for (final d in daysByWeekId[w.id!] ?? const <MealPlanDay>[]) {
+            final int offsetDays = (w.weekNumber - 1) * 7 + (d.day - 1);
+            final DateTime dayCalendarDate = baseDate.add(
+              Duration(days: offsetDays),
+            );
+            neededDates.add(DateUtilities.getNumericDate(dayCalendarDate));
+          }
+        }
+
+        final existingLogsResult = await selectManyInChunks(
+          failureType: SingleErrorTypes.operationFailure,
+          dao: _dailyLogDao,
+          column: DailyNutritionLogColumns.date,
+          values: neededDates,
+          trx: txn,
+        );
+        if (existingLogsResult.isErr()) return err(existingLogsResult.error);
+        final existingLogs = existingLogsResult.value;
+        final dailyLogIdByDate = <int, int>{
+          for (final log in existingLogs) log.date: log.id!,
+        };
+
         final now = DateUtilities.getNowUtcUnix();
-        // 1. Abandon existing in-progress meal plan records in a single update
+        // Abandon the previous active plan only after all reads succeed.
         await txn.update(
           MealPlanRecord.table,
           {
@@ -187,18 +205,6 @@ final class MealPlanRecordRepository implements Repository {
           whereArgs: [ProgressStatus.inProgress.value],
         );
 
-        // 2. Preload existing DailyNutritionLog entries for all target dates
-        final existingLogs = await selectManyInChunks<DailyNutritionLog>(
-          dao: _dailyLogDao,
-          column: DailyNutritionLogColumns.date,
-          values: neededDates,
-          trx: txn,
-        );
-        final dailyLogIdByDate = <int, int>{
-          for (final log in existingLogs) log.date: log.id!,
-        };
-
-        // 3. Create active MealPlanRecord
         final record = MealPlanRecord.create(
           mealPlanId: mealPlanId,
           mealPlanVersion: targetVersion,
@@ -269,8 +275,8 @@ final class MealPlanRecordRepository implements Repository {
         final createdDto = MealPlanRecordDto.fromModel(
           record.copyWith(id: Nullable(recordId)),
           planName: plan.name,
-          totalWeeks: plan.totalWeeks,
-          totalDays: plan.totalDays,
+          totalWeeks: weekRows.length,
+          totalDays: allDayRows.length,
           weeks: weekRecordDtos,
         );
         _logger.info('Started meal plan with record id $recordId');
@@ -346,8 +352,8 @@ final class MealPlanRecordRepository implements Repository {
         MealPlanRecordDto.fromModel(
           active,
           planName: plan?.name,
-          totalWeeks: plan?.totalWeeks ?? 1,
-          totalDays: plan?.totalDays ?? 7,
+          totalWeeks: weekRecords.length,
+          totalDays: dayRecords.length,
           weeks: weekDtos,
         ),
       );
@@ -634,7 +640,8 @@ final class MealPlanRecordRepository implements Repository {
         where.and(MealPlanRecordColumns.status.equal, status.value);
       }
 
-      final (records, total) = await fetchPaginatedWithTotal<MealPlanRecord>(
+      final pageResult = await fetchPaginatedWithTotal(
+        failureType: OperationErrorTypes.operationFailure,
         dao: _recordDao,
         limit: limit,
         offset: offset,
@@ -642,13 +649,18 @@ final class MealPlanRecordRepository implements Repository {
         whereArgs: where.args,
         orderBy: [MealPlanRecordColumns.startedAt.orderDesc],
       );
+      if (pageResult.isErr()) return err(pageResult.error);
+      final (records, total) = pageResult.value;
 
       final planIds = records.map((record) => record.mealPlanId).toSet();
-      final plans = await selectManyInChunks<MealPlan>(
+      final plansResult = await selectManyInChunks(
+        failureType: OperationErrorTypes.operationFailure,
         dao: _mealPlanDao,
         column: MealPlanColumns.id,
         values: planIds,
       );
+      if (plansResult.isErr()) return err(plansResult.error);
+      final plans = plansResult.value;
       final plansById = {for (final plan in plans) plan.id!: plan};
       final dtos = records.map((record) {
         final plan = plansById[record.mealPlanId];

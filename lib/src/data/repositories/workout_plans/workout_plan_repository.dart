@@ -125,10 +125,8 @@ final class WorkoutPlanRepository implements Repository {
     }
 
     try {
-      final (
-        List<WorkoutPlan> plans,
-        int total,
-      ) = await fetchPaginatedWithTotal<WorkoutPlan>(
+      final pageResult = await fetchPaginatedWithTotal(
+        failureType: OperationErrorTypes.operationFailure,
         dao: _workoutPlanDao,
         limit: limit,
         offset: offset,
@@ -136,6 +134,8 @@ final class WorkoutPlanRepository implements Repository {
         whereArgs: query.args,
         orderBy: [WorkoutPlanColumns.name.orderCaseInsensitiveAsc],
       );
+      if (pageResult.isErr()) return err(pageResult.error);
+      final (List<WorkoutPlan> plans, int total) = pageResult.value;
       _logger.info('Got ${plans.length} workout plans');
       return ok(
         PaginatedDto<WorkoutPlanDto, WorkoutPlan>.mapData(
@@ -500,11 +500,14 @@ final class WorkoutPlanRepository implements Repository {
           .expand((day) => day.workouts)
           .map((workout) => workout.workoutId)
           .toSet();
-      final workouts = await selectManyInChunks(
+      final workoutsResult = await selectManyInChunks(
+        failureType: SingleErrorTypes.operationFailure,
         dao: _workoutDao,
         column: WorkoutColumns.id,
         values: workoutIds,
       );
+      if (workoutsResult.isErr()) return err(workoutsResult.error);
+      final workouts = workoutsResult.value;
       if (workouts.length != workoutIds.length) {
         return err(
           const ServiceError(
@@ -1261,11 +1264,14 @@ final class WorkoutPlanRepository implements Repository {
       }
 
       final uniqueWorkoutIds = workouts.map((e) => e.workoutId).toSet();
-      final workoutModels = await selectManyInChunks(
+      final workoutModelsResult = await selectManyInChunks(
+        failureType: SingleErrorTypes.operationFailure,
         dao: _workoutDao,
         column: WorkoutColumns.id,
         values: uniqueWorkoutIds,
       );
+      if (workoutModelsResult.isErr()) return err(workoutModelsResult.error);
+      final workoutModels = workoutModelsResult.value;
       if (workoutModels.length != uniqueWorkoutIds.length) {
         _logger.warning('Not all workouts found');
         return err(
@@ -2138,12 +2144,15 @@ final class WorkoutPlanRepository implements Repository {
     }
 
     final workoutIds = planWorkouts.map((pw) => pw.workoutId).toSet();
-    final workouts = await selectManyInChunks<Workout>(
+    final workoutsResult = await selectManyInChunks(
+      failureType: SingleErrorTypes.operationFailure,
       dao: _workoutDao,
       column: WorkoutColumns.id,
       values: workoutIds,
       trx: txn,
     );
+    if (workoutsResult.isErr()) return err(workoutsResult.error);
+    final workouts = workoutsResult.value;
     if (workouts.length != workoutIds.length) {
       _logger.warning(missingWorkoutsMessage);
       return err(

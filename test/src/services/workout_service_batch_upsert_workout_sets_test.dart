@@ -998,6 +998,59 @@ void main() {
     expect(rowsByVersion.map((row) => row['count']), everyElement(1));
   });
 
+  test('concurrent workout edits allocate separate versions', () async {
+    final db = await testDatabase.db;
+    final workoutId = await createWorkout(db);
+    await db.insert(
+      WorkoutRecord.table,
+      WorkoutRecord.create(
+        workoutId: workoutId,
+        version: 1,
+        startedAt: 1,
+      ).toMap(),
+    );
+    final exerciseId = await createExercise(
+      db,
+      muscleGroup: MuscleGroup.push,
+      primaryMuscles: {Muscle.chest},
+    );
+
+    final results = await Future.wait([
+      for (final reps in [5, 8])
+        workoutService.batchUpsertWorkoutSets(
+          workoutId: workoutId,
+          inputs: [
+            WorkoutSetUpsertInput(
+              setType: WorkoutSetType.standard,
+              minSets: 1,
+              recommendedRestSecs: 60,
+              position: 1,
+              exercises: [
+                WorkoutSetExerciseUpsertInput(
+                  exerciseId: exerciseId,
+                  position: 1,
+                  minReps: reps,
+                ),
+              ],
+            ),
+          ],
+        ),
+    ]);
+
+    expect(results.every((result) => result.isOk()), isTrue);
+    final versionTwo = (await workoutService.getWorkout(
+      workoutId,
+      version: 2,
+    )).value;
+    final versionThree = (await workoutService.getWorkout(
+      workoutId,
+      version: 3,
+    )).value;
+    expect({versionTwo.totalReps, versionThree.totalReps}, {5, 8});
+    expect(versionTwo.sets, hasLength(1));
+    expect(versionThree.sets, hasLength(1));
+  });
+
   test('clears nullable maxSets, maxRestSecs, maxReps, and difficulty when omitted on update', () async {
     final db = await testDatabase.db;
     final workoutId = await createWorkout(
