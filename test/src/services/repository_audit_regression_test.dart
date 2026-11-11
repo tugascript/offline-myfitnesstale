@@ -40,8 +40,16 @@ import 'package:myfitnesstale/src/data/repositories/recipes/inputs/recipe_item_i
 import 'package:myfitnesstale/src/data/repositories/recipes/recipe_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/weight/inputs/weight_goal_input.dart';
 import 'package:myfitnesstale/src/data/repositories/weight/weight_record_repository.dart';
+import 'package:myfitnesstale/src/data/repositories/workout_plans/inputs/week_workout_input.dart';
+import 'package:myfitnesstale/src/data/repositories/workout_plans/inputs/workout_plan_day_batch_create_input.dart';
+import 'package:myfitnesstale/src/data/repositories/workout_plans/inputs/workout_plan_record_input.dart';
+import 'package:myfitnesstale/src/data/repositories/workout_plans/inputs/workout_plan_week_batch_create_input.dart';
+import 'package:myfitnesstale/src/data/repositories/workout_plans/inputs/workout_plan_workout_batch_create_input.dart';
+import 'package:myfitnesstale/src/data/repositories/workout_plans/inputs/workout_plan_workout_record_input.dart';
 import 'package:myfitnesstale/src/data/repositories/workout_plans/workout_plan_record_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/workout_plans/workout_plan_repository.dart';
+import 'package:myfitnesstale/src/data/repositories/workouts/inputs/workout_record_batch_input.dart';
+import 'package:myfitnesstale/src/data/repositories/workouts/inputs/workout_set_record_batch_input.dart';
 import 'package:myfitnesstale/src/data/repositories/workouts/workout_record_repository.dart';
 import 'package:myfitnesstale/src/data/services/sqlite/dao.dart';
 import 'package:myfitnesstale/src/data/services/sqlite/database_helper.dart';

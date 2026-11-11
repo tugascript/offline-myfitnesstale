@@ -15,17 +15,16 @@
 // You should have received a copy of the GNU General Public License
 // along with My Fitness Tale.  If not, see <https://www.gnu.org/licenses/>.
 
-import '../../../utils/nullable.dart';
-
 import 'package:equatable/equatable.dart';
 
-import 'daily_nutrition_log_model.dart';
+import '../../../utils/nullable.dart';
+import '../../utils/dates.dart';
 import '../../utils/enums.dart';
+import 'daily_nutrition_log_model.dart';
 import 'meal_plan_day_model.dart';
 import 'meal_plan_record_model.dart';
 import 'meal_plan_week_record_model.dart';
 import 'model.dart';
-import '../../utils/dates.dart';
 
 const String _table = 'meal_plan_day_records';
 

@@ -15,16 +15,15 @@
 // You should have received a copy of the GNU General Public License
 // along with My Fitness Tale.  If not, see <https://www.gnu.org/licenses/>.
 
-import '../../../data/repositories/recipes/inputs/recipe_input.dart';
-
 import 'dart:math';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:logging/logging.dart';
 
-import '../../../utils/nullable.dart';
-import '../../../data/utils/enums.dart';
+import '../../../data/repositories/recipes/inputs/recipe_input.dart';
 import '../../../data/repositories/recipes/recipe_repository.dart';
+import '../../../data/utils/enums.dart';
+import '../../../utils/nullable.dart';
 import '../../core/view_models/states/common_state.dart';
 import './states/recipe_state.dart';
 

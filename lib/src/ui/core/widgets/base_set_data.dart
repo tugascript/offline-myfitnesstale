@@ -18,8 +18,8 @@
 import 'package:flutter/material.dart';
 
 import '../../../data/repositories/workouts/dtos/workout_set_dto.dart';
-import '../utils/converters.dart';
 import '../sizes/data_display_sizes.dart';
+import '../utils/converters.dart';
 import './set_type_badge.dart';
 
 class BaseSetData extends StatelessWidget {

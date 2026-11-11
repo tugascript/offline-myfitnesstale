@@ -19,13 +19,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import '../view_models/states/workout_plan_record_state.dart';
-import '../view_models/workout_plan_record_cubit.dart';
 import '../../../data/utils/enums.dart';
 import '../../../routing/routes.dart';
 import '../../core/sizes/data_display_sizes.dart';
 import '../../core/sizes/screen_size.dart';
 import '../../core/widgets/layout/app_scaffold.dart';
+import '../view_models/states/workout_plan_record_state.dart';
+import '../view_models/workout_plan_record_cubit.dart';
 import '../widgets/active/active_workout_plan_content.dart';
 import '../widgets/active/current_workout_plan_placeholder.dart';
 

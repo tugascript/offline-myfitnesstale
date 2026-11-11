@@ -15,15 +15,14 @@
 // You should have received a copy of the GNU General Public License
 // along with My Fitness Tale.  If not, see <https://www.gnu.org/licenses/>.
 
-import '../../../utils/errors.dart';
-
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:logging/logging.dart';
 
-import '../../../utils/nullable.dart';
-import '../../../data/utils/enums.dart';
 import '../../../data/repositories/meal_plans/dtos/meal_plan_record_dto.dart';
 import '../../../data/repositories/meal_plans/meal_plan_record_repository.dart';
+import '../../../data/utils/enums.dart';
+import '../../../utils/errors.dart';
+import '../../../utils/nullable.dart';
 import '../../core/view_models/states/common_state.dart';
 import './states/meal_plan_record_state.dart';
 

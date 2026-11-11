@@ -18,16 +18,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../view_models/exercise_record_cubit.dart';
-import '../../../../../data/utils/enums.dart';
 import '../../../../../data/repositories/exercises/dtos/exercise_dto.dart';
 import '../../../../../data/repositories/exercises/dtos/exercise_record_dto.dart';
+import '../../../../../data/utils/enums.dart';
+import '../../../../core/sizes/data_display_sizes.dart';
 import '../../../../core/utils/converters.dart';
 import '../../../../core/utils/formatters.dart';
-import '../../../../core/sizes/data_display_sizes.dart';
 import '../../../../core/widgets/confirmation_dialog.dart';
-import '../../../../core/widgets/mutation_buttons.dart';
 import '../../../../core/widgets/layout/app_modal.dart';
+import '../../../../core/widgets/mutation_buttons.dart';
+import '../../../view_models/exercise_record_cubit.dart';
 import '../exercise_record_reps.dart';
 import './edit_exercise_record_modal.dart';
 

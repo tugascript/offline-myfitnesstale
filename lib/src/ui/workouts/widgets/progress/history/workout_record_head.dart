@@ -18,11 +18,11 @@
 import 'package:flutter/material.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
-import '../../../../../data/utils/enums.dart';
 import '../../../../../data/repositories/workouts/dtos/workout_record_dto.dart';
+import '../../../../../data/utils/enums.dart';
+import '../../../../core/sizes/data_display_sizes.dart';
 import '../../../../core/utils/converters.dart';
 import '../../../../core/utils/formatters.dart';
-import '../../../../core/sizes/data_display_sizes.dart';
 import '../../../../core/widgets/muscles_carousel.dart';
 import '../../../../core/widgets/total_numeric_string.dart';
 import '../../../../core/widgets/total_string.dart';

@@ -19,8 +19,8 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
-import '../../../core/utils/formatters.dart';
 import '../../../core/sizes/data_display_sizes.dart';
+import '../../../core/utils/formatters.dart';
 
 class ActiveProgressBar extends StatefulWidget {
   final DataDisplaySizesList sizes;

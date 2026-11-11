@@ -18,12 +18,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../home/view_models/profile_cubit.dart';
-import '../../home/view_models/states/profile_state.dart';
 import '../../../data/utils/enums.dart';
 import '../../core/sizes/data_display_sizes.dart';
 import '../../core/sizes/screen_size.dart';
 import '../../core/widgets/layout/responsive_scaffold.dart';
+import '../../home/view_models/profile_cubit.dart';
+import '../../home/view_models/states/profile_state.dart';
 import '../widgets/records/editor/create_weight_record_modal.dart';
 import '../widgets/records/latest_weight_record.dart';
 import '../widgets/records/weight_records_history.dart';

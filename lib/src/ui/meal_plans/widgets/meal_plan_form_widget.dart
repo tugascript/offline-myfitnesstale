@@ -15,23 +15,22 @@
 // You should have received a copy of the GNU General Public License
 // along with My Fitness Tale.  If not, see <https://www.gnu.org/licenses/>.
 
-import '../../../data/repositories/meal_plans/inputs/meal_plan_day_input.dart';
-import '../../../data/repositories/meal_plans/inputs/meal_plan_meal_input.dart';
-import '../../../data/repositories/meal_plans/inputs/meal_plan_meal_item_input.dart';
-import '../../../data/repositories/meal_plans/inputs/meal_plan_week_input.dart';
-import '../../core/widgets/layout/responsive_fields.dart';
-import '../../core/widgets/layout/app_text_form_field.dart';
-import '../../../utils/nullable.dart';
-import '../../../data/repositories/meal_plans/inputs/meal_plan_input.dart';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../foods/view_models/food_cubit.dart';
-import '../../../data/utils/enums.dart';
 import '../../../data/repositories/foods/dtos/food_dto.dart';
 import '../../../data/repositories/meal_plans/dtos/meal_plan_dto.dart';
+import '../../../data/repositories/meal_plans/inputs/meal_plan_day_input.dart';
+import '../../../data/repositories/meal_plans/inputs/meal_plan_input.dart';
+import '../../../data/repositories/meal_plans/inputs/meal_plan_meal_input.dart';
+import '../../../data/repositories/meal_plans/inputs/meal_plan_meal_item_input.dart';
+import '../../../data/repositories/meal_plans/inputs/meal_plan_week_input.dart';
+import '../../../data/utils/enums.dart';
+import '../../../utils/nullable.dart';
 import '../../core/sizes/data_display_sizes.dart';
+import '../../core/widgets/layout/app_text_form_field.dart';
+import '../../core/widgets/layout/responsive_fields.dart';
+import '../../foods/view_models/food_cubit.dart';
 
 class MealPlanFormWidget extends StatefulWidget {
   final ThemeData theme;

@@ -18,12 +18,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../view_models/weight_record_cubit.dart';
-import '../../../../../data/utils/enums.dart';
 import '../../../../../data/repositories/weight/dtos/weight_goal_dto.dart';
-import '../../../../core/utils/converters.dart';
+import '../../../../../data/utils/enums.dart';
 import '../../../../core/sizes/data_display_sizes.dart';
+import '../../../../core/utils/converters.dart';
 import '../../../../core/widgets/confirmation_dialog.dart';
+import '../../../view_models/weight_record_cubit.dart';
 import '../goal_date.dart';
 import '../goal_phase_badge.dart';
 import '../goal_status_badge.dart';

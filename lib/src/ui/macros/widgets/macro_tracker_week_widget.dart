@@ -19,17 +19,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 
+import '../../../data/utils/dates.dart';
+import '../../core/sizes/data_display_sizes.dart';
 import '../view_models/macro_tracking_cubit.dart';
 import '../view_models/states/macro_tracking_state.dart';
-
-import '../../core/sizes/data_display_sizes.dart';
-import '../../../data/utils/dates.dart';
 
 class MacroTrackerWeekWidget extends StatelessWidget {
   final DataDisplaySizesList sizes;
   final ThemeData theme;
   final DateTime selectedDate;
   final ValueChanged<DateTime> onSelectDate;
+
   const MacroTrackerWeekWidget({
     required this.theme,
     super.key,
@@ -37,6 +37,7 @@ class MacroTrackerWeekWidget extends StatelessWidget {
     required this.selectedDate,
     required this.onSelectDate,
   });
+
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<MacroTrackingCubit, MacroTrackingState>(

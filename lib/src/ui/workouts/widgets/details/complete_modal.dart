@@ -18,8 +18,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../view_models/active_workout_cubit.dart';
 import '../../../core/widgets/confirmation_dialog.dart';
+import '../../view_models/active_workout_cubit.dart';
 
 class CompleteWorkoutDialog extends StatelessWidget {
   final String workoutName;

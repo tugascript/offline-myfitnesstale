@@ -17,13 +17,13 @@
 
 import 'package:flutter/material.dart';
 
-import '../../../../data/repositories/macros/inputs/day_macro_goal_input.dart';
-import '../../../../utils/nullable.dart';
-import '../../../../data/utils/enums.dart';
 import '../../../../data/repositories/macros/dtos/macro_tracking_dto.dart';
+import '../../../../data/repositories/macros/inputs/day_macro_goal_input.dart';
 import '../../../../data/repositories/macros/inputs/week_macro_goal_input.dart';
-import '../../../core/utils/converters.dart';
+import '../../../../data/utils/enums.dart';
+import '../../../../utils/nullable.dart';
 import '../../../core/sizes/data_display_sizes.dart';
+import '../../../core/utils/converters.dart';
 import '../../../core/widgets/icons_switch.dart';
 import '../../../core/widgets/layout/app_elevated_button.dart';
 import '../../../core/widgets/layout/app_text_form_field.dart';

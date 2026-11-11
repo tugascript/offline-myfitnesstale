@@ -17,9 +17,9 @@
 
 import 'package:equatable/equatable.dart';
 
-import '../../core/inputs/input.dart';
 import '../../../models/sqlite/system_model.dart';
 import '../../../utils/enums.dart';
+import '../../core/inputs/input.dart';
 
 final class SystemInput extends Equatable implements ModelInput<System> {
   final ThemeType theme;

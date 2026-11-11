@@ -17,9 +17,9 @@
 
 import 'package:equatable/equatable.dart';
 
+import '../../../models/sqlite/profile_model.dart';
 import '../../../utils/enums.dart';
 import '../../core/inputs/input.dart';
-import '../../../models/sqlite/profile_model.dart';
 
 final class ProfileInput extends Equatable implements ModelInput<Profile> {
   final String name;

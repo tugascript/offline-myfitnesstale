@@ -19,12 +19,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../utils/nullable.dart';
-import '../../view_models/states/workout_state.dart';
-import '../../view_models/workout_cubit.dart';
+import '../../../../data/repositories/workouts/inputs/workout_input.dart';
 import '../../../../data/utils/enums.dart';
+import '../../../../utils/nullable.dart';
 import '../../../core/sizes/data_display_sizes.dart';
 import '../../../core/widgets/layout/app_modal.dart';
+import '../../view_models/states/workout_state.dart';
+import '../../view_models/workout_cubit.dart';
 import './workout_base_form.dart';
 
 class CreateWorkoutDialog extends StatelessWidget {

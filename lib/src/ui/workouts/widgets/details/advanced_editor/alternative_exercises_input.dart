@@ -18,11 +18,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../../exercises/view_models/exercise_cubit.dart';
-import '../../../../exercises/view_models/states/exercise_state.dart';
 import '../../../../core/sizes/data_display_sizes.dart';
 import '../../../../core/widgets/layout/dynamic_list_input.dart';
 import '../../../../core/widgets/layout/expanding_section.dart';
+import '../../../../exercises/view_models/exercise_cubit.dart';
+import '../../../../exercises/view_models/states/exercise_state.dart';
 import '../editors/set_exercise_search_modal.dart';
 import './complex_set_editor_data.dart';
 

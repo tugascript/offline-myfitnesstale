@@ -20,10 +20,10 @@ import 'dart:math';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:logging/logging.dart';
 
-import '../../../utils/nullable.dart';
-import '../../../data/utils/enums.dart';
 import '../../../data/repositories/foods/food_repository.dart';
 import '../../../data/repositories/foods/inputs/food_input.dart';
+import '../../../data/utils/enums.dart';
+import '../../../utils/nullable.dart';
 import '../../core/view_models/states/common_state.dart';
 import './states/food_state.dart';
 

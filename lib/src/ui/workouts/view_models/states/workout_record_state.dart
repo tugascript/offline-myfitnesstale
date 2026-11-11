@@ -17,8 +17,8 @@
 
 import 'package:equatable/equatable.dart';
 
-import '../../../../utils/nullable.dart';
 import '../../../../data/repositories/workouts/dtos/workout_record_dto.dart';
+import '../../../../utils/nullable.dart';
 import '../../../core/view_models/states/common_state.dart';
 
 final class WorkoutRecordPagination extends Equatable {

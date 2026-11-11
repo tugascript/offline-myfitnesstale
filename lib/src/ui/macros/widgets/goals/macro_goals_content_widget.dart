@@ -18,12 +18,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../view_models/macro_tracking_cubit.dart';
-import '../../view_models/states/macro_tracking_state.dart';
-import '../../../../data/utils/enums.dart';
 import '../../../../data/repositories/macros/dtos/macro_tracking_dto.dart';
+import '../../../../data/utils/enums.dart';
 import '../../../core/sizes/data_display_sizes.dart';
 import '../../../core/widgets/confirmation_dialog.dart';
+import '../../view_models/macro_tracking_cubit.dart';
+import '../../view_models/states/macro_tracking_state.dart';
 import './macro_goal_chip.dart';
 import './macro_goal_form_modal.dart';
 

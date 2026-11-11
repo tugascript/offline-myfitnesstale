@@ -19,17 +19,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../data/utils/enums.dart';
+import '../../../routing/routes.dart';
+import '../../core/sizes/data_display_sizes.dart';
+import '../../core/sizes/screen_size.dart';
+import '../../core/widgets/layout/responsive_scaffold.dart';
 import '../../home/view_models/profile_cubit.dart';
 import '../../home/view_models/states/profile_state.dart';
 import '../view_models/states/workout_record_state.dart';
 import '../view_models/states/workout_state.dart';
 import '../view_models/workout_cubit.dart';
 import '../view_models/workout_record_cubit.dart';
-import '../../../data/utils/enums.dart';
-import '../../../routing/routes.dart';
-import '../../core/sizes/data_display_sizes.dart';
-import '../../core/sizes/screen_size.dart';
-import '../../core/widgets/layout/responsive_scaffold.dart';
 import '../widgets/progress/history/latest_workout_record.dart';
 import '../widgets/progress/history/workout_record_history.dart';
 

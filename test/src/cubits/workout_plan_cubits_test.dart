@@ -21,6 +21,12 @@ import 'package:sqflite/sqflite.dart';
 import 'package:myfitnesstale/src/utils/nullable.dart';
 import 'package:myfitnesstale/src/ui/workout_plans/view_models/workout_plan_cubit.dart';
 import 'package:myfitnesstale/src/ui/workout_plans/view_models/workout_plan_record_cubit.dart';
+import 'package:myfitnesstale/src/data/repositories/workout_plans/inputs/workout_plan_day_record_input.dart';
+import 'package:myfitnesstale/src/data/repositories/workout_plans/inputs/workout_plan_input.dart';
+import 'package:myfitnesstale/src/data/repositories/workout_plans/inputs/workout_plan_record_input.dart';
+import 'package:myfitnesstale/src/data/repositories/workout_plans/inputs/workout_plan_workout_record_input.dart';
+import 'package:myfitnesstale/src/data/repositories/workouts/inputs/workout_record_batch_input.dart';
+import 'package:myfitnesstale/src/data/repositories/workouts/inputs/workout_record_input.dart';
 import 'package:myfitnesstale/src/data/utils/enums.dart';
 
 import 'package:myfitnesstale/src/data/models/sqlite/workout_model.dart';

@@ -17,10 +17,9 @@
 
 import 'package:flutter/material.dart';
 
-import '../../../data/utils/enums.dart';
-
-import '../sizes/data_display_sizes.dart';
 import '../../../data/utils/display_names.dart';
+import '../../../data/utils/enums.dart';
+import '../sizes/data_display_sizes.dart';
 
 class SetTypeBadge extends StatelessWidget {
   final DataDisplaySizesList sizes;

@@ -19,11 +19,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import '../view_models/macro_tracking_cubit.dart';
-import '../view_models/states/macro_tracking_state.dart';
 import '../../../routing/routes.dart';
 import '../../core/sizes/data_display_sizes.dart';
 import '../../core/widgets/confirmation_dialog.dart';
+import '../view_models/macro_tracking_cubit.dart';
+import '../view_models/states/macro_tracking_state.dart';
 import './log_food_modal.dart';
 import './macro_progress_bar.dart';
 import './nutrition_timeline_widget.dart';

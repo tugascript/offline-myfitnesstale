@@ -17,11 +17,11 @@
 
 import 'package:flutter/material.dart';
 
-import '../../../../data/utils/enums.dart';
 import '../../../../data/repositories/profile/dtos/profile_dto.dart';
 import '../../../../data/repositories/profile/dtos/system_dto.dart';
-import '../../../core/utils/converters.dart';
+import '../../../../data/utils/enums.dart';
 import '../../../core/sizes/data_display_sizes.dart';
+import '../../../core/utils/converters.dart';
 
 class ProfileInfo extends StatelessWidget {
   final DataDisplaySizesList sizes;

@@ -19,16 +19,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 
-import '../widgets/macro_tracker_day_widget.dart';
-import '../widgets/macro_tracker_week_widget.dart';
-import '../widgets/macro_tracker_month_widget.dart';
-import '../view_models/macro_tracking_cubit.dart';
-import '../../meal_plans/view_models/meal_plan_cubit.dart';
-import '../../meal_plans/view_models/meal_plan_record_cubit.dart';
 import '../../core/sizes/data_display_sizes.dart';
 import '../../core/sizes/screen_size.dart';
 import '../../core/widgets/layout/app_scaffold.dart';
+import '../../meal_plans/view_models/meal_plan_cubit.dart';
+import '../../meal_plans/view_models/meal_plan_record_cubit.dart';
+import '../view_models/macro_tracking_cubit.dart';
 import '../widgets/log_food_modal.dart';
+import '../widgets/macro_tracker_day_widget.dart';
+import '../widgets/macro_tracker_month_widget.dart';
+import '../widgets/macro_tracker_week_widget.dart';
 
 enum TrackerScope { day, week, month }
 

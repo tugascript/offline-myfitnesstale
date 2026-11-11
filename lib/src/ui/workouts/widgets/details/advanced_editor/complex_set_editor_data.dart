@@ -17,8 +17,8 @@
 
 import 'package:flutter/foundation.dart';
 
-import '../../../../../data/utils/json_data.dart';
 import '../../../../../data/utils/enums.dart';
+import '../../../../../data/utils/json_data.dart';
 
 final class AlternativeExerciseData {
   final int id;

@@ -19,12 +19,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../utils/nullable.dart';
-import '../../view_models/states/workout_plan_state.dart';
-import '../../view_models/workout_plan_cubit.dart';
+import '../../../../data/repositories/workout_plans/inputs/workout_plan_input.dart';
 import '../../../../data/utils/enums.dart';
+import '../../../../utils/nullable.dart';
 import '../../../core/sizes/data_display_sizes.dart';
 import '../../../core/widgets/layout/app_modal.dart';
+import '../../view_models/states/workout_plan_state.dart';
+import '../../view_models/workout_plan_cubit.dart';
 import './workout_plan_base_form.dart';
 
 class CreateWorkoutPlanModal extends StatelessWidget {

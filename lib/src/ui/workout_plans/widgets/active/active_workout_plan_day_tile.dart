@@ -18,10 +18,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../data/utils/enums.dart';
 import '../../../../data/repositories/workout_plans/dtos/workout_plan_day_dto.dart';
-import '../../../../data/repositories/workout_plans/dtos/workout_plan_workout_record_dto.dart';
 import '../../../../data/repositories/workout_plans/dtos/workout_plan_workout_dto.dart';
+import '../../../../data/repositories/workout_plans/dtos/workout_plan_workout_record_dto.dart';
+import '../../../../data/utils/enums.dart';
 import '../../../core/sizes/data_display_sizes.dart';
 
 enum DayProgressStatus { past, current, future }

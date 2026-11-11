@@ -19,17 +19,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import '../view_models/food_cubit.dart';
-import '../view_models/states/food_state.dart';
 import '../../../data/utils/enums.dart';
 import '../../../routing/routes.dart';
+import '../../core/screens/loading_screen.dart';
 import '../../core/sizes/data_display_sizes.dart';
 import '../../core/sizes/screen_size.dart';
 import '../../core/widgets/confirmation_dialog.dart';
-import '../../core/widgets/mutation_buttons.dart';
-import '../widgets/food_details_widget.dart';
 import '../../core/widgets/layout/app_scaffold.dart';
-import '../../core/screens/loading_screen.dart';
+import '../../core/widgets/mutation_buttons.dart';
+import '../view_models/food_cubit.dart';
+import '../view_models/states/food_state.dart';
+import '../widgets/food_details_widget.dart';
 
 class FoodDetailsScreen extends StatefulWidget {
   static const name = 'food_details';

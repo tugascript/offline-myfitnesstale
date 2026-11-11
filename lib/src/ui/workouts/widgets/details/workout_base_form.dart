@@ -17,14 +17,13 @@
 
 import 'package:flutter/material.dart';
 
+import '../../../../data/utils/display_names.dart';
 import '../../../../data/utils/enums.dart';
-
 import '../../../core/sizes/data_display_sizes.dart';
 import '../../../core/widgets/layout/app_dropdown.dart';
 import '../../../core/widgets/layout/app_elevated_button.dart';
 import '../../../core/widgets/layout/app_text_form_field.dart';
 import '../../../core/widgets/layout/sharp_switch_title.dart';
-import '../../../../data/utils/display_names.dart';
 
 class WorkoutBaseForm extends StatefulWidget {
   final ThemeData theme;

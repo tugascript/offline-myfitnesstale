@@ -17,9 +17,9 @@
 
 import 'package:equatable/equatable.dart';
 
-import '../../../../utils/nullable.dart';
 import '../../../../data/repositories/exercises/dtos/exercise_record_dto.dart';
 import '../../../../data/repositories/exercises/dtos/strength_goal_dto.dart';
+import '../../../../utils/nullable.dart';
 import '../../../core/view_models/states/common_state.dart';
 
 final class ExerciseRecordPagination extends Equatable {
@@ -67,6 +67,7 @@ final class StrengthGoalPagination extends Equatable {
   final int total;
   final int limit;
   final int offset;
+
   const StrengthGoalPagination({
     this.exerciseId,
     this.skipInProgress = false,
@@ -74,6 +75,7 @@ final class StrengthGoalPagination extends Equatable {
     this.limit = 20,
     this.offset = 0,
   });
+
   StrengthGoalPagination copyWith({
     Nullable<int>? exerciseId,
     bool? skipInProgress,
@@ -87,6 +89,7 @@ final class StrengthGoalPagination extends Equatable {
     limit: limit ?? this.limit,
     offset: offset ?? this.offset,
   );
+
   @override
   List<Object?> get props => [exerciseId, skipInProgress, total, limit, offset];
 }

@@ -19,18 +19,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import '../view_models/meal_plan_cubit.dart';
-import '../view_models/meal_plan_record_cubit.dart';
-import '../view_models/states/meal_plan_state.dart';
 import '../../../data/utils/enums.dart';
 import '../../../routing/routes.dart';
+import '../../core/screens/loading_screen.dart';
 import '../../core/sizes/data_display_sizes.dart';
 import '../../core/sizes/screen_size.dart';
 import '../../core/widgets/confirmation_dialog.dart';
-import '../../core/widgets/mutation_buttons.dart';
 import '../../core/widgets/layout/app_scaffold.dart';
+import '../../core/widgets/mutation_buttons.dart';
+import '../view_models/meal_plan_cubit.dart';
+import '../view_models/meal_plan_record_cubit.dart';
+import '../view_models/states/meal_plan_state.dart';
 import '../widgets/meal_plan_schedule_widget.dart';
-import '../../core/screens/loading_screen.dart';
 
 class MealPlanDetailsScreen extends StatefulWidget {
   static const name = 'meal_plan_details';

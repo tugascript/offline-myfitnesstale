@@ -19,13 +19,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../utils/nullable.dart';
+import '../../../data/repositories/exercises/inputs/equipment_input.dart';
 import '../../../data/utils/json_data.dart';
 import '../../../routing/routes.dart';
-import '../../../data/repositories/exercises/inputs/equipment_input.dart';
-import '../../core/widgets/layout/responsive_scaffold.dart';
+import '../../../utils/nullable.dart';
 import '../../core/sizes/data_display_sizes.dart';
 import '../../core/sizes/screen_size.dart';
+import '../../core/widgets/layout/responsive_scaffold.dart';
 import '../view_models/exercise_cubit.dart';
 import '../view_models/states/exercise_state.dart';
 import '../widgets/equipment_form.dart';

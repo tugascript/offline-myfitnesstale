@@ -18,8 +18,8 @@
 import 'package:flutter/material.dart';
 
 import '../../core/sizes/data_display_sizes.dart';
-import '../../core/widgets/search_form_button.dart';
 import '../../core/widgets/layout/app_text_form_field.dart';
+import '../../core/widgets/search_form_button.dart';
 
 class EquipmentsSearchForm extends StatefulWidget {
   final ThemeData theme;

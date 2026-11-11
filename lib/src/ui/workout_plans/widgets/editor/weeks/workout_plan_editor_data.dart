@@ -17,10 +17,10 @@
 
 import 'package:flutter/foundation.dart';
 
-import '../../../../../data/utils/enums.dart';
 import '../../../../../data/repositories/workout_plans/dtos/workout_plan_day_dto.dart';
 import '../../../../../data/repositories/workout_plans/dtos/workout_plan_week_dto.dart';
 import '../../../../../data/repositories/workout_plans/dtos/workout_plan_workout_dto.dart';
+import '../../../../../data/utils/enums.dart';
 
 class WorkoutPlanWorkoutEditorData {
   final String internalId;

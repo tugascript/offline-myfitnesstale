@@ -20,8 +20,8 @@ import 'package:flutter/material.dart';
 import '../../../data/repositories/workout_plans/dtos/workout_plan_dto.dart';
 import '../../core/sizes/data_display_sizes.dart';
 import '../../core/widgets/difficulty_badge.dart';
-import '../../core/widgets/total_numeric_string.dart';
 import '../../core/widgets/layout/list_card.dart';
+import '../../core/widgets/total_numeric_string.dart';
 
 class WorkoutPlanCard extends StatelessWidget {
   final WorkoutPlanDto plan;

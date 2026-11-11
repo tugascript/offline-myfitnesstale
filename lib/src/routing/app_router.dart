@@ -17,6 +17,7 @@
 
 import 'package:go_router/go_router.dart';
 
+import '../ui/core/screens/not_found_screen.dart';
 import '../ui/exercises/screens/equipment_creation_screen.dart';
 import '../ui/exercises/screens/equipment_details_screen.dart';
 import '../ui/exercises/screens/equipment_update_screen.dart';
@@ -28,21 +29,20 @@ import '../ui/exercises/screens/exercise_records_screen.dart';
 import '../ui/exercises/screens/exercise_update_screen.dart';
 import '../ui/exercises/screens/exercises_screen.dart';
 import '../ui/exercises/screens/strength_goals_screen.dart';
-import '../ui/home/screens/profile/create_profile_screen.dart';
 import '../ui/foods/screens/food_creation_screen.dart';
 import '../ui/foods/screens/food_details_screen.dart';
 import '../ui/foods/screens/food_update_screen.dart';
 import '../ui/foods/screens/foods_screen.dart';
 import '../ui/home/screens/main_navigation_screen.dart';
+import '../ui/home/screens/profile/create_profile_screen.dart';
+import '../ui/home/screens/profile/onboarding_screen.dart';
+import '../ui/home/screens/profile/reminder_preferences_screen.dart';
 import '../ui/macros/screens/macro_goals_screen.dart';
 import '../ui/macros/screens/macro_tracker_screen.dart';
 import '../ui/meal_plans/screens/meal_plan_creation_screen.dart';
 import '../ui/meal_plans/screens/meal_plan_details_screen.dart';
 import '../ui/meal_plans/screens/meal_plan_list_screen.dart';
 import '../ui/meal_plans/screens/meal_plan_update_screen.dart';
-import '../ui/core/screens/not_found_screen.dart';
-import '../ui/home/screens/profile/onboarding_screen.dart';
-import '../ui/home/screens/profile/reminder_preferences_screen.dart';
 import '../ui/recipes/screens/recipe_creation_screen.dart';
 import '../ui/recipes/screens/recipe_details_screen.dart';
 import '../ui/recipes/screens/recipe_update_screen.dart';

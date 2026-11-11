@@ -18,11 +18,10 @@
 import 'package:equatable/equatable.dart';
 
 import '../../../utils/nullable.dart';
+import '../../utils/dates.dart';
 import '../../utils/enums.dart';
 import 'model.dart';
-
 import 'workout_model.dart';
-import '../../utils/dates.dart';
 
 const String _table = 'workout_sets';
 

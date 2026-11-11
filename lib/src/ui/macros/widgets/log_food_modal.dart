@@ -15,20 +15,19 @@
 // You should have received a copy of the GNU General Public License
 // along with My Fitness Tale.  If not, see <https://www.gnu.org/licenses/>.
 
-import '../../core/widgets/layout/app_text_form_field.dart';
-import '../../../data/repositories/macros/inputs/quick_food_log_input.dart';
-import './quick_add_food_form.dart';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 
-import '../../foods/view_models/food_cubit.dart';
-import '../view_models/macro_tracking_cubit.dart';
-import '../../recipes/view_models/recipe_cubit.dart';
-import '../../../data/utils/enums.dart';
 import '../../../data/repositories/foods/dtos/food_dto.dart';
+import '../../../data/repositories/macros/inputs/quick_food_log_input.dart';
+import '../../../data/utils/enums.dart';
 import '../../core/sizes/data_display_sizes.dart';
+import '../../core/widgets/layout/app_text_form_field.dart';
+import '../../foods/view_models/food_cubit.dart';
+import '../../recipes/view_models/recipe_cubit.dart';
+import '../view_models/macro_tracking_cubit.dart';
+import './quick_add_food_form.dart';
 
 class LogFoodModal extends StatefulWidget {
   final ThemeData theme;

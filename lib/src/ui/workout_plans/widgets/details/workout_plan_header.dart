@@ -17,8 +17,8 @@
 
 import 'package:flutter/material.dart';
 
-import '../../../../data/utils/enums.dart';
 import '../../../../data/repositories/workout_plans/dtos/workout_plan_dto.dart';
+import '../../../../data/utils/enums.dart';
 import '../../../core/sizes/data_display_sizes.dart';
 import '../../../core/widgets/base_details_header.dart';
 import '../../../core/widgets/difficulty_badge.dart';

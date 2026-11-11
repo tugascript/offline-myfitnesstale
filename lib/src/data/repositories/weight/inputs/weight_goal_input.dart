@@ -18,8 +18,8 @@
 import 'package:equatable/equatable.dart';
 
 import '../../../../utils/nullable.dart';
-import '../../../utils/enums.dart';
 import '../../../models/sqlite/weight_goal_model.dart';
+import '../../../utils/enums.dart';
 import '../../core/inputs/input.dart';
 
 final class WeightGoalInput extends Equatable

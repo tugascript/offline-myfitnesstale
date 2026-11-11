@@ -18,8 +18,8 @@
 import 'package:equatable/equatable.dart';
 
 import '../../../models/sqlite/meal_plan_meal_model.dart';
-import '../../core/inputs/input.dart';
 import '../../../utils/enums.dart';
+import '../../core/inputs/input.dart';
 import 'meal_plan_meal_item_input.dart';
 
 final class MealPlanMealInput extends Equatable

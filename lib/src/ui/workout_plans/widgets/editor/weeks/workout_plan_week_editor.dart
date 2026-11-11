@@ -17,8 +17,8 @@
 
 import 'package:flutter/material.dart';
 
+import '../../../../../data/utils/display_names.dart';
 import '../../../../../data/utils/enums.dart';
-
 import '../../../../core/sizes/data_display_sizes.dart';
 import '../../../../core/widgets/editors/expanding_dynamic_input_wrapper.dart';
 import '../../../../core/widgets/layout/app_dropdown.dart';
@@ -26,7 +26,6 @@ import '../../../../core/widgets/layout/dynamic_list_input.dart';
 import './weeks_input.dart';
 import './workout_plan_day_editor.dart';
 import './workout_plan_editor_data.dart';
-import '../../../../../data/utils/display_names.dart';
 
 class WorkoutPlanWeekEditor extends StatelessWidget {
   final ThemeData theme;

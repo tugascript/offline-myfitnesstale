@@ -19,13 +19,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import '../view_models/meal_plan_cubit.dart';
-import '../view_models/states/meal_plan_state.dart';
+import '../../core/screens/loading_screen.dart';
 import '../../core/sizes/data_display_sizes.dart';
 import '../../core/sizes/screen_size.dart';
 import '../../core/widgets/layout/app_scaffold.dart';
+import '../view_models/meal_plan_cubit.dart';
+import '../view_models/states/meal_plan_state.dart';
 import '../widgets/meal_plan_form_widget.dart';
-import '../../core/screens/loading_screen.dart';
 
 class MealPlanUpdateScreen extends StatefulWidget {
   static const name = 'meal_plan_update';

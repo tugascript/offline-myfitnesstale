@@ -36,6 +36,7 @@ import 'package:myfitnesstale/src/data/models/sqlite/workout_plan_workout_model.
 import 'package:myfitnesstale/src/data/models/sqlite/workout_set_exercise_model.dart';
 import 'package:myfitnesstale/src/data/models/sqlite/workout_set_exercise_option_model.dart';
 import 'package:myfitnesstale/src/data/models/sqlite/workout_set_model.dart';
+import 'package:myfitnesstale/src/data/repositories/onboarding/inputs/onboarding_input.dart';
 import 'package:myfitnesstale/src/data/repositories/onboarding/onboarding_repository.dart';
 
 import '../../support/test_database.dart';

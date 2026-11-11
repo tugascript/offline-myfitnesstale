@@ -18,12 +18,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../../exercises/view_models/exercise_cubit.dart';
-import '../../../../exercises/view_models/states/exercise_state.dart';
-import '../../../../../data/utils/enums.dart';
 import '../../../../../data/repositories/exercises/dtos/exercise_dto.dart';
+import '../../../../../data/utils/enums.dart';
 import '../../../../core/sizes/data_display_sizes.dart';
 import '../../../../core/widgets/modal_search/modal_search_form.dart';
+import '../../../../exercises/view_models/exercise_cubit.dart';
+import '../../../../exercises/view_models/states/exercise_state.dart';
 import './set_exercise_search_list.dart';
 
 class SetExerciseSearchModal extends StatefulWidget {

@@ -17,12 +17,12 @@
 
 import 'package:equatable/equatable.dart';
 
-import '../../../../utils/nullable.dart';
 import '../../../../data/repositories/workouts/dtos/workout_dto.dart';
 import '../../../../data/repositories/workouts/dtos/workout_record_dto.dart';
 import '../../../../data/repositories/workouts/dtos/workout_set_dto.dart';
 import '../../../../data/repositories/workouts/dtos/workout_set_exercise_dto.dart';
 import '../../../../data/repositories/workouts/dtos/workout_set_exercise_record_dto.dart';
+import '../../../../utils/nullable.dart';
 import '../../../core/view_models/states/common_state.dart';
 
 class ActiveWorkoutState extends Equatable {

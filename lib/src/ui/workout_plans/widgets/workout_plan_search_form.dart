@@ -17,12 +17,11 @@
 
 import 'package:flutter/material.dart';
 
+import '../../../data/utils/display_names.dart';
 import '../../../data/utils/enums.dart';
-
+import '../../core/widgets/favourite_checkbox.dart';
 import '../../core/widgets/layout/app_dropdown.dart';
 import '../../core/widgets/layout/app_text_form_field.dart';
-import '../../core/widgets/favourite_checkbox.dart';
-import '../../../data/utils/display_names.dart';
 
 class WorkoutPlanSearchForm extends StatefulWidget {
   final String nameLabel;

@@ -15,17 +15,16 @@
 // You should have received a copy of the GNU General Public License
 // along with My Fitness Tale.  If not, see <https://www.gnu.org/licenses/>.
 
-import '../../../utils/errors.dart';
-import '../../../data/repositories/macros/inputs/week_macro_goal_input.dart';
-import '../../../data/repositories/macros/inputs/quick_food_log_input.dart';
-
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:logging/logging.dart';
 
-import '../../../utils/nullable.dart';
-import '../../../data/utils/enums.dart';
 import '../../../data/repositories/macros/dtos/macro_tracking_dto.dart';
+import '../../../data/repositories/macros/inputs/quick_food_log_input.dart';
+import '../../../data/repositories/macros/inputs/week_macro_goal_input.dart';
 import '../../../data/repositories/macros/macro_tracking_repository.dart';
+import '../../../data/utils/enums.dart';
+import '../../../utils/errors.dart';
+import '../../../utils/nullable.dart';
 import '../../core/view_models/states/common_state.dart';
 import './states/macro_tracking_state.dart';
 

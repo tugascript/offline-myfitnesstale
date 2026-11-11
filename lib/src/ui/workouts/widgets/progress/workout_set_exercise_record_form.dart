@@ -18,10 +18,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../../../../data/utils/json_data.dart';
 import '../../../../data/utils/enums.dart';
-import '../../../core/utils/converters.dart';
+import '../../../../data/utils/json_data.dart';
 import '../../../core/sizes/data_display_sizes.dart';
+import '../../../core/utils/converters.dart';
 import '../../../core/widgets/layout/app_text_form_field.dart';
 import '../workout_set_exercise_difficulty_input.dart';
 import './workout_rest_duration_input.dart';

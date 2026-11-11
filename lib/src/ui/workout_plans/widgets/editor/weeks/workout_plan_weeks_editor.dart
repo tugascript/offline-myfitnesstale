@@ -19,14 +19,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../view_models/states/workout_plan_state.dart';
-import '../../../../workouts/view_models/workout_cubit.dart';
-import '../../../view_models/workout_plan_cubit.dart';
-import '../../../../../data/utils/enums.dart';
 import '../../../../../data/repositories/workout_plans/dtos/workout_plan_week_dto.dart';
+import '../../../../../data/repositories/workout_plans/inputs/workout_plan_day_batch_create_input.dart';
+import '../../../../../data/repositories/workout_plans/inputs/workout_plan_week_batch_create_input.dart';
+import '../../../../../data/repositories/workout_plans/inputs/workout_plan_workout_batch_create_input.dart';
+import '../../../../../data/utils/enums.dart';
 import '../../../../core/sizes/data_display_sizes.dart';
 import '../../../../core/widgets/editors/save_buttons.dart';
 import '../../../../core/widgets/layout/dynamic_list_input.dart';
+import '../../../../workouts/view_models/workout_cubit.dart';
+import '../../../view_models/states/workout_plan_state.dart';
+import '../../../view_models/workout_plan_cubit.dart';
 import './workout_plan_editor_data.dart';
 import './workout_plan_week_editor.dart';
 

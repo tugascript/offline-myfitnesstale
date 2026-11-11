@@ -54,6 +54,10 @@ import 'package:myfitnesstale/src/ui/home/view_models/states/profile_state.dart'
 import 'package:myfitnesstale/src/ui/weight/view_models/states/weight_record_state.dart';
 import 'package:myfitnesstale/src/ui/weight/view_models/weight_record_cubit.dart';
 import 'package:myfitnesstale/src/ui/workout_plans/view_models/states/workout_plan_state.dart';
+import 'package:myfitnesstale/src/data/repositories/workout_plans/inputs/workout_plan_day_batch_create_input.dart';
+import 'package:myfitnesstale/src/data/repositories/workout_plans/inputs/workout_plan_input.dart';
+import 'package:myfitnesstale/src/data/repositories/workout_plans/inputs/workout_plan_week_batch_create_input.dart';
+import 'package:myfitnesstale/src/data/repositories/workout_plans/inputs/workout_plan_workout_batch_create_input.dart';
 import 'package:myfitnesstale/src/ui/workout_plans/view_models/workout_plan_cubit.dart';
 import 'package:myfitnesstale/src/ui/workout_plans/view_models/workout_plan_record_cubit.dart';
 import 'package:myfitnesstale/src/ui/workouts/view_models/states/active_workout_state.dart';

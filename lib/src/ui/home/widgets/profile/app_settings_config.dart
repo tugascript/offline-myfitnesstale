@@ -18,11 +18,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../view_models/profile_cubit.dart';
-import '../../../../data/utils/enums.dart';
 import '../../../../data/repositories/profile/dtos/system_dto.dart';
+import '../../../../data/utils/enums.dart';
 import '../../../core/sizes/data_display_sizes.dart';
 import '../../../core/widgets/layout/expanding_section.dart';
+import '../../view_models/profile_cubit.dart';
 
 class AppSettingsConfig extends StatelessWidget {
   final SystemDto system;
@@ -172,7 +172,8 @@ class _SettingsSelector<T> extends StatelessWidget {
           DropdownButton<T>(
             value: value,
             isDense: true,
-            underline: Container(), // Remove underline
+            underline: Container(),
+            // Remove underline
             items: values.map((T v) {
               return DropdownMenuItem<T>(
                 value: v,

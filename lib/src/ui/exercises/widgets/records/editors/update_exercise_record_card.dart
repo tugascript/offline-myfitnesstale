@@ -18,14 +18,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../../../utils/nullable.dart';
-import '../../../view_models/exercise_record_cubit.dart';
-import '../../../../../data/utils/json_data.dart';
-import '../../../../../data/utils/enums.dart';
 import '../../../../../data/repositories/exercises/dtos/exercise_dto.dart';
 import '../../../../../data/repositories/exercises/dtos/exercise_record_dto.dart';
 import '../../../../../data/repositories/exercises/inputs/exercise_record_input.dart';
+import '../../../../../data/utils/enums.dart';
+import '../../../../../data/utils/json_data.dart';
+import '../../../../../utils/nullable.dart';
 import '../../../../core/sizes/data_display_sizes.dart';
+import '../../../view_models/exercise_record_cubit.dart';
 import './exercise_record_form.dart';
 
 class UpdateExerciseRecordCard extends StatelessWidget {
