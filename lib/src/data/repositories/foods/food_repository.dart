@@ -342,34 +342,39 @@ final class FoodRepository implements Repository {
   ) async {
     _logger.info('Toggling favorite for food with id $id');
     try {
-      final Food? food = await _foodDao.selectOne(id);
-      if (food == null) {
-        return err(
-          const ServiceError(
-            type: SingleErrorTypes.notFound,
-            description: 'Food not found',
+      return await _foodDao.startTransaction<
+        Result<FoodDto, ServiceError<SingleErrorTypes>>
+      >((txn) async {
+        final Food? food = await _foodDao.selectOne(id, txn);
+        if (food == null) {
+          return err(
+            const ServiceError(
+              type: SingleErrorTypes.notFound,
+              description: 'Food not found',
+            ),
+          );
+        }
+
+        final portions = await _portionDao.selectMany(
+          where: FoodPortionColumns.foodId.equal,
+          whereArgs: [id],
+          orderBy: [FoodPortionColumns.portionName.orderAsc],
+          trx: txn,
+        );
+
+        final updated = food.copyWith(
+          isFavorite: !food.isFavorite,
+          updatedAt: DateUtilities.getNowUtcUnix(),
+        );
+        await _foodDao.update(updated, txn);
+
+        return ok(
+          FoodDto.fromModel(
+            updated,
+            portions: portions.map((p) => FoodPortionDto.fromModel(p)).toList(),
           ),
         );
-      }
-
-      final updated = food.copyWith(
-        isFavorite: !food.isFavorite,
-        updatedAt: DateUtilities.getNowUtcUnix(),
-      );
-      await _foodDao.update(updated);
-
-      final portions = await _portionDao.selectMany(
-        where: FoodPortionColumns.foodId.equal,
-        whereArgs: [id],
-        orderBy: [FoodPortionColumns.portionName.orderAsc],
-      );
-
-      return ok(
-        FoodDto.fromModel(
-          updated,
-          portions: portions.map((p) => FoodPortionDto.fromModel(p)).toList(),
-        ),
-      );
+      });
     } catch (e) {
       _logger.severe('Failed to toggle favorite for food with id $id', e);
       return err(

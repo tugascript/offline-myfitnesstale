@@ -951,22 +951,26 @@ final class MealPlanRepository implements Repository {
   ) async {
     _logger.info('Toggling favorite for meal plan with id $id');
     try {
-      final MealPlan? plan = await _mealPlanDao.selectOne(id);
-      if (plan == null) {
-        return err(
-          const ServiceError(
-            type: SingleErrorTypes.notFound,
-            description: 'Meal plan not found',
-          ),
-        );
-      }
+      return await _mealPlanDao.startTransaction<
+        Result<MealPlanDto, ServiceError<SingleErrorTypes>>
+      >((txn) async {
+        final MealPlan? plan = await _mealPlanDao.selectOne(id, txn);
+        if (plan == null) {
+          return err(
+            const ServiceError(
+              type: SingleErrorTypes.notFound,
+              description: 'Meal plan not found',
+            ),
+          );
+        }
 
-      final updated = plan.copyWith(
-        isFavorite: !plan.isFavorite,
-        updatedAt: DateUtilities.getNowUtcUnix(),
-      );
-      await _mealPlanDao.update(updated);
-      return ok(MealPlanDto.fromModel(updated));
+        final updated = plan.copyWith(
+          isFavorite: !plan.isFavorite,
+          updatedAt: DateUtilities.getNowUtcUnix(),
+        );
+        await _mealPlanDao.update(updated, txn);
+        return ok(MealPlanDto.fromModel(updated));
+      });
     } catch (e) {
       _logger.severe('Failed to toggle favorite for meal plan $id', e);
       return err(

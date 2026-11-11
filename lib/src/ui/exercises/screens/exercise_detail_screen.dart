@@ -52,10 +52,9 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
   }
 
   void _toggleFavorite(bool isFavorite) {
-    context.read<ExerciseCubit>().updateExerciseFavorite(
-      widget.exerciseId,
-      !isFavorite,
-    );
+    final cubit = context.read<ExerciseCubit>();
+    if (cubit.state.isLoading) return;
+    cubit.updateExerciseFavorite(widget.exerciseId, !isFavorite);
   }
 
   void _deleteExercise() {

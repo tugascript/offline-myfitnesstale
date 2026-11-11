@@ -24,10 +24,12 @@ import '../../../data/repositories/meal_plans/inputs/meal_plan_input.dart';
 import '../../../data/repositories/meal_plans/meal_plan_repository.dart';
 import '../../../data/utils/enums.dart';
 import '../../../utils/nullable.dart';
+import '../../core/view_models/favorite_request_serializer.dart';
 import '../../core/view_models/states/common_state.dart';
 import './states/meal_plan_state.dart';
 
-class MealPlanCubit extends Cubit<MealPlanState> {
+class MealPlanCubit extends Cubit<MealPlanState>
+    with FavoriteRequestSerializer {
   final MealPlanRepository _mealPlanService;
   final Logger _logger = Logger('MealPlanCubit');
 
@@ -213,34 +215,38 @@ class MealPlanCubit extends Cubit<MealPlanState> {
     return true;
   }
 
-  Future<bool> toggleFavorite(int id) async {
-    _logger.info('Toggling favorite for meal plan $id');
-    final result = await _mealPlanService.toggleFavorite(id);
-    if (result.isErr()) {
-      final error = result.error;
-      _logger.warning('Failed to toggle favorite', error);
-      emit(
-        state.copyWith(
-          error: Nullable(
-            ErrorState(type: error.type.name, description: error.description),
+  Future<bool> toggleFavorite(int id) {
+    return serializeFavorite(() async {
+      if (isClosed) return false;
+      _logger.info('Toggling favorite for meal plan $id');
+      final result = await _mealPlanService.toggleFavorite(id);
+      if (result.isErr()) {
+        if (isClosed) return false;
+        final error = result.error;
+        _logger.warning('Failed to toggle favorite', error);
+        emit(
+          state.copyWith(
+            error: Nullable(
+              ErrorState(type: error.type.name, description: error.description),
+            ),
           ),
+        );
+        return false;
+      }
+
+      final updated = result.value;
+      if (isClosed) return true;
+      final selected = state.selectedMealPlan;
+      await _refreshMealPlans(
+        state.copyWith(
+          selectedMealPlan: selected != null && selected.id == id
+              ? Nullable(selected.copyWith(isFavorite: updated.isFavorite))
+              : null,
+          error: const Nullable(null),
         ),
       );
-      return false;
-    }
-
-    final updated = result.value;
-    if (isClosed) return true;
-    final selected = state.selectedMealPlan;
-    await _refreshMealPlans(
-      state.copyWith(
-        selectedMealPlan: selected != null && selected.id == id
-            ? Nullable(selected.copyWith(isFavorite: updated.isFavorite))
-            : null,
-        error: const Nullable(null),
-      ),
-    );
-    return true;
+      return true;
+    });
   }
 
   Future<bool> deleteMealPlan(int id) async {

@@ -112,10 +112,9 @@ class _WorkoutPlanDetailScreenState extends State<WorkoutPlanDetailScreen> {
                 // Plan Header
                 WorkoutPlanHeader(
                   actionButtonPress: () {
-                    context.read<WorkoutPlanCubit>().updateWorkoutPlanFavorite(
-                      plan.id,
-                      !plan.isFavorite,
-                    );
+                    final cubit = context.read<WorkoutPlanCubit>();
+                    if (cubit.state.isLoading) return;
+                    cubit.updateWorkoutPlanFavorite(plan.id, !plan.isFavorite);
                   },
                   sizes: sizes,
                   plan: plan,

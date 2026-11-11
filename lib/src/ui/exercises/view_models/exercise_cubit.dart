@@ -26,10 +26,12 @@ import '../../../data/repositories/exercises/inputs/exercise_input.dart';
 import '../../../data/utils/enums.dart';
 import '../../../utils/errors.dart';
 import '../../../utils/nullable.dart';
+import '../../core/view_models/favorite_request_serializer.dart';
 import '../../core/view_models/states/common_state.dart';
 import './states/exercise_state.dart';
 
-class ExerciseCubit extends Cubit<ExerciseState> {
+class ExerciseCubit extends Cubit<ExerciseState>
+    with FavoriteRequestSerializer {
   final ExerciseRepository _exerciseService;
 
   final Logger _logger = Logger("ExerciseCubit");
@@ -288,59 +290,63 @@ class ExerciseCubit extends Cubit<ExerciseState> {
     );
   }
 
-  Future<void> updateExerciseFavorite(int id, bool isFavorite) async {
-    _logger.info(
-      'updateExerciseFavorite: updating exercise favorite by id: $id',
-    );
-    emit(state.copyWith(isLoading: true));
-    final result = await _exerciseService.updateExerciseFavorite(
-      id,
-      isFavorite,
-    );
-    if (result.isErr()) {
-      final error = result.error;
-      _logger.warning("Failed to update exercise favorite, error: $error");
-      switch (error.type) {
-        case SingleErrorTypes.notFound:
-        case SingleErrorTypes.invalidInput:
-          emit(
-            state.copyWith(
-              error: Nullable(
-                ErrorState(
-                  type: error.type.name,
-                  description: error.description,
+  Future<void> updateExerciseFavorite(int id, bool isFavorite) {
+    return serializeFavorite(() async {
+      if (isClosed) return;
+      _logger.info(
+        'updateExerciseFavorite: updating exercise favorite by id: $id',
+      );
+      emit(state.copyWith(isLoading: true));
+      final result = await _exerciseService.updateExerciseFavorite(
+        id,
+        isFavorite,
+      );
+      if (result.isErr()) {
+        if (isClosed) return;
+        final error = result.error;
+        _logger.warning("Failed to update exercise favorite, error: $error");
+        switch (error.type) {
+          case SingleErrorTypes.notFound:
+          case SingleErrorTypes.invalidInput:
+            emit(
+              state.copyWith(
+                error: Nullable(
+                  ErrorState(
+                    type: error.type.name,
+                    description: error.description,
+                  ),
                 ),
+                isLoading: false,
               ),
-              isLoading: false,
-            ),
-          );
-          return;
-        case SingleErrorTypes.operationFailure:
-          emit(
-            state.copyWith(
-              error: Nullable(
-                ErrorState(
-                  type: error.type.name,
-                  description: "Failed to update exercise favorite",
+            );
+            return;
+          case SingleErrorTypes.operationFailure:
+            emit(
+              state.copyWith(
+                error: Nullable(
+                  ErrorState(
+                    type: error.type.name,
+                    description: "Failed to update exercise favorite",
+                  ),
                 ),
+                isLoading: false,
               ),
-              isLoading: false,
-            ),
-          );
-          return;
+            );
+            return;
+        }
       }
-    }
-    final updatedExercise = result.value;
-    if (isClosed) return;
-    await _refreshExercises(
-      state.copyWith(
-        selectedExercise: state.selectedExercise?.id == id
-            ? Nullable(updatedExercise)
-            : null,
-        isLoading: false,
-        error: const Nullable(null),
-      ),
-    );
+      final updatedExercise = result.value;
+      if (isClosed) return;
+      await _refreshExercises(
+        state.copyWith(
+          selectedExercise: state.selectedExercise?.id == id
+              ? Nullable(updatedExercise)
+              : null,
+          isLoading: false,
+          error: const Nullable(null),
+        ),
+      );
+    });
   }
 
   Future<void> deleteExercise(int id) async {

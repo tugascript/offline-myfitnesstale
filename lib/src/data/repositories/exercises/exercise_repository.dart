@@ -510,30 +510,36 @@ final class ExerciseRepository implements Repository {
   updateExerciseFavorite(int id, bool isFavorite) async {
     _logger.info("Updating exercise favorite with id: $id");
     try {
-      final Exercise? exercise = await _exerciseDao.selectOne(id);
-      if (exercise == null) {
-        _logger.info("Exercise with id: $id not found");
-        return err(
-          const ServiceError(
-            type: SingleErrorTypes.notFound,
-            description: 'Exercise not found',
+      return await _exerciseDao.startTransaction<
+        Result<ExerciseDto, ServiceError<SingleErrorTypes>>
+      >((txn) async {
+        final Exercise? exercise = await _exerciseDao.selectOne(id, txn);
+        if (exercise == null) {
+          _logger.info("Exercise with id: $id not found");
+          return err(
+            const ServiceError(
+              type: SingleErrorTypes.notFound,
+              description: 'Exercise not found',
+            ),
+          );
+        }
+
+        final List<Equipment> equipments = await _exerciseEquipmentJoinDao
+            .selectJoined(id, null, txn);
+        final Exercise updatedExercise = exercise.copyWith(
+          isFavorite: isFavorite,
+          updatedAt: DateUtilities.getNowUtcUnix(),
+        );
+        await _exerciseDao.update(updatedExercise, txn);
+        return ok(
+          ExerciseDto.fromModel(
+            updatedExercise,
+            equipments: equipments
+                .map((e) => EquipmentDto.fromModel(e))
+                .toList(),
           ),
         );
-      }
-
-      final Exercise updatedExercise = exercise.copyWith(
-        isFavorite: isFavorite,
-        updatedAt: DateUtilities.getNowUtcUnix(),
-      );
-      await _exerciseDao.update(updatedExercise);
-      final List<Equipment> equipments = await _exerciseEquipmentJoinDao
-          .selectJoined(id);
-      return ok(
-        ExerciseDto.fromModel(
-          updatedExercise,
-          equipments: equipments.map((e) => EquipmentDto.fromModel(e)).toList(),
-        ),
-      );
+      });
     } catch (e) {
       _logger.severe("Failed to update exercise favorite with id: $id", e);
       return err(
