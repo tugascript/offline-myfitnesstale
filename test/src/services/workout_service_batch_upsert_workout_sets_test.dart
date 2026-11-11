@@ -891,6 +891,55 @@ void main() {
     expect(workoutAfterFailure.muscles.primary, {Muscle.chest});
   });
 
+  test(
+    'rolls back a workout edit when the alternative exercise batch fails',
+    () async {
+      final db = await testDatabase.db;
+      final workoutId = await createWorkout(db);
+      final exerciseId = await createExercise(
+        db,
+        muscleGroup: MuscleGroup.push,
+        primaryMuscles: {Muscle.chest},
+      );
+      final alternativeId = await createExercise(
+        db,
+        muscleGroup: MuscleGroup.pull,
+        primaryMuscles: {Muscle.lats},
+      );
+      await db.execute("""
+      CREATE TEMP TRIGGER reject_alternative_exercise
+      BEFORE INSERT ON ${WorkoutSetExerciseOption.table}
+      BEGIN SELECT RAISE(ABORT, 'forced test failure'); END
+    """);
+      addTearDown(() => db.execute('DROP TRIGGER reject_alternative_exercise'));
+
+      final result = await workoutService.batchUpsertWorkoutSets(
+        workoutId: workoutId,
+        inputs: [
+          WorkoutSetUpsertInput(
+            setType: WorkoutSetType.standard,
+            minSets: 1,
+            recommendedRestSecs: 60,
+            position: 1,
+            exercises: [
+              WorkoutSetExerciseUpsertInput(
+                exerciseId: exerciseId,
+                position: 1,
+                minReps: 8,
+                alternativeExerciseIds: [alternativeId],
+              ),
+            ],
+          ),
+        ],
+      );
+
+      expect(result.error.type, SingleErrorTypes.operationFailure);
+      expect(result.error.description, 'Failed to save alternative exercises');
+      expect(await db.query(WorkoutSet.table), isEmpty);
+      expect(await db.query(WorkoutSetExercise.table), isEmpty);
+    },
+  );
+
   test('creates an isolated version after a workout has records', () async {
     final db = await testDatabase.db;
     final workoutId = await createWorkout(db);

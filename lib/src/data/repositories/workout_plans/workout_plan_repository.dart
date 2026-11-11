@@ -668,136 +668,157 @@ final class WorkoutPlanRepository implements Repository {
     _logger.info('Creating ${plans.length} workout plans...');
 
     try {
-      Future<List<WorkoutPlanDto>> create(Transaction txn) async {
-        final List<WorkoutPlanDto> createdPlans = [];
+      Future<Result<List<WorkoutPlanDto>, ServiceError<OperationErrorTypes>>>
+      create(Transaction txn) async {
+        try {
+          final List<WorkoutPlanDto> createdPlans = [];
 
-        for (final planInput in plans) {
-          int totalWeeks = 0;
-          int totalWorkouts = 0;
-          int totalDays = 0;
-          final List<({int totalDays, int totalWorkouts})> weekTotals = [];
-          for (final weekInput in planInput.weeks) {
-            totalWeeks += weekInput.endWeek - weekInput.startWeek + 1;
-            int totalDaysInWeek = 0;
-            int totalWorkoutsInWeek = 0;
-            for (final dayInput in weekInput.days) {
-              totalDaysInWeek += dayInput.isRestDay ? 0 : 1;
-              totalWorkoutsInWeek += dayInput.workouts.length;
+          for (final planInput in plans) {
+            int totalWeeks = 0;
+            int totalWorkouts = 0;
+            int totalDays = 0;
+            final List<({int totalDays, int totalWorkouts})> weekTotals = [];
+            for (final weekInput in planInput.weeks) {
+              totalWeeks += weekInput.endWeek - weekInput.startWeek + 1;
+              int totalDaysInWeek = 0;
+              int totalWorkoutsInWeek = 0;
+              for (final dayInput in weekInput.days) {
+                totalDaysInWeek += dayInput.isRestDay ? 0 : 1;
+                totalWorkoutsInWeek += dayInput.workouts.length;
+              }
+              totalDays += totalDaysInWeek;
+              totalWorkouts += totalWorkoutsInWeek;
+              weekTotals.add((
+                totalDays: totalDaysInWeek,
+                totalWorkouts: totalWorkoutsInWeek,
+              ));
             }
-            totalDays += totalDaysInWeek;
-            totalWorkouts += totalWorkoutsInWeek;
-            weekTotals.add((
-              totalDays: totalDaysInWeek,
-              totalWorkouts: totalWorkoutsInWeek,
-            ));
-          }
 
-          final plan = WorkoutPlan.create(
-            name: planInput.name,
-            totalWeeks: totalWeeks,
-            difficulty: planInput.difficulty,
-            description: planInput.description,
-            picture: planInput.picture,
-            video: planInput.video,
-            totalDays: totalDays,
-            totalWorkouts: totalWorkouts,
-            createdBy: createdBy,
-          );
-
-          final int planId = await _workoutPlanDao.insert(plan, txn);
-          final List<WorkoutPlanWeekDto> createdWeeks = [];
-
-          for (int wIdx = 0; wIdx < planInput.weeks.length; wIdx++) {
-            final weekInput = planInput.weeks[wIdx];
-            final weekMetric = weekTotals[wIdx];
-            final week = WorkoutPlanWeek.create(
-              workoutPlanId: planId,
-              planVersion: plan.version,
-              startWeek: weekInput.startWeek,
-              endWeek: weekInput.endWeek,
-              phase: weekInput.phase,
-              totalDays: weekMetric.totalDays,
-              totalWorkouts: weekMetric.totalWorkouts,
+            final plan = WorkoutPlan.create(
+              name: planInput.name,
+              totalWeeks: totalWeeks,
+              difficulty: planInput.difficulty,
+              description: planInput.description,
+              picture: planInput.picture,
+              video: planInput.video,
+              totalDays: totalDays,
+              totalWorkouts: totalWorkouts,
               createdBy: createdBy,
             );
 
-            final int weekId = await _weekDao.insert(week, txn);
-            final List<WorkoutPlanDayDto> createdDays = [];
+            final int planId = await _workoutPlanDao.insert(plan, txn);
+            final List<WorkoutPlanWeekDto> createdWeeks = [];
 
-            for (int i = 0; i < weekInput.days.length; i++) {
-              final dayInput = weekInput.days[i];
-              final day = WorkoutPlanDay.create(
+            for (int wIdx = 0; wIdx < planInput.weeks.length; wIdx++) {
+              final weekInput = planInput.weeks[wIdx];
+              final weekMetric = weekTotals[wIdx];
+              final week = WorkoutPlanWeek.create(
                 workoutPlanId: planId,
-                workoutPlanWeekId: weekId,
                 planVersion: plan.version,
-                day: i + 1,
+                startWeek: weekInput.startWeek,
+                endWeek: weekInput.endWeek,
+                phase: weekInput.phase,
+                totalDays: weekMetric.totalDays,
+                totalWorkouts: weekMetric.totalWorkouts,
                 createdBy: createdBy,
-                totalWorkouts: dayInput.workouts.length,
-                isRestDay: dayInput.isRestDay,
               );
 
-              final int dayId = await _dayDao.insert(day, txn);
-              final List<WorkoutPlanWorkoutDto> createdWorkouts = [];
+              final int weekId = await _weekDao.insert(week, txn);
+              final List<WorkoutPlanDayDto> createdDays = [];
 
-              for (int j = 0; j < dayInput.workouts.length; j++) {
-                final workoutInput = dayInput.workouts[j];
-                final workout = WorkoutPlanWorkout.create(
-                  position: j + 1,
+              for (int i = 0; i < weekInput.days.length; i++) {
+                final dayInput = weekInput.days[i];
+                final day = WorkoutPlanDay.create(
                   workoutPlanId: planId,
                   workoutPlanWeekId: weekId,
-                  workoutPlanDayId: dayId,
                   planVersion: plan.version,
-                  workoutId: workoutInput.workout.id,
-                  timeOfDay: workoutInput.timeOfDay,
+                  day: i + 1,
                   createdBy: createdBy,
+                  totalWorkouts: dayInput.workouts.length,
+                  isRestDay: dayInput.isRestDay,
                 );
 
-                final int planWorkoutId = await _planWorkoutDao.insert(
-                  workout,
-                  txn,
-                );
+                final int dayId = await _dayDao.insert(day, txn);
+                final List<WorkoutPlanWorkoutDto> createdWorkouts = [];
 
-                createdWorkouts.add(
-                  WorkoutPlanWorkoutDto.fromModel(
-                    workout.copyWith(id: Nullable(planWorkoutId)),
-                    workout: workoutInput.workout,
+                for (int j = 0; j < dayInput.workouts.length; j++) {
+                  final workoutInput = dayInput.workouts[j];
+                  final workout = WorkoutPlanWorkout.create(
+                    position: j + 1,
+                    workoutPlanId: planId,
+                    workoutPlanWeekId: weekId,
+                    workoutPlanDayId: dayId,
+                    planVersion: plan.version,
+                    workoutId: workoutInput.workout.id,
+                    timeOfDay: workoutInput.timeOfDay,
+                    createdBy: createdBy,
+                  );
+
+                  final int planWorkoutId = await _planWorkoutDao.insert(
+                    workout,
+                    txn,
+                  );
+
+                  createdWorkouts.add(
+                    WorkoutPlanWorkoutDto.fromModel(
+                      workout.copyWith(id: Nullable(planWorkoutId)),
+                      workout: workoutInput.workout,
+                    ),
+                  );
+                }
+
+                createdDays.add(
+                  WorkoutPlanDayDto.fromModel(
+                    day.copyWith(id: Nullable(dayId)),
+                    planWorkouts: createdWorkouts,
                   ),
                 );
               }
 
-              createdDays.add(
-                WorkoutPlanDayDto.fromModel(
-                  day.copyWith(id: Nullable(dayId)),
-                  planWorkouts: createdWorkouts,
+              createdWeeks.add(
+                WorkoutPlanWeekDto.fromModel(
+                  week.copyWith(id: Nullable(weekId)),
+                  days: createdDays,
                 ),
               );
             }
 
-            createdWeeks.add(
-              WorkoutPlanWeekDto.fromModel(
-                week.copyWith(id: Nullable(weekId)),
-                days: createdDays,
+            createdPlans.add(
+              WorkoutPlanDto.fromModel(
+                plan.copyWith(id: Nullable(planId)),
+                weeks: createdWeeks,
               ),
             );
           }
 
-          createdPlans.add(
-            WorkoutPlanDto.fromModel(
-              plan.copyWith(id: Nullable(planId)),
-              weeks: createdWeeks,
+          return ok(createdPlans);
+        } catch (e) {
+          _logger.severe('Failed to create workout plans', e);
+          return err(
+            ServiceError(
+              type: OperationErrorTypes.operationFailure,
+              description:
+                  'Failed to create workout plans with error: ${e.toString()}',
             ),
           );
         }
-
-        return createdPlans;
       }
 
-      final List<WorkoutPlanDto> createdPlans = transaction != null
+      final result = transaction != null
           ? await create(transaction)
-          : await _workoutPlanDao.startTransaction(create);
+          : await _workoutPlanDao.startTransaction((txn) async {
+              final result = await create(txn);
+              // A partial batch must roll back before returning its error.
+              if (result.isErr()) throw result.error;
+              return result;
+            });
+      if (result.isErr()) return err(result.error);
+      final createdPlans = result.value;
 
       _logger.info('Created ${createdPlans.length} workout plans');
       return ok(createdPlans);
+    } on ServiceError<OperationErrorTypes> catch (error) {
+      return err(error);
     } catch (e) {
       _logger.severe('Failed to create workout plans', e);
       return err(
