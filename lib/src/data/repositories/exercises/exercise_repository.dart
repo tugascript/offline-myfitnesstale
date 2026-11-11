@@ -731,24 +731,48 @@ final class ExerciseRepository implements Repository {
   }) async {
     _logger.info('Creating ${names.length} equipments...');
     try {
-      Future<List<Equipment>> create(Transaction txn) async {
-        final List<Equipment> equipments = [];
+      Future<Result<List<Equipment>, ServiceError<OperationErrorTypes>>> create(
+        Transaction txn,
+      ) async {
+        try {
+          final List<Equipment> equipments = [];
 
-        for (final name in names) {
-          final equipment = Equipment.create(name: name, createdBy: createdBy);
-          final id = await _equipmentDao.insert(equipment, txn);
-          equipments.add(equipment.copyWith(id: Nullable(id)));
+          for (final name in names) {
+            final equipment = Equipment.create(
+              name: name,
+              createdBy: createdBy,
+            );
+            final id = await _equipmentDao.insert(equipment, txn);
+            equipments.add(equipment.copyWith(id: Nullable(id)));
+          }
+
+          return ok(equipments);
+        } catch (e) {
+          _logger.severe("Failed to create equipments", e);
+          return err(
+            const ServiceError(
+              type: OperationErrorTypes.operationFailure,
+              description: 'Failed to create equipments',
+            ),
+          );
         }
-
-        return equipments;
       }
 
-      final List<Equipment> equipments = transaction != null
+      final result = transaction != null
           ? await create(transaction)
-          : await _exerciseDao.startTransaction(create);
+          : await _exerciseDao.startTransaction((txn) async {
+              final result = await create(txn);
+              // A partial batch must roll back before returning its error.
+              if (result.isErr()) throw result.error;
+              return result;
+            });
+      if (result.isErr()) return err(result.error);
+      final equipments = result.value;
 
       _logger.info('Created ${equipments.length} equipments');
       return ok(equipments.map((e) => EquipmentDto.fromModel(e)).toList());
+    } on ServiceError<OperationErrorTypes> catch (error) {
+      return err(error);
     } catch (e) {
       _logger.severe("Failed to create equipments", e);
       return err(

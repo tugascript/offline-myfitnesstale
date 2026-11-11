@@ -693,43 +693,69 @@ final class MacroTrackingRepository implements Repository {
 
   // ==================== DAILY LOGS & MEALS ====================
 
-  Future<DailyNutritionLog?> _findDailyLog(
-    int numericDate, [
-    Transaction? txn,
-  ]) async {
-    final rows = await _dailyLogDao.selectMany(
-      where: DailyNutritionLogColumns.date.equal,
-      whereArgs: [numericDate],
-      limit: 1,
-      trx: txn,
+  Future<Result<DailyNutritionLog?, ServiceError<SingleErrorTypes>>>
+  _findDailyLog(int numericDate, [Transaction? txn]) async {
+    const failure = ServiceError(
+      type: SingleErrorTypes.operationFailure,
+      description: 'Failed to find daily nutrition log',
     );
-    return rows.firstOrNull;
-  }
-
-  Future<DailyNutritionLog> _getOrCreateDailyLogInternal(
-    Transaction txn,
-    int numericDate,
-  ) async {
-    final existing = await _findDailyLog(numericDate, txn);
-    if (existing != null) {
-      return existing;
+    try {
+      final rows = await _dailyLogDao.selectMany(
+        where: DailyNutritionLogColumns.date.equal,
+        whereArgs: [numericDate],
+        limit: 1,
+        trx: txn,
+      );
+      return ok(rows.firstOrNull);
+    } catch (error, stackTrace) {
+      _logger.severe(failure.description, error, stackTrace);
+      return err(failure);
     }
-
-    final newLog = DailyNutritionLog.create(date: numericDate);
-    final id = await _dailyLogDao.insert(newLog, txn);
-    return newLog.copyWith(id: Nullable(id));
   }
 
-  Future<FoodPortion?> _loadPortionForFood(int foodId, int portionId) async {
-    final portionWhere = WhereBuilder()
-      ..and(FoodPortionColumns.id.equal, portionId)
-      ..and(FoodPortionColumns.foodId.equal, foodId);
-    final rows = await _foodPortionDao.selectMany(
-      where: portionWhere.where,
-      whereArgs: portionWhere.args,
-      limit: 1,
+  Future<Result<DailyNutritionLog, ServiceError<SingleErrorTypes>>>
+  _getOrCreateDailyLogInternal(Transaction txn, int numericDate) async {
+    const failure = ServiceError(
+      type: SingleErrorTypes.operationFailure,
+      description: 'Failed to create daily nutrition log',
     );
-    return rows.isEmpty ? null : rows.first;
+    try {
+      final existing = await _findDailyLog(numericDate, txn);
+      if (existing.isErr()) return err(existing.error);
+      if (existing.value case final dailyLog?) {
+        return ok(dailyLog);
+      }
+
+      final newLog = DailyNutritionLog.create(date: numericDate);
+      final id = await _dailyLogDao.insert(newLog, txn);
+      if (id <= 0) return err(failure);
+      return ok(newLog.copyWith(id: Nullable(id)));
+    } catch (error, stackTrace) {
+      _logger.severe(failure.description, error, stackTrace);
+      return err(failure);
+    }
+  }
+
+  Future<Result<FoodPortion?, ServiceError<SingleErrorTypes>>>
+  _loadPortionForFood(int foodId, int portionId) async {
+    const failure = ServiceError(
+      type: SingleErrorTypes.operationFailure,
+      description: 'Failed to load food portion',
+    );
+    try {
+      final portionWhere = WhereBuilder()
+        ..and(FoodPortionColumns.id.equal, portionId)
+        ..and(FoodPortionColumns.foodId.equal, foodId);
+      final rows = await _foodPortionDao.selectMany(
+        where: portionWhere.where,
+        whereArgs: portionWhere.args,
+        limit: 1,
+      );
+      return ok(rows.firstOrNull);
+    } catch (error, stackTrace) {
+      _logger.severe(failure.description, error, stackTrace);
+      return err(failure);
+    }
   }
 
   Micronutrients? _scaleMicronutrients(Micronutrients? micros, num scale) {
@@ -831,11 +857,16 @@ final class MacroTrackingRepository implements Repository {
     final numericDate = DateUtilities.getNumericDate(localDate);
     _logger.info('Getting daily log for date $numericDate');
     try {
-      final dailyLog =
-          await _findDailyLog(numericDate) ??
-          await _dailyLogDao.startTransaction<DailyNutritionLog>(
-            (txn) => _getOrCreateDailyLogInternal(txn, numericDate),
-          );
+      final existing = await _findDailyLog(numericDate);
+      if (existing.isErr()) return err(existing.error);
+      var dailyLog = existing.value;
+      if (dailyLog == null) {
+        final created = await _dailyLogDao.startTransaction(
+          (txn) => _getOrCreateDailyLogInternal(txn, numericDate),
+        );
+        if (created.isErr()) return err(created.error);
+        dailyLog = created.value;
+      }
       final mealsResult = await _loadMealsByDailyLogIds([
         dailyLog.id!,
       ], SingleErrorTypes.operationFailure);
@@ -906,24 +937,31 @@ final class MacroTrackingRepository implements Repository {
     final numericDate = DateUtilities.getNumericDate(date);
     _logger.info('Updating water intake for $numericDate to $waterIntakeMl ml');
     try {
-      final updated = await _dailyLogDao.startTransaction((txn) async {
-        final existing = await _findDailyLog(numericDate, txn);
-        if (existing == null) {
-          final newLog = DailyNutritionLog.create(
-            date: numericDate,
-            waterIntakeMl: waterIntakeMl,
-          );
-          final id = await _dailyLogDao.insert(newLog, txn);
-          return newLog.copyWith(id: Nullable(id));
-        }
+      final waterResult = await _dailyLogDao
+          .startTransaction<
+            Result<DailyNutritionLog, ServiceError<SingleErrorTypes>>
+          >((txn) async {
+            final existingResult = await _findDailyLog(numericDate, txn);
+            if (existingResult.isErr()) return err(existingResult.error);
+            final existing = existingResult.value;
+            if (existing == null) {
+              final newLog = DailyNutritionLog.create(
+                date: numericDate,
+                waterIntakeMl: waterIntakeMl,
+              );
+              final id = await _dailyLogDao.insert(newLog, txn);
+              return ok(newLog.copyWith(id: Nullable(id)));
+            }
 
-        final updated = existing.copyWith(
-          waterIntakeMl: waterIntakeMl,
-          updatedAt: DateUtilities.getNowUtcUnix(),
-        );
-        await _dailyLogDao.update(updated, txn);
-        return updated;
-      });
+            final updated = existing.copyWith(
+              waterIntakeMl: waterIntakeMl,
+              updatedAt: DateUtilities.getNowUtcUnix(),
+            );
+            await _dailyLogDao.update(updated, txn);
+            return ok(updated);
+          });
+      if (waterResult.isErr()) return err(waterResult.error);
+      final updated = waterResult.value;
       final mealsResult = await _loadMealsByDailyLogIds([
         updated.id!,
       ], SingleErrorTypes.operationFailure);
@@ -957,8 +995,12 @@ final class MacroTrackingRepository implements Repository {
       final foodFuture = _foodDao.selectOne(foodId);
       final portionFuture = portionId != null
           ? _loadPortionForFood(foodId, portionId)
-          : Future<FoodPortion?>.value(null);
-      final (food, portion) = await (foodFuture, portionFuture).wait;
+          : Future.value(
+              ok<FoodPortion?, ServiceError<SingleErrorTypes>>(null),
+            );
+      final (food, portionResult) = await (foodFuture, portionFuture).wait;
+      if (portionResult.isErr()) return err(portionResult.error);
+      final portion = portionResult.value;
 
       if (food == null) {
         return err(
@@ -998,50 +1040,56 @@ final class MacroTrackingRepository implements Repository {
         scale,
       );
 
-      return await _dailyLogDao.startTransaction<
-        Result<MealLogDto, ServiceError<SingleErrorTypes>>
-      >((txn) async {
-        final dailyLog = await _getOrCreateDailyLogInternal(txn, numericDate);
+      return await _dailyLogDao
+          .startTransaction<Result<MealLogDto, ServiceError<SingleErrorTypes>>>(
+            (txn) async {
+              final dailyLogResult = await _getOrCreateDailyLogInternal(
+                txn,
+                numericDate,
+              );
+              if (dailyLogResult.isErr()) return err(dailyLogResult.error);
+              final dailyLog = dailyLogResult.value;
 
-        // Each submission retains its own time and nutrition snapshot.
-        final newMeal = MealLog.create(
-          dailyLogId: dailyLog.id!,
-          mealType: mealType,
-          logTime: logUnix,
-          totalCalories: itemCals,
-          totalProtein: itemProtein,
-          totalCarbs: itemCarbs,
-          totalFat: itemFat,
-        );
-        final mealLogId = await _mealLogDao.insert(newMeal, txn);
-        final savedMeal = newMeal.copyWith(id: Nullable(mealLogId));
+              // Each submission retains its own time and nutrition snapshot.
+              final newMeal = MealLog.create(
+                dailyLogId: dailyLog.id!,
+                mealType: mealType,
+                logTime: logUnix,
+                totalCalories: itemCals,
+                totalProtein: itemProtein,
+                totalCarbs: itemCarbs,
+                totalFat: itemFat,
+              );
+              final mealLogId = await _mealLogDao.insert(newMeal, txn);
+              final savedMeal = newMeal.copyWith(id: Nullable(mealLogId));
 
-        final logItem = MealLogItem.create(
-          mealLogId: mealLogId,
-          foodId: foodId,
-          portionId: portionId,
-          amount: amount,
-          loggedFoodName: food.name,
-          loggedCalories: itemCals,
-          loggedProtein: itemProtein,
-          loggedCarbs: itemCarbs,
-          loggedFat: itemFat,
-          loggedMicros: itemMicros,
-        );
-        final itemId = await _mealLogItemDao.insert(logItem, txn);
+              final logItem = MealLogItem.create(
+                mealLogId: mealLogId,
+                foodId: foodId,
+                portionId: portionId,
+                amount: amount,
+                loggedFoodName: food.name,
+                loggedCalories: itemCals,
+                loggedProtein: itemProtein,
+                loggedCarbs: itemCarbs,
+                loggedFat: itemFat,
+                loggedMicros: itemMicros,
+              );
+              final itemId = await _mealLogItemDao.insert(logItem, txn);
 
-        return ok(
-          MealLogDto.fromModel(
-            savedMeal,
-            items: [
-              MealLogItemDto.fromModel(
-                logItem.copyWith(id: Nullable(itemId)),
-                portionName: portionName,
-              ),
-            ],
-          ),
-        );
-      });
+              return ok(
+                MealLogDto.fromModel(
+                  savedMeal,
+                  items: [
+                    MealLogItemDto.fromModel(
+                      logItem.copyWith(id: Nullable(itemId)),
+                      portionName: portionName,
+                    ),
+                  ],
+                ),
+              );
+            },
+          );
     } catch (e) {
       _logger.severe('Failed to log food item', e);
       return err(
@@ -1075,10 +1123,12 @@ final class MacroTrackingRepository implements Repository {
       return await _dailyLogDao.startTransaction<
         Result<MealLogDto, ServiceError<SingleErrorTypes>>
       >((txn) async {
-        final dailyLog = await _getOrCreateDailyLogInternal(
+        final dailyLogResult = await _getOrCreateDailyLogInternal(
           txn,
           DateUtilities.getNumericDate(time),
         );
+        if (dailyLogResult.isErr()) return err(dailyLogResult.error);
+        final dailyLog = dailyLogResult.value;
         final meal = MealLog.create(
           dailyLogId: dailyLog.id!,
           mealType: mealType,
@@ -1154,7 +1204,12 @@ final class MacroTrackingRepository implements Repository {
       return await _dailyLogDao.startTransaction<
         Result<MealLogDto, ServiceError<SingleErrorTypes>>
       >((txn) async {
-        final dailyLog = await _getOrCreateDailyLogInternal(txn, numericDate);
+        final dailyLogResult = await _getOrCreateDailyLogInternal(
+          txn,
+          numericDate,
+        );
+        if (dailyLogResult.isErr()) return err(dailyLogResult.error);
+        final dailyLog = dailyLogResult.value;
 
         final newMeal = MealLog.create(
           dailyLogId: dailyLog.id!,

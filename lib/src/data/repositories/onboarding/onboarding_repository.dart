@@ -44,6 +44,7 @@ import '../profile/inputs/profile_input.dart';
 import '../profile/inputs/reminders_config_input.dart';
 import '../profile/inputs/system_input.dart';
 import '../profile/profile_repository.dart';
+import '../workout_plans/dtos/workout_plan_dto.dart';
 import '../workout_plans/inputs/workout_plan_day_registration_input.dart';
 import '../workout_plans/inputs/workout_plan_registration_input.dart';
 import '../workout_plans/inputs/workout_plan_week_registration_input.dart';
@@ -118,24 +119,13 @@ final class OnboardingRepository implements Repository {
     OnboardingInput input,
   ) async {
     try {
-      final result = await _systemDao.startTransaction(
-        (transaction) => _onboard(transaction, input),
-      );
-      return ok(result);
-    } on _OnboardingFailure catch (error, stackTrace) {
-      _logger.warning(
-        'Onboarding failed during ${error.stage.name}: ${error.description}',
-        error,
-        stackTrace,
-      );
-      return err(
-        ServiceError(
-          type: OperationErrorTypes.operationFailure,
-          description: error.requiresReset
-              ? 'Setup could not continue because existing development data is incomplete. Clear app data and try again. This attempt saved no data.'
-              : 'Setup failed during ${_stageLabel(error.stage)}. No data was saved. Please try again.',
-        ),
-      );
+      return await _systemDao.startTransaction((transaction) async {
+        final result = await _onboard(transaction, input);
+        if (result.isErr()) throw result.error;
+        return result;
+      });
+    } on ServiceError<OperationErrorTypes> catch (error) {
+      return err(error);
     } catch (error, stackTrace) {
       _logger.severe('Onboarding failed unexpectedly', error, stackTrace);
       return err(
@@ -147,111 +137,130 @@ final class OnboardingRepository implements Repository {
     }
   }
 
-  Future<OnboardingDto> _onboard(
+  Future<Result<OnboardingDto, ServiceError<OperationErrorTypes>>> _onboard(
     Transaction transaction,
     OnboardingInput input,
   ) async {
-    final existing = await _resolveExistingOrRejectIncomplete(transaction);
-    if (existing != null) {
-      return existing;
+    try {
+      final existing = await _resolveExistingOrRejectIncomplete(transaction);
+      if (existing.isErr()) return err(existing.error);
+      if (existing.value case final existingDto?) {
+        return ok(existingDto);
+      }
+
+      final equipmentResult = await _exerciseService.createEquipments(
+        kEquipmentNames.toList(),
+        createdBy: CreatedBy.system,
+        transaction: transaction,
+      );
+      final equipments = _require(equipmentResult, OnboardingStage.equipments);
+      await _stageCompleted(OnboardingStage.equipments);
+
+      final equipmentByName = <String, EquipmentDto>{
+        for (final equipment in equipments) equipment.name: equipment,
+      };
+      final exerciseResult = await _exerciseService.createExercises(
+        kInitialExercises
+            .map(
+              (exercise) => ExerciseInput(
+                name: exercise.name,
+                muscleGroup: exercise.muscleGroup,
+                muscles: exercise.muscles,
+                equipmentIds: exercise.equipments
+                    .map((name) => equipmentByName[name]?.id)
+                    .nonNulls
+                    .toSet(),
+                difficulty: Nullable(exercise.difficulty),
+              ),
+            )
+            .toList(),
+        createdBy: CreatedBy.system,
+        transaction: transaction,
+      );
+      final exercises = _require(exerciseResult, OnboardingStage.exercises);
+      await _stageCompleted(OnboardingStage.exercises);
+
+      final profileResult = await _profileService.upsertProfile(
+        ProfileInput(
+          name: input.name,
+          height: input.height,
+          gender: input.gender,
+          birthday: input.birthday,
+        ),
+        transaction,
+      );
+      final profile = _require(profileResult, OnboardingStage.profile);
+      await _stageCompleted(OnboardingStage.profile);
+
+      final systemResult = await _profileService.upsertSystem(
+        SystemInput(
+          theme: input.theme,
+          units: input.units,
+          notificationsOn: input.notificationsOn,
+        ),
+        profile.id,
+        transaction,
+      );
+      _require(systemResult, OnboardingStage.system);
+      await _stageCompleted(OnboardingStage.system);
+
+      final remindersResult = await _profileService.upsertRemindersConfig(
+        RemindersConfigInput.withDefaultTimes(
+          workoutsOn: input.notificationsOn,
+          weightRecordsOn: input.notificationsOn,
+          macroTrackingOn: input.notificationsOn,
+        ),
+        profile.id,
+        transaction,
+      );
+      final reminders = _require(remindersResult, OnboardingStage.reminders);
+      await _stageCompleted(OnboardingStage.reminders);
+
+      if (input.createWorkouts) {
+        final workouts = _require(
+          await _createWorkouts(transaction, exercises),
+          OnboardingStage.workouts,
+        );
+        await _stageCompleted(OnboardingStage.workouts);
+        _require(
+          await _createWorkoutPlan(transaction, workouts),
+          OnboardingStage.workoutPlan,
+        );
+        await _stageCompleted(OnboardingStage.workoutPlan);
+      }
+
+      final completionResult = await _profileService.upgradeSystem(
+        initialSetup: SetUpStatus.completed,
+        transaction: transaction,
+      );
+      final completedSystem = _require(
+        completionResult,
+        OnboardingStage.completion,
+      );
+      await _stageCompleted(OnboardingStage.completion);
+
+      return ok(
+        OnboardingDto(
+          profile: profile,
+          system: completedSystem,
+          remindersConfig: reminders,
+        ),
+      );
+    } on _OnboardingFailure catch (error, stackTrace) {
+      return err(_stageError(error, stackTrace));
+    } catch (error, stackTrace) {
+      _logger.severe('Onboarding failed unexpectedly', error, stackTrace);
+      return err(
+        const ServiceError(
+          type: OperationErrorTypes.operationFailure,
+          description: 'Setup failed. No data was saved. Please try again.',
+        ),
+      );
     }
-
-    final equipmentResult = await _exerciseService.createEquipments(
-      kEquipmentNames.toList(),
-      createdBy: CreatedBy.system,
-      transaction: transaction,
-    );
-    final equipments = _require(equipmentResult, OnboardingStage.equipments);
-    await _stageCompleted(OnboardingStage.equipments);
-
-    final equipmentByName = <String, EquipmentDto>{
-      for (final equipment in equipments) equipment.name: equipment,
-    };
-    final exerciseResult = await _exerciseService.createExercises(
-      kInitialExercises
-          .map(
-            (exercise) => ExerciseInput(
-              name: exercise.name,
-              muscleGroup: exercise.muscleGroup,
-              muscles: exercise.muscles,
-              equipmentIds: exercise.equipments
-                  .map((name) => equipmentByName[name]?.id)
-                  .nonNulls
-                  .toSet(),
-              difficulty: Nullable(exercise.difficulty),
-            ),
-          )
-          .toList(),
-      createdBy: CreatedBy.system,
-      transaction: transaction,
-    );
-    final exercises = _require(exerciseResult, OnboardingStage.exercises);
-    await _stageCompleted(OnboardingStage.exercises);
-
-    final profileResult = await _profileService.upsertProfile(
-      ProfileInput(
-        name: input.name,
-        height: input.height,
-        gender: input.gender,
-        birthday: input.birthday,
-      ),
-      transaction,
-    );
-    final profile = _require(profileResult, OnboardingStage.profile);
-    await _stageCompleted(OnboardingStage.profile);
-
-    final systemResult = await _profileService.upsertSystem(
-      SystemInput(
-        theme: input.theme,
-        units: input.units,
-        notificationsOn: input.notificationsOn,
-      ),
-      profile.id,
-      transaction,
-    );
-    _require(systemResult, OnboardingStage.system);
-    await _stageCompleted(OnboardingStage.system);
-
-    final remindersResult = await _profileService.upsertRemindersConfig(
-      RemindersConfigInput.withDefaultTimes(
-        workoutsOn: input.notificationsOn,
-        weightRecordsOn: input.notificationsOn,
-        macroTrackingOn: input.notificationsOn,
-      ),
-      profile.id,
-      transaction,
-    );
-    final reminders = _require(remindersResult, OnboardingStage.reminders);
-    await _stageCompleted(OnboardingStage.reminders);
-
-    if (input.createWorkouts) {
-      final workouts = await _createWorkouts(transaction, exercises);
-      await _stageCompleted(OnboardingStage.workouts);
-      await _createWorkoutPlan(transaction, workouts);
-      await _stageCompleted(OnboardingStage.workoutPlan);
-    }
-
-    final completionResult = await _profileService.upgradeSystem(
-      initialSetup: SetUpStatus.completed,
-      transaction: transaction,
-    );
-    final completedSystem = _require(
-      completionResult,
-      OnboardingStage.completion,
-    );
-    await _stageCompleted(OnboardingStage.completion);
-
-    return OnboardingDto(
-      profile: profile,
-      system: completedSystem,
-      remindersConfig: reminders,
-    );
   }
 
-  Future<List<WorkoutDto>> _createWorkouts(
-    Transaction transaction,
-    List<ExerciseDto> exercises,
-  ) async {
+  Future<Result<List<WorkoutDto>, ServiceError<OperationErrorTypes>>>
+  _createWorkouts(Transaction transaction, List<ExerciseDto> exercises) async {
     final exerciseByName = <String, ExerciseDto>{
       for (final exercise in exercises) exercise.name: exercise,
     };
@@ -294,13 +303,11 @@ final class OnboardingRepository implements Repository {
       createdBy: CreatedBy.system,
       transaction: transaction,
     );
-    return _require(result, OnboardingStage.workouts);
+    return result;
   }
 
-  Future<void> _createWorkoutPlan(
-    Transaction transaction,
-    List<WorkoutDto> workouts,
-  ) async {
+  Future<Result<List<WorkoutPlanDto>, ServiceError<OperationErrorTypes>>>
+  _createWorkoutPlan(Transaction transaction, List<WorkoutDto> workouts) async {
     final workoutByName = <String, WorkoutDto>{
       for (final workout in workouts) workout.name: workout,
     };
@@ -340,15 +347,64 @@ final class OnboardingRepository implements Repository {
       createdBy: CreatedBy.system,
       transaction: transaction,
     );
-    _require(result, OnboardingStage.workoutPlan);
+    return result;
   }
 
-  Future<OnboardingDto?> _resolveExistingOrRejectIncomplete(
-    Transaction transaction,
-  ) async {
-    final systemResult = await _profileService.selectSystem(transaction);
-    if (systemResult.isOk()) {
-      if (systemResult.value.initialSetup != SetUpStatus.completed) {
+  Future<Result<OnboardingDto?, ServiceError<OperationErrorTypes>>>
+  _resolveExistingOrRejectIncomplete(Transaction transaction) async {
+    try {
+      final systemResult = await _profileService.selectSystem(transaction);
+      if (systemResult.isOk()) {
+        if (systemResult.value.initialSetup != SetUpStatus.completed) {
+          throw const _OnboardingFailure(
+            OnboardingStage.profile,
+            'An incomplete development onboarding state already exists. Clear app data and try again.',
+            requiresReset: true,
+          );
+        }
+
+        final profileResult = await _profileService.selectProfile(transaction);
+        final remindersResult = await _profileService.selectRemindersConfig(
+          transaction,
+        );
+        if (profileResult.isErr() || remindersResult.isErr()) {
+          throw const _OnboardingFailure(
+            OnboardingStage.completion,
+            'Completed onboarding data is inconsistent',
+            requiresReset: true,
+          );
+        }
+
+        return ok(
+          OnboardingDto(
+            profile: profileResult.value,
+            system: systemResult.value,
+            remindersConfig: remindersResult.value,
+          ),
+        );
+      }
+
+      if (systemResult.error.type != SingleErrorTypes.notFound) {
+        throw _OnboardingFailure(
+          OnboardingStage.system,
+          systemResult.error.description,
+        );
+      }
+
+      final profile = await _profileService.selectProfile(transaction);
+      final reminders = await _profileService.selectRemindersConfig(
+        transaction,
+      );
+
+      final seedData = await _containsAnyRows(transaction, const [
+        Equipment.table,
+        Exercise.table,
+        Workout.table,
+        WorkoutPlan.table,
+      ]);
+
+      if (seedData.isErr()) return err(seedData.error);
+      if (profile.isOk() || reminders.isOk() || seedData.value) {
         throw const _OnboardingFailure(
           OnboardingStage.profile,
           'An incomplete development onboarding state already exists. Clear app data and try again.',
@@ -356,67 +412,57 @@ final class OnboardingRepository implements Repository {
         );
       }
 
-      final profileResult = await _profileService.selectProfile(transaction);
-      final remindersResult = await _profileService.selectRemindersConfig(
-        transaction,
-      );
-      if (profileResult.isErr() || remindersResult.isErr()) {
-        throw const _OnboardingFailure(
-          OnboardingStage.completion,
-          'Completed onboarding data is inconsistent',
-          requiresReset: true,
-        );
-      }
-
-      return OnboardingDto(
-        profile: profileResult.value,
-        system: systemResult.value,
-        remindersConfig: remindersResult.value,
-      );
+      return ok(null);
+    } on _OnboardingFailure catch (error, stackTrace) {
+      return err(_stageError(error, stackTrace));
     }
-
-    if (systemResult.error.type != SingleErrorTypes.notFound) {
-      throw _OnboardingFailure(
-        OnboardingStage.system,
-        systemResult.error.description,
-      );
-    }
-
-    final profile = await _profileService.selectProfile(transaction);
-    final reminders = await _profileService.selectRemindersConfig(transaction);
-
-    final hasSeedData = await _containsAnyRows(transaction, const [
-      Equipment.table,
-      Exercise.table,
-      Workout.table,
-      WorkoutPlan.table,
-    ]);
-
-    if (profile.isOk() || reminders.isOk() || hasSeedData) {
-      throw const _OnboardingFailure(
-        OnboardingStage.profile,
-        'An incomplete development onboarding state already exists. Clear app data and try again.',
-        requiresReset: true,
-      );
-    }
-
-    return null;
   }
 
-  Future<bool> _containsAnyRows(
+  Future<Result<bool, ServiceError<OperationErrorTypes>>> _containsAnyRows(
     Transaction transaction,
     List<String> tables,
   ) async {
-    for (final table in tables) {
-      if ((await transaction.query(
-        table,
-        columns: const ['1'],
-        limit: 1,
-      )).isNotEmpty) {
-        return true;
+    try {
+      for (final table in tables) {
+        if ((await transaction.query(
+          table,
+          columns: const ['1'],
+          limit: 1,
+        )).isNotEmpty) {
+          return ok(true);
+        }
       }
+      return ok(false);
+    } catch (error, stackTrace) {
+      _logger.severe(
+        'Failed to check existing onboarding data',
+        error,
+        stackTrace,
+      );
+      return err(
+        const ServiceError(
+          type: OperationErrorTypes.operationFailure,
+          description: 'Setup failed. No data was saved. Please try again.',
+        ),
+      );
     }
-    return false;
+  }
+
+  ServiceError<OperationErrorTypes> _stageError(
+    _OnboardingFailure error,
+    StackTrace stackTrace,
+  ) {
+    _logger.warning(
+      'Onboarding failed during ${error.stage.name}: ${error.description}',
+      error,
+      stackTrace,
+    );
+    return ServiceError(
+      type: OperationErrorTypes.operationFailure,
+      description: error.requiresReset
+          ? 'Setup could not continue because existing development data is incomplete. Clear app data and try again. This attempt saved no data.'
+          : 'Setup failed during ${_stageLabel(error.stage)}. No data was saved. Please try again.',
+    );
   }
 
   T _require<T, E extends ErrorTypes>(

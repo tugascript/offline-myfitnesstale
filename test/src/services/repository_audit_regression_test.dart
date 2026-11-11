@@ -16,6 +16,8 @@
 // along with My Fitness Tale.  If not, see <https://www.gnu.org/licenses/>.
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:myfitnesstale/src/data/models/sqlite/daily_nutrition_log_model.dart';
+import 'package:myfitnesstale/src/data/models/sqlite/food_portion_model.dart';
 import 'package:myfitnesstale/src/data/models/sqlite/day_macro_goal_model.dart';
 import 'package:myfitnesstale/src/data/repositories/meal_plans/meal_plan_record_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/meal_plans/inputs/meal_plan_day_input.dart';
@@ -446,6 +448,62 @@ void main() {
       )).value;
       expect(saved.weeks.single.id, result.value.weeks.single.id);
     }
+  });
+
+  test('macro diary lookups return typed SQLite failures', () async {
+    final repo = MacroTrackingRepository.create();
+    final food = (await FoodRepository.create().createFood(
+      FoodInput(
+        name: uniqueName('Test food'),
+        category: FoodCategory.fruits,
+        servingSizeBaseGrams: 100,
+        caloriesBase: 90,
+        proteinBase: 1,
+        carbsBase: 23,
+        fatBase: 0,
+        portions: const [],
+      ),
+    )).value;
+    final date = DateTime(2025, 8, 9);
+    final db = await testDatabase.db;
+    await db.execute(
+      'CREATE TEMP VIEW ${FoodPortion.table} AS SELECT 1 AS unused',
+    );
+    addTearDown(() => db.execute('DROP VIEW temp.${FoodPortion.table}'));
+
+    final portionFailure = await repo.logFoodItem(
+      logTime: date,
+      mealType: MealType.breakfast,
+      foodId: food.id,
+      portionId: 1,
+      amount: 1,
+    );
+    expect(portionFailure.error.type, SingleErrorTypes.operationFailure);
+    expect(portionFailure.error.description, 'Failed to load food portion');
+
+    await db.execute(
+      'CREATE TEMP VIEW ${DailyNutritionLog.table} AS SELECT 1 AS unused',
+    );
+    addTearDown(() => db.execute('DROP VIEW temp.${DailyNutritionLog.table}'));
+    final diaryFailure = await repo.getDailyLogByDate(date);
+    expect(diaryFailure.error.type, SingleErrorTypes.operationFailure);
+    expect(
+      diaryFailure.error.description,
+      'Failed to find daily nutrition log',
+    );
+  });
+
+  test('scheduled workout counts return a typed SQLite failure', () async {
+    final db = await testDatabase.db;
+    await db.execute(
+      'CREATE TEMP VIEW ${WorkoutPlanWeek.table} AS SELECT 1 AS unused',
+    );
+    addTearDown(() => db.execute('DROP VIEW temp.${WorkoutPlanWeek.table}'));
+
+    final result = await WorkoutPlanRecordRepository.create()
+        .getTotalWorkoutsCount(1, workoutPlanVersion: 1);
+    expect(result.error.type, OperationErrorTypes.operationFailure);
+    expect(result.error.description, 'Failed to get total workouts count');
   });
 
   test('query helpers return typed failures for SQLite errors', () async {

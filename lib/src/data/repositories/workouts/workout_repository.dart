@@ -313,150 +313,171 @@ final class WorkoutRepository implements Repository {
   }) async {
     _logger.info("Creating ${workouts.length} workouts...");
     try {
-      Future<List<WorkoutDto>> create(Transaction txn) async {
-        final List<WorkoutDto> createdWorkouts = [];
+      Future<Result<List<WorkoutDto>, ServiceError<OperationErrorTypes>>>
+      create(Transaction txn) async {
+        try {
+          final List<WorkoutDto> createdWorkouts = [];
 
-        for (final workoutInput in workouts) {
-          int totalSets = 0;
-          int totalReps = 0;
-          final Set<MuscleGroup> muscleGroups = {};
-          final TargetMuscles muscles = TargetMuscles(
-            primary: <Muscle>{},
-            secondary: <Muscle>{},
-          );
-
-          for (final set in workoutInput.sets) {
-            final int setNum = (set.maxSets ?? set.minSets);
-            totalSets += setNum;
-            for (final exercise in set.exercises) {
-              totalReps += setNum * (exercise.maxReps ?? exercise.minReps);
-              muscleGroups.add(exercise.exercise.muscleGroup);
-
-              muscles.primary.addAll(exercise.exercise.muscles.primary);
-              muscles.secondary.addAll(exercise.exercise.muscles.secondary);
-              muscles.secondary.removeAll(muscles.primary);
-            }
-          }
-
-          final workout = Workout.create(
-            name: workoutInput.name,
-            description: workoutInput.description,
-            picture: workoutInput.picture,
-            video: workoutInput.video,
-            difficulty: workoutInput.difficulty,
-            phase: workoutInput.phase,
-            muscleGroups: muscleGroups,
-            muscles: muscles,
-            createdBy: createdBy,
-            totalSets: totalSets,
-            totalReps: totalReps,
-          );
-
-          final int workoutId = await _workoutDao.insert(workout, txn);
-          final List<WorkoutSetDto> createdSets = [];
-
-          for (int i = 0; i < workoutInput.sets.length; i++) {
-            final setInput = workoutInput.sets[i];
-            final set = WorkoutSet.create(
-              workoutVersion: workout.version,
-              position: i + 1,
-              workoutId: workoutId,
-              setType: setInput.setType,
-              minSets: setInput.minSets,
-              maxSets: setInput.maxSets,
-              recommendedRestSecs: setInput.recommendedRestSecs,
-              maxRestSecs: setInput.maxRestSecs,
-              createdBy: createdBy,
+          for (final workoutInput in workouts) {
+            int totalSets = 0;
+            int totalReps = 0;
+            final Set<MuscleGroup> muscleGroups = {};
+            final TargetMuscles muscles = TargetMuscles(
+              primary: <Muscle>{},
+              secondary: <Muscle>{},
             );
 
-            final int setId = await _setDao.insert(set, txn);
-            final List<WorkoutSetExerciseDto> createdSetExercises = [];
+            for (final set in workoutInput.sets) {
+              final int setNum = (set.maxSets ?? set.minSets);
+              totalSets += setNum;
+              for (final exercise in set.exercises) {
+                totalReps += setNum * (exercise.maxReps ?? exercise.minReps);
+                muscleGroups.add(exercise.exercise.muscleGroup);
 
-            for (int j = 0; j < setInput.exercises.length; j++) {
-              final exerciseInput = setInput.exercises[j];
+                muscles.primary.addAll(exercise.exercise.muscles.primary);
+                muscles.secondary.addAll(exercise.exercise.muscles.secondary);
+                muscles.secondary.removeAll(muscles.primary);
+              }
+            }
 
-              final setExercise = WorkoutSetExercise.create(
+            final workout = Workout.create(
+              name: workoutInput.name,
+              description: workoutInput.description,
+              picture: workoutInput.picture,
+              video: workoutInput.video,
+              difficulty: workoutInput.difficulty,
+              phase: workoutInput.phase,
+              muscleGroups: muscleGroups,
+              muscles: muscles,
+              createdBy: createdBy,
+              totalSets: totalSets,
+              totalReps: totalReps,
+            );
+
+            final int workoutId = await _workoutDao.insert(workout, txn);
+            final List<WorkoutSetDto> createdSets = [];
+
+            for (int i = 0; i < workoutInput.sets.length; i++) {
+              final setInput = workoutInput.sets[i];
+              final set = WorkoutSet.create(
                 workoutVersion: workout.version,
-                position: j + 1,
+                position: i + 1,
                 workoutId: workoutId,
-                workoutSetId: setId,
-                exerciseId: exerciseInput.exercise.id,
-                minReps: exerciseInput.minReps,
-                maxReps: exerciseInput.maxReps,
-                difficulty: exerciseInput.difficulty,
+                setType: setInput.setType,
+                minSets: setInput.minSets,
+                maxSets: setInput.maxSets,
+                recommendedRestSecs: setInput.recommendedRestSecs,
+                maxRestSecs: setInput.maxRestSecs,
                 createdBy: createdBy,
               );
 
-              final int setExerciseId = await _setExerciseDao.insert(
-                setExercise,
-                txn,
-              );
+              final int setId = await _setDao.insert(set, txn);
+              final List<WorkoutSetExerciseDto> createdSetExercises = [];
 
-              final List<WorkoutSetExerciseOptionDto> createdOptions = [];
-              for (
-                int k = 0;
-                k < exerciseInput.alternativeExercises.length;
-                k++
-              ) {
-                final optionDto = exerciseInput.alternativeExercises[k];
+              for (int j = 0; j < setInput.exercises.length; j++) {
+                final exerciseInput = setInput.exercises[j];
 
-                final option = WorkoutSetExerciseOption.create(
+                final setExercise = WorkoutSetExercise.create(
                   workoutVersion: workout.version,
+                  position: j + 1,
                   workoutId: workoutId,
                   workoutSetId: setId,
-                  workoutSetExerciseId: setExerciseId,
-                  exerciseId: optionDto.id,
-                  position: k + 1,
+                  exerciseId: exerciseInput.exercise.id,
+                  minReps: exerciseInput.minReps,
+                  maxReps: exerciseInput.maxReps,
+                  difficulty: exerciseInput.difficulty,
                   createdBy: createdBy,
                 );
 
-                final int optionKey = await _setExerciseOptionDao.insert(
-                  option,
+                final int setExerciseId = await _setExerciseDao.insert(
+                  setExercise,
                   txn,
                 );
 
-                createdOptions.add(
-                  WorkoutSetExerciseOptionDto.fromModel(
-                    option.copyWith(id: Nullable(optionKey)),
-                    exercise: optionDto,
+                final List<WorkoutSetExerciseOptionDto> createdOptions = [];
+                for (
+                  int k = 0;
+                  k < exerciseInput.alternativeExercises.length;
+                  k++
+                ) {
+                  final optionDto = exerciseInput.alternativeExercises[k];
+
+                  final option = WorkoutSetExerciseOption.create(
+                    workoutVersion: workout.version,
+                    workoutId: workoutId,
+                    workoutSetId: setId,
+                    workoutSetExerciseId: setExerciseId,
+                    exerciseId: optionDto.id,
+                    position: k + 1,
+                    createdBy: createdBy,
+                  );
+
+                  final int optionKey = await _setExerciseOptionDao.insert(
+                    option,
+                    txn,
+                  );
+
+                  createdOptions.add(
+                    WorkoutSetExerciseOptionDto.fromModel(
+                      option.copyWith(id: Nullable(optionKey)),
+                      exercise: optionDto,
+                    ),
+                  );
+                }
+
+                createdSetExercises.add(
+                  WorkoutSetExerciseDto.fromModel(
+                    setExercise.copyWith(id: Nullable(setExerciseId)),
+                    exercise: exerciseInput.exercise,
+                    options: createdOptions,
                   ),
                 );
               }
 
-              createdSetExercises.add(
-                WorkoutSetExerciseDto.fromModel(
-                  setExercise.copyWith(id: Nullable(setExerciseId)),
-                  exercise: exerciseInput.exercise,
-                  options: createdOptions,
+              createdSets.add(
+                WorkoutSetDto.fromModel(
+                  set.copyWith(id: Nullable(setId)),
+                  exercises: createdSetExercises,
                 ),
               );
             }
 
-            createdSets.add(
-              WorkoutSetDto.fromModel(
-                set.copyWith(id: Nullable(setId)),
-                exercises: createdSetExercises,
+            createdWorkouts.add(
+              WorkoutDto.fromModel(
+                workout.copyWith(id: Nullable(workoutId)),
+                sets: createdSets,
               ),
             );
           }
 
-          createdWorkouts.add(
-            WorkoutDto.fromModel(
-              workout.copyWith(id: Nullable(workoutId)),
-              sets: createdSets,
+          return ok(createdWorkouts);
+        } catch (e) {
+          _logger.severe("Failed to create workouts", e);
+          return err(
+            ServiceError(
+              type: OperationErrorTypes.operationFailure,
+              description:
+                  'Failed to create workouts with error: ${e.toString()}',
             ),
           );
         }
-
-        return createdWorkouts;
       }
 
-      final List<WorkoutDto> createdWorkouts = transaction != null
+      final result = transaction != null
           ? await create(transaction)
-          : await _workoutDao.startTransaction(create);
+          : await _workoutDao.startTransaction((txn) async {
+              final result = await create(txn);
+              // A partial batch must roll back before returning its error.
+              if (result.isErr()) throw result.error;
+              return result;
+            });
+      if (result.isErr()) return err(result.error);
+      final createdWorkouts = result.value;
 
       _logger.info("Created ${createdWorkouts.length} workouts");
       return ok(createdWorkouts);
+    } on ServiceError<OperationErrorTypes> catch (error) {
+      return err(error);
     } catch (e) {
       _logger.severe("Failed to create workouts", e);
       return err(
@@ -836,11 +857,12 @@ final class WorkoutRepository implements Repository {
             ? 0
             : existingSets.length - idsToDelete.length;
         for (final id in idsToDelete) {
-          await _doBatchSetDelete(id, txn);
+          final result = await _doBatchSetDelete(id, txn);
+          if (result.isErr()) throw result.error;
         }
 
         for (final input in setsToCreate) {
-          await _doBatchSetCreate(
+          final result = await _doBatchSetCreate(
             workoutVersion: workoutVersion,
             input: input,
             txn: txn,
@@ -848,6 +870,7 @@ final class WorkoutRepository implements Repository {
             workoutSetsCount: currentSetCount,
             exerciseMap: exerciseMap,
           );
+          if (result.isErr()) throw result.error;
           currentSetCount++;
         }
 
@@ -962,7 +985,7 @@ final class WorkoutRepository implements Repository {
                 throw Exception('Exercise not found');
               }
 
-              await _batchCreateSetExercise(
+              final result = await _batchCreateSetExercise(
                 exerciseInput: exerciseInput,
                 index: i,
                 setCount: setCount,
@@ -971,6 +994,7 @@ final class WorkoutRepository implements Repository {
                 txn: txn,
                 updatedWorkoutSet: updatedWorkoutSet,
               );
+              if (result.isErr()) throw result.error;
             }
           }
 
@@ -982,11 +1006,12 @@ final class WorkoutRepository implements Repository {
                 throw Exception('Exercise not found');
               }
 
-              await _batchUpdateSetExercise(
+              final result = await _batchUpdateSetExercise(
                 exerciseInput: exerciseInput,
                 txn: txn,
                 workoutSet: workoutSet,
               );
+              if (result.isErr()) throw result.error;
             }
           }
         }
@@ -1061,38 +1086,52 @@ final class WorkoutRepository implements Repository {
     }
   }
 
-  Future<void> _doBatchSetDelete(int id, Transaction txn) async {
-    final workoutSet = await _setDao.selectOne(id, txn);
-    if (workoutSet == null) {
-      _logger.warning('Workout set with id $id not found');
-      return;
-    }
+  Future<Result<void, ServiceError<SingleErrorTypes>>> _doBatchSetDelete(
+    int id,
+    Transaction txn,
+  ) async {
+    const failure = ServiceError(
+      type: SingleErrorTypes.operationFailure,
+      description: 'Failed to delete workout set',
+    );
+    try {
+      final workoutSet = await _setDao.selectOne(id, txn);
+      if (workoutSet == null) {
+        _logger.warning('Workout set with id $id not found');
+        return ok(null);
+      }
 
-    final int oldPosition = workoutSet.position;
-    await txn.delete(
-      WorkoutSetExerciseOption.table,
-      where: WorkoutSetExerciseOptionColumns.workoutSetId.equal,
-      whereArgs: [id],
-    );
-    await txn.delete(
-      WorkoutSetExercise.table,
-      where: WorkoutSetExerciseColumns.workoutSetId.equal,
-      whereArgs: [id],
-    );
-    await _setDao.deleteOne(id, txn);
-    await txn.rawUpdate(
-      """
+      final int oldPosition = workoutSet.position;
+      await txn.delete(
+        WorkoutSetExerciseOption.table,
+        where: WorkoutSetExerciseOptionColumns.workoutSetId.equal,
+        whereArgs: [id],
+      );
+      await txn.delete(
+        WorkoutSetExercise.table,
+        where: WorkoutSetExerciseColumns.workoutSetId.equal,
+        whereArgs: [id],
+      );
+      await _setDao.deleteOne(id, txn);
+      await txn.rawUpdate(
+        """
       UPDATE ${WorkoutSet.table}
       SET ${WorkoutSetColumns.position.value} = ${WorkoutSetColumns.position.value} - 1
       WHERE ${WorkoutSetColumns.workoutId.equal}
         AND ${WorkoutSetColumns.workoutVersion.equal}
         AND ${WorkoutSetColumns.position.greaterThan};
       """,
-      [workoutSet.workoutId, workoutSet.workoutVersion, oldPosition],
-    );
+        [workoutSet.workoutId, workoutSet.workoutVersion, oldPosition],
+      );
+      return ok(null);
+    } catch (error, stackTrace) {
+      _logger.severe(failure.description, error, stackTrace);
+      return err(failure);
+    }
   }
 
-  Future<void> _insertAlternativeExerciseOptions({
+  Future<Result<void, ServiceError<SingleErrorTypes>>>
+  _insertAlternativeExerciseOptions({
     required List<int>? alternativeExerciseIds,
     required int workoutVersion,
     required int workoutId,
@@ -1100,94 +1139,128 @@ final class WorkoutRepository implements Repository {
     required int workoutSetExerciseId,
     required Transaction txn,
   }) async {
-    if (alternativeExerciseIds == null || alternativeExerciseIds.isEmpty) {
-      return;
-    }
+    const failure = ServiceError(
+      type: SingleErrorTypes.operationFailure,
+      description: 'Failed to save alternative exercises',
+    );
+    try {
+      if (alternativeExerciseIds == null || alternativeExerciseIds.isEmpty) {
+        return ok(null);
+      }
 
-    final options = [
-      for (int j = 0; j < alternativeExerciseIds.length; j++)
-        WorkoutSetExerciseOption.create(
-          workoutVersion: workoutVersion,
-          workoutId: workoutId,
-          workoutSetId: workoutSetId,
-          workoutSetExerciseId: workoutSetExerciseId,
-          exerciseId: alternativeExerciseIds[j],
-          position: j + 1,
-        ),
-    ];
-    await _setExerciseOptionDao.insertMany(options, txn);
+      final options = [
+        for (int j = 0; j < alternativeExerciseIds.length; j++)
+          WorkoutSetExerciseOption.create(
+            workoutVersion: workoutVersion,
+            workoutId: workoutId,
+            workoutSetId: workoutSetId,
+            workoutSetExerciseId: workoutSetExerciseId,
+            exerciseId: alternativeExerciseIds[j],
+            position: j + 1,
+          ),
+      ];
+      await _setExerciseOptionDao.insertMany(options, txn);
+      return ok(null);
+    } catch (error, stackTrace) {
+      _logger.severe(failure.description, error, stackTrace);
+      return err(failure);
+    }
   }
 
-  Future<void> _batchUpdateSetExercise({
+  Future<Result<void, ServiceError<SingleErrorTypes>>> _batchUpdateSetExercise({
     required WorkoutSetExerciseUpsertInput exerciseInput,
     required Transaction txn,
     required WorkoutSet workoutSet,
   }) async {
-    final setExercise = await _setExerciseDao.selectOne(exerciseInput.id!, txn);
-    if (setExercise == null) {
-      _logger.warning('Set exercise not found');
-      throw Exception('Set exercise not found');
-    }
-    if (setExercise.workoutSetId != workoutSet.id) {
-      _logger.warning('Set exercise does not belong to workout set');
-      throw Exception('Set exercise does not belong to workout set');
-    }
-
-    final int oldPosition = setExercise.position;
-    final updatedSetExercise = setExercise.copyWith(
-      exerciseId: exerciseInput.exerciseId,
-      position: exerciseInput.position,
-      minReps: exerciseInput.minReps,
-      maxReps: Nullable(exerciseInput.maxReps),
-      toMaxReps: exerciseInput.toMaxReps,
-      difficulty: Nullable(exerciseInput.difficulty),
-      updatedAt: DateUtilities.getNowUtcUnix(),
+    const failure = ServiceError(
+      type: SingleErrorTypes.operationFailure,
+      description: 'Failed to update workout set exercise',
     );
+    try {
+      final setExercise = await _setExerciseDao.selectOne(
+        exerciseInput.id!,
+        txn,
+      );
+      if (setExercise == null) {
+        _logger.warning('Set exercise not found');
+        return err(
+          const ServiceError(
+            type: SingleErrorTypes.operationFailure,
+            description: 'Set exercise not found',
+          ),
+        );
+      }
+      if (setExercise.workoutSetId != workoutSet.id) {
+        _logger.warning('Set exercise does not belong to workout set');
+        return err(
+          const ServiceError(
+            type: SingleErrorTypes.operationFailure,
+            description: 'Set exercise does not belong to workout set',
+          ),
+        );
+      }
 
-    if (oldPosition != exerciseInput.position) {
-      if (oldPosition < exerciseInput.position) {
-        await txn.rawUpdate(
-          """
+      final int oldPosition = setExercise.position;
+      final updatedSetExercise = setExercise.copyWith(
+        exerciseId: exerciseInput.exerciseId,
+        position: exerciseInput.position,
+        minReps: exerciseInput.minReps,
+        maxReps: Nullable(exerciseInput.maxReps),
+        toMaxReps: exerciseInput.toMaxReps,
+        difficulty: Nullable(exerciseInput.difficulty),
+        updatedAt: DateUtilities.getNowUtcUnix(),
+      );
+
+      if (oldPosition != exerciseInput.position) {
+        if (oldPosition < exerciseInput.position) {
+          await txn.rawUpdate(
+            """
           UPDATE ${WorkoutSetExercise.table}
           SET ${WorkoutSetExerciseColumns.position.value} = ${WorkoutSetExerciseColumns.position.value} - 1
           WHERE ${WorkoutSetExerciseColumns.workoutSetId.equal}
             AND ${WorkoutSetExerciseColumns.position.greaterThan}
             AND ${WorkoutSetExerciseColumns.position.lessThanOrEqual};
           """,
-          [workoutSet.id!, oldPosition, exerciseInput.position],
-        );
-      } else {
-        await txn.rawUpdate(
-          """
+            [workoutSet.id!, oldPosition, exerciseInput.position],
+          );
+        } else {
+          await txn.rawUpdate(
+            """
           UPDATE ${WorkoutSetExercise.table}
           SET ${WorkoutSetExerciseColumns.position.value} = ${WorkoutSetExerciseColumns.position.value} + 1
           WHERE ${WorkoutSetExerciseColumns.workoutSetId.equal}
             AND ${WorkoutSetExerciseColumns.position.greaterThanOrEqual}
             AND ${WorkoutSetExerciseColumns.position.lessThan};
           """,
-          [workoutSet.id!, exerciseInput.position, oldPosition],
-        );
+            [workoutSet.id!, exerciseInput.position, oldPosition],
+          );
+        }
       }
+
+      await _setExerciseOptionDao.deleteMany(
+        where: WorkoutSetExerciseOptionColumns.workoutSetExerciseId.equal,
+        whereArgs: [setExercise.id!],
+        trx: txn,
+      );
+      final optionsResult = await _insertAlternativeExerciseOptions(
+        alternativeExerciseIds: exerciseInput.alternativeExerciseIds,
+        workoutVersion: workoutSet.workoutVersion,
+        workoutId: workoutSet.workoutId,
+        workoutSetId: workoutSet.id!,
+        workoutSetExerciseId: setExercise.id!,
+        txn: txn,
+      );
+      if (optionsResult.isErr()) return err(optionsResult.error);
+
+      await _setExerciseDao.update(updatedSetExercise, txn);
+      return ok(null);
+    } catch (error, stackTrace) {
+      _logger.severe(failure.description, error, stackTrace);
+      return err(failure);
     }
-
-    await _setExerciseOptionDao.deleteMany(
-      where: WorkoutSetExerciseOptionColumns.workoutSetExerciseId.equal,
-      whereArgs: [setExercise.id!],
-      trx: txn,
-    );
-    await _insertAlternativeExerciseOptions(
-      alternativeExerciseIds: exerciseInput.alternativeExerciseIds,
-      workoutVersion: workoutSet.workoutVersion,
-      workoutId: workoutSet.workoutId,
-      workoutSetId: workoutSet.id!,
-      workoutSetExerciseId: setExercise.id!,
-      txn: txn,
-    );
-
-    await _setExerciseDao.update(updatedSetExercise, txn);
   }
 
-  Future<void> _batchCreateSetExercise({
+  Future<Result<void, ServiceError<SingleErrorTypes>>> _batchCreateSetExercise({
     required WorkoutSetExerciseUpsertInput exerciseInput,
     required int index,
     required int setCount,
@@ -1196,42 +1269,56 @@ final class WorkoutRepository implements Repository {
     required Transaction txn,
     required WorkoutSet updatedWorkoutSet,
   }) async {
-    final newPosition = setCount + 1 + index;
-    final setExercisePosition = exerciseInput.position;
-    final workoutSetExercise = WorkoutSetExercise.create(
-      workoutVersion: workoutSet.workoutVersion,
-      position: setExercisePosition,
-      workoutId: workoutId,
-      workoutSetId: workoutSet.id!,
-      exerciseId: exerciseInput.exerciseId,
-      minReps: exerciseInput.minReps,
-      maxReps: exerciseInput.maxReps,
-      toMaxReps: exerciseInput.toMaxReps,
-      difficulty: exerciseInput.difficulty,
+    const failure = ServiceError(
+      type: SingleErrorTypes.operationFailure,
+      description: 'Failed to create workout set exercise',
     );
+    try {
+      final newPosition = setCount + 1 + index;
+      final setExercisePosition = exerciseInput.position;
+      final workoutSetExercise = WorkoutSetExercise.create(
+        workoutVersion: workoutSet.workoutVersion,
+        position: setExercisePosition,
+        workoutId: workoutId,
+        workoutSetId: workoutSet.id!,
+        exerciseId: exerciseInput.exerciseId,
+        minReps: exerciseInput.minReps,
+        maxReps: exerciseInput.maxReps,
+        toMaxReps: exerciseInput.toMaxReps,
+        difficulty: exerciseInput.difficulty,
+      );
 
-    if (newPosition > setExercisePosition) {
-      await txn.rawUpdate(
-        """
+      if (newPosition > setExercisePosition) {
+        await txn.rawUpdate(
+          """
         UPDATE ${WorkoutSetExercise.table} SET ${WorkoutSetExerciseColumns.position.value} = ${WorkoutSetExerciseColumns.position.value} + 1
         WHERE ${WorkoutSetExerciseColumns.workoutSetId.equal} AND ${WorkoutSetExerciseColumns.position.greaterThanOrEqual};
         """,
-        [updatedWorkoutSet.id!, setExercisePosition],
+          [updatedWorkoutSet.id!, setExercisePosition],
+        );
+      }
+      final setExerciseId = await _setExerciseDao.insert(
+        workoutSetExercise,
+        txn,
       );
-    }
-    final setExerciseId = await _setExerciseDao.insert(workoutSetExercise, txn);
 
-    await _insertAlternativeExerciseOptions(
-      alternativeExerciseIds: exerciseInput.alternativeExerciseIds,
-      workoutVersion: workoutSet.workoutVersion,
-      workoutId: workoutId,
-      workoutSetId: workoutSet.id!,
-      workoutSetExerciseId: setExerciseId,
-      txn: txn,
-    );
+      final optionsResult = await _insertAlternativeExerciseOptions(
+        alternativeExerciseIds: exerciseInput.alternativeExerciseIds,
+        workoutVersion: workoutSet.workoutVersion,
+        workoutId: workoutId,
+        workoutSetId: workoutSet.id!,
+        workoutSetExerciseId: setExerciseId,
+        txn: txn,
+      );
+      if (optionsResult.isErr()) return err(optionsResult.error);
+      return ok(null);
+    } catch (error, stackTrace) {
+      _logger.severe(failure.description, error, stackTrace);
+      return err(failure);
+    }
   }
 
-  Future<void> _doBatchSetCreate({
+  Future<Result<void, ServiceError<SingleErrorTypes>>> _doBatchSetCreate({
     required WorkoutSetUpsertInput input,
     required Transaction txn,
     required int workoutId,
@@ -1239,71 +1326,87 @@ final class WorkoutRepository implements Repository {
     required int workoutSetsCount,
     required Map<int, ExerciseDto> exerciseMap,
   }) async {
-    final int extraSets = input.maxSets ?? input.minSets;
-    final int perSetReps = input.exercises.fold(
-      0,
-      (acc, exercise) => acc + (exercise.maxReps ?? exercise.minReps),
+    const failure = ServiceError(
+      type: SingleErrorTypes.operationFailure,
+      description: 'Failed to create workout set',
     );
-    final int setTotalReps = extraSets * perSetReps;
-    final int newPosition = workoutSetsCount + 1;
-    final int setPosition = input.position;
+    try {
+      final int extraSets = input.maxSets ?? input.minSets;
+      final int perSetReps = input.exercises.fold(
+        0,
+        (acc, exercise) => acc + (exercise.maxReps ?? exercise.minReps),
+      );
+      final int setTotalReps = extraSets * perSetReps;
+      final int newPosition = workoutSetsCount + 1;
+      final int setPosition = input.position;
 
-    if (setPosition < newPosition) {
-      await txn.rawUpdate(
-        """
+      if (setPosition < newPosition) {
+        await txn.rawUpdate(
+          """
         UPDATE ${WorkoutSet.table}
         SET ${WorkoutSetColumns.position.value} = ${WorkoutSetColumns.position.value} + 1
         WHERE ${WorkoutSetColumns.workoutId.equal}
           AND ${WorkoutSetColumns.workoutVersion.equal}
           AND ${WorkoutSetColumns.position.greaterThanOrEqual};
         """,
-        [workoutId, workoutVersion, setPosition],
-      );
-    }
-
-    final WorkoutSet workoutSet = WorkoutSet.create(
-      workoutVersion: workoutVersion,
-      position: setPosition,
-      workoutId: workoutId,
-      setType: input.setType,
-      minSets: input.minSets,
-      maxSets: input.maxSets,
-      recommendedRestSecs: input.recommendedRestSecs,
-      maxRestSecs: input.maxRestSecs,
-      totalExercises: input.exercises.length,
-      totalReps: setTotalReps,
-    );
-    final int setId = await _setDao.insert(workoutSet, txn);
-
-    for (int i = 0; i < input.exercises.length; i++) {
-      final exerciseInput = input.exercises[i];
-      if (!exerciseMap.containsKey(exerciseInput.exerciseId)) {
-        throw Exception('Exercise not found');
+          [workoutId, workoutVersion, setPosition],
+        );
       }
-      final workoutSetExercise = WorkoutSetExercise.create(
-        workoutVersion: workoutVersion,
-        position: i + 1,
-        workoutId: workoutId,
-        workoutSetId: setId,
-        exerciseId: exerciseInput.exerciseId,
-        minReps: exerciseInput.minReps,
-        maxReps: exerciseInput.maxReps,
-        toMaxReps: exerciseInput.toMaxReps,
-        difficulty: exerciseInput.difficulty,
-      );
-      final setExerciseId = await _setExerciseDao.insert(
-        workoutSetExercise,
-        txn,
-      );
 
-      await _insertAlternativeExerciseOptions(
-        alternativeExerciseIds: exerciseInput.alternativeExerciseIds,
+      final WorkoutSet workoutSet = WorkoutSet.create(
         workoutVersion: workoutVersion,
+        position: setPosition,
         workoutId: workoutId,
-        workoutSetId: setId,
-        workoutSetExerciseId: setExerciseId,
-        txn: txn,
+        setType: input.setType,
+        minSets: input.minSets,
+        maxSets: input.maxSets,
+        recommendedRestSecs: input.recommendedRestSecs,
+        maxRestSecs: input.maxRestSecs,
+        totalExercises: input.exercises.length,
+        totalReps: setTotalReps,
       );
+      final int setId = await _setDao.insert(workoutSet, txn);
+
+      for (int i = 0; i < input.exercises.length; i++) {
+        final exerciseInput = input.exercises[i];
+        if (!exerciseMap.containsKey(exerciseInput.exerciseId)) {
+          return err(
+            const ServiceError(
+              type: SingleErrorTypes.operationFailure,
+              description: 'Exercise not found',
+            ),
+          );
+        }
+        final workoutSetExercise = WorkoutSetExercise.create(
+          workoutVersion: workoutVersion,
+          position: i + 1,
+          workoutId: workoutId,
+          workoutSetId: setId,
+          exerciseId: exerciseInput.exerciseId,
+          minReps: exerciseInput.minReps,
+          maxReps: exerciseInput.maxReps,
+          toMaxReps: exerciseInput.toMaxReps,
+          difficulty: exerciseInput.difficulty,
+        );
+        final setExerciseId = await _setExerciseDao.insert(
+          workoutSetExercise,
+          txn,
+        );
+
+        final optionsResult = await _insertAlternativeExerciseOptions(
+          alternativeExerciseIds: exerciseInput.alternativeExerciseIds,
+          workoutVersion: workoutVersion,
+          workoutId: workoutId,
+          workoutSetId: setId,
+          workoutSetExerciseId: setExerciseId,
+          txn: txn,
+        );
+        if (optionsResult.isErr()) return err(optionsResult.error);
+      }
+      return ok(null);
+    } catch (error, stackTrace) {
+      _logger.severe(failure.description, error, stackTrace);
+      return err(failure);
     }
   }
 }

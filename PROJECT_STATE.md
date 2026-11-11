@@ -501,7 +501,11 @@ PR #36 review follow-up:
   errors. Rejected child inserts roll back the full create or update.
 - Macro-goal deactivation and daily goal inserts return typed errors. Failed
   replacements preserve the previous weekly and daily goals.
-- The host suite passed 421 tests with the existing migration test skipped.
+- The remaining asynchronous repository database helpers use typed results,
+  including diary lookups, workout-set writes, workout-plan record reads and
+  counts, and onboarding seed checks. Transactions roll back when a helper
+  fails after earlier writes.
+- The host suite passed 424 tests with the existing migration test skipped.
   Device integration tests were not run.
 
 ## Known gaps and release blockers
