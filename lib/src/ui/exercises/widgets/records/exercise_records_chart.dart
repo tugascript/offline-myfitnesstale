@@ -16,8 +16,8 @@
 // along with My Fitness Tale.  If not, see <https://www.gnu.org/licenses/>.
 
 import 'package:fl_chart/fl_chart.dart';
-import 'package:material_ui/material_ui.dart';
 import 'package:intl/intl.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../../../../data/repositories/exercises/dtos/exercise_dto.dart';
 import '../../../../data/repositories/exercises/dtos/exercise_record_dto.dart';

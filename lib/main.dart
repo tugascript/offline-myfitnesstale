@@ -15,9 +15,9 @@
 // You should have received a copy of the GNU General Public License
 // along with My Fitness Tale.  If not, see <https://www.gnu.org/licenses/>.
 
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:logging/logging.dart';
+import 'package:material_ui/material_ui.dart';
 
 import './my_app.dart';
 import './src/data/services/sqlite/database_helper.dart';
