@@ -28,6 +28,7 @@ import 'package:myfitnesstale/src/data/models/sqlite/workout_plan_record_model.d
 import '../../support/test_database.dart';
 
 import 'package:myfitnesstale/src/data/repositories/workout_plans/workout_plan_repository.dart';
+import 'package:myfitnesstale/src/data/repositories/workouts/workout_record_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/workout_plans/workout_plan_record_repository.dart';
 
 void main() {
@@ -100,6 +101,7 @@ void main() {
       final cubit = WorkoutPlanRecordCubit(
         workoutPlanRecordRepository: WorkoutPlanRecordRepository.create(),
         workoutPlanRepository: WorkoutPlanRepository.create(),
+        workoutRecordRepository: WorkoutRecordRepository.create(),
       );
       addTearDown(cubit.close);
 
@@ -175,6 +177,7 @@ void main() {
       final cubit = WorkoutPlanRecordCubit(
         workoutPlanRecordRepository: WorkoutPlanRecordRepository.create(),
         workoutPlanRepository: WorkoutPlanRepository.create(),
+        workoutRecordRepository: WorkoutRecordRepository.create(),
       );
       addTearDown(cubit.close);
 
@@ -219,6 +222,7 @@ void main() {
       final cubit = WorkoutPlanRecordCubit(
         workoutPlanRecordRepository: WorkoutPlanRecordRepository.create(),
         workoutPlanRepository: WorkoutPlanRepository.create(),
+        workoutRecordRepository: WorkoutRecordRepository.create(),
       );
       addTearDown(cubit.close);
 
@@ -253,6 +257,7 @@ void main() {
     final cubit = WorkoutPlanRecordCubit(
       workoutPlanRecordRepository: WorkoutPlanRecordRepository.create(),
       workoutPlanRepository: WorkoutPlanRepository.create(),
+      workoutRecordRepository: WorkoutRecordRepository.create(),
     );
     addTearDown(cubit.close);
 

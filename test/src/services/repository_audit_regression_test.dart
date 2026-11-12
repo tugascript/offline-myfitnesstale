@@ -17,11 +17,8 @@
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:myfitnesstale/src/data/models/sqlite/daily_nutrition_log_model.dart';
-import 'package:myfitnesstale/src/data/models/sqlite/food_portion_model.dart';
 import 'package:myfitnesstale/src/data/models/sqlite/day_macro_goal_model.dart';
-import 'package:myfitnesstale/src/data/repositories/meal_plans/meal_plan_record_repository.dart';
-import 'package:myfitnesstale/src/data/repositories/meal_plans/inputs/meal_plan_day_input.dart';
-import 'package:myfitnesstale/src/data/repositories/core/repository_helpers.dart';
+import 'package:myfitnesstale/src/data/models/sqlite/food_portion_model.dart';
 import 'package:myfitnesstale/src/data/models/sqlite/meal_plan_day_record_model.dart';
 import 'package:myfitnesstale/src/data/models/sqlite/meal_plan_week_model.dart';
 import 'package:myfitnesstale/src/data/models/sqlite/recipe_item_model.dart';
@@ -34,14 +31,17 @@ import 'package:myfitnesstale/src/data/models/sqlite/workout_plan_week_model.dar
 import 'package:myfitnesstale/src/data/models/sqlite/workout_record_model.dart';
 import 'package:myfitnesstale/src/data/models/sqlite/workout_set_model.dart';
 import 'package:myfitnesstale/src/data/models/sqlite/workout_set_record_model.dart';
+import 'package:myfitnesstale/src/data/repositories/core/repository_helpers.dart';
 import 'package:myfitnesstale/src/data/repositories/exercises/exercise_record_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/foods/food_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/foods/inputs/food_input.dart';
 import 'package:myfitnesstale/src/data/repositories/foods/inputs/food_portion_input.dart';
 import 'package:myfitnesstale/src/data/repositories/macros/inputs/week_macro_goal_input.dart';
 import 'package:myfitnesstale/src/data/repositories/macros/macro_tracking_repository.dart';
+import 'package:myfitnesstale/src/data/repositories/meal_plans/inputs/meal_plan_day_input.dart';
 import 'package:myfitnesstale/src/data/repositories/meal_plans/inputs/meal_plan_input.dart';
 import 'package:myfitnesstale/src/data/repositories/meal_plans/inputs/meal_plan_week_input.dart';
+import 'package:myfitnesstale/src/data/repositories/meal_plans/meal_plan_record_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/meal_plans/meal_plan_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/recipes/inputs/recipe_input.dart';
 import 'package:myfitnesstale/src/data/repositories/recipes/inputs/recipe_item_input.dart';
@@ -333,7 +333,7 @@ void main() {
       final workoutRecB = await insertWorkoutRecord(db, workoutB);
 
       // Requesting week 2 on v1 record must NOT fall through to v2's week 2 template.
-      final v1Week2Miss = await recordRepo.updateWorkoutPlanWorkoutRecordStatus(
+      final v1Week2Miss = await recordRepo.upsertWorkoutPlanWorkoutRecord(
         WorkoutPlanWorkoutRecordInput(
           workoutPlanRecordId: v1Record.id,
           workoutRecordId: workoutRecA,
@@ -347,7 +347,7 @@ void main() {
       expect(v1Week2Miss.error.type, SingleErrorTypes.notFound);
 
       // Requesting week 2 on v2 record succeeds using v2's template.
-      final v2Week2Hit = await recordRepo.updateWorkoutPlanWorkoutRecordStatus(
+      final v2Week2Hit = await recordRepo.upsertWorkoutPlanWorkoutRecord(
         WorkoutPlanWorkoutRecordInput(
           workoutPlanRecordId: v2Record.id,
           workoutRecordId: workoutRecB,
@@ -370,7 +370,7 @@ void main() {
       expect(v1Total.value, 1);
       expect(v2Total.value, 4);
 
-      final completedV1 = await recordRepo.updateWorkoutPlanWorkoutRecordStatus(
+      final completedV1 = await recordRepo.upsertWorkoutPlanWorkoutRecord(
         WorkoutPlanWorkoutRecordInput(
           workoutPlanRecordId: v1Record.id,
           workoutRecordId: workoutRecA,

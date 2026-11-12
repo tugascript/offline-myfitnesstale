@@ -23,6 +23,7 @@ import 'package:myfitnesstale/src/data/repositories/workout_plans/dtos/workout_p
 import 'package:myfitnesstale/src/data/repositories/workout_plans/dtos/workout_plan_record_dto.dart';
 import 'package:myfitnesstale/src/data/repositories/workout_plans/workout_plan_record_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/workout_plans/workout_plan_repository.dart';
+import 'package:myfitnesstale/src/data/repositories/workouts/workout_record_repository.dart';
 import 'package:myfitnesstale/src/data/utils/enums.dart';
 import 'package:myfitnesstale/src/ui/core/sizes/data_display_sizes.dart';
 import 'package:myfitnesstale/src/ui/core/sizes/screen_size.dart';
@@ -39,6 +40,7 @@ class _FakeWorkoutPlanRecordCubit extends WorkoutPlanRecordCubit {
     : super(
         workoutPlanRecordRepository: WorkoutPlanRecordRepository.create(),
         workoutPlanRepository: WorkoutPlanRepository.create(),
+        workoutRecordRepository: WorkoutRecordRepository.create(),
       ) {
     emit(initialState);
   }

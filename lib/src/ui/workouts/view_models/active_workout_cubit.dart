@@ -460,7 +460,7 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
           position != null) {
         final planRecordService = _workoutPlanRecordService;
         final planResult = await planRecordService
-            .updateWorkoutPlanWorkoutRecordStatus(
+            .upsertWorkoutPlanWorkoutRecord(
               WorkoutPlanWorkoutRecordInput(
                 workoutPlanRecordId: planRecordId,
                 workoutRecordId: state.workoutRecord!.id,

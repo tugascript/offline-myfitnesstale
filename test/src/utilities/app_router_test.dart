@@ -115,6 +115,7 @@ class _WorkoutPlanRecordCubit extends WorkoutPlanRecordCubit {
     : super(
         workoutPlanRecordRepository: WorkoutPlanRecordRepository.create(),
         workoutPlanRepository: WorkoutPlanRepository.create(),
+        workoutRecordRepository: WorkoutRecordRepository.create(),
       );
 
   @override

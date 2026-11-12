@@ -76,6 +76,7 @@ import 'package:myfitnesstale/src/data/repositories/macros/macro_tracking_reposi
 import 'package:myfitnesstale/src/data/repositories/meal_plans/meal_plan_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/meal_plans/meal_plan_record_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/workout_plans/workout_plan_repository.dart';
+import 'package:myfitnesstale/src/data/repositories/workouts/workout_record_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/workout_plans/workout_plan_record_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/profile/profile_repository.dart';
 
@@ -502,6 +503,7 @@ void main() {
                     workoutPlanRecordRepository:
                         WorkoutPlanRecordRepository.create(),
                     workoutPlanRepository: WorkoutPlanRepository.create(),
+                    workoutRecordRepository: WorkoutRecordRepository.create(),
                   ),
                 ),
                 BlocProvider<MacroTrackingCubit>(create: (_) => _Macros()),

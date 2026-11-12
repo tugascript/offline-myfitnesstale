@@ -19,6 +19,7 @@ import 'package:equatable/equatable.dart';
 
 import '../../../../utils/nullable.dart';
 import '../../../models/sqlite/workout_plan_week_record_model.dart';
+import '../../../utils/enums.dart';
 import '../../core/dtos/dto.dart';
 import './workout_plan_day_record_dto.dart';
 
@@ -29,6 +30,7 @@ final class WorkoutPlanWeekRecordDto extends Equatable
   final int workoutPlanRecordId;
   final int workoutPlanWeekId;
   final int week;
+  final ProgressStatus status;
   final DateTime? completedAt;
 
   final List<WorkoutPlanDayRecordDto> days;
@@ -38,6 +40,7 @@ final class WorkoutPlanWeekRecordDto extends Equatable
     required this.workoutPlanRecordId,
     required this.workoutPlanWeekId,
     required this.week,
+    required this.status,
     this.completedAt,
     this.days = const [],
   });
@@ -51,6 +54,7 @@ final class WorkoutPlanWeekRecordDto extends Equatable
       workoutPlanRecordId: model.workoutPlanRecordId,
       workoutPlanWeekId: model.workoutPlanWeekId,
       week: model.week,
+      status: model.status,
       completedAt: model.completedAt != null
           ? DateTime.fromMillisecondsSinceEpoch(
               model.completedAt! * 1000,
@@ -67,6 +71,7 @@ final class WorkoutPlanWeekRecordDto extends Equatable
     int? workoutPlanRecordId,
     int? workoutPlanWeekId,
     int? week,
+    ProgressStatus? status,
     Nullable<DateTime>? completedAt,
     List<WorkoutPlanDayRecordDto>? days,
   }) {
@@ -75,6 +80,7 @@ final class WorkoutPlanWeekRecordDto extends Equatable
       workoutPlanRecordId: workoutPlanRecordId ?? this.workoutPlanRecordId,
       workoutPlanWeekId: workoutPlanWeekId ?? this.workoutPlanWeekId,
       week: week ?? this.week,
+      status: status ?? this.status,
       completedAt: completedAt != null ? completedAt.value : this.completedAt,
       days: days ?? this.days,
     );
@@ -86,6 +92,7 @@ final class WorkoutPlanWeekRecordDto extends Equatable
     workoutPlanRecordId,
     workoutPlanWeekId,
     week,
+    status,
     completedAt,
     days.length,
   ];

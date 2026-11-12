@@ -16,19 +16,6 @@
 // along with My Fitness Tale.  If not, see <https://www.gnu.org/licenses/>.
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:sqflite/sqflite.dart';
-
-import 'package:myfitnesstale/src/utils/nullable.dart';
-import 'package:myfitnesstale/src/ui/workout_plans/view_models/workout_plan_cubit.dart';
-import 'package:myfitnesstale/src/ui/workout_plans/view_models/workout_plan_record_cubit.dart';
-import 'package:myfitnesstale/src/data/repositories/workout_plans/inputs/workout_plan_day_record_input.dart';
-import 'package:myfitnesstale/src/data/repositories/workout_plans/inputs/workout_plan_input.dart';
-import 'package:myfitnesstale/src/data/repositories/workout_plans/inputs/workout_plan_record_input.dart';
-import 'package:myfitnesstale/src/data/repositories/workout_plans/inputs/workout_plan_workout_record_input.dart';
-import 'package:myfitnesstale/src/data/repositories/workouts/inputs/workout_record_batch_input.dart';
-import 'package:myfitnesstale/src/data/repositories/workouts/inputs/workout_record_input.dart';
-import 'package:myfitnesstale/src/data/utils/enums.dart';
-
 import 'package:myfitnesstale/src/data/models/sqlite/workout_model.dart';
 import 'package:myfitnesstale/src/data/models/sqlite/workout_plan_day_model.dart';
 import 'package:myfitnesstale/src/data/models/sqlite/workout_plan_model.dart';
@@ -37,14 +24,24 @@ import 'package:myfitnesstale/src/data/models/sqlite/workout_plan_week_model.dar
 import 'package:myfitnesstale/src/data/models/sqlite/workout_plan_workout_model.dart';
 import 'package:myfitnesstale/src/data/models/sqlite/workout_plan_workout_record_model.dart';
 import 'package:myfitnesstale/src/data/models/sqlite/workout_record_model.dart';
-import 'package:myfitnesstale/src/utils/errors.dart';
-import 'package:myfitnesstale/src/data/repositories/workout_plans/workout_plan_repository.dart';
+import 'package:myfitnesstale/src/data/repositories/workout_plans/inputs/workout_plan_day_record_input.dart';
+import 'package:myfitnesstale/src/data/repositories/workout_plans/inputs/workout_plan_input.dart';
+import 'package:myfitnesstale/src/data/repositories/workout_plans/inputs/workout_plan_record_input.dart';
+import 'package:myfitnesstale/src/data/repositories/workout_plans/inputs/workout_plan_workout_record_input.dart';
 import 'package:myfitnesstale/src/data/repositories/workout_plans/workout_plan_record_repository.dart';
+import 'package:myfitnesstale/src/data/repositories/workout_plans/workout_plan_repository.dart';
+import 'package:myfitnesstale/src/data/repositories/workouts/inputs/workout_record_batch_input.dart';
+import 'package:myfitnesstale/src/data/repositories/workouts/inputs/workout_record_input.dart';
 import 'package:myfitnesstale/src/data/repositories/workouts/workout_record_repository.dart';
+import 'package:myfitnesstale/src/data/utils/dates.dart';
+import 'package:myfitnesstale/src/data/utils/enums.dart';
+import 'package:myfitnesstale/src/ui/workout_plans/view_models/workout_plan_cubit.dart';
+import 'package:myfitnesstale/src/ui/workout_plans/view_models/workout_plan_record_cubit.dart';
+import 'package:myfitnesstale/src/utils/errors.dart';
+import 'package:myfitnesstale/src/utils/nullable.dart';
+import 'package:sqflite/sqflite.dart';
 
 import '../../support/test_database.dart';
-
-import 'package:myfitnesstale/src/data/utils/dates.dart';
 
 void main() {
   final testDatabase = TestDatabase();
@@ -197,6 +194,7 @@ void main() {
     final cubit = WorkoutPlanRecordCubit(
       workoutPlanRecordRepository: WorkoutPlanRecordRepository.create(),
       workoutPlanRepository: WorkoutPlanRepository.create(),
+      workoutRecordRepository: WorkoutRecordRepository.create(),
     );
     await cubit.getOrCreateActivePlanRecord(planId);
 
@@ -286,17 +284,16 @@ void main() {
     expect(startResult.isOk(), isTrue);
 
     // Complete workout
-    final completeResult = await recordService
-        .updateWorkoutPlanWorkoutRecordStatus(
-          WorkoutPlanWorkoutRecordInput(
-            workoutPlanRecordId: recordId,
-            workoutRecordId: workoutRecordId,
-            week: 1,
-            weekDay: 1,
-            workoutPosition: 1,
-            status: ProgressStatus.completed,
-          ),
-        );
+    final completeResult = await recordService.upsertWorkoutPlanWorkoutRecord(
+      WorkoutPlanWorkoutRecordInput(
+        workoutPlanRecordId: recordId,
+        workoutRecordId: workoutRecordId,
+        week: 1,
+        weekDay: 1,
+        workoutPosition: 1,
+        status: ProgressStatus.completed,
+      ),
+    );
     expect(completeResult.isOk(), isTrue);
 
     final updatedPlanRecord = completeResult.value;
@@ -396,7 +393,7 @@ void main() {
     expect(startResult.isOk(), isTrue);
 
     // Skip workout
-    final skipResult = await recordService.updateWorkoutPlanWorkoutRecordStatus(
+    final skipResult = await recordService.upsertWorkoutPlanWorkoutRecord(
       WorkoutPlanWorkoutRecordInput(
         workoutPlanRecordId: recordId,
         workoutRecordId: workoutRecordId,
@@ -409,8 +406,8 @@ void main() {
     expect(skipResult.isOk(), isTrue);
 
     final updatedPlanRecord = skipResult.value;
-    // Verify progress propagation (skipped workouts also allow parent day/week/record to be completed)
-    expect(updatedPlanRecord.status, ProgressStatus.completed);
+    // All-skipped children mark parents as skipped.
+    expect(updatedPlanRecord.status, ProgressStatus.skipped);
 
     // Verify workout record status is skipped and completedAt is null
     final List<Map<String, dynamic>> workoutRecords = await db.query(
@@ -423,6 +420,102 @@ void main() {
     expect(wRecord.status, ProgressStatus.skipped);
     expect(wRecord.completedAt, isNull);
   });
+
+  test(
+    'cubit skipPlanWorkout creates a skipped workout for never-started plans',
+    () async {
+      final db = await testDatabase.db;
+      final workoutAId = await createWorkout(db, uniqueName('skip-new-a'));
+
+      final plan = WorkoutPlan.create(
+        name: uniqueName('skip-new-plan'),
+        difficulty: Difficulty.beginner,
+        version: 1,
+        totalWeeks: 1,
+        totalDays: 1,
+        totalWorkouts: 1,
+      );
+      final planId = await db.insert(WorkoutPlan.table, plan.toMap());
+
+      final week = WorkoutPlanWeek.create(
+        workoutPlanId: planId,
+        planVersion: 1,
+        startWeek: 1,
+        endWeek: 1,
+        scheduleMode: WorkoutPlanWeekScheduleMode.manual,
+        totalDays: 1,
+        totalWorkouts: 1,
+      );
+      final weekId = await db.insert(WorkoutPlanWeek.table, week.toMap());
+
+      final day = WorkoutPlanDay.create(
+        workoutPlanId: planId,
+        workoutPlanWeekId: weekId,
+        planVersion: 1,
+        day: 1,
+        totalWorkouts: 1,
+        isRestDay: false,
+      );
+      final dayId = await db.insert(WorkoutPlanDay.table, day.toMap());
+
+      await db.insert(
+        WorkoutPlanWorkout.table,
+        WorkoutPlanWorkout.create(
+          position: 1,
+          workoutPlanId: planId,
+          workoutPlanWeekId: weekId,
+          workoutPlanDayId: dayId,
+          planVersion: 1,
+          workoutId: workoutAId,
+        ).toMap(),
+      );
+
+      final cubit = WorkoutPlanRecordCubit(
+        workoutPlanRecordRepository: WorkoutPlanRecordRepository.create(),
+        workoutPlanRepository: WorkoutPlanRepository.create(),
+        workoutRecordRepository: WorkoutRecordRepository.create(),
+      );
+      addTearDown(cubit.close);
+
+      await cubit.getOrCreateActivePlanRecord(planId);
+      final recordId = cubit.state.currentPlanRecord.currentPlanRecord!.id;
+
+      final skipped = await cubit.skipPlanWorkout(
+        workoutPlanRecordId: recordId,
+        week: 1,
+        day: 1,
+        workoutPosition: 1,
+        workoutId: workoutAId,
+      );
+      expect(skipped, isTrue);
+      expect(
+        cubit.state.currentPlanRecord.currentPlanRecord!.status,
+        ProgressStatus.skipped,
+      );
+
+      final planWorkoutRows = await db.query(
+        WorkoutPlanWorkoutRecord.table,
+        where: 'workout_plan_record_id = ?',
+        whereArgs: [recordId],
+      );
+      expect(planWorkoutRows, hasLength(1));
+      final planWorkout = WorkoutPlanWorkoutRecord.fromMap(
+        planWorkoutRows.first,
+      );
+      expect(planWorkout.status, ProgressStatus.skipped);
+
+      final workoutRow = await db.query(
+        WorkoutRecord.table,
+        where: 'id = ?',
+        whereArgs: [planWorkout.workoutRecordId],
+      );
+      expect(workoutRow, hasLength(1));
+      expect(
+        WorkoutRecord.fromMap(workoutRow.first).status,
+        ProgressStatus.skipped,
+      );
+    },
+  );
 
   test('a completed workout is not reused as an active workout', () async {
     final db = await testDatabase.db;
@@ -496,6 +589,7 @@ void main() {
       final cubit = WorkoutPlanRecordCubit(
         workoutPlanRecordRepository: WorkoutPlanRecordRepository.create(),
         workoutPlanRepository: WorkoutPlanRepository.create(),
+        workoutRecordRepository: WorkoutRecordRepository.create(),
       );
       addTearDown(cubit.close);
       final planIds = <int>[];
@@ -621,7 +715,7 @@ void main() {
         ),
       );
       expect(dayResult.isOk(), isTrue);
-      final result = await service.updateWorkoutPlanWorkoutRecordStatus(
+      final result = await service.upsertWorkoutPlanWorkoutRecord(
         WorkoutPlanWorkoutRecordInput(
           workoutPlanRecordId: planRecordId,
           workoutRecordId: workoutRecordId,
@@ -666,7 +760,7 @@ void main() {
     expect(failedUpsert.isErr(), isTrue);
     expect(failedUpsert.error.type, SingleErrorTypes.notFound);
 
-    final failedUpdate = await service.updateWorkoutPlanWorkoutRecordStatus(
+    final failedUpdate = await service.upsertWorkoutPlanWorkoutRecord(
       WorkoutPlanWorkoutRecordInput(
         workoutPlanRecordId: planRecordId,
         workoutRecordId: recordBId,
@@ -702,7 +796,7 @@ void main() {
     ];
 
     final beforeReopen = await snapshot();
-    final stalePosition = await service.updateWorkoutPlanWorkoutRecordStatus(
+    final stalePosition = await service.upsertWorkoutPlanWorkoutRecord(
       WorkoutPlanWorkoutRecordInput(
         workoutPlanRecordId: planRecordId,
         workoutRecordId: recordBId,
@@ -722,7 +816,7 @@ void main() {
       END;
     ''');
     try {
-      final failedReopen = await service.updateWorkoutPlanWorkoutRecordStatus(
+      final failedReopen = await service.upsertWorkoutPlanWorkoutRecord(
         WorkoutPlanWorkoutRecordInput(
           workoutPlanRecordId: planRecordId,
           workoutRecordId: recordBId,
@@ -737,7 +831,7 @@ void main() {
     }
 
     // Valid workout status reset atomically reopens the day/week/plan.
-    final reopened = await service.updateWorkoutPlanWorkoutRecordStatus(
+    final reopened = await service.upsertWorkoutPlanWorkoutRecord(
       WorkoutPlanWorkoutRecordInput(
         workoutPlanRecordId: planRecordId,
         workoutRecordId: recordBId,

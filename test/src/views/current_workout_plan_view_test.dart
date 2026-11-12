@@ -32,6 +32,7 @@ import 'package:myfitnesstale/src/ui/workout_plans/screens/current_workout_plan_
 import 'package:myfitnesstale/src/ui/workout_plans/widgets/active/active_workout_plan_content.dart';
 import 'package:myfitnesstale/src/ui/workout_plans/widgets/active/active_workout_plan_dummy_data.dart';
 import 'package:myfitnesstale/src/data/repositories/workout_plans/workout_plan_repository.dart';
+import 'package:myfitnesstale/src/data/repositories/workouts/workout_record_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/workout_plans/workout_plan_record_repository.dart';
 
 class _Cubit extends WorkoutPlanRecordCubit {
@@ -39,6 +40,7 @@ class _Cubit extends WorkoutPlanRecordCubit {
     : super(
         workoutPlanRecordRepository: WorkoutPlanRecordRepository.create(),
         workoutPlanRepository: WorkoutPlanRepository.create(),
+        workoutRecordRepository: WorkoutRecordRepository.create(),
       );
 
   int loads = 0;

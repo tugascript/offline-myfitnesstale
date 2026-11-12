@@ -440,6 +440,97 @@ final class WorkoutRecordRepository implements Repository {
     }
   }
 
+  Future<Result<WorkoutRecordDto, ServiceError<OperationErrorTypes>>>
+  createWorkoutRecordWithStatus({
+    required int workoutId,
+    required ProgressStatus status,
+  }) async {
+    _logger.info('Creating workout record with status $status');
+    try {
+      final Workout? workout = await _workoutDao.selectOne(workoutId);
+      if (workout == null) {
+        return err(
+          ServiceError(
+            type: OperationErrorTypes.invalidInput,
+            description: 'Workout with id: $workoutId not found',
+          ),
+        );
+      }
+
+      final now = DateUtilities.getNowUtcUnix();
+      final isTerminal =
+          status == ProgressStatus.skipped ||
+          status == ProgressStatus.abandoned ||
+          status == ProgressStatus.completed;
+      final WorkoutRecord record = WorkoutRecord.create(
+        version: workout.version,
+        workoutId: workoutId,
+        startedAt: now,
+        completedAt: status == ProgressStatus.completed ? now : null,
+        droppedAt:
+            status == ProgressStatus.skipped ||
+                status == ProgressStatus.abandoned
+            ? now
+            : null,
+        status: isTerminal ? status : ProgressStatus.inProgress,
+      );
+      final int id = await _workoutRecordDao.insert(record);
+      _logger.info('Created workout record with id $id and status $status');
+      return ok(WorkoutRecordDto.fromModel(record.copyWith(id: Nullable(id))));
+    } catch (e) {
+      _logger.severe('Failed to create workout record with status', e);
+      return err(
+        const ServiceError(
+          type: OperationErrorTypes.operationFailure,
+          description: 'Failed to create workout record',
+        ),
+      );
+    }
+  }
+
+  Future<Result<WorkoutRecordDto, ServiceError<SingleErrorTypes>>>
+  updateWorkoutRecordStatus({
+    required int id,
+    required ProgressStatus status,
+  }) async {
+    _logger.info('Updating workout record $id status to $status');
+    try {
+      final WorkoutRecord? record = await _workoutRecordDao.selectOne(id);
+      if (record == null) {
+        return err(
+          ServiceError(
+            type: SingleErrorTypes.notFound,
+            description: 'Workout record with id: $id not found',
+          ),
+        );
+      }
+
+      final now = DateUtilities.getNowUtcUnix();
+      final updatedRecord = record.copyWith(
+        status: status,
+        completedAt: Nullable(
+          status == ProgressStatus.completed ? now : record.completedAt,
+        ),
+        droppedAt: Nullable(
+          status == ProgressStatus.skipped || status == ProgressStatus.abandoned
+              ? (record.droppedAt ?? now)
+              : record.droppedAt,
+        ),
+        updatedAt: now,
+      );
+      await _workoutRecordDao.update(updatedRecord);
+      return ok(WorkoutRecordDto.fromModel(updatedRecord));
+    } catch (e) {
+      _logger.severe('Failed to update workout record status', e);
+      return err(
+        const ServiceError(
+          type: SingleErrorTypes.operationFailure,
+          description: 'Failed to update workout record status',
+        ),
+      );
+    }
+  }
+
   Future<Result<WorkoutRecordDto, ServiceError<SingleErrorTypes>>>
   updateWorkoutRecord(int id, WorkoutRecordInput input) async {
     _logger.info('Updating workout record with id $id');

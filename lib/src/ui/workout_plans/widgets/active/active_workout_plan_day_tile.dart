@@ -23,6 +23,9 @@ import '../../../../data/repositories/workout_plans/dtos/workout_plan_workout_dt
 import '../../../../data/repositories/workout_plans/dtos/workout_plan_workout_record_dto.dart';
 import '../../../../data/utils/enums.dart';
 import '../../../core/sizes/data_display_sizes.dart';
+import '../../../core/widgets/confirmation_dialog.dart';
+import '../../../core/widgets/layout/app_elevated_button.dart';
+import '../../../core/widgets/mutation_button.dart';
 
 enum DayProgressStatus { past, current, future }
 
@@ -35,6 +38,8 @@ class ActiveWorkoutPlanDayTile extends StatelessWidget {
   final int week;
   final int workoutPlanRecordId;
   final List<WorkoutPlanWorkoutRecordDto> workoutRecords;
+  final ValueChanged<WorkoutPlanWorkoutDto>? onSkipWorkout;
+  final VoidCallback? onSkipDay;
 
   const ActiveWorkoutPlanDayTile({
     super.key,
@@ -46,6 +51,8 @@ class ActiveWorkoutPlanDayTile extends StatelessWidget {
     required this.week,
     required this.workoutPlanRecordId,
     this.workoutRecords = const [],
+    this.onSkipWorkout,
+    this.onSkipDay,
   });
 
   @override
@@ -61,6 +68,12 @@ class ActiveWorkoutPlanDayTile extends StatelessWidget {
               record.status == ProgressStatus.completed ||
               record.status == ProgressStatus.skipped,
         );
+    final canSkipDay =
+        !day.isRestDay &&
+        !isDayCompleted &&
+        isCurrent &&
+        scheduledWorkoutCount > 0 &&
+        onSkipDay != null;
 
     Color containerColor;
     Color iconColor;
@@ -88,28 +101,39 @@ class ActiveWorkoutPlanDayTile extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
+            Wrap(
+              spacing: sizes.spacing,
+              runSpacing: sizes.halfSpacing,
+              crossAxisAlignment: WrapCrossAlignment.center,
               children: [
-                Icon(
-                  isDayCompleted ? Icons.check_circle : Icons.calendar_today,
-                  color: iconColor,
-                  size: sizes.subtitleFontSize,
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      isDayCompleted
+                          ? Icons.check_circle
+                          : Icons.calendar_today,
+                      color: iconColor,
+                      size: sizes.subtitleFontSize,
+                    ),
+                    SizedBox(width: sizes.padding / 2),
+                    Text(
+                      'Day ${day.day}',
+                      style: TextStyle(
+                        fontWeight: isCurrent
+                            ? FontWeight.bold
+                            : FontWeight.normal,
+                        color: isPast
+                            ? isDarkTheme
+                                  ? Colors.grey.shade300
+                                  : Colors.grey.shade700
+                            : isCurrent
+                            ? theme.primaryColor
+                            : theme.colorScheme.onSurface,
+                      ),
+                    ),
+                  ],
                 ),
-                SizedBox(width: sizes.padding / 2),
-                Text(
-                  'Day ${day.day}',
-                  style: TextStyle(
-                    fontWeight: isCurrent ? FontWeight.bold : FontWeight.normal,
-                    color: isPast
-                        ? isDarkTheme
-                              ? Colors.grey.shade300
-                              : Colors.grey.shade700
-                        : isCurrent
-                        ? theme.primaryColor
-                        : theme.colorScheme.onSurface,
-                  ),
-                ),
-                const Spacer(),
                 if (isCurrent)
                   Container(
                     padding: EdgeInsets.symmetric(
@@ -177,12 +201,36 @@ class ActiveWorkoutPlanDayTile extends StatelessWidget {
               Padding(
                 padding: EdgeInsets.only(top: sizes.spacing / 2),
                 child: Column(
-                  children: day.planWorkouts!
-                      .map(
-                        (pw) =>
-                            _buildWorkoutRow(context, pw, isPast, isCurrent),
-                      )
-                      .toList(),
+                  children: [
+                    ...day.planWorkouts!.map(
+                      (pw) => _buildWorkoutRow(context, pw, isPast, isCurrent),
+                    ),
+                    if (canSkipDay) ...[
+                      SizedBox(height: sizes.spacing / 2),
+                      SizedBox(
+                        width: double.infinity,
+                        child: MutationButton(
+                          theme: theme,
+                          sizes: sizes,
+                          isLoading: false,
+                          isDense: true,
+                          onPressed: () => showDialog<void>(
+                            context: context,
+                            builder: (_) => ConfirmationDialog(
+                              title: 'Skip Day',
+                              content:
+                                  'Skip all unfinished workouts for Day ${day.day}? Completed workouts will be kept.',
+                              confirmLabel: 'Skip Day',
+                              onConfirm: onSkipDay!,
+                            ),
+                          ),
+                          label: 'Skip Day',
+                          icon: Icons.skip_next,
+                          color: theme.colorScheme.secondary,
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
               )
             else
@@ -219,81 +267,132 @@ class ActiveWorkoutPlanDayTile extends StatelessWidget {
         .where((record) => record.position == planWorkout.position)
         .firstOrNull;
     final isCompleted = planRecord?.status == ProgressStatus.completed;
+    final isSkipped = planRecord?.status == ProgressStatus.skipped;
+    final isFinished = isCompleted || isSkipped;
     final isInProgress = planRecord?.status == ProgressStatus.inProgress;
-    final canRecord = !isCompleted && (isPast || isCurrent);
+    final canRecord = !isFinished && (isPast || isCurrent);
 
     return Padding(
-      padding: EdgeInsets.only(top: sizes.spacing / 2, left: sizes.padding * 2),
-      child: Row(
+      padding: EdgeInsets.only(top: sizes.halfSpacing, left: sizes.padding * 2),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  workout.name,
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: sizes.fontSize,
-                    decoration: isCompleted ? TextDecoration.lineThrough : null,
-                    color: isCompleted
-                        ? isDarkTheme
-                              ? Colors.grey.shade300
-                              : Colors.grey.shade700
-                        : isCurrent
-                        ? theme.primaryColor
-                        : theme.colorScheme.onSurface,
-                  ),
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      workout.name,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: sizes.fontSize,
+                        decoration: isFinished
+                            ? TextDecoration.lineThrough
+                            : null,
+                        color: isFinished
+                            ? isDarkTheme
+                                  ? Colors.grey.shade300
+                                  : Colors.grey.shade700
+                            : isCurrent
+                            ? theme.primaryColor
+                            : theme.colorScheme.onSurface,
+                      ),
+                    ),
+                    Text(
+                      '${workout.totalSets} sets • ${workout.totalReps} reps',
+                      style: TextStyle(
+                        fontSize: sizes.smallFontSize,
+                        color: isDarkTheme
+                            ? Colors.grey.shade300
+                            : Colors.grey.shade600,
+                      ),
+                    ),
+                  ],
                 ),
-                Text(
-                  '${workout.totalSets} sets • ${workout.totalReps} reps',
-                  style: TextStyle(
-                    fontSize: sizes.smallFontSize,
-                    color: isDarkTheme
-                        ? Colors.grey.shade300
-                        : Colors.grey.shade600,
+              ),
+              if (isCompleted)
+                Chip(
+                  avatar: Icon(Icons.check, size: sizes.smallFontSize * 1.3),
+                  label: const Text('Completed'),
+                )
+              else if (isSkipped)
+                Chip(
+                  avatar: Icon(
+                    Icons.skip_next,
+                    size: sizes.smallFontSize * 1.3,
                   ),
+                  label: const Text('Skipped'),
                 ),
-              ],
-            ),
+            ],
           ),
-          if (isCompleted)
-            Chip(
-              avatar: Icon(Icons.check, size: sizes.smallFontSize * 1.3),
-              label: const Text('Completed'),
-            )
-          else if (canRecord)
-            Wrap(
-              spacing: sizes.spacing / 2,
-              runSpacing: sizes.spacing / 4,
+          if (canRecord) ...[
+            SizedBox(height: sizes.halfSpacing),
+            Row(
               children: [
-                OutlinedButton.icon(
-                  onPressed: () => context.push(
-                    '/workouts/${workout.id}/history/${workout.version}/records/create'
-                    '?workoutPlanRecordId=$workoutPlanRecordId'
-                    '&week=$week'
-                    '&day=${day.day}'
-                    '&workoutPosition=${planWorkout.position}',
+                Expanded(
+                  child: MutationButton(
+                    theme: theme,
+                    sizes: sizes,
+                    isLoading: false,
+                    isDense: true,
+                    onPressed: () => context.push(
+                      '/workouts/${workout.id}/history/${workout.version}/records/create'
+                      '?workoutPlanRecordId=$workoutPlanRecordId'
+                      '&week=$week'
+                      '&day=${day.day}'
+                      '&workoutPosition=${planWorkout.position}',
+                    ),
+                    label: 'Log',
+                    icon: Icons.edit_note,
                   ),
-                  icon: Icon(Icons.edit_note, size: sizes.fontSize * 1.3),
-                  label: const Text('Log'),
                 ),
-                ElevatedButton.icon(
-                  onPressed: () => context.push(
-                    '/workouts/${workout.id}/active'
-                    '?workoutPlanRecordId=$workoutPlanRecordId'
-                    '&week=$week'
-                    '&day=${day.day}'
-                    '&workoutPosition=${planWorkout.position}',
+                SizedBox(width: sizes.spacing / 2),
+                Expanded(
+                  child: AppElevatedButton(
+                    theme: theme,
+                    sizes: sizes,
+                    isLoading: false,
+                    isDense: true,
+                    onPressed: () => context.push(
+                      '/workouts/${workout.id}/active'
+                      '?workoutPlanRecordId=$workoutPlanRecordId'
+                      '&week=$week'
+                      '&day=${day.day}'
+                      '&workoutPosition=${planWorkout.position}',
+                    ),
+                    label: isInProgress ? 'Resume' : 'Start',
+                    icon: isInProgress ? Icons.play_circle : Icons.play_arrow,
                   ),
-                  icon: Icon(
-                    isInProgress ? Icons.play_circle : Icons.play_arrow,
-                    size: sizes.fontSize * 1.5,
-                  ),
-                  label: Text(isInProgress ? 'Resume' : 'Start'),
                 ),
               ],
             ),
+            if (isCurrent && onSkipWorkout != null) ...[
+              SizedBox(height: sizes.spacing / 2),
+              SizedBox(
+                width: double.infinity,
+                child: MutationButton(
+                  theme: theme,
+                  sizes: sizes,
+                  isLoading: false,
+                  isDense: true,
+                  onPressed: () => showDialog<void>(
+                    context: context,
+                    builder: (_) => ConfirmationDialog(
+                      title: 'Skip Workout',
+                      content: 'Skip ${workout.name} in this workout plan?',
+                      confirmLabel: 'Skip Workout',
+                      onConfirm: () => onSkipWorkout!(planWorkout),
+                    ),
+                  ),
+                  label: 'Skip',
+                  icon: Icons.skip_next,
+                  color: theme.colorScheme.secondary,
+                ),
+              ),
+            ],
+          ],
         ],
       ),
     );

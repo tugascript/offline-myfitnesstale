@@ -178,6 +178,7 @@ class _TestWorkoutPlanRecordCubit extends WorkoutPlanRecordCubit {
     : super(
         workoutPlanRecordRepository: WorkoutPlanRecordRepository.create(),
         workoutPlanRepository: WorkoutPlanRepository.create(),
+        workoutRecordRepository: WorkoutRecordRepository.create(),
       );
 
   int loadCalls = 0;

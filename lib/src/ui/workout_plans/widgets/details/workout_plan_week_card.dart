@@ -23,6 +23,7 @@ import '../../../core/sizes/data_display_sizes.dart';
 import '../../../core/widgets/detail_number.dart';
 import '../workout_phase_badge.dart';
 import '../workout_plan_week_strip.dart';
+import '../workout_plan_weeks_strip.dart';
 import './workout_plan_workout_card.dart';
 
 class WorkoutPlanWeekCard extends StatefulWidget {
@@ -46,11 +47,13 @@ class WorkoutPlanWeekCard extends StatefulWidget {
 }
 
 class _WorkoutPlanWeekCardState extends State<WorkoutPlanWeekCard> {
+  late int _selectedWeek;
   late int _selectedDay;
 
   @override
   void initState() {
     super.initState();
+    _selectedWeek = widget.week.startWeek;
     _selectedDay = _initialSelectedDay();
   }
 
@@ -58,6 +61,10 @@ class _WorkoutPlanWeekCardState extends State<WorkoutPlanWeekCard> {
   void didUpdateWidget(WorkoutPlanWeekCard oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.week != widget.week) {
+      if (_selectedWeek < widget.week.startWeek ||
+          _selectedWeek > widget.week.endWeek) {
+        _selectedWeek = widget.week.startWeek;
+      }
       final byDay = {for (final d in widget.week.days) d.day: d};
       if (!byDay.containsKey(_selectedDay)) {
         setState(() {
@@ -158,6 +165,23 @@ class _WorkoutPlanWeekCardState extends State<WorkoutPlanWeekCard> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                if (widget.week.startWeek < widget.week.endWeek) ...[
+                  WorkoutPlanWeeksStrip(
+                    startWeek: widget.week.startWeek,
+                    endWeek: widget.week.endWeek,
+                    selectedWeek: _selectedWeek,
+                    onSelectWeek: (weekNum) {
+                      setState(() {
+                        _selectedWeek = weekNum;
+                      });
+                    },
+                    sizes: widget.sizes,
+                    theme: widget.theme,
+                    isDarkTheme: widget.isDarkTheme,
+                    getWeekWorkoutCount: (_) => widget.week.totalWorkouts,
+                  ),
+                  SizedBox(height: widget.sizes.spacing),
+                ],
                 WorkoutPlanWeekStrip(
                   days: widget.week.days,
                   selectedDay: _selectedDay,
@@ -193,7 +217,7 @@ class _WorkoutPlanWeekCardState extends State<WorkoutPlanWeekCard> {
                 ? Colors.grey.shade800
                 : Colors.grey.shade300,
           ),
-          borderRadius: BorderRadius.circular(widget.sizes.padding / 2),
+          borderRadius: BorderRadius.zero,
         ),
         child: Center(
           child: Text(
@@ -222,7 +246,7 @@ class _WorkoutPlanWeekCardState extends State<WorkoutPlanWeekCard> {
                 ? Colors.grey.shade800
                 : Colors.grey.shade300,
           ),
-          borderRadius: BorderRadius.circular(widget.sizes.padding / 2),
+          borderRadius: BorderRadius.zero,
         ),
         child: Row(
           children: [

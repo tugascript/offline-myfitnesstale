@@ -163,6 +163,7 @@ There is no import/export, local backup, or broader weight analytics.
   abandonment commit in the same transaction; failed updates preserve both
   executions and their week/day/workout history.
 - Expands ranged week templates into dated week instances.
+- Displays week schedules using a compact 7-column day strip (D1–D7) with cell states for workout days (workout count chip), rest days (snooze icon), and unscheduled days (hollow dash). On active plans, overlays execution status (today highlight ring, completed checkmark, missed indicator). Tapping any cell displays that day's workouts, execution actions (Start/Resume/Log), and rest/empty state in a focused detail panel below the strip.
 - Shows missed days and progress.
 - Starts/resumes live scheduled workouts or records them manually using shared
   `WorkoutPlanRecordInput`, `WorkoutPlanDayRecordInput`, and
@@ -389,6 +390,14 @@ real workout-history row, not a reusable template. Day, week, and plan
 completion propagate only after required child workouts are completed or
 skipped. Cancelling a live scheduled workout removes the plan association and
 its unfinished workout-history row.
+
+The execution UI offers workout and day skipping only for the current scheduled
+day, and week skipping only for the current scheduled week. Each skip action
+requires confirmation; cancelling or dismissing the dialog leaves records unchanged.
+Past workouts remain available for live or manual recording. Week skip controls
+are removed while browsing another week; inactive carousel pages cannot receive
+taps or accessibility actions. Week-group details and day status headers wrap
+on narrow screens and at 200% text scaling.
 
 ## Test harness and recorded results
 

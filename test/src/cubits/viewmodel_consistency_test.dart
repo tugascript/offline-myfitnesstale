@@ -34,6 +34,7 @@ import 'package:myfitnesstale/src/data/repositories/weight/inputs/weight_goal_in
 import 'package:myfitnesstale/src/data/repositories/weight/weight_record_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/workout_plans/workout_plan_record_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/workout_plans/workout_plan_repository.dart';
+import 'package:myfitnesstale/src/data/repositories/workouts/workout_record_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/workouts/dtos/workout_dto.dart';
 import 'package:myfitnesstale/src/data/repositories/workouts/dtos/workout_record_dto.dart';
 import 'package:myfitnesstale/src/data/repositories/workouts/dtos/workout_set_dto.dart';
@@ -630,6 +631,7 @@ void main() {
       final recordCubit = WorkoutPlanRecordCubit(
         workoutPlanRecordRepository: WorkoutPlanRecordRepository.create(),
         workoutPlanRepository: planRepo,
+        workoutRecordRepository: WorkoutRecordRepository.create(),
       );
       addTearDown(recordCubit.close);
 
