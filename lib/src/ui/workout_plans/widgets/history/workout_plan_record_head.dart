@@ -103,7 +103,11 @@ class WorkoutPlanRecordHead extends StatelessWidget {
           if (status != null) ...[
             Row(
               children: [
-                Icon(status.icon, color: status.color, size: sizes.fontSize * 1.2),
+                Icon(
+                  status.icon,
+                  color: status.color,
+                  size: sizes.fontSize * 1.2,
+                ),
                 SizedBox(width: sizes.spacing / 2),
                 Expanded(
                   child: Text(

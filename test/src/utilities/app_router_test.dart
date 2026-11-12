@@ -204,9 +204,7 @@ void main() {
           BlocProvider<ExerciseRecordCubit>.value(value: exerciseRecordCubit),
           BlocProvider<WorkoutCubit>.value(value: workoutCubit),
           BlocProvider<WorkoutRecordCubit>.value(value: workoutRecordCubit),
-          BlocProvider<WorkoutPlanCubit>.value(
-            value: workoutPlanCubit,
-          ),
+          BlocProvider<WorkoutPlanCubit>.value(value: workoutPlanCubit),
           BlocProvider<WorkoutPlanRecordCubit>.value(
             value: workoutPlanRecordCubit,
           ),

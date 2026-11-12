@@ -122,7 +122,10 @@ void main() {
     expect(find.textContaining('Week'), findsWidgets);
     expect(find.textContaining('Day'), findsWidgets);
     expect(find.textContaining('Workout'), findsWidgets);
-    expect(find.text('Last reached: Week 2 • Day 3 • Workout 1'), findsOneWidget);
+    expect(
+      find.text('Last reached: Week 2 • Day 3 • Workout 1'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('SingleWorkoutPlanRecordList renders cards and empty state', (
@@ -173,67 +176,68 @@ void main() {
     expect(find.text('In Progress'), findsOneWidget);
   });
 
-  testWidgets('LatestWorkoutPlanRecord renders empty and loaded record states', (
-    tester,
-  ) async {
-    final emptyCubit = _FakeWorkoutPlanRecordCubit(
-      WorkoutPlanRecordState.initial(),
-    );
-    addTearDown(emptyCubit.close);
+  testWidgets(
+    'LatestWorkoutPlanRecord renders empty and loaded record states',
+    (tester) async {
+      final emptyCubit = _FakeWorkoutPlanRecordCubit(
+        WorkoutPlanRecordState.initial(),
+      );
+      addTearDown(emptyCubit.close);
 
-    await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(
-          body: BlocProvider<WorkoutPlanRecordCubit>.value(
-            value: emptyCubit,
-            child: Builder(
-              builder: (context) => LatestWorkoutPlanRecord(
-                sizes: sizes,
-                theme: Theme.of(context),
-                units: Units.metric,
-                workoutPlanId: 1,
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: BlocProvider<WorkoutPlanRecordCubit>.value(
+              value: emptyCubit,
+              child: Builder(
+                builder: (context) => LatestWorkoutPlanRecord(
+                  sizes: sizes,
+                  theme: Theme.of(context),
+                  units: Units.metric,
+                  workoutPlanId: 1,
+                ),
               ),
             ),
           ),
         ),
-      ),
-    );
+      );
 
-    expect(find.text('No workout plan records'), findsOneWidget);
-    expect(find.text('START PLAN'), findsOneWidget);
+      expect(find.text('No workout plan records'), findsOneWidget);
+      expect(find.text('START PLAN'), findsOneWidget);
 
-    final loadedRecord = sampleRecord(
-      startedAt: DateTime.utc(2026, 5, 1, 9, 0),
-      plan: samplePlan('Strength Block A'),
-    );
-    final loadedCubit = _FakeWorkoutPlanRecordCubit(
-      WorkoutPlanRecordState.initial().copyWith(
-        latestWorkoutPlanRecord: Nullable(loadedRecord),
-      ),
-    );
-    addTearDown(loadedCubit.close);
+      final loadedRecord = sampleRecord(
+        startedAt: DateTime.utc(2026, 5, 1, 9, 0),
+        plan: samplePlan('Strength Block A'),
+      );
+      final loadedCubit = _FakeWorkoutPlanRecordCubit(
+        WorkoutPlanRecordState.initial().copyWith(
+          latestWorkoutPlanRecord: Nullable(loadedRecord),
+        ),
+      );
+      addTearDown(loadedCubit.close);
 
-    await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(
-          body: BlocProvider<WorkoutPlanRecordCubit>.value(
-            value: loadedCubit,
-            child: Builder(
-              builder: (context) => LatestWorkoutPlanRecord(
-                sizes: sizes,
-                theme: Theme.of(context),
-                units: Units.metric,
-                workoutPlanId: 1,
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: BlocProvider<WorkoutPlanRecordCubit>.value(
+              value: loadedCubit,
+              child: Builder(
+                builder: (context) => LatestWorkoutPlanRecord(
+                  sizes: sizes,
+                  theme: Theme.of(context),
+                  units: Units.metric,
+                  workoutPlanId: 1,
+                ),
               ),
             ),
           ),
         ),
-      ),
-    );
+      );
 
-    expect(find.text('Latest Record'), findsOneWidget);
-    expect(find.text(' Strength Block A'), findsOneWidget);
-  });
+      expect(find.text('Latest Record'), findsOneWidget);
+      expect(find.text(' Strength Block A'), findsOneWidget);
+    },
+  );
 
   testWidgets('WorkoutPlanRecordHistory renders date range and records', (
     tester,

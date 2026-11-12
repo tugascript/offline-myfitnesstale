@@ -167,66 +167,78 @@ void main() {
     expect(withDate.dateRange, isNotNull);
   });
 
-  test('getLatestWorkoutPlanRecord retrieves newest record or null when not found', () async {
-    final database = await testDatabase.db;
-    final planId = await seedPlan(database, name: 'Latest Plan');
-    final cubit = WorkoutPlanRecordCubit(
-      workoutPlanRecordRepository: WorkoutPlanRecordRepository.create(),
-      workoutPlanRepository: WorkoutPlanRepository.create(),
-    );
-    addTearDown(cubit.close);
+  test(
+    'getLatestWorkoutPlanRecord retrieves newest record or null when not found',
+    () async {
+      final database = await testDatabase.db;
+      final planId = await seedPlan(database, name: 'Latest Plan');
+      final cubit = WorkoutPlanRecordCubit(
+        workoutPlanRecordRepository: WorkoutPlanRecordRepository.create(),
+        workoutPlanRepository: WorkoutPlanRepository.create(),
+      );
+      addTearDown(cubit.close);
 
-    await cubit.getLatestWorkoutPlanRecord(planId);
-    expect(cubit.state.latestWorkoutPlanRecord, isNull);
+      await cubit.getLatestWorkoutPlanRecord(planId);
+      expect(cubit.state.latestWorkoutPlanRecord, isNull);
 
-    await seedRecord(
-      database,
-      planId: planId,
-      status: ProgressStatus.inProgress,
-      timestamp: 1000,
-    );
-    final newerId = await seedRecord(
-      database,
-      planId: planId,
-      status: ProgressStatus.completed,
-      timestamp: 2000,
-    );
+      await seedRecord(
+        database,
+        planId: planId,
+        status: ProgressStatus.inProgress,
+        timestamp: 1000,
+      );
+      final newerId = await seedRecord(
+        database,
+        planId: planId,
+        status: ProgressStatus.completed,
+        timestamp: 2000,
+      );
 
-    await cubit.getLatestWorkoutPlanRecord(planId);
-    expect(cubit.state.latestWorkoutPlanRecord?.id, newerId);
-  });
+      await cubit.getLatestWorkoutPlanRecord(planId);
+      expect(cubit.state.latestWorkoutPlanRecord?.id, newerId);
+    },
+  );
 
-  test('filtering by dateRange restricts returned workout plan records', () async {
-    final database = await testDatabase.db;
-    final planId = await seedPlan(database, name: 'Date Filter Plan');
-    await seedRecord(
-      database,
-      planId: planId,
-      status: ProgressStatus.completed,
-      timestamp: 1770000000, // ~Feb 2026
-    );
-    final inRangeId = await seedRecord(
-      database,
-      planId: planId,
-      status: ProgressStatus.completed,
-      timestamp: 1772000000, // ~Late Feb 2026
-    );
-    final cubit = WorkoutPlanRecordCubit(
-      workoutPlanRecordRepository: WorkoutPlanRecordRepository.create(),
-      workoutPlanRepository: WorkoutPlanRepository.create(),
-    );
-    addTearDown(cubit.close);
+  test(
+    'filtering by dateRange restricts returned workout plan records',
+    () async {
+      final database = await testDatabase.db;
+      final planId = await seedPlan(database, name: 'Date Filter Plan');
+      await seedRecord(
+        database,
+        planId: planId,
+        status: ProgressStatus.completed,
+        timestamp: 1770000000, // ~Feb 2026
+      );
+      final inRangeId = await seedRecord(
+        database,
+        planId: planId,
+        status: ProgressStatus.completed,
+        timestamp: 1772000000, // ~Late Feb 2026
+      );
+      final cubit = WorkoutPlanRecordCubit(
+        workoutPlanRecordRepository: WorkoutPlanRecordRepository.create(),
+        workoutPlanRepository: WorkoutPlanRepository.create(),
+      );
+      addTearDown(cubit.close);
 
-    final start = DateTime.fromMillisecondsSinceEpoch(1771000000 * 1000, isUtc: true);
-    final end = DateTime.fromMillisecondsSinceEpoch(1773000000 * 1000, isUtc: true);
+      final start = DateTime.fromMillisecondsSinceEpoch(
+        1771000000 * 1000,
+        isUtc: true,
+      );
+      final end = DateTime.fromMillisecondsSinceEpoch(
+        1773000000 * 1000,
+        isUtc: true,
+      );
 
-    await cubit.getWorkoutPlanRecords(
-      workoutPlanId: planId,
-      dateRange: (start, end),
-    );
+      await cubit.getWorkoutPlanRecords(
+        workoutPlanId: planId,
+        dateRange: (start, end),
+      );
 
-    expect(cubit.state.planRecords.map((r) => r.id), [inRangeId]);
-  });
+      expect(cubit.state.planRecords.map((r) => r.id), [inRangeId]);
+    },
+  );
 
   test('switching plan filters clears cached records before loading', () async {
     final database = await testDatabase.db;
