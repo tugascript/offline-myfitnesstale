@@ -18,6 +18,7 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
+import '../../../../data/repositories/workout_plans/utils/workout_plan_schedule_utils.dart';
 import '../../../core/sizes/data_display_sizes.dart';
 import '../../view_models/states/workout_plan_record_state.dart';
 import '../plan_statistics_widget.dart';
@@ -53,17 +54,26 @@ class ActiveWorkoutPlanContent extends StatelessWidget {
 
     // Calculate current week and day indices based on startedAt
     final record = displayState.currentPlanRecord;
-    int currentWeekNum = 1;
-    int relativeDayIndex = 1;
+    int calendarWeekNum = 1;
+    int calendarDayNum = 1;
 
     if (record != null) {
       final now = DateTime.now();
       final difference = now.difference(record.startedAt);
       final daysSinceStart = difference.inDays;
 
-      currentWeekNum = (daysSinceStart / 7).floor() + 1;
-      relativeDayIndex = (daysSinceStart % 7) + 1;
+      calendarWeekNum = (daysSinceStart / 7).floor() + 1;
+      calendarDayNum = (daysSinceStart % 7) + 1;
     }
+
+    final effectiveProgress = WorkoutPlanScheduleUtils.resolveEffectiveProgress(
+      weeks: plan.weeks ?? const [],
+      calendarWeekNum: calendarWeekNum,
+      calendarDayNum: calendarDayNum,
+      workoutPlanRecord: record,
+    );
+    final currentWeekNum = effectiveProgress.currentWeekNum;
+    final relativeDayIndex = effectiveProgress.relativeDayIndex;
 
     // Calculate progress percentage
     double progressPercentage = 0;

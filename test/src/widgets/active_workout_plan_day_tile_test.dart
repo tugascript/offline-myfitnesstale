@@ -160,7 +160,9 @@ void main() {
     });
   }
 
-  testWidgets('future workouts and days cannot be skipped', (tester) async {
+  testWidgets('future workouts and days offer Start/Log and cannot be skipped', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       harness(
         status: DayProgressStatus.future,
@@ -168,6 +170,8 @@ void main() {
         onSkipDay: () {},
       ),
     );
+    expect(find.text('LOG'), findsOneWidget);
+    expect(find.text('START'), findsOneWidget);
     expect(find.text('SKIP'), findsNothing);
     expect(find.text('SKIP DAY'), findsNothing);
   });
@@ -206,34 +210,66 @@ void main() {
     expect(find.text('SKIP DAY'), findsNothing);
   });
 
-  testWidgets('skipped plan workout shows skipped instead of actions', (
-    tester,
-  ) async {
-    final now = DateTime.now();
+  testWidgets(
+    'skipped plan workout shows skipped chip and still allows Start and Log',
+    (tester) async {
+      final now = DateTime.now();
+      await tester.pumpWidget(
+        harness(
+          status: DayProgressStatus.current,
+          onSkipWorkout: (_) {},
+          onSkipDay: () {},
+          records: [
+            WorkoutPlanWorkoutRecordDto(
+              id: 50,
+              workoutPlanRecordId: 40,
+              workoutPlanWeekRecordId: 41,
+              workoutPlanDayRecordId: 42,
+              workoutPlanWorkoutId: planWorkout.id,
+              workoutRecordId: 60,
+              position: 1,
+              startedAt: now.subtract(const Duration(hours: 1)),
+              status: ProgressStatus.skipped,
+            ),
+          ],
+        ),
+      );
+
+      expect(find.text('Skipped'), findsOneWidget);
+      expect(find.text('LOG'), findsOneWidget);
+      expect(find.text('START'), findsOneWidget);
+      expect(find.text('SKIP'), findsNothing);
+      expect(find.text('SKIP DAY'), findsNothing);
+    },
+  );
+
+  testWidgets('past rest day does not show MISSED badge', (tester) async {
+    const restDay = WorkoutPlanDayDto(
+      id: 31,
+      planVersion: 1,
+      day: 2,
+      totalWorkouts: 0,
+      isRestDay: true,
+    );
     await tester.pumpWidget(
-      harness(
-        status: DayProgressStatus.current,
-        onSkipWorkout: (_) {},
-        onSkipDay: () {},
-        records: [
-          WorkoutPlanWorkoutRecordDto(
-            id: 50,
-            workoutPlanRecordId: 40,
-            workoutPlanWeekRecordId: 41,
-            workoutPlanDayRecordId: 42,
-            workoutPlanWorkoutId: planWorkout.id,
-            workoutRecordId: 60,
-            position: 1,
-            startedAt: now.subtract(const Duration(hours: 1)),
-            status: ProgressStatus.skipped,
+      MaterialApp(
+        home: Builder(
+          builder: (context) => Scaffold(
+            body: ActiveWorkoutPlanDayTile(
+              sizes: sizes,
+              theme: Theme.of(context),
+              isDarkTheme: false,
+              day: restDay,
+              status: DayProgressStatus.past,
+              week: 1,
+              workoutPlanRecordId: 40,
+            ),
           ),
-        ],
+        ),
       ),
     );
 
-    expect(find.text('Skipped'), findsOneWidget);
-    expect(find.text('LOG'), findsNothing);
-    expect(find.text('SKIP'), findsNothing);
-    expect(find.text('SKIP DAY'), findsNothing);
+    expect(find.text('Rest Day'), findsOneWidget);
+    expect(find.text('MISSED'), findsNothing);
   });
 }

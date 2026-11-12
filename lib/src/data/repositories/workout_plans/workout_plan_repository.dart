@@ -47,6 +47,7 @@ import './inputs/workout_plan_registration_input.dart';
 import './inputs/workout_plan_week_batch_create_input.dart';
 import './inputs/workout_plan_week_input.dart';
 import './inputs/workout_plan_workout_input.dart';
+import './utils/workout_plan_schedule_utils.dart';
 
 final class WorkoutPlanRepository implements Repository {
   final Dao<WorkoutPlan> _workoutPlanDao;
@@ -298,78 +299,7 @@ final class WorkoutPlanRepository implements Repository {
     WorkoutPlanWeekScheduleMode scheduleMode,
     List<WorkoutPlanDayDto> days,
   ) {
-    if (days.isEmpty) {
-      return [];
-    }
-    if (days.length > 7) {
-      return days.take(7).toList();
-    }
-
-    switch (scheduleMode) {
-      case WorkoutPlanWeekScheduleMode.manual:
-        return days;
-      case WorkoutPlanWeekScheduleMode.automatic:
-        return _addRestDaysAutomatic(days);
-      case WorkoutPlanWeekScheduleMode.hybrid:
-        return _addRestDaysHybrid(days);
-    }
-  }
-
-  List<WorkoutPlanDayDto> _addRestDaysAutomatic(List<WorkoutPlanDayDto> days) {
-    switch (days.length) {
-      case 1:
-        return [
-          days[0],
-          for (int i = 0; i < 6; i++) WorkoutPlanDayDto.autoRestDay(i + 2),
-        ];
-      case 2:
-        return [
-          days[0],
-          for (int i = 2; i < 4; i++) WorkoutPlanDayDto.autoRestDay(i),
-          days[1].copyWith(day: 4),
-          for (int i = 5; i <= 7; i++) WorkoutPlanDayDto.autoRestDay(i),
-        ];
-      case 3:
-        return [
-          days[0],
-          WorkoutPlanDayDto.autoRestDay(2),
-          days[1].copyWith(day: 3),
-          WorkoutPlanDayDto.autoRestDay(4),
-          days[2].copyWith(day: 5),
-          for (int i = 6; i <= 7; i++) WorkoutPlanDayDto.autoRestDay(i),
-        ];
-      case 4:
-        return [
-          days[0],
-          days[1],
-          WorkoutPlanDayDto.autoRestDay(3),
-          days[2].copyWith(day: 4),
-          days[3].copyWith(day: 5),
-          for (int i = 6; i <= 7; i++) WorkoutPlanDayDto.autoRestDay(i),
-        ];
-      case 5:
-        return [
-          ...days,
-          for (int i = 6; i <= 7; i++) WorkoutPlanDayDto.autoRestDay(i),
-        ];
-      case 6:
-        return [...days, WorkoutPlanDayDto.autoRestDay(7)];
-      case 7:
-      default:
-        return days;
-    }
-  }
-
-  List<WorkoutPlanDayDto> _addRestDaysHybrid(List<WorkoutPlanDayDto> days) {
-    final int nextDay = days.length + 1;
-    if (nextDay > 7) {
-      return days;
-    }
-
-    return [
-      ...days,
-      for (int i = nextDay; i <= 7; i++) WorkoutPlanDayDto.autoRestDay(i),
-    ];
+    return WorkoutPlanScheduleUtils.addRestDays(scheduleMode, days);
   }
 
   Future<Result<WorkoutPlanDto, ServiceError<OperationErrorTypes>>>

@@ -114,6 +114,6 @@ final class WorkoutPlanDayRecordDto extends Equatable
     currentWorkoutPosition,
     status,
     completedAt,
-    workouts.length,
+    workouts,
   ];
 }

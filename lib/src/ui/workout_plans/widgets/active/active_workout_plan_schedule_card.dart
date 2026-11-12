@@ -23,7 +23,7 @@ import '../../../../data/repositories/workout_plans/dtos/workout_plan_record_dto
 import '../../../../data/repositories/workout_plans/dtos/workout_plan_week_dto.dart';
 import '../../../../data/repositories/workout_plans/dtos/workout_plan_workout_dto.dart';
 import '../../../../data/repositories/workout_plans/dtos/workout_plan_workout_record_dto.dart';
-import '../../../../data/utils/enums.dart';
+import '../../../../data/repositories/workout_plans/utils/workout_plan_schedule_utils.dart';
 import '../../../core/sizes/data_display_sizes.dart';
 import '../../../core/widgets/confirmation_dialog.dart';
 import '../../../core/widgets/mutation_button.dart';
@@ -67,6 +67,14 @@ class _ActiveWorkoutPlanScheduleCardState
   double _lastWidth = 0;
   bool _initializedScroll = false;
 
+  ({int currentWeekNum, int relativeDayIndex}) get _effectiveProgress =>
+      WorkoutPlanScheduleUtils.resolveEffectiveProgress(
+        weeks: widget.weeks,
+        calendarWeekNum: widget.currentWeekNum,
+        calendarDayNum: widget.relativeDayIndex,
+        workoutPlanRecord: widget.workoutPlanRecord,
+      );
+
   @override
   void initState() {
     super.initState();
@@ -89,7 +97,8 @@ class _ActiveWorkoutPlanScheduleCardState
     super.didUpdateWidget(oldWidget);
     if (oldWidget.currentWeekNum != widget.currentWeekNum ||
         oldWidget.relativeDayIndex != widget.relativeDayIndex ||
-        oldWidget.weeks != widget.weeks) {
+        oldWidget.weeks != widget.weeks ||
+        oldWidget.workoutPlanRecord != widget.workoutPlanRecord) {
       if (_selectedGroupIndex >= widget.weeks.length) {
         _selectedGroupIndex = _initialGroupIndex();
       }
@@ -115,10 +124,9 @@ class _ActiveWorkoutPlanScheduleCardState
   }
 
   int _initialGroupIndex() {
+    final effectiveWeek = _effectiveProgress.currentWeekNum;
     final matchIndex = widget.weeks.indexWhere(
-      (w) =>
-          widget.currentWeekNum >= w.startWeek &&
-          widget.currentWeekNum <= w.endWeek,
+      (w) => effectiveWeek >= w.startWeek && effectiveWeek <= w.endWeek,
     );
     return matchIndex != -1 ? matchIndex : 0;
   }
@@ -126,9 +134,9 @@ class _ActiveWorkoutPlanScheduleCardState
   int _initialSelectedWeek(int groupIndex) {
     if (widget.weeks.isEmpty) return 1;
     final group = widget.weeks[groupIndex.clamp(0, widget.weeks.length - 1)];
-    if (widget.currentWeekNum >= group.startWeek &&
-        widget.currentWeekNum <= group.endWeek) {
-      return widget.currentWeekNum;
+    final effectiveWeek = _effectiveProgress.currentWeekNum;
+    if (effectiveWeek >= group.startWeek && effectiveWeek <= group.endWeek) {
+      return effectiveWeek;
     }
     return group.startWeek;
   }
@@ -137,10 +145,11 @@ class _ActiveWorkoutPlanScheduleCardState
     if (widget.weeks.isEmpty) return 1;
     final group = widget.weeks[groupIndex.clamp(0, widget.weeks.length - 1)];
     final byDay = {for (final d in group.days) d.day: d};
-    final isCurrentWeek = widget.currentWeekNum == weekNum;
+    final effective = _effectiveProgress;
+    final isCurrentWeek = effective.currentWeekNum == weekNum;
 
-    if (isCurrentWeek && byDay.containsKey(widget.relativeDayIndex)) {
-      return widget.relativeDayIndex;
+    if (isCurrentWeek && byDay.containsKey(effective.relativeDayIndex)) {
+      return effective.relativeDayIndex;
     }
     for (int dayNum = 1; dayNum <= 7; dayNum++) {
       final day = byDay[dayNum];
@@ -155,14 +164,15 @@ class _ActiveWorkoutPlanScheduleCardState
   }
 
   DayProgressStatus _getDayProgressStatus(int dayNum, int weekNum) {
-    if (widget.currentWeekNum > weekNum) {
+    final effective = _effectiveProgress;
+    if (effective.currentWeekNum > weekNum) {
       return DayProgressStatus.past;
-    } else if (widget.currentWeekNum < weekNum) {
+    } else if (effective.currentWeekNum < weekNum) {
       return DayProgressStatus.future;
     } else {
-      if (dayNum < widget.relativeDayIndex) {
+      if (dayNum < effective.relativeDayIndex) {
         return DayProgressStatus.past;
-      } else if (dayNum == widget.relativeDayIndex) {
+      } else if (dayNum == effective.relativeDayIndex) {
         return DayProgressStatus.current;
       } else {
         return DayProgressStatus.future;
@@ -171,32 +181,23 @@ class _ActiveWorkoutPlanScheduleCardState
   }
 
   bool _isDayCompleted(int dayNum, int weekNum) {
-    final currentGroup = widget.weeks[_selectedGroupIndex];
-    final day = currentGroup.days.where((d) => d.day == dayNum).firstOrNull;
+    final group = widget.weeks
+        .where((g) => weekNum >= g.startWeek && weekNum <= g.endWeek)
+        .firstOrNull;
+    final day = group?.days.where((d) => d.day == dayNum).firstOrNull;
     if (day == null) return false;
-    final scheduledWorkoutCount = day.planWorkouts?.length ?? 0;
-    if (scheduledWorkoutCount == 0) return false;
-
-    final records =
-        widget.workoutPlanRecord?.weeks
-            .where((rw) => rw.week == weekNum)
-            .expand((rw) => rw.days)
-            .where((rd) => rd.day == dayNum)
-            .expand((rd) => rd.workouts)
-            .toList() ??
-        const [];
-
-    return records.length >= scheduledWorkoutCount &&
-        records.every(
-          (r) =>
-              r.status == ProgressStatus.completed ||
-              r.status == ProgressStatus.skipped,
-        );
+    return WorkoutPlanScheduleUtils.isDayFinished(
+      day: day,
+      weekNum: weekNum,
+      workoutPlanRecord: widget.workoutPlanRecord,
+    );
   }
 
   bool _isDayMissed(int dayNum, int weekNum) {
-    final currentGroup = widget.weeks[_selectedGroupIndex];
-    final day = currentGroup.days.where((d) => d.day == dayNum).firstOrNull;
+    final group = widget.weeks
+        .where((g) => weekNum >= g.startWeek && weekNum <= g.endWeek)
+        .firstOrNull;
+    final day = group?.days.where((d) => d.day == dayNum).firstOrNull;
     if (day == null || day.isRestDay) return false;
     final status = _getDayProgressStatus(dayNum, weekNum);
     return status == DayProgressStatus.past &&
@@ -204,19 +205,16 @@ class _ActiveWorkoutPlanScheduleCardState
   }
 
   bool _isWeekCompleted(int weekNum) {
-    return widget.workoutPlanRecord?.weeks
-            .where((recordWeek) => recordWeek.week == weekNum)
-            .any(
-              (recordWeek) =>
-                  recordWeek.completedAt != null ||
-                  recordWeek.status == ProgressStatus.completed ||
-                  recordWeek.status == ProgressStatus.skipped,
-            ) ??
-        false;
+    return WorkoutPlanScheduleUtils.isWeekFinished(
+      weeks: widget.weeks,
+      weekNum: weekNum,
+      workoutPlanRecord: widget.workoutPlanRecord,
+    );
   }
 
   bool _canSkipWeek(WorkoutPlanWeekDto currentGroup, int weekNum) {
-    if (widget.currentWeekNum != weekNum || _selectedWeek != weekNum) {
+    if (_effectiveProgress.currentWeekNum != weekNum ||
+        _selectedWeek != weekNum) {
       return false;
     }
     if (_isWeekCompleted(weekNum)) return false;
@@ -239,7 +237,8 @@ class _ActiveWorkoutPlanScheduleCardState
         ? (currentGroup.endWeek - currentGroup.startWeek + 1)
         : 0;
     final byDay = {for (final d in currentGroup.days) d.day: d};
-    final isCurrentWeek = widget.currentWeekNum == _selectedWeek;
+    final effectiveWeekNum = _effectiveProgress.currentWeekNum;
+    final isCurrentWeek = effectiveWeekNum == _selectedWeek;
 
     return Card(
       margin: EdgeInsets.only(bottom: widget.sizes.margins),
@@ -255,6 +254,7 @@ class _ActiveWorkoutPlanScheduleCardState
       child: Padding(
         padding: EdgeInsets.all(widget.sizes.padding),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             WorkoutPlanWeekGroupSelector(
@@ -309,7 +309,7 @@ class _ActiveWorkoutPlanScheduleCardState
               sizes: widget.sizes,
               theme: widget.theme,
               isDarkTheme: widget.isDarkTheme,
-              currentWeekNum: widget.currentWeekNum,
+              currentWeekNum: effectiveWeekNum,
               isWeekCompleted: _isWeekCompleted,
               getWeekWorkoutCount: (_) => currentGroup.totalWorkouts,
             ),
@@ -371,31 +371,28 @@ class _ActiveWorkoutPlanScheduleCardState
                     controller: _carouselController,
                     scrollDirection: Axis.horizontal,
                     physics: const PageScrollPhysics(),
-                    child: IntrinsicHeight(
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          for (int i = 0; i < weekCount; i++)
-                            SizedBox(
-                              width: width,
-                              child: IgnorePointer(
-                                ignoring:
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        for (int i = 0; i < weekCount; i++)
+                          SizedBox(
+                            width: width,
+                            child: IgnorePointer(
+                              ignoring:
+                                  currentGroup.startWeek + i != _selectedWeek,
+                              child: ExcludeSemantics(
+                                excluding:
                                     currentGroup.startWeek + i != _selectedWeek,
-                                child: ExcludeSemantics(
-                                  excluding:
-                                      currentGroup.startWeek + i !=
-                                      _selectedWeek,
-                                  child: _buildWeekContent(
-                                    context,
-                                    currentGroup,
-                                    currentGroup.startWeek + i,
-                                    byDay,
-                                  ),
+                                child: _buildWeekContent(
+                                  context,
+                                  currentGroup,
+                                  currentGroup.startWeek + i,
+                                  byDay,
                                 ),
                               ),
                             ),
-                        ],
-                      ),
+                          ),
+                      ],
                     ),
                   ),
                 );
@@ -418,6 +415,7 @@ class _ActiveWorkoutPlanScheduleCardState
         _initialSelectedDay(_selectedGroupIndex, weekNum);
 
     return Column(
+      mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         WorkoutPlanWeekStrip(

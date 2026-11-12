@@ -137,6 +137,6 @@ final class WorkoutPlanRecordDto extends Equatable
     currentDay,
     currentWorkoutPosition,
     workoutPlan,
-    weeks.length,
+    weeks,
   ];
 }

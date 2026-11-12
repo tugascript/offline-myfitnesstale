@@ -18,9 +18,12 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:myfitnesstale/src/data/repositories/workout_plans/dtos/workout_plan_day_dto.dart';
+import 'package:myfitnesstale/src/data/repositories/workout_plans/dtos/workout_plan_day_record_dto.dart';
 import 'package:myfitnesstale/src/data/repositories/workout_plans/dtos/workout_plan_record_dto.dart';
 import 'package:myfitnesstale/src/data/repositories/workout_plans/dtos/workout_plan_week_dto.dart';
+import 'package:myfitnesstale/src/data/repositories/workout_plans/dtos/workout_plan_week_record_dto.dart';
 import 'package:myfitnesstale/src/data/repositories/workout_plans/dtos/workout_plan_workout_dto.dart';
+import 'package:myfitnesstale/src/data/repositories/workout_plans/dtos/workout_plan_workout_record_dto.dart';
 import 'package:myfitnesstale/src/data/repositories/workouts/dtos/workout_dto.dart';
 import 'package:myfitnesstale/src/data/utils/enums.dart';
 import 'package:myfitnesstale/src/data/utils/json_data.dart';
@@ -474,6 +477,233 @@ void main() {
       expect(find.text('Weeks 1 - 4'), findsWidgets);
       expect(find.text('W2'), findsWidgets);
     });
+
+    testWidgets('shows skip week button when record exists and week is incomplete', (
+      tester,
+    ) async {
+      final record = WorkoutPlanRecordDto(
+        id: 100,
+        workoutPlanId: 1,
+        workoutPlanVersion: 1,
+        status: ProgressStatus.inProgress,
+        startedAt: DateTime.now(),
+        currentWeek: 1,
+        currentDay: 1,
+        currentWorkoutPosition: 1,
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: ActiveWorkoutPlanScheduleCard(
+              sizes: sizes,
+              theme: ThemeData.light(),
+              isDarkTheme: false,
+              weeks: [weekBlock1, weekBlock2],
+              currentWeekNum: 1,
+              relativeDayIndex: 1,
+              workoutPlanRecord: record,
+            ),
+          ),
+        ),
+      );
+
+      expect(find.text('SKIP WEEK'), findsOneWidget);
+    });
+
+    testWidgets(
+      'skipped week causes no overflow and unlocks Week 2 Day 1 and skipped workouts',
+      (tester) async {
+        tester.view.physicalSize = const Size(360, 740);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+
+        final now = DateTime.now();
+        final skippedWeek1Record = WorkoutPlanRecordDto(
+          id: 100,
+          workoutPlanId: 1,
+          workoutPlanVersion: 1,
+          status: ProgressStatus.inProgress,
+          startedAt: now,
+          currentWeek: 1,
+          currentDay: 1,
+          currentWorkoutPosition: 1,
+          weeks: [
+            WorkoutPlanWeekRecordDto(
+              id: 10,
+              workoutPlanRecordId: 100,
+              workoutPlanWeekId: weekBlock1.id,
+              week: 1,
+              status: ProgressStatus.skipped,
+              completedAt: now,
+              days: [
+                WorkoutPlanDayRecordDto(
+                  id: 11,
+                  workoutPlanRecordId: 100,
+                  workoutPlanWeekRecordId: 10,
+                  workoutPlanDayId: workoutDay.id,
+                  week: 1,
+                  day: 1,
+                  currentWorkoutPosition: 1,
+                  status: ProgressStatus.skipped,
+                  completedAt: now,
+                  workouts: [
+                    WorkoutPlanWorkoutRecordDto(
+                      id: 12,
+                      workoutPlanRecordId: 100,
+                      workoutPlanWeekRecordId: 10,
+                      workoutPlanDayRecordId: 11,
+                      workoutPlanWorkoutId: planWorkout.id,
+                      workoutRecordId: 201,
+                      position: 1,
+                      startedAt: now,
+                      status: ProgressStatus.skipped,
+                    ),
+                  ],
+                ),
+                WorkoutPlanDayRecordDto(
+                  id: 13,
+                  workoutPlanRecordId: 100,
+                  workoutPlanWeekRecordId: 10,
+                  workoutPlanDayId: workoutDay2.id,
+                  week: 1,
+                  day: 2,
+                  currentWorkoutPosition: 1,
+                  status: ProgressStatus.skipped,
+                  completedAt: now,
+                  workouts: [
+                    WorkoutPlanWorkoutRecordDto(
+                      id: 14,
+                      workoutPlanRecordId: 100,
+                      workoutPlanWeekRecordId: 10,
+                      workoutPlanDayRecordId: 13,
+                      workoutPlanWorkoutId: planWorkout.id,
+                      workoutRecordId: 202,
+                      position: 1,
+                      startedAt: now,
+                      status: ProgressStatus.skipped,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ],
+        );
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: SingleChildScrollView(
+                child: ActiveWorkoutPlanScheduleCard(
+                  sizes: sizes,
+                  theme: ThemeData.light(),
+                  isDarkTheme: false,
+                  weeks: [weekBlock1, weekBlock2],
+                  currentWeekNum: 1,
+                  relativeDayIndex: 1,
+                  workoutPlanRecord: skippedWeek1Record,
+                ),
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(tester.takeException(), isNull);
+        // Advanced to Week 2 Day 1 automatically, with active controls ready
+        expect(find.text('TODAY').hitTestable(), findsOneWidget);
+        expect(find.text('START').hitTestable(), findsOneWidget);
+        expect(find.text('LOG').hitTestable(), findsOneWidget);
+        expect(find.text('SKIP WEEK').hitTestable(), findsOneWidget);
+        expect(find.text('SKIP DAY').hitTestable(), findsOneWidget);
+
+        // Switching back to skipped Week 1 renders Skipped chip without overflow and still allows Start/Log
+        await tester.tap(find.text('W1').first);
+        await tester.pumpAndSettle();
+        expect(tester.takeException(), isNull);
+        expect(find.text('Skipped').hitTestable(), findsOneWidget);
+        expect(find.text('START').hitTestable(), findsOneWidget);
+        expect(find.text('LOG').hitTestable(), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'skipping Day 1 advances current day to Day 2 so it can be started',
+      (tester) async {
+        final now = DateTime.now();
+        final skippedDay1Record = WorkoutPlanRecordDto(
+          id: 100,
+          workoutPlanId: 1,
+          workoutPlanVersion: 1,
+          status: ProgressStatus.inProgress,
+          startedAt: now,
+          currentWeek: 1,
+          currentDay: 1,
+          currentWorkoutPosition: 1,
+          weeks: [
+            WorkoutPlanWeekRecordDto(
+              id: 10,
+              workoutPlanRecordId: 100,
+              workoutPlanWeekId: weekBlock1.id,
+              week: 1,
+              status: ProgressStatus.inProgress,
+              days: [
+                WorkoutPlanDayRecordDto(
+                  id: 11,
+                  workoutPlanRecordId: 100,
+                  workoutPlanWeekRecordId: 10,
+                  workoutPlanDayId: workoutDay.id,
+                  week: 1,
+                  day: 1,
+                  currentWorkoutPosition: 1,
+                  status: ProgressStatus.skipped,
+                  completedAt: now,
+                  workouts: [
+                    WorkoutPlanWorkoutRecordDto(
+                      id: 12,
+                      workoutPlanRecordId: 100,
+                      workoutPlanWeekRecordId: 10,
+                      workoutPlanDayRecordId: 11,
+                      workoutPlanWorkoutId: planWorkout.id,
+                      workoutRecordId: 201,
+                      position: 1,
+                      startedAt: now,
+                      status: ProgressStatus.skipped,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ],
+        );
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: SingleChildScrollView(
+                child: ActiveWorkoutPlanScheduleCard(
+                  sizes: sizes,
+                  theme: ThemeData.light(),
+                  isDarkTheme: false,
+                  weeks: [weekBlock1],
+                  currentWeekNum: 1,
+                  relativeDayIndex: 1,
+                  workoutPlanRecord: skippedDay1Record,
+                ),
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(tester.takeException(), isNull);
+        expect(find.text('Day 2').hitTestable(), findsOneWidget);
+        expect(find.text('TODAY').hitTestable(), findsOneWidget);
+        expect(find.text('START').hitTestable(), findsOneWidget);
+        expect(find.text('LOG').hitTestable(), findsOneWidget);
+      },
+    );
   });
 
   group('WorkoutPlanScheduleCard', () {

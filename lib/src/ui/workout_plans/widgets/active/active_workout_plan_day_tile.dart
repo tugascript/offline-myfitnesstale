@@ -79,7 +79,11 @@ class ActiveWorkoutPlanDayTile extends StatelessWidget {
     Color iconColor;
     if (isPast) {
       containerColor = Colors.grey.withValues(alpha: 0.1);
-      iconColor = isDayCompleted ? Colors.green : Colors.orange;
+      iconColor = isDayCompleted
+          ? Colors.green
+          : (day.isRestDay || scheduledWorkoutCount == 0)
+          ? Colors.grey
+          : Colors.orange;
     } else if (isCurrent) {
       containerColor = theme.primaryColor.withValues(alpha: 0.1);
       iconColor = theme.primaryColor;
@@ -99,6 +103,7 @@ class ActiveWorkoutPlanDayTile extends StatelessWidget {
       child: Padding(
         padding: EdgeInsets.all(sizes.padding),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Wrap(
@@ -150,7 +155,10 @@ class ActiveWorkoutPlanDayTile extends StatelessWidget {
                       ),
                     ),
                   ),
-                if (isPast && !isDayCompleted)
+                if (isPast &&
+                    !day.isRestDay &&
+                    scheduledWorkoutCount > 0 &&
+                    !isDayCompleted)
                   Container(
                     padding: EdgeInsets.symmetric(
                       horizontal: sizes.padding / 2,
@@ -201,6 +209,7 @@ class ActiveWorkoutPlanDayTile extends StatelessWidget {
               Padding(
                 padding: EdgeInsets.only(top: sizes.spacing / 2),
                 child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     ...day.planWorkouts!.map(
                       (pw) => _buildWorkoutRow(context, pw, isPast, isCurrent),
@@ -270,17 +279,19 @@ class ActiveWorkoutPlanDayTile extends StatelessWidget {
     final isSkipped = planRecord?.status == ProgressStatus.skipped;
     final isFinished = isCompleted || isSkipped;
     final isInProgress = planRecord?.status == ProgressStatus.inProgress;
-    final canRecord = !isFinished && (isPast || isCurrent);
+    final canRecord = !isCompleted;
 
     return Padding(
       padding: EdgeInsets.only(top: sizes.halfSpacing, left: sizes.padding * 2),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
               Expanded(
                 child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
@@ -368,7 +379,7 @@ class ActiveWorkoutPlanDayTile extends StatelessWidget {
                 ),
               ],
             ),
-            if (isCurrent && onSkipWorkout != null) ...[
+            if (isCurrent && !isSkipped && onSkipWorkout != null) ...[
               SizedBox(height: sizes.spacing / 2),
               SizedBox(
                 width: double.infinity,

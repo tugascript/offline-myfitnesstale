@@ -46,6 +46,7 @@ import './dtos/workout_plan_workout_record_dto.dart';
 import './inputs/workout_plan_day_record_input.dart';
 import './inputs/workout_plan_record_input.dart';
 import './inputs/workout_plan_workout_record_input.dart';
+import './utils/workout_plan_schedule_utils.dart';
 
 final class WorkoutPlanRecordRepository implements Repository {
   final Dao<WorkoutPlanRecord> _workoutPlanRecordDao;
@@ -977,28 +978,14 @@ final class WorkoutPlanRecordRepository implements Repository {
 
       WorkoutPlanDay? templateDay;
       if (existingDayRecord == null) {
-        final dayTemplateWhere = WhereBuilder();
-        dayTemplateWhere.and(
-          WorkoutPlanDayColumns.workoutPlanWeekId.equal,
-          workoutPlanWeekId,
+        final templateDayResult = await _findTemplateDay(
+          workoutPlanWeekId: workoutPlanWeekId,
+          weekDay: weekDay,
         );
-        dayTemplateWhere.and(WorkoutPlanDayColumns.day.equal, weekDay);
-        final List<WorkoutPlanDay> dayData = await _workoutPlanDayDao
-            .selectMany(
-              where: dayTemplateWhere.where,
-              whereArgs: dayTemplateWhere.args,
-              limit: 1,
-            );
-        if (dayData.isEmpty) {
-          return err(
-            const ServiceError(
-              type: SingleErrorTypes.notFound,
-              description:
-                  'No workout plan day found for workout plan week and day',
-            ),
-          );
+        if (templateDayResult.isErr()) {
+          return err(templateDayResult.error);
         }
-        templateDay = dayData.first;
+        templateDay = templateDayResult.value;
       }
       final int workoutPlanDayId =
           existingDayRecord?.workoutPlanDayId ?? templateDay!.id!;
@@ -1383,6 +1370,65 @@ final class WorkoutPlanRecordRepository implements Repository {
     }
   }
 
+  Future<Result<WorkoutPlanDay, ServiceError<SingleErrorTypes>>>
+  _findTemplateDay({
+    required int workoutPlanWeekId,
+    required int weekDay,
+    Transaction? txn,
+  }) async {
+    try {
+      final templateWeek = await _workoutPlanWeekDao.selectOne(
+        workoutPlanWeekId,
+        txn,
+      );
+      if (templateWeek == null) {
+        return err(
+          const ServiceError(
+            type: SingleErrorTypes.notFound,
+            description: 'Workout plan week not found',
+          ),
+        );
+      }
+
+      final dayTemplateWhere = WhereBuilder();
+      dayTemplateWhere.and(
+        WorkoutPlanDayColumns.workoutPlanWeekId.equal,
+        workoutPlanWeekId,
+      );
+      final List<WorkoutPlanDay> dayData = await _workoutPlanDayDao.selectMany(
+        where: dayTemplateWhere.where,
+        whereArgs: dayTemplateWhere.args,
+        orderBy: [WorkoutPlanDayColumns.day.orderAsc],
+        trx: txn,
+      );
+
+      final templateDay = WorkoutPlanScheduleUtils.resolveTemplateDay(
+        scheduleMode: templateWeek.scheduleMode,
+        days: dayData,
+        weekDay: weekDay,
+      );
+
+      if (templateDay == null) {
+        return err(
+          const ServiceError(
+            type: SingleErrorTypes.notFound,
+            description:
+                'No workout plan day found for workout plan week and day',
+          ),
+        );
+      }
+      return ok(templateDay);
+    } catch (e, stackTrace) {
+      _logger.severe('Failed to find template day', e, stackTrace);
+      return err(
+        const ServiceError(
+          type: SingleErrorTypes.operationFailure,
+          description: 'Failed to find template day',
+        ),
+      );
+    }
+  }
+
   Future<Result<WorkoutPlanDayRecordDto, ServiceError<SingleErrorTypes>>>
   _createWorkoutPlanWeekAndDayRecords({
     required WorkoutPlanRecord workoutPlanRecord,
@@ -1423,31 +1469,18 @@ final class WorkoutPlanRecordRepository implements Repository {
         status: status,
         currentDay: weekDay,
       );
-      final WhereBuilder dayWhere = WhereBuilder();
-      dayWhere.and(
-        WorkoutPlanDayColumns.workoutPlanWeekId.equal,
-        templateWeek.id!,
-      );
-      dayWhere.and(WorkoutPlanDayColumns.day.equal, weekDay);
 
-      final List<WorkoutPlanDay> dayData = await _workoutPlanDayDao.selectMany(
-        where: dayWhere.where,
-        whereArgs: dayWhere.args,
-        limit: 1,
+      final templateDayResult = await _findTemplateDay(
+        workoutPlanWeekId: templateWeek.id!,
+        weekDay: weekDay,
       );
-      if (dayData.isEmpty) {
+      if (templateDayResult.isErr()) {
         _logger.info(
           'No workout plan day found for workout plan week ${templateWeek.id} and day $weekDay',
         );
-        return err(
-          const ServiceError(
-            type: SingleErrorTypes.notFound,
-            description:
-                'No workout plan day found for workout plan week and day',
-          ),
-        );
+        return err(templateDayResult.error);
       }
-      final int workoutPlanDayId = dayData.first.id!;
+      final int workoutPlanDayId = templateDayResult.value.id!;
 
       final (
         int weekRecordId,
@@ -1510,32 +1543,19 @@ final class WorkoutPlanRecordRepository implements Repository {
       'Creating workout plan day record for workout plan record $workoutPlanRecordId, week record $workoutPlanWeekRecordId and week day $weekDay',
     );
 
-    final WhereBuilder dayWhere = WhereBuilder();
-    dayWhere.and(
-      WorkoutPlanDayColumns.workoutPlanWeekId.equal,
-      weekRecord.workoutPlanWeekId,
-    );
-    dayWhere.and(WorkoutPlanDayColumns.day.equal, weekDay);
     try {
-      final List<WorkoutPlanDay> dayData = await _workoutPlanDayDao.selectMany(
-        where: dayWhere.where,
-        whereArgs: dayWhere.args,
-        limit: 1,
+      final templateDayResult = await _findTemplateDay(
+        workoutPlanWeekId: weekRecord.workoutPlanWeekId,
+        weekDay: weekDay,
       );
-      if (dayData.isEmpty) {
+      if (templateDayResult.isErr()) {
         _logger.info(
           'No workout plan day found for workout plan week ${weekRecord.workoutPlanWeekId} and day $weekDay',
         );
-        return err(
-          const ServiceError(
-            type: SingleErrorTypes.notFound,
-            description:
-                'No workout plan day found for workout plan week and day',
-          ),
-        );
+        return err(templateDayResult.error);
       }
 
-      final int workoutPlanDayId = dayData.first.id!;
+      final int workoutPlanDayId = templateDayResult.value.id!;
       final WorkoutPlanDayRecord dayRecord = WorkoutPlanDayRecord.create(
         workoutPlanRecordId: workoutPlanRecordId,
         workoutPlanWeekRecordId: workoutPlanWeekRecordId,

@@ -94,6 +94,6 @@ final class WorkoutPlanWeekRecordDto extends Equatable
     week,
     status,
     completedAt,
-    days.length,
+    days,
   ];
 }
