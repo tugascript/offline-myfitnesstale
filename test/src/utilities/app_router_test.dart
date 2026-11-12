@@ -28,6 +28,7 @@ import 'package:myfitnesstale/src/ui/exercises/view_models/exercise_record_cubit
 import 'package:myfitnesstale/src/ui/home/view_models/states/profile_state.dart';
 import 'package:myfitnesstale/src/ui/workouts/view_models/workout_cubit.dart';
 import 'package:myfitnesstale/src/ui/workout_plans/view_models/workout_plan_record_cubit.dart';
+import 'package:myfitnesstale/src/ui/workout_plans/view_models/workout_plan_cubit.dart';
 import 'package:myfitnesstale/src/ui/workouts/view_models/workout_record_cubit.dart';
 import 'package:myfitnesstale/src/data/utils/json_data.dart';
 import 'package:myfitnesstale/src/data/utils/enums.dart';
@@ -101,6 +102,14 @@ class _WorkoutRecordCubit extends WorkoutRecordCubit {
   }) async {}
 }
 
+class _WorkoutPlanCubit extends WorkoutPlanCubit {
+  _WorkoutPlanCubit()
+    : super(workoutPlanRepository: WorkoutPlanRepository.create());
+
+  @override
+  Future<void> getWorkoutPlan(int id, {bool isRefresh = false}) async {}
+}
+
 class _WorkoutPlanRecordCubit extends WorkoutPlanRecordCubit {
   _WorkoutPlanRecordCubit()
     : super(
@@ -112,9 +121,13 @@ class _WorkoutPlanRecordCubit extends WorkoutPlanRecordCubit {
   Future<void> getWorkoutPlanRecords({
     int? workoutPlanId,
     ProgressStatus? progressStatus,
+    (DateTime, DateTime)? dateRange,
     int limit = 20,
     int offset = 0,
   }) async {}
+
+  @override
+  Future<void> getLatestWorkoutPlanRecord([int? workoutPlanId]) async {}
 }
 
 class _ProfileCubit extends ProfileCubit {
@@ -168,6 +181,7 @@ void main() {
     final exerciseRecordCubit = _ExerciseRecordCubit();
     final workoutCubit = _WorkoutCubit(selectedWorkout: selectedWorkout);
     final workoutRecordCubit = _WorkoutRecordCubit();
+    final workoutPlanCubit = _WorkoutPlanCubit();
     final workoutPlanRecordCubit = _WorkoutPlanRecordCubit();
     final profileCubit = _ProfileCubit();
     final router = AppRouter.createRouter(initialLocation: location);
@@ -178,6 +192,7 @@ void main() {
       await exerciseRecordCubit.close();
       await workoutCubit.close();
       await workoutRecordCubit.close();
+      await workoutPlanCubit.close();
       await workoutPlanRecordCubit.close();
       await profileCubit.close();
     });
@@ -189,6 +204,9 @@ void main() {
           BlocProvider<ExerciseRecordCubit>.value(value: exerciseRecordCubit),
           BlocProvider<WorkoutCubit>.value(value: workoutCubit),
           BlocProvider<WorkoutRecordCubit>.value(value: workoutRecordCubit),
+          BlocProvider<WorkoutPlanCubit>.value(
+            value: workoutPlanCubit,
+          ),
           BlocProvider<WorkoutPlanRecordCubit>.value(
             value: workoutPlanRecordCubit,
           ),

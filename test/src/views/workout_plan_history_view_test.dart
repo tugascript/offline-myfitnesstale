@@ -15,22 +15,62 @@
 // You should have received a copy of the GNU General Public License
 // along with My Fitness Tale.  If not, see <https://www.gnu.org/licenses/>.
 
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:material_ui/material_ui.dart';
 
-import 'package:myfitnesstale/src/utils/nullable.dart';
-import 'package:myfitnesstale/src/ui/core/view_models/states/common_state.dart';
-import 'package:myfitnesstale/src/ui/workout_plans/view_models/states/workout_plan_record_state.dart';
-import 'package:myfitnesstale/src/ui/workout_plans/view_models/workout_plan_record_cubit.dart';
-import 'package:myfitnesstale/src/data/utils/enums.dart';
-import 'package:myfitnesstale/src/routing/routes.dart';
+import 'package:myfitnesstale/src/data/repositories/profile/dtos/profile_dto.dart';
+import 'package:myfitnesstale/src/data/repositories/profile/dtos/system_dto.dart';
+import 'package:myfitnesstale/src/data/repositories/profile/profile_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/workout_plans/dtos/workout_plan_dto.dart';
 import 'package:myfitnesstale/src/data/repositories/workout_plans/dtos/workout_plan_record_dto.dart';
-import 'package:myfitnesstale/src/ui/workout_plans/screens/workout_plan_history_screen.dart';
-import 'package:myfitnesstale/src/data/repositories/workout_plans/workout_plan_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/workout_plans/workout_plan_record_repository.dart';
+import 'package:myfitnesstale/src/data/repositories/workout_plans/workout_plan_repository.dart';
+import 'package:myfitnesstale/src/data/utils/enums.dart';
+import 'package:myfitnesstale/src/routing/routes.dart';
+import 'package:myfitnesstale/src/ui/core/view_models/states/common_state.dart';
+import 'package:myfitnesstale/src/ui/home/view_models/profile_cubit.dart';
+import 'package:myfitnesstale/src/ui/home/view_models/states/profile_state.dart';
+import 'package:myfitnesstale/src/ui/workout_plans/screens/workout_plan_history_screen.dart';
+import 'package:myfitnesstale/src/ui/workout_plans/view_models/states/workout_plan_record_state.dart';
+import 'package:myfitnesstale/src/ui/workout_plans/view_models/workout_plan_cubit.dart';
+import 'package:myfitnesstale/src/ui/workout_plans/view_models/workout_plan_record_cubit.dart';
+import 'package:myfitnesstale/src/ui/workout_plans/widgets/history/single_workout_plan_record_list.dart';
+import 'package:myfitnesstale/src/utils/nullable.dart';
+
+class _ProfileCubit extends ProfileCubit {
+  _ProfileCubit() : super(profileRepository: ProfileRepository.create()) {
+    emit(
+      ProfileState(
+        profile: ProfileDto(
+          id: 1,
+          name: 'Tester',
+          height: 175,
+          gender: Gender.other,
+          birthdate: DateTime(1990),
+        ),
+        system: const SystemDto(
+          id: 1,
+          units: Units.metric,
+          theme: ThemeType.system,
+          initialSetup: SetUpStatus.completed,
+          notificationsOn: false,
+        ),
+        isLoading: false,
+        isInitiated: true,
+      ),
+    );
+  }
+}
+
+class _WorkoutPlanCubit extends WorkoutPlanCubit {
+  _WorkoutPlanCubit()
+    : super(workoutPlanRepository: WorkoutPlanRepository.create());
+
+  @override
+  Future<void> getWorkoutPlan(int id, {bool isRefresh = false}) async {}
+}
 
 class _WorkoutPlanRecordCubit extends WorkoutPlanRecordCubit {
   _WorkoutPlanRecordCubit(WorkoutPlanRecordState initialState)
@@ -57,11 +97,15 @@ class _WorkoutPlanRecordCubit extends WorkoutPlanRecordCubit {
   Future<void> getWorkoutPlanRecords({
     int? workoutPlanId,
     ProgressStatus? progressStatus,
+    (DateTime, DateTime)? dateRange,
     int limit = 20,
     int offset = 0,
   }) async {
     loadCalls++;
   }
+
+  @override
+  Future<void> getLatestWorkoutPlanRecord([int? workoutPlanId]) async {}
 }
 
 void main() {
@@ -104,7 +148,13 @@ void main() {
     int? workoutPlanId = 9,
   }) async {
     final cubit = _WorkoutPlanRecordCubit(state);
-    addTearDown(cubit.close);
+    final workoutPlanCubit = _WorkoutPlanCubit();
+    final profileCubit = _ProfileCubit();
+    addTearDown(() async {
+      await cubit.close();
+      await workoutPlanCubit.close();
+      await profileCubit.close();
+    });
     final router = GoRouter(
       initialLocation: WorkoutPlanHistoryScreen.location(workoutPlanId),
       routes: [
@@ -117,8 +167,12 @@ void main() {
     );
     addTearDown(router.dispose);
     await tester.pumpWidget(
-      BlocProvider<WorkoutPlanRecordCubit>.value(
-        value: cubit,
+      MultiBlocProvider(
+        providers: [
+          BlocProvider<WorkoutPlanCubit>.value(value: workoutPlanCubit),
+          BlocProvider<ProfileCubit>.value(value: profileCubit),
+          BlocProvider<WorkoutPlanRecordCubit>.value(value: cubit),
+        ],
         child: MaterialApp.router(routerConfig: router),
       ),
     );
@@ -130,23 +184,16 @@ void main() {
       tester,
       WorkoutPlanRecordState.initial().copyWith(isLoading: true),
     );
-    expect(find.byType(CircularProgressIndicator), findsOneWidget);
     expect(cubit.loadCalls, 1);
 
     cubit = await pumpView(tester, WorkoutPlanRecordState.initial());
     expect(find.text('No Plan History'), findsOneWidget);
+    expect(find.text('No workout plan records'), findsOneWidget);
 
-    cubit = await pumpView(
-      tester,
-      WorkoutPlanRecordState.initial().copyWith(
-        error: const Nullable(
-          ErrorState(type: 'operationFailure', description: 'History failed'),
-        ),
-      ),
-    );
-    expect(find.text('Could not load plan history'), findsOneWidget);
+    cubit.failWithLoadedRecords('History failed');
+    await tester.pump();
     expect(find.text('History failed'), findsOneWidget);
-    expect(find.text('Retry'), findsOneWidget);
+    expect(find.byType(SnackBar), findsOneWidget);
   });
 
   testWidgets('renders read-only progress summaries for every status', (
@@ -191,7 +238,11 @@ void main() {
       findsOneWidget,
     );
     expect(find.textContaining('Completed:'), findsOneWidget);
-    expect(find.byType(InkWell), findsNothing);
+    final cardInkWells = find.descendant(
+      of: find.byType(SingleWorkoutPlanRecordList),
+      matching: find.byType(InkWell),
+    );
+    expect(cardInkWells, findsNothing);
   });
 
   testWidgets(

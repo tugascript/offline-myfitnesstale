@@ -326,7 +326,20 @@ sealed class AppRouter {
             return const NotFoundScreen();
           }
         }
-        return WorkoutPlanHistoryScreen(workoutPlanId: id);
+
+        final versionParam = state.uri.queryParameters['version'];
+        int? version;
+        if (versionParam != null) {
+          if (id == null) {
+            return const NotFoundScreen();
+          }
+          version = int.tryParse(versionParam);
+          if (version == null) {
+            return const NotFoundScreen();
+          }
+        }
+
+        return WorkoutPlanHistoryScreen(workoutPlanId: id, version: version);
       },
     ),
     GoRoute(

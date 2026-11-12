@@ -125,6 +125,7 @@ final class WorkoutPlanRecordRepository implements Repository {
   getWorkoutPlanRecords({
     int? workoutPlanId,
     ProgressStatus? status,
+    (DateTime start, DateTime end)? dateRange,
     int limit = kDefaultLimit,
     int offset = kDefaultOffset,
   }) async {
@@ -137,6 +138,34 @@ final class WorkoutPlanRecordRepository implements Repository {
 
     if (status != null) {
       query.and(WorkoutPlanRecordColumns.status.equal, status.value);
+    }
+
+    if (dateRange != null) {
+      final startOfDay = DateTime(
+        dateRange.$1.year,
+        dateRange.$1.month,
+        dateRange.$1.day,
+        0,
+        0,
+        0,
+      );
+      query.and(
+        WorkoutPlanRecordColumns.startedAt.greaterThanOrEqual,
+        DateUtilities.getDateUnix(startOfDay),
+      );
+
+      final endOfDay = DateTime(
+        dateRange.$2.year,
+        dateRange.$2.month,
+        dateRange.$2.day,
+        23,
+        59,
+        59,
+      );
+      query.and(
+        WorkoutPlanRecordColumns.startedAt.lessThanOrEqual,
+        DateUtilities.getDateUnix(endOfDay),
+      );
     }
 
     try {
@@ -650,6 +679,60 @@ final class WorkoutPlanRecordRepository implements Repository {
         const ServiceError(
           type: SingleErrorTypes.operationFailure,
           description: 'Failed to get latest active plan record',
+        ),
+      );
+    }
+  }
+
+  Future<Result<WorkoutPlanRecordDto, ServiceError<SingleErrorTypes>>>
+  getLatestWorkoutPlanRecord([int? workoutPlanId]) async {
+    _logger.info('Getting latest workout plan record for plan $workoutPlanId');
+    try {
+      final List<WorkoutPlanRecord> records = await _workoutPlanRecordDao
+          .selectMany(
+            where: workoutPlanId != null
+                ? WorkoutPlanRecordColumns.workoutPlanId.equal
+                : null,
+            whereArgs: workoutPlanId != null ? [workoutPlanId] : null,
+            orderBy: [WorkoutPlanRecordColumns.startedAt.orderDesc],
+            limit: 1,
+          );
+      if (records.isEmpty) {
+        _logger.info('No latest workout plan record found');
+        return err(
+          const ServiceError(
+            type: SingleErrorTypes.notFound,
+            description: 'Latest workout plan record not found',
+          ),
+        );
+      }
+
+      final record = records.first;
+      WorkoutPlanDto? workoutPlanDto;
+      if (workoutPlanId == null) {
+        final WorkoutPlan? plan = await _workoutPlanDao.selectOne(
+          record.workoutPlanId,
+        );
+        if (plan != null) {
+          workoutPlanDto = WorkoutPlanDto.fromModel(plan);
+        }
+      }
+
+      final weeks = await _loadWeeksTree(record.id!);
+      if (weeks.isErr()) return err(weeks.error);
+      return ok(
+        WorkoutPlanRecordDto.fromModel(
+          record,
+          workoutPlan: workoutPlanDto,
+          weeks: weeks.value,
+        ),
+      );
+    } catch (e) {
+      _logger.severe('Failed to get latest workout plan record', e);
+      return err(
+        const ServiceError(
+          type: SingleErrorTypes.operationFailure,
+          description: 'Failed to get latest workout plan record',
         ),
       );
     }
