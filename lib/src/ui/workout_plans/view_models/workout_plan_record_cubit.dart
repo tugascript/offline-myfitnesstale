@@ -48,6 +48,7 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
   Future<void> getWorkoutPlanRecords({
     int? workoutPlanId,
     ProgressStatus? progressStatus,
+    (DateTime, DateTime)? dateRange,
     int limit = 20,
     int offset = 0,
   }) async {
@@ -55,7 +56,8 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
     final requestId = state.historyRequestId + 1;
     final filtersChanged =
         state.pagination.workoutPlanId != workoutPlanId ||
-        state.pagination.progressStatus != progressStatus;
+        state.pagination.progressStatus != progressStatus ||
+        state.pagination.dateRange != dateRange;
     final clearStaleRecords = offset == 0 && filtersChanged;
 
     emit(
@@ -66,6 +68,7 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
             ? state.pagination.copyWith(
                 workoutPlanId: Nullable(workoutPlanId),
                 progressStatus: Nullable(progressStatus),
+                dateRange: Nullable(dateRange),
                 limit: limit,
                 offset: 0,
                 total: 0,
@@ -79,6 +82,7 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
     final result = await _workoutPlanRecordService.getWorkoutPlanRecords(
       workoutPlanId: workoutPlanId,
       status: progressStatus,
+      dateRange: dateRange ?? state.pagination.dateRange,
       limit: limit,
       offset: offset,
     );
@@ -110,10 +114,56 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
         pagination: state.pagination.copyWith(
           workoutPlanId: Nullable(workoutPlanId),
           progressStatus: Nullable(progressStatus),
+          dateRange: dateRange != null ? Nullable(dateRange) : null,
           limit: page.limit,
           offset: page.offset,
           total: page.total,
         ),
+        isLoading: false,
+        error: const Nullable(null),
+      ),
+    );
+  }
+
+  Future<void> getLatestWorkoutPlanRecord([int? workoutPlanId]) async {
+    _logger.info('Getting latest workout plan record for plan $workoutPlanId');
+    emit(state.copyWith(isLoading: true));
+
+    final result = await _workoutPlanRecordService.getLatestWorkoutPlanRecord(
+      workoutPlanId,
+    );
+    if (result.isErr()) {
+      final error = result.error;
+      _logger.warning("Failed to get latest workout plan record", error);
+      switch (error.type) {
+        case SingleErrorTypes.invalidInput:
+        case SingleErrorTypes.notFound:
+          emit(
+            state.copyWith(
+              latestWorkoutPlanRecord: const Nullable(null),
+              isLoading: false,
+            ),
+          );
+          return;
+        case SingleErrorTypes.operationFailure:
+          emit(
+            state.copyWith(
+              error: Nullable(
+                ErrorState(
+                  type: error.type.name,
+                  description: error.description,
+                ),
+              ),
+              isLoading: false,
+            ),
+          );
+          return;
+      }
+    }
+
+    emit(
+      state.copyWith(
+        latestWorkoutPlanRecord: Nullable(result.value),
         isLoading: false,
         error: const Nullable(null),
       ),
