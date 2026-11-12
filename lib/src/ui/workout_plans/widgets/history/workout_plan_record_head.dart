@@ -22,34 +22,8 @@ import '../../../../data/repositories/workout_plans/dtos/workout_plan_record_dto
 import '../../../../data/utils/enums.dart';
 import '../../../core/sizes/data_display_sizes.dart';
 import '../../../core/utils/formatters.dart';
+import '../../../core/utils/progress_status_presentation.dart';
 import '../../../core/widgets/total_numeric_string.dart';
-
-({String label, IconData icon, Color color}) workoutPlanStatusPresentation(
-  ProgressStatus status,
-) {
-  return switch (status) {
-    ProgressStatus.inProgress => (
-      label: 'In Progress',
-      icon: Icons.play_circle_outline,
-      color: Colors.blue,
-    ),
-    ProgressStatus.completed => (
-      label: 'Completed',
-      icon: Icons.check_circle_outline,
-      color: Colors.green,
-    ),
-    ProgressStatus.skipped => (
-      label: 'Skipped',
-      icon: Icons.skip_next_outlined,
-      color: Colors.orange,
-    ),
-    ProgressStatus.abandoned => (
-      label: 'Abandoned',
-      icon: Icons.cancel_outlined,
-      color: Colors.red,
-    ),
-  };
-}
 
 class WorkoutPlanRecordHead extends StatelessWidget {
   final DataDisplaySizesList sizes;
@@ -71,7 +45,7 @@ class WorkoutPlanRecordHead extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final status = workoutPlanRecord != null
-        ? workoutPlanStatusPresentation(workoutPlanRecord!.status)
+        ? ProgressStatusPresentation.fromStatus(workoutPlanRecord!.status)
         : null;
 
     return Skeletonizer(

@@ -23,6 +23,7 @@ import '../../../../data/repositories/workout_plans/dtos/workout_plan_workout_dt
 import '../../../../data/repositories/workout_plans/dtos/workout_plan_workout_record_dto.dart';
 import '../../../../data/utils/enums.dart';
 import '../../../core/sizes/data_display_sizes.dart';
+import '../../../core/utils/progress_status_presentation.dart';
 import '../../../core/widgets/confirmation_dialog.dart';
 import '../../../core/widgets/layout/app_elevated_button.dart';
 import '../../../core/widgets/mutation_button.dart';
@@ -74,6 +75,10 @@ class ActiveWorkoutPlanDayTile extends StatelessWidget {
         isCurrent &&
         scheduledWorkoutCount > 0 &&
         onSkipDay != null;
+    final dayStatus = _dayProgressStatus(scheduledWorkoutCount);
+    final dayStatusPresentation = dayStatus != null
+        ? ProgressStatusPresentation.fromStatus(dayStatus)
+        : null;
 
     Color containerColor;
     Color iconColor;
@@ -106,74 +111,92 @@ class ActiveWorkoutPlanDayTile extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Wrap(
-              spacing: sizes.spacing,
-              runSpacing: sizes.halfSpacing,
-              crossAxisAlignment: WrapCrossAlignment.center,
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      isDayCompleted
-                          ? Icons.check_circle
-                          : Icons.calendar_today,
-                      color: iconColor,
-                      size: sizes.subtitleFontSize,
-                    ),
-                    SizedBox(width: sizes.padding / 2),
-                    Text(
-                      'Day ${day.day}',
-                      style: TextStyle(
-                        fontWeight: isCurrent
-                            ? FontWeight.bold
-                            : FontWeight.normal,
-                        color: isPast
-                            ? isDarkTheme
-                                  ? Colors.grey.shade300
-                                  : Colors.grey.shade700
-                            : isCurrent
-                            ? theme.primaryColor
-                            : theme.colorScheme.onSurface,
+                Expanded(
+                  child: Wrap(
+                    spacing: sizes.spacing,
+                    runSpacing: sizes.halfSpacing,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            isDayCompleted
+                                ? Icons.check_circle
+                                : Icons.calendar_today,
+                            color: iconColor,
+                            size: sizes.subtitleFontSize,
+                          ),
+                          SizedBox(width: sizes.padding / 2),
+                          Text(
+                            'Day ${day.day}',
+                            style: TextStyle(
+                              fontWeight: isCurrent
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
+                              color: isPast
+                                  ? isDarkTheme
+                                        ? Colors.grey.shade300
+                                        : Colors.grey.shade700
+                                  : isCurrent
+                                  ? theme.primaryColor
+                                  : theme.colorScheme.onSurface,
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                  ],
+                      if (isCurrent)
+                        Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: sizes.padding / 2,
+                            vertical: sizes.padding / 4,
+                          ),
+                          decoration: BoxDecoration(color: theme.primaryColor),
+                          child: Text(
+                            'TODAY',
+                            style: TextStyle(
+                              fontSize: sizes.smallFontSize,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      if (isPast &&
+                          !day.isRestDay &&
+                          scheduledWorkoutCount > 0 &&
+                          !isDayCompleted)
+                        Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: sizes.padding / 2,
+                            vertical: sizes.padding / 4,
+                          ),
+                          color: Colors.orange.withValues(alpha: 0.15),
+                          child: Text(
+                            'MISSED',
+                            style: TextStyle(
+                              fontSize: sizes.smallFontSize,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.orange,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
-                if (isCurrent)
-                  Container(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: sizes.padding / 2,
-                      vertical: sizes.padding / 4,
-                    ),
-                    decoration: BoxDecoration(color: theme.primaryColor),
-                    child: Text(
-                      'TODAY',
-                      style: TextStyle(
-                        fontSize: sizes.smallFontSize,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
+                if (dayStatusPresentation != null) ...[
+                  SizedBox(width: sizes.spacing / 2),
+                  Text(
+                    dayStatusPresentation.label,
+                    style: TextStyle(
+                      fontSize: sizes.smallFontSize,
+                      fontWeight: FontWeight.w600,
+                      color: dayStatusPresentation.color,
                     ),
                   ),
-                if (isPast &&
-                    !day.isRestDay &&
-                    scheduledWorkoutCount > 0 &&
-                    !isDayCompleted)
-                  Container(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: sizes.padding / 2,
-                      vertical: sizes.padding / 4,
-                    ),
-                    color: Colors.orange.withValues(alpha: 0.15),
-                    child: Text(
-                      'MISSED',
-                      style: TextStyle(
-                        fontSize: sizes.smallFontSize,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.orange,
-                      ),
-                    ),
-                  ),
+                ],
               ],
             ),
             if (day.isRestDay)
@@ -264,6 +287,39 @@ class ActiveWorkoutPlanDayTile extends StatelessWidget {
     );
   }
 
+  ProgressStatus? _dayProgressStatus(int scheduledWorkoutCount) {
+    if (day.isRestDay || scheduledWorkoutCount == 0) return null;
+
+    final recordsByPosition = {
+      for (final record in workoutRecords) record.position: record,
+    };
+    final planWorkouts = day.planWorkouts ?? const <WorkoutPlanWorkoutDto>[];
+
+    var hasInProgress = false;
+    var finishedCount = 0;
+    var skippedCount = 0;
+
+    for (final planWorkout in planWorkouts) {
+      final record = recordsByPosition[planWorkout.position];
+      if (record == null) continue;
+
+      if (record.status == ProgressStatus.inProgress) {
+        hasInProgress = true;
+      } else if (record.status == ProgressStatus.completed ||
+          record.status == ProgressStatus.skipped) {
+        finishedCount++;
+        if (record.status == ProgressStatus.skipped) {
+          skippedCount++;
+        }
+      }
+    }
+
+    if (hasInProgress) return ProgressStatus.inProgress;
+    if (finishedCount < scheduledWorkoutCount) return null;
+    if (skippedCount == finishedCount) return ProgressStatus.skipped;
+    return ProgressStatus.completed;
+  }
+
   Widget _buildWorkoutRow(
     BuildContext context,
     WorkoutPlanWorkoutDto planWorkout,
@@ -287,55 +343,34 @@ class ActiveWorkoutPlanDayTile extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      workout.name,
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: sizes.fontSize,
-                        decoration: isFinished
-                            ? TextDecoration.lineThrough
-                            : null,
-                        color: isFinished
-                            ? isDarkTheme
-                                  ? Colors.grey.shade300
-                                  : Colors.grey.shade700
-                            : isCurrent
-                            ? theme.primaryColor
-                            : theme.colorScheme.onSurface,
-                      ),
-                    ),
-                    Text(
-                      '${workout.totalSets} sets • ${workout.totalReps} reps',
-                      style: TextStyle(
-                        fontSize: sizes.smallFontSize,
-                        color: isDarkTheme
+              Text(
+                workout.name,
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: sizes.fontSize,
+                  decoration: isFinished ? TextDecoration.lineThrough : null,
+                  color: isFinished
+                      ? isDarkTheme
                             ? Colors.grey.shade300
-                            : Colors.grey.shade600,
-                      ),
-                    ),
-                  ],
+                            : Colors.grey.shade700
+                      : isCurrent
+                      ? theme.primaryColor
+                      : theme.colorScheme.onSurface,
                 ),
               ),
-              if (isCompleted)
-                Chip(
-                  avatar: Icon(Icons.check, size: sizes.smallFontSize * 1.3),
-                  label: const Text('Completed'),
-                )
-              else if (isSkipped)
-                Chip(
-                  avatar: Icon(
-                    Icons.skip_next,
-                    size: sizes.smallFontSize * 1.3,
-                  ),
-                  label: const Text('Skipped'),
+              Text(
+                '${workout.totalSets} sets • ${workout.totalReps} reps',
+                style: TextStyle(
+                  fontSize: sizes.smallFontSize,
+                  color: isDarkTheme
+                      ? Colors.grey.shade300
+                      : Colors.grey.shade600,
                 ),
+              ),
             ],
           ),
           if (canRecord) ...[
