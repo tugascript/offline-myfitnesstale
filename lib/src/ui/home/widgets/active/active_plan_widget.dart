@@ -210,10 +210,7 @@ class _ActivePlanWidgetState extends State<ActivePlanWidget> {
                                     ),
                                   ),
                                   Text(
-                                    currentPlanRecord
-                                        .todaysWorkouts
-                                        .first
-                                        .name,
+                                    currentPlanRecord.todaysWorkouts.first.name,
                                     style: TextStyle(
                                       fontSize: widget.sizes.fontSize,
                                       fontWeight: FontWeight.w600,
