@@ -19,6 +19,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 
+import '../../../data/utils/display_names.dart';
 import '../../../data/utils/enums.dart';
 import '../../core/screens/loading_screen.dart';
 import '../../core/sizes/data_display_sizes.dart';
@@ -46,6 +47,13 @@ class WorkoutDetailScreen extends StatefulWidget {
 }
 
 class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
+  final Map<int, GlobalKey> _blockKeys = {};
+  int? _selectedBlockIndex;
+
+  GlobalKey _getBlockKey(int setId) {
+    return _blockKeys.putIfAbsent(setId, () => GlobalKey());
+  }
+
   @override
   void initState() {
     super.initState();
@@ -131,9 +139,9 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
                   },
                 ),
                 SizedBox(height: sizes.spacing * 1.25),
-                // Workout Sets
+                // Workout Structure
                 Text(
-                  'Sets',
+                  'Workout Structure',
                   style: TextStyle(
                     fontSize: sizes.titleFontSize,
                     fontWeight: FontWeight.bold,
@@ -141,13 +149,66 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
                   ),
                 ),
                 SizedBox(height: sizes.spacing),
+                if (workout.sets != null && workout.sets!.length > 1) ...[
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: workout.sets!.asMap().entries.map((entry) {
+                        final index = entry.key;
+                        final set = entry.value;
+                        final isSelected = _selectedBlockIndex == index;
+                        final typeName = EnumDisplayNames.getSetTypeDisplayName(
+                          set.setType,
+                        );
+                        final rounds =
+                            '${set.minSets}${set.maxSets != null && set.maxSets! > set.minSets ? "-${set.maxSets}" : ""}×';
+
+                        return Padding(
+                          padding: EdgeInsets.only(right: sizes.spacing / 2),
+                          child: ActionChip(
+                            shape: const BeveledRectangleBorder(),
+                            backgroundColor: isSelected
+                                ? theme.colorScheme.primaryContainer
+                                : null,
+                            label: Text(
+                              '${index + 1} $typeName · $rounds',
+                              style: TextStyle(
+                                fontSize: sizes.smallFontSize,
+                                fontWeight: isSelected
+                                    ? FontWeight.bold
+                                    : FontWeight.normal,
+                                color: isSelected
+                                    ? theme.colorScheme.onPrimaryContainer
+                                    : null,
+                              ),
+                            ),
+                            onPressed: () {
+                              setState(() {
+                                _selectedBlockIndex = index;
+                              });
+                              final blockContext = _getBlockKey(set.id)
+                                  .currentContext;
+                              if (blockContext != null) {
+                                Scrollable.ensureVisible(
+                                  blockContext,
+                                  duration: const Duration(milliseconds: 300),
+                                  curve: Curves.easeInOut,
+                                );
+                              }
+                            },
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                  SizedBox(height: sizes.spacing),
+                ],
                 if (workout.sets == null || workout.sets!.isEmpty)
                   EmptySetsCard(sizes: sizes)
                 else
-                  ...workoutState.selectedWorkout!.sets!.asMap().entries.map((
-                    entry,
-                  ) {
+                  ...workout.sets!.asMap().entries.map((entry) {
                     return WorkoutSetCard(
+                      key: _getBlockKey(entry.value.id),
                       theme: theme,
                       isDarkTheme: isDarkTheme,
                       sizes: sizes,

@@ -119,6 +119,7 @@ class MyApp extends StatelessWidget {
           create: (BuildContext context) => WorkoutPlanRecordCubit(
             workoutPlanRecordRepository: workoutPlanRecordRepository,
             workoutPlanRepository: workoutPlanRepository,
+            workoutRecordRepository: workoutRecordRepository,
           ),
         ),
         BlocProvider<ActiveWorkoutCubit>(

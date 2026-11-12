@@ -27,6 +27,7 @@ import 'package:myfitnesstale/src/data/repositories/exercises/exercise_repositor
 import 'package:myfitnesstale/src/data/repositories/workout_plans/dtos/workout_plan_dto.dart';
 import 'package:myfitnesstale/src/data/repositories/workout_plans/workout_plan_record_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/workout_plans/workout_plan_repository.dart';
+import 'package:myfitnesstale/src/data/repositories/workouts/workout_record_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/workouts/dtos/workout_dto.dart';
 import 'package:myfitnesstale/src/data/repositories/workouts/workout_repository.dart';
 import 'package:myfitnesstale/src/data/utils/enums.dart';
@@ -210,6 +211,7 @@ class _NoopWorkoutPlanRecordCubit extends WorkoutPlanRecordCubit {
     : super(
         workoutPlanRecordRepository: WorkoutPlanRecordRepository.create(),
         workoutPlanRepository: WorkoutPlanRepository.create(),
+        workoutRecordRepository: WorkoutRecordRepository.create(),
       );
 
   @override

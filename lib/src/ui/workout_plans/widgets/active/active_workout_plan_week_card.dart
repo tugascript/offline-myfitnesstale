@@ -15,13 +15,19 @@
 // You should have received a copy of the GNU General Public License
 // along with My Fitness Tale.  If not, see <https://www.gnu.org/licenses/>.
 
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../../data/repositories/workout_plans/dtos/workout_plan_day_dto.dart';
 import '../../../../data/repositories/workout_plans/dtos/workout_plan_record_dto.dart';
 import '../../../../data/repositories/workout_plans/dtos/workout_plan_week_dto.dart';
+import '../../../../data/repositories/workout_plans/dtos/workout_plan_workout_dto.dart';
+import '../../../../data/repositories/workout_plans/dtos/workout_plan_workout_record_dto.dart';
 import '../../../../data/utils/enums.dart';
 import '../../../core/sizes/data_display_sizes.dart';
+import '../../../core/widgets/confirmation_dialog.dart';
+import '../../../core/widgets/mutation_button.dart';
+import '../../view_models/workout_plan_record_cubit.dart';
 import '../workout_phase_badge.dart';
 import '../workout_plan_week_strip.dart';
 import './active_workout_plan_day_tile.dart';
@@ -153,8 +159,20 @@ class _ActiveWorkoutPlanWeekCardState extends State<ActiveWorkoutPlanWeekCard> {
     final isWeekCompleted =
         widget.workoutPlanRecord?.weeks
             .where((recordWeek) => recordWeek.week == widget.weekNumber)
-            .any((recordWeek) => recordWeek.completedAt != null) ??
+            .any(
+              (recordWeek) =>
+                  recordWeek.completedAt != null ||
+                  recordWeek.status == ProgressStatus.completed ||
+                  recordWeek.status == ProgressStatus.skipped,
+            ) ??
         false;
+    final canSkipWeek =
+        isCurrentWeek &&
+        !isWeekCompleted &&
+        widget.workoutPlanRecord != null &&
+        widget.week.days.any(
+          (day) => !day.isRestDay && (day.planWorkouts?.isNotEmpty ?? false),
+        );
 
     Color headerColor;
     if (isPastWeek) {
@@ -175,7 +193,6 @@ class _ActiveWorkoutPlanWeekCardState extends State<ActiveWorkoutPlanWeekCard> {
 
     return Card(
       margin: EdgeInsets.only(bottom: widget.sizes.margins),
-      elevation: isCurrentWeek ? 2 : 1,
       shape: RoundedRectangleBorder(
         side: isCurrentWeek
             ? BorderSide(
@@ -292,6 +309,28 @@ class _ActiveWorkoutPlanWeekCardState extends State<ActiveWorkoutPlanWeekCard> {
                     isDayCompleted: _isDayCompleted,
                     isDayMissed: _isDayMissed,
                   ),
+                  if (canSkipWeek) ...[
+                    SizedBox(height: widget.sizes.spacing),
+                    MutationButton(
+                      theme: widget.theme,
+                      sizes: widget.sizes,
+                      isLoading: false,
+                      isDense: true,
+                      onPressed: () => showDialog<void>(
+                        context: context,
+                        builder: (_) => ConfirmationDialog(
+                          title: 'Skip Week',
+                          content:
+                              'Skip all unfinished workouts for Week ${widget.weekNumber}? Completed workouts will be kept.',
+                          confirmLabel: 'Skip Week',
+                          onConfirm: () => _skipWeek(context),
+                        ),
+                      ),
+                      label: 'Skip Week',
+                      icon: Icons.skip_next,
+                      color: widget.theme.colorScheme.secondary,
+                    ),
+                  ],
                   SizedBox(height: widget.sizes.spacing),
                   _buildSelectedDayPanel(context, byDay),
                 ],
@@ -320,7 +359,7 @@ class _ActiveWorkoutPlanWeekCardState extends State<ActiveWorkoutPlanWeekCard> {
                 ? Colors.grey.shade800
                 : Colors.grey.shade300,
           ),
-          borderRadius: BorderRadius.circular(widget.sizes.padding / 2),
+          borderRadius: BorderRadius.zero,
         ),
         child: Center(
           child: Text(
@@ -338,6 +377,8 @@ class _ActiveWorkoutPlanWeekCardState extends State<ActiveWorkoutPlanWeekCard> {
     }
 
     final status = _getDayProgressStatus(selectedDay.day);
+    final workoutRecords = _recordsForDay(selectedDay.day);
+    final planRecordId = widget.workoutPlanRecord?.id ?? 0;
 
     return ActiveWorkoutPlanDayTile(
       sizes: widget.sizes,
@@ -346,15 +387,94 @@ class _ActiveWorkoutPlanWeekCardState extends State<ActiveWorkoutPlanWeekCard> {
       isDarkTheme: widget.isDarkTheme,
       status: status,
       week: widget.weekNumber,
-      workoutPlanRecordId: widget.workoutPlanRecord?.id ?? 0,
-      workoutRecords:
-          widget.workoutPlanRecord?.weeks
-              .where((recordWeek) => recordWeek.week == widget.weekNumber)
-              .expand((recordWeek) => recordWeek.days)
-              .where((recordDay) => recordDay.day == selectedDay.day)
-              .expand((recordDay) => recordDay.workouts)
-              .toList() ??
-          const [],
+      workoutPlanRecordId: planRecordId,
+      workoutRecords: workoutRecords,
+      onSkipWorkout: planRecordId == 0
+          ? null
+          : (planWorkout) => _skipWorkout(
+              context,
+              day: selectedDay.day,
+              planWorkout: planWorkout,
+              existingRecords: workoutRecords,
+            ),
+      onSkipDay: planRecordId == 0
+          ? null
+          : () => _skipDay(
+              context,
+              day: selectedDay,
+              existingRecords: workoutRecords,
+            ),
+    );
+  }
+
+  List<WorkoutPlanWorkoutRecordDto> _recordsForDay(int dayNum) {
+    return widget.workoutPlanRecord?.weeks
+            .where((recordWeek) => recordWeek.week == widget.weekNumber)
+            .expand((recordWeek) => recordWeek.days)
+            .where((recordDay) => recordDay.day == dayNum)
+            .expand((recordDay) => recordDay.workouts)
+            .toList() ??
+        const [];
+  }
+
+  Future<void> _skipWorkout(
+    BuildContext context, {
+    required int day,
+    required WorkoutPlanWorkoutDto planWorkout,
+    required List<WorkoutPlanWorkoutRecordDto> existingRecords,
+  }) async {
+    final planRecordId = widget.workoutPlanRecord?.id;
+    if (planRecordId == null) return;
+    final existing = existingRecords
+        .where((record) => record.position == planWorkout.position)
+        .firstOrNull;
+    await context.read<WorkoutPlanRecordCubit>().skipPlanWorkout(
+      workoutPlanRecordId: planRecordId,
+      week: widget.weekNumber,
+      day: day,
+      workoutPosition: planWorkout.position,
+      workoutId: planWorkout.workoutId,
+      existingWorkoutRecordId: existing?.workoutRecordId,
+    );
+  }
+
+  Future<void> _skipDay(
+    BuildContext context, {
+    required WorkoutPlanDayDto day,
+    required List<WorkoutPlanWorkoutRecordDto> existingRecords,
+  }) async {
+    final planRecordId = widget.workoutPlanRecord?.id;
+    final planWorkouts = day.planWorkouts;
+    if (planRecordId == null || planWorkouts == null || planWorkouts.isEmpty) {
+      return;
+    }
+    await context.read<WorkoutPlanRecordCubit>().skipPlanDay(
+      workoutPlanRecordId: planRecordId,
+      week: widget.weekNumber,
+      day: day.day,
+      planWorkouts: planWorkouts,
+      existingRecords: existingRecords,
+    );
+  }
+
+  Future<void> _skipWeek(BuildContext context) async {
+    final planRecordId = widget.workoutPlanRecord?.id;
+    if (planRecordId == null) return;
+
+    final workoutsByDay = <int, List<WorkoutPlanWorkoutDto>>{};
+    final recordsByDay = <int, List<WorkoutPlanWorkoutRecordDto>>{};
+    for (final day in widget.week.days) {
+      final workouts = day.planWorkouts;
+      if (day.isRestDay || workouts == null || workouts.isEmpty) continue;
+      workoutsByDay[day.day] = workouts;
+      recordsByDay[day.day] = _recordsForDay(day.day);
+    }
+
+    await context.read<WorkoutPlanRecordCubit>().skipPlanWeek(
+      workoutPlanRecordId: planRecordId,
+      week: widget.weekNumber,
+      workoutsByDay: workoutsByDay,
+      existingRecordsByDay: recordsByDay,
     );
   }
 }

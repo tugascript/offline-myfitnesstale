@@ -32,7 +32,7 @@ import '../view_models/states/workout_plan_state.dart';
 import '../view_models/workout_plan_cubit.dart';
 import '../view_models/workout_plan_record_cubit.dart';
 import '../widgets/details/workout_plan_header.dart';
-import '../widgets/details/workout_plan_week_card.dart';
+import '../widgets/details/workout_plan_schedule_card.dart';
 import './workout_plan_history_screen.dart';
 
 class WorkoutPlanDetailScreen extends StatefulWidget {
@@ -130,16 +130,13 @@ class _WorkoutPlanDetailScreenState extends State<WorkoutPlanDetailScreen> {
                   ),
                 ),
                 SizedBox(height: sizes.spacing),
-                ...(plan.weeks?.asMap().entries.map(
-                      (entry) => WorkoutPlanWeekCard(
-                        theme: theme,
-                        isDarkTheme: isDarkTheme,
-                        sizes: sizes,
-                        week: entry.value,
-                        weekNumber: entry.key + 1,
-                      ),
-                    ) ??
-                    []),
+                if (plan.weeks != null && plan.weeks!.isNotEmpty)
+                  WorkoutPlanScheduleCard(
+                    theme: theme,
+                    isDarkTheme: isDarkTheme,
+                    sizes: sizes,
+                    weeks: plan.weeks!,
+                  ),
                 SizedBox(height: sizes.spacing),
                 BlocBuilder<WorkoutPlanRecordCubit, WorkoutPlanRecordState>(
                   builder: (context, recordState) {

@@ -19,6 +19,7 @@ import 'package:logging/logging.dart';
 import 'package:sqflite/sqflite.dart';
 
 import '../../models/sqlite/model.dart';
+import '../../../utils/result.dart';
 import '../common.dart';
 import './database_helper.dart';
 
@@ -241,6 +242,22 @@ final class Dao<T extends Model> {
   }) async {
     _logger.info("startTransaction");
     final db = await _databaseHelper.db;
-    return await db.transaction(action, exclusive: exclusive);
+    try {
+      return await db.transaction<R>((txn) async {
+        final result = await action(txn);
+        if (result is Result && result.isErr()) {
+          throw _TransactionRollbackException(result);
+        }
+        return result;
+      }, exclusive: exclusive);
+    } on _TransactionRollbackException catch (e) {
+      return e.result as R;
+    }
   }
+}
+
+final class _TransactionRollbackException implements Exception {
+  final Result<dynamic, dynamic> result;
+
+  _TransactionRollbackException(this.result);
 }

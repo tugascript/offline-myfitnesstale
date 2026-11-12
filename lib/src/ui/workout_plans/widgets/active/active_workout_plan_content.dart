@@ -22,7 +22,8 @@ import '../../../core/sizes/data_display_sizes.dart';
 import '../../view_models/states/workout_plan_record_state.dart';
 import '../plan_statistics_widget.dart';
 import './active_workout_plan_dummy_data.dart';
-import './active_workout_plan_week_card.dart';
+import './active_workout_plan_schedule_card.dart';
+import 'active_workout_description.dart';
 
 class ActiveWorkoutPlanContent extends StatelessWidget {
   final CurrentWorkoutPlanRecordState state;
@@ -64,17 +65,6 @@ class ActiveWorkoutPlanContent extends StatelessWidget {
       relativeDayIndex = (daysSinceStart % 7) + 1;
     }
 
-    final scheduleWeeks =
-        plan.weeks
-            ?.expand(
-              (week) => List.generate(
-                week.endWeek - week.startWeek + 1,
-                (index) => (week: week, number: week.startWeek + index),
-              ),
-            )
-            .toList() ??
-        const [];
-
     // Calculate progress percentage
     double progressPercentage = 0;
     if (displayState.totalWorkouts > 0) {
@@ -100,14 +90,10 @@ class ActiveWorkoutPlanContent extends StatelessWidget {
                 if (plan.description != null &&
                     plan.description!.isNotEmpty) ...[
                   SizedBox(height: sizes.spacing),
-                  Text(
-                    plan.description!,
-                    style: TextStyle(
-                      fontSize: sizes.fontSize,
-                      color: isDarkTheme
-                          ? Colors.grey.shade300
-                          : Colors.grey.shade700,
-                    ),
+                  ActiveWorkoutDescription(
+                    description: plan.description!,
+                    sizes: sizes,
+                    isDarkTheme: isDarkTheme,
                   ),
                 ],
                 SizedBox(height: sizes.spacing * 2),
@@ -138,21 +124,17 @@ class ActiveWorkoutPlanContent extends StatelessWidget {
               ],
             ),
           ),
-          if (scheduleWeeks.isNotEmpty)
-            SliverList(
-              delegate: SliverChildBuilderDelegate((context, index) {
-                final scheduleWeek = scheduleWeeks[index];
-                return ActiveWorkoutPlanWeekCard(
-                  sizes: sizes,
-                  theme: theme,
-                  isDarkTheme: isDarkTheme,
-                  week: scheduleWeek.week,
-                  weekNumber: scheduleWeek.number,
-                  currentWeekNum: currentWeekNum,
-                  relativeDayIndex: relativeDayIndex,
-                  workoutPlanRecord: record,
-                );
-              }, childCount: scheduleWeeks.length),
+          if (plan.weeks != null && plan.weeks!.isNotEmpty)
+            SliverToBoxAdapter(
+              child: ActiveWorkoutPlanScheduleCard(
+                sizes: sizes,
+                theme: theme,
+                isDarkTheme: isDarkTheme,
+                weeks: plan.weeks!,
+                currentWeekNum: currentWeekNum,
+                relativeDayIndex: relativeDayIndex,
+                workoutPlanRecord: record,
+              ),
             ),
           SliverPadding(padding: EdgeInsets.only(bottom: sizes.spacing * 2)),
         ],

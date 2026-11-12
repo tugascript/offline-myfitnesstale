@@ -44,6 +44,8 @@ final class DataDisplaySizesList {
 
   double get svgMaxHeight => buttonSize * 5;
 
+  double get halfSpacing => spacing / 2;
+
   const DataDisplaySizesList({
     required this.padding,
     required this.viewPadding,
