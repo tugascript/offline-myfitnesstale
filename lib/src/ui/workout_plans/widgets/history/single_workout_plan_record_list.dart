@@ -22,9 +22,9 @@ import 'package:skeletonizer/skeletonizer.dart';
 import '../../../../data/repositories/workout_plans/dtos/workout_plan_record_dto.dart';
 import '../../../../data/utils/enums.dart';
 import '../../../core/sizes/data_display_sizes.dart';
+import '../../../core/utils/progress_status_presentation.dart';
 import '../../../core/widgets/not_found_list.dart';
 import '../../view_models/states/workout_plan_record_state.dart';
-import './workout_plan_record_head.dart';
 
 class SingleWorkoutPlanRecordList extends StatelessWidget {
   final DataDisplaySizesList sizes;
@@ -116,7 +116,7 @@ class _SingleWorkoutPlanRecordCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final status = workoutPlanStatusPresentation(record.status);
+    final status = ProgressStatusPresentation.fromStatus(record.status);
     final localDateFormat = DateFormat.yMMMd().add_jm();
 
     return Card(
