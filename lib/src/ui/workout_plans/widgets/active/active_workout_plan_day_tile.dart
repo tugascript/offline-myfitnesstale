@@ -112,15 +112,15 @@ class ActiveWorkoutPlanDayTile extends StatelessWidget {
                 const Spacer(),
                 if (isCurrent)
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
+                    padding: EdgeInsets.symmetric(
+                      horizontal: sizes.padding / 2,
+                      vertical: sizes.padding / 4,
                     ),
                     decoration: BoxDecoration(color: theme.primaryColor),
-                    child: const Text(
+                    child: Text(
                       'TODAY',
                       style: TextStyle(
-                        fontSize: 10,
+                        fontSize: sizes.smallFontSize,
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
                       ),
@@ -128,15 +128,15 @@ class ActiveWorkoutPlanDayTile extends StatelessWidget {
                   ),
                 if (isPast && !isDayCompleted)
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
+                    padding: EdgeInsets.symmetric(
+                      horizontal: sizes.padding / 2,
+                      vertical: sizes.padding / 4,
                     ),
                     color: Colors.orange.withValues(alpha: 0.15),
-                    child: const Text(
+                    child: Text(
                       'MISSED',
                       style: TextStyle(
-                        fontSize: 10,
+                        fontSize: sizes.smallFontSize,
                         fontWeight: FontWeight.bold,
                         color: Colors.orange,
                       ),
@@ -146,20 +146,36 @@ class ActiveWorkoutPlanDayTile extends StatelessWidget {
             ),
             if (day.isRestDay)
               Padding(
-                padding: const EdgeInsets.only(top: 8.0, left: 28.0),
-                child: Text(
-                  'Rest Day',
-                  style: TextStyle(
-                    color: isDarkTheme
-                        ? Colors.grey.shade300
-                        : Colors.grey.shade600,
-                    fontStyle: FontStyle.italic,
-                  ),
+                padding: EdgeInsets.only(
+                  top: sizes.spacing / 2,
+                  left: sizes.padding * 2,
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.snooze,
+                      size: sizes.fontSize * 1.25,
+                      color: isDarkTheme
+                          ? Colors.grey.shade400
+                          : Colors.grey.shade600,
+                    ),
+                    SizedBox(width: sizes.spacing / 2),
+                    Text(
+                      'Rest Day',
+                      style: TextStyle(
+                        fontSize: sizes.fontSize,
+                        color: isDarkTheme
+                            ? Colors.grey.shade300
+                            : Colors.grey.shade600,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                  ],
                 ),
               )
             else if (day.planWorkouts != null && day.planWorkouts!.isNotEmpty)
               Padding(
-                padding: const EdgeInsets.only(top: 8.0),
+                padding: EdgeInsets.only(top: sizes.spacing / 2),
                 child: Column(
                   children: day.planWorkouts!
                       .map(
@@ -171,10 +187,18 @@ class ActiveWorkoutPlanDayTile extends StatelessWidget {
               )
             else
               Padding(
-                padding: const EdgeInsets.only(top: 8.0, left: 28.0),
+                padding: EdgeInsets.only(
+                  top: sizes.spacing / 2,
+                  left: sizes.padding * 2,
+                ),
                 child: Text(
                   'No workouts',
-                  style: TextStyle(color: Colors.grey[600]),
+                  style: TextStyle(
+                    fontSize: sizes.fontSize,
+                    color: isDarkTheme
+                        ? Colors.grey.shade400
+                        : Colors.grey.shade600,
+                  ),
                 ),
               ),
           ],
@@ -199,7 +223,7 @@ class ActiveWorkoutPlanDayTile extends StatelessWidget {
     final canRecord = !isCompleted && (isPast || isCurrent);
 
     return Padding(
-      padding: const EdgeInsets.only(top: 8.0, left: 28.0),
+      padding: EdgeInsets.only(top: sizes.spacing / 2, left: sizes.padding * 2),
       child: Row(
         children: [
           Expanded(
@@ -210,6 +234,7 @@ class ActiveWorkoutPlanDayTile extends StatelessWidget {
                   workout.name,
                   style: TextStyle(
                     fontWeight: FontWeight.w600,
+                    fontSize: sizes.fontSize,
                     decoration: isCompleted ? TextDecoration.lineThrough : null,
                     color: isCompleted
                         ? isDarkTheme
@@ -223,7 +248,7 @@ class ActiveWorkoutPlanDayTile extends StatelessWidget {
                 Text(
                   '${workout.totalSets} sets • ${workout.totalReps} reps',
                   style: TextStyle(
-                    fontSize: 12,
+                    fontSize: sizes.smallFontSize,
                     color: isDarkTheme
                         ? Colors.grey.shade300
                         : Colors.grey.shade600,
@@ -233,13 +258,14 @@ class ActiveWorkoutPlanDayTile extends StatelessWidget {
             ),
           ),
           if (isCompleted)
-            const Chip(
-              avatar: Icon(Icons.check, size: 16),
-              label: Text('Completed'),
+            Chip(
+              avatar: Icon(Icons.check, size: sizes.smallFontSize * 1.3),
+              label: const Text('Completed'),
             )
           else if (canRecord)
             Wrap(
-              spacing: 8,
+              spacing: sizes.spacing / 2,
+              runSpacing: sizes.spacing / 4,
               children: [
                 OutlinedButton.icon(
                   onPressed: () => context.push(

@@ -17,14 +17,15 @@
 
 import 'package:material_ui/material_ui.dart';
 
+import '../../../../data/repositories/workout_plans/dtos/workout_plan_day_dto.dart';
 import '../../../../data/repositories/workout_plans/dtos/workout_plan_week_dto.dart';
-import '../../../../data/utils/display_names.dart';
-import '../../../../data/utils/enums.dart';
 import '../../../core/sizes/data_display_sizes.dart';
 import '../../../core/widgets/detail_number.dart';
-import './workout_plan_day_card.dart';
+import '../workout_phase_badge.dart';
+import '../workout_plan_week_strip.dart';
+import './workout_plan_workout_card.dart';
 
-class WorkoutPlanWeekCard extends StatelessWidget {
+class WorkoutPlanWeekCard extends StatefulWidget {
   final ThemeData theme;
   final bool isDarkTheme;
   final DataDisplaySizesList sizes;
@@ -41,17 +42,59 @@ class WorkoutPlanWeekCard extends StatelessWidget {
   });
 
   @override
+  State<WorkoutPlanWeekCard> createState() => _WorkoutPlanWeekCardState();
+}
+
+class _WorkoutPlanWeekCardState extends State<WorkoutPlanWeekCard> {
+  late int _selectedDay;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedDay = _initialSelectedDay();
+  }
+
+  @override
+  void didUpdateWidget(WorkoutPlanWeekCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.week != widget.week) {
+      final byDay = {for (final d in widget.week.days) d.day: d};
+      if (!byDay.containsKey(_selectedDay)) {
+        setState(() {
+          _selectedDay = _initialSelectedDay();
+        });
+      }
+    }
+  }
+
+  int _initialSelectedDay() {
+    final byDay = {for (final d in widget.week.days) d.day: d};
+    for (int dayNum = 1; dayNum <= 7; dayNum++) {
+      final day = byDay[dayNum];
+      if (day != null && !day.isRestDay) {
+        return dayNum;
+      }
+    }
+    if (widget.week.days.isNotEmpty) {
+      return widget.week.days.first.day;
+    }
+    return 1;
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final byDay = {for (final d in widget.week.days) d.day: d};
+
     return Card(
-      margin: EdgeInsets.symmetric(vertical: sizes.margins / 2),
+      margin: EdgeInsets.symmetric(vertical: widget.sizes.margins / 2),
       child: ExpansionTile(
         dense: true,
         leading: DetailNumber(
-          number: weekNumber,
-          theme: theme,
-          fontSize: sizes.subtitleFontSize,
+          number: widget.weekNumber,
+          theme: widget.theme,
+          fontSize: widget.sizes.subtitleFontSize,
         ),
-        initiallyExpanded: weekNumber == 1,
+        initiallyExpanded: widget.weekNumber == 1,
         title: Wrap(
           alignment: WrapAlignment.spaceBetween,
           runAlignment: WrapAlignment.center,
@@ -60,28 +103,34 @@ class WorkoutPlanWeekCard extends StatelessWidget {
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.calendar_month, size: sizes.subtitleFontSize * 2),
+                Icon(
+                  Icons.calendar_month,
+                  size: widget.sizes.subtitleFontSize * 2,
+                ),
                 Text(
-                  ' ${week.startWeek}${week.endWeek > week.startWeek ? ' - ${week.endWeek}' : ''}',
+                  ' ${widget.week.startWeek}${widget.week.endWeek > widget.week.startWeek ? ' - ${widget.week.endWeek}' : ''}',
                   style: TextStyle(
-                    fontSize: sizes.subtitleFontSize,
+                    fontSize: widget.sizes.subtitleFontSize,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
               ],
             ),
-            if (week.phase != null) ...[
-              SizedBox(width: sizes.spacing),
-              _WorkoutPhaseBadge(sizes: sizes, phase: week.phase!),
+            if (widget.week.phase != null) ...[
+              SizedBox(width: widget.sizes.spacing),
+              WorkoutPhaseBadge(sizes: widget.sizes, phase: widget.week.phase!),
             ],
             Row(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Icon(Icons.calendar_today, size: sizes.subtitleFontSize * 1.2),
+                Icon(
+                  Icons.calendar_today,
+                  size: widget.sizes.subtitleFontSize * 1.2,
+                ),
                 Text(
-                  ' ${week.totalDays}',
-                  style: TextStyle(fontSize: sizes.subtitleFontSize),
+                  ' ${widget.week.totalDays}',
+                  style: TextStyle(fontSize: widget.sizes.subtitleFontSize),
                 ),
               ],
             ),
@@ -91,67 +140,141 @@ class WorkoutPlanWeekCard extends StatelessWidget {
               children: [
                 Text(
                   '🏋',
-                  style: TextStyle(fontSize: sizes.subtitleFontSize * 1.2),
+                  style: TextStyle(
+                    fontSize: widget.sizes.subtitleFontSize * 1.2,
+                  ),
                 ),
                 Text(
-                  ' ${week.totalWorkouts}',
-                  style: TextStyle(fontSize: sizes.subtitleFontSize),
+                  ' ${widget.week.totalWorkouts}',
+                  style: TextStyle(fontSize: widget.sizes.subtitleFontSize),
                 ),
               ],
             ),
           ],
         ),
-        children: week.days
-            .map(
-              (day) => WorkoutPlanDayCard(
-                day: day,
-                sizes: sizes,
-                theme: theme,
-                isDarkTheme: isDarkTheme,
-              ),
-            )
-            .toList(),
+        children: [
+          Padding(
+            padding: EdgeInsets.all(widget.sizes.padding),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                WorkoutPlanWeekStrip(
+                  days: widget.week.days,
+                  selectedDay: _selectedDay,
+                  onSelectDay: (dayNum) {
+                    setState(() {
+                      _selectedDay = dayNum;
+                    });
+                  },
+                  sizes: widget.sizes,
+                  theme: widget.theme,
+                  isDarkTheme: widget.isDarkTheme,
+                ),
+                SizedBox(height: widget.sizes.spacing),
+                _buildSelectedDayDetail(byDay[_selectedDay]),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
-}
 
-class _WorkoutPhaseBadge extends StatelessWidget {
-  final DataDisplaySizesList sizes;
-  final WorkoutPhase phase;
-
-  const _WorkoutPhaseBadge({required this.sizes, required this.phase});
-
-  Color _getPhaseColor(WorkoutPhase phase) {
-    switch (phase) {
-      case WorkoutPhase.endurance:
-        return Colors.green;
-      case WorkoutPhase.hypertrophy:
-        return Colors.yellow[700]!;
-      case WorkoutPhase.maxStrength:
-        return Colors.orange;
-      case WorkoutPhase.power:
-        return Colors.red;
+  Widget _buildSelectedDayDetail(WorkoutPlanDayDto? day) {
+    if (day == null) {
+      return Container(
+        padding: EdgeInsets.all(widget.sizes.padding),
+        decoration: BoxDecoration(
+          color: widget.isDarkTheme
+              ? Colors.white.withValues(alpha: 0.03)
+              : Colors.black.withValues(alpha: 0.03),
+          border: Border.all(
+            color: widget.isDarkTheme
+                ? Colors.grey.shade800
+                : Colors.grey.shade300,
+          ),
+          borderRadius: BorderRadius.circular(widget.sizes.padding / 2),
+        ),
+        child: Center(
+          child: Text(
+            'No workout scheduled for Day $_selectedDay',
+            style: TextStyle(
+              fontSize: widget.sizes.fontSize,
+              color: widget.isDarkTheme
+                  ? Colors.grey.shade400
+                  : Colors.grey.shade600,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ),
+      );
     }
-  }
 
-  @override
-  Widget build(BuildContext context) {
-    final color = _getPhaseColor(phase);
+    if (day.isRestDay) {
+      return Container(
+        padding: EdgeInsets.all(widget.sizes.padding),
+        decoration: BoxDecoration(
+          color: widget.isDarkTheme
+              ? Colors.white.withValues(alpha: 0.03)
+              : Colors.black.withValues(alpha: 0.03),
+          border: Border.all(
+            color: widget.isDarkTheme
+                ? Colors.grey.shade800
+                : Colors.grey.shade300,
+          ),
+          borderRadius: BorderRadius.circular(widget.sizes.padding / 2),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              Icons.snooze,
+              size: widget.sizes.subtitleFontSize * 1.5,
+              color: widget.isDarkTheme
+                  ? Colors.grey.shade400
+                  : Colors.grey.shade600,
+            ),
+            SizedBox(width: widget.sizes.spacing / 2),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Day ${day.day} • Rest Day',
+                  style: TextStyle(
+                    fontSize: widget.sizes.fontSize,
+                    fontWeight: FontWeight.w600,
+                    color: widget.isDarkTheme
+                        ? Colors.grey.shade300
+                        : Colors.grey.shade700,
+                  ),
+                ),
+                Text(
+                  'Recovery day',
+                  style: TextStyle(
+                    fontSize: widget.sizes.smallFontSize,
+                    color: widget.isDarkTheme
+                        ? Colors.grey.shade400
+                        : Colors.grey.shade600,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
+    }
 
-    return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: sizes.padding / 4,
-        vertical: sizes.padding / 8,
-      ),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.2),
-        border: Border.all(color: color, width: 1),
-      ),
-      child: Text(
-        EnumDisplayNames.getWorkoutPhaseDisplayName(phase),
-        style: TextStyle(color: color, fontSize: sizes.smallFontSize),
-      ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        ...(day.planWorkouts?.map(
+              (planWorkout) => WorkoutPlanWorkoutCard(
+                isDarkTheme: widget.isDarkTheme,
+                sizes: widget.sizes,
+                workoutPlanWorkout: planWorkout,
+              ),
+            ) ??
+            []),
+      ],
     );
   }
 }
