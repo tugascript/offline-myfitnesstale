@@ -42,54 +42,47 @@ class EmptyActivePlan extends StatelessWidget {
       title: 'Active Workout Plan',
       sizes: sizes,
       showTitle: showTitle,
-      child: Card(
-        elevation: sizes.elevation,
-        margin: EdgeInsets.zero,
-        child: SizedBox(
-          width: double.infinity,
-          child: InkWell(
-            onTap: () {
-              context.push(Routes.workoutPlanList.name);
-            },
-            child: Padding(
-              padding: EdgeInsets.all(sizes.padding),
-              child: Column(
-                children: [
-                  Icon(Icons.snooze, size: sizes.subtitleFontSize * 2),
-                  SizedBox(height: spacing),
-                  Text(
-                    'No Active Workout Plan',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: sizes.subtitleFontSize,
-                      fontWeight: FontWeight.bold,
-                      color: colors.onSurface,
-                    ),
+      child: InkWell(
+        onTap: () {
+          context.push(Routes.workoutPlanList.name);
+        },
+        child: Padding(
+          padding: EdgeInsets.all(sizes.padding),
+          child: SizedBox(
+            width: double.infinity,
+            child: Column(
+              children: [
+                Icon(Icons.snooze, size: sizes.subtitleFontSize * 2),
+                SizedBox(height: spacing),
+                Text(
+                  'No Active Workout Plan',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: sizes.subtitleFontSize,
+                    fontWeight: FontWeight.bold,
+                    color: colors.onSurface,
                   ),
-                  SizedBox(height: spacing),
-                  Text(
-                    'Start an old or create a new workout plan',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: sizes.fontSize,
-                      color: colors.onSurfaceVariant,
-                    ),
+                ),
+                SizedBox(height: spacing),
+                Text(
+                  'Start an old or create a new workout plan',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: sizes.fontSize,
+                    color: colors.onSurfaceVariant,
                   ),
-                  SizedBox(height: sizes.spacing),
-                  TextButton.icon(
-                    key: const ValueKey('active-workout-plan-browse'),
-                    onPressed: () => context.push(Routes.workoutPlanList.name),
-                    icon: Icon(
-                      Icons.book_outlined,
-                      size: sizes.compactIconSize,
-                    ),
-                    label: Text(
-                      'Browse Plans',
-                      style: TextStyle(fontSize: sizes.fontSize),
-                    ),
+                ),
+                SizedBox(height: sizes.spacing),
+                TextButton.icon(
+                  key: const ValueKey('active-workout-plan-browse'),
+                  onPressed: () => context.push(Routes.workoutPlanList.name),
+                  icon: Icon(Icons.book_outlined, size: sizes.compactIconSize),
+                  label: Text(
+                    'Browse Plans',
+                    style: TextStyle(fontSize: sizes.fontSize),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ),

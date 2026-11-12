@@ -18,6 +18,7 @@
 import 'package:material_ui/material_ui.dart';
 
 import '../../core/sizes/data_display_sizes.dart';
+import '../../core/themes/colors.dart';
 import './quick_action_category.dart';
 
 class QuickActionCategoryCard extends StatelessWidget {
@@ -35,43 +36,41 @@ class QuickActionCategoryCard extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) => Card(
-    elevation: sizes.elevation,
-    shape: const BeveledRectangleBorder(),
-    margin: EdgeInsets.zero,
-    child: InkWell(
-      onTap: onTap,
-      child: Padding(
-        padding: EdgeInsets.all(sizes.padding),
-        child: Column(
-          children: [
-            ExcludeSemantics(
-              child: Text(
-                category.emoji,
-                style: TextStyle(fontSize: sizes.buttonIconSize),
+  Widget build(BuildContext context) {
+    final color = theme.colorScheme.brightness == Brightness.light
+        ? kPrimaryOrangeSwatch.shade600
+        : theme.colorScheme.primary;
+    return Card(
+      clipBehavior: Clip.antiAlias,
+      shape: BeveledRectangleBorder(side: BorderSide(color: color, width: 1)),
+      child: InkWell(
+        onTap: onTap,
+        overlayColor: WidgetStatePropertyAll(color.withValues(alpha: 0.2)),
+        child: Padding(
+          padding: EdgeInsets.all(sizes.padding),
+          child: Column(
+            children: [
+              Icon(category.icon, size: sizes.mediumIconSize, color: color),
+              SizedBox(height: sizes.spacing / 2),
+              Text(
+                category.title,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: sizes.subtitleFontSize,
+                  fontWeight: FontWeight.w600,
+                  color: color,
+                ),
               ),
-            ),
-            SizedBox(height: sizes.spacing / 2),
-            Text(
-              category.title,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: sizes.subtitleFontSize,
-                fontWeight: FontWeight.w600,
+              SizedBox(height: sizes.spacing / 6),
+              Text(
+                category.subtitle,
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: sizes.fontSize, color: color),
               ),
-            ),
-            SizedBox(height: sizes.spacing / 6),
-            Text(
-              category.subtitle,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: sizes.fontSize,
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
-    ),
-  );
+    );
+  }
 }

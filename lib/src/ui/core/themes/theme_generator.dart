@@ -19,24 +19,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../data/utils/enums.dart';
-
-const MaterialColor _orangeSwatch = MaterialColor(
-  _orangePrimaryValue,
-  <int, Color>{
-    50: Color(0xFFF9E6E1),
-    100: Color(0xFFF3CFC5),
-    200: Color(0xFFEDB8A9),
-    300: Color(0xFFE7A08C),
-    400: Color(0xFFE18970),
-    500: Color(_orangePrimaryValue),
-    600: Color(0xFFD86F4D),
-    700: Color(0xFFD26441),
-    800: Color(0xFFCC5935),
-    900: Color(0xFFC14B23),
-  },
-);
-const int _orangePrimaryValue =
-    0xFFDB7B5B; // Choose the primary orange you'll use
+import 'colors.dart';
 
 sealed class ThemeGenerator {
   // google_fonts 9 types its TextTheme against material_ui. Apply individual
@@ -107,12 +90,12 @@ sealed class ThemeGenerator {
     // Define the default brightness and colors.
     useMaterial3: true,
     brightness: Brightness.dark,
-    primarySwatch: _orangeSwatch,
+    primarySwatch: kPrimaryOrangeSwatch,
     primaryColorDark: Colors.black,
-    primaryColor: const Color(_orangePrimaryValue),
+    primaryColor: const Color(kPrimaryOrangeValue),
     colorScheme:
         ColorScheme.fromSwatch(
-          primarySwatch: _orangeSwatch,
+          primarySwatch: kPrimaryOrangeSwatch,
           accentColor: Colors.orangeAccent,
           brightness: Brightness.dark,
           backgroundColor: Colors.black,
@@ -159,7 +142,7 @@ sealed class ThemeGenerator {
 
     // Define the default `ButtonTheme`.
     buttonTheme: ButtonThemeData(
-      buttonColor: const Color(_orangePrimaryValue),
+      buttonColor: const Color(kPrimaryOrangeValue),
       shape: const BeveledRectangleBorder(),
       textTheme: ButtonTextTheme.primary,
     ),
@@ -181,7 +164,7 @@ sealed class ThemeGenerator {
       elevation: 0,
       backgroundColor: Colors.black,
       titleTextStyle: GoogleFonts.majorMonoDisplay(
-        color: _orangeSwatch,
+        color: kPrimaryOrangeSwatch,
         fontSize: 20,
         fontWeight: FontWeight.bold,
       ),
@@ -215,7 +198,7 @@ sealed class ThemeGenerator {
     switchTheme: SwitchThemeData(
       trackColor: WidgetStateProperty.resolveWith((states) {
         if (states.contains(WidgetState.selected)) {
-          return const Color(_orangePrimaryValue);
+          return const Color(kPrimaryOrangeValue);
         }
         return Colors.grey.withValues(alpha: 0.2);
       }),
@@ -243,7 +226,7 @@ sealed class ThemeGenerator {
           return null;
         }
         if (states.contains(WidgetState.selected)) {
-          return const Color(_orangePrimaryValue);
+          return const Color(kPrimaryOrangeValue);
         }
         return null;
       }),
@@ -264,11 +247,11 @@ sealed class ThemeGenerator {
     useMaterial3: true,
     // Define the default brightness and colors.
     brightness: Brightness.light,
-    primarySwatch: _orangeSwatch,
-    primaryColor: const Color(_orangePrimaryValue),
+    primarySwatch: kPrimaryOrangeSwatch,
+    primaryColor: const Color(kPrimaryOrangeValue),
     colorScheme:
         ColorScheme.fromSwatch(
-          primarySwatch: _orangeSwatch,
+          primarySwatch: kPrimaryOrangeSwatch,
           accentColor: Colors.orangeAccent,
           brightness: Brightness.light,
           backgroundColor: Colors.white,
@@ -315,7 +298,7 @@ sealed class ThemeGenerator {
 
     // Define the default `ButtonTheme`.
     buttonTheme: ButtonThemeData(
-      buttonColor: const Color(_orangePrimaryValue),
+      buttonColor: const Color(kPrimaryOrangeValue),
       shape: const BeveledRectangleBorder(),
       textTheme: ButtonTextTheme.primary,
     ),
@@ -373,7 +356,7 @@ sealed class ThemeGenerator {
     switchTheme: SwitchThemeData(
       trackColor: WidgetStateProperty.resolveWith((states) {
         if (states.contains(WidgetState.selected)) {
-          return const Color(_orangePrimaryValue);
+          return const Color(kPrimaryOrangeValue);
         }
         return Colors.grey.withValues(alpha: 0.2);
       }),
@@ -401,7 +384,7 @@ sealed class ThemeGenerator {
           return null;
         }
         if (states.contains(WidgetState.selected)) {
-          return const Color(_orangePrimaryValue);
+          return const Color(kPrimaryOrangeValue);
         }
         return null;
       }),

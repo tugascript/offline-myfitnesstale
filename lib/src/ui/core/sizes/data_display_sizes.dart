@@ -34,6 +34,8 @@ final class DataDisplaySizesList {
 
   double get compactIconSize => buttonIconSize * 0.75;
 
+  double get mediumIconSize => buttonIconSize * 1.2;
+
   double get largeIconSize => buttonIconSize * 2.5;
 
   double get formFieldMinWidth => fontSize * 12;

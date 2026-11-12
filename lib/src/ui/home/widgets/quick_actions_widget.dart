@@ -39,7 +39,7 @@ class QuickActionsWidget extends StatelessWidget {
       id: 'training',
       title: 'Workout Plans',
       subtitle: 'Train and organise your workouts',
-      emoji: '🏋️',
+      icon: Icons.fitness_center,
       destinations: [
         QuickActionDestination(
           'workouts',
@@ -71,7 +71,7 @@ class QuickActionsWidget extends StatelessWidget {
       id: 'weight',
       title: 'Weight Goals',
       subtitle: 'Track your weight and targets',
-      emoji: '⚖️',
+      icon: Icons.monitor_weight_outlined,
       destinations: [
         QuickActionDestination(
           'weight-records',
@@ -91,7 +91,7 @@ class QuickActionsWidget extends StatelessWidget {
       id: 'exercises',
       title: 'Exercises',
       subtitle: 'Explore exercises and track progress',
-      emoji: '💪',
+      icon: Icons.sports_gymnastics,
       destinations: [
         QuickActionDestination(
           'exercises',
@@ -123,7 +123,7 @@ class QuickActionsWidget extends StatelessWidget {
       id: 'nutrition',
       title: 'Nutrition',
       subtitle: 'Plan meals and manage your food',
-      emoji: '🍽️',
+      icon: Icons.restaurant_menu,
       destinations: [
         QuickActionDestination(
           'macro-goals',
@@ -183,60 +183,67 @@ class QuickActionsWidget extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) => Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Text(
-        'Quick Actions',
-        style: TextStyle(
-          fontSize: sizes.titleFontSize,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-      SizedBox(height: sizes.spacing),
-      LayoutBuilder(
-        builder: (context, constraints) {
-          final minimumWidth = MediaQuery.textScalerOf(context)
-              .scale(sizes.formFieldMinWidth);
-          final columns =
-              constraints.maxWidth >= minimumWidth * 2 + sizes.spacing ? 2 : 1;
-          return Column(
-            children: [
-              for (
-                var start = 0;
-                start < categories.length;
-                start += columns
-              ) ...[
-                if (start > 0) SizedBox(height: sizes.inputSpacing),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    for (
-                      var index = start;
-                      index < start + columns;
-                      index++
-                    ) ...[
-                      if (index > start) SizedBox(width: sizes.spacing),
-                      Expanded(
-                        child: QuickActionCategoryCard(
-                          key: ValueKey(
-                            'quick-action-category-${categories[index].id}',
+  Widget build(BuildContext context) => Card(
+    child: Padding(
+      padding: EdgeInsets.all(sizes.padding),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Quick Actions',
+            style: TextStyle(
+              fontSize: sizes.titleFontSize,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          SizedBox(height: sizes.spacing),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final minimumWidth = MediaQuery.textScalerOf(context)
+                  .scale(sizes.formFieldMinWidth);
+              final columns =
+                  constraints.maxWidth >= minimumWidth * 2 + sizes.spacing
+                  ? 2
+                  : 1;
+              return Column(
+                children: [
+                  for (
+                    var start = 0;
+                    start < categories.length;
+                    start += columns
+                  ) ...[
+                    if (start > 0) SizedBox(height: sizes.inputSpacing),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        for (
+                          var index = start;
+                          index < start + columns;
+                          index++
+                        ) ...[
+                          if (index > start) SizedBox(width: sizes.spacing),
+                          Expanded(
+                            child: QuickActionCategoryCard(
+                              key: ValueKey(
+                                'quick-action-category-${categories[index].id}',
+                              ),
+                              category: categories[index],
+                              sizes: sizes,
+                              theme: theme,
+                              onTap: () =>
+                                  _openCategory(context, categories[index]),
+                            ),
                           ),
-                          category: categories[index],
-                          sizes: sizes,
-                          theme: theme,
-                          onTap: () =>
-                              _openCategory(context, categories[index]),
-                        ),
-                      ),
-                    ],
+                        ],
+                      ],
+                    ),
                   ],
-                ),
-              ],
-            ],
-          );
-        },
+                ],
+              );
+            },
+          ),
+        ],
       ),
-    ],
+    ),
   );
 }
