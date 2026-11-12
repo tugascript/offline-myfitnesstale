@@ -146,12 +146,15 @@ class _ActivePlanWidgetState extends State<ActivePlanWidget> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(
-                              'Progress',
-                              style: TextStyle(
-                                fontSize: widget.sizes.fontSize,
-                                fontWeight: FontWeight.w600,
-                                color: colors.onSurfaceVariant,
+                            Flexible(
+                              child: Text(
+                                'Progress',
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontSize: widget.sizes.fontSize,
+                                  fontWeight: FontWeight.w600,
+                                  color: colors.onSurfaceVariant,
+                                ),
                               ),
                             ),
                             Text(
@@ -240,17 +243,24 @@ class _ActivePlanWidgetState extends State<ActivePlanWidget> {
                       ),
                     ],
                     SizedBox(height: widget.sizes.spacing),
-                    TextButton.icon(
-                      onPressed: () {
-                        context.push('/workout-plans/${plan.id}');
-                      },
-                      icon: Icon(
-                        Icons.arrow_forward,
-                        size: widget.sizes.fontSize * 1.2,
-                      ),
-                      label: Text(
-                        'View Plan Details',
-                        style: TextStyle(fontSize: widget.sizes.fontSize),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerLeft,
+                        child: TextButton.icon(
+                          onPressed: () {
+                            context.push('/workout-plans/${plan.id}');
+                          },
+                          icon: Icon(
+                            Icons.arrow_forward,
+                            size: widget.sizes.fontSize * 1.2,
+                          ),
+                          label: Text(
+                            'View Plan Details',
+                            style: TextStyle(fontSize: widget.sizes.fontSize),
+                          ),
+                        ),
                       ),
                     ),
                   ],

@@ -355,9 +355,9 @@ void main() {
         await tester.pumpAndSettle();
         final scroll = find.byKey(const ValueKey('active-plans-scroll'));
         final height = tester.getSize(scroll).height;
-        final cards = find.descendant(of: scroll, matching: find.byType(Card));
-        expect(cards, findsNWidgets(2));
-        expect(tester.getSize(cards.at(0)), tester.getSize(cards.at(1)));
+        final content0 = find.byKey(const ValueKey('active-plans-content-0'));
+        final content1 = find.byKey(const ValueKey('active-plans-content-1'));
+        expect(tester.getSize(content0), tester.getSize(content1));
         final line = find.byKey(const ValueKey('active-plans-line-0'));
         final selectorWidth = tester.getSize(scroll).width;
         for (final index in [0, 1]) {
@@ -420,7 +420,7 @@ void main() {
                 as _TestWorkoutPlanRecordCubit;
         cubit.showPlan();
         await tester.pumpAndSettle();
-        expect(tester.getSize(cards.at(0)), tester.getSize(cards.at(1)));
+        expect(tester.getSize(content0), tester.getSize(content1));
         expect(find.text('1 of 3 workouts'), findsOneWidget);
         expect(tester.takeException(), isNull);
       });

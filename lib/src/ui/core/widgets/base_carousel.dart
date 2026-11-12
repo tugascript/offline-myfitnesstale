@@ -149,8 +149,14 @@ class _BaseCarouselState extends State<BaseCarousel> {
                   child: Row(
                     crossAxisAlignment: widget.crossAxisAlignment,
                     children: [
-                      for (final child in widget.children)
-                        SizedBox(width: width, child: child),
+                      for (final (index, child) in widget.children.indexed)
+                        SizedBox(
+                          key: prefix != null
+                              ? ValueKey('$prefix-content-$index')
+                              : null,
+                          width: width,
+                          child: child,
+                        ),
                     ],
                   ),
                 ),

@@ -204,17 +204,24 @@ class _ActiveMealPlanWidgetState extends State<ActiveMealPlanWidget> {
                           ),
                           SizedBox(height: sizes.spacing),
                           if (record != null)
-                            TextButton.icon(
-                              onPressed: () => context.push(
-                                '/meal-plans/${record.mealPlanId}',
-                              ),
-                              icon: Icon(
-                                Icons.arrow_forward,
-                                size: sizes.fontSize * 1.2,
-                              ),
-                              label: Text(
-                                'View Plan Details',
-                                style: TextStyle(fontSize: sizes.fontSize),
+                            Align(
+                              alignment: Alignment.centerLeft,
+                              child: FittedBox(
+                                fit: BoxFit.scaleDown,
+                                alignment: Alignment.centerLeft,
+                                child: TextButton.icon(
+                                  onPressed: () => context.push(
+                                    '/meal-plans/${record.mealPlanId}',
+                                  ),
+                                  icon: Icon(
+                                    Icons.arrow_forward,
+                                    size: sizes.fontSize * 1.2,
+                                  ),
+                                  label: Text(
+                                    'View Plan Details',
+                                    style: TextStyle(fontSize: sizes.fontSize),
+                                  ),
+                                ),
                               ),
                             ),
                         ],
