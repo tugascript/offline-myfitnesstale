@@ -97,42 +97,45 @@ class _WorkoutPlanHistoryScreenState extends State<WorkoutPlanHistoryScreen> {
               return Padding(
                 padding: EdgeInsets.all(sizes.viewPadding),
                 child:
-                    BlocConsumer<WorkoutPlanRecordCubit, WorkoutPlanRecordState>(
-                  listener: (context, state) {
-                    if (state.error != null) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(state.error!.description),
-                          backgroundColor: theme.colorScheme.error,
-                        ),
-                      );
-                    }
-                  },
-                  builder: (context, state) {
-                    return Column(
-                      mainAxisSize: MainAxisSize.max,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        LatestWorkoutPlanRecord(
-                          sizes: sizes,
-                          theme: theme,
-                          units: units,
-                          workoutPlanId: widget.workoutPlanId,
-                          workoutPlanVersion: workoutPlanVersion,
-                        ),
-                        SizedBox(height: sizes.spacing),
-                        WorkoutPlanRecordHistory(
-                          theme: theme,
-                          breakPoint: breakpoints,
-                          sizes: sizes,
-                          units: units,
-                          workoutPlanId: widget.workoutPlanId,
-                          workoutPlanVersion: workoutPlanVersion,
-                        ),
-                      ],
-                    );
-                  },
-                ),
+                    BlocConsumer<
+                      WorkoutPlanRecordCubit,
+                      WorkoutPlanRecordState
+                    >(
+                      listener: (context, state) {
+                        if (state.error != null) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(state.error!.description),
+                              backgroundColor: theme.colorScheme.error,
+                            ),
+                          );
+                        }
+                      },
+                      builder: (context, state) {
+                        return Column(
+                          mainAxisSize: MainAxisSize.max,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            LatestWorkoutPlanRecord(
+                              sizes: sizes,
+                              theme: theme,
+                              units: units,
+                              workoutPlanId: widget.workoutPlanId,
+                              workoutPlanVersion: workoutPlanVersion,
+                            ),
+                            SizedBox(height: sizes.spacing),
+                            WorkoutPlanRecordHistory(
+                              theme: theme,
+                              breakPoint: breakpoints,
+                              sizes: sizes,
+                              units: units,
+                              workoutPlanId: widget.workoutPlanId,
+                              workoutPlanVersion: workoutPlanVersion,
+                            ),
+                          ],
+                        );
+                      },
+                    ),
               );
             },
           ),

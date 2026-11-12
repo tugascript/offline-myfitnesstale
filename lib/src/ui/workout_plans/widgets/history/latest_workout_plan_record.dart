@@ -53,8 +53,8 @@ class _LatestWorkoutPlanRecordState extends State<LatestWorkoutPlanRecord> {
   void initState() {
     super.initState();
     context.read<WorkoutPlanRecordCubit>().getLatestWorkoutPlanRecord(
-          widget.workoutPlanId,
-        );
+      widget.workoutPlanId,
+    );
   }
 
   @override
