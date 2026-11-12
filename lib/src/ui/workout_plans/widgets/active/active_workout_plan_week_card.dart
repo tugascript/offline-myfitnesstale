@@ -23,7 +23,7 @@ import '../../../../data/repositories/workout_plans/dtos/workout_plan_record_dto
 import '../../../../data/repositories/workout_plans/dtos/workout_plan_week_dto.dart';
 import '../../../../data/repositories/workout_plans/dtos/workout_plan_workout_dto.dart';
 import '../../../../data/repositories/workout_plans/dtos/workout_plan_workout_record_dto.dart';
-import '../../../../data/utils/enums.dart';
+import '../../../../data/repositories/workout_plans/utils/workout_plan_schedule_utils.dart';
 import '../../../core/sizes/data_display_sizes.dart';
 import '../../../core/widgets/confirmation_dialog.dart';
 import '../../../core/widgets/mutation_button.dart';
@@ -63,10 +63,18 @@ class _ActiveWorkoutPlanWeekCardState extends State<ActiveWorkoutPlanWeekCard> {
   late bool _isExpanded;
   late int _selectedDay;
 
+  ({int currentWeekNum, int relativeDayIndex}) get _effectiveProgress =>
+      WorkoutPlanScheduleUtils.resolveEffectiveProgress(
+        weeks: [widget.week],
+        calendarWeekNum: widget.currentWeekNum,
+        calendarDayNum: widget.relativeDayIndex,
+        workoutPlanRecord: widget.workoutPlanRecord,
+      );
+
   @override
   void initState() {
     super.initState();
-    _isExpanded = widget.currentWeekNum == widget.weekNumber;
+    _isExpanded = _effectiveProgress.currentWeekNum == widget.weekNumber;
     _selectedDay = _initialSelectedDay();
   }
 
@@ -75,10 +83,11 @@ class _ActiveWorkoutPlanWeekCardState extends State<ActiveWorkoutPlanWeekCard> {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.currentWeekNum != widget.currentWeekNum ||
         oldWidget.relativeDayIndex != widget.relativeDayIndex ||
-        oldWidget.week != widget.week) {
+        oldWidget.week != widget.week ||
+        oldWidget.workoutPlanRecord != widget.workoutPlanRecord) {
       final byDay = {for (final d in widget.week.days) d.day: d};
-      if (!byDay.containsKey(_selectedDay) &&
-          _selectedDay != widget.relativeDayIndex) {
+      final effectiveDay = _effectiveProgress.relativeDayIndex;
+      if (!byDay.containsKey(_selectedDay) && _selectedDay != effectiveDay) {
         setState(() {
           _selectedDay = _initialSelectedDay();
         });
@@ -88,9 +97,10 @@ class _ActiveWorkoutPlanWeekCardState extends State<ActiveWorkoutPlanWeekCard> {
 
   int _initialSelectedDay() {
     final byDay = {for (final d in widget.week.days) d.day: d};
-    final isCurrentWeek = widget.currentWeekNum == widget.weekNumber;
-    if (isCurrentWeek && byDay.containsKey(widget.relativeDayIndex)) {
-      return widget.relativeDayIndex;
+    final effective = _effectiveProgress;
+    final isCurrentWeek = effective.currentWeekNum == widget.weekNumber;
+    if (isCurrentWeek && byDay.containsKey(effective.relativeDayIndex)) {
+      return effective.relativeDayIndex;
     }
     for (int dayNum = 1; dayNum <= 7; dayNum++) {
       final day = byDay[dayNum];
@@ -105,14 +115,15 @@ class _ActiveWorkoutPlanWeekCardState extends State<ActiveWorkoutPlanWeekCard> {
   }
 
   DayProgressStatus _getDayProgressStatus(int dayNum) {
-    if (widget.currentWeekNum > widget.weekNumber) {
+    final effective = _effectiveProgress;
+    if (effective.currentWeekNum > widget.weekNumber) {
       return DayProgressStatus.past;
-    } else if (widget.currentWeekNum < widget.weekNumber) {
+    } else if (effective.currentWeekNum < widget.weekNumber) {
       return DayProgressStatus.future;
     } else {
-      if (dayNum < widget.relativeDayIndex) {
+      if (dayNum < effective.relativeDayIndex) {
         return DayProgressStatus.past;
-      } else if (dayNum == widget.relativeDayIndex) {
+      } else if (dayNum == effective.relativeDayIndex) {
         return DayProgressStatus.current;
       } else {
         return DayProgressStatus.future;
@@ -123,24 +134,11 @@ class _ActiveWorkoutPlanWeekCardState extends State<ActiveWorkoutPlanWeekCard> {
   bool _isDayCompleted(int dayNum) {
     final day = widget.week.days.where((d) => d.day == dayNum).firstOrNull;
     if (day == null) return false;
-    final scheduledWorkoutCount = day.planWorkouts?.length ?? 0;
-    if (scheduledWorkoutCount == 0) return false;
-
-    final records =
-        widget.workoutPlanRecord?.weeks
-            .where((rw) => rw.week == widget.weekNumber)
-            .expand((rw) => rw.days)
-            .where((rd) => rd.day == dayNum)
-            .expand((rd) => rd.workouts)
-            .toList() ??
-        const [];
-
-    return records.length >= scheduledWorkoutCount &&
-        records.every(
-          (r) =>
-              r.status == ProgressStatus.completed ||
-              r.status == ProgressStatus.skipped,
-        );
+    return WorkoutPlanScheduleUtils.isDayFinished(
+      day: day,
+      weekNum: widget.weekNumber,
+      workoutPlanRecord: widget.workoutPlanRecord,
+    );
   }
 
   bool _isDayMissed(int dayNum) {
@@ -153,19 +151,15 @@ class _ActiveWorkoutPlanWeekCardState extends State<ActiveWorkoutPlanWeekCard> {
   @override
   Widget build(BuildContext context) {
     final weekText = 'Week ${widget.weekNumber}';
+    final effective = _effectiveProgress;
 
-    final isPastWeek = widget.currentWeekNum > widget.weekNumber;
-    final isCurrentWeek = widget.currentWeekNum == widget.weekNumber;
-    final isWeekCompleted =
-        widget.workoutPlanRecord?.weeks
-            .where((recordWeek) => recordWeek.week == widget.weekNumber)
-            .any(
-              (recordWeek) =>
-                  recordWeek.completedAt != null ||
-                  recordWeek.status == ProgressStatus.completed ||
-                  recordWeek.status == ProgressStatus.skipped,
-            ) ??
-        false;
+    final isPastWeek = effective.currentWeekNum > widget.weekNumber;
+    final isCurrentWeek = effective.currentWeekNum == widget.weekNumber;
+    final isWeekCompleted = WorkoutPlanScheduleUtils.isWeekFinished(
+      weeks: [widget.week],
+      weekNum: widget.weekNumber,
+      workoutPlanRecord: widget.workoutPlanRecord,
+    );
     final canSkipWeek =
         isCurrentWeek &&
         !isWeekCompleted &&

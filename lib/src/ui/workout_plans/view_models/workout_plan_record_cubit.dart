@@ -360,7 +360,9 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
       final lookup = await _workoutPlanRecordService.getWorkoutPlanRecord(
         workoutPlanRecordId,
       );
-      if (lookup.isErr() || lookup.value.status != ProgressStatus.inProgress) {
+      if (lookup.isErr() ||
+          (lookup.value.status != ProgressStatus.inProgress &&
+              lookup.value.status != ProgressStatus.skipped)) {
         emit(
           state.copyWith(
             error: Nullable(
@@ -406,9 +408,14 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
 
     final updatedRecord = result.value;
     final plan = state.currentPlanRecord.workoutPlan;
-    final counts = plan != null
-        ? await _loadProgressCounts(updatedRecord, plan)
-        : null;
+    (int, int)? counts;
+    List<WorkoutDto>? todaysWorkouts;
+    if (plan != null) {
+      final countsFuture = _loadProgressCounts(updatedRecord, plan);
+      final todaysWorkoutsFuture = _resolveTodaysWorkouts(updatedRecord, plan);
+      counts = await countsFuture;
+      todaysWorkouts = await todaysWorkoutsFuture;
+    }
 
     emit(
       state.copyWith(
@@ -418,6 +425,7 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
           currentPlanRecord: Nullable(updatedRecord),
           completedWorkouts: counts?.$1,
           totalWorkouts: counts?.$2,
+          todaysWorkouts: todaysWorkouts,
         ),
       ),
     );
@@ -533,9 +541,14 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
 
     final updatedRecord = result.value;
     final plan = state.currentPlanRecord.workoutPlan;
-    final counts = plan != null
-        ? await _loadProgressCounts(updatedRecord, plan)
-        : null;
+    (int, int)? counts;
+    List<WorkoutDto>? todaysWorkouts;
+    if (plan != null) {
+      final countsFuture = _loadProgressCounts(updatedRecord, plan);
+      final todaysWorkoutsFuture = _resolveTodaysWorkouts(updatedRecord, plan);
+      counts = await countsFuture;
+      todaysWorkouts = await todaysWorkoutsFuture;
+    }
 
     emit(
       state.copyWith(
@@ -545,6 +558,7 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
           currentPlanRecord: Nullable(updatedRecord),
           completedWorkouts: counts?.$1,
           totalWorkouts: counts?.$2,
+          todaysWorkouts: todaysWorkouts,
         ),
       ),
     );

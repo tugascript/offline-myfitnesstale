@@ -136,6 +136,7 @@ class _WorkoutPlanScheduleCardState extends State<WorkoutPlanScheduleCard> {
       child: Padding(
         padding: EdgeInsets.all(widget.sizes.padding),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             WorkoutPlanWeekGroupSelector(
@@ -246,22 +247,20 @@ class _WorkoutPlanScheduleCardState extends State<WorkoutPlanScheduleCard> {
                     controller: _carouselController,
                     scrollDirection: Axis.horizontal,
                     physics: const PageScrollPhysics(),
-                    child: IntrinsicHeight(
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          for (int i = 0; i < weekCount; i++)
-                            SizedBox(
-                              width: width,
-                              child: _buildWeekContent(
-                                context,
-                                currentGroup,
-                                currentGroup.startWeek + i,
-                                byDay,
-                              ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        for (int i = 0; i < weekCount; i++)
+                          SizedBox(
+                            width: width,
+                            child: _buildWeekContent(
+                              context,
+                              currentGroup,
+                              currentGroup.startWeek + i,
+                              byDay,
                             ),
-                        ],
-                      ),
+                          ),
+                      ],
                     ),
                   ),
                 );
@@ -283,6 +282,7 @@ class _WorkoutPlanScheduleCardState extends State<WorkoutPlanScheduleCard> {
         _selectedDayByWeek[weekNum] ?? _initialSelectedDay(_selectedGroupIndex);
 
     return Column(
+      mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         WorkoutPlanWeekStrip(
