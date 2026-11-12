@@ -63,6 +63,9 @@ Follow a strict MVVM flow aligned with the Flutter app architecture guide:
   parameterized routes (e.g. `/exercises/progress` before `/exercises/:id/records`).
 - **Orientation**: Portrait mode is enforced at runtime.
 - **Responsiveness**: Ensure screens handle narrow widths and 200% text scaling without layout or pixel overflow errors.
+- **Corners**: Keep surface UI square. Prefer theme shapes (`BeveledRectangleBorder`, `BorderRadius.zero`). Do not add
+  rounded corners on cards, badges, chips, buttons, dialogs, or similar surfaces. Omit `borderRadius` or set
+  `BorderRadius.zero`; do not use `BorderRadius.circular(...)` for those widgets.
 
 ## Data and Persistence Conventions
 
