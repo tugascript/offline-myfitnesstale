@@ -190,7 +190,7 @@ sealed class ThemeGenerator {
     cardTheme: CardThemeData(
       color: Colors.black,
       shape: const BeveledRectangleBorder(),
-      elevation: 1,
+      elevation: 0,
     ),
 
     // Define the default `IconTheme`.
@@ -348,7 +348,7 @@ sealed class ThemeGenerator {
     cardTheme: CardThemeData(
       color: Colors.white,
       shape: const BeveledRectangleBorder(),
-      elevation: 1,
+      elevation: 0,
     ),
 
     // Define the default `IconTheme`.

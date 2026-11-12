@@ -75,9 +75,7 @@ class _ActiveMealPlanWidgetState extends State<ActiveMealPlanWidget> {
                       : 'empty-active-meal-plan-card',
                 ),
                 onTap: () => context.push(
-                  isEmpty
-                      ? Routes.mealPlanList.name
-                      : Routes.macroTracker.name,
+                  isEmpty ? Routes.mealPlanList.name : Routes.macroTracker.name,
                 ),
                 child: Padding(
                   padding: EdgeInsets.all(sizes.padding),
@@ -89,10 +87,7 @@ class _ActiveMealPlanWidgetState extends State<ActiveMealPlanWidget> {
                           : CrossAxisAlignment.start,
                       children: [
                         if (isEmpty) ...[
-                          Icon(
-                            Icons.snooze,
-                            size: sizes.subtitleFontSize * 2,
-                          ),
+                          Icon(Icons.snooze, size: sizes.subtitleFontSize * 2),
                           SizedBox(height: sizes.spacing / 3),
                           Text(
                             'No active meal plan or macro goal',
@@ -169,7 +164,7 @@ class _ActiveMealPlanWidgetState extends State<ActiveMealPlanWidget> {
                                 Expanded(
                                   child: Column(
                                     crossAxisAlignment:
-                                    CrossAxisAlignment.start,
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         record != null
@@ -201,7 +196,7 @@ class _ActiveMealPlanWidgetState extends State<ActiveMealPlanWidget> {
                             record != null
                                 ? 'Track meals and daily nutrition in the macro tracker.'
                                 : 'Protein: ${dayGoal!.targetProtein}g • Carbs: ${dayGoal.targetCarbs}g • Fat: ${dayGoal.targetFat}g'
-                                '${dayGoal.targetWaterIntakeMl != null ? ' • Water: ${dayGoal.targetWaterIntakeMl}ml' : ''}',
+                                      '${dayGoal.targetWaterIntakeMl != null ? ' • Water: ${dayGoal.targetWaterIntakeMl}ml' : ''}',
                             style: TextStyle(
                               fontSize: sizes.smallFontSize,
                               color: colors.onSurfaceVariant,
