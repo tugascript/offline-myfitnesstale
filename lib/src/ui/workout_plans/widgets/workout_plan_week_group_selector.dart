@@ -83,22 +83,33 @@ class WorkoutPlanWeekGroupSelector extends StatelessWidget {
           ),
         SizedBox(height: sizes.halfSpacing),
         Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            if (currentGroup.phase != null)
-              WorkoutPhaseBadge(sizes: sizes, phase: currentGroup.phase!),
+            Expanded(
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: WorkoutPhaseBadge(
+                  sizes: sizes,
+                  phase: currentGroup.phase,
+                ),
+              ),
+            ),
             IconNumericString(
               sizes: sizes,
               icon: Icons.calendar_today,
               color: metaColor,
               number: currentGroup.totalDays,
             ),
-            IconNumericString(
-              sizes: sizes,
-              icon: Icons.fitness_center,
-              color: metaColor,
-              number: currentGroup.totalWorkouts,
+            Expanded(
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: IconNumericString(
+                  sizes: sizes,
+                  icon: Icons.fitness_center,
+                  color: metaColor,
+                  number: currentGroup.totalWorkouts,
+                ),
+              ),
             ),
           ],
         ),

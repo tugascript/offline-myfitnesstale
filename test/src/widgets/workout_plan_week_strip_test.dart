@@ -137,8 +137,9 @@ void main() {
         ),
       );
 
-      // Day 1 has 1 workout
-      expect(find.text('1'), findsOneWidget);
+      // Day 1 has 1 workout with fitness icon
+      expect(find.text(' 1'), findsOneWidget);
+      expect(find.byIcon(Icons.fitness_center), findsOneWidget);
       // Day 2 has snooze icon for rest
       expect(find.byIcon(Icons.snooze), findsOneWidget);
       // Days 3..7 have hollow '—' (5 missing days)

@@ -377,7 +377,7 @@ void main() {
         expect(find.text('SKIP WEEK'), findsNothing);
         expect(tester.takeException(), isNull);
 
-        await tester.tap(find.byType(DropdownButton<int>));
+        await tester.tap(find.byType(DropdownButtonFormField<int?>));
         await tester.pumpAndSettle();
         await tester.tap(find.text('Weeks 5 - 8').last);
         await tester.pumpAndSettle();
@@ -385,7 +385,7 @@ void main() {
         expect(find.text('SKIP'), findsNothing);
         expect(tester.takeException(), isNull);
 
-        await tester.tap(find.byType(DropdownButton<int>));
+        await tester.tap(find.byType(DropdownButtonFormField<int?>));
         await tester.pumpAndSettle();
         await tester.tap(find.text('Weeks 1 - 4').last);
         await tester.pumpAndSettle();
