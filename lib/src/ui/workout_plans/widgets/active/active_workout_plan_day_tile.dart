@@ -21,6 +21,7 @@ import 'package:material_ui/material_ui.dart';
 import '../../../../data/repositories/workout_plans/dtos/workout_plan_day_dto.dart';
 import '../../../../data/repositories/workout_plans/dtos/workout_plan_workout_dto.dart';
 import '../../../../data/repositories/workout_plans/dtos/workout_plan_workout_record_dto.dart';
+import '../../../../data/repositories/workout_plans/utils/workout_plan_schedule_utils.dart';
 import '../../../../data/utils/enums.dart';
 import '../../../core/sizes/data_display_sizes.dart';
 import '../../../core/utils/progress_status_presentation.dart';
@@ -61,24 +62,19 @@ class ActiveWorkoutPlanDayTile extends StatelessWidget {
     final isPast = status == DayProgressStatus.past;
     final isCurrent = status == DayProgressStatus.current;
     final scheduledWorkoutCount = day.planWorkouts?.length ?? 0;
+    final dayStatus = _dayProgressStatus(scheduledWorkoutCount);
+    final dayStatusPresentation = dayStatus != null
+        ? ProgressStatusPresentation.fromStatus(dayStatus)
+        : null;
     final isDayCompleted =
-        scheduledWorkoutCount > 0 &&
-        workoutRecords.length >= scheduledWorkoutCount &&
-        workoutRecords.every(
-          (record) =>
-              record.status == ProgressStatus.completed ||
-              record.status == ProgressStatus.skipped,
-        );
+        dayStatus != null &&
+        WorkoutPlanScheduleUtils.isTerminalStatus(dayStatus);
     final canSkipDay =
         !day.isRestDay &&
         !isDayCompleted &&
         isCurrent &&
         scheduledWorkoutCount > 0 &&
         onSkipDay != null;
-    final dayStatus = _dayProgressStatus(scheduledWorkoutCount);
-    final dayStatusPresentation = dayStatus != null
-        ? ProgressStatusPresentation.fromStatus(dayStatus)
-        : null;
 
     Color containerColor;
     Color iconColor;
@@ -298,6 +294,7 @@ class ActiveWorkoutPlanDayTile extends StatelessWidget {
     var hasInProgress = false;
     var finishedCount = 0;
     var skippedCount = 0;
+    var abandonedCount = 0;
 
     for (final planWorkout in planWorkouts) {
       final record = recordsByPosition[planWorkout.position];
@@ -305,11 +302,12 @@ class ActiveWorkoutPlanDayTile extends StatelessWidget {
 
       if (record.status == ProgressStatus.inProgress) {
         hasInProgress = true;
-      } else if (record.status == ProgressStatus.completed ||
-          record.status == ProgressStatus.skipped) {
+      } else if (WorkoutPlanScheduleUtils.isTerminalStatus(record.status)) {
         finishedCount++;
         if (record.status == ProgressStatus.skipped) {
           skippedCount++;
+        } else if (record.status == ProgressStatus.abandoned) {
+          abandonedCount++;
         }
       }
     }
@@ -317,6 +315,7 @@ class ActiveWorkoutPlanDayTile extends StatelessWidget {
     if (hasInProgress) return ProgressStatus.inProgress;
     if (finishedCount < scheduledWorkoutCount) return null;
     if (skippedCount == finishedCount) return ProgressStatus.skipped;
+    if (abandonedCount == finishedCount) return ProgressStatus.abandoned;
     return ProgressStatus.completed;
   }
 
@@ -333,9 +332,11 @@ class ActiveWorkoutPlanDayTile extends StatelessWidget {
         .firstOrNull;
     final isCompleted = planRecord?.status == ProgressStatus.completed;
     final isSkipped = planRecord?.status == ProgressStatus.skipped;
-    final isFinished = isCompleted || isSkipped;
+    final isAbandoned = planRecord?.status == ProgressStatus.abandoned;
+    final isFinished = isCompleted || isSkipped || isAbandoned;
     final isInProgress = planRecord?.status == ProgressStatus.inProgress;
-    final canRecord = !isCompleted;
+    final canRecord =
+        !isCompleted && (isPast || isCurrent || isSkipped || isAbandoned);
 
     return Padding(
       padding: EdgeInsets.only(top: sizes.halfSpacing, left: sizes.padding * 2),
@@ -414,7 +415,7 @@ class ActiveWorkoutPlanDayTile extends StatelessWidget {
                 ),
               ],
             ),
-            if (isCurrent && !isSkipped && onSkipWorkout != null) ...[
+            if (isCurrent && !isFinished && onSkipWorkout != null) ...[
               SizedBox(height: sizes.spacing / 2),
               SizedBox(
                 width: double.infinity,
