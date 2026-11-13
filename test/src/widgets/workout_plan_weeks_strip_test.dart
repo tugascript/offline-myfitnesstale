@@ -708,6 +708,145 @@ void main() {
         expect(find.text('LOG').hitTestable(), findsOneWidget);
       },
     );
+
+    testWidgets(
+      'unfinished Week 1 hides Log and Start on future days and weeks',
+      (tester) async {
+        final now = DateTime.now();
+        final unfinishedWeek1Record = WorkoutPlanRecordDto(
+          id: 100,
+          workoutPlanId: 1,
+          workoutPlanVersion: 1,
+          status: ProgressStatus.inProgress,
+          startedAt: now,
+          currentWeek: 1,
+          currentDay: 1,
+          currentWorkoutPosition: 1,
+          weeks: [
+            WorkoutPlanWeekRecordDto(
+              id: 10,
+              workoutPlanRecordId: 100,
+              workoutPlanWeekId: weekBlock1.id,
+              week: 1,
+              status: ProgressStatus.inProgress,
+              days: [
+                WorkoutPlanDayRecordDto(
+                  id: 11,
+                  workoutPlanRecordId: 100,
+                  workoutPlanWeekRecordId: 10,
+                  workoutPlanDayId: workoutDay.id,
+                  week: 1,
+                  day: 1,
+                  currentWorkoutPosition: 1,
+                  status: ProgressStatus.inProgress,
+                ),
+              ],
+            ),
+          ],
+        );
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: SingleChildScrollView(
+                child: ActiveWorkoutPlanScheduleCard(
+                  sizes: sizes,
+                  theme: ThemeData.light(),
+                  isDarkTheme: false,
+                  weeks: [weekBlock1, weekBlock2],
+                  currentWeekNum: 1,
+                  relativeDayIndex: 1,
+                  workoutPlanRecord: unfinishedWeek1Record,
+                ),
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        // Day 1 of Week 1 is current -> Start/Log are visible
+        expect(find.text('START').hitTestable(), findsOneWidget);
+        expect(find.text('LOG').hitTestable(), findsOneWidget);
+
+        // Selecting Day 2 in Week 1 is future -> hides Start/Log
+        await tester.tap(find.text('D2').first);
+        await tester.pumpAndSettle();
+        expect(find.text('START').hitTestable(), findsNothing);
+        expect(find.text('LOG').hitTestable(), findsNothing);
+        expect(find.text('SKIP').hitTestable(), findsNothing);
+        expect(find.text('SKIP DAY').hitTestable(), findsNothing);
+
+        // Switching to Week 2 (W2) is future -> hides Start/Log
+        await tester.tap(find.text('W2').first);
+        await tester.pumpAndSettle();
+        expect(find.text('START').hitTestable(), findsNothing);
+        expect(find.text('LOG').hitTestable(), findsNothing);
+        expect(find.text('SKIP').hitTestable(), findsNothing);
+        expect(find.text('SKIP DAY').hitTestable(), findsNothing);
+      },
+    );
+
+    testWidgets(
+      'abandoned Week 1 unlocks Week 2 Day 1 while keeping Week 2 Day 2 and Week 3 locked',
+      (tester) async {
+        final now = DateTime.now();
+        final abandonedWeek1Record = WorkoutPlanRecordDto(
+          id: 100,
+          workoutPlanId: 1,
+          workoutPlanVersion: 1,
+          status: ProgressStatus.inProgress,
+          startedAt: now,
+          currentWeek: 1,
+          currentDay: 1,
+          currentWorkoutPosition: 1,
+          weeks: [
+            WorkoutPlanWeekRecordDto(
+              id: 10,
+              workoutPlanRecordId: 100,
+              workoutPlanWeekId: weekBlock1.id,
+              week: 1,
+              status: ProgressStatus.abandoned,
+            ),
+          ],
+        );
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: SingleChildScrollView(
+                child: ActiveWorkoutPlanScheduleCard(
+                  sizes: sizes,
+                  theme: ThemeData.light(),
+                  isDarkTheme: false,
+                  weeks: [weekBlock1, weekBlock2],
+                  currentWeekNum: 1,
+                  relativeDayIndex: 1,
+                  workoutPlanRecord: abandonedWeek1Record,
+                ),
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        // Week 2 Day 1 is unlocked
+        expect(find.text('TODAY').hitTestable(), findsOneWidget);
+        expect(find.text('START').hitTestable(), findsOneWidget);
+        expect(find.text('LOG').hitTestable(), findsOneWidget);
+
+        // Week 2 Day 2 is still future and locked
+        await tester.tap(find.text('D2').hitTestable());
+        await tester.pumpAndSettle();
+        expect(find.text('START').hitTestable(), findsNothing);
+        expect(find.text('LOG').hitTestable(), findsNothing);
+
+        // Week 3 is still future and locked
+        await tester.tap(find.text('W3').first);
+        await tester.pumpAndSettle();
+        expect(find.text('START').hitTestable(), findsNothing);
+        expect(find.text('LOG').hitTestable(), findsNothing);
+      },
+    );
   });
 
   group('WorkoutPlanScheduleCard', () {

@@ -160,7 +160,7 @@ void main() {
     });
   }
 
-  testWidgets('future workouts and days offer Start/Log and cannot be skipped', (
+  testWidgets('future workouts and days hide Log, Start, and Skip actions', (
     tester,
   ) async {
     await tester.pumpWidget(
@@ -170,8 +170,8 @@ void main() {
         onSkipDay: () {},
       ),
     );
-    expect(find.text('LOG'), findsOneWidget);
-    expect(find.text('START'), findsOneWidget);
+    expect(find.text('LOG'), findsNothing);
+    expect(find.text('START'), findsNothing);
     expect(find.text('SKIP'), findsNothing);
     expect(find.text('SKIP DAY'), findsNothing);
   });
@@ -236,6 +236,40 @@ void main() {
       );
 
       expect(find.text('Skipped'), findsOneWidget);
+      expect(find.text('LOG'), findsOneWidget);
+      expect(find.text('START'), findsOneWidget);
+      expect(find.text('SKIP'), findsNothing);
+      expect(find.text('SKIP DAY'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'abandoned plan workout shows Abandoned label, hides Skip, and still allows Start and Log',
+    (tester) async {
+      final now = DateTime.now();
+      await tester.pumpWidget(
+        harness(
+          status: DayProgressStatus.past,
+          onSkipWorkout: (_) {},
+          onSkipDay: () {},
+          records: [
+            WorkoutPlanWorkoutRecordDto(
+              id: 50,
+              workoutPlanRecordId: 40,
+              workoutPlanWeekRecordId: 41,
+              workoutPlanDayRecordId: 42,
+              workoutPlanWorkoutId: planWorkout.id,
+              workoutRecordId: 60,
+              position: 1,
+              startedAt: now.subtract(const Duration(hours: 1)),
+              status: ProgressStatus.abandoned,
+            ),
+          ],
+        ),
+      );
+
+      expect(find.text('MISSED'), findsNothing);
+      expect(find.text('Abandoned'), findsOneWidget);
       expect(find.text('LOG'), findsOneWidget);
       expect(find.text('START'), findsOneWidget);
       expect(find.text('SKIP'), findsNothing);

@@ -428,5 +428,144 @@ void main() {
       expect(progress.currentWeekNum, 1);
       expect(progress.relativeDayIndex, 2);
     });
+
+    test('advances to Week 2 Day 1 when Week 1 is abandoned', () {
+      final weeks = [
+        WorkoutPlanWeekDto(
+          id: 1,
+          planVersion: 1,
+          startWeek: 1,
+          endWeek: 2,
+          totalDays: 2,
+          totalWorkouts: 2,
+          scheduleMode: WorkoutPlanWeekScheduleMode.manual,
+          days: [workoutDay(1), workoutDay(2)],
+        ),
+      ];
+      final record = WorkoutPlanRecordDto.empty().copyWith(
+        id: 1,
+        weeks: [
+          WorkoutPlanWeekRecordDto(
+            id: 1,
+            workoutPlanRecordId: 1,
+            workoutPlanWeekId: 1,
+            week: 1,
+            status: ProgressStatus.abandoned,
+          ),
+        ],
+      );
+
+      final progress = WorkoutPlanScheduleUtils.resolveEffectiveProgress(
+        weeks: weeks,
+        calendarWeekNum: 1,
+        calendarDayNum: 1,
+        workoutPlanRecord: record,
+      );
+
+      expect(progress.currentWeekNum, 2);
+      expect(progress.relativeDayIndex, 1);
+    });
+
+    test('advances to next workout day when Day 1 is abandoned', () {
+      final weeks = [
+        WorkoutPlanWeekDto(
+          id: 1,
+          planVersion: 1,
+          startWeek: 1,
+          endWeek: 2,
+          totalDays: 2,
+          totalWorkouts: 2,
+          scheduleMode: WorkoutPlanWeekScheduleMode.automatic,
+          days: [
+            workoutDay(1),
+            WorkoutPlanDayDto.autoRestDay(2),
+            workoutDay(3),
+          ],
+        ),
+      ];
+      final record = WorkoutPlanRecordDto.empty().copyWith(
+        id: 1,
+        weeks: [
+          WorkoutPlanWeekRecordDto(
+            id: 1,
+            workoutPlanRecordId: 1,
+            workoutPlanWeekId: 1,
+            week: 1,
+            status: ProgressStatus.inProgress,
+            days: [
+              WorkoutPlanDayRecordDto(
+                id: 11,
+                workoutPlanRecordId: 1,
+                workoutPlanWeekRecordId: 1,
+                workoutPlanDayId: 1,
+                week: 1,
+                day: 1,
+                currentWorkoutPosition: 1,
+                status: ProgressStatus.abandoned,
+              ),
+            ],
+          ),
+        ],
+      );
+
+      final progress = WorkoutPlanScheduleUtils.resolveEffectiveProgress(
+        weeks: weeks,
+        calendarWeekNum: 1,
+        calendarDayNum: 1,
+        workoutPlanRecord: record,
+      );
+
+      expect(progress.currentWeekNum, 1);
+      expect(progress.relativeDayIndex, 3);
+    });
+
+    test('does not advance past Day 1 or Week 1 when inProgress', () {
+      final weeks = [
+        WorkoutPlanWeekDto(
+          id: 1,
+          planVersion: 1,
+          startWeek: 1,
+          endWeek: 2,
+          totalDays: 2,
+          totalWorkouts: 2,
+          scheduleMode: WorkoutPlanWeekScheduleMode.manual,
+          days: [workoutDay(1), workoutDay(2)],
+        ),
+      ];
+      final record = WorkoutPlanRecordDto.empty().copyWith(
+        id: 1,
+        weeks: [
+          WorkoutPlanWeekRecordDto(
+            id: 1,
+            workoutPlanRecordId: 1,
+            workoutPlanWeekId: 1,
+            week: 1,
+            status: ProgressStatus.inProgress,
+            days: [
+              WorkoutPlanDayRecordDto(
+                id: 11,
+                workoutPlanRecordId: 1,
+                workoutPlanWeekRecordId: 1,
+                workoutPlanDayId: 1,
+                week: 1,
+                day: 1,
+                currentWorkoutPosition: 1,
+                status: ProgressStatus.inProgress,
+              ),
+            ],
+          ),
+        ],
+      );
+
+      final progress = WorkoutPlanScheduleUtils.resolveEffectiveProgress(
+        weeks: weeks,
+        calendarWeekNum: 1,
+        calendarDayNum: 1,
+        workoutPlanRecord: record,
+      );
+
+      expect(progress.currentWeekNum, 1);
+      expect(progress.relativeDayIndex, 1);
+    });
   });
 }

@@ -184,8 +184,17 @@ abstract final class WorkoutPlanScheduleUtils {
     return null;
   }
 
-  /// Returns `true` when [day] has scheduled workouts and all of them have a
-  /// record with [ProgressStatus.completed] or [ProgressStatus.skipped] in [weekNum].
+  /// Returns `true` when [status] represents a finished outcome (`completed`,
+  /// `skipped`, or `abandoned`).
+  static bool isTerminalStatus(ProgressStatus status) {
+    return status == ProgressStatus.completed ||
+        status == ProgressStatus.skipped ||
+        status == ProgressStatus.abandoned;
+  }
+
+  /// Returns `true` when [day] has scheduled workouts and either its day record
+  /// or all scheduled workout records in [weekNum] have a terminal status
+  /// (`completed`, `skipped`, or `abandoned`).
   static bool isDayFinished({
     required WorkoutPlanDayDto day,
     required int weekNum,
@@ -196,25 +205,29 @@ abstract final class WorkoutPlanScheduleUtils {
       return false;
     }
 
-    final records =
+    final dayRecords =
         workoutPlanRecord?.weeks
             .where((rw) => rw.week == weekNum)
             .expand((rw) => rw.days)
             .where((rd) => rd.day == day.day)
-            .expand((rd) => rd.workouts)
             .toList() ??
         const [];
 
+    if (dayRecords.any(
+      (rd) => rd.completedAt != null || isTerminalStatus(rd.status),
+    )) {
+      return true;
+    }
+
+    final records = dayRecords.expand((rd) => rd.workouts).toList();
+
     return records.length >= scheduledWorkoutCount &&
-        records.every(
-          (r) =>
-              r.status == ProgressStatus.completed ||
-              r.status == ProgressStatus.skipped,
-        );
+        records.every((r) => isTerminalStatus(r.status));
   }
 
-  /// Returns `true` when [weekNum] is marked completed/skipped in [workoutPlanRecord]
-  /// or all scheduled workout days in the matching week group are finished.
+  /// Returns `true` when [weekNum] is marked completed/skipped/abandoned in
+  /// [workoutPlanRecord] or all scheduled workout days in the matching week group
+  /// are finished.
   static bool isWeekFinished({
     required List<WorkoutPlanWeekDto> weeks,
     required int weekNum,
@@ -224,10 +237,7 @@ abstract final class WorkoutPlanScheduleUtils {
         workoutPlanRecord?.weeks
             .where((rw) => rw.week == weekNum)
             .any(
-              (rw) =>
-                  rw.completedAt != null ||
-                  rw.status == ProgressStatus.completed ||
-                  rw.status == ProgressStatus.skipped,
+              (rw) => rw.completedAt != null || isTerminalStatus(rw.status),
             ) ??
         false;
     if (hasFinishedRecord) {
