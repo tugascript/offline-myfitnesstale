@@ -23,7 +23,7 @@ import '../../core/sizes/data_display_sizes.dart';
 
 class WorkoutPhaseBadge extends StatelessWidget {
   final DataDisplaySizesList sizes;
-  final WorkoutPhase phase;
+  final WorkoutPhase? phase;
 
   const WorkoutPhaseBadge({
     super.key,
@@ -31,7 +31,7 @@ class WorkoutPhaseBadge extends StatelessWidget {
     required this.phase,
   });
 
-  Color _getPhaseColor(WorkoutPhase phase) {
+  Color _getPhaseColor(WorkoutPhase? phase) {
     switch (phase) {
       case WorkoutPhase.endurance:
         return Colors.green;
@@ -41,6 +41,8 @@ class WorkoutPhaseBadge extends StatelessWidget {
         return Colors.orange;
       case WorkoutPhase.power:
         return Colors.red;
+      case null:
+        return Colors.grey;
     }
   }
 
