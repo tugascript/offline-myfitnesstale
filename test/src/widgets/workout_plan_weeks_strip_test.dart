@@ -29,6 +29,7 @@ import 'package:myfitnesstale/src/data/utils/enums.dart';
 import 'package:myfitnesstale/src/data/utils/json_data.dart';
 import 'package:myfitnesstale/src/ui/core/sizes/data_display_sizes.dart';
 import 'package:myfitnesstale/src/ui/core/sizes/screen_size.dart';
+import 'package:myfitnesstale/src/ui/core/widgets/layout/app_dropdown.dart';
 import 'package:myfitnesstale/src/ui/workout_plans/widgets/active/active_workout_plan_schedule_card.dart';
 import 'package:myfitnesstale/src/ui/workout_plans/widgets/details/workout_plan_schedule_card.dart';
 import 'package:myfitnesstale/src/ui/workout_plans/widgets/workout_phase_badge.dart';
@@ -206,7 +207,8 @@ void main() {
 
       expect(find.text('Weeks 1 - 4'), findsOneWidget);
       expect(find.byType(WorkoutPhaseBadge), findsOneWidget);
-      expect(find.byIcon(Icons.keyboard_arrow_down), findsNothing);
+      expect(find.byIcon(Icons.fitness_center), findsOneWidget);
+      expect(find.byType(AppDropdown<int>), findsNothing);
     });
 
     testWidgets('renders dropdown for multiple week groups', (tester) async {
@@ -228,9 +230,11 @@ void main() {
       );
 
       expect(find.text('Weeks 1 - 4'), findsWidgets);
-      expect(find.byIcon(Icons.keyboard_arrow_down), findsOneWidget);
+      expect(find.byType(AppDropdown<int>), findsOneWidget);
+      expect(find.byType(WorkoutPhaseBadge), findsOneWidget);
+      expect(find.byIcon(Icons.fitness_center), findsOneWidget);
 
-      await tester.tap(find.byType(DropdownButton<int>));
+      await tester.tap(find.byType(DropdownButtonFormField<int?>));
       await tester.pumpAndSettle();
 
       await tester.tap(find.text('Weeks 5 - 8').last);

@@ -91,12 +91,6 @@ class WorkoutPlanWeeksStrip extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Container(
-                  key: ValueKey('week-strip-line-$weekNum'),
-                  height: sizes.spacing / 4,
-                  color: lineColor,
-                ),
-                SizedBox(height: sizes.spacing / 2),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   mainAxisSize: MainAxisSize.min,
@@ -124,6 +118,12 @@ class WorkoutPlanWeeksStrip extends StatelessWidget {
                       ),
                     ),
                   ],
+                ),
+                SizedBox(height: sizes.halfSpacing),
+                Container(
+                  key: ValueKey('week-strip-line-$weekNum'),
+                  height: sizes.quarterSpacing,
+                  color: lineColor,
                 ),
               ],
             ),

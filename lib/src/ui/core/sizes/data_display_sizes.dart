@@ -46,6 +46,10 @@ final class DataDisplaySizesList {
 
   double get halfSpacing => spacing / 2;
 
+  double get quarterSpacing => spacing / 4;
+
+  double get mediumSmallFontSize => smallFontSize * 1.2;
+
   const DataDisplaySizesList({
     required this.padding,
     required this.viewPadding,

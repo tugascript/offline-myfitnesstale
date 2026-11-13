@@ -242,8 +242,7 @@ class _ActiveWorkoutPlanScheduleCardState
 
     return Card(
       margin: EdgeInsets.only(bottom: widget.sizes.margins),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.zero,
+      shape: BeveledRectangleBorder(
         side: isCurrentWeek
             ? BorderSide(
                 color: widget.theme.primaryColor.withValues(alpha: 0.5),
