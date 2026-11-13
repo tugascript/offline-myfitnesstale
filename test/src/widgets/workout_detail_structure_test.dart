@@ -407,7 +407,7 @@ void main() {
 
   group('WorkoutDetailScreen structure and overview strip', () {
     testWidgets(
-      'hides overview strip for 2-4 blocks and navigates on exercise tap',
+      'hides overview strip for 2-3 blocks and navigates on exercise tap',
       (tester) async {
         tester.view.physicalSize = const Size(1200, 1600);
         tester.view.devicePixelRatio = 1.0;
@@ -455,7 +455,7 @@ void main() {
     );
 
     testWidgets(
-      'renders sharp WorkoutBlockStrip for 5+ blocks and highlights tapped block card',
+      'renders sharp WorkoutBlockStrip for 4+ blocks and highlights tapped block card',
       (tester) async {
         tester.view.physicalSize = const Size(1200, 1600);
         tester.view.devicePixelRatio = 1.0;
@@ -467,20 +467,14 @@ void main() {
           name: 'Full Upper Marathon',
           version: 1,
           isFavorite: false,
-          totalSets: 15,
-          totalReps: 208,
+          totalSets: 12,
+          totalReps: 160,
           editorType: EditorType.advanced,
           createdBy: CreatedBy.user,
           difficulty: Difficulty.intermediate,
           muscleGroups: const {MuscleGroup.push},
           muscles: const TargetMuscles(primary: {Muscle.chest}, secondary: {}),
-          sets: [
-            standardSet,
-            superSet,
-            dropSetSingle,
-            dropSetMulti,
-            pyramidSet,
-          ],
+          sets: [standardSet, superSet, dropSetSingle, dropSetMulti],
         );
 
         final cubit = _FakeWorkoutCubit(workout);
@@ -500,7 +494,7 @@ void main() {
         expect(find.byType(WorkoutBlockStrip), findsOneWidget);
         expect(find.text('1 Standard · 3×'), findsOneWidget);
         expect(find.text('2 Super · 4×'), findsOneWidget);
-        expect(find.text('5 Pyramid · 3×'), findsOneWidget);
+        expect(find.text('4 Drop · 2×'), findsOneWidget);
 
         await tester.tap(find.text('2 Super · 4×'));
         await tester.pumpAndSettle();
