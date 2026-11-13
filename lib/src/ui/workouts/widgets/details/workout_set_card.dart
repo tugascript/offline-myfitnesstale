@@ -32,6 +32,7 @@ class WorkoutSetCard extends StatelessWidget {
   final DataDisplaySizesList sizes;
   final WorkoutSetDto set;
   final int setNumber;
+  final bool isSelected;
 
   const WorkoutSetCard({
     super.key,
@@ -40,6 +41,7 @@ class WorkoutSetCard extends StatelessWidget {
     required this.sizes,
     required this.set,
     required this.setNumber,
+    this.isSelected = false,
   });
 
   String _formatRest() {
@@ -79,6 +81,14 @@ class WorkoutSetCard extends StatelessWidget {
     return '$rounds×$reps';
   }
 
+  BeveledRectangleBorder _cardShape() {
+    return BeveledRectangleBorder(
+      side: isSelected
+          ? BorderSide(color: theme.primaryColor, width: 1.5)
+          : BorderSide.none,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final isStandardSingle =
@@ -96,85 +106,103 @@ class WorkoutSetCard extends StatelessWidget {
     BuildContext context,
     WorkoutSetExerciseDto exercise,
   ) {
-    final iconLightGreyColor = isDarkTheme
-        ? Colors.grey.shade400
-        : Colors.grey.shade600;
+    final colors = theme.colorScheme;
+    final mutedColor = colors.onSurfaceVariant;
     final roundsAndReps = _formatRoundsAndReps(exercise);
     final rest = _formatRest();
     final hasDifficulty = exercise.difficulty != null;
     final hasOptions = exercise.options != null && exercise.options!.isNotEmpty;
 
     return Card(
-      margin: EdgeInsets.symmetric(vertical: sizes.margins / 2),
+      margin: EdgeInsets.zero,
+      shape: _cardShape(),
       child: InkWell(
         onTap: () {
           context.push('/exercises/${exercise.exerciseId}');
         },
-        borderRadius: BorderRadius.circular(4),
         child: Padding(
           padding: EdgeInsets.all(sizes.padding),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  DetailNumber(
-                    number: setNumber,
-                    theme: theme,
-                    fontSize: sizes.subtitleFontSize,
-                  ),
-                  SizedBox(width: sizes.padding),
-                  Expanded(
-                    child: Wrap(
+              DetailNumber(
+                number: setNumber,
+                theme: theme,
+                fontSize: sizes.subtitleFontSize,
+              ),
+              SizedBox(width: sizes.spacing),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Wrap(
                       crossAxisAlignment: WrapCrossAlignment.center,
-                      spacing: sizes.padding / 4,
+                      spacing: sizes.halfSpacing,
+                      runSpacing: sizes.quarterSpacing,
                       children: [
+                        SetTypeBadge(sizes: sizes, setType: set.setType),
                         Text(
                           exercise.exercise?.name ?? 'Unknown Exercise',
                           style: TextStyle(
                             fontSize: sizes.fontSize,
                             fontWeight: FontWeight.w600,
-                            color: theme.colorScheme.onSurface,
+                            color: colors.onSurface,
                           ),
                         ),
-                        Text(
-                          '· $roundsAndReps · $rest',
-                          style: TextStyle(
-                            fontSize: sizes.fontSize,
-                            color: iconLightGreyColor,
-                          ),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.repeat,
+                              size: sizes.mediumSmallFontSize,
+                              color: mutedColor,
+                            ),
+                            Text(
+                              ' $roundsAndReps',
+                              style: TextStyle(
+                                fontSize: sizes.fontSize,
+                                color: mutedColor,
+                              ),
+                            ),
+                          ],
+                        ),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.timer_outlined,
+                              size: sizes.mediumSmallFontSize,
+                              color: mutedColor,
+                            ),
+                            Text(
+                              ' $rest',
+                              style: TextStyle(
+                                fontSize: sizes.fontSize,
+                                color: mutedColor,
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
-                  ),
-                  SizedBox(width: sizes.padding / 2),
-                  SetTypeBadge(sizes: sizes, setType: set.setType),
-                  SizedBox(width: sizes.padding / 4),
-                  Icon(
-                    Icons.chevron_right,
-                    size: sizes.fontSize * 1.2,
-                    color: iconLightGreyColor,
-                  ),
-                ],
-              ),
-              if (hasDifficulty || hasOptions) ...[
-                SizedBox(height: sizes.padding / 4),
-                Padding(
-                  padding: EdgeInsets.only(
-                    left: sizes.subtitleFontSize * 1.75 + sizes.padding,
-                  ),
-                  child: _SetExerciseSubtitle(
-                    setExercise: exercise,
-                    padding: 0,
-                    spacing: sizes.spacing / 2,
-                    smallPadding: sizes.padding / 4,
-                    fontSize: sizes.fontSize,
-                    smallFontSize: sizes.smallFontSize,
-                    isDarkTheme: isDarkTheme,
-                  ),
+                    if (hasDifficulty || hasOptions) ...[
+                      SizedBox(height: sizes.quarterSpacing),
+                      _SetExerciseSubtitle(
+                        setExercise: exercise,
+                        sizes: sizes,
+                        theme: theme,
+                        isDarkTheme: isDarkTheme,
+                      ),
+                    ],
+                  ],
                 ),
-              ],
+              ),
+              SizedBox(width: sizes.halfSpacing),
+              Icon(
+                Icons.chevron_right,
+                size: sizes.compactIconSize,
+                color: mutedColor,
+              ),
             ],
           ),
         ),
@@ -183,14 +211,12 @@ class WorkoutSetCard extends StatelessWidget {
   }
 
   Widget _buildStackedCard(BuildContext context) {
-    final iconGreyColor = isDarkTheme
-        ? Colors.grey.shade200
-        : Colors.grey.shade800;
-    final iconLightGreyColor = isDarkTheme
-        ? Colors.grey.shade400
-        : Colors.grey.shade600;
+    final colors = theme.colorScheme;
+    final mutedColor = colors.onSurfaceVariant;
     final rounds = _formatRounds();
     final rest = _formatRest();
+    final exercises = set.exercises ?? const <WorkoutSetExerciseDto>[];
+    final showStepLabels = exercises.length > 1;
 
     final isLettered =
         set.setType == WorkoutSetType.superSet ||
@@ -198,11 +224,12 @@ class WorkoutSetCard extends StatelessWidget {
         set.setType == WorkoutSetType.circuit;
 
     return Card(
-      margin: EdgeInsets.symmetric(vertical: sizes.margins / 2),
+      margin: EdgeInsets.zero,
+      shape: _cardShape(),
       child: Padding(
         padding: EdgeInsets.all(sizes.padding),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             // Block Header
             Row(
@@ -213,78 +240,101 @@ class WorkoutSetCard extends StatelessWidget {
                   theme: theme,
                   fontSize: sizes.subtitleFontSize,
                 ),
-                SizedBox(width: sizes.padding),
-                SetTypeBadge(sizes: sizes, setType: set.setType),
-                SizedBox(width: sizes.padding / 2),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.repeat,
-                      size: sizes.fontSize * 1.1,
-                      color: iconLightGreyColor,
-                    ),
-                    Text(
-                      ' $rounds',
-                      style: TextStyle(
-                        fontSize: sizes.fontSize,
-                        fontWeight: FontWeight.w600,
-                        color: iconGreyColor,
+                SizedBox(width: sizes.spacing),
+                Expanded(
+                  child: Wrap(
+                    alignment: WrapAlignment.spaceBetween,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    spacing: sizes.halfSpacing,
+                    runSpacing: sizes.quarterSpacing,
+                    children: [
+                      Wrap(
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        spacing: sizes.halfSpacing,
+                        runSpacing: sizes.quarterSpacing,
+                        children: [
+                          SetTypeBadge(sizes: sizes, setType: set.setType),
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.repeat,
+                                size: sizes.mediumSmallFontSize,
+                                color: mutedColor,
+                              ),
+                              Text(
+                                ' $rounds',
+                                style: TextStyle(
+                                  fontSize: sizes.fontSize,
+                                  fontWeight: FontWeight.w600,
+                                  color: colors.onSurface,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
-                    ),
-                  ],
-                ),
-                const Spacer(),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.timer_outlined,
-                      size: sizes.fontSize,
-                      color: iconLightGreyColor,
-                    ),
-                    Text(
-                      ' $rest',
-                      style: TextStyle(
-                        fontSize: sizes.fontSize,
-                        color: iconLightGreyColor,
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.timer_outlined,
+                            size: sizes.mediumSmallFontSize,
+                            color: mutedColor,
+                          ),
+                          Text(
+                            ' $rest',
+                            style: TextStyle(
+                              fontSize: sizes.fontSize,
+                              color: mutedColor,
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ],
             ),
-            SizedBox(height: sizes.padding / 2),
-            const Divider(height: 1),
-            SizedBox(height: sizes.padding / 4),
+            SizedBox(height: sizes.halfSpacing),
+            Container(
+              height: 1,
+              color: colors.outlineVariant.withValues(alpha: 0.5),
+            ),
+            SizedBox(height: sizes.quarterSpacing),
             // Stacked exercises
-            if (set.exercises == null || set.exercises!.isEmpty)
+            if (exercises.isEmpty)
               Padding(
-                padding: EdgeInsets.symmetric(vertical: sizes.padding / 2),
+                padding: EdgeInsets.symmetric(vertical: sizes.halfSpacing),
                 child: Text(
                   'No exercises in this block',
                   style: TextStyle(
-                    color: Colors.grey,
+                    color: mutedColor,
                     fontStyle: FontStyle.italic,
                     fontSize: sizes.fontSize,
                   ),
                 ),
               )
             else
-              ...set.exercises!.asMap().entries.map((entry) {
+              ...exercises.asMap().entries.map((entry) {
                 final exIndex = entry.key;
                 final setExercise = entry.value;
-                final label = isLettered
-                    ? String.fromCharCode(65 + exIndex)
-                    : '${exIndex + 1}';
+                final label = showStepLabels
+                    ? (isLettered
+                          ? String.fromCharCode(65 + exIndex)
+                          : '${exIndex + 1}')
+                    : null;
 
                 return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     if (exIndex > 0)
-                      Divider(
-                        height: sizes.padding / 2,
-                        thickness: 0.5,
-                        color: theme.dividerColor.withValues(alpha: 0.3),
+                      Container(
+                        height: 1,
+                        margin: EdgeInsets.symmetric(
+                          vertical: sizes.quarterSpacing,
+                        ),
+                        color: colors.outlineVariant.withValues(alpha: 0.35),
                       ),
                     _StackedExerciseRow(
                       theme: theme,
@@ -308,7 +358,7 @@ class _StackedExerciseRow extends StatelessWidget {
   final ThemeData theme;
   final bool isDarkTheme;
   final DataDisplaySizesList sizes;
-  final String label;
+  final String? label;
   final WorkoutSetExerciseDto setExercise;
   final String repsText;
 
@@ -323,9 +373,8 @@ class _StackedExerciseRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final iconLightGreyColor = isDarkTheme
-        ? Colors.grey.shade400
-        : Colors.grey.shade600;
+    final colors = theme.colorScheme;
+    final mutedColor = colors.onSurfaceVariant;
     final hasDifficulty = setExercise.difficulty != null;
     final hasOptions =
         setExercise.options != null && setExercise.options!.isNotEmpty;
@@ -334,82 +383,80 @@ class _StackedExerciseRow extends StatelessWidget {
       onTap: () {
         context.push('/exercises/${setExercise.exerciseId}');
       },
-      borderRadius: BorderRadius.circular(4),
       child: Padding(
         padding: EdgeInsets.symmetric(
-          vertical: sizes.padding / 2,
-          horizontal: sizes.padding / 4,
+          vertical: sizes.halfSpacing,
+          horizontal: sizes.quarterSpacing,
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Row(
-              children: [
-                Container(
-                  width: sizes.fontSize * 1.5,
-                  height: sizes.fontSize * 1.5,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: isDarkTheme
-                        ? Colors.grey.shade800
-                        : Colors.grey.shade200,
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: Text(
-                    label,
-                    style: TextStyle(
-                      fontSize: sizes.smallFontSize,
-                      fontWeight: FontWeight.bold,
-                      color: isDarkTheme
-                          ? Colors.grey.shade300
-                          : Colors.grey.shade800,
-                    ),
-                  ),
+            if (label != null) ...[
+              Container(
+                width: sizes.fontSize * 1.5,
+                height: sizes.fontSize * 1.5,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: colors.surfaceContainerHighest,
+                  border: Border.all(color: colors.outlineVariant),
                 ),
-                SizedBox(width: sizes.padding / 2),
-                Expanded(
-                  child: Text(
-                    setExercise.exercise?.name ?? 'Unknown Exercise',
-                    style: TextStyle(
-                      fontSize: sizes.fontSize,
-                      fontWeight: FontWeight.w600,
-                      color: theme.colorScheme.onSurface,
-                    ),
-                  ),
-                ),
-                SizedBox(width: sizes.padding / 2),
-                Text(
-                  repsText,
+                child: Text(
+                  label!,
                   style: TextStyle(
-                    fontSize: sizes.fontSize,
-                    fontWeight: FontWeight.w500,
-                    color: iconLightGreyColor,
+                    fontSize: sizes.smallFontSize,
+                    fontWeight: FontWeight.bold,
+                    color: colors.onSurface,
                   ),
-                ),
-                SizedBox(width: sizes.padding / 4),
-                Icon(
-                  Icons.chevron_right,
-                  size: sizes.fontSize * 1.2,
-                  color: iconLightGreyColor,
-                ),
-              ],
-            ),
-            if (hasDifficulty || hasOptions)
-              Padding(
-                padding: EdgeInsets.only(
-                  left: sizes.fontSize * 1.5 + sizes.padding / 2,
-                  top: sizes.padding / 4,
-                ),
-                child: _SetExerciseSubtitle(
-                  setExercise: setExercise,
-                  padding: 0,
-                  spacing: sizes.spacing / 2,
-                  smallPadding: sizes.padding / 4,
-                  fontSize: sizes.fontSize,
-                  smallFontSize: sizes.smallFontSize,
-                  isDarkTheme: isDarkTheme,
                 ),
               ),
+              SizedBox(width: sizes.halfSpacing),
+            ],
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Wrap(
+                    alignment: WrapAlignment.spaceBetween,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    spacing: sizes.halfSpacing,
+                    runSpacing: sizes.quarterSpacing,
+                    children: [
+                      Text(
+                        setExercise.exercise?.name ?? 'Unknown Exercise',
+                        style: TextStyle(
+                          fontSize: sizes.fontSize,
+                          fontWeight: FontWeight.w600,
+                          color: colors.onSurface,
+                        ),
+                      ),
+                      Text(
+                        repsText,
+                        style: TextStyle(
+                          fontSize: sizes.fontSize,
+                          fontWeight: FontWeight.w500,
+                          color: mutedColor,
+                        ),
+                      ),
+                    ],
+                  ),
+                  if (hasDifficulty || hasOptions) ...[
+                    SizedBox(height: sizes.quarterSpacing),
+                    _SetExerciseSubtitle(
+                      setExercise: setExercise,
+                      sizes: sizes,
+                      theme: theme,
+                      isDarkTheme: isDarkTheme,
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            SizedBox(width: sizes.halfSpacing),
+            Icon(
+              Icons.chevron_right,
+              size: sizes.compactIconSize,
+              color: mutedColor,
+            ),
           ],
         ),
       ),
@@ -419,20 +466,14 @@ class _StackedExerciseRow extends StatelessWidget {
 
 class _SetExerciseSubtitle extends StatelessWidget {
   final WorkoutSetExerciseDto setExercise;
-  final double padding;
-  final double spacing;
-  final double smallPadding;
-  final double fontSize;
-  final double smallFontSize;
+  final DataDisplaySizesList sizes;
+  final ThemeData theme;
   final bool isDarkTheme;
 
   const _SetExerciseSubtitle({
     required this.setExercise,
-    required this.padding,
-    required this.spacing,
-    required this.smallPadding,
-    required this.fontSize,
-    required this.smallFontSize,
+    required this.sizes,
+    required this.theme,
     required this.isDarkTheme,
   });
 
@@ -445,9 +486,8 @@ class _SetExerciseSubtitle extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (padding > 0) SizedBox(height: padding),
         if (hasDifficulty) _buildDifficulty(),
-        if (hasDifficulty && hasOptions) SizedBox(height: spacing),
+        if (hasDifficulty && hasOptions) SizedBox(height: sizes.quarterSpacing),
         if (hasOptions) _buildOptions(),
       ],
     );
@@ -455,17 +495,19 @@ class _SetExerciseSubtitle extends StatelessWidget {
 
   Widget _buildDifficulty() {
     final color = isDarkTheme ? Colors.red[400] : Colors.red[600];
-    return Wrap(
-      crossAxisAlignment: WrapCrossAlignment.center,
+    return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(Icons.bolt, size: fontSize * 1.1, color: color),
-        SizedBox(width: smallPadding),
-        Text(
-          '${setExercise.difficulty!.value} ${setExercise.difficulty!.type.value}',
-          style: TextStyle(
-            fontSize: smallFontSize,
-            color: color,
-            fontWeight: FontWeight.w500,
+        Icon(Icons.bolt, size: sizes.mediumSmallFontSize, color: color),
+        SizedBox(width: sizes.quarterSpacing),
+        Flexible(
+          child: Text(
+            '${setExercise.difficulty!.value} ${setExercise.difficulty!.type.value}',
+            style: TextStyle(
+              fontSize: sizes.smallFontSize,
+              color: color,
+              fontWeight: FontWeight.w500,
+            ),
           ),
         ),
       ],
@@ -473,16 +515,27 @@ class _SetExerciseSubtitle extends StatelessWidget {
   }
 
   Widget _buildOptions() {
-    final color = isDarkTheme ? Colors.grey[400] : Colors.grey[600];
-    return Wrap(
-      crossAxisAlignment: WrapCrossAlignment.center,
+    final color = theme.colorScheme.onSurfaceVariant;
+    final optionNames = setExercise.options!
+        .map((option) => option.exercise?.name ?? 'Unknown')
+        .join(', ');
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(Icons.swap_horiz, size: smallFontSize * 1.2, color: color),
-        SizedBox(width: smallPadding),
-        ...setExercise.options!.asMap().entries.map(
-          (entry) => Text(
-            '${entry.value.exercise?.name}${entry.key == setExercise.options!.length - 1 ? '' : ', '}',
-            style: TextStyle(fontSize: smallFontSize, color: color),
+        Padding(
+          padding: EdgeInsets.only(top: sizes.quarterSpacing / 2),
+          child: Icon(
+            Icons.swap_horiz,
+            size: sizes.mediumSmallFontSize,
+            color: color,
+          ),
+        ),
+        SizedBox(width: sizes.quarterSpacing),
+        Expanded(
+          child: Text(
+            optionNames,
+            style: TextStyle(fontSize: sizes.smallFontSize, color: color),
           ),
         ),
       ],

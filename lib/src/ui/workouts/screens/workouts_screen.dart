@@ -50,6 +50,8 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
         name: pagination.name,
         difficulty: pagination.difficulty,
         muscleGroup: pagination.muscleGroup,
+        isFavorite: pagination.isFavorite,
+        createdBy: pagination.createdBy,
         limit: 20,
         offset: 0,
       );
@@ -75,6 +77,7 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
           difficulty: pagination.difficulty,
           muscleGroup: pagination.muscleGroup,
           isFavorite: pagination.isFavorite,
+          createdBy: pagination.createdBy,
           offset: cubit.state.workouts.length,
           limit: 20,
         );
@@ -115,6 +118,8 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
                   initialDifficulty: state.pagination.difficulty,
                   initialMuscleGroup: state.pagination.muscleGroup,
                   initialIsFavorite: state.pagination.isFavorite,
+                  initialCreatedBy: state.pagination.createdBy,
+                  showCreatedBy: true,
                   onSubmit:
                       ({
                         required difficulty,
@@ -122,6 +127,7 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
                         required muscleGroup,
                         required equipmentId,
                         required name,
+                        required createdBy,
                       }) => context.read<WorkoutCubit>().getWorkouts(
                         name: name,
                         difficulty: difficulty,
@@ -129,6 +135,7 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
                         limit: 20,
                         offset: 0,
                         isFavorite: isFavourite,
+                        createdBy: createdBy,
                       ),
                 ),
                 SizedBox(height: sizes.inputSpacing),

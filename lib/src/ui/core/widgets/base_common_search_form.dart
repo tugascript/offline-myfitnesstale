@@ -19,6 +19,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../../data/utils/display_names.dart';
 import '../../../data/utils/enums.dart';
+import './created_by_checkbox.dart';
 import './favourite_checkbox.dart';
 import './layout/app_dropdown.dart';
 import './layout/app_text_form_field.dart';
@@ -38,12 +39,16 @@ class BaseCommonSearchForm extends StatefulWidget {
   final int? initialEquipmentId;
   final Map<int, String>? equipmentSelection;
   final bool initialIsFavorite;
+  final CreatedBy? initialCreatedBy;
+  final bool showMuscleGroup;
+  final bool showCreatedBy;
   final void Function({
     required String name,
     required Difficulty? difficulty,
     required MuscleGroup? muscleGroup,
     required int? equipmentId,
     required bool isFavourite,
+    required CreatedBy? createdBy,
   })
   onSubmit;
 
@@ -57,10 +62,13 @@ class BaseCommonSearchForm extends StatefulWidget {
     required this.isLoading,
     required this.initialName,
     required this.initialDifficulty,
-    required this.initialMuscleGroup,
+    this.initialMuscleGroup,
     this.initialEquipmentId,
     this.equipmentSelection,
     required this.initialIsFavorite,
+    this.initialCreatedBy,
+    this.showMuscleGroup = true,
+    this.showCreatedBy = false,
     required this.onSubmit,
   });
 
@@ -82,8 +90,39 @@ class _BaseCommonSearchFormState extends State<BaseCommonSearchForm> {
       muscleGroup: widget.initialMuscleGroup,
       equipmentId: widget.initialEquipmentId,
       isFavourite: widget.initialIsFavorite,
+      createdBy: widget.initialCreatedBy,
     );
     _nameController.text = _data.name;
+  }
+
+  @override
+  void didUpdateWidget(BaseCommonSearchForm oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.initialName != widget.initialName &&
+        widget.initialName != _data.name) {
+      _data.name = widget.initialName;
+      _nameController.text = widget.initialName;
+    }
+    if (oldWidget.initialDifficulty != widget.initialDifficulty &&
+        widget.initialDifficulty != _data.difficulty) {
+      _data.difficulty = widget.initialDifficulty;
+    }
+    if (oldWidget.initialMuscleGroup != widget.initialMuscleGroup &&
+        widget.initialMuscleGroup != _data.muscleGroup) {
+      _data.muscleGroup = widget.initialMuscleGroup;
+    }
+    if (oldWidget.initialEquipmentId != widget.initialEquipmentId &&
+        widget.initialEquipmentId != _data.equipmentId) {
+      _data.equipmentId = widget.initialEquipmentId;
+    }
+    if (oldWidget.initialIsFavorite != widget.initialIsFavorite &&
+        widget.initialIsFavorite != _data.isFavourite) {
+      _data.isFavourite = widget.initialIsFavorite;
+    }
+    if (oldWidget.initialCreatedBy != widget.initialCreatedBy &&
+        widget.initialCreatedBy != _data.createdBy) {
+      _data.createdBy = widget.initialCreatedBy;
+    }
   }
 
   @override
@@ -148,6 +187,17 @@ class _BaseCommonSearchFormState extends State<BaseCommonSearchForm> {
                   });
                 },
               ),
+              if (widget.showCreatedBy) ...[
+                SizedBox(width: widget.spacing),
+                CreatedByCheckbox(
+                  value: _data.createdBy,
+                  onChanged: (value) {
+                    setState(() {
+                      _data.createdBy = value;
+                    });
+                  },
+                ),
+              ],
               SizedBox(width: widget.spacing),
               Expanded(
                 child: AppDropdown<Difficulty>(
@@ -171,37 +221,40 @@ class _BaseCommonSearchFormState extends State<BaseCommonSearchForm> {
                   },
                 ),
               ),
-              SizedBox(width: widget.spacing),
-              Expanded(
-                child: AppDropdown<MuscleGroup>(
-                  value: _data.muscleGroup,
-                  emptyLabel: 'All Muscle Groups',
-                  items: MuscleGroup.values,
-                  fontSize: widget.fontSize,
-                  padding: widget.padding / 2,
-                  labelBuilder: (d) {
-                    return EnumDisplayNames.getMuscleGroupDisplayName(d);
-                  },
-                  onChanged: (value) {
-                    setState(() {
-                      _data.muscleGroup = value;
-                    });
-                  },
-                  onSaved: (value) {
-                    setState(() {
-                      _data.muscleGroup = value;
-                    });
-                  },
+              if (widget.showMuscleGroup) ...[
+                SizedBox(width: widget.spacing),
+                Expanded(
+                  child: AppDropdown<MuscleGroup>(
+                    value: _data.muscleGroup,
+                    emptyLabel: 'All Muscle Groups',
+                    items: MuscleGroup.values,
+                    fontSize: widget.fontSize,
+                    padding: widget.padding / 2,
+                    labelBuilder: (d) {
+                      return EnumDisplayNames.getMuscleGroupDisplayName(d);
+                    },
+                    onChanged: (value) {
+                      setState(() {
+                        _data.muscleGroup = value;
+                      });
+                    },
+                    onSaved: (value) {
+                      setState(() {
+                        _data.muscleGroup = value;
+                      });
+                    },
+                  ),
                 ),
-              ),
-              SizedBox(width: widget.spacing),
-              if (widget.equipmentSelection == null)
+              ],
+              if (widget.equipmentSelection == null) ...[
+                SizedBox(width: widget.spacing),
                 SearchFormButton(
                   theme: widget.theme,
                   loadingSize: loadingSize,
                   isLoading: widget.isLoading,
                   onPressed: _submit,
                 ),
+              ],
             ],
           ),
           if (widget.equipmentSelection != null) ...[
@@ -252,6 +305,7 @@ class _BaseCommonSearchFormState extends State<BaseCommonSearchForm> {
       muscleGroup: _data.muscleGroup,
       equipmentId: _data.equipmentId,
       isFavourite: _data.isFavourite,
+      createdBy: _data.createdBy,
     );
   }
 }
@@ -262,6 +316,7 @@ final class _FormData {
   MuscleGroup? muscleGroup;
   int? equipmentId;
   bool isFavourite;
+  CreatedBy? createdBy;
 
   _FormData({
     required this.name,
@@ -269,5 +324,6 @@ final class _FormData {
     required this.muscleGroup,
     required this.equipmentId,
     required this.isFavourite,
+    required this.createdBy,
   });
 }

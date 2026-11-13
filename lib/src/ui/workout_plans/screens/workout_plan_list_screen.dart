@@ -21,11 +21,11 @@ import 'package:material_ui/material_ui.dart';
 import '../../../data/utils/enums.dart';
 import '../../core/sizes/data_display_sizes.dart';
 import '../../core/sizes/screen_size.dart';
+import '../../core/widgets/base_common_search_form.dart';
 import '../../core/widgets/layout/app_scaffold.dart';
 import '../view_models/states/workout_plan_state.dart';
 import '../view_models/workout_plan_cubit.dart';
 import '../widgets/editor/create_workout_plan_modal.dart';
-import '../widgets/workout_plan_search_form.dart';
 import '../widgets/workout_plans_list.dart';
 
 class WorkoutPlanListScreen extends StatefulWidget {
@@ -49,6 +49,7 @@ class _WorkoutPlanListScreenState extends State<WorkoutPlanListScreen> {
         name: cubitState.pagination.name,
         difficulty: cubitState.pagination.difficulty,
         isFavorite: cubitState.pagination.isFavorite,
+        createdBy: cubitState.pagination.createdBy,
         limit: 20,
         offset: 0,
       );
@@ -73,6 +74,7 @@ class _WorkoutPlanListScreenState extends State<WorkoutPlanListScreen> {
           name: pagination.name,
           difficulty: pagination.difficulty,
           isFavorite: pagination.isFavorite,
+          createdBy: pagination.createdBy,
           offset: cubit.state.workoutPlans.length,
         );
       }
@@ -111,7 +113,8 @@ class _WorkoutPlanListScreenState extends State<WorkoutPlanListScreen> {
             return Column(
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
-                WorkoutPlanSearchForm(
+                BaseCommonSearchForm(
+                  theme: theme,
                   nameLabel: "Plans",
                   padding: sizes.padding,
                   fontSize: sizes.fontSize,
@@ -120,16 +123,23 @@ class _WorkoutPlanListScreenState extends State<WorkoutPlanListScreen> {
                   initialName: state.pagination.name,
                   initialDifficulty: state.pagination.difficulty,
                   initialIsFavorite: state.pagination.isFavorite,
+                  initialCreatedBy: state.pagination.createdBy,
+                  showMuscleGroup: false,
+                  showCreatedBy: true,
                   onSubmit:
                       ({
                         required String name,
                         required Difficulty? difficulty,
-                        required bool isFavorite,
+                        required MuscleGroup? muscleGroup,
+                        required int? equipmentId,
+                        required bool isFavourite,
+                        required CreatedBy? createdBy,
                       }) {
                         context.read<WorkoutPlanCubit>().getWorkoutPlans(
                           name: name,
                           difficulty: difficulty,
-                          isFavorite: isFavorite,
+                          isFavorite: isFavourite,
+                          createdBy: createdBy,
                           limit: 20,
                           offset: 0,
                         );
