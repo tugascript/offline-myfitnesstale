@@ -125,6 +125,7 @@ final class WorkoutRecord extends Equatable implements Model {
   
   CREATE INDEX IF NOT EXISTS idx_workout_records_workout_id ON $_table (${WorkoutRecordColumns.workoutId.value});
   CREATE INDEX IF NOT EXISTS idx_workout_records_started_at ON $_table (${WorkoutRecordColumns.startedAt.value});
+  CREATE INDEX IF NOT EXISTS idx_workout_records_status ON $_table (${WorkoutRecordColumns.status.value});
   ''';
 
   @override

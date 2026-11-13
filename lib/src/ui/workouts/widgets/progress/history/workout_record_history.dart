@@ -67,6 +67,7 @@ class _WorkoutRecordHistoryState extends State<WorkoutRecordHistory> {
     cubit.getWorkoutRecords(
       workoutId: widget.workoutId,
       dateRange: (_dateRange.start, _dateRange.end),
+      skipSkipped: true,
       limit: 20,
       offset: 0,
     );
@@ -120,6 +121,7 @@ class _WorkoutRecordHistoryState extends State<WorkoutRecordHistory> {
         await context.read<WorkoutRecordCubit>().getWorkoutRecords(
           workoutId: widget.workoutId,
           dateRange: (_dateRange.start, _dateRange.end),
+          skipSkipped: true,
           limit: 20,
           offset: 0,
         );

@@ -91,11 +91,15 @@ class _WorkoutRecordCubit extends WorkoutRecordCubit {
     : super(workoutRecordRepository: WorkoutRecordRepository.create());
 
   @override
-  Future<void> getLatestWorkoutRecord([int? workoutId]) async {}
+  Future<void> getLatestWorkoutRecord({
+    int? workoutId,
+    bool skipSkipped = false,
+  }) async {}
 
   @override
   Future<void> getWorkoutRecords({
     int? workoutId,
+    bool? skipSkipped,
     int? limit,
     int? offset,
     (DateTime start, DateTime end)? dateRange,

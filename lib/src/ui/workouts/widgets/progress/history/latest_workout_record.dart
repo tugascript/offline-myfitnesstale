@@ -51,7 +51,10 @@ class _LatestWorkoutRecordState extends State<LatestWorkoutRecord> {
   @override
   void initState() {
     super.initState();
-    context.read<WorkoutRecordCubit>().getLatestWorkoutRecord(widget.workoutId);
+    context.read<WorkoutRecordCubit>().getLatestWorkoutRecord(
+      workoutId: widget.workoutId,
+      skipSkipped: true,
+    );
   }
 
   @override

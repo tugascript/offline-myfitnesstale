@@ -1061,4 +1061,111 @@ void main() {
       greaterThan(1000),
     );
   });
+
+  test(
+    'WorkoutRecordRepository skips skipped records in getWorkoutRecords and getLatestWorkoutRecord when skipSkipped is true',
+    () async {
+      final db = await testDatabase.db;
+      final workoutId = await insertWorkout(db);
+      final otherWorkoutId = await insertWorkout(db);
+      final repo = WorkoutRecordRepository.create();
+
+      final completedTime = DateTime(2026, 11, 10, 10, 0);
+      final abandonedTime = DateTime(2026, 11, 11, 10, 0);
+      final skippedTime = DateTime(2026, 11, 12, 10, 0);
+
+      final completedId = await db.insert(
+        WorkoutRecord.table,
+        WorkoutRecord.create(
+          workoutId: workoutId,
+          version: 1,
+          startedAt: completedTime.millisecondsSinceEpoch ~/ 1000,
+          completedAt: completedTime
+              .add(const Duration(minutes: 45))
+              .millisecondsSinceEpoch ~/
+              1000,
+          status: ProgressStatus.completed,
+        ).toMap(),
+      );
+      final abandonedId = await db.insert(
+        WorkoutRecord.table,
+        WorkoutRecord.create(
+          workoutId: workoutId,
+          version: 1,
+          startedAt: abandonedTime.millisecondsSinceEpoch ~/ 1000,
+          droppedAt: abandonedTime
+              .add(const Duration(minutes: 10))
+              .millisecondsSinceEpoch ~/
+              1000,
+          status: ProgressStatus.abandoned,
+        ).toMap(),
+      );
+      final skippedId = await db.insert(
+        WorkoutRecord.table,
+        WorkoutRecord.create(
+          workoutId: workoutId,
+          version: 1,
+          startedAt: skippedTime.millisecondsSinceEpoch ~/ 1000,
+          droppedAt: skippedTime.millisecondsSinceEpoch ~/ 1000,
+          status: ProgressStatus.skipped,
+        ).toMap(),
+      );
+      final onlySkippedId = await db.insert(
+        WorkoutRecord.table,
+        WorkoutRecord.create(
+          workoutId: otherWorkoutId,
+          version: 1,
+          startedAt: skippedTime.millisecondsSinceEpoch ~/ 1000,
+          droppedAt: skippedTime.millisecondsSinceEpoch ~/ 1000,
+          status: ProgressStatus.skipped,
+        ).toMap(),
+      );
+
+      final allRecords = (await repo.getWorkoutRecords(
+        workoutId: workoutId,
+      )).value;
+      expect(allRecords.total, 3);
+      expect(
+        allRecords.data.map((r) => r.id),
+        [skippedId, abandonedId, completedId],
+      );
+
+      final nonSkippedRecords = (await repo.getWorkoutRecords(
+        workoutId: workoutId,
+        skipSkipped: true,
+      )).value;
+      expect(nonSkippedRecords.total, 2);
+      expect(
+        nonSkippedRecords.data.map((r) => r.id),
+        [abandonedId, completedId],
+      );
+
+      final allAcrossWorkouts = (await repo.getWorkoutRecords(
+        skipSkipped: true,
+      )).value;
+      expect(allAcrossWorkouts.data.map((r) => r.id), isNot(contains(skippedId)));
+      expect(
+        allAcrossWorkouts.data.map((r) => r.id),
+        isNot(contains(onlySkippedId)),
+      );
+
+      final latestUnfiltered = (await repo.getLatestWorkoutRecord(
+        workoutId: workoutId,
+      )).value;
+      expect(latestUnfiltered.id, skippedId);
+
+      final latestNonSkipped = (await repo.getLatestWorkoutRecord(
+        workoutId: workoutId,
+        skipSkipped: true,
+      )).value;
+      expect(latestNonSkipped.id, abandonedId);
+
+      final onlySkippedLatest = await repo.getLatestWorkoutRecord(
+        workoutId: otherWorkoutId,
+        skipSkipped: true,
+      );
+      expect(onlySkippedLatest.isErr(), isTrue);
+      expect(onlySkippedLatest.error.type, SingleErrorTypes.notFound);
+    },
+  );
 }

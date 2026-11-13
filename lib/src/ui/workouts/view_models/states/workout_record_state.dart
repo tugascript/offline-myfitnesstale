@@ -24,6 +24,7 @@ import '../../../core/view_models/states/common_state.dart';
 final class WorkoutRecordPagination extends Equatable {
   final int? workoutId;
   final (DateTime, DateTime)? dateRange;
+  final bool skipSkipped;
   final int limit;
   final int offset;
   final int total;
@@ -31,18 +32,25 @@ final class WorkoutRecordPagination extends Equatable {
   const WorkoutRecordPagination({
     this.workoutId,
     this.dateRange,
+    this.skipSkipped = false,
     required this.limit,
     required this.offset,
     required this.total,
   });
 
   factory WorkoutRecordPagination.initial() {
-    return const WorkoutRecordPagination(limit: 20, offset: 0, total: 0);
+    return const WorkoutRecordPagination(
+      skipSkipped: false,
+      limit: 20,
+      offset: 0,
+      total: 0,
+    );
   }
 
   WorkoutRecordPagination copyWith({
     Nullable<int>? workoutId,
     Nullable<(DateTime, DateTime)>? dateRange,
+    bool? skipSkipped,
     int? limit,
     int? offset,
     int? total,
@@ -50,6 +58,7 @@ final class WorkoutRecordPagination extends Equatable {
     return WorkoutRecordPagination(
       workoutId: workoutId != null ? workoutId.value : this.workoutId,
       dateRange: dateRange != null ? dateRange.value : this.dateRange,
+      skipSkipped: skipSkipped ?? this.skipSkipped,
       limit: limit ?? this.limit,
       offset: offset ?? this.offset,
       total: total ?? this.total,
@@ -57,7 +66,14 @@ final class WorkoutRecordPagination extends Equatable {
   }
 
   @override
-  List<Object?> get props => [workoutId, dateRange, limit, offset, total];
+  List<Object?> get props => [
+    workoutId,
+    dateRange,
+    skipSkipped,
+    limit,
+    offset,
+    total,
+  ];
 }
 
 final class WorkoutRecordState extends Equatable {

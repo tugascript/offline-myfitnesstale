@@ -104,11 +104,19 @@ final class WorkoutRecordRepository implements Repository {
   getWorkoutRecords({
     int? workoutId,
     (DateTime start, DateTime end)? dateRange,
+    bool skipSkipped = false,
     int limit = kDefaultLimit,
     int offset = kDefaultOffset,
   }) async {
     _logger.info('Getting workout records');
     final WhereBuilder query = WhereBuilder();
+
+    if (skipSkipped) {
+      query.and(
+        WorkoutRecordColumns.status.notEqual,
+        ProgressStatus.skipped.value,
+      );
+    }
 
     if (dateRange != null) {
       final startOfDay = DateTime(
@@ -331,12 +339,26 @@ final class WorkoutRecordRepository implements Repository {
   }
 
   Future<Result<WorkoutRecordDto, ServiceError<SingleErrorTypes>>>
-  getLatestWorkoutRecord([int? workoutId]) async {
+  getLatestWorkoutRecord({
+    int? workoutId,
+    bool skipSkipped = false,
+  }) async {
     _logger.info('Getting latest workout record for workout $workoutId');
     try {
+      final WhereBuilder query = WhereBuilder();
+      if (workoutId != null) {
+        query.and(WorkoutRecordColumns.workoutId.equal, workoutId);
+      }
+      if (skipSkipped) {
+        query.and(
+          WorkoutRecordColumns.status.notEqual,
+          ProgressStatus.skipped.value,
+        );
+      }
+
       final List<WorkoutRecord> records = await _workoutRecordDao.selectMany(
-        where: workoutId != null ? WorkoutRecordColumns.workoutId.equal : null,
-        whereArgs: workoutId != null ? [workoutId] : null,
+        where: query.where,
+        whereArgs: query.args,
         orderBy: [WorkoutRecordColumns.startedAt.orderDesc],
         limit: 1,
       );
