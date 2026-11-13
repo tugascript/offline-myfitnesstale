@@ -150,7 +150,7 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
                   ),
                 ),
                 SizedBox(height: sizes.spacing),
-                if (sets.length >= 5) ...[
+                if (sets.length >= 4) ...[
                   WorkoutBlockStrip(
                     sets: sets,
                     selectedBlockIndex: _selectedBlockIndex,
@@ -191,7 +191,7 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
                         set: entry.value,
                         setNumber: index + 1,
                         isSelected:
-                            sets.length >= 5 && _selectedBlockIndex == index,
+                            sets.length >= 4 && _selectedBlockIndex == index,
                       ),
                     );
                   }),
