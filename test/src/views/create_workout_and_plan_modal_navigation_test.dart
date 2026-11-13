@@ -29,9 +29,9 @@ import 'package:myfitnesstale/src/data/repositories/workouts/workout_repository.
 import 'package:myfitnesstale/src/data/utils/enums.dart';
 import 'package:myfitnesstale/src/data/utils/json_data.dart';
 import 'package:myfitnesstale/src/ui/core/view_models/states/common_state.dart';
-import 'package:myfitnesstale/src/ui/workout_plans/screens/workout_plan_list_screen.dart';
+import 'package:myfitnesstale/src/ui/workout_plans/screens/workout_plans_list_screen.dart';
 import 'package:myfitnesstale/src/ui/workout_plans/view_models/workout_plan_cubit.dart';
-import 'package:myfitnesstale/src/ui/workouts/screens/workouts_screen.dart';
+import 'package:myfitnesstale/src/ui/workouts/screens/workouts_list_screen.dart';
 import 'package:myfitnesstale/src/ui/workouts/view_models/workout_cubit.dart';
 import 'package:myfitnesstale/src/utils/nullable.dart';
 
