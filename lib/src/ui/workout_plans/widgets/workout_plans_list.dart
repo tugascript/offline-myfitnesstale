@@ -17,10 +17,26 @@
 
 import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 
 import '../../../data/repositories/workout_plans/dtos/workout_plan_dto.dart';
+import '../../../data/utils/enums.dart';
 import '../../core/sizes/data_display_sizes.dart';
 import './workout_plan_card.dart';
+
+const _skeletonWorkoutPlan = WorkoutPlanDto(
+  id: 0,
+  name: 'Loading Workout Plan...',
+  currentVersion: 1,
+  totalWeeks: 4,
+  totalDays: 12,
+  totalWorkouts: 12,
+  difficulty: Difficulty.beginner,
+  isFavorite: false,
+  createdBy: CreatedBy.system,
+);
+
+void _noopTap() {}
 
 class WorkoutPlansList extends StatelessWidget {
   final DataDisplaySizesList sizes;
@@ -38,11 +54,7 @@ class WorkoutPlansList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (isLoading && workoutPlans.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    if (workoutPlans.isEmpty) {
+    if (!isLoading && workoutPlans.isEmpty) {
       return SizedBox(
         height: MediaQuery.of(context).size.height / 2,
         child: Center(
@@ -70,23 +82,43 @@ class WorkoutPlansList extends StatelessWidget {
       );
     }
 
-    return ListView.builder(
-      controller: scrollController,
-      itemCount: workoutPlans.length + (isLoading ? 1 : 0),
-      itemBuilder: (context, index) {
-        if (index == workoutPlans.length) {
-          return const Padding(
-            padding: EdgeInsets.all(16.0),
-            child: Center(child: CircularProgressIndicator()),
+    final isInitialLoading = isLoading && workoutPlans.isEmpty;
+
+    return Skeletonizer(
+      enabled: isInitialLoading,
+      child: ListView.builder(
+        controller: scrollController,
+        itemCount: isInitialLoading
+            ? 3
+            : workoutPlans.length + (isLoading ? 1 : 0),
+        itemBuilder: (context, index) {
+          if (isInitialLoading) {
+            return WorkoutPlanCard(
+              plan: _skeletonWorkoutPlan,
+              sizes: sizes,
+              onTap: _noopTap,
+            );
+          }
+
+          if (index == workoutPlans.length) {
+            return Skeletonizer(
+              enabled: true,
+              child: WorkoutPlanCard(
+                plan: _skeletonWorkoutPlan,
+                sizes: sizes,
+                onTap: _noopTap,
+              ),
+            );
+          }
+
+          final plan = workoutPlans[index];
+          return WorkoutPlanCard(
+            plan: plan,
+            sizes: sizes,
+            onTap: () => context.push('/workout-plans/${plan.id}'),
           );
-        }
-        final plan = workoutPlans[index];
-        return WorkoutPlanCard(
-          plan: plan,
-          sizes: sizes,
-          onTap: () => context.push('/workout-plans/${plan.id}'),
-        );
-      },
+        },
+      ),
     );
   }
 }
