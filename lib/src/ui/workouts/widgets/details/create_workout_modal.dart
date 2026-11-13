@@ -72,9 +72,10 @@ class CreateWorkoutDialog extends StatelessWidget {
                   if (context.mounted) {
                     Navigator.of(context).pop();
                     final cubitState = context.read<WorkoutCubit>().state;
-                    if (cubitState.selectedWorkout != null) {
+                    if (cubitState.error == null &&
+                        cubitState.selectedWorkout != null) {
                       context.push(
-                        "/workouts/${cubitState.selectedWorkout!.id}",
+                        "/workouts/${cubitState.selectedWorkout!.id}/edit",
                       );
                     }
                   }
