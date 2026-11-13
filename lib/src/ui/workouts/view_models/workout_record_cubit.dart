@@ -38,17 +38,20 @@ class WorkoutRecordCubit extends Cubit<WorkoutRecordState> {
   Future<void> getWorkoutRecords({
     int? workoutId,
     (DateTime, DateTime)? dateRange,
+    bool? skipSkipped,
     int? limit,
     int? offset,
   }) async {
     _logger.info('Getting workout records');
     final requestId = state.recordsRequestId + 1;
     final isLoadMore = (offset ?? state.pagination.offset) > 0;
+    final resolvedSkipSkipped = skipSkipped ?? state.pagination.skipSkipped;
     emit(state.copyWith(recordsRequestId: requestId, isLoading: true));
 
     final result = await _workoutRecordService.getWorkoutRecords(
       workoutId: workoutId,
       dateRange: dateRange ?? state.pagination.dateRange,
+      skipSkipped: resolvedSkipSkipped,
       limit: limit ?? state.pagination.limit,
       offset: offset ?? state.pagination.offset,
     );
@@ -99,6 +102,7 @@ class WorkoutRecordCubit extends Cubit<WorkoutRecordState> {
         pagination: state.pagination.copyWith(
           workoutId: Nullable(workoutId),
           dateRange: dateRange != null ? Nullable(dateRange) : null,
+          skipSkipped: resolvedSkipSkipped,
           total: paginatedData.total,
           limit: paginatedData.limit,
           offset: paginatedData.offset,
@@ -109,12 +113,16 @@ class WorkoutRecordCubit extends Cubit<WorkoutRecordState> {
     );
   }
 
-  Future<void> getLatestWorkoutRecord([int? workoutId]) async {
+  Future<void> getLatestWorkoutRecord({
+    int? workoutId,
+    bool skipSkipped = false,
+  }) async {
     _logger.info('Getting latest workout record for workout $workoutId');
     emit(state.copyWith(isLoading: true));
 
     final result = await _workoutRecordService.getLatestWorkoutRecord(
-      workoutId,
+      workoutId: workoutId,
+      skipSkipped: skipSkipped,
     );
     if (result.isErr()) {
       final error = result.error;
