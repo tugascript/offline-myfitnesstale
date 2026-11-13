@@ -17,13 +17,32 @@
 
 import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 
 import '../../../data/repositories/workouts/dtos/workout_dto.dart';
+import '../../../data/utils/enums.dart';
+import '../../../data/utils/json_data.dart';
 import '../../../routing/routes.dart';
 import '../../core/sizes/data_display_sizes.dart';
 import '../../core/widgets/not_found_list.dart';
 import '../view_models/states/workout_state.dart';
 import './workout_card.dart';
+
+const _skeletonWorkout = WorkoutDto(
+  id: 0,
+  name: 'Loading Workout Name...',
+  muscleGroups: {MuscleGroup.push, MuscleGroup.legs},
+  muscles: TargetMuscles(primary: {}, secondary: {}),
+  difficulty: Difficulty.beginner,
+  version: 1,
+  isFavorite: false,
+  totalSets: 4,
+  totalReps: 40,
+  editorType: EditorType.advanced,
+  createdBy: CreatedBy.system,
+);
+
+void _noopTap() {}
 
 class WorkoutsList extends StatelessWidget {
   final DataDisplaySizesList sizes;
@@ -43,37 +62,51 @@ class WorkoutsList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (isLoading && workouts.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    if (workouts.isEmpty) {
+    if (!isLoading && workouts.isEmpty) {
       return NotFoundList(sizes: sizes, name: 'workouts');
     }
 
-    return ListView.builder(
-      controller: scrollController,
-      // Remove shrinkWrap and physics to allow normal scrolling behavior in Expanded
-      itemCount: workouts.length + (isLoading ? 1 : 0),
-      itemBuilder: (context, index) {
-        if (index == workouts.length) {
-          return Padding(
-            padding: EdgeInsets.all(sizes.padding),
-            child: const Center(child: CircularProgressIndicator()),
-          );
-        }
-        final workout = workouts[index];
-        return WorkoutCard(
-          workout: workout,
-          sizes: sizes,
-          onTap: () => context.push(
-            Routes.workoutDetail.name.replaceFirst(
-              ":id",
-              workout.id.toString(),
+    final isInitialLoading = isLoading && workouts.isEmpty;
+
+    return Skeletonizer(
+      enabled: isInitialLoading,
+      child: ListView.builder(
+        controller: scrollController,
+        // Remove shrinkWrap and physics to allow normal scrolling behavior in Expanded
+        itemCount: isInitialLoading ? 3 : workouts.length + (isLoading ? 1 : 0),
+        itemBuilder: (context, index) {
+          if (isInitialLoading) {
+            return WorkoutCard(
+              workout: _skeletonWorkout,
+              sizes: sizes,
+              onTap: _noopTap,
+            );
+          }
+
+          if (index == workouts.length) {
+            return Skeletonizer(
+              enabled: true,
+              child: WorkoutCard(
+                workout: _skeletonWorkout,
+                sizes: sizes,
+                onTap: _noopTap,
+              ),
+            );
+          }
+
+          final workout = workouts[index];
+          return WorkoutCard(
+            workout: workout,
+            sizes: sizes,
+            onTap: () => context.push(
+              Routes.workoutDetail.name.replaceFirst(
+                ":id",
+                workout.id.toString(),
+              ),
             ),
-          ),
-        );
-      },
+          );
+        },
+      ),
     );
   }
 }
