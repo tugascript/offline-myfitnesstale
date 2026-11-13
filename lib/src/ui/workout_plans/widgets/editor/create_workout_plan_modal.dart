@@ -74,9 +74,10 @@ class CreateWorkoutPlanModal extends StatelessWidget {
                   if (context.mounted) {
                     Navigator.of(context).pop();
                     final cubitState = context.read<WorkoutPlanCubit>().state;
-                    if (cubitState.selectedWorkoutPlan != null) {
+                    if (cubitState.error == null &&
+                        cubitState.selectedWorkoutPlan != null) {
                       context.push(
-                        "/workout-plans/${cubitState.selectedWorkoutPlan!.id}",
+                        "/workout-plans/${cubitState.selectedWorkoutPlan!.id}/edit",
                       );
                     }
                   }
