@@ -65,6 +65,8 @@ class QuickActionCategoryCard extends StatelessWidget {
               Text(
                 category.subtitle,
                 textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
                 style: TextStyle(fontSize: sizes.fontSize, color: color),
               ),
             ],
