@@ -19,6 +19,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../../data/repositories/workout_plans/dtos/workout_plan_day_dto.dart';
 import '../../core/sizes/data_display_sizes.dart';
+import '../../core/widgets/icon_numeric_string.dart';
 import 'active/active_workout_plan_day_tile.dart';
 
 class WorkoutPlanWeekStrip extends StatelessWidget {
@@ -238,25 +239,11 @@ class _WeekDayCell extends StatelessWidget {
         fit: BoxFit.scaleDown,
         child: Padding(
           padding: EdgeInsets.symmetric(horizontal: sizes.spacing / 8),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.fitness_center,
-                size: sizes.smallFontSize * 1.15,
-                color: contentColor,
-              ),
-              SizedBox(width: sizes.spacing / 8),
-              Text(
-                '$totalWorkouts',
-                style: TextStyle(
-                  fontSize: sizes.smallFontSize,
-                  fontWeight: FontWeight.bold,
-                  color: contentColor,
-                ),
-              ),
-            ],
+          child: IconNumericString(
+            sizes: sizes,
+            icon: Icons.fitness_center,
+            color: contentColor,
+            number: totalWorkouts,
           ),
         ),
       );

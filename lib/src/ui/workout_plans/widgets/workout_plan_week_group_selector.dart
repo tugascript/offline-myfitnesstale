@@ -19,6 +19,8 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../../data/repositories/workout_plans/dtos/workout_plan_week_dto.dart';
 import '../../core/sizes/data_display_sizes.dart';
+import '../../core/widgets/icon_numeric_string.dart';
+import '../../core/widgets/layout/app_dropdown.dart';
 import './workout_phase_badge.dart';
 
 class WorkoutPlanWeekGroupSelector extends StatelessWidget {
@@ -51,86 +53,56 @@ class WorkoutPlanWeekGroupSelector extends StatelessWidget {
 
     final safeIndex = selectedGroupIndex.clamp(0, weekGroups.length - 1);
     final currentGroup = weekGroups[safeIndex];
+    final metaColor = theme.colorScheme.onSurfaceVariant;
 
-    return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: sizes.padding,
-        vertical: sizes.padding / 2,
-      ),
-      decoration: BoxDecoration(
-        color: isDarkTheme
-            ? Colors.white.withValues(alpha: 0.04)
-            : Colors.black.withValues(alpha: 0.03),
-        border: Border.all(
-          color: isDarkTheme ? Colors.grey.shade800 : Colors.grey.shade300,
-        ),
-        borderRadius: BorderRadius.zero,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          if (weekGroups.length == 1)
-            Text(
-              _groupLabel(currentGroup),
-              style: TextStyle(
-                fontSize: sizes.fontSize,
-                fontWeight: FontWeight.bold,
-              ),
-            )
-          else
-            DropdownButtonHideUnderline(
-              child: DropdownButton<int>(
-                value: safeIndex,
-                isExpanded: true,
-                itemHeight: null,
-                borderRadius: BorderRadius.zero,
-                dropdownColor: theme.cardColor,
-                icon: Icon(
-                  Icons.keyboard_arrow_down,
-                  color: theme.primaryColor,
-                  size: sizes.buttonIconSize,
-                ),
-                onChanged: (newIndex) {
-                  if (newIndex != null) onSelectGroup(newIndex);
-                },
-                items: weekGroups.asMap().entries.map((entry) {
-                  return DropdownMenuItem<int>(
-                    value: entry.key,
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(
-                        vertical: sizes.halfSpacing,
-                      ),
-                      child: Text(
-                        _groupLabel(entry.value),
-                        style: TextStyle(
-                          fontSize: sizes.fontSize,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  );
-                }).toList(),
-              ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (weekGroups.length == 1)
+          Text(
+            _groupLabel(currentGroup),
+            style: TextStyle(
+              fontSize: sizes.fontSize,
+              fontWeight: FontWeight.bold,
             ),
-          SizedBox(height: sizes.halfSpacing),
-          Wrap(
-            spacing: sizes.halfSpacing,
-            runSpacing: sizes.halfSpacing,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            children: [
-              if (currentGroup.phase != null)
-                WorkoutPhaseBadge(sizes: sizes, phase: currentGroup.phase!),
-              Text(
-                '${currentGroup.totalDays} days • ${currentGroup.totalWorkouts} workouts',
-                style: TextStyle(
-                  fontSize: sizes.smallFontSize,
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ],
+          )
+        else
+          AppDropdown<int>(
+            filled: true,
+            value: safeIndex,
+            emptyLabel: 'Select weeks',
+            showEmptyValue: false,
+            items: List.generate(weekGroups.length, (index) => index),
+            labelBuilder: (index) => _groupLabel(weekGroups[index]),
+            fontSize: sizes.fontSize,
+            padding: sizes.padding * 0.4,
+            onChanged: (newIndex) {
+              if (newIndex != null) onSelectGroup(newIndex);
+            },
+            onSaved: (_) {},
           ),
-        ],
-      ),
+        SizedBox(height: sizes.halfSpacing),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            if (currentGroup.phase != null)
+              WorkoutPhaseBadge(sizes: sizes, phase: currentGroup.phase!),
+            IconNumericString(
+              sizes: sizes,
+              icon: Icons.calendar_today,
+              color: metaColor,
+              number: currentGroup.totalDays,
+            ),
+            IconNumericString(
+              sizes: sizes,
+              icon: Icons.fitness_center,
+              color: metaColor,
+              number: currentGroup.totalWorkouts,
+            ),
+          ],
+        ),
+      ],
     );
   }
 }
