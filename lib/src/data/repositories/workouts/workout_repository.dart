@@ -110,6 +110,7 @@ final class WorkoutRepository implements Repository {
     Difficulty? difficulty,
     MuscleGroup? muscleGroup,
     bool isFavorite = false,
+    CreatedBy? createdBy,
     int limit = kDefaultLimit,
     int offset = kDefaultOffset,
   }) async {
@@ -130,6 +131,10 @@ final class WorkoutRepository implements Repository {
 
     if (isFavorite) {
       query.and(WorkoutColumns.isFavorite.equal, 1);
+    }
+
+    if (createdBy != null) {
+      query.and(WorkoutColumns.createdBy.equal, createdBy.value);
     }
 
     try {

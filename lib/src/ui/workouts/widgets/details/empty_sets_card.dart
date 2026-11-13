@@ -26,6 +26,8 @@ class EmptySetsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final mutedColor = Theme.of(context).colorScheme.onSurfaceVariant;
+
     return Card(
       margin: EdgeInsets.zero,
       child: Padding(
@@ -35,24 +37,23 @@ class EmptySetsCard extends StatelessWidget {
             children: [
               Icon(
                 Icons.fitness_center,
-                size: sizes.titleFontSize,
-                color: Colors.grey[400],
+                size: sizes.largeIconSize,
+                color: mutedColor,
               ),
               SizedBox(height: sizes.spacing),
               Text(
-                'No sets configured',
+                'No blocks configured',
+                textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: sizes.subtitleFontSize,
-                  color: Colors.grey[600],
+                  color: mutedColor,
                 ),
               ),
-              SizedBox(height: sizes.spacing / 2),
+              SizedBox(height: sizes.halfSpacing),
               Text(
-                'Add sets and exercises to this workout',
-                style: TextStyle(
-                  fontSize: sizes.fontSize,
-                  color: Colors.grey[500],
-                ),
+                'Add blocks and exercises to this workout',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: sizes.fontSize, color: mutedColor),
               ),
             ],
           ),

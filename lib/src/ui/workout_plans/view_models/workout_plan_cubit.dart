@@ -44,6 +44,7 @@ class WorkoutPlanCubit extends Cubit<WorkoutPlanState>
     String? name,
     Difficulty? difficulty,
     bool isFavorite = false,
+    CreatedBy? createdBy,
     int? limit,
     int? offset,
   }) => _loadWorkoutPlans(
@@ -51,6 +52,7 @@ class WorkoutPlanCubit extends Cubit<WorkoutPlanState>
       name: name ?? '',
       difficulty: difficulty,
       isFavorite: isFavorite,
+      createdBy: createdBy,
       limit: limit ?? state.pagination.limit,
       offset: offset ?? state.pagination.offset,
       total: 0,
@@ -77,6 +79,7 @@ class WorkoutPlanCubit extends Cubit<WorkoutPlanState>
       name: query.name,
       difficulty: query.difficulty,
       isFavorite: query.isFavorite,
+      createdBy: query.createdBy,
       limit: limit,
       offset: offset,
     );

@@ -27,6 +27,7 @@ final class WorkoutPagination extends Equatable {
   final MuscleGroup? muscleGroup;
   final Difficulty? difficulty;
   final bool isFavorite;
+  final CreatedBy? createdBy;
   final int limit;
   final int offset;
   final int total;
@@ -35,6 +36,7 @@ final class WorkoutPagination extends Equatable {
     this.muscleGroup,
     this.difficulty,
     required this.isFavorite,
+    this.createdBy,
     required this.name,
     required this.limit,
     required this.offset,
@@ -59,6 +61,7 @@ final class WorkoutPagination extends Equatable {
     int? offset,
     int? total,
     bool? isFavorite,
+    Nullable<CreatedBy>? createdBy,
   }) {
     return WorkoutPagination(
       name: name ?? this.name,
@@ -68,6 +71,7 @@ final class WorkoutPagination extends Equatable {
       offset: offset ?? this.offset,
       total: total ?? this.total,
       isFavorite: isFavorite ?? this.isFavorite,
+      createdBy: createdBy != null ? createdBy.value : this.createdBy,
     );
   }
 
@@ -77,6 +81,7 @@ final class WorkoutPagination extends Equatable {
     muscleGroup,
     difficulty,
     isFavorite,
+    createdBy,
     limit,
     offset,
     total,

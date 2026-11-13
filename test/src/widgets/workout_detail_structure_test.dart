@@ -28,8 +28,11 @@ import 'package:myfitnesstale/src/data/repositories/workouts/workout_repository.
 import 'package:myfitnesstale/src/data/utils/enums.dart';
 import 'package:myfitnesstale/src/data/utils/json_data.dart';
 import 'package:myfitnesstale/src/ui/core/sizes/data_display_sizes.dart';
+import 'package:myfitnesstale/src/ui/core/sizes/screen_size.dart';
 import 'package:myfitnesstale/src/ui/workouts/screens/workout_detail_screen.dart';
 import 'package:myfitnesstale/src/ui/workouts/view_models/workout_cubit.dart';
+import 'package:myfitnesstale/src/ui/workouts/widgets/details/empty_sets_card.dart';
+import 'package:myfitnesstale/src/ui/workouts/widgets/details/workout_block_strip.dart';
 import 'package:myfitnesstale/src/ui/workouts/widgets/details/workout_set_card.dart';
 import 'package:myfitnesstale/src/utils/nullable.dart';
 
@@ -145,7 +148,7 @@ void main() {
     ],
   );
 
-  final dropSet = WorkoutSetDto(
+  final dropSetSingle = WorkoutSetDto(
     id: 3,
     position: 3,
     setType: WorkoutSetType.drop,
@@ -165,9 +168,85 @@ void main() {
     ],
   );
 
+  final dropSetMulti = WorkoutSetDto(
+    id: 4,
+    position: 4,
+    setType: WorkoutSetType.drop,
+    minSets: 2,
+    recommendedRestSecs: 90,
+    totalExercises: 2,
+    totalReps: 40,
+    exercises: const [
+      WorkoutSetExerciseDto(
+        id: 41,
+        position: 1,
+        exerciseId: 103,
+        minReps: 12,
+        toMaxReps: false,
+        exercise: lateralRaise,
+      ),
+      WorkoutSetExerciseDto(
+        id: 42,
+        position: 2,
+        exerciseId: 103,
+        minReps: 8,
+        toMaxReps: false,
+        exercise: lateralRaise,
+      ),
+    ],
+  );
+
+  final pyramidSet = WorkoutSetDto(
+    id: 5,
+    position: 5,
+    setType: WorkoutSetType.pyramid,
+    minSets: 3,
+    recommendedRestSecs: 120,
+    totalExercises: 2,
+    totalReps: 54,
+    exercises: const [
+      WorkoutSetExerciseDto(
+        id: 51,
+        position: 1,
+        exerciseId: 101,
+        minReps: 10,
+        toMaxReps: false,
+        exercise: benchPress,
+      ),
+      WorkoutSetExerciseDto(
+        id: 52,
+        position: 2,
+        exerciseId: 101,
+        minReps: 8,
+        toMaxReps: false,
+        exercise: benchPress,
+      ),
+    ],
+  );
+
+  GoRouter buildDetailRouter() {
+    return GoRouter(
+      initialLocation: '/workouts/1',
+      routes: [
+        GoRoute(
+          path: '/workouts/:id',
+          builder: (context, state) => WorkoutDetailScreen(
+            workoutId: int.parse(state.pathParameters['id']!),
+          ),
+        ),
+        GoRoute(
+          path: '/exercises/:id',
+          builder: (context, state) => Scaffold(
+            body: Text('Exercise Detail ${state.pathParameters['id']}'),
+          ),
+        ),
+      ],
+    );
+  }
+
   group('WorkoutSetCard dense prescription layout', () {
     testWidgets(
-      'renders standard single-exercise set as dense one-liner without ExpansionTile',
+      'renders standard single-exercise set as compact row without ExpansionTile or rounded corners',
       (tester) async {
         await tester.pumpWidget(
           MaterialApp(
@@ -183,14 +262,18 @@ void main() {
           ),
         );
 
-        // ExpansionTile should not exist
         expect(find.byType(ExpansionTile), findsNothing);
 
-        // Exercise name and prescription are visible immediately
         expect(find.text('Bench Press'), findsOneWidget);
         expect(find.textContaining('3×8–12'), findsOneWidget);
         expect(find.textContaining('1m 30s'), findsOneWidget);
         expect(find.text('Standard'), findsOneWidget);
+
+        for (final inkWell in tester.widgetList<InkWell>(
+          find.byType(InkWell),
+        )) {
+          expect(inkWell.borderRadius, isNull);
+        }
       },
     );
 
@@ -213,54 +296,123 @@ void main() {
 
       expect(find.byType(ExpansionTile), findsNothing);
 
-      // Header
       expect(find.text('Super'), findsOneWidget);
       expect(find.textContaining('4×'), findsOneWidget);
       expect(find.textContaining('1m'), findsOneWidget);
 
-      // Stacked lettered exercises
       expect(find.text('A'), findsOneWidget);
       expect(find.text('B'), findsOneWidget);
       expect(find.text('Bench Press'), findsOneWidget);
       expect(find.text('Dumbbell Fly'), findsOneWidget);
       expect(find.text('10–12 reps'), findsOneWidget);
       expect(find.text('12–15 reps'), findsOneWidget);
+
+      for (final container in tester.widgetList<Container>(
+        find.byType(Container),
+      )) {
+        final decoration = container.decoration;
+        if (decoration is BoxDecoration) {
+          expect(decoration.borderRadius, isNull);
+        }
+      }
     });
 
-    testWidgets('renders drop set with progression badge in header', (
+    testWidgets(
+      'hides redundant step label on 1-exercise drop block and shows step labels on multi-exercise drop block',
+      (tester) async {
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: WorkoutSetCard(
+                theme: ThemeData.light(),
+                isDarkTheme: false,
+                sizes: sizes,
+                set: dropSetSingle,
+                setNumber: 3,
+              ),
+            ),
+          ),
+        );
+
+        expect(find.byType(ExpansionTile), findsNothing);
+        expect(find.text('Drop'), findsOneWidget);
+        expect(find.text('3'), findsOneWidget);
+        expect(find.text('1'), findsNothing);
+        expect(find.text('Lateral Raise'), findsOneWidget);
+        expect(find.text('12 reps'), findsOneWidget);
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: WorkoutSetCard(
+                theme: ThemeData.light(),
+                isDarkTheme: false,
+                sizes: sizes,
+                set: dropSetMulti,
+                setNumber: 4,
+              ),
+            ),
+          ),
+        );
+
+        expect(find.text('Drop'), findsOneWidget);
+        expect(find.text('4'), findsOneWidget);
+        expect(find.text('1'), findsOneWidget);
+        expect(find.text('2'), findsOneWidget);
+      },
+    );
+
+    testWidgets('applies primary border highlight when isSelected is true', (
       tester,
     ) async {
+      final theme = ThemeData.light();
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
             body: WorkoutSetCard(
-              theme: ThemeData.light(),
+              theme: theme,
               isDarkTheme: false,
               sizes: sizes,
-              set: dropSet,
-              setNumber: 3,
+              set: standardSet,
+              setNumber: 1,
+              isSelected: true,
             ),
           ),
         ),
       );
 
-      expect(find.byType(ExpansionTile), findsNothing);
-      expect(find.text('Drop'), findsOneWidget);
-      expect(find.text('1'), findsOneWidget);
-      expect(find.text('Lateral Raise'), findsOneWidget);
-      expect(find.text('12 reps'), findsOneWidget);
+      final card = tester.widget<Card>(find.byType(Card));
+      final shape = card.shape as BeveledRectangleBorder;
+      expect(shape.side.color, equals(theme.primaryColor));
+      expect(shape.side.width, equals(1.5));
+    });
+  });
+
+  group('EmptySetsCard copy', () {
+    testWidgets('renders blocks terminology instead of sets', (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(body: EmptySetsCard(sizes: sizes)),
+        ),
+      );
+
+      expect(find.text('No blocks configured'), findsOneWidget);
+      expect(
+        find.text('Add blocks and exercises to this workout'),
+        findsOneWidget,
+      );
+      expect(find.text('No sets configured'), findsNothing);
     });
   });
 
   group('WorkoutDetailScreen structure and overview strip', () {
     testWidgets(
-      'renders Workout Structure title and scrubber chips for multi-block workouts',
+      'hides overview strip for 2-4 blocks and navigates on exercise tap',
       (tester) async {
         tester.view.physicalSize = const Size(1200, 1600);
         tester.view.devicePixelRatio = 1.0;
-        addTearDown(() {
-          tester.platformDispatcher.clearAllTestValues();
-        });
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
 
         final workout = WorkoutDto(
           id: 1,
@@ -274,29 +426,12 @@ void main() {
           difficulty: Difficulty.intermediate,
           muscleGroups: const {MuscleGroup.push},
           muscles: const TargetMuscles(primary: {Muscle.chest}, secondary: {}),
-          sets: [standardSet, superSet, dropSet],
+          sets: [standardSet, superSet, dropSetSingle],
         );
 
         final cubit = _FakeWorkoutCubit(workout);
+        final router = buildDetailRouter();
         addTearDown(cubit.close);
-
-        final router = GoRouter(
-          initialLocation: '/workouts/1',
-          routes: [
-            GoRoute(
-              path: '/workouts/:id',
-              builder: (context, state) => WorkoutDetailScreen(
-                workoutId: int.parse(state.pathParameters['id']!),
-              ),
-            ),
-            GoRoute(
-              path: '/exercises/:id',
-              builder: (context, state) => Scaffold(
-                body: Text('Exercise Detail ${state.pathParameters['id']}'),
-              ),
-            ),
-          ],
-        );
         addTearDown(router.dispose);
 
         await tester.pumpWidget(
@@ -307,27 +442,132 @@ void main() {
         );
         await tester.pumpAndSettle();
 
-        // Clear section title
         expect(find.text('Workout Structure'), findsOneWidget);
         expect(find.text('Sets'), findsNothing);
+        expect(find.byType(ActionChip), findsNothing);
+        expect(find.byType(WorkoutBlockStrip), findsNothing);
 
-        // Horizontal scrubber chips
-        expect(
-          find.widgetWithText(ActionChip, '1 Standard · 3×'),
-          findsOneWidget,
-        );
-        expect(find.widgetWithText(ActionChip, '2 Super · 4×'), findsOneWidget);
-        expect(find.widgetWithText(ActionChip, '3 Drop · 3×'), findsOneWidget);
-
-        // Tapping a scrubber chip focuses/selects it
-        await tester.tap(find.widgetWithText(ActionChip, '2 Super · 4×'));
-        await tester.pumpAndSettle();
-
-        // Tapping an exercise navigates to exercise detail
         await tester.tap(find.text('Dumbbell Fly'));
         await tester.pumpAndSettle();
 
         expect(find.text('Exercise Detail 102'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'renders sharp WorkoutBlockStrip for 5+ blocks and highlights tapped block card',
+      (tester) async {
+        tester.view.physicalSize = const Size(1200, 1600);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+
+        final workout = WorkoutDto(
+          id: 1,
+          name: 'Full Upper Marathon',
+          version: 1,
+          isFavorite: false,
+          totalSets: 15,
+          totalReps: 208,
+          editorType: EditorType.advanced,
+          createdBy: CreatedBy.user,
+          difficulty: Difficulty.intermediate,
+          muscleGroups: const {MuscleGroup.push},
+          muscles: const TargetMuscles(primary: {Muscle.chest}, secondary: {}),
+          sets: [
+            standardSet,
+            superSet,
+            dropSetSingle,
+            dropSetMulti,
+            pyramidSet,
+          ],
+        );
+
+        final cubit = _FakeWorkoutCubit(workout);
+        final router = buildDetailRouter();
+        addTearDown(cubit.close);
+        addTearDown(router.dispose);
+
+        await tester.pumpWidget(
+          BlocProvider<WorkoutCubit>.value(
+            value: cubit,
+            child: MaterialApp.router(routerConfig: router),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.byType(ActionChip), findsNothing);
+        expect(find.byType(WorkoutBlockStrip), findsOneWidget);
+        expect(find.text('1 Standard · 3×'), findsOneWidget);
+        expect(find.text('2 Super · 4×'), findsOneWidget);
+        expect(find.text('5 Pyramid · 3×'), findsOneWidget);
+
+        await tester.tap(find.text('2 Super · 4×'));
+        await tester.pumpAndSettle();
+
+        final setCards = tester
+            .widgetList<WorkoutSetCard>(find.byType(WorkoutSetCard))
+            .toList();
+        expect(setCards[0].isSelected, isFalse);
+        expect(setCards[1].isSelected, isTrue);
+      },
+    );
+
+    testWidgets(
+      'renders without overflow on narrow width with 200% text scaling',
+      (tester) async {
+        tester.view.physicalSize = const Size(320, 740);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+
+        final workout = WorkoutDto(
+          id: 1,
+          name: 'Narrow Scale Check',
+          version: 1,
+          isFavorite: false,
+          totalSets: 15,
+          totalReps: 208,
+          editorType: EditorType.advanced,
+          createdBy: CreatedBy.user,
+          difficulty: Difficulty.intermediate,
+          muscleGroups: const {MuscleGroup.push},
+          muscles: const TargetMuscles(primary: {Muscle.chest}, secondary: {}),
+          sets: [
+            standardSet,
+            superSet,
+            dropSetSingle,
+            dropSetMulti,
+            pyramidSet,
+          ],
+        );
+
+        final cubit = _FakeWorkoutCubit(workout);
+        final router = buildDetailRouter();
+        addTearDown(cubit.close);
+        addTearDown(router.dispose);
+
+        await tester.pumpWidget(
+          BlocProvider<WorkoutCubit>.value(
+            value: cubit,
+            child: MediaQuery(
+              data: const MediaQueryData(textScaler: TextScaler.linear(2.0)),
+              child: MaterialApp.router(routerConfig: router),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(tester.takeException(), isNull);
+        expect(find.byType(WorkoutBlockStrip), findsOneWidget);
+        expect(
+          find.byType(WorkoutSetCard, skipOffstage: false),
+          findsNWidgets(5),
+        );
+        expect(
+          DataDisplaySizes.getDataDisplaySizes(ScreenSize.xs).fontSize,
+          greaterThan(0),
+        );
       },
     );
   });

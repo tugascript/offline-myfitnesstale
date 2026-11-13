@@ -26,6 +26,7 @@ final class WorkoutPlanPagination extends Equatable {
   final String name;
   final Difficulty? difficulty;
   final bool isFavorite;
+  final CreatedBy? createdBy;
   final int limit;
   final int offset;
   final int total;
@@ -33,6 +34,7 @@ final class WorkoutPlanPagination extends Equatable {
   const WorkoutPlanPagination({
     this.difficulty,
     required this.isFavorite,
+    this.createdBy,
     required this.name,
     required this.limit,
     required this.offset,
@@ -53,6 +55,7 @@ final class WorkoutPlanPagination extends Equatable {
     String? name,
     Nullable<Difficulty>? difficulty,
     bool? isFavorite,
+    Nullable<CreatedBy>? createdBy,
     int? limit,
     int? offset,
     int? total,
@@ -61,6 +64,7 @@ final class WorkoutPlanPagination extends Equatable {
       name: name ?? this.name,
       difficulty: difficulty != null ? difficulty.value : this.difficulty,
       isFavorite: isFavorite ?? this.isFavorite,
+      createdBy: createdBy != null ? createdBy.value : this.createdBy,
       limit: limit ?? this.limit,
       offset: offset ?? this.offset,
       total: total ?? this.total,
@@ -72,6 +76,7 @@ final class WorkoutPlanPagination extends Equatable {
     name,
     difficulty,
     isFavorite,
+    createdBy,
     limit,
     offset,
     total,

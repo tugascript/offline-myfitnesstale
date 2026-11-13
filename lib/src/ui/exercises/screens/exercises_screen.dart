@@ -134,6 +134,7 @@ class _ExercisesScreenState extends State<ExercisesScreen> {
                         MuscleGroup? muscleGroup,
                         int? equipmentId,
                         bool isFavourite = false,
+                        CreatedBy? createdBy,
                       }) {
                         context.read<ExerciseCubit>().getExercises(
                           name: name,

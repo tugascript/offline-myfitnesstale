@@ -19,7 +19,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 
-import '../../../data/utils/display_names.dart';
 import '../../../data/utils/enums.dart';
 import '../../core/screens/loading_screen.dart';
 import '../../core/sizes/data_display_sizes.dart';
@@ -31,6 +30,7 @@ import '../../core/widgets/layout/responsive_scaffold.dart';
 import '../view_models/states/workout_state.dart';
 import '../view_models/workout_cubit.dart';
 import '../widgets/details/empty_sets_card.dart';
+import '../widgets/details/workout_block_strip.dart';
 import '../widgets/details/workout_header_card.dart';
 import '../widgets/details/workout_set_card.dart';
 import './workout_history_screen.dart';
@@ -117,6 +117,7 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
         }
 
         final workout = workoutState.selectedWorkout!;
+        final sets = workout.sets ?? const [];
 
         return ResponsiveScaffold(
           title: workout.name,
@@ -149,71 +150,49 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
                   ),
                 ),
                 SizedBox(height: sizes.spacing),
-                if (workout.sets != null && workout.sets!.length > 1) ...[
-                  SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      children: workout.sets!.asMap().entries.map((entry) {
-                        final index = entry.key;
-                        final set = entry.value;
-                        final isSelected = _selectedBlockIndex == index;
-                        final typeName = EnumDisplayNames.getSetTypeDisplayName(
-                          set.setType,
+                if (sets.length >= 5) ...[
+                  WorkoutBlockStrip(
+                    sets: sets,
+                    selectedBlockIndex: _selectedBlockIndex,
+                    sizes: sizes,
+                    theme: theme,
+                    onSelectBlock: (index) {
+                      setState(() {
+                        _selectedBlockIndex = index;
+                      });
+                      final blockContext = _getBlockKey(sets[index].id)
+                          .currentContext;
+                      if (blockContext != null) {
+                        Scrollable.ensureVisible(
+                          blockContext,
+                          duration: const Duration(milliseconds: 300),
+                          curve: Curves.easeInOut,
+                          alignment: 0.1,
                         );
-                        final rounds =
-                            '${set.minSets}${set.maxSets != null && set.maxSets! > set.minSets ? "-${set.maxSets}" : ""}×';
-
-                        return Padding(
-                          padding: EdgeInsets.only(right: sizes.spacing / 2),
-                          child: ActionChip(
-                            shape: const BeveledRectangleBorder(),
-                            backgroundColor: isSelected
-                                ? theme.colorScheme.primaryContainer
-                                : null,
-                            label: Text(
-                              '${index + 1} $typeName · $rounds',
-                              style: TextStyle(
-                                fontSize: sizes.smallFontSize,
-                                fontWeight: isSelected
-                                    ? FontWeight.bold
-                                    : FontWeight.normal,
-                                color: isSelected
-                                    ? theme.colorScheme.onPrimaryContainer
-                                    : null,
-                              ),
-                            ),
-                            onPressed: () {
-                              setState(() {
-                                _selectedBlockIndex = index;
-                              });
-                              final blockContext = _getBlockKey(set.id)
-                                  .currentContext;
-                              if (blockContext != null) {
-                                Scrollable.ensureVisible(
-                                  blockContext,
-                                  duration: const Duration(milliseconds: 300),
-                                  curve: Curves.easeInOut,
-                                );
-                              }
-                            },
-                          ),
-                        );
-                      }).toList(),
-                    ),
+                      }
+                    },
                   ),
                   SizedBox(height: sizes.spacing),
                 ],
-                if (workout.sets == null || workout.sets!.isEmpty)
+                if (sets.isEmpty)
                   EmptySetsCard(sizes: sizes)
                 else
-                  ...workout.sets!.asMap().entries.map((entry) {
-                    return WorkoutSetCard(
-                      key: _getBlockKey(entry.value.id),
-                      theme: theme,
-                      isDarkTheme: isDarkTheme,
-                      sizes: sizes,
-                      set: entry.value,
-                      setNumber: entry.key + 1,
+                  ...sets.asMap().entries.map((entry) {
+                    final index = entry.key;
+                    return Padding(
+                      padding: EdgeInsets.only(
+                        bottom: index < sets.length - 1 ? sizes.spacing : 0,
+                      ),
+                      child: WorkoutSetCard(
+                        key: _getBlockKey(entry.value.id),
+                        theme: theme,
+                        isDarkTheme: isDarkTheme,
+                        sizes: sizes,
+                        set: entry.value,
+                        setNumber: index + 1,
+                        isSelected:
+                            sets.length >= 5 && _selectedBlockIndex == index,
+                      ),
                     );
                   }),
                 SizedBox(height: sizes.spacing),
