@@ -27,6 +27,7 @@ import '../../../core/view_models/states/common_state.dart';
 final class WorkoutPlanRecordPagination extends Equatable {
   final int? workoutPlanId;
   final ProgressStatus? progressStatus;
+  final (DateTime, DateTime)? dateRange;
   final int limit;
   final int offset;
   final int total;
@@ -34,6 +35,7 @@ final class WorkoutPlanRecordPagination extends Equatable {
   const WorkoutPlanRecordPagination({
     this.workoutPlanId,
     this.progressStatus,
+    this.dateRange,
     required this.limit,
     required this.offset,
     required this.total,
@@ -46,6 +48,7 @@ final class WorkoutPlanRecordPagination extends Equatable {
   WorkoutPlanRecordPagination copyWith({
     Nullable<int>? workoutPlanId,
     Nullable<ProgressStatus>? progressStatus,
+    Nullable<(DateTime, DateTime)>? dateRange,
     int? limit,
     int? offset,
     int? total,
@@ -57,6 +60,7 @@ final class WorkoutPlanRecordPagination extends Equatable {
       progressStatus: progressStatus != null
           ? progressStatus.value
           : this.progressStatus,
+      dateRange: dateRange != null ? dateRange.value : this.dateRange,
       limit: limit ?? this.limit,
       offset: offset ?? this.offset,
       total: total ?? this.total,
@@ -67,6 +71,7 @@ final class WorkoutPlanRecordPagination extends Equatable {
   List<Object?> get props => [
     workoutPlanId,
     progressStatus,
+    dateRange,
     limit,
     offset,
     total,
@@ -146,6 +151,7 @@ final class WorkoutPlanRecordState extends Equatable {
   final int historyRequestId;
   final CurrentWorkoutPlanRecordState currentPlanRecord;
   final List<WorkoutPlanRecordDto> planRecords;
+  final WorkoutPlanRecordDto? latestWorkoutPlanRecord;
   final WorkoutPlanRecordPagination pagination;
   final bool isLoading;
   final ErrorState? error;
@@ -154,6 +160,7 @@ final class WorkoutPlanRecordState extends Equatable {
     this.historyRequestId = 0,
     required this.currentPlanRecord,
     required this.planRecords,
+    this.latestWorkoutPlanRecord,
     required this.pagination,
     required this.isLoading,
     this.error,
@@ -172,6 +179,7 @@ final class WorkoutPlanRecordState extends Equatable {
     int? historyRequestId,
     CurrentWorkoutPlanRecordState? currentPlanRecord,
     List<WorkoutPlanRecordDto>? planRecords,
+    Nullable<WorkoutPlanRecordDto>? latestWorkoutPlanRecord,
     WorkoutPlanRecordPagination? pagination,
     bool? isLoading,
     Nullable<ErrorState>? error,
@@ -180,6 +188,9 @@ final class WorkoutPlanRecordState extends Equatable {
       historyRequestId: historyRequestId ?? this.historyRequestId,
       currentPlanRecord: currentPlanRecord ?? this.currentPlanRecord,
       planRecords: planRecords ?? this.planRecords,
+      latestWorkoutPlanRecord: latestWorkoutPlanRecord != null
+          ? latestWorkoutPlanRecord.value
+          : this.latestWorkoutPlanRecord,
       pagination: pagination ?? this.pagination,
       isLoading: isLoading ?? this.isLoading,
       error: error != null ? error.value : this.error,
@@ -191,6 +202,7 @@ final class WorkoutPlanRecordState extends Equatable {
     historyRequestId,
     currentPlanRecord,
     planRecords,
+    latestWorkoutPlanRecord,
     pagination,
     isLoading,
     error,

@@ -16,26 +16,38 @@
 // along with My Fitness Tale.  If not, see <https://www.gnu.org/licenses/>.
 
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:intl/intl.dart';
+import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 
-import '../../../data/repositories/workout_plans/dtos/workout_plan_record_dto.dart';
 import '../../../data/utils/enums.dart';
 import '../../../routing/routes.dart';
 import '../../core/sizes/data_display_sizes.dart';
 import '../../core/sizes/screen_size.dart';
-import '../../core/widgets/layout/app_scaffold.dart';
+import '../../core/widgets/layout/responsive_scaffold.dart';
+import '../../home/view_models/profile_cubit.dart';
+import '../../home/view_models/states/profile_state.dart';
 import '../view_models/states/workout_plan_record_state.dart';
+import '../view_models/states/workout_plan_state.dart';
+import '../view_models/workout_plan_cubit.dart';
 import '../view_models/workout_plan_record_cubit.dart';
+import '../widgets/history/latest_workout_plan_record.dart';
+import '../widgets/history/workout_plan_record_history.dart';
 
 class WorkoutPlanHistoryScreen extends StatefulWidget {
   final int? workoutPlanId;
+  final int? version;
 
-  const WorkoutPlanHistoryScreen({super.key, this.workoutPlanId});
+  const WorkoutPlanHistoryScreen({super.key, this.workoutPlanId, this.version});
 
-  static String location([int? workoutPlanId]) => workoutPlanId != null
-      ? '${Routes.workoutPlanHistory.name}?id=$workoutPlanId'
-      : Routes.workoutPlanHistory.name;
+  static String location([int? workoutPlanId, int? version]) {
+    if (workoutPlanId == null) {
+      return Routes.workoutPlanHistory.name;
+    }
+    if (version == null) {
+      return '${Routes.workoutPlanHistory.name}?id=$workoutPlanId';
+    }
+    return '${Routes.workoutPlanHistory.name}?id=$workoutPlanId&version=$version';
+  }
 
   @override
   State<WorkoutPlanHistoryScreen> createState() =>
@@ -43,249 +55,104 @@ class WorkoutPlanHistoryScreen extends StatefulWidget {
 }
 
 class _WorkoutPlanHistoryScreenState extends State<WorkoutPlanHistoryScreen> {
-  static const int _pageSize = 20;
-  final ScrollController _scrollController = ScrollController();
-
   @override
   void initState() {
     super.initState();
-    _loadFirstPage();
-    _scrollController.addListener(_onScroll);
-  }
 
-  @override
-  void dispose() {
-    _scrollController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _loadFirstPage() {
-    return context.read<WorkoutPlanRecordCubit>().getWorkoutPlanRecords(
-      workoutPlanId: widget.workoutPlanId,
-      limit: _pageSize,
-      offset: 0,
-    );
-  }
-
-  void _onScroll() {
-    if (!_scrollController.hasClients) {
-      return;
-    }
-
-    final cubit = context.read<WorkoutPlanRecordCubit>();
-    final state = cubit.state;
-    final isNearBottom =
-        _scrollController.offset >=
-        _scrollController.position.maxScrollExtent * 0.9;
-    final hasMore = state.planRecords.length < state.pagination.total;
-
-    if (isNearBottom && hasMore && !state.isLoading) {
-      cubit.getWorkoutPlanRecords(
-        workoutPlanId: widget.workoutPlanId,
-        progressStatus: state.pagination.progressStatus,
-        limit: state.pagination.limit,
-        offset: state.planRecords.length,
-      );
+    if (widget.workoutPlanId != null) {
+      final workoutPlanCubit = context.read<WorkoutPlanCubit>();
+      if (workoutPlanCubit.state.selectedWorkoutPlan?.id !=
+          widget.workoutPlanId) {
+        workoutPlanCubit.getWorkoutPlan(widget.workoutPlanId!);
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final screenSize = BreakPoint.fromContext(context).screenSize;
-    final sizes = DataDisplaySizes.getDataDisplaySizes(screenSize);
+    final theme = Theme.of(context);
+    final breakpoints = BreakPoint.fromContext(context);
+    final sizes = DataDisplaySizes.getDataDisplaySizes(breakpoints.screenSize);
+    final isSinglePlan = widget.workoutPlanId != null;
 
-    return AppScaffold(
-      title: 'Plan History',
-      body: BlocConsumer<WorkoutPlanRecordCubit, WorkoutPlanRecordState>(
-        listenWhen: (previous, current) =>
-            previous.error != current.error &&
-            current.error != null &&
-            current.planRecords.isNotEmpty,
-        listener: (context, state) {
-          ScaffoldMessenger.of(context)
-              .showSnackBar(SnackBar(content: Text(state.error!.description)));
-        },
-        builder: (context, state) {
-          if (state.isLoading && state.planRecords.isEmpty) {
-            return const Center(child: CircularProgressIndicator());
-          }
+    return BlocBuilder<WorkoutPlanCubit, WorkoutPlanState>(
+      builder: (context, workoutPlanState) {
+        final selectedWorkoutPlan =
+            workoutPlanState.selectedWorkoutPlan?.id == widget.workoutPlanId &&
+                !workoutPlanState.isLoading
+            ? workoutPlanState.selectedWorkoutPlan
+            : null;
+        final workoutPlanVersion = isSinglePlan
+            ? (widget.version ?? selectedWorkoutPlan?.currentVersion ?? 1)
+            : null;
 
-          if (state.error != null && state.planRecords.isEmpty) {
-            return _HistoryMessage(
-              sizes: sizes,
-              icon: Icons.error_outline,
-              title: 'Could not load plan history',
-              description: state.error!.description,
-              action: ElevatedButton(
-                onPressed: _loadFirstPage,
-                child: const Text('Retry'),
-              ),
-            );
-          }
-
-          if (state.planRecords.isEmpty) {
-            return _HistoryMessage(
-              sizes: sizes,
-              icon: Icons.event_note_outlined,
-              title: 'No Plan History',
-              description: 'Start this plan to create its first history entry.',
-            );
-          }
-
-          return RefreshIndicator(
-            onRefresh: _loadFirstPage,
-            child: ListView.builder(
-              controller: _scrollController,
-              physics: const AlwaysScrollableScrollPhysics(),
-              padding: EdgeInsets.all(sizes.viewPadding),
-              itemCount: state.planRecords.length + (state.isLoading ? 1 : 0),
-              itemBuilder: (context, index) {
-                if (index == state.planRecords.length) {
-                  return Padding(
-                    padding: EdgeInsets.all(sizes.padding),
-                    child: const Center(child: CircularProgressIndicator()),
-                  );
-                }
-
-                return _WorkoutPlanHistoryCard(
-                  record: state.planRecords[index],
-                  sizes: sizes,
-                );
-              },
-            ),
-          );
-        },
-      ),
-    );
-  }
-}
-
-class _WorkoutPlanHistoryCard extends StatelessWidget {
-  final WorkoutPlanRecordDto record;
-  final DataDisplaySizesList sizes;
-
-  const _WorkoutPlanHistoryCard({required this.record, required this.sizes});
-
-  @override
-  Widget build(BuildContext context) {
-    final status = _statusPresentation(record.status);
-    final localDateFormat = DateFormat.yMMMd().add_jm();
-
-    return Card(
-      margin: EdgeInsets.only(bottom: sizes.margins),
-      child: Padding(
-        padding: EdgeInsets.all(sizes.padding),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (record.workoutPlan != null) ...[
-              Text(
-                record.workoutPlan!.name,
-                style: Theme.of(context).textTheme.titleMedium
-                    ?.copyWith(fontWeight: FontWeight.bold),
-              ),
-              SizedBox(height: sizes.spacing / 2),
-            ],
-            Row(
-              children: [
-                Icon(status.icon, color: status.color),
-                SizedBox(width: sizes.spacing / 2),
-                Expanded(
-                  child: Text(
-                    status.label,
-                    style: TextStyle(
-                      color: status.color,
-                      fontWeight: FontWeight.bold,
+        return ResponsiveScaffold(
+          title: isSinglePlan
+              ? (selectedWorkoutPlan?.name ?? 'Plan History')
+              : 'Plan History',
+          isEntity: isSinglePlan,
+          body: BlocBuilder<ProfileCubit, ProfileState>(
+            builder: (context, profileState) {
+              final units = profileState.system?.units ?? Units.metric;
+              return Padding(
+                padding: EdgeInsets.all(sizes.viewPadding),
+                child:
+                    BlocConsumer<
+                      WorkoutPlanRecordCubit,
+                      WorkoutPlanRecordState
+                    >(
+                      listener: (context, state) {
+                        if (state.error != null) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(state.error!.description),
+                              backgroundColor: theme.colorScheme.error,
+                            ),
+                          );
+                        }
+                      },
+                      builder: (context, state) {
+                        return Column(
+                          mainAxisSize: MainAxisSize.max,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            LatestWorkoutPlanRecord(
+                              sizes: sizes,
+                              theme: theme,
+                              units: units,
+                              workoutPlanId: widget.workoutPlanId,
+                              workoutPlanVersion: workoutPlanVersion,
+                            ),
+                            SizedBox(height: sizes.spacing),
+                            WorkoutPlanRecordHistory(
+                              theme: theme,
+                              breakPoint: breakpoints,
+                              sizes: sizes,
+                              units: units,
+                              workoutPlanId: widget.workoutPlanId,
+                              workoutPlanVersion: workoutPlanVersion,
+                            ),
+                          ],
+                        );
+                      },
                     ),
-                  ),
-                ),
-                Text('Version ${record.workoutPlanVersion}'),
-              ],
-            ),
-            SizedBox(height: sizes.spacing),
-            Text(
-              'Started: ${localDateFormat.format(record.startedAt.toLocal())}',
-            ),
-            if (record.completedAt != null) ...[
-              SizedBox(height: sizes.spacing / 3),
-              Text(
-                'Completed: ${localDateFormat.format(record.completedAt!.toLocal())}',
-              ),
-            ],
-            SizedBox(height: sizes.spacing / 2),
-            Text(
-              'Last reached: Week ${record.currentWeek} • Day ${record.currentDay} • Workout ${record.currentWorkoutPosition}',
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-({String label, IconData icon, Color color}) _statusPresentation(
-  ProgressStatus status,
-) {
-  return switch (status) {
-    ProgressStatus.inProgress => (
-      label: 'In Progress',
-      icon: Icons.play_circle_outline,
-      color: Colors.blue,
-    ),
-    ProgressStatus.completed => (
-      label: 'Completed',
-      icon: Icons.check_circle_outline,
-      color: Colors.green,
-    ),
-    ProgressStatus.skipped => (
-      label: 'Skipped',
-      icon: Icons.skip_next_outlined,
-      color: Colors.orange,
-    ),
-    ProgressStatus.abandoned => (
-      label: 'Abandoned',
-      icon: Icons.cancel_outlined,
-      color: Colors.red,
-    ),
-  };
-}
-
-class _HistoryMessage extends StatelessWidget {
-  final DataDisplaySizesList sizes;
-  final IconData icon;
-  final String title;
-  final String description;
-  final Widget? action;
-
-  const _HistoryMessage({
-    required this.sizes,
-    required this.icon,
-    required this.title,
-    required this.description,
-    this.action,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: EdgeInsets.all(sizes.padding * 1.5),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, size: sizes.largeIconSize, color: Colors.grey),
-            SizedBox(height: sizes.spacing),
-            Text(
-              title,
-              style: Theme.of(context).textTheme.titleLarge,
-              textAlign: TextAlign.center,
-            ),
-            SizedBox(height: sizes.spacing / 2),
-            Text(description, textAlign: TextAlign.center),
-            if (action != null) ...[SizedBox(height: sizes.spacing), action!],
-          ],
-        ),
-      ),
+              );
+            },
+          ),
+          floatingActionButton: isSinglePlan
+              ? FloatingActionButton(
+                  key: const ValueKey('workout-plan-record-start'),
+                  elevation: sizes.elevation,
+                  onPressed: () {
+                    context.push(
+                      '/workout-plans/${widget.workoutPlanId}/active',
+                    );
+                  },
+                  child: const Icon(Icons.play_arrow),
+                )
+              : null,
+        );
+      },
     );
   }
 }

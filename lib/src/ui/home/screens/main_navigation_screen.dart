@@ -21,6 +21,8 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../../routing/routes.dart';
 import '../../core/screens/loading_screen.dart';
+import '../../core/sizes/data_display_sizes.dart';
+import '../../core/sizes/screen_size.dart';
 import '../../macros/screens/macro_tracker_screen.dart';
 import '../../workout_plans/screens/current_workout_plan_screen.dart';
 import '../view_models/profile_cubit.dart';
@@ -80,6 +82,9 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final breakPoint = BreakPoint.fromContext(context);
+    final sizes = DataDisplaySizes.getDataDisplaySizes(breakPoint.screenSize);
+
     return Scaffold(
       body: BlocConsumer<ProfileCubit, ProfileState>(
         builder: (context, state) {
@@ -122,21 +127,23 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         },
         selectedItemColor: Theme.of(context).primaryColor,
         unselectedItemColor: Colors.grey,
-        items: const [
+        selectedFontSize: sizes.fontSize,
+        unselectedFontSize: sizes.fontSize,
+        items: [
           BottomNavigationBarItem(
-            icon: Text('🏠', style: TextStyle(fontSize: 20)),
+            icon: Icon(Icons.home, size: sizes.mediumIconSize),
             label: 'Home',
           ),
           BottomNavigationBarItem(
-            icon: Text('🏋️', style: TextStyle(fontSize: 20)),
+            icon: Icon(Icons.fitness_center, size: sizes.mediumIconSize),
             label: 'Plan',
           ),
           BottomNavigationBarItem(
-            icon: Text('🍎', style: TextStyle(fontSize: 20)),
+            icon: Icon(Icons.restaurant_menu, size: sizes.mediumIconSize),
             label: 'Macros',
           ),
           BottomNavigationBarItem(
-            icon: Text('👤', style: TextStyle(fontSize: 20)),
+            icon: Icon(Icons.person, size: sizes.mediumIconSize),
             label: 'Profile',
           ),
         ],

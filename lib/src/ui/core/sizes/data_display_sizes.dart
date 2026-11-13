@@ -34,6 +34,8 @@ final class DataDisplaySizesList {
 
   double get compactIconSize => buttonIconSize * 0.75;
 
+  double get mediumIconSize => buttonIconSize * 1.2;
+
   double get largeIconSize => buttonIconSize * 2.5;
 
   double get formFieldMinWidth => fontSize * 12;
@@ -41,6 +43,12 @@ final class DataDisplaySizesList {
   double get modalMaxWidth => buttonSize * 8;
 
   double get svgMaxHeight => buttonSize * 5;
+
+  double get halfSpacing => spacing / 2;
+
+  double get quarterSpacing => spacing / 4;
+
+  double get mediumSmallFontSize => smallFontSize * 1.2;
 
   const DataDisplaySizesList({
     required this.padding,

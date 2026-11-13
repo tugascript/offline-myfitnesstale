@@ -18,9 +18,14 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 
+import '../../../data/repositories/exercises/dtos/exercise_dto.dart';
+import '../../../data/repositories/workouts/dtos/workout_dto.dart';
+import '../../../data/repositories/workouts/dtos/workout_set_dto.dart';
+import '../../../data/repositories/workouts/dtos/workout_set_exercise_dto.dart';
 import '../../../data/utils/enums.dart';
-import '../../core/screens/loading_screen.dart';
+import '../../../data/utils/json_data.dart';
 import '../../core/sizes/data_display_sizes.dart';
 import '../../core/sizes/screen_size.dart';
 import '../../core/widgets/action_buttons.dart';
@@ -30,9 +35,96 @@ import '../../core/widgets/layout/responsive_scaffold.dart';
 import '../view_models/states/workout_state.dart';
 import '../view_models/workout_cubit.dart';
 import '../widgets/details/empty_sets_card.dart';
+import '../widgets/details/workout_block_strip.dart';
 import '../widgets/details/workout_header_card.dart';
 import '../widgets/details/workout_set_card.dart';
 import './workout_history_screen.dart';
+
+const _skeletonExercise = ExerciseDto(
+  id: 0,
+  name: 'Loading Exercise Name',
+  description: '',
+  muscleGroup: MuscleGroup.push,
+  muscles: TargetMuscles(primary: {}, secondary: {}),
+  createdBy: CreatedBy.system,
+);
+
+const _skeletonWorkout = WorkoutDto(
+  id: 0,
+  name: 'Loading Workout Name',
+  description: 'Loading workout description placeholder...',
+  muscleGroups: {MuscleGroup.push},
+  muscles: TargetMuscles(primary: {}, secondary: {}),
+  difficulty: Difficulty.beginner,
+  version: 1,
+  isFavorite: false,
+  totalSets: 9,
+  totalReps: 90,
+  editorType: EditorType.advanced,
+  createdBy: CreatedBy.system,
+  sets: [
+    WorkoutSetDto(
+      id: -1,
+      position: 1,
+      setType: WorkoutSetType.standard,
+      minSets: 3,
+      recommendedRestSecs: 90,
+      totalExercises: 1,
+      totalReps: 30,
+      exercises: [
+        WorkoutSetExerciseDto(
+          id: -1,
+          position: 1,
+          minReps: 8,
+          maxReps: 12,
+          exerciseId: 0,
+          toMaxReps: false,
+          exercise: _skeletonExercise,
+        ),
+      ],
+    ),
+    WorkoutSetDto(
+      id: -2,
+      position: 2,
+      setType: WorkoutSetType.standard,
+      minSets: 3,
+      recommendedRestSecs: 90,
+      totalExercises: 1,
+      totalReps: 30,
+      exercises: [
+        WorkoutSetExerciseDto(
+          id: -2,
+          position: 1,
+          minReps: 8,
+          maxReps: 12,
+          exerciseId: 0,
+          toMaxReps: false,
+          exercise: _skeletonExercise,
+        ),
+      ],
+    ),
+    WorkoutSetDto(
+      id: -3,
+      position: 3,
+      setType: WorkoutSetType.standard,
+      minSets: 3,
+      recommendedRestSecs: 90,
+      totalExercises: 1,
+      totalReps: 30,
+      exercises: [
+        WorkoutSetExerciseDto(
+          id: -3,
+          position: 1,
+          minReps: 8,
+          maxReps: 12,
+          exerciseId: 0,
+          toMaxReps: false,
+          exercise: _skeletonExercise,
+        ),
+      ],
+    ),
+  ],
+);
 
 class WorkoutDetailScreen extends StatefulWidget {
   static const name = "workout-detail";
@@ -46,6 +138,13 @@ class WorkoutDetailScreen extends StatefulWidget {
 }
 
 class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
+  final Map<int, GlobalKey> _blockKeys = {};
+  int? _selectedBlockIndex;
+
+  GlobalKey _getBlockKey(int setId) {
+    return _blockKeys.putIfAbsent(setId, () => GlobalKey());
+  }
+
   @override
   void initState() {
     super.initState();
@@ -77,14 +176,14 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
         }
       },
       builder: (context, workoutState) {
-        if (workoutState.isLoading && workoutState.selectedWorkout == null) {
-          return const LoadingScreen(
-            title: "Workout details",
-            message: "Loading workout details...",
-          );
-        }
+        final isSkeletonLoading =
+            workoutState.isLoading &&
+            (workoutState.selectedWorkout == null ||
+                workoutState.selectedWorkout!.id != widget.workoutId);
 
-        if (workoutState.selectedWorkout == null) {
+        if (!isSkeletonLoading &&
+            (workoutState.selectedWorkout == null ||
+                workoutState.selectedWorkout!.id != widget.workoutId)) {
           return AppScaffold(
             title: "Unknown Workout",
             body: Center(
@@ -108,89 +207,127 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
           );
         }
 
-        final workout = workoutState.selectedWorkout!;
+        final workout = isSkeletonLoading
+            ? _skeletonWorkout
+            : workoutState.selectedWorkout!;
+        final sets = workout.sets ?? const [];
 
         return ResponsiveScaffold(
-          title: workout.name,
-          isEntity: true,
-          body: Padding(
-            padding: EdgeInsets.all(sizes.viewPadding),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Workout Header
-                WorkoutHeaderCard(
-                  sizes: sizes,
-                  workoutDto: workout,
-                  actionButtonPress: () {
-                    if (workoutState.isLoading) return;
-                    context.read<WorkoutCubit>().updateWorkoutFavorite(
-                      workout.id,
-                      !workout.isFavorite,
-                    );
-                  },
-                ),
-                SizedBox(height: sizes.spacing * 1.25),
-                // Workout Sets
-                Text(
-                  'Sets',
-                  style: TextStyle(
-                    fontSize: sizes.titleFontSize,
-                    fontWeight: FontWeight.bold,
-                    color: isDarkTheme ? Colors.grey[200] : Colors.grey[800],
+          title: isSkeletonLoading ? "Workout details" : workout.name,
+          isEntity: !isSkeletonLoading,
+          body: Skeletonizer(
+            enabled: isSkeletonLoading,
+            child: Padding(
+              padding: EdgeInsets.all(sizes.viewPadding),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Workout Header
+                  WorkoutHeaderCard(
+                    sizes: sizes,
+                    workoutDto: workout,
+                    actionButtonPress: () {
+                      if (workoutState.isLoading) return;
+                      context.read<WorkoutCubit>().updateWorkoutFavorite(
+                        workout.id,
+                        !workout.isFavorite,
+                      );
+                    },
                   ),
-                ),
-                SizedBox(height: sizes.spacing),
-                if (workout.sets == null || workout.sets!.isEmpty)
-                  EmptySetsCard(sizes: sizes)
-                else
-                  ...workoutState.selectedWorkout!.sets!.asMap().entries.map((
-                    entry,
-                  ) {
-                    return WorkoutSetCard(
-                      theme: theme,
-                      isDarkTheme: isDarkTheme,
-                      sizes: sizes,
-                      set: entry.value,
-                      setNumber: entry.key + 1,
-                    );
-                  }),
-                SizedBox(height: sizes.spacing),
-                ActionButtons(
-                  isLoading: workoutState.isLoading,
-                  theme: theme,
-                  sizes: sizes,
-                  showMutationBtns: workout.createdBy == CreatedBy.user,
-                  onStart: () => context.push("/workouts/${workout.id}/active"),
-                  startLabel: 'Start Workout',
-                  onEdit: () => context.push('/workouts/${workout.id}/edit'),
-                  onHistory: () => context.push(
-                    WorkoutHistoryScreen.location(
-                      workoutId: workout.id,
-                      version: workout.version,
+                  SizedBox(height: sizes.spacing * 1.25),
+                  // Workout Structure
+                  Text(
+                    'Workout Structure',
+                    style: TextStyle(
+                      fontSize: sizes.titleFontSize,
+                      fontWeight: FontWeight.bold,
+                      color: isDarkTheme ? Colors.grey[200] : Colors.grey[800],
                     ),
                   ),
-                  historyLabel: 'History',
-                  onDelete: () {
-                    showDialog(
-                      context: context,
-                      builder: (context) => ConfirmationDialog(
-                        title: 'Delete Workout',
-                        content: 'Are you sure you want to delete this workout? This action cannot be undone.',
-                        confirmLabel: 'Delete',
-                        isDestructive: true,
-                        onConfirm: () {
-                          context.read<WorkoutCubit>().deleteWorkout(
-                            widget.workoutId,
+                  SizedBox(height: sizes.spacing),
+                  if (sets.length >= 4) ...[
+                    WorkoutBlockStrip(
+                      sets: sets,
+                      selectedBlockIndex: _selectedBlockIndex,
+                      sizes: sizes,
+                      theme: theme,
+                      onSelectBlock: (index) {
+                        setState(() {
+                          _selectedBlockIndex = index;
+                        });
+                        final blockContext = _getBlockKey(sets[index].id)
+                            .currentContext;
+                        if (blockContext != null) {
+                          Scrollable.ensureVisible(
+                            blockContext,
+                            duration: const Duration(milliseconds: 300),
+                            curve: Curves.easeInOut,
+                            alignment: 0.1,
                           );
-                          context.pop();
-                        },
+                        }
+                      },
+                    ),
+                    SizedBox(height: sizes.spacing),
+                  ],
+                  if (sets.isEmpty)
+                    EmptySetsCard(sizes: sizes)
+                  else
+                    ...sets.asMap().entries.map((entry) {
+                      final index = entry.key;
+                      return Padding(
+                        padding: EdgeInsets.only(
+                          bottom: index < sets.length - 1 ? sizes.spacing : 0,
+                        ),
+                        child: WorkoutSetCard(
+                          key: _getBlockKey(entry.value.id),
+                          theme: theme,
+                          isDarkTheme: isDarkTheme,
+                          sizes: sizes,
+                          set: entry.value,
+                          setNumber: index + 1,
+                          isSelected:
+                              sets.length >= 4 && _selectedBlockIndex == index,
+                        ),
+                      );
+                    }),
+                  SizedBox(height: sizes.spacing),
+                  ActionButtons(
+                    isLoading: workoutState.isLoading,
+                    theme: theme,
+                    sizes: sizes,
+                    showMutationBtns: workout.createdBy == CreatedBy.user,
+                    onStart: () =>
+                        context.push("/workouts/${workout.id}/active"),
+                    startLabel: 'Start Workout',
+                    onEdit: () => context.push('/workouts/${workout.id}/edit'),
+                    onHistory: () => context.push(
+                      WorkoutHistoryScreen.location(
+                        workoutId: workout.id,
+                        version: workout.version,
                       ),
-                    );
-                  },
-                ),
-                SizedBox(height: sizes.spacing),
-              ],
+                    ),
+                    historyLabel: 'History',
+                    onDelete: () {
+                      showDialog(
+                        context: context,
+                        builder: (context) => ConfirmationDialog(
+                          title: 'Delete Workout',
+                          content: 'Are you sure you want to delete this workout? This action cannot be undone.',
+                          confirmLabel: 'Delete',
+                          isDestructive: true,
+                          onConfirm: () {
+                            context.read<WorkoutCubit>().deleteWorkout(
+                              widget.workoutId,
+                            );
+                            context.pop();
+                          },
+                        ),
+                      );
+                    },
+                  ),
+                  SizedBox(height: sizes.spacing),
+                ],
+              ),
             ),
           ),
         );

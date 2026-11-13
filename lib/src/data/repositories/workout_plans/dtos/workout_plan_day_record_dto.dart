@@ -19,6 +19,7 @@ import 'package:equatable/equatable.dart';
 
 import '../../../../utils/nullable.dart';
 import '../../../models/sqlite/workout_plan_day_record_model.dart';
+import '../../../utils/enums.dart';
 import '../../core/dtos/dto.dart';
 import './workout_plan_workout_record_dto.dart';
 
@@ -32,6 +33,7 @@ final class WorkoutPlanDayRecordDto extends Equatable
   final int week;
   final int day;
   final int currentWorkoutPosition;
+  final ProgressStatus status;
   final DateTime? completedAt;
 
   final List<WorkoutPlanWorkoutRecordDto> workouts;
@@ -44,6 +46,7 @@ final class WorkoutPlanDayRecordDto extends Equatable
     required this.week,
     required this.day,
     required this.currentWorkoutPosition,
+    required this.status,
     this.completedAt,
     this.workouts = const [],
   });
@@ -60,6 +63,7 @@ final class WorkoutPlanDayRecordDto extends Equatable
       week: model.week,
       day: model.day,
       currentWorkoutPosition: model.currentWorkoutPosition,
+      status: model.status,
       completedAt: model.completedAt != null
           ? DateTime.fromMillisecondsSinceEpoch(
               model.completedAt! * 1000,
@@ -77,6 +81,7 @@ final class WorkoutPlanDayRecordDto extends Equatable
     int? workoutPlanWeekRecordId,
     int? workoutPlanDayId,
     int? currentWorkoutPosition,
+    ProgressStatus? status,
     Nullable<DateTime>? completedAt,
     int? week,
     int? day,
@@ -92,6 +97,7 @@ final class WorkoutPlanDayRecordDto extends Equatable
       day: day ?? this.day,
       currentWorkoutPosition:
           currentWorkoutPosition ?? this.currentWorkoutPosition,
+      status: status ?? this.status,
       completedAt: completedAt != null ? completedAt.value : this.completedAt,
       workouts: workouts ?? this.workouts,
     );
@@ -106,7 +112,8 @@ final class WorkoutPlanDayRecordDto extends Equatable
     week,
     day,
     currentWorkoutPosition,
+    status,
     completedAt,
-    workouts.length,
+    workouts,
   ];
 }

@@ -49,12 +49,14 @@ class WorkoutCubit extends Cubit<WorkoutState> with FavoriteRequestSerializer {
     int? limit,
     int? offset,
     bool isFavorite = false,
+    CreatedBy? createdBy,
   }) => _loadWorkouts(
     WorkoutPagination(
       name: name ?? '',
       difficulty: difficulty,
       muscleGroup: muscleGroup,
       isFavorite: isFavorite,
+      createdBy: createdBy,
       limit: limit ?? state.pagination.limit,
       offset: offset ?? state.pagination.offset,
       total: 0,
@@ -82,6 +84,7 @@ class WorkoutCubit extends Cubit<WorkoutState> with FavoriteRequestSerializer {
       difficulty: query.difficulty,
       muscleGroup: query.muscleGroup,
       isFavorite: query.isFavorite,
+      createdBy: query.createdBy,
       limit: limit,
       offset: offset,
     );

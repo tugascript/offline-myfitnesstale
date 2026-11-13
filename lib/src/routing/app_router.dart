@@ -53,7 +53,7 @@ import '../ui/workout_plans/screens/active_workout_plan_screen.dart';
 import '../ui/workout_plans/screens/workout_plan_detail_screen.dart';
 import '../ui/workout_plans/screens/workout_plan_edit_screen.dart';
 import '../ui/workout_plans/screens/workout_plan_history_screen.dart';
-import '../ui/workout_plans/screens/workout_plan_list_screen.dart';
+import '../ui/workout_plans/screens/workout_plans_list_screen.dart';
 import '../ui/workouts/screens/active_workout_screen.dart';
 import '../ui/workouts/screens/create_workout_record_screen.dart';
 import '../ui/workouts/screens/update_workout_record_screen.dart';
@@ -61,7 +61,7 @@ import '../ui/workouts/screens/workout_detail_screen.dart';
 import '../ui/workouts/screens/workout_edit_screen.dart';
 import '../ui/workouts/screens/workout_history_detail_screen.dart';
 import '../ui/workouts/screens/workout_history_screen.dart';
-import '../ui/workouts/screens/workouts_screen.dart';
+import '../ui/workouts/screens/workouts_list_screen.dart';
 import 'routes.dart';
 
 sealed class AppRouter {
@@ -326,7 +326,20 @@ sealed class AppRouter {
             return const NotFoundScreen();
           }
         }
-        return WorkoutPlanHistoryScreen(workoutPlanId: id);
+
+        final versionParam = state.uri.queryParameters['version'];
+        int? version;
+        if (versionParam != null) {
+          if (id == null) {
+            return const NotFoundScreen();
+          }
+          version = int.tryParse(versionParam);
+          if (version == null) {
+            return const NotFoundScreen();
+          }
+        }
+
+        return WorkoutPlanHistoryScreen(workoutPlanId: id, version: version);
       },
     ),
     GoRoute(

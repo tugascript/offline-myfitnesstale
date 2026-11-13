@@ -46,6 +46,7 @@ import './dtos/workout_plan_workout_record_dto.dart';
 import './inputs/workout_plan_day_record_input.dart';
 import './inputs/workout_plan_record_input.dart';
 import './inputs/workout_plan_workout_record_input.dart';
+import './utils/workout_plan_schedule_utils.dart';
 
 final class WorkoutPlanRecordRepository implements Repository {
   final Dao<WorkoutPlanRecord> _workoutPlanRecordDao;
@@ -125,6 +126,7 @@ final class WorkoutPlanRecordRepository implements Repository {
   getWorkoutPlanRecords({
     int? workoutPlanId,
     ProgressStatus? status,
+    (DateTime start, DateTime end)? dateRange,
     int limit = kDefaultLimit,
     int offset = kDefaultOffset,
   }) async {
@@ -137,6 +139,34 @@ final class WorkoutPlanRecordRepository implements Repository {
 
     if (status != null) {
       query.and(WorkoutPlanRecordColumns.status.equal, status.value);
+    }
+
+    if (dateRange != null) {
+      final startOfDay = DateTime(
+        dateRange.$1.year,
+        dateRange.$1.month,
+        dateRange.$1.day,
+        0,
+        0,
+        0,
+      );
+      query.and(
+        WorkoutPlanRecordColumns.startedAt.greaterThanOrEqual,
+        DateUtilities.getDateUnix(startOfDay),
+      );
+
+      final endOfDay = DateTime(
+        dateRange.$2.year,
+        dateRange.$2.month,
+        dateRange.$2.day,
+        23,
+        59,
+        59,
+      );
+      query.and(
+        WorkoutPlanRecordColumns.startedAt.lessThanOrEqual,
+        DateUtilities.getDateUnix(endOfDay),
+      );
     }
 
     try {
@@ -296,7 +326,7 @@ final class WorkoutPlanRecordRepository implements Repository {
             txn,
             DateUtilities.getNowUtcUnix(),
           );
-          if (abandoned.isErr()) throw abandoned.error;
+          if (abandoned.isErr()) return err(abandoned.error);
         }
         final id = await _workoutPlanRecordDao.insert(record, txn);
         _logger.info('Created workout plan record with id $id');
@@ -304,8 +334,6 @@ final class WorkoutPlanRecordRepository implements Repository {
           WorkoutPlanRecordDto.fromModel(record.copyWith(id: Nullable(id))),
         );
       });
-    } on ServiceError<SingleErrorTypes> catch (error) {
-      return err(error);
     } catch (e) {
       _logger.severe('Failed to create workout plan record', e);
       return err(
@@ -359,22 +387,25 @@ final class WorkoutPlanRecordRepository implements Repository {
         updatedAt: DateUtilities.getNowUtcUnix(),
       );
       if (updatedRecord.status == ProgressStatus.inProgress) {
-        await _workoutPlanRecordDao.startTransaction((txn) async {
-          await _workoutPlanRecordDao.update(updatedRecord, txn);
-          final abandoned = await _abandonOtherActiveRecords(
-            txn,
-            updatedRecord.updatedAt,
-            exceptId: id,
-          );
-          if (abandoned.isErr()) throw abandoned.error;
-        });
+        final updateResult = await _workoutPlanRecordDao
+            .startTransaction<Result<void, ServiceError<SingleErrorTypes>>>((
+              txn,
+            ) async {
+              await _workoutPlanRecordDao.update(updatedRecord, txn);
+              final abandoned = await _abandonOtherActiveRecords(
+                txn,
+                updatedRecord.updatedAt,
+                exceptId: id,
+              );
+              if (abandoned.isErr()) return err(abandoned.error);
+              return ok(null);
+            });
+        if (updateResult.isErr()) return err(updateResult.error);
       } else {
         await _workoutPlanRecordDao.update(updatedRecord);
       }
       _logger.info('Updated workout plan record with id $id');
       return ok(WorkoutPlanRecordDto.fromModel(updatedRecord));
-    } on ServiceError<SingleErrorTypes> catch (error) {
-      return err(error);
     } catch (e) {
       _logger.severe('Failed to update workout plan record with id $id', e);
       return err(
@@ -655,6 +686,60 @@ final class WorkoutPlanRecordRepository implements Repository {
     }
   }
 
+  Future<Result<WorkoutPlanRecordDto, ServiceError<SingleErrorTypes>>>
+  getLatestWorkoutPlanRecord([int? workoutPlanId]) async {
+    _logger.info('Getting latest workout plan record for plan $workoutPlanId');
+    try {
+      final List<WorkoutPlanRecord> records = await _workoutPlanRecordDao
+          .selectMany(
+            where: workoutPlanId != null
+                ? WorkoutPlanRecordColumns.workoutPlanId.equal
+                : null,
+            whereArgs: workoutPlanId != null ? [workoutPlanId] : null,
+            orderBy: [WorkoutPlanRecordColumns.startedAt.orderDesc],
+            limit: 1,
+          );
+      if (records.isEmpty) {
+        _logger.info('No latest workout plan record found');
+        return err(
+          const ServiceError(
+            type: SingleErrorTypes.notFound,
+            description: 'Latest workout plan record not found',
+          ),
+        );
+      }
+
+      final record = records.first;
+      WorkoutPlanDto? workoutPlanDto;
+      if (workoutPlanId == null) {
+        final WorkoutPlan? plan = await _workoutPlanDao.selectOne(
+          record.workoutPlanId,
+        );
+        if (plan != null) {
+          workoutPlanDto = WorkoutPlanDto.fromModel(plan);
+        }
+      }
+
+      final weeks = await _loadWeeksTree(record.id!);
+      if (weeks.isErr()) return err(weeks.error);
+      return ok(
+        WorkoutPlanRecordDto.fromModel(
+          record,
+          workoutPlan: workoutPlanDto,
+          weeks: weeks.value,
+        ),
+      );
+    } catch (e) {
+      _logger.severe('Failed to get latest workout plan record', e);
+      return err(
+        const ServiceError(
+          type: SingleErrorTypes.operationFailure,
+          description: 'Failed to get latest workout plan record',
+        ),
+      );
+    }
+  }
+
   Future<Result<List<WorkoutPlanWeekRecordDto>, ServiceError<SingleErrorTypes>>>
   getWorkoutPlanRecordWeeksDaysAndWorkouts(int workoutPlanRecordId) async {
     _logger.info(
@@ -813,274 +898,6 @@ final class WorkoutPlanRecordRepository implements Repository {
 
   Future<Result<WorkoutPlanRecordDto, ServiceError<SingleErrorTypes>>>
   upsertWorkoutPlanWorkoutRecord(WorkoutPlanWorkoutRecordInput input) async {
-    return updateWorkoutPlanWorkoutRecordStatus(input);
-  }
-
-  Future<Result<WorkoutPlanWeek?, ServiceError<SingleErrorTypes>>>
-  _findTemplateWeek(
-    int workoutPlanId,
-    int week, {
-    required int planVersion,
-  }) async {
-    const failure = ServiceError(
-      type: SingleErrorTypes.operationFailure,
-      description: 'Failed to load workout plan template week',
-    );
-    try {
-      final WhereBuilder mainWhere = WhereBuilder();
-      mainWhere.and(WorkoutPlanWeekColumns.workoutPlanId.equal, workoutPlanId);
-      mainWhere.and(WorkoutPlanWeekColumns.planVersion.equal, planVersion);
-
-      final WhereBuilder onlyStartWeekWhere = WhereBuilder();
-      onlyStartWeekWhere.and(WorkoutPlanWeekColumns.startWeek.equal, week);
-      onlyStartWeekWhere.and(WorkoutPlanWeekColumns.endWeek.isNull);
-
-      final WhereBuilder betweenWeekWhere = WhereBuilder();
-      betweenWeekWhere.and(
-        WorkoutPlanWeekColumns.startWeek.lessThanOrEqual,
-        week,
-      );
-      betweenWeekWhere.and(WorkoutPlanWeekColumns.endWeek.notNull);
-      betweenWeekWhere.and(
-        WorkoutPlanWeekColumns.endWeek.greaterThanOrEqual,
-        week,
-      );
-
-      final WhereBuilder weekWhere = WhereBuilder();
-      weekWhere.or(onlyStartWeekWhere.where!);
-      weekWhere.or(betweenWeekWhere.where!);
-      mainWhere.and(weekWhere.where!);
-
-      final List<Object?> args = [
-        ...mainWhere.args!,
-        ...onlyStartWeekWhere.args!,
-        ...betweenWeekWhere.args!,
-      ];
-
-      final List<WorkoutPlanWeek> weeks = await _workoutPlanWeekDao.selectMany(
-        where: mainWhere.where,
-        whereArgs: args,
-        orderBy: [WorkoutPlanWeekColumns.startWeek.orderAsc],
-        limit: 1,
-      );
-      return ok(weeks.firstOrNull);
-    } catch (error, stackTrace) {
-      _logger.severe(failure.description, error, stackTrace);
-      return err(failure);
-    }
-  }
-
-  Future<Result<WorkoutPlanDayRecordDto, ServiceError<SingleErrorTypes>>>
-  _createWorkoutPlanWeekAndDayRecords({
-    required WorkoutPlanRecord workoutPlanRecord,
-    required int week,
-    required int weekDay,
-    required ProgressStatus status,
-  }) async {
-    final int workoutPlanRecordId = workoutPlanRecord.id!;
-    final int workoutPlanId = workoutPlanRecord.workoutPlanId;
-    _logger.info(
-      'Creating workout plan week and day records for workout plan record $workoutPlanRecordId and workout plan $workoutPlanId for week $week and day $weekDay',
-    );
-
-    try {
-      final weekResult = await _findTemplateWeek(
-        workoutPlanId,
-        week,
-        planVersion: workoutPlanRecord.workoutPlanVersion,
-      );
-      if (weekResult.isErr()) return err(weekResult.error);
-      final templateWeek = weekResult.value;
-      if (templateWeek == null) {
-        _logger.info(
-          'No workout plan week found for workout plan $workoutPlanId and week $week',
-        );
-        return err(
-          const ServiceError(
-            type: SingleErrorTypes.notFound,
-            description: 'No workout plan week found for workout plan and week',
-          ),
-        );
-      }
-
-      final WorkoutPlanWeekRecord weekRecord = WorkoutPlanWeekRecord.create(
-        workoutPlanRecordId: workoutPlanRecordId,
-        workoutPlanWeekId: templateWeek.id!,
-        week: week,
-        status: status,
-        currentDay: weekDay,
-      );
-      final WhereBuilder dayWhere = WhereBuilder();
-      dayWhere.and(
-        WorkoutPlanDayColumns.workoutPlanWeekId.equal,
-        templateWeek.id!,
-      );
-      dayWhere.and(WorkoutPlanDayColumns.day.equal, weekDay);
-
-      final List<WorkoutPlanDay> dayData = await _workoutPlanDayDao.selectMany(
-        where: dayWhere.where,
-        whereArgs: dayWhere.args,
-        limit: 1,
-      );
-      if (dayData.isEmpty) {
-        _logger.info(
-          'No workout plan day found for workout plan week ${templateWeek.id} and day $weekDay',
-        );
-        return err(
-          const ServiceError(
-            type: SingleErrorTypes.notFound,
-            description:
-                'No workout plan day found for workout plan week and day',
-          ),
-        );
-      }
-      final int workoutPlanDayId = dayData.first.id!;
-
-      final (
-        int weekRecordId,
-        WorkoutPlanDayRecord dayRecord,
-      ) = await _workoutPlanRecordDao.startTransaction((txn) async {
-        final int weekRecordId = await _workoutPlanWeekRecordDao.insert(
-          weekRecord,
-          txn,
-        );
-
-        final WorkoutPlanDayRecord dayRecord = WorkoutPlanDayRecord.create(
-          workoutPlanRecordId: workoutPlanRecordId,
-          workoutPlanWeekRecordId: weekRecordId,
-          workoutPlanDayId: workoutPlanDayId,
-          day: weekDay,
-          status: status,
-          week: week,
-        );
-        final int dayRecordId = await _workoutPlanDayRecordDao.insert(
-          dayRecord,
-          txn,
-        );
-
-        final WorkoutPlanRecord updatedRecord = workoutPlanRecord.copyWith(
-          currentWeek: week,
-          currentDay: weekDay,
-          updatedAt: DateUtilities.getNowUtcUnix(),
-        );
-        await _workoutPlanRecordDao.update(updatedRecord, txn);
-        return (weekRecordId, dayRecord.copyWith(id: Nullable(dayRecordId)));
-      });
-      _logger.info(
-        'Created workout plan week record with id $weekRecordId and day record with id ${dayRecord.id} for workout plan record $workoutPlanRecordId',
-      );
-      return ok(WorkoutPlanDayRecordDto.fromModel(dayRecord));
-    } catch (e) {
-      _logger.severe(
-        'Failed to create workout plan week record for workout plan record $workoutPlanRecordId',
-        e,
-      );
-      return err(
-        const ServiceError(
-          type: SingleErrorTypes.operationFailure,
-          description: 'Failed to create workout plan week record',
-        ),
-      );
-    }
-  }
-
-  Future<Result<WorkoutPlanDayRecordDto, ServiceError<SingleErrorTypes>>>
-  _createWorkoutPlanDayRecord({
-    required WorkoutPlanRecord workoutPlanRecord,
-    required WorkoutPlanWeekRecord weekRecord,
-    required int weekDay,
-    required ProgressStatus status,
-  }) async {
-    final int workoutPlanRecordId = workoutPlanRecord.id!;
-    final int workoutPlanWeekRecordId = weekRecord.id!;
-    _logger.info(
-      'Creating workout plan day record for workout plan record $workoutPlanRecordId, week record $workoutPlanWeekRecordId and week day $weekDay',
-    );
-
-    final WhereBuilder dayWhere = WhereBuilder();
-    dayWhere.and(
-      WorkoutPlanDayColumns.workoutPlanWeekId.equal,
-      weekRecord.workoutPlanWeekId,
-    );
-    dayWhere.and(WorkoutPlanDayColumns.day.equal, weekDay);
-    try {
-      final List<WorkoutPlanDay> dayData = await _workoutPlanDayDao.selectMany(
-        where: dayWhere.where,
-        whereArgs: dayWhere.args,
-        limit: 1,
-      );
-      if (dayData.isEmpty) {
-        _logger.info(
-          'No workout plan day found for workout plan week ${weekRecord.workoutPlanWeekId} and day $weekDay',
-        );
-        return err(
-          const ServiceError(
-            type: SingleErrorTypes.notFound,
-            description:
-                'No workout plan day found for workout plan week and day',
-          ),
-        );
-      }
-
-      final int workoutPlanDayId = dayData.first.id!;
-      final WorkoutPlanDayRecord dayRecord = WorkoutPlanDayRecord.create(
-        workoutPlanRecordId: workoutPlanRecordId,
-        workoutPlanWeekRecordId: workoutPlanWeekRecordId,
-        workoutPlanDayId: workoutPlanDayId,
-        day: weekDay,
-        status: status,
-      );
-
-      final int dayRecordId = await _workoutPlanDayRecordDao.startTransaction((
-        txn,
-      ) async {
-        final int dayRecordId = await _workoutPlanDayRecordDao.insert(
-          dayRecord,
-          txn,
-        );
-
-        final WorkoutPlanRecord updatedRecord = workoutPlanRecord.copyWith(
-          currentWeek: weekRecord.week,
-          currentDay: weekDay,
-          updatedAt: DateUtilities.getNowUtcUnix(),
-        );
-        await _workoutPlanRecordDao.update(updatedRecord, txn);
-
-        final WorkoutPlanWeekRecord updatedWeekRecord = weekRecord.copyWith(
-          currentDay: weekDay,
-          updatedAt: DateUtilities.getNowUtcUnix(),
-        );
-        await _workoutPlanWeekRecordDao.update(updatedWeekRecord, txn);
-
-        return dayRecordId;
-      });
-
-      _logger.info(
-        'Created workout plan day record with id $dayRecordId for workout plan record $workoutPlanRecordId',
-      );
-      return ok(
-        WorkoutPlanDayRecordDto.fromModel(
-          dayRecord.copyWith(id: Nullable(dayRecordId)),
-        ),
-      );
-    } catch (e) {
-      _logger.severe(
-        'Failed to create workout plan day record for workout plan record $workoutPlanRecordId',
-        e,
-      );
-      return err(
-        const ServiceError(
-          type: SingleErrorTypes.operationFailure,
-          description: 'Failed to create workout plan day record',
-        ),
-      );
-    }
-  }
-
-  Future<Result<WorkoutPlanRecordDto, ServiceError<SingleErrorTypes>>>
-  updateWorkoutPlanWorkoutRecordStatus(
-    WorkoutPlanWorkoutRecordInput input,
-  ) async {
     final workoutPlanRecordId = input.workoutPlanRecordId;
     final status = input.status;
     _logger.info('Updating workout plan workout record status to $status');
@@ -1161,28 +978,14 @@ final class WorkoutPlanRecordRepository implements Repository {
 
       WorkoutPlanDay? templateDay;
       if (existingDayRecord == null) {
-        final dayTemplateWhere = WhereBuilder();
-        dayTemplateWhere.and(
-          WorkoutPlanDayColumns.workoutPlanWeekId.equal,
-          workoutPlanWeekId,
+        final templateDayResult = await _findTemplateDay(
+          workoutPlanWeekId: workoutPlanWeekId,
+          weekDay: weekDay,
         );
-        dayTemplateWhere.and(WorkoutPlanDayColumns.day.equal, weekDay);
-        final List<WorkoutPlanDay> dayData = await _workoutPlanDayDao
-            .selectMany(
-              where: dayTemplateWhere.where,
-              whereArgs: dayTemplateWhere.args,
-              limit: 1,
-            );
-        if (dayData.isEmpty) {
-          return err(
-            const ServiceError(
-              type: SingleErrorTypes.notFound,
-              description:
-                  'No workout plan day found for workout plan week and day',
-            ),
-          );
+        if (templateDayResult.isErr()) {
+          return err(templateDayResult.error);
         }
-        templateDay = dayData.first;
+        templateDay = templateDayResult.value;
       }
       final int workoutPlanDayId =
           existingDayRecord?.workoutPlanDayId ?? templateDay!.id!;
@@ -1238,261 +1041,570 @@ final class WorkoutPlanRecordRepository implements Repository {
 
       final now = DateUtilities.getNowUtcUnix();
 
-      final updatedRecord = await _workoutPlanRecordDao.startTransaction((
-        txn,
-      ) async {
-        WorkoutPlanRecord currentRecord = record;
-        late WorkoutPlanWeekRecord weekRecord;
-        if (existingWeekRecord == null) {
-          final newWeekRecord = WorkoutPlanWeekRecord.create(
-            workoutPlanRecordId: workoutPlanRecordId,
-            workoutPlanWeekId: workoutPlanWeekId,
-            week: week,
-            status: ProgressStatus.inProgress,
-            currentDay: weekDay,
-          );
-          final weekRecordId = await _workoutPlanWeekRecordDao.insert(
-            newWeekRecord,
-            txn,
-          );
-          weekRecord = newWeekRecord.copyWith(id: Nullable(weekRecordId));
-        } else {
-          weekRecord = existingWeekRecord;
-          if (existingDayRecord == null) {
-            weekRecord = weekRecord.copyWith(
-              currentDay: weekDay,
-              updatedAt: now,
-            );
-            await _workoutPlanWeekRecordDao.update(weekRecord, txn);
-          }
-        }
+      final updatedRecordResult = await _workoutPlanRecordDao
+          .startTransaction<
+            Result<WorkoutPlanRecord, ServiceError<SingleErrorTypes>>
+          >((txn) async {
+            WorkoutPlanRecord currentRecord = record;
+            late WorkoutPlanWeekRecord weekRecord;
+            if (existingWeekRecord == null) {
+              final newWeekRecord = WorkoutPlanWeekRecord.create(
+                workoutPlanRecordId: workoutPlanRecordId,
+                workoutPlanWeekId: workoutPlanWeekId,
+                week: week,
+                status: ProgressStatus.inProgress,
+                currentDay: weekDay,
+              );
+              final weekRecordId = await _workoutPlanWeekRecordDao.insert(
+                newWeekRecord,
+                txn,
+              );
+              weekRecord = newWeekRecord.copyWith(id: Nullable(weekRecordId));
+            } else {
+              weekRecord = existingWeekRecord;
+              if (existingDayRecord == null) {
+                weekRecord = weekRecord.copyWith(
+                  currentDay: weekDay,
+                  updatedAt: now,
+                );
+                await _workoutPlanWeekRecordDao.update(weekRecord, txn);
+              }
+            }
 
-        late WorkoutPlanDayRecord dayRecord;
-        if (existingDayRecord == null) {
-          final newDayRecord = WorkoutPlanDayRecord.create(
-            workoutPlanRecordId: workoutPlanRecordId,
-            workoutPlanWeekRecordId: weekRecord.id!,
-            workoutPlanDayId: workoutPlanDayId,
-            day: weekDay,
-            week: week,
-            status: ProgressStatus.inProgress,
-          );
-          final dayRecordId = await _workoutPlanDayRecordDao.insert(
-            newDayRecord,
-            txn,
-          );
-          dayRecord = newDayRecord.copyWith(id: Nullable(dayRecordId));
-
-          currentRecord = currentRecord.copyWith(
-            currentWeek: week,
-            currentDay: weekDay,
-            updatedAt: now,
-          );
-          await _workoutPlanRecordDao.update(currentRecord, txn);
-        } else {
-          dayRecord = existingDayRecord;
-        }
-
-        late WorkoutPlanWorkoutRecord updatedWorkoutRecord;
-        if (existingWorkoutRecord == null) {
-          final newWorkoutRecord =
-              WorkoutPlanWorkoutRecord.create(
+            late WorkoutPlanDayRecord dayRecord;
+            if (existingDayRecord == null) {
+              final newDayRecord = WorkoutPlanDayRecord.create(
                 workoutPlanRecordId: workoutPlanRecordId,
                 workoutPlanWeekRecordId: weekRecord.id!,
-                workoutPlanDayRecordId: dayRecord.id!,
-                workoutPlanWorkoutId: templateWorkout!.id!,
+                workoutPlanDayId: workoutPlanDayId,
+                day: weekDay,
+                week: week,
+                status: ProgressStatus.inProgress,
+              );
+              final dayRecordId = await _workoutPlanDayRecordDao.insert(
+                newDayRecord,
+                txn,
+              );
+              dayRecord = newDayRecord.copyWith(id: Nullable(dayRecordId));
+
+              currentRecord = currentRecord.copyWith(
+                currentWeek: week,
+                currentDay: weekDay,
+                updatedAt: now,
+              );
+              await _workoutPlanRecordDao.update(currentRecord, txn);
+            } else {
+              dayRecord = existingDayRecord;
+            }
+
+            late WorkoutPlanWorkoutRecord updatedWorkoutRecord;
+            if (existingWorkoutRecord == null) {
+              final newWorkoutRecord =
+                  WorkoutPlanWorkoutRecord.create(
+                    workoutPlanRecordId: workoutPlanRecordId,
+                    workoutPlanWeekRecordId: weekRecord.id!,
+                    workoutPlanDayRecordId: dayRecord.id!,
+                    workoutPlanWorkoutId: templateWorkout!.id!,
+                    workoutRecordId: input.workoutRecordId,
+                    position: workoutPosition,
+                    startedAt: input.startedAt != null
+                        ? DateUtilities.getDateUnix(input.startedAt!)
+                        : null,
+                    status: status,
+                  ).copyWith(
+                    completedAt: Nullable(
+                      status == ProgressStatus.completed ? now : null,
+                    ),
+                    updatedAt: now,
+                  );
+              final workoutRecordId = await _workoutPlanWorkoutRecordDao.insert(
+                newWorkoutRecord,
+                txn,
+              );
+              updatedWorkoutRecord = newWorkoutRecord.copyWith(
+                id: Nullable(workoutRecordId),
+              );
+            } else {
+              updatedWorkoutRecord = existingWorkoutRecord.copyWith(
                 workoutRecordId: input.workoutRecordId,
-                position: workoutPosition,
                 startedAt: input.startedAt != null
                     ? DateUtilities.getDateUnix(input.startedAt!)
-                    : null,
+                    : existingWorkoutRecord.startedAt,
                 status: status,
-              ).copyWith(
                 completedAt: Nullable(
                   status == ProgressStatus.completed ? now : null,
                 ),
                 updatedAt: now,
               );
-          final workoutRecordId = await _workoutPlanWorkoutRecordDao.insert(
-            newWorkoutRecord,
-            txn,
-          );
-          updatedWorkoutRecord = newWorkoutRecord.copyWith(
-            id: Nullable(workoutRecordId),
-          );
-        } else {
-          updatedWorkoutRecord = existingWorkoutRecord.copyWith(
-            workoutRecordId: input.workoutRecordId,
-            startedAt: input.startedAt != null
-                ? DateUtilities.getDateUnix(input.startedAt!)
-                : existingWorkoutRecord.startedAt,
-            status: status,
-            completedAt: Nullable(
-              status == ProgressStatus.completed ? now : null,
-            ),
-            updatedAt: now,
-          );
-          await _workoutPlanWorkoutRecordDao.update(updatedWorkoutRecord, txn);
-        }
-
-        final planWorkouts = await _workoutPlanWorkoutRecordDao.selectMany(
-          where: WorkoutPlanWorkoutRecordColumns.workoutPlanRecordId.equal,
-          whereArgs: [workoutPlanRecordId],
-          trx: txn,
-        );
-        final allWorkouts = planWorkouts
-            .where((w) => w.workoutPlanDayRecordId == dayRecord.id!)
-            .toList();
-        final scheduledDay = await _workoutPlanDayDao.selectOne(
-          dayRecord.workoutPlanDayId,
-          txn,
-        );
-        final int scheduledDayWorkouts = scheduledDay?.totalWorkouts ?? 0;
-        final bool allCompletedOrSkipped =
-            scheduledDayWorkouts > 0 &&
-            allWorkouts.length >= scheduledDayWorkouts &&
-            allWorkouts.every(
-              (w) =>
-                  w.status == ProgressStatus.completed ||
-                  w.status == ProgressStatus.skipped,
-            );
-
-        if (allCompletedOrSkipped) {
-          final updatedDayRecord = dayRecord.copyWith(
-            status: ProgressStatus.completed,
-            completedAt: Nullable(now),
-            updatedAt: now,
-          );
-          await _workoutPlanDayRecordDao.update(updatedDayRecord, txn);
-
-          final weekWorkouts = planWorkouts
-              .where((w) => w.workoutPlanWeekRecordId == weekRecord.id!)
-              .toList();
-          final scheduledWeek = await _workoutPlanWeekDao.selectOne(
-            weekRecord.workoutPlanWeekId,
-            txn,
-          );
-          final int scheduledWeekWorkouts = scheduledWeek?.totalWorkouts ?? 0;
-          final bool allWeekWorkoutsCompleted =
-              scheduledWeekWorkouts > 0 &&
-              weekWorkouts.length >= scheduledWeekWorkouts &&
-              weekWorkouts.every(
-                (workout) =>
-                    workout.status == ProgressStatus.completed ||
-                    workout.status == ProgressStatus.skipped,
+              await _workoutPlanWorkoutRecordDao.update(
+                updatedWorkoutRecord,
+                txn,
               );
+            }
 
-          if (allWeekWorkoutsCompleted) {
-            final updatedWeekRecord = weekRecord.copyWith(
-              status: ProgressStatus.completed,
-              completedAt: Nullable(now),
-              updatedAt: now,
+            final planWorkouts = await _workoutPlanWorkoutRecordDao.selectMany(
+              where: WorkoutPlanWorkoutRecordColumns.workoutPlanRecordId.equal,
+              whereArgs: [workoutPlanRecordId],
+              trx: txn,
             );
-            await _workoutPlanWeekRecordDao.update(updatedWeekRecord, txn);
-
-            final scheduledResult = await _countScheduledWorkouts(
-              currentRecord.workoutPlanId,
-              currentRecord.workoutPlanVersion,
-              SingleErrorTypes.operationFailure,
+            final allWorkouts = planWorkouts
+                .where((w) => w.workoutPlanDayRecordId == dayRecord.id!)
+                .toList();
+            final scheduledDay = await _workoutPlanDayDao.selectOne(
+              dayRecord.workoutPlanDayId,
               txn,
             );
-            // The workout, day, and week writes must roll back if counting fails.
-            if (scheduledResult.isErr()) throw scheduledResult.error;
-            final scheduledWorkouts = scheduledResult.value;
-            final allPlanWorkoutsCompleted =
-                scheduledWorkouts > 0 &&
-                planWorkouts.length >= scheduledWorkouts &&
-                planWorkouts.every(
-                  (workout) =>
-                      workout.status == ProgressStatus.completed ||
-                      workout.status == ProgressStatus.skipped,
+            final int scheduledDayWorkouts = scheduledDay?.totalWorkouts ?? 0;
+            final bool allCompletedOrSkipped =
+                scheduledDayWorkouts > 0 &&
+                allWorkouts.length >= scheduledDayWorkouts &&
+                allWorkouts.every(
+                  (w) =>
+                      w.status == ProgressStatus.completed ||
+                      w.status == ProgressStatus.skipped,
                 );
 
-            if (allPlanWorkoutsCompleted) {
-              currentRecord = currentRecord.copyWith(
-                status: ProgressStatus.completed,
+            if (allCompletedOrSkipped) {
+              final dayStatus = _terminalStatusFromChildren(
+                allWorkouts.map((w) => w.status),
+              );
+              final updatedDayRecord = dayRecord.copyWith(
+                status: dayStatus,
                 completedAt: Nullable(now),
                 updatedAt: now,
               );
-              await _workoutPlanRecordDao.update(currentRecord, txn);
-            } else if (currentRecord.status == ProgressStatus.completed ||
-                currentRecord.completedAt != null) {
-              currentRecord = currentRecord.copyWith(
-                status: ProgressStatus.inProgress,
-                completedAt: const Nullable(null),
-                updatedAt: now,
+              await _workoutPlanDayRecordDao.update(updatedDayRecord, txn);
+
+              final weekWorkouts = planWorkouts
+                  .where((w) => w.workoutPlanWeekRecordId == weekRecord.id!)
+                  .toList();
+              final scheduledWeek = await _workoutPlanWeekDao.selectOne(
+                weekRecord.workoutPlanWeekId,
+                txn,
               );
-              await _workoutPlanRecordDao.update(currentRecord, txn);
+              final int scheduledWeekWorkouts =
+                  scheduledWeek?.totalWorkouts ?? 0;
+              final bool allWeekWorkoutsCompleted =
+                  scheduledWeekWorkouts > 0 &&
+                  weekWorkouts.length >= scheduledWeekWorkouts &&
+                  weekWorkouts.every(
+                    (workout) =>
+                        workout.status == ProgressStatus.completed ||
+                        workout.status == ProgressStatus.skipped,
+                  );
+
+              if (allWeekWorkoutsCompleted) {
+                final weekStatus = _terminalStatusFromChildren(
+                  weekWorkouts.map((w) => w.status),
+                );
+                final updatedWeekRecord = weekRecord.copyWith(
+                  status: weekStatus,
+                  completedAt: Nullable(now),
+                  updatedAt: now,
+                );
+                await _workoutPlanWeekRecordDao.update(updatedWeekRecord, txn);
+
+                final scheduledResult = await _countScheduledWorkouts(
+                  currentRecord.workoutPlanId,
+                  currentRecord.workoutPlanVersion,
+                  SingleErrorTypes.operationFailure,
+                  txn,
+                );
+                // The workout, day, and week writes must roll back if counting fails.
+                if (scheduledResult.isErr()) return err(scheduledResult.error);
+                final scheduledWorkouts = scheduledResult.value;
+                final allPlanWorkoutsCompleted =
+                    scheduledWorkouts > 0 &&
+                    planWorkouts.length >= scheduledWorkouts &&
+                    planWorkouts.every(
+                      (workout) =>
+                          workout.status == ProgressStatus.completed ||
+                          workout.status == ProgressStatus.skipped,
+                    );
+
+                if (allPlanWorkoutsCompleted) {
+                  final planStatus = _terminalStatusFromChildren(
+                    planWorkouts.map((w) => w.status),
+                  );
+                  currentRecord = currentRecord.copyWith(
+                    status: planStatus,
+                    completedAt: Nullable(now),
+                    updatedAt: now,
+                  );
+                  await _workoutPlanRecordDao.update(currentRecord, txn);
+                } else if (_isTerminalProgress(currentRecord.status) ||
+                    currentRecord.completedAt != null) {
+                  currentRecord = currentRecord.copyWith(
+                    status: ProgressStatus.inProgress,
+                    completedAt: const Nullable(null),
+                    updatedAt: now,
+                  );
+                  await _workoutPlanRecordDao.update(currentRecord, txn);
+                }
+              } else {
+                if (_isTerminalProgress(weekRecord.status) ||
+                    weekRecord.completedAt != null) {
+                  weekRecord = weekRecord.copyWith(
+                    status: ProgressStatus.inProgress,
+                    completedAt: const Nullable(null),
+                    updatedAt: now,
+                  );
+                  await _workoutPlanWeekRecordDao.update(weekRecord, txn);
+                }
+                if (_isTerminalProgress(currentRecord.status) ||
+                    currentRecord.completedAt != null) {
+                  currentRecord = currentRecord.copyWith(
+                    status: ProgressStatus.inProgress,
+                    completedAt: const Nullable(null),
+                    updatedAt: now,
+                  );
+                  await _workoutPlanRecordDao.update(currentRecord, txn);
+                }
+              }
+            } else {
+              if (dayRecord.status != ProgressStatus.inProgress ||
+                  dayRecord.completedAt != null) {
+                final updatedDayRecord = dayRecord.copyWith(
+                  status: ProgressStatus.inProgress,
+                  completedAt: const Nullable(null),
+                  updatedAt: now,
+                );
+                await _workoutPlanDayRecordDao.update(updatedDayRecord, txn);
+              }
+              if (_isTerminalProgress(weekRecord.status) ||
+                  weekRecord.completedAt != null) {
+                weekRecord = weekRecord.copyWith(
+                  status: ProgressStatus.inProgress,
+                  completedAt: const Nullable(null),
+                  updatedAt: now,
+                );
+                await _workoutPlanWeekRecordDao.update(weekRecord, txn);
+              }
+              if (_isTerminalProgress(currentRecord.status) ||
+                  currentRecord.completedAt != null) {
+                currentRecord = currentRecord.copyWith(
+                  status: ProgressStatus.inProgress,
+                  completedAt: const Nullable(null),
+                  updatedAt: now,
+                );
+                await _workoutPlanRecordDao.update(currentRecord, txn);
+              }
             }
-          } else {
-            if (weekRecord.status == ProgressStatus.completed ||
-                weekRecord.completedAt != null) {
-              weekRecord = weekRecord.copyWith(
-                status: ProgressStatus.inProgress,
-                completedAt: const Nullable(null),
-                updatedAt: now,
+            if (currentRecord.status == ProgressStatus.inProgress) {
+              final abandoned = await _abandonOtherActiveRecords(
+                txn,
+                now,
+                exceptId: workoutPlanRecordId,
               );
-              await _workoutPlanWeekRecordDao.update(weekRecord, txn);
+              if (abandoned.isErr()) return err(abandoned.error);
             }
-            if (currentRecord.status == ProgressStatus.completed ||
-                currentRecord.completedAt != null) {
-              currentRecord = currentRecord.copyWith(
-                status: ProgressStatus.inProgress,
-                completedAt: const Nullable(null),
-                updatedAt: now,
-              );
-              await _workoutPlanRecordDao.update(currentRecord, txn);
-            }
-          }
-        } else {
-          if (dayRecord.status != ProgressStatus.inProgress ||
-              dayRecord.completedAt != null) {
-            final updatedDayRecord = dayRecord.copyWith(
-              status: ProgressStatus.inProgress,
-              completedAt: const Nullable(null),
-              updatedAt: now,
-            );
-            await _workoutPlanDayRecordDao.update(updatedDayRecord, txn);
-          }
-          if (weekRecord.status == ProgressStatus.completed ||
-              weekRecord.completedAt != null) {
-            weekRecord = weekRecord.copyWith(
-              status: ProgressStatus.inProgress,
-              completedAt: const Nullable(null),
-              updatedAt: now,
-            );
-            await _workoutPlanWeekRecordDao.update(weekRecord, txn);
-          }
-          if (currentRecord.status == ProgressStatus.completed ||
-              currentRecord.completedAt != null) {
-            currentRecord = currentRecord.copyWith(
-              status: ProgressStatus.inProgress,
-              completedAt: const Nullable(null),
-              updatedAt: now,
-            );
-            await _workoutPlanRecordDao.update(currentRecord, txn);
-          }
-        }
-        if (currentRecord.status == ProgressStatus.inProgress) {
-          final abandoned = await _abandonOtherActiveRecords(
-            txn,
-            now,
-            exceptId: workoutPlanRecordId,
-          );
-          if (abandoned.isErr()) throw abandoned.error;
-        }
-        return currentRecord;
-      });
+            return ok(currentRecord);
+          });
+
+      if (updatedRecordResult.isErr()) return err(updatedRecordResult.error);
+      final updatedRecord = updatedRecordResult.value;
 
       return await _toRecordDtoWithTree(updatedRecord);
-    } on ServiceError<SingleErrorTypes> catch (error) {
-      return err(error);
     } catch (e) {
       _logger.severe('Failed to complete workout plan workout record', e);
       return err(
         const ServiceError(
           type: SingleErrorTypes.operationFailure,
           description: 'Failed to complete workout plan workout record',
+        ),
+      );
+    }
+  }
+
+  Future<Result<WorkoutPlanWeek?, ServiceError<SingleErrorTypes>>>
+  _findTemplateWeek(
+    int workoutPlanId,
+    int week, {
+    required int planVersion,
+  }) async {
+    const failure = ServiceError(
+      type: SingleErrorTypes.operationFailure,
+      description: 'Failed to load workout plan template week',
+    );
+    try {
+      final WhereBuilder mainWhere = WhereBuilder();
+      mainWhere.and(WorkoutPlanWeekColumns.workoutPlanId.equal, workoutPlanId);
+      mainWhere.and(WorkoutPlanWeekColumns.planVersion.equal, planVersion);
+
+      final WhereBuilder onlyStartWeekWhere = WhereBuilder();
+      onlyStartWeekWhere.and(WorkoutPlanWeekColumns.startWeek.equal, week);
+      onlyStartWeekWhere.and(WorkoutPlanWeekColumns.endWeek.isNull);
+
+      final WhereBuilder betweenWeekWhere = WhereBuilder();
+      betweenWeekWhere.and(
+        WorkoutPlanWeekColumns.startWeek.lessThanOrEqual,
+        week,
+      );
+      betweenWeekWhere.and(WorkoutPlanWeekColumns.endWeek.notNull);
+      betweenWeekWhere.and(
+        WorkoutPlanWeekColumns.endWeek.greaterThanOrEqual,
+        week,
+      );
+
+      final WhereBuilder weekWhere = WhereBuilder();
+      weekWhere.or(onlyStartWeekWhere.where!);
+      weekWhere.or(betweenWeekWhere.where!);
+      mainWhere.and(weekWhere.where!);
+
+      final List<Object?> args = [
+        ...mainWhere.args!,
+        ...onlyStartWeekWhere.args!,
+        ...betweenWeekWhere.args!,
+      ];
+
+      final List<WorkoutPlanWeek> weeks = await _workoutPlanWeekDao.selectMany(
+        where: mainWhere.where,
+        whereArgs: args,
+        orderBy: [WorkoutPlanWeekColumns.startWeek.orderAsc],
+        limit: 1,
+      );
+      return ok(weeks.firstOrNull);
+    } catch (error, stackTrace) {
+      _logger.severe(failure.description, error, stackTrace);
+      return err(failure);
+    }
+  }
+
+  Future<Result<WorkoutPlanDay, ServiceError<SingleErrorTypes>>>
+  _findTemplateDay({
+    required int workoutPlanWeekId,
+    required int weekDay,
+    Transaction? txn,
+  }) async {
+    try {
+      final templateWeek = await _workoutPlanWeekDao.selectOne(
+        workoutPlanWeekId,
+        txn,
+      );
+      if (templateWeek == null) {
+        return err(
+          const ServiceError(
+            type: SingleErrorTypes.notFound,
+            description: 'Workout plan week not found',
+          ),
+        );
+      }
+
+      final dayTemplateWhere = WhereBuilder();
+      dayTemplateWhere.and(
+        WorkoutPlanDayColumns.workoutPlanWeekId.equal,
+        workoutPlanWeekId,
+      );
+      final List<WorkoutPlanDay> dayData = await _workoutPlanDayDao.selectMany(
+        where: dayTemplateWhere.where,
+        whereArgs: dayTemplateWhere.args,
+        orderBy: [WorkoutPlanDayColumns.day.orderAsc],
+        trx: txn,
+      );
+
+      final templateDay = WorkoutPlanScheduleUtils.resolveTemplateDay(
+        scheduleMode: templateWeek.scheduleMode,
+        days: dayData,
+        weekDay: weekDay,
+      );
+
+      if (templateDay == null) {
+        return err(
+          const ServiceError(
+            type: SingleErrorTypes.notFound,
+            description:
+                'No workout plan day found for workout plan week and day',
+          ),
+        );
+      }
+      return ok(templateDay);
+    } catch (e, stackTrace) {
+      _logger.severe('Failed to find template day', e, stackTrace);
+      return err(
+        const ServiceError(
+          type: SingleErrorTypes.operationFailure,
+          description: 'Failed to find template day',
+        ),
+      );
+    }
+  }
+
+  Future<Result<WorkoutPlanDayRecordDto, ServiceError<SingleErrorTypes>>>
+  _createWorkoutPlanWeekAndDayRecords({
+    required WorkoutPlanRecord workoutPlanRecord,
+    required int week,
+    required int weekDay,
+    required ProgressStatus status,
+  }) async {
+    final int workoutPlanRecordId = workoutPlanRecord.id!;
+    final int workoutPlanId = workoutPlanRecord.workoutPlanId;
+    _logger.info(
+      'Creating workout plan week and day records for workout plan record $workoutPlanRecordId and workout plan $workoutPlanId for week $week and day $weekDay',
+    );
+
+    try {
+      final weekResult = await _findTemplateWeek(
+        workoutPlanId,
+        week,
+        planVersion: workoutPlanRecord.workoutPlanVersion,
+      );
+      if (weekResult.isErr()) return err(weekResult.error);
+      final templateWeek = weekResult.value;
+      if (templateWeek == null) {
+        _logger.info(
+          'No workout plan week found for workout plan $workoutPlanId and week $week',
+        );
+        return err(
+          const ServiceError(
+            type: SingleErrorTypes.notFound,
+            description: 'No workout plan week found for workout plan and week',
+          ),
+        );
+      }
+
+      final WorkoutPlanWeekRecord weekRecord = WorkoutPlanWeekRecord.create(
+        workoutPlanRecordId: workoutPlanRecordId,
+        workoutPlanWeekId: templateWeek.id!,
+        week: week,
+        status: status,
+        currentDay: weekDay,
+      );
+
+      final templateDayResult = await _findTemplateDay(
+        workoutPlanWeekId: templateWeek.id!,
+        weekDay: weekDay,
+      );
+      if (templateDayResult.isErr()) {
+        _logger.info(
+          'No workout plan day found for workout plan week ${templateWeek.id} and day $weekDay',
+        );
+        return err(templateDayResult.error);
+      }
+      final int workoutPlanDayId = templateDayResult.value.id!;
+
+      final (
+        int weekRecordId,
+        WorkoutPlanDayRecord dayRecord,
+      ) = await _workoutPlanRecordDao.startTransaction((txn) async {
+        final int weekRecordId = await _workoutPlanWeekRecordDao.insert(
+          weekRecord,
+          txn,
+        );
+
+        final WorkoutPlanDayRecord dayRecord = WorkoutPlanDayRecord.create(
+          workoutPlanRecordId: workoutPlanRecordId,
+          workoutPlanWeekRecordId: weekRecordId,
+          workoutPlanDayId: workoutPlanDayId,
+          day: weekDay,
+          status: status,
+          week: week,
+        );
+        final int dayRecordId = await _workoutPlanDayRecordDao.insert(
+          dayRecord,
+          txn,
+        );
+
+        final WorkoutPlanRecord updatedRecord = workoutPlanRecord.copyWith(
+          currentWeek: week,
+          currentDay: weekDay,
+          updatedAt: DateUtilities.getNowUtcUnix(),
+        );
+        await _workoutPlanRecordDao.update(updatedRecord, txn);
+        return (weekRecordId, dayRecord.copyWith(id: Nullable(dayRecordId)));
+      });
+      _logger.info(
+        'Created workout plan week record with id $weekRecordId and day record with id ${dayRecord.id} for workout plan record $workoutPlanRecordId',
+      );
+      return ok(WorkoutPlanDayRecordDto.fromModel(dayRecord));
+    } catch (e) {
+      _logger.severe(
+        'Failed to create workout plan week record for workout plan record $workoutPlanRecordId',
+        e,
+      );
+      return err(
+        const ServiceError(
+          type: SingleErrorTypes.operationFailure,
+          description: 'Failed to create workout plan week record',
+        ),
+      );
+    }
+  }
+
+  Future<Result<WorkoutPlanDayRecordDto, ServiceError<SingleErrorTypes>>>
+  _createWorkoutPlanDayRecord({
+    required WorkoutPlanRecord workoutPlanRecord,
+    required WorkoutPlanWeekRecord weekRecord,
+    required int weekDay,
+    required ProgressStatus status,
+  }) async {
+    final int workoutPlanRecordId = workoutPlanRecord.id!;
+    final int workoutPlanWeekRecordId = weekRecord.id!;
+    _logger.info(
+      'Creating workout plan day record for workout plan record $workoutPlanRecordId, week record $workoutPlanWeekRecordId and week day $weekDay',
+    );
+
+    try {
+      final templateDayResult = await _findTemplateDay(
+        workoutPlanWeekId: weekRecord.workoutPlanWeekId,
+        weekDay: weekDay,
+      );
+      if (templateDayResult.isErr()) {
+        _logger.info(
+          'No workout plan day found for workout plan week ${weekRecord.workoutPlanWeekId} and day $weekDay',
+        );
+        return err(templateDayResult.error);
+      }
+
+      final int workoutPlanDayId = templateDayResult.value.id!;
+      final WorkoutPlanDayRecord dayRecord = WorkoutPlanDayRecord.create(
+        workoutPlanRecordId: workoutPlanRecordId,
+        workoutPlanWeekRecordId: workoutPlanWeekRecordId,
+        workoutPlanDayId: workoutPlanDayId,
+        day: weekDay,
+        status: status,
+      );
+
+      final int dayRecordId = await _workoutPlanDayRecordDao.startTransaction((
+        txn,
+      ) async {
+        final int dayRecordId = await _workoutPlanDayRecordDao.insert(
+          dayRecord,
+          txn,
+        );
+
+        final WorkoutPlanRecord updatedRecord = workoutPlanRecord.copyWith(
+          currentWeek: weekRecord.week,
+          currentDay: weekDay,
+          updatedAt: DateUtilities.getNowUtcUnix(),
+        );
+        await _workoutPlanRecordDao.update(updatedRecord, txn);
+
+        final WorkoutPlanWeekRecord updatedWeekRecord = weekRecord.copyWith(
+          currentDay: weekDay,
+          updatedAt: DateUtilities.getNowUtcUnix(),
+        );
+        await _workoutPlanWeekRecordDao.update(updatedWeekRecord, txn);
+
+        return dayRecordId;
+      });
+
+      _logger.info(
+        'Created workout plan day record with id $dayRecordId for workout plan record $workoutPlanRecordId',
+      );
+      return ok(
+        WorkoutPlanDayRecordDto.fromModel(
+          dayRecord.copyWith(id: Nullable(dayRecordId)),
+        ),
+      );
+    } catch (e) {
+      _logger.severe(
+        'Failed to create workout plan day record for workout plan record $workoutPlanRecordId',
+        e,
+      );
+      return err(
+        const ServiceError(
+          type: SingleErrorTypes.operationFailure,
+          description: 'Failed to create workout plan day record',
         ),
       );
     }
@@ -1620,5 +1732,21 @@ final class WorkoutPlanRecordRepository implements Repository {
     final weeks = await _loadWeeksTree(record.id!);
     if (weeks.isErr()) return err(weeks.error);
     return ok(WorkoutPlanRecordDto.fromModel(record, weeks: weeks.value));
+  }
+
+  ProgressStatus _terminalStatusFromChildren(
+    Iterable<ProgressStatus> statuses,
+  ) {
+    final list = statuses.toList();
+    if (list.isNotEmpty &&
+        list.every((status) => status == ProgressStatus.skipped)) {
+      return ProgressStatus.skipped;
+    }
+    return ProgressStatus.completed;
+  }
+
+  bool _isTerminalProgress(ProgressStatus status) {
+    return status == ProgressStatus.completed ||
+        status == ProgressStatus.skipped;
   }
 }

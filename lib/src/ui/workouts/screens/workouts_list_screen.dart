@@ -18,37 +18,40 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:material_ui/material_ui.dart';
 
-import '../../../data/utils/enums.dart';
 import '../../core/sizes/data_display_sizes.dart';
 import '../../core/sizes/screen_size.dart';
+import '../../core/widgets/base_common_search_form.dart';
 import '../../core/widgets/layout/app_scaffold.dart';
-import '../view_models/states/workout_plan_state.dart';
-import '../view_models/workout_plan_cubit.dart';
-import '../widgets/editor/create_workout_plan_modal.dart';
-import '../widgets/workout_plan_search_form.dart';
-import '../widgets/workout_plans_list.dart';
+import '../view_models/states/workout_state.dart';
+import '../view_models/workout_cubit.dart';
+import '../widgets/details/create_workout_modal.dart';
+import '../widgets/workouts_list.dart';
 
-class WorkoutPlanListScreen extends StatefulWidget {
-  const WorkoutPlanListScreen({super.key});
+class WorkoutsScreen extends StatefulWidget {
+  static const name = "workouts";
+
+  const WorkoutsScreen({super.key});
 
   @override
-  State<WorkoutPlanListScreen> createState() => _WorkoutPlanListScreenState();
+  State<WorkoutsScreen> createState() => _WorkoutsScreenState();
 }
 
-class _WorkoutPlanListScreenState extends State<WorkoutPlanListScreen> {
+class _WorkoutsScreenState extends State<WorkoutsScreen> {
   final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
-    final cubit = context.read<WorkoutPlanCubit>();
-    final cubitState = cubit.state;
+    final cubit = context.read<WorkoutCubit>();
 
-    if (cubitState.workoutPlans.isEmpty) {
-      cubit.getWorkoutPlans(
-        name: cubitState.pagination.name,
-        difficulty: cubitState.pagination.difficulty,
-        isFavorite: cubitState.pagination.isFavorite,
+    if (cubit.state.workouts.isEmpty) {
+      final pagination = cubit.state.pagination;
+      cubit.getWorkouts(
+        name: pagination.name,
+        difficulty: pagination.difficulty,
+        muscleGroup: pagination.muscleGroup,
+        isFavorite: pagination.isFavorite,
+        createdBy: pagination.createdBy,
         limit: 20,
         offset: 0,
       );
@@ -65,15 +68,18 @@ class _WorkoutPlanListScreenState extends State<WorkoutPlanListScreen> {
 
   void _onScroll() {
     if (_isBottom) {
-      final cubit = context.read<WorkoutPlanCubit>();
+      final cubit = context.read<WorkoutCubit>();
       if (!cubit.state.isLoading &&
-          cubit.state.pagination.total > cubit.state.workoutPlans.length) {
+          cubit.state.pagination.total > cubit.state.workouts.length) {
         final pagination = cubit.state.pagination;
-        cubit.getWorkoutPlans(
+        cubit.getWorkouts(
           name: pagination.name,
           difficulty: pagination.difficulty,
+          muscleGroup: pagination.muscleGroup,
           isFavorite: pagination.isFavorite,
-          offset: cubit.state.workoutPlans.length,
+          createdBy: pagination.createdBy,
+          offset: cubit.state.workouts.length,
+          limit: 20,
         );
       }
     }
@@ -88,59 +94,57 @@ class _WorkoutPlanListScreenState extends State<WorkoutPlanListScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final breakPoints = BreakPoint.fromContext(context);
     final sizes = DataDisplaySizes.getDataDisplaySizes(breakPoints.screenSize);
-    final theme = Theme.of(context);
 
     return AppScaffold(
-      title: 'Workout Plans',
+      title: 'Workouts',
       body: Padding(
         padding: EdgeInsets.all(sizes.viewPadding),
-        child: BlocConsumer<WorkoutPlanCubit, WorkoutPlanState>(
-          listener: (context, state) {
-            if (state.error != null) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('Error: ${state.error!.description}'),
-                  backgroundColor: Colors.red,
-                ),
-              );
-            }
-          },
+        child: BlocBuilder<WorkoutCubit, WorkoutState>(
           builder: (context, state) {
             return Column(
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
-                WorkoutPlanSearchForm(
-                  nameLabel: "Plans",
+                BaseCommonSearchForm(
+                  theme: theme,
+                  isLoading: state.isLoading,
+                  nameLabel: "Workouts",
                   padding: sizes.padding,
                   fontSize: sizes.fontSize,
                   spacing: sizes.inputSpacing,
-                  isLoading: state.isLoading,
                   initialName: state.pagination.name,
                   initialDifficulty: state.pagination.difficulty,
+                  initialMuscleGroup: state.pagination.muscleGroup,
                   initialIsFavorite: state.pagination.isFavorite,
+                  initialCreatedBy: state.pagination.createdBy,
+                  showCreatedBy: true,
                   onSubmit:
                       ({
-                        required String name,
-                        required Difficulty? difficulty,
-                        required bool isFavorite,
-                      }) {
-                        context.read<WorkoutPlanCubit>().getWorkoutPlans(
-                          name: name,
-                          difficulty: difficulty,
-                          isFavorite: isFavorite,
-                          limit: 20,
-                          offset: 0,
-                        );
-                      },
+                        required difficulty,
+                        required isFavourite,
+                        required muscleGroup,
+                        required equipmentId,
+                        required name,
+                        required createdBy,
+                      }) => context.read<WorkoutCubit>().getWorkouts(
+                        name: name,
+                        difficulty: difficulty,
+                        muscleGroup: muscleGroup,
+                        limit: 20,
+                        offset: 0,
+                        isFavorite: isFavourite,
+                        createdBy: createdBy,
+                      ),
                 ),
                 SizedBox(height: sizes.inputSpacing),
                 Expanded(
-                  child: WorkoutPlansList(
+                  child: WorkoutsList(
                     sizes: sizes,
                     isLoading: state.isLoading,
-                    workoutPlans: state.workoutPlans,
+                    workouts: state.workouts,
+                    pagination: state.pagination,
                     scrollController: _scrollController,
                   ),
                 ),
@@ -150,13 +154,12 @@ class _WorkoutPlanListScreenState extends State<WorkoutPlanListScreen> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        key: const ValueKey('workout-plan-add'),
+        key: const ValueKey('workout-add'),
         elevation: sizes.elevation,
         onPressed: () {
           showDialog(
             context: context,
-            builder: (context) =>
-                CreateWorkoutPlanModal(theme: theme, sizes: sizes),
+            builder: (context) => CreateWorkoutDialog(sizes: sizes),
           );
         },
         shape: BeveledRectangleBorder(),

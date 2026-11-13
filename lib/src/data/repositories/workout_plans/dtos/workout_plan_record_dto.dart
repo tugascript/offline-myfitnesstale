@@ -54,6 +54,19 @@ final class WorkoutPlanRecordDto extends Equatable
     this.weeks = const [],
   });
 
+  factory WorkoutPlanRecordDto.empty() {
+    return WorkoutPlanRecordDto(
+      id: 0,
+      workoutPlanId: 0,
+      workoutPlanVersion: 1,
+      status: ProgressStatus.inProgress,
+      currentWeek: 1,
+      currentDay: 1,
+      currentWorkoutPosition: 1,
+      startedAt: DateTime.fromMillisecondsSinceEpoch(0, isUtc: true),
+    );
+  }
+
   factory WorkoutPlanRecordDto.fromModel(
     WorkoutPlanRecord model, {
     WorkoutPlanDto? workoutPlan,
@@ -124,6 +137,6 @@ final class WorkoutPlanRecordDto extends Equatable
     currentDay,
     currentWorkoutPosition,
     workoutPlan,
-    weeks.length,
+    weeks,
   ];
 }

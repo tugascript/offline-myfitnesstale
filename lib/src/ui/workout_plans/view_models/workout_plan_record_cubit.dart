@@ -23,9 +23,12 @@ import '../../../data/repositories/workout_plans/dtos/workout_plan_record_dto.da
 import '../../../data/repositories/workout_plans/inputs/workout_plan_day_record_input.dart';
 import '../../../data/repositories/workout_plans/inputs/workout_plan_record_input.dart';
 import '../../../data/repositories/workout_plans/inputs/workout_plan_workout_record_input.dart';
+import '../../../data/repositories/workout_plans/dtos/workout_plan_workout_dto.dart';
+import '../../../data/repositories/workout_plans/dtos/workout_plan_workout_record_dto.dart';
 import '../../../data/repositories/workout_plans/workout_plan_record_repository.dart';
 import '../../../data/repositories/workout_plans/workout_plan_repository.dart';
 import '../../../data/repositories/workouts/dtos/workout_dto.dart';
+import '../../../data/repositories/workouts/workout_record_repository.dart';
 import '../../../data/utils/enums.dart';
 import '../../../utils/errors.dart';
 import '../../../utils/nullable.dart';
@@ -35,19 +38,24 @@ import './states/workout_plan_record_state.dart';
 class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
   final WorkoutPlanRecordRepository _workoutPlanRecordService;
   final WorkoutPlanRepository _workoutPlanService;
+  final WorkoutRecordRepository _workoutRecordService;
 
   WorkoutPlanRecordCubit({
     required WorkoutPlanRecordRepository workoutPlanRecordRepository,
     required WorkoutPlanRepository workoutPlanRepository,
-  }) : _workoutPlanRecordService = workoutPlanRecordRepository,
-       _workoutPlanService = workoutPlanRepository,
-       super(WorkoutPlanRecordState.initial());
+    required WorkoutRecordRepository workoutRecordRepository,
+  })
+      : _workoutPlanRecordService = workoutPlanRecordRepository,
+        _workoutPlanService = workoutPlanRepository,
+        _workoutRecordService = workoutRecordRepository,
+        super(WorkoutPlanRecordState.initial());
 
   final Logger _logger = Logger('WorkoutPlanRecordCubit');
 
   Future<void> getWorkoutPlanRecords({
     int? workoutPlanId,
     ProgressStatus? progressStatus,
+    (DateTime, DateTime)? dateRange,
     int limit = 20,
     int offset = 0,
   }) async {
@@ -55,7 +63,8 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
     final requestId = state.historyRequestId + 1;
     final filtersChanged =
         state.pagination.workoutPlanId != workoutPlanId ||
-        state.pagination.progressStatus != progressStatus;
+            state.pagination.progressStatus != progressStatus ||
+            state.pagination.dateRange != dateRange;
     final clearStaleRecords = offset == 0 && filtersChanged;
 
     emit(
@@ -64,12 +73,13 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
         planRecords: clearStaleRecords ? const [] : null,
         pagination: clearStaleRecords
             ? state.pagination.copyWith(
-                workoutPlanId: Nullable(workoutPlanId),
-                progressStatus: Nullable(progressStatus),
-                limit: limit,
-                offset: 0,
-                total: 0,
-              )
+          workoutPlanId: Nullable(workoutPlanId),
+          progressStatus: Nullable(progressStatus),
+          dateRange: Nullable(dateRange),
+          limit: limit,
+          offset: 0,
+          total: 0,
+        )
             : null,
         isLoading: true,
         error: const Nullable(null),
@@ -79,6 +89,7 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
     final result = await _workoutPlanRecordService.getWorkoutPlanRecords(
       workoutPlanId: workoutPlanId,
       status: progressStatus,
+      dateRange: dateRange ?? state.pagination.dateRange,
       limit: limit,
       offset: offset,
     );
@@ -110,10 +121,56 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
         pagination: state.pagination.copyWith(
           workoutPlanId: Nullable(workoutPlanId),
           progressStatus: Nullable(progressStatus),
+          dateRange: dateRange != null ? Nullable(dateRange) : null,
           limit: page.limit,
           offset: page.offset,
           total: page.total,
         ),
+        isLoading: false,
+        error: const Nullable(null),
+      ),
+    );
+  }
+
+  Future<void> getLatestWorkoutPlanRecord([int? workoutPlanId]) async {
+    _logger.info('Getting latest workout plan record for plan $workoutPlanId');
+    emit(state.copyWith(isLoading: true));
+
+    final result = await _workoutPlanRecordService.getLatestWorkoutPlanRecord(
+      workoutPlanId,
+    );
+    if (result.isErr()) {
+      final error = result.error;
+      _logger.warning("Failed to get latest workout plan record", error);
+      switch (error.type) {
+        case SingleErrorTypes.invalidInput:
+        case SingleErrorTypes.notFound:
+          emit(
+            state.copyWith(
+              latestWorkoutPlanRecord: const Nullable(null),
+              isLoading: false,
+            ),
+          );
+          return;
+        case SingleErrorTypes.operationFailure:
+          emit(
+            state.copyWith(
+              error: Nullable(
+                ErrorState(
+                  type: error.type.name,
+                  description: error.description,
+                ),
+              ),
+              isLoading: false,
+            ),
+          );
+          return;
+      }
+    }
+
+    emit(
+      state.copyWith(
+        latestWorkoutPlanRecord: Nullable(result.value),
         isLoading: false,
         error: const Nullable(null),
       ),
@@ -194,7 +251,7 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
           completedWorkouts: counts?.$1,
           totalWorkouts: counts?.$2,
           todaysWorkouts:
-              todaysWorkouts ??
+          todaysWorkouts ??
               (state.currentPlanRecord.currentPlanRecord?.id == record.id
                   ? state.currentPlanRecord.todaysWorkouts
                   : const []),
@@ -237,15 +294,15 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
 
     final workoutResult = await _workoutPlanRecordService
         .upsertWorkoutPlanWorkoutRecord(
-          WorkoutPlanWorkoutRecordInput(
-            workoutPlanRecordId: currentPlanRecord.id,
-            workoutRecordId: workoutRecordId,
-            status: ProgressStatus.inProgress,
-            week: useWeek,
-            weekDay: useDay,
-            workoutPosition: useWorkoutPosition,
-          ),
-        );
+      WorkoutPlanWorkoutRecordInput(
+        workoutPlanRecordId: currentPlanRecord.id,
+        workoutRecordId: workoutRecordId,
+        status: ProgressStatus.inProgress,
+        week: useWeek,
+        weekDay: useDay,
+        workoutPosition: useWorkoutPosition,
+      ),
+    );
     if (workoutResult.isErr()) {
       final error = workoutResult.error;
       emit(
@@ -303,7 +360,9 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
       final lookup = await _workoutPlanRecordService.getWorkoutPlanRecord(
         workoutPlanRecordId,
       );
-      if (lookup.isErr() || lookup.value.status != ProgressStatus.inProgress) {
+      if (lookup.isErr() ||
+          (lookup.value.status != ProgressStatus.inProgress &&
+              lookup.value.status != ProgressStatus.skipped)) {
         emit(
           state.copyWith(
             error: Nullable(
@@ -321,17 +380,17 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
 
     emit(state.copyWith(isLoading: true));
     final result = await _workoutPlanRecordService
-        .updateWorkoutPlanWorkoutRecordStatus(
-          WorkoutPlanWorkoutRecordInput(
-            workoutPlanRecordId: planRecord.id,
-            workoutRecordId: workoutRecordId,
-            week: week,
-            weekDay: day,
-            workoutPosition: workoutPosition,
-            status: ProgressStatus.completed,
-            startedAt: startedAt,
-          ),
-        );
+        .upsertWorkoutPlanWorkoutRecord(
+      WorkoutPlanWorkoutRecordInput(
+        workoutPlanRecordId: planRecord.id,
+        workoutRecordId: workoutRecordId,
+        week: week,
+        weekDay: day,
+        workoutPosition: workoutPosition,
+        status: ProgressStatus.completed,
+        startedAt: startedAt,
+      ),
+    );
     if (result.isErr()) {
       emit(
         state.copyWith(
@@ -349,9 +408,14 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
 
     final updatedRecord = result.value;
     final plan = state.currentPlanRecord.workoutPlan;
-    final counts = plan != null
-        ? await _loadProgressCounts(updatedRecord, plan)
-        : null;
+    (int, int)? counts;
+    List<WorkoutDto>? todaysWorkouts;
+    if (plan != null) {
+      final countsFuture = _loadProgressCounts(updatedRecord, plan);
+      final todaysWorkoutsFuture = _resolveTodaysWorkouts(updatedRecord, plan);
+      counts = await countsFuture;
+      todaysWorkouts = await todaysWorkoutsFuture;
+    }
 
     emit(
       state.copyWith(
@@ -361,9 +425,203 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
           currentPlanRecord: Nullable(updatedRecord),
           completedWorkouts: counts?.$1,
           totalWorkouts: counts?.$2,
+          todaysWorkouts: todaysWorkouts,
         ),
       ),
     );
+    return true;
+  }
+
+  Future<bool> skipPlanWorkout({
+    required int workoutPlanRecordId,
+    required int week,
+    required int day,
+    required int workoutPosition,
+    required int workoutId,
+    int? existingWorkoutRecordId,
+  }) async {
+    _logger.info(
+      'Skipping plan workout week=$week day=$day position=$workoutPosition',
+    );
+    var planRecord = state.currentPlanRecord.currentPlanRecord;
+    if (planRecord == null || planRecord.id != workoutPlanRecordId) {
+      final lookup = await _workoutPlanRecordService.getWorkoutPlanRecord(
+        workoutPlanRecordId,
+      );
+      if (lookup.isErr() ||
+          (lookup.value.status != ProgressStatus.inProgress &&
+              lookup.value.status != ProgressStatus.skipped)) {
+        emit(
+          state.copyWith(
+            error: Nullable(
+              ErrorState(
+                type: SingleErrorTypes.invalidInput.name,
+                description: 'The selected workout plan is no longer active',
+              ),
+            ),
+          ),
+        );
+        return false;
+      }
+      planRecord = lookup.value;
+    }
+
+    emit(state.copyWith(isLoading: true));
+
+    int workoutRecordId;
+    if (existingWorkoutRecordId != null) {
+      workoutRecordId = existingWorkoutRecordId;
+      final linkedRecord = await _workoutRecordService
+          .updateWorkoutRecordStatus(
+        id: workoutRecordId,
+        status: ProgressStatus.skipped,
+      );
+      if (linkedRecord.isErr() &&
+          linkedRecord.error.type != SingleErrorTypes.notFound) {
+        emit(
+          state.copyWith(
+            isLoading: false,
+            error: Nullable(
+              ErrorState(
+                type: linkedRecord.error.type.name,
+                description: linkedRecord.error.description,
+              ),
+            ),
+          ),
+        );
+        return false;
+      }
+    } else {
+      final created = await _workoutRecordService.createWorkoutRecordWithStatus(
+        workoutId: workoutId,
+        status: ProgressStatus.skipped,
+      );
+      if (created.isErr()) {
+        emit(
+          state.copyWith(
+            isLoading: false,
+            error: Nullable(
+              ErrorState(
+                type: created.error.type.name,
+                description: created.error.description,
+              ),
+            ),
+          ),
+        );
+        return false;
+      }
+      workoutRecordId = created.value.id;
+    }
+
+    final result = await _workoutPlanRecordService
+        .upsertWorkoutPlanWorkoutRecord(
+      WorkoutPlanWorkoutRecordInput(
+        workoutPlanRecordId: planRecord.id,
+        workoutRecordId: workoutRecordId,
+        week: week,
+        weekDay: day,
+        workoutPosition: workoutPosition,
+        status: ProgressStatus.skipped,
+      ),
+    );
+    if (result.isErr()) {
+      emit(
+        state.copyWith(
+          isLoading: false,
+          error: Nullable(
+            ErrorState(
+              type: result.error.type.name,
+              description: result.error.description,
+            ),
+          ),
+        ),
+      );
+      return false;
+    }
+
+    final updatedRecord = result.value;
+    final plan = state.currentPlanRecord.workoutPlan;
+    (int, int)? counts;
+    List<WorkoutDto>? todaysWorkouts;
+    if (plan != null) {
+      final countsFuture = _loadProgressCounts(updatedRecord, plan);
+      final todaysWorkoutsFuture = _resolveTodaysWorkouts(updatedRecord, plan);
+      counts = await countsFuture;
+      todaysWorkouts = await todaysWorkoutsFuture;
+    }
+
+    emit(
+      state.copyWith(
+        isLoading: false,
+        error: const Nullable(null),
+        currentPlanRecord: state.currentPlanRecord.copyWith(
+          currentPlanRecord: Nullable(updatedRecord),
+          completedWorkouts: counts?.$1,
+          totalWorkouts: counts?.$2,
+          todaysWorkouts: todaysWorkouts,
+        ),
+      ),
+    );
+    return true;
+  }
+
+  Future<bool> skipPlanDay({
+    required int workoutPlanRecordId,
+    required int week,
+    required int day,
+    required List<WorkoutPlanWorkoutDto> planWorkouts,
+    List<WorkoutPlanWorkoutRecordDto> existingRecords = const [],
+  }) async {
+    _logger.info('Skipping plan day week=$week day=$day');
+    final byPosition = {
+      for (final record in existingRecords) record.position: record,
+    };
+    emit(state.copyWith(isLoading: true));
+
+    for (final planWorkout in planWorkouts) {
+      final existing = byPosition[planWorkout.position];
+      if (existing?.status == ProgressStatus.completed ||
+          existing?.status == ProgressStatus.skipped) {
+        continue;
+      }
+      final skipped = await skipPlanWorkout(
+        workoutPlanRecordId: workoutPlanRecordId,
+        week: week,
+        day: day,
+        workoutPosition: planWorkout.position,
+        workoutId: planWorkout.workoutId,
+        existingWorkoutRecordId: existing?.workoutRecordId,
+      );
+      if (!skipped) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  Future<bool> skipPlanWeek({
+    required int workoutPlanRecordId,
+    required int week,
+    required Map<int, List<WorkoutPlanWorkoutDto>> workoutsByDay,
+    Map<int, List<WorkoutPlanWorkoutRecordDto>> existingRecordsByDay = const {},
+  }) async {
+    _logger.info('Skipping plan week=$week');
+    emit(state.copyWith(isLoading: true));
+
+    for (final entry in workoutsByDay.entries) {
+      final skipped = await skipPlanDay(
+        workoutPlanRecordId: workoutPlanRecordId,
+        week: week,
+        day: entry.key,
+        planWorkouts: entry.value,
+        existingRecords: existingRecordsByDay[entry.key] ?? const [],
+      );
+      if (!skipped) {
+        return false;
+      }
+    }
+
     return true;
   }
 
@@ -435,7 +693,7 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
           completedWorkouts: counts?.$1,
           totalWorkouts: counts?.$2,
           todaysWorkouts:
-              todaysWorkouts ??
+          todaysWorkouts ??
               (state.currentPlanRecord.currentPlanRecord?.id == record.id
                   ? state.currentPlanRecord.todaysWorkouts
                   : const []),
@@ -485,12 +743,13 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
     );
   }
 
-  Future<List<WorkoutDto>?> _resolveTodaysWorkouts(
-    WorkoutPlanRecordDto record,
-    WorkoutPlanDto plan,
-  ) async {
+  Future<List<WorkoutDto>?> _resolveTodaysWorkouts(WorkoutPlanRecordDto record,
+      WorkoutPlanDto plan,) async {
     try {
-      final daysSinceStart = DateTime.now().difference(record.startedAt).inDays;
+      final daysSinceStart = DateTime
+          .now()
+          .difference(record.startedAt)
+          .inDays;
       final currentWeekNum = (daysSinceStart / 7).floor() + 1;
 
       if (currentWeekNum > plan.totalWeeks) {
@@ -514,7 +773,7 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
       final week = weeks
           .where(
             (w) => currentWeekNum >= w.startWeek && currentWeekNum <= w.endWeek,
-          )
+      )
           .firstOrNull;
       if (week == null) {
         return const [];
@@ -551,10 +810,8 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
     }
   }
 
-  Future<(int, int)?> _loadProgressCounts(
-    WorkoutPlanRecordDto record,
-    WorkoutPlanDto plan,
-  ) async {
+  Future<(int, int)?> _loadProgressCounts(WorkoutPlanRecordDto record,
+      WorkoutPlanDto plan,) async {
     try {
       final results = await Future.wait([
         _workoutPlanRecordService.getCompletedWorkoutsCount(record.id),

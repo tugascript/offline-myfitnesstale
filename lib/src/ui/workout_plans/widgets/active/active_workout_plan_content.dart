@@ -18,11 +18,13 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
+import '../../../../data/repositories/workout_plans/utils/workout_plan_schedule_utils.dart';
 import '../../../core/sizes/data_display_sizes.dart';
 import '../../view_models/states/workout_plan_record_state.dart';
 import '../plan_statistics_widget.dart';
 import './active_workout_plan_dummy_data.dart';
-import './active_workout_plan_week_card.dart';
+import './active_workout_plan_schedule_card.dart';
+import 'active_workout_description.dart';
 
 class ActiveWorkoutPlanContent extends StatelessWidget {
   final CurrentWorkoutPlanRecordState state;
@@ -52,28 +54,26 @@ class ActiveWorkoutPlanContent extends StatelessWidget {
 
     // Calculate current week and day indices based on startedAt
     final record = displayState.currentPlanRecord;
-    int currentWeekNum = 1;
-    int relativeDayIndex = 1;
+    int calendarWeekNum = 1;
+    int calendarDayNum = 1;
 
     if (record != null) {
       final now = DateTime.now();
       final difference = now.difference(record.startedAt);
       final daysSinceStart = difference.inDays;
 
-      currentWeekNum = (daysSinceStart / 7).floor() + 1;
-      relativeDayIndex = (daysSinceStart % 7) + 1;
+      calendarWeekNum = (daysSinceStart / 7).floor() + 1;
+      calendarDayNum = (daysSinceStart % 7) + 1;
     }
 
-    final scheduleWeeks =
-        plan.weeks
-            ?.expand(
-              (week) => List.generate(
-                week.endWeek - week.startWeek + 1,
-                (index) => (week: week, number: week.startWeek + index),
-              ),
-            )
-            .toList() ??
-        const [];
+    final effectiveProgress = WorkoutPlanScheduleUtils.resolveEffectiveProgress(
+      weeks: plan.weeks ?? const [],
+      calendarWeekNum: calendarWeekNum,
+      calendarDayNum: calendarDayNum,
+      workoutPlanRecord: record,
+    );
+    final currentWeekNum = effectiveProgress.currentWeekNum;
+    final relativeDayIndex = effectiveProgress.relativeDayIndex;
 
     // Calculate progress percentage
     double progressPercentage = 0;
@@ -100,14 +100,10 @@ class ActiveWorkoutPlanContent extends StatelessWidget {
                 if (plan.description != null &&
                     plan.description!.isNotEmpty) ...[
                   SizedBox(height: sizes.spacing),
-                  Text(
-                    plan.description!,
-                    style: TextStyle(
-                      fontSize: sizes.fontSize,
-                      color: isDarkTheme
-                          ? Colors.grey.shade300
-                          : Colors.grey.shade700,
-                    ),
+                  ActiveWorkoutDescription(
+                    description: plan.description!,
+                    sizes: sizes,
+                    isDarkTheme: isDarkTheme,
                   ),
                 ],
                 SizedBox(height: sizes.spacing * 2),
@@ -138,21 +134,17 @@ class ActiveWorkoutPlanContent extends StatelessWidget {
               ],
             ),
           ),
-          if (scheduleWeeks.isNotEmpty)
-            SliverList(
-              delegate: SliverChildBuilderDelegate((context, index) {
-                final scheduleWeek = scheduleWeeks[index];
-                return ActiveWorkoutPlanWeekCard(
-                  sizes: sizes,
-                  theme: theme,
-                  isDarkTheme: isDarkTheme,
-                  week: scheduleWeek.week,
-                  weekNumber: scheduleWeek.number,
-                  currentWeekNum: currentWeekNum,
-                  relativeDayIndex: relativeDayIndex,
-                  workoutPlanRecord: record,
-                );
-              }, childCount: scheduleWeeks.length),
+          if (plan.weeks != null && plan.weeks!.isNotEmpty)
+            SliverToBoxAdapter(
+              child: ActiveWorkoutPlanScheduleCard(
+                sizes: sizes,
+                theme: theme,
+                isDarkTheme: isDarkTheme,
+                weeks: plan.weeks!,
+                currentWeekNum: currentWeekNum,
+                relativeDayIndex: relativeDayIndex,
+                workoutPlanRecord: record,
+              ),
             ),
           SliverPadding(padding: EdgeInsets.only(bottom: sizes.spacing * 2)),
         ],

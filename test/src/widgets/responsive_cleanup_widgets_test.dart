@@ -61,6 +61,7 @@ void main() {
                         required MuscleGroup? muscleGroup,
                         required int? equipmentId,
                         required bool isFavourite,
+                        required CreatedBy? createdBy,
                       }) {
                         submittedEquipmentId = equipmentId;
                       },

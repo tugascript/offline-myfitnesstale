@@ -34,8 +34,6 @@ class WelcomeSection extends StatelessWidget {
     return SizedBox(
       width: double.infinity,
       child: Card(
-        elevation: sizes.elevation,
-        margin: EdgeInsets.zero,
         child: Padding(
           padding: EdgeInsets.all(sizes.padding),
           child: Column(

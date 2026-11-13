@@ -36,20 +36,23 @@ class ActivePlansCarousel extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
-    return BaseCarousel(
-      sizes: sizes,
-      theme: theme,
-      title: 'Active plans',
-      keyPrefix: 'active-plans',
-      labels: const ['Workout', 'Meal'],
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      semanticLabelBuilder: (label, index, total) =>
-          '$label plan, ${index + 1} of $total',
-      children: [
-        ActivePlanWidget(sizes: sizes, showTitle: false),
-        ActiveMealPlanWidget(theme: theme, sizes: sizes, showTitle: false),
-      ],
-    );
-  }
+  Widget build(BuildContext context) => Card(
+    child: Padding(
+      padding: EdgeInsets.all(sizes.padding),
+      child: BaseCarousel(
+        sizes: sizes,
+        theme: theme,
+        title: 'Active plans',
+        keyPrefix: 'active-plans',
+        labels: const ['Workout', 'Meal'],
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        semanticLabelBuilder: (label, index, total) =>
+            '$label plan, ${index + 1} of $total',
+        children: [
+          ActivePlanWidget(sizes: sizes, showTitle: false),
+          ActiveMealPlanWidget(theme: theme, sizes: sizes, showTitle: false),
+        ],
+      ),
+    ),
+  );
 }
