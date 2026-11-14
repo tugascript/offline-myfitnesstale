@@ -139,11 +139,13 @@ class _LatestWorkoutPlanRecord extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   mainAxisSize: MainAxisSize.max,
                   children: [
-                    Text(
-                      "Latest Record",
-                      style: TextStyle(
-                        fontSize: sizes.titleFontSize,
-                        fontWeight: FontWeight.bold,
+                    Expanded(
+                      child: Text(
+                        "Latest Record",
+                        style: TextStyle(
+                          fontSize: sizes.titleFontSize,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                     Icon(

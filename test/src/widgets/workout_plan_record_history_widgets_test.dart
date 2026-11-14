@@ -124,6 +124,9 @@ void main() {
     expect(find.textContaining('Week'), findsWidgets);
     expect(find.textContaining('Day'), findsWidgets);
     expect(find.textContaining('Workout'), findsWidgets);
+    expect(find.text('Total Weeks: 8', findRichText: true), findsOneWidget);
+    expect(find.text('Total Days: 4', findRichText: true), findsOneWidget);
+    expect(find.text('Total Workouts: 32', findRichText: true), findsOneWidget);
     expect(
       find.text('Last reached: Week 2 • Day 3 • Workout 1'),
       findsOneWidget,
@@ -284,4 +287,53 @@ void main() {
     expect(find.byType(TextFormField), findsOneWidget);
     expect(find.text('Upper Lower'), findsOneWidget);
   });
+
+  testWidgets(
+    'LatestWorkoutPlanRecord renders without overflow on 320px width at 200% text scale',
+    (tester) async {
+      final cubit = _FakeWorkoutPlanRecordCubit(
+        WorkoutPlanRecordState.initial().copyWith(
+          latestWorkoutPlanRecord: Nullable(
+            sampleRecord(
+              startedAt: DateTime.utc(2026, 5, 1),
+              plan: samplePlan('Strength Block A'),
+            ),
+          ),
+        ),
+      );
+      addTearDown(cubit.close);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: MediaQuery(
+            data: const MediaQueryData(
+              size: Size(320, 640),
+              textScaler: TextScaler.linear(2.0),
+            ),
+            child: Scaffold(
+              body: SingleChildScrollView(
+                child: SizedBox(
+                  width: 320,
+                  child: BlocProvider<WorkoutPlanRecordCubit>.value(
+                    value: cubit,
+                    child: Builder(
+                      builder: (context) => LatestWorkoutPlanRecord(
+                        sizes: sizes,
+                        theme: Theme.of(context),
+                        units: Units.metric,
+                        workoutPlanId: 1,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+
+      expect(tester.takeException(), isNull);
+      expect(find.text('Latest Record'), findsOneWidget);
+    },
+  );
 }
