@@ -58,6 +58,16 @@ class _LatestWorkoutPlanRecordState extends State<LatestWorkoutPlanRecord> {
   }
 
   @override
+  void didUpdateWidget(covariant LatestWorkoutPlanRecord oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.workoutPlanId != widget.workoutPlanId) {
+      context.read<WorkoutPlanRecordCubit>().getLatestWorkoutPlanRecord(
+        widget.workoutPlanId,
+      );
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return BlocBuilder<WorkoutPlanRecordCubit, WorkoutPlanRecordState>(
       builder: (context, state) {

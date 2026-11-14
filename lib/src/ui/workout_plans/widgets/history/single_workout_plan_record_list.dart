@@ -116,7 +116,10 @@ class _SingleWorkoutPlanRecordCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final status = ProgressStatusPresentation.fromStatus(record.status);
+    final status = ProgressStatusPresentation.fromStatus(
+      record.status,
+      Theme.of(context).brightness,
+    );
     final localDateFormat = DateFormat.yMMMd().add_jm();
 
     return Card(

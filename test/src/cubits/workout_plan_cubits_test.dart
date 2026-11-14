@@ -1399,4 +1399,116 @@ void main() {
       expect(planWorkoutRecords, isEmpty);
     },
   );
+
+  test(
+    'skipPlanDay advances todaysWorkouts to the next unfinished day',
+    () async {
+      final db = await testDatabase.db;
+      final workout1 = await createWorkout(db, uniqueName('today-skip-wo-1'));
+      final workout2 = await createWorkout(db, uniqueName('today-skip-wo-2'));
+      final planId = await db.insert(
+        WorkoutPlan.table,
+        WorkoutPlan.create(
+          name: uniqueName('today-skip-plan'),
+          difficulty: Difficulty.beginner,
+          version: 1,
+          totalWeeks: 1,
+          totalDays: 2,
+          totalWorkouts: 2,
+        ).toMap(),
+      );
+      final weekId = await db.insert(
+        WorkoutPlanWeek.table,
+        WorkoutPlanWeek.create(
+          workoutPlanId: planId,
+          planVersion: 1,
+          startWeek: 1,
+          endWeek: 1,
+          scheduleMode: WorkoutPlanWeekScheduleMode.manual,
+          totalDays: 2,
+          totalWorkouts: 2,
+        ).toMap(),
+      );
+      final day1Id = await db.insert(
+        WorkoutPlanDay.table,
+        WorkoutPlanDay.create(
+          workoutPlanId: planId,
+          workoutPlanWeekId: weekId,
+          planVersion: 1,
+          day: 1,
+          totalWorkouts: 1,
+          isRestDay: false,
+        ).toMap(),
+      );
+      final day2Id = await db.insert(
+        WorkoutPlanDay.table,
+        WorkoutPlanDay.create(
+          workoutPlanId: planId,
+          workoutPlanWeekId: weekId,
+          planVersion: 1,
+          day: 2,
+          totalWorkouts: 1,
+          isRestDay: false,
+        ).toMap(),
+      );
+      await db.insert(
+        WorkoutPlanWorkout.table,
+        WorkoutPlanWorkout.create(
+          position: 1,
+          workoutPlanId: planId,
+          workoutPlanWeekId: weekId,
+          workoutPlanDayId: day1Id,
+          planVersion: 1,
+          workoutId: workout1,
+        ).toMap(),
+      );
+      await db.insert(
+        WorkoutPlanWorkout.table,
+        WorkoutPlanWorkout.create(
+          position: 1,
+          workoutPlanId: planId,
+          workoutPlanWeekId: weekId,
+          workoutPlanDayId: day2Id,
+          planVersion: 1,
+          workoutId: workout2,
+        ).toMap(),
+      );
+
+      final cubit = WorkoutPlanRecordCubit(
+        workoutPlanRecordRepository: WorkoutPlanRecordRepository.create(),
+        workoutPlanRepository: WorkoutPlanRepository.create(),
+      );
+      addTearDown(cubit.close);
+
+      await cubit.getOrCreateActivePlanRecord(planId);
+      expect(cubit.state.currentPlanRecord.todaysWorkouts.map((w) => w.id), [
+        workout1,
+      ]);
+
+      final recordId = cubit.state.currentPlanRecord.currentPlanRecord!.id;
+      final day1Workouts = cubit
+          .state
+          .currentPlanRecord
+          .workoutPlan!
+          .weeks!
+          .first
+          .days
+          .firstWhere((d) => d.day == 1)
+          .planWorkouts!;
+
+      expect(
+        await cubit.skipPlanDay(
+          workoutPlanRecordId: recordId,
+          week: 1,
+          day: 1,
+          planWorkouts: day1Workouts,
+        ),
+        isTrue,
+      );
+
+      expect(cubit.state.currentPlanRecord.todaysWorkouts.map((w) => w.id), [
+        workout2,
+      ]);
+    },
+  );
 }

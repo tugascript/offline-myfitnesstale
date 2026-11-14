@@ -64,7 +64,10 @@ class ActiveWorkoutPlanDayTile extends StatelessWidget {
     final scheduledWorkoutCount = day.planWorkouts?.length ?? 0;
     final dayStatus = _dayProgressStatus(scheduledWorkoutCount);
     final dayStatusPresentation = dayStatus != null
-        ? ProgressStatusPresentation.fromStatus(dayStatus)
+        ? ProgressStatusPresentation.fromStatus(
+            dayStatus,
+            Theme.of(context).brightness,
+          )
         : null;
     final isDayCompleted =
         dayStatus != null &&

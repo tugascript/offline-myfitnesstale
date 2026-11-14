@@ -15,9 +15,12 @@
 // You should have received a copy of the GNU General Public License
 // along with My Fitness Tale.  If not, see <https://www.gnu.org/licenses/>.
 
+import 'dart:math' as math;
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:logging/logging.dart';
 
+import '../../../data/repositories/workout_plans/dtos/workout_plan_day_dto.dart';
 import '../../../data/repositories/workout_plans/dtos/workout_plan_dto.dart';
 import '../../../data/repositories/workout_plans/dtos/workout_plan_record_dto.dart';
 import '../../../data/repositories/workout_plans/inputs/workout_plan_day_record_input.dart';
@@ -49,6 +52,7 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
        super(WorkoutPlanRecordState.initial());
 
   final Logger _logger = Logger('WorkoutPlanRecordCubit');
+  int _latestRecordRequestId = 0;
 
   Future<void> getWorkoutPlanRecords({
     int? workoutPlanId,
@@ -132,11 +136,15 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
 
   Future<void> getLatestWorkoutPlanRecord([int? workoutPlanId]) async {
     _logger.info('Getting latest workout plan record for plan $workoutPlanId');
+    final requestId = ++_latestRecordRequestId;
     emit(state.copyWith(isLoading: true));
 
     final result = await _workoutPlanRecordService.getLatestWorkoutPlanRecord(
       workoutPlanId,
     );
+    if (isClosed || requestId != _latestRecordRequestId) {
+      return;
+    }
     if (result.isErr()) {
       final error = result.error;
       _logger.warning("Failed to get latest workout plan record", error);
@@ -661,16 +669,28 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
     WorkoutPlanDto plan,
   ) async {
     try {
-      final daysSinceStart = DateTime.now().difference(record.startedAt).inDays;
-      final currentWeekNum = (daysSinceStart / 7).floor() + 1;
+      if (record.status != ProgressStatus.inProgress) {
+        return const [];
+      }
 
-      if (currentWeekNum > plan.totalWeeks) {
+      final daysSinceStart = math.max(
+        0,
+        DateTime.now().difference(record.startedAt).inDays,
+      );
+      final calendarWeekNum = (daysSinceStart / 7).floor() + 1;
+
+      if (calendarWeekNum > plan.totalWeeks) {
         _logger.info('Plan completed (time-wise)');
         return null;
       }
 
-      // Get weekday (1=Mon, 7=Sun)
-      final relativeDayIndex = (daysSinceStart % 7) + 1;
+      final calendarDayIndex = (daysSinceStart % 7) + 1;
+      final startWeek = math.max(calendarWeekNum, record.currentWeek);
+      final startDay = calendarWeekNum > record.currentWeek
+          ? calendarDayIndex
+          : (record.currentWeek > calendarWeekNum
+                ? record.currentDay
+                : math.max(calendarDayIndex, record.currentDay));
 
       var weeks = plan.weeks;
       if (weeks == null) {
@@ -682,40 +702,67 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
         weeks = weeksResult.value;
       }
 
-      final week = weeks
-          .where(
-            (w) => currentWeekNum >= w.startWeek && currentWeekNum <= w.endWeek,
-          )
-          .firstOrNull;
-      if (week == null) {
-        return const [];
+      final finishedPositions = <(int, int), Set<int>>{};
+      for (final weekRecord in record.weeks) {
+        for (final dayRecord in weekRecord.days) {
+          for (final workoutRecord in dayRecord.workouts) {
+            if (workoutRecord.status == ProgressStatus.completed ||
+                workoutRecord.status == ProgressStatus.skipped) {
+              finishedPositions
+                  .putIfAbsent((weekRecord.week, dayRecord.day), () => <int>{})
+                  .add(workoutRecord.position);
+            }
+          }
+        }
       }
 
-      var todaysDay = week.days
-          .where((d) => d.day == relativeDayIndex)
-          .firstOrNull;
-      if (todaysDay == null && plan.weeks == null) {
-        final daysResult = await _workoutPlanService.getWorkoutPlanWeek(
-          week.id,
-          planVersion: record.workoutPlanVersion,
-        );
-        if (daysResult.isErr()) return null;
-        todaysDay = daysResult.value.days
-            .where((d) => d.day == relativeDayIndex)
+      final cachedWeekDays = <int, List<WorkoutPlanDayDto>>{};
+      for (var weekNum = startWeek; weekNum <= plan.totalWeeks; weekNum++) {
+        final week = weeks
+            .where((w) => weekNum >= w.startWeek && weekNum <= w.endWeek)
             .firstOrNull;
+        if (week == null) {
+          continue;
+        }
+
+        var days = week.days;
+        if (days.isEmpty && plan.weeks == null) {
+          if (cachedWeekDays.containsKey(week.id)) {
+            days = cachedWeekDays[week.id]!;
+          } else {
+            final daysResult = await _workoutPlanService.getWorkoutPlanWeek(
+              week.id,
+              planVersion: record.workoutPlanVersion,
+            );
+            if (daysResult.isErr()) return null;
+            days = daysResult.value.days;
+            cachedWeekDays[week.id] = days;
+          }
+        }
+
+        final firstDay = weekNum == startWeek ? startDay : 1;
+        for (var dayNum = firstDay; dayNum <= 7; dayNum++) {
+          final dayDto = days.where((d) => d.day == dayNum).firstOrNull;
+          if (dayDto == null || dayDto.isRestDay) {
+            continue;
+          }
+          final planWorkouts = dayDto.planWorkouts;
+          if (planWorkouts == null) {
+            return null;
+          }
+          final finished = finishedPositions[(weekNum, dayNum)] ?? const {};
+          final remaining = planWorkouts
+              .where((pw) => !finished.contains(pw.position))
+              .map((pw) => pw.workout)
+              .whereType<WorkoutDto>()
+              .toList();
+          if (remaining.isNotEmpty) {
+            return remaining;
+          }
+        }
       }
 
-      if (todaysDay == null) {
-        return const [];
-      }
-
-      final planWorkouts = todaysDay.planWorkouts;
-      if (planWorkouts == null) return null;
-
-      return planWorkouts
-          .map((pw) => pw.workout)
-          .whereType<WorkoutDto>()
-          .toList();
+      return const [];
     } catch (e) {
       _logger.warning("Error calculating today's workout", e);
       return null;

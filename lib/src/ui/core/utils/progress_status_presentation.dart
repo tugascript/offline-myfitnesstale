@@ -18,6 +18,7 @@
 import 'package:material_ui/material_ui.dart';
 
 import '../../../data/utils/enums.dart';
+import '../themes/colors.dart';
 
 @immutable
 final class ProgressStatusPresentation {
@@ -31,27 +32,33 @@ final class ProgressStatusPresentation {
     required this.color,
   });
 
-  factory ProgressStatusPresentation.fromStatus(ProgressStatus status) {
+  factory ProgressStatusPresentation.fromStatus(
+    ProgressStatus status, [
+    Brightness brightness = Brightness.light,
+  ]) {
+    final isDark = brightness == Brightness.dark;
     return switch (status) {
-      ProgressStatus.inProgress => const ProgressStatusPresentation(
+      ProgressStatus.inProgress => ProgressStatusPresentation(
         label: 'In Progress',
         icon: Icons.play_circle_outline,
-        color: Colors.blue,
+        color: isDark ? Colors.blue.shade300 : Colors.blue.shade800,
       ),
-      ProgressStatus.completed => const ProgressStatusPresentation(
+      ProgressStatus.completed => ProgressStatusPresentation(
         label: 'Completed',
         icon: Icons.check_circle_outline,
-        color: Colors.green,
+        color: isDark ? Colors.green.shade300 : Colors.green.shade800,
       ),
-      ProgressStatus.skipped => const ProgressStatusPresentation(
+      ProgressStatus.skipped => ProgressStatusPresentation(
         label: 'Skipped',
         icon: Icons.skip_next_outlined,
-        color: Colors.orange,
+        color: isDark
+            ? kPrimaryOrangeSwatch.shade300
+            : kPrimaryOrangeSwatch.shade900,
       ),
-      ProgressStatus.abandoned => const ProgressStatusPresentation(
+      ProgressStatus.abandoned => ProgressStatusPresentation(
         label: 'Abandoned',
         icon: Icons.cancel_outlined,
-        color: Colors.red,
+        color: isDark ? Colors.red.shade300 : Colors.red.shade700,
       ),
     };
   }
