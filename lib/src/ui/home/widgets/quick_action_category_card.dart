@@ -38,7 +38,7 @@ class QuickActionCategoryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = theme.colorScheme.brightness == Brightness.light
-        ? kPrimaryOrangeSwatch.shade600
+        ? kPrimaryOrangeSwatch.shade900
         : theme.colorScheme.primary;
     return Card(
       clipBehavior: Clip.antiAlias,
