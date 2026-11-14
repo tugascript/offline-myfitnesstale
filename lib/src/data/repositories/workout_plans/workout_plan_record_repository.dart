@@ -728,12 +728,44 @@ final class WorkoutPlanRecordRepository implements Repository {
 
       final record = records.first;
       WorkoutPlanDto? workoutPlanDto;
-      if (workoutPlanId == null) {
-        final WorkoutPlan? plan = await _workoutPlanDao.selectOne(
-          record.workoutPlanId,
-        );
-        if (plan != null) {
+      final WorkoutPlan? plan = await _workoutPlanDao.selectOne(
+        record.workoutPlanId,
+      );
+      if (plan != null) {
+        if (record.workoutPlanVersion == plan.version) {
           workoutPlanDto = WorkoutPlanDto.fromModel(plan);
+        } else {
+          final versionWhere = WhereBuilder()
+            ..and(
+              WorkoutPlanWeekColumns.workoutPlanId.equal,
+              record.workoutPlanId,
+            )
+            ..and(
+              WorkoutPlanWeekColumns.planVersion.equal,
+              record.workoutPlanVersion,
+            );
+          final versionWeeks = await _workoutPlanWeekDao.selectMany(
+            where: versionWhere.where,
+            whereArgs: versionWhere.args,
+          );
+          final totalWeeks = versionWeeks.fold<int>(
+            0,
+            (sum, week) => sum + (week.endWeek - week.startWeek + 1),
+          );
+          final totalDays = versionWeeks.fold<int>(
+            0,
+            (sum, week) => sum + week.totalDays,
+          );
+          final totalWorkouts = versionWeeks.fold<int>(
+            0,
+            (sum, week) => sum + week.totalWorkouts,
+          );
+          workoutPlanDto = WorkoutPlanDto.fromModel(plan).copyWith(
+            currentVersion: record.workoutPlanVersion,
+            totalWeeks: totalWeeks,
+            totalDays: totalDays,
+            totalWorkouts: totalWorkouts,
+          );
         }
       }
 

@@ -77,6 +77,21 @@ class _WorkoutPlanRecordHistoryState extends State<WorkoutPlanRecordHistory> {
   }
 
   @override
+  void didUpdateWidget(covariant WorkoutPlanRecordHistory oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.workoutPlanId != widget.workoutPlanId) {
+      final cubit = context.read<WorkoutPlanRecordCubit>();
+      cubit.getWorkoutPlanRecords(
+        workoutPlanId: widget.workoutPlanId,
+        progressStatus: cubit.state.pagination.progressStatus,
+        dateRange: (_dateRange.start, _dateRange.end),
+        limit: _pageSize,
+        offset: 0,
+      );
+    }
+  }
+
+  @override
   void dispose() {
     _scrollController.dispose();
     super.dispose();

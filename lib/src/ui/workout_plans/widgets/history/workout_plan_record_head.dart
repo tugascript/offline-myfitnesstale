@@ -45,7 +45,10 @@ class WorkoutPlanRecordHead extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final status = workoutPlanRecord != null
-        ? ProgressStatusPresentation.fromStatus(workoutPlanRecord!.status)
+        ? ProgressStatusPresentation.fromStatus(
+            workoutPlanRecord!.status,
+            theme.brightness,
+          )
         : null;
 
     return Skeletonizer(
@@ -140,42 +143,44 @@ class WorkoutPlanRecordHead extends StatelessWidget {
               ],
             ],
           ),
-          SizedBox(height: sizes.spacing),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              Expanded(
-                child: TotalNumericString(
-                  leading: Icon(
-                    Icons.calendar_view_week,
-                    size: sizes.fontSize * 1.2,
+          if (isLoading || workoutPlanRecord?.workoutPlan != null) ...[
+            SizedBox(height: sizes.spacing),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: TotalNumericString(
+                    leading: Icon(
+                      Icons.calendar_view_week,
+                      size: sizes.fontSize * 1.2,
+                    ),
+                    name: 'Weeks',
+                    total: workoutPlanRecord?.workoutPlan?.totalWeeks ?? 0,
+                    fontSize: sizes.fontSize,
                   ),
-                  name: 'Weeks',
-                  total: workoutPlanRecord?.workoutPlan?.totalWeeks ?? 0,
-                  fontSize: sizes.fontSize,
                 ),
-              ),
-              Expanded(
-                child: TotalNumericString(
-                  leading: Icon(Icons.today, size: sizes.fontSize * 1.2),
-                  name: 'Days',
-                  total: workoutPlanRecord?.workoutPlan?.totalDays ?? 0,
-                  fontSize: sizes.fontSize,
-                ),
-              ),
-              Expanded(
-                child: TotalNumericString(
-                  leading: Icon(
-                    Icons.fitness_center,
-                    size: sizes.fontSize * 1.2,
+                Expanded(
+                  child: TotalNumericString(
+                    leading: Icon(Icons.today, size: sizes.fontSize * 1.2),
+                    name: 'Days',
+                    total: workoutPlanRecord?.workoutPlan?.totalDays ?? 0,
+                    fontSize: sizes.fontSize,
                   ),
-                  name: 'Workouts',
-                  total: workoutPlanRecord?.workoutPlan?.totalWorkouts ?? 0,
-                  fontSize: sizes.fontSize,
                 ),
-              ),
-            ],
-          ),
+                Expanded(
+                  child: TotalNumericString(
+                    leading: Icon(
+                      Icons.fitness_center,
+                      size: sizes.fontSize * 1.2,
+                    ),
+                    name: 'Workouts',
+                    total: workoutPlanRecord?.workoutPlan?.totalWorkouts ?? 0,
+                    fontSize: sizes.fontSize,
+                  ),
+                ),
+              ],
+            ),
+          ],
           SizedBox(height: sizes.spacing / 2),
           Text(
             'Last reached: Week ${workoutPlanRecord?.currentWeek ?? 1} • Day ${workoutPlanRecord?.currentDay ?? 1} • Workout ${workoutPlanRecord?.currentWorkoutPosition ?? 1}',
