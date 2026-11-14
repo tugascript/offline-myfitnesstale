@@ -71,7 +71,14 @@ class _LatestWorkoutPlanRecordState extends State<LatestWorkoutPlanRecord> {
   Widget build(BuildContext context) {
     return BlocBuilder<WorkoutPlanRecordCubit, WorkoutPlanRecordState>(
       builder: (context, state) {
-        if (!state.isLoading && state.latestWorkoutPlanRecord == null) {
+        final record = state.latestWorkoutPlanRecord;
+        final matchingRecord =
+            (widget.workoutPlanId != null &&
+                record?.workoutPlanId != widget.workoutPlanId)
+            ? null
+            : record;
+
+        if (!state.isLoading && matchingRecord == null) {
           return _EmptyWorkoutPlanRecord(
             sizes: widget.sizes,
             theme: widget.theme,
@@ -88,7 +95,7 @@ class _LatestWorkoutPlanRecordState extends State<LatestWorkoutPlanRecord> {
           isLoading: state.isLoading,
           workoutPlanId: widget.workoutPlanId,
           workoutPlanVersion: widget.workoutPlanVersion,
-          workoutPlanRecord: state.latestWorkoutPlanRecord,
+          workoutPlanRecord: matchingRecord,
         );
       },
     );
@@ -120,19 +127,22 @@ class _LatestWorkoutPlanRecord extends StatelessWidget {
     return Card(
       margin: EdgeInsets.zero,
       child: InkWell(
-        onTap: () {
-          if (workoutPlanRecord == null) {
-            return;
-          }
+        onTap: isLoading || workoutPlanRecord == null
+            ? null
+            : () {
+                if (workoutPlanId != null &&
+                    workoutPlanRecord!.workoutPlanId != workoutPlanId) {
+                  return;
+                }
 
-          final targetPlanId =
-              workoutPlanId ?? workoutPlanRecord!.workoutPlanId;
-          if (workoutPlanRecord!.status == ProgressStatus.inProgress) {
-            context.push('/workout-plans/$targetPlanId/active');
-          } else {
-            context.push('/workout-plans/$targetPlanId');
-          }
-        },
+                final targetPlanId =
+                    workoutPlanId ?? workoutPlanRecord!.workoutPlanId;
+                if (workoutPlanRecord!.status == ProgressStatus.inProgress) {
+                  context.push('/workout-plans/$targetPlanId/active');
+                } else {
+                  context.push('/workout-plans/$targetPlanId');
+                }
+              },
         child: SizedBox(
           width: double.infinity,
           child: Padding(
