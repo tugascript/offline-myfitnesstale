@@ -134,6 +134,7 @@ class _BaseCommonSearchFormState extends State<BaseCommonSearchForm> {
   @override
   Widget build(BuildContext context) {
     final loadingSize = widget.fontSize * 2;
+    final iconSize = widget.fontSize * 1.15;
 
     return Form(
       key: _formKey,
@@ -158,15 +159,12 @@ class _BaseCommonSearchFormState extends State<BaseCommonSearchForm> {
                 });
               }
             },
-            prefixIcon: Padding(
-              padding: EdgeInsets.symmetric(horizontal: widget.padding * 0.65),
-              child: Icon(Icons.search, size: widget.fontSize),
-            ),
+            prefixIcon: Icon(Icons.search, size: iconSize),
             suffixIcon: _data.name.isNotEmpty
                 ? IconButton(
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(),
-                    icon: Icon(Icons.clear, size: widget.fontSize),
+                    icon: Icon(Icons.clear, size: iconSize),
                     onPressed: () {
                       setState(() {
                         _data.name = '';
@@ -207,7 +205,7 @@ class _BaseCommonSearchFormState extends State<BaseCommonSearchForm> {
                   emptyLabel: 'All Difficulties',
                   items: Difficulty.values,
                   fontSize: widget.fontSize,
-                  padding: widget.padding / 2,
+                  padding: widget.padding,
                   labelBuilder: (d) {
                     return EnumDisplayNames.getDifficultyDisplayName(d);
                   },
@@ -221,6 +219,7 @@ class _BaseCommonSearchFormState extends State<BaseCommonSearchForm> {
                       _data.difficulty = value;
                     });
                   },
+                  prefixIcon: Icon(Icons.bolt, size: iconSize),
                 ),
               ),
               if (widget.showMuscleGroup) ...[
@@ -233,7 +232,7 @@ class _BaseCommonSearchFormState extends State<BaseCommonSearchForm> {
                     emptyLabel: 'All Muscle Groups',
                     items: MuscleGroup.values,
                     fontSize: widget.fontSize,
-                    padding: widget.padding / 2,
+                    padding: widget.padding,
                     labelBuilder: (d) {
                       return EnumDisplayNames.getMuscleGroupDisplayName(d);
                     },
@@ -247,6 +246,7 @@ class _BaseCommonSearchFormState extends State<BaseCommonSearchForm> {
                         _data.muscleGroup = value;
                       });
                     },
+                    prefixIcon: Icon(Icons.accessibility_new, size: iconSize),
                   ),
                 ),
               ],
@@ -273,7 +273,7 @@ class _BaseCommonSearchFormState extends State<BaseCommonSearchForm> {
                     emptyLabel: 'All Equipment',
                     items: widget.equipmentSelection!.keys.toList(),
                     fontSize: widget.fontSize,
-                    padding: widget.padding / 2,
+                    padding: widget.padding,
                     labelBuilder: (id) => widget.equipmentSelection![id]!,
                     onChanged: (value) {
                       setState(() {
@@ -283,6 +283,7 @@ class _BaseCommonSearchFormState extends State<BaseCommonSearchForm> {
                     onSaved: (value) {
                       _data.equipmentId = value;
                     },
+                    prefixIcon: Icon(Icons.build_outlined, size: iconSize),
                   ),
                 ),
                 SizedBox(width: widget.spacing),
