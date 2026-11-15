@@ -68,6 +68,8 @@ class WorkoutPlanWeekGroupSelector extends StatelessWidget {
           )
         else
           AppDropdown<int>(
+            theme: theme,
+            isLoading: false,
             filled: true,
             value: safeIndex,
             emptyLabel: 'Select weeks',

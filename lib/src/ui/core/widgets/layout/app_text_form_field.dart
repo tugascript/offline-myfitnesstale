@@ -18,6 +18,8 @@
 import 'package:flutter/services.dart';
 import 'package:material_ui/material_ui.dart';
 
+import '../../themes/colors.dart';
+
 class AppTextFormField extends StatelessWidget {
   final ThemeData theme;
   final TextEditingController? controller;
@@ -74,9 +76,7 @@ class AppTextFormField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final greyColor = theme.colorScheme.brightness == Brightness.light
-        ? Colors.grey[400]
-        : Colors.grey[600];
+    final greyColor = ThemedColors.themedGrey.fromBrightness(theme.brightness);
     return TextFormField(
       initialValue: initialValue,
       readOnly: readOnly,
@@ -133,7 +133,7 @@ class AppTextFormField extends StatelessWidget {
         ),
         disabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.zero,
-          borderSide: BorderSide(color: greyColor!, width: 1.0),
+          borderSide: BorderSide(color: greyColor, width: 1.0),
         ),
         isDense: true,
         filled: filled,

@@ -18,6 +18,8 @@
 import 'package:equatable/equatable.dart';
 
 import '../../utils/dates.dart';
+import '../../utils/time_of_day_value.dart';
+import '../../utils/weekday_time_of_day_value.dart';
 import 'model.dart';
 import 'profile_model.dart';
 
@@ -45,10 +47,16 @@ final class RemindersConfig extends Equatable implements Model {
   @override
   final int? id;
   final bool workoutsOn;
+
+  /// Minutes since midnight (0..1439).
   final int workoutsReminderTime;
   final bool weightRecordsOn;
+
+  /// Packed [WeekdayTimeOfDayValue] (weekday + minutes since midnight).
   final int weightRecordsReminderTime;
   final bool macroTrackingOn;
+
+  /// Minutes since midnight (0..1439).
   final int macroTrackingReminderTime;
   final int profileId;
   @override
@@ -160,25 +168,21 @@ final class RemindersConfig extends Equatable implements Model {
   factory RemindersConfig.create({
     required int profileId,
     required bool workoutsOn,
-    required DateTime workoutsReminderTime,
+    required TimeOfDayValue workoutsReminderTime,
     required bool weightRecordsOn,
-    required DateTime weightRecordsReminderTime,
+    required WeekdayTimeOfDayValue weightRecordsReminderTime,
     required bool macroTrackingOn,
-    required DateTime macroTrackingReminderTime,
+    required TimeOfDayValue macroTrackingReminderTime,
   }) {
     final int now = DateUtilities.getNowUtcUnix();
     return RemindersConfig(
       profileId: profileId,
       workoutsOn: workoutsOn,
-      workoutsReminderTime: DateUtilities.getDateUnix(workoutsReminderTime),
+      workoutsReminderTime: workoutsReminderTime.minutesSinceMidnight,
       weightRecordsOn: weightRecordsOn,
-      weightRecordsReminderTime: DateUtilities.getDateUnix(
-        weightRecordsReminderTime,
-      ),
+      weightRecordsReminderTime: weightRecordsReminderTime.packedValue,
       macroTrackingOn: macroTrackingOn,
-      macroTrackingReminderTime: DateUtilities.getDateUnix(
-        macroTrackingReminderTime,
-      ),
+      macroTrackingReminderTime: macroTrackingReminderTime.minutesSinceMidnight,
       createdAt: now,
       updatedAt: now,
     );

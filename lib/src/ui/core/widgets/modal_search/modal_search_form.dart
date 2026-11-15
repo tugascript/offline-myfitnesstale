@@ -140,6 +140,8 @@ class _ModalSearchFormState extends State<ModalSearchForm> {
               SizedBox(width: spacing),
               Expanded(
                 child: AppDropdown<MuscleGroup>(
+                  theme: widget.theme,
+                  isLoading: widget.isLoading,
                   value: _data.muscleGroup,
                   emptyLabel: 'All Muscle Groups',
                   items: MuscleGroup.values,

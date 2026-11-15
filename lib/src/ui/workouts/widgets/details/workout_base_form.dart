@@ -192,6 +192,8 @@ class _WorkoutBaseFormState extends State<WorkoutBaseForm> {
           ),
           SizedBox(height: widget.sizes.spacing),
           AppDropdown<Difficulty>(
+            theme: widget.theme,
+            isLoading: widget.isLoading,
             value: _data.difficulty,
             filled: true,
             labelText: 'Difficulty',

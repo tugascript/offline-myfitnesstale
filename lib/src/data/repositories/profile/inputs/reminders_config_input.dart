@@ -18,16 +18,18 @@
 import 'package:equatable/equatable.dart';
 
 import '../../../models/sqlite/reminders_config_model.dart';
+import '../../../utils/time_of_day_value.dart';
+import '../../../utils/weekday_time_of_day_value.dart';
 import '../../core/inputs/input.dart';
 
 final class RemindersConfigInput extends Equatable
     implements ModelInput<RemindersConfig> {
   final bool workoutsOn;
-  final DateTime workoutsReminderTime;
+  final TimeOfDayValue workoutsReminderTime;
   final bool weightRecordsOn;
-  final DateTime weightRecordsReminderTime;
+  final WeekdayTimeOfDayValue weightRecordsReminderTime;
   final bool macroTrackingOn;
-  final DateTime macroTrackingReminderTime;
+  final TimeOfDayValue macroTrackingReminderTime;
 
   const RemindersConfigInput({
     required this.workoutsOn,
@@ -44,15 +46,13 @@ final class RemindersConfigInput extends Equatable
     required bool weightRecordsOn,
     required bool macroTrackingOn,
   }) {
-    final now = DateTime.now();
-    final defaultTime = DateTime(now.year, now.month, now.day, 8);
     return RemindersConfigInput(
       workoutsOn: workoutsOn,
-      workoutsReminderTime: defaultTime,
+      workoutsReminderTime: TimeOfDayValue.defaultReminder,
       weightRecordsOn: weightRecordsOn,
-      weightRecordsReminderTime: defaultTime,
+      weightRecordsReminderTime: WeekdayTimeOfDayValue.defaultReminder,
       macroTrackingOn: macroTrackingOn,
-      macroTrackingReminderTime: defaultTime,
+      macroTrackingReminderTime: TimeOfDayValue(hour: 20, minute: 0),
     );
   }
 

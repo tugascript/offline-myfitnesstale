@@ -185,6 +185,8 @@ class _WorkoutSetExerciseDifficultyInputState
         Expanded(
           flex: 3,
           child: AppDropdown<WorkoutSetExerciseDifficultyType>(
+            theme: widget.theme,
+            isLoading: false,
             value: _type,
             emptyLabel: 'None',
             showEmptyValue: false,

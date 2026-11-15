@@ -25,7 +25,7 @@ class AppSettingsSelector<T> extends StatelessWidget {
   final List<T> values;
   final String label;
   final Color titleColor;
-  final Function(T?) onChanged;
+  final ValueChanged<T?>? onChanged;
   final IconData Function(T) getIcon;
   final Color? iconColor;
   final String Function(T) getText;
@@ -79,9 +79,12 @@ class AppSettingsSelector<T> extends StatelessWidget {
                       color: iconColor,
                     ),
                     SizedBox(width: sizes.spacing),
-                    Text(
-                      getText(v),
-                      style: TextStyle(fontSize: sizes.subtitleFontSize),
+                    Flexible(
+                      child: Text(
+                        getText(v),
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(fontSize: sizes.subtitleFontSize),
+                      ),
                     ),
                   ],
                 ),

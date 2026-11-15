@@ -32,6 +32,8 @@ import 'package:myfitnesstale/src/data/repositories/workout_plans/workout_plan_r
 import 'package:myfitnesstale/src/data/repositories/workout_plans/workout_plan_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/workouts/workout_record_repository.dart';
 import 'package:myfitnesstale/src/data/utils/enums.dart';
+import 'package:myfitnesstale/src/data/utils/time_of_day_value.dart';
+import 'package:myfitnesstale/src/data/utils/weekday_time_of_day_value.dart';
 import 'package:myfitnesstale/src/routing/routes.dart';
 import 'package:myfitnesstale/src/ui/core/view_models/states/common_state.dart';
 import 'package:myfitnesstale/src/ui/home/screens/home_screen.dart';
@@ -419,11 +421,11 @@ final class _OnboardingProfileCubit extends ProfileCubit {
           RemindersConfigDto(
             id: 1,
             workoutsOn: notificationsOn,
-            workoutsReminderTime: DateTime(2026, 1, 1, 8),
+            workoutsReminderTime: TimeOfDayValue.defaultReminder,
             weightRecordsOn: notificationsOn,
-            weightRecordsReminderTime: DateTime(2026, 1, 1, 8),
+            weightRecordsReminderTime: WeekdayTimeOfDayValue.defaultReminder,
             macroTrackingOn: notificationsOn,
-            macroTrackingReminderTime: DateTime(2026, 1, 1, 8),
+            macroTrackingReminderTime: TimeOfDayValue.defaultReminder,
           ),
         ),
         onboardingDraft: const Nullable(null),

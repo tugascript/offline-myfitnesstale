@@ -26,6 +26,8 @@ import '../../../data/repositories/profile/inputs/reminders_config_input.dart';
 import '../../../data/repositories/profile/inputs/system_input.dart';
 import '../../../data/repositories/profile/profile_repository.dart';
 import '../../../data/utils/enums.dart';
+import '../../../data/utils/time_of_day_value.dart';
+import '../../../data/utils/weekday_time_of_day_value.dart';
 import '../../../utils/errors.dart';
 import '../../../utils/nullable.dart';
 import '../../core/view_models/states/common_state.dart';
@@ -248,27 +250,48 @@ class ProfileCubit extends Cubit<ProfileState> {
   Future<void> upsertRemindersConfig({
     required int profileId,
     required bool workoutsOn,
+    TimeOfDayValue? workoutsReminderTime,
     required bool weightRecordsOn,
+    WeekdayTimeOfDayValue? weightRecordsReminderTime,
     bool? macroTrackingOn,
+    TimeOfDayValue? macroTrackingReminderTime,
   }) async {
     _logger.info("Upserting reminders config for profile $profileId");
     emit(state.copyWith(isLoading: true));
 
     final existing = state.remindersConfig;
+    final defaults = RemindersConfigInput.withDefaultTimes(
+      workoutsOn: workoutsOn,
+      weightRecordsOn: weightRecordsOn,
+      macroTrackingOn: macroTrackingOn ?? workoutsOn,
+    );
     final result = await _profileService.upsertRemindersConfig(
       existing == null
-          ? RemindersConfigInput.withDefaultTimes(
+          ? RemindersConfigInput(
               workoutsOn: workoutsOn,
+              workoutsReminderTime:
+                  workoutsReminderTime ?? defaults.workoutsReminderTime,
               weightRecordsOn: weightRecordsOn,
+              weightRecordsReminderTime:
+                  weightRecordsReminderTime ??
+                  defaults.weightRecordsReminderTime,
               macroTrackingOn: macroTrackingOn ?? workoutsOn,
+              macroTrackingReminderTime:
+                  macroTrackingReminderTime ??
+                  defaults.macroTrackingReminderTime,
             )
           : RemindersConfigInput(
               workoutsOn: workoutsOn,
-              workoutsReminderTime: existing.workoutsReminderTime,
+              workoutsReminderTime:
+                  workoutsReminderTime ?? existing.workoutsReminderTime,
               weightRecordsOn: weightRecordsOn,
-              weightRecordsReminderTime: existing.weightRecordsReminderTime,
+              weightRecordsReminderTime:
+                  weightRecordsReminderTime ??
+                  existing.weightRecordsReminderTime,
               macroTrackingOn: macroTrackingOn ?? existing.macroTrackingOn,
-              macroTrackingReminderTime: existing.macroTrackingReminderTime,
+              macroTrackingReminderTime:
+                  macroTrackingReminderTime ??
+                  existing.macroTrackingReminderTime,
             ),
       profileId,
     );
@@ -304,8 +327,11 @@ class ProfileCubit extends Cubit<ProfileState> {
 
   Future<void> updateRemindersConfig({
     bool? workoutsOn,
+    TimeOfDayValue? workoutsReminderTime,
     bool? weightRecordsOn,
+    WeekdayTimeOfDayValue? weightRecordsReminderTime,
     bool? macroTrackingOn,
+    TimeOfDayValue? macroTrackingReminderTime,
   }) async {
     _logger.info("Updating reminders config");
     final existing = state.remindersConfig;
@@ -319,11 +345,14 @@ class ProfileCubit extends Cubit<ProfileState> {
     final result = await _profileService.updateRemindersConfig(
       RemindersConfigInput(
         workoutsOn: workoutsOn ?? existing.workoutsOn,
-        workoutsReminderTime: existing.workoutsReminderTime,
+        workoutsReminderTime:
+            workoutsReminderTime ?? existing.workoutsReminderTime,
         weightRecordsOn: weightRecordsOn ?? existing.weightRecordsOn,
-        weightRecordsReminderTime: existing.weightRecordsReminderTime,
+        weightRecordsReminderTime:
+            weightRecordsReminderTime ?? existing.weightRecordsReminderTime,
         macroTrackingOn: macroTrackingOn ?? existing.macroTrackingOn,
-        macroTrackingReminderTime: existing.macroTrackingReminderTime,
+        macroTrackingReminderTime:
+            macroTrackingReminderTime ?? existing.macroTrackingReminderTime,
       ),
     );
     if (result.isErr()) {

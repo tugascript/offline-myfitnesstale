@@ -191,6 +191,8 @@ class _ExerciseFormState extends State<ExerciseForm> {
           ),
           SizedBox(height: widget.sizes.spacing),
           AppDropdown<MuscleGroup>(
+            theme: widget.theme,
+            isLoading: widget.isLoading,
             value: _data.muscleGroup,
             filled: true,
             emptyLabel: 'Muscle Group',
@@ -213,6 +215,8 @@ class _ExerciseFormState extends State<ExerciseForm> {
           ),
           SizedBox(height: widget.sizes.spacing),
           AppDropdown<Difficulty>(
+            theme: widget.theme,
+            isLoading: widget.isLoading,
             value: _data.difficulty,
             filled: true,
             emptyLabel: 'Difficulty',
@@ -249,6 +253,8 @@ class _ExerciseFormState extends State<ExerciseForm> {
             items: _data.primaryMuscles.toList(),
             itemBuilder: (context, index, item) {
               return AppDropdown<Muscle>(
+                theme: widget.theme,
+                isLoading: widget.isLoading,
                 filled: true,
                 value: item,
                 emptyLabel: 'Primary Muscle',
@@ -317,6 +323,8 @@ class _ExerciseFormState extends State<ExerciseForm> {
             filled: true,
             itemBuilder: (context, index, item) {
               return AppDropdown<Muscle>(
+                theme: widget.theme,
+                isLoading: widget.isLoading,
                 value: item,
                 filled: true,
                 emptyLabel: 'Secondary Muscle',
@@ -400,6 +408,8 @@ class _ExerciseFormState extends State<ExerciseForm> {
                 filled: true,
                 itemBuilder: (context, index, item) {
                   return AppDropdown<int>(
+                    theme: widget.theme,
+                    isLoading: widget.isLoading,
                     value: item,
                     filled: true,
                     emptyLabel: 'Equipment',

@@ -99,6 +99,8 @@ class _WeightGoalFormState extends State<WeightGoalForm> {
       child: Column(
         children: [
           AppDropdown<WeightGoalPhase>(
+            theme: widget.theme,
+            isLoading: widget.isLoading,
             value: _data.phase,
             emptyLabel: "Phase",
             labelText: "Phase",

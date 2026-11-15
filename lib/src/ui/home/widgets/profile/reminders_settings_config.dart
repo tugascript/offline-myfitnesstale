@@ -19,9 +19,15 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../../data/repositories/profile/dtos/reminders_config_dto.dart';
+import '../../../../data/utils/enums.dart';
+import '../../../../data/utils/time_of_day_value.dart';
+import '../../../../data/utils/weekday_time_of_day_value.dart';
 import '../../../core/sizes/data_display_sizes.dart';
 import '../../../core/themes/colors.dart';
+import '../../../core/utils/formatters.dart';
 import '../../view_models/profile_cubit.dart';
+import 'reminder_toggle_row.dart';
+import 'reminder_weekday_toggle_row.dart';
 
 class RemindersSettingsConfig extends StatelessWidget {
   final RemindersConfigDto remindersConfig;
@@ -44,103 +50,158 @@ class RemindersSettingsConfig extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cubit = context.read<ProfileCubit>();
-    final labelWidth = sizes.subtitleFontSize * 7;
     final titleColor = isDarkTheme
         ? ThemedColors.themedGrey.light
         : ThemedColors.themedGrey.dark;
 
     return Column(
+      key: const ValueKey('profile-reminders-settings'),
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          "Reminders",
-          style: TextStyle(
-            fontSize: sizes.subtitleFontSize,
-            fontWeight: FontWeight.bold,
-          ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            Icon(Icons.notifications, size: sizes.iconSubtitleFontSize),
+            Text(
+              " Reminders",
+              style: TextStyle(
+                fontSize: sizes.subtitleFontSize,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
         ),
-        _ReminderToggle(
+        SizedBox(height: sizes.halfSpacing),
+        ReminderToggleRow(
           switchKey: const ValueKey('reminder-workouts'),
+          timeKey: const ValueKey('reminder-workouts-time'),
           value: remindersConfig.workoutsOn,
           label: "Workouts",
-          labelWidth: labelWidth,
-          fontSize: sizes.subtitleFontSize,
-          padding: sizes.padding,
+          timeLabel: Formatters.formatTimeOfDay(
+            remindersConfig.workoutsReminderTime,
+          ),
+          sizes: sizes,
+          theme: theme,
           titleColor: titleColor,
+          isLoading: isLoading,
           onChanged: (value) {
             if (!isLoading) {
-              cubit.updateRemindersConfig(
-                workoutsOn: value,
-                weightRecordsOn: remindersConfig.weightRecordsOn,
-              );
+              cubit.updateRemindersConfig(workoutsOn: value);
             }
           },
+          onTimeTap: () => _pickClockTime(
+            context: context,
+            currentTime: remindersConfig.workoutsReminderTime,
+            onSelected: (updated) {
+              cubit.updateRemindersConfig(workoutsReminderTime: updated);
+            },
+          ),
         ),
-        _ReminderToggle(
+        SizedBox(height: sizes.spacing),
+        ReminderToggleRow(
+          switchKey: const ValueKey('reminder-macro-tracking'),
+          timeKey: const ValueKey('reminder-macro-tracking-time'),
+          value: remindersConfig.macroTrackingOn,
+          label: "Macro Tracking",
+          timeLabel: Formatters.formatTimeOfDay(
+            remindersConfig.macroTrackingReminderTime,
+          ),
+          sizes: sizes,
+          theme: theme,
+          titleColor: titleColor,
+          isLoading: isLoading,
+          onChanged: (value) {
+            if (!isLoading) {
+              cubit.updateRemindersConfig(macroTrackingOn: value);
+            }
+          },
+          onTimeTap: () => _pickClockTime(
+            context: context,
+            currentTime: remindersConfig.macroTrackingReminderTime,
+            onSelected: (updated) {
+              cubit.updateRemindersConfig(macroTrackingReminderTime: updated);
+            },
+          ),
+        ),
+        SizedBox(height: sizes.spacing),
+        ReminderWeekdayToggleRow(
           switchKey: const ValueKey('reminder-weight-records'),
+          dayKey: const ValueKey('reminder-weight-records-day'),
+          timeKey: const ValueKey('reminder-weight-records-time'),
           value: remindersConfig.weightRecordsOn,
           label: "Weight Records",
-          labelWidth: labelWidth,
-          fontSize: sizes.subtitleFontSize,
-          padding: sizes.padding,
+          dayOfWeek: remindersConfig.weightRecordsReminderTime.dayOfWeek,
+          timeLabel: Formatters.formatTimeOfDay(
+            remindersConfig.weightRecordsReminderTime.timeOfDay,
+          ),
+          sizes: sizes,
+          theme: theme,
           titleColor: titleColor,
+          isLoading: isLoading,
           onChanged: (value) {
             if (!isLoading) {
-              cubit.updateRemindersConfig(
-                workoutsOn: remindersConfig.workoutsOn,
-                weightRecordsOn: value,
-              );
+              cubit.updateRemindersConfig(weightRecordsOn: value);
             }
           },
+          onDayChanged: (DayOfWeek newDay) {
+            cubit.updateRemindersConfig(
+              weightRecordsReminderTime: remindersConfig
+                  .weightRecordsReminderTime
+                  .copyWith(dayOfWeek: newDay),
+            );
+          },
+          onTimeTap: () => _pickWeekdayClockTime(
+            context: context,
+            current: remindersConfig.weightRecordsReminderTime,
+            onSelected: (updated) {
+              cubit.updateRemindersConfig(weightRecordsReminderTime: updated);
+            },
+          ),
         ),
       ],
     );
   }
-}
 
-class _ReminderToggle extends StatelessWidget {
-  final bool value;
-  final String label;
-  final double labelWidth;
-  final double fontSize;
-  final double padding;
-  final Color titleColor;
-  final ValueChanged<bool> onChanged;
-  final Key switchKey;
+  Future<void> _pickClockTime({
+    required BuildContext context,
+    required TimeOfDayValue currentTime,
+    required ValueChanged<TimeOfDayValue> onSelected,
+  }) async {
+    if (isLoading) {
+      return;
+    }
 
-  const _ReminderToggle({
-    required this.switchKey,
-    required this.value,
-    required this.label,
-    required this.labelWidth,
-    required this.fontSize,
-    required this.padding,
-    required this.titleColor,
-    required this.onChanged,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.symmetric(vertical: padding),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        mainAxisAlignment: MainAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: labelWidth,
-            child: Text(
-              label,
-              style: TextStyle(
-                fontSize: fontSize,
-                fontWeight: FontWeight.w600,
-                color: titleColor,
-              ),
-            ),
-          ),
-          Switch(key: switchKey, value: value, onChanged: onChanged),
-        ],
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay(
+        hour: currentTime.hour,
+        minute: currentTime.minute,
       ),
     );
+    if (picked != null && context.mounted) {
+      onSelected(TimeOfDayValue(hour: picked.hour, minute: picked.minute));
+    }
+  }
+
+  Future<void> _pickWeekdayClockTime({
+    required BuildContext context,
+    required WeekdayTimeOfDayValue current,
+    required ValueChanged<WeekdayTimeOfDayValue> onSelected,
+  }) async {
+    if (isLoading) {
+      return;
+    }
+
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay(hour: current.hour, minute: current.minute),
+    );
+    if (picked != null && context.mounted) {
+      onSelected(
+        current.copyWith(
+          timeOfDay: TimeOfDayValue(hour: picked.hour, minute: picked.minute),
+        ),
+      );
+    }
   }
 }

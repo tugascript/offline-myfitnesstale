@@ -147,6 +147,8 @@ class _AdvancedSetEditorState extends State<AdvancedSetEditor> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             AppDropdown<WorkoutSetType>(
+              theme: theme,
+              isLoading: widget.isLoading,
               value: setData.setType,
               emptyLabel: "Set Type",
               labelText: "Set Type",

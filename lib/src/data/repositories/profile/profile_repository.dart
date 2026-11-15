@@ -94,17 +94,12 @@ final class ProfileRepository implements Repository {
   ) {
     return existing.copyWith(
       workoutsOn: input.workoutsOn,
-      workoutsReminderTime: DateUtilities.getDateUnix(
-        input.workoutsReminderTime,
-      ),
+      workoutsReminderTime: input.workoutsReminderTime.minutesSinceMidnight,
       weightRecordsOn: input.weightRecordsOn,
-      weightRecordsReminderTime: DateUtilities.getDateUnix(
-        input.weightRecordsReminderTime,
-      ),
+      weightRecordsReminderTime: input.weightRecordsReminderTime.packedValue,
       macroTrackingOn: input.macroTrackingOn,
-      macroTrackingReminderTime: DateUtilities.getDateUnix(
-        input.macroTrackingReminderTime,
-      ),
+      macroTrackingReminderTime:
+          input.macroTrackingReminderTime.minutesSinceMidnight,
       updatedAt: DateUtilities.getNowUtcUnix(),
     );
   }
