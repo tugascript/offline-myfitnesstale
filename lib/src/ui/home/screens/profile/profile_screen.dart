@@ -18,68 +18,18 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:material_ui/material_ui.dart';
 
-import '../../../../data/repositories/profile/dtos/profile_dto.dart';
-import '../../../../data/repositories/profile/dtos/system_dto.dart';
-import '../../../../data/utils/enums.dart';
 import '../../../core/sizes/data_display_sizes.dart';
 import '../../../core/sizes/screen_size.dart';
 import '../../../core/widgets/layout/responsive_scaffold.dart';
 import '../../view_models/profile_cubit.dart';
 import '../../view_models/states/profile_state.dart';
-import '../../widgets/profile/height_input.dart';
-import '../../widgets/profile/profile_header.dart';
 import '../../widgets/profile/profile_info.dart';
 import '../../widgets/profile/settings_config.dart';
 
-class ProfileScreen extends StatefulWidget {
+class ProfileScreen extends StatelessWidget {
   static const name = "profile";
 
   const ProfileScreen({super.key});
-
-  @override
-  State<ProfileScreen> createState() => _ProfileScreenState();
-}
-
-class _ProfileScreenState extends State<ProfileScreen> {
-  final _formKey = GlobalKey<FormState>();
-  final _nameController = TextEditingController();
-  int _height = 0;
-  Gender _selectedGender = Gender.male;
-  bool _isEditing = false;
-
-  @override
-  void dispose() {
-    _nameController.dispose();
-    super.dispose();
-  }
-
-  void _startEditing(ProfileDto profile) {
-    setState(() {
-      _isEditing = true;
-      _nameController.text = profile.name;
-      _selectedGender = profile.gender;
-      _height = profile.height;
-    });
-  }
-
-  void _cancelEditing() {
-    setState(() {
-      _isEditing = false;
-    });
-  }
-
-  void _saveProfile() {
-    if (_formKey.currentState!.validate()) {
-      context.read<ProfileCubit>().updateProfile(
-        name: _nameController.text,
-        height: _height,
-        gender: _selectedGender,
-      );
-      setState(() {
-        _isEditing = false;
-      });
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -155,24 +105,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Profile Header
-                ProfileHeader(
-                  profile: profile,
-                  system: system,
-                  sizes: sizes,
-                  isEditing: _isEditing,
-                  editOnPress: () => _startEditing(profile),
-                ),
-                SizedBox(height: sizes.spacing * 2),
-
-                // Profile Form
-                if (_isEditing) _buildEditForm(profile, system, sizes),
-                if (!_isEditing)
-                  ProfileInfo(sizes: sizes, profile: profile, system: system),
-
-                SizedBox(height: sizes.spacing * 2),
-
-                // Settings Section
+                ProfileInfo(sizes: sizes, profile: profile, system: system),
+                SizedBox(height: sizes.betweenSpacing),
                 SettingsConfig(
                   profileId: profile.id,
                   isLoading: state.isLoading,
@@ -183,113 +117,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ],
             );
           },
-        ),
-      ),
-    );
-  }
-
-  Widget _buildEditForm(
-    ProfileDto profile,
-    SystemDto? system,
-    DataDisplaySizesList sizes,
-  ) {
-    return Card(
-      child: Padding(
-        padding: EdgeInsets.all(sizes.padding),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                "Edit Profile",
-                style: TextStyle(
-                  fontSize: sizes.subtitleFontSize,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              SizedBox(height: sizes.spacing),
-              TextFormField(
-                controller: _nameController,
-                decoration: const InputDecoration(
-                  labelText: "Name",
-                  border: OutlineInputBorder(),
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return "Please enter your name";
-                  }
-                  return null;
-                },
-              ),
-              SizedBox(height: sizes.spacing),
-              HeightInput(
-                initialHeight: profile.height,
-                isMetric: system?.units == Units.metric,
-                onChanged: (int cm) {
-                  setState(() {
-                    _height = cm;
-                  });
-                },
-                onSaved: (int cm) {
-                  setState(() {
-                    _height = cm;
-                  });
-                },
-              ),
-              SizedBox(height: sizes.spacing),
-              DropdownButtonFormField<Gender>(
-                initialValue: _selectedGender,
-                decoration: const InputDecoration(
-                  labelText: "Gender",
-                  border: OutlineInputBorder(),
-                ),
-                items: Gender.values.map((gender) {
-                  return DropdownMenuItem(
-                    value: gender,
-                    child: Text(gender.name),
-                  );
-                }).toList(),
-                onChanged: (value) {
-                  if (value != null) {
-                    setState(() {
-                      _selectedGender = value;
-                    });
-                  }
-                },
-              ),
-              SizedBox(height: sizes.spacing * 1.5),
-              LayoutBuilder(
-                builder: (context, constraints) {
-                  final cancel = OutlinedButton(
-                    onPressed: _cancelEditing,
-                    child: const Text("Cancel"),
-                  );
-                  final save = ElevatedButton(
-                    onPressed: _saveProfile,
-                    child: const Text("Save"),
-                  );
-                  if (constraints.maxWidth < 360) {
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        cancel,
-                        SizedBox(height: sizes.spacing / 2),
-                        save,
-                      ],
-                    );
-                  }
-                  return Row(
-                    children: [
-                      Expanded(child: cancel),
-                      SizedBox(width: sizes.spacing),
-                      Expanded(child: save),
-                    ],
-                  );
-                },
-              ),
-            ],
-          ),
         ),
       ),
     );

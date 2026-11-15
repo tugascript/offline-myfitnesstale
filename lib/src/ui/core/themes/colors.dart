@@ -35,3 +35,18 @@ const MaterialColor kPrimaryOrangeSwatch = MaterialColor(
     900: Color(0xFFC14B23),
   },
 );
+
+final class ThemedColors {
+  final Color light;
+  final Color dark;
+
+  const ThemedColors({required this.light, required this.dark});
+
+  static final ThemedColors themedGrey = ThemedColors(
+    light: Colors.grey.shade400,
+    dark: Colors.grey.shade800,
+  );
+
+  Color fromBrightness(Brightness brightness) =>
+      brightness == Brightness.light ? light : dark;
+}

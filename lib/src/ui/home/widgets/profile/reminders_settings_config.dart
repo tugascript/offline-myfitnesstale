@@ -20,7 +20,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../../../data/repositories/profile/dtos/reminders_config_dto.dart';
 import '../../../core/sizes/data_display_sizes.dart';
-import '../../../core/widgets/layout/expanding_section.dart';
+import '../../../core/themes/colors.dart';
 import '../../view_models/profile_cubit.dart';
 
 class RemindersSettingsConfig extends StatelessWidget {
@@ -30,7 +30,6 @@ class RemindersSettingsConfig extends StatelessWidget {
   final DataDisplaySizesList sizes;
   final ThemeData theme;
   final bool isDarkTheme;
-  final bool initiallyExpanded;
 
   const RemindersSettingsConfig({
     super.key,
@@ -40,31 +39,34 @@ class RemindersSettingsConfig extends StatelessWidget {
     required this.sizes,
     required this.theme,
     required this.isDarkTheme,
-    this.initiallyExpanded = false,
   });
 
   @override
   Widget build(BuildContext context) {
     final cubit = context.read<ProfileCubit>();
     final labelWidth = sizes.subtitleFontSize * 7;
-    return ExpandingSection(
-      icon: Icons.notifications,
-      title: "Reminders",
-      titleFountSize: sizes.titleFontSize,
-      subtitle:
-          "Workouts ${_subtitleState(remindersConfig.workoutsOn)} • Weight Records ${_subtitleState(remindersConfig.weightRecordsOn)}",
-      subtitleFontSize: sizes.subtitleFontSize,
-      padding: sizes.padding / 2,
-      initiallyExpanded: initiallyExpanded,
+    final titleColor = isDarkTheme
+        ? ThemedColors.themedGrey.light
+        : ThemedColors.themedGrey.dark;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        Text(
+          "Reminders",
+          style: TextStyle(
+            fontSize: sizes.subtitleFontSize,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         _ReminderToggle(
           switchKey: const ValueKey('reminder-workouts'),
           value: remindersConfig.workoutsOn,
           label: "Workouts",
           labelWidth: labelWidth,
           fontSize: sizes.subtitleFontSize,
-          padding: sizes.padding / 2,
-          isDarkTheme: isDarkTheme,
+          padding: sizes.padding,
+          titleColor: titleColor,
           onChanged: (value) {
             if (!isLoading) {
               cubit.updateRemindersConfig(
@@ -80,8 +82,8 @@ class RemindersSettingsConfig extends StatelessWidget {
           label: "Weight Records",
           labelWidth: labelWidth,
           fontSize: sizes.subtitleFontSize,
-          padding: sizes.padding / 2,
-          isDarkTheme: isDarkTheme,
+          padding: sizes.padding,
+          titleColor: titleColor,
           onChanged: (value) {
             if (!isLoading) {
               cubit.updateRemindersConfig(
@@ -94,10 +96,6 @@ class RemindersSettingsConfig extends StatelessWidget {
       ],
     );
   }
-
-  String _subtitleState(bool isOn) {
-    return isOn ? "On" : "Off";
-  }
 }
 
 class _ReminderToggle extends StatelessWidget {
@@ -106,7 +104,7 @@ class _ReminderToggle extends StatelessWidget {
   final double labelWidth;
   final double fontSize;
   final double padding;
-  final bool isDarkTheme;
+  final Color titleColor;
   final ValueChanged<bool> onChanged;
   final Key switchKey;
 
@@ -117,14 +115,14 @@ class _ReminderToggle extends StatelessWidget {
     required this.labelWidth,
     required this.fontSize,
     required this.padding,
-    required this.isDarkTheme,
+    required this.titleColor,
     required this.onChanged,
   });
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.all(padding),
+      padding: EdgeInsets.symmetric(vertical: padding),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         mainAxisAlignment: MainAxisAlignment.start,
@@ -136,7 +134,7 @@ class _ReminderToggle extends StatelessWidget {
               style: TextStyle(
                 fontSize: fontSize,
                 fontWeight: FontWeight.w600,
-                color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
+                color: titleColor,
               ),
             ),
           ),

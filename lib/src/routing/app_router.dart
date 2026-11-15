@@ -36,7 +36,6 @@ import '../ui/foods/screens/foods_screen.dart';
 import '../ui/home/screens/main_navigation_screen.dart';
 import '../ui/home/screens/profile/create_profile_screen.dart';
 import '../ui/home/screens/profile/onboarding_screen.dart';
-import '../ui/home/screens/profile/reminder_preferences_screen.dart';
 import '../ui/macros/screens/macro_goals_screen.dart';
 import '../ui/macros/screens/macro_tracker_screen.dart';
 import '../ui/meal_plans/screens/meal_plan_creation_screen.dart';
@@ -371,10 +370,6 @@ sealed class AppRouter {
         }
         return WorkoutPlanDetailScreen(workoutPlanId: id);
       },
-    ),
-    GoRoute(
-      path: Routes.reminderPreferences.name,
-      builder: (context, state) => const ReminderPreferencesScreen(),
     ),
     // Strength Goals
     GoRoute(

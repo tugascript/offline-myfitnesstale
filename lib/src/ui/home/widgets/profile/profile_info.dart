@@ -15,15 +15,19 @@
 // You should have received a copy of the GNU General Public License
 // along with My Fitness Tale.  If not, see <https://www.gnu.org/licenses/>.
 
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../../data/repositories/profile/dtos/profile_dto.dart';
 import '../../../../data/repositories/profile/dtos/system_dto.dart';
 import '../../../../data/utils/enums.dart';
 import '../../../core/sizes/data_display_sizes.dart';
-import '../../../core/utils/converters.dart';
+import '../../view_models/profile_cubit.dart';
+import 'profile_edit_form.dart';
+import 'profile_header.dart';
+import 'profile_info_display.dart';
 
-class ProfileInfo extends StatelessWidget {
+class ProfileInfo extends StatefulWidget {
   final DataDisplaySizesList sizes;
   final ProfileDto profile;
   final SystemDto system;
@@ -36,110 +40,77 @@ class ProfileInfo extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDarkTheme = theme.brightness == Brightness.dark;
-
-    return Card(
-      child: Padding(
-        padding: EdgeInsets.all(sizes.padding),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              "Profile Information",
-              style: TextStyle(
-                fontSize: sizes.titleFontSize,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            SizedBox(
-              height: sizes.padding, // Spacing between title and info rows
-            ),
-            _InfoRow(
-              name: "Name",
-              isDarkTheme: isDarkTheme,
-              value: profile.name,
-              padding: sizes.padding,
-              fontSize: sizes.subtitleFontSize,
-              nameWidth: sizes.subtitleFontSize * 7,
-            ),
-            _InfoRow(
-              name: "Height",
-              isDarkTheme: isDarkTheme,
-              value: system.units == Units.metric
-                  ? "${profile.height}cm"
-                  : Converters.formatImperialHeight(profile.height),
-              padding: sizes.padding,
-              fontSize: sizes.subtitleFontSize,
-              nameWidth: sizes.subtitleFontSize * 7,
-            ),
-            _InfoRow(
-              name: "Gender",
-              isDarkTheme: isDarkTheme,
-              value: profile.gender.name,
-              padding: sizes.padding,
-              fontSize: sizes.subtitleFontSize,
-              nameWidth: sizes.subtitleFontSize * 7,
-            ),
-            _InfoRow(
-              name: "Birthdate",
-              isDarkTheme: isDarkTheme,
-              value: Converters.formatDate(
-                profile.birthdate,
-                imperial: system.units == Units.imperial,
-              ),
-              padding: sizes.padding,
-              fontSize: sizes.subtitleFontSize,
-              nameWidth: sizes.subtitleFontSize * 7,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  State<ProfileInfo> createState() => _ProfileInfoState();
 }
 
-class _InfoRow extends StatelessWidget {
-  final String name;
-  final bool isDarkTheme;
-  final String value;
-  final double padding;
-  final double fontSize;
-  final double nameWidth;
+class _ProfileInfoState extends State<ProfileInfo> {
+  bool _isEditing = false;
 
-  const _InfoRow({
-    required this.name,
-    required this.isDarkTheme,
-    required this.value,
-    required this.padding,
-    required this.fontSize,
-    required this.nameWidth,
-  });
+  void _startEditing() {
+    setState(() {
+      _isEditing = true;
+    });
+  }
+
+  void _cancelEditing() {
+    setState(() {
+      _isEditing = false;
+    });
+  }
+
+  void _saveProfile({
+    required String name,
+    required int height,
+    required Gender gender,
+    required DateTime birthdate,
+  }) {
+    context.read<ProfileCubit>().updateProfile(
+      name: name,
+      height: height,
+      gender: gender,
+      birthday: birthdate,
+    );
+    setState(() {
+      _isEditing = false;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.symmetric(vertical: padding),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: nameWidth,
-            child: Text(
-              name,
-              style: TextStyle(
-                fontSize: fontSize,
-                fontWeight: FontWeight.w600,
-                color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
-              ),
-            ),
+    final sizes = widget.sizes;
+    final profile = widget.profile;
+    final system = widget.system;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        ProfileHeader(
+          profile: profile,
+          system: system,
+          sizes: sizes,
+          isEditing: _isEditing,
+          editOnPress: _startEditing,
+        ),
+        SizedBox(height: sizes.betweenSpacing),
+        Text(
+          "Profile Information",
+          style: TextStyle(
+            fontSize: sizes.titleFontSize,
+            fontWeight: FontWeight.bold,
           ),
-          Expanded(
-            child: Text(value, style: TextStyle(fontSize: fontSize)),
-          ),
-        ],
-      ),
+        ),
+        SizedBox(height: sizes.spacing),
+        if (_isEditing)
+          ProfileEditForm(
+            profile: profile,
+            system: system,
+            sizes: sizes,
+            onCancel: _cancelEditing,
+            onSave: _saveProfile,
+          )
+        else
+          ProfileInfoDisplay(sizes: sizes, profile: profile, system: system),
+      ],
     );
   }
 }
