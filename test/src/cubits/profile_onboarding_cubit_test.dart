@@ -70,12 +70,14 @@ void main() {
       await Future<void>.delayed(Duration.zero);
       expect(cubit.state.isLoading, isTrue);
       expect(cubit.state.error, isNull);
+      expect(cubit.state.onboardingDraft?.name, 'Retry Tester');
 
       gate.complete();
       await firstCall;
       expect(cubit.state.isLoading, isFalse);
       expect(cubit.state.profile, isNull);
       expect(cubit.state.error?.description, contains('No data was saved'));
+      expect(cubit.state.onboardingDraft?.name, 'Retry Tester');
 
       final retryCall = cubit.onboardProfile(
         units: Units.metric,
@@ -97,6 +99,7 @@ void main() {
       expect(cubit.state.profile?.name, 'Retry Tester');
       expect(cubit.state.system?.initialSetup, SetUpStatus.completed);
       expect(cubit.state.remindersConfig, isNotNull);
+      expect(cubit.state.onboardingDraft, isNull);
       expect(cubit.state.error, isNull);
     },
   );

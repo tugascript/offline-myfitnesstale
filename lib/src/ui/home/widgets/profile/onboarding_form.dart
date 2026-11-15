@@ -110,6 +110,7 @@ class _OnboardingFormState extends State<OnboardingForm> {
       preLoadWorkouts: widget.initialPreLoadWorkouts,
       notificationsOn: widget.initialNotificationsOn,
     );
+    _nameController.text = _data.name;
     _birthdayController.text =
         "${_data.birthday.day}/${_data.birthday.month}/${_data.birthday.year}";
   }
@@ -395,19 +396,13 @@ class _OnboardingFormState extends State<OnboardingForm> {
             style: ElevatedButton.styleFrom(
               padding: EdgeInsets.symmetric(vertical: widget.sizes.padding / 2),
             ),
-            child: widget.isLoading
-                ? SizedBox(
-                    height: widget.sizes.breaks * 1.75,
-                    width: widget.sizes.breaks * 1.75,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : Text(
-                    widget.submitButtonLabel,
-                    style: TextStyle(
-                      fontSize: widget.sizes.subtitleFontSize,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
+            child: Text(
+              widget.submitButtonLabel,
+              style: TextStyle(
+                fontSize: widget.sizes.subtitleFontSize,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ),
         ],
       ),
