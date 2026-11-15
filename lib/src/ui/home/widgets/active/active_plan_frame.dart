@@ -36,7 +36,7 @@ class ActivePlanFrame extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (!showTitle) return Column(children: [Expanded(child: child)]);
+    if (!showTitle) return child;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

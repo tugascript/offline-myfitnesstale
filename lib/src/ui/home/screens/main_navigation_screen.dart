@@ -20,7 +20,6 @@ import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../routing/routes.dart';
-import '../../core/screens/loading_screen.dart';
 import '../../core/sizes/data_display_sizes.dart';
 import '../../core/sizes/screen_size.dart';
 import '../../macros/screens/macro_tracker_screen.dart';
@@ -75,6 +74,20 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   final Set<int> _visitedIndices = {0};
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final state = context.read<ProfileCubit>().state;
+      if (!state.isLoading &&
+          state.profile == null &&
+          (state.isInitiated || state.error != null)) {
+        GoRouter.maybeOf(context)?.go(Routes.onboarding.name);
+      }
+    });
+  }
+
+  @override
   void dispose() {
     _PageBuilder.clearBuiltPages();
     super.dispose();
@@ -85,69 +98,71 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     final breakPoint = BreakPoint.fromContext(context);
     final sizes = DataDisplaySizes.getDataDisplaySizes(breakPoint.screenSize);
 
-    return Scaffold(
-      body: BlocConsumer<ProfileCubit, ProfileState>(
-        builder: (context, state) {
-          if (!state.isInitiated) {
-            return const LoadingScreen();
-          }
+    return BlocConsumer<ProfileCubit, ProfileState>(
+      listener: (context, state) {
+        if (!state.isLoading && state.profile == null) {
+          GoRouter.maybeOf(context)?.go(Routes.onboarding.name);
+        }
+      },
+      builder: (context, state) {
+        final isHomeLoading =
+            !state.isInitiated || (state.isLoading && state.profile == null);
 
-          if (!state.isLoading && state.profile == null) {
-            return CreateProfileButtonScreen();
-          }
+        if (!isHomeLoading && !state.isLoading && state.profile == null) {
+          return Scaffold(body: CreateProfileButtonScreen());
+        }
 
-          return IndexedStack(
-            index: _currentIndex,
+        final activeIndex = isHomeLoading ? 0 : _currentIndex;
+
+        return Scaffold(
+          body: IndexedStack(
+            index: activeIndex,
             children: List.generate(_PageBuilder.pagesCount, (index) {
               if (_visitedIndices.contains(index)) {
                 return _PageBuilder.getPage(
                   index,
-                  isVisible: _currentIndex == index,
+                  isVisible: activeIndex == index,
                 );
               }
-              return const LoadingScreen();
+              return const SizedBox.shrink();
             }),
-          );
-        },
-        listener: (context, state) {
-          if (!state.isLoading && state.profile == null) {
-            context.go(Routes.onboarding.name);
-          }
-        },
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        key: const ValueKey('main-bottom-navigation'),
-        type: BottomNavigationBarType.fixed,
-        currentIndex: _currentIndex,
-        onTap: (index) {
-          setState(() {
-            _visitedIndices.add(index);
-            _currentIndex = index;
-          });
-        },
-        selectedItemColor: Theme.of(context).primaryColor,
-        unselectedItemColor: Colors.grey,
-        selectedFontSize: sizes.fontSize,
-        unselectedFontSize: sizes.fontSize,
-        items: [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home, size: sizes.mediumIconSize),
-            label: 'Home',
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.fitness_center, size: sizes.mediumIconSize),
-            label: 'Plan',
+          bottomNavigationBar: BottomNavigationBar(
+            key: const ValueKey('main-bottom-navigation'),
+            type: BottomNavigationBarType.fixed,
+            currentIndex: activeIndex,
+            onTap: (index) {
+              if (isHomeLoading) return;
+              setState(() {
+                _visitedIndices.add(index);
+                _currentIndex = index;
+              });
+            },
+            selectedItemColor: Theme.of(context).primaryColor,
+            unselectedItemColor: Colors.grey,
+            selectedFontSize: sizes.fontSize,
+            unselectedFontSize: sizes.fontSize,
+            items: [
+              BottomNavigationBarItem(
+                icon: Icon(Icons.home, size: sizes.mediumIconSize),
+                label: 'Home',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.fitness_center, size: sizes.mediumIconSize),
+                label: 'Plan',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.restaurant_menu, size: sizes.mediumIconSize),
+                label: 'Macros',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.person, size: sizes.mediumIconSize),
+                label: 'Profile',
+              ),
+            ],
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.restaurant_menu, size: sizes.mediumIconSize),
-            label: 'Macros',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person, size: sizes.mediumIconSize),
-            label: 'Profile',
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 }

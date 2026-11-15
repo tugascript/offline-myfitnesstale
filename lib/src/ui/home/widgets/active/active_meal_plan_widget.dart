@@ -27,7 +27,7 @@ import '../../../meal_plans/view_models/meal_plan_record_cubit.dart';
 import '../../../meal_plans/view_models/states/meal_plan_record_state.dart';
 import './active_plan_frame.dart';
 
-class ActiveMealPlanWidget extends StatefulWidget {
+class ActiveMealPlanWidget extends StatelessWidget {
   final DataDisplaySizesList sizes;
   final ThemeData theme;
   final bool showTitle;
@@ -40,20 +40,8 @@ class ActiveMealPlanWidget extends StatefulWidget {
   });
 
   @override
-  State<ActiveMealPlanWidget> createState() => _ActiveMealPlanWidgetState();
-}
-
-class _ActiveMealPlanWidgetState extends State<ActiveMealPlanWidget> {
-  @override
-  void initState() {
-    super.initState();
-    context.read<MacroTrackingCubit>().getActiveMacroGoal();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final sizes = widget.sizes;
-    final colors = widget.theme.colorScheme;
+    final colors = theme.colorScheme;
     return BlocBuilder<MealPlanRecordCubit, MealPlanRecordState>(
       builder: (context, planState) {
         return BlocBuilder<MacroTrackingCubit, MacroTrackingState>(
@@ -65,7 +53,7 @@ class _ActiveMealPlanWidgetState extends State<ActiveMealPlanWidget> {
             return ActivePlanFrame(
               title: 'Active Meal Plan',
               sizes: sizes,
-              showTitle: widget.showTitle,
+              showTitle: showTitle,
               child: InkWell(
                 key: ValueKey(
                   record != null

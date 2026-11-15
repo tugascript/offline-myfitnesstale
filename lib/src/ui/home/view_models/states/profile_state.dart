@@ -17,6 +17,7 @@
 
 import 'package:equatable/equatable.dart';
 
+import '../../../../data/repositories/onboarding/inputs/onboarding_input.dart';
 import '../../../../data/repositories/profile/dtos/profile_dto.dart';
 import '../../../../data/repositories/profile/dtos/reminders_config_dto.dart';
 import '../../../../data/repositories/profile/dtos/system_dto.dart';
@@ -27,6 +28,7 @@ final class ProfileState extends Equatable {
   final ProfileDto? profile;
   final SystemDto? system;
   final RemindersConfigDto? remindersConfig;
+  final OnboardingInput? onboardingDraft;
   final bool isLoading;
   final bool isInitiated;
   final ErrorState? error;
@@ -35,6 +37,7 @@ final class ProfileState extends Equatable {
     this.profile,
     this.system,
     this.remindersConfig,
+    this.onboardingDraft,
     required this.isLoading,
     required this.isInitiated,
     this.error,
@@ -48,6 +51,7 @@ final class ProfileState extends Equatable {
     Nullable<ProfileDto?>? profile,
     Nullable<SystemDto?>? system,
     Nullable<RemindersConfigDto?>? remindersConfig,
+    Nullable<OnboardingInput?>? onboardingDraft,
     bool? isLoading,
     bool? isInitiated,
     Nullable<ErrorState?>? error,
@@ -58,6 +62,9 @@ final class ProfileState extends Equatable {
       remindersConfig: remindersConfig != null
           ? remindersConfig.value
           : this.remindersConfig,
+      onboardingDraft: onboardingDraft != null
+          ? onboardingDraft.value
+          : this.onboardingDraft,
       isLoading: isLoading ?? this.isLoading,
       isInitiated: isInitiated ?? this.isInitiated,
       error: error != null ? error.value : this.error,
@@ -71,6 +78,7 @@ final class ProfileState extends Equatable {
     profile,
     system,
     remindersConfig,
+    onboardingDraft,
     isInitiated,
   ];
 }

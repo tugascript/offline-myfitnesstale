@@ -410,19 +410,25 @@ class ProfileCubit extends Cubit<ProfileState> {
       return;
     }
 
-    emit(state.copyWith(isLoading: true, error: const Nullable(null)));
-    final result = await _onboardingService.onboard(
-      OnboardingInput(
-        units: units,
-        theme: theme,
-        name: name,
-        height: height,
-        gender: gender,
-        birthday: birthday,
-        createWorkouts: createWorkouts,
-        notificationsOn: notificationsOn,
+    final input = OnboardingInput(
+      units: units,
+      theme: theme,
+      name: name,
+      height: height,
+      gender: gender,
+      birthday: birthday,
+      createWorkouts: createWorkouts,
+      notificationsOn: notificationsOn,
+    );
+
+    emit(
+      state.copyWith(
+        isLoading: true,
+        error: const Nullable(null),
+        onboardingDraft: Nullable(input),
       ),
     );
+    final result = await _onboardingService.onboard(input);
 
     if (result.isErr()) {
       _logger.severe("Failed to onboard profile", result.error);
@@ -447,6 +453,7 @@ class ProfileCubit extends Cubit<ProfileState> {
         profile: Nullable(onboarding.profile),
         system: Nullable(onboarding.system),
         remindersConfig: Nullable(onboarding.remindersConfig),
+        onboardingDraft: const Nullable(null),
         isLoading: false,
         isInitiated: true,
         error: const Nullable(null),

@@ -201,6 +201,7 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
               workoutPlan: const Nullable(null),
               todaysWorkouts: [],
             ),
+            hasLoadedActivePlan: true,
             isLoading: false,
           ),
         );
@@ -262,6 +263,7 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
                   ? state.currentPlanRecord.todaysWorkouts
                   : const []),
         ),
+        hasLoadedActivePlan: true,
         isLoading: false,
         error: const Nullable(null),
       ),
@@ -557,6 +559,7 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
         case SingleErrorTypes.notFound:
           emit(
             state.copyWith(
+              hasLoadedActivePlan: true,
               isLoading: false,
               currentPlanRecord: CurrentWorkoutPlanRecordState.initial(),
               error: const Nullable(null),
@@ -619,6 +622,7 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
                   ? state.currentPlanRecord.todaysWorkouts
                   : const []),
         ),
+        hasLoadedActivePlan: true,
         isLoading: false,
         error: const Nullable(null),
       ),

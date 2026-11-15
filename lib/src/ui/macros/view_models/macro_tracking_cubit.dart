@@ -47,6 +47,7 @@ class MacroTrackingCubit extends Cubit<MacroTrackingState> {
         emit(
           state.copyWith(
             activeGoal: const Nullable(null),
+            hasLoadedActiveGoal: true,
             isLoading: false,
             error: const Nullable(null),
           ),
@@ -68,6 +69,7 @@ class MacroTrackingCubit extends Cubit<MacroTrackingState> {
     emit(
       state.copyWith(
         activeGoal: Nullable(result.value),
+        hasLoadedActiveGoal: true,
         isLoading: false,
         error: const Nullable(null),
       ),
@@ -255,6 +257,12 @@ class MacroTrackingCubit extends Cubit<MacroTrackingState> {
                 limit: limit,
                 offset: 0,
               )
+            : null,
+        hasLoadedActiveGoal:
+            activeResult.isOk() ||
+                (activeResult.isErr() &&
+                    activeResult.error.type == SingleErrorTypes.notFound)
+            ? true
             : null,
         isLoading: false,
         error: Nullable(error),

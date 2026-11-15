@@ -53,20 +53,28 @@ class OnboardingScreen extends StatelessWidget {
               SizedBox(height: sizes.breaks * 4),
               BlocListener<ProfileCubit, ProfileState>(
                 listenWhen: (previous, current) {
-                  // Only listen when transitioning from no profile to having profile
-                  return previous.profile == null &&
+                  final startedOnboarding =
+                      !previous.isLoading &&
+                      current.isLoading &&
+                      current.profile == null;
+                  final completedOnboarding =
+                      previous.profile == null &&
                       current.profile != null &&
                       !current.isLoading;
+                  return startedOnboarding || completedOnboarding;
                 },
                 listener: (context, state) {
-                  if (state.profile != null &&
-                      !state.isLoading &&
-                      state.isInitiated) {
-                    context.go(Routes.home.name);
+                  final latest = context.read<ProfileCubit>().state;
+                  if (latest.isLoading ||
+                      (latest.profile != null &&
+                          !latest.isLoading &&
+                          latest.isInitiated)) {
+                    GoRouter.maybeOf(context)?.go(Routes.home.name);
                   }
                 },
                 child: BlocBuilder<ProfileCubit, ProfileState>(
                   builder: (context, state) {
+                    final draft = state.onboardingDraft;
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
@@ -104,15 +112,17 @@ class OnboardingScreen extends StatelessWidget {
                         ],
                         OnboardingForm(
                           sizes: sizes,
-                          initialUnits: Units.metric,
-                          initialThemeMode: ThemeType.system,
-                          initialName: "",
-                          initialHeight: 176,
+                          initialUnits: draft?.units ?? Units.metric,
+                          initialThemeMode: draft?.theme ?? ThemeType.system,
+                          initialName: draft?.name ?? "",
+                          initialHeight: draft?.height ?? 176,
                           // average height for a male in cm
-                          initialGender: Gender.male,
-                          initialBirthday: DateTime.now().subtract(
-                            Duration(days: (365.25 * 25).floor()),
-                          ),
+                          initialGender: draft?.gender ?? Gender.male,
+                          initialBirthday:
+                              draft?.birthday ??
+                              DateTime.now().subtract(
+                                Duration(days: (365.25 * 25).floor()),
+                              ),
                           submitButtonLabel: "Create & get started",
                           isLoading: state.isLoading,
                           onSubmit:
@@ -125,22 +135,22 @@ class OnboardingScreen extends StatelessWidget {
                                 required DateTime birthday,
                                 required bool preLoadWorkouts,
                                 required bool notificationsOn,
-                              }) async {
-                                await context
-                                    .read<ProfileCubit>()
-                                    .onboardProfile(
-                                      units: units,
-                                      theme: theme,
-                                      name: name,
-                                      height: height,
-                                      gender: gender,
-                                      birthday: birthday,
-                                      createWorkouts: preLoadWorkouts,
-                                      notificationsOn: notificationsOn,
-                                    );
+                              }) {
+                                context.read<ProfileCubit>().onboardProfile(
+                                  units: units,
+                                  theme: theme,
+                                  name: name,
+                                  height: height,
+                                  gender: gender,
+                                  birthday: birthday,
+                                  createWorkouts: preLoadWorkouts,
+                                  notificationsOn: notificationsOn,
+                                );
                               },
-                          initialPreLoadWorkouts: true,
-                          initialNotificationsOn: false,
+                          initialPreLoadWorkouts:
+                              draft?.createWorkouts ?? true,
+                          initialNotificationsOn:
+                              draft?.notificationsOn ?? false,
                         ),
                       ],
                     );
