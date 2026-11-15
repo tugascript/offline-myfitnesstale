@@ -18,6 +18,7 @@
 import 'package:intl/intl.dart';
 
 import '../../../data/utils/enums.dart';
+import '../../../data/utils/time_of_day_value.dart';
 
 sealed class Formatters {
   static String formatDate(Units unit, DateTime date) {
@@ -79,6 +80,10 @@ sealed class Formatters {
 
   static String formatTime(DateTime time) {
     return DateFormat("HH:mm").format(time);
+  }
+
+  static String formatTimeOfDay(TimeOfDayValue time) {
+    return time.toString();
   }
 
   static String formatDateTimeRange(

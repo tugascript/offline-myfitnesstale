@@ -18,7 +18,8 @@
 import 'package:equatable/equatable.dart';
 
 import '../../../models/sqlite/reminders_config_model.dart';
-import '../../../utils/dates.dart';
+import '../../../utils/time_of_day_value.dart';
+import '../../../utils/weekday_time_of_day_value.dart';
 import '../../core/dtos/dto.dart';
 
 final class RemindersConfigDto extends Equatable
@@ -26,11 +27,11 @@ final class RemindersConfigDto extends Equatable
   @override
   final int id;
   final bool workoutsOn;
-  final DateTime workoutsReminderTime;
+  final TimeOfDayValue workoutsReminderTime;
   final bool weightRecordsOn;
-  final DateTime weightRecordsReminderTime;
+  final WeekdayTimeOfDayValue weightRecordsReminderTime;
   final bool macroTrackingOn;
-  final DateTime macroTrackingReminderTime;
+  final TimeOfDayValue macroTrackingReminderTime;
 
   const RemindersConfigDto({
     required this.id,
@@ -46,15 +47,15 @@ final class RemindersConfigDto extends Equatable
     return RemindersConfigDto(
       id: model.id!,
       workoutsOn: model.workoutsOn,
-      workoutsReminderTime: DateUtilities.getDateFromUnix(
+      workoutsReminderTime: TimeOfDayValue.fromMinutesSinceMidnight(
         model.workoutsReminderTime,
       ),
       weightRecordsOn: model.weightRecordsOn,
-      weightRecordsReminderTime: DateUtilities.getDateFromUnix(
+      weightRecordsReminderTime: WeekdayTimeOfDayValue.fromPackedValue(
         model.weightRecordsReminderTime,
       ),
       macroTrackingOn: model.macroTrackingOn,
-      macroTrackingReminderTime: DateUtilities.getDateFromUnix(
+      macroTrackingReminderTime: TimeOfDayValue.fromMinutesSinceMidnight(
         model.macroTrackingReminderTime,
       ),
     );
@@ -64,11 +65,11 @@ final class RemindersConfigDto extends Equatable
   RemindersConfigDto copyWith({
     int? id,
     bool? workoutsOn,
-    DateTime? workoutsReminderTime,
+    TimeOfDayValue? workoutsReminderTime,
     bool? weightRecordsOn,
-    DateTime? weightRecordsReminderTime,
+    WeekdayTimeOfDayValue? weightRecordsReminderTime,
     bool? macroTrackingOn,
-    DateTime? macroTrackingReminderTime,
+    TimeOfDayValue? macroTrackingReminderTime,
   }) {
     return RemindersConfigDto(
       id: id ?? this.id,

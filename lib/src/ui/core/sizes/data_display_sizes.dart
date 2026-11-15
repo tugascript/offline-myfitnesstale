@@ -44,6 +44,8 @@ final class DataDisplaySizesList {
 
   double get svgMaxHeight => buttonSize * 5;
 
+  double get halfPadding => padding / 2;
+
   double get halfSpacing => spacing / 2;
 
   double get quarterSpacing => spacing / 4;
@@ -54,7 +56,9 @@ final class DataDisplaySizesList {
 
   double get iconSubtitleFontSize => subtitleFontSize * 1.15;
 
-  double get profileLabelWidth => subtitleFontSize * 9;
+  double get iconFontSize => fontSize * 1.15;
+
+  double get profileLabelWidth => subtitleFontSize * 9.5;
 
   const DataDisplaySizesList({
     required this.padding,

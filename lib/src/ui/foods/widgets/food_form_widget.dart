@@ -247,6 +247,8 @@ class _FoodFormWidgetState extends State<FoodFormWidget> {
           SizedBox(height: widget.sizes.spacing),
           AppDropdown<FoodCategory>(
             key: const ValueKey('food-form-category-dropdown'),
+            theme: widget.theme,
+            isLoading: widget.isLoading,
             value: _data.category,
             filled: true,
             emptyLabel: 'Category',

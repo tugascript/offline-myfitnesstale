@@ -31,6 +31,8 @@ import 'package:myfitnesstale/src/data/repositories/workouts/workout_record_repo
 import 'package:myfitnesstale/src/data/repositories/workouts/workout_repository.dart';
 import 'package:myfitnesstale/src/data/utils/enums.dart';
 import 'package:myfitnesstale/src/data/utils/json_data.dart';
+import 'package:myfitnesstale/src/data/utils/time_of_day_value.dart';
+import 'package:myfitnesstale/src/data/utils/weekday_time_of_day_value.dart';
 import 'package:myfitnesstale/src/routing/app_router.dart';
 import 'package:myfitnesstale/src/routing/routes.dart';
 import 'package:myfitnesstale/src/ui/core/screens/not_found_screen.dart';
@@ -154,11 +156,11 @@ class _ProfileCubit extends ProfileCubit {
         remindersConfig: RemindersConfigDto(
           id: 1,
           workoutsOn: false,
-          workoutsReminderTime: DateTime(2026, 1, 1, 8),
+          workoutsReminderTime: TimeOfDayValue.defaultReminder,
           weightRecordsOn: false,
-          weightRecordsReminderTime: DateTime(2026, 1, 1, 8),
+          weightRecordsReminderTime: WeekdayTimeOfDayValue.defaultReminder,
           macroTrackingOn: false,
-          macroTrackingReminderTime: DateTime(2026, 1, 1, 8),
+          macroTrackingReminderTime: TimeOfDayValue.defaultReminder,
         ),
         isLoading: false,
         isInitiated: true,
@@ -169,8 +171,11 @@ class _ProfileCubit extends ProfileCubit {
   @override
   Future<void> updateRemindersConfig({
     bool? workoutsOn,
+    TimeOfDayValue? workoutsReminderTime,
     bool? weightRecordsOn,
+    WeekdayTimeOfDayValue? weightRecordsReminderTime,
     bool? macroTrackingOn,
+    TimeOfDayValue? macroTrackingReminderTime,
   }) async {}
 }
 

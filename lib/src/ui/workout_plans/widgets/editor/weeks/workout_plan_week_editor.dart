@@ -77,6 +77,8 @@ class WorkoutPlanWeekEditor extends StatelessWidget {
                 SizedBox(width: sizes.spacing / 2),
                 Expanded(
                   child: AppDropdown<WorkoutPhase>(
+                    theme: theme,
+                    isLoading: isLoading,
                     filled: true,
                     value: week.phase,
                     emptyLabel: 'No Phase',

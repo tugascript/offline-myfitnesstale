@@ -201,6 +201,8 @@ class _BaseCommonSearchFormState extends State<BaseCommonSearchForm> {
               SizedBox(width: widget.spacing),
               Expanded(
                 child: AppDropdown<Difficulty>(
+                  theme: widget.theme,
+                  isLoading: widget.isLoading,
                   value: _data.difficulty,
                   emptyLabel: 'All Difficulties',
                   items: Difficulty.values,
@@ -225,6 +227,8 @@ class _BaseCommonSearchFormState extends State<BaseCommonSearchForm> {
                 SizedBox(width: widget.spacing),
                 Expanded(
                   child: AppDropdown<MuscleGroup>(
+                    theme: widget.theme,
+                    isLoading: widget.isLoading,
                     value: _data.muscleGroup,
                     emptyLabel: 'All Muscle Groups',
                     items: MuscleGroup.values,
@@ -263,6 +267,8 @@ class _BaseCommonSearchFormState extends State<BaseCommonSearchForm> {
               children: [
                 Expanded(
                   child: AppDropdown<int>(
+                    theme: widget.theme,
+                    isLoading: widget.isLoading,
                     value: _data.equipmentId,
                     emptyLabel: 'All Equipment',
                     items: widget.equipmentSelection!.keys.toList(),

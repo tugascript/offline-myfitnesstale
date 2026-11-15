@@ -169,6 +169,8 @@ class _DifficultyInput extends StatelessWidget {
         Expanded(
           flex: 3,
           child: AppDropdown<WorkoutSetExerciseDifficultyType>(
+            theme: theme,
+            isLoading: isLoading,
             value: difficulty?.type,
             emptyLabel: "None",
             items: WorkoutSetExerciseDifficultyType.values,

@@ -107,6 +107,8 @@ class _WorkoutPlanWorkoutRowEditorState
           ),
           SizedBox(height: widget.sizes.spacing / 2),
           AppDropdown<WorkoutTimeOfDay>(
+            theme: widget.theme,
+            isLoading: widget.isLoading,
             filled: true,
             value: widget.workout.timeOfDay,
             emptyLabel: 'Anytime',

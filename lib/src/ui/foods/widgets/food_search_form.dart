@@ -147,6 +147,8 @@ class _FoodSearchFormState extends State<FoodSearchForm> {
               Expanded(
                 child: AppDropdown<FoodCategory>(
                   key: const ValueKey('foods-filter-category'),
+                  theme: theme,
+                  isLoading: widget.isLoading,
                   value: _data.category,
                   emptyLabel: 'All Categories',
                   items: FoodCategory.values,
