@@ -48,7 +48,6 @@ enum Routes {
   workoutPlanEdit('/workout-plans/:id/edit'),
   activeWorkoutPlan('/workout-plans/:id/active'),
   workoutPlanDetail('/workout-plans/:id'),
-  reminderPreferences('/settings/reminders'),
   strengthGoals('/strength-goals'),
   foods('/foods'),
   foodCreation('/foods/create'),

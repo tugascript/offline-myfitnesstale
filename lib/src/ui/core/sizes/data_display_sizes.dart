@@ -48,7 +48,13 @@ final class DataDisplaySizesList {
 
   double get quarterSpacing => spacing / 4;
 
+  double get betweenSpacing => spacing * 1.25;
+
   double get mediumSmallFontSize => smallFontSize * 1.2;
+
+  double get iconSubtitleFontSize => subtitleFontSize * 1.15;
+
+  double get profileLabelWidth => subtitleFontSize * 9;
 
   const DataDisplaySizesList({
     required this.padding,

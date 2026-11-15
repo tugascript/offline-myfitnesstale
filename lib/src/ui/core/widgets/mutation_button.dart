@@ -18,6 +18,7 @@
 import 'package:material_ui/material_ui.dart';
 
 import '../sizes/data_display_sizes.dart';
+import '../themes/colors.dart';
 
 class MutationButton extends StatelessWidget {
   final ThemeData theme;
@@ -43,11 +44,10 @@ class MutationButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final lightGrey = theme.brightness == Brightness.light
-        ? Colors.grey[400]
-        : Colors.grey[600];
     final baseColor = (color ?? theme.colorScheme.primary);
-    final btnColor = isLoading ? lightGrey! : baseColor;
+    final btnColor = isLoading
+        ? ThemedColors.themedGrey.fromBrightness(theme.brightness)
+        : baseColor;
     return OutlinedButton.icon(
       onPressed: isLoading ? null : onPressed,
       icon: Icon(icon, size: sizes.fontSize, fontWeight: FontWeight.w600),

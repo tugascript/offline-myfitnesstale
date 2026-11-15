@@ -20,6 +20,7 @@ import 'package:material_ui/material_ui.dart';
 import '../../../../data/repositories/profile/dtos/reminders_config_dto.dart';
 import '../../../../data/repositories/profile/dtos/system_dto.dart';
 import '../../../core/sizes/data_display_sizes.dart';
+import '../../../core/themes/colors.dart';
 import './app_settings_config.dart';
 import './reminders_settings_config.dart';
 
@@ -43,47 +44,107 @@ class SettingsConfig extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDarkTheme = theme.brightness == Brightness.dark;
-    return Card(
+    final titleColor = isDarkTheme
+        ? ThemedColors.themedGrey.light
+        : ThemedColors.themedGrey.dark;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          "Settings",
+          style: TextStyle(
+            fontSize: sizes.titleFontSize,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        SizedBox(height: sizes.spacing),
+        Card(
+          child: Padding(
+            padding: EdgeInsets.all(sizes.padding),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                AppSettingsConfig(
+                  isLoading: isLoading,
+                  system: system,
+                  sizes: sizes,
+                  theme: theme,
+                  isDarkTheme: isDarkTheme,
+                ),
+                SizedBox(height: sizes.spacing),
+                RemindersSettingsConfig(
+                  theme: theme,
+                  isDarkTheme: isDarkTheme,
+                  isLoading: isLoading,
+                  sizes: sizes,
+                  profileId: profileId,
+                  remindersConfig: remindersConfig,
+                ),
+                SizedBox(height: sizes.spacing),
+                _DataBackupRow(
+                  sizes: sizes,
+                  titleColor: titleColor,
+                  onTap: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text("Data management coming soon!"),
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _DataBackupRow extends StatelessWidget {
+  final DataDisplaySizesList sizes;
+  final Color titleColor;
+  final VoidCallback onTap;
+
+  const _DataBackupRow({
+    required this.sizes,
+    required this.titleColor,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(sizes.spacing),
       child: Padding(
-        padding: EdgeInsets.all(sizes.padding),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        padding: EdgeInsets.symmetric(vertical: sizes.padding),
+        child: Row(
           children: [
-            Text(
-              "Settings",
-              style: TextStyle(
-                fontSize: sizes.titleFontSize,
-                fontWeight: FontWeight.bold,
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "Data & Backup",
+                    style: TextStyle(
+                      fontSize: sizes.subtitleFontSize,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  SizedBox(height: sizes.quarterSpacing),
+                  Text(
+                    "Export/import your data",
+                    style: TextStyle(
+                      fontSize: sizes.smallFontSize,
+                      color: titleColor,
+                    ),
+                  ),
+                ],
               ),
             ),
-            SizedBox(height: sizes.padding),
-            AppSettingsConfig(
-              isLoading: isLoading,
-              system: system,
-              sizes: sizes,
-              theme: theme,
-              isDarkTheme: isDarkTheme,
-            ),
-            SizedBox(height: sizes.spacing),
-            RemindersSettingsConfig(
-              theme: theme,
-              isDarkTheme: isDarkTheme,
-              isLoading: isLoading,
-              sizes: sizes,
-              profileId: profileId,
-              remindersConfig: remindersConfig,
-            ),
-            ListTile(
-              leading: const Icon(Icons.backup),
-              title: const Text("Data & Backup"),
-              subtitle: const Text("Export/import your data"),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("Data management coming soon!")),
-                );
-              },
-            ),
+            Icon(Icons.chevron_right, color: titleColor),
           ],
         ),
       ),

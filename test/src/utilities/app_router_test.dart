@@ -15,40 +15,38 @@
 // You should have received a copy of the GNU General Public License
 // along with My Fitness Tale.  If not, see <https://www.gnu.org/licenses/>.
 
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
-
-import 'package:myfitnesstale/src/utils/nullable.dart';
-import 'package:myfitnesstale/src/ui/home/view_models/profile_cubit.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:myfitnesstale/src/data/repositories/exercises/exercise_record_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/exercises/exercise_repository.dart';
-import 'package:myfitnesstale/src/ui/exercises/view_models/exercise_cubit.dart';
-import 'package:myfitnesstale/src/ui/exercises/view_models/exercise_record_cubit.dart';
-import 'package:myfitnesstale/src/ui/home/view_models/states/profile_state.dart';
-import 'package:myfitnesstale/src/ui/workouts/view_models/workout_cubit.dart';
-import 'package:myfitnesstale/src/ui/workout_plans/view_models/workout_plan_record_cubit.dart';
-import 'package:myfitnesstale/src/ui/workout_plans/view_models/workout_plan_cubit.dart';
-import 'package:myfitnesstale/src/ui/workouts/view_models/workout_record_cubit.dart';
-import 'package:myfitnesstale/src/data/utils/json_data.dart';
-import 'package:myfitnesstale/src/data/utils/enums.dart';
-import 'package:myfitnesstale/src/routing/app_router.dart';
-import 'package:myfitnesstale/src/routing/routes.dart';
 import 'package:myfitnesstale/src/data/repositories/profile/dtos/profile_dto.dart';
 import 'package:myfitnesstale/src/data/repositories/profile/dtos/reminders_config_dto.dart';
 import 'package:myfitnesstale/src/data/repositories/profile/dtos/system_dto.dart';
+import 'package:myfitnesstale/src/data/repositories/profile/profile_repository.dart';
+import 'package:myfitnesstale/src/data/repositories/workout_plans/workout_plan_record_repository.dart';
+import 'package:myfitnesstale/src/data/repositories/workout_plans/workout_plan_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/workouts/dtos/workout_dto.dart';
+import 'package:myfitnesstale/src/data/repositories/workouts/workout_record_repository.dart';
+import 'package:myfitnesstale/src/data/repositories/workouts/workout_repository.dart';
+import 'package:myfitnesstale/src/data/utils/enums.dart';
+import 'package:myfitnesstale/src/data/utils/json_data.dart';
+import 'package:myfitnesstale/src/routing/app_router.dart';
+import 'package:myfitnesstale/src/routing/routes.dart';
+import 'package:myfitnesstale/src/ui/core/screens/not_found_screen.dart';
 import 'package:myfitnesstale/src/ui/exercises/screens/exercise_progress_screen.dart';
 import 'package:myfitnesstale/src/ui/exercises/screens/exercise_records_screen.dart';
-import 'package:myfitnesstale/src/ui/core/screens/not_found_screen.dart';
-import 'package:myfitnesstale/src/ui/home/screens/profile/reminder_preferences_screen.dart';
+import 'package:myfitnesstale/src/ui/exercises/view_models/exercise_cubit.dart';
+import 'package:myfitnesstale/src/ui/exercises/view_models/exercise_record_cubit.dart';
+import 'package:myfitnesstale/src/ui/home/view_models/profile_cubit.dart';
+import 'package:myfitnesstale/src/ui/home/view_models/states/profile_state.dart';
 import 'package:myfitnesstale/src/ui/workout_plans/screens/workout_plan_history_screen.dart';
+import 'package:myfitnesstale/src/ui/workout_plans/view_models/workout_plan_cubit.dart';
+import 'package:myfitnesstale/src/ui/workout_plans/view_models/workout_plan_record_cubit.dart';
 import 'package:myfitnesstale/src/ui/workouts/screens/workout_history_screen.dart';
-import 'package:myfitnesstale/src/data/repositories/workouts/workout_repository.dart';
-import 'package:myfitnesstale/src/data/repositories/workouts/workout_record_repository.dart';
-import 'package:myfitnesstale/src/data/repositories/workout_plans/workout_plan_repository.dart';
-import 'package:myfitnesstale/src/data/repositories/workout_plans/workout_plan_record_repository.dart';
-import 'package:myfitnesstale/src/data/repositories/profile/profile_repository.dart';
+import 'package:myfitnesstale/src/ui/workouts/view_models/workout_cubit.dart';
+import 'package:myfitnesstale/src/ui/workouts/view_models/workout_record_cubit.dart';
+import 'package:myfitnesstale/src/utils/nullable.dart';
 
 class _ExerciseCubit extends ExerciseCubit {
   _ExerciseCubit() : super(exerciseRepository: ExerciseRepository.create());
@@ -312,12 +310,6 @@ void main() {
 
     await pumpRoute(tester, '/workouts/history?id=12&version=not-a-number');
     expect(find.byType(NotFoundScreen), findsOneWidget);
-  });
-
-  testWidgets('reminder preferences resolve', (tester) async {
-    await pumpRoute(tester, Routes.reminderPreferences.name);
-
-    expect(find.byType(ReminderPreferencesScreen), findsOneWidget);
   });
 
   testWidgets('exercise records resolve with a parsed ID', (tester) async {
