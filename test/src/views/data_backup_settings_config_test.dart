@@ -119,21 +119,16 @@ void main() {
         find.byKey(const ValueKey('profile-backup-settings')),
         findsOneWidget,
       );
-      expect(
-        find.byKey(const ValueKey('profile-data-export')),
-        findsOneWidget,
-      );
+      expect(find.byKey(const ValueKey('profile-data-export')), findsOneWidget);
       expect(find.text(' Backups'), findsOneWidget);
+      expect(find.text('(Coming Soon)'), findsOneWidget);
       expect(find.text(' Data Export'), findsOneWidget);
 
       expect(find.text('Backups'), findsOneWidget);
       expect(find.text('Provider'), findsOneWidget);
       expect(find.text('Schedule'), findsNothing);
       expect(find.text('Encrypted'), findsNothing);
-      expect(
-        find.byKey(const ValueKey('backup-backups-on')),
-        findsOneWidget,
-      );
+      expect(find.byKey(const ValueKey('backup-backups-on')), findsOneWidget);
       expect(find.byKey(const ValueKey('backup-schedule')), findsOneWidget);
       expect(find.byKey(const ValueKey('backup-provider')), findsOneWidget);
       expect(find.byKey(const ValueKey('backup-encrypted')), findsOneWidget);
@@ -170,15 +165,13 @@ void main() {
         find.byKey(const ValueKey('data-export-snapshot')),
         findsOneWidget,
       );
-      expect(find.text('Export Data Copy'), findsOneWidget);
-      expect(find.text('Save Full Backup'), findsOneWidget);
+      expect(find.text('Export data'), findsOneWidget);
+      expect(find.text('Database snapshot'), findsOneWidget);
 
       final remindersTop = tester
           .getTopLeft(find.byType(RemindersSettingsConfig))
           .dy;
-      final backupTop = tester
-          .getTopLeft(find.byType(BackupSettingsConfig))
-          .dy;
+      final backupTop = tester.getTopLeft(find.byType(BackupSettingsConfig)).dy;
       final exportTop = tester.getTopLeft(find.byType(DataExport)).dy;
       expect(backupTop, greaterThan(remindersTop));
       expect(exportTop, greaterThan(backupTop));
@@ -194,20 +187,21 @@ void main() {
     },
   );
 
-  testWidgets('defaults provider to iCloud on iOS and Google Drive on Android', (
-    tester,
-  ) async {
-    debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
-    addTearDown(() => debugDefaultTargetPlatformOverride = null);
+  testWidgets(
+    'defaults provider to iCloud on iOS and Google Drive on Android',
+    (tester) async {
+      debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+      addTearDown(() => debugDefaultTargetPlatformOverride = null);
 
-    final cubit = _TestProfileCubit();
-    addTearDown(cubit.close);
+      final cubit = _TestProfileCubit();
+      addTearDown(cubit.close);
 
-    await tester.pumpWidget(buildSubject(cubit));
-    await tester.pumpAndSettle();
+      await tester.pumpWidget(buildSubject(cubit));
+      await tester.pumpAndSettle();
 
-    expect(find.text('iCloud'), findsOneWidget);
-  });
+      expect(find.text('iCloud'), findsOneWidget);
+    },
+  );
 
   testWidgets(
     'disables schedule, provider, and encrypted when backups are off while export buttons remain clickable',
@@ -248,38 +242,8 @@ void main() {
     },
   );
 
-  testWidgets('allows changing schedule and provider when backups are on', (
-    tester,
-  ) async {
-    debugDefaultTargetPlatformOverride = TargetPlatform.android;
-    addTearDown(() => debugDefaultTargetPlatformOverride = null);
-
-    final cubit = _TestProfileCubit();
-    addTearDown(cubit.close);
-
-    await tester.pumpWidget(buildSubject(cubit));
-    await tester.pumpAndSettle();
-
-    await tester.tap(find.byKey(const ValueKey('backup-backups-on')));
-    await tester.pumpAndSettle();
-
-    await tester.ensureVisible(find.byKey(const ValueKey('backup-schedule')));
-    await tester.tap(find.byKey(const ValueKey('backup-schedule')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Weekly').last);
-    await tester.pumpAndSettle();
-    expect(find.text('Weekly'), findsOneWidget);
-
-    await tester.ensureVisible(find.byKey(const ValueKey('backup-provider')));
-    await tester.tap(find.byKey(const ValueKey('backup-provider')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Local File').last);
-    await tester.pumpAndSettle();
-    expect(find.text('Local File'), findsOneWidget);
-  });
-
   testWidgets(
-    'encrypted switch opens passkey modal, validates input, and updates switch state',
+    'keeps backup controls disabled when tapped until backups are implemented',
     (tester) async {
       debugDefaultTargetPlatformOverride = TargetPlatform.android;
       addTearDown(() => debugDefaultTargetPlatformOverride = null);
@@ -290,27 +254,83 @@ void main() {
       await tester.pumpWidget(buildSubject(cubit));
       await tester.pumpAndSettle();
 
+      final backupsSwitch = tester.widget<SharpSwitch>(
+        find.byKey(const ValueKey('backup-backups-on')),
+      );
+      expect(backupsSwitch.enabled, isFalse);
+      expect(backupsSwitch.value, isFalse);
+
       await tester.tap(find.byKey(const ValueKey('backup-backups-on')));
       await tester.pumpAndSettle();
 
-      // Open modal and cancel -> switch remains off
-      await tester.ensureVisible(find.byKey(const ValueKey('backup-encrypted')));
+      expect(
+        tester
+            .widget<SharpSwitch>(
+              find.byKey(const ValueKey('backup-backups-on')),
+            )
+            .value,
+        isFalse,
+      );
+
+      await tester.tap(
+        find.byKey(const ValueKey('backup-schedule')),
+        warnIfMissed: false,
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Weekly'), findsNothing);
+
+      await tester.tap(
+        find.byKey(const ValueKey('backup-provider')),
+        warnIfMissed: false,
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Local File'), findsNothing);
+
       await tester.tap(find.byKey(const ValueKey('backup-encrypted')));
+      await tester.pumpAndSettle();
+      expect(find.byType(BackupPasskeyModal), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'BackupPasskeyModal validates input and returns submitted passkey',
+    (tester) async {
+      final sizes = DataDisplaySizes.getDataDisplaySizes(ScreenSize.md);
+      String? result;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Builder(
+            builder: (context) => Scaffold(
+              body: ElevatedButton(
+                onPressed: () async {
+                  result = await showDialog<String>(
+                    context: context,
+                    builder: (_) => BackupPasskeyModal(
+                      theme: Theme.of(context),
+                      sizes: sizes,
+                    ),
+                  );
+                },
+                child: const Text('Open'),
+              ),
+            ),
+          ),
+        ),
+      );
+
+      // Open modal and cancel -> returns null
+      await tester.tap(find.text('Open'));
       await tester.pumpAndSettle();
       expect(find.byType(BackupPasskeyModal), findsOneWidget);
 
       await tester.tap(find.text('CANCEL'));
       await tester.pumpAndSettle();
       expect(find.byType(BackupPasskeyModal), findsNothing);
-      expect(
-        tester
-            .widget<SharpSwitch>(find.byKey(const ValueKey('backup-encrypted')))
-            .value,
-        isFalse,
-      );
+      expect(result, isNull);
 
       // Re-open modal and test validation + saving valid passkey
-      await tester.tap(find.byKey(const ValueKey('backup-encrypted')));
+      await tester.tap(find.text('Open'));
       await tester.pumpAndSettle();
       expect(find.byType(BackupPasskeyModal), findsOneWidget);
 
@@ -343,25 +363,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(BackupPasskeyModal), findsNothing);
-      expect(
-        tester
-            .widget<SharpSwitch>(find.byKey(const ValueKey('backup-encrypted')))
-            .value,
-        isTrue,
-      );
-      expect(find.byIcon(Icons.lock), findsOneWidget);
-
-      // Tapping again turns encryption off without opening the modal
-      await tester.tap(find.byKey(const ValueKey('backup-encrypted')));
-      await tester.pumpAndSettle();
-      expect(find.byType(BackupPasskeyModal), findsNothing);
-      expect(
-        tester
-            .widget<SharpSwitch>(find.byKey(const ValueKey('backup-encrypted')))
-            .value,
-        isFalse,
-      );
-      expect(find.byIcon(Icons.lock_open), findsOneWidget);
+      expect(result, equals('my-secure-passkey'));
     },
   );
 
