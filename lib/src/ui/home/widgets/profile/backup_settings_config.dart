@@ -104,6 +104,18 @@ class _BackupSettingsConfigState extends State<BackupSettingsConfig> {
                 fontWeight: FontWeight.bold,
               ),
             ),
+            SizedBox(width: widget.sizes.halfSpacing),
+            Flexible(
+              child: Text(
+                "(Coming Soon)",
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: widget.sizes.smallFontSize,
+                  color: titleColor,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
           ],
         ),
         SizedBox(height: widget.sizes.halfSpacing),
@@ -126,7 +138,8 @@ class _BackupSettingsConfigState extends State<BackupSettingsConfig> {
             SharpSwitch(
               key: const ValueKey('backup-backups-on'),
               value: _backupsOn,
-              enabled: !widget.isLoading,
+              // Disabled until backup execution and persistence are implemented.
+              enabled: false,
               onChanged: (value) {
                 if (!widget.isLoading) {
                   setState(() {
@@ -153,7 +166,7 @@ class _BackupSettingsConfigState extends State<BackupSettingsConfig> {
                   fontSize: widget.sizes.fontSize,
                   padding: widget.sizes.halfSpacing,
                   isLoading: widget.isLoading,
-                  enabled: _backupsOn,
+                  enabled: false,
                   prefixIcon: Icon(
                     Icons.schedule,
                     size: widget.sizes.iconFontSize,
@@ -203,7 +216,7 @@ class _BackupSettingsConfigState extends State<BackupSettingsConfig> {
                   fontSize: widget.sizes.fontSize,
                   padding: widget.sizes.halfSpacing,
                   isLoading: widget.isLoading,
-                  enabled: _backupsOn,
+                  enabled: false,
                   prefixIcon: Icon(
                     Icons.cloud_outlined,
                     size: widget.sizes.iconFontSize,
@@ -221,24 +234,20 @@ class _BackupSettingsConfigState extends State<BackupSettingsConfig> {
             ),
             SizedBox(width: widget.sizes.halfSpacing),
             Tooltip(
-              message: "Encrypt backups",
+              message: "Encrypt backups (coming soon)",
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(
                     _encrypted ? Icons.lock : Icons.lock_open,
                     size: widget.sizes.iconFontSize,
-                    color: _backupsOn
-                        ? (_encrypted
-                              ? widget.theme.colorScheme.primary
-                              : titleColor)
-                        : widget.theme.disabledColor,
+                    color: widget.theme.disabledColor,
                   ),
                   SizedBox(width: widget.sizes.quarterSpacing),
                   SharpSwitch(
                     key: const ValueKey('backup-encrypted'),
                     value: _encrypted,
-                    enabled: !widget.isLoading && _backupsOn,
+                    enabled: false,
                     onChanged: _onEncryptedChanged,
                     thumbSize: widget.sizes.subtitleFontSize,
                     padding: EdgeInsets.all(widget.sizes.halfSpacing),
