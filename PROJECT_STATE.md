@@ -1,8 +1,9 @@
 # My Fitness Tale: Current Project State
 
-Reviewed on 10 November 2026 from branch
-`tugascript/refactor-code-architecture` at commit `db291c6`, including the
-current working tree. This file records what the code does now. See
+Entity model and file structure reviewed on 17 November 2026 from branch
+`tugascript/onboarding-home-ui-update` at commit `d89d1e1`, including the
+current working tree. Test results below retain their original dates.
+This file records what the code does now. See
 [README.md](README.md) for the product overview and [project.md](project.md)
 for planned work.
 
@@ -22,23 +23,24 @@ reminder preferences do not schedule notifications.
 
 Repository facts at this review:
 
-- 414 Dart source files under `lib/`;
-- 41 SQLite tables in the create schema, including strength goals;
+- 486 Dart source files under `lib/`;
+- 45 SQLite tables in the create schema, including strength goals and the three backup tables;
 - database schema version 1;
 - 89 seeded exercises and 25 seeded equipment entries;
 - 16 optional starter workouts and one 16-week starter plan;
-- 49 host test files and six integration-test Dart files;
+- 71 host test files and six device journey files (plus the shared integration harness);
 - no repository CI configuration;
 - no backend implementation in the current working tree.
 
-Backup foundations were updated on 16 November 2026 after commit `38ab351`;
-the historical inventory above predates these additions. The create schema now
-registers 45 tables, including `backups`, `backup_configs`, and
-`backup_passkeys` with their indexes. Backup configuration/history and bcrypt
+Backup foundations were updated on 16 November 2026 after commit `38ab351`.
+The create schema registers `backups`, `backup_configs`, and `backup_passkeys`
+with their indexes. Backup configuration/history and bcrypt
 passkey hashes with PBKDF2 salts can be persisted; crypto helpers derive AES
 keys and optionally cache them in platform secure storage. There is still no
 backup repository, export/import format, restore workflow, scheduling engine,
-provider integration, or backup UI.
+or provider integration. Profile backup settings and data-export widgets exist,
+but settings remain widget-local and export actions show coming-soon messages.
+There is no backup repository/Cubit wiring or persisted configuration from the UI.
 
 Android backup rules exclude only the secure-storage plugin's encrypted
 preferences, wrapped keys, and configuration files from legacy backup and
@@ -100,9 +102,24 @@ mechanism; after restore they must be derived again from the passkey and salt.
 - Preserves the form after failure and supports a clean retry.
 - Saves profile, theme, units, and both reminder switches.
 
+Enabling any reminder (workouts, macro tracking, or weight records) first requests
+notification permission through the existing `ProfileCubit` permission flow. Only a
+granted result saves the enabled preference; denial leaves it unchanged and shows
+settings guidance. Disabling reminders does not request permission. Reminder
+controls are disabled during the permission request/update, and responses after
+widget disposal are ignored.
+
 Reminder switches represent saved preferences only. Notification scheduling,
 delivery, cancellation, permission recovery, and time-zone behavior do not
 exist.
+
+Notification permission requests during onboarding flow through
+`ProfileCubit -> OnboardingRepository -> PermissionsService` in
+`lib/src/data/services/permissions/permissions_service.dart`. The service wraps
+`permission_handler`; the repository maps platform failures to typed results.
+The form handles granted/denied feedback through the Cubit and ignores responses
+after disposal. Permission requests run separately from the atomic setup
+transaction and do not schedule reminders.
 
 ### Equipment, exercises, and progress
 
@@ -338,10 +355,36 @@ SQLite Model -> DAO -> Repository -> Cubit/ViewModel -> Screen/Widget
 
 Feature code is split under `lib/src/data` (models, DAOs, repositories) and
 `lib/src/ui/<feature>` (`screens/`, `view_models/`, `widgets/`), with shared UI
-in `lib/src/ui/core` and helpers in `lib/src/utils`. SQLite table models live in
+in `lib/src/ui/core`. Profile and onboarding UI live under `ui/home/`, while
+their repositories live under `data/repositories/profile/` and `onboarding/`.
+SQLite table models live in
 `lib/src/data/models/sqlite`; seed/onboarding constants live in
 `lib/src/data/models/constants`. `DatabaseHelper` lives in
 `lib/src/data/services/sqlite`.
+
+Additional source locations:
+
+- `data/repositories/core/`: repository contracts, typed pagination and chunked-query
+  helpers, shared DTOs (including media), and the input contract;
+- `data/repositories/<feature>/dtos/` and `inputs/`: immutable domain results and
+  feature inputs, with shared create/update inputs for PUT-style mutations;
+- `data/repositories/workout_plans/utils/`: `WorkoutPlanScheduleUtils` for rest-day
+  distribution, scheduled dates, and execution progress;
+- `data/services/backup/backup_crypto.dart`: bcrypt passkey verification, PBKDF2
+  key derivation, and optional derived-key caching;
+- `data/services/secure_storage/secure_storage_service.dart`: platform secure-storage wrapper;
+- `data/services/permissions/permissions_service.dart`: platform notification permission requests;
+- `data/utils/`: enums, date/time values, SQL filters, JSON data, and strength calculations;
+- `ui/core/utils/`: display converters, formatters, and progress-status presentation;
+- `ui/core/sizes/`: `screen_size.dart`, `data_display_sizes.dart`, and `app_bar_sizes.dart`;
+- `ui/core/widgets/`: shared components, including `layout/`, `editors/`, and `modal_search/`;
+- `ui/<feature>/view_models/states/` and `ui/core/view_models/states/`: feature and shared state;
+- `utils/`: `Result`, `Nullable`, and service errors.
+
+Host tests remain grouped under `test/src/{cubits,models,services,utilities,views,widgets}`;
+these legacy test folder names do not mirror the current production-layer names.
+`integration_test/` contains mobile journeys, `support/device_test_harness.dart`, and
+`BACKUP_STORAGE.md` for the native key-cache and relaunch procedure.
 
 - Flutter Material widgets provide the UI, including responsive components.
 - `go_router` provides a flat route table and parameter validation.
@@ -371,13 +414,38 @@ instances. Production uses `AppRouter.router`. Used fonts are bundled under
 ### Data conventions
 
 - IDs are integer primary keys.
-- Dates are generally Unix seconds and become `DateTime` values in DTOs.
+- Timestamps are integer UTC Unix seconds and become `DateTime` values in DTOs.
+  Daily nutrition dates use numeric local `YYYYMMDD` keys instead.
 - Weight is stored as integer grams and converted for display.
 - Workouts and plans are versioned; history keeps its originating version.
 - SQLite foreign keys are enabled in `onConfigure`.
 - `ProgressStatus` includes in-progress, completed, skipped, and abandoned.
-- Some `copyWith` methods use `value ?? oldValue`; nullable fields cannot be
-  deliberately cleared unless the model provides explicit handling.
+- Models and DTOs are immutable `Equatable` values. SQLite models expose `Columns`
+  enums, `tableCreate`, `toMap()`, and `fromMap()`. Nullable `copyWith` fields use
+  `Nullable` wrappers to distinguish omission from explicit clearing.
+
+### Backup entities
+
+- `BackupConfig` (`backup_configs`) stores provider, daily/weekly/monthly schedule,
+  `backups_on`, and `encrypted` preferences. It has no profile foreign key.
+- `BackupPasskeys` (`backup_passkeys`) stores a bcrypt hash in `passkey`, a base64
+  PBKDF2 salt, and optional `last_used_at`; plaintext passkeys are not stored there.
+  The hash has a unique index.
+- `Backup` (`backups`) stores provider, path, start/optional finish timestamps,
+  encryption flag, and schema version. Nullable `backup_config_id` and
+  `backup_passkey_id` references use `ON DELETE SET NULL`, preserving history
+  when configuration or passkey rows are deleted. Provider, start time, and both
+  references are indexed.
+- `BackupProvider` and `BackupSchedule` live in `data/utils/enums.dart`. Their values
+  describe future configuration options; no storage-provider integration or
+  scheduling engine exists.
+- Profile UI placeholders live in `ui/home/widgets/profile/backup_settings_config.dart`,
+  `backup_passkey_modal.dart`, and `data_export.dart`. They do not persist preferences
+  or passkeys, derive keys, or produce backup/export files.
+
+The [README entity diagram](README.md#local-data-model) summarizes all 45 tables.
+It shows domain relationships; for example, `strength_goals.exercise_id` is indexed
+but has no declared SQLite foreign-key constraint.
 
 ### Onboarding invariants
 
@@ -422,7 +490,7 @@ close and reopen it. Teardown removes fixture data and restores the production
 database configuration. The deletion API throws if production `app.db` is
 selected.
 
-Five integration files contain seven journeys covering:
+Five fitness integration files contain seven journeys covering:
 
 - onboarding with starter workouts disabled and enabled;
 - all primary navigation, dashboard, and Home quick-action destinations;
@@ -431,6 +499,9 @@ Five integration files contain seven journeys covering:
 - equipment, exercises, and exercise records;
 - workout creation/editing, live completion/cancellation/resume, and history;
 - plan creation/editing/start/progress/restart and completed history.
+
+A sixth journey file, `backup_storage_journey_test.dart`, covers native backup
+key storage separately; its recorded results appear below.
 
 Host tests also cover narrow phone layouts, 200% text scaling, onboarding
 rollback/idempotency, route precedence, workout mutation rollback, plan
@@ -563,6 +634,33 @@ PR #36 review follow-up:
   behavior, and iOS native storage remain unverified. The separate launch and
   restore phases are documented in
   [integration_test/BACKUP_STORAGE.md](integration_test/BACKUP_STORAGE.md).
+
+### Onboarding permission service verification (17 November 2026)
+
+- Notification requests now pass through `PermissionsService`, `OnboardingRepository`,
+  and `ProfileCubit`; `OnboardingForm` no longer imports `permission_handler`.
+- All 23 focused permission/onboarding tests passed, including eight new tests for
+  granted/denied/restricted/permanently denied results, platform failure and retry,
+  switch behavior, and disposal during a pending request. Existing onboarding
+  rollback/idempotency tests remain passing.
+- `flutter pub get`, `dart analyze`, changed-file formatting, and `git diff --check`
+  passed. Full host suite: 572 passed, one existing migration test skipped, four failed.
+- The four failures also reproduce with the original source in an isolated copy:
+  three onboarding UI tests search for the previous mixed-case submit label, and
+  one backup settings test searches for previous export button labels.
+- The repository-wide formatting check reports 14 pre-existing files needing
+  formatting; those files were left unchanged. No device journey was run.
+
+### Reminder permission gating verification (17 November 2026)
+
+- All 19 focused reminder/onboarding permission tests passed. New coverage checks
+  denial for each reminder, disabling without a permission request, and disabled
+  controls/disposal during a pending request.
+- Dependency resolution, static analysis, changed-file formatting, and whitespace
+  checks passed. The full host suite passed 577 tests with one existing migration
+  test skipped and the same four pre-existing UI label failures documented above.
+- The repository-wide formatting check reports 13 other files needing formatting.
+  No device journey was run; reminder scheduling remains unimplemented.
 
 ## Known gaps and release blockers
 

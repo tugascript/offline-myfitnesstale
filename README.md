@@ -76,6 +76,7 @@ No cloud account or backend is needed for the implemented mobile flows.
 Run the standard checks before submitting a change:
 
 ```sh
+flutter pub get
 dart format --output=none --set-exit-if-changed lib test integration_test
 dart analyze
 flutter test
@@ -101,20 +102,25 @@ a strict MVVM flow:
 SQLite Model -> DAO -> Repository -> Cubit/ViewModel -> Screen/Widget
 ```
 
-- **Models** (`lib/src/data/models/sqlite`) define SQLite tables and map database rows;
-  seed/onboarding constants live in `lib/src/data/models/constants`.
+- **Models** (`lib/src/data/models/sqlite`) define SQLite tables with `Columns` enums and map rows
+  through `toMap()`/`fromMap()`. They are immutable `Equatable` data containers; nullable `copyWith`
+  fields use `Nullable` to distinguish keeping a value from clearing it. Seed/onboarding constants
+  live in `lib/src/data/models/constants`.
 - **DAOs** (`lib/src/data/services/sqlite`) handle single-table CRUD against SQLite.
 - **Repositories** (`lib/src/data/repositories/<feature>`) own domain rules, multi-table transactions, DTOs, and
-  `Result`/`ServiceError` returns.
+  `Result`/`ServiceError` returns. Shared repository contracts, pagination/chunked-query helpers,
+  media DTOs, and input contracts live in `repositories/core/`.
 - **Cubits** live under `lib/src/ui/<feature>/view_models` and expose feature state to the UI.
 - **Screens and widgets** under `lib/src/ui/<feature>` render routed screens (`*_screen.dart`) and reusable UI; shared
   pieces live in `lib/src/ui/core`.
+- **Services** include SQLite persistence, backup crypto helpers (`data/services/backup`), and
+  platform key storage (`data/services/secure_storage`). Backup services are foundations only.
 - **GoRouter** (`lib/src/routing`) connects the four main areas: Home, Plans, Tracker, and Profile.
 
 ```text
 .
 ├── android/                     # Android host project
-├── assets/                      # Fonts, icons, and seed JSON
+├── assets/                      # Bundled fonts, icons, muscle SVGs
 ├── integration_test/            # Android/iOS journey tests
 ├── ios/                         # iOS host project
 ├── lib/
@@ -126,34 +132,65 @@ SQLite Model -> DAO -> Repository -> Cubit/ViewModel -> Screen/Widget
 │       │   │   ├── constants/   # Seed/onboarding constants
 │       │   │   └── sqlite/      # SQLite table models
 │       │   ├── repositories/    # Feature repositories, DTOs, inputs
-│       │   └── services/        # SQLite DAOs and DatabaseHelper
+│       │   ├── services/
+│       │   │   ├── sqlite/      # Dao, JoinDao, DatabaseHelper
+│       │   │   ├── backup/      # BackupCrypto key/hash helpers
+│       │   │   ├── permissions/ # Platform permission requests
+│       │   │   └── secure_storage/ # Platform key storage wrapper
+│       │   └── utils/          # Enums, dates, SQL filters, strength helpers
 │       ├── routing/             # GoRouter configuration
 │       ├── ui/
-│       │   ├── core/            # Shared screens, widgets, sizes, themes
+│       │   ├── core/            # Shared screens, widgets, sizes, themes, UI utils
 │       │   └── <feature>/       # screens/, view_models/, widgets/
-│       └── utils/               # Result, Nullable, and shared helpers
+│       └── utils/               # Result, Nullable, and service errors
 ├── test/                        # Unit and widget tests
 ├── PROJECT_STATE.md             # What is implemented now
 └── project.md                   # What should be built next
 ```
 
 Feature folders under `ui/` and `data/repositories/` are grouped around equipment, exercises, profile/onboarding,
-weight, workouts, workout plans, foods, recipes, meal plans, and macros.
+weight, workouts, workout plans, foods, recipes, meal plans, and macros. Repository folders also
+include `onboarding/`, `profile/`, and `core/`; profile/onboarding UI lives under `ui/home/`.
+Feature UI state lives in `view_models/states/`, shared state in `ui/core/view_models/states/`, and
+presentation converters/formatters in `ui/core/utils/`. Workout-plan scheduling helpers live in
+`data/repositories/workout_plans/utils/`. Host tests retain their existing `test/src/cubits/`,
+`models/`, `services/`, `utilities/`, `views/`, and `widgets/` organization.
 
 ### Local data model
 
 `DatabaseHelper` in `lib/src/data/services/sqlite` creates the SQLite schema and enables
-foreign-key enforcement. The diagram below intentionally shows domain relationships rather than
+foreign-key enforcement. The version 1 create schema currently registers 45 tables, including
+three backup foundation tables:
+
+- `backup_configs`: provider, schedule, enabled flag, and encryption preference;
+- `backup_passkeys`: bcrypt passkey hashes, base64 PBKDF2 salts, and optional last-used timestamps;
+- `backups`: provider/path, start/finish timestamps, encryption flag, schema version, and optional
+  configuration/passkey references. Both references use `ON DELETE SET NULL` to retain history.
+
+`BackupCrypto` derives keys and optionally caches them through `SecureStorageService`. The Profile
+backup controls keep widget-local state and export buttons show coming-soon messages; they are not
+wired to these tables. Export/import, restore, scheduling, and provider integrations remain incomplete.
+Existing development databases created before the backup tables require explicit reset/recreation;
+there is no version upgrade migration or automatic reset.
+
+Weights use integer grams and timestamps use integer UTC Unix seconds. Nutrition diary dates are
+local `YYYYMMDD` integers. Workout and plan records retain their originating template versions;
+logged nutrition retains immutable snapshots.
+
+The diagram below intentionally shows domain relationships rather than
 every column; the model files under `lib/src/data/models/sqlite` are the authoritative schema
-definition.
+definition. The strength-goal exercise link is a domain association without a declared SQLite
+foreign key. Backup provider enum values do not imply implemented provider integrations.
 
 <details>
 <summary>Show the entity-relationship diagram</summary>
 
 ```mermaid
 erDiagram
-    profiles ||--|| systems: has
-    profiles ||--|| reminders_configs: has
+    backup_configs |o--o{ backups: configures
+    backup_passkeys |o--o{ backups: encrypts
+    profiles ||--o| systems: has
+    profiles ||--o| reminders_configs: has
     weight_goals |o--o{ weight_records: groups
     exercises ||--o{ exercise_equipment: uses
     equipment ||--o{ exercise_equipment: supports
@@ -168,6 +205,7 @@ erDiagram
     workout_records ||--o{ workout_set_records: contains
     workout_sets ||--o{ workout_set_records: instantiates
     workout_set_records ||--o{ workout_set_exercise_records: contains
+    workout_set_exercises ||--o{ workout_set_exercise_records: instantiates
     exercises ||--o{ workout_set_exercise_records: logs
     workout_plans ||--o{ workout_plan_weeks: contains
     workout_plan_weeks ||--o{ workout_plan_days: contains
@@ -175,8 +213,11 @@ erDiagram
     workouts ||--o{ workout_plan_workouts: references
     workout_plans ||--o{ workout_plan_records: produces
     workout_plan_records ||--o{ workout_plan_week_records: contains
+    workout_plan_weeks ||--o{ workout_plan_week_records: instantiates
     workout_plan_week_records ||--o{ workout_plan_day_records: contains
+    workout_plan_days ||--o{ workout_plan_day_records: instantiates
     workout_plan_day_records ||--o{ workout_plan_workout_records: contains
+    workout_plan_workouts ||--o{ workout_plan_workout_records: instantiates
     workout_records ||--o{ workout_plan_workout_records: completes
     foods ||--o{ food_portions: offers
     recipes ||--o{ recipe_items: contains
@@ -196,6 +237,7 @@ erDiagram
     food_portions |o--o{ meal_plan_meal_items: measures
     meal_plans ||--o{ meal_plan_records: produces
     meal_plan_records ||--o{ meal_plan_week_records: contains
+    meal_plan_weeks ||--o{ meal_plan_week_records: instantiates
     meal_plan_week_records ||--o{ meal_plan_day_records: contains
     meal_plan_days ||--o{ meal_plan_day_records: instantiates
     daily_nutrition_logs ||--o| meal_plan_day_records: tracks

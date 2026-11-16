@@ -1,6 +1,7 @@
 # My Fitness Tale: Delivery Plan
 
-Last aligned with [README.md](README.md) on 10 November 2026. For the
+Entity model and file structure last aligned with the code and
+[README.md](README.md) on 17 November 2026. For the
 code-grounded implementation snapshot, see [PROJECT_STATE.md](PROJECT_STATE.md).
 
 ## Product objective
@@ -40,9 +41,12 @@ Remaining P1 work is verification and consolidation, not initial implementation:
 
 #### P1 — Consolidate workout-plan calculations
 
-Move duplicated date mapping and progress calculations into a tested domain
-helper shared by the dashboard and active-plan screens. Split the large plan
-repositories only where doing so makes transactions and invariants clearer.
+Build on `WorkoutPlanScheduleUtils` in
+`lib/src/data/repositories/workout_plans/utils/`, which already covers rest-day
+distribution, scheduled-day mapping, and completion/progress rules. Consolidate
+remaining duplicated calculations where a shared helper improves consistency.
+Split the large plan repositories only where doing so makes transactions and
+invariants clearer.
 
 #### P1 — Decide reminder scope
 
@@ -58,9 +62,22 @@ preservation and release readiness:
 
 #### P2 — Add local backup and restore
 
-Deferred to P2 so the complete mobile schema, now including meals and macros, can be
-stabilized before defining the serialization format, avoiding migration churn on
-disposable pre-beta schemas.
+The version 1 schema already includes the backup foundation: `backup_configs`,
+`backup_passkeys`, and `backups`, bringing the create schema to 45 tables. Backup
+history optionally references configuration and passkey rows with `ON DELETE SET NULL`.
+`data/services/backup/backup_crypto.dart` supplies passkey hashing/verification and key
+derivation; `data/services/secure_storage/secure_storage_service.dart` wraps platform
+key storage. These foundations do not export or restore fitness data.
+
+Profile backup settings, passkey modal, and data-export widgets live under
+`lib/src/ui/home/widgets/profile/`. Controls currently keep widget-local state and
+export actions show coming-soon messages. Remaining work includes repository/Cubit
+wiring, persisted configuration, a versioned format, file encryption/decryption,
+export/import, and atomic restore. Scheduling and provider integrations remain incomplete;
+provider enum values are not evidence of working cloud connections.
+
+Complete local backup/restore in P2 after stabilizing the mobile schema, avoiding
+format churn on disposable pre-beta databases. Cloud sync remains optional Phase 3 work.
 
 The app stores irreplaceable history; implement the recovery path before release:
 
@@ -117,11 +134,29 @@ optional and must not silently weaken local ownership.
 
 The current development schema is version 1 and the app has not been released.
 SQLite table models live under `lib/src/data/models/sqlite`, with seed/onboarding
-constants in `lib/src/data/models/constants`. Development databases may be
-cleared after schema changes. The first external beta establishes the
+constants in `lib/src/data/models/constants`. `DatabaseHelper` in
+`lib/src/data/services/sqlite/` registers the tables and enables foreign keys.
+The backup tables were added without a version bump or upgrade migration; older
+development databases need explicit reset/recreation. Initialization does not
+automatically reset them. Development databases may be cleared after schema changes. The first external beta establishes the
 compatibility baseline; after that, every schema change must include an ordered
 migration, upgrade fixtures, data-preservation checks, and foreign-key
 validation.
+
+### Keep the layer boundaries and file structure
+
+Use `SQLite Model -> DAO -> Repository -> Cubit/ViewModel -> Screen/Widget`.
+Feature repositories live in `lib/src/data/repositories/<feature>/`, with `dtos/`
+and `inputs/`; common contracts and query helpers live in `repositories/core/`.
+Feature Cubits and immutable states live in `lib/src/ui/<feature>/view_models/`
+and `view_models/states/`. Profile/onboarding UI is part of `ui/home/`.
+
+Keep date/enumeration/SQL helpers in `data/utils/`, presentation helpers in
+`ui/core/utils/`, and `Result`, `Nullable`, and service errors in `lib/src/utils/`.
+Reuse shared widgets and the size classes under `ui/core/`. Extend the existing
+workout-plan scheduling helper under `repositories/workout_plans/utils/` where
+appropriate. Backup foundations remain services until their repository and UI
+state flow are implemented.
 
 ### Onboarding must remain atomic
 
@@ -146,7 +181,7 @@ flutter test
 git diff --check
 ```
 
-The latest recorded full verification is from 21 August 2026:
+The historical cross-platform fitness-journey baseline is from 21 August 2026:
 
 ```text
 dart analyze
@@ -163,7 +198,11 @@ flutter test integration_test -d CB4D3190-72FB-4D34-A136-1352A1EB507B
 ```
 
 These are historical results, not a claim that the current working tree has
-been reverified. See [PROJECT_STATE.md](PROJECT_STATE.md) for coverage details.
+been reverified. The 16 November backup-foundation record reports 562 host tests
+passed (one existing migration test skipped), analysis passing, an Android debug
+build, and a physical Pixel 7 native storage journey. That journey verifies key
+storage and database reopening, not a complete fitness backup/restore workflow.
+See [PROJECT_STATE.md](PROJECT_STATE.md) for dated coverage details and limitations.
 
 ## Physical-device and release smoke matrix
 
