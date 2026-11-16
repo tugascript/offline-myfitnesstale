@@ -143,11 +143,11 @@ class _HomeScreenState extends State<HomeScreen> {
                               children: [
                                 // Welcome Section
                                 WelcomeSection(sizes: sizes),
-                                SizedBox(height: sizes.spacing),
+                                SizedBox(height: sizes.betweenSpacing),
 
                                 // Active workout and meal plans
                                 ActivePlansCarousel(theme: theme, sizes: sizes),
-                                SizedBox(height: sizes.spacing),
+                                SizedBox(height: sizes.betweenSpacing),
 
                                 // Quick Actions
                                 QuickActionsWidget(theme: theme, sizes: sizes),

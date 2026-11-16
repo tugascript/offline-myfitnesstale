@@ -20,6 +20,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../../routing/routes.dart';
 import '../../core/sizes/data_display_sizes.dart';
+import '../../core/widgets/layout/titled_section.dart';
 import './quick_action_category.dart';
 import './quick_action_category_card.dart';
 import './quick_action_destination_sheet.dart';
@@ -183,67 +184,47 @@ class QuickActionsWidget extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) => Card(
-    child: Padding(
-      padding: EdgeInsets.all(sizes.padding),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Quick Actions',
-            style: TextStyle(
-              fontSize: sizes.titleFontSize,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          SizedBox(height: sizes.spacing),
-          LayoutBuilder(
-            builder: (context, constraints) {
-              final minimumWidth = MediaQuery.textScalerOf(context)
-                  .scale(sizes.formFieldMinWidth);
-              final columns =
-                  constraints.maxWidth >= minimumWidth * 2 + sizes.spacing
-                  ? 2
-                  : 1;
-              return Column(
+  Widget build(BuildContext context) => TitledSection(
+    title: 'Quick Actions',
+    sizes: sizes,
+    child: LayoutBuilder(
+      builder: (context, constraints) {
+        final minimumWidth = MediaQuery.textScalerOf(context)
+            .scale(sizes.formFieldMinWidth);
+        final columns = constraints.maxWidth >= minimumWidth * 2 + sizes.spacing
+            ? 2
+            : 1;
+        return Column(
+          children: [
+            for (
+              var start = 0;
+              start < categories.length;
+              start += columns
+            ) ...[
+              if (start > 0) SizedBox(height: sizes.halfSpacing),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  for (
-                    var start = 0;
-                    start < categories.length;
-                    start += columns
-                  ) ...[
-                    if (start > 0) SizedBox(height: sizes.inputSpacing),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        for (
-                          var index = start;
-                          index < start + columns;
-                          index++
-                        ) ...[
-                          if (index > start) SizedBox(width: sizes.spacing),
-                          Expanded(
-                            child: QuickActionCategoryCard(
-                              key: ValueKey(
-                                'quick-action-category-${categories[index].id}',
-                              ),
-                              category: categories[index],
-                              sizes: sizes,
-                              theme: theme,
-                              onTap: () =>
-                                  _openCategory(context, categories[index]),
-                            ),
-                          ),
-                        ],
-                      ],
+                  for (var index = start; index < start + columns; index++) ...[
+                    if (index > start) SizedBox(width: sizes.halfSpacing),
+                    Expanded(
+                      child: QuickActionCategoryCard(
+                        key: ValueKey(
+                          'quick-action-category-${categories[index].id}',
+                        ),
+                        category: categories[index],
+                        sizes: sizes,
+                        theme: theme,
+                        onTap: () => _openCategory(context, categories[index]),
+                      ),
                     ),
                   ],
                 ],
-              );
-            },
-          ),
-        ],
-      ),
+              ),
+            ],
+          ],
+        );
+      },
     ),
   );
 }
