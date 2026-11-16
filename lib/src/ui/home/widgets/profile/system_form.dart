@@ -18,7 +18,7 @@
 import 'package:material_ui/material_ui.dart';
 
 import '../../../../data/utils/enums.dart';
-import '../../../core/sizes/profile/modal_form_sizes.dart';
+import '../../../core/sizes/data_display_sizes.dart';
 import '../../../core/sizes/screen_size.dart';
 
 final class _FormData {
@@ -80,18 +80,17 @@ class _SystemFormState extends State<SystemForm> {
   Widget build(BuildContext context) {
     final bool isMetric = _data.units == Units.metric;
     final BreakPoint breakPoint = BreakPoint.fromContext(widget.ctx);
-    final ModalFormSizesList sizes = ModalFormSizes.getNavFormSizes(
+    final DataDisplaySizesList sizes = DataDisplaySizes.getDataDisplaySizes(
       breakPoint.screenSize,
-      breakPoint.width,
     );
 
     return Form(
       key: _formKey,
       child: AlertDialog(
         content: SizedBox(
-          width: sizes.width,
-          height: sizes.height,
+          width: sizes.modalMaxWidth,
           child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
               SegmentedButton(
                 segments: <ButtonSegment<ThemeType>>[
@@ -100,7 +99,7 @@ class _SystemFormState extends State<SystemForm> {
                       "Light",
                       style: TextStyle(fontSize: sizes.fontSize),
                     ),
-                    icon: Icon(Icons.light_mode, size: sizes.iconSize),
+                    icon: Icon(Icons.light_mode, size: sizes.buttonIconSize),
                     value: ThemeType.light,
                   ),
                   ButtonSegment(
@@ -108,7 +107,7 @@ class _SystemFormState extends State<SystemForm> {
                       "System",
                       style: TextStyle(fontSize: sizes.fontSize),
                     ),
-                    icon: Icon(Icons.settings, size: sizes.iconSize),
+                    icon: Icon(Icons.settings, size: sizes.buttonIconSize),
                     value: ThemeType.system,
                   ),
                   ButtonSegment(
@@ -116,7 +115,7 @@ class _SystemFormState extends State<SystemForm> {
                       "Dark",
                       style: TextStyle(fontSize: sizes.fontSize),
                     ),
-                    icon: Icon(Icons.dark_mode, size: sizes.iconSize),
+                    icon: Icon(Icons.dark_mode, size: sizes.buttonIconSize),
                     value: ThemeType.dark,
                   ),
                 ],
@@ -130,8 +129,8 @@ class _SystemFormState extends State<SystemForm> {
               SwitchListTile(
                 title: Row(
                   children: [
-                    Icon(Icons.height_rounded, size: sizes.iconSize),
-                    SizedBox(width: sizes.fontSize / 2),
+                    Icon(Icons.height_rounded, size: sizes.buttonIconSize),
+                    SizedBox(width: sizes.halfSpacing),
                     Text(
                       "Units ${isMetric ? "Metric" : "Imperial"}",
                       style: TextStyle(fontSize: sizes.fontSize),

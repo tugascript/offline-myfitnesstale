@@ -15,7 +15,7 @@
 // You should have received a copy of the GNU General Public License
 // along with My Fitness Tale.  If not, see <https://www.gnu.org/licenses/>.
 
-import 'package:material_ui/material_ui.dart';
+import 'package:flutter/widgets.dart';
 
 enum ScreenSize {
   xl(1536),
@@ -29,7 +29,8 @@ enum ScreenSize {
   const ScreenSize(this.value);
 }
 
-class BreakPoint {
+@immutable
+final class BreakPoint {
   final double _width;
   final double _height;
 

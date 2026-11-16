@@ -17,7 +17,7 @@
 
 import 'package:material_ui/material_ui.dart';
 
-import '../../sizes/font_size.dart';
+import '../../sizes/data_display_sizes.dart';
 import '../../sizes/screen_size.dart';
 
 class NotFound extends StatelessWidget {
@@ -26,7 +26,8 @@ class NotFound extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final BreakPoint breakPoint = BreakPoint.fromContext(context);
-    final double fontSize = FontSize.getFontSize(breakPoint.screenSize);
+    final DataDisplaySizesList dataDisplaySizesList =
+        DataDisplaySizes.getDataDisplaySizes(breakPoint.screenSize);
 
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -35,11 +36,14 @@ class NotFound extends StatelessWidget {
         Text(
           'PAGE NOT FOUND',
           style: TextStyle(
-            fontSize: fontSize * 1.5,
+            fontSize: dataDisplaySizesList.fontSize * 1.5,
             fontWeight: FontWeight.w500,
           ),
         ),
-        Icon(Icons.broken_image_rounded, size: fontSize * 7),
+        Icon(
+          Icons.broken_image_rounded,
+          size: dataDisplaySizesList.fontSize * 7,
+        ),
       ],
     );
   }

@@ -38,6 +38,8 @@ final class DataDisplaySizesList {
 
   double get largeIconSize => buttonIconSize * 2.5;
 
+  double get extraLargeIconSize => buttonIconSize * 4;
+
   double get formFieldMinWidth => fontSize * 12;
 
   double get modalMaxWidth => buttonSize * 8;
