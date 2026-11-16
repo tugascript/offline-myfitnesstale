@@ -423,6 +423,33 @@ class ProfileCubit extends Cubit<ProfileState> {
     );
   }
 
+  Future<bool> requestNotificationPermission() async {
+    if (isClosed) return false;
+    emit(state.copyWith(error: const Nullable(null)));
+    final result = await _onboardingService.requestNotificationPermission();
+    if (isClosed) return false;
+
+    if (result.isErr()) {
+      _logger.warning(
+        'Failed to request notification permission',
+        result.error,
+      );
+      emit(
+        state.copyWith(
+          error: Nullable(
+            ErrorState(
+              type: result.error.type.name,
+              description: result.error.description,
+            ),
+          ),
+        ),
+      );
+      return false;
+    }
+
+    return result.value;
+  }
+
   Future<void> onboardProfile({
     required Units units,
     required ThemeType theme,

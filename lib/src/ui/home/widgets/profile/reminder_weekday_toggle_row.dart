@@ -112,6 +112,7 @@ class _ReminderWeekdayToggleRowState extends State<ReminderWeekdayToggleRow> {
         SharpSwitch(
           key: widget.switchKey,
           value: widget.value,
+          enabled: !widget.isLoading,
           onChanged: widget.onChanged,
           thumbSize: widget.sizes.subtitleFontSize,
           padding: EdgeInsets.all(widget.sizes.halfSpacing),

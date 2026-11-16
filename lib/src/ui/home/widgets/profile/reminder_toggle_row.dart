@@ -98,6 +98,7 @@ class _ReminderToggleRowState extends State<ReminderToggleRow> {
         SharpSwitch(
           key: widget.switchKey,
           value: widget.value,
+          enabled: !widget.isLoading,
           onChanged: widget.onChanged,
           thumbSize: widget.sizes.subtitleFontSize,
           padding: EdgeInsets.all(widget.sizes.halfSpacing),

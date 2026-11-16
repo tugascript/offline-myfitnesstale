@@ -32,6 +32,7 @@ import '../../models/sqlite/exercise_model.dart';
 import '../../models/sqlite/system_model.dart';
 import '../../models/sqlite/workout_model.dart';
 import '../../models/sqlite/workout_plan_model.dart';
+import '../../services/permissions/permissions_service.dart';
 import '../../services/sqlite/dao.dart';
 import '../../services/sqlite/database_helper.dart';
 import '../../utils/enums.dart';
@@ -75,6 +76,7 @@ typedef OnboardingStageCallback = FutureOr<void> Function(
 
 final class OnboardingRepository implements Repository {
   final Dao<System> _systemDao;
+  final PermissionsService _permissionsService;
   final ExerciseRepository _exerciseService;
   final ProfileRepository _profileService;
   final WorkoutRepository _workoutService;
@@ -88,11 +90,13 @@ final class OnboardingRepository implements Repository {
     required this._workoutService,
     required this._workoutPlanService,
     required this._systemDao,
+    required this._permissionsService,
     this._afterStage,
   });
 
   factory OnboardingRepository.create({
     DatabaseHelper? databaseHelper,
+    PermissionsService? permissionsService,
     ExerciseRepository? exerciseService,
     ProfileRepository? profileService,
     WorkoutRepository? workoutService,
@@ -101,6 +105,7 @@ final class OnboardingRepository implements Repository {
   }) {
     final helper = databaseHelper ?? DatabaseHelper();
     return OnboardingRepository(
+      permissionsService: permissionsService ?? PermissionsService.create(),
       exerciseService: exerciseService ?? ExerciseRepository.create(helper),
       profileService: profileService ?? ProfileRepository.create(helper),
       workoutService: workoutService ?? WorkoutRepository.create(helper),
@@ -113,6 +118,26 @@ final class OnboardingRepository implements Repository {
       ),
       afterStage: afterStage,
     );
+  }
+
+  Future<Result<bool, ServiceError<OperationErrorTypes>>>
+  requestNotificationPermission() async {
+    try {
+      return ok(await _permissionsService.requestNotificationPermission());
+    } catch (error, stackTrace) {
+      _logger.warning(
+        'Notification permission request failed',
+        error,
+        stackTrace,
+      );
+      return err(
+        const ServiceError(
+          type: OperationErrorTypes.operationFailure,
+          description:
+              'Unable to request notification permission. Please try again.',
+        ),
+      );
+    }
   }
 
   Future<Result<OnboardingDto, ServiceError<OperationErrorTypes>>> onboard(
