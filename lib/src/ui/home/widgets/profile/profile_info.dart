@@ -32,12 +32,14 @@ class ProfileInfo extends StatefulWidget {
   final DataDisplaySizesList sizes;
   final ProfileDto profile;
   final SystemDto system;
+  final bool isLoading;
 
   const ProfileInfo({
     super.key,
     required this.sizes,
     required this.profile,
     required this.system,
+    required this.isLoading,
   });
 
   @override
@@ -59,21 +61,22 @@ class _ProfileInfoState extends State<ProfileInfo> {
     });
   }
 
-  void _saveProfile({
+  Future<void> _saveProfile({
     required String name,
     required int height,
     required Gender gender,
     required DateTime birthdate,
-  }) {
-    context.read<ProfileCubit>().updateProfile(
+  }) async {
+    final cubit = context.read<ProfileCubit>();
+    if (cubit.state.isLoading) return;
+
+    final saved = await cubit.updateProfile(
       name: name,
       height: height,
       gender: gender,
       birthday: birthdate,
     );
-    setState(() {
-      _isEditing = false;
-    });
+    if (mounted && saved) _cancelEditing();
   }
 
   @override
@@ -101,6 +104,7 @@ class _ProfileInfoState extends State<ProfileInfo> {
                   profile: profile,
                   system: system,
                   sizes: sizes,
+                  isLoading: widget.isLoading,
                   onCancel: _cancelEditing,
                   onSave: _saveProfile,
                 )

@@ -62,7 +62,7 @@ void main() {
         'Widget Tester',
       );
 
-      final submit = find.text('Create & get started');
+      final submit = find.byKey(const ValueKey('onboarding-submit'));
       await tester.ensureVisible(submit);
       await tester.tap(submit);
       await tester.pump();
@@ -86,9 +86,8 @@ void main() {
       expect(find.text('Widget Tester'), findsOneWidget);
       expect(cubit.attempts, 1);
 
-      final retrySubmit = find.text('Create & get started');
-      await tester.ensureVisible(retrySubmit);
-      await tester.tap(retrySubmit);
+      await tester.ensureVisible(submit);
+      await tester.tap(submit);
       await tester.pump();
       await tester.pump();
 
@@ -130,7 +129,7 @@ void main() {
         find.widgetWithText(TextFormField, 'Name'),
         'Navigation Tester',
       );
-      final submit = find.text('Create & get started');
+      final submit = find.byKey(const ValueKey('onboarding-submit'));
       await tester.ensureVisible(submit);
       await tester.tap(submit);
       await tester.pump();
@@ -189,7 +188,7 @@ void main() {
         find.widgetWithText(TextFormField, 'Name'),
         'Empty Home Tester',
       );
-      final submit = find.text('Create & get started');
+      final submit = find.byKey(const ValueKey('onboarding-submit'));
       await tester.ensureVisible(submit);
       await tester.tap(submit);
       await tester.pump();
@@ -269,9 +268,7 @@ Future<void> _pumpOnboardingRouter(
     MultiBlocProvider(
       providers: [
         BlocProvider<ProfileCubit>.value(value: profileCubit),
-        BlocProvider<WorkoutPlanRecordCubit>.value(
-          value: resolvedWorkoutCubit,
-        ),
+        BlocProvider<WorkoutPlanRecordCubit>.value(value: resolvedWorkoutCubit),
         BlocProvider<MacroTrackingCubit>.value(value: resolvedMacroCubit),
         BlocProvider<MealPlanRecordCubit>.value(value: mealPlanRecordCubit),
       ],

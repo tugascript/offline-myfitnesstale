@@ -40,7 +40,22 @@ class ProfileScreen extends StatelessWidget {
       title: "Profile",
       body: Padding(
         padding: EdgeInsets.all(sizes.viewPadding),
-        child: BlocBuilder<ProfileCubit, ProfileState>(
+        child: BlocConsumer<ProfileCubit, ProfileState>(
+          listenWhen: (previous, current) =>
+              previous.isLoading && !current.isLoading && current.error != null,
+          listener: (context, state) {
+            final error = state.error;
+            if (error == null ||
+                state.profile == null ||
+                state.system == null ||
+                state.remindersConfig == null) {
+              return;
+            }
+
+            ScaffoldMessenger.of(context)
+              ..hideCurrentSnackBar()
+              ..showSnackBar(SnackBar(content: Text(error.description)));
+          },
           buildWhen: (previous, current) {
             // Only rebuild when the profile data changes, not on minor UI updates.
             return previous.profile != current.profile ||
@@ -109,7 +124,12 @@ class ProfileScreen extends StatelessWidget {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                ProfileInfo(sizes: sizes, profile: profile, system: system),
+                ProfileInfo(
+                  sizes: sizes,
+                  profile: profile,
+                  system: system,
+                  isLoading: state.isLoading,
+                ),
                 SizedBox(height: sizes.betweenSpacing),
                 SettingsConfig(
                   profileId: profile.id,

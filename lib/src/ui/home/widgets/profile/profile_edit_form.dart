@@ -29,6 +29,7 @@ class ProfileEditForm extends StatefulWidget {
   final ProfileDto profile;
   final SystemDto system;
   final DataDisplaySizesList sizes;
+  final bool isLoading;
   final VoidCallback onCancel;
   final void Function({
     required String name,
@@ -43,6 +44,7 @@ class ProfileEditForm extends StatefulWidget {
     required this.profile,
     required this.system,
     required this.sizes,
+    required this.isLoading,
     required this.onCancel,
     required this.onSave,
   });
@@ -101,6 +103,7 @@ class _ProfileEditFormState extends State<ProfileEditForm> {
         children: [
           TextFormField(
             controller: _nameController,
+            enabled: !widget.isLoading,
             decoration: const InputDecoration(
               labelText: "Name",
               border: OutlineInputBorder(),
@@ -116,7 +119,7 @@ class _ProfileEditFormState extends State<ProfileEditForm> {
           HeightInput(
             theme: theme,
             sizes: sizes,
-            isLoading: false,
+            isLoading: widget.isLoading,
             initialHeight: widget.profile.height,
             isMetric: widget.system.units == Units.metric,
             onChanged: (int cm) {
@@ -132,6 +135,7 @@ class _ProfileEditFormState extends State<ProfileEditForm> {
           ),
           SizedBox(height: sizes.spacing),
           DropdownButtonFormField<Gender>(
+            enabled: !widget.isLoading,
             initialValue: _selectedGender,
             decoration: const InputDecoration(
               labelText: "Gender",
@@ -151,6 +155,7 @@ class _ProfileEditFormState extends State<ProfileEditForm> {
           SizedBox(height: sizes.spacing),
           TextFormField(
             controller: _birthdateController,
+            enabled: !widget.isLoading,
             readOnly: true,
             decoration: const InputDecoration(
               labelText: "Birthdate",
@@ -169,7 +174,7 @@ class _ProfileEditFormState extends State<ProfileEditForm> {
                   Duration(days: (365.25 * 16).floor()),
                 ),
               );
-              if (picked != null && picked != _birthdate) {
+              if (mounted && picked != null && picked != _birthdate) {
                 setState(() {
                   _birthdate = picked;
                   _birthdateController.text =
@@ -185,14 +190,14 @@ class _ProfileEditFormState extends State<ProfileEditForm> {
                 onPressed: widget.onCancel,
                 theme: theme,
                 sizes: sizes,
-                isLoading: false,
+                isLoading: widget.isLoading,
                 label: "Cancel",
                 icon: Icons.close,
               );
               final save = AppElevatedButton(
                 onPressed: _save,
                 theme: Theme.of(context),
-                isLoading: false,
+                isLoading: widget.isLoading,
                 sizes: sizes,
                 label: "Save",
                 icon: Icons.save,
