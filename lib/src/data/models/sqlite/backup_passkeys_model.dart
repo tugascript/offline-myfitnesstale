@@ -25,8 +25,10 @@ const String _table = 'backup_passkeys';
 
 enum BackupPasskeysColumns with Columns {
   id("id"),
+
   /// bcrypt hash of the plaintext passkey (never store plaintext here).
   passkey("passkey"),
+
   /// Base64-encoded PBKDF2 salt used to derive the AES backup key.
   salt("salt"),
   lastUsedAt("last_used_at"),

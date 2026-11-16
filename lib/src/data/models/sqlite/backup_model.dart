@@ -20,6 +20,8 @@ import 'package:equatable/equatable.dart';
 import '../../../utils/nullable.dart';
 import '../../utils/dates.dart';
 import '../../utils/enums.dart';
+import 'backup_config_model.dart';
+import 'backup_passkeys_model.dart';
 import 'model.dart';
 
 const String _table = 'backups';
@@ -30,6 +32,10 @@ enum BackupColumns with Columns {
   startedAt("started_at"),
   finishedAt("finished_at"),
   path("path"),
+  encrypted("encrypted"),
+  schemaVersion("schema_version"),
+  backupConfigId("backup_config_id"),
+  backupPasskeyId("backup_passkey_id"),
   createdAt("created_at"),
   updatedAt("updated_at");
 
@@ -46,6 +52,10 @@ final class Backup extends Equatable implements Model {
   final int startedAt;
   final int? finishedAt;
   final String path;
+  final bool encrypted;
+  final int schemaVersion;
+  final int? backupConfigId;
+  final int? backupPasskeyId;
   @override
   final int createdAt;
   @override
@@ -57,6 +67,10 @@ final class Backup extends Equatable implements Model {
     required this.startedAt,
     this.finishedAt,
     required this.path,
+    required this.encrypted,
+    required this.schemaVersion,
+    this.backupConfigId,
+    this.backupPasskeyId,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -70,12 +84,22 @@ final class Backup extends Equatable implements Model {
       ${BackupColumns.startedAt.value} INTEGER NOT NULL,
       ${BackupColumns.finishedAt.value} INTEGER,
       ${BackupColumns.path.value} TEXT NOT NULL,
+      ${BackupColumns.encrypted.value} INTEGER NOT NULL DEFAULT 0,
+      ${BackupColumns.schemaVersion.value} INTEGER NOT NULL,
+      ${BackupColumns.backupConfigId.value} INTEGER,
+      ${BackupColumns.backupPasskeyId.value} INTEGER,
       ${BackupColumns.createdAt.value} INTEGER NOT NULL,
-      ${BackupColumns.updatedAt.value} INTEGER NOT NULL
+      ${BackupColumns.updatedAt.value} INTEGER NOT NULL,
+      FOREIGN KEY (${BackupColumns.backupConfigId.value}) REFERENCES ${BackupConfig.table} (${BackupConfigColumns.id.value})
+        ON DELETE SET NULL,
+      FOREIGN KEY (${BackupColumns.backupPasskeyId.value}) REFERENCES ${BackupPasskeys.table} (${BackupPasskeysColumns.id.value})
+        ON DELETE SET NULL
     );
 
     CREATE INDEX IF NOT EXISTS idx_backups_provider ON $_table (${BackupColumns.provider.value});
     CREATE INDEX IF NOT EXISTS idx_backups_started_at ON $_table (${BackupColumns.startedAt.value});
+    CREATE INDEX IF NOT EXISTS idx_backups_backup_config_id ON $_table (${BackupColumns.backupConfigId.value});
+    CREATE INDEX IF NOT EXISTS idx_backups_backup_passkey_id ON $_table (${BackupColumns.backupPasskeyId.value});
     ''';
 
   @override
@@ -86,6 +110,10 @@ final class Backup extends Equatable implements Model {
       BackupColumns.startedAt.value: startedAt,
       BackupColumns.finishedAt.value: finishedAt,
       BackupColumns.path.value: path,
+      BackupColumns.encrypted.value: encrypted ? 1 : 0,
+      BackupColumns.schemaVersion.value: schemaVersion,
+      BackupColumns.backupConfigId.value: backupConfigId,
+      BackupColumns.backupPasskeyId.value: backupPasskeyId,
       BackupColumns.createdAt.value: createdAt,
       BackupColumns.updatedAt.value: updatedAt,
     };
@@ -100,6 +128,10 @@ final class Backup extends Equatable implements Model {
       startedAt: map[BackupColumns.startedAt.value]! as int,
       finishedAt: map[BackupColumns.finishedAt.value] as int?,
       path: map[BackupColumns.path.value]! as String,
+      encrypted: map[BackupColumns.encrypted.value]! as int == 1,
+      schemaVersion: map[BackupColumns.schemaVersion.value]! as int,
+      backupConfigId: map[BackupColumns.backupConfigId.value] as int?,
+      backupPasskeyId: map[BackupColumns.backupPasskeyId.value] as int?,
       createdAt: map[BackupColumns.createdAt.value]! as int,
       updatedAt: map[BackupColumns.updatedAt.value]! as int,
     );
@@ -108,13 +140,21 @@ final class Backup extends Equatable implements Model {
   factory Backup.create({
     required BackupProvider provider,
     required String path,
+    required bool encrypted,
+    required int schemaVersion,
     int? startedAt,
+    int? backupConfigId,
+    int? backupPasskeyId,
   }) {
     final int now = DateUtilities.getNowUtcUnix();
     return Backup(
       provider: provider,
       startedAt: startedAt ?? now,
       path: path,
+      encrypted: encrypted,
+      schemaVersion: schemaVersion,
+      backupConfigId: backupConfigId,
+      backupPasskeyId: backupPasskeyId,
       createdAt: now,
       updatedAt: now,
     );
@@ -127,6 +167,10 @@ final class Backup extends Equatable implements Model {
     int? startedAt,
     Nullable<int>? finishedAt,
     String? path,
+    bool? encrypted,
+    int? schemaVersion,
+    Nullable<int>? backupConfigId,
+    Nullable<int>? backupPasskeyId,
     int? createdAt,
     int? updatedAt,
   }) {
@@ -136,6 +180,14 @@ final class Backup extends Equatable implements Model {
       startedAt: startedAt ?? this.startedAt,
       finishedAt: finishedAt != null ? finishedAt.value : this.finishedAt,
       path: path ?? this.path,
+      encrypted: encrypted ?? this.encrypted,
+      schemaVersion: schemaVersion ?? this.schemaVersion,
+      backupConfigId: backupConfigId != null
+          ? backupConfigId.value
+          : this.backupConfigId,
+      backupPasskeyId: backupPasskeyId != null
+          ? backupPasskeyId.value
+          : this.backupPasskeyId,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -148,6 +200,10 @@ final class Backup extends Equatable implements Model {
     startedAt,
     finishedAt,
     path,
+    encrypted,
+    schemaVersion,
+    backupConfigId,
+    backupPasskeyId,
     createdAt,
     updatedAt,
   ];

@@ -31,6 +31,21 @@ Repository facts at this review:
 - no repository CI configuration;
 - no backend implementation in the current working tree.
 
+Backup foundations were updated on 16 November 2026 after commit `38ab351`;
+the historical inventory above predates these additions. The create schema now
+registers 45 tables, including `backups`, `backup_configs`, and
+`backup_passkeys` with their indexes. Backup configuration/history and bcrypt
+passkey hashes with PBKDF2 salts can be persisted; crypto helpers derive AES
+keys and optionally cache them in platform secure storage. There is still no
+backup repository, export/import format, restore workflow, scheduling engine,
+provider integration, or backup UI.
+
+Android backup rules exclude only the secure-storage plugin's encrypted
+preferences, wrapped keys, and configuration files from legacy backup and
+Android 12+ cloud backup/device transfer. Other app data retains its existing
+OS backup behavior. Cached keys are device-local conveniences, not a recovery
+mechanism; after restore they must be derived again from the passkey and salt.
+
 ## Implemented capabilities
 
 ### Home active plans
@@ -528,6 +543,27 @@ PR #36 review follow-up:
 - The host suite passed 438 tests with the existing migration test skipped.
   Device integration tests were not run.
 
+### Backup foundation verification (16 November 2026)
+
+- `flutter pub get`, `dart analyze`, and `git diff --check` passed.
+- Host suite: 562 tests passed, one existing migration test skipped. New
+  database tests initialize through `DatabaseHelper`, check all three backup
+  tables and indexes, and exercise DAO CRUD including clearing nullable dates.
+- Android manifest references and all legacy/cloud/device-transfer exclusions
+  were checked by parsing the XML; the Android debug build succeeded.
+- The native storage journey passed on a physical Pixel 7 running Android 17
+  (API 37), exercising cache write/read/clear and database reopening with
+  isolated test values and `integration_test.db`. Separate `seed` and `verify`
+  process launches also passed with `--no-uninstall`, preserving both the key
+  and SQLite row. The initial relaunch attempt without that flag failed because
+  Flutter uninstalled the test app between phases, removing its data.
+- The full formatting check reports 12 pre-existing files outside this fix;
+  the changed Dart files are formatted.
+- Actual OS cloud-backup/device-transfer restoration, legacy Android runtime
+  behavior, and iOS native storage remain unverified. The separate launch and
+  restore phases are documented in
+  [integration_test/BACKUP_STORAGE.md](integration_test/BACKUP_STORAGE.md).
+
 ## Known gaps and release blockers
 
 - No fitness-data import/export, backup/restore, cloud sync, or account system.
@@ -535,7 +571,8 @@ PR #36 review follow-up:
   trainer.
 - No Apple Watch or Wear OS app.
 - Reminder preferences do not deliver notifications.
-- No physical-device, release-build, signing, or full accessibility evidence.
+- Physical-device coverage remains incomplete; the backup storage check above
+  does not establish release-build, signing, or full accessibility readiness.
 - Android and iOS identifiers/signing are still development placeholders.
 - No CI, crash reporting, privacy/data-retention statement, store assets, or
   documented release process.
@@ -549,6 +586,11 @@ PR #36 review follow-up:
 The current create schema is version 1. Because no public release or external
 beta compatibility baseline exists, development databases are disposable and
 may be recreated after schema changes.
+
+The backup tables were added to the version 1 create schema without an upgrade
+migration. Existing development databases created before this addition require
+an explicit developer reset/recreation to obtain them. Initialization does not
+automatically reset or upgrade those databases.
 
 The first external beta must establish the non-destructive compatibility
 baseline. Every later schema increment must include ordered migrations,
