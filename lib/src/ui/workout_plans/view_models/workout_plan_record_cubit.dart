@@ -201,7 +201,7 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
               workoutPlan: const Nullable(null),
               todaysWorkouts: [],
             ),
-            hasLoadedActivePlan: true,
+            hasLoadedActivePlan: false,
             isLoading: false,
           ),
         );
