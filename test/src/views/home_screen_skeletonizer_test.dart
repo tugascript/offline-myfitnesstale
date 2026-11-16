@@ -41,6 +41,7 @@ import 'package:myfitnesstale/src/ui/core/screens/loading_screen.dart';
 import 'package:myfitnesstale/src/ui/core/sizes/data_display_sizes.dart';
 import 'package:myfitnesstale/src/ui/core/sizes/screen_size.dart';
 import 'package:myfitnesstale/src/ui/core/themes/theme_generator.dart';
+import 'package:myfitnesstale/src/ui/core/view_models/states/common_state.dart';
 import 'package:myfitnesstale/src/ui/core/widgets/base_carousel.dart';
 import 'package:myfitnesstale/src/ui/home/screens/home_screen.dart';
 import 'package:myfitnesstale/src/ui/home/screens/main_navigation_screen.dart';
@@ -394,6 +395,115 @@ void main() {
       expect(tester.getSize(content0), tester.getSize(content1));
     },
   );
+
+  testWidgets('loads active meal plan record on cold launch', (tester) async {
+    final profileGate = Completer<void>()..complete();
+    final profileCubit = _TestProfileCubit(
+      gate: profileGate,
+      withProfile: true,
+    );
+    final workoutPlanCubit = _TestWorkoutPlanRecordCubit(
+      returnActivePlan: false,
+    );
+    final macroCubit = _TestMacroTrackingCubit();
+    final mealPlanCubit = _TestMealPlanRecordCubit();
+
+    await _pumpMainApp(
+      tester,
+      profileCubit: profileCubit..loadInitialData(),
+      workoutPlanCubit: workoutPlanCubit,
+      macroCubit: macroCubit,
+      mealPlanCubit: mealPlanCubit,
+    );
+    await tester.pumpAndSettle();
+
+    expect(mealPlanCubit.loadCalls, 1);
+  });
+
+  testWidgets(
+    'shows startup error with retry instead of masking profile load failure',
+    (tester) async {
+      final profileGate = Completer<void>()..complete();
+      final profileCubit = _TestProfileCubit(
+        gate: profileGate,
+        withProfile: true,
+        failFirstLoad: true,
+      );
+      final workoutPlanCubit = _TestWorkoutPlanRecordCubit();
+      final macroCubit = _TestMacroTrackingCubit();
+      final mealPlanCubit = _TestMealPlanRecordCubit();
+
+      await _pumpMainApp(
+        tester,
+        profileCubit: profileCubit..loadInitialData(),
+        workoutPlanCubit: workoutPlanCubit,
+        macroCubit: macroCubit,
+        mealPlanCubit: mealPlanCubit,
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byType(HomeScreen), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('home-startup-error-card')),
+        findsOneWidget,
+      );
+      expect(find.text('Failed to load profile'), findsOneWidget);
+      expect(find.text('RETRY'), findsOneWidget);
+      expect(
+        find.byWidgetPredicate((w) => w is Skeletonizer && w.enabled),
+        findsNothing,
+      );
+
+      await tester.tap(find.text('RETRY'));
+      await tester.pumpAndSettle();
+
+      expect(profileCubit.loadCalls, 2);
+      expect(
+        find.byKey(const ValueKey('home-startup-error-card')),
+        findsNothing,
+      );
+      expect(find.text('Welcome back Home Tester!'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'shows retry card when active meal plan load fails and retries cleanly',
+    (tester) async {
+      final profileGate = Completer<void>()..complete();
+      final profileCubit = _TestProfileCubit(
+        gate: profileGate,
+        withProfile: true,
+      );
+      final workoutPlanCubit = _TestWorkoutPlanRecordCubit();
+      final macroCubit = _TestMacroTrackingCubit();
+      final mealPlanCubit = _TestMealPlanRecordCubit(failFirstLoad: true);
+
+      await _pumpMainApp(
+        tester,
+        profileCubit: profileCubit..loadInitialData(),
+        workoutPlanCubit: workoutPlanCubit,
+        macroCubit: macroCubit,
+        mealPlanCubit: mealPlanCubit,
+      );
+      await tester.pumpAndSettle();
+
+      expect(
+        find.byKey(const ValueKey('home-active-load-error-card')),
+        findsOneWidget,
+      );
+      expect(find.text('Failed to load meal plan'), findsOneWidget);
+      expect(find.text('RETRY'), findsOneWidget);
+
+      await tester.tap(find.text('RETRY'));
+      await tester.pumpAndSettle();
+
+      expect(mealPlanCubit.loadCalls, 2);
+      expect(
+        find.byKey(const ValueKey('home-active-load-error-card')),
+        findsNothing,
+      );
+    },
+  );
 }
 
 Future<void> _pumpMainApp(
@@ -443,14 +553,35 @@ Future<void> _pumpMainApp(
 final class _TestProfileCubit extends ProfileCubit {
   final Completer<void> gate;
   final bool withProfile;
+  final bool failFirstLoad;
+  int loadCalls = 0;
 
-  _TestProfileCubit({required this.gate, required this.withProfile})
-    : super(profileRepository: ProfileRepository.create());
+  _TestProfileCubit({
+    required this.gate,
+    required this.withProfile,
+    this.failFirstLoad = false,
+  }) : super(profileRepository: ProfileRepository.create());
 
   @override
   Future<void> loadInitialData() async {
+    loadCalls++;
     emit(state.copyWith(isLoading: true));
     await gate.future;
+    if (failFirstLoad && loadCalls == 1) {
+      emit(
+        state.copyWith(
+          error: const Nullable(
+            ErrorState(
+              type: 'operationFailure',
+              description: 'Failed to load profile',
+            ),
+          ),
+          isLoading: false,
+          isInitiated: false,
+        ),
+      );
+      return;
+    }
     if (!withProfile) {
       emit(
         state.copyWith(
@@ -593,9 +724,35 @@ final class _TestMacroTrackingCubit extends MacroTrackingCubit {
 }
 
 final class _TestMealPlanRecordCubit extends MealPlanRecordCubit {
-  _TestMealPlanRecordCubit()
+  final bool failFirstLoad;
+  int loadCalls = 0;
+
+  _TestMealPlanRecordCubit({this.failFirstLoad = false})
     : super(mealPlanRecordRepository: MealPlanRecordRepository.create());
 
   @override
-  Future<void> getActiveMealPlanRecord() async {}
+  Future<void> getActiveMealPlanRecord() async {
+    loadCalls++;
+    if (failFirstLoad && loadCalls == 1) {
+      emit(
+        state.copyWith(
+          isLoading: false,
+          error: const Nullable(
+            ErrorState(
+              type: 'operationFailure',
+              description: 'Failed to load meal plan',
+            ),
+          ),
+        ),
+      );
+      return;
+    }
+    emit(
+      state.copyWith(
+        hasLoadedActiveRecord: true,
+        isLoading: false,
+        error: const Nullable(null),
+      ),
+    );
+  }
 }

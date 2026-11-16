@@ -80,8 +80,9 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       if (!mounted) return;
       final state = context.read<ProfileCubit>().state;
       if (!state.isLoading &&
+          state.isInitiated &&
           state.profile == null &&
-          (state.isInitiated || state.error != null)) {
+          state.error == null) {
         GoRouter.maybeOf(context)?.go(Routes.onboarding.name);
       }
     });
@@ -100,15 +101,23 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
 
     return BlocConsumer<ProfileCubit, ProfileState>(
       listener: (context, state) {
-        if (!state.isLoading && state.profile == null) {
+        if (!state.isLoading &&
+            state.isInitiated &&
+            state.profile == null &&
+            state.error == null) {
           GoRouter.maybeOf(context)?.go(Routes.onboarding.name);
         }
       },
       builder: (context, state) {
+        final hasStartupError = state.profile == null && state.error != null;
         final isHomeLoading =
-            !state.isInitiated || (state.isLoading && state.profile == null);
+            !hasStartupError &&
+            (!state.isInitiated || (state.isLoading && state.profile == null));
 
-        if (!isHomeLoading && !state.isLoading && state.profile == null) {
+        if (!hasStartupError &&
+            !isHomeLoading &&
+            !state.isLoading &&
+            state.profile == null) {
           return Scaffold(body: CreateProfileButtonScreen());
         }
 

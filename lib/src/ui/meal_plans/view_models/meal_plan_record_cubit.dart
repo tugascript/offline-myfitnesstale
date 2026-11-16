@@ -46,6 +46,7 @@ class MealPlanRecordCubit extends Cubit<MealPlanRecordState> {
         emit(
           state.copyWith(
             activeRecord: const Nullable(null),
+            hasLoadedActiveRecord: true,
             isLoading: false,
             error: const Nullable(null),
           ),
@@ -67,6 +68,7 @@ class MealPlanRecordCubit extends Cubit<MealPlanRecordState> {
     emit(
       state.copyWith(
         activeRecord: Nullable(result.value),
+        hasLoadedActiveRecord: true,
         isLoading: false,
         error: const Nullable(null),
       ),
