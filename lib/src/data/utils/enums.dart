@@ -534,3 +534,41 @@ enum MacroGoalType {
     orElse: () => MacroGoalType.flat,
   );
 }
+
+enum BackupProvider {
+  googleDrive("google_drive"),
+  iCloud("icloud"),
+  oneDrive("one_drive"),
+  localFile("local_file"),
+  myFitnessTale("my_fitness_tale");
+
+  final String value;
+
+  const BackupProvider(this.value);
+
+  static BackupProvider fromValue(String v) => BackupProvider.values.firstWhere(
+    (p) => p.value == v,
+    orElse: () => BackupProvider.googleDrive,
+  );
+
+  static List<BackupProvider> supportedValues() => [
+    BackupProvider.googleDrive,
+    BackupProvider.iCloud,
+    BackupProvider.localFile,
+  ];
+}
+
+enum BackupSchedule {
+  daily("daily"),
+  weekly("weekly"),
+  monthly("monthly");
+
+  final String value;
+
+  const BackupSchedule(this.value);
+
+  static BackupSchedule fromValue(String v) => BackupSchedule.values.firstWhere(
+    (s) => s.value == v,
+    orElse: () => BackupSchedule.daily,
+  );
+}
