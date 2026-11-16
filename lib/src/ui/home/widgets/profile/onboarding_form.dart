@@ -17,7 +17,6 @@
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:material_ui/material_ui.dart';
-import 'package:permission_handler/permission_handler.dart';
 
 import '../../../../data/utils/enums.dart';
 import '../../../core/sizes/data_display_sizes.dart';
@@ -100,6 +99,7 @@ class _OnboardingFormState extends State<OnboardingForm> {
   final _nameController = TextEditingController();
   final _birthdayController = TextEditingController();
   late final _FormData _data;
+  bool _isRequestingPermission = false;
 
   @override
   void initState() {
@@ -225,31 +225,30 @@ class _OnboardingFormState extends State<OnboardingForm> {
                   value: _data.notificationsOn,
                   thumbSize: widget.sizes.subtitleFontSize,
                   switchPadding: EdgeInsets.all(widget.sizes.quarterSpacing),
+                  enabled: !widget.isLoading && !_isRequestingPermission,
                   onChanged: (bool value) async {
-                    if (value) {
-                      final status = await Permission.notification.request();
-                      if (status.isGranted) {
-                        setState(() {
-                          _data.notificationsOn = true;
-                        });
-                      } else {
-                        setState(() {
-                          _data.notificationsOn = false;
-                        });
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text(
-                                'Permission denied. Please enable notifications in settings.',
-                              ),
-                            ),
-                          );
-                        }
-                      }
-                    } else {
-                      setState(() {
-                        _data.notificationsOn = false;
-                      });
+                    if (widget.isLoading || _isRequestingPermission) return;
+                    if (!value) {
+                      setState(() => _data.notificationsOn = false);
+                      return;
+                    }
+
+                    setState(() => _isRequestingPermission = true);
+                    final granted = await cubit.requestNotificationPermission();
+                    if (!mounted) return;
+
+                    setState(() {
+                      _isRequestingPermission = false;
+                      _data.notificationsOn = granted;
+                    });
+                    if (!granted && context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            cubit.state.error?.description ?? 'Permission denied. Please enable notifications in settings.',
+                          ),
+                        ),
+                      );
                     }
                   },
                 ),
@@ -418,7 +417,7 @@ class _OnboardingFormState extends State<OnboardingForm> {
           AppElevatedButton(
             key: const ValueKey('onboarding-submit'),
             theme: theme,
-            isLoading: widget.isLoading,
+            isLoading: widget.isLoading || _isRequestingPermission,
             sizes: widget.sizes,
             icon: Icons.check,
             label: widget.submitButtonLabel,

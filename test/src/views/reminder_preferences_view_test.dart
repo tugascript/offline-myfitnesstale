@@ -15,6 +15,9 @@
 // You should have received a copy of the GNU General Public License
 // along with My Fitness Tale.  If not, see <https://www.gnu.org/licenses/>.
 
+import 'dart:async';
+
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
@@ -32,6 +35,7 @@ import 'package:myfitnesstale/src/ui/home/view_models/profile_cubit.dart';
 import 'package:myfitnesstale/src/ui/home/view_models/states/profile_state.dart';
 import 'package:myfitnesstale/src/ui/home/widgets/profile/reminders_settings_config.dart';
 import 'package:myfitnesstale/src/ui/home/widgets/profile/settings_config.dart';
+import 'package:myfitnesstale/src/ui/core/widgets/layout/sharp_switch.dart';
 import 'package:myfitnesstale/src/utils/nullable.dart';
 
 class _ProfileCubit extends ProfileCubit {
@@ -66,7 +70,8 @@ class _ProfileCubit extends ProfileCubit {
               workoutsReminderTime ?? const TimeOfDayValue(hour: 8, minute: 0),
           weightRecordsOn: weightRecordsOn,
           weightRecordsReminderTime:
-              weightRecordsReminderTime ?? WeekdayTimeOfDayValue.defaultReminder,
+              weightRecordsReminderTime ??
+              WeekdayTimeOfDayValue.defaultReminder,
           macroTrackingOn: macroTrackingOn,
           macroTrackingReminderTime:
               macroTrackingReminderTime ??
@@ -118,7 +123,31 @@ class _ProfileCubit extends ProfileCubit {
 }
 
 void main() {
-  Widget buildSubject(_ProfileCubit cubit, {ScreenSize screenSize = ScreenSize.md}) {
+  TestWidgetsFlutterBinding.ensureInitialized();
+  const permissionsChannel = MethodChannel(
+    'flutter.baseflow.com/permissions/methods',
+  );
+  final messenger =
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+  late Future<int> Function() requestStatus;
+  late int permissionRequests;
+
+  setUp(() {
+    permissionRequests = 0;
+    requestStatus = () async => 1;
+    messenger.setMockMethodCallHandler(permissionsChannel, (call) async {
+      expect(call.method, 'requestPermissions');
+      expect(call.arguments, [17]);
+      permissionRequests++;
+      return <int, int>{17: await requestStatus()};
+    });
+  });
+  tearDown(() => messenger.setMockMethodCallHandler(permissionsChannel, null));
+
+  Widget buildSubject(
+    _ProfileCubit cubit, {
+    ScreenSize screenSize = ScreenSize.md,
+  }) {
     final sizes = DataDisplaySizes.getDataDisplaySizes(screenSize);
     return BlocProvider<ProfileCubit>.value(
       value: cubit,
@@ -145,67 +174,174 @@ void main() {
     );
   }
 
-  testWidgets('renders all reminder toggles, time fields, and weight day selector', (
+  testWidgets(
+    'renders all reminder toggles, time fields, and weight day selector',
+    (tester) async {
+      final cubit = _ProfileCubit(
+        workoutsOn: true,
+        workoutsReminderTime: const TimeOfDayValue(hour: 7, minute: 30),
+        weightRecordsOn: true,
+        weightRecordsReminderTime: const WeekdayTimeOfDayValue(
+          dayOfWeek: DayOfWeek.wednesday,
+          timeOfDay: TimeOfDayValue(hour: 9, minute: 15),
+        ),
+        macroTrackingOn: true,
+        macroTrackingReminderTime: const TimeOfDayValue(hour: 20, minute: 45),
+      );
+      addTearDown(cubit.close);
+
+      await tester.pumpWidget(buildSubject(cubit));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.byKey(const ValueKey('profile-reminders-settings')),
+        findsOneWidget,
+      );
+      expect(find.text(' Reminders'), findsOneWidget);
+
+      expect(find.text('Workouts'), findsOneWidget);
+      expect(find.byKey(const ValueKey('reminder-workouts')), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('reminder-workouts-time')),
+        findsOneWidget,
+      );
+      expect(find.text('07:30'), findsOneWidget);
+
+      expect(find.text('Weight Records'), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('reminder-weight-records')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const ValueKey('reminder-weight-records-day')),
+        findsOneWidget,
+      );
+      expect(find.text('Wed'), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('reminder-weight-records-time')),
+        findsOneWidget,
+      );
+      expect(find.text('09:15'), findsOneWidget);
+
+      expect(find.text('Macro Tracking'), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('reminder-macro-tracking')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const ValueKey('reminder-macro-tracking-time')),
+        findsOneWidget,
+      );
+      expect(find.text('20:45'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'toggling switches updates workouts, weight records, and macro tracking',
+    (tester) async {
+      final cubit = _ProfileCubit();
+      addTearDown(cubit.close);
+
+      await tester.pumpWidget(buildSubject(cubit));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const ValueKey('reminder-workouts')));
+      await tester.pumpAndSettle();
+      expect(cubit.updatedWorkoutsOn, isTrue);
+
+      await tester.tap(find.byKey(const ValueKey('reminder-weight-records')));
+      await tester.pumpAndSettle();
+      expect(cubit.updatedWeightRecordsOn, isTrue);
+
+      await tester.tap(find.byKey(const ValueKey('reminder-macro-tracking')));
+      await tester.pumpAndSettle();
+      expect(cubit.updatedMacroTrackingOn, isTrue);
+    },
+  );
+
+  for (final key in [
+    'reminder-workouts',
+    'reminder-macro-tracking',
+    'reminder-weight-records',
+  ]) {
+    testWidgets('$key stays off when notification permission is denied', (
+      tester,
+    ) async {
+      requestStatus = () async => 0;
+      final cubit = _ProfileCubit();
+      addTearDown(cubit.close);
+      await tester.pumpWidget(buildSubject(cubit));
+      final toggle = find.byKey(ValueKey(key));
+      await tester.ensureVisible(toggle);
+      await tester.tap(toggle);
+      await tester.pumpAndSettle();
+
+      expect(permissionRequests, 1);
+      expect(tester.widget<SharpSwitch>(toggle).value, isFalse);
+      expect(cubit.updatedWorkoutsOn, isNull);
+      expect(cubit.updatedMacroTrackingOn, isNull);
+      expect(cubit.updatedWeightRecordsOn, isNull);
+      expect(
+        find.text(
+          'Please enable notifications in settings before enabling reminders.',
+        ),
+        findsOneWidget,
+      );
+    });
+  }
+
+  testWidgets('turning reminders off does not request permission', (
     tester,
   ) async {
     final cubit = _ProfileCubit(
       workoutsOn: true,
-      workoutsReminderTime: const TimeOfDayValue(hour: 7, minute: 30),
-      weightRecordsOn: true,
-      weightRecordsReminderTime: const WeekdayTimeOfDayValue(
-        dayOfWeek: DayOfWeek.wednesday,
-        timeOfDay: TimeOfDayValue(hour: 9, minute: 15),
-      ),
       macroTrackingOn: true,
-      macroTrackingReminderTime: const TimeOfDayValue(hour: 20, minute: 45),
+      weightRecordsOn: true,
     );
     addTearDown(cubit.close);
-
     await tester.pumpWidget(buildSubject(cubit));
-    await tester.pumpAndSettle();
-
-    expect(find.byKey(const ValueKey('profile-reminders-settings')), findsOneWidget);
-    expect(find.text(' Reminders'), findsOneWidget);
-
-    expect(find.text('Workouts'), findsOneWidget);
-    expect(find.byKey(const ValueKey('reminder-workouts')), findsOneWidget);
-    expect(find.byKey(const ValueKey('reminder-workouts-time')), findsOneWidget);
-    expect(find.text('07:30'), findsOneWidget);
-
-    expect(find.text('Weight Records'), findsOneWidget);
-    expect(find.byKey(const ValueKey('reminder-weight-records')), findsOneWidget);
-    expect(find.byKey(const ValueKey('reminder-weight-records-day')), findsOneWidget);
-    expect(find.text('Wed'), findsOneWidget);
-    expect(find.byKey(const ValueKey('reminder-weight-records-time')), findsOneWidget);
-    expect(find.text('09:15'), findsOneWidget);
-
-    expect(find.text('Macro Tracking'), findsOneWidget);
-    expect(find.byKey(const ValueKey('reminder-macro-tracking')), findsOneWidget);
-    expect(find.byKey(const ValueKey('reminder-macro-tracking-time')), findsOneWidget);
-    expect(find.text('20:45'), findsOneWidget);
+    for (final key in [
+      'reminder-workouts',
+      'reminder-macro-tracking',
+      'reminder-weight-records',
+    ]) {
+      final toggle = find.byKey(ValueKey(key));
+      await tester.ensureVisible(toggle);
+      await tester.tap(toggle);
+      await tester.pumpAndSettle();
+      expect(tester.widget<SharpSwitch>(toggle).value, isFalse);
+    }
+    expect(permissionRequests, 0);
   });
 
-  testWidgets('toggling switches updates workouts, weight records, and macro tracking', (
-    tester,
-  ) async {
-    final cubit = _ProfileCubit();
-    addTearDown(cubit.close);
-
-    await tester.pumpWidget(buildSubject(cubit));
-    await tester.pumpAndSettle();
-
-    await tester.tap(find.byKey(const ValueKey('reminder-workouts')));
-    await tester.pumpAndSettle();
-    expect(cubit.updatedWorkoutsOn, isTrue);
-
-    await tester.tap(find.byKey(const ValueKey('reminder-weight-records')));
-    await tester.pumpAndSettle();
-    expect(cubit.updatedWeightRecordsOn, isTrue);
-
-    await tester.tap(find.byKey(const ValueKey('reminder-macro-tracking')));
-    await tester.pumpAndSettle();
-    expect(cubit.updatedMacroTrackingOn, isTrue);
-  });
+  testWidgets(
+    'pending permission disables all reminders and survives disposal',
+    (tester) async {
+      final gate = Completer<int>();
+      requestStatus = () => gate.future;
+      final cubit = _ProfileCubit();
+      addTearDown(cubit.close);
+      await tester.pumpWidget(buildSubject(cubit));
+      await tester.tap(find.byKey(const ValueKey('reminder-workouts')));
+      await tester.pump();
+      for (final key in [
+        'reminder-workouts',
+        'reminder-macro-tracking',
+        'reminder-weight-records',
+      ]) {
+        expect(
+          tester.widget<SharpSwitch>(find.byKey(ValueKey(key))).enabled,
+          isFalse,
+        );
+      }
+      expect(permissionRequests, 1);
+      await tester.pumpWidget(const SizedBox.shrink());
+      gate.complete(1);
+      await tester.pumpAndSettle();
+      expect(cubit.updatedWorkoutsOn, isNull);
+      expect(tester.takeException(), isNull);
+    },
+  );
 
   testWidgets('disabled when toggles are off', (tester) async {
     final cubit = _ProfileCubit(
@@ -229,7 +365,9 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Fri'), findsNothing);
 
-    await tester.tap(find.byKey(const ValueKey('reminder-macro-tracking-time')));
+    await tester.tap(
+      find.byKey(const ValueKey('reminder-macro-tracking-time')),
+    );
     await tester.pumpAndSettle();
     expect(find.byType(TimePickerDialog), findsNothing);
   });
@@ -262,52 +400,57 @@ void main() {
     expect(updated.minute, 15);
   });
 
-  testWidgets('picking time updates workouts, weight records (keeping weekday), and macro tracking', (
-    tester,
-  ) async {
-    final cubit = _ProfileCubit(
-      workoutsOn: true,
-      workoutsReminderTime: const TimeOfDayValue(hour: 8, minute: 0),
-      weightRecordsOn: true,
-      weightRecordsReminderTime: const WeekdayTimeOfDayValue(
-        dayOfWeek: DayOfWeek.friday,
-        timeOfDay: TimeOfDayValue(hour: 8, minute: 0),
-      ),
-      macroTrackingOn: true,
-      macroTrackingReminderTime: const TimeOfDayValue(hour: 8, minute: 0),
-    );
-    addTearDown(cubit.close);
+  testWidgets(
+    'picking time updates workouts, weight records (keeping weekday), and macro tracking',
+    (tester) async {
+      final cubit = _ProfileCubit(
+        workoutsOn: true,
+        workoutsReminderTime: const TimeOfDayValue(hour: 8, minute: 0),
+        weightRecordsOn: true,
+        weightRecordsReminderTime: const WeekdayTimeOfDayValue(
+          dayOfWeek: DayOfWeek.friday,
+          timeOfDay: TimeOfDayValue(hour: 8, minute: 0),
+        ),
+        macroTrackingOn: true,
+        macroTrackingReminderTime: const TimeOfDayValue(hour: 8, minute: 0),
+      );
+      addTearDown(cubit.close);
 
-    await tester.pumpWidget(buildSubject(cubit));
-    await tester.pumpAndSettle();
+      await tester.pumpWidget(buildSubject(cubit));
+      await tester.pumpAndSettle();
 
-    // Workouts time
-    await tester.tap(find.byKey(const ValueKey('reminder-workouts-time')));
-    await tester.pumpAndSettle();
-    expect(find.byType(TimePickerDialog), findsOneWidget);
-    await tester.tap(find.text('OK'));
-    await tester.pumpAndSettle();
-    expect(cubit.updatedWorkoutsReminderTime?.hour, 8);
-    expect(cubit.updatedWorkoutsReminderTime?.minute, 0);
+      // Workouts time
+      await tester.tap(find.byKey(const ValueKey('reminder-workouts-time')));
+      await tester.pumpAndSettle();
+      expect(find.byType(TimePickerDialog), findsOneWidget);
+      await tester.tap(find.text('OK'));
+      await tester.pumpAndSettle();
+      expect(cubit.updatedWorkoutsReminderTime?.hour, 8);
+      expect(cubit.updatedWorkoutsReminderTime?.minute, 0);
 
-    // Weight records time keeps Friday
-    await tester.tap(find.byKey(const ValueKey('reminder-weight-records-time')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('OK'));
-    await tester.pumpAndSettle();
-    expect(
-      cubit.updatedWeightRecordsReminderTime?.dayOfWeek,
-      DayOfWeek.friday,
-    );
+      // Weight records time keeps Friday
+      await tester.tap(
+        find.byKey(const ValueKey('reminder-weight-records-time')),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('OK'));
+      await tester.pumpAndSettle();
+      expect(
+        cubit.updatedWeightRecordsReminderTime?.dayOfWeek,
+        DayOfWeek.friday,
+      );
 
-    // Macro tracking time
-    await tester.tap(find.byKey(const ValueKey('reminder-macro-tracking-time')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('OK'));
-    await tester.pumpAndSettle();
-    expect(cubit.updatedMacroTrackingReminderTime?.hour, 8);
-    expect(cubit.updatedMacroTrackingReminderTime?.minute, 0);
-  });
+      // Macro tracking time
+      await tester.tap(
+        find.byKey(const ValueKey('reminder-macro-tracking-time')),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('OK'));
+      await tester.pumpAndSettle();
+      expect(cubit.updatedMacroTrackingReminderTime?.hour, 8);
+      expect(cubit.updatedMacroTrackingReminderTime?.minute, 0);
+    },
+  );
 
   testWidgets('renders without overflow on narrow xs screen', (tester) async {
     tester.view.physicalSize = const Size(320, 800);

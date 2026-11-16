@@ -29,7 +29,7 @@ import '../../view_models/profile_cubit.dart';
 import 'reminder_toggle_row.dart';
 import 'reminder_weekday_toggle_row.dart';
 
-class RemindersSettingsConfig extends StatelessWidget {
+class RemindersSettingsConfig extends StatefulWidget {
   final RemindersConfigDto remindersConfig;
   final bool isLoading;
   final int profileId;
@@ -48,7 +48,48 @@ class RemindersSettingsConfig extends StatelessWidget {
   });
 
   @override
+  State<RemindersSettingsConfig> createState() =>
+      _RemindersSettingsConfigState();
+}
+
+class _RemindersSettingsConfigState extends State<RemindersSettingsConfig> {
+  bool _isUpdatingReminder = false;
+
+  Future<void> _updateReminder(
+    bool value,
+    Future<void> Function(bool) update,
+  ) async {
+    if (widget.isLoading || _isUpdatingReminder) return;
+    setState(() => _isUpdatingReminder = true);
+    try {
+      final cubit = context.read<ProfileCubit>();
+      if (value) {
+        final granted = await cubit.requestNotificationPermission();
+        if (!mounted) return;
+        if (!granted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                cubit.state.error?.description ?? 'Please enable notifications in settings before enabling reminders.',
+              ),
+            ),
+          );
+          return;
+        }
+      }
+      await update(value);
+    } finally {
+      if (mounted) setState(() => _isUpdatingReminder = false);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final remindersConfig = widget.remindersConfig;
+    final sizes = widget.sizes;
+    final theme = widget.theme;
+    final isDarkTheme = widget.isDarkTheme;
+    final isLoading = widget.isLoading || _isUpdatingReminder;
     final cubit = context.read<ProfileCubit>();
     final titleColor = isDarkTheme
         ? ThemedColors.themedGrey.light
@@ -84,11 +125,10 @@ class RemindersSettingsConfig extends StatelessWidget {
           theme: theme,
           titleColor: titleColor,
           isLoading: isLoading,
-          onChanged: (value) {
-            if (!isLoading) {
-              cubit.updateRemindersConfig(workoutsOn: value);
-            }
-          },
+          onChanged: (value) => _updateReminder(
+            value,
+            (enabled) => cubit.updateRemindersConfig(workoutsOn: enabled),
+          ),
           onTimeTap: () => _pickClockTime(
             context: context,
             currentTime: remindersConfig.workoutsReminderTime,
@@ -110,11 +150,10 @@ class RemindersSettingsConfig extends StatelessWidget {
           theme: theme,
           titleColor: titleColor,
           isLoading: isLoading,
-          onChanged: (value) {
-            if (!isLoading) {
-              cubit.updateRemindersConfig(macroTrackingOn: value);
-            }
-          },
+          onChanged: (value) => _updateReminder(
+            value,
+            (enabled) => cubit.updateRemindersConfig(macroTrackingOn: enabled),
+          ),
           onTimeTap: () => _pickClockTime(
             context: context,
             currentTime: remindersConfig.macroTrackingReminderTime,
@@ -138,11 +177,10 @@ class RemindersSettingsConfig extends StatelessWidget {
           theme: theme,
           titleColor: titleColor,
           isLoading: isLoading,
-          onChanged: (value) {
-            if (!isLoading) {
-              cubit.updateRemindersConfig(weightRecordsOn: value);
-            }
-          },
+          onChanged: (value) => _updateReminder(
+            value,
+            (enabled) => cubit.updateRemindersConfig(weightRecordsOn: enabled),
+          ),
           onDayChanged: (DayOfWeek newDay) {
             cubit.updateRemindersConfig(
               weightRecordsReminderTime: remindersConfig
@@ -167,7 +205,7 @@ class RemindersSettingsConfig extends StatelessWidget {
     required TimeOfDayValue currentTime,
     required ValueChanged<TimeOfDayValue> onSelected,
   }) async {
-    if (isLoading) {
+    if (widget.isLoading || _isUpdatingReminder) {
       return;
     }
 
@@ -188,7 +226,7 @@ class RemindersSettingsConfig extends StatelessWidget {
     required WeekdayTimeOfDayValue current,
     required ValueChanged<WeekdayTimeOfDayValue> onSelected,
   }) async {
-    if (isLoading) {
+    if (widget.isLoading || _isUpdatingReminder) {
       return;
     }
 
