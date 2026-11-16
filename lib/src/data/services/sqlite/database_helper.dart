@@ -20,6 +20,9 @@ import 'package:logging/logging.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
+import '../../models/sqlite/backup_config_model.dart';
+import '../../models/sqlite/backup_model.dart';
+import '../../models/sqlite/backup_passkeys_model.dart';
 import '../../models/sqlite/daily_nutrition_log_model.dart';
 import '../../models/sqlite/day_macro_goal_model.dart';
 import '../../models/sqlite/equipment_model.dart';
@@ -160,6 +163,9 @@ final class DatabaseHelper {
       Profile.tableCreate,
       System.tableCreate,
       RemindersConfig.tableCreate,
+      BackupConfig.tableCreate,
+      BackupPasskeys.tableCreate,
+      Backup.tableCreate,
       WeightRecord.tableCreate,
       WeightGoal.tableCreate,
       Equipment.tableCreate,

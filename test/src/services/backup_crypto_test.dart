@@ -73,16 +73,19 @@ void main() {
   });
 
   group('AES key derivation', () {
-    test('deriveAesKey is deterministic for the same passkey and salt', () async {
-      const passkey = 'derive-me';
-      final salt = List<int>.generate(16, (i) => i + 1);
+    test(
+      'deriveAesKey is deterministic for the same passkey and salt',
+      () async {
+        const passkey = 'derive-me';
+        final salt = List<int>.generate(16, (i) => i + 1);
 
-      final first = await crypto.deriveAesKey(passkey: passkey, salt: salt);
-      final second = await crypto.deriveAesKey(passkey: passkey, salt: salt);
+        final first = await crypto.deriveAesKey(passkey: passkey, salt: salt);
+        final second = await crypto.deriveAesKey(passkey: passkey, salt: salt);
 
-      expect(await first.extractBytes(), await second.extractBytes());
-      expect(await first.extractBytes(), hasLength(32));
-    });
+        expect(await first.extractBytes(), await second.extractBytes());
+        expect(await first.extractBytes(), hasLength(32));
+      },
+    );
 
     test('deriveAesKey changes when the salt changes', () async {
       const passkey = 'derive-me';
@@ -92,7 +95,10 @@ void main() {
       final keyA = await crypto.deriveAesKey(passkey: passkey, salt: saltA);
       final keyB = await crypto.deriveAesKey(passkey: passkey, salt: saltB);
 
-      expect(await keyA.extractBytes(), isNot(equals(await keyB.extractBytes())));
+      expect(
+        await keyA.extractBytes(),
+        isNot(equals(await keyB.extractBytes())),
+      );
     });
   });
 
