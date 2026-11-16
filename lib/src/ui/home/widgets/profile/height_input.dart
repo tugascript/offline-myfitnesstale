@@ -56,6 +56,11 @@ class _HeightInputState extends State<HeightInput> {
 
     if (widget.isMetric) {
       _cmController.text = widget.initialHeight.toString();
+      final (int feet, int inches) = Converters.cmToFeetAndInches(
+        widget.initialHeight,
+      );
+      _feetController.text = feet.toString();
+      _inchesController.text = inches.toString();
       return;
     }
 
@@ -85,31 +90,12 @@ class _HeightInputState extends State<HeightInput> {
             fontSize: widget.sizes.fontSize,
             padding: widget.sizes.padding,
             keyboardType: TextInputType.number,
-            prefixIcon: Icon(
-              Icons.straighten,
-              size: widget.sizes.iconFontSize,
-            ),
+            prefixIcon: Icon(Icons.straighten, size: widget.sizes.iconFontSize),
             onChanged: (value) {
-              if (value.isEmpty) {
-                widget.onChanged(0);
-                return;
-              }
-
-              final int? height = int.tryParse(value);
-              if (height == null) {
-                return;
-              }
-
-              widget.onChanged(height);
+              _updateHeightMetric(widget.onChanged);
             },
             onSaved: (value) {
-              if (value != null && value.isNotEmpty) {
-                final int? height = int.tryParse(value);
-                if (height == null) {
-                  return;
-                }
-                widget.onSaved(height);
-              }
+              _updateHeightMetric(widget.onSaved);
             },
             validator: (value) {
               if (value == null || value.isEmpty) {
@@ -137,7 +123,10 @@ class _HeightInputState extends State<HeightInput> {
                     size: widget.sizes.iconFontSize,
                   ),
                   onChanged: (value) {
-                    _updateHeight();
+                    _updateHeightImperial(widget.onChanged);
+                  },
+                  onSaved: (value) {
+                    _updateHeightImperial(widget.onSaved);
                   },
                   validator: (value) {
                     if (value == null || value.isEmpty) {
@@ -150,7 +139,7 @@ class _HeightInputState extends State<HeightInput> {
                   },
                 ),
               ),
-              SizedBox(width: widget.sizes.margins),
+              SizedBox(width: widget.sizes.halfSpacing),
               Expanded(
                 child: AppTextFormField(
                   theme: widget.theme,
@@ -165,7 +154,10 @@ class _HeightInputState extends State<HeightInput> {
                     size: widget.sizes.iconFontSize,
                   ),
                   onChanged: (value) {
-                    _updateHeight();
+                    _updateHeightImperial(widget.onChanged);
+                  },
+                  onSaved: (value) {
+                    _updateHeightImperial(widget.onSaved);
                   },
                   validator: (value) {
                     if (value == null || value.isEmpty) {
@@ -182,11 +174,21 @@ class _HeightInputState extends State<HeightInput> {
           );
   }
 
-  void _updateHeight() {
+  void _updateHeightImperial(void Function(int) onFn) {
+    if (widget.isLoading) return;
     final int feet = int.tryParse(_feetController.text) ?? 0;
     final int inches = int.tryParse(_inchesController.text) ?? 0;
     final int totalCm = Converters.feetAndInchesToCm(feet, inches);
-    widget.onChanged(totalCm);
-    widget.onSaved(totalCm);
+    _cmController.text = totalCm.toString();
+    onFn(totalCm);
+  }
+
+  void _updateHeightMetric(void Function(int) onFn) {
+    if (widget.isLoading) return;
+    final int cm = int.tryParse(_cmController.text) ?? 0;
+    final (int feet, int inches) = Converters.cmToFeetAndInches(cm);
+    _feetController.text = feet.toString();
+    _inchesController.text = inches.toString();
+    onFn(cm);
   }
 }

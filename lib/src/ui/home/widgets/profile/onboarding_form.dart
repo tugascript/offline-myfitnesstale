@@ -219,6 +219,9 @@ class _OnboardingFormState extends State<OnboardingForm> {
                 SharpSwitchTitle(
                   contentPadding: EdgeInsets.zero,
                   title: 'Allow Notifications',
+                  titleStyle: TextStyle(
+                    fontSize: widget.sizes.subtitleFontSize,
+                  ),
                   value: _data.notificationsOn,
                   thumbSize: widget.sizes.subtitleFontSize,
                   switchPadding: EdgeInsets.all(widget.sizes.quarterSpacing),
@@ -311,6 +314,8 @@ class _OnboardingFormState extends State<OnboardingForm> {
                     });
                   },
                   onSaved: (int cm) {
+                    if (widget.isLoading) return;
+
                     setState(() {
                       _data.height = cm;
                     });
@@ -397,6 +402,7 @@ class _OnboardingFormState extends State<OnboardingForm> {
               key: const ValueKey('onboarding-preload-workouts'),
               contentPadding: EdgeInsets.zero,
               title: 'Pre-built Workout & Plans',
+              titleStyle: TextStyle(fontSize: widget.sizes.subtitleFontSize),
               value: _data.preLoadWorkouts,
               thumbSize: widget.sizes.subtitleFontSize,
               switchPadding: EdgeInsets.all(widget.sizes.quarterSpacing),

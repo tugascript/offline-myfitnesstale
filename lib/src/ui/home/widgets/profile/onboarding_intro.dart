@@ -18,6 +18,7 @@
 import 'package:material_ui/material_ui.dart';
 
 import '../../../core/sizes/data_display_sizes.dart';
+import '../../../core/themes/colors.dart';
 import '../../../core/widgets/layout/app_icon.dart';
 
 class OnboardingIntro extends StatelessWidget {
@@ -35,27 +36,27 @@ class OnboardingIntro extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isDarkMode = theme.brightness == Brightness.dark;
 
     return Center(
       child: Column(
         children: [
-          AppIcon(size: sizes.extraLargeIconSize),
-          SizedBox(height: sizes.spacing * 2),
+          AppIcon(size: sizes.mainIconSize),
+          SizedBox(height: sizes.doubleSpacing),
           Text(
             title,
-            style: theme.textTheme.headlineMedium?.copyWith(
+            style: TextStyle(
               fontWeight: FontWeight.bold,
-              fontSize: sizes.titleFontSize,
+              fontSize: sizes.mainTitleFontSize,
             ),
             textAlign: TextAlign.center,
           ),
           SizedBox(height: sizes.spacing),
           Text(
             subtitle,
-            style: theme.textTheme.bodyLarge?.copyWith(
-              color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+            style: TextStyle(
+              color: ThemedColors.themedGrey.fromBrightness(theme.brightness),
               fontSize: sizes.subtitleFontSize,
+              fontWeight: FontWeight.w600,
             ),
             textAlign: TextAlign.center,
           ),
