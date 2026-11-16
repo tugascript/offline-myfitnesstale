@@ -56,6 +56,8 @@ final class DataDisplaySizesList {
 
   double get mediumSmallFontSize => smallFontSize * 1.2;
 
+  double get titleIconSize => titleFontSize * 1.15;
+
   double get iconSubtitleFontSize => subtitleFontSize * 1.15;
 
   double get iconFontSize => fontSize * 1.15;

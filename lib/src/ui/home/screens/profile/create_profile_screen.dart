@@ -21,6 +21,8 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../../../data/utils/enums.dart';
 import '../../../../routing/routes.dart';
+import '../../../core/sizes/data_display_sizes.dart';
+import '../../../core/sizes/screen_size.dart';
 import '../../../core/widgets/layout/responsive_scaffold.dart';
 import '../../view_models/profile_cubit.dart';
 import '../../view_models/states/profile_state.dart';
@@ -41,6 +43,8 @@ class _CreateProfileScreenState extends State<CreateProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final breakPoint = BreakPoint.fromContext(context);
+    final sizes = DataDisplaySizes.getDataDisplaySizes(breakPoint.screenSize);
     return ResponsiveScaffold(
       title: "Create Profile",
       showBackButton: true,
@@ -80,6 +84,7 @@ class _CreateProfileScreenState extends State<CreateProfileScreen> {
         },
         builder: (context, state) {
           return ProfileForm(
+            sizes: sizes,
             initialName: "",
             initialHeight: 0,
             initialGender: Gender.male,
