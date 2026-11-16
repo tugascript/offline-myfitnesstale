@@ -45,6 +45,7 @@ class AppTextFormField extends StatelessWidget {
   final BoxConstraints? suffixIconConstraints;
   final TextInputAction? textInputAction;
   final List<TextInputFormatter>? inputFormatters;
+  final bool obscureText;
 
   const AppTextFormField({
     super.key,
@@ -72,6 +73,7 @@ class AppTextFormField extends StatelessWidget {
     this.prefixIconConstraints,
     this.suffixIconConstraints,
     this.inputFormatters,
+    this.obscureText = false,
   });
 
   @override
@@ -84,10 +86,11 @@ class AppTextFormField extends StatelessWidget {
       keyboardType: keyboardType,
       textInputAction: textInputAction,
       inputFormatters: inputFormatters,
+      obscureText: obscureText,
       enabled: enabled && !isLoading,
       style: TextStyle(fontSize: fontSize),
       controller: controller,
-      maxLines: maxLines,
+      maxLines: obscureText ? 1 : maxLines,
       onChanged: onChanged,
       onSaved: onSaved,
       onFieldSubmitted: onFieldSubmitted,
