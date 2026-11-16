@@ -18,6 +18,7 @@
 import 'package:material_ui/material_ui.dart';
 
 import '../../../../data/utils/enums.dart';
+import '../../../core/sizes/data_display_sizes.dart';
 import './height_input.dart';
 
 final class _FormData {
@@ -29,6 +30,7 @@ final class _FormData {
 }
 
 final class ProfileForm extends StatefulWidget {
+  final DataDisplaySizesList sizes;
   final String initialName;
   final int initialHeight;
   final Gender initialGender;
@@ -45,6 +47,7 @@ final class ProfileForm extends StatefulWidget {
 
   const ProfileForm({
     super.key,
+    required this.sizes,
     required this.initialName,
     required this.initialHeight,
     required this.initialGender,
@@ -82,6 +85,7 @@ class _ProfileFormState extends State<ProfileForm> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Form(
       key: _formKey,
       child: Column(
@@ -139,6 +143,9 @@ class _ProfileFormState extends State<ProfileForm> {
             },
           ),
           HeightInput(
+            theme: theme,
+            sizes: widget.sizes,
+            isLoading: widget.isLoading,
             initialHeight: _data.height,
             isMetric: widget.units == Units.metric,
             onChanged: (int cm) {

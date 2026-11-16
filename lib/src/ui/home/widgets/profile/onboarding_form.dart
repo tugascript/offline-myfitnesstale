@@ -21,7 +21,11 @@ import 'package:permission_handler/permission_handler.dart';
 
 import '../../../../data/utils/enums.dart';
 import '../../../core/sizes/data_display_sizes.dart';
+import '../../../core/widgets/layout/app_dropdown.dart';
+import '../../../core/widgets/layout/app_elevated_button.dart';
+import '../../../core/widgets/layout/app_text_form_field.dart';
 import '../../../core/widgets/layout/sharp_switch_title.dart';
+import '../../../core/widgets/layout/titled_section.dart';
 import '../../view_models/profile_cubit.dart';
 import './height_input.dart';
 
@@ -125,329 +129,310 @@ class _OnboardingFormState extends State<OnboardingForm> {
   @override
   Widget build(BuildContext context) {
     final cubit = context.read<ProfileCubit>();
+    final theme = Theme.of(context);
     return Form(
       key: _formKey,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _Section(
+          TitledSection(
             sizes: widget.sizes,
-            title: 'App Settings',
+            title: "Settings",
             icon: Icons.settings,
-            children: [
-              DropdownButtonFormField<Units>(
-                initialValue: _data.units,
-                decoration: const InputDecoration(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                AppDropdown<Units>(
+                  theme: theme,
+                  isLoading: widget.isLoading,
+                  value: _data.units,
+                  emptyLabel: '',
+                  showEmptyValue: false,
                   labelText: 'Units',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.straighten),
-                ),
-                items: Units.values.map((units) {
-                  return DropdownMenuItem(
-                    value: units,
-                    child: Text(
-                      units == Units.imperial
-                          ? 'Imperial (lbs, ft)'
-                          : 'Metric (kg, cm)',
-                    ),
-                  );
-                }).toList(),
-                onChanged: (value) {
-                  if (value != null) {
-                    setState(() {
-                      _data.units = value;
-                      cubit.changeSystem(
-                        theme: _data.themeMode,
-                        units: value,
-                        notificationsOn: _data.notificationsOn,
-                      );
-                    });
-                  }
-                },
-                onSaved: (value) {
-                  if (value != null) {
-                    setState(() {
-                      _data.units = value;
-                    });
-                  }
-                },
-              ),
-              SizedBox(height: widget.sizes.spacing),
-              DropdownButtonFormField<ThemeType>(
-                initialValue: _data.themeMode,
-                decoration: const InputDecoration(
-                  labelText: 'Theme',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.palette),
-                ),
-                items: ThemeType.values.map((theme) {
-                  return DropdownMenuItem(
-                    value: theme,
-                    child: Text(_getThemeDisplayName(theme)),
-                  );
-                }).toList(),
-                onChanged: (value) {
-                  if (value != null) {
-                    setState(() {
-                      _data.themeMode = value;
-                      cubit.changeSystem(
-                        theme: value,
-                        units: _data.units,
-                        notificationsOn: _data.notificationsOn,
-                      );
-                    });
-                  }
-                },
-                onSaved: (value) {
-                  if (value != null) {
-                    setState(() {
-                      _data.themeMode = value;
-                    });
-                  }
-                },
-              ),
-              SizedBox(height: widget.sizes.spacing),
-              SharpSwitchTitle(
-                contentPadding: EdgeInsets.zero,
-                title: 'Allow Notifications',
-                value: _data.notificationsOn,
-                thumbSize: widget.sizes.subtitleFontSize,
-                switchPadding: EdgeInsets.all(widget.sizes.quarterSpacing),
-                onChanged: (bool value) async {
-                  if (value) {
-                    final status = await Permission.notification.request();
-                    if (status.isGranted) {
+                  items: Units.values,
+                  fontSize: widget.sizes.fontSize,
+                  padding: widget.sizes.padding,
+                  prefixIcon: Icon(
+                    Icons.straighten,
+                    size: widget.sizes.iconFontSize,
+                  ),
+                  labelBuilder: (units) => units == Units.imperial
+                      ? 'Imperial (lbs, ft)'
+                      : 'Metric (kg, cm)',
+                  onChanged: (value) {
+                    if (value != null) {
                       setState(() {
-                        _data.notificationsOn = true;
+                        _data.units = value;
+                        cubit.changeSystem(
+                          theme: _data.themeMode,
+                          units: value,
+                          notificationsOn: _data.notificationsOn,
+                        );
                       });
+                    }
+                  },
+                  onSaved: (value) {
+                    if (value != null) {
+                      setState(() {
+                        _data.units = value;
+                      });
+                    }
+                  },
+                ),
+                SizedBox(height: widget.sizes.halfSpacing),
+                AppDropdown<ThemeType>(
+                  theme: theme,
+                  isLoading: widget.isLoading,
+                  value: _data.themeMode,
+                  emptyLabel: '',
+                  showEmptyValue: false,
+                  labelText: 'Theme',
+                  items: ThemeType.values,
+                  fontSize: widget.sizes.fontSize,
+                  padding: widget.sizes.padding,
+                  prefixIcon: Icon(
+                    Icons.palette,
+                    size: widget.sizes.iconFontSize,
+                  ),
+                  labelBuilder: _getThemeDisplayName,
+                  onChanged: (value) {
+                    if (value != null) {
+                      setState(() {
+                        _data.themeMode = value;
+                        cubit.changeSystem(
+                          theme: value,
+                          units: _data.units,
+                          notificationsOn: _data.notificationsOn,
+                        );
+                      });
+                    }
+                  },
+                  onSaved: (value) {
+                    if (value != null) {
+                      setState(() {
+                        _data.themeMode = value;
+                      });
+                    }
+                  },
+                ),
+                SizedBox(height: widget.sizes.halfSpacing),
+                SharpSwitchTitle(
+                  contentPadding: EdgeInsets.zero,
+                  title: 'Allow Notifications',
+                  value: _data.notificationsOn,
+                  thumbSize: widget.sizes.subtitleFontSize,
+                  switchPadding: EdgeInsets.all(widget.sizes.quarterSpacing),
+                  onChanged: (bool value) async {
+                    if (value) {
+                      final status = await Permission.notification.request();
+                      if (status.isGranted) {
+                        setState(() {
+                          _data.notificationsOn = true;
+                        });
+                      } else {
+                        setState(() {
+                          _data.notificationsOn = false;
+                        });
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                'Permission denied. Please enable notifications in settings.',
+                              ),
+                            ),
+                          );
+                        }
+                      }
                     } else {
                       setState(() {
                         _data.notificationsOn = false;
                       });
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text(
-                              'Permission denied. Please enable notifications in settings.',
-                            ),
-                          ),
-                        );
-                      }
                     }
-                  } else {
-                    setState(() {
-                      _data.notificationsOn = false;
-                    });
-                  }
-                },
-              ),
-            ],
-          ),
-          SizedBox(height: widget.sizes.spacing * 2),
-          _Section(
-            sizes: widget.sizes,
-            title: 'Profile Information',
-            icon: Icons.person,
-            children: [
-              TextFormField(
-                controller: _nameController,
-                decoration: const InputDecoration(
-                  labelText: 'Name',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.person_outline),
-                ),
-                textInputAction: TextInputAction.next,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your name';
-                  }
-                  return null;
-                },
-                onChanged: (value) {
-                  setState(() {
-                    _data.name = value;
-                  });
-                },
-                onSaved: (value) {
-                  if (value != null) {
-                    setState(() {
-                      _data.name = value;
-                    });
-                  }
-                },
-                onFieldSubmitted: (_) {
-                  // Move focus to next field instead of submitting form
-                  FocusScope.of(context).nextFocus();
-                },
-              ),
-              SizedBox(height: widget.sizes.inputSpacing),
-              HeightInput(
-                initialHeight: _data.height,
-                isMetric: _data.units == Units.metric,
-                onChanged: (int cm) {
-                  if (widget.isLoading) return;
-
-                  setState(() {
-                    _data.height = cm;
-                  });
-                },
-                onSaved: (int cm) {
-                  setState(() {
-                    _data.height = cm;
-                  });
-                },
-              ),
-              SizedBox(height: widget.sizes.inputSpacing),
-              TextFormField(
-                controller: _birthdayController,
-                readOnly: true,
-                decoration: const InputDecoration(
-                  labelText: 'Birthday',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.cake_outlined),
-                  suffixIcon: Icon(Icons.calendar_today),
-                ),
-                onTap: () async {
-                  final DateTime? picked = await showDatePicker(
-                    context: context,
-                    initialDate: _data.birthday,
-                    firstDate: DateTime.now().subtract(
-                      Duration(days: (365.25 * 125).floor()),
-                    ),
-                    lastDate: DateTime.now().subtract(
-                      Duration(days: (365.25 * 16).floor()),
-                    ),
-                  );
-                  if (picked != null && picked != _data.birthday) {
-                    setState(() {
-                      _data.birthday = picked;
-                      _birthdayController.text =
-                          "${picked.day}/${picked.month}/${picked.year}";
-                    });
-                  }
-                },
-              ),
-              SizedBox(height: widget.sizes.inputSpacing),
-              DropdownButtonFormField<Gender>(
-                initialValue: _data.gender,
-                decoration: const InputDecoration(
-                  labelText: 'Gender',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.people_outline),
-                ),
-                items: Gender.values.map((gender) {
-                  return DropdownMenuItem(
-                    value: gender,
-                    child: Text(
-                      "${gender.name[0].toUpperCase()}${gender.name.substring(1)}",
-                    ),
-                  );
-                }).toList(),
-                onChanged: (value) {
-                  if (value != null) {
-                    setState(() {
-                      _data.gender = value;
-                    });
-                  }
-                },
-              ),
-            ],
-          ),
-          SizedBox(height: widget.sizes.spacing * 2),
-          _Section(
-            sizes: widget.sizes,
-            title: 'Initial Data',
-            icon: Icons.fitness_center,
-            children: [
-              CheckboxListTile(
-                key: const ValueKey('onboarding-preload-workouts'),
-                value: _data.preLoadWorkouts,
-                onChanged: (checked) {
-                  if (checked != null) {
-                    setState(() {
-                      _data.preLoadWorkouts = checked;
-                    });
-                  }
-                },
-                title: const Text("Pre-built Workout & Plans"),
-              ),
-            ],
-          ),
-          SizedBox(height: widget.sizes.spacing * 2),
-          ElevatedButton(
-            key: const ValueKey('onboarding-submit'),
-            onPressed: () {
-              if (!widget.isLoading) {
-                if (_formKey.currentState!.validate()) {
-                  _formKey.currentState!.save();
-                  widget.onSubmit(
-                    units: _data.units,
-                    theme: _data.themeMode,
-                    name: _nameController.text,
-                    gender: _data.gender,
-                    height: _data.height,
-                    birthday: _data.birthday,
-                    preLoadWorkouts: _data.preLoadWorkouts,
-                    notificationsOn: _data.notificationsOn,
-                  );
-                }
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              padding: EdgeInsets.symmetric(vertical: widget.sizes.halfPadding),
-            ),
-            child: Text(
-              widget.submitButtonLabel,
-              style: TextStyle(
-                fontSize: widget.sizes.subtitleFontSize,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _Section extends StatelessWidget {
-  final DataDisplaySizesList sizes;
-  final String title;
-  final IconData icon;
-  final List<Widget> children;
-
-  const _Section({
-    required this.sizes,
-    required this.title,
-    required this.icon,
-    required this.children,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: EdgeInsets.all(sizes.padding / 1.2),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(icon, color: Theme.of(context).primaryColor),
-                SizedBox(width: sizes.spacing),
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: sizes.subtitleFontSize,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  },
                 ),
               ],
             ),
-            SizedBox(height: sizes.spacing / 0.6),
-            ...children,
-          ],
-        ),
+          ),
+          SizedBox(height: widget.sizes.betweenSpacing),
+          TitledSection(
+            sizes: widget.sizes,
+            title: 'Profile Information',
+            icon: Icons.person,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                AppTextFormField(
+                  theme: theme,
+                  isLoading: widget.isLoading,
+                  controller: _nameController,
+                  labelText: 'Name',
+                  fontSize: widget.sizes.fontSize,
+                  padding: widget.sizes.padding,
+                  textInputAction: TextInputAction.next,
+                  prefixIcon: Icon(
+                    Icons.person_outline,
+                    size: widget.sizes.iconFontSize,
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter your name';
+                    }
+                    return null;
+                  },
+                  onChanged: (value) {
+                    setState(() {
+                      _data.name = value;
+                    });
+                  },
+                  onSaved: (value) {
+                    if (value != null) {
+                      setState(() {
+                        _data.name = value;
+                      });
+                    }
+                  },
+                  onFieldSubmitted: (_) {
+                    // Move focus to next field instead of submitting form
+                    FocusScope.of(context).nextFocus();
+                  },
+                ),
+                SizedBox(height: widget.sizes.halfSpacing),
+                HeightInput(
+                  theme: theme,
+                  sizes: widget.sizes,
+                  isLoading: widget.isLoading,
+                  initialHeight: _data.height,
+                  isMetric: _data.units == Units.metric,
+                  onChanged: (int cm) {
+                    if (widget.isLoading) return;
+
+                    setState(() {
+                      _data.height = cm;
+                    });
+                  },
+                  onSaved: (int cm) {
+                    setState(() {
+                      _data.height = cm;
+                    });
+                  },
+                ),
+                SizedBox(height: widget.sizes.halfSpacing),
+                AppTextFormField(
+                  theme: theme,
+                  isLoading: widget.isLoading,
+                  controller: _birthdayController,
+                  labelText: 'Birthday',
+                  fontSize: widget.sizes.fontSize,
+                  padding: widget.sizes.padding,
+                  readOnly: true,
+                  prefixIcon: Icon(
+                    Icons.cake_outlined,
+                    size: widget.sizes.iconFontSize,
+                  ),
+                  suffixIcon: Icon(
+                    Icons.calendar_today,
+                    size: widget.sizes.iconFontSize,
+                  ),
+                  onTap: () async {
+                    final DateTime? picked = await showDatePicker(
+                      context: context,
+                      initialDate: _data.birthday,
+                      firstDate: DateTime.now().subtract(
+                        Duration(days: (365.25 * 125).floor()),
+                      ),
+                      lastDate: DateTime.now().subtract(
+                        Duration(days: (365.25 * 16).floor()),
+                      ),
+                    );
+                    if (picked != null && picked != _data.birthday) {
+                      setState(() {
+                        _data.birthday = picked;
+                        _birthdayController.text =
+                            "${picked.day}/${picked.month}/${picked.year}";
+                      });
+                    }
+                  },
+                ),
+                SizedBox(height: widget.sizes.halfSpacing),
+                AppDropdown<Gender>(
+                  theme: theme,
+                  isLoading: widget.isLoading,
+                  value: _data.gender,
+                  emptyLabel: '',
+                  showEmptyValue: false,
+                  labelText: 'Gender',
+                  items: Gender.values,
+                  fontSize: widget.sizes.fontSize,
+                  padding: widget.sizes.padding,
+                  prefixIcon: Icon(
+                    Icons.people_outline,
+                    size: widget.sizes.iconFontSize,
+                  ),
+                  labelBuilder: (gender) =>
+                      "${gender.name[0].toUpperCase()}${gender.name.substring(1)}",
+                  onChanged: (value) {
+                    if (value != null) {
+                      setState(() {
+                        _data.gender = value;
+                      });
+                    }
+                  },
+                  onSaved: (value) {
+                    if (value != null) {
+                      setState(() {
+                        _data.gender = value;
+                      });
+                    }
+                  },
+                ),
+              ],
+            ),
+          ),
+          SizedBox(height: widget.sizes.betweenSpacing),
+          TitledSection(
+            sizes: widget.sizes,
+            title: 'Initial Data',
+            icon: Icons.fitness_center,
+            child: SharpSwitchTitle(
+              key: const ValueKey('onboarding-preload-workouts'),
+              contentPadding: EdgeInsets.zero,
+              title: 'Pre-built Workout & Plans',
+              value: _data.preLoadWorkouts,
+              thumbSize: widget.sizes.subtitleFontSize,
+              switchPadding: EdgeInsets.all(widget.sizes.quarterSpacing),
+              enabled: !widget.isLoading,
+              onChanged: (checked) {
+                setState(() {
+                  _data.preLoadWorkouts = checked;
+                });
+              },
+            ),
+          ),
+          SizedBox(height: widget.sizes.betweenSpacing),
+          AppElevatedButton(
+            key: const ValueKey('onboarding-submit'),
+            theme: theme,
+            isLoading: widget.isLoading,
+            sizes: widget.sizes,
+            icon: Icons.check,
+            label: widget.submitButtonLabel,
+            onPressed: () {
+              if (_formKey.currentState!.validate()) {
+                _formKey.currentState!.save();
+                widget.onSubmit(
+                  units: _data.units,
+                  theme: _data.themeMode,
+                  name: _nameController.text,
+                  gender: _data.gender,
+                  height: _data.height,
+                  birthday: _data.birthday,
+                  preLoadWorkouts: _data.preLoadWorkouts,
+                  notificationsOn: _data.notificationsOn,
+                );
+              }
+            },
+          ),
+        ],
       ),
     );
   }

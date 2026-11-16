@@ -17,9 +17,14 @@
 
 import 'package:material_ui/material_ui.dart';
 
+import '../../../core/sizes/data_display_sizes.dart';
 import '../../../core/utils/converters.dart';
+import '../../../core/widgets/layout/app_text_form_field.dart';
 
 final class HeightInput extends StatefulWidget {
+  final ThemeData theme;
+  final DataDisplaySizesList sizes;
+  final bool isLoading;
   final bool isMetric;
   final int initialHeight;
   final void Function(int) onChanged;
@@ -27,6 +32,9 @@ final class HeightInput extends StatefulWidget {
 
   const HeightInput({
     super.key,
+    required this.theme,
+    required this.sizes,
+    required this.isLoading,
     required this.initialHeight,
     required this.isMetric,
     required this.onChanged,
@@ -69,13 +77,18 @@ class _HeightInputState extends State<HeightInput> {
   @override
   Widget build(BuildContext context) {
     return widget.isMetric
-        ? TextFormField(
+        ? AppTextFormField(
+            theme: widget.theme,
+            isLoading: widget.isLoading,
             controller: _cmController,
-            decoration: const InputDecoration(
-              labelText: 'Height (cm)',
-              prefixIcon: Icon(Icons.straighten),
-            ),
+            labelText: 'Height (cm)',
+            fontSize: widget.sizes.fontSize,
+            padding: widget.sizes.padding,
             keyboardType: TextInputType.number,
+            prefixIcon: Icon(
+              Icons.straighten,
+              size: widget.sizes.iconFontSize,
+            ),
             onChanged: (value) {
               if (value.isEmpty) {
                 widget.onChanged(0);
@@ -111,13 +124,18 @@ class _HeightInputState extends State<HeightInput> {
         : Row(
             children: [
               Expanded(
-                child: TextFormField(
+                child: AppTextFormField(
+                  theme: widget.theme,
+                  isLoading: widget.isLoading,
                   controller: _feetController,
-                  decoration: const InputDecoration(
-                    labelText: 'Feet',
-                    prefixIcon: Icon(Icons.square_foot),
-                  ),
+                  labelText: 'Feet',
+                  fontSize: widget.sizes.fontSize,
+                  padding: widget.sizes.padding,
                   keyboardType: TextInputType.number,
+                  prefixIcon: Icon(
+                    Icons.square_foot,
+                    size: widget.sizes.iconFontSize,
+                  ),
                   onChanged: (value) {
                     _updateHeight();
                   },
@@ -132,15 +150,20 @@ class _HeightInputState extends State<HeightInput> {
                   },
                 ),
               ),
-              const SizedBox(width: 10),
+              SizedBox(width: widget.sizes.margins),
               Expanded(
-                child: TextFormField(
+                child: AppTextFormField(
+                  theme: widget.theme,
+                  isLoading: widget.isLoading,
                   controller: _inchesController,
-                  decoration: const InputDecoration(
-                    labelText: 'Inches',
-                    prefixIcon: Icon(Icons.straighten),
-                  ),
+                  labelText: 'Inches',
+                  fontSize: widget.sizes.fontSize,
+                  padding: widget.sizes.padding,
                   keyboardType: TextInputType.number,
+                  prefixIcon: Icon(
+                    Icons.straighten,
+                    size: widget.sizes.iconFontSize,
+                  ),
                   onChanged: (value) {
                     _updateHeight();
                   },

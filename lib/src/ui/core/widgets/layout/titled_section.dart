@@ -23,12 +23,14 @@ class TitledSection extends StatelessWidget {
   final DataDisplaySizesList sizes;
   final String title;
   final Widget child;
+  final IconData? icon;
 
   const TitledSection({
     super.key,
     required this.sizes,
     required this.title,
     required this.child,
+    this.icon,
   });
 
   @override
@@ -36,13 +38,27 @@ class TitledSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          title,
-          style: TextStyle(
-            fontSize: sizes.titleFontSize,
-            fontWeight: FontWeight.bold,
+        if (icon != null)
+          Row(
+            children: [
+              Icon(icon, size: sizes.titleIconSize),
+              Text(
+                " $title",
+                style: TextStyle(
+                  fontSize: sizes.titleFontSize,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          )
+        else
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: sizes.titleFontSize,
+              fontWeight: FontWeight.bold,
+            ),
           ),
-        ),
         SizedBox(height: sizes.spacing),
         Card(
           child: Padding(padding: EdgeInsets.all(sizes.padding), child: child),

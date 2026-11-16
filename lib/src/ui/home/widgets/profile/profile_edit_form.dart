@@ -114,6 +114,9 @@ class _ProfileEditFormState extends State<ProfileEditForm> {
           ),
           SizedBox(height: sizes.spacing),
           HeightInput(
+            theme: theme,
+            sizes: sizes,
+            isLoading: false,
             initialHeight: widget.profile.height,
             isMetric: widget.system.units == Units.metric,
             onChanged: (int cm) {
