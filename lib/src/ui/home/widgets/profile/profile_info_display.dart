@@ -45,47 +45,42 @@ class ProfileInfoDisplay extends StatelessWidget {
         ? ThemedColors.themedGrey.light
         : ThemedColors.themedGrey.dark;
 
-    return Card(
-      child: Padding(
-        padding: EdgeInsets.all(sizes.padding),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            ProfileInfoRow(
-              name: "Name",
-              value: profile.name,
-              sizes: sizes,
-              titleColor: color,
-            ),
-            SizedBox(height: sizes.halfSpacing),
-            ProfileInfoRow(
-              name: "Height",
-              value: system.units == Units.metric
-                  ? "${profile.height}cm"
-                  : Converters.formatImperialHeight(profile.height),
-              sizes: sizes,
-              titleColor: color,
-            ),
-            SizedBox(height: sizes.halfSpacing),
-            ProfileInfoRow(
-              name: "Gender",
-              value: profile.gender.name,
-              sizes: sizes,
-              titleColor: color,
-            ),
-            SizedBox(height: sizes.halfSpacing),
-            ProfileInfoRow(
-              name: "Birthdate",
-              value: Converters.formatDate(
-                profile.birthdate,
-                imperial: system.units == Units.imperial,
-              ),
-              sizes: sizes,
-              titleColor: color,
-            ),
-          ],
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        ProfileInfoRow(
+          name: "Name",
+          value: profile.name,
+          sizes: sizes,
+          titleColor: color,
         ),
-      ),
+        SizedBox(height: sizes.halfSpacing),
+        ProfileInfoRow(
+          name: "Height",
+          value: system.units == Units.metric
+              ? "${profile.height}cm"
+              : Converters.formatImperialHeight(profile.height),
+          sizes: sizes,
+          titleColor: color,
+        ),
+        SizedBox(height: sizes.halfSpacing),
+        ProfileInfoRow(
+          name: "Gender",
+          value: profile.gender.name,
+          sizes: sizes,
+          titleColor: color,
+        ),
+        SizedBox(height: sizes.halfSpacing),
+        ProfileInfoRow(
+          name: "Birthdate",
+          value: Converters.formatDate(
+            profile.birthdate,
+            imperial: system.units == Units.imperial,
+          ),
+          sizes: sizes,
+          titleColor: color,
+        ),
+      ],
     );
   }
 }

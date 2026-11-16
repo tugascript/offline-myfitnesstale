@@ -94,134 +94,126 @@ class _ProfileEditFormState extends State<ProfileEditForm> {
     final theme = Theme.of(context);
     final sizes = widget.sizes;
 
-    return Card(
-      child: Padding(
-        padding: EdgeInsets.all(sizes.padding),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              TextFormField(
-                controller: _nameController,
-                decoration: const InputDecoration(
-                  labelText: "Name",
-                  border: OutlineInputBorder(),
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return "Please enter your name";
-                  }
-                  return null;
-                },
-              ),
-              SizedBox(height: sizes.spacing),
-              HeightInput(
-                initialHeight: widget.profile.height,
-                isMetric: widget.system.units == Units.metric,
-                onChanged: (int cm) {
-                  setState(() {
-                    _height = cm;
-                  });
-                },
-                onSaved: (int cm) {
-                  setState(() {
-                    _height = cm;
-                  });
-                },
-              ),
-              SizedBox(height: sizes.spacing),
-              DropdownButtonFormField<Gender>(
-                initialValue: _selectedGender,
-                decoration: const InputDecoration(
-                  labelText: "Gender",
-                  border: OutlineInputBorder(),
-                ),
-                items: Gender.values.map((gender) {
-                  return DropdownMenuItem(
-                    value: gender,
-                    child: Text(gender.name),
-                  );
-                }).toList(),
-                onChanged: (value) {
-                  if (value != null) {
-                    setState(() {
-                      _selectedGender = value;
-                    });
-                  }
-                },
-              ),
-              SizedBox(height: sizes.spacing),
-              TextFormField(
-                controller: _birthdateController,
-                readOnly: true,
-                decoration: const InputDecoration(
-                  labelText: "Birthdate",
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.cake_outlined),
-                  suffixIcon: Icon(Icons.calendar_today),
-                ),
-                onTap: () async {
-                  final DateTime? picked = await showDatePicker(
-                    context: context,
-                    initialDate: _birthdate,
-                    firstDate: DateTime.now().subtract(
-                      Duration(days: (365.25 * 125).floor()),
-                    ),
-                    lastDate: DateTime.now().subtract(
-                      Duration(days: (365.25 * 16).floor()),
-                    ),
-                  );
-                  if (picked != null && picked != _birthdate) {
-                    setState(() {
-                      _birthdate = picked;
-                      _birthdateController.text =
-                          "${picked.day}/${picked.month}/${picked.year}";
-                    });
-                  }
-                },
-              ),
-              SizedBox(height: sizes.spacing * 1.5),
-              LayoutBuilder(
-                builder: (context, constraints) {
-                  final cancel = MutationButton(
-                    onPressed: widget.onCancel,
-                    theme: theme,
-                    sizes: sizes,
-                    isLoading: false,
-                    label: "Cancel",
-                    icon: Icons.close,
-                  );
-                  final save = AppElevatedButton(
-                    onPressed: _save,
-                    theme: Theme.of(context),
-                    isLoading: false,
-                    sizes: sizes,
-                    label: "Save",
-                    icon: Icons.save,
-                  );
-                  if (constraints.maxWidth < 360) {
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        cancel,
-                        SizedBox(height: sizes.spacing / 2),
-                        save,
-                      ],
-                    );
-                  }
-                  return Row(
-                    children: [
-                      Expanded(child: cancel),
-                      SizedBox(width: sizes.spacing),
-                      Expanded(child: save),
-                    ],
-                  );
-                },
-              ),
-            ],
+    return Form(
+      key: _formKey,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          TextFormField(
+            controller: _nameController,
+            decoration: const InputDecoration(
+              labelText: "Name",
+              border: OutlineInputBorder(),
+            ),
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return "Please enter your name";
+              }
+              return null;
+            },
           ),
-        ),
+          SizedBox(height: sizes.spacing),
+          HeightInput(
+            initialHeight: widget.profile.height,
+            isMetric: widget.system.units == Units.metric,
+            onChanged: (int cm) {
+              setState(() {
+                _height = cm;
+              });
+            },
+            onSaved: (int cm) {
+              setState(() {
+                _height = cm;
+              });
+            },
+          ),
+          SizedBox(height: sizes.spacing),
+          DropdownButtonFormField<Gender>(
+            initialValue: _selectedGender,
+            decoration: const InputDecoration(
+              labelText: "Gender",
+              border: OutlineInputBorder(),
+            ),
+            items: Gender.values.map((gender) {
+              return DropdownMenuItem(value: gender, child: Text(gender.name));
+            }).toList(),
+            onChanged: (value) {
+              if (value != null) {
+                setState(() {
+                  _selectedGender = value;
+                });
+              }
+            },
+          ),
+          SizedBox(height: sizes.spacing),
+          TextFormField(
+            controller: _birthdateController,
+            readOnly: true,
+            decoration: const InputDecoration(
+              labelText: "Birthdate",
+              border: OutlineInputBorder(),
+              prefixIcon: Icon(Icons.cake_outlined),
+              suffixIcon: Icon(Icons.calendar_today),
+            ),
+            onTap: () async {
+              final DateTime? picked = await showDatePicker(
+                context: context,
+                initialDate: _birthdate,
+                firstDate: DateTime.now().subtract(
+                  Duration(days: (365.25 * 125).floor()),
+                ),
+                lastDate: DateTime.now().subtract(
+                  Duration(days: (365.25 * 16).floor()),
+                ),
+              );
+              if (picked != null && picked != _birthdate) {
+                setState(() {
+                  _birthdate = picked;
+                  _birthdateController.text =
+                      "${picked.day}/${picked.month}/${picked.year}";
+                });
+              }
+            },
+          ),
+          SizedBox(height: sizes.spacing * 1.5),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final cancel = MutationButton(
+                onPressed: widget.onCancel,
+                theme: theme,
+                sizes: sizes,
+                isLoading: false,
+                label: "Cancel",
+                icon: Icons.close,
+              );
+              final save = AppElevatedButton(
+                onPressed: _save,
+                theme: Theme.of(context),
+                isLoading: false,
+                sizes: sizes,
+                label: "Save",
+                icon: Icons.save,
+              );
+              if (constraints.maxWidth < 360) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    cancel,
+                    SizedBox(height: sizes.spacing / 2),
+                    save,
+                  ],
+                );
+              }
+              return Row(
+                children: [
+                  Expanded(child: cancel),
+                  SizedBox(width: sizes.spacing),
+                  Expanded(child: save),
+                ],
+              );
+            },
+          ),
+        ],
       ),
     );
   }

@@ -20,6 +20,7 @@ import 'package:material_ui/material_ui.dart';
 import '../../../../data/repositories/profile/dtos/reminders_config_dto.dart';
 import '../../../../data/repositories/profile/dtos/system_dto.dart';
 import '../../../core/sizes/data_display_sizes.dart';
+import '../../../core/widgets/layout/titled_section.dart';
 import 'app_settings_config.dart';
 import 'backup_settings_config.dart';
 import 'data_export.dart';
@@ -46,53 +47,39 @@ class SettingsConfig extends StatelessWidget {
     final theme = Theme.of(context);
     final isDarkTheme = theme.brightness == Brightness.dark;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          "Settings",
-          style: TextStyle(
-            fontSize: sizes.titleFontSize,
-            fontWeight: FontWeight.bold,
+    return TitledSection(
+      sizes: sizes,
+      title: "Settings",
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          AppSettingsConfig(
+            isLoading: isLoading,
+            system: system,
+            sizes: sizes,
+            theme: theme,
+            isDarkTheme: isDarkTheme,
           ),
-        ),
-        SizedBox(height: sizes.spacing),
-        Card(
-          child: Padding(
-            padding: EdgeInsets.all(sizes.padding),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                AppSettingsConfig(
-                  isLoading: isLoading,
-                  system: system,
-                  sizes: sizes,
-                  theme: theme,
-                  isDarkTheme: isDarkTheme,
-                ),
-                SizedBox(height: sizes.spacing),
-                RemindersSettingsConfig(
-                  theme: theme,
-                  isDarkTheme: isDarkTheme,
-                  isLoading: isLoading,
-                  sizes: sizes,
-                  profileId: profileId,
-                  remindersConfig: remindersConfig,
-                ),
-                SizedBox(height: sizes.spacing),
-                BackupSettingsConfig(
-                  sizes: sizes,
-                  theme: theme,
-                  isDarkTheme: isDarkTheme,
-                  isLoading: isLoading,
-                ),
-                SizedBox(height: sizes.spacing),
-                DataExport(sizes: sizes, isLoading: isLoading),
-              ],
-            ),
+          SizedBox(height: sizes.spacing),
+          RemindersSettingsConfig(
+            theme: theme,
+            isDarkTheme: isDarkTheme,
+            isLoading: isLoading,
+            sizes: sizes,
+            profileId: profileId,
+            remindersConfig: remindersConfig,
           ),
-        ),
-      ],
+          SizedBox(height: sizes.spacing),
+          BackupSettingsConfig(
+            sizes: sizes,
+            theme: theme,
+            isDarkTheme: isDarkTheme,
+            isLoading: isLoading,
+          ),
+          SizedBox(height: sizes.spacing),
+          DataExport(sizes: sizes, isLoading: isLoading),
+        ],
+      ),
     );
   }
 }

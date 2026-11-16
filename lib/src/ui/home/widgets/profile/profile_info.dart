@@ -22,6 +22,7 @@ import '../../../../data/repositories/profile/dtos/profile_dto.dart';
 import '../../../../data/repositories/profile/dtos/system_dto.dart';
 import '../../../../data/utils/enums.dart';
 import '../../../core/sizes/data_display_sizes.dart';
+import '../../../core/widgets/layout/titled_section.dart';
 import '../../view_models/profile_cubit.dart';
 import 'profile_edit_form.dart';
 import 'profile_header.dart';
@@ -92,24 +93,23 @@ class _ProfileInfoState extends State<ProfileInfo> {
           editOnPress: _startEditing,
         ),
         SizedBox(height: sizes.betweenSpacing),
-        Text(
-          "Profile Information",
-          style: TextStyle(
-            fontSize: sizes.titleFontSize,
-            fontWeight: FontWeight.bold,
-          ),
+        TitledSection(
+          sizes: sizes,
+          title: "Profile Information",
+          child: _isEditing
+              ? ProfileEditForm(
+                  profile: profile,
+                  system: system,
+                  sizes: sizes,
+                  onCancel: _cancelEditing,
+                  onSave: _saveProfile,
+                )
+              : ProfileInfoDisplay(
+                  sizes: sizes,
+                  profile: profile,
+                  system: system,
+                ),
         ),
-        SizedBox(height: sizes.spacing),
-        if (_isEditing)
-          ProfileEditForm(
-            profile: profile,
-            system: system,
-            sizes: sizes,
-            onCancel: _cancelEditing,
-            onSave: _saveProfile,
-          )
-        else
-          ProfileInfoDisplay(sizes: sizes, profile: profile, system: system),
       ],
     );
   }
