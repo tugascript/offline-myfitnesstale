@@ -101,6 +101,8 @@ mechanism; after restore they must be derived again from the passkey and salt.
 - Marks setup complete only after every other write succeeds.
 - Preserves the form after failure and supports a clean retry.
 - Saves profile, theme, units, and both reminder switches.
+- Shows save errors while keeping the Profile screen available. Failed profile
+  edits stay in the form so they can be retried.
 
 Enabling any reminder (workouts, macro tracking, or weight records) first requests
 notification permission through the existing `ProfileCubit` permission flow. Only a
@@ -431,6 +433,8 @@ instances. Production uses `AppRouter.router`. Used fonts are bundled under
 - `BackupPasskeys` (`backup_passkeys`) stores a bcrypt hash in `passkey`, a base64
   PBKDF2 salt, and optional `last_used_at`; plaintext passkeys are not stored there.
   The hash has a unique index.
+- The passkey dialog and bcrypt helpers enforce a 72-byte UTF-8 limit. Oversized
+  verification inputs fail safely, and hash validation errors omit the passkey.
 - `Backup` (`backups`) stores provider, path, start/optional finish timestamps,
   encryption flag, and schema version. Nullable `backup_config_id` and
   `backup_passkey_id` references use `ON DELETE SET NULL`, preserving history

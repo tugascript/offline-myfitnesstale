@@ -23,6 +23,7 @@ import 'package:bcrypt/bcrypt.dart';
 import 'package:cryptography/cryptography.dart';
 import 'package:logging/logging.dart';
 
+import '../../utils/backup_passkey.dart';
 import '../secure_storage/secure_storage_service.dart';
 
 /// Crypto helpers for backup passkeys: bcrypt verification + PBKDF2 AES key
@@ -62,11 +63,17 @@ final class BackupCrypto {
   /// One-way hash for verifying the passkey. Store this in SQLite, not the
   /// plaintext passkey.
   String hashPasskey(String passkey) {
+    if (isBackupPasskeyTooLong(passkey)) {
+      throw ArgumentError(
+        'Backup passkeys must be at most '
+        '$backupPasskeyMaxBytes UTF-8 bytes.',
+      );
+    }
     return BCrypt.hashpw(passkey, BCrypt.gensalt());
   }
 
   bool verifyPasskey(String passkey, String hash) {
-    return BCrypt.checkpw(passkey, hash);
+    return !isBackupPasskeyTooLong(passkey) && BCrypt.checkpw(passkey, hash);
   }
 
   /// Derives a 256-bit AES key from [passkey] and [salt] via PBKDF2-HMAC-SHA256.

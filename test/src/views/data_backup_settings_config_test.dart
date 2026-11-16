@@ -351,6 +351,20 @@ void main() {
       expect(find.text('Passkeys do not match'), findsOneWidget);
       expect(find.byType(BackupPasskeyModal), findsOneWidget);
 
+      final oversizedPasskey = '€' * 25;
+      await tester.enterText(
+        find.byKey(const ValueKey('backup-passkey-input')),
+        oversizedPasskey,
+      );
+      await tester.enterText(
+        find.byKey(const ValueKey('backup-passkey-confirm-input')),
+        oversizedPasskey,
+      );
+      await tester.tap(find.text('SAVE'));
+      await tester.pumpAndSettle();
+      expect(find.text('Passkey must be at most 72 bytes'), findsOneWidget);
+      expect(find.byType(BackupPasskeyModal), findsOneWidget);
+
       await tester.enterText(
         find.byKey(const ValueKey('backup-passkey-input')),
         'my-secure-passkey',

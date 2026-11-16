@@ -17,6 +17,7 @@
 
 import 'package:material_ui/material_ui.dart';
 
+import '../../../../data/utils/backup_passkey.dart';
 import '../../../core/sizes/data_display_sizes.dart';
 import '../../../core/themes/colors.dart';
 import '../../../core/widgets/editors/save_buttons.dart';
@@ -113,10 +114,7 @@ class _BackupPasskeyModalState extends State<BackupPasskeyModal> {
                 filled: true,
                 obscureText: _obscurePasskey,
                 textInputAction: TextInputAction.next,
-                prefixIcon: Icon(
-                  Icons.key,
-                  size: widget.sizes.iconFontSize,
-                ),
+                prefixIcon: Icon(Icons.key, size: widget.sizes.iconFontSize),
                 suffixIcon: IconButton(
                   key: const ValueKey('backup-passkey-visibility'),
                   padding: EdgeInsets.zero,
@@ -138,6 +136,9 @@ class _BackupPasskeyModalState extends State<BackupPasskeyModal> {
                   if (value.length < _minPasskeyLength) {
                     return "Passkey must be at least $_minPasskeyLength characters";
                   }
+                  if (isBackupPasskeyTooLong(value)) {
+                    return "Passkey must be at most $backupPasskeyMaxBytes bytes";
+                  }
                   return null;
                 },
               ),
@@ -155,10 +156,7 @@ class _BackupPasskeyModalState extends State<BackupPasskeyModal> {
                 obscureText: _obscureConfirmPasskey,
                 textInputAction: TextInputAction.done,
                 onFieldSubmitted: (_) => _onSave(),
-                prefixIcon: Icon(
-                  Icons.key,
-                  size: widget.sizes.iconFontSize,
-                ),
+                prefixIcon: Icon(Icons.key, size: widget.sizes.iconFontSize),
                 suffixIcon: IconButton(
                   key: const ValueKey('backup-passkey-confirm-visibility'),
                   padding: EdgeInsets.zero,

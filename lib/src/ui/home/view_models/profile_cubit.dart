@@ -572,7 +572,7 @@ class ProfileCubit extends Cubit<ProfileState> {
     );
   }
 
-  Future<void> updateProfile({
+  Future<bool> updateProfile({
     String? name,
     int? height,
     Gender? gender,
@@ -582,7 +582,7 @@ class ProfileCubit extends Cubit<ProfileState> {
     final existing = state.profile;
     if (existing == null) {
       _logger.info("No profile loaded, skipping");
-      return;
+      return false;
     }
 
     emit(state.copyWith(isLoading: true));
@@ -594,6 +594,8 @@ class ProfileCubit extends Cubit<ProfileState> {
         birthday: birthday ?? existing.birthdate,
       ),
     );
+
+    if (isClosed) return false;
 
     if (result.isErr()) {
       final error = result.error;
@@ -613,7 +615,7 @@ class ProfileCubit extends Cubit<ProfileState> {
               isLoading: false,
             ),
           );
-          return;
+          return false;
         case SingleErrorTypes.operationFailure:
           _logger.severe("Failed to update profile", result.error);
           emit(
@@ -627,7 +629,7 @@ class ProfileCubit extends Cubit<ProfileState> {
               isLoading: false,
             ),
           );
-          return;
+          return false;
       }
     }
 
@@ -639,6 +641,7 @@ class ProfileCubit extends Cubit<ProfileState> {
         error: const Nullable(null),
       ),
     );
+    return true;
   }
 
   Future<void> updateSystem({Units? units, ThemeType? theme}) async {

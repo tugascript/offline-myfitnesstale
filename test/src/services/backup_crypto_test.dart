@@ -70,6 +70,28 @@ void main() {
 
       expect(crypto.verifyPasskey('wrong-passkey', hash), isFalse);
     });
+
+    test('accepts 72 UTF-8 bytes and safely rejects longer passkeys', () {
+      final passkeyAtLimit = '€' * 24;
+      final oversizedPasskey = '${passkeyAtLimit}a';
+      final hash = crypto.hashPasskey(passkeyAtLimit);
+
+      expect(crypto.verifyPasskey(passkeyAtLimit, hash), isTrue);
+      expect(crypto.verifyPasskey(oversizedPasskey, hash), isFalse);
+      expect(
+        () => crypto.hashPasskey(oversizedPasskey),
+        throwsA(
+          isA<ArgumentError>().having(
+            (error) => error.toString(),
+            'message',
+            allOf(
+              contains('72 UTF-8 bytes'),
+              isNot(contains(oversizedPasskey)),
+            ),
+          ),
+        ),
+      );
+    });
   });
 
   group('AES key derivation', () {
