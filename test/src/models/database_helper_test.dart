@@ -18,9 +18,6 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:path/path.dart';
-import 'package:sqflite_common_ffi/sqflite_ffi.dart';
-
 import 'package:myfitnesstale/src/data/models/sqlite/backup_config_model.dart';
 import 'package:myfitnesstale/src/data/models/sqlite/backup_model.dart';
 import 'package:myfitnesstale/src/data/models/sqlite/backup_passkeys_model.dart';
@@ -29,6 +26,8 @@ import 'package:myfitnesstale/src/data/services/sqlite/dao.dart';
 import 'package:myfitnesstale/src/data/services/sqlite/database_helper.dart';
 import 'package:myfitnesstale/src/data/utils/enums.dart';
 import 'package:myfitnesstale/src/utils/nullable.dart';
+import 'package:path/path.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -167,6 +166,7 @@ void main() {
     final config = BackupConfig.create(
       provider: BackupProvider.localFile,
       schedule: BackupSchedule.weekly,
+      backupsOn: true,
       encrypted: false,
     );
     await _expectCrud(

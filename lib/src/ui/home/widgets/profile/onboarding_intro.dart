@@ -17,11 +17,11 @@
 
 import 'package:material_ui/material_ui.dart';
 
-import '../../../core/sizes/profile/onboarding_sizes.dart';
+import '../../../core/sizes/data_display_sizes.dart';
 import '../../../core/widgets/layout/app_icon.dart';
 
 class OnboardingIntro extends StatelessWidget {
-  final OnboardingSizesList sizes;
+  final DataDisplaySizesList sizes;
   final String title;
   final String subtitle;
 
@@ -40,8 +40,8 @@ class OnboardingIntro extends StatelessWidget {
     return Center(
       child: Column(
         children: [
-          AppIcon(size: sizes.icon),
-          SizedBox(height: sizes.breaks * 2),
+          AppIcon(size: sizes.extraLargeIconSize),
+          SizedBox(height: sizes.spacing * 2),
           Text(
             title,
             style: theme.textTheme.headlineMedium?.copyWith(
@@ -50,7 +50,7 @@ class OnboardingIntro extends StatelessWidget {
             ),
             textAlign: TextAlign.center,
           ),
-          SizedBox(height: sizes.breaks),
+          SizedBox(height: sizes.spacing),
           Text(
             subtitle,
             style: theme.textTheme.bodyLarge?.copyWith(

@@ -54,6 +54,7 @@ void main() {
         BackupConfig.create(
           provider: BackupProvider.localFile,
           schedule: BackupSchedule.weekly,
+          backupsOn: true,
           encrypted: true,
         ).toMap(),
       );

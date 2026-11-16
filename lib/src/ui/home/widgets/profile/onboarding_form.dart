@@ -20,7 +20,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import '../../../../data/utils/enums.dart';
-import '../../../core/sizes/profile/onboarding_sizes.dart';
+import '../../../core/sizes/data_display_sizes.dart';
 import '../../../core/widgets/layout/sharp_switch_title.dart';
 import '../../view_models/profile_cubit.dart';
 import './height_input.dart';
@@ -48,7 +48,7 @@ final class _FormData {
 }
 
 class OnboardingForm extends StatefulWidget {
-  final OnboardingSizesList sizes;
+  final DataDisplaySizesList sizes;
   final Units initialUnits;
   final ThemeType initialThemeMode;
   final String initialName;
@@ -172,7 +172,7 @@ class _OnboardingFormState extends State<OnboardingForm> {
                   }
                 },
               ),
-              SizedBox(height: widget.sizes.breaks),
+              SizedBox(height: widget.sizes.spacing),
               DropdownButtonFormField<ThemeType>(
                 initialValue: _data.themeMode,
                 decoration: const InputDecoration(
@@ -206,13 +206,13 @@ class _OnboardingFormState extends State<OnboardingForm> {
                   }
                 },
               ),
-              SizedBox(height: widget.sizes.breaks),
+              SizedBox(height: widget.sizes.spacing),
               SharpSwitchTitle(
                 contentPadding: EdgeInsets.zero,
                 title: 'Allow Notifications',
                 value: _data.notificationsOn,
                 thumbSize: widget.sizes.subtitleFontSize,
-                switchPadding: EdgeInsets.all(widget.sizes.breaks / 4),
+                switchPadding: EdgeInsets.all(widget.sizes.quarterSpacing),
                 onChanged: (bool value) async {
                   if (value) {
                     final status = await Permission.notification.request();
@@ -243,7 +243,7 @@ class _OnboardingFormState extends State<OnboardingForm> {
               ),
             ],
           ),
-          SizedBox(height: widget.sizes.breaks * 2),
+          SizedBox(height: widget.sizes.spacing * 2),
           _Section(
             sizes: widget.sizes,
             title: 'Profile Information',
@@ -280,7 +280,7 @@ class _OnboardingFormState extends State<OnboardingForm> {
                   FocusScope.of(context).nextFocus();
                 },
               ),
-              SizedBox(height: widget.sizes.formBreaks),
+              SizedBox(height: widget.sizes.inputSpacing),
               HeightInput(
                 initialHeight: _data.height,
                 isMetric: _data.units == Units.metric,
@@ -297,7 +297,7 @@ class _OnboardingFormState extends State<OnboardingForm> {
                   });
                 },
               ),
-              SizedBox(height: widget.sizes.formBreaks),
+              SizedBox(height: widget.sizes.inputSpacing),
               TextFormField(
                 controller: _birthdayController,
                 readOnly: true,
@@ -327,7 +327,7 @@ class _OnboardingFormState extends State<OnboardingForm> {
                   }
                 },
               ),
-              SizedBox(height: widget.sizes.formBreaks),
+              SizedBox(height: widget.sizes.inputSpacing),
               DropdownButtonFormField<Gender>(
                 initialValue: _data.gender,
                 decoration: const InputDecoration(
@@ -353,7 +353,7 @@ class _OnboardingFormState extends State<OnboardingForm> {
               ),
             ],
           ),
-          SizedBox(height: widget.sizes.breaks * 2),
+          SizedBox(height: widget.sizes.spacing * 2),
           _Section(
             sizes: widget.sizes,
             title: 'Initial Data',
@@ -373,7 +373,7 @@ class _OnboardingFormState extends State<OnboardingForm> {
               ),
             ],
           ),
-          SizedBox(height: widget.sizes.breaks * 2),
+          SizedBox(height: widget.sizes.spacing * 2),
           ElevatedButton(
             key: const ValueKey('onboarding-submit'),
             onPressed: () {
@@ -394,7 +394,7 @@ class _OnboardingFormState extends State<OnboardingForm> {
               }
             },
             style: ElevatedButton.styleFrom(
-              padding: EdgeInsets.symmetric(vertical: widget.sizes.padding / 2),
+              padding: EdgeInsets.symmetric(vertical: widget.sizes.halfPadding),
             ),
             child: Text(
               widget.submitButtonLabel,
@@ -411,7 +411,7 @@ class _OnboardingFormState extends State<OnboardingForm> {
 }
 
 class _Section extends StatelessWidget {
-  final OnboardingSizesList sizes;
+  final DataDisplaySizesList sizes;
   final String title;
   final IconData icon;
   final List<Widget> children;
@@ -434,7 +434,7 @@ class _Section extends StatelessWidget {
             Row(
               children: [
                 Icon(icon, color: Theme.of(context).primaryColor),
-                SizedBox(width: sizes.breaks),
+                SizedBox(width: sizes.spacing),
                 Text(
                   title,
                   style: TextStyle(
@@ -444,7 +444,7 @@ class _Section extends StatelessWidget {
                 ),
               ],
             ),
-            SizedBox(height: sizes.breaks / 0.6),
+            SizedBox(height: sizes.spacing / 0.6),
             ...children,
           ],
         ),

@@ -21,7 +21,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../../../data/utils/enums.dart';
 import '../../../../routing/routes.dart';
-import '../../../core/sizes/profile/onboarding_sizes.dart';
+import '../../../core/sizes/data_display_sizes.dart';
 import '../../../core/sizes/screen_size.dart';
 import '../../view_models/profile_cubit.dart';
 import '../../view_models/states/profile_state.dart';
@@ -36,7 +36,7 @@ class OnboardingScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final breakPoint = BreakPoint.fromContext(context);
-    final sizes = OnboardingSizes.getOnboardingSizes(breakPoint.screenSize);
+    final sizes = DataDisplaySizes.getDataDisplaySizes(breakPoint.screenSize);
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
@@ -44,13 +44,13 @@ class OnboardingScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              SizedBox(height: sizes.breaks),
+              SizedBox(height: sizes.spacing),
               OnboardingIntro(
                 sizes: sizes,
                 title: "Welcome",
                 subtitle: "Set up your profile to start on your fitness tale",
               ),
-              SizedBox(height: sizes.breaks * 4),
+              SizedBox(height: sizes.spacing * 4),
               BlocListener<ProfileCubit, ProfileState>(
                 listenWhen: (previous, current) {
                   final startedOnboarding =
@@ -108,7 +108,7 @@ class OnboardingScreen extends StatelessWidget {
                               ),
                             ),
                           ),
-                          SizedBox(height: sizes.breaks),
+                          SizedBox(height: sizes.spacing),
                         ],
                         OnboardingForm(
                           sizes: sizes,
