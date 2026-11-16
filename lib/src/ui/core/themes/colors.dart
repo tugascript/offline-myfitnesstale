@@ -43,8 +43,8 @@ final class ThemedColors {
   const ThemedColors({required this.light, required this.dark});
 
   static final ThemedColors themedGrey = ThemedColors(
-    light: Colors.grey.shade400,
-    dark: Colors.grey.shade800,
+    light: Colors.grey.shade800,
+    dark: Colors.grey.shade400,
   );
 
   Color fromBrightness(Brightness brightness) =>
