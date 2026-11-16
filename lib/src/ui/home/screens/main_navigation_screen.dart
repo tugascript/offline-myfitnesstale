@@ -73,16 +73,19 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   int _currentIndex = 0;
   final Set<int> _visitedIndices = {0};
 
+  bool _shouldRedirectToOnboarding(ProfileState state) =>
+      !state.isLoading &&
+      state.profile == null &&
+      ((state.isInitiated && state.error == null) ||
+          state.onboardingDraft != null);
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       final state = context.read<ProfileCubit>().state;
-      if (!state.isLoading &&
-          state.isInitiated &&
-          state.profile == null &&
-          state.error == null) {
+      if (_shouldRedirectToOnboarding(state)) {
         GoRouter.maybeOf(context)?.go(Routes.onboarding.name);
       }
     });
@@ -101,15 +104,15 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
 
     return BlocConsumer<ProfileCubit, ProfileState>(
       listener: (context, state) {
-        if (!state.isLoading &&
-            state.isInitiated &&
-            state.profile == null &&
-            state.error == null) {
+        if (_shouldRedirectToOnboarding(state)) {
           GoRouter.maybeOf(context)?.go(Routes.onboarding.name);
         }
       },
       builder: (context, state) {
-        final hasStartupError = state.profile == null && state.error != null;
+        final hasStartupError =
+            state.profile == null &&
+            state.error != null &&
+            state.onboardingDraft == null;
         final isHomeLoading =
             !hasStartupError &&
             (!state.isInitiated || (state.isLoading && state.profile == null));
