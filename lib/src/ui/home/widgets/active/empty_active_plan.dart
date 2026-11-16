@@ -67,6 +67,8 @@ class EmptyActivePlan extends StatelessWidget {
                 Text(
                   'Start an old or create a new workout plan',
                   textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     fontSize: sizes.fontSize,
                     color: colors.onSurfaceVariant,

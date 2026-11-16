@@ -22,6 +22,7 @@ import '../../core/sizes/data_display_sizes.dart';
 import '../view_models/profile_cubit.dart';
 import '../view_models/states/profile_state.dart';
 
+// TODO: add random welcome motivational message
 class WelcomeSection extends StatelessWidget {
   final DataDisplaySizesList sizes;
 
