@@ -57,7 +57,14 @@ class ProfileScreen extends StatelessWidget {
               return const Center(child: CircularProgressIndicator());
             }
 
-            if (state.error != null) {
+            final profile = state.profile;
+            final system = state.system;
+            final remindersConfig = state.remindersConfig;
+
+            if (state.error != null &&
+                (profile == null ||
+                    system == null ||
+                    remindersConfig == null)) {
               return Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -74,9 +81,6 @@ class ProfileScreen extends StatelessWidget {
               );
             }
 
-            final profile = state.profile;
-            final system = state.system;
-            final remindersConfig = state.remindersConfig;
             if (profile == null || system == null || remindersConfig == null) {
               return const Center(
                 child: Column(

@@ -44,9 +44,7 @@ class AppSettingsConfig extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cubit = context.read<ProfileCubit>();
-    final titleColor = isDarkTheme
-        ? ThemedColors.themedGrey.light
-        : ThemedColors.themedGrey.dark;
+    final titleColor = ThemedColors.themedGrey.fromBrightness(theme.brightness);
 
     return Column(
       key: const ValueKey('profile-app-settings'),

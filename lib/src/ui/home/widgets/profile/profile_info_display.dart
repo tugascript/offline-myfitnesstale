@@ -40,10 +40,7 @@ class ProfileInfoDisplay extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isDarkTheme = theme.brightness == Brightness.dark;
-    final color = isDarkTheme
-        ? ThemedColors.themedGrey.light
-        : ThemedColors.themedGrey.dark;
+    final color = ThemedColors.themedGrey.fromBrightness(theme.brightness);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

@@ -42,11 +42,13 @@ class TitledSection extends StatelessWidget {
           Row(
             children: [
               Icon(icon, size: sizes.titleIconSize),
-              Text(
-                " $title",
-                style: TextStyle(
-                  fontSize: sizes.titleFontSize,
-                  fontWeight: FontWeight.bold,
+              Expanded(
+                child: Text(
+                  " $title",
+                  style: TextStyle(
+                    fontSize: sizes.titleFontSize,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ],

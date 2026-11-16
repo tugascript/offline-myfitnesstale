@@ -85,9 +85,9 @@ class _BackupSettingsConfigState extends State<BackupSettingsConfig> {
 
   @override
   Widget build(BuildContext context) {
-    final titleColor = widget.isDarkTheme
-        ? ThemedColors.themedGrey.light
-        : ThemedColors.themedGrey.dark;
+    final titleColor = ThemedColors.themedGrey.fromBrightness(
+      widget.theme.brightness,
+    );
 
     return Column(
       key: const ValueKey('profile-backup-settings'),
