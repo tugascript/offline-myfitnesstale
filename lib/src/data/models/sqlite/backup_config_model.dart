@@ -27,6 +27,7 @@ enum BackupConfigColumns with Columns {
   id("id"),
   provider("provider"),
   schedule("schedule"),
+  backupsOn("backups_on"),
   encrypted("encrypted"),
   createdAt("created_at"),
   updatedAt("updated_at");
@@ -42,6 +43,7 @@ final class BackupConfig extends Equatable implements Model {
   final int? id;
   final BackupProvider provider;
   final BackupSchedule schedule;
+  final bool backupsOn;
   final bool encrypted;
   @override
   final int createdAt;
@@ -52,6 +54,7 @@ final class BackupConfig extends Equatable implements Model {
     this.id,
     required this.provider,
     required this.schedule,
+    required this.backupsOn,
     required this.encrypted,
     required this.createdAt,
     required this.updatedAt,
@@ -64,6 +67,7 @@ final class BackupConfig extends Equatable implements Model {
       ${BackupConfigColumns.id.value} INTEGER PRIMARY KEY AUTOINCREMENT,
       ${BackupConfigColumns.provider.value} TEXT NOT NULL,
       ${BackupConfigColumns.schedule.value} TEXT NOT NULL,
+      ${BackupConfigColumns.backupsOn.value} INTEGER NOT NULL DEFAULT 0,
       ${BackupConfigColumns.encrypted.value} INTEGER NOT NULL DEFAULT 0,
       ${BackupConfigColumns.createdAt.value} INTEGER NOT NULL,
       ${BackupConfigColumns.updatedAt.value} INTEGER NOT NULL
@@ -76,6 +80,7 @@ final class BackupConfig extends Equatable implements Model {
       BackupConfigColumns.id.value: id,
       BackupConfigColumns.provider.value: provider.value,
       BackupConfigColumns.schedule.value: schedule.value,
+      BackupConfigColumns.backupsOn.value: backupsOn ? 1 : 0,
       BackupConfigColumns.encrypted.value: encrypted ? 1 : 0,
       BackupConfigColumns.createdAt.value: createdAt,
       BackupConfigColumns.updatedAt.value: updatedAt,
@@ -91,6 +96,7 @@ final class BackupConfig extends Equatable implements Model {
       schedule: BackupSchedule.fromValue(
         map[BackupConfigColumns.schedule.value]! as String,
       ),
+      backupsOn: map[BackupConfigColumns.backupsOn.value]! as int == 1,
       encrypted: map[BackupConfigColumns.encrypted.value]! as int == 1,
       createdAt: map[BackupConfigColumns.createdAt.value]! as int,
       updatedAt: map[BackupConfigColumns.updatedAt.value]! as int,
@@ -101,12 +107,14 @@ final class BackupConfig extends Equatable implements Model {
     required BackupProvider provider,
     required BackupSchedule schedule,
     required bool encrypted,
+    required bool backupsOn,
   }) {
     final int now = DateUtilities.getNowUtcUnix();
     return BackupConfig(
       provider: provider,
       schedule: schedule,
       encrypted: encrypted,
+      backupsOn: backupsOn,
       createdAt: now,
       updatedAt: now,
     );
@@ -118,6 +126,7 @@ final class BackupConfig extends Equatable implements Model {
     BackupProvider? provider,
     BackupSchedule? schedule,
     bool? encrypted,
+    bool? backupsOn,
     int? createdAt,
     int? updatedAt,
   }) {
@@ -126,6 +135,7 @@ final class BackupConfig extends Equatable implements Model {
       provider: provider ?? this.provider,
       schedule: schedule ?? this.schedule,
       encrypted: encrypted ?? this.encrypted,
+      backupsOn: backupsOn ?? this.backupsOn,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -137,6 +147,7 @@ final class BackupConfig extends Equatable implements Model {
     provider,
     schedule,
     encrypted,
+    backupsOn,
     createdAt,
     updatedAt,
   ];
