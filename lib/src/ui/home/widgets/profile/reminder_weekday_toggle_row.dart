@@ -91,14 +91,84 @@ class _ReminderWeekdayToggleRowState extends State<ReminderWeekdayToggleRow> {
     super.dispose();
   }
 
+  Widget _buildSwitch() {
+    return Semantics(
+      label: widget.label,
+      toggled: widget.value,
+      enabled: !widget.isLoading,
+      onTap: !widget.isLoading ? () => widget.onChanged(!widget.value) : null,
+      excludeSemantics: true,
+      child: SharpSwitch(
+        key: widget.switchKey,
+        value: widget.value,
+        enabled: !widget.isLoading,
+        onChanged: widget.onChanged,
+        thumbSize: widget.sizes.subtitleFontSize,
+        padding: EdgeInsets.all(widget.sizes.halfSpacing),
+      ),
+    );
+  }
+
+  Widget _buildDayDropdown() {
+    return KeyedSubtree(
+      key: widget.dayKey,
+      child: AppDropdown<DayOfWeek>(
+        key: ValueKey(widget.dayOfWeek),
+        theme: widget.theme,
+        filled: true,
+        value: widget.dayOfWeek,
+        emptyLabel: '',
+        showEmptyValue: false,
+        items: DayOfWeek.values,
+        labelBuilder: ReminderWeekdayToggleRow.abbreviateDay,
+        fontSize: widget.sizes.fontSize,
+        padding: widget.sizes.halfSpacing,
+        isLoading: widget.isLoading,
+        enabled: widget.value,
+        prefixIcon: Icon(Icons.calendar_today, size: widget.sizes.iconFontSize),
+        onChanged: (day) {
+          if (day != null) {
+            widget.onDayChanged(day);
+          }
+        },
+        onSaved: (_) {},
+      ),
+    );
+  }
+
+  Widget _buildTimeField() {
+    return AppTextFormField(
+      key: widget.timeKey,
+      theme: widget.theme,
+      controller: _timeController,
+      fontSize: widget.sizes.fontSize,
+      padding: widget.sizes.halfSpacing,
+      isLoading: widget.isLoading,
+      enabled: widget.value,
+      readOnly: true,
+      filled: true,
+      onTap: widget.value ? widget.onTimeTap : null,
+      prefixIcon: Icon(Icons.access_time, size: widget.sizes.iconFontSize),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      mainAxisAlignment: MainAxisAlignment.start,
-      mainAxisSize: MainAxisSize.max,
-      children: [
-        SizedBox(
+    final textScale = MediaQuery.textScalerOf(context).scale(1.0);
+    final switchWidth =
+        widget.sizes.subtitleFontSize * 2 + widget.sizes.halfSpacing * 2;
+    final singleRowUsed =
+        widget.sizes.profileLabelWidth +
+        switchWidth +
+        widget.sizes.halfSpacing * 2;
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final remainingForSelectors = constraints.maxWidth - singleRowUsed;
+        final isTight =
+            textScale > 1.2 || remainingForSelectors < 130.0 * textScale;
+
+        final labelWidget = SizedBox(
           width: widget.sizes.profileLabelWidth,
           child: Text(
             widget.label,
@@ -108,65 +178,46 @@ class _ReminderWeekdayToggleRowState extends State<ReminderWeekdayToggleRow> {
               color: widget.titleColor,
             ),
           ),
-        ),
-        SharpSwitch(
-          key: widget.switchKey,
-          value: widget.value,
-          enabled: !widget.isLoading,
-          onChanged: widget.onChanged,
-          thumbSize: widget.sizes.subtitleFontSize,
-          padding: EdgeInsets.all(widget.sizes.halfSpacing),
-        ),
-        SizedBox(width: widget.sizes.halfSpacing),
-        Expanded(
-          child: KeyedSubtree(
-            key: widget.dayKey,
-            child: AppDropdown<DayOfWeek>(
-              key: ValueKey(widget.dayOfWeek),
-              theme: widget.theme,
-              filled: true,
-              value: widget.dayOfWeek,
-              emptyLabel: '',
-              showEmptyValue: false,
-              items: DayOfWeek.values,
-              labelBuilder: ReminderWeekdayToggleRow.abbreviateDay,
-              fontSize: widget.sizes.fontSize,
-              padding: widget.sizes.halfSpacing,
-              isLoading: widget.isLoading,
-              enabled: widget.value,
-              prefixIcon: Icon(
-                Icons.calendar_today,
-                size: widget.sizes.iconFontSize,
+        );
+
+        if (isTight) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Flexible(child: labelWidget),
+                  _buildSwitch(),
+                ],
               ),
-              onChanged: (day) {
-                if (day != null) {
-                  widget.onDayChanged(day);
-                }
-              },
-              onSaved: (_) {},
-            ),
-          ),
-        ),
-        SizedBox(width: widget.sizes.halfSpacing),
-        Expanded(
-          child: AppTextFormField(
-            key: widget.timeKey,
-            theme: widget.theme,
-            controller: _timeController,
-            fontSize: widget.sizes.fontSize,
-            padding: widget.sizes.halfSpacing,
-            isLoading: widget.isLoading,
-            enabled: widget.value,
-            readOnly: true,
-            filled: true,
-            onTap: widget.value ? widget.onTimeTap : null,
-            prefixIcon: Icon(
-              Icons.access_time,
-              size: widget.sizes.iconFontSize,
-            ),
-          ),
-        ),
-      ],
+              SizedBox(height: widget.sizes.halfSpacing),
+              Row(
+                children: [
+                  Expanded(child: _buildDayDropdown()),
+                  SizedBox(width: widget.sizes.halfSpacing),
+                  Expanded(child: _buildTimeField()),
+                ],
+              ),
+            ],
+          );
+        }
+
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.start,
+          mainAxisSize: MainAxisSize.max,
+          children: [
+            labelWidget,
+            _buildSwitch(),
+            SizedBox(width: widget.sizes.halfSpacing),
+            Expanded(child: _buildDayDropdown()),
+            SizedBox(width: widget.sizes.halfSpacing),
+            Expanded(child: _buildTimeField()),
+          ],
+        );
+      },
     );
   }
 }

@@ -88,12 +88,9 @@ class _RemindersSettingsConfigState extends State<RemindersSettingsConfig> {
     final remindersConfig = widget.remindersConfig;
     final sizes = widget.sizes;
     final theme = widget.theme;
-    final isDarkTheme = widget.isDarkTheme;
     final isLoading = widget.isLoading || _isUpdatingReminder;
     final cubit = context.read<ProfileCubit>();
-    final titleColor = isDarkTheme
-        ? ThemedColors.themedGrey.light
-        : ThemedColors.themedGrey.dark;
+    final titleColor = ThemedColors.themedGrey.fromBrightness(theme.brightness);
 
     return Column(
       key: const ValueKey('profile-reminders-settings'),

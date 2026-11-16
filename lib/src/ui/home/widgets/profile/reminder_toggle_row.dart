@@ -95,13 +95,22 @@ class _ReminderToggleRowState extends State<ReminderToggleRow> {
             ),
           ),
         ),
-        SharpSwitch(
-          key: widget.switchKey,
-          value: widget.value,
+        Semantics(
+          label: widget.label,
+          toggled: widget.value,
           enabled: !widget.isLoading,
-          onChanged: widget.onChanged,
-          thumbSize: widget.sizes.subtitleFontSize,
-          padding: EdgeInsets.all(widget.sizes.halfSpacing),
+          onTap: !widget.isLoading
+              ? () => widget.onChanged(!widget.value)
+              : null,
+          excludeSemantics: true,
+          child: SharpSwitch(
+            key: widget.switchKey,
+            value: widget.value,
+            enabled: !widget.isLoading,
+            onChanged: widget.onChanged,
+            thumbSize: widget.sizes.subtitleFontSize,
+            padding: EdgeInsets.all(widget.sizes.halfSpacing),
+          ),
         ),
         SizedBox(width: widget.sizes.halfSpacing),
         Expanded(
