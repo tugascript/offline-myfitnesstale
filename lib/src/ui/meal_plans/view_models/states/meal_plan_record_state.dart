@@ -65,6 +65,7 @@ final class MealPlanRecordState extends Equatable {
   final List<MealPlanRecordDto> records;
   final MealPlanRecordDto? activeRecord;
   final MealPlanRecordPagination mealPlanRecordPagination;
+  final bool hasLoadedActiveRecord;
   final bool isLoading;
   final ErrorState? error;
 
@@ -73,6 +74,7 @@ final class MealPlanRecordState extends Equatable {
     this.records = const [],
     this.activeRecord,
     this.mealPlanRecordPagination = const MealPlanRecordPagination(),
+    this.hasLoadedActiveRecord = false,
     this.isLoading = false,
     this.error,
   });
@@ -84,6 +86,7 @@ final class MealPlanRecordState extends Equatable {
     List<MealPlanRecordDto>? records,
     Nullable<MealPlanRecordDto>? activeRecord,
     MealPlanRecordPagination? mealPlanRecordPagination,
+    bool? hasLoadedActiveRecord,
     bool? isLoading,
     Nullable<ErrorState>? error,
   }) => MealPlanRecordState(
@@ -92,6 +95,7 @@ final class MealPlanRecordState extends Equatable {
     activeRecord: activeRecord != null ? activeRecord.value : this.activeRecord,
     mealPlanRecordPagination:
         mealPlanRecordPagination ?? this.mealPlanRecordPagination,
+    hasLoadedActiveRecord: hasLoadedActiveRecord ?? this.hasLoadedActiveRecord,
     isLoading: isLoading ?? this.isLoading,
     error: error != null ? error.value : this.error,
   );
@@ -102,6 +106,7 @@ final class MealPlanRecordState extends Equatable {
     records,
     activeRecord,
     mealPlanRecordPagination,
+    hasLoadedActiveRecord,
     isLoading,
     error,
   ];

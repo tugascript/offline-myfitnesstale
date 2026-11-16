@@ -21,6 +21,7 @@ import 'package:skeletonizer/skeletonizer.dart';
 
 import '../../core/sizes/data_display_sizes.dart';
 import '../../core/sizes/screen_size.dart';
+import '../../core/widgets/layout/app_elevated_button.dart';
 import '../../core/widgets/layout/responsive_scaffold.dart';
 import '../../macros/view_models/macro_tracking_cubit.dart';
 import '../../macros/view_models/states/macro_tracking_state.dart';
@@ -46,6 +47,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   bool _hasAttemptedWorkoutLoad = false;
   bool _hasAttemptedMacroLoad = false;
+  bool _hasAttemptedMealPlanLoad = false;
 
   @override
   void initState() {
@@ -88,6 +90,68 @@ class _HomeScreenState extends State<HomeScreen> {
         _hasAttemptedMacroLoad = true;
       }
     }
+
+    if (!_hasAttemptedMealPlanLoad) {
+      final mealPlanCubit = context.read<MealPlanRecordCubit>();
+      final mealPlanState = mealPlanCubit.state;
+      if (!mealPlanState.isLoading &&
+          !mealPlanState.hasLoadedActiveRecord &&
+          mealPlanState.activeRecord == null) {
+        _hasAttemptedMealPlanLoad = true;
+        mealPlanCubit.getActiveMealPlanRecord();
+      } else if (mealPlanState.hasLoadedActiveRecord ||
+          mealPlanState.activeRecord != null) {
+        _hasAttemptedMealPlanLoad = true;
+      }
+    }
+  }
+
+  Widget _buildStartupErrorCard({
+    required ThemeData theme,
+    required DataDisplaySizesList sizes,
+    required String message,
+    required VoidCallback onRetry,
+    Key? cardKey,
+  }) {
+    return Card(
+      key: cardKey,
+      child: Padding(
+        padding: EdgeInsets.all(sizes.padding),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.error_outline,
+                  color: theme.colorScheme.error,
+                  size: sizes.iconSubtitleFontSize,
+                ),
+                SizedBox(width: sizes.halfSpacing),
+                Expanded(
+                  child: Text(
+                    message,
+                    style: TextStyle(
+                      fontSize: sizes.fontSize,
+                      color: theme.colorScheme.error,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: sizes.spacing),
+            AppElevatedButton(
+              theme: theme,
+              isLoading: false,
+              sizes: sizes,
+              onPressed: onRetry,
+              label: 'Retry',
+              icon: Icons.refresh,
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
@@ -117,6 +181,46 @@ class _HomeScreenState extends State<HomeScreen> {
                       MealPlanRecordState
                     >(
                       builder: (context, mealPlanState) {
+                        final hasProfileError =
+                            profileState.profile == null &&
+                            profileState.error != null &&
+                            !profileState.isLoading;
+
+                        if (hasProfileError) {
+                          return Padding(
+                            padding: EdgeInsets.all(sizes.viewPadding),
+                            child: _buildStartupErrorCard(
+                              cardKey: const ValueKey(
+                                'home-startup-error-card',
+                              ),
+                              theme: theme,
+                              sizes: sizes,
+                              message: profileState.error!.description,
+                              onRetry: () => context
+                                  .read<ProfileCubit>()
+                                  .loadInitialData(),
+                            ),
+                          );
+                        }
+
+                        final hasWorkoutError =
+                            workoutPlanState.error != null &&
+                            workoutPlanState.currentPlanRecord.workoutPlan ==
+                                null &&
+                            !workoutPlanState.isLoading;
+                        final hasMacroError =
+                            macroState.error != null &&
+                            macroState.activeGoal == null &&
+                            !macroState.isLoading;
+                        final hasMealPlanError =
+                            mealPlanState.error != null &&
+                            mealPlanState.activeRecord == null &&
+                            !mealPlanState.isLoading;
+                        final hasActiveLoadError =
+                            hasWorkoutError ||
+                            hasMacroError ||
+                            hasMealPlanError;
+
                         final isProfileSkeleton =
                             !profileState.isInitiated ||
                             profileState.profile == null;
@@ -144,6 +248,38 @@ class _HomeScreenState extends State<HomeScreen> {
                                 // Welcome Section
                                 WelcomeSection(sizes: sizes),
                                 SizedBox(height: sizes.betweenSpacing),
+
+                                if (hasActiveLoadError) ...[
+                                  _buildStartupErrorCard(
+                                    cardKey: const ValueKey(
+                                      'home-active-load-error-card',
+                                    ),
+                                    theme: theme,
+                                    sizes: sizes,
+                                    message:
+                                        workoutPlanState.error?.description ??
+                                        macroState.error?.description ??
+                                        mealPlanState.error!.description,
+                                    onRetry: () {
+                                      if (hasWorkoutError) {
+                                        context
+                                            .read<WorkoutPlanRecordCubit>()
+                                            .getLatestActivePlanRecord();
+                                      }
+                                      if (hasMacroError) {
+                                        context
+                                            .read<MacroTrackingCubit>()
+                                            .getActiveMacroGoal();
+                                      }
+                                      if (hasMealPlanError) {
+                                        context
+                                            .read<MealPlanRecordCubit>()
+                                            .getActiveMealPlanRecord();
+                                      }
+                                    },
+                                  ),
+                                  SizedBox(height: sizes.betweenSpacing),
+                                ],
 
                                 // Active workout and meal plans
                                 ActivePlansCarousel(theme: theme, sizes: sizes),
