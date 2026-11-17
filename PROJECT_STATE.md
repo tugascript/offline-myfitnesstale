@@ -634,10 +634,33 @@ PR #36 review follow-up:
   Flutter uninstalled the test app between phases, removing its data.
 - The full formatting check reports 12 pre-existing files outside this fix;
   the changed Dart files are formatted.
-- Actual OS cloud-backup/device-transfer restoration, legacy Android runtime
-  behavior, and iOS native storage remain unverified. The separate launch and
-  restore phases are documented in
+- This run did not exercise an OS backup or restore transport. The separate
+  launch and restore phases are documented in
   [integration_test/BACKUP_STORAGE.md](integration_test/BACKUP_STORAGE.md).
+
+### PR 39 native verification (17 November 2026)
+
+- On an iPhone 17 Pro simulator running iOS 26.5, the native Keychain cache
+  survived separate seed and verify launches alongside the SQLite fixture.
+  The cleanup phase passed. Two onboarding runs displayed the iOS notification
+  alert. **Allow** granted OS authorization and turned the switch on.
+  **Don’t Allow** denied OS authorization and left the switch off.
+- The Android restore test checks the matching SQLite fixture and the absence
+  of all four secure-storage preference files before opening the plugin. It
+  then checks that a different key can be written, read, and cleared.
+- On a Google Play Android 15 emulator (API 35), Google's device-transfer
+  test transport backed up the fixture and Android restored it on reinstall.
+  The restore journey passed with fresh KeyStore state.
+- Android's local backup transport also passed a separate backup and reinstall
+  on the same emulator, exercising the cloud-backup rules. The initial local
+  backup exceeded quota because of extracted Flutter debug assets. Removing
+  those assets from the dedicated test installation let the backup complete.
+  Google-hosted cloud restore and the API 30-and-earlier runtime path remain
+  unverified.
+- Dependency resolution, static analysis, and whitespace checks passed. The
+  host suite passed 586 tests with one existing skip. The repository-wide
+  formatting check identified ten pre-existing files. Both changed Dart files
+  passed formatting.
 
 ### Onboarding permission service verification (17 November 2026)
 
