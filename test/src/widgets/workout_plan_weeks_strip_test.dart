@@ -482,38 +482,39 @@ void main() {
       expect(find.text('W2'), findsWidgets);
     });
 
-    testWidgets('shows skip week button when record exists and week is incomplete', (
-      tester,
-    ) async {
-      final record = WorkoutPlanRecordDto(
-        id: 100,
-        workoutPlanId: 1,
-        workoutPlanVersion: 1,
-        status: ProgressStatus.inProgress,
-        startedAt: DateTime.now(),
-        currentWeek: 1,
-        currentDay: 1,
-        currentWorkoutPosition: 1,
-      );
+    testWidgets(
+      'shows skip week button when record exists and week is incomplete',
+      (tester) async {
+        final record = WorkoutPlanRecordDto(
+          id: 100,
+          workoutPlanId: 1,
+          workoutPlanVersion: 1,
+          status: ProgressStatus.inProgress,
+          startedAt: DateTime.now(),
+          currentWeek: 1,
+          currentDay: 1,
+          currentWorkoutPosition: 1,
+        );
 
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: ActiveWorkoutPlanScheduleCard(
-              sizes: sizes,
-              theme: ThemeData.light(),
-              isDarkTheme: false,
-              weeks: [weekBlock1, weekBlock2],
-              currentWeekNum: 1,
-              relativeDayIndex: 1,
-              workoutPlanRecord: record,
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: ActiveWorkoutPlanScheduleCard(
+                sizes: sizes,
+                theme: ThemeData.light(),
+                isDarkTheme: false,
+                weeks: [weekBlock1, weekBlock2],
+                currentWeekNum: 1,
+                relativeDayIndex: 1,
+                workoutPlanRecord: record,
+              ),
             ),
           ),
-        ),
-      );
+        );
 
-      expect(find.text('SKIP WEEK'), findsOneWidget);
-    });
+        expect(find.text('SKIP WEEK'), findsOneWidget);
+      },
+    );
 
     testWidgets(
       'skipped week causes no overflow and unlocks Week 2 Day 1 and skipped workouts',

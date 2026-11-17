@@ -38,6 +38,7 @@ import 'package:myfitnesstale/src/data/models/sqlite/workout_set_exercise_option
 import 'package:myfitnesstale/src/data/models/sqlite/workout_set_model.dart';
 import 'package:myfitnesstale/src/data/repositories/onboarding/inputs/onboarding_input.dart';
 import 'package:myfitnesstale/src/data/repositories/onboarding/onboarding_repository.dart';
+import 'package:myfitnesstale/src/data/repositories/workouts/workout_repository.dart';
 
 import '../../support/test_database.dart';
 
@@ -158,6 +159,8 @@ void main() {
     );
     expect(plan.name, kWorkoutPlanData.name);
     expect(plan.totalWeeks, 16);
+    expect(plan.totalDays, 64);
+    expect(plan.totalWorkouts, 64);
     expect(await count(WorkoutPlanWeek.table), kWorkoutPlanData.weeks.length);
     expect(
       await count(WorkoutPlanDay.table),
@@ -178,6 +181,22 @@ void main() {
             ),
       ),
     );
+    final seededWorkouts = (await db.query(Workout.table))
+        .map(Workout.fromMap)
+        .toList();
+    final seededSets = (await db.query(WorkoutSet.table))
+        .map(WorkoutSet.fromMap)
+        .toList();
+    expect(seededSets, isNotEmpty);
+    expect(
+      seededSets.every((s) => s.totalReps > 0 && s.totalExercises > 0),
+      isTrue,
+    );
+    final firstDetailedWorkout = (await WorkoutRepository.create().getWorkout(
+      seededWorkouts.first.id!,
+    )).value;
+    expect(firstDetailedWorkout.totalReps, seededWorkouts.first.totalReps);
+    expect(firstDetailedWorkout.totalReps, greaterThan(0));
     expect(await db.rawQuery('PRAGMA foreign_key_check'), isEmpty);
   });
 

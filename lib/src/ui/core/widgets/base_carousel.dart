@@ -288,7 +288,11 @@ class _RenderCarouselPages extends RenderBox
   double _computeMaxChildHeight() {
     final measureConstraints = BoxConstraints.tightFor(width: _pageWidth);
     var maxHeight = 0.0;
-    for (RenderBox? child = firstChild; child != null; child = childAfter(child)) {
+    for (
+      RenderBox? child = firstChild;
+      child != null;
+      child = childAfter(child)
+    ) {
       maxHeight = math.max(
         maxHeight,
         child.getDryLayout(measureConstraints).height,
@@ -310,7 +314,11 @@ class _RenderCarouselPages extends RenderBox
   @override
   double computeMaxIntrinsicHeight(double width) {
     var maxHeight = 0.0;
-    for (RenderBox? child = firstChild; child != null; child = childAfter(child)) {
+    for (
+      RenderBox? child = firstChild;
+      child != null;
+      child = childAfter(child)
+    ) {
       maxHeight = math.max(maxHeight, child.getMaxIntrinsicHeight(_pageWidth));
     }
     return maxHeight;
@@ -341,13 +349,21 @@ class _RenderCarouselPages extends RenderBox
         : BoxConstraints.tightFor(width: _pageWidth);
 
     var actualMaxHeight = 0.0;
-    for (RenderBox? child = firstChild; child != null; child = childAfter(child)) {
+    for (
+      RenderBox? child = firstChild;
+      child != null;
+      child = childAfter(child)
+    ) {
       child.layout(childConstraints, parentUsesSize: true);
       actualMaxHeight = math.max(actualMaxHeight, child.size.height);
     }
 
     var x = 0.0;
-    for (RenderBox? child = firstChild; child != null; child = childAfter(child)) {
+    for (
+      RenderBox? child = firstChild;
+      child != null;
+      child = childAfter(child)
+    ) {
       final parentData = child.parentData! as _CarouselPageParentData;
       final dy = switch (_crossAxisAlignment) {
         CrossAxisAlignment.end => actualMaxHeight - child.size.height,
@@ -360,7 +376,9 @@ class _RenderCarouselPages extends RenderBox
       x += _pageWidth;
     }
 
-    size = constraints.constrain(Size(_pageWidth * childCount, actualMaxHeight));
+    size = constraints.constrain(
+      Size(_pageWidth * childCount, actualMaxHeight),
+    );
   }
 
   @override

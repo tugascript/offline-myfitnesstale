@@ -153,10 +153,7 @@ void main() {
       final router = GoRouter(
         initialLocation: '/workouts',
         routes: [
-          GoRoute(
-            path: '/workouts',
-            builder: (_, _) => const WorkoutsScreen(),
-          ),
+          GoRoute(path: '/workouts', builder: (_, _) => const WorkoutsScreen()),
           GoRoute(
             path: '/workouts/:id/edit',
             builder: (_, state) {
@@ -277,10 +274,7 @@ void main() {
       final router = GoRouter(
         initialLocation: '/workouts',
         routes: [
-          GoRoute(
-            path: '/workouts',
-            builder: (_, _) => const WorkoutsScreen(),
-          ),
+          GoRoute(path: '/workouts', builder: (_, _) => const WorkoutsScreen()),
           GoRoute(
             path: '/workouts/:id/edit',
             builder: (_, state) {

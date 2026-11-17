@@ -20,6 +20,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../../../routing/routes.dart';
 import '../../../core/sizes/data_display_sizes.dart';
+import '../../../core/widgets/layout/app_text_button.dart';
 import './active_plan_frame.dart';
 
 class EmptyMealPlanOrMacroGoal extends StatelessWidget {
@@ -76,30 +77,24 @@ class EmptyMealPlanOrMacroGoal extends StatelessWidget {
                 SizedBox(height: sizes.spacing),
                 Wrap(
                   alignment: WrapAlignment.center,
-                  spacing: sizes.spacing / 2,
-                  runSpacing: sizes.spacing / 2,
+                  spacing: sizes.doubleSpacing,
+                  runSpacing: sizes.spacing,
                   children: [
-                    TextButton.icon(
+                    AppTextButton(
                       onPressed: () => context.push(Routes.mealPlanList.name),
-                      icon: Icon(
-                        Icons.restaurant_menu,
-                        size: sizes.compactIconSize,
-                      ),
-                      label: Text(
-                        'Browse Plans',
-                        style: TextStyle(fontSize: sizes.fontSize),
-                      ),
+                      icon: Icons.restaurant_menu,
+                      label: 'Browse Plans',
+                      isLoading: false,
+                      isDense: true,
+                      sizes: sizes,
                     ),
-                    TextButton.icon(
+                    AppTextButton(
                       onPressed: () => context.push(Routes.macroGoals.name),
-                      icon: Icon(
-                        Icons.flag_outlined,
-                        size: sizes.compactIconSize,
-                      ),
-                      label: Text(
-                        'Set Macro Goal',
-                        style: TextStyle(fontSize: sizes.fontSize),
-                      ),
+                      icon: Icons.flag_outlined,
+                      label: 'Set Macro Goal',
+                      isLoading: false,
+                      isDense: true,
+                      sizes: sizes,
                     ),
                   ],
                 ),

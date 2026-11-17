@@ -331,18 +331,25 @@ final class WorkoutRepository implements Repository {
               primary: <Muscle>{},
               secondary: <Muscle>{},
             );
+            final List<({int totalExercises, int totalReps})> setTotals = [];
 
             for (final set in workoutInput.sets) {
               final int setNum = (set.maxSets ?? set.minSets);
               totalSets += setNum;
+              int setTotalReps = 0;
               for (final exercise in set.exercises) {
-                totalReps += setNum * (exercise.maxReps ?? exercise.minReps);
+                setTotalReps += setNum * (exercise.maxReps ?? exercise.minReps);
                 muscleGroups.add(exercise.exercise.muscleGroup);
 
                 muscles.primary.addAll(exercise.exercise.muscles.primary);
                 muscles.secondary.addAll(exercise.exercise.muscles.secondary);
                 muscles.secondary.removeAll(muscles.primary);
               }
+              totalReps += setTotalReps;
+              setTotals.add((
+                totalExercises: set.exercises.length,
+                totalReps: setTotalReps,
+              ));
             }
 
             final workout = Workout.create(
@@ -364,6 +371,7 @@ final class WorkoutRepository implements Repository {
 
             for (int i = 0; i < workoutInput.sets.length; i++) {
               final setInput = workoutInput.sets[i];
+              final setMetric = setTotals[i];
               final set = WorkoutSet.create(
                 workoutVersion: workout.version,
                 position: i + 1,
@@ -373,6 +381,8 @@ final class WorkoutRepository implements Repository {
                 maxSets: setInput.maxSets,
                 recommendedRestSecs: setInput.recommendedRestSecs,
                 maxRestSecs: setInput.maxRestSecs,
+                totalExercises: setMetric.totalExercises,
+                totalReps: setMetric.totalReps,
                 createdBy: createdBy,
               );
 
@@ -730,29 +740,46 @@ final class WorkoutRepository implements Repository {
       );
 
       return ok(
-        workoutSets
-            .map(
-              (ws) => WorkoutSetDto.fromModel(
-                ws,
-                exercises: setExerciseMap[ws.id!]
-                    ?.map(
-                      (se) => WorkoutSetExerciseDto.fromModel(
-                        se,
-                        exercise: exerciseMap[se.exerciseId],
-                        options: setExerciseOptionsMap[se.id]
-                            ?.map(
-                              (so) => WorkoutSetExerciseOptionDto.fromModel(
-                                so,
-                                exercise: exerciseMap[so.exerciseId],
-                              ),
-                            )
-                            .toList(),
-                      ),
+        workoutSets.map((ws) {
+          final rawSetExercises = setExerciseMap[ws.id!];
+          final exercises = rawSetExercises
+              ?.map(
+                (se) => WorkoutSetExerciseDto.fromModel(
+                  se,
+                  exercise: exerciseMap[se.exerciseId],
+                  options: setExerciseOptionsMap[se.id]
+                      ?.map(
+                        (so) => WorkoutSetExerciseOptionDto.fromModel(
+                          so,
+                          exercise: exerciseMap[so.exerciseId],
+                        ),
+                      )
+                      .toList(),
+                ),
+              )
+              .toList();
+          final int resolvedTotalExercises =
+              ws.totalExercises == 0 && rawSetExercises != null
+              ? rawSetExercises.length
+              : ws.totalExercises;
+          final int resolvedTotalReps =
+              ws.totalReps == 0 && rawSetExercises != null
+              ? (ws.maxSets ?? ws.minSets) *
+                    rawSetExercises.fold<int>(
+                      0,
+                      (total, se) => total + (se.maxReps ?? se.minReps),
                     )
-                    .toList(),
-              ),
-            )
-            .toList(),
+              : ws.totalReps;
+          final resolvedSet =
+              resolvedTotalExercises == ws.totalExercises &&
+                  resolvedTotalReps == ws.totalReps
+              ? ws
+              : ws.copyWith(
+                  totalExercises: resolvedTotalExercises,
+                  totalReps: resolvedTotalReps,
+                );
+          return WorkoutSetDto.fromModel(resolvedSet, exercises: exercises);
+        }).toList(),
       );
     } catch (error, stackTrace) {
       _logger.severe('Failed to load workout sets', error, stackTrace);

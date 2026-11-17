@@ -80,7 +80,7 @@ class ActivePlanWidget extends StatelessWidget {
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      SizedBox(height: sizes.spacing / 2),
+                      SizedBox(height: sizes.halfSpacing),
                       DifficultyBadge(
                         difficulty: plan.difficulty,
                         spacing: sizes.spacing,
@@ -118,7 +118,7 @@ class ActivePlanWidget extends StatelessWidget {
                           ),
                         ],
                       ),
-                      SizedBox(height: sizes.spacing / 2),
+                      SizedBox(height: sizes.halfSpacing),
                       LinearProgressIndicator(
                         value: progressFraction,
                         minHeight: 6,
@@ -127,7 +127,7 @@ class ActivePlanWidget extends StatelessWidget {
                           colors.primary,
                         ),
                       ),
-                      SizedBox(height: sizes.spacing / 2),
+                      SizedBox(height: sizes.halfSpacing),
                       Text(
                         '${currentPlanRecord.completedWorkouts} of ${currentPlanRecord.totalWorkouts} workouts',
                         style: TextStyle(

@@ -147,8 +147,7 @@ class OnboardingScreen extends StatelessWidget {
                                   notificationsOn: notificationsOn,
                                 );
                               },
-                          initialPreLoadWorkouts:
-                              draft?.createWorkouts ?? true,
+                          initialPreLoadWorkouts: draft?.createWorkouts ?? true,
                           initialNotificationsOn:
                               draft?.notificationsOn ?? false,
                         ),

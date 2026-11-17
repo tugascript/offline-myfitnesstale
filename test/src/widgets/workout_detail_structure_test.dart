@@ -443,6 +443,11 @@ void main() {
         await tester.pumpAndSettle();
 
         expect(find.text('Workout Structure'), findsOneWidget);
+        expect(find.text('Total Sets: 10', findRichText: true), findsOneWidget);
+        expect(
+          find.text('Total Reps: 114', findRichText: true),
+          findsOneWidget,
+        );
         expect(find.text('Sets'), findsNothing);
         expect(find.byType(ActionChip), findsNothing);
         expect(find.byType(WorkoutBlockStrip), findsNothing);

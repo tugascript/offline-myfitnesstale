@@ -18,6 +18,7 @@
 import 'package:material_ui/material_ui.dart';
 
 import '../../sizes/data_display_sizes.dart';
+import '../../themes/colors.dart';
 
 class AppElevatedButton extends StatelessWidget {
   final ThemeData theme;
@@ -46,12 +47,12 @@ class AppElevatedButton extends StatelessWidget {
     final baseColor = isSecondary
         ? theme.colorScheme.secondary
         : theme.primaryColor;
-    final greyColor = theme.colorScheme.brightness == Brightness.light
-        ? Colors.grey[400]
-        : Colors.grey[600];
+    final greyColor = ThemedColors.themedGrey.fromBrightness(
+      theme.colorScheme.brightness,
+    );
     return ElevatedButton.icon(
       onPressed: isLoading ? null : onPressed,
-      icon: Icon(icon, size: sizes.fontSize * 1.2, fontWeight: FontWeight.w600),
+      icon: Icon(icon, size: sizes.btnIconSize, fontWeight: FontWeight.w600),
       label: Text(
         label.toUpperCase(),
         style: TextStyle(

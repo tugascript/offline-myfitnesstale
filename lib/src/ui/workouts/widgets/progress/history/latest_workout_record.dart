@@ -22,7 +22,7 @@ import 'package:material_ui/material_ui.dart';
 import '../../../../../data/repositories/workouts/dtos/workout_record_dto.dart';
 import '../../../../../data/utils/enums.dart';
 import '../../../../core/sizes/data_display_sizes.dart';
-import '../../../../core/widgets/layout/app_elevated_button.dart';
+import '../../../../core/widgets/layout/app_text_button.dart';
 import '../../../view_models/states/workout_record_state.dart';
 import '../../../view_models/workout_record_cubit.dart';
 import './workout_record_head.dart';
@@ -213,42 +213,42 @@ class _EmptyWorkoutRecord extends StatelessWidget {
               ),
               if (workoutId != null) ...[
                 SizedBox(height: sizes.spacing),
-                SizedBox(
-                  width: double.infinity,
-                  child: AppElevatedButton(
-                    isLoading: isLoading,
-                    theme: theme,
-                    sizes: sizes,
-                    isDense: true,
-                    onPressed: () =>
-                        context.push('/workouts/$workoutId/active'),
-                    label: 'Start Workout',
-                    icon: Icons.play_arrow,
-                  ),
-                ),
-                SizedBox(height: sizes.spacing / 2),
-                SizedBox(
-                  width: double.infinity,
-                  child: AppElevatedButton(
-                    isLoading: isLoading,
-                    theme: theme,
-                    sizes: sizes,
-                    isDense: true,
-                    isSecondary: true,
-                    onPressed: () => context.push(
-                      '/workouts/$workoutId/history/${workoutVersion ?? 1}/records/create',
+                Row(
+                  mainAxisSize: MainAxisSize.max,
+                  children: [
+                    Expanded(
+                      child: AppTextButton(
+                        isLoading: isLoading,
+                        sizes: sizes,
+                        isDense: true,
+                        onPressed: () =>
+                            context.push('/workouts/$workoutId/active'),
+                        label: 'Start Workout',
+                        icon: Icons.play_arrow,
+                      ),
                     ),
-                    label: 'Create Record',
-                    icon: Icons.add,
-                  ),
+                    SizedBox(width: sizes.halfSpacing),
+                    Expanded(
+                      child: AppTextButton(
+                        isLoading: isLoading,
+                        sizes: sizes,
+                        isDense: true,
+                        isSecondary: true,
+                        onPressed: () => context.push(
+                          '/workouts/$workoutId/history/${workoutVersion ?? 1}/records/create',
+                        ),
+                        label: 'Create Record',
+                        icon: Icons.add,
+                      ),
+                    ),
+                  ],
                 ),
               ] else ...[
                 SizedBox(height: sizes.spacing),
                 SizedBox(
                   width: double.infinity,
-                  child: AppElevatedButton(
+                  child: AppTextButton(
                     isLoading: isLoading,
-                    theme: theme,
                     sizes: sizes,
                     isDense: true,
                     onPressed: () => context.push('/workouts'),

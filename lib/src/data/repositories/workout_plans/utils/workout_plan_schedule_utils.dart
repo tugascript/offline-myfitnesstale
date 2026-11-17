@@ -166,7 +166,8 @@ abstract final class WorkoutPlanScheduleUtils {
     }
 
     // For automatic mode:
-    final sortedDays = List<T>.from(days)..sort((a, b) => a.day.compareTo(b.day));
+    final sortedDays = List<T>.from(days)
+      ..sort((a, b) => a.day.compareTo(b.day));
     final int totalDays = sortedDays.length;
 
     for (int i = 0; i < sortedDays.length; i++) {
@@ -317,7 +318,9 @@ abstract final class WorkoutPlanScheduleUtils {
     }
 
     final group = weeks
-        .where((w) => effectiveWeek >= w.startWeek && effectiveWeek <= w.endWeek)
+        .where(
+          (w) => effectiveWeek >= w.startWeek && effectiveWeek <= w.endWeek,
+        )
         .firstOrNull;
     if (group == null) {
       return (
@@ -372,16 +375,10 @@ abstract final class WorkoutPlanScheduleUtils {
           )
           .firstOrNull;
       if (nextDay != null) {
-        return (
-          currentWeekNum: effectiveWeek,
-          relativeDayIndex: nextDay.day,
-        );
+        return (currentWeekNum: effectiveWeek, relativeDayIndex: nextDay.day);
       }
     }
 
-    return (
-      currentWeekNum: effectiveWeek,
-      relativeDayIndex: calendarDayNum,
-    );
+    return (currentWeekNum: effectiveWeek, relativeDayIndex: calendarDayNum);
   }
 }

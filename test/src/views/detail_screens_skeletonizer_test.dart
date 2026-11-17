@@ -194,9 +194,8 @@ void main() {
           child: MaterialApp.router(
             routerConfig: router,
             builder: (context, child) => MediaQuery(
-              data: MediaQuery.of(
-                context,
-              ).copyWith(textScaler: TextScaler.linear(textScale)),
+              data: MediaQuery.of(context)
+                  .copyWith(textScaler: TextScaler.linear(textScale)),
               child: child!,
             ),
           ),
@@ -290,28 +289,27 @@ void main() {
       expect(find.text('Workout plan not found'), findsAtLeastNWidgets(1));
     });
 
-    testWidgets(
-      'skeleton state fits mobile screens without overflow',
-      (tester) async {
-        tester.view.physicalSize = const Size(540, 900);
-        tester.view.devicePixelRatio = 1.0;
-        addTearDown(tester.view.resetPhysicalSize);
-        addTearDown(tester.view.resetDevicePixelRatio);
+    testWidgets('skeleton state fits mobile screens without overflow', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(540, 900);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
 
-        final cubit = _TestWorkoutPlanCubit()
-          ..pending = Completer<void>()
-          ..nextPlan = _samplePlan();
+      final cubit = _TestWorkoutPlanCubit()
+        ..pending = Completer<void>()
+        ..nextPlan = _samplePlan();
 
-        await pumpPlanScreen(tester, cubit: cubit);
-        await tester.pump(const Duration(milliseconds: 150));
+      await pumpPlanScreen(tester, cubit: cubit);
+      await tester.pump(const Duration(milliseconds: 150));
 
-        expect(tester.takeException(), isNull);
+      expect(tester.takeException(), isNull);
 
-        cubit.pending!.complete();
-        await tester.pumpAndSettle();
-        expect(tester.takeException(), isNull);
-      },
-    );
+      cubit.pending!.complete();
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+    });
   });
 
   group('WorkoutDetailScreen Skeletonizer', () {
@@ -331,9 +329,8 @@ void main() {
           child: MaterialApp.router(
             routerConfig: router,
             builder: (context, child) => MediaQuery(
-              data: MediaQuery.of(
-                context,
-              ).copyWith(textScaler: TextScaler.linear(textScale)),
+              data: MediaQuery.of(context)
+                  .copyWith(textScaler: TextScaler.linear(textScale)),
               child: child!,
             ),
           ),
