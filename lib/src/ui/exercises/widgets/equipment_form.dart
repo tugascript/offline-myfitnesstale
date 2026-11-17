@@ -27,6 +27,7 @@ class EquipmentForm extends StatefulWidget {
   final String initialName;
   final bool isLoading;
   final String submitLabel;
+  final IconData? submitIcon;
   final void Function({required String name}) onSubmit;
 
   const EquipmentForm({
@@ -36,6 +37,7 @@ class EquipmentForm extends StatefulWidget {
     required this.initialName,
     required this.isLoading,
     required this.submitLabel,
+    this.submitIcon,
     required this.onSubmit,
   });
 
@@ -67,9 +69,12 @@ class _EquipmentFormState extends State<EquipmentForm> {
       key: _formKey,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: MainAxisSize.min,
         children: [
           AppTextFormField(
+            filled: true,
             theme: widget.theme,
+            maxLines: 1,
             isLoading: widget.isLoading,
             controller: _nameController,
             labelText: 'Name',
@@ -89,7 +94,7 @@ class _EquipmentFormState extends State<EquipmentForm> {
               }
             },
             validator: (value) {
-              if (value == null || value.isEmpty) {
+              if (value == null || value.trim().isEmpty) {
                 return 'Please enter a name';
               }
               return null;
@@ -100,13 +105,14 @@ class _EquipmentFormState extends State<EquipmentForm> {
             isLoading: widget.isLoading,
             onPressed: () {
               if (_formKey.currentState!.validate()) {
-                widget.onSubmit(name: _data.name);
+                _formKey.currentState!.save();
+                widget.onSubmit(name: _data.name.trim());
               }
             },
             sizes: widget.sizes,
             theme: widget.theme,
             label: widget.submitLabel,
-            icon: Icons.check,
+            icon: widget.submitIcon ?? Icons.add,
           ),
         ],
       ),

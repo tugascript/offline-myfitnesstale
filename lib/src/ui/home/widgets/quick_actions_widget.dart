@@ -114,7 +114,7 @@ class QuickActionsWidget extends StatelessWidget {
         ),
         QuickActionDestination(
           'equipments',
-          'Equipment',
+          'Equipments',
           Icons.build_outlined,
           Routes.equipments.name,
         ),

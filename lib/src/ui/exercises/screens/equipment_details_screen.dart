@@ -29,6 +29,7 @@ import '../../core/widgets/layout/app_scaffold.dart';
 import '../../core/widgets/mutation_buttons.dart';
 import '../view_models/exercise_cubit.dart';
 import '../view_models/states/exercise_state.dart';
+import '../widgets/edit_equipment_modal.dart';
 import '../widgets/exercises_list.dart';
 
 class EquipmentDetailsScreen extends StatefulWidget {
@@ -133,10 +134,12 @@ class _EquipmentDetailsScreenState extends State<EquipmentDetailsScreen> {
                     theme: theme,
                     sizes: sizes,
                     onEdit: () {
-                      context.push(
-                        Routes.equipmentUpdate.name.replaceFirst(
-                          ':id',
-                          equipment.id.toString(),
+                      showDialog(
+                        context: context,
+                        builder: (context) => EditEquipmentModal(
+                          theme: theme,
+                          sizes: sizes,
+                          equipment: equipment,
                         ),
                       );
                     },
