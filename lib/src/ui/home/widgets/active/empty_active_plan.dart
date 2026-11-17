@@ -43,50 +43,45 @@ class EmptyActivePlan extends StatelessWidget {
       title: 'Active Workout Plan',
       sizes: sizes,
       showTitle: showTitle,
-      child: InkWell(
-        onTap: () {
-          context.push(Routes.workoutPlanList.name);
-        },
-        child: Padding(
-          padding: EdgeInsets.all(sizes.padding),
-          child: SizedBox(
-            width: double.infinity,
-            child: Column(
-              children: [
-                Icon(Icons.snooze, size: sizes.subtitleFontSize * 2),
-                SizedBox(height: spacing),
-                Text(
-                  'No Active Workout Plan',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: sizes.subtitleFontSize,
-                    fontWeight: FontWeight.bold,
-                    color: colors.onSurface,
-                  ),
+      child: Padding(
+        padding: EdgeInsets.all(sizes.padding),
+        child: SizedBox(
+          width: double.infinity,
+          child: Column(
+            children: [
+              Icon(Icons.snooze, size: sizes.subtitleFontSize * 2),
+              SizedBox(height: spacing),
+              Text(
+                'No Active Workout Plan',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: sizes.subtitleFontSize,
+                  fontWeight: FontWeight.bold,
+                  color: colors.onSurface,
                 ),
-                SizedBox(height: spacing),
-                Text(
-                  'Start an old or create a new workout plan',
-                  textAlign: TextAlign.center,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: sizes.fontSize,
-                    color: colors.onSurfaceVariant,
-                  ),
+              ),
+              SizedBox(height: spacing),
+              Text(
+                'Start an old or create a new workout plan',
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: sizes.fontSize,
+                  color: colors.onSurfaceVariant,
                 ),
-                SizedBox(height: sizes.spacing),
-                AppTextButton(
-                  key: const ValueKey('active-workout-plan-browse'),
-                  onPressed: () => context.push(Routes.workoutPlanList.name),
-                  icon: Icons.book_outlined,
-                  label: 'Browse Plans',
-                  isLoading: false,
-                  isDense: true,
-                  sizes: sizes,
-                ),
-              ],
-            ),
+              ),
+              SizedBox(height: sizes.spacing),
+              AppTextButton(
+                key: const ValueKey('active-workout-plan-browse'),
+                onPressed: () => context.push(Routes.workoutPlanList.name),
+                icon: Icons.book_outlined,
+                label: 'Browse Plans',
+                isLoading: false,
+                isDense: true,
+                sizes: sizes,
+              ),
+            ],
           ),
         ),
       ),

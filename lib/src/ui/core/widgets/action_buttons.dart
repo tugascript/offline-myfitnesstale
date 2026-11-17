@@ -77,7 +77,9 @@ class ActionButtons extends StatelessWidget {
         SizedBox(height: sizes.spacing),
         SizedBox(
           width: double.infinity,
-          child: _TertiaryButton(
+          child: AppElevatedButton(
+            isLoading: isLoading,
+            isSecondary: true,
             theme: theme,
             sizes: sizes,
             onPressed: onHistory,
@@ -96,47 +98,6 @@ class ActionButtons extends StatelessWidget {
           ),
         ],
       ],
-    );
-  }
-}
-
-class _TertiaryButton extends StatelessWidget {
-  final ThemeData theme;
-  final DataDisplaySizesList sizes;
-  final VoidCallback? onPressed;
-  final String label;
-  final IconData icon;
-
-  const _TertiaryButton({
-    required this.theme,
-    required this.sizes,
-    required this.onPressed,
-    required this.label,
-    required this.icon,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return ElevatedButton.icon(
-      onPressed: onPressed,
-      icon: Icon(
-        icon,
-        size: sizes.subtitleFontSize,
-        fontWeight: FontWeight.w600,
-      ),
-      label: Text(
-        label.toUpperCase(),
-        style: TextStyle(
-          fontSize: sizes.subtitleFontSize,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
-      style: ElevatedButton.styleFrom(
-        padding: EdgeInsets.symmetric(vertical: sizes.padding),
-        backgroundColor: theme.colorScheme.secondary,
-        foregroundColor: theme.scaffoldBackgroundColor,
-        shape: BeveledRectangleBorder(),
-      ),
     );
   }
 }
