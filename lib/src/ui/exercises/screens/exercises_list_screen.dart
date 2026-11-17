@@ -16,29 +16,28 @@
 // along with My Fitness Tale.  If not, see <https://www.gnu.org/licenses/>.
 
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../data/utils/enums.dart';
-import '../../../routing/routes.dart';
 import '../../core/sizes/data_display_sizes.dart';
 import '../../core/sizes/screen_size.dart';
 import '../../core/widgets/base_common_search_form.dart';
 import '../../core/widgets/layout/app_scaffold.dart';
 import '../view_models/exercise_cubit.dart';
 import '../view_models/states/exercise_state.dart';
+import '../widgets/details/create_exercise_modal.dart';
 import '../widgets/exercises_list.dart';
 
-class ExercisesScreen extends StatefulWidget {
+class ExercisesListScreen extends StatefulWidget {
   static const name = "exercises";
 
-  const ExercisesScreen({super.key});
+  const ExercisesListScreen({super.key});
 
   @override
-  State<ExercisesScreen> createState() => _ExercisesScreenState();
+  State<ExercisesListScreen> createState() => _ExercisesListScreenState();
 }
 
-class _ExercisesScreenState extends State<ExercisesScreen> {
+class _ExercisesListScreenState extends State<ExercisesListScreen> {
   final ScrollController _scrollController = ScrollController();
 
   @override
@@ -109,7 +108,17 @@ class _ExercisesScreenState extends State<ExercisesScreen> {
       showBackButton: true,
       body: Padding(
         padding: EdgeInsets.all(sizes.viewPadding),
-        child: BlocBuilder<ExerciseCubit, ExerciseState>(
+        child: BlocConsumer<ExerciseCubit, ExerciseState>(
+          listenWhen: (previous, current) =>
+              previous.error != current.error && current.error != null,
+          listener: (context, state) {
+            if (state.isLoading || state.error == null) {
+              return;
+            }
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text(state.error!.description)));
+          },
           builder: (context, state) {
             return Column(
               mainAxisAlignment: MainAxisAlignment.start,
@@ -169,7 +178,11 @@ class _ExercisesScreenState extends State<ExercisesScreen> {
           key: const ValueKey('exercise-add'),
           elevation: sizes.elevation,
           onPressed: () {
-            context.push(Routes.exerciseCreation.name);
+            showDialog(
+              context: context,
+              builder: (context) =>
+                  CreateExerciseModal(theme: theme, sizes: sizes),
+            );
           },
           shape: BeveledRectangleBorder(),
           child: Icon(Icons.add, size: sizes.buttonIconSize),
