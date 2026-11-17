@@ -200,7 +200,8 @@ There is no import/export, local backup, or broader weight analytics.
 - Expands ranged week templates into dated week instances.
 - Schedule edits rebuild the current plan's workout-day and workout totals from
   its week templates in the same transaction, including plans saved before
-  those totals accounted for repeated weeks.
+  those totals accounted for repeated weeks. A failed totals update rolls back
+  the schedule edit and returns a typed service error.
 - Displays week schedules using a compact 7-column day strip (D1–D7) with cell states for workout days (workout count chip), rest days (snooze icon), and unscheduled days (hollow dash). On active plans, overlays execution status (today highlight ring, completed checkmark, missed indicator). Tapping any cell displays that day's workouts, execution actions (Start/Resume/Log), and rest/empty state in a focused detail panel below the strip.
 - Shows missed days and progress.
 - Starts/resumes live scheduled workouts or records them manually using shared

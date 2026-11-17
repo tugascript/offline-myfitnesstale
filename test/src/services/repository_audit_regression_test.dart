@@ -479,6 +479,58 @@ void main() {
       expect(loaded.totalWorkouts, 1);
     });
 
+    for (final (table, description) in const [
+      (WorkoutPlanDay.table, 'Failed to update workout plan day totals'),
+      (WorkoutPlanWeek.table, 'Failed to update workout plan week totals'),
+      (WorkoutPlan.table, 'Failed to refresh workout plan schedule totals'),
+    ]) {
+      test(
+        'a totals write failure in $table rolls back the scheduled workout',
+        () async {
+          final db = await testDatabase.db;
+          final workoutId = await insertWorkout(db);
+          final planId = await insertWorkoutPlan(db);
+          final repo = WorkoutPlanRepository.create();
+          final plan = (await repo.createWorkoutPlanVersionWithWeeks(
+            workoutPlanId: planId,
+            weeks: [
+              WorkoutPlanWeekBatchCreateInput(
+                startWeek: 1,
+                endWeek: 3,
+                days: [
+                  WorkoutPlanDayBatchCreateInput(
+                    day: 1,
+                    workouts: [
+                      WorkoutPlanWorkoutBatchCreateInput(workoutId: workoutId),
+                    ],
+                  ),
+                ],
+              ),
+            ],
+          )).value;
+          final original = (await repo.getWorkoutPlan(planId)).value;
+
+          await db.execute("""
+          CREATE TEMP TRIGGER fail_schedule_totals_update
+          BEFORE UPDATE ON $table
+          BEGIN SELECT RAISE(ABORT, 'forced test failure'); END
+        """);
+          addTearDown(
+            () => db.execute('DROP TRIGGER fail_schedule_totals_update'),
+          );
+
+          final result = await repo.createWorkoutPlanWorkout(
+            plan.weeks!.single.days.single.id,
+            WorkoutPlanWorkoutInput(workoutId: workoutId),
+          );
+
+          expect(result.error.type, SingleErrorTypes.operationFailure);
+          expect(result.error.description, description);
+          expect((await repo.getWorkoutPlan(planId)).value, original);
+        },
+      );
+    }
+
     test('getWorkoutPlan with explicit older planVersion computes totals for that version', () async {
       final db = await testDatabase.db;
       final workoutA = await insertWorkout(db);
