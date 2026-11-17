@@ -1511,4 +1511,126 @@ void main() {
       ]);
     },
   );
+
+  test('deleting a leading week block preserves max endWeek in totalWeeks so later workouts remain reachable', () async {
+    final db = await testDatabase.db;
+    final workout1 = await createWorkout(db, uniqueName('leading-block-w1'));
+    final workout4 = await createWorkout(db, uniqueName('surviving-w4'));
+
+    final planId = await db.insert(
+      WorkoutPlan.table,
+      WorkoutPlan.create(
+        name: uniqueName('leading-delete-plan'),
+        difficulty: Difficulty.beginner,
+        version: 1,
+        totalWeeks: 4,
+        totalDays: 4,
+        totalWorkouts: 4,
+      ).toMap(),
+    );
+
+    final week1To3Id = await db.insert(
+      WorkoutPlanWeek.table,
+      WorkoutPlanWeek.create(
+        workoutPlanId: planId,
+        planVersion: 1,
+        startWeek: 1,
+        endWeek: 3,
+        scheduleMode: WorkoutPlanWeekScheduleMode.manual,
+        totalDays: 1,
+        totalWorkouts: 1,
+      ).toMap(),
+    );
+    final week4Id = await db.insert(
+      WorkoutPlanWeek.table,
+      WorkoutPlanWeek.create(
+        workoutPlanId: planId,
+        planVersion: 1,
+        startWeek: 4,
+        endWeek: 4,
+        scheduleMode: WorkoutPlanWeekScheduleMode.manual,
+        totalDays: 1,
+        totalWorkouts: 1,
+      ).toMap(),
+    );
+
+    final day1Id = await db.insert(
+      WorkoutPlanDay.table,
+      WorkoutPlanDay.create(
+        workoutPlanId: planId,
+        workoutPlanWeekId: week1To3Id,
+        planVersion: 1,
+        day: 1,
+        totalWorkouts: 1,
+        isRestDay: false,
+      ).toMap(),
+    );
+    final day4Id = await db.insert(
+      WorkoutPlanDay.table,
+      WorkoutPlanDay.create(
+        workoutPlanId: planId,
+        workoutPlanWeekId: week4Id,
+        planVersion: 1,
+        day: 1,
+        totalWorkouts: 1,
+        isRestDay: false,
+      ).toMap(),
+    );
+
+    await db.insert(
+      WorkoutPlanWorkout.table,
+      WorkoutPlanWorkout.create(
+        position: 1,
+        workoutPlanId: planId,
+        workoutPlanWeekId: week1To3Id,
+        workoutPlanDayId: day1Id,
+        planVersion: 1,
+        workoutId: workout1,
+      ).toMap(),
+    );
+    await db.insert(
+      WorkoutPlanWorkout.table,
+      WorkoutPlanWorkout.create(
+        position: 1,
+        workoutPlanId: planId,
+        workoutPlanWeekId: week4Id,
+        workoutPlanDayId: day4Id,
+        planVersion: 1,
+        workoutId: workout4,
+      ).toMap(),
+    );
+
+    final repo = WorkoutPlanRepository.create();
+    final deleteResult = await repo.deleteWorkoutPlanWeek(week1To3Id);
+    expect(deleteResult.isOk(), isTrue);
+
+    final planResult = await repo.getWorkoutPlan(planId);
+    expect(planResult.isOk(), isTrue);
+    expect(planResult.value.totalWeeks, 4);
+    expect(planResult.value.totalDays, 1);
+    expect(planResult.value.totalWorkouts, 1);
+
+    final startedAtWeek4 = DateUtilities.getNowUtcUnix() - 21 * 86400;
+    await db.insert(
+      WorkoutPlanRecord.table,
+      WorkoutPlanRecord.create(
+        planId,
+        workoutPlanVersion: 1,
+        currentWeek: 4,
+        currentDay: 1,
+        startedAt: startedAtWeek4,
+      ).toMap(),
+    );
+
+    final cubit = WorkoutPlanRecordCubit(
+      workoutPlanRecordRepository: WorkoutPlanRecordRepository.create(),
+      workoutPlanRepository: repo,
+    );
+    addTearDown(cubit.close);
+
+    await cubit.getOrCreateActivePlanRecord(planId);
+    expect(cubit.state.currentPlanRecord.todaysWorkouts.map((w) => w.id), [
+      workout4,
+    ]);
+  });
 }
