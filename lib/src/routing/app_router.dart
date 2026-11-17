@@ -18,10 +18,8 @@
 import 'package:go_router/go_router.dart';
 
 import '../ui/core/screens/not_found_screen.dart';
-import '../ui/exercises/screens/equipment_creation_screen.dart';
 import '../ui/exercises/screens/equipment_details_screen.dart';
-import '../ui/exercises/screens/equipment_update_screen.dart';
-import '../ui/exercises/screens/equipments_screen.dart';
+import '../ui/exercises/screens/equipments_list_screen.dart';
 import '../ui/exercises/screens/exercise_creation_screen.dart';
 import '../ui/exercises/screens/exercise_detail_screen.dart';
 import '../ui/exercises/screens/exercise_progress_screen.dart';
@@ -87,11 +85,7 @@ sealed class AppRouter {
     ),
     GoRoute(
       path: Routes.equipments.name,
-      builder: (context, state) => const EquipmentsScreen(),
-    ),
-    GoRoute(
-      path: Routes.equipmentCreation.name,
-      builder: (context, state) => const EquipmentCreationScreen(),
+      builder: (context, state) => const EquipmentsListScreen(),
     ),
     GoRoute(
       path: Routes.equipmentDetails.name,
@@ -101,16 +95,6 @@ sealed class AppRouter {
           return const NotFoundScreen();
         }
         return EquipmentDetailsScreen(equipmentId: id);
-      },
-    ),
-    GoRoute(
-      path: Routes.equipmentUpdate.name,
-      builder: (context, state) {
-        final id = int.tryParse(state.pathParameters['id'] ?? '');
-        if (id == null) {
-          return const NotFoundScreen();
-        }
-        return EquipmentUpdateScreen(equipmentId: id);
       },
     ),
     GoRoute(
