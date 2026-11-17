@@ -2249,7 +2249,9 @@ final class WorkoutPlanRepository implements Repository {
     int totalWorkouts = 0;
     for (final week in weeks) {
       final int weekCount = week.endWeek - week.startWeek + 1;
-      totalWeeks += weekCount;
+      if (week.endWeek > totalWeeks) {
+        totalWeeks = week.endWeek;
+      }
       totalDays += week.totalDays * weekCount;
       totalWorkouts += week.totalWorkouts * weekCount;
     }
