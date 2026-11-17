@@ -972,14 +972,18 @@ final class WorkoutPlanRepository implements Repository {
           updatedAt: DateUtilities.getNowUtcUnix(),
         );
         await _weekDao.update(updatedWeek, txn);
-        await _refreshPlanScheduleTotals(
+        final planTotals = await _refreshPlanScheduleTotals(
           txn,
           workoutPlanId: week.workoutPlanId,
           planVersion: week.planVersion,
         );
+        // Throw inside the SQLite callback so the preceding write rolls back.
+        if (planTotals.isErr()) throw planTotals.error;
         _logger.info('Updated workout plan week with id $weekId');
         return ok(WorkoutPlanWeekDto.fromModel(updatedWeek));
       });
+    } on ServiceError<SingleErrorTypes> catch (error) {
+      return err(error);
     } catch (e) {
       _logger.severe('Failed to update workout plan week with id $weekId', e);
       return err(
@@ -1016,14 +1020,17 @@ final class WorkoutPlanRepository implements Repository {
             ),
           );
         }
-        await _refreshPlanScheduleTotals(
+        final planTotals = await _refreshPlanScheduleTotals(
           txn,
           workoutPlanId: week.workoutPlanId,
           planVersion: week.planVersion,
         );
+        if (planTotals.isErr()) throw planTotals.error;
         _logger.info('Deleted workout plan week with id $weekId');
         return ok(null);
       });
+    } on ServiceError<SingleErrorTypes> catch (error) {
+      return err(error);
     } catch (e) {
       _logger.severe('Failed to delete workout plan week with id $weekId', e);
       return err(
@@ -1373,17 +1380,19 @@ final class WorkoutPlanRepository implements Repository {
           planWorkouts.add(planWorkout.copyWith(id: Nullable(planWorkoutId)));
         }
 
-        await _applyWeekTotalsDelta(
+        final weekTotals = await _applyWeekTotalsDelta(
           txn,
           workoutPlanWeekId: workoutPlanWeekId,
           totalDaysDelta: 1,
           totalWorkoutsDelta: workouts.length,
         );
-        await _refreshPlanScheduleTotals(
+        if (weekTotals.isErr()) throw weekTotals.error;
+        final planTotals = await _refreshPlanScheduleTotals(
           txn,
           workoutPlanId: week.workoutPlanId,
           planVersion: week.planVersion,
         );
+        if (planTotals.isErr()) throw planTotals.error;
 
         _logger.info('Created workout plan day with id $planDayId');
         return ok(
@@ -1400,6 +1409,8 @@ final class WorkoutPlanRepository implements Repository {
           ),
         );
       });
+    } on ServiceError<SingleErrorTypes> catch (error) {
+      return err(error);
     } catch (e) {
       _logger.severe(
         'Failed to create workout plan day for workout week with id $workoutPlanWeekId and day $day',
@@ -1580,22 +1591,26 @@ final class WorkoutPlanRepository implements Repository {
         }
 
         if (!planDay.isRestDay) {
-          await _applyWeekTotalsDelta(
+          final weekTotals = await _applyWeekTotalsDelta(
             txn,
             workoutPlanWeekId: planDay.workoutPlanWeekId,
             totalDaysDelta: -1,
             totalWorkoutsDelta: -planDay.totalWorkouts,
           );
-          await _refreshPlanScheduleTotals(
+          if (weekTotals.isErr()) throw weekTotals.error;
+          final planTotals = await _refreshPlanScheduleTotals(
             txn,
             workoutPlanId: planDay.workoutPlanId,
             planVersion: planDay.planVersion,
           );
+          if (planTotals.isErr()) throw planTotals.error;
         }
 
         _logger.info('Deleted workout plan day with id $workoutPlanDayId');
         return ok(null);
       });
+    } on ServiceError<SingleErrorTypes> catch (error) {
+      return err(error);
     } catch (e) {
       _logger.severe(
         'Failed to delete workout plan day with id $workoutPlanDayId',
@@ -1872,22 +1887,25 @@ final class WorkoutPlanRepository implements Repository {
         }
 
         final int id = await _planWorkoutDao.insert(planWorkout, txn);
-        await _applyDayWorkoutsDelta(
+        final dayTotals = await _applyDayWorkoutsDelta(
           txn,
           workoutPlanDayId: workoutPlanDayId,
           totalWorkoutsDelta: 1,
         );
+        if (dayTotals.isErr()) throw dayTotals.error;
         if (!planDay.isRestDay) {
-          await _applyWeekTotalsDelta(
+          final weekTotals = await _applyWeekTotalsDelta(
             txn,
             workoutPlanWeekId: planDay.workoutPlanWeekId,
             totalWorkoutsDelta: 1,
           );
-          await _refreshPlanScheduleTotals(
+          if (weekTotals.isErr()) throw weekTotals.error;
+          final planTotals = await _refreshPlanScheduleTotals(
             txn,
             workoutPlanId: planDay.workoutPlanId,
             planVersion: planDay.planVersion,
           );
+          if (planTotals.isErr()) throw planTotals.error;
         }
 
         _logger.info(
@@ -1900,6 +1918,8 @@ final class WorkoutPlanRepository implements Repository {
           ),
         );
       });
+    } on ServiceError<SingleErrorTypes> catch (error) {
+      return err(error);
     } catch (e) {
       _logger.severe(
         'Failed to create workout plan workout for workout plan day with id $workoutPlanDayId',
@@ -2123,26 +2143,29 @@ final class WorkoutPlanRepository implements Repository {
           );
         }
 
-        await _applyDayWorkoutsDelta(
+        final dayTotals = await _applyDayWorkoutsDelta(
           txn,
           workoutPlanDayId: planWorkout.workoutPlanDayId,
           totalWorkoutsDelta: -1,
         );
+        if (dayTotals.isErr()) throw dayTotals.error;
         final WorkoutPlanDay? planDay = await _dayDao.selectOne(
           planWorkout.workoutPlanDayId,
           txn,
         );
         if (planDay == null || !planDay.isRestDay) {
-          await _applyWeekTotalsDelta(
+          final weekTotals = await _applyWeekTotalsDelta(
             txn,
             workoutPlanWeekId: planWorkout.workoutPlanWeekId,
             totalWorkoutsDelta: -1,
           );
-          await _refreshPlanScheduleTotals(
+          if (weekTotals.isErr()) throw weekTotals.error;
+          final planTotals = await _refreshPlanScheduleTotals(
             txn,
             workoutPlanId: planWorkout.workoutPlanId,
             planVersion: planWorkout.planVersion,
           );
+          if (planTotals.isErr()) throw planTotals.error;
         }
 
         _logger.info(
@@ -2150,6 +2173,8 @@ final class WorkoutPlanRepository implements Repository {
         );
         return ok(null);
       });
+    } on ServiceError<SingleErrorTypes> catch (error) {
+      return err(error);
     } catch (e) {
       _logger.severe(
         'Failed to delete workout plan workout with id $workoutPlanWorkoutId',
@@ -2243,81 +2268,115 @@ final class WorkoutPlanRepository implements Repository {
     );
   }
 
-  Future<void> _refreshPlanScheduleTotals(
+  Future<Result<void, ServiceError<SingleErrorTypes>>>
+  _refreshPlanScheduleTotals(
     Transaction txn, {
     required int workoutPlanId,
     required int planVersion,
-  }) async {
-    final where = WhereBuilder()
-      ..and(WorkoutPlanWeekColumns.workoutPlanId.equal, workoutPlanId)
-      ..and(WorkoutPlanWeekColumns.planVersion.equal, planVersion);
-    final weeks = await _weekDao.selectMany(
-      where: where.where,
-      whereArgs: where.args,
-      trx: txn,
-    );
-    final totals = _buildVersionTotals(weeks);
+  }) {
+    return _updateScheduleTotals(
+      'Failed to refresh workout plan schedule totals',
+      () async {
+        final where = WhereBuilder()
+          ..and(WorkoutPlanWeekColumns.workoutPlanId.equal, workoutPlanId)
+          ..and(WorkoutPlanWeekColumns.planVersion.equal, planVersion);
+        final weeks = await _weekDao.selectMany(
+          where: where.where,
+          whereArgs: where.args,
+          trx: txn,
+        );
+        final totals = _buildVersionTotals(weeks);
 
-    await txn.rawUpdate(
-      '''
-      UPDATE ${WorkoutPlan.table}
-      SET ${WorkoutPlanColumns.totalDays.value} = ?,
-          ${WorkoutPlanColumns.totalWorkouts.value} = ?,
-          ${WorkoutPlanColumns.updatedAt.value} = ?
-      WHERE ${WorkoutPlanColumns.id.equal}
-        AND ${WorkoutPlanColumns.version.equal}
-      ''',
-      [
-        totals.totalDays,
-        totals.totalWorkouts,
-        DateUtilities.getNowUtcUnix(),
-        workoutPlanId,
-        planVersion,
-      ],
+        await txn.rawUpdate(
+          '''
+        UPDATE ${WorkoutPlan.table}
+        SET ${WorkoutPlanColumns.totalDays.value} = ?,
+            ${WorkoutPlanColumns.totalWorkouts.value} = ?,
+            ${WorkoutPlanColumns.updatedAt.value} = ?
+        WHERE ${WorkoutPlanColumns.id.equal}
+          AND ${WorkoutPlanColumns.version.equal}
+        ''',
+          [
+            totals.totalDays,
+            totals.totalWorkouts,
+            DateUtilities.getNowUtcUnix(),
+            workoutPlanId,
+            planVersion,
+          ],
+        );
+      },
     );
   }
 
-  Future<void> _applyWeekTotalsDelta(
+  Future<Result<void, ServiceError<SingleErrorTypes>>> _applyWeekTotalsDelta(
     Transaction txn, {
     required int workoutPlanWeekId,
     int totalDaysDelta = 0,
     int totalWorkoutsDelta = 0,
-  }) async {
-    if (totalDaysDelta == 0 && totalWorkoutsDelta == 0) {
-      return;
-    }
+  }) {
+    return _updateScheduleTotals(
+      'Failed to update workout plan week totals',
+      () async {
+        if (totalDaysDelta == 0 && totalWorkoutsDelta == 0) {
+          return;
+        }
 
-    final now = DateUtilities.getNowUtcUnix();
-    await txn.rawUpdate(
-      '''
-      UPDATE ${WorkoutPlanWeek.table}
-      SET ${WorkoutPlanWeekColumns.totalDays.value} = MAX(0, ${WorkoutPlanWeekColumns.totalDays.value} + ?),
-          ${WorkoutPlanWeekColumns.totalWorkouts.value} = MAX(0, ${WorkoutPlanWeekColumns.totalWorkouts.value} + ?),
-          ${WorkoutPlanWeekColumns.updatedAt.value} = ?
-      WHERE ${WorkoutPlanWeekColumns.id.equal}
-      ''',
-      [totalDaysDelta, totalWorkoutsDelta, now, workoutPlanWeekId],
+        final now = DateUtilities.getNowUtcUnix();
+        await txn.rawUpdate(
+          '''
+        UPDATE ${WorkoutPlanWeek.table}
+        SET ${WorkoutPlanWeekColumns.totalDays.value} = MAX(0, ${WorkoutPlanWeekColumns.totalDays.value} + ?),
+            ${WorkoutPlanWeekColumns.totalWorkouts.value} = MAX(0, ${WorkoutPlanWeekColumns.totalWorkouts.value} + ?),
+            ${WorkoutPlanWeekColumns.updatedAt.value} = ?
+        WHERE ${WorkoutPlanWeekColumns.id.equal}
+        ''',
+          [totalDaysDelta, totalWorkoutsDelta, now, workoutPlanWeekId],
+        );
+      },
     );
   }
 
-  Future<void> _applyDayWorkoutsDelta(
+  Future<Result<void, ServiceError<SingleErrorTypes>>> _applyDayWorkoutsDelta(
     Transaction txn, {
     required int workoutPlanDayId,
     required int totalWorkoutsDelta,
-  }) async {
-    if (totalWorkoutsDelta == 0) {
-      return;
-    }
+  }) {
+    return _updateScheduleTotals(
+      'Failed to update workout plan day totals',
+      () async {
+        if (totalWorkoutsDelta == 0) {
+          return;
+        }
 
-    final now = DateUtilities.getNowUtcUnix();
-    await txn.rawUpdate(
-      '''
-      UPDATE ${WorkoutPlanDay.table}
-      SET ${WorkoutPlanDayColumns.totalWorkouts.value} = MAX(0, ${WorkoutPlanDayColumns.totalWorkouts.value} + ?),
-          ${WorkoutPlanDayColumns.updatedAt.value} = ?
-      WHERE ${WorkoutPlanDayColumns.id.equal}
-      ''',
-      [totalWorkoutsDelta, now, workoutPlanDayId],
+        final now = DateUtilities.getNowUtcUnix();
+        await txn.rawUpdate(
+          '''
+        UPDATE ${WorkoutPlanDay.table}
+        SET ${WorkoutPlanDayColumns.totalWorkouts.value} = MAX(0, ${WorkoutPlanDayColumns.totalWorkouts.value} + ?),
+            ${WorkoutPlanDayColumns.updatedAt.value} = ?
+        WHERE ${WorkoutPlanDayColumns.id.equal}
+        ''',
+          [totalWorkoutsDelta, now, workoutPlanDayId],
+        );
+      },
     );
+  }
+
+  Future<Result<void, ServiceError<SingleErrorTypes>>> _updateScheduleTotals(
+    String failureDescription,
+    Future<void> Function() update,
+  ) async {
+    try {
+      await update();
+      return ok(null);
+    } catch (error, stackTrace) {
+      _logger.severe(failureDescription, error, stackTrace);
+      return err(
+        ServiceError(
+          type: SingleErrorTypes.operationFailure,
+          description: failureDescription,
+        ),
+      );
+    }
   }
 }
