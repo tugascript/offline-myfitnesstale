@@ -124,10 +124,8 @@ void main() {
       routes: [
         GoRoute(
           path: Routes.workoutHistory.name,
-          builder: (context, state) => WorkoutHistoryScreen(
-            workoutId: workoutId,
-            version: version,
-          ),
+          builder: (context, state) =>
+              WorkoutHistoryScreen(workoutId: workoutId, version: version),
         ),
       ],
     );

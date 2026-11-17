@@ -22,7 +22,7 @@ import 'package:material_ui/material_ui.dart';
 import '../../../../data/repositories/workout_plans/dtos/workout_plan_record_dto.dart';
 import '../../../../data/utils/enums.dart';
 import '../../../core/sizes/data_display_sizes.dart';
-import '../../../core/widgets/layout/app_elevated_button.dart';
+import '../../../core/widgets/layout/app_text_button.dart';
 import '../../view_models/states/workout_plan_record_state.dart';
 import '../../view_models/workout_plan_record_cubit.dart';
 import './workout_plan_record_head.dart';
@@ -240,9 +240,8 @@ class _EmptyWorkoutPlanRecord extends StatelessWidget {
                 SizedBox(height: sizes.spacing),
                 SizedBox(
                   width: double.infinity,
-                  child: AppElevatedButton(
+                  child: AppTextButton(
                     isLoading: isLoading,
-                    theme: theme,
                     sizes: sizes,
                     isDense: true,
                     onPressed: () =>
@@ -255,9 +254,8 @@ class _EmptyWorkoutPlanRecord extends StatelessWidget {
                 SizedBox(height: sizes.spacing),
                 SizedBox(
                   width: double.infinity,
-                  child: AppElevatedButton(
+                  child: AppTextButton(
                     isLoading: isLoading,
-                    theme: theme,
                     sizes: sizes,
                     isDense: true,
                     onPressed: () => context.push('/workout-plans'),

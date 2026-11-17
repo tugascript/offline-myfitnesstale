@@ -20,6 +20,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../../../routing/routes.dart';
 import '../../../core/sizes/data_display_sizes.dart';
+import '../../../core/widgets/layout/app_text_button.dart';
 import './active_plan_frame.dart';
 
 class EmptyActivePlan extends StatelessWidget {
@@ -75,14 +76,14 @@ class EmptyActivePlan extends StatelessWidget {
                   ),
                 ),
                 SizedBox(height: sizes.spacing),
-                TextButton.icon(
+                AppTextButton(
                   key: const ValueKey('active-workout-plan-browse'),
                   onPressed: () => context.push(Routes.workoutPlanList.name),
-                  icon: Icon(Icons.book_outlined, size: sizes.compactIconSize),
-                  label: Text(
-                    'Browse Plans',
-                    style: TextStyle(fontSize: sizes.fontSize),
-                  ),
+                  icon: Icons.book_outlined,
+                  label: 'Browse Plans',
+                  isLoading: false,
+                  isDense: true,
+                  sizes: sizes,
                 ),
               ],
             ),

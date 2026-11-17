@@ -144,14 +144,19 @@ void main() {
     final dto = result.value;
     expect(dto.currentVersion, 1);
     expect(dto.totalWeeks, 6);
-    expect(dto.totalDays, 3);
-    expect(dto.totalWorkouts, 4);
+    expect(dto.totalDays, 10);
+    expect(dto.totalWorkouts, 14);
+    expect(dto.weeks, hasLength(2));
+    expect(dto.weeks![0].totalDays, 2);
+    expect(dto.weeks![0].totalWorkouts, 3);
+    expect(dto.weeks![1].totalDays, 1);
+    expect(dto.weeks![1].totalWorkouts, 1);
 
     final plan = await getPlan(db, workoutPlanId);
     expect(plan.version, 1);
     expect(plan.totalWeeks, 6);
-    expect(plan.totalDays, 3);
-    expect(plan.totalWorkouts, 4);
+    expect(plan.totalDays, 10);
+    expect(plan.totalWorkouts, 14);
 
     final weekCount =
         Sqflite.firstIntValue(

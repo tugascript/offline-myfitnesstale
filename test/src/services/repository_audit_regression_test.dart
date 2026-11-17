@@ -24,14 +24,17 @@ import 'package:myfitnesstale/src/data/models/sqlite/meal_plan_week_model.dart';
 import 'package:myfitnesstale/src/data/models/sqlite/recipe_item_model.dart';
 import 'package:myfitnesstale/src/data/models/sqlite/week_macro_goal_model.dart';
 import 'package:myfitnesstale/src/data/models/sqlite/weight_goal_model.dart';
+import 'package:myfitnesstale/src/data/models/sqlite/exercise_model.dart';
 import 'package:myfitnesstale/src/data/models/sqlite/workout_model.dart';
 import 'package:myfitnesstale/src/data/models/sqlite/workout_plan_day_model.dart';
 import 'package:myfitnesstale/src/data/models/sqlite/workout_plan_model.dart';
 import 'package:myfitnesstale/src/data/models/sqlite/workout_plan_week_model.dart';
 import 'package:myfitnesstale/src/data/models/sqlite/workout_record_model.dart';
+import 'package:myfitnesstale/src/data/models/sqlite/workout_set_exercise_model.dart';
 import 'package:myfitnesstale/src/data/models/sqlite/workout_set_model.dart';
 import 'package:myfitnesstale/src/data/models/sqlite/workout_set_record_model.dart';
 import 'package:myfitnesstale/src/data/repositories/core/repository_helpers.dart';
+import 'package:myfitnesstale/src/data/repositories/exercises/dtos/exercise_dto.dart';
 import 'package:myfitnesstale/src/data/repositories/exercises/exercise_record_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/foods/food_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/foods/inputs/food_input.dart';
@@ -50,20 +53,33 @@ import 'package:myfitnesstale/src/data/repositories/weight/inputs/weight_goal_in
 import 'package:myfitnesstale/src/data/repositories/weight/weight_record_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/workout_plans/inputs/week_workout_input.dart';
 import 'package:myfitnesstale/src/data/repositories/workout_plans/inputs/workout_plan_day_batch_create_input.dart';
+import 'package:myfitnesstale/src/data/repositories/workout_plans/inputs/workout_plan_day_registration_input.dart';
 import 'package:myfitnesstale/src/data/repositories/workout_plans/inputs/workout_plan_record_input.dart';
+import 'package:myfitnesstale/src/data/repositories/workout_plans/inputs/workout_plan_registration_input.dart';
 import 'package:myfitnesstale/src/data/repositories/workout_plans/inputs/workout_plan_week_batch_create_input.dart';
+import 'package:myfitnesstale/src/data/repositories/workout_plans/inputs/workout_plan_week_input.dart';
+import 'package:myfitnesstale/src/data/repositories/workout_plans/inputs/workout_plan_week_registration_input.dart';
 import 'package:myfitnesstale/src/data/repositories/workout_plans/inputs/workout_plan_workout_batch_create_input.dart';
+import 'package:myfitnesstale/src/data/repositories/workout_plans/inputs/workout_plan_workout_input.dart';
 import 'package:myfitnesstale/src/data/repositories/workout_plans/inputs/workout_plan_workout_record_input.dart';
+import 'package:myfitnesstale/src/data/repositories/workout_plans/inputs/workout_plan_workout_registration_input.dart';
 import 'package:myfitnesstale/src/data/repositories/workout_plans/workout_plan_record_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/workout_plans/workout_plan_repository.dart';
+import 'package:myfitnesstale/src/data/repositories/workouts/dtos/workout_dto.dart';
 import 'package:myfitnesstale/src/data/repositories/workouts/inputs/workout_record_batch_input.dart';
+import 'package:myfitnesstale/src/data/repositories/workouts/inputs/workout_registration_input.dart';
+import 'package:myfitnesstale/src/data/repositories/workouts/inputs/workout_set_exercise_registration_input.dart';
 import 'package:myfitnesstale/src/data/repositories/workouts/inputs/workout_set_record_batch_input.dart';
+import 'package:myfitnesstale/src/data/repositories/workouts/inputs/workout_set_registration_input.dart';
 import 'package:myfitnesstale/src/data/repositories/workouts/workout_record_repository.dart';
+import 'package:myfitnesstale/src/data/repositories/workouts/workout_repository.dart';
 import 'package:myfitnesstale/src/data/services/sqlite/dao.dart';
 import 'package:myfitnesstale/src/data/services/sqlite/database_helper.dart';
 import 'package:myfitnesstale/src/data/utils/enums.dart';
+import 'package:myfitnesstale/src/data/utils/json_data.dart';
 import 'package:myfitnesstale/src/ui/meal_plans/view_models/meal_plan_cubit.dart';
 import 'package:myfitnesstale/src/utils/errors.dart';
+import 'package:myfitnesstale/src/utils/nullable.dart';
 import 'package:sqflite/sqflite.dart';
 
 import '../../support/test_database.dart';
@@ -265,6 +281,380 @@ void main() {
 
       expect(await readDaysById(), {day1.id: 1, day3.id: 2, day2.id: 3});
     });
+
+    test(
+      'createWorkoutPlans multiplies week block totals by week span',
+      () async {
+        final db = await testDatabase.db;
+        final workoutId = await insertWorkout(db);
+        final workout = Workout.fromMap(
+          (await db.query(
+            Workout.table,
+            where: '${WorkoutColumns.id.value} = ?',
+            whereArgs: [workoutId],
+            limit: 1,
+          )).single,
+        );
+        final workoutDto = WorkoutDto.fromModel(workout);
+        final repo = WorkoutPlanRepository.create();
+
+        final result = await repo.createWorkoutPlans([
+          WorkoutPlanRegistrationInput(
+            name: uniqueName('Registered Plan'),
+            description: 'Plan with multi-week blocks',
+            difficulty: Difficulty.intermediate,
+            weeks: [
+              WorkoutPlanWeekRegistrationInput(
+                startWeek: 1,
+                endWeek: 4,
+                phase: WorkoutPhase.endurance,
+                days: [
+                  WorkoutPlanDayRegistrationInput(
+                    workouts: [
+                      WorkoutPlanWorkoutRegistrationInput(
+                        workout: workoutDto,
+                        timeOfDay: WorkoutTimeOfDay.anytime,
+                      ),
+                    ],
+                  ),
+                  const WorkoutPlanDayRegistrationInput(
+                    isRestDay: true,
+                    workouts: [],
+                  ),
+                  WorkoutPlanDayRegistrationInput(
+                    workouts: [
+                      WorkoutPlanWorkoutRegistrationInput(
+                        workout: workoutDto,
+                        timeOfDay: WorkoutTimeOfDay.anytime,
+                      ),
+                      WorkoutPlanWorkoutRegistrationInput(
+                        workout: workoutDto,
+                        timeOfDay: WorkoutTimeOfDay.anytime,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              WorkoutPlanWeekRegistrationInput(
+                startWeek: 5,
+                endWeek: 6,
+                phase: WorkoutPhase.hypertrophy,
+                days: [
+                  WorkoutPlanDayRegistrationInput(
+                    workouts: [
+                      WorkoutPlanWorkoutRegistrationInput(
+                        workout: workoutDto,
+                        timeOfDay: WorkoutTimeOfDay.anytime,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ]);
+
+        expect(result.isOk(), isTrue);
+        final created = result.value.single;
+        expect(created.totalWeeks, 6);
+        expect(created.totalDays, 10);
+        expect(created.totalWorkouts, 14);
+        expect(created.weeks![0].totalDays, 2);
+        expect(created.weeks![0].totalWorkouts, 3);
+        expect(created.weeks![1].totalDays, 1);
+        expect(created.weeks![1].totalWorkouts, 1);
+      },
+    );
+
+    test('week, day, and workout mutations keep day, week, and plan totals synced across multi-week spans', () async {
+      final db = await testDatabase.db;
+      final workoutA = await insertWorkout(db);
+      final workoutB = await insertWorkout(db);
+      final planId = await insertWorkoutPlan(db);
+      final repo = WorkoutPlanRepository.create();
+
+      final initial = (await repo.createWorkoutPlanVersionWithWeeks(
+        workoutPlanId: planId,
+        weeks: [
+          WorkoutPlanWeekBatchCreateInput(
+            startWeek: 1,
+            endWeek: 3,
+            days: [
+              WorkoutPlanDayBatchCreateInput(
+                day: 1,
+                workouts: [
+                  WorkoutPlanWorkoutBatchCreateInput(workoutId: workoutA),
+                ],
+              ),
+            ],
+          ),
+          WorkoutPlanWeekBatchCreateInput(
+            startWeek: 4,
+            endWeek: 4,
+            days: [
+              WorkoutPlanDayBatchCreateInput(
+                day: 1,
+                workouts: [
+                  WorkoutPlanWorkoutBatchCreateInput(workoutId: workoutA),
+                ],
+              ),
+            ],
+          ),
+        ],
+      )).value;
+      expect(initial.totalWeeks, 4);
+      expect(initial.totalDays, 4);
+      expect(initial.totalWorkouts, 4);
+
+      final week1Id = initial.weeks![0].id;
+      final week2Id = initial.weeks![1].id;
+      final day1Id = initial.weeks![0].days.first.id;
+
+      // Add a second workout to week1's day1 (+1 workout/week * 3 weeks = +3).
+      final addedWorkout = (await repo.createWorkoutPlanWorkout(
+        day1Id,
+        WorkoutPlanWorkoutInput(workoutId: workoutB),
+      )).value;
+      var loaded = (await repo.getWorkoutPlan(planId)).value;
+      expect(loaded.totalDays, 4);
+      expect(loaded.totalWorkouts, 7);
+      expect(loaded.weeks![0].totalWorkouts, 2);
+      expect(loaded.weeks![0].days.first.totalWorkouts, 2);
+
+      // Add a second workout day to week1 (+1 day/week * 3, +1 workout/week * 3).
+      final addedDay = (await repo.createWorkoutPlanDay(
+        workoutPlanWeekId: week1Id,
+        day: 3,
+        workouts: [WeekWorkoutInput(workoutId: workoutA)],
+      )).value;
+      loaded = (await repo.getWorkoutPlan(planId)).value;
+      expect(loaded.totalDays, 7);
+      expect(loaded.totalWorkouts, 10);
+      expect(loaded.weeks![0].totalDays, 2);
+      expect(loaded.weeks![0].totalWorkouts, 3);
+
+      // Expand week1 from 1..3 to 1..4 (4 weeks * 2 days = 8, 4 * 3 workouts = 12) + week2 (1 day, 1 workout).
+      final updatedWeek = await repo.updateWorkoutPlanWeek(
+        week1Id,
+        const WorkoutPlanWeekInput(startWeek: 1, endWeek: 4),
+      );
+      expect(updatedWeek.isOk(), isTrue);
+      loaded = (await repo.getWorkoutPlan(planId)).value;
+      expect(loaded.totalDays, 9);
+      expect(loaded.totalWorkouts, 13);
+
+      // Delete the added workout from day1 (week1 now has 2 workouts/week * 4 + 1 = 9).
+      final deletedWorkout = await repo.deleteWorkoutPlanWorkout(
+        workoutPlanWorkoutId: addedWorkout.id,
+      );
+      expect(deletedWorkout.isOk(), isTrue);
+      loaded = (await repo.getWorkoutPlan(planId)).value;
+      expect(loaded.totalDays, 9);
+      expect(loaded.totalWorkouts, 9);
+
+      // Delete addedDay from week1 (week1 now has 1 day/week * 4 + 1 = 5, 1 workout/week * 4 + 1 = 5).
+      final deletedDay = await repo.deleteWorkoutPlanDay(addedDay.id);
+      expect(deletedDay.isOk(), isTrue);
+      loaded = (await repo.getWorkoutPlan(planId)).value;
+      expect(loaded.totalDays, 5);
+      expect(loaded.totalWorkouts, 5);
+
+      // Delete week2 (only week1 remains: 4 days, 4 workouts).
+      final deletedWeek = await repo.deleteWorkoutPlanWeek(week2Id);
+      expect(deletedWeek.isOk(), isTrue);
+      loaded = (await repo.getWorkoutPlan(planId)).value;
+      expect(loaded.totalDays, 4);
+      expect(loaded.totalWorkouts, 4);
+    });
+
+    test('getWorkoutPlan with explicit older planVersion computes totals for that version', () async {
+      final db = await testDatabase.db;
+      final workoutA = await insertWorkout(db);
+      final workoutB = await insertWorkout(db);
+      final planId = await insertWorkoutPlan(db);
+      final repo = WorkoutPlanRepository.create();
+
+      await repo.createWorkoutPlanVersionWithWeeks(
+        workoutPlanId: planId,
+        weeks: [
+          WorkoutPlanWeekBatchCreateInput(
+            startWeek: 1,
+            endWeek: 3,
+            days: [
+              WorkoutPlanDayBatchCreateInput(
+                day: 1,
+                workouts: [
+                  WorkoutPlanWorkoutBatchCreateInput(workoutId: workoutA),
+                  WorkoutPlanWorkoutBatchCreateInput(workoutId: workoutB),
+                ],
+              ),
+            ],
+          ),
+        ],
+      );
+
+      await repo.createWorkoutPlanVersionWithWeeks(
+        workoutPlanId: planId,
+        weeks: [
+          WorkoutPlanWeekBatchCreateInput(
+            startWeek: 1,
+            endWeek: 1,
+            days: [
+              WorkoutPlanDayBatchCreateInput(
+                day: 1,
+                workouts: [
+                  WorkoutPlanWorkoutBatchCreateInput(workoutId: workoutA),
+                ],
+              ),
+            ],
+          ),
+        ],
+      );
+
+      final v1 = (await repo.getWorkoutPlan(planId, planVersion: 1)).value;
+      expect(v1.currentVersion, 1);
+      expect(v1.totalWeeks, 3);
+      expect(v1.totalDays, 3);
+      expect(v1.totalWorkouts, 6);
+
+      final v2 = (await repo.getWorkoutPlan(planId)).value;
+      expect(v2.currentVersion, 2);
+      expect(v2.totalWeeks, 1);
+      expect(v2.totalDays, 1);
+      expect(v2.totalWorkouts, 1);
+    });
+  });
+
+  group('WorkoutRepository regressions', () {
+    tearDown(testDatabase.clearWorkoutTables);
+
+    test('createWorkouts persists set totalReps/totalExercises and getWorkout returns matching totalReps', () async {
+      final db = await testDatabase.db;
+      final exercise = Exercise.create(
+        name: uniqueName('Bench'),
+        muscleGroup: MuscleGroup.push,
+        muscles: const TargetMuscles(
+          primary: {Muscle.chest},
+          secondary: {Muscle.triceps},
+        ),
+        difficulty: Difficulty.beginner,
+      );
+      final exerciseId = await db.insert(Exercise.table, exercise.toMap());
+      final exerciseDto = ExerciseDto.fromModel(
+        exercise.copyWith(id: Nullable(exerciseId)),
+      );
+      final repo = WorkoutRepository.create();
+
+      final createdResult = await repo.createWorkouts([
+        WorkoutRegistrationInput(
+          name: uniqueName('Push Seed'),
+          description: 'Push workout',
+          difficulty: Difficulty.intermediate,
+          sets: [
+            WorkoutSetRegistrationInput(
+              setType: WorkoutSetType.standard,
+              minSets: 3,
+              maxSets: 4,
+              recommendedRestSecs: 90,
+              exercises: [
+                WorkoutSetExerciseRegistrationInput(
+                  exercise: exerciseDto,
+                  minReps: 8,
+                  maxReps: 12,
+                ),
+              ],
+            ),
+            WorkoutSetRegistrationInput(
+              setType: WorkoutSetType.superSet,
+              minSets: 2,
+              recommendedRestSecs: 60,
+              exercises: [
+                WorkoutSetExerciseRegistrationInput(
+                  exercise: exerciseDto,
+                  minReps: 10,
+                ),
+                WorkoutSetExerciseRegistrationInput(
+                  exercise: exerciseDto,
+                  minReps: 15,
+                ),
+              ],
+            ),
+          ],
+        ),
+      ]);
+
+      expect(createdResult.isOk(), isTrue);
+      final created = createdResult.value.single;
+      // Set 1: 4 * 12 = 48; Set 2: 2 * (10 + 15) = 50 -> total = 98
+      expect(created.totalSets, 6);
+      expect(created.totalReps, 98);
+      expect(created.sets![0].totalExercises, 1);
+      expect(created.sets![0].totalReps, 48);
+      expect(created.sets![1].totalExercises, 2);
+      expect(created.sets![1].totalReps, 50);
+
+      final fetched = await repo.getWorkout(created.id);
+      expect(fetched.isOk(), isTrue);
+      expect(fetched.value.totalSets, 6);
+      expect(fetched.value.totalReps, 98);
+    });
+
+    test('getWorkout resolves totalReps when legacy workout_sets rows have total_reps = 0', () async {
+      final db = await testDatabase.db;
+      final exerciseId = await db.insert(
+        Exercise.table,
+        Exercise.create(
+          name: uniqueName('Squat'),
+          muscleGroup: MuscleGroup.legs,
+          muscles: const TargetMuscles(
+            primary: {Muscle.quadriceps},
+            secondary: {},
+          ),
+          difficulty: Difficulty.beginner,
+        ).toMap(),
+      );
+      final workoutId = await db.insert(
+        Workout.table,
+        Workout.create(
+          name: uniqueName('Legacy Legs'),
+          difficulty: Difficulty.beginner,
+          totalSets: 3,
+          totalReps: 36,
+        ).toMap(),
+      );
+      final setId = await db.insert(
+        WorkoutSet.table,
+        WorkoutSet.create(
+          position: 1,
+          workoutId: workoutId,
+          setType: WorkoutSetType.standard,
+          minSets: 3,
+          recommendedRestSecs: 90,
+          workoutVersion: 1,
+          totalExercises: 0,
+          totalReps: 0,
+        ).toMap(),
+      );
+      await db.insert(
+        WorkoutSetExercise.table,
+        WorkoutSetExercise.create(
+          position: 1,
+          workoutId: workoutId,
+          workoutVersion: 1,
+          workoutSetId: setId,
+          exerciseId: exerciseId,
+          minReps: 10,
+          maxReps: 12,
+        ).toMap(),
+      );
+
+      final fetched = await WorkoutRepository.create().getWorkout(workoutId);
+      expect(fetched.isOk(), isTrue);
+      expect(fetched.value.totalSets, 3);
+      expect(fetched.value.totalReps, 36);
+      expect(fetched.value.sets!.single.totalExercises, 1);
+      expect(fetched.value.sets!.single.totalReps, 36);
+    });
   });
 
   group('WorkoutPlanRecordRepository regressions', () {
@@ -402,6 +792,70 @@ void main() {
         [planId],
       );
       expect(directRawCount, 2);
+    });
+
+    test('getLatestWorkoutPlanRecord multiplies week span totals for older plan versions', () async {
+      final db = await testDatabase.db;
+      final planId = await insertWorkoutPlan(db);
+      final workoutA = await insertWorkout(db);
+      final workoutB = await insertWorkout(db);
+      final planRepo = WorkoutPlanRepository.create();
+      final recordRepo = WorkoutPlanRecordRepository.create();
+
+      await planRepo.createWorkoutPlanVersionWithWeeks(
+        workoutPlanId: planId,
+        weeks: [
+          WorkoutPlanWeekBatchCreateInput(
+            startWeek: 1,
+            endWeek: 3,
+            days: [
+              WorkoutPlanDayBatchCreateInput(
+                day: 1,
+                workouts: [
+                  WorkoutPlanWorkoutBatchCreateInput(workoutId: workoutA),
+                  WorkoutPlanWorkoutBatchCreateInput(workoutId: workoutB),
+                ],
+              ),
+              WorkoutPlanDayBatchCreateInput(
+                day: 2,
+                workouts: [
+                  WorkoutPlanWorkoutBatchCreateInput(workoutId: workoutA),
+                ],
+              ),
+            ],
+          ),
+        ],
+      );
+
+      await recordRepo.createWorkoutPlanRecord(
+        WorkoutPlanRecordInput(workoutPlanId: planId),
+      );
+
+      await planRepo.createWorkoutPlanVersionWithWeeks(
+        workoutPlanId: planId,
+        weeks: [
+          WorkoutPlanWeekBatchCreateInput(
+            startWeek: 1,
+            endWeek: 1,
+            days: [
+              WorkoutPlanDayBatchCreateInput(
+                day: 1,
+                workouts: [
+                  WorkoutPlanWorkoutBatchCreateInput(workoutId: workoutA),
+                ],
+              ),
+            ],
+          ),
+        ],
+      );
+
+      final latest = (await recordRepo.getLatestWorkoutPlanRecord(planId))
+          .value;
+      expect(latest.workoutPlanVersion, 1);
+      expect(latest.workoutPlan?.currentVersion, 1);
+      expect(latest.workoutPlan?.totalWeeks, 3);
+      expect(latest.workoutPlan?.totalDays, 6);
+      expect(latest.workoutPlan?.totalWorkouts, 9);
     });
   });
 
@@ -1062,110 +1516,105 @@ void main() {
     );
   });
 
-  test(
-    'WorkoutRecordRepository skips skipped records in getWorkoutRecords and getLatestWorkoutRecord when skipSkipped is true',
-    () async {
-      final db = await testDatabase.db;
-      final workoutId = await insertWorkout(db);
-      final otherWorkoutId = await insertWorkout(db);
-      final repo = WorkoutRecordRepository.create();
+  test('WorkoutRecordRepository skips skipped records in getWorkoutRecords and getLatestWorkoutRecord when skipSkipped is true', () async {
+    final db = await testDatabase.db;
+    final workoutId = await insertWorkout(db);
+    final otherWorkoutId = await insertWorkout(db);
+    final repo = WorkoutRecordRepository.create();
 
-      final completedTime = DateTime(2026, 11, 10, 10, 0);
-      final abandonedTime = DateTime(2026, 11, 11, 10, 0);
-      final skippedTime = DateTime(2026, 11, 12, 10, 0);
+    final completedTime = DateTime(2026, 11, 10, 10, 0);
+    final abandonedTime = DateTime(2026, 11, 11, 10, 0);
+    final skippedTime = DateTime(2026, 11, 12, 10, 0);
 
-      final completedId = await db.insert(
-        WorkoutRecord.table,
-        WorkoutRecord.create(
-          workoutId: workoutId,
-          version: 1,
-          startedAt: completedTime.millisecondsSinceEpoch ~/ 1000,
-          completedAt: completedTime
-              .add(const Duration(minutes: 45))
-              .millisecondsSinceEpoch ~/
-              1000,
-          status: ProgressStatus.completed,
-        ).toMap(),
-      );
-      final abandonedId = await db.insert(
-        WorkoutRecord.table,
-        WorkoutRecord.create(
-          workoutId: workoutId,
-          version: 1,
-          startedAt: abandonedTime.millisecondsSinceEpoch ~/ 1000,
-          droppedAt: abandonedTime
-              .add(const Duration(minutes: 10))
-              .millisecondsSinceEpoch ~/
-              1000,
-          status: ProgressStatus.abandoned,
-        ).toMap(),
-      );
-      final skippedId = await db.insert(
-        WorkoutRecord.table,
-        WorkoutRecord.create(
-          workoutId: workoutId,
-          version: 1,
-          startedAt: skippedTime.millisecondsSinceEpoch ~/ 1000,
-          droppedAt: skippedTime.millisecondsSinceEpoch ~/ 1000,
-          status: ProgressStatus.skipped,
-        ).toMap(),
-      );
-      final onlySkippedId = await db.insert(
-        WorkoutRecord.table,
-        WorkoutRecord.create(
-          workoutId: otherWorkoutId,
-          version: 1,
-          startedAt: skippedTime.millisecondsSinceEpoch ~/ 1000,
-          droppedAt: skippedTime.millisecondsSinceEpoch ~/ 1000,
-          status: ProgressStatus.skipped,
-        ).toMap(),
-      );
-
-      final allRecords = (await repo.getWorkoutRecords(
+    final completedId = await db.insert(
+      WorkoutRecord.table,
+      WorkoutRecord.create(
         workoutId: workoutId,
-      )).value;
-      expect(allRecords.total, 3);
-      expect(
-        allRecords.data.map((r) => r.id),
-        [skippedId, abandonedId, completedId],
-      );
-
-      final nonSkippedRecords = (await repo.getWorkoutRecords(
+        version: 1,
+        startedAt: completedTime.millisecondsSinceEpoch ~/ 1000,
+        completedAt:
+            completedTime
+                .add(const Duration(minutes: 45))
+                .millisecondsSinceEpoch ~/
+            1000,
+        status: ProgressStatus.completed,
+      ).toMap(),
+    );
+    final abandonedId = await db.insert(
+      WorkoutRecord.table,
+      WorkoutRecord.create(
         workoutId: workoutId,
-        skipSkipped: true,
-      )).value;
-      expect(nonSkippedRecords.total, 2);
-      expect(
-        nonSkippedRecords.data.map((r) => r.id),
-        [abandonedId, completedId],
-      );
-
-      final allAcrossWorkouts = (await repo.getWorkoutRecords(
-        skipSkipped: true,
-      )).value;
-      expect(allAcrossWorkouts.data.map((r) => r.id), isNot(contains(skippedId)));
-      expect(
-        allAcrossWorkouts.data.map((r) => r.id),
-        isNot(contains(onlySkippedId)),
-      );
-
-      final latestUnfiltered = (await repo.getLatestWorkoutRecord(
+        version: 1,
+        startedAt: abandonedTime.millisecondsSinceEpoch ~/ 1000,
+        droppedAt:
+            abandonedTime
+                .add(const Duration(minutes: 10))
+                .millisecondsSinceEpoch ~/
+            1000,
+        status: ProgressStatus.abandoned,
+      ).toMap(),
+    );
+    final skippedId = await db.insert(
+      WorkoutRecord.table,
+      WorkoutRecord.create(
         workoutId: workoutId,
-      )).value;
-      expect(latestUnfiltered.id, skippedId);
-
-      final latestNonSkipped = (await repo.getLatestWorkoutRecord(
-        workoutId: workoutId,
-        skipSkipped: true,
-      )).value;
-      expect(latestNonSkipped.id, abandonedId);
-
-      final onlySkippedLatest = await repo.getLatestWorkoutRecord(
+        version: 1,
+        startedAt: skippedTime.millisecondsSinceEpoch ~/ 1000,
+        droppedAt: skippedTime.millisecondsSinceEpoch ~/ 1000,
+        status: ProgressStatus.skipped,
+      ).toMap(),
+    );
+    final onlySkippedId = await db.insert(
+      WorkoutRecord.table,
+      WorkoutRecord.create(
         workoutId: otherWorkoutId,
-        skipSkipped: true,
-      );
-      expect(onlySkippedLatest.isErr(), isTrue);
-      expect(onlySkippedLatest.error.type, SingleErrorTypes.notFound);
-    },
-  );
+        version: 1,
+        startedAt: skippedTime.millisecondsSinceEpoch ~/ 1000,
+        droppedAt: skippedTime.millisecondsSinceEpoch ~/ 1000,
+        status: ProgressStatus.skipped,
+      ).toMap(),
+    );
+
+    final allRecords = (await repo.getWorkoutRecords(workoutId: workoutId))
+        .value;
+    expect(allRecords.total, 3);
+    expect(allRecords.data.map((r) => r.id), [
+      skippedId,
+      abandonedId,
+      completedId,
+    ]);
+
+    final nonSkippedRecords = (await repo.getWorkoutRecords(
+      workoutId: workoutId,
+      skipSkipped: true,
+    )).value;
+    expect(nonSkippedRecords.total, 2);
+    expect(nonSkippedRecords.data.map((r) => r.id), [abandonedId, completedId]);
+
+    final allAcrossWorkouts = (await repo.getWorkoutRecords(skipSkipped: true))
+        .value;
+    expect(allAcrossWorkouts.data.map((r) => r.id), isNot(contains(skippedId)));
+    expect(
+      allAcrossWorkouts.data.map((r) => r.id),
+      isNot(contains(onlySkippedId)),
+    );
+
+    final latestUnfiltered = (await repo.getLatestWorkoutRecord(
+      workoutId: workoutId,
+    )).value;
+    expect(latestUnfiltered.id, skippedId);
+
+    final latestNonSkipped = (await repo.getLatestWorkoutRecord(
+      workoutId: workoutId,
+      skipSkipped: true,
+    )).value;
+    expect(latestNonSkipped.id, abandonedId);
+
+    final onlySkippedLatest = await repo.getLatestWorkoutRecord(
+      workoutId: otherWorkoutId,
+      skipSkipped: true,
+    );
+    expect(onlySkippedLatest.isErr(), isTrue);
+    expect(onlySkippedLatest.error.type, SingleErrorTypes.notFound);
+  });
 }

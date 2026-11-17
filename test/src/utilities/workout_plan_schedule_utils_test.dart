@@ -31,12 +31,12 @@ import 'package:myfitnesstale/src/utils/nullable.dart';
 void main() {
   group('WorkoutPlanScheduleUtils.addRestDays', () {
     WorkoutPlanDayDto makeDay(int day) => WorkoutPlanDayDto(
-          id: day,
-          planVersion: 1,
-          day: day,
-          totalWorkouts: 1,
-          isRestDay: false,
-        );
+      id: day,
+      planVersion: 1,
+      day: day,
+      totalWorkouts: 1,
+      isRestDay: false,
+    );
 
     test('automatic 1-day plan places workout on Day 1 and rests on 2..7', () {
       final days = [makeDay(1)];

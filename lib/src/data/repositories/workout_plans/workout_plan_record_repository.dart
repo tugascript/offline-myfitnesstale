@@ -754,11 +754,13 @@ final class WorkoutPlanRecordRepository implements Repository {
           );
           final totalDays = versionWeeks.fold<int>(
             0,
-            (sum, week) => sum + week.totalDays,
+            (sum, week) =>
+                sum + week.totalDays * (week.endWeek - week.startWeek + 1),
           );
           final totalWorkouts = versionWeeks.fold<int>(
             0,
-            (sum, week) => sum + week.totalWorkouts,
+            (sum, week) =>
+                sum + week.totalWorkouts * (week.endWeek - week.startWeek + 1),
           );
           workoutPlanDto = WorkoutPlanDto.fromModel(plan).copyWith(
             currentVersion: record.workoutPlanVersion,

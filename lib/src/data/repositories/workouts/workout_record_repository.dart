@@ -339,10 +339,7 @@ final class WorkoutRecordRepository implements Repository {
   }
 
   Future<Result<WorkoutRecordDto, ServiceError<SingleErrorTypes>>>
-  getLatestWorkoutRecord({
-    int? workoutId,
-    bool skipSkipped = false,
-  }) async {
+  getLatestWorkoutRecord({int? workoutId, bool skipSkipped = false}) async {
     _logger.info('Getting latest workout record for workout $workoutId');
     try {
       final WhereBuilder query = WhereBuilder();
