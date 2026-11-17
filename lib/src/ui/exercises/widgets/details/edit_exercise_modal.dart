@@ -57,6 +57,9 @@ class EditExerciseModal extends StatelessWidget {
           initialDescription: exercise.description.isEmpty
               ? null
               : exercise.description,
+          initialVideoUrl: exercise.video?.platform == VideoPlatform.youtube
+              ? exercise.video!.uri
+              : null,
           initialMuscleGroup: exercise.muscleGroup,
           initialPrimaryMuscles: exercise.muscles.primary,
           initialSecondaryMuscles: exercise.muscles.secondary,
@@ -67,6 +70,7 @@ class EditExerciseModal extends StatelessWidget {
           onSubmit:
               ({
                 String? description,
+                String? videoUrl,
                 Difficulty? difficulty,
                 required Set<int> equipmentIds,
                 required bool isFavorite,
@@ -97,12 +101,19 @@ class EditExerciseModal extends StatelessWidget {
                           : null,
                     ),
                     video: Nullable(
-                      existingVideo != null
+                      videoUrl != null
                           ? VideoData(
-                              uri: existingVideo.uri,
-                              platform: existingVideo.platform,
+                              uri: videoUrl,
+                              platform: VideoPlatform.youtube,
                             )
-                          : null,
+                          : (existingVideo != null &&
+                                    existingVideo.platform !=
+                                        VideoPlatform.youtube
+                                ? VideoData(
+                                    uri: existingVideo.uri,
+                                    platform: existingVideo.platform,
+                                  )
+                                : null),
                     ),
                     equipmentIds: equipmentIds,
                     difficulty: Nullable(difficulty),

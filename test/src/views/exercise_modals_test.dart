@@ -28,12 +28,15 @@ import 'package:myfitnesstale/src/data/repositories/exercises/inputs/exercise_in
 import 'package:myfitnesstale/src/data/utils/enums.dart';
 import 'package:myfitnesstale/src/data/utils/json_data.dart';
 import 'package:myfitnesstale/src/ui/core/view_models/states/common_state.dart';
+import 'package:myfitnesstale/src/ui/core/widgets/video/app_video_player.dart';
 import 'package:myfitnesstale/src/ui/exercises/screens/exercise_detail_screen.dart';
 import 'package:myfitnesstale/src/ui/exercises/screens/exercises_list_screen.dart';
 import 'package:myfitnesstale/src/ui/exercises/view_models/exercise_cubit.dart';
 import 'package:myfitnesstale/src/ui/exercises/widgets/details/create_exercise_modal.dart';
 import 'package:myfitnesstale/src/ui/exercises/widgets/details/edit_exercise_modal.dart';
 import 'package:myfitnesstale/src/utils/nullable.dart';
+
+import '../../support/fake_webview_platform.dart';
 
 class _FakeExerciseCubit extends ExerciseCubit {
   final bool shouldFail;
@@ -96,6 +99,12 @@ class _FakeExerciseCubit extends ExerciseCubit {
       id: 99,
       name: input.name,
       description: input.description.value ?? '',
+      video: input.video.value != null
+          ? VideoDto(
+              uri: input.video.value!.uri,
+              platform: input.video.value!.platform,
+            )
+          : null,
       muscleGroup: input.muscleGroup,
       muscles: input.muscles,
       difficulty: input.difficulty.value,
@@ -214,6 +223,8 @@ ExerciseDto _sampleExercise({
 }
 
 void main() {
+  setUpAll(setUpFakeWebViewPlatform);
+
   testWidgets(
     'ExercisesListScreen FAB opens CreateExerciseModal, creates exercise, and closes modal',
     (tester) async {
@@ -327,7 +338,7 @@ void main() {
           uri: 'larsen.png',
         ),
         video: const VideoDto(
-          uri: 'https://youtu.be/example',
+          uri: 'https://youtu.be/dQw4w9WgXcQ',
           platform: VideoPlatform.youtube,
         ),
       );
@@ -351,12 +362,16 @@ void main() {
           child: MaterialApp.router(routerConfig: router),
         ),
       );
-      await tester.pumpAndSettle();
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      expect(find.byType(AppVideoPlayer), findsOneWidget);
 
       final editButton = find.text('EDIT');
       await tester.ensureVisible(editButton);
       await tester.tap(editButton);
-      await tester.pumpAndSettle();
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
 
       expect(find.byType(EditExerciseModal), findsOneWidget);
       expect(find.text('UPDATE EXERCISE'), findsOneWidget);
@@ -380,7 +395,8 @@ void main() {
       final updateButton = find.text('UPDATE EXERCISE');
       await tester.ensureVisible(updateButton);
       await tester.tap(updateButton);
-      await tester.pumpAndSettle();
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
 
       expect(cubit.updatedCalls, hasLength(1));
       final (updatedId, updatedInput) = cubit.updatedCalls.first;
@@ -390,7 +406,7 @@ void main() {
       expect(updatedInput.isFavorite, isTrue);
       expect(updatedInput.picture.value?.uri, 'larsen.png');
       expect(updatedInput.picture.value?.storage, PictureStorage.files);
-      expect(updatedInput.video.value?.uri, 'https://youtu.be/example');
+      expect(updatedInput.video.value?.uri, 'https://youtu.be/dQw4w9WgXcQ');
       expect(updatedInput.video.value?.platform, VideoPlatform.youtube);
       expect(find.byType(EditExerciseModal), findsNothing);
       expect(find.textContaining('SPOTO PRESS'), findsOneWidget);
@@ -451,6 +467,140 @@ void main() {
 
       expect(find.byType(EditExerciseModal), findsOneWidget);
       expect(find.textContaining('Failed to update exercise'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'CreateExerciseModal validates YouTube URL and saves valid VideoData',
+    (tester) async {
+      final cubit = _FakeExerciseCubit(initialExercise: _sampleExercise());
+      addTearDown(cubit.close);
+
+      await tester.pumpWidget(
+        BlocProvider<ExerciseCubit>.value(
+          value: cubit,
+          child: const MaterialApp(home: ExercisesListScreen()),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const ValueKey('exercise-add')));
+      await tester.pumpAndSettle();
+
+      await tester.enterText(
+        find.descendant(
+          of: find.byType(CreateExerciseModal),
+          matching: find.byWidgetPredicate(
+            (w) => w is TextField && w.decoration?.labelText == 'Name',
+          ),
+        ),
+        'Overhead Press',
+      );
+      await tester.tap(
+        find.descendant(
+          of: find.byType(CreateExerciseModal),
+          matching: find.text('Muscle Group'),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Push').last);
+      await tester.pumpAndSettle();
+
+      final videoField = find.descendant(
+        of: find.byType(CreateExerciseModal),
+        matching: find.byWidgetPredicate(
+          (w) =>
+              w is TextField && w.decoration?.labelText == 'YouTube Video URL',
+        ),
+      );
+
+      // Invalid URL blocks submission
+      await tester.enterText(videoField, 'https://vimeo.com/123456');
+      final createButton = find.text('CREATE EXERCISE');
+      await tester.ensureVisible(createButton);
+      await tester.tap(createButton);
+      await tester.pumpAndSettle();
+
+      expect(cubit.createdInputs, isEmpty);
+      expect(find.text('Please enter a valid YouTube video URL'), findsOneWidget);
+      expect(find.byType(CreateExerciseModal), findsOneWidget);
+
+      // Valid YouTube URL succeeds
+      await tester.enterText(
+        videoField,
+        'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+      );
+      await tester.ensureVisible(createButton);
+      await tester.tap(createButton);
+      await tester.pumpAndSettle();
+
+      expect(cubit.createdInputs, hasLength(1));
+      expect(
+        cubit.createdInputs.first.video.value?.uri,
+        'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+      );
+      expect(
+        cubit.createdInputs.first.video.value?.platform,
+        VideoPlatform.youtube,
+      );
+      expect(find.byType(CreateExerciseModal), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'EditExerciseModal allows clearing existing YouTube URL',
+    (tester) async {
+      final existing = _sampleExercise(
+        id: 15,
+        name: 'Romanian Deadlift',
+        createdBy: CreatedBy.user,
+        video: const VideoDto(
+          uri: 'https://youtu.be/dQw4w9WgXcQ',
+          platform: VideoPlatform.youtube,
+        ),
+      );
+      final cubit = _FakeExerciseCubit(initialExercise: existing);
+      addTearDown(cubit.close);
+
+      final router = GoRouter(
+        initialLocation: '/exercises/15',
+        routes: [
+          GoRoute(
+            path: '/exercises/:id',
+            builder: (_, _) => const ExerciseDetailScreen(exerciseId: 15),
+          ),
+        ],
+      );
+      addTearDown(router.dispose);
+
+      await tester.pumpWidget(
+        BlocProvider<ExerciseCubit>.value(
+          value: cubit,
+          child: MaterialApp.router(routerConfig: router),
+        ),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      final editButton = find.text('EDIT');
+      await tester.ensureVisible(editButton);
+      await tester.tap(editButton);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      final clearButton = find.byTooltip('Clear video URL');
+      expect(clearButton, findsOneWidget);
+      await tester.tap(clearButton);
+      await tester.pump();
+
+      final updateButton = find.text('UPDATE EXERCISE');
+      await tester.ensureVisible(updateButton);
+      await tester.tap(updateButton);
+      await tester.pumpAndSettle();
+
+      expect(cubit.updatedCalls, hasLength(1));
+      expect(cubit.updatedCalls.first.$2.video.value, isNull);
+      expect(find.byType(AppVideoPlayer), findsNothing);
     },
   );
 }

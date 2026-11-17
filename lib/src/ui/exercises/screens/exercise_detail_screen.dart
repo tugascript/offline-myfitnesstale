@@ -29,6 +29,7 @@ import '../../core/widgets/layout/app_elevated_button.dart';
 import '../../core/widgets/layout/app_scaffold.dart';
 import '../../core/widgets/layout/responsive_scaffold.dart';
 import '../../core/widgets/mutation_button.dart';
+import '../../core/widgets/video/app_video_player.dart';
 import '../view_models/exercise_cubit.dart';
 import '../view_models/states/exercise_state.dart';
 import '../widgets/details/edit_exercise_modal.dart';
@@ -81,7 +82,6 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isDarkTheme = theme.brightness == Brightness.dark;
     final breakpoints = BreakPoint.fromContext(context);
     final sizes = DataDisplaySizes.getDataDisplaySizes(breakpoints.screenSize);
 
@@ -166,54 +166,13 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
 
                 SizedBox(height: sizes.spacing * 1.25),
 
-                // Video Placeholder
+                // Video Player
                 if (exercise.video != null &&
                     exercise.video!.uri.isNotEmpty) ...[
-                  Text(
-                    'Video',
-                    style: TextStyle(
-                      fontSize: sizes.titleFontSize,
-                      fontWeight: FontWeight.bold,
-                      color: isDarkTheme ? Colors.grey[200] : Colors.grey[800],
-                    ),
-                  ),
-                  SizedBox(height: sizes.spacing),
-                  Container(
-                    width: double.infinity,
-                    height: 200,
-                    decoration: BoxDecoration(
-                      color: Colors.grey[300],
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.play_circle_outline,
-                          size: 64,
-                          color: Colors.grey[600],
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Video: ${exercise.video!.platform.value}',
-                          style: TextStyle(
-                            color: Colors.grey[600],
-                            fontSize: 14,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          exercise.video!.uri,
-                          style: TextStyle(
-                            color: Colors.grey[600],
-                            fontSize: 12,
-                          ),
-                          textAlign: TextAlign.center,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
+                  AppVideoPlayer(
+                    video: exercise.video!,
+                    sizes: sizes,
+                    theme: theme,
                   ),
                   SizedBox(height: sizes.spacing * 1.25),
                 ],

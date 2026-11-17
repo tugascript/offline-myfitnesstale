@@ -51,6 +51,7 @@ class CreateExerciseModal extends StatelessWidget {
           submitLabel: "CREATE EXERCISE",
           initialName: '',
           initialDescription: null,
+          initialVideoUrl: null,
           initialMuscleGroup: null,
           initialPrimaryMuscles: const {},
           initialSecondaryMuscles: const {},
@@ -60,6 +61,7 @@ class CreateExerciseModal extends StatelessWidget {
           onSubmit:
               ({
                 String? description,
+                String? videoUrl,
                 Difficulty? difficulty,
                 required Set<int> equipmentIds,
                 required bool isFavorite,
@@ -73,6 +75,14 @@ class CreateExerciseModal extends StatelessWidget {
                   ExerciseInput(
                     name: name,
                     description: Nullable(description),
+                    video: Nullable(
+                      videoUrl != null
+                          ? VideoData(
+                              uri: videoUrl,
+                              platform: VideoPlatform.youtube,
+                            )
+                          : null,
+                    ),
                     muscleGroup: muscleGroup,
                     muscles: TargetMuscles(
                       primary: primaryMuscles,
