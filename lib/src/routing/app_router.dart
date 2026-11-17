@@ -20,12 +20,10 @@ import 'package:go_router/go_router.dart';
 import '../ui/core/screens/not_found_screen.dart';
 import '../ui/exercises/screens/equipment_details_screen.dart';
 import '../ui/exercises/screens/equipments_list_screen.dart';
-import '../ui/exercises/screens/exercise_creation_screen.dart';
 import '../ui/exercises/screens/exercise_detail_screen.dart';
 import '../ui/exercises/screens/exercise_progress_screen.dart';
 import '../ui/exercises/screens/exercise_records_screen.dart';
-import '../ui/exercises/screens/exercise_update_screen.dart';
-import '../ui/exercises/screens/exercises_screen.dart';
+import '../ui/exercises/screens/exercises_list_screen.dart';
 import '../ui/exercises/screens/strength_goals_screen.dart';
 import '../ui/foods/screens/food_creation_screen.dart';
 import '../ui/foods/screens/food_details_screen.dart';
@@ -99,11 +97,7 @@ sealed class AppRouter {
     ),
     GoRoute(
       path: Routes.exercises.name,
-      builder: (context, state) => const ExercisesScreen(),
-    ),
-    GoRoute(
-      path: Routes.exerciseCreation.name,
-      builder: (context, state) => const ExerciseCreationScreen(),
+      builder: (context, state) => const ExercisesListScreen(),
     ),
     GoRoute(
       path: Routes.exerciseProgress.name,
@@ -117,16 +111,6 @@ sealed class AppRouter {
           return const NotFoundScreen();
         }
         return ExerciseDetailScreen(exerciseId: id);
-      },
-    ),
-    GoRoute(
-      path: Routes.exerciseUpdate.name,
-      builder: (context, state) {
-        final id = int.tryParse(state.pathParameters['id'] ?? '');
-        if (id == null) {
-          return const NotFoundScreen();
-        }
-        return ExerciseUpdateScreen(exerciseId: id);
       },
     ),
     GoRoute(

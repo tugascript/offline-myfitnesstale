@@ -33,6 +33,7 @@ class ExerciseForm extends StatefulWidget {
   final DataDisplaySizesList sizes;
   final bool isLoading;
   final String submitLabel;
+  final IconData? submitIcon;
 
   final String initialName;
   final String? initialDescription;
@@ -61,6 +62,7 @@ class ExerciseForm extends StatefulWidget {
     required this.sizes,
     required this.isLoading,
     required this.submitLabel,
+    this.submitIcon,
     required this.initialName,
     required this.initialDescription,
     required this.initialMuscleGroup,
@@ -85,14 +87,21 @@ class _ExerciseFormState extends State<ExerciseForm> {
   @override
   void initState() {
     super.initState();
-    context.read<ExerciseCubit>().getSelectionEquipments();
+    final cubit = context.read<ExerciseCubit>();
+    if (cubit.state.equipmentSelection.isEmpty) {
+      Future.microtask(() {
+        if (mounted) {
+          context.read<ExerciseCubit>().getSelectionEquipments();
+        }
+      });
+    }
     _data = _FormData(
       name: widget.initialName,
       description: widget.initialDescription ?? '',
       muscleGroup: widget.initialMuscleGroup,
-      primaryMuscles: widget.initialPrimaryMuscles,
-      secondaryMuscles: widget.initialSecondaryMuscles,
-      equipmentIds: widget.initialEquipmentIds,
+      primaryMuscles: {...widget.initialPrimaryMuscles},
+      secondaryMuscles: {...widget.initialSecondaryMuscles},
+      equipmentIds: {...widget.initialEquipmentIds},
       difficulty: widget.initialDifficulty,
       isFavorite: widget.initialIsFavorite,
     );
@@ -112,6 +121,7 @@ class _ExerciseFormState extends State<ExerciseForm> {
     return Form(
       key: _formKey,
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Row(
@@ -142,7 +152,7 @@ class _ExerciseFormState extends State<ExerciseForm> {
                     }
                   },
                   validator: (value) {
-                    if (value == null || value.isEmpty) {
+                    if (value == null || value.trim().isEmpty) {
                       return 'Please enter a name';
                     }
                     return null;
@@ -212,6 +222,8 @@ class _ExerciseFormState extends State<ExerciseForm> {
                 });
               }
             },
+            validator: (value) =>
+                value == null ? 'Please select a muscle group' : null,
           ),
           SizedBox(height: widget.sizes.spacing),
           AppDropdown<Difficulty>(
@@ -469,6 +481,7 @@ class _ExerciseFormState extends State<ExerciseForm> {
             onPressed: () {
               if (_formKey.currentState!.validate() &&
                   _data.muscleGroup != null) {
+                _formKey.currentState!.save();
                 widget.onSubmit(
                   name: _nameController.text.trim(),
                   description: _descriptionController.text.trim().isEmpty
@@ -486,7 +499,7 @@ class _ExerciseFormState extends State<ExerciseForm> {
             isLoading: widget.isLoading,
             sizes: widget.sizes,
             label: widget.submitLabel,
-            icon: Icons.save,
+            icon: widget.submitIcon ?? Icons.add,
           ),
         ],
       ),

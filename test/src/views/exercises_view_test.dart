@@ -17,15 +17,14 @@
 
 import 'dart:async';
 
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
-
+import 'package:material_ui/material_ui.dart';
 import 'package:myfitnesstale/src/data/repositories/exercises/exercise_repository.dart';
 import 'package:myfitnesstale/src/data/utils/enums.dart';
 import 'package:myfitnesstale/src/routing/routes.dart';
-import 'package:myfitnesstale/src/ui/exercises/screens/exercises_screen.dart';
+import 'package:myfitnesstale/src/ui/exercises/screens/exercises_list_screen.dart';
 import 'package:myfitnesstale/src/ui/exercises/view_models/exercise_cubit.dart';
 
 class _ExerciseSearchCubit extends ExerciseCubit {
@@ -74,7 +73,7 @@ void main() {
       routes: [
         GoRoute(
           path: Routes.exercises.name,
-          builder: (_, _) => const ExercisesScreen(),
+          builder: (_, _) => const ExercisesListScreen(),
         ),
       ],
     );

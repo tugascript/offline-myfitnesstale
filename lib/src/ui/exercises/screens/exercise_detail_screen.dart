@@ -31,6 +31,7 @@ import '../../core/widgets/layout/responsive_scaffold.dart';
 import '../../core/widgets/mutation_button.dart';
 import '../view_models/exercise_cubit.dart';
 import '../view_models/states/exercise_state.dart';
+import '../widgets/details/edit_exercise_modal.dart';
 import '../widgets/details/exercise_header_card.dart';
 
 class ExerciseDetailScreen extends StatefulWidget {
@@ -249,10 +250,12 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
                           theme: theme,
                           sizes: sizes,
                           onPressed: () {
-                            context.push(
-                              Routes.exerciseUpdate.name.replaceFirst(
-                                ":id",
-                                exercise.id.toString(),
+                            showDialog(
+                              context: context,
+                              builder: (context) => EditExerciseModal(
+                                theme: theme,
+                                sizes: sizes,
+                                exercise: exercise,
                               ),
                             );
                           },
