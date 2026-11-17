@@ -1380,11 +1380,9 @@ final class WorkoutPlanRepository implements Repository {
           planWorkouts.add(planWorkout.copyWith(id: Nullable(planWorkoutId)));
         }
 
-        final weekTotals = await _applyWeekTotalsDelta(
+        final weekTotals = await _refreshWeekScheduleTotals(
           txn,
           workoutPlanWeekId: workoutPlanWeekId,
-          totalDaysDelta: 1,
-          totalWorkoutsDelta: workouts.length,
         );
         if (weekTotals.isErr()) throw weekTotals.error;
         final planTotals = await _refreshPlanScheduleTotals(
@@ -1591,11 +1589,9 @@ final class WorkoutPlanRepository implements Repository {
         }
 
         if (!planDay.isRestDay) {
-          final weekTotals = await _applyWeekTotalsDelta(
+          final weekTotals = await _refreshWeekScheduleTotals(
             txn,
             workoutPlanWeekId: planDay.workoutPlanWeekId,
-            totalDaysDelta: -1,
-            totalWorkoutsDelta: -planDay.totalWorkouts,
           );
           if (weekTotals.isErr()) throw weekTotals.error;
           final planTotals = await _refreshPlanScheduleTotals(
@@ -1887,17 +1883,15 @@ final class WorkoutPlanRepository implements Repository {
         }
 
         final int id = await _planWorkoutDao.insert(planWorkout, txn);
-        final dayTotals = await _applyDayWorkoutsDelta(
+        final dayTotals = await _refreshDayWorkoutsTotal(
           txn,
           workoutPlanDayId: workoutPlanDayId,
-          totalWorkoutsDelta: 1,
         );
         if (dayTotals.isErr()) throw dayTotals.error;
         if (!planDay.isRestDay) {
-          final weekTotals = await _applyWeekTotalsDelta(
+          final weekTotals = await _refreshWeekScheduleTotals(
             txn,
             workoutPlanWeekId: planDay.workoutPlanWeekId,
-            totalWorkoutsDelta: 1,
           );
           if (weekTotals.isErr()) throw weekTotals.error;
           final planTotals = await _refreshPlanScheduleTotals(
@@ -2143,10 +2137,9 @@ final class WorkoutPlanRepository implements Repository {
           );
         }
 
-        final dayTotals = await _applyDayWorkoutsDelta(
+        final dayTotals = await _refreshDayWorkoutsTotal(
           txn,
           workoutPlanDayId: planWorkout.workoutPlanDayId,
-          totalWorkoutsDelta: -1,
         );
         if (dayTotals.isErr()) throw dayTotals.error;
         final WorkoutPlanDay? planDay = await _dayDao.selectOne(
@@ -2154,10 +2147,9 @@ final class WorkoutPlanRepository implements Repository {
           txn,
         );
         if (planDay == null || !planDay.isRestDay) {
-          final weekTotals = await _applyWeekTotalsDelta(
+          final weekTotals = await _refreshWeekScheduleTotals(
             txn,
             workoutPlanWeekId: planWorkout.workoutPlanWeekId,
-            totalWorkoutsDelta: -1,
           );
           if (weekTotals.isErr()) throw weekTotals.error;
           final planTotals = await _refreshPlanScheduleTotals(
@@ -2310,55 +2302,81 @@ final class WorkoutPlanRepository implements Repository {
     );
   }
 
-  Future<Result<void, ServiceError<SingleErrorTypes>>> _applyWeekTotalsDelta(
+  Future<Result<void, ServiceError<SingleErrorTypes>>>
+  _refreshWeekScheduleTotals(
     Transaction txn, {
     required int workoutPlanWeekId,
-    int totalDaysDelta = 0,
-    int totalWorkoutsDelta = 0,
   }) {
     return _updateScheduleTotals(
       'Failed to update workout plan week totals',
       () async {
-        if (totalDaysDelta == 0 && totalWorkoutsDelta == 0) {
-          return;
-        }
+        final daysWhere = WhereBuilder()
+          ..and(
+            WorkoutPlanDayColumns.workoutPlanWeekId.equal,
+            workoutPlanWeekId,
+          )
+          ..and(WorkoutPlanDayColumns.isRestDay.equal, 0);
+        final totalDays = await _dayDao.count(
+          where: daysWhere.where,
+          whereArgs: daysWhere.args,
+          trx: txn,
+        );
+
+        final workoutsCountResult = await txn.rawQuery(
+          '''
+        SELECT COUNT(*) AS count
+        FROM ${WorkoutPlanWorkout.table} w
+        INNER JOIN ${WorkoutPlanDay.table} d
+          ON d.${WorkoutPlanDayColumns.id.value} = w.${WorkoutPlanWorkoutColumns.workoutPlanDayId.value}
+        WHERE d.${WorkoutPlanDayColumns.workoutPlanWeekId.value} = ?
+          AND d.${WorkoutPlanDayColumns.isRestDay.value} = 0
+        ''',
+          [workoutPlanWeekId],
+        );
+        final totalWorkouts = Sqflite.firstIntValue(workoutsCountResult) ?? 0;
 
         final now = DateUtilities.getNowUtcUnix();
         await txn.rawUpdate(
           '''
         UPDATE ${WorkoutPlanWeek.table}
-        SET ${WorkoutPlanWeekColumns.totalDays.value} = MAX(0, ${WorkoutPlanWeekColumns.totalDays.value} + ?),
-            ${WorkoutPlanWeekColumns.totalWorkouts.value} = MAX(0, ${WorkoutPlanWeekColumns.totalWorkouts.value} + ?),
+        SET ${WorkoutPlanWeekColumns.totalDays.value} = ?,
+            ${WorkoutPlanWeekColumns.totalWorkouts.value} = ?,
             ${WorkoutPlanWeekColumns.updatedAt.value} = ?
         WHERE ${WorkoutPlanWeekColumns.id.equal}
         ''',
-          [totalDaysDelta, totalWorkoutsDelta, now, workoutPlanWeekId],
+          [totalDays, totalWorkouts, now, workoutPlanWeekId],
         );
       },
     );
   }
 
-  Future<Result<void, ServiceError<SingleErrorTypes>>> _applyDayWorkoutsDelta(
+  Future<Result<void, ServiceError<SingleErrorTypes>>> _refreshDayWorkoutsTotal(
     Transaction txn, {
     required int workoutPlanDayId,
-    required int totalWorkoutsDelta,
   }) {
     return _updateScheduleTotals(
       'Failed to update workout plan day totals',
       () async {
-        if (totalWorkoutsDelta == 0) {
-          return;
-        }
+        final where = WhereBuilder()
+          ..and(
+            WorkoutPlanWorkoutColumns.workoutPlanDayId.equal,
+            workoutPlanDayId,
+          );
+        final totalWorkouts = await _planWorkoutDao.count(
+          where: where.where,
+          whereArgs: where.args,
+          trx: txn,
+        );
 
         final now = DateUtilities.getNowUtcUnix();
         await txn.rawUpdate(
           '''
         UPDATE ${WorkoutPlanDay.table}
-        SET ${WorkoutPlanDayColumns.totalWorkouts.value} = MAX(0, ${WorkoutPlanDayColumns.totalWorkouts.value} + ?),
+        SET ${WorkoutPlanDayColumns.totalWorkouts.value} = ?,
             ${WorkoutPlanDayColumns.updatedAt.value} = ?
         WHERE ${WorkoutPlanDayColumns.id.equal}
         ''',
-          [totalWorkoutsDelta, now, workoutPlanDayId],
+          [totalWorkouts, now, workoutPlanDayId],
         );
       },
     );
