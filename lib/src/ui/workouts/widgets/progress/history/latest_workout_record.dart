@@ -213,33 +213,30 @@ class _EmptyWorkoutRecord extends StatelessWidget {
               ),
               if (workoutId != null) ...[
                 SizedBox(height: sizes.spacing),
-                Row(
-                  mainAxisSize: MainAxisSize.max,
+                Wrap(
+                  alignment: WrapAlignment.center,
+                  spacing: sizes.halfSpacing,
+                  runSpacing: sizes.halfSpacing,
                   children: [
-                    Expanded(
-                      child: AppTextButton(
-                        isLoading: isLoading,
-                        sizes: sizes,
-                        isDense: true,
-                        onPressed: () =>
-                            context.push('/workouts/$workoutId/active'),
-                        label: 'Start Workout',
-                        icon: Icons.play_arrow,
-                      ),
+                    AppTextButton(
+                      isLoading: isLoading,
+                      sizes: sizes,
+                      isDense: true,
+                      onPressed: () =>
+                          context.push('/workouts/$workoutId/active'),
+                      label: 'Start Workout',
+                      icon: Icons.play_arrow,
                     ),
-                    SizedBox(width: sizes.halfSpacing),
-                    Expanded(
-                      child: AppTextButton(
-                        isLoading: isLoading,
-                        sizes: sizes,
-                        isDense: true,
-                        isSecondary: true,
-                        onPressed: () => context.push(
-                          '/workouts/$workoutId/history/${workoutVersion ?? 1}/records/create',
-                        ),
-                        label: 'Create Record',
-                        icon: Icons.add,
+                    AppTextButton(
+                      isLoading: isLoading,
+                      sizes: sizes,
+                      isDense: true,
+                      isSecondary: true,
+                      onPressed: () => context.push(
+                        '/workouts/$workoutId/history/${workoutVersion ?? 1}/records/create',
                       ),
+                      label: 'Create Record',
+                      icon: Icons.add,
                     ),
                   ],
                 ),

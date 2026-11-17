@@ -459,12 +459,24 @@ void main() {
       expect(loaded.totalDays, 5);
       expect(loaded.totalWorkouts, 5);
 
-      // Delete week2 (only week1 remains: 4 days, 4 workouts).
-      final deletedWeek = await repo.deleteWorkoutPlanWeek(week2Id);
+      // Simulate totals saved before repeated weeks were counted.
+      await db.update(
+        WorkoutPlan.table,
+        {
+          WorkoutPlanColumns.totalDays.value: 2,
+          WorkoutPlanColumns.totalWorkouts.value: 2,
+        },
+        where: WorkoutPlanColumns.id.equal,
+        whereArgs: [planId],
+      );
+
+      // Delete the repeated block. The single scheduled workout in week2 remains.
+      final deletedWeek = await repo.deleteWorkoutPlanWeek(week1Id);
       expect(deletedWeek.isOk(), isTrue);
       loaded = (await repo.getWorkoutPlan(planId)).value;
-      expect(loaded.totalDays, 4);
-      expect(loaded.totalWorkouts, 4);
+      expect(loaded.weeks!.single.id, week2Id);
+      expect(loaded.totalDays, 1);
+      expect(loaded.totalWorkouts, 1);
     });
 
     test('getWorkoutPlan with explicit older planVersion computes totals for that version', () async {

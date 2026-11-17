@@ -159,7 +159,8 @@ records. Media fields exist, but there is no picker, upload, or storage flow.
   manual completion requires confirmation, while finishing the final exercise
   completes the workout automatically.
 - Lists, creates, edits, and deletes completed workout history using shared
-  `WorkoutRecordBatchInput` PUT semantics.
+  `WorkoutRecordBatchInput` PUT semantics. The empty workout-history actions
+  wrap onto separate rows when the available width cannot fit both labels.
 
 ### Weight and goals
 
@@ -197,6 +198,9 @@ There is no import/export, local backup, or broader weight analytics.
   abandonment commit in the same transaction; failed updates preserve both
   executions and their week/day/workout history.
 - Expands ranged week templates into dated week instances.
+- Schedule edits rebuild the current plan's workout-day and workout totals from
+  its week templates in the same transaction, including plans saved before
+  those totals accounted for repeated weeks.
 - Displays week schedules using a compact 7-column day strip (D1–D7) with cell states for workout days (workout count chip), rest days (snooze icon), and unscheduled days (hollow dash). On active plans, overlays execution status (today highlight ring, completed checkmark, missed indicator). Tapping any cell displays that day's workouts, execution actions (Start/Resume/Log), and rest/empty state in a focused detail panel below the strip.
 - Shows missed days and progress.
 - Starts/resumes live scheduled workouts or records them manually using shared

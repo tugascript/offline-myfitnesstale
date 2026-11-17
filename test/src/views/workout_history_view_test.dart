@@ -162,6 +162,35 @@ void main() {
   );
 
   testWidgets(
+    'WorkoutHistoryScreen wraps empty-state actions at 200% text scaling',
+    (tester) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(320, 800);
+      tester.platformDispatcher.textScaleFactorTestValue = 2;
+      addTearDown(tester.view.resetDevicePixelRatio);
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+
+      final spyCubit = _SpyWorkoutRecordCubit();
+      addTearDown(spyCubit.close);
+      await pumpHistoryScreen(
+        tester,
+        workoutRecordCubit: spyCubit,
+        workoutId: 9,
+        version: 2,
+      );
+
+      final start = find.text('START WORKOUT');
+      final create = find.text('CREATE RECORD');
+      expect(
+        tester.getBottomLeft(start).dy,
+        lessThan(tester.getTopLeft(create).dy),
+      );
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
     'WorkoutHistoryScreen omits skipped workout records from latest and history list',
     (tester) async {
       final workoutId = await tester.runAsync(() async {
