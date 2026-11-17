@@ -20,6 +20,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../../../data/utils/display_names.dart';
 import '../../../../data/utils/enums.dart';
+import '../../../../data/utils/youtube_video_utils.dart';
 import '../../../core/sizes/data_display_sizes.dart';
 import '../../../core/widgets/layout/app_dropdown.dart';
 import '../../../core/widgets/layout/app_elevated_button.dart';
@@ -37,6 +38,7 @@ class ExerciseForm extends StatefulWidget {
 
   final String initialName;
   final String? initialDescription;
+  final String? initialVideoUrl;
   final MuscleGroup? initialMuscleGroup;
   final Set<Muscle> initialPrimaryMuscles;
   final Set<Muscle> initialSecondaryMuscles;
@@ -47,6 +49,7 @@ class ExerciseForm extends StatefulWidget {
   final void Function({
     required String name,
     required String? description,
+    required String? videoUrl,
     required MuscleGroup muscleGroup,
     required Set<Muscle> primaryMuscles,
     required Set<Muscle> secondaryMuscles,
@@ -65,6 +68,7 @@ class ExerciseForm extends StatefulWidget {
     this.submitIcon,
     required this.initialName,
     required this.initialDescription,
+    this.initialVideoUrl,
     required this.initialMuscleGroup,
     required this.initialPrimaryMuscles,
     required this.initialSecondaryMuscles,
@@ -82,6 +86,7 @@ class _ExerciseFormState extends State<ExerciseForm> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _descriptionController = TextEditingController();
+  final _videoUrlController = TextEditingController();
   late final _FormData _data;
 
   @override
@@ -98,6 +103,7 @@ class _ExerciseFormState extends State<ExerciseForm> {
     _data = _FormData(
       name: widget.initialName,
       description: widget.initialDescription ?? '',
+      videoUrl: widget.initialVideoUrl ?? '',
       muscleGroup: widget.initialMuscleGroup,
       primaryMuscles: {...widget.initialPrimaryMuscles},
       secondaryMuscles: {...widget.initialSecondaryMuscles},
@@ -107,12 +113,14 @@ class _ExerciseFormState extends State<ExerciseForm> {
     );
     _nameController.text = _data.name;
     _descriptionController.text = _data.description;
+    _videoUrlController.text = _data.videoUrl;
   }
 
   @override
   void dispose() {
     _nameController.dispose();
     _descriptionController.dispose();
+    _videoUrlController.dispose();
     super.dispose();
   }
 
@@ -198,6 +206,56 @@ class _ExerciseFormState extends State<ExerciseForm> {
                 });
               }
             },
+          ),
+          SizedBox(height: widget.sizes.spacing),
+          AppTextFormField(
+            filled: true,
+            theme: widget.theme,
+            isLoading: widget.isLoading,
+            controller: _videoUrlController,
+            labelText: "YouTube Video URL",
+            hintText: "https://www.youtube.com/watch?v=...",
+            maxLines: 1,
+            keyboardType: TextInputType.url,
+            fontSize: widget.sizes.subtitleFontSize,
+            padding: widget.sizes.padding,
+            prefixIcon: Icon(
+              Icons.ondemand_video,
+              size: widget.sizes.subtitleFontSize,
+            ),
+            suffixIconConstraints: BoxConstraints.tightFor(
+              width: widget.sizes.subtitleFontSize * 2.2,
+              height: widget.sizes.subtitleFontSize * 2.2,
+            ),
+            suffixIcon: _data.videoUrl.isNotEmpty
+                ? IconButton(
+                    padding: EdgeInsets.zero,
+                    icon: Icon(
+                      Icons.clear,
+                      size: widget.sizes.subtitleFontSize,
+                    ),
+                    onPressed: () {
+                      _videoUrlController.clear();
+                      setState(() {
+                        _data.videoUrl = '';
+                      });
+                    },
+                    tooltip: 'Clear video URL',
+                  )
+                : null,
+            onChanged: (value) {
+              setState(() {
+                _data.videoUrl = value;
+              });
+            },
+            onSaved: (value) {
+              if (value != null) {
+                setState(() {
+                  _data.videoUrl = value;
+                });
+              }
+            },
+            validator: YoutubeVideoUtils.validateOptionalUrl,
           ),
           SizedBox(height: widget.sizes.spacing),
           AppDropdown<MuscleGroup>(
@@ -487,6 +545,9 @@ class _ExerciseFormState extends State<ExerciseForm> {
                   description: _descriptionController.text.trim().isEmpty
                       ? null
                       : _descriptionController.text.trim(),
+                  videoUrl: _videoUrlController.text.trim().isEmpty
+                      ? null
+                      : _videoUrlController.text.trim(),
                   muscleGroup: _data.muscleGroup!,
                   primaryMuscles: _data.primaryMuscles,
                   secondaryMuscles: _data.secondaryMuscles,
@@ -510,6 +571,7 @@ class _ExerciseFormState extends State<ExerciseForm> {
 final class _FormData {
   String name;
   String description;
+  String videoUrl;
   MuscleGroup? muscleGroup;
   Set<Muscle> primaryMuscles;
   Set<Muscle> secondaryMuscles;
@@ -520,6 +582,7 @@ final class _FormData {
   _FormData({
     required this.name,
     required this.description,
+    required this.videoUrl,
     required this.muscleGroup,
     required this.primaryMuscles,
     required this.secondaryMuscles,

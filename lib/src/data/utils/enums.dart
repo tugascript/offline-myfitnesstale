@@ -233,6 +233,10 @@ enum VideoPlatform {
     (p) => p.value == v,
     orElse: () => VideoPlatform.youtube,
   );
+
+  static const List<VideoPlatform> supportedVideoPlatforms = [
+    VideoPlatform.youtube,
+  ];
 }
 
 enum PictureStorage {
