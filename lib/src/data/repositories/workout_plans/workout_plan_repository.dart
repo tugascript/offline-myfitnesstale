@@ -2290,13 +2290,15 @@ final class WorkoutPlanRepository implements Repository {
         await txn.rawUpdate(
           '''
         UPDATE ${WorkoutPlan.table}
-        SET ${WorkoutPlanColumns.totalDays.value} = ?,
+        SET ${WorkoutPlanColumns.totalWeeks.value} = ?,
+            ${WorkoutPlanColumns.totalDays.value} = ?,
             ${WorkoutPlanColumns.totalWorkouts.value} = ?,
             ${WorkoutPlanColumns.updatedAt.value} = ?
         WHERE ${WorkoutPlanColumns.id.equal}
           AND ${WorkoutPlanColumns.version.equal}
         ''',
           [
+            totals.totalWeeks,
             totals.totalDays,
             totals.totalWorkouts,
             DateUtilities.getNowUtcUnix(),
