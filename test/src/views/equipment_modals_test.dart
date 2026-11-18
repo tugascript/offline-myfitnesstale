@@ -15,23 +15,38 @@
 // You should have received a copy of the GNU General Public License
 // along with My Fitness Tale.  If not, see <https://www.gnu.org/licenses/>.
 
+import 'dart:io';
+import 'dart:typed_data';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image/image.dart' as img;
 import 'package:material_ui/material_ui.dart';
 import 'package:myfitnesstale/src/data/repositories/core/dtos/picture_dto.dart';
 import 'package:myfitnesstale/src/data/repositories/exercises/dtos/equipment_dto.dart';
 import 'package:myfitnesstale/src/data/repositories/exercises/exercise_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/exercises/inputs/equipment_input.dart';
+import 'package:myfitnesstale/src/data/services/storage/local_file_storage_service.dart';
 import 'package:myfitnesstale/src/data/utils/enums.dart';
+import 'package:myfitnesstale/src/ui/core/sizes/data_display_sizes.dart';
+import 'package:myfitnesstale/src/ui/core/sizes/screen_size.dart';
 import 'package:myfitnesstale/src/ui/core/view_models/states/common_state.dart';
+import 'package:myfitnesstale/src/ui/core/widgets/picture/app_picture.dart';
 import 'package:myfitnesstale/src/ui/exercises/screens/equipment_details_screen.dart';
 import 'package:myfitnesstale/src/ui/exercises/screens/equipments_list_screen.dart';
 import 'package:myfitnesstale/src/ui/exercises/view_models/exercise_cubit.dart';
 import 'package:myfitnesstale/src/ui/exercises/view_models/states/exercise_state.dart';
 import 'package:myfitnesstale/src/ui/exercises/widgets/create_equipment_modal.dart';
 import 'package:myfitnesstale/src/ui/exercises/widgets/edit_equipment_modal.dart';
+import 'package:myfitnesstale/src/ui/exercises/widgets/equipment_header_card.dart';
 import 'package:myfitnesstale/src/utils/nullable.dart';
+
+Uint8List _testJpgBytes() {
+  final image = img.Image(width: 80, height: 60);
+  img.fill(image, color: img.ColorRgb8(255, 140, 0));
+  return Uint8List.fromList(img.encodeJpg(image));
+}
 
 class _FakeExerciseCubit extends ExerciseCubit {
   final bool shouldFail;
@@ -90,6 +105,12 @@ class _FakeExerciseCubit extends ExerciseCubit {
     final created = EquipmentDto(
       id: 99,
       name: input.name,
+      picture: input.picture.value != null
+          ? PictureDto(
+              storage: input.picture.value!.storage,
+              uri: input.picture.value!.uri,
+            )
+          : null,
       isFavorite: input.isFavorite,
       createdBy: createdBy,
     );
@@ -341,6 +362,210 @@ void main() {
 
       expect(find.byType(EditEquipmentModal), findsOneWidget);
       expect(find.text('Failed to update equipment'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'CreateEquipmentModal validates URL photo option and creates PictureStorage.network equipment',
+    (tester) async {
+      final cubit = _FakeExerciseCubit();
+      addTearDown(cubit.close);
+      final sizes = DataDisplaySizes.getDataDisplaySizes(ScreenSize.md);
+      final theme = ThemeData();
+
+      await tester.pumpWidget(
+        BlocProvider<ExerciseCubit>.value(
+          value: cubit,
+          child: MaterialApp(
+            theme: theme,
+            home: Scaffold(
+              body: Builder(
+                builder: (context) => ElevatedButton(
+                  onPressed: () => showDialog<void>(
+                    context: context,
+                    builder: (_) =>
+                        CreateEquipmentModal(theme: theme, sizes: sizes),
+                  ),
+                  child: const Text('Open'),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('Open'));
+      await tester.pumpAndSettle();
+
+      await tester.enterText(
+        find.byWidgetPredicate(
+          (w) => w is TextField && w.decoration?.labelText == 'Name',
+        ),
+        'Kettlebell',
+      );
+      await tester.tap(find.text('URL'));
+      await tester.pumpAndSettle();
+
+      await tester.enterText(
+        find.byWidgetPredicate(
+          (w) => w is TextField && w.decoration?.labelText == 'Photo URL',
+        ),
+        'ftp://bad-scheme.com/pic.jpg',
+      );
+      await tester.tap(find.text('CREATE EQUIPMENT'));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text('Please enter a valid HTTP or HTTPS image URL'),
+        findsOneWidget,
+      );
+      expect(cubit.createdInputs, isEmpty);
+
+      await tester.enterText(
+        find.byWidgetPredicate(
+          (w) => w is TextField && w.decoration?.labelText == 'Photo URL',
+        ),
+        'https://example.com/kettlebell.jpg',
+      );
+      await tester.pump();
+      await tester.ensureVisible(find.text('CREATE EQUIPMENT'));
+      await tester.tap(find.text('CREATE EQUIPMENT'));
+      await tester.pumpAndSettle();
+
+      expect(cubit.createdInputs, hasLength(1));
+      expect(cubit.createdInputs.first.name, 'Kettlebell');
+      expect(
+        cubit.createdInputs.first.picture.value?.storage,
+        PictureStorage.network,
+      );
+      expect(
+        cubit.createdInputs.first.picture.value?.uri,
+        'https://example.com/kettlebell.jpg',
+      );
+    },
+  );
+
+  testWidgets(
+    'CreateEquipmentModal Upload option picks, crops/compresses, and saves PictureStorage.files locally',
+    (tester) async {
+      final tempDir = Directory.systemTemp.createTempSync('mft_equip_upload_');
+      addTearDown(() {
+        if (tempDir.existsSync()) {
+          tempDir.deleteSync(recursive: true);
+        }
+      });
+
+      final storage = LocalFileStorageService.create(
+        directoryProvider: () async => tempDir,
+      );
+      final cubit = _FakeExerciseCubit();
+      addTearDown(cubit.close);
+      final sizes = DataDisplaySizes.getDataDisplaySizes(ScreenSize.md);
+      final theme = ThemeData();
+      final jpgBytes = _testJpgBytes();
+
+      await tester.pumpWidget(
+        BlocProvider<ExerciseCubit>.value(
+          value: cubit,
+          child: MaterialApp(
+            theme: theme,
+            home: Scaffold(
+              body: Builder(
+                builder: (context) => ElevatedButton(
+                  onPressed: () => showDialog<void>(
+                    context: context,
+                    builder: (_) => CreateEquipmentModal(
+                      theme: theme,
+                      sizes: sizes,
+                      storageService: storage,
+                      pickImageBytes: (_) async => jpgBytes,
+                      editPictureBytes: (raw) async => raw,
+                    ),
+                  ),
+                  child: const Text('Open'),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('Open'));
+      await tester.pumpAndSettle();
+
+      await tester.enterText(
+        find.byWidgetPredicate(
+          (w) => w is TextField && w.decoration?.labelText == 'Name',
+        ),
+        'Olympic Rings',
+      );
+      await tester.tap(find.text('Upload'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const ValueKey('equipment-photo-camera')));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(AppPicture), findsOneWidget);
+
+      await tester.ensureVisible(find.text('CREATE EQUIPMENT'));
+      await tester.tap(find.text('CREATE EQUIPMENT'));
+      for (var i = 0; i < 20 && cubit.createdInputs.isEmpty; i++) {
+        await tester.pump();
+        await tester.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 50)),
+        );
+      }
+      await tester.pumpAndSettle();
+
+      expect(cubit.createdInputs, hasLength(1));
+      final savedPicture = cubit.createdInputs.first.picture.value;
+      expect(savedPicture, isNotNull);
+      expect(savedPicture!.storage, PictureStorage.files);
+      final exists = await tester.runAsync(
+        () => storage.pictureExists(savedPicture.uri),
+      );
+      expect(exists, isTrue);
+    },
+  );
+
+  testWidgets(
+    'EquipmentDetailsScreen renders EquipmentHeaderCard with 4:3 AppPicture',
+    (tester) async {
+      const existing = EquipmentDto(
+        id: 22,
+        name: 'GHD Machine',
+        picture: PictureDto(
+          storage: PictureStorage.network,
+          uri: 'https://example.com/ghd.jpg',
+        ),
+        createdBy: CreatedBy.user,
+      );
+      final cubit = _FakeExerciseCubit(initialEquipment: existing);
+      addTearDown(cubit.close);
+
+      final router = GoRouter(
+        initialLocation: '/equipments/22',
+        routes: [
+          GoRoute(
+            path: '/equipments/:id',
+            builder: (_, _) => const EquipmentDetailsScreen(equipmentId: 22),
+          ),
+        ],
+      );
+      addTearDown(router.dispose);
+
+      await tester.pumpWidget(
+        BlocProvider<ExerciseCubit>.value(
+          value: cubit,
+          child: MaterialApp.router(routerConfig: router),
+        ),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 50));
+
+      expect(find.byType(EquipmentHeaderCard), findsOneWidget);
+      expect(find.byType(AppPicture), findsOneWidget);
+      expect(find.text('Custom Equipment'), findsOneWidget);
+      expect(find.text('0 exercises'), findsOneWidget);
+      expect(find.text('Related Exercises'), findsOneWidget);
     },
   );
 }

@@ -29,6 +29,9 @@ class ExercisesList extends StatelessWidget {
   final bool isLoading;
   final List<ExerciseDto> exercises;
   final ScrollController? scrollController;
+  final bool shrinkWrap;
+  final ScrollPhysics? physics;
+  final double? emptyHeight;
 
   const ExercisesList({
     super.key,
@@ -37,6 +40,9 @@ class ExercisesList extends StatelessWidget {
     required this.isLoading,
     required this.exercises,
     this.scrollController,
+    this.shrinkWrap = false,
+    this.physics,
+    this.emptyHeight,
   });
 
   @override
@@ -46,11 +52,17 @@ class ExercisesList extends StatelessWidget {
     }
 
     if (exercises.isEmpty) {
-      return NotFoundList(sizes: sizes, name: 'exercises');
+      return NotFoundList(
+        sizes: sizes,
+        name: 'exercises',
+        height: emptyHeight,
+      );
     }
 
     return ListView.builder(
       controller: scrollController,
+      shrinkWrap: shrinkWrap,
+      physics: physics,
       itemCount: exercises.length + (isLoading ? 1 : 0),
       itemBuilder: (context, index) {
         if (index == exercises.length) {

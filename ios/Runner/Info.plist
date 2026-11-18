@@ -66,6 +66,10 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSCameraUsageDescription</key>
+	<string>Take horizontal photos of your equipment and workouts to store locally in the app.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Choose photos from your library to attach to your equipment and workouts.</string>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSAllowsLocalNetworking</key>

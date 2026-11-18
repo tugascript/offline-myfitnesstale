@@ -30,6 +30,7 @@ import '../../core/widgets/mutation_buttons.dart';
 import '../view_models/exercise_cubit.dart';
 import '../view_models/states/exercise_state.dart';
 import '../widgets/edit_equipment_modal.dart';
+import '../widgets/equipment_header_card.dart';
 import '../widgets/exercises_list.dart';
 
 class EquipmentDetailsScreen extends StatefulWidget {
@@ -105,66 +106,88 @@ class _EquipmentDetailsScreenState extends State<EquipmentDetailsScreen> {
         return AppScaffold(
           title: equipment.name,
           isEntity: true,
-          body: Padding(
-            padding: EdgeInsets.all(sizes.viewPadding),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Related Exercises',
-                  style: TextStyle(
-                    fontSize: sizes.titleFontSize,
-                    fontWeight: FontWeight.bold,
-                    color: isDarkTheme ? Colors.grey[200] : Colors.grey[800],
+          body: SafeArea(
+            child: Padding(
+              padding: EdgeInsets.all(sizes.viewPadding),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: SingleChildScrollView(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          EquipmentHeaderCard(
+                            sizes: sizes,
+                            equipment: equipment,
+                            relatedExercisesCount: relatedExercises.length,
+                            theme: theme,
+                          ),
+                          SizedBox(height: sizes.spacing * 1.25),
+                          Text(
+                            'Related Exercises',
+                            style: TextStyle(
+                              fontSize: sizes.titleFontSize,
+                              fontWeight: FontWeight.bold,
+                              color: isDarkTheme
+                                  ? Colors.grey[200]
+                                  : Colors.grey[800],
+                            ),
+                          ),
+                          SizedBox(height: sizes.spacing),
+                          ExercisesList(
+                            theme: theme,
+                            sizes: sizes,
+                            isLoading: state.isLoading,
+                            exercises: relatedExercises,
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            emptyHeight: sizes.buttonSize * 3,
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-                ),
-                SizedBox(height: sizes.spacing),
-                Expanded(
-                  child: ExercisesList(
-                    theme: theme,
-                    sizes: sizes,
-                    isLoading: state.isLoading,
-                    exercises: relatedExercises,
-                  ),
-                ),
-                if (equipment.createdBy == CreatedBy.user) ...[
-                  SizedBox(height: sizes.spacing),
-                  MutationButtons(
-                    isLoading: state.isLoading,
-                    theme: theme,
-                    sizes: sizes,
-                    onEdit: () {
-                      showDialog(
-                        context: context,
-                        builder: (context) => EditEquipmentModal(
-                          theme: theme,
-                          sizes: sizes,
-                          equipment: equipment,
-                        ),
-                      );
-                    },
-                    onDelete: () {
-                      showDialog(
-                        context: context,
-                        builder: (context) => ConfirmationDialog(
-                          title: 'Delete ${equipment.name}',
-                          content: 'Are you sure you want to delete this equipment? This action cannot be undone.',
-                          onConfirm: () {
-                            context.read<ExerciseCubit>().deleteEquipment(
-                              equipment.id,
-                            );
-                            if (context.canPop()) {
-                              context.pop();
-                            } else {
-                              context.go(Routes.equipments.name);
-                            }
-                          },
-                        ),
-                      );
-                    },
-                  ),
+                  if (equipment.createdBy == CreatedBy.user) ...[
+                    SizedBox(height: sizes.spacing),
+                    MutationButtons(
+                      isLoading: state.isLoading,
+                      theme: theme,
+                      sizes: sizes,
+                      onEdit: () {
+                        showDialog(
+                          context: context,
+                          builder: (context) => EditEquipmentModal(
+                            theme: theme,
+                            sizes: sizes,
+                            equipment: equipment,
+                          ),
+                        );
+                      },
+                      onDelete: () {
+                        showDialog(
+                          context: context,
+                          builder: (context) => ConfirmationDialog(
+                            title: 'Delete ${equipment.name}',
+                            content:
+                                'Are you sure you want to delete this equipment? This action cannot be undone.',
+                            onConfirm: () {
+                              context.read<ExerciseCubit>().deleteEquipment(
+                                equipment.id,
+                              );
+                              if (context.canPop()) {
+                                context.pop();
+                              } else {
+                                context.go(Routes.equipments.name);
+                              }
+                            },
+                          ),
+                        );
+                      },
+                    ),
+                  ],
                 ],
-              ],
+              ),
             ),
           ),
         );

@@ -53,6 +53,10 @@ dependencies:
   cryptography: ^2.9.0
   flutter_secure_storage: ^11.2.0
   youtube_player_flutter: ^10.0.2
+  path_provider: ^2.1.6
+  image_picker: ^1.2.4
+  crop_your_image: ^2.0.1
+  image: ^4.13.1
 
 dev_dependencies:
   flutter_test:

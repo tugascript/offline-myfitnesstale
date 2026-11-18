@@ -19,6 +19,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../data/repositories/exercises/inputs/equipment_input.dart';
+import '../../../data/services/storage/local_file_storage_service.dart';
+import '../../../data/utils/enums.dart';
+import '../../../data/utils/json_data.dart';
+import '../../../utils/nullable.dart';
 import '../../core/sizes/data_display_sizes.dart';
 import '../../core/widgets/layout/app_modal.dart';
 import '../view_models/exercise_cubit.dart';
@@ -28,15 +32,23 @@ import './equipment_form.dart';
 class CreateEquipmentModal extends StatelessWidget {
   final ThemeData theme;
   final DataDisplaySizesList sizes;
+  final LocalFileStorageService? storageService;
+  final EquipmentImagePicker? pickImageBytes;
+  final EquipmentPictureEditor? editPictureBytes;
 
   const CreateEquipmentModal({
     super.key,
     required this.theme,
     required this.sizes,
+    this.storageService,
+    this.pickImageBytes,
+    this.editPictureBytes,
   });
 
   @override
   Widget build(BuildContext context) {
+    final resolvedStorage = storageService ?? LocalFileStorageService.create();
+
     return AppModal(
       theme: theme,
       sizes: sizes,
@@ -47,10 +59,40 @@ class CreateEquipmentModal extends StatelessWidget {
           initialName: '',
           isLoading: state.isLoading,
           submitLabel: "CREATE EQUIPMENT",
-          onSubmit: ({required String name}) async {
+          storageService: resolvedStorage,
+          pickImageBytes: pickImageBytes,
+          editPictureBytes: editPictureBytes,
+          onSubmit: ({required name, required picture, required uploadedPictureBytes}) async {
             final cubit = context.read<ExerciseCubit>();
-            await cubit.createEquipment(EquipmentInput(name: name));
-            if (context.mounted && cubit.state.error == null) {
+            String? newlySavedUri;
+            var resolvedPicture = picture;
+
+            if (uploadedPictureBytes != null) {
+              newlySavedUri = await resolvedStorage.savePictureBytes(
+                uploadedPictureBytes,
+                prefix: 'equipment',
+              );
+              resolvedPicture = PictureData(
+                storage: PictureStorage.files,
+                uri: newlySavedUri,
+              );
+            }
+
+            await cubit.createEquipment(
+              EquipmentInput(
+                name: name,
+                picture: Nullable(resolvedPicture),
+              ),
+            );
+
+            if (cubit.state.error != null) {
+              if (newlySavedUri != null) {
+                await resolvedStorage.deletePicture(newlySavedUri);
+              }
+              return;
+            }
+
+            if (context.mounted) {
               Navigator.of(context).pop();
             }
           },
