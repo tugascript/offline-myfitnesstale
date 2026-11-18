@@ -45,7 +45,28 @@ class AppModal extends StatelessWidget {
             vertical: sizes.padding * 2,
             horizontal: sizes.padding,
           ),
-          child: child,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisSize: MainAxisSize.max,
+                children: [
+                  const Spacer(),
+                  InkWell(
+                    onTap: () {
+                      if (context.mounted) {
+                        Navigator.of(context).pop();
+                      }
+                    },
+                    child: Icon(Icons.close, size: sizes.titleIconSize),
+                  ),
+                ],
+              ),
+              SizedBox(height: sizes.betweenSpacing),
+              child,
+            ],
+          ),
         ),
       ),
     );
