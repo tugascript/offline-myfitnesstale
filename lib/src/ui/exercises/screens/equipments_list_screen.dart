@@ -18,6 +18,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:material_ui/material_ui.dart';
 
+import '../../../data/utils/enums.dart';
 import '../../core/sizes/data_display_sizes.dart';
 import '../../core/sizes/screen_size.dart';
 import '../../core/widgets/layout/app_scaffold.dart';
@@ -45,7 +46,13 @@ class _EquipmentsListScreenState extends State<EquipmentsListScreen> {
     final cubit = context.read<ExerciseCubit>();
     if (cubit.state.equipments.isEmpty) {
       final pagination = cubit.state.equipmentPagination;
-      cubit.getEquipments(name: pagination.name, limit: 50, offset: 0);
+      cubit.getEquipments(
+        name: pagination.name,
+        isFavorite: pagination.isFavorite,
+        createdBy: pagination.createdBy,
+        limit: 50,
+        offset: 0,
+      );
     }
     _scrollController.addListener(_onScroll);
   }
@@ -59,6 +66,8 @@ class _EquipmentsListScreenState extends State<EquipmentsListScreen> {
         final pagination = cubit.state.equipmentPagination;
         cubit.getEquipments(
           name: pagination.name,
+          isFavorite: pagination.isFavorite,
+          createdBy: pagination.createdBy,
           offset: cubit.state.equipments.length,
           limit: 50,
         );
@@ -110,9 +119,17 @@ class _EquipmentsListScreenState extends State<EquipmentsListScreen> {
                   sizes: sizes,
                   isLoading: state.isLoading,
                   initialName: state.equipmentPagination.name,
-                  onSubmit: ({String? name}) {
+                  initialIsFavorite: state.equipmentPagination.isFavorite,
+                  initialCreatedBy: state.equipmentPagination.createdBy,
+                  onSubmit: ({
+                    required String name,
+                    required bool isFavorite,
+                    required CreatedBy? createdBy,
+                  }) {
                     context.read<ExerciseCubit>().getEquipments(
                       name: name,
+                      isFavorite: isFavorite,
+                      createdBy: createdBy,
                       limit: 50,
                       offset: 0,
                     );

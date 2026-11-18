@@ -595,6 +595,8 @@ final class ExerciseRepository implements Repository {
   >
   getEquipments({
     String? name,
+    bool isFavorite = false,
+    CreatedBy? createdBy,
     int limit = kDefaultLimit,
     int offset = kDefaultOffset,
   }) async {
@@ -603,6 +605,12 @@ final class ExerciseRepository implements Repository {
 
     if (name != null && name.isNotEmpty) {
       query.and(EquipmentColumns.name.like, '%$name%');
+    }
+    if (isFavorite) {
+      query.and(EquipmentColumns.isFavorite.equal, 1);
+    }
+    if (createdBy != null) {
+      query.and(EquipmentColumns.createdBy.equal, createdBy.value);
     }
 
     try {
