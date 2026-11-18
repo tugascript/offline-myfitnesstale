@@ -268,16 +268,10 @@ sealed class PictureUtils {
         final int cropHeight;
         if (currentRatio > horizontalAspectRatio) {
           cropHeight = current.height;
-          cropWidth = math.max(
-            1,
-            (cropHeight * horizontalAspectRatio).round(),
-          );
+          cropWidth = math.max(1, (cropHeight * horizontalAspectRatio).round());
         } else {
           cropWidth = current.width;
-          cropHeight = math.max(
-            1,
-            (cropWidth / horizontalAspectRatio).round(),
-          );
+          cropHeight = math.max(1, (cropWidth / horizontalAspectRatio).round());
         }
         final offsetX = ((current.width - cropWidth) / 2).round();
         final offsetY = ((current.height - cropHeight) / 2).round();
@@ -303,7 +297,9 @@ sealed class PictureUtils {
       }
 
       var quality = initialQuality;
-      var encoded = Uint8List.fromList(img.encodeJpg(current, quality: quality));
+      var encoded = Uint8List.fromList(
+        img.encodeJpg(current, quality: quality),
+      );
 
       while (encoded.length > maxBytes && quality > minQuality) {
         quality = math.max(minQuality, quality - 10);

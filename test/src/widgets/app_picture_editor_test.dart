@@ -35,7 +35,9 @@ Uint8List _sampleJpgBytes(int width, int height) {
 void main() {
   final sizes = DataDisplaySizes.getDataDisplaySizes(ScreenSize.md);
 
-  testWidgets('AppPictureEditor configures 4:3 Crop and cancels cleanly', (tester) async {
+  testWidgets('AppPictureEditor configures 4:3 Crop and cancels cleanly', (
+    tester,
+  ) async {
     final theme = ThemeData();
     var cancelled = false;
 
@@ -61,14 +63,19 @@ void main() {
     await tester.pump();
 
     final crop = tester.widget<Crop>(find.byType(Crop));
-    expect(crop.aspectRatio, closeTo(PictureUtils.horizontalAspectRatio, 0.001));
+    expect(
+      crop.aspectRatio,
+      closeTo(PictureUtils.horizontalAspectRatio, 0.001),
+    );
 
     await tester.tap(find.text('CANCEL'));
     await tester.pump();
     expect(cancelled, isTrue);
   });
 
-  testWidgets('AppPictureEditor crops and compresses to 4:3 JPEG on SAVE', (tester) async {
+  testWidgets('AppPictureEditor crops and compresses to 4:3 JPEG on SAVE', (
+    tester,
+  ) async {
     final theme = ThemeData();
     Uint8List? savedBytes;
     final sample = _sampleJpgBytes(800, 600);

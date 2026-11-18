@@ -29,8 +29,8 @@ import '../../core/widgets/layout/app_scaffold.dart';
 import '../../core/widgets/mutation_buttons.dart';
 import '../view_models/exercise_cubit.dart';
 import '../view_models/states/exercise_state.dart';
-import '../widgets/edit_equipment_modal.dart';
-import '../widgets/equipment_header_card.dart';
+import '../widgets/equipments/edit_equipment_modal.dart';
+import '../widgets/equipments/equipment_header_card.dart';
 import '../widgets/exercises_list.dart';
 
 class EquipmentDetailsScreen extends StatefulWidget {
@@ -169,8 +169,7 @@ class _EquipmentDetailsScreenState extends State<EquipmentDetailsScreen> {
                           context: context,
                           builder: (context) => ConfirmationDialog(
                             title: 'Delete ${equipment.name}',
-                            content:
-                                'Are you sure you want to delete this equipment? This action cannot be undone.',
+                            content: 'Are you sure you want to delete this equipment? This action cannot be undone.',
                             onConfirm: () {
                               context.read<ExerciseCubit>().deleteEquipment(
                                 equipment.id,

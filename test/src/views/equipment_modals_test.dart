@@ -37,9 +37,9 @@ import 'package:myfitnesstale/src/ui/exercises/screens/equipment_details_screen.
 import 'package:myfitnesstale/src/ui/exercises/screens/equipments_list_screen.dart';
 import 'package:myfitnesstale/src/ui/exercises/view_models/exercise_cubit.dart';
 import 'package:myfitnesstale/src/ui/exercises/view_models/states/exercise_state.dart';
-import 'package:myfitnesstale/src/ui/exercises/widgets/create_equipment_modal.dart';
-import 'package:myfitnesstale/src/ui/exercises/widgets/edit_equipment_modal.dart';
-import 'package:myfitnesstale/src/ui/exercises/widgets/equipment_header_card.dart';
+import 'package:myfitnesstale/src/ui/exercises/widgets/equipments/create_equipment_modal.dart';
+import 'package:myfitnesstale/src/ui/exercises/widgets/equipments/edit_equipment_modal.dart';
+import 'package:myfitnesstale/src/ui/exercises/widgets/equipments/equipment_header_card.dart';
 import 'package:myfitnesstale/src/utils/nullable.dart';
 
 Uint8List _testJpgBytes() {

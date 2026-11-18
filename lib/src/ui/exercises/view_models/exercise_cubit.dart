@@ -645,7 +645,8 @@ class ExerciseCubit extends Cubit<ExerciseState>
       }
     }
 
-    if (targetPicture != null && targetPicture.storage == PictureStorage.files) {
+    if (targetPicture != null &&
+        targetPicture.storage == PictureStorage.files) {
       await _localFileStorageService.deletePicture(targetPicture.uri);
     }
 

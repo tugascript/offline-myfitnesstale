@@ -227,7 +227,11 @@ class _AppPictureState extends State<AppPicture> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: widget.sizes.largeIconSize * 0.65, color: Colors.grey),
+            Icon(
+              icon,
+              size: widget.sizes.largeIconSize * 0.65,
+              color: Colors.grey,
+            ),
             SizedBox(height: widget.sizes.halfSpacing),
             Text(
               message,

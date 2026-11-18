@@ -29,12 +29,7 @@ sealed class YoutubeVideoUtils {
     'www.youtube-nocookie.com',
   };
 
-  static const Set<String> _pathIdPrefixes = {
-    'shorts',
-    'embed',
-    'live',
-    'v',
-  };
+  static const Set<String> _pathIdPrefixes = {'shorts', 'embed', 'live', 'v'};
 
   /// Extracts a valid 11-character YouTube video ID from [rawUrl].
   ///

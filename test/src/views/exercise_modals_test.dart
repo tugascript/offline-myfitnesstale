@@ -524,7 +524,10 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(cubit.createdInputs, isEmpty);
-      expect(find.text('Please enter a valid YouTube video URL'), findsOneWidget);
+      expect(
+        find.text('Please enter a valid YouTube video URL'),
+        findsOneWidget,
+      );
       expect(find.byType(CreateExerciseModal), findsOneWidget);
 
       // Valid YouTube URL succeeds
@@ -549,60 +552,59 @@ void main() {
     },
   );
 
-  testWidgets(
-    'EditExerciseModal allows clearing existing YouTube URL',
-    (tester) async {
-      final existing = _sampleExercise(
-        id: 15,
-        name: 'Romanian Deadlift',
-        createdBy: CreatedBy.user,
-        video: const VideoDto(
-          uri: 'https://youtu.be/dQw4w9WgXcQ',
-          platform: VideoPlatform.youtube,
+  testWidgets('EditExerciseModal allows clearing existing YouTube URL', (
+    tester,
+  ) async {
+    final existing = _sampleExercise(
+      id: 15,
+      name: 'Romanian Deadlift',
+      createdBy: CreatedBy.user,
+      video: const VideoDto(
+        uri: 'https://youtu.be/dQw4w9WgXcQ',
+        platform: VideoPlatform.youtube,
+      ),
+    );
+    final cubit = _FakeExerciseCubit(initialExercise: existing);
+    addTearDown(cubit.close);
+
+    final router = GoRouter(
+      initialLocation: '/exercises/15',
+      routes: [
+        GoRoute(
+          path: '/exercises/:id',
+          builder: (_, _) => const ExerciseDetailScreen(exerciseId: 15),
         ),
-      );
-      final cubit = _FakeExerciseCubit(initialExercise: existing);
-      addTearDown(cubit.close);
+      ],
+    );
+    addTearDown(router.dispose);
 
-      final router = GoRouter(
-        initialLocation: '/exercises/15',
-        routes: [
-          GoRoute(
-            path: '/exercises/:id',
-            builder: (_, _) => const ExerciseDetailScreen(exerciseId: 15),
-          ),
-        ],
-      );
-      addTearDown(router.dispose);
+    await tester.pumpWidget(
+      BlocProvider<ExerciseCubit>.value(
+        value: cubit,
+        child: MaterialApp.router(routerConfig: router),
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
 
-      await tester.pumpWidget(
-        BlocProvider<ExerciseCubit>.value(
-          value: cubit,
-          child: MaterialApp.router(routerConfig: router),
-        ),
-      );
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 300));
+    final editButton = find.text('EDIT');
+    await tester.ensureVisible(editButton);
+    await tester.tap(editButton);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
 
-      final editButton = find.text('EDIT');
-      await tester.ensureVisible(editButton);
-      await tester.tap(editButton);
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 300));
+    final clearButton = find.byTooltip('Clear video URL');
+    expect(clearButton, findsOneWidget);
+    await tester.tap(clearButton);
+    await tester.pump();
 
-      final clearButton = find.byTooltip('Clear video URL');
-      expect(clearButton, findsOneWidget);
-      await tester.tap(clearButton);
-      await tester.pump();
+    final updateButton = find.text('UPDATE EXERCISE');
+    await tester.ensureVisible(updateButton);
+    await tester.tap(updateButton);
+    await tester.pumpAndSettle();
 
-      final updateButton = find.text('UPDATE EXERCISE');
-      await tester.ensureVisible(updateButton);
-      await tester.tap(updateButton);
-      await tester.pumpAndSettle();
-
-      expect(cubit.updatedCalls, hasLength(1));
-      expect(cubit.updatedCalls.first.$2.video.value, isNull);
-      expect(find.byType(AppVideoPlayer), findsNothing);
-    },
-  );
+    expect(cubit.updatedCalls, hasLength(1));
+    expect(cubit.updatedCalls.first.$2.video.value, isNull);
+    expect(find.byType(AppVideoPlayer), findsNothing);
+  });
 }

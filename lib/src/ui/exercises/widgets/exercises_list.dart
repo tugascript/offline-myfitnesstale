@@ -52,11 +52,7 @@ class ExercisesList extends StatelessWidget {
     }
 
     if (exercises.isEmpty) {
-      return NotFoundList(
-        sizes: sizes,
-        name: 'exercises',
-        height: emptyHeight,
-      );
+      return NotFoundList(sizes: sizes, name: 'exercises', height: emptyHeight);
     }
 
     return ListView.builder(
