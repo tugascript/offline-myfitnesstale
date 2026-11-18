@@ -25,6 +25,7 @@ class ExerciseData {
   final TargetMuscles muscles;
   final Set<String> equipments;
   final Difficulty difficulty;
+  final ExerciseWeightProgress weightProgress;
 
   const ExerciseData({
     required this.name,
@@ -32,6 +33,7 @@ class ExerciseData {
     required this.muscles,
     required this.equipments,
     required this.difficulty,
+    this.weightProgress = ExerciseWeightProgress.positive,
   });
 }
 
@@ -982,6 +984,7 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
     ),
     equipments: {kMachineName, kPullUpBarName},
     difficulty: Difficulty.beginnerIntermediate,
+    weightProgress: ExerciseWeightProgress.negative,
   ),
   ExerciseData(
     name: kAssistedChinUpName,
@@ -992,6 +995,7 @@ const Set<ExerciseData> kInitialExercises = <ExerciseData>{
     ),
     equipments: {kMachineName, kPullUpBarName},
     difficulty: Difficulty.beginnerIntermediate,
+    weightProgress: ExerciseWeightProgress.negative,
   ),
   ExerciseData(
     name: kSmithMachineSkullCrushersName,

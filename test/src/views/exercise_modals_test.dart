@@ -108,6 +108,7 @@ class _FakeExerciseCubit extends ExerciseCubit {
       muscleGroup: input.muscleGroup,
       muscles: input.muscles,
       difficulty: input.difficulty.value,
+      weightProgress: input.weightProgress,
       isFavorite: input.isFavorite,
       equipments: input.equipmentIds
           .map(
@@ -170,6 +171,7 @@ class _FakeExerciseCubit extends ExerciseCubit {
       muscleGroup: input.muscleGroup,
       muscles: input.muscles,
       difficulty: input.difficulty.value,
+      weightProgress: input.weightProgress,
       isFavorite: input.isFavorite,
       equipments: input.equipmentIds
           .map(

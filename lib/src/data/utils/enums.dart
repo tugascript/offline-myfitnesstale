@@ -576,3 +576,18 @@ enum BackupSchedule {
     orElse: () => BackupSchedule.daily,
   );
 }
+
+enum ExerciseWeightProgress {
+  positive("positive"),
+  negative("negative");
+
+  final String value;
+
+  const ExerciseWeightProgress(this.value);
+
+  static ExerciseWeightProgress fromValue(String v) =>
+      ExerciseWeightProgress.values.firstWhere(
+        (s) => s.value == v,
+        orElse: () => ExerciseWeightProgress.positive,
+      );
+}

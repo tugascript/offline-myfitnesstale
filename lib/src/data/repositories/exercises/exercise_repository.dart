@@ -258,6 +258,7 @@ final class ExerciseRepository implements Repository {
       video: input.video.value,
       isFavorite: input.isFavorite,
       difficulty: input.difficulty.value,
+      weightProgress: input.weightProgress,
       createdBy: createdBy,
     );
 
@@ -363,6 +364,7 @@ final class ExerciseRepository implements Repository {
             picture: exerciseInput.picture.value,
             video: exerciseInput.video.value,
             difficulty: exerciseInput.difficulty.value,
+            weightProgress: exerciseInput.weightProgress,
             isFavorite: exerciseInput.isFavorite,
             createdBy: createdBy,
           );
@@ -444,6 +446,7 @@ final class ExerciseRepository implements Repository {
         video: input.video,
         isFavorite: input.isFavorite,
         difficulty: input.difficulty,
+        weightProgress: input.weightProgress,
         updatedAt: DateUtilities.getNowUtcUnix(),
       );
 

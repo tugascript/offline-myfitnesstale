@@ -119,6 +119,19 @@ sealed class EnumDisplayNames {
     }
   }
 
+  static String getExerciseWeightProgressDisplayName(
+    ExerciseWeightProgress? progress,
+  ) {
+    switch (progress) {
+      case ExerciseWeightProgress.positive:
+        return 'Positive';
+      case ExerciseWeightProgress.negative:
+        return 'Negative';
+      case null:
+        return 'Unknown';
+    }
+  }
+
   static String getSetTypeDisplayName(WorkoutSetType? s) {
     switch (s) {
       case WorkoutSetType.standard:

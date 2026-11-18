@@ -196,6 +196,7 @@ final class OnboardingRepository implements Repository {
                     .nonNulls
                     .toSet(),
                 difficulty: Nullable(exercise.difficulty),
+                weightProgress: exercise.weightProgress,
               ),
             )
             .toList(),

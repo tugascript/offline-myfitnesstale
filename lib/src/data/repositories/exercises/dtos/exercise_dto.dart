@@ -37,6 +37,7 @@ final class ExerciseDto extends Equatable implements ModelDto<Exercise> {
   final TargetMuscles muscles;
   final bool isFavorite;
   final Difficulty? difficulty;
+  final ExerciseWeightProgress weightProgress;
   final CreatedBy createdBy;
 
   // Related data
@@ -53,6 +54,7 @@ final class ExerciseDto extends Equatable implements ModelDto<Exercise> {
     this.equipments,
     this.isFavorite = false,
     this.difficulty,
+    this.weightProgress = ExerciseWeightProgress.positive,
     required this.createdBy,
   });
 
@@ -74,6 +76,7 @@ final class ExerciseDto extends Equatable implements ModelDto<Exercise> {
       muscles: exercise.muscles,
       isFavorite: exercise.isFavorite,
       difficulty: exercise.difficulty,
+      weightProgress: exercise.weightProgress,
       equipments: equipments,
       createdBy: exercise.createdBy,
     );
@@ -91,6 +94,7 @@ final class ExerciseDto extends Equatable implements ModelDto<Exercise> {
     Nullable<List<EquipmentDto>>? equipments,
     bool? isFavorite,
     Nullable<Difficulty>? difficulty,
+    ExerciseWeightProgress? weightProgress,
     CreatedBy? createdBy,
   }) {
     return ExerciseDto(
@@ -104,6 +108,7 @@ final class ExerciseDto extends Equatable implements ModelDto<Exercise> {
       equipments: equipments != null ? equipments.value : this.equipments,
       isFavorite: isFavorite ?? this.isFavorite,
       difficulty: difficulty != null ? difficulty.value : this.difficulty,
+      weightProgress: weightProgress ?? this.weightProgress,
       createdBy: createdBy ?? this.createdBy,
     );
   }
@@ -120,6 +125,7 @@ final class ExerciseDto extends Equatable implements ModelDto<Exercise> {
     equipments,
     isFavorite,
     difficulty,
+    weightProgress,
     createdBy,
   ];
 }
