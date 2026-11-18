@@ -96,29 +96,43 @@ final class ExercisePagination extends Equatable {
 
 final class EquipmentPagination extends Equatable {
   final String name;
+  final bool isFavorite;
+  final CreatedBy? createdBy;
   final int total;
   final int limit;
   final int offset;
 
   const EquipmentPagination({
     required this.name,
+    required this.isFavorite,
+    this.createdBy,
     required this.total,
     required this.limit,
     required this.offset,
   });
 
   factory EquipmentPagination.initial() {
-    return const EquipmentPagination(name: "", total: 0, limit: 10, offset: 0);
+    return const EquipmentPagination(
+      name: "",
+      isFavorite: false,
+      total: 0,
+      limit: 10,
+      offset: 0,
+    );
   }
 
   EquipmentPagination copyWith({
     String? name,
+    bool? isFavorite,
+    Nullable<CreatedBy>? createdBy,
     int? total,
     int? limit,
     int? offset,
   }) {
     return EquipmentPagination(
       name: name ?? this.name,
+      isFavorite: isFavorite ?? this.isFavorite,
+      createdBy: createdBy != null ? createdBy.value : this.createdBy,
       total: total ?? this.total,
       limit: limit ?? this.limit,
       offset: offset ?? this.offset,
@@ -126,7 +140,14 @@ final class EquipmentPagination extends Equatable {
   }
 
   @override
-  List<Object?> get props => [name, total, limit, offset];
+  List<Object?> get props => [
+    name,
+    isFavorite,
+    createdBy,
+    total,
+    limit,
+    offset,
+  ];
 }
 
 final class SelectedEquipment extends Equatable {

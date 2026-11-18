@@ -32,7 +32,10 @@ import 'package:myfitnesstale/src/data/utils/enums.dart';
 import 'package:myfitnesstale/src/ui/core/sizes/data_display_sizes.dart';
 import 'package:myfitnesstale/src/ui/core/sizes/screen_size.dart';
 import 'package:myfitnesstale/src/ui/core/view_models/states/common_state.dart';
+import 'package:myfitnesstale/src/ui/core/widgets/created_by_checkbox.dart';
+import 'package:myfitnesstale/src/ui/core/widgets/favourite_checkbox.dart';
 import 'package:myfitnesstale/src/ui/core/widgets/picture/app_picture.dart';
+import 'package:myfitnesstale/src/ui/core/widgets/search_form_button.dart';
 import 'package:myfitnesstale/src/ui/exercises/screens/equipment_details_screen.dart';
 import 'package:myfitnesstale/src/ui/exercises/screens/equipments_list_screen.dart';
 import 'package:myfitnesstale/src/ui/exercises/view_models/exercise_cubit.dart';
@@ -52,6 +55,8 @@ class _FakeExerciseCubit extends ExerciseCubit {
   final bool shouldFail;
   final List<EquipmentInput> createdInputs = [];
   final List<(int, EquipmentInput)> updatedCalls = [];
+  final List<({String? name, bool isFavorite, CreatedBy? createdBy})>
+  getEquipmentsCalls = [];
 
   _FakeExerciseCubit({this.shouldFail = false, EquipmentDto? initialEquipment})
     : super(exerciseRepository: ExerciseRepository.create()) {
@@ -74,9 +79,17 @@ class _FakeExerciseCubit extends ExerciseCubit {
   @override
   Future<void> getEquipments({
     String? name,
+    bool isFavorite = false,
+    CreatedBy? createdBy,
     required int limit,
     required int offset,
-  }) async {}
+  }) async {
+    getEquipmentsCalls.add((
+      name: name,
+      isFavorite: isFavorite,
+      createdBy: createdBy,
+    ));
+  }
 
   @override
   Future<void> getEquipment(int id) async {}
@@ -566,6 +579,40 @@ void main() {
       expect(find.text('Custom Equipment'), findsOneWidget);
       expect(find.text('0 exercises'), findsOneWidget);
       expect(find.text('Related Exercises'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'EquipmentsListScreen submits favorite and createdBy filters to ExerciseCubit.getEquipments',
+    (tester) async {
+      final cubit = _FakeExerciseCubit(
+        initialEquipment: const EquipmentDto(
+          id: 1,
+          name: 'Barbell',
+          createdBy: CreatedBy.system,
+        ),
+      );
+      addTearDown(cubit.close);
+
+      await tester.pumpWidget(
+        BlocProvider<ExerciseCubit>.value(
+          value: cubit,
+          child: const MaterialApp(home: EquipmentsListScreen()),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.enterText(find.byType(TextField), 'Bar');
+      await tester.tap(find.byType(HeartCheckbox));
+      await tester.pump();
+      await tester.tap(find.byType(CreatedByCheckbox));
+      await tester.pump();
+      await tester.tap(find.byType(SearchFormButton));
+      await tester.pump();
+
+      expect(cubit.getEquipmentsCalls, [
+        (name: 'Bar', isFavorite: true, createdBy: CreatedBy.user),
+      ]);
     },
   );
 }

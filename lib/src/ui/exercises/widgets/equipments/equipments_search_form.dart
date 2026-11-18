@@ -17,7 +17,10 @@
 
 import 'package:material_ui/material_ui.dart';
 
+import '../../../../data/utils/enums.dart';
 import '../../../core/sizes/data_display_sizes.dart';
+import '../../../core/widgets/created_by_checkbox.dart';
+import '../../../core/widgets/favourite_checkbox.dart';
 import '../../../core/widgets/layout/app_text_form_field.dart';
 import '../../../core/widgets/search_form_button.dart';
 
@@ -27,13 +30,22 @@ class EquipmentsSearchForm extends StatefulWidget {
 
   final bool isLoading;
   final String initialName;
-  final void Function({required String name}) onSubmit;
+  final bool initialIsFavorite;
+  final CreatedBy? initialCreatedBy;
+  final void Function({
+    required String name,
+    required bool isFavorite,
+    required CreatedBy? createdBy,
+  })
+  onSubmit;
 
   const EquipmentsSearchForm({
     super.key,
     required this.theme,
     required this.sizes,
     required this.initialName,
+    required this.initialIsFavorite,
+    this.initialCreatedBy,
     required this.isLoading,
     required this.onSubmit,
   });
@@ -50,8 +62,30 @@ class _EquipmentsSearchFormState extends State<EquipmentsSearchForm> {
   @override
   void initState() {
     super.initState();
-    _data = _FormData(name: widget.initialName);
+    _data = _FormData(
+      name: widget.initialName,
+      isFavorite: widget.initialIsFavorite,
+      createdBy: widget.initialCreatedBy,
+    );
     _nameController.text = _data.name;
+  }
+
+  @override
+  void didUpdateWidget(EquipmentsSearchForm oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.initialName != widget.initialName &&
+        widget.initialName != _data.name) {
+      _data.name = widget.initialName;
+      _nameController.text = widget.initialName;
+    }
+    if (oldWidget.initialIsFavorite != widget.initialIsFavorite &&
+        widget.initialIsFavorite != _data.isFavorite) {
+      _data.isFavorite = widget.initialIsFavorite;
+    }
+    if (oldWidget.initialCreatedBy != widget.initialCreatedBy &&
+        widget.initialCreatedBy != _data.createdBy) {
+      _data.createdBy = widget.initialCreatedBy;
+    }
   }
 
   @override
@@ -67,6 +101,24 @@ class _EquipmentsSearchFormState extends State<EquipmentsSearchForm> {
       key: _formKey,
       child: Row(
         children: [
+          HeartCheckbox(
+            value: _data.isFavorite,
+            onChanged: (value) {
+              setState(() {
+                _data.isFavorite = value;
+              });
+            },
+          ),
+          SizedBox(width: widget.sizes.inputSpacing),
+          CreatedByCheckbox(
+            value: _data.createdBy,
+            onChanged: (value) {
+              setState(() {
+                _data.createdBy = value;
+              });
+            },
+          ),
+          SizedBox(width: widget.sizes.inputSpacing),
           Expanded(
             child: AppTextFormField(
               controller: _nameController,
@@ -85,6 +137,7 @@ class _EquipmentsSearchFormState extends State<EquipmentsSearchForm> {
                   });
                 }
               },
+              onFieldSubmitted: (_) => _submit(),
               prefixIcon: Padding(
                 padding: EdgeInsets.symmetric(
                   horizontal: widget.sizes.padding * 0.65,
@@ -112,23 +165,34 @@ class _EquipmentsSearchFormState extends State<EquipmentsSearchForm> {
             theme: widget.theme,
             loadingSize: loadingSize,
             isLoading: widget.isLoading,
-            onPressed: () {
-              if (!widget.isLoading) {
-                if (_formKey.currentState!.validate()) {
-                  _formKey.currentState!.save();
-                  widget.onSubmit(name: _data.name);
-                }
-              }
-            },
+            onPressed: _submit,
           ),
         ],
       ),
+    );
+  }
+
+  void _submit() {
+    if (widget.isLoading || !_formKey.currentState!.validate()) {
+      return;
+    }
+    _formKey.currentState!.save();
+    widget.onSubmit(
+      name: _data.name,
+      isFavorite: _data.isFavorite,
+      createdBy: _data.createdBy,
     );
   }
 }
 
 final class _FormData {
   String name;
+  bool isFavorite;
+  CreatedBy? createdBy;
 
-  _FormData({required this.name});
+  _FormData({
+    required this.name,
+    required this.isFavorite,
+    required this.createdBy,
+  });
 }

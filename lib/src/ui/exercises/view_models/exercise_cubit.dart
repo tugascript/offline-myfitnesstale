@@ -410,6 +410,8 @@ class ExerciseCubit extends Cubit<ExerciseState>
 
   Future<void> getEquipments({
     String? name,
+    bool isFavorite = false,
+    CreatedBy? createdBy,
     required int limit,
     required int offset,
   }) async {
@@ -419,6 +421,8 @@ class ExerciseCubit extends Cubit<ExerciseState>
 
     final result = await _exerciseService.getEquipments(
       name: name,
+      isFavorite: isFavorite,
+      createdBy: createdBy,
       limit: limit,
       offset: offset,
     );
@@ -448,7 +452,9 @@ class ExerciseCubit extends Cubit<ExerciseState>
             ? [...state.equipments, ...paginatedData.data]
             : paginatedData.data,
         equipmentPagination: state.equipmentPagination.copyWith(
-          name: name,
+          name: name ?? '',
+          isFavorite: isFavorite,
+          createdBy: Nullable(createdBy),
           limit: paginatedData.limit,
           offset: paginatedData.offset,
           total: paginatedData.total,
@@ -566,6 +572,8 @@ class ExerciseCubit extends Cubit<ExerciseState>
     final pagination = state.equipmentPagination;
     final equipmentsResult = await _exerciseService.getEquipments(
       name: pagination.name,
+      isFavorite: pagination.isFavorite,
+      createdBy: pagination.createdBy,
       limit: pagination.limit,
       offset: 0,
     );
@@ -730,6 +738,8 @@ class ExerciseCubit extends Cubit<ExerciseState>
     final pagination = state.equipmentPagination;
     final equipmentsResult = await _exerciseService.getEquipments(
       name: pagination.name,
+      isFavorite: pagination.isFavorite,
+      createdBy: pagination.createdBy,
       limit: pagination.limit,
       offset: 0,
     );
