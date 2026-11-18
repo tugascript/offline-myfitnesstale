@@ -44,6 +44,7 @@ class ExerciseForm extends StatefulWidget {
   final Set<Muscle> initialSecondaryMuscles;
   final Set<int> initialEquipmentIds;
   final Difficulty? initialDifficulty;
+  final ExerciseWeightProgress initialWeightProgress;
   final bool initialIsFavorite;
 
   final void Function({
@@ -55,6 +56,7 @@ class ExerciseForm extends StatefulWidget {
     required Set<Muscle> secondaryMuscles,
     required Set<int> equipmentIds,
     required Difficulty? difficulty,
+    required ExerciseWeightProgress weightProgress,
     required bool isFavorite,
   })
   onSubmit;
@@ -74,6 +76,7 @@ class ExerciseForm extends StatefulWidget {
     required this.initialSecondaryMuscles,
     required this.initialEquipmentIds,
     required this.initialDifficulty,
+    this.initialWeightProgress = ExerciseWeightProgress.positive,
     required this.initialIsFavorite,
     required this.onSubmit,
   });
@@ -109,6 +112,7 @@ class _ExerciseFormState extends State<ExerciseForm> {
       secondaryMuscles: {...widget.initialSecondaryMuscles},
       equipmentIds: {...widget.initialEquipmentIds},
       difficulty: widget.initialDifficulty,
+      weightProgress: widget.initialWeightProgress,
       isFavorite: widget.initialIsFavorite,
     );
     _nameController.text = _data.name;
@@ -303,6 +307,35 @@ class _ExerciseFormState extends State<ExerciseForm> {
               if (value != null) {
                 setState(() {
                   _data.difficulty = value;
+                });
+              }
+            },
+          ),
+          SizedBox(height: widget.sizes.spacing),
+          AppDropdown<ExerciseWeightProgress>(
+            theme: widget.theme,
+            isLoading: widget.isLoading,
+            value: _data.weightProgress,
+            filled: true,
+            emptyLabel: 'Weight Progress',
+            showEmptyValue: false,
+            items: ExerciseWeightProgress.values,
+            fontSize: widget.sizes.subtitleFontSize,
+            padding: widget.sizes.padding,
+            labelText: 'Weight Progress',
+            labelBuilder: (d) =>
+                EnumDisplayNames.getExerciseWeightProgressDisplayName(d),
+            onChanged: (value) {
+              if (value != null) {
+                setState(() {
+                  _data.weightProgress = value;
+                });
+              }
+            },
+            onSaved: (value) {
+              if (value != null) {
+                setState(() {
+                  _data.weightProgress = value;
                 });
               }
             },
@@ -553,6 +586,7 @@ class _ExerciseFormState extends State<ExerciseForm> {
                   secondaryMuscles: _data.secondaryMuscles,
                   equipmentIds: _data.equipmentIds,
                   difficulty: _data.difficulty,
+                  weightProgress: _data.weightProgress,
                   isFavorite: _data.isFavorite,
                 );
               }
@@ -577,6 +611,7 @@ final class _FormData {
   Set<Muscle> secondaryMuscles;
   Set<int> equipmentIds;
   Difficulty? difficulty;
+  ExerciseWeightProgress weightProgress;
   bool isFavorite;
 
   _FormData({
@@ -588,6 +623,7 @@ final class _FormData {
     required this.secondaryMuscles,
     required this.equipmentIds,
     required this.difficulty,
+    required this.weightProgress,
     required this.isFavorite,
   });
 }

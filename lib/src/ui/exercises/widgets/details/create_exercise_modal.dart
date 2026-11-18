@@ -57,12 +57,14 @@ class CreateExerciseModal extends StatelessWidget {
           initialSecondaryMuscles: const {},
           initialEquipmentIds: const {},
           initialDifficulty: null,
+          initialWeightProgress: ExerciseWeightProgress.positive,
           initialIsFavorite: false,
           onSubmit:
               ({
                 String? description,
                 String? videoUrl,
                 Difficulty? difficulty,
+                required ExerciseWeightProgress weightProgress,
                 required Set<int> equipmentIds,
                 required bool isFavorite,
                 required MuscleGroup muscleGroup,
@@ -90,6 +92,7 @@ class CreateExerciseModal extends StatelessWidget {
                     ),
                     equipmentIds: equipmentIds,
                     difficulty: Nullable(difficulty),
+                    weightProgress: weightProgress,
                     isFavorite: isFavorite,
                   ),
                 );

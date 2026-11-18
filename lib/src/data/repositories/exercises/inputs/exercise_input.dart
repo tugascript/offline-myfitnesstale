@@ -32,6 +32,7 @@ final class ExerciseInput extends Equatable implements ModelInput<Exercise> {
   final Nullable<PictureData> picture;
   final Nullable<VideoData> video;
   final Nullable<Difficulty> difficulty;
+  final ExerciseWeightProgress weightProgress;
   final bool isFavorite;
 
   const ExerciseInput({
@@ -43,6 +44,7 @@ final class ExerciseInput extends Equatable implements ModelInput<Exercise> {
     this.picture = const Nullable<PictureData>(null),
     this.video = const Nullable<VideoData>(null),
     this.difficulty = const Nullable<Difficulty>(null),
+    this.weightProgress = ExerciseWeightProgress.positive,
     this.isFavorite = false,
   });
 
@@ -56,6 +58,7 @@ final class ExerciseInput extends Equatable implements ModelInput<Exercise> {
     picture,
     video,
     difficulty,
+    weightProgress,
     isFavorite,
   ];
 }
