@@ -50,6 +50,8 @@ final class DataDisplaySizesList {
 
   double get halfPadding => padding / 2;
 
+  double get thirdPadding => padding / 3;
+
   double get halfSpacing => spacing / 2;
 
   double get quarterSpacing => spacing / 4;

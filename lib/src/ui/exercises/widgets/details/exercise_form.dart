@@ -268,6 +268,7 @@ class _ExerciseFormState extends State<ExerciseForm> {
             value: _data.muscleGroup,
             filled: true,
             emptyLabel: 'Muscle Group',
+            labelText: 'Muscle Group',
             items: MuscleGroup.values,
             fontSize: widget.sizes.subtitleFontSize,
             padding: widget.sizes.padding,
@@ -294,6 +295,7 @@ class _ExerciseFormState extends State<ExerciseForm> {
             value: _data.difficulty,
             filled: true,
             emptyLabel: 'Difficulty',
+            labelText: 'Difficulty',
             items: Difficulty.values,
             fontSize: widget.sizes.subtitleFontSize,
             padding: widget.sizes.padding,
@@ -352,8 +354,9 @@ class _ExerciseFormState extends State<ExerciseForm> {
           DynamicListInput<Muscle>(
             filled: true,
             theme: widget.theme,
-            handlesPadding: widget.sizes.padding,
+            handlesPadding: widget.sizes.thirdPadding,
             items: _data.primaryMuscles.toList(),
+            addEnabled: _data.muscleGroup != null,
             itemBuilder: (context, index, item) {
               return AppDropdown<Muscle>(
                 theme: widget.theme,
@@ -361,7 +364,7 @@ class _ExerciseFormState extends State<ExerciseForm> {
                 filled: true,
                 value: item,
                 emptyLabel: 'Primary Muscle',
-                items: Muscle.values
+                items: Muscle.fromMuscleGroup(_data.muscleGroup!)
                     .where((m) => !_data.secondaryMuscles.contains(m))
                     .toList(),
                 fontSize: widget.sizes.subtitleFontSize,
@@ -421,9 +424,10 @@ class _ExerciseFormState extends State<ExerciseForm> {
           SizedBox(height: widget.sizes.spacing),
           DynamicListInput<Muscle>(
             theme: widget.theme,
-            handlesPadding: widget.sizes.padding / 3,
+            handlesPadding: widget.sizes.thirdPadding,
             items: _data.secondaryMuscles.toList(),
             filled: true,
+            addEnabled: _data.muscleGroup != null,
             itemBuilder: (context, index, item) {
               return AppDropdown<Muscle>(
                 theme: widget.theme,
@@ -431,7 +435,7 @@ class _ExerciseFormState extends State<ExerciseForm> {
                 value: item,
                 filled: true,
                 emptyLabel: 'Secondary Muscle',
-                items: Muscle.values
+                items: Muscle.fromMuscleGroup(_data.muscleGroup!)
                     .where((m) => !_data.primaryMuscles.contains(m))
                     .toList(),
                 fontSize: widget.sizes.subtitleFontSize,
@@ -506,7 +510,7 @@ class _ExerciseFormState extends State<ExerciseForm> {
 
               return DynamicListInput<int>(
                 theme: widget.theme,
-                handlesPadding: widget.sizes.padding,
+                handlesPadding: widget.sizes.thirdPadding,
                 items: _data.equipmentIds.toList(),
                 filled: true,
                 itemBuilder: (context, index, item) {
