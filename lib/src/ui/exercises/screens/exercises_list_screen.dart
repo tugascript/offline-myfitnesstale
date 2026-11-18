@@ -59,6 +59,7 @@ class _ExercisesListScreenState extends State<ExercisesListScreen> {
         muscleGroup: pagination.muscleGroup,
         equipmentId: pagination.equipmentId,
         isFavourite: pagination.isFavorite,
+        createdBy: pagination.createdBy,
         limit: 20,
         offset: 0,
       );
@@ -83,6 +84,7 @@ class _ExercisesListScreenState extends State<ExercisesListScreen> {
           muscleGroup: pagination.muscleGroup,
           equipmentId: pagination.equipmentId,
           isFavourite: pagination.isFavorite,
+          createdBy: pagination.createdBy,
           offset: cubit.state.exercises.length,
           limit: 20,
         );
@@ -136,6 +138,8 @@ class _ExercisesListScreenState extends State<ExercisesListScreen> {
                   initialEquipmentId: state.exercisePagination.equipmentId,
                   equipmentSelection: state.equipmentSelection,
                   initialIsFavorite: state.exercisePagination.isFavorite,
+                  initialCreatedBy: state.exercisePagination.createdBy,
+                  showCreatedBy: true,
                   onSubmit:
                       ({
                         String? name,
@@ -151,6 +155,7 @@ class _ExercisesListScreenState extends State<ExercisesListScreen> {
                           muscleGroup: muscleGroup,
                           equipmentId: equipmentId,
                           isFavourite: isFavourite,
+                          createdBy: createdBy,
                           limit: 20,
                           offset: 0,
                         );

@@ -45,6 +45,7 @@ void main() {
     required MuscleGroup muscleGroup,
     required Difficulty difficulty,
     required bool isFavorite,
+    CreatedBy createdBy = CreatedBy.user,
   }) {
     return db.insert(
       Exercise.table,
@@ -53,6 +54,7 @@ void main() {
         muscleGroup: muscleGroup,
         difficulty: difficulty,
         isFavorite: isFavorite,
+        createdBy: createdBy,
         muscles: const TargetMuscles(primary: {}, secondary: {}),
       ).toMap(),
     );
@@ -61,6 +63,55 @@ void main() {
   setUpAll(testDatabase.initialize);
   tearDown(testDatabase.clearOnboardingTables);
   tearDownAll(testDatabase.destroy);
+
+  test('filters exercises by createdBy and retains filter across pages', () async {
+    final db = await testDatabase.db;
+    await createExercise(
+      db,
+      name: 'User Press',
+      muscleGroup: MuscleGroup.push,
+      difficulty: Difficulty.beginner,
+      isFavorite: false,
+      createdBy: CreatedBy.user,
+    );
+    await createExercise(
+      db,
+      name: 'User Row',
+      muscleGroup: MuscleGroup.pull,
+      difficulty: Difficulty.beginner,
+      isFavorite: false,
+      createdBy: CreatedBy.user,
+    );
+    await createExercise(
+      db,
+      name: 'System Squat',
+      muscleGroup: MuscleGroup.legs,
+      difficulty: Difficulty.beginner,
+      isFavorite: false,
+      createdBy: CreatedBy.system,
+    );
+
+    final cubit = ExerciseCubit(exerciseRepository: service);
+    addTearDown(cubit.close);
+    await cubit.getExercises(createdBy: CreatedBy.user, limit: 1, offset: 0);
+    expect(cubit.state.exercises, hasLength(1));
+    expect(cubit.state.exercisePagination.total, 2);
+    expect(cubit.state.exercisePagination.createdBy, CreatedBy.user);
+
+    await cubit.getExercises(
+      createdBy: cubit.state.exercisePagination.createdBy,
+      limit: 1,
+      offset: 1,
+    );
+    expect(cubit.state.exercises, hasLength(2));
+    expect(
+      cubit.state.exercises.every(
+        (exercise) => exercise.createdBy == CreatedBy.user,
+      ),
+      isTrue,
+    );
+    expect(cubit.state.exercisePagination.createdBy, CreatedBy.user);
+  });
 
   test(
     'combines equipment with other filters and reports filtered totals',

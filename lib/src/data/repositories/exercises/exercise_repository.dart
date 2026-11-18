@@ -91,6 +91,7 @@ final class ExerciseRepository implements Repository {
     Difficulty? difficulty,
     int? equipmentId,
     bool isFavorite = false,
+    CreatedBy? createdBy,
     int limit = kDefaultLimit,
     int offset = kDefaultOffset,
   }) async {
@@ -108,6 +109,9 @@ final class ExerciseRepository implements Repository {
     }
     if (difficulty != null) {
       query.and(ExerciseColumns.difficulty.equal, difficulty.value);
+    }
+    if (createdBy != null) {
+      query.and(ExerciseColumns.createdBy.equal, createdBy.value);
     }
     if (equipmentId != null) {
       query.and(

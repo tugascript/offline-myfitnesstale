@@ -58,6 +58,7 @@ class _ExerciseSearchCubit extends ExerciseCubit {
     int? limit,
     int? offset,
     bool isFavourite = false,
+    CreatedBy? createdBy,
   }) async {}
 }
 

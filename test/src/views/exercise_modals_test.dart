@@ -69,6 +69,7 @@ class _FakeExerciseCubit extends ExerciseCubit {
     int? limit,
     int? offset,
     bool isFavourite = false,
+    CreatedBy? createdBy,
   }) async {}
 
   @override
@@ -607,4 +608,139 @@ void main() {
     expect(cubit.updatedCalls.first.$2.video.value, isNull);
     expect(find.byType(AppVideoPlayer), findsNothing);
   });
+
+  testWidgets(
+    'CreateExerciseModal adds primary and secondary muscles for Pull group and filters incompatible muscles when switching group',
+    (tester) async {
+      final cubit = _FakeExerciseCubit(initialExercise: _sampleExercise());
+      addTearDown(cubit.close);
+
+      await tester.pumpWidget(
+        BlocProvider<ExerciseCubit>.value(
+          value: cubit,
+          child: const MaterialApp(home: ExercisesListScreen()),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const ValueKey('exercise-add')));
+      await tester.pumpAndSettle();
+
+      await tester.enterText(
+        find.descendant(
+          of: find.byType(CreateExerciseModal),
+          matching: find.byWidgetPredicate(
+            (w) => w is TextField && w.decoration?.labelText == 'Name',
+          ),
+        ),
+        'Barbell Row',
+      );
+
+      final muscleGroupDropdown = find.descendant(
+        of: find.byType(CreateExerciseModal),
+        matching: find.byType(DropdownButtonFormField<MuscleGroup?>),
+      );
+      await tester.tap(muscleGroupDropdown);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Pull').last);
+      await tester.pumpAndSettle();
+
+      // Tapping Add Muscle for primary and secondary should pick Pull muscles
+      // (not Muscle.chest) and render without dropdown assertion errors.
+      final addMuscleButtons = find.descendant(
+        of: find.byType(CreateExerciseModal),
+        matching: find.text('Add Muscle'),
+      );
+      expect(addMuscleButtons, findsNWidgets(2));
+
+      await tester.ensureVisible(addMuscleButtons.at(0));
+      await tester.tap(addMuscleButtons.at(0));
+      await tester.pumpAndSettle();
+
+      await tester.ensureVisible(addMuscleButtons.at(1));
+      await tester.tap(addMuscleButtons.at(1));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.byType(DropdownButtonFormField<Muscle?>),
+        findsNWidgets(2),
+      );
+
+      // Switching MuscleGroup to Legs clears incompatible Pull muscles.
+      await tester.ensureVisible(muscleGroupDropdown);
+      await tester.tap(muscleGroupDropdown);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Legs').last);
+      await tester.pumpAndSettle();
+
+      expect(find.byType(DropdownButtonFormField<Muscle?>), findsNothing);
+
+      // Re-add a Legs primary muscle and submit.
+      await tester.ensureVisible(addMuscleButtons.at(0));
+      await tester.tap(addMuscleButtons.at(0));
+      await tester.pumpAndSettle();
+
+      final createButton = find.text('CREATE EXERCISE');
+      await tester.ensureVisible(createButton);
+      await tester.tap(createButton);
+      await tester.pumpAndSettle();
+
+      expect(cubit.createdInputs, hasLength(1));
+      expect(cubit.createdInputs.first.muscleGroup, MuscleGroup.legs);
+      expect(
+        cubit.createdInputs.first.muscles.primary,
+        {Muscle.quadriceps},
+      );
+      expect(cubit.createdInputs.first.muscles.secondary, isEmpty);
+    },
+  );
+
+  testWidgets(
+    'EditExerciseModal renders exercises with secondary muscles outside MuscleGroup',
+    (tester) async {
+      final existing = ExerciseDto(
+        id: 21,
+        name: 'Barbell Deadlift',
+        description: 'Lift bar from floor',
+        muscleGroup: MuscleGroup.legs,
+        muscles: const TargetMuscles(
+          primary: {Muscle.hamstrings, Muscle.glutes},
+          secondary: {Muscle.lowerBack, Muscle.forearms},
+        ),
+        equipments: const [],
+        difficulty: Difficulty.intermediate,
+        isFavorite: false,
+        createdBy: CreatedBy.user,
+      );
+      final cubit = _FakeExerciseCubit(initialExercise: existing);
+      addTearDown(cubit.close);
+
+      final router = GoRouter(
+        initialLocation: '/exercises/21',
+        routes: [
+          GoRoute(
+            path: '/exercises/:id',
+            builder: (_, _) => const ExerciseDetailScreen(exerciseId: 21),
+          ),
+        ],
+      );
+      addTearDown(router.dispose);
+
+      await tester.pumpWidget(
+        BlocProvider<ExerciseCubit>.value(
+          value: cubit,
+          child: MaterialApp.router(routerConfig: router),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final editButton = find.text('EDIT');
+      await tester.ensureVisible(editButton);
+      await tester.tap(editButton);
+      await tester.pumpAndSettle();
+
+      expect(find.byType(EditExerciseModal), findsOneWidget);
+      expect(find.byType(DropdownButtonFormField<Muscle?>), findsNWidgets(4));
+    },
+  );
 }
