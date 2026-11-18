@@ -128,6 +128,51 @@ class _ExerciseFormState extends State<ExerciseForm> {
     super.dispose();
   }
 
+  bool get _hasAvailableGroupMuscles {
+    final muscleGroup = _data.muscleGroup;
+    if (muscleGroup == null) {
+      return false;
+    }
+    return Muscle.fromMuscleGroup(muscleGroup).any(
+      (m) =>
+          !_data.primaryMuscles.contains(m) &&
+          !_data.secondaryMuscles.contains(m),
+    );
+  }
+
+  List<Muscle> _muscleDropdownItems({
+    required Muscle currentItem,
+    required Set<Muscle> excludedMuscles,
+  }) {
+    final muscleGroup = _data.muscleGroup;
+    final availableMuscles = muscleGroup != null
+        ? Muscle.fromMuscleGroup(muscleGroup)
+        : Muscle.values.toSet();
+    final items = availableMuscles
+        .where((m) => m == currentItem || !excludedMuscles.contains(m))
+        .toList();
+    if (!items.contains(currentItem)) {
+      items.insert(0, currentItem);
+    }
+    return items;
+  }
+
+  void _addMuscle(Set<Muscle> targetMuscles) {
+    final muscleGroup = _data.muscleGroup;
+    if (muscleGroup == null) {
+      return;
+    }
+    for (final m in Muscle.fromMuscleGroup(muscleGroup)) {
+      if (!(_data.primaryMuscles.contains(m) ||
+          _data.secondaryMuscles.contains(m))) {
+        setState(() {
+          targetMuscles.add(m);
+        });
+        break;
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Form(
@@ -276,6 +321,14 @@ class _ExerciseFormState extends State<ExerciseForm> {
             onChanged: (value) {
               setState(() {
                 _data.muscleGroup = value;
+                if (value == null) {
+                  _data.primaryMuscles.clear();
+                  _data.secondaryMuscles.clear();
+                } else {
+                  final allowedMuscles = Muscle.fromMuscleGroup(value);
+                  _data.primaryMuscles.retainAll(allowedMuscles);
+                  _data.secondaryMuscles.retainAll(allowedMuscles);
+                }
               });
             },
             onSaved: (value) {
@@ -356,7 +409,7 @@ class _ExerciseFormState extends State<ExerciseForm> {
             theme: widget.theme,
             handlesPadding: widget.sizes.thirdPadding,
             items: _data.primaryMuscles.toList(),
-            addEnabled: _data.muscleGroup != null,
+            addEnabled: _hasAvailableGroupMuscles,
             itemBuilder: (context, index, item) {
               return AppDropdown<Muscle>(
                 theme: widget.theme,
@@ -364,9 +417,10 @@ class _ExerciseFormState extends State<ExerciseForm> {
                 filled: true,
                 value: item,
                 emptyLabel: 'Primary Muscle',
-                items: Muscle.fromMuscleGroup(_data.muscleGroup!)
-                    .where((m) => !_data.secondaryMuscles.contains(m))
-                    .toList(),
+                items: _muscleDropdownItems(
+                  currentItem: item,
+                  excludedMuscles: _data.secondaryMuscles,
+                ),
                 fontSize: widget.sizes.subtitleFontSize,
                 padding: widget.sizes.padding,
                 labelBuilder: (d) => EnumDisplayNames.getMuscleDisplayName(d),
@@ -392,20 +446,7 @@ class _ExerciseFormState extends State<ExerciseForm> {
                 _data.primaryMuscles = value.toSet();
               });
             },
-            onAdd: () {
-              if (_data.primaryMuscles.length >= Muscle.values.length) {
-                return;
-              }
-              for (final m in Muscle.values) {
-                if (!(_data.primaryMuscles.contains(m) ||
-                    _data.secondaryMuscles.contains(m))) {
-                  setState(() {
-                    _data.primaryMuscles.add(m);
-                  });
-                  break;
-                }
-              }
-            },
+            onAdd: () => _addMuscle(_data.primaryMuscles),
             keyBuilder: (item) => ValueKey(item),
             addLabel: 'Add Muscle',
             fontSize: widget.sizes.subtitleFontSize,
@@ -427,7 +468,7 @@ class _ExerciseFormState extends State<ExerciseForm> {
             handlesPadding: widget.sizes.thirdPadding,
             items: _data.secondaryMuscles.toList(),
             filled: true,
-            addEnabled: _data.muscleGroup != null,
+            addEnabled: _hasAvailableGroupMuscles,
             itemBuilder: (context, index, item) {
               return AppDropdown<Muscle>(
                 theme: widget.theme,
@@ -435,9 +476,10 @@ class _ExerciseFormState extends State<ExerciseForm> {
                 value: item,
                 filled: true,
                 emptyLabel: 'Secondary Muscle',
-                items: Muscle.fromMuscleGroup(_data.muscleGroup!)
-                    .where((m) => !_data.primaryMuscles.contains(m))
-                    .toList(),
+                items: _muscleDropdownItems(
+                  currentItem: item,
+                  excludedMuscles: _data.primaryMuscles,
+                ),
                 fontSize: widget.sizes.subtitleFontSize,
                 padding: widget.sizes.padding,
                 labelBuilder: (d) => EnumDisplayNames.getMuscleDisplayName(d),
@@ -463,21 +505,7 @@ class _ExerciseFormState extends State<ExerciseForm> {
                 _data.secondaryMuscles = value.toSet();
               });
             },
-            onAdd: () {
-              if (_data.secondaryMuscles.length >= Muscle.values.length) {
-                return;
-              }
-
-              for (final m in Muscle.values) {
-                if (!(_data.secondaryMuscles.contains(m) ||
-                    _data.primaryMuscles.contains(m))) {
-                  setState(() {
-                    _data.secondaryMuscles.add(m);
-                  });
-                  break;
-                }
-              }
-            },
+            onAdd: () => _addMuscle(_data.secondaryMuscles),
             keyBuilder: (item) => ValueKey(item),
             addLabel: 'Add Muscle',
             fontSize: widget.sizes.subtitleFontSize,

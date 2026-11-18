@@ -29,6 +29,7 @@ final class ExercisePagination extends Equatable {
   final Difficulty? difficulty;
   final int? equipmentId;
   final bool isFavorite;
+  final CreatedBy? createdBy;
   final int total;
   final int limit;
   final int offset;
@@ -39,6 +40,7 @@ final class ExercisePagination extends Equatable {
     this.equipmentId,
     required this.name,
     required this.isFavorite,
+    this.createdBy,
     required this.total,
     required this.limit,
     required this.offset,
@@ -60,6 +62,7 @@ final class ExercisePagination extends Equatable {
     Nullable<Difficulty>? difficulty,
     Nullable<int>? equipmentId,
     bool? isFavorite,
+    Nullable<CreatedBy>? createdBy,
     int? total,
     int? limit,
     int? offset,
@@ -70,6 +73,7 @@ final class ExercisePagination extends Equatable {
       difficulty: difficulty != null ? difficulty.value : this.difficulty,
       equipmentId: equipmentId != null ? equipmentId.value : this.equipmentId,
       isFavorite: isFavorite ?? this.isFavorite,
+      createdBy: createdBy != null ? createdBy.value : this.createdBy,
       total: total ?? this.total,
       limit: limit ?? this.limit,
       offset: offset ?? this.offset,
@@ -83,6 +87,7 @@ final class ExercisePagination extends Equatable {
     difficulty,
     equipmentId,
     isFavorite,
+    createdBy,
     total,
     limit,
     offset,
