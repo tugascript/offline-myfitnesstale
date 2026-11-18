@@ -17,9 +17,9 @@
 
 import 'package:material_ui/material_ui.dart';
 
-import '../../../data/repositories/exercises/dtos/equipment_dto.dart';
-import '../../core/sizes/data_display_sizes.dart';
-import '../../core/widgets/layout/list_card.dart';
+import '../../../../data/repositories/exercises/dtos/equipment_dto.dart';
+import '../../../core/sizes/data_display_sizes.dart';
+import '../../../core/widgets/layout/list_card.dart';
 
 class EquipmentCard extends StatelessWidget {
   final EquipmentDto equipment;

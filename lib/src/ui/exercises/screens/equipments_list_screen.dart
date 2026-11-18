@@ -23,9 +23,9 @@ import '../../core/sizes/screen_size.dart';
 import '../../core/widgets/layout/app_scaffold.dart';
 import '../view_models/exercise_cubit.dart';
 import '../view_models/states/exercise_state.dart';
-import '../widgets/create_equipment_modal.dart';
-import '../widgets/equipments_grid.dart';
-import '../widgets/equipments_search_form.dart';
+import '../widgets/equipments/create_equipment_modal.dart';
+import '../widgets/equipments/equipments_grid.dart';
+import '../widgets/equipments/equipments_search_form.dart';
 
 class EquipmentsListScreen extends StatefulWidget {
   static const name = 'equipments';

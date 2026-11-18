@@ -33,7 +33,8 @@ final class LocalFileStorageService {
   final DirectoryProvider _directoryProvider;
 
   const LocalFileStorageService({DirectoryProvider? directoryProvider})
-    : _directoryProvider = directoryProvider ?? getApplicationDocumentsDirectory;
+    : _directoryProvider =
+          directoryProvider ?? getApplicationDocumentsDirectory;
 
   factory LocalFileStorageService.create({
     DirectoryProvider? directoryProvider,

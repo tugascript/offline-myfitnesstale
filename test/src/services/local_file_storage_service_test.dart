@@ -39,19 +39,22 @@ void main() {
     }
   });
 
-  test('savePictureBytes saves inside pictures dir and returns relative filename', () async {
-    final bytes = Uint8List.fromList([1, 2, 3, 4, 5]);
-    final uri = await storage.savePictureBytes(bytes, prefix: 'equip!@#');
+  test(
+    'savePictureBytes saves inside pictures dir and returns relative filename',
+    () async {
+      final bytes = Uint8List.fromList([1, 2, 3, 4, 5]);
+      final uri = await storage.savePictureBytes(bytes, prefix: 'equip!@#');
 
-    expect(p.isRelative(uri), isTrue);
-    expect(uri, startsWith('equip____'));
-    expect(uri, endsWith('.jpg'));
-    expect(await storage.pictureExists(uri), isTrue);
+      expect(p.isRelative(uri), isTrue);
+      expect(uri, startsWith('equip____'));
+      expect(uri, endsWith('.jpg'));
+      expect(await storage.pictureExists(uri), isTrue);
 
-    final resolved = await storage.resolvePictureFile(uri);
-    expect(resolved, isNotNull);
-    expect(await resolved!.readAsBytes(), bytes);
-  });
+      final resolved = await storage.resolvePictureFile(uri);
+      expect(resolved, isNotNull);
+      expect(await resolved!.readAsBytes(), bytes);
+    },
+  );
 
   test('resolvePictureFile rejects empty strings and path traversal', () async {
     expect(await storage.resolvePictureFile(''), isNull);
@@ -60,21 +63,24 @@ void main() {
     expect(await storage.resolvePictureFile('sub/../../outside.jpg'), isNull);
   });
 
-  test('deletePicture deletes managed file and refuses external files', () async {
-    final externalFile = File(p.join(tempDir.path, 'outside.jpg'));
-    await externalFile.writeAsBytes([9, 9, 9]);
+  test(
+    'deletePicture deletes managed file and refuses external files',
+    () async {
+      final externalFile = File(p.join(tempDir.path, 'outside.jpg'));
+      await externalFile.writeAsBytes([9, 9, 9]);
 
-    final savedUri = await storage.savePictureBytes(
-      Uint8List.fromList([10, 20, 30]),
-      prefix: 'test',
-    );
-    expect(await storage.pictureExists(savedUri), isTrue);
+      final savedUri = await storage.savePictureBytes(
+        Uint8List.fromList([10, 20, 30]),
+        prefix: 'test',
+      );
+      expect(await storage.pictureExists(savedUri), isTrue);
 
-    expect(await storage.deletePicture(externalFile.path), isFalse);
-    expect(await externalFile.exists(), isTrue);
+      expect(await storage.deletePicture(externalFile.path), isFalse);
+      expect(await externalFile.exists(), isTrue);
 
-    expect(await storage.deletePicture(savedUri), isTrue);
-    expect(await storage.pictureExists(savedUri), isFalse);
-    expect(await storage.deletePicture(savedUri), isFalse);
-  });
+      expect(await storage.deletePicture(savedUri), isTrue);
+      expect(await storage.pictureExists(savedUri), isFalse);
+      expect(await storage.deletePicture(savedUri), isFalse);
+    },
+  );
 }

@@ -20,19 +20,21 @@ import 'dart:typed_data';
 import 'package:image_picker/image_picker.dart';
 import 'package:material_ui/material_ui.dart';
 
-import '../../../data/repositories/core/dtos/picture_dto.dart';
-import '../../../data/services/storage/local_file_storage_service.dart';
-import '../../../data/utils/enums.dart';
-import '../../../data/utils/json_data.dart';
-import '../../../data/utils/picture_utils.dart';
-import '../../core/sizes/data_display_sizes.dart';
-import '../../core/widgets/layout/app_elevated_button.dart';
-import '../../core/widgets/layout/app_text_form_field.dart';
-import '../../core/widgets/picture/app_picture.dart';
-import '../../core/widgets/picture/app_picture_editor.dart';
+import '../../../../data/repositories/core/dtos/picture_dto.dart';
+import '../../../../data/services/storage/local_file_storage_service.dart';
+import '../../../../data/utils/enums.dart';
+import '../../../../data/utils/json_data.dart';
+import '../../../../data/utils/picture_utils.dart';
+import '../../../core/sizes/data_display_sizes.dart';
+import '../../../core/widgets/layout/app_elevated_button.dart';
+import '../../../core/widgets/layout/app_text_form_field.dart';
+import '../../../core/widgets/picture/app_picture.dart';
+import '../../../core/widgets/picture/app_picture_editor.dart';
 
 typedef EquipmentImagePicker = Future<Uint8List?> Function(ImageSource source);
-typedef EquipmentPictureEditor = Future<Uint8List?> Function(Uint8List rawBytes);
+typedef EquipmentPictureEditor = Future<Uint8List?> Function(
+  Uint8List rawBytes,
+);
 
 enum _PictureSourceMode { none, url, upload }
 

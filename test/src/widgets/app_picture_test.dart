@@ -37,130 +37,147 @@ Uint8List _tinyValidJpg() {
 void main() {
   final sizes = DataDisplaySizes.getDataDisplaySizes(ScreenSize.md);
 
-  testWidgets('AppPicture.memory enforces 4:3 AspectRatio and renders Image.memory', (tester) async {
-    await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(
-          body: SizedBox(
-            width: 300,
-            child: AppPicture.memory(
-              memoryBytes: _tinyValidJpg(),
-              sizes: sizes,
+  testWidgets(
+    'AppPicture.memory enforces 4:3 AspectRatio and renders Image.memory',
+    (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: SizedBox(
+              width: 300,
+              child: AppPicture.memory(
+                memoryBytes: _tinyValidJpg(),
+                sizes: sizes,
+              ),
             ),
           ),
         ),
-      ),
-    );
-    await tester.pump();
+      );
+      await tester.pump();
 
-    final aspect = tester.widget<AspectRatio>(find.byType(AspectRatio));
-    expect(aspect.aspectRatio, closeTo(4 / 3, 0.001));
-    expect(find.byType(Image), findsOneWidget);
-  });
+      final aspect = tester.widget<AspectRatio>(find.byType(AspectRatio));
+      expect(aspect.aspectRatio, closeTo(4 / 3, 0.001));
+      expect(find.byType(Image), findsOneWidget);
+    },
+  );
 
-  testWidgets('AppPicture renders existing PictureStorage.files photo and fallback when missing', (tester) async {
-    final tempDir = Directory.systemTemp.createTempSync('mft_app_pic_');
-    addTearDown(() {
-      if (tempDir.existsSync()) {
-        tempDir.deleteSync(recursive: true);
+  testWidgets(
+    'AppPicture renders existing PictureStorage.files photo and fallback when missing',
+    (tester) async {
+      final tempDir = Directory.systemTemp.createTempSync('mft_app_pic_');
+      addTearDown(() {
+        if (tempDir.existsSync()) {
+          tempDir.deleteSync(recursive: true);
+        }
+      });
+
+      final storage = LocalFileStorageService.create(
+        directoryProvider: () async => tempDir,
+      );
+      late String savedUri;
+      await tester.runAsync(() async {
+        savedUri = await storage.savePictureBytes(
+          _tinyValidJpg(),
+          prefix: 'test',
+        );
+      });
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: SizedBox(
+              width: 300,
+              child: AppPicture(
+                picture: PictureDto(
+                  storage: PictureStorage.files,
+                  uri: savedUri,
+                ),
+                sizes: sizes,
+                storageService: storage,
+              ),
+            ),
+          ),
+        ),
+      );
+      for (var i = 0; i < 10 && find.byType(Image).evaluate().isEmpty; i++) {
+        await tester.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 20)),
+        );
+        await tester.pump();
       }
-    });
 
-    final storage = LocalFileStorageService.create(
-      directoryProvider: () async => tempDir,
-    );
-    late String savedUri;
-    await tester.runAsync(() async {
-      savedUri = await storage.savePictureBytes(_tinyValidJpg(), prefix: 'test');
-    });
+      expect(find.byType(Image), findsOneWidget);
+      expect(find.text('Local photo unavailable'), findsNothing);
 
-    await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(
-          body: SizedBox(
-            width: 300,
-            child: AppPicture(
-              picture: PictureDto(storage: PictureStorage.files, uri: savedUri),
-              sizes: sizes,
-              storageService: storage,
-            ),
-          ),
-        ),
-      ),
-    );
-    for (var i = 0; i < 10 && find.byType(Image).evaluate().isEmpty; i++) {
-      await tester.runAsync(
-        () => Future<void>.delayed(const Duration(milliseconds: 20)),
-      );
-      await tester.pump();
-    }
-
-    expect(find.byType(Image), findsOneWidget);
-    expect(find.text('Local photo unavailable'), findsNothing);
-
-    await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(
-          body: SizedBox(
-            width: 300,
-            child: AppPicture(
-              picture: const PictureDto(
-                storage: PictureStorage.files,
-                uri: 'missing.jpg',
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: SizedBox(
+              width: 300,
+              child: AppPicture(
+                picture: const PictureDto(
+                  storage: PictureStorage.files,
+                  uri: 'missing.jpg',
+                ),
+                sizes: sizes,
+                storageService: storage,
               ),
-              sizes: sizes,
-              storageService: storage,
             ),
           ),
         ),
-      ),
-    );
-    for (var i = 0;
+      );
+      for (
+        var i = 0;
         i < 10 && find.text('Local photo unavailable').evaluate().isEmpty;
-        i++) {
-      await tester.runAsync(
-        () => Future<void>.delayed(const Duration(milliseconds: 20)),
-      );
-      await tester.pump();
-    }
+        i++
+      ) {
+        await tester.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 20)),
+        );
+        await tester.pump();
+      }
 
-    expect(find.text('Local photo unavailable'), findsOneWidget);
-  });
+      expect(find.text('Local photo unavailable'), findsOneWidget);
+    },
+  );
 
-  testWidgets('AppPicture handles PictureStorage.assets and PictureStorage.network', (tester) async {
-    await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(
-          body: Column(
-            children: [
-              SizedBox(
-                width: 240,
-                child: AppPicture(
-                  picture: const PictureDto(
-                    storage: PictureStorage.assets,
-                    uri: 'assets/nonexistent.png',
+  testWidgets(
+    'AppPicture handles PictureStorage.assets and PictureStorage.network',
+    (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Column(
+              children: [
+                SizedBox(
+                  width: 240,
+                  child: AppPicture(
+                    picture: const PictureDto(
+                      storage: PictureStorage.assets,
+                      uri: 'assets/nonexistent.png',
+                    ),
+                    sizes: sizes,
                   ),
-                  sizes: sizes,
                 ),
-              ),
-              SizedBox(
-                width: 240,
-                child: AppPicture(
-                  picture: const PictureDto(
-                    storage: PictureStorage.network,
-                    uri: 'https://example.com/equip.jpg',
+                SizedBox(
+                  width: 240,
+                  child: AppPicture(
+                    picture: const PictureDto(
+                      storage: PictureStorage.network,
+                      uri: 'https://example.com/equip.jpg',
+                    ),
+                    sizes: sizes,
                   ),
-                  sizes: sizes,
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
-      ),
-    );
-    await tester.pump();
+      );
+      await tester.pump();
 
-    expect(find.byType(AspectRatio), findsNWidgets(2));
-    expect(find.byType(Image), findsNWidgets(2));
-  });
+      expect(find.byType(AspectRatio), findsNWidgets(2));
+      expect(find.byType(Image), findsNWidgets(2));
+    },
+  );
 }

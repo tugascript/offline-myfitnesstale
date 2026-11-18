@@ -17,12 +17,12 @@
 
 import 'package:material_ui/material_ui.dart';
 
-import '../../../data/repositories/exercises/dtos/equipment_dto.dart';
-import '../../../data/services/storage/local_file_storage_service.dart';
-import '../../../data/utils/enums.dart';
-import '../../core/sizes/data_display_sizes.dart';
-import '../../core/widgets/base_details_header.dart';
-import '../../core/widgets/picture/app_picture.dart';
+import '../../../../data/repositories/exercises/dtos/equipment_dto.dart';
+import '../../../../data/services/storage/local_file_storage_service.dart';
+import '../../../../data/utils/enums.dart';
+import '../../../core/sizes/data_display_sizes.dart';
+import '../../../core/widgets/base_details_header.dart';
+import '../../../core/widgets/picture/app_picture.dart';
 
 class EquipmentHeaderCard extends StatelessWidget {
   final DataDisplaySizesList sizes;

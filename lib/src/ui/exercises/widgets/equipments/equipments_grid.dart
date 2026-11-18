@@ -18,10 +18,10 @@
 import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 
-import '../../../data/repositories/exercises/dtos/equipment_dto.dart';
-import '../../core/sizes/data_display_sizes.dart';
-import '../../core/widgets/not_found_list.dart';
-import './equipment_card.dart';
+import '../../../../data/repositories/exercises/dtos/equipment_dto.dart';
+import '../../../core/sizes/data_display_sizes.dart';
+import '../../../core/widgets/not_found_list.dart';
+import 'equipment_card.dart';
 
 class EquipmentsGrid extends StatelessWidget {
   final DataDisplaySizesList sizes;

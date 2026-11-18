@@ -52,7 +52,10 @@ void main() {
     });
 
     test('rejects invalid schemes and malformed URLs', () {
-      expect(PictureUtils.isValidNetworkUrl('ftp://example.com/a.jpg'), isFalse);
+      expect(
+        PictureUtils.isValidNetworkUrl('ftp://example.com/a.jpg'),
+        isFalse,
+      );
       expect(PictureUtils.isValidNetworkUrl('not-a-url'), isFalse);
       expect(PictureUtils.isValidNetworkUrl('https://nodot'), isFalse);
       expect(PictureUtils.validateRequiredUrl('   '), isNotNull);
@@ -61,20 +64,29 @@ void main() {
   });
 
   group('PictureUtils image processing & compression', () {
-    test('compressHorizontalPicture crops non-4:3 and downscales oversized photos', () async {
-      final raw = _createPngBytes(2000, 3000);
-      final compressed = await PictureUtils.compressHorizontalPicture(raw);
+    test(
+      'compressHorizontalPicture crops non-4:3 and downscales oversized photos',
+      () async {
+        final raw = _createPngBytes(2000, 3000);
+        final compressed = await PictureUtils.compressHorizontalPicture(raw);
 
-      final decoded = img.decodeJpg(compressed);
-      expect(decoded, isNotNull);
-      expect(decoded!.width, lessThanOrEqualTo(PictureUtils.defaultMaxWidth));
-      expect(decoded.height, lessThanOrEqualTo(PictureUtils.defaultMaxHeight));
-      expect(
-        decoded.width / decoded.height,
-        closeTo(PictureUtils.horizontalAspectRatio, 0.02),
-      );
-      expect(compressed.length, lessThanOrEqualTo(PictureUtils.defaultMaxBytes));
-    });
+        final decoded = img.decodeJpg(compressed);
+        expect(decoded, isNotNull);
+        expect(decoded!.width, lessThanOrEqualTo(PictureUtils.defaultMaxWidth));
+        expect(
+          decoded.height,
+          lessThanOrEqualTo(PictureUtils.defaultMaxHeight),
+        );
+        expect(
+          decoded.width / decoded.height,
+          closeTo(PictureUtils.horizontalAspectRatio, 0.02),
+        );
+        expect(
+          compressed.length,
+          lessThanOrEqualTo(PictureUtils.defaultMaxBytes),
+        );
+      },
+    );
 
     test('compressHorizontalPicture preserves small 4:3 dimensions without upscaling', () async {
       final raw = _createPngBytes(400, 300);
@@ -110,7 +122,8 @@ void main() {
         throwsFormatException,
       );
       expect(
-        () => PictureUtils.compressHorizontalPicture(Uint8List.fromList([1, 2])),
+        () =>
+            PictureUtils.compressHorizontalPicture(Uint8List.fromList([1, 2])),
         throwsFormatException,
       );
     });

@@ -103,7 +103,9 @@ void main() {
         isNull,
       );
       expect(
-        YoutubeVideoUtils.extractVideoId('ftp://www.youtube.com/watch?v=dQw4w9WgXcQ'),
+        YoutubeVideoUtils.extractVideoId(
+          'ftp://www.youtube.com/watch?v=dQw4w9WgXcQ',
+        ),
         isNull,
       );
       expect(YoutubeVideoUtils.extractVideoId('   '), isNull);
