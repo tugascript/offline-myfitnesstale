@@ -23,6 +23,7 @@ import 'package:logging/logging.dart';
 import '../../../data/repositories/exercises/exercise_repository.dart';
 import '../../../data/repositories/exercises/inputs/equipment_input.dart';
 import '../../../data/repositories/exercises/inputs/exercise_input.dart';
+import '../../../data/services/storage/local_file_storage_service.dart';
 import '../../../data/utils/enums.dart';
 import '../../../utils/errors.dart';
 import '../../../utils/nullable.dart';
@@ -33,12 +34,17 @@ import './states/exercise_state.dart';
 class ExerciseCubit extends Cubit<ExerciseState>
     with FavoriteRequestSerializer {
   final ExerciseRepository _exerciseService;
+  final LocalFileStorageService _localFileStorageService;
 
   final Logger _logger = Logger("ExerciseCubit");
 
-  ExerciseCubit({required ExerciseRepository exerciseRepository})
-    : _exerciseService = exerciseRepository,
-      super(ExerciseState.initial());
+  ExerciseCubit({
+    required ExerciseRepository exerciseRepository,
+    LocalFileStorageService? localFileStorageService,
+  }) : _exerciseService = exerciseRepository,
+       _localFileStorageService =
+           localFileStorageService ?? LocalFileStorageService.create(),
+       super(ExerciseState.initial());
 
   Future<void> getExercises({
     String? name,
@@ -599,6 +605,9 @@ class ExerciseCubit extends Cubit<ExerciseState>
 
   Future<void> deleteEquipment(int id) async {
     _logger.info('deleteEquipment: deleting equipment');
+    final targetPicture = state.selectedEquipment?.equipment.id == id
+        ? state.selectedEquipment?.equipment.picture
+        : state.equipments.where((e) => e.id == id).firstOrNull?.picture;
     emit(state.copyWith(isLoading: true));
 
     final result = await _exerciseService.deleteEquipment(id);
@@ -634,6 +643,10 @@ class ExerciseCubit extends Cubit<ExerciseState>
           );
           return;
       }
+    }
+
+    if (targetPicture != null && targetPicture.storage == PictureStorage.files) {
+      await _localFileStorageService.deletePicture(targetPicture.uri);
     }
 
     final pagination = state.equipmentPagination;

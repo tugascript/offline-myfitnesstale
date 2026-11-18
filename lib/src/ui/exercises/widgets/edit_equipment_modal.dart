@@ -20,6 +20,8 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../../data/repositories/exercises/dtos/equipment_dto.dart';
 import '../../../data/repositories/exercises/inputs/equipment_input.dart';
+import '../../../data/services/storage/local_file_storage_service.dart';
+import '../../../data/utils/enums.dart';
 import '../../../data/utils/json_data.dart';
 import '../../../utils/nullable.dart';
 import '../../core/sizes/data_display_sizes.dart';
@@ -32,16 +34,24 @@ class EditEquipmentModal extends StatelessWidget {
   final ThemeData theme;
   final DataDisplaySizesList sizes;
   final EquipmentDto equipment;
+  final LocalFileStorageService? storageService;
+  final EquipmentImagePicker? pickImageBytes;
+  final EquipmentPictureEditor? editPictureBytes;
 
   const EditEquipmentModal({
     super.key,
     required this.theme,
     required this.sizes,
     required this.equipment,
+    this.storageService,
+    this.pickImageBytes,
+    this.editPictureBytes,
   });
 
   @override
   Widget build(BuildContext context) {
+    final resolvedStorage = storageService ?? LocalFileStorageService.create();
+
     return AppModal(
       theme: theme,
       sizes: sizes,
@@ -50,28 +60,55 @@ class EditEquipmentModal extends StatelessWidget {
           theme: theme,
           sizes: sizes,
           initialName: equipment.name,
+          initialPicture: equipment.picture,
           isLoading: state.isLoading,
           submitLabel: "UPDATE EQUIPMENT",
           submitIcon: Icons.save,
-          onSubmit: ({required String name}) async {
-            final existingPicture = equipment.picture;
+          storageService: resolvedStorage,
+          pickImageBytes: pickImageBytes,
+          editPictureBytes: editPictureBytes,
+          onSubmit: ({required name, required picture, required uploadedPictureBytes}) async {
             final cubit = context.read<ExerciseCubit>();
+            final existingPicture = equipment.picture;
+            String? newlySavedUri;
+            var resolvedPicture = picture;
+
+            if (uploadedPictureBytes != null) {
+              newlySavedUri = await resolvedStorage.savePictureBytes(
+                uploadedPictureBytes,
+                prefix: 'equipment',
+              );
+              resolvedPicture = PictureData(
+                storage: PictureStorage.files,
+                uri: newlySavedUri,
+              );
+            }
+
             await cubit.updateEquipment(
               equipment.id,
               EquipmentInput(
                 name: name,
-                picture: Nullable(
-                  existingPicture != null
-                      ? PictureData(
-                          uri: existingPicture.uri,
-                          storage: existingPicture.storage,
-                        )
-                      : null,
-                ),
+                picture: Nullable(resolvedPicture),
                 isFavorite: equipment.isFavorite,
               ),
             );
-            if (context.mounted && cubit.state.error == null) {
+
+            if (cubit.state.error != null) {
+              if (newlySavedUri != null) {
+                await resolvedStorage.deletePicture(newlySavedUri);
+              }
+              return;
+            }
+
+            if (existingPicture != null &&
+                existingPicture.storage == PictureStorage.files &&
+                (resolvedPicture == null ||
+                    resolvedPicture.storage != PictureStorage.files ||
+                    resolvedPicture.uri != existingPicture.uri)) {
+              await resolvedStorage.deletePicture(existingPicture.uri);
+            }
+
+            if (context.mounted) {
               Navigator.of(context).pop();
             }
           },

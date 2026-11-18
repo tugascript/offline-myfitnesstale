@@ -26,4 +26,9 @@ final class PermissionsService {
     final status = await Permission.notification.request();
     return status.isGranted;
   }
+
+  Future<bool> requestCameraPermission() async {
+    final status = await Permission.camera.request();
+    return status.isGranted;
+  }
 }
