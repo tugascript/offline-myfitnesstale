@@ -337,6 +337,9 @@ class _EquipmentFormState extends State<EquipmentForm> {
           SizedBox(height: widget.sizes.halfSpacing),
           SegmentedButton<_PictureSourceMode>(
             showSelectedIcon: false,
+            style: const ButtonStyle(
+              shape: WidgetStatePropertyAll(RoundedRectangleBorder()),
+            ),
             segments: [
               ButtonSegment<_PictureSourceMode>(
                 value: _PictureSourceMode.none,
