@@ -40,7 +40,7 @@ const _groups = {
     'Exercises': '/exercises',
     'Exercise Progress': '/exercises/progress',
     'Strength Goals': '/strength-goals',
-    'Equipment': '/equipments',
+    'Equipments': '/equipments',
   },
   'nutrition': {
     'Macro Goals': '/macro-goals',
@@ -245,7 +245,7 @@ void main() {
       );
       final lastRow = find.descendant(
         of: find.byType(ListTile),
-        matching: find.text('Equipment'),
+        matching: find.text('Equipments'),
       );
       await tester.ensureVisible(lastRow);
       await tester.pumpAndSettle();

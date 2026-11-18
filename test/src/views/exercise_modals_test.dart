@@ -259,7 +259,7 @@ void main() {
       await tester.tap(
         find.descendant(
           of: find.byType(CreateExerciseModal),
-          matching: find.text('Muscle Group'),
+          matching: find.byType(DropdownButtonFormField<MuscleGroup?>),
         ),
       );
       await tester.pumpAndSettle();
@@ -311,7 +311,7 @@ void main() {
       await tester.tap(
         find.descendant(
           of: find.byType(CreateExerciseModal),
-          matching: find.text('Muscle Group'),
+          matching: find.byType(DropdownButtonFormField<MuscleGroup?>),
         ),
       );
       await tester.pumpAndSettle();
@@ -501,7 +501,7 @@ void main() {
       await tester.tap(
         find.descendant(
           of: find.byType(CreateExerciseModal),
-          matching: find.text('Muscle Group'),
+          matching: find.byType(DropdownButtonFormField<MuscleGroup?>),
         ),
       );
       await tester.pumpAndSettle();
