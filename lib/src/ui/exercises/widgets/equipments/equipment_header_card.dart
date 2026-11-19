@@ -55,28 +55,30 @@ class EquipmentHeaderCard extends StatelessWidget {
           children: [
             CreatedByIcon(sizes: sizes, createdBy: equipment.createdBy),
             Expanded(
-              child: Wrap(
+              child: EquipmentRarityBadge(
+                rarity: equipment.rarity,
                 spacing: sizes.spacing,
-                runSpacing: sizes.spacing / 2,
-                crossAxisAlignment: WrapCrossAlignment.center,
-                children: [
-                  EquipmentRarityBadge(
-                    rarity: equipment.rarity,
-                    spacing: sizes.spacing,
-                    fontSize: sizes.smallFontSize,
-                    fontWeight: FontWeight.w600,
-                  ),
-                  Text(
-                    '$relatedExercisesCount ${relatedExercisesCount == 1 ? 'exercise' : 'exercises'}',
-                    style: TextStyle(
-                      fontSize: sizes.smallFontSize,
-                      fontWeight: FontWeight.w600,
-                      color: resolvedTheme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ],
+                fontSize: sizes.smallFontSize,
+                fontWeight: FontWeight.w600,
               ),
             ),
+            SizedBox(width: sizes.spacing),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  '$relatedExercisesCount ',
+                  style: TextStyle(
+                    fontSize: sizes.fontSize,
+                    fontWeight: FontWeight.w600,
+                    color: resolvedTheme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                Icon(Icons.sports_gymnastics, size: sizes.iconFontSize),
+              ],
+            ),
+            SizedBox(width: sizes.spacing),
             FavoriteIconButton(
               sizes: sizes,
               isFavorite: equipment.isFavorite,
