@@ -45,7 +45,7 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
   }) async {
     _logger.info("Getting exercise records");
     final requestId = state.recordsRequestId + 1;
-    emit(state.copyWith(recordsRequestId: requestId, isLoading: true));
+    emit(state.copyWith(recordsRequestId: requestId, isLoadingRecords: true));
 
     final result = await _exerciseRecordService.getExerciseRecords(
       limit: limit,
@@ -70,7 +70,7 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
                   description: "Failed to get exercise records",
                 ),
               ),
-              isLoading: false,
+              isLoadingRecords: false,
             ),
           );
           return;
@@ -91,17 +91,23 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
           offset: paginatedData.offset,
           total: paginatedData.total,
         ),
-        isLoading: false,
+        isLoadingRecords: false,
         error: const Nullable(null),
       ),
     );
   }
 
-  Future<void> getLatestExerciseRecord(int exerciseId) async {
-    _logger.info("Getting latest exercise record for exercise $exerciseId");
-    emit(state.copyWith(isLoading: true));
+  Future<void> getLatestExerciseRecord([int? exerciseId]) async {
+    _logger.info(
+      exerciseId != null
+          ? "Getting latest exercise record for exercise $exerciseId"
+          : "Getting latest exercise record",
+    );
+    final requestId = state.latestRequestId + 1;
+    emit(state.copyWith(latestRequestId: requestId, isLoadingLatest: true));
 
     final result = await _exerciseRecordService.getLatestRecord(exerciseId);
+    if (isClosed || requestId != state.latestRequestId) return;
 
     if (result.isErr()) {
       final error = result.error;
@@ -110,8 +116,8 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
         case SingleErrorTypes.notFound:
           emit(
             state.copyWith(
-              latestExerciseRecord: Nullable(null),
-              isLoading: false,
+              latestExerciseRecord: const Nullable(null),
+              isLoadingLatest: false,
             ),
           );
           return;
@@ -125,7 +131,7 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
                   description: "Failed to get latest exercise record",
                 ),
               ),
-              isLoading: false,
+              isLoadingLatest: false,
             ),
           );
           return;
@@ -135,7 +141,7 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
     emit(
       state.copyWith(
         latestExerciseRecord: Nullable(result.value),
-        isLoading: false,
+        isLoadingLatest: false,
         error: const Nullable(null),
       ),
     );

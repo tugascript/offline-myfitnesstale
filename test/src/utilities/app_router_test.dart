@@ -68,6 +68,9 @@ class _ExerciseRecordCubit extends ExerciseRecordCubit {
     (DateTime start, DateTime end)? dateRange,
     int? exerciseId,
   }) async {}
+
+  @override
+  Future<void> getLatestExerciseRecord([int? exerciseId]) async {}
 }
 
 class _WorkoutCubit extends WorkoutCubit {
