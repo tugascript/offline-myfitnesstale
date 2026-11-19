@@ -298,13 +298,22 @@ final class ExerciseRecordRepository implements Repository {
   }
 
   Future<Result<ExerciseRecordDto, ServiceError<SingleErrorTypes>>>
-  getLatestRecord(int exerciseId) async {
-    _logger.info('Getting latest record for exercise $exerciseId');
+  getLatestRecord([int? exerciseId]) async {
+    _logger.info(
+      exerciseId != null
+          ? 'Getting latest record for exercise $exerciseId'
+          : 'Getting latest exercise record',
+    );
     try {
       final List<ExerciseRecord> records = await _exerciseRecordDao.selectMany(
-        where: ExerciseRecordColumns.exerciseId.equal,
-        whereArgs: [exerciseId],
-        orderBy: [ExerciseRecordColumns.recordDate.orderDesc],
+        where: exerciseId != null
+            ? ExerciseRecordColumns.exerciseId.equal
+            : null,
+        whereArgs: exerciseId != null ? [exerciseId] : null,
+        orderBy: [
+          ExerciseRecordColumns.recordDate.orderDesc,
+          ExerciseRecordColumns.id.orderDesc,
+        ],
         limit: 1,
       );
       if (records.isEmpty) {
@@ -316,8 +325,19 @@ final class ExerciseRecordRepository implements Repository {
         );
       }
 
+      final record = records.first;
+      ExerciseDto? exerciseDto;
+      if (exerciseId == null) {
+        final Exercise? exercise = await _exerciseDao.selectOne(
+          record.exerciseId,
+        );
+        if (exercise != null) {
+          exerciseDto = ExerciseDto.fromModel(exercise);
+        }
+      }
+
       _logger.info('Got latest exercise record');
-      return ok(ExerciseRecordDto.fromModel(records.first));
+      return ok(ExerciseRecordDto.fromModel(record, exercise: exerciseDto));
     } catch (e) {
       _logger.severe('Failed to get latest exercise record', e);
       return err(
