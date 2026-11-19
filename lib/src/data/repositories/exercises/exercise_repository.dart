@@ -595,6 +595,7 @@ final class ExerciseRepository implements Repository {
   >
   getEquipments({
     String? name,
+    EquipmentRarity? rarity,
     bool isFavorite = false,
     CreatedBy? createdBy,
     int limit = kDefaultLimit,
@@ -605,6 +606,9 @@ final class ExerciseRepository implements Repository {
 
     if (name != null && name.isNotEmpty) {
       query.and(EquipmentColumns.name.like, '%$name%');
+    }
+    if (rarity != null) {
+      query.and(EquipmentColumns.rarity.equal, rarity.value);
     }
     if (isFavorite) {
       query.and(EquipmentColumns.isFavorite.equal, 1);
@@ -708,6 +712,7 @@ final class ExerciseRepository implements Repository {
     final Equipment equipment = Equipment.create(
       name: input.name,
       picture: input.picture.value,
+      rarity: input.rarity,
       isFavorite: input.isFavorite,
       createdBy: createdBy,
     );
@@ -854,6 +859,7 @@ final class ExerciseRepository implements Repository {
       final Equipment updatedEquipment = equipment.copyWith(
         name: input.name,
         picture: input.picture,
+        rarity: input.rarity,
         isFavorite: input.isFavorite,
         updatedAt: DateUtilities.getNowUtcUnix(),
       );

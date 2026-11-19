@@ -19,20 +19,23 @@ import 'package:equatable/equatable.dart';
 
 import '../../../../utils/nullable.dart';
 import '../../../models/sqlite/equipment_model.dart';
+import '../../../utils/enums.dart';
 import '../../../utils/json_data.dart';
 import '../../core/inputs/input.dart';
 
 final class EquipmentInput extends Equatable implements ModelInput<Equipment> {
   final String name;
   final Nullable<PictureData> picture;
+  final EquipmentRarity rarity;
   final bool isFavorite;
 
   const EquipmentInput({
     required this.name,
     this.picture = const Nullable<PictureData>(null),
+    this.rarity = EquipmentRarity.common,
     this.isFavorite = false,
   });
 
   @override
-  List<Object?> get props => [name, picture, isFavorite];
+  List<Object?> get props => [name, picture, rarity, isFavorite];
 }

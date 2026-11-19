@@ -560,3 +560,21 @@ enum ExerciseWeightProgress {
         orElse: () => ExerciseWeightProgress.positive,
       );
 }
+
+enum EquipmentRarity {
+  veryCommon("very_common"),
+  common("common"),
+  uncommon("uncommon"),
+  rare("rare"),
+  legendary("legendary");
+
+  final String value;
+
+  const EquipmentRarity(this.value);
+
+  static EquipmentRarity fromValue(String v) =>
+      EquipmentRarity.values.firstWhere(
+        (r) => r.value == v,
+        orElse: () => EquipmentRarity.veryCommon,
+      );
+}

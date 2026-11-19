@@ -410,6 +410,7 @@ class ExerciseCubit extends Cubit<ExerciseState>
 
   Future<void> getEquipments({
     String? name,
+    EquipmentRarity? rarity,
     bool isFavorite = false,
     CreatedBy? createdBy,
     required int limit,
@@ -421,6 +422,7 @@ class ExerciseCubit extends Cubit<ExerciseState>
 
     final result = await _exerciseService.getEquipments(
       name: name,
+      rarity: rarity,
       isFavorite: isFavorite,
       createdBy: createdBy,
       limit: limit,
@@ -453,6 +455,7 @@ class ExerciseCubit extends Cubit<ExerciseState>
             : paginatedData.data,
         equipmentPagination: state.equipmentPagination.copyWith(
           name: name ?? '',
+          rarity: Nullable(rarity),
           isFavorite: isFavorite,
           createdBy: Nullable(createdBy),
           limit: paginatedData.limit,
@@ -572,6 +575,7 @@ class ExerciseCubit extends Cubit<ExerciseState>
     final pagination = state.equipmentPagination;
     final equipmentsResult = await _exerciseService.getEquipments(
       name: pagination.name,
+      rarity: pagination.rarity,
       isFavorite: pagination.isFavorite,
       createdBy: pagination.createdBy,
       limit: pagination.limit,
@@ -738,6 +742,7 @@ class ExerciseCubit extends Cubit<ExerciseState>
     final pagination = state.equipmentPagination;
     final equipmentsResult = await _exerciseService.getEquipments(
       name: pagination.name,
+      rarity: pagination.rarity,
       isFavorite: pagination.isFavorite,
       createdBy: pagination.createdBy,
       limit: pagination.limit,

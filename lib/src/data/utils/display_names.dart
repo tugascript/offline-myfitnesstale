@@ -132,6 +132,23 @@ sealed class EnumDisplayNames {
     }
   }
 
+  static String getEquipmentRarityDisplayName(EquipmentRarity? rarity) {
+    switch (rarity) {
+      case EquipmentRarity.veryCommon:
+        return 'Very Common';
+      case EquipmentRarity.common:
+        return 'Common';
+      case EquipmentRarity.uncommon:
+        return 'Uncommon';
+      case EquipmentRarity.rare:
+        return 'Rare';
+      case EquipmentRarity.legendary:
+        return 'Legendary';
+      case null:
+        return 'Unknown';
+    }
+  }
+
   static String getSetTypeDisplayName(WorkoutSetType? s) {
     switch (s) {
       case WorkoutSetType.standard:

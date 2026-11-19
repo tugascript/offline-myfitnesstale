@@ -96,6 +96,7 @@ final class ExercisePagination extends Equatable {
 
 final class EquipmentPagination extends Equatable {
   final String name;
+  final EquipmentRarity? rarity;
   final bool isFavorite;
   final CreatedBy? createdBy;
   final int total;
@@ -104,6 +105,7 @@ final class EquipmentPagination extends Equatable {
 
   const EquipmentPagination({
     required this.name,
+    this.rarity,
     required this.isFavorite,
     this.createdBy,
     required this.total,
@@ -123,6 +125,7 @@ final class EquipmentPagination extends Equatable {
 
   EquipmentPagination copyWith({
     String? name,
+    Nullable<EquipmentRarity>? rarity,
     bool? isFavorite,
     Nullable<CreatedBy>? createdBy,
     int? total,
@@ -131,6 +134,7 @@ final class EquipmentPagination extends Equatable {
   }) {
     return EquipmentPagination(
       name: name ?? this.name,
+      rarity: rarity != null ? rarity.value : this.rarity,
       isFavorite: isFavorite ?? this.isFavorite,
       createdBy: createdBy != null ? createdBy.value : this.createdBy,
       total: total ?? this.total,
@@ -142,6 +146,7 @@ final class EquipmentPagination extends Equatable {
   @override
   List<Object?> get props => [
     name,
+    rarity,
     isFavorite,
     createdBy,
     total,

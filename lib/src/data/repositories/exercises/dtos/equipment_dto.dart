@@ -28,6 +28,7 @@ final class EquipmentDto extends Equatable implements ModelDto<Equipment> {
   final int id;
   final String name;
   final PictureDto? picture;
+  final EquipmentRarity rarity;
   final bool isFavorite;
   final CreatedBy createdBy;
 
@@ -35,6 +36,7 @@ final class EquipmentDto extends Equatable implements ModelDto<Equipment> {
     required this.id,
     required this.name,
     this.picture,
+    this.rarity = EquipmentRarity.common,
     this.isFavorite = false,
     required this.createdBy,
   });
@@ -46,6 +48,7 @@ final class EquipmentDto extends Equatable implements ModelDto<Equipment> {
       picture: equipment.picture != null
           ? PictureDto.fromModel(equipment.picture!)
           : null,
+      rarity: equipment.rarity,
       isFavorite: equipment.isFavorite,
       createdBy: equipment.createdBy,
     );
@@ -56,6 +59,7 @@ final class EquipmentDto extends Equatable implements ModelDto<Equipment> {
     int? id,
     String? name,
     Nullable<PictureDto>? picture,
+    EquipmentRarity? rarity,
     bool? isFavorite,
     CreatedBy? createdBy,
   }) {
@@ -63,11 +67,12 @@ final class EquipmentDto extends Equatable implements ModelDto<Equipment> {
       id: id ?? this.id,
       name: name ?? this.name,
       picture: picture != null ? picture.value : this.picture,
+      rarity: rarity ?? this.rarity,
       isFavorite: isFavorite ?? this.isFavorite,
       createdBy: createdBy ?? this.createdBy,
     );
   }
 
   @override
-  List<Object?> get props => [id, name, picture, isFavorite, createdBy];
+  List<Object?> get props => [id, name, picture, rarity, isFavorite, createdBy];
 }

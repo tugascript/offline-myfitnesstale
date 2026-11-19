@@ -23,6 +23,7 @@ import 'package:myfitnesstale/src/ui/core/sizes/data_display_sizes.dart';
 import 'package:myfitnesstale/src/ui/core/sizes/screen_size.dart';
 import 'package:myfitnesstale/src/ui/core/widgets/created_by_checkbox.dart';
 import 'package:myfitnesstale/src/ui/core/widgets/favourite_checkbox.dart';
+import 'package:myfitnesstale/src/ui/core/widgets/layout/app_dropdown.dart';
 import 'package:myfitnesstale/src/ui/core/widgets/search_form_button.dart';
 import 'package:myfitnesstale/src/ui/exercises/widgets/equipments/equipments_search_form.dart';
 
@@ -31,10 +32,12 @@ void main() {
 
   Widget buildTestWidget({
     String initialName = '',
+    EquipmentRarity? initialRarity,
     bool initialIsFavorite = false,
     CreatedBy? initialCreatedBy,
     required void Function({
       required String name,
+      required EquipmentRarity? rarity,
       required bool isFavorite,
       required CreatedBy? createdBy,
     })
@@ -50,6 +53,7 @@ void main() {
               sizes: sizes,
               isLoading: false,
               initialName: initialName,
+              initialRarity: initialRarity,
               initialIsFavorite: initialIsFavorite,
               initialCreatedBy: initialCreatedBy,
               onSubmit: onSubmit,
@@ -60,57 +64,80 @@ void main() {
     );
   }
 
-  testWidgets('renders favorite, createdBy, search field, and submit button', (
+  testWidgets(
+    'renders search field, favorite, createdBy, rarity, and submit button',
+    (tester) async {
+      await tester.pumpWidget(
+        buildTestWidget(
+          onSubmit: ({
+            required name,
+            required rarity,
+            required isFavorite,
+            required createdBy,
+          }) {},
+        ),
+      );
+      await tester.pump();
+
+      expect(find.byType(TextField), findsOneWidget);
+      expect(find.text('Search Equipments...'), findsOneWidget);
+      expect(find.byType(HeartCheckbox), findsOneWidget);
+      expect(find.byType(CreatedByCheckbox), findsOneWidget);
+      expect(find.byType(AppDropdown<EquipmentRarity>), findsOneWidget);
+      expect(find.text('All Rarities'), findsOneWidget);
+      expect(find.byType(SearchFormButton), findsOneWidget);
+      expect(find.byIcon(Icons.favorite_border), findsOneWidget);
+      expect(find.byIcon(Icons.person_outline), findsOneWidget);
+    },
+  );
+
+  testWidgets('renders initial favorite, createdBy, and rarity states', (
     tester,
   ) async {
     await tester.pumpWidget(
       buildTestWidget(
-        onSubmit: ({required name, required isFavorite, required createdBy}) {},
-      ),
-    );
-    await tester.pump();
-
-    expect(find.byType(HeartCheckbox), findsOneWidget);
-    expect(find.byType(CreatedByCheckbox), findsOneWidget);
-    expect(find.byType(TextField), findsOneWidget);
-    expect(find.text('Search Equipments...'), findsOneWidget);
-    expect(find.byType(SearchFormButton), findsOneWidget);
-    expect(find.byIcon(Icons.favorite_border), findsOneWidget);
-    expect(find.byIcon(Icons.person_outline), findsOneWidget);
-  });
-
-  testWidgets('renders initial favorite and createdBy states', (tester) async {
-    await tester.pumpWidget(
-      buildTestWidget(
         initialName: 'Bar',
+        initialRarity: EquipmentRarity.rare,
         initialIsFavorite: true,
         initialCreatedBy: CreatedBy.user,
-        onSubmit: ({required name, required isFavorite, required createdBy}) {},
+        onSubmit: ({
+          required name,
+          required rarity,
+          required isFavorite,
+          required createdBy,
+        }) {},
       ),
     );
     await tester.pump();
 
     expect(find.text('Bar'), findsOneWidget);
+    expect(find.text('Rare'), findsOneWidget);
     expect(find.byIcon(Icons.favorite), findsOneWidget);
     expect(find.byIcon(Icons.person), findsOneWidget);
     expect(find.byIcon(Icons.favorite_border), findsNothing);
     expect(find.byIcon(Icons.person_outline), findsNothing);
   });
 
-  testWidgets('toggles favorite and createdBy filters and submits', (
-    tester,
-  ) async {
+  testWidgets('toggles filters including rarity and submits', (tester) async {
     String? submittedName;
+    EquipmentRarity? submittedRarity = EquipmentRarity.common;
     bool? submittedFavorite;
     CreatedBy? submittedCreatedBy = CreatedBy.system;
 
     await tester.pumpWidget(
       buildTestWidget(
-        onSubmit: ({required name, required isFavorite, required createdBy}) {
-          submittedName = name;
-          submittedFavorite = isFavorite;
-          submittedCreatedBy = createdBy;
-        },
+        onSubmit:
+            ({
+              required name,
+              required rarity,
+              required isFavorite,
+              required createdBy,
+            }) {
+              submittedName = name;
+              submittedRarity = rarity;
+              submittedFavorite = isFavorite;
+              submittedCreatedBy = createdBy;
+            },
       ),
     );
     await tester.pump();
@@ -122,6 +149,11 @@ void main() {
     await tester.tap(find.byType(CreatedByCheckbox));
     await tester.pumpAndSettle();
     expect(find.byIcon(Icons.person), findsOneWidget);
+
+    await tester.tap(find.byType(AppDropdown<EquipmentRarity>));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Legendary').last);
+    await tester.pumpAndSettle();
 
     await tester.enterText(find.byType(TextField), 'Barbell');
     await tester.pumpAndSettle();
@@ -130,6 +162,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(submittedName, 'Barbell');
+    expect(submittedRarity, EquipmentRarity.legendary);
     expect(submittedFavorite, isTrue);
     expect(submittedCreatedBy, CreatedBy.user);
 
@@ -137,44 +170,61 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.byType(CreatedByCheckbox));
     await tester.pumpAndSettle();
+    await tester.tap(find.byType(AppDropdown<EquipmentRarity>));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('All Rarities').last);
+    await tester.pumpAndSettle();
     await tester.tap(find.byIcon(Icons.clear));
     await tester.pumpAndSettle();
     await tester.tap(find.byType(SearchFormButton));
     await tester.pumpAndSettle();
 
     expect(submittedName, '');
+    expect(submittedRarity, isNull);
     expect(submittedFavorite, isFalse);
     expect(submittedCreatedBy, isNull);
   });
 
-  testWidgets('syncs updated initial props in didUpdateWidget', (
-    tester,
-  ) async {
+  testWidgets('syncs updated initial props in didUpdateWidget', (tester) async {
     await tester.pumpWidget(
       buildTestWidget(
         initialName: 'Initial',
+        initialRarity: null,
         initialIsFavorite: false,
         initialCreatedBy: null,
-        onSubmit: ({required name, required isFavorite, required createdBy}) {},
+        onSubmit: ({
+          required name,
+          required rarity,
+          required isFavorite,
+          required createdBy,
+        }) {},
       ),
     );
     await tester.pump();
 
     expect(find.text('Initial'), findsOneWidget);
+    expect(find.text('All Rarities'), findsOneWidget);
     expect(find.byIcon(Icons.favorite_border), findsOneWidget);
     expect(find.byIcon(Icons.person_outline), findsOneWidget);
 
     await tester.pumpWidget(
       buildTestWidget(
         initialName: 'Updated',
+        initialRarity: EquipmentRarity.uncommon,
         initialIsFavorite: true,
         initialCreatedBy: CreatedBy.user,
-        onSubmit: ({required name, required isFavorite, required createdBy}) {},
+        onSubmit: ({
+          required name,
+          required rarity,
+          required isFavorite,
+          required createdBy,
+        }) {},
       ),
     );
     await tester.pump();
 
     expect(find.text('Updated'), findsOneWidget);
+    expect(find.text('Uncommon'), findsOneWidget);
     expect(find.byIcon(Icons.favorite), findsOneWidget);
     expect(find.byIcon(Icons.person), findsOneWidget);
   });
@@ -207,6 +257,7 @@ void main() {
                   onSubmit:
                       ({
                         required name,
+                        required rarity,
                         required isFavorite,
                         required createdBy,
                       }) {

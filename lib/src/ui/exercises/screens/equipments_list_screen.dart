@@ -48,6 +48,7 @@ class _EquipmentsListScreenState extends State<EquipmentsListScreen> {
       final pagination = cubit.state.equipmentPagination;
       cubit.getEquipments(
         name: pagination.name,
+        rarity: pagination.rarity,
         isFavorite: pagination.isFavorite,
         createdBy: pagination.createdBy,
         limit: 50,
@@ -66,6 +67,7 @@ class _EquipmentsListScreenState extends State<EquipmentsListScreen> {
         final pagination = cubit.state.equipmentPagination;
         cubit.getEquipments(
           name: pagination.name,
+          rarity: pagination.rarity,
           isFavorite: pagination.isFavorite,
           createdBy: pagination.createdBy,
           offset: cubit.state.equipments.length,
@@ -119,21 +121,25 @@ class _EquipmentsListScreenState extends State<EquipmentsListScreen> {
                   sizes: sizes,
                   isLoading: state.isLoading,
                   initialName: state.equipmentPagination.name,
+                  initialRarity: state.equipmentPagination.rarity,
                   initialIsFavorite: state.equipmentPagination.isFavorite,
                   initialCreatedBy: state.equipmentPagination.createdBy,
-                  onSubmit: ({
-                    required String name,
-                    required bool isFavorite,
-                    required CreatedBy? createdBy,
-                  }) {
-                    context.read<ExerciseCubit>().getEquipments(
-                      name: name,
-                      isFavorite: isFavorite,
-                      createdBy: createdBy,
-                      limit: 50,
-                      offset: 0,
-                    );
-                  },
+                  onSubmit:
+                      ({
+                        required String name,
+                        required EquipmentRarity? rarity,
+                        required bool isFavorite,
+                        required CreatedBy? createdBy,
+                      }) {
+                        context.read<ExerciseCubit>().getEquipments(
+                          name: name,
+                          rarity: rarity,
+                          isFavorite: isFavorite,
+                          createdBy: createdBy,
+                          limit: 50,
+                          offset: 0,
+                        );
+                      },
                 ),
                 SizedBox(height: sizes.inputSpacing),
                 Expanded(

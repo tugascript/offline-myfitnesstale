@@ -29,6 +29,7 @@ enum EquipmentColumns with Columns {
   id("id"),
   name("name"),
   picture("picture"),
+  rarity("rarity"),
   isFavorite("is_favorite"),
   createdBy("created_by"),
   createdAt("created_at"),
@@ -45,6 +46,7 @@ final class Equipment extends Equatable implements Model {
   final int? id;
   final String name;
   final PictureData? picture;
+  final EquipmentRarity rarity;
   final bool isFavorite;
   final CreatedBy createdBy;
   @override
@@ -56,6 +58,7 @@ final class Equipment extends Equatable implements Model {
     this.id,
     required this.name,
     this.picture,
+    required this.rarity,
     required this.isFavorite,
     required this.createdBy,
     required this.createdAt,
@@ -69,6 +72,7 @@ final class Equipment extends Equatable implements Model {
     ${EquipmentColumns.id.value} INTEGER PRIMARY KEY AUTOINCREMENT,
     ${EquipmentColumns.name.value} TEXT NOT NULL,
     ${EquipmentColumns.picture.value} TEXT,
+    ${EquipmentColumns.rarity.value} TEXT NOT NULL DEFAULT '${EquipmentRarity.common.value}',
     ${EquipmentColumns.isFavorite.value} INTEGER NOT NULL,
     ${EquipmentColumns.createdBy.value} TEXT NOT NULL,
     ${EquipmentColumns.createdAt.value} INTEGER NOT NULL,
@@ -85,6 +89,7 @@ final class Equipment extends Equatable implements Model {
       EquipmentColumns.name.value: name,
       EquipmentColumns.picture.value: picture?.toJson(),
       EquipmentColumns.isFavorite.value: isFavorite ? 1 : 0,
+      EquipmentColumns.rarity.value: rarity.value,
       EquipmentColumns.createdBy.value: createdBy.value,
       EquipmentColumns.createdAt.value: createdAt,
       EquipmentColumns.updatedAt.value: updatedAt,
@@ -99,6 +104,9 @@ final class Equipment extends Equatable implements Model {
           ? PictureData.fromJson(map[EquipmentColumns.picture.value] as String)
           : null,
       isFavorite: map[EquipmentColumns.isFavorite.value] as int == 1,
+      rarity: EquipmentRarity.fromValue(
+        map[EquipmentColumns.rarity.value] as String,
+      ),
       createdBy: CreatedBy.fromValue(
         map[EquipmentColumns.createdBy.value] as String,
       ),
@@ -112,12 +120,14 @@ final class Equipment extends Equatable implements Model {
     PictureData? picture,
     bool isFavorite = false,
     CreatedBy createdBy = CreatedBy.user,
+    EquipmentRarity rarity = EquipmentRarity.common,
   }) {
     final int now = DateUtilities.getNowUtcUnix();
     return Equipment(
       name: name,
       picture: picture,
       isFavorite: isFavorite,
+      rarity: rarity,
       createdBy: createdBy,
       createdAt: now,
       updatedAt: now,
@@ -131,6 +141,7 @@ final class Equipment extends Equatable implements Model {
     Nullable<PictureData>? picture,
     bool? isFavorite,
     CreatedBy? createdBy,
+    EquipmentRarity? rarity,
     int? createdAt,
     int? updatedAt,
   }) {
@@ -140,6 +151,7 @@ final class Equipment extends Equatable implements Model {
       picture: picture != null ? picture.value : this.picture,
       isFavorite: isFavorite ?? this.isFavorite,
       createdBy: createdBy ?? this.createdBy,
+      rarity: rarity ?? this.rarity,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -147,7 +159,7 @@ final class Equipment extends Equatable implements Model {
 
   @override
   String toString() {
-    return 'Equipment{id: $id, name: $name, picture: $picture, isFavorite: $isFavorite, createdBy: $createdBy, createdAt: $createdAt, updatedAt: $updatedAt}';
+    return 'Equipment{id: $id, name: $name, picture: $picture, isFavorite: $isFavorite, createdBy: $createdBy, rarity: $rarity, createdAt: $createdAt, updatedAt: $updatedAt}';
   }
 
   @override
@@ -157,6 +169,7 @@ final class Equipment extends Equatable implements Model {
     picture,
     isFavorite,
     createdBy,
+    rarity,
     createdAt,
     updatedAt,
   ];
