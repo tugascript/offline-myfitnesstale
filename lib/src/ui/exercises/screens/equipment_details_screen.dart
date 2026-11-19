@@ -51,6 +51,12 @@ class _EquipmentDetailsScreenState extends State<EquipmentDetailsScreen> {
     context.read<ExerciseCubit>().getEquipment(widget.equipmentId);
   }
 
+  void _toggleFavorite(bool isFavorite) {
+    final cubit = context.read<ExerciseCubit>();
+    if (cubit.state.isLoading) return;
+    cubit.updateEquipmentFavorite(widget.equipmentId, !isFavorite);
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -122,6 +128,8 @@ class _EquipmentDetailsScreenState extends State<EquipmentDetailsScreen> {
                             equipment: equipment,
                             relatedExercisesCount: relatedExercises.length,
                             theme: theme,
+                            onFavoriteToggle: () =>
+                                _toggleFavorite(equipment.isFavorite),
                           ),
                           SizedBox(height: sizes.spacing * 1.25),
                           Text(

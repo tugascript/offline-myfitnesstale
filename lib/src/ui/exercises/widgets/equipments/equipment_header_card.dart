@@ -19,15 +19,18 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../../../data/repositories/exercises/dtos/equipment_dto.dart';
 import '../../../../data/services/storage/local_file_storage_service.dart';
-import '../../../../data/utils/enums.dart';
 import '../../../core/sizes/data_display_sizes.dart';
 import '../../../core/widgets/base_details_header.dart';
+import '../../../core/widgets/layout/created_by_icon.dart';
+import '../../../core/widgets/layout/favorite_icon_button.dart';
 import '../../../core/widgets/picture/app_picture.dart';
+import 'equipment_rarity_badge.dart';
 
 class EquipmentHeaderCard extends StatelessWidget {
   final DataDisplaySizesList sizes;
   final EquipmentDto equipment;
   final int relatedExercisesCount;
+  final VoidCallback onFavoriteToggle;
   final ThemeData? theme;
   final LocalFileStorageService? storageService;
 
@@ -36,6 +39,7 @@ class EquipmentHeaderCard extends StatelessWidget {
     required this.sizes,
     required this.equipment,
     required this.relatedExercisesCount,
+    required this.onFavoriteToggle,
     this.theme,
     this.storageService,
   });
@@ -43,36 +47,40 @@ class EquipmentHeaderCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final resolvedTheme = theme ?? Theme.of(context);
-    final isUserCreated = equipment.createdBy == CreatedBy.user;
 
     return BaseDetailsHeader(
       padding: sizes.padding,
       children: [
         Row(
           children: [
-            Icon(
-              isUserCreated ? Icons.person : Icons.public,
-              color: isUserCreated ? Colors.blue : Colors.grey,
-              size: sizes.mediumIconSize,
-            ),
-            SizedBox(width: sizes.halfSpacing),
+            CreatedByIcon(sizes: sizes, createdBy: equipment.createdBy),
             Expanded(
-              child: Text(
-                isUserCreated ? 'Custom Equipment' : 'System Equipment',
-                style: TextStyle(
-                  fontSize: sizes.smallFontSize,
-                  fontWeight: FontWeight.w600,
-                  color: resolvedTheme.colorScheme.onSurfaceVariant,
-                ),
+              child: Wrap(
+                spacing: sizes.spacing,
+                runSpacing: sizes.spacing / 2,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  EquipmentRarityBadge(
+                    rarity: equipment.rarity,
+                    spacing: sizes.spacing,
+                    fontSize: sizes.smallFontSize,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  Text(
+                    '$relatedExercisesCount ${relatedExercisesCount == 1 ? 'exercise' : 'exercises'}',
+                    style: TextStyle(
+                      fontSize: sizes.smallFontSize,
+                      fontWeight: FontWeight.w600,
+                      color: resolvedTheme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
               ),
             ),
-            Text(
-              '$relatedExercisesCount ${relatedExercisesCount == 1 ? 'exercise' : 'exercises'}',
-              style: TextStyle(
-                fontSize: sizes.smallFontSize,
-                fontWeight: FontWeight.w600,
-                color: resolvedTheme.colorScheme.onSurfaceVariant,
-              ),
+            FavoriteIconButton(
+              sizes: sizes,
+              isFavorite: equipment.isFavorite,
+              onFavoriteToggle: onFavoriteToggle,
             ),
           ],
         ),

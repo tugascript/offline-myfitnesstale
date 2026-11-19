@@ -680,6 +680,69 @@ class ExerciseCubit extends Cubit<ExerciseState>
     );
   }
 
+  Future<void> updateEquipmentFavorite(int id, bool isFavorite) {
+    return serializeFavorite(() async {
+      if (isClosed) return;
+      _logger.info(
+        'updateEquipmentFavorite: updating equipment favorite by id: $id',
+      );
+      emit(state.copyWith(isLoading: true));
+      final result = await _exerciseService.updateEquipmentFavorite(
+        id,
+        isFavorite,
+      );
+      if (result.isErr()) {
+        if (isClosed) return;
+        final error = result.error;
+        _logger.warning("Failed to update equipment favorite, error: $error");
+        switch (error.type) {
+          case SingleErrorTypes.notFound:
+          case SingleErrorTypes.invalidInput:
+            emit(
+              state.copyWith(
+                error: Nullable(
+                  ErrorState(
+                    type: error.type.name,
+                    description: error.description,
+                  ),
+                ),
+                isLoading: false,
+              ),
+            );
+            return;
+          case SingleErrorTypes.operationFailure:
+            emit(
+              state.copyWith(
+                error: Nullable(
+                  ErrorState(
+                    type: error.type.name,
+                    description: "Failed to update equipment favorite",
+                  ),
+                ),
+                isLoading: false,
+              ),
+            );
+            return;
+        }
+      }
+      final updatedEquipment = result.value;
+      if (isClosed) return;
+      final selected = state.selectedEquipment;
+      emit(
+        state.copyWith(
+          selectedEquipment: selected?.equipment.id == id
+              ? Nullable(selected!.copyWith(equipment: updatedEquipment))
+              : null,
+          equipments: state.equipments
+              .map((e) => e.id == id ? updatedEquipment : e)
+              .toList(),
+          isLoading: false,
+          error: const Nullable(null),
+        ),
+      );
+    });
+  }
+
   Future<void> updateEquipment(int id, EquipmentInput input) async {
     _logger.info('updateEquipment: updating equipment');
     emit(state.copyWith(isLoading: true));
