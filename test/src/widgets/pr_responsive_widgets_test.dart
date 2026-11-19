@@ -61,7 +61,7 @@ import 'package:myfitnesstale/src/ui/recipes/screens/recipe_update_screen.dart';
 import 'package:myfitnesstale/src/ui/recipes/screens/recipes_screen.dart';
 import 'package:myfitnesstale/src/ui/home/widgets/active/active_plans_carousel.dart';
 import 'package:myfitnesstale/src/ui/home/widgets/quick_actions_widget.dart';
-import 'package:myfitnesstale/src/ui/exercises/widgets/strength_goal/strength_goal_form_modal.dart';
+import 'package:myfitnesstale/src/ui/exercises/widgets/strength_goal/edit_strength_goal_modal.dart';
 import 'package:myfitnesstale/src/ui/foods/widgets/food_form_widget.dart';
 import 'package:myfitnesstale/src/ui/macros/widgets/goals/macro_goal_form_modal.dart';
 import 'package:myfitnesstale/src/ui/macros/widgets/log_food_modal.dart';
@@ -445,7 +445,7 @@ void main() {
       theme: theme,
       existingGoal: _macroGoal,
     ),
-    'strength-goal dialog': (sizes, theme) => StrengthGoalFormModal(
+    'strength-goal dialog': (sizes, theme) => EditStrengthGoalModal(
       sizes: sizes,
       theme: theme,
       existingGoal: _strengthGoal,

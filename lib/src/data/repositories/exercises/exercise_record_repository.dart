@@ -448,9 +448,12 @@ final class ExerciseRecordRepository implements Repository {
         );
       }
 
+      final trimmedName = input.name.value?.trim();
       final StrengthGoal goal = StrengthGoal.create(
         exerciseId: input.exerciseId,
-        name: input.name,
+        name: trimmedName != null && trimmedName.isNotEmpty
+            ? trimmedName
+            : null,
         targetReps: input.targetReps,
         targetWeight: input.targetWeight,
         targetMaxStrength: input.targetMaxStrength,
@@ -651,9 +654,12 @@ final class ExerciseRecordRepository implements Repository {
           );
         }
       }
+      final trimmedName = input.name.value?.trim();
       final StrengthGoal updated = goal.copyWith(
         exerciseId: input.exerciseId,
-        name: input.name,
+        name: Nullable(
+          trimmedName != null && trimmedName.isNotEmpty ? trimmedName : null,
+        ),
         targetReps: input.targetReps,
         targetWeight: input.targetWeight,
         targetMaxStrength: input.targetMaxStrength,

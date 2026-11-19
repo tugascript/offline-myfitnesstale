@@ -25,7 +25,7 @@ import '../../core/inputs/input.dart';
 final class StrengthGoalInput extends Equatable
     implements ModelInput<StrengthGoal> {
   final int exerciseId;
-  final String name;
+  final Nullable<String> name;
   final int targetReps;
   final int targetWeight;
   final int targetMaxStrength;
@@ -35,7 +35,7 @@ final class StrengthGoalInput extends Equatable
 
   const StrengthGoalInput({
     required this.exerciseId,
-    required this.name,
+    this.name = const Nullable(null),
     required this.targetReps,
     required this.targetWeight,
     required this.targetMaxStrength,

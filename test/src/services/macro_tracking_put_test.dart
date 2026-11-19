@@ -133,7 +133,7 @@ void main() {
       final created = await service.createStrengthGoal(
         StrengthGoalInput(
           exerciseId: exerciseId,
-          name: 'Completed goal',
+          name: const Nullable('Completed goal'),
           targetReps: 5,
           targetWeight: 80000,
           targetMaxStrength: 90000,
@@ -146,7 +146,7 @@ void main() {
       final other = await service.createStrengthGoal(
         StrengthGoalInput(
           exerciseId: exerciseId,
-          name: 'Other active goal',
+          name: const Nullable('Other active goal'),
           targetReps: 5,
           targetWeight: 81000,
           targetMaxStrength: 94000,
@@ -158,7 +158,7 @@ void main() {
         created.value.id,
         StrengthGoalInput(
           exerciseId: exerciseId,
-          name: 'Reopened',
+          name: const Nullable('Reopened'),
           targetReps: 6,
           targetWeight: 82000,
           targetMaxStrength: 95000,
@@ -175,6 +175,36 @@ void main() {
       expect(
         (await service.getStrengthGoal(created.value.id)).value,
         updated.value,
+      );
+
+      final unnamed = await service.createStrengthGoal(
+        StrengthGoalInput(
+          exerciseId: exerciseId,
+          targetReps: 3,
+          targetWeight: 90000,
+          targetMaxStrength: 100000,
+          startDate: DateTime(2026, 10, 4),
+        ),
+      );
+      expect(unnamed.isOk(), isTrue);
+      expect(unnamed.value.name, isNull);
+
+      final cleared = await service.updateStrengthGoal(
+        created.value.id,
+        StrengthGoalInput(
+          exerciseId: exerciseId,
+          name: const Nullable(null),
+          targetReps: 6,
+          targetWeight: 82000,
+          targetMaxStrength: 95000,
+          startDate: DateTime(2026, 10, 3),
+        ),
+      );
+      expect(cleared.isOk(), isTrue);
+      expect(cleared.value.name, isNull);
+      expect(
+        (await service.getStrengthGoal(created.value.id)).value.name,
+        isNull,
       );
     },
   );

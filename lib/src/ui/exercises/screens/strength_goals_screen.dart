@@ -23,7 +23,7 @@ import '../../core/sizes/screen_size.dart';
 import '../../core/widgets/layout/app_scaffold.dart';
 import '../view_models/exercise_record_cubit.dart';
 import '../widgets/strength_goal/active_strength_goal_card.dart';
-import '../widgets/strength_goal/strength_goal_form_modal.dart';
+import '../widgets/strength_goal/create_strength_goal_modal.dart';
 import '../widgets/strength_goal/strength_goal_history_list.dart';
 
 class StrengthGoalsScreen extends StatefulWidget {
@@ -85,7 +85,7 @@ class _StrengthGoalsScreenState extends State<StrengthGoalsScreen> {
           showDialog(
             context: context,
             builder: (context) =>
-                StrengthGoalFormModal(theme: theme, sizes: sizes),
+                CreateStrengthGoalModal(theme: theme, sizes: sizes),
           );
         },
         child: Icon(Icons.add, size: sizes.buttonIconSize),
