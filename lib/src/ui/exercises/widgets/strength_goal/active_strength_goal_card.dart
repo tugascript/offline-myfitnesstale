@@ -27,7 +27,7 @@ import '../../../core/sizes/data_display_sizes.dart';
 import '../../../core/utils/converters.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../core/widgets/confirmation_dialog.dart';
-import '../../../core/widgets/mutation_button.dart';
+import '../../../core/widgets/layout/delete_icon_button.dart';
 import '../../../core/widgets/progress_status_badge.dart';
 import '../../../home/view_models/profile_cubit.dart';
 import '../../view_models/exercise_record_cubit.dart';
@@ -155,6 +155,30 @@ class ActiveStrengthGoalCard extends StatelessWidget {
                                   );
                                 },
                         ),
+                        if (!isSkeleton && goal != null)
+                          DeleteIconButton(
+                            key: const ValueKey(
+                              'active-strength-goal-delete-btn',
+                            ),
+                            sizes: sizes,
+                            onDelete: () {
+                              showDialog(
+                                context: context,
+                                builder: (ctx) => ConfirmationDialog(
+                                  title: 'Delete Strength Goal',
+                                  content:
+                                      'Are you sure you want to delete this strength goal?',
+                                  confirmLabel: 'Delete',
+                                  isDestructive: true,
+                                  onConfirm: () {
+                                    context
+                                        .read<ExerciseRecordCubit>()
+                                        .deleteStrengthGoal(goal.id);
+                                  },
+                                ),
+                              );
+                            },
+                          ),
                       ],
                     ),
                     if (displayGoal.exercise != null) ...[
@@ -278,38 +302,6 @@ class ActiveStrengthGoalCard extends StatelessWidget {
                           ],
                         ),
                       ],
-                    ),
-                    SizedBox(height: sizes.spacing),
-                    SizedBox(
-                      width: double.infinity,
-                      child: MutationButton(
-                        key: const ValueKey('active-strength-goal-delete-btn'),
-                        theme: theme,
-                        sizes: sizes,
-                        isLoading: state.isLoading,
-                        isDense: true,
-                        label: 'Delete',
-                        icon: Icons.delete,
-                        color: theme.colorScheme.error,
-                        onPressed: goal == null
-                            ? null
-                            : () {
-                                showDialog(
-                                  context: context,
-                                  builder: (ctx) => ConfirmationDialog(
-                                    title: 'Delete Strength Goal',
-                                    content: 'Are you sure you want to delete this strength goal?',
-                                    confirmLabel: 'Delete',
-                                    isDestructive: true,
-                                    onConfirm: () {
-                                      context
-                                          .read<ExerciseRecordCubit>()
-                                          .deleteStrengthGoal(goal.id);
-                                    },
-                                  ),
-                                );
-                              },
-                      ),
                     ),
                   ],
                 ),

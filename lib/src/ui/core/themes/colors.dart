@@ -47,6 +47,11 @@ final class ThemedColors {
     dark: Colors.grey.shade400,
   );
 
+  static final ThemedColors themedRed = ThemedColors(
+    light: Colors.red.shade600,
+    dark: Colors.red.shade400,
+  );
+
   Color fromBrightness(Brightness brightness) =>
       brightness == Brightness.light ? light : dark;
 }

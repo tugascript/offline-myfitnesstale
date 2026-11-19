@@ -34,6 +34,7 @@ class FavoriteIconButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return IconButton(
+      visualDensity: VisualDensity.compact,
       icon: Icon(
         isFavorite ? Icons.favorite : Icons.favorite_border,
         color: isFavorite ? Colors.red : null,
