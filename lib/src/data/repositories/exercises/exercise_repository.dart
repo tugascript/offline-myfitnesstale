@@ -877,6 +877,42 @@ final class ExerciseRepository implements Repository {
     }
   }
 
+  Future<Result<EquipmentDto, ServiceError<SingleErrorTypes>>>
+  updateEquipmentFavorite(int id, bool isFavorite) async {
+    _logger.info('Updating equipment favorite with id: $id');
+    try {
+      return await _equipmentDao.startTransaction<
+        Result<EquipmentDto, ServiceError<SingleErrorTypes>>
+      >((txn) async {
+        final Equipment? equipment = await _equipmentDao.selectOne(id, txn);
+        if (equipment == null) {
+          _logger.info('Equipment with id: $id not found');
+          return err(
+            const ServiceError(
+              type: SingleErrorTypes.notFound,
+              description: 'Equipment not found',
+            ),
+          );
+        }
+
+        final Equipment updatedEquipment = equipment.copyWith(
+          isFavorite: isFavorite,
+          updatedAt: DateUtilities.getNowUtcUnix(),
+        );
+        await _equipmentDao.update(updatedEquipment, txn);
+        return ok(EquipmentDto.fromModel(updatedEquipment));
+      });
+    } catch (e) {
+      _logger.severe('Failed to update equipment favorite with id: $id', e);
+      return err(
+        const ServiceError(
+          type: SingleErrorTypes.operationFailure,
+          description: 'Failed to update equipment favorite',
+        ),
+      );
+    }
+  }
+
   Future<Result<List<ExerciseDto>, ServiceError<SingleErrorTypes>>>
   getExercisesByEquipmentId(int equipmentId) async {
     _logger.info('Getting exercises for equipment with id: $equipmentId');

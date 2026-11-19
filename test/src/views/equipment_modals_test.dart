@@ -585,7 +585,7 @@ void main() {
 
       expect(find.byType(EquipmentHeaderCard), findsOneWidget);
       expect(find.byType(AppPicture), findsOneWidget);
-      expect(find.text('Custom Equipment'), findsOneWidget);
+      expect(find.text('Common'), findsOneWidget);
       expect(find.text('0 exercises'), findsOneWidget);
       expect(find.text('Related Exercises'), findsOneWidget);
     },
