@@ -151,6 +151,7 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
     emit(state.copyWith(isLoading: true));
 
     final result = await _exerciseRecordService.createExerciseRecord(input);
+    if (isClosed) return;
 
     if (result.isErr()) {
       final error = result.error;
@@ -180,6 +181,8 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
       limit: currentPagination.limit,
       dateRange: currentPagination.dateRange,
     );
+    if (isClosed) return;
+
     if (recordsResult.isErr()) {
       final error = recordsResult.error;
       _logger.warning("Failed to get exercise records", error);
@@ -221,10 +224,10 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
               ? state.latestExerciseRecord
               : record,
         ),
-        isLoading: false,
         error: const Nullable(null),
       ),
     );
+    await _refreshStrengthGoals();
   }
 
   Future<void> updateExerciseRecord(int id, ExerciseRecordInput input) async {

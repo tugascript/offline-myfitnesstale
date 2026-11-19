@@ -45,7 +45,7 @@ import 'package:myfitnesstale/src/data/repositories/profile/dtos/system_dto.dart
 import 'package:myfitnesstale/src/data/repositories/workout_plans/dtos/workout_plan_dto.dart';
 import 'package:myfitnesstale/src/ui/core/sizes/data_display_sizes.dart';
 import 'package:myfitnesstale/src/ui/core/sizes/screen_size.dart';
-import 'package:myfitnesstale/src/ui/exercises/screens/strength_goals_screen.dart';
+import 'package:myfitnesstale/src/ui/exercises/screens/strength_goals_list_screen.dart';
 import 'package:myfitnesstale/src/ui/foods/screens/foods_screen.dart';
 import 'package:myfitnesstale/src/ui/home/screens/home_screen.dart';
 import 'package:myfitnesstale/src/ui/home/screens/main_navigation_screen.dart';

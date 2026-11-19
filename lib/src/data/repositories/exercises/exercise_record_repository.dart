@@ -95,7 +95,33 @@ final class ExerciseRecordRepository implements Repository {
         video: input.video.value,
         recordDate: DateUtilities.getDateUnix(input.recordDate),
       );
-      final int id = await _exerciseRecordDao.insert(exerciseRecord);
+      final int id = await _exerciseRecordDao.startTransaction((txn) async {
+        final int recordId = await _exerciseRecordDao.insert(
+          exerciseRecord,
+          txn,
+        );
+        final openGoals = await _strengthGoalDao.selectMany(
+          where:
+              '${StrengthGoalColumns.exerciseId.equal} AND ${StrengthGoalColumns.status.equal}',
+          whereArgs: [input.exerciseId, ProgressStatus.inProgress.value],
+          trx: txn,
+        );
+
+        final int now = DateUtilities.getNowUtcUnix();
+        for (final goal in openGoals) {
+          if (input.weight >= goal.targetWeight &&
+              input.reps >= goal.targetReps) {
+            final completedGoal = goal.copyWith(
+              status: ProgressStatus.completed,
+              completedAt: Nullable(now),
+              updatedAt: now,
+            );
+            await _strengthGoalDao.update(completedGoal, txn);
+          }
+        }
+
+        return recordId;
+      });
       _logger.info('Created exercise record with id $id');
       return ok(
         ExerciseRecordDto.fromModel(
@@ -541,10 +567,39 @@ final class ExerciseRecordRepository implements Repository {
       if (pageResult.isErr()) return err(pageResult.error);
       final (goals, total) = pageResult.value;
       _logger.info('Got ${goals.length} strength goals');
+
+      if (exerciseId != null || goals.isEmpty) {
+        return ok(
+          PaginatedDto<StrengthGoalDto, StrengthGoal>.mapData(
+            data: goals,
+            mapper: (goal) => StrengthGoalDto.fromModel(goal),
+            total: total,
+            limit: limit,
+            offset: offset,
+          ),
+        );
+      }
+
+      final Set<int> exerciseIds = goals.map((goal) => goal.exerciseId).toSet();
+      final exercisesResult = await selectManyInChunks(
+        failureType: OperationErrorTypes.operationFailure,
+        dao: _exerciseDao,
+        column: ExerciseColumns.id,
+        values: exerciseIds,
+      );
+      if (exercisesResult.isErr()) return err(exercisesResult.error);
+      final Map<int, ExerciseDto> exerciseMap = {
+        for (final exercise in exercisesResult.value)
+          exercise.id!: ExerciseDto.fromModel(exercise),
+      };
+
       return ok(
         PaginatedDto<StrengthGoalDto, StrengthGoal>.mapData(
           data: goals,
-          mapper: (goal) => StrengthGoalDto.fromModel(goal),
+          mapper: (goal) => StrengthGoalDto.fromModel(
+            goal,
+            exercise: exerciseMap[goal.exerciseId],
+          ),
           total: total,
           limit: limit,
           offset: offset,
@@ -592,7 +647,19 @@ final class ExerciseRecordRepository implements Repository {
           ),
         );
       }
-      return ok(StrengthGoalDto.fromModel(goals.first));
+
+      final goal = goals.first;
+      ExerciseDto? exerciseDto;
+      if (exerciseId == null) {
+        final Exercise? exercise = await _exerciseDao.selectOne(
+          goal.exerciseId,
+        );
+        if (exercise != null) {
+          exerciseDto = ExerciseDto.fromModel(exercise);
+        }
+      }
+
+      return ok(StrengthGoalDto.fromModel(goal, exercise: exerciseDto));
     } catch (e) {
       _logger.severe('Failed to get active strength goal', e);
       return err(
