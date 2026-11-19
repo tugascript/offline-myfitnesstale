@@ -22,6 +22,7 @@ import '../../../models/sqlite/strength_goal_model.dart';
 import '../../../utils/dates.dart';
 import '../../../utils/enums.dart';
 import '../../core/dtos/dto.dart';
+import './exercise_dto.dart';
 
 final class StrengthGoalDto extends Equatable
     implements ModelDto<StrengthGoal> {
@@ -36,6 +37,9 @@ final class StrengthGoalDto extends Equatable
   final DateTime startDate;
   final DateTime? completedAt;
 
+  // Related data
+  final ExerciseDto? exercise;
+
   const StrengthGoalDto({
     required this.id,
     this.name,
@@ -46,9 +50,13 @@ final class StrengthGoalDto extends Equatable
     required this.status,
     required this.startDate,
     this.completedAt,
+    this.exercise,
   });
 
-  factory StrengthGoalDto.fromModel(StrengthGoal model) {
+  factory StrengthGoalDto.fromModel(
+    StrengthGoal model, {
+    ExerciseDto? exercise,
+  }) {
     return StrengthGoalDto(
       id: model.id!,
       name: model.name,
@@ -61,6 +69,7 @@ final class StrengthGoalDto extends Equatable
       completedAt: model.completedAt != null
           ? DateUtilities.getDateFromUnix(model.completedAt!)
           : null,
+      exercise: exercise,
     );
   }
 
@@ -75,6 +84,7 @@ final class StrengthGoalDto extends Equatable
     ProgressStatus? status,
     DateTime? startDate,
     Nullable<DateTime>? completedAt,
+    Nullable<ExerciseDto>? exercise,
   }) {
     return StrengthGoalDto(
       id: id ?? this.id,
@@ -86,6 +96,7 @@ final class StrengthGoalDto extends Equatable
       status: status ?? this.status,
       startDate: startDate ?? this.startDate,
       completedAt: completedAt != null ? completedAt.value : this.completedAt,
+      exercise: exercise != null ? exercise.value : this.exercise,
     );
   }
 
@@ -100,5 +111,6 @@ final class StrengthGoalDto extends Equatable
     status,
     startDate,
     completedAt,
+    exercise,
   ];
 }

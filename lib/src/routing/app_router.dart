@@ -24,7 +24,7 @@ import '../ui/exercises/screens/exercise_detail_screen.dart';
 import '../ui/exercises/screens/exercise_progress_screen.dart';
 import '../ui/exercises/screens/exercise_records_screen.dart';
 import '../ui/exercises/screens/exercises_list_screen.dart';
-import '../ui/exercises/screens/strength_goals_screen.dart';
+import '../ui/exercises/screens/strength_goals_list_screen.dart';
 import '../ui/foods/screens/food_creation_screen.dart';
 import '../ui/foods/screens/food_details_screen.dart';
 import '../ui/foods/screens/food_update_screen.dart';

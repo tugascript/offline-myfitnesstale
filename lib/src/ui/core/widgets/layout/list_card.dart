@@ -21,31 +21,30 @@ class ListCard extends StatelessWidget {
   final double margin;
   final double padding;
   final List<Widget> children;
-  final void Function() onTap;
+  final VoidCallback? onTap;
 
   const ListCard({
     super.key,
     required this.margin,
     required this.padding,
     required this.children,
-    required this.onTap,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
+    final content = Padding(
+      padding: EdgeInsets.all(padding),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: children,
+      ),
+    );
+
     return Card(
       clipBehavior: Clip.antiAlias,
       margin: EdgeInsets.symmetric(vertical: margin),
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: EdgeInsets.all(padding),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: children,
-          ),
-        ),
-      ),
+      child: onTap != null ? InkWell(onTap: onTap, child: content) : content,
     );
   }
 }

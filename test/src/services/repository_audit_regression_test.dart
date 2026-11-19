@@ -25,6 +25,8 @@ import 'package:myfitnesstale/src/data/models/sqlite/recipe_item_model.dart';
 import 'package:myfitnesstale/src/data/models/sqlite/week_macro_goal_model.dart';
 import 'package:myfitnesstale/src/data/models/sqlite/weight_goal_model.dart';
 import 'package:myfitnesstale/src/data/models/sqlite/exercise_model.dart';
+import 'package:myfitnesstale/src/data/models/sqlite/exercise_record_model.dart';
+import 'package:myfitnesstale/src/data/models/sqlite/strength_goal_model.dart';
 import 'package:myfitnesstale/src/data/models/sqlite/workout_model.dart';
 import 'package:myfitnesstale/src/data/models/sqlite/workout_plan_day_model.dart';
 import 'package:myfitnesstale/src/data/models/sqlite/workout_plan_model.dart';
@@ -36,6 +38,8 @@ import 'package:myfitnesstale/src/data/models/sqlite/workout_set_record_model.da
 import 'package:myfitnesstale/src/data/repositories/core/repository_helpers.dart';
 import 'package:myfitnesstale/src/data/repositories/exercises/dtos/exercise_dto.dart';
 import 'package:myfitnesstale/src/data/repositories/exercises/exercise_record_repository.dart';
+import 'package:myfitnesstale/src/data/repositories/exercises/inputs/exercise_record_input.dart';
+import 'package:myfitnesstale/src/data/repositories/exercises/inputs/strength_goal_input.dart';
 import 'package:myfitnesstale/src/data/repositories/foods/food_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/foods/inputs/food_input.dart';
 import 'package:myfitnesstale/src/data/repositories/foods/inputs/food_portion_input.dart';
@@ -77,6 +81,7 @@ import 'package:myfitnesstale/src/data/services/sqlite/dao.dart';
 import 'package:myfitnesstale/src/data/services/sqlite/database_helper.dart';
 import 'package:myfitnesstale/src/data/utils/enums.dart';
 import 'package:myfitnesstale/src/data/utils/json_data.dart';
+import 'package:myfitnesstale/src/ui/exercises/view_models/exercise_record_cubit.dart';
 import 'package:myfitnesstale/src/ui/meal_plans/view_models/meal_plan_cubit.dart';
 import 'package:myfitnesstale/src/utils/errors.dart';
 import 'package:myfitnesstale/src/utils/nullable.dart';
@@ -1680,5 +1685,254 @@ void main() {
     );
     expect(onlySkippedLatest.isErr(), isTrue);
     expect(onlySkippedLatest.error.type, SingleErrorTypes.notFound);
+  });
+
+  group('ExerciseRecordRepository strength goal auto-completion', () {
+    Future<int> insertExercise(Database db, String name) {
+      return db.insert(
+        Exercise.table,
+        Exercise.create(
+          name: name,
+          muscleGroup: MuscleGroup.push,
+          muscles: const TargetMuscles(
+            primary: {Muscle.chest},
+            secondary: {Muscle.triceps},
+          ),
+        ).toMap(),
+      );
+    }
+
+    tearDown(() async {
+      final db = await testDatabase.db;
+      await db.transaction((txn) async {
+        await txn.delete(StrengthGoal.table);
+        await txn.delete(ExerciseRecord.table);
+        await txn.delete(Exercise.table);
+      });
+    });
+
+    test('completes open StrengthGoal on exact match, higher reps at same weight, and higher weight+reps, but ignores missed targets or other exercises', () async {
+      final db = await testDatabase.db;
+      final benchId = await insertExercise(db, uniqueName('bench'));
+      final squatId = await insertExercise(db, uniqueName('squat'));
+      final repo = ExerciseRecordRepository.create();
+
+      final benchGoal = (await repo.createStrengthGoal(
+        StrengthGoalInput(
+          exerciseId: benchId,
+          name: const Nullable('Bench 100x5'),
+          targetWeight: 100000,
+          targetReps: 5,
+          targetMaxStrength: 116667,
+          startDate: DateTime(2026, 11, 1),
+        ),
+      )).value;
+
+      final squatGoal = (await repo.createStrengthGoal(
+        StrengthGoalInput(
+          exerciseId: squatId,
+          name: const Nullable('Squat 140x5'),
+          targetWeight: 140000,
+          targetReps: 5,
+          targetMaxStrength: 163333,
+          startDate: DateTime(2026, 11, 1),
+        ),
+      )).value;
+
+      // Record with same weight but fewer reps must not complete bench goal.
+      await repo.createExerciseRecord(
+        ExerciseRecordInput(
+          exerciseId: benchId,
+          weight: 100000,
+          reps: 4,
+          recordDate: DateTime(2026, 11, 2),
+        ),
+      );
+      expect(
+        (await repo.getStrengthGoal(benchGoal.id)).value.status,
+        ProgressStatus.inProgress,
+      );
+
+      // Record with lighter weight and more reps (even higher 1RM) must not complete bench goal.
+      await repo.createExerciseRecord(
+        ExerciseRecordInput(
+          exerciseId: benchId,
+          weight: 95000,
+          reps: 8,
+          recordDate: DateTime(2026, 11, 3),
+        ),
+      );
+      expect(
+        (await repo.getStrengthGoal(benchGoal.id)).value.status,
+        ProgressStatus.inProgress,
+      );
+
+      // Record for bench meeting exact weight and higher reps completes bench goal, not squat goal.
+      await repo.createExerciseRecord(
+        ExerciseRecordInput(
+          exerciseId: benchId,
+          weight: 100000,
+          reps: 6,
+          recordDate: DateTime(2026, 11, 4),
+        ),
+      );
+      final completedBench = (await repo.getStrengthGoal(benchGoal.id)).value;
+      expect(completedBench.status, ProgressStatus.completed);
+      expect(completedBench.completedAt, isNotNull);
+      expect(
+        (await repo.getStrengthGoal(squatGoal.id)).value.status,
+        ProgressStatus.inProgress,
+      );
+
+      // Exact match completes squat goal.
+      await repo.createExerciseRecord(
+        ExerciseRecordInput(
+          exerciseId: squatId,
+          weight: 140000,
+          reps: 5,
+          recordDate: DateTime(2026, 11, 5),
+        ),
+      );
+      final completedSquat = (await repo.getStrengthGoal(squatGoal.id)).value;
+      expect(completedSquat.status, ProgressStatus.completed);
+      expect(completedSquat.completedAt, isNotNull);
+
+      // Higher weight and at least target reps completes a new goal.
+      final heavierGoal = (await repo.createStrengthGoal(
+        StrengthGoalInput(
+          exerciseId: benchId,
+          targetWeight: 105000,
+          targetReps: 5,
+          targetMaxStrength: 122500,
+          startDate: DateTime(2026, 11, 6),
+        ),
+      )).value;
+      await repo.createExerciseRecord(
+        ExerciseRecordInput(
+          exerciseId: benchId,
+          weight: 110000,
+          reps: 5,
+          recordDate: DateTime(2026, 11, 7),
+        ),
+      );
+      expect(
+        (await repo.getStrengthGoal(heavierGoal.id)).value.status,
+        ProgressStatus.completed,
+      );
+    });
+
+    test('ExerciseRecordCubit.createExerciseRecord refreshes activeStrengthGoal and strengthGoals when record completes open goal', () async {
+      final db = await testDatabase.db;
+      final exerciseId = await insertExercise(db, uniqueName('deadlift'));
+      final repo = ExerciseRecordRepository.create();
+      final cubit = ExerciseRecordCubit(exerciseRecordRepository: repo);
+      addTearDown(cubit.close);
+
+      await cubit.createStrengthGoal(
+        StrengthGoalInput(
+          exerciseId: exerciseId,
+          name: const Nullable('Pull 180x3'),
+          targetWeight: 180000,
+          targetReps: 3,
+          targetMaxStrength: 196364,
+          startDate: DateTime(2026, 11, 1),
+        ),
+      );
+      expect(cubit.state.activeStrengthGoal, isNotNull);
+      expect(cubit.state.activeStrengthGoal!.status, ProgressStatus.inProgress);
+
+      await cubit.createExerciseRecord(
+        ExerciseRecordInput(
+          exerciseId: exerciseId,
+          weight: 180000,
+          reps: 4,
+          recordDate: DateTime(2026, 11, 10),
+        ),
+      );
+
+      expect(cubit.state.activeStrengthGoal, isNull);
+      expect(cubit.state.strengthGoals, hasLength(1));
+      expect(cubit.state.strengthGoals.single.status, ProgressStatus.completed);
+      expect(cubit.state.strengthGoals.single.completedAt, isNotNull);
+      expect(cubit.state.isLoading, isFalse);
+    });
+
+    test('getActiveStrengthGoal and getStrengthGoals attach exercise only when exerciseId is null', () async {
+      final db = await testDatabase.db;
+      final benchName = uniqueName('bench');
+      final squatName = uniqueName('squat');
+      final benchId = await insertExercise(db, benchName);
+      final squatId = await insertExercise(db, squatName);
+      final repo = ExerciseRecordRepository.create();
+
+      await repo.createStrengthGoal(
+        StrengthGoalInput(
+          exerciseId: squatId,
+          name: const Nullable('Squat Goal'),
+          targetWeight: 140000,
+          targetReps: 5,
+          targetMaxStrength: 163333,
+          startDate: DateTime(2026, 11, 1),
+        ),
+      );
+      await repo.createStrengthGoal(
+        StrengthGoalInput(
+          exerciseId: benchId,
+          name: const Nullable('Bench Goal'),
+          targetWeight: 100000,
+          targetReps: 5,
+          targetMaxStrength: 116667,
+          startDate: DateTime(2026, 11, 2),
+        ),
+      );
+
+      final allActive = await repo.getActiveStrengthGoal();
+      expect(allActive.isOk(), isTrue);
+      expect(allActive.value.exercise?.name, benchName);
+
+      final singleActive = await repo.getActiveStrengthGoal(
+        exerciseId: benchId,
+      );
+      expect(singleActive.isOk(), isTrue);
+      expect(singleActive.value.exercise, isNull);
+
+      final allGoals = await repo.getStrengthGoals();
+      expect(allGoals.isOk(), isTrue);
+      expect(allGoals.value.data, hasLength(2));
+      expect(allGoals.value.data.map((g) => g.exercise?.name).toSet(), {
+        benchName,
+        squatName,
+      });
+
+      final singleGoals = await repo.getStrengthGoals(exerciseId: squatId);
+      expect(singleGoals.isOk(), isTrue);
+      expect(singleGoals.value.data, hasLength(1));
+      expect(singleGoals.value.data.single.exercise, isNull);
+
+      final cubit = ExerciseRecordCubit(exerciseRecordRepository: repo);
+      addTearDown(cubit.close);
+      await cubit.getActiveStrengthGoal();
+      await cubit.getStrengthGoals();
+      expect(cubit.state.activeStrengthGoal?.exercise?.name, benchName);
+      expect(cubit.state.strengthGoals, hasLength(2));
+
+      await cubit.createExerciseRecord(
+        ExerciseRecordInput(
+          exerciseId: benchId,
+          weight: 100000,
+          reps: 5,
+          recordDate: DateTime(2026, 11, 5),
+        ),
+      );
+
+      expect(cubit.state.activeStrengthGoal?.exercise?.name, squatName);
+      expect(
+        cubit.state.strengthGoals
+            .firstWhere((g) => g.exerciseId == benchId)
+            .exercise
+            ?.name,
+        benchName,
+      );
+    });
   });
 }

@@ -18,13 +18,17 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:material_ui/material_ui.dart';
 
+import '../../../data/utils/enums.dart';
 import '../../core/sizes/data_display_sizes.dart';
 import '../../core/sizes/screen_size.dart';
-import '../../core/widgets/layout/app_scaffold.dart';
+import '../../core/widgets/layout/responsive_scaffold.dart';
+import '../../home/view_models/profile_cubit.dart';
+import '../../home/view_models/states/profile_state.dart';
 import '../view_models/exercise_record_cubit.dart';
+import '../view_models/states/exercise_record_state.dart';
 import '../widgets/strength_goal/active_strength_goal_card.dart';
 import '../widgets/strength_goal/create_strength_goal_modal.dart';
-import '../widgets/strength_goal/strength_goal_history_list.dart';
+import '../widgets/strength_goal/strength_goal_history.dart';
 
 class StrengthGoalsScreen extends StatefulWidget {
   static const name = 'strength-goals';
@@ -50,37 +54,54 @@ class _StrengthGoalsScreenState extends State<StrengthGoalsScreen> {
     final breakpoints = BreakPoint.fromContext(context);
     final sizes = DataDisplaySizes.getDataDisplaySizes(breakpoints.screenSize);
 
-    return AppScaffold(
+    return ResponsiveScaffold(
       title: 'Strength Goals',
-      body: Padding(
-        padding: EdgeInsets.all(sizes.viewPadding),
-        child: SingleChildScrollView(
-          child: Column(
-            children: [
-              ActiveStrengthGoalCard(sizes: sizes, theme: theme),
-              SizedBox(height: sizes.spacing * 2),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  'Goal History',
-                  style: TextStyle(
-                    fontSize: sizes.subtitleFontSize,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              SizedBox(height: sizes.spacing),
-              StrengthGoalHistoryList(
-                shrinkWrap: true,
-                sizes: sizes,
-                theme: theme,
-              ),
-            ],
-          ),
-        ),
+      body: BlocBuilder<ProfileCubit, ProfileState>(
+        builder: (context, profileState) {
+          final units = profileState.system?.units ?? Units.metric;
+
+          return Padding(
+            padding: EdgeInsets.all(sizes.viewPadding),
+            child: BlocConsumer<ExerciseRecordCubit, ExerciseRecordState>(
+              listenWhen: (previous, current) =>
+                  current.error != null && current.error != previous.error,
+              listener: (context, state) {
+                if (state.error != null) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(state.error!.description),
+                      backgroundColor: theme.colorScheme.error,
+                    ),
+                  );
+                }
+              },
+              builder: (context, state) {
+                return Column(
+                  mainAxisSize: MainAxisSize.max,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    ActiveStrengthGoalCard(
+                      sizes: sizes,
+                      theme: theme,
+                      units: units,
+                    ),
+                    SizedBox(height: sizes.spacing),
+                    StrengthGoalHistory(
+                      theme: theme,
+                      breakPoint: breakpoints,
+                      sizes: sizes,
+                      units: units,
+                    ),
+                  ],
+                );
+              },
+            ),
+          );
+        },
       ),
       floatingActionButton: FloatingActionButton(
         key: const ValueKey('strength-goal-add-fab'),
+        elevation: sizes.elevation,
         onPressed: () {
           showDialog(
             context: context,

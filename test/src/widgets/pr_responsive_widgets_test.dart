@@ -44,7 +44,7 @@ import 'package:myfitnesstale/src/data/repositories/recipes/dtos/recipe_dto.dart
 import 'package:myfitnesstale/src/data/repositories/exercises/dtos/strength_goal_dto.dart';
 import 'package:myfitnesstale/src/ui/core/sizes/data_display_sizes.dart';
 import 'package:myfitnesstale/src/ui/core/sizes/screen_size.dart';
-import 'package:myfitnesstale/src/ui/exercises/screens/strength_goals_screen.dart';
+import 'package:myfitnesstale/src/ui/exercises/screens/strength_goals_list_screen.dart';
 import 'package:myfitnesstale/src/ui/foods/screens/food_creation_screen.dart';
 import 'package:myfitnesstale/src/ui/foods/screens/food_details_screen.dart';
 import 'package:myfitnesstale/src/ui/foods/screens/food_update_screen.dart';
@@ -210,6 +210,13 @@ const _macroGoal = MacroGoalDto(
   phase: WeightGoalPhase.maintain,
 );
 final _date = DateTime(2026, 10, 13);
+final _exercise = ExerciseDto.fromModel(
+  Exercise.create(
+    name: 'Bench press with a long exercise name',
+    muscleGroup: MuscleGroup.push,
+    muscles: const TargetMuscles(primary: {}, secondary: {}),
+  ).copyWith(id: const Nullable(1)),
+);
 final _strengthGoal = StrengthGoalDto(
   id: 1,
   name: 'A long bench press strength goal',
@@ -219,6 +226,7 @@ final _strengthGoal = StrengthGoalDto(
   exerciseId: 1,
   status: ProgressStatus.inProgress,
   startDate: _date,
+  exercise: _exercise,
 );
 
 class _Foods extends FoodCubit {

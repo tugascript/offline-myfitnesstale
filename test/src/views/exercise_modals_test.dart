@@ -35,12 +35,19 @@ import 'package:myfitnesstale/src/data/utils/enums.dart';
 import 'package:myfitnesstale/src/data/utils/json_data.dart';
 import 'package:myfitnesstale/src/ui/core/sizes/data_display_sizes.dart';
 import 'package:myfitnesstale/src/ui/core/sizes/screen_size.dart';
+import 'package:myfitnesstale/src/ui/core/utils/formatters.dart';
 import 'package:myfitnesstale/src/ui/core/view_models/states/common_state.dart';
+import 'package:myfitnesstale/src/ui/core/widgets/layout/app_text_button.dart';
+import 'package:myfitnesstale/src/ui/core/widgets/layout/list_card.dart';
+import 'package:myfitnesstale/src/ui/core/widgets/not_found_list.dart';
+import 'package:myfitnesstale/src/ui/core/widgets/progress_status_badge.dart';
 import 'package:myfitnesstale/src/ui/core/widgets/video/app_video_player.dart';
 import 'package:myfitnesstale/src/ui/exercises/screens/exercise_detail_screen.dart';
 import 'package:myfitnesstale/src/ui/exercises/screens/exercises_list_screen.dart';
+import 'package:myfitnesstale/src/ui/exercises/screens/strength_goals_list_screen.dart';
 import 'package:myfitnesstale/src/ui/exercises/view_models/exercise_cubit.dart';
 import 'package:myfitnesstale/src/ui/exercises/view_models/exercise_record_cubit.dart';
+import 'package:myfitnesstale/src/ui/exercises/view_models/states/exercise_record_state.dart';
 import 'package:myfitnesstale/src/ui/exercises/widgets/details/create_exercise_modal.dart';
 import 'package:myfitnesstale/src/ui/exercises/widgets/details/edit_exercise_modal.dart';
 import 'package:myfitnesstale/src/ui/exercises/widgets/strength_goal/active_strength_goal_card.dart';
@@ -246,18 +253,45 @@ class _FakeExerciseRecordCubit extends ExerciseRecordCubit {
   final bool shouldFail;
   final List<StrengthGoalInput> createdStrengthGoals = [];
   final List<(int, StrengthGoalInput)> updatedStrengthGoals = [];
+  final List<(int, int)> getStrengthGoalsCalls = [];
 
   _FakeExerciseRecordCubit({
     this.shouldFail = false,
     StrengthGoalDto? activeStrengthGoal,
     List<StrengthGoalDto> strengthGoals = const [],
+    StrengthGoalPagination? strengthGoalPagination,
   }) : super(exerciseRecordRepository: ExerciseRecordRepository.create()) {
     emit(
       state.copyWith(
         activeStrengthGoal: Nullable(activeStrengthGoal),
         strengthGoals: strengthGoals,
+        strengthGoalPagination: strengthGoalPagination,
       ),
     );
+  }
+
+  void emitError(String description) {
+    emit(
+      state.copyWith(
+        error: Nullable(
+          ErrorState(type: 'operationFailure', description: description),
+        ),
+        isLoading: false,
+      ),
+    );
+  }
+
+  @override
+  Future<void> getActiveStrengthGoal({int? exerciseId}) async {}
+
+  @override
+  Future<void> getStrengthGoals({
+    int? exerciseId,
+    bool skipInProgress = false,
+    int limit = 20,
+    int offset = 0,
+  }) async {
+    getStrengthGoalsCalls.add((limit, offset));
   }
 
   @override
@@ -1407,7 +1441,7 @@ void main() {
         targetMaxStrength: 114000,
         exerciseId: 1,
         status: ProgressStatus.inProgress,
-        startDate: DateTime(2026, 10, 10),
+        startDate: DateTime(2025, 10, 10),
       );
       final pastUnnamedGoal = StrengthGoalDto(
         id: 2,
@@ -1417,8 +1451,8 @@ void main() {
         targetMaxStrength: 93333,
         exerciseId: 1,
         status: ProgressStatus.completed,
-        startDate: DateTime(2026, 9, 1),
-        completedAt: DateTime(2026, 9, 20),
+        startDate: DateTime(2025, 9, 1),
+        completedAt: DateTime(2025, 9, 20),
       );
       final pastNamedGoal = StrengthGoalDto(
         id: 3,
@@ -1428,7 +1462,7 @@ void main() {
         targetMaxStrength: 105882,
         exerciseId: 1,
         status: ProgressStatus.abandoned,
-        startDate: DateTime(2026, 8, 1),
+        startDate: DateTime(2025, 8, 1),
       );
 
       final recordCubit = _FakeExerciseRecordCubit(
@@ -1473,15 +1507,233 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('Active Strength Goal'), findsOneWidget);
-      expect(find.text('90.0 kg'), findsOneWidget);
-      expect(find.text('114.0 kg'), findsOneWidget);
-      expect(find.text('80.0 kg × 5 reps • 1RM: 93.3 kg'), findsOneWidget);
-      expect(find.text('Sep 20, 2026'), findsOneWidget);
-      expect(find.text('Autumn Peak'), findsOneWidget);
+      expect(find.text('Latest Active Goal'), findsOneWidget);
       expect(
-        find.textContaining('100.0 kg × 3 reps • 1RM: 105.9 kg'),
+        find.byKey(const ValueKey('active-strength-goal-complete-btn')),
+        findsNothing,
+      );
+      expect(find.text('Complete Goal'), findsNothing);
+      expect(
+        find.byKey(const ValueKey('active-strength-goal-delete-btn')),
         findsOneWidget,
+      );
+      expect(find.text(' 90 kg'), findsOneWidget);
+      expect(find.text(' 114 kg'), findsOneWidget);
+      expect(find.text('Started: 10/10/2025'), findsOneWidget);
+      expect(find.byType(ProgressStatusBadge), findsNWidgets(3));
+      expect(find.text('In Progress'), findsOneWidget);
+      expect(find.text('Completed'), findsOneWidget);
+      expect(find.text('Abandoned'), findsOneWidget);
+      expect(find.byType(ListCard), findsNWidgets(2));
+      expect(
+        find.text(
+          ' ${Formatters.formatRelativeDate(Units.metric, DateTime(2025, 9, 20))}',
+        ),
+        findsOneWidget,
+      );
+      expect(find.textContaining('80 kg', findRichText: true), findsOneWidget);
+      expect(find.text(' 93.33 kg'), findsOneWidget);
+      expect(find.text(' Autumn Peak'), findsOneWidget);
+      expect(find.textContaining('100 kg', findRichText: true), findsOneWidget);
+      expect(find.text(' 105.88 kg'), findsOneWidget);
+
+      final containers = tester.widgetList<Container>(find.byType(Container));
+      for (final container in containers) {
+        final decoration = container.decoration;
+        if (decoration is BoxDecoration) {
+          expect(
+            decoration.borderRadius == null ||
+                decoration.borderRadius == BorderRadius.zero,
+            isTrue,
+          );
+        }
+      }
+      expect(find.byIcon(Icons.sports_gymnastics), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'ActiveStrengthGoalCard and StrengthGoalHistoryList display exercise names only when populated',
+    (tester) async {
+      final bench = _sampleExercise(id: 1, name: 'Bench Press');
+      final squat = _sampleExercise(id: 2, name: 'Back Squat');
+      final incline = _sampleExercise(id: 3, name: 'Incline Press');
+
+      final activeGoal = StrengthGoalDto(
+        id: 1,
+        name: 'Summer Goal',
+        targetReps: 5,
+        targetWeight: 100000,
+        targetMaxStrength: 116667,
+        exerciseId: 1,
+        status: ProgressStatus.inProgress,
+        startDate: DateTime(2025, 10, 10),
+        exercise: bench,
+      );
+      final pastUnnamedGoal = StrengthGoalDto(
+        id: 2,
+        name: null,
+        targetReps: 5,
+        targetWeight: 140000,
+        targetMaxStrength: 163333,
+        exerciseId: 2,
+        status: ProgressStatus.completed,
+        startDate: DateTime(2025, 9, 1),
+        completedAt: DateTime(2025, 9, 20),
+        exercise: squat,
+      );
+      final pastNamedGoal = StrengthGoalDto(
+        id: 3,
+        name: 'Autumn Peak',
+        targetReps: 3,
+        targetWeight: 90000,
+        targetMaxStrength: 95294,
+        exerciseId: 3,
+        status: ProgressStatus.abandoned,
+        startDate: DateTime(2025, 8, 1),
+        exercise: incline,
+      );
+
+      final recordCubit = _FakeExerciseRecordCubit(
+        activeStrengthGoal: activeGoal,
+        strengthGoals: [activeGoal, pastUnnamedGoal, pastNamedGoal],
+      );
+      final profileCubit = _FakeProfileCubit();
+      addTearDown(recordCubit.close);
+      addTearDown(profileCubit.close);
+
+      await tester.pumpWidget(
+        MultiBlocProvider(
+          providers: [
+            BlocProvider<ExerciseRecordCubit>.value(value: recordCubit),
+            BlocProvider<ProfileCubit>.value(value: profileCubit),
+          ],
+          child: MaterialApp(
+            home: Builder(
+              builder: (context) {
+                final sizes = DataDisplaySizes.getDataDisplaySizes(
+                  ScreenSize.md,
+                );
+                final theme = Theme.of(context);
+                return Scaffold(
+                  body: SingleChildScrollView(
+                    child: Column(
+                      children: [
+                        ActiveStrengthGoalCard(theme: theme, sizes: sizes),
+                        StrengthGoalHistoryList(
+                          shrinkWrap: true,
+                          theme: theme,
+                          sizes: sizes,
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byIcon(Icons.sports_gymnastics), findsNWidgets(3));
+      expect(find.text(' Bench Press'), findsOneWidget);
+      expect(find.text('Summer Goal'), findsOneWidget);
+      expect(find.text(' Back Squat'), findsOneWidget);
+      expect(find.text(' Incline Press'), findsOneWidget);
+      expect(find.text(' Autumn Peak'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'StrengthGoalsScreen uses core empty widgets, displays error SnackBar, and paginates history on scroll',
+    (tester) async {
+      final pastGoals = List.generate(
+        10,
+        (i) => StrengthGoalDto(
+          id: i + 10,
+          name: 'Past Goal ${i + 1}',
+          targetReps: 5,
+          targetWeight: 80000 + (i * 2500),
+          targetMaxStrength: 93333 + (i * 2500),
+          exerciseId: 1,
+          status: ProgressStatus.completed,
+          startDate: DateTime(2025, 1, 1 + i),
+          completedAt: DateTime(2025, 2, 1 + i),
+        ),
+      );
+      final emptyRecordCubit = _FakeExerciseRecordCubit();
+      final profileCubit = _FakeProfileCubit();
+      addTearDown(emptyRecordCubit.close);
+      addTearDown(profileCubit.close);
+
+      final emptyRouter = GoRouter(
+        routes: [
+          GoRoute(path: '/', builder: (_, _) => const StrengthGoalsScreen()),
+        ],
+      );
+      addTearDown(emptyRouter.dispose);
+
+      await tester.pumpWidget(
+        MultiBlocProvider(
+          providers: [
+            BlocProvider<ExerciseRecordCubit>.value(value: emptyRecordCubit),
+            BlocProvider<ProfileCubit>.value(value: profileCubit),
+          ],
+          child: MaterialApp.router(routerConfig: emptyRouter),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('No Active Strength Goal'), findsOneWidget);
+      expect(find.byType(AppTextButton), findsOneWidget);
+      expect(find.text('Goal History'), findsOneWidget);
+      expect(find.byType(NotFoundList), findsOneWidget);
+      expect(find.text('Empty history'), findsOneWidget);
+
+      emptyRecordCubit.emitError('Failed to load goals');
+      await tester.pumpAndSettle();
+      expect(find.text('Failed to load goals'), findsOneWidget);
+
+      final paginatedCubit = _FakeExerciseRecordCubit(
+        strengthGoals: pastGoals,
+        strengthGoalPagination: const StrengthGoalPagination(
+          total: 25,
+          limit: 10,
+          offset: 0,
+        ),
+      );
+      addTearDown(paginatedCubit.close);
+
+      final paginatedRouter = GoRouter(
+        routes: [
+          GoRoute(path: '/', builder: (_, _) => const StrengthGoalsScreen()),
+        ],
+      );
+      addTearDown(paginatedRouter.dispose);
+
+      await tester.pumpWidget(
+        MultiBlocProvider(
+          providers: [
+            BlocProvider<ExerciseRecordCubit>.value(value: paginatedCubit),
+            BlocProvider<ProfileCubit>.value(value: profileCubit),
+          ],
+          child: MaterialApp.router(routerConfig: paginatedRouter),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byType(ListCard), findsWidgets);
+      final historyListView = find.descendant(
+        of: find.byType(StrengthGoalHistoryList),
+        matching: find.byType(ListView),
+      );
+      await tester.drag(historyListView, const Offset(0, -1200));
+      await tester.pumpAndSettle();
+
+      expect(
+        paginatedCubit.getStrengthGoalsCalls.any((call) => call.$2 == 10),
+        isTrue,
       );
     },
   );

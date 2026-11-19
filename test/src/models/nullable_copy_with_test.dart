@@ -137,6 +137,27 @@ void main() {
             .completedAt,
         DateTime(2026, 10, 11),
       );
+
+      final exerciseDto = ExerciseDto(
+        id: 2,
+        name: 'Bench Press',
+        description: '',
+        muscleGroup: MuscleGroup.push,
+        muscles: const TargetMuscles(primary: {}, secondary: {}),
+        createdBy: CreatedBy.system,
+      );
+      expect(goal.copyWith().exercise, isNull);
+      expect(
+        goal.copyWith(exercise: Nullable(exerciseDto)).exercise,
+        exerciseDto,
+      );
+      expect(
+        goal
+            .copyWith(exercise: Nullable(exerciseDto))
+            .copyWith(exercise: const Nullable(null))
+            .exercise,
+        isNull,
+      );
     });
 
     test('WeightRecord and WeightRecordDto can clear nullable fields', () {
