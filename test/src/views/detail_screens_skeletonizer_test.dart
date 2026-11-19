@@ -23,7 +23,9 @@ import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
+import 'package:myfitnesstale/src/data/repositories/exercises/dtos/equipment_dto.dart';
 import 'package:myfitnesstale/src/data/repositories/exercises/dtos/exercise_dto.dart';
+import 'package:myfitnesstale/src/data/repositories/exercises/exercise_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/workout_plans/dtos/workout_plan_dto.dart';
 import 'package:myfitnesstale/src/data/repositories/workout_plans/workout_plan_record_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/workout_plans/workout_plan_repository.dart';
@@ -36,6 +38,10 @@ import 'package:myfitnesstale/src/data/utils/enums.dart';
 import 'package:myfitnesstale/src/data/utils/json_data.dart';
 import 'package:myfitnesstale/src/ui/core/screens/loading_screen.dart';
 import 'package:myfitnesstale/src/ui/core/view_models/states/common_state.dart';
+import 'package:myfitnesstale/src/ui/exercises/screens/equipment_details_screen.dart';
+import 'package:myfitnesstale/src/ui/exercises/screens/exercise_detail_screen.dart';
+import 'package:myfitnesstale/src/ui/exercises/view_models/exercise_cubit.dart';
+import 'package:myfitnesstale/src/ui/exercises/view_models/states/exercise_state.dart';
 import 'package:myfitnesstale/src/ui/workout_plans/screens/workout_plan_detail_screen.dart';
 import 'package:myfitnesstale/src/ui/workout_plans/view_models/workout_plan_cubit.dart';
 import 'package:myfitnesstale/src/ui/workout_plans/view_models/workout_plan_record_cubit.dart';
@@ -93,6 +99,43 @@ class _TestWorkoutCubit extends WorkoutCubit {
     emit(
       state.copyWith(
         selectedWorkout: Nullable(nextWorkout),
+        isLoading: false,
+        error: Nullable(nextError),
+      ),
+    );
+  }
+}
+
+class _TestExerciseCubit extends ExerciseCubit {
+  _TestExerciseCubit() : super(exerciseRepository: ExerciseRepository.create());
+
+  Completer<void>? pending;
+  ExerciseDto? nextExercise;
+  SelectedEquipment? nextEquipment;
+  ErrorState? nextError;
+
+  @override
+  Future<void> getExercise(int id) async {
+    emit(state.copyWith(isLoading: true, error: const Nullable(null)));
+    await pending?.future;
+    if (isClosed) return;
+    emit(
+      state.copyWith(
+        selectedExercise: Nullable(nextExercise),
+        isLoading: false,
+        error: Nullable(nextError),
+      ),
+    );
+  }
+
+  @override
+  Future<void> getEquipment(int id) async {
+    emit(state.copyWith(isLoading: true, error: const Nullable(null)));
+    await pending?.future;
+    if (isClosed) return;
+    emit(
+      state.copyWith(
+        selectedEquipment: Nullable(nextEquipment),
         isLoading: false,
         error: Nullable(nextError),
       ),
@@ -438,6 +481,312 @@ void main() {
           ..nextWorkout = _sampleWorkout();
 
         await pumpWorkoutScreen(tester, cubit: cubit, textScale: 2.0);
+        await tester.pump(const Duration(milliseconds: 150));
+
+        expect(tester.takeException(), isNull);
+
+        cubit.pending!.complete();
+        await tester.pumpAndSettle();
+        expect(tester.takeException(), isNull);
+      },
+    );
+  });
+
+  ExerciseDto sampleExercise({int id = 1, String name = 'Bench Press'}) {
+    return ExerciseDto(
+      id: id,
+      name: name,
+      description: 'Compound chest movement',
+      muscleGroup: MuscleGroup.push,
+      muscles: const TargetMuscles(primary: {Muscle.chest}, secondary: {}),
+      difficulty: Difficulty.intermediate,
+      equipments: const [
+        EquipmentDto(id: 1, name: 'Barbell', createdBy: CreatedBy.system),
+      ],
+      createdBy: CreatedBy.user,
+    );
+  }
+
+  SelectedEquipment sampleSelectedEquipment({
+    int id = 1,
+    String name = 'Barbell',
+  }) {
+    return SelectedEquipment(
+      equipment: EquipmentDto(
+        id: id,
+        name: name,
+        rarity: EquipmentRarity.common,
+        createdBy: CreatedBy.user,
+      ),
+      relatedExercises: [sampleExercise()],
+    );
+  }
+
+  group('ExerciseDetailScreen Skeletonizer', () {
+    Future<void> pumpExerciseScreen(
+      WidgetTester tester, {
+      required _TestExerciseCubit cubit,
+      int exerciseId = 1,
+      double textScale = 1.0,
+    }) async {
+      final router = _routerFor(ExerciseDetailScreen(exerciseId: exerciseId));
+      addTearDown(cubit.close);
+      addTearDown(router.dispose);
+
+      await tester.pumpWidget(
+        BlocProvider<ExerciseCubit>.value(
+          value: cubit,
+          child: MaterialApp.router(
+            routerConfig: router,
+            builder: (context, child) => MediaQuery(
+              data: MediaQuery.of(context)
+                  .copyWith(textScaler: TextScaler.linear(textScale)),
+              child: child!,
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+    }
+
+    testWidgets(
+      'shows enabled Skeletonizer instead of LoadingScreen while loading, then renders loaded exercise',
+      (tester) async {
+        final cubit = _TestExerciseCubit()
+          ..pending = Completer<void>()
+          ..nextExercise = sampleExercise();
+
+        await pumpExerciseScreen(tester, cubit: cubit);
+
+        expect(find.byType(LoadingScreen), findsNothing);
+        expect(find.byType(CircularProgressIndicator), findsNothing);
+        expect(find.textContaining('Exercise Details'), findsOneWidget);
+        expect(
+          find.byWidgetPredicate(
+            (widget) =>
+                widget is Skeletonizer &&
+                widget.enabled &&
+                widget.ignorePointers,
+          ),
+          findsOneWidget,
+        );
+
+        cubit.pending!.complete();
+        await tester.pumpAndSettle();
+
+        expect(
+          find.byWidgetPredicate(
+            (widget) => widget is Skeletonizer && !widget.enabled,
+          ),
+          findsOneWidget,
+        );
+        expect(find.textContaining('BENCH PRESS'), findsOneWidget);
+        expect(find.text('Compound chest movement'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'skeletonizes when switching to a different exercise id while previous exercise is in state',
+      (tester) async {
+        final cubit = _TestExerciseCubit()
+          ..pending = Completer<void>()
+          ..nextExercise = sampleExercise(id: 2, name: 'Pull Up');
+        cubit.emit(
+          cubit.state.copyWith(
+            selectedExercise: Nullable(
+              sampleExercise(id: 1, name: 'Stale Exercise'),
+            ),
+          ),
+        );
+
+        await pumpExerciseScreen(tester, cubit: cubit, exerciseId: 2);
+
+        expect(find.textContaining('STALE EXERCISE'), findsNothing);
+        expect(
+          find.byWidgetPredicate(
+            (widget) => widget is Skeletonizer && widget.enabled,
+          ),
+          findsOneWidget,
+        );
+
+        cubit.pending!.complete();
+        await tester.pumpAndSettle();
+
+        expect(find.textContaining('PULL UP'), findsOneWidget);
+      },
+    );
+
+    testWidgets('renders Exercise Not Found when loading resolves to null', (
+      tester,
+    ) async {
+      final cubit = _TestExerciseCubit()
+        ..pending = Completer<void>()
+        ..nextExercise = null
+        ..nextError = const ErrorState(
+          type: 'notFound',
+          description: 'Exercise not found',
+        );
+
+      await pumpExerciseScreen(tester, cubit: cubit);
+      cubit.pending!.complete();
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('Exercise Not Found'), findsOneWidget);
+      expect(find.text('Exercise not found'), findsOneWidget);
+    });
+
+    testWidgets(
+      'skeleton state fits narrow screens at 200% text scaling without overflow',
+      (tester) async {
+        tester.view.physicalSize = const Size(320, 740);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+
+        final cubit = _TestExerciseCubit()
+          ..pending = Completer<void>()
+          ..nextExercise = sampleExercise();
+
+        await pumpExerciseScreen(tester, cubit: cubit, textScale: 2.0);
+        await tester.pump(const Duration(milliseconds: 150));
+
+        expect(tester.takeException(), isNull);
+
+        cubit.pending!.complete();
+        await tester.pumpAndSettle();
+        expect(tester.takeException(), isNull);
+      },
+    );
+  });
+
+  group('EquipmentDetailsScreen Skeletonizer', () {
+    Future<void> pumpEquipmentScreen(
+      WidgetTester tester, {
+      required _TestExerciseCubit cubit,
+      int equipmentId = 1,
+      double textScale = 1.0,
+    }) async {
+      final router = _routerFor(
+        EquipmentDetailsScreen(equipmentId: equipmentId),
+      );
+      addTearDown(cubit.close);
+      addTearDown(router.dispose);
+
+      await tester.pumpWidget(
+        BlocProvider<ExerciseCubit>.value(
+          value: cubit,
+          child: MaterialApp.router(
+            routerConfig: router,
+            builder: (context, child) => MediaQuery(
+              data: MediaQuery.of(context)
+                  .copyWith(textScaler: TextScaler.linear(textScale)),
+              child: child!,
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+    }
+
+    testWidgets(
+      'shows enabled Skeletonizer instead of LoadingScreen while loading, then renders loaded equipment',
+      (tester) async {
+        final cubit = _TestExerciseCubit()
+          ..pending = Completer<void>()
+          ..nextEquipment = sampleSelectedEquipment();
+
+        await pumpEquipmentScreen(tester, cubit: cubit);
+
+        expect(find.byType(LoadingScreen), findsNothing);
+        expect(find.byType(CircularProgressIndicator), findsNothing);
+        expect(find.textContaining('Equipment details'), findsOneWidget);
+        expect(
+          find.byWidgetPredicate(
+            (widget) =>
+                widget is Skeletonizer &&
+                widget.enabled &&
+                widget.ignorePointers,
+          ),
+          findsOneWidget,
+        );
+
+        cubit.pending!.complete();
+        await tester.pumpAndSettle();
+
+        expect(
+          find.byWidgetPredicate(
+            (widget) => widget is Skeletonizer && !widget.enabled,
+          ),
+          findsOneWidget,
+        );
+        expect(find.textContaining('BARBELL'), findsOneWidget);
+        expect(find.text('Bench Press'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'skeletonizes when switching to a different equipment id while previous equipment is in state',
+      (tester) async {
+        final cubit = _TestExerciseCubit()
+          ..pending = Completer<void>()
+          ..nextEquipment = sampleSelectedEquipment(id: 2, name: 'Dumbbell');
+        cubit.emit(
+          cubit.state.copyWith(
+            selectedEquipment: Nullable(
+              sampleSelectedEquipment(id: 1, name: 'Stale Equipment'),
+            ),
+          ),
+        );
+
+        await pumpEquipmentScreen(tester, cubit: cubit, equipmentId: 2);
+
+        expect(find.textContaining('STALE EQUIPMENT'), findsNothing);
+        expect(
+          find.byWidgetPredicate(
+            (widget) => widget is Skeletonizer && widget.enabled,
+          ),
+          findsOneWidget,
+        );
+
+        cubit.pending!.complete();
+        await tester.pumpAndSettle();
+
+        expect(find.textContaining('DUMBBELL'), findsOneWidget);
+      },
+    );
+
+    testWidgets('renders Unknown Equipment when loading resolves to null', (
+      tester,
+    ) async {
+      final cubit = _TestExerciseCubit()
+        ..pending = Completer<void>()
+        ..nextEquipment = null
+        ..nextError = const ErrorState(
+          type: 'notFound',
+          description: 'Equipment not found',
+        );
+
+      await pumpEquipmentScreen(tester, cubit: cubit);
+      cubit.pending!.complete();
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('Unknown Equipment'), findsOneWidget);
+      expect(find.text('Equipment not found'), findsAtLeastNWidgets(1));
+    });
+
+    testWidgets(
+      'skeleton state fits narrow screens at 200% text scaling without overflow',
+      (tester) async {
+        tester.view.physicalSize = const Size(320, 740);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+
+        final cubit = _TestExerciseCubit()
+          ..pending = Completer<void>()
+          ..nextEquipment = sampleSelectedEquipment();
+
+        await pumpEquipmentScreen(tester, cubit: cubit, textScale: 2.0);
         await tester.pump(const Duration(milliseconds: 150));
 
         expect(tester.takeException(), isNull);

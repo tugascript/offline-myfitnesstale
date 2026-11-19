@@ -70,6 +70,8 @@ final class DataDisplaySizesList {
 
   double get iconFontSize => fontSize * 1.15;
 
+  double get iconSmallSize => smallFontSize * 1.15;
+
   double get btnIconSize => fontSize * 1.2;
 
   double get profileLabelWidth => subtitleFontSize * 9.5;

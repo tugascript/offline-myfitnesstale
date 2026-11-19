@@ -18,10 +18,12 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 
+import '../../../data/repositories/exercises/dtos/exercise_dto.dart';
 import '../../../data/utils/enums.dart';
+import '../../../data/utils/json_data.dart';
 import '../../../routing/routes.dart';
-import '../../core/screens/loading_screen.dart';
 import '../../core/sizes/data_display_sizes.dart';
 import '../../core/sizes/screen_size.dart';
 import '../../core/widgets/confirmation_dialog.dart';
@@ -34,6 +36,16 @@ import '../view_models/exercise_cubit.dart';
 import '../view_models/states/exercise_state.dart';
 import '../widgets/details/edit_exercise_modal.dart';
 import '../widgets/details/exercise_header_card.dart';
+
+const _skeletonExercise = ExerciseDto(
+  id: 0,
+  name: 'Loading Exercise Name',
+  description: 'Loading exercise description placeholder...',
+  muscleGroup: MuscleGroup.push,
+  muscles: TargetMuscles(primary: {}, secondary: {}),
+  difficulty: Difficulty.beginner,
+  createdBy: CreatedBy.system,
+);
 
 class ExerciseDetailScreen extends StatefulWidget {
   static const name = "exercise-detail";
@@ -114,14 +126,14 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
         }
       },
       builder: (context, exerciseState) {
-        if (exerciseState.isLoading && exerciseState.selectedExercise == null) {
-          return const LoadingScreen(
-            title: "Exercise Details",
-            message: "Loading exercise details...",
-          );
-        }
+        final isSkeletonLoading =
+            exerciseState.isLoading &&
+            (exerciseState.selectedExercise == null ||
+                exerciseState.selectedExercise!.id != widget.exerciseId);
 
-        if (exerciseState.selectedExercise == null) {
+        if (!isSkeletonLoading &&
+            (exerciseState.selectedExercise == null ||
+                exerciseState.selectedExercise!.id != widget.exerciseId)) {
           return AppScaffold(
             title: "Exercise Not Found",
             body: Center(
@@ -130,9 +142,9 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
                 children: [
                   const Icon(Icons.error_outline, size: 64, color: Colors.grey),
                   const SizedBox(height: 16),
-                  const Text(
-                    'Exercise not found',
-                    style: TextStyle(fontSize: 16, color: Colors.grey),
+                  Text(
+                    exerciseState.error?.description ?? 'Exercise not found',
+                    style: const TextStyle(fontSize: 16, color: Colors.grey),
                   ),
                   const SizedBox(height: 16),
                   ElevatedButton(
@@ -145,100 +157,106 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
           );
         }
 
-        final exercise = exerciseState.selectedExercise!;
+        final exercise = isSkeletonLoading
+            ? _skeletonExercise
+            : exerciseState.selectedExercise!;
 
         return ResponsiveScaffold(
-          title: exercise.name,
-          isEntity: true,
+          title: isSkeletonLoading ? "Exercise Details" : exercise.name,
+          isEntity: !isSkeletonLoading,
           showBackButton: true,
-          body: Padding(
-            padding: EdgeInsets.all(sizes.viewPadding),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Exercise Header
-                ExerciseHeaderCard(
-                  theme: theme,
-                  sizes: sizes,
-                  exerciseDto: exercise,
-                  onFavoriteToggle: () => _toggleFavorite(exercise.isFavorite),
-                ),
-
-                SizedBox(height: sizes.spacing * 1.25),
-
-                // Video Player
-                if (exercise.video != null &&
-                    exercise.video!.uri.isNotEmpty) ...[
-                  AppVideoPlayer(
-                    video: exercise.video!,
-                    sizes: sizes,
+          body: Skeletonizer(
+            enabled: isSkeletonLoading,
+            child: Padding(
+              padding: EdgeInsets.all(sizes.viewPadding),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Exercise Header
+                  ExerciseHeaderCard(
                     theme: theme,
+                    sizes: sizes,
+                    exerciseDto: exercise,
+                    onFavoriteToggle: () =>
+                        _toggleFavorite(exercise.isFavorite),
                   ),
-                  SizedBox(height: sizes.spacing * 1.25),
-                ],
 
-                // Action Buttons
-                Row(
-                  children: [
-                    Expanded(
-                      child: AppElevatedButton(
-                        theme: theme,
-                        isLoading: exerciseState.isLoading,
-                        sizes: sizes,
-                        onPressed: () {
-                          context.push(
-                            Routes.exerciseRecords.name.replaceFirst(
-                              ":id",
-                              exercise.id.toString(),
-                            ),
-                          );
-                        },
-                        label: 'Log Progress',
-                        icon: Icons.history,
-                      ),
+                  SizedBox(height: sizes.spacing * 1.25),
+
+                  // Video Player
+                  if (exercise.video != null &&
+                      exercise.video!.uri.isNotEmpty) ...[
+                    AppVideoPlayer(
+                      video: exercise.video!,
+                      sizes: sizes,
+                      theme: theme,
                     ),
+                    SizedBox(height: sizes.spacing * 1.25),
                   ],
-                ),
-                if (exercise.createdBy == CreatedBy.user) ...[
-                  SizedBox(height: sizes.spacing),
+
+                  // Action Buttons
                   Row(
                     children: [
                       Expanded(
-                        child: MutationButton(
-                          isLoading: exerciseState.isLoading,
+                        child: AppElevatedButton(
                           theme: theme,
+                          isLoading: exerciseState.isLoading,
                           sizes: sizes,
                           onPressed: () {
-                            showDialog(
-                              context: context,
-                              builder: (context) => EditExerciseModal(
-                                theme: theme,
-                                sizes: sizes,
-                                exercise: exercise,
+                            context.push(
+                              Routes.exerciseRecords.name.replaceFirst(
+                                ":id",
+                                exercise.id.toString(),
                               ),
                             );
                           },
-                          label: 'EDIT',
-                          icon: Icons.edit,
-                        ),
-                      ),
-                      SizedBox(width: sizes.spacing),
-                      Expanded(
-                        child: MutationButton(
-                          isLoading: exerciseState.isLoading,
-                          theme: theme,
-                          sizes: sizes,
-                          onPressed: _deleteExercise,
-                          label: 'DELETE',
-                          icon: Icons.delete,
-                          color: Colors.red,
+                          label: 'Log Progress',
+                          icon: Icons.history,
                         ),
                       ),
                     ],
                   ),
+                  if (exercise.createdBy == CreatedBy.user) ...[
+                    SizedBox(height: sizes.spacing),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: MutationButton(
+                            isLoading: exerciseState.isLoading,
+                            theme: theme,
+                            sizes: sizes,
+                            onPressed: () {
+                              showDialog(
+                                context: context,
+                                builder: (context) => EditExerciseModal(
+                                  theme: theme,
+                                  sizes: sizes,
+                                  exercise: exercise,
+                                ),
+                              );
+                            },
+                            label: 'EDIT',
+                            icon: Icons.edit,
+                          ),
+                        ),
+                        SizedBox(width: sizes.spacing),
+                        Expanded(
+                          child: MutationButton(
+                            isLoading: exerciseState.isLoading,
+                            theme: theme,
+                            sizes: sizes,
+                            onPressed: _deleteExercise,
+                            label: 'DELETE',
+                            icon: Icons.delete,
+                            color: Colors.red,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                  SizedBox(height: sizes.spacing * 2),
                 ],
-                SizedBox(height: sizes.spacing * 2),
-              ],
+              ),
             ),
           ),
         );
