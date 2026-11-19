@@ -661,10 +661,7 @@ void main() {
       await tester.tap(addMuscleButtons.at(1));
       await tester.pumpAndSettle();
 
-      expect(
-        find.byType(DropdownButtonFormField<Muscle?>),
-        findsNWidgets(2),
-      );
+      expect(find.byType(DropdownButtonFormField<Muscle?>), findsNWidgets(2));
 
       // Switching MuscleGroup to Legs clears incompatible Pull muscles.
       await tester.ensureVisible(muscleGroupDropdown);
@@ -687,10 +684,7 @@ void main() {
 
       expect(cubit.createdInputs, hasLength(1));
       expect(cubit.createdInputs.first.muscleGroup, MuscleGroup.legs);
-      expect(
-        cubit.createdInputs.first.muscles.primary,
-        {Muscle.quadriceps},
-      );
+      expect(cubit.createdInputs.first.muscles.primary, {Muscle.quadriceps});
       expect(cubit.createdInputs.first.muscles.secondary, isEmpty);
     },
   );

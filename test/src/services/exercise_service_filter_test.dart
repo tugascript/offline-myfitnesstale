@@ -64,172 +64,172 @@ void main() {
   tearDown(testDatabase.clearOnboardingTables);
   tearDownAll(testDatabase.destroy);
 
-  test('filters exercises by createdBy and retains filter across pages', () async {
-    final db = await testDatabase.db;
-    await createExercise(
-      db,
-      name: 'User Press',
-      muscleGroup: MuscleGroup.push,
-      difficulty: Difficulty.beginner,
-      isFavorite: false,
-      createdBy: CreatedBy.user,
-    );
-    await createExercise(
-      db,
-      name: 'User Row',
-      muscleGroup: MuscleGroup.pull,
-      difficulty: Difficulty.beginner,
-      isFavorite: false,
-      createdBy: CreatedBy.user,
-    );
-    await createExercise(
-      db,
-      name: 'System Squat',
-      muscleGroup: MuscleGroup.legs,
-      difficulty: Difficulty.beginner,
-      isFavorite: false,
-      createdBy: CreatedBy.system,
-    );
-
-    final cubit = ExerciseCubit(exerciseRepository: service);
-    addTearDown(cubit.close);
-    await cubit.getExercises(createdBy: CreatedBy.user, limit: 1, offset: 0);
-    expect(cubit.state.exercises, hasLength(1));
-    expect(cubit.state.exercisePagination.total, 2);
-    expect(cubit.state.exercisePagination.createdBy, CreatedBy.user);
-
-    await cubit.getExercises(
-      createdBy: cubit.state.exercisePagination.createdBy,
-      limit: 1,
-      offset: 1,
-    );
-    expect(cubit.state.exercises, hasLength(2));
-    expect(
-      cubit.state.exercises.every(
-        (exercise) => exercise.createdBy == CreatedBy.user,
-      ),
-      isTrue,
-    );
-    expect(cubit.state.exercisePagination.createdBy, CreatedBy.user);
-  });
-
   test(
-    'filters equipments by isFavorite and createdBy and retains filters across pages',
+    'filters exercises by createdBy and retains filter across pages',
     () async {
       final db = await testDatabase.db;
-      Future<int> createEquipment({
-        required String name,
-        required bool isFavorite,
-        required CreatedBy createdBy,
-      }) {
-        return db.insert(
-          Equipment.table,
-          Equipment.create(
-            name: name,
-            isFavorite: isFavorite,
-            createdBy: createdBy,
-          ).toMap(),
-        );
-      }
-
-      await createEquipment(
-        name: 'User Fav Barbell',
-        isFavorite: true,
-        createdBy: CreatedBy.user,
-      );
-      await createEquipment(
-        name: 'User Fav Dumbbell',
-        isFavorite: true,
-        createdBy: CreatedBy.user,
-      );
-      await createEquipment(
-        name: 'User NonFav Kettlebell',
+      await createExercise(
+        db,
+        name: 'User Press',
+        muscleGroup: MuscleGroup.push,
+        difficulty: Difficulty.beginner,
         isFavorite: false,
         createdBy: CreatedBy.user,
       );
-      await createEquipment(
-        name: 'System Fav Cable',
-        isFavorite: true,
-        createdBy: CreatedBy.system,
+      await createExercise(
+        db,
+        name: 'User Row',
+        muscleGroup: MuscleGroup.pull,
+        difficulty: Difficulty.beginner,
+        isFavorite: false,
+        createdBy: CreatedBy.user,
       );
-
-      final favOnly = await service.getEquipments(isFavorite: true);
-      expect(favOnly.isOk(), isTrue);
-      expect(favOnly.value.total, 3);
-      expect(favOnly.value.data.every((e) => e.isFavorite), isTrue);
-
-      final userOnly = await service.getEquipments(createdBy: CreatedBy.user);
-      expect(userOnly.isOk(), isTrue);
-      expect(userOnly.value.total, 3);
-      expect(
-        userOnly.value.data.every((e) => e.createdBy == CreatedBy.user),
-        isTrue,
+      await createExercise(
+        db,
+        name: 'System Squat',
+        muscleGroup: MuscleGroup.legs,
+        difficulty: Difficulty.beginner,
+        isFavorite: false,
+        createdBy: CreatedBy.system,
       );
 
       final cubit = ExerciseCubit(exerciseRepository: service);
       addTearDown(cubit.close);
+      await cubit.getExercises(createdBy: CreatedBy.user, limit: 1, offset: 0);
+      expect(cubit.state.exercises, hasLength(1));
+      expect(cubit.state.exercisePagination.total, 2);
+      expect(cubit.state.exercisePagination.createdBy, CreatedBy.user);
 
-      await cubit.getEquipments(
-        isFavorite: true,
-        createdBy: CreatedBy.user,
-        limit: 1,
-        offset: 0,
-      );
-      expect(cubit.state.equipments, hasLength(1));
-      expect(cubit.state.equipmentPagination.total, 2);
-      expect(cubit.state.equipmentPagination.isFavorite, isTrue);
-      expect(cubit.state.equipmentPagination.createdBy, CreatedBy.user);
-
-      await cubit.getEquipments(
-        name: cubit.state.equipmentPagination.name,
-        isFavorite: cubit.state.equipmentPagination.isFavorite,
-        createdBy: cubit.state.equipmentPagination.createdBy,
+      await cubit.getExercises(
+        createdBy: cubit.state.exercisePagination.createdBy,
         limit: 1,
         offset: 1,
       );
-      expect(cubit.state.equipments, hasLength(2));
+      expect(cubit.state.exercises, hasLength(2));
       expect(
-        cubit.state.equipments.every(
-          (e) => e.isFavorite && e.createdBy == CreatedBy.user,
+        cubit.state.exercises.every(
+          (exercise) => exercise.createdBy == CreatedBy.user,
         ),
         isTrue,
       );
-
-      // Re-fetch with limit 10, then create a non-favorite equipment while favorite filter is active.
-      await cubit.getEquipments(
-        isFavorite: true,
-        createdBy: CreatedBy.user,
-        limit: 10,
-        offset: 0,
-      );
-      await cubit.createEquipment(
-        const EquipmentInput(name: 'User NonFav Bench', isFavorite: false),
-      );
-      expect(cubit.state.equipments, hasLength(2));
-      expect(cubit.state.equipmentPagination.total, 2);
-      expect(cubit.state.equipmentPagination.isFavorite, isTrue);
-      expect(cubit.state.equipmentPagination.createdBy, CreatedBy.user);
-
-      // Creating a matching equipment adds it under the active filters.
-      await cubit.createEquipment(
-        const EquipmentInput(name: 'User Fav Kettlebell', isFavorite: true),
-      );
-      expect(cubit.state.equipments, hasLength(3));
-      expect(cubit.state.equipmentPagination.total, 3);
-
-      // Clearing filters resets pagination state.
-      await cubit.getEquipments(
-        name: '',
-        isFavorite: false,
-        createdBy: null,
-        limit: 10,
-        offset: 0,
-      );
-      expect(cubit.state.equipmentPagination.isFavorite, isFalse);
-      expect(cubit.state.equipmentPagination.createdBy, isNull);
-      expect(cubit.state.equipmentPagination.total, 6);
+      expect(cubit.state.exercisePagination.createdBy, CreatedBy.user);
     },
   );
+
+  test('filters equipments by isFavorite and createdBy and retains filters across pages', () async {
+    final db = await testDatabase.db;
+    Future<int> createEquipment({
+      required String name,
+      required bool isFavorite,
+      required CreatedBy createdBy,
+    }) {
+      return db.insert(
+        Equipment.table,
+        Equipment.create(
+          name: name,
+          isFavorite: isFavorite,
+          createdBy: createdBy,
+        ).toMap(),
+      );
+    }
+
+    await createEquipment(
+      name: 'User Fav Barbell',
+      isFavorite: true,
+      createdBy: CreatedBy.user,
+    );
+    await createEquipment(
+      name: 'User Fav Dumbbell',
+      isFavorite: true,
+      createdBy: CreatedBy.user,
+    );
+    await createEquipment(
+      name: 'User NonFav Kettlebell',
+      isFavorite: false,
+      createdBy: CreatedBy.user,
+    );
+    await createEquipment(
+      name: 'System Fav Cable',
+      isFavorite: true,
+      createdBy: CreatedBy.system,
+    );
+
+    final favOnly = await service.getEquipments(isFavorite: true);
+    expect(favOnly.isOk(), isTrue);
+    expect(favOnly.value.total, 3);
+    expect(favOnly.value.data.every((e) => e.isFavorite), isTrue);
+
+    final userOnly = await service.getEquipments(createdBy: CreatedBy.user);
+    expect(userOnly.isOk(), isTrue);
+    expect(userOnly.value.total, 3);
+    expect(
+      userOnly.value.data.every((e) => e.createdBy == CreatedBy.user),
+      isTrue,
+    );
+
+    final cubit = ExerciseCubit(exerciseRepository: service);
+    addTearDown(cubit.close);
+
+    await cubit.getEquipments(
+      isFavorite: true,
+      createdBy: CreatedBy.user,
+      limit: 1,
+      offset: 0,
+    );
+    expect(cubit.state.equipments, hasLength(1));
+    expect(cubit.state.equipmentPagination.total, 2);
+    expect(cubit.state.equipmentPagination.isFavorite, isTrue);
+    expect(cubit.state.equipmentPagination.createdBy, CreatedBy.user);
+
+    await cubit.getEquipments(
+      name: cubit.state.equipmentPagination.name,
+      isFavorite: cubit.state.equipmentPagination.isFavorite,
+      createdBy: cubit.state.equipmentPagination.createdBy,
+      limit: 1,
+      offset: 1,
+    );
+    expect(cubit.state.equipments, hasLength(2));
+    expect(
+      cubit.state.equipments.every(
+        (e) => e.isFavorite && e.createdBy == CreatedBy.user,
+      ),
+      isTrue,
+    );
+
+    // Re-fetch with limit 10, then create a non-favorite equipment while favorite filter is active.
+    await cubit.getEquipments(
+      isFavorite: true,
+      createdBy: CreatedBy.user,
+      limit: 10,
+      offset: 0,
+    );
+    await cubit.createEquipment(
+      const EquipmentInput(name: 'User NonFav Bench', isFavorite: false),
+    );
+    expect(cubit.state.equipments, hasLength(2));
+    expect(cubit.state.equipmentPagination.total, 2);
+    expect(cubit.state.equipmentPagination.isFavorite, isTrue);
+    expect(cubit.state.equipmentPagination.createdBy, CreatedBy.user);
+
+    // Creating a matching equipment adds it under the active filters.
+    await cubit.createEquipment(
+      const EquipmentInput(name: 'User Fav Kettlebell', isFavorite: true),
+    );
+    expect(cubit.state.equipments, hasLength(3));
+    expect(cubit.state.equipmentPagination.total, 3);
+
+    // Clearing filters resets pagination state.
+    await cubit.getEquipments(
+      name: '',
+      isFavorite: false,
+      createdBy: null,
+      limit: 10,
+      offset: 0,
+    );
+    expect(cubit.state.equipmentPagination.isFavorite, isFalse);
+    expect(cubit.state.equipmentPagination.createdBy, isNull);
+    expect(cubit.state.equipmentPagination.total, 6);
+  });
 
   test(
     'combines equipment with other filters and reports filtered totals',

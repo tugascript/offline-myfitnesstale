@@ -60,6 +60,7 @@ class EditEquipmentModal extends StatelessWidget {
           theme: theme,
           sizes: sizes,
           initialName: equipment.name,
+          initialRarity: equipment.rarity,
           initialPicture: equipment.picture,
           isLoading: state.isLoading,
           submitLabel: "UPDATE EQUIPMENT",
@@ -70,6 +71,7 @@ class EditEquipmentModal extends StatelessWidget {
           onSubmit:
               ({
                 required name,
+                required rarity,
                 required picture,
                 required uploadedPictureBytes,
               }) async {
@@ -93,6 +95,7 @@ class EditEquipmentModal extends StatelessWidget {
                   equipment.id,
                   EquipmentInput(
                     name: name,
+                    rarity: rarity,
                     picture: Nullable(resolvedPicture),
                     isFavorite: equipment.isFavorite,
                   ),

@@ -55,7 +55,14 @@ class _FakeExerciseCubit extends ExerciseCubit {
   final bool shouldFail;
   final List<EquipmentInput> createdInputs = [];
   final List<(int, EquipmentInput)> updatedCalls = [];
-  final List<({String? name, bool isFavorite, CreatedBy? createdBy})>
+  final List<
+    ({
+      String? name,
+      EquipmentRarity? rarity,
+      bool isFavorite,
+      CreatedBy? createdBy,
+    })
+  >
   getEquipmentsCalls = [];
 
   _FakeExerciseCubit({this.shouldFail = false, EquipmentDto? initialEquipment})
@@ -79,6 +86,7 @@ class _FakeExerciseCubit extends ExerciseCubit {
   @override
   Future<void> getEquipments({
     String? name,
+    EquipmentRarity? rarity,
     bool isFavorite = false,
     CreatedBy? createdBy,
     required int limit,
@@ -86,6 +94,7 @@ class _FakeExerciseCubit extends ExerciseCubit {
   }) async {
     getEquipmentsCalls.add((
       name: name,
+      rarity: rarity,
       isFavorite: isFavorite,
       createdBy: createdBy,
     ));
@@ -611,7 +620,12 @@ void main() {
       await tester.pump();
 
       expect(cubit.getEquipmentsCalls, [
-        (name: 'Bar', isFavorite: true, createdBy: CreatedBy.user),
+        (
+          name: 'Bar',
+          rarity: null,
+          isFavorite: true,
+          createdBy: CreatedBy.user,
+        ),
       ]);
     },
   );

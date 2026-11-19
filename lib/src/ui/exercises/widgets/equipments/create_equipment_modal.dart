@@ -65,6 +65,7 @@ class CreateEquipmentModal extends StatelessWidget {
           onSubmit:
               ({
                 required name,
+                required rarity,
                 required picture,
                 required uploadedPictureBytes,
               }) async {
@@ -86,6 +87,7 @@ class CreateEquipmentModal extends StatelessWidget {
                 await cubit.createEquipment(
                   EquipmentInput(
                     name: name,
+                    rarity: rarity,
                     picture: Nullable(resolvedPicture),
                   ),
                 );

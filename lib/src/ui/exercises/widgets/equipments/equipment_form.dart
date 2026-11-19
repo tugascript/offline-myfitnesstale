@@ -22,10 +22,12 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../../../data/repositories/core/dtos/picture_dto.dart';
 import '../../../../data/services/storage/local_file_storage_service.dart';
+import '../../../../data/utils/display_names.dart';
 import '../../../../data/utils/enums.dart';
 import '../../../../data/utils/json_data.dart';
 import '../../../../data/utils/picture_utils.dart';
 import '../../../core/sizes/data_display_sizes.dart';
+import '../../../core/widgets/layout/app_dropdown.dart';
 import '../../../core/widgets/layout/app_elevated_button.dart';
 import '../../../core/widgets/layout/app_text_form_field.dart';
 import '../../../core/widgets/picture/app_picture.dart';
@@ -42,6 +44,7 @@ class EquipmentForm extends StatefulWidget {
   final ThemeData theme;
   final DataDisplaySizesList sizes;
   final String initialName;
+  final EquipmentRarity initialRarity;
   final PictureDto? initialPicture;
   final bool isLoading;
   final String submitLabel;
@@ -51,6 +54,7 @@ class EquipmentForm extends StatefulWidget {
   final EquipmentPictureEditor? editPictureBytes;
   final void Function({
     required String name,
+    required EquipmentRarity rarity,
     required PictureData? picture,
     required Uint8List? uploadedPictureBytes,
   })
@@ -61,6 +65,7 @@ class EquipmentForm extends StatefulWidget {
     required this.theme,
     required this.sizes,
     required this.initialName,
+    this.initialRarity = EquipmentRarity.common,
     this.initialPicture,
     required this.isLoading,
     required this.submitLabel,
@@ -83,6 +88,7 @@ class _EquipmentFormState extends State<EquipmentForm> {
 
   late _PictureSourceMode _sourceMode;
   late String _name;
+  late EquipmentRarity _rarity;
   PictureDto? _existingLocalPicture;
   Uint8List? _rawPickedBytes;
   Uint8List? _uploadedBytes;
@@ -96,6 +102,7 @@ class _EquipmentFormState extends State<EquipmentForm> {
   void initState() {
     super.initState();
     _name = widget.initialName;
+    _rarity = widget.initialRarity;
     _nameController.text = _name;
 
     final initialPicture = widget.initialPicture;
@@ -278,6 +285,7 @@ class _EquipmentFormState extends State<EquipmentForm> {
 
     widget.onSubmit(
       name: _name.trim(),
+      rarity: _rarity,
       picture: picture,
       uploadedPictureBytes: uploadedBytes,
     );
@@ -323,6 +331,34 @@ class _EquipmentFormState extends State<EquipmentForm> {
                 return 'Please enter a name';
               }
               return null;
+            },
+          ),
+          SizedBox(height: widget.sizes.spacing),
+          AppDropdown<EquipmentRarity>(
+            theme: widget.theme,
+            isLoading: isBusy,
+            value: _rarity,
+            filled: true,
+            emptyLabel: 'Rarity',
+            labelText: 'Rarity',
+            showEmptyValue: false,
+            items: EquipmentRarity.values,
+            fontSize: widget.sizes.subtitleFontSize,
+            padding: widget.sizes.padding,
+            labelBuilder: EnumDisplayNames.getEquipmentRarityDisplayName,
+            onChanged: (value) {
+              if (value != null) {
+                setState(() {
+                  _rarity = value;
+                });
+              }
+            },
+            onSaved: (value) {
+              if (value != null) {
+                setState(() {
+                  _rarity = value;
+                });
+              }
             },
           ),
           SizedBox(height: widget.sizes.spacing),
