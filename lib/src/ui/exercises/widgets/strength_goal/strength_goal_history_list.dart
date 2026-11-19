@@ -72,11 +72,18 @@ class StrengthGoalHistoryList extends StatelessWidget {
             final weightString = profileUnits == Units.imperial
                 ? '${Converters.gramsToLbs(goal.targetWeight).toStringAsFixed(1)} lbs'
                 : '${Converters.gramsToKg(goal.targetWeight).toStringAsFixed(1)} kg';
+            final maxStrengthString = profileUnits == Units.imperial
+                ? '${Converters.gramsToLbs(goal.targetMaxStrength).toStringAsFixed(1)} lbs'
+                : '${Converters.gramsToKg(goal.targetMaxStrength).toStringAsFixed(1)} kg';
 
             final isCompleted = goal.status == ProgressStatus.completed;
             final dateText = goal.completedAt != null
                 ? DateFormat('MMM d, yyyy').format(goal.completedAt!)
                 : DateFormat('MMM d, yyyy').format(goal.startDate);
+
+            final hasName = goal.name != null && goal.name!.trim().isNotEmpty;
+            final metricsText =
+                '$weightString × ${goal.targetReps} reps • 1RM: $maxStrengthString';
 
             return Card(
               margin: EdgeInsets.zero,
@@ -89,20 +96,24 @@ class StrengthGoalHistoryList extends StatelessWidget {
                   size: sizes.buttonIconSize,
                 ),
                 title: Text(
-                  goal.name,
+                  hasName ? goal.name! : metricsText,
                   style: TextStyle(
                     fontSize: sizes.fontSize,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-                subtitle: Text(
-                  '$weightString × ${goal.targetReps} reps • 1RM: ${goal.targetMaxStrength}'
-                  '${dateText.isNotEmpty ? '\n$dateText' : ''}',
-                  style: TextStyle(
-                    fontSize: sizes.fontSize * 0.9,
-                    color: Colors.grey[600],
-                  ),
-                ),
+                subtitle: hasName || dateText.isNotEmpty
+                    ? Text(
+                        hasName
+                            ? '$metricsText'
+                                  '${dateText.isNotEmpty ? '\n$dateText' : ''}'
+                            : dateText,
+                        style: TextStyle(
+                          fontSize: sizes.fontSize * 0.9,
+                          color: Colors.grey[600],
+                        ),
+                      )
+                    : null,
                 trailing: IconButton(
                   icon: Icon(
                     Icons.delete_outline,

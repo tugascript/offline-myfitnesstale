@@ -27,7 +27,7 @@ final class StrengthGoalDto extends Equatable
     implements ModelDto<StrengthGoal> {
   @override
   final int id;
-  final String name;
+  final String? name;
   final int targetReps;
   final int targetWeight;
   final int targetMaxStrength;
@@ -38,7 +38,7 @@ final class StrengthGoalDto extends Equatable
 
   const StrengthGoalDto({
     required this.id,
-    required this.name,
+    this.name,
     required this.targetReps,
     required this.targetWeight,
     required this.targetMaxStrength,
@@ -67,7 +67,7 @@ final class StrengthGoalDto extends Equatable
   @override
   StrengthGoalDto copyWith({
     int? id,
-    String? name,
+    Nullable<String>? name,
     int? targetReps,
     int? targetWeight,
     int? targetMaxStrength,
@@ -78,7 +78,7 @@ final class StrengthGoalDto extends Equatable
   }) {
     return StrengthGoalDto(
       id: id ?? this.id,
-      name: name ?? this.name,
+      name: name != null ? name.value : this.name,
       targetReps: targetReps ?? this.targetReps,
       targetWeight: targetWeight ?? this.targetWeight,
       targetMaxStrength: targetMaxStrength ?? this.targetMaxStrength,

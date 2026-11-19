@@ -24,6 +24,7 @@ import 'package:myfitnesstale/src/data/models/sqlite/equipment_model.dart';
 import 'package:myfitnesstale/src/data/models/sqlite/exercise_model.dart';
 import 'package:myfitnesstale/src/data/models/sqlite/exercise_record_model.dart';
 import 'package:myfitnesstale/src/data/models/sqlite/food_model.dart';
+import 'package:myfitnesstale/src/data/models/sqlite/strength_goal_model.dart';
 import 'package:myfitnesstale/src/data/models/sqlite/weight_goal_model.dart';
 import 'package:myfitnesstale/src/data/models/sqlite/weight_record_model.dart';
 import 'package:myfitnesstale/src/data/models/sqlite/workout_model.dart';
@@ -95,8 +96,21 @@ void main() {
       expect(food.copyWith(id: const Nullable(null)).id, isNull);
     });
 
-    test('StrengthGoalDto can clear its completion date', () {
+    test('StrengthGoal and StrengthGoalDto can clear nullable fields', () {
       final completedAt = DateTime(2026, 10, 12);
+      final model = StrengthGoal.create(
+        name: 'Bench press',
+        targetReps: 5,
+        targetWeight: 80000,
+        targetMaxStrength: 90000,
+        exerciseId: 2,
+        startDate: 1700000000,
+      );
+
+      expect(model.copyWith().name, 'Bench press');
+      expect(model.copyWith(name: const Nullable(null)).name, isNull);
+      expect(model.copyWith(name: const Nullable('Squat')).name, 'Squat');
+
       final goal = StrengthGoalDto(
         id: 1,
         name: 'Bench press',
@@ -109,6 +123,9 @@ void main() {
         completedAt: completedAt,
       );
 
+      expect(goal.copyWith().name, 'Bench press');
+      expect(goal.copyWith(name: const Nullable(null)).name, isNull);
+      expect(goal.copyWith(name: const Nullable('Deadlift')).name, 'Deadlift');
       expect(goal.copyWith().completedAt, completedAt);
       expect(
         goal.copyWith(completedAt: const Nullable(null)).completedAt,

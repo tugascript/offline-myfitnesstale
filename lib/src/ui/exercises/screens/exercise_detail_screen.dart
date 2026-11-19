@@ -36,6 +36,8 @@ import '../view_models/exercise_cubit.dart';
 import '../view_models/states/exercise_state.dart';
 import '../widgets/details/edit_exercise_modal.dart';
 import '../widgets/details/exercise_header_card.dart';
+import '../widgets/strength_goal/create_strength_goal_modal.dart';
+import './exercise_records_screen.dart';
 
 const _skeletonExercise = ExerciseDto(
   id: 0,
@@ -212,6 +214,33 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
                           },
                           label: 'Log Progress',
                           icon: Icons.history,
+                        ),
+                      ),
+                      SizedBox(width: sizes.spacing),
+                      Expanded(
+                        child: AppElevatedButton(
+                          key: const ValueKey('exercise-create-goal-button'),
+                          theme: theme,
+                          isLoading: exerciseState.isLoading,
+                          isSecondary: true,
+                          sizes: sizes,
+                          onPressed: () async {
+                            final created = await showDialog<bool>(
+                              context: context,
+                              builder: (context) => CreateStrengthGoalModal(
+                                theme: theme,
+                                sizes: sizes,
+                                exerciseId: exercise.id,
+                              ),
+                            );
+                            if (created == true && context.mounted) {
+                              context.push(
+                                ExerciseRecordsScreen.location(exercise.id),
+                              );
+                            }
+                          },
+                          label: 'Create Goal',
+                          icon: Icons.emoji_events,
                         ),
                       ),
                     ],

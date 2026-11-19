@@ -27,7 +27,8 @@ import '../../../core/widgets/layout/responsive_fields.dart';
 import '../../../home/view_models/profile_cubit.dart';
 import '../../view_models/exercise_record_cubit.dart';
 import '../../view_models/states/exercise_record_state.dart';
-import './strength_goal_form_modal.dart';
+import './create_strength_goal_modal.dart';
+import './edit_strength_goal_modal.dart';
 
 class ActiveStrengthGoalCard extends StatelessWidget {
   final ThemeData theme;
@@ -89,7 +90,7 @@ class ActiveStrengthGoalCard extends StatelessWidget {
                       showDialog(
                         context: context,
                         builder: (ctx) =>
-                            StrengthGoalFormModal(theme: theme, sizes: sizes),
+                            CreateStrengthGoalModal(theme: theme, sizes: sizes),
                       );
                     },
                   ),
@@ -102,6 +103,9 @@ class ActiveStrengthGoalCard extends StatelessWidget {
         final weightString = profileUnits == Units.imperial
             ? '${Converters.gramsToLbs(goal.targetWeight).toStringAsFixed(1)} lbs'
             : '${Converters.gramsToKg(goal.targetWeight).toStringAsFixed(1)} kg';
+        final maxStrengthString = profileUnits == Units.imperial
+            ? '${Converters.gramsToLbs(goal.targetMaxStrength).toStringAsFixed(1)} lbs'
+            : '${Converters.gramsToKg(goal.targetMaxStrength).toStringAsFixed(1)} kg';
 
         return Card(
           elevation: 2,
@@ -133,7 +137,7 @@ class ActiveStrengthGoalCard extends StatelessWidget {
                       onPressed: () {
                         showDialog(
                           context: context,
-                          builder: (ctx) => StrengthGoalFormModal(
+                          builder: (ctx) => EditStrengthGoalModal(
                             theme: theme,
                             sizes: sizes,
                             existingGoal: goal,
@@ -143,14 +147,16 @@ class ActiveStrengthGoalCard extends StatelessWidget {
                     ),
                   ],
                 ),
-                SizedBox(height: sizes.spacing / 2),
-                Text(
-                  goal.name,
-                  style: TextStyle(
-                    fontSize: sizes.titleFontSize,
-                    fontWeight: FontWeight.bold,
+                if (goal.name != null && goal.name!.trim().isNotEmpty) ...[
+                  SizedBox(height: sizes.spacing / 2),
+                  Text(
+                    goal.name!,
+                    style: TextStyle(
+                      fontSize: sizes.titleFontSize,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                ),
+                ],
                 SizedBox(height: sizes.spacing),
                 ResponsiveFields(
                   sizes: sizes,
@@ -170,7 +176,7 @@ class ActiveStrengthGoalCard extends StatelessWidget {
                     _MetricChip(
                       theme: theme,
                       label: 'Target 1RM',
-                      value: '${goal.targetMaxStrength}',
+                      value: maxStrengthString,
                       sizes: sizes,
                     ),
                   ],

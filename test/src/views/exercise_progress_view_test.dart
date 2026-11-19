@@ -289,14 +289,18 @@ void main() {
       expect(
         find.descendant(
           of: find.byType(ExerciseProgressHead),
-          matching: find.byWidgetPredicate((w) => w is Skeletonizer && w.enabled),
+          matching: find.byWidgetPredicate(
+            (w) => w is Skeletonizer && w.enabled,
+          ),
         ),
         findsOneWidget,
       );
       expect(
         find.descendant(
           of: find.byType(ExerciseProgressRecordsList),
-          matching: find.byWidgetPredicate((w) => w is Skeletonizer && w.enabled),
+          matching: find.byWidgetPredicate(
+            (w) => w is Skeletonizer && w.enabled,
+          ),
         ),
         findsOneWidget,
       );
@@ -355,61 +359,69 @@ void main() {
     expect(find.textContaining('kg'), findsNothing);
   });
 
-  testWidgets('opens exercise records from latest header and list card and reloads on return', (
-    tester,
-  ) async {
-    await tester.pumpWidget(buildHarness());
-    await tester.pumpAndSettle();
+  testWidgets(
+    'opens exercise records from latest header and list card and reloads on return',
+    (tester) async {
+      await tester.pumpWidget(buildHarness());
+      await tester.pumpAndSettle();
 
-    await tester.tap(find.byKey(const ValueKey('latest-exercise-progress-card')));
-    await tester.pumpAndSettle();
+      await tester.tap(
+        find.byKey(const ValueKey('latest-exercise-progress-card')),
+      );
+      await tester.pumpAndSettle();
 
-    expect(find.text('Records for 1'), findsOneWidget);
-    exerciseRecordCubit.showOnlyExercise(alpha.id);
+      expect(find.text('Records for 1'), findsOneWidget);
+      exerciseRecordCubit.showOnlyExercise(alpha.id);
 
-    await tester.pageBack();
-    await tester.pumpAndSettle();
+      await tester.pageBack();
+      await tester.pumpAndSettle();
 
-    expect(exerciseRecordCubit.latestCalls, 2);
-    expect(exerciseRecordCubit.listCalls, 2);
+      expect(exerciseRecordCubit.latestCalls, 2);
+      expect(exerciseRecordCubit.listCalls, 2);
 
-    final listScrollable = find.descendant(
-      of: find.byType(ExerciseProgressRecordsList),
-      matching: find.byType(Scrollable),
-    );
-    await tester.scrollUntilVisible(
-      find.byKey(const ValueKey('exercise-progress-record-3')),
-      100,
-      scrollable: listScrollable,
-    );
-    await tester.pumpAndSettle();
-    expect(find.textContaining('Zulu Row'), findsOneWidget);
+      final listScrollable = find.descendant(
+        of: find.byType(ExerciseProgressRecordsList),
+        matching: find.byType(Scrollable),
+      );
+      await tester.scrollUntilVisible(
+        find.byKey(const ValueKey('exercise-progress-record-3')),
+        100,
+        scrollable: listScrollable,
+      );
+      await tester.pumpAndSettle();
+      expect(find.textContaining('Zulu Row'), findsOneWidget);
 
-    await tester.tap(find.byKey(const ValueKey('exercise-progress-record-3')));
-    await tester.pumpAndSettle();
+      await tester.tap(
+        find.byKey(const ValueKey('exercise-progress-record-3')),
+      );
+      await tester.pumpAndSettle();
 
-    expect(find.text('Records for 2'), findsOneWidget);
-  });
+      expect(find.text('Records for 2'), findsOneWidget);
+    },
+  );
 
-  testWidgets('renders empty header and empty history when there are no records', (
-    tester,
-  ) async {
-    await tester.pumpWidget(buildHarness(customRecords: const []));
-    await tester.pumpAndSettle();
+  testWidgets(
+    'renders empty header and empty history when there are no records',
+    (tester) async {
+      await tester.pumpWidget(buildHarness(customRecords: const []));
+      await tester.pumpAndSettle();
 
-    expect(find.text('No exercise records'), findsOneWidget);
-    expect(find.text('BROWSE EXERCISES'), findsOneWidget);
-    expect(find.text('Empty history'), findsOneWidget);
+      expect(find.text('No exercise records'), findsOneWidget);
+      expect(find.text('BROWSE EXERCISES'), findsOneWidget);
+      expect(find.text('Empty history'), findsOneWidget);
 
-    await tester.tap(find.text('BROWSE EXERCISES'));
-    await tester.pumpAndSettle();
-    expect(find.text('Exercises Destination'), findsOneWidget);
-  });
+      await tester.tap(find.text('BROWSE EXERCISES'));
+      await tester.pumpAndSettle();
+      expect(find.text('Exercises Destination'), findsOneWidget);
+    },
+  );
 
   testWidgets('shows skeleton footer card when loading more records', (
     tester,
   ) async {
-    await tester.pumpWidget(buildHarness(customRecords: [records.first], total: 5));
+    await tester.pumpWidget(
+      buildHarness(customRecords: [records.first], total: 5),
+    );
     await tester.pumpAndSettle();
 
     expect(

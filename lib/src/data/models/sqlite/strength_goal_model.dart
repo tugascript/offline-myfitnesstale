@@ -46,7 +46,7 @@ enum StrengthGoalColumns with Columns {
 final class StrengthGoal extends Equatable implements Model {
   @override
   final int? id;
-  final String name;
+  final String? name;
   final int targetReps;
   final int targetWeight;
   final int targetMaxStrength;
@@ -61,7 +61,7 @@ final class StrengthGoal extends Equatable implements Model {
 
   const StrengthGoal({
     required this.id,
-    required this.name,
+    this.name,
     required this.targetReps,
     required this.targetWeight,
     required this.targetMaxStrength,
@@ -78,7 +78,7 @@ final class StrengthGoal extends Equatable implements Model {
       '''
   CREATE TABLE IF NOT EXISTS $_table (
     ${StrengthGoalColumns.id.value} INTEGER PRIMARY KEY AUTOINCREMENT,
-    ${StrengthGoalColumns.name.value} TEXT NOT NULL,
+    ${StrengthGoalColumns.name.value} TEXT,
     ${StrengthGoalColumns.targetReps.value} INTEGER NOT NULL,
     ${StrengthGoalColumns.targetWeight.value} INTEGER NOT NULL,
     ${StrengthGoalColumns.targetMaxStrength.value} INTEGER NOT NULL,
@@ -116,7 +116,7 @@ final class StrengthGoal extends Equatable implements Model {
   factory StrengthGoal.fromMap(Map<String, Object?> map) {
     return StrengthGoal(
       id: map[StrengthGoalColumns.id.value] as int?,
-      name: map[StrengthGoalColumns.name.value] as String,
+      name: map[StrengthGoalColumns.name.value] as String?,
       targetReps: map[StrengthGoalColumns.targetReps.value] as int,
       targetWeight: map[StrengthGoalColumns.targetWeight.value] as int,
       targetMaxStrength:
@@ -133,7 +133,7 @@ final class StrengthGoal extends Equatable implements Model {
   }
 
   factory StrengthGoal.create({
-    required String name,
+    String? name,
     required int targetReps,
     required int targetWeight,
     required int targetMaxStrength,
@@ -161,7 +161,7 @@ final class StrengthGoal extends Equatable implements Model {
   @override
   StrengthGoal copyWith({
     Nullable<int>? id,
-    String? name,
+    Nullable<String>? name,
     int? targetReps,
     int? targetWeight,
     int? targetMaxStrength,
@@ -174,7 +174,7 @@ final class StrengthGoal extends Equatable implements Model {
   }) {
     return StrengthGoal(
       id: id != null ? id.value : this.id,
-      name: name ?? this.name,
+      name: name != null ? name.value : this.name,
       targetReps: targetReps ?? this.targetReps,
       targetWeight: targetWeight ?? this.targetWeight,
       targetMaxStrength: targetMaxStrength ?? this.targetMaxStrength,

@@ -23,17 +23,32 @@ import 'package:myfitnesstale/src/data/repositories/core/dtos/picture_dto.dart';
 import 'package:myfitnesstale/src/data/repositories/core/dtos/video_dto.dart';
 import 'package:myfitnesstale/src/data/repositories/exercises/dtos/equipment_dto.dart';
 import 'package:myfitnesstale/src/data/repositories/exercises/dtos/exercise_dto.dart';
+import 'package:myfitnesstale/src/data/repositories/exercises/dtos/strength_goal_dto.dart';
+import 'package:myfitnesstale/src/data/repositories/exercises/exercise_record_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/exercises/exercise_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/exercises/inputs/exercise_input.dart';
+import 'package:myfitnesstale/src/data/repositories/exercises/inputs/strength_goal_input.dart';
+import 'package:myfitnesstale/src/data/repositories/profile/dtos/profile_dto.dart';
+import 'package:myfitnesstale/src/data/repositories/profile/dtos/system_dto.dart';
+import 'package:myfitnesstale/src/data/repositories/profile/profile_repository.dart';
 import 'package:myfitnesstale/src/data/utils/enums.dart';
 import 'package:myfitnesstale/src/data/utils/json_data.dart';
+import 'package:myfitnesstale/src/ui/core/sizes/data_display_sizes.dart';
+import 'package:myfitnesstale/src/ui/core/sizes/screen_size.dart';
 import 'package:myfitnesstale/src/ui/core/view_models/states/common_state.dart';
 import 'package:myfitnesstale/src/ui/core/widgets/video/app_video_player.dart';
 import 'package:myfitnesstale/src/ui/exercises/screens/exercise_detail_screen.dart';
 import 'package:myfitnesstale/src/ui/exercises/screens/exercises_list_screen.dart';
 import 'package:myfitnesstale/src/ui/exercises/view_models/exercise_cubit.dart';
+import 'package:myfitnesstale/src/ui/exercises/view_models/exercise_record_cubit.dart';
 import 'package:myfitnesstale/src/ui/exercises/widgets/details/create_exercise_modal.dart';
 import 'package:myfitnesstale/src/ui/exercises/widgets/details/edit_exercise_modal.dart';
+import 'package:myfitnesstale/src/ui/exercises/widgets/strength_goal/active_strength_goal_card.dart';
+import 'package:myfitnesstale/src/ui/exercises/widgets/strength_goal/create_strength_goal_modal.dart';
+import 'package:myfitnesstale/src/ui/exercises/widgets/strength_goal/edit_strength_goal_modal.dart';
+import 'package:myfitnesstale/src/ui/exercises/widgets/strength_goal/strength_goal_history_list.dart';
+import 'package:myfitnesstale/src/ui/home/view_models/profile_cubit.dart';
+import 'package:myfitnesstale/src/ui/home/view_models/states/profile_state.dart';
 import 'package:myfitnesstale/src/utils/nullable.dart';
 
 import '../../support/fake_webview_platform.dart';
@@ -42,6 +57,7 @@ class _FakeExerciseCubit extends ExerciseCubit {
   final bool shouldFail;
   final List<ExerciseInput> createdInputs = [];
   final List<(int, ExerciseInput)> updatedCalls = [];
+  int getExercisesCalls = 0;
 
   _FakeExerciseCubit({this.shouldFail = false, ExerciseDto? initialExercise})
     : super(exerciseRepository: ExerciseRepository.create()) {
@@ -70,7 +86,9 @@ class _FakeExerciseCubit extends ExerciseCubit {
     int? offset,
     bool isFavourite = false,
     CreatedBy? createdBy,
-  }) async {}
+  }) async {
+    getExercisesCalls++;
+  }
 
   @override
   Future<void> getExercise(int id) async {}
@@ -195,6 +213,95 @@ class _FakeExerciseCubit extends ExerciseCubit {
         error: const Nullable(null),
       ),
     );
+  }
+}
+
+class _FakeProfileCubit extends ProfileCubit {
+  _FakeProfileCubit({Units units = Units.metric})
+    : super(profileRepository: ProfileRepository.create()) {
+    emit(
+      ProfileState(
+        profile: ProfileDto(
+          id: 1,
+          name: 'Tester',
+          height: 175,
+          gender: Gender.other,
+          birthdate: DateTime(1990),
+        ),
+        system: SystemDto(
+          id: 1,
+          units: units,
+          theme: ThemeType.system,
+          initialSetup: SetUpStatus.completed,
+          notificationsOn: false,
+        ),
+        isLoading: false,
+        isInitiated: true,
+      ),
+    );
+  }
+}
+
+class _FakeExerciseRecordCubit extends ExerciseRecordCubit {
+  final bool shouldFail;
+  final List<StrengthGoalInput> createdStrengthGoals = [];
+  final List<(int, StrengthGoalInput)> updatedStrengthGoals = [];
+
+  _FakeExerciseRecordCubit({
+    this.shouldFail = false,
+    StrengthGoalDto? activeStrengthGoal,
+    List<StrengthGoalDto> strengthGoals = const [],
+  }) : super(exerciseRecordRepository: ExerciseRecordRepository.create()) {
+    emit(
+      state.copyWith(
+        activeStrengthGoal: Nullable(activeStrengthGoal),
+        strengthGoals: strengthGoals,
+      ),
+    );
+  }
+
+  @override
+  Future<bool> createStrengthGoal(StrengthGoalInput input) async {
+    createdStrengthGoals.add(input);
+    if (shouldFail) {
+      emit(
+        state.copyWith(
+          error: const Nullable(
+            ErrorState(
+              type: 'operationFailure',
+              description: 'Failed to create strength goal',
+            ),
+          ),
+          isLoading: false,
+        ),
+      );
+      return false;
+    }
+
+    emit(state.copyWith(isLoading: false, error: const Nullable(null)));
+    return true;
+  }
+
+  @override
+  Future<bool> updateStrengthGoal(int id, StrengthGoalInput input) async {
+    updatedStrengthGoals.add((id, input));
+    if (shouldFail) {
+      emit(
+        state.copyWith(
+          error: const Nullable(
+            ErrorState(
+              type: 'operationFailure',
+              description: 'Failed to update strength goal',
+            ),
+          ),
+          isLoading: false,
+        ),
+      );
+      return false;
+    }
+
+    emit(state.copyWith(isLoading: false, error: const Nullable(null)));
+    return true;
   }
 }
 
@@ -735,6 +842,647 @@ void main() {
 
       expect(find.byType(EditExerciseModal), findsOneWidget);
       expect(find.byType(DropdownButtonFormField<Muscle?>), findsNWidgets(4));
+    },
+  );
+
+  testWidgets(
+    'ExerciseDetailScreen Create Goal button uses trophy icon, hides exercise dropdown, creates goal, and pushes to records page',
+    (tester) async {
+      final exercise = _sampleExercise(id: 33, name: 'Overhead Press');
+      final exerciseCubit = _FakeExerciseCubit(initialExercise: exercise);
+      final recordCubit = _FakeExerciseRecordCubit();
+      final profileCubit = _FakeProfileCubit();
+      addTearDown(exerciseCubit.close);
+      addTearDown(recordCubit.close);
+      addTearDown(profileCubit.close);
+
+      final router = GoRouter(
+        initialLocation: '/exercises/33',
+        routes: [
+          GoRoute(
+            path: '/exercises/:id',
+            builder: (_, _) => const ExerciseDetailScreen(exerciseId: 33),
+          ),
+          GoRoute(
+            path: '/exercises/:id/records',
+            builder: (_, state) => Scaffold(
+              body: Text('Records for ${state.pathParameters['id']}'),
+            ),
+          ),
+        ],
+      );
+      addTearDown(router.dispose);
+
+      await tester.pumpWidget(
+        MultiBlocProvider(
+          providers: [
+            BlocProvider<ExerciseCubit>.value(value: exerciseCubit),
+            BlocProvider<ExerciseRecordCubit>.value(value: recordCubit),
+            BlocProvider<ProfileCubit>.value(value: profileCubit),
+          ],
+          child: MaterialApp.router(routerConfig: router),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final createGoalBtn = find.byKey(
+        const ValueKey('exercise-create-goal-button'),
+      );
+      expect(createGoalBtn, findsOneWidget);
+      expect(
+        find.descendant(
+          of: createGoalBtn,
+          matching: find.byIcon(Icons.emoji_events),
+        ),
+        findsOneWidget,
+      );
+
+      await tester.ensureVisible(createGoalBtn);
+      await tester.tap(createGoalBtn);
+      await tester.pumpAndSettle();
+
+      expect(find.byType(CreateStrengthGoalModal), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('strength-goal-exercise-dropdown')),
+        findsNothing,
+      );
+      expect(exerciseCubit.getExercisesCalls, 0);
+
+      await tester.enterText(
+        find.byKey(const ValueKey('strength-goal-weight-input')),
+        '80',
+      );
+      await tester.enterText(
+        find.byKey(const ValueKey('strength-goal-reps-input')),
+        '5',
+      );
+      await tester.tap(
+        find.byKey(const ValueKey('strength-goal-submit-button')),
+      );
+      await tester.pumpAndSettle();
+
+      expect(recordCubit.createdStrengthGoals, hasLength(1));
+      expect(recordCubit.createdStrengthGoals.first.exerciseId, 33);
+      expect(recordCubit.createdStrengthGoals.first.targetWeight, 80000);
+      expect(recordCubit.createdStrengthGoals.first.targetReps, 5);
+      expect(recordCubit.createdStrengthGoals.first.targetMaxStrength, 93333);
+      expect(find.byType(CreateStrengthGoalModal), findsNothing);
+      expect(find.text('Records for 33'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'ExerciseDetailScreen cancelling CreateStrengthGoalModal does not push to records page',
+    (tester) async {
+      final exercise = _sampleExercise(id: 34, name: 'Barbell Squat');
+      final exerciseCubit = _FakeExerciseCubit(initialExercise: exercise);
+      final recordCubit = _FakeExerciseRecordCubit();
+      final profileCubit = _FakeProfileCubit();
+      addTearDown(exerciseCubit.close);
+      addTearDown(recordCubit.close);
+      addTearDown(profileCubit.close);
+
+      final router = GoRouter(
+        initialLocation: '/exercises/34',
+        routes: [
+          GoRoute(
+            path: '/exercises/:id',
+            builder: (_, _) => const ExerciseDetailScreen(exerciseId: 34),
+          ),
+          GoRoute(
+            path: '/exercises/:id/records',
+            builder: (_, state) => Scaffold(
+              body: Text('Records for ${state.pathParameters['id']}'),
+            ),
+          ),
+        ],
+      );
+      addTearDown(router.dispose);
+
+      await tester.pumpWidget(
+        MultiBlocProvider(
+          providers: [
+            BlocProvider<ExerciseCubit>.value(value: exerciseCubit),
+            BlocProvider<ExerciseRecordCubit>.value(value: recordCubit),
+            BlocProvider<ProfileCubit>.value(value: profileCubit),
+          ],
+          child: MaterialApp.router(routerConfig: router),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final createGoalBtn = find.byKey(
+        const ValueKey('exercise-create-goal-button'),
+      );
+      await tester.ensureVisible(createGoalBtn);
+      await tester.tap(createGoalBtn);
+      await tester.pumpAndSettle();
+
+      expect(find.byType(CreateStrengthGoalModal), findsOneWidget);
+      await tester.tap(find.byIcon(Icons.close));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(CreateStrengthGoalModal), findsNothing);
+      expect(recordCubit.createdStrengthGoals, isEmpty);
+      expect(find.text('Records for 34'), findsNothing);
+      expect(find.byType(ExerciseDetailScreen), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'Failed strength goal creation keeps CreateStrengthGoalModal open and does not push to records page',
+    (tester) async {
+      final exercise = _sampleExercise(id: 35, name: 'Deadlift');
+      final exerciseCubit = _FakeExerciseCubit(initialExercise: exercise);
+      final recordCubit = _FakeExerciseRecordCubit(shouldFail: true);
+      final profileCubit = _FakeProfileCubit();
+      addTearDown(exerciseCubit.close);
+      addTearDown(recordCubit.close);
+      addTearDown(profileCubit.close);
+
+      final router = GoRouter(
+        initialLocation: '/exercises/35',
+        routes: [
+          GoRoute(
+            path: '/exercises/:id',
+            builder: (_, _) => const ExerciseDetailScreen(exerciseId: 35),
+          ),
+          GoRoute(
+            path: '/exercises/:id/records',
+            builder: (_, state) => Scaffold(
+              body: Text('Records for ${state.pathParameters['id']}'),
+            ),
+          ),
+        ],
+      );
+      addTearDown(router.dispose);
+
+      await tester.pumpWidget(
+        MultiBlocProvider(
+          providers: [
+            BlocProvider<ExerciseCubit>.value(value: exerciseCubit),
+            BlocProvider<ExerciseRecordCubit>.value(value: recordCubit),
+            BlocProvider<ProfileCubit>.value(value: profileCubit),
+          ],
+          child: MaterialApp.router(routerConfig: router),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final createGoalBtn = find.byKey(
+        const ValueKey('exercise-create-goal-button'),
+      );
+      await tester.ensureVisible(createGoalBtn);
+      await tester.tap(createGoalBtn);
+      await tester.pumpAndSettle();
+
+      await tester.enterText(
+        find.byKey(const ValueKey('strength-goal-weight-input')),
+        '140',
+      );
+      await tester.enterText(
+        find.byKey(const ValueKey('strength-goal-reps-input')),
+        '5',
+      );
+      await tester.tap(
+        find.byKey(const ValueKey('strength-goal-submit-button')),
+      );
+      await tester.pumpAndSettle();
+
+      expect(recordCubit.createdStrengthGoals, hasLength(1));
+      expect(find.byType(CreateStrengthGoalModal), findsOneWidget);
+      expect(find.text('Failed to create strength goal'), findsOneWidget);
+      expect(find.text('Records for 35'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'CreateStrengthGoalModal without exerciseId displays and validates exercise dropdown',
+    (tester) async {
+      final exercise = _sampleExercise(id: 1, name: 'Bench Press');
+      final exerciseCubit = _FakeExerciseCubit(initialExercise: exercise);
+      final recordCubit = _FakeExerciseRecordCubit();
+      final profileCubit = _FakeProfileCubit();
+      addTearDown(exerciseCubit.close);
+      addTearDown(recordCubit.close);
+      addTearDown(profileCubit.close);
+
+      await tester.pumpWidget(
+        MultiBlocProvider(
+          providers: [
+            BlocProvider<ExerciseCubit>.value(value: exerciseCubit),
+            BlocProvider<ExerciseRecordCubit>.value(value: recordCubit),
+            BlocProvider<ProfileCubit>.value(value: profileCubit),
+          ],
+          child: MaterialApp(
+            home: Builder(
+              builder: (context) => Scaffold(
+                body: CreateStrengthGoalModal(
+                  theme: Theme.of(context),
+                  sizes: DataDisplaySizes.getDataDisplaySizes(ScreenSize.md),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(
+        find.byKey(const ValueKey('strength-goal-exercise-dropdown')),
+        findsOneWidget,
+      );
+
+      await tester.enterText(
+        find.byKey(const ValueKey('strength-goal-weight-input')),
+        '100',
+      );
+      await tester.enterText(
+        find.byKey(const ValueKey('strength-goal-reps-input')),
+        '5',
+      );
+      await tester.tap(
+        find.byKey(const ValueKey('strength-goal-submit-button')),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Please select an exercise'), findsOneWidget);
+      expect(recordCubit.createdStrengthGoals, isEmpty);
+    },
+  );
+
+  testWidgets(
+    'CreateStrengthGoalModal allows omitting name and submits Nullable(null)',
+    (tester) async {
+      final exercise = _sampleExercise(id: 1, name: 'Bench Press');
+      final exerciseCubit = _FakeExerciseCubit(initialExercise: exercise);
+      final recordCubit = _FakeExerciseRecordCubit();
+      final profileCubit = _FakeProfileCubit();
+      addTearDown(exerciseCubit.close);
+      addTearDown(recordCubit.close);
+      addTearDown(profileCubit.close);
+
+      await tester.pumpWidget(
+        MultiBlocProvider(
+          providers: [
+            BlocProvider<ExerciseCubit>.value(value: exerciseCubit),
+            BlocProvider<ExerciseRecordCubit>.value(value: recordCubit),
+            BlocProvider<ProfileCubit>.value(value: profileCubit),
+          ],
+          child: MaterialApp(
+            home: Builder(
+              builder: (context) => Scaffold(
+                body: CreateStrengthGoalModal(
+                  theme: Theme.of(context),
+                  sizes: DataDisplaySizes.getDataDisplaySizes(ScreenSize.md),
+                  exerciseId: 1,
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.enterText(
+        find.byKey(const ValueKey('strength-goal-weight-input')),
+        '100',
+      );
+      await tester.enterText(
+        find.byKey(const ValueKey('strength-goal-reps-input')),
+        '3',
+      );
+      await tester.tap(
+        find.byKey(const ValueKey('strength-goal-submit-button')),
+      );
+      await tester.pumpAndSettle();
+
+      expect(recordCubit.createdStrengthGoals, hasLength(1));
+      expect(recordCubit.createdStrengthGoals.first.name.value, isNull);
+      expect(recordCubit.createdStrengthGoals.first.targetMaxStrength, 105882);
+    },
+  );
+
+  testWidgets(
+    'CreateStrengthGoalModal has no starting values and auto-calculates read-only Target 1RM',
+    (tester) async {
+      final exercise = _sampleExercise(id: 1, name: 'Bench Press');
+      final exerciseCubit = _FakeExerciseCubit(initialExercise: exercise);
+      final recordCubit = _FakeExerciseRecordCubit();
+      final profileCubit = _FakeProfileCubit();
+      addTearDown(exerciseCubit.close);
+      addTearDown(recordCubit.close);
+      addTearDown(profileCubit.close);
+
+      await tester.pumpWidget(
+        MultiBlocProvider(
+          providers: [
+            BlocProvider<ExerciseCubit>.value(value: exerciseCubit),
+            BlocProvider<ExerciseRecordCubit>.value(value: recordCubit),
+            BlocProvider<ProfileCubit>.value(value: profileCubit),
+          ],
+          child: MaterialApp(
+            home: Builder(
+              builder: (context) => Scaffold(
+                body: CreateStrengthGoalModal(
+                  theme: Theme.of(context),
+                  sizes: DataDisplaySizes.getDataDisplaySizes(ScreenSize.md),
+                  exerciseId: 1,
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      TextField fieldOf(String key) => tester.widget<TextField>(
+        find.descendant(
+          of: find.byKey(ValueKey(key)),
+          matching: find.byType(TextField),
+        ),
+      );
+
+      expect(fieldOf('strength-goal-weight-input').controller!.text, isEmpty);
+      expect(fieldOf('strength-goal-reps-input').controller!.text, isEmpty);
+      expect(
+        fieldOf('strength-goal-max-strength-input').controller!.text,
+        isEmpty,
+      );
+      expect(fieldOf('strength-goal-name-input').controller!.text, isEmpty);
+      expect(fieldOf('strength-goal-max-strength-input').readOnly, isTrue);
+
+      await tester.tap(
+        find.byKey(const ValueKey('strength-goal-submit-button')),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Required'), findsNWidgets(2));
+      expect(recordCubit.createdStrengthGoals, isEmpty);
+
+      await tester.enterText(
+        find.byKey(const ValueKey('strength-goal-weight-input')),
+        '100',
+      );
+      await tester.enterText(
+        find.byKey(const ValueKey('strength-goal-reps-input')),
+        '10',
+      );
+      await tester.pump();
+      expect(
+        fieldOf('strength-goal-max-strength-input').controller!.text,
+        '133.3',
+      );
+
+      await tester.enterText(
+        find.byKey(const ValueKey('strength-goal-reps-input')),
+        '11',
+      );
+      await tester.pump();
+      expect(
+        fieldOf('strength-goal-max-strength-input').controller!.text,
+        isEmpty,
+      );
+
+      await tester.tap(
+        find.byKey(const ValueKey('strength-goal-submit-button')),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Must be between 1 and 10'), findsOneWidget);
+      expect(recordCubit.createdStrengthGoals, isEmpty);
+
+      await tester.enterText(
+        find.byKey(const ValueKey('strength-goal-reps-input')),
+        '1',
+      );
+      await tester.pump();
+      expect(
+        fieldOf('strength-goal-max-strength-input').controller!.text,
+        '100.0',
+      );
+    },
+  );
+
+  testWidgets(
+    'CreateStrengthGoalModal calculates Target 1RM in lbs for imperial units and stores grams',
+    (tester) async {
+      final exercise = _sampleExercise(id: 1, name: 'Squat');
+      final exerciseCubit = _FakeExerciseCubit(initialExercise: exercise);
+      final recordCubit = _FakeExerciseRecordCubit();
+      final profileCubit = _FakeProfileCubit(units: Units.imperial);
+      addTearDown(exerciseCubit.close);
+      addTearDown(recordCubit.close);
+      addTearDown(profileCubit.close);
+
+      await tester.pumpWidget(
+        MultiBlocProvider(
+          providers: [
+            BlocProvider<ExerciseCubit>.value(value: exerciseCubit),
+            BlocProvider<ExerciseRecordCubit>.value(value: recordCubit),
+            BlocProvider<ProfileCubit>.value(value: profileCubit),
+          ],
+          child: MaterialApp(
+            home: Builder(
+              builder: (context) => Scaffold(
+                body: CreateStrengthGoalModal(
+                  theme: Theme.of(context),
+                  sizes: DataDisplaySizes.getDataDisplaySizes(ScreenSize.md),
+                  exerciseId: 1,
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.enterText(
+        find.byKey(const ValueKey('strength-goal-weight-input')),
+        '225',
+      );
+      await tester.enterText(
+        find.byKey(const ValueKey('strength-goal-reps-input')),
+        '5',
+      );
+      await tester.pump();
+
+      final maxStrengthField = tester.widget<TextField>(
+        find.descendant(
+          of: find.byKey(const ValueKey('strength-goal-max-strength-input')),
+          matching: find.byType(TextField),
+        ),
+      );
+      expect(maxStrengthField.controller!.text, '262.5');
+      expect(find.text('Target 1RM (lbs)'), findsOneWidget);
+
+      await tester.tap(
+        find.byKey(const ValueKey('strength-goal-submit-button')),
+      );
+      await tester.pumpAndSettle();
+
+      expect(recordCubit.createdStrengthGoals, hasLength(1));
+      expect(recordCubit.createdStrengthGoals.first.targetWeight, 102058);
+      expect(recordCubit.createdStrengthGoals.first.targetMaxStrength, 119068);
+    },
+  );
+
+  testWidgets(
+    'EditStrengthGoalModal allows clearing existing goal name and auto-calculates Target 1RM',
+    (tester) async {
+      final exerciseCubit = _FakeExerciseCubit();
+      final recordCubit = _FakeExerciseRecordCubit();
+      final profileCubit = _FakeProfileCubit();
+      addTearDown(exerciseCubit.close);
+      addTearDown(recordCubit.close);
+      addTearDown(profileCubit.close);
+
+      final existingGoal = StrengthGoalDto(
+        id: 7,
+        name: 'Summer PR',
+        targetReps: 5,
+        targetWeight: 100000,
+        targetMaxStrength: 116667,
+        exerciseId: 1,
+        status: ProgressStatus.inProgress,
+        startDate: DateTime(2026, 10, 1),
+      );
+
+      await tester.pumpWidget(
+        MultiBlocProvider(
+          providers: [
+            BlocProvider<ExerciseCubit>.value(value: exerciseCubit),
+            BlocProvider<ExerciseRecordCubit>.value(value: recordCubit),
+            BlocProvider<ProfileCubit>.value(value: profileCubit),
+          ],
+          child: MaterialApp(
+            home: Builder(
+              builder: (context) => Scaffold(
+                body: EditStrengthGoalModal(
+                  theme: Theme.of(context),
+                  sizes: DataDisplaySizes.getDataDisplaySizes(ScreenSize.md),
+                  existingGoal: existingGoal,
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Summer PR'), findsOneWidget);
+      final maxStrengthField = tester.widget<TextField>(
+        find.descendant(
+          of: find.byKey(const ValueKey('strength-goal-max-strength-input')),
+          matching: find.byType(TextField),
+        ),
+      );
+      expect(maxStrengthField.controller!.text, '116.7');
+
+      await tester.enterText(
+        find.byKey(const ValueKey('strength-goal-name-input')),
+        '   ',
+      );
+      await tester.tap(
+        find.byKey(const ValueKey('strength-goal-submit-button')),
+      );
+      await tester.pumpAndSettle();
+
+      expect(recordCubit.updatedStrengthGoals, hasLength(1));
+      expect(recordCubit.updatedStrengthGoals.first.$1, 7);
+      expect(recordCubit.updatedStrengthGoals.first.$2.name.value, isNull);
+      expect(
+        recordCubit.updatedStrengthGoals.first.$2.targetMaxStrength,
+        116667,
+      );
+    },
+  );
+
+  testWidgets(
+    'ActiveStrengthGoalCard and StrengthGoalHistoryList handle unnamed goals and display 1RM in user units',
+    (tester) async {
+      final activeGoal = StrengthGoalDto(
+        id: 1,
+        name: null,
+        targetReps: 8,
+        targetWeight: 90000,
+        targetMaxStrength: 114000,
+        exerciseId: 1,
+        status: ProgressStatus.inProgress,
+        startDate: DateTime(2026, 10, 10),
+      );
+      final pastUnnamedGoal = StrengthGoalDto(
+        id: 2,
+        name: null,
+        targetReps: 5,
+        targetWeight: 80000,
+        targetMaxStrength: 93333,
+        exerciseId: 1,
+        status: ProgressStatus.completed,
+        startDate: DateTime(2026, 9, 1),
+        completedAt: DateTime(2026, 9, 20),
+      );
+      final pastNamedGoal = StrengthGoalDto(
+        id: 3,
+        name: 'Autumn Peak',
+        targetReps: 3,
+        targetWeight: 100000,
+        targetMaxStrength: 105882,
+        exerciseId: 1,
+        status: ProgressStatus.abandoned,
+        startDate: DateTime(2026, 8, 1),
+      );
+
+      final recordCubit = _FakeExerciseRecordCubit(
+        activeStrengthGoal: activeGoal,
+        strengthGoals: [activeGoal, pastUnnamedGoal, pastNamedGoal],
+      );
+      final profileCubit = _FakeProfileCubit();
+      addTearDown(recordCubit.close);
+      addTearDown(profileCubit.close);
+
+      await tester.pumpWidget(
+        MultiBlocProvider(
+          providers: [
+            BlocProvider<ExerciseRecordCubit>.value(value: recordCubit),
+            BlocProvider<ProfileCubit>.value(value: profileCubit),
+          ],
+          child: MaterialApp(
+            home: Builder(
+              builder: (context) {
+                final sizes = DataDisplaySizes.getDataDisplaySizes(
+                  ScreenSize.md,
+                );
+                final theme = Theme.of(context);
+                return Scaffold(
+                  body: SingleChildScrollView(
+                    child: Column(
+                      children: [
+                        ActiveStrengthGoalCard(theme: theme, sizes: sizes),
+                        StrengthGoalHistoryList(
+                          shrinkWrap: true,
+                          theme: theme,
+                          sizes: sizes,
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Active Strength Goal'), findsOneWidget);
+      expect(find.text('90.0 kg'), findsOneWidget);
+      expect(find.text('114.0 kg'), findsOneWidget);
+      expect(find.text('80.0 kg × 5 reps • 1RM: 93.3 kg'), findsOneWidget);
+      expect(find.text('Sep 20, 2026'), findsOneWidget);
+      expect(find.text('Autumn Peak'), findsOneWidget);
+      expect(
+        find.textContaining('100.0 kg × 3 reps • 1RM: 105.9 kg'),
+        findsOneWidget,
+      );
     },
   );
 }
