@@ -27,14 +27,13 @@ import '../../../core/sizes/data_display_sizes.dart';
 import '../../../core/utils/converters.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../core/widgets/confirmation_dialog.dart';
-import '../../../core/widgets/layout/app_text_button.dart';
 import '../../../core/widgets/mutation_button.dart';
 import '../../../core/widgets/progress_status_badge.dart';
 import '../../../home/view_models/profile_cubit.dart';
 import '../../view_models/exercise_record_cubit.dart';
 import '../../view_models/states/exercise_record_state.dart';
-import './create_strength_goal_modal.dart';
 import './edit_strength_goal_modal.dart';
+import './empty_active_strength_goal_card.dart';
 
 final _skeletonStrengthGoal = StrengthGoalDto(
   id: 0,
@@ -89,7 +88,7 @@ class ActiveStrengthGoalCard extends StatelessWidget {
         final isSkeleton = state.isLoading && goal == null;
 
         if (!state.isLoading && goal == null) {
-          return _EmptyActiveStrengthGoalCard(
+          return EmptyActiveStrengthGoalCard(
             theme: theme,
             sizes: sizes,
             isLoading: state.isLoading,
@@ -165,7 +164,7 @@ class ActiveStrengthGoalCard extends StatelessWidget {
                         children: [
                           Icon(
                             Icons.sports_gymnastics,
-                            size: sizes.subtitleFontSize * 1.2,
+                            size: sizes.iconSubtitleFontSize,
                           ),
                           Flexible(
                             child: Text(
@@ -211,10 +210,9 @@ class ActiveStrengthGoalCard extends StatelessWidget {
                                 Icons.calendar_today,
                                 size: sizes.iconFontSize,
                               ),
-                              SizedBox(width: sizes.quarterSpacing),
                               Flexible(
                                 child: Text(
-                                  'Started: ${Formatters.formatRelativeDate(effectiveUnits, displayGoal.startDate)}',
+                                  ' Started: ${Formatters.formatRelativeDate(effectiveUnits, displayGoal.startDate)}',
                                   style: TextStyle(
                                     fontSize: sizes.fontSize,
                                     fontWeight: FontWeight.w600,
@@ -320,80 +318,6 @@ class ActiveStrengthGoalCard extends StatelessWidget {
           ),
         );
       },
-    );
-  }
-}
-
-class _EmptyActiveStrengthGoalCard extends StatelessWidget {
-  final ThemeData theme;
-  final DataDisplaySizesList sizes;
-  final bool isLoading;
-
-  const _EmptyActiveStrengthGoalCard({
-    required this.theme,
-    required this.sizes,
-    required this.isLoading,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final isDarkTheme = theme.brightness == Brightness.dark;
-    final subtitleColor = isDarkTheme ? Colors.grey[400] : Colors.grey[600];
-
-    return Card(
-      margin: EdgeInsets.zero,
-      child: SizedBox(
-        width: double.infinity,
-        child: Padding(
-          padding: EdgeInsets.symmetric(
-            horizontal: sizes.padding,
-            vertical: sizes.padding * 2,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.emoji_events_outlined, size: sizes.titleFontSize * 2),
-              SizedBox(height: sizes.spacing),
-              Text(
-                'No Active Strength Goal',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: sizes.titleFontSize,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              SizedBox(height: sizes.halfSpacing),
-              Text(
-                'Set a target weight and reps for an exercise to stay motivated.',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: sizes.fontSize,
-                  color: subtitleColor,
-                ),
-              ),
-              SizedBox(height: sizes.spacing),
-              SizedBox(
-                width: double.infinity,
-                child: AppTextButton(
-                  key: const ValueKey('strength-goal-set-active-button'),
-                  isLoading: isLoading,
-                  sizes: sizes,
-                  isDense: true,
-                  onPressed: () {
-                    showDialog(
-                      context: context,
-                      builder: (ctx) =>
-                          CreateStrengthGoalModal(theme: theme, sizes: sizes),
-                    );
-                  },
-                  label: 'Set Goal',
-                  icon: Icons.add,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
     );
   }
 }
