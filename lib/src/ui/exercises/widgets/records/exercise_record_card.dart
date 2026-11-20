@@ -56,32 +56,49 @@ class ExerciseRecordCard extends StatelessWidget {
         padding: EdgeInsets.all(sizes.padding),
         child: Column(
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              mainAxisSize: MainAxisSize.max,
-              children: [
-                ExerciseRecordReps(
-                  units: units,
-                  fontSize: sizes.fontSize,
-                  reps: record.reps,
-                  weight: record.weight,
+            LayoutBuilder(
+              builder: (context, constraints) => FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    minWidth: constraints.maxWidth.isFinite
+                        ? constraints.maxWidth
+                        : 0,
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    spacing: sizes.halfSpacing,
+                    children: [
+                      ExerciseRecordReps(
+                        units: units,
+                        fontSize: sizes.fontSize,
+                        reps: record.reps,
+                        weight: record.weight,
+                      ),
+                      MaxStrengthLabel(
+                        units: units,
+                        maxStrength: record.maxStrength,
+                        fontSize: sizes.subtitleFontSize,
+                      ),
+                    ],
+                  ),
                 ),
-                MaxStrengthLabel(
-                  units: units,
-                  maxStrength: record.maxStrength,
-                  fontSize: sizes.subtitleFontSize,
-                ),
-              ],
+              ),
             ),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               mainAxisSize: MainAxisSize.max,
               children: [
-                RelativeDateLabel(
-                  units: units,
-                  date: record.recordDate,
-                  fontSize: sizes.fontSize,
+                Flexible(
+                  child: RelativeDateLabel(
+                    units: units,
+                    date: record.recordDate,
+                    fontSize: sizes.fontSize,
+                  ),
                 ),
+                SizedBox(width: sizes.halfSpacing),
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [

@@ -225,25 +225,36 @@ class ActiveStrengthGoalCard extends StatelessWidget {
                       ),
                     ),
                     SizedBox(height: sizes.spacing),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        FittedBox(
-                          fit: BoxFit.scaleDown,
-                          child: ExerciseRecordReps(
-                            units: effectiveUnits,
-                            fontSize: sizes.fontSize,
-                            reps: displayGoal.targetReps,
-                            weight: displayGoal.targetWeight,
+                    LayoutBuilder(
+                      builder: (context, constraints) => FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerLeft,
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(
+                            minWidth: constraints.maxWidth.isFinite
+                                ? constraints.maxWidth
+                                : 0,
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            spacing: sizes.halfSpacing,
+                            children: [
+                              ExerciseRecordReps(
+                                units: effectiveUnits,
+                                fontSize: sizes.fontSize,
+                                reps: displayGoal.targetReps,
+                                weight: displayGoal.targetWeight,
+                              ),
+                              MaxStrengthLabel(
+                                units: effectiveUnits,
+                                maxStrength: displayGoal.targetMaxStrength,
+                                fontSize: sizes.fontSize,
+                              ),
+                            ],
                           ),
                         ),
-                        MaxStrengthLabel(
-                          units: effectiveUnits,
-                          maxStrength: displayGoal.targetMaxStrength,
-                          fontSize: sizes.fontSize,
-                        ),
-                      ],
+                      ),
                     ),
                     SizedBox(height: sizes.spacing),
                     Row(

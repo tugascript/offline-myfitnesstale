@@ -85,27 +85,41 @@ class ExerciseProgressRecordCard extends StatelessWidget {
                 ),
                 SizedBox(height: sizes.spacing),
               ],
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                mainAxisSize: MainAxisSize.max,
-                children: [
-                  RelativeDateLabel(
-                    units: units,
-                    date: record.recordDate,
-                    fontSize: sizes.fontSize,
+              LayoutBuilder(
+                builder: (context, constraints) => FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      minWidth: constraints.maxWidth.isFinite
+                          ? constraints.maxWidth
+                          : 0,
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      spacing: sizes.halfSpacing,
+                      children: [
+                        RelativeDateLabel(
+                          units: units,
+                          date: record.recordDate,
+                          fontSize: sizes.fontSize,
+                        ),
+                        ExerciseRecordReps(
+                          units: units,
+                          fontSize: sizes.fontSize,
+                          reps: record.reps,
+                          weight: record.weight,
+                        ),
+                        MaxStrengthLabel(
+                          units: units,
+                          maxStrength: record.maxStrength,
+                          fontSize: sizes.subtitleFontSize,
+                        ),
+                      ],
+                    ),
                   ),
-                  ExerciseRecordReps(
-                    units: units,
-                    fontSize: sizes.fontSize,
-                    reps: record.reps,
-                    weight: record.weight,
-                  ),
-                  MaxStrengthLabel(
-                    units: units,
-                    maxStrength: record.maxStrength,
-                    fontSize: sizes.subtitleFontSize,
-                  ),
-                ],
+                ),
               ),
             ],
           ),

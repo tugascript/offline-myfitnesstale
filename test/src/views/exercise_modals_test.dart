@@ -1517,7 +1517,7 @@ void main() {
         find.byKey(const ValueKey('active-strength-goal-delete-btn')),
         findsOneWidget,
       );
-      expect(find.text(' 90 kg'), findsOneWidget);
+      expect(find.text(' 90.00 KG'), findsOneWidget);
       expect(find.text(' 114.00 KG'), findsOneWidget);
       expect(find.textContaining('Started: 10/10/2025'), findsOneWidget);
       expect(find.byType(ProgressStatusBadge), findsNWidgets(3));

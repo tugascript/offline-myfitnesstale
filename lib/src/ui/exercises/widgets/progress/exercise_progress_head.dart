@@ -54,56 +54,75 @@ class ExerciseProgressHead extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (isSkeleton || exerciseRecord?.exercise != null) ...[
-            Row(
-              mainAxisSize: MainAxisSize.max,
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.sports_gymnastics,
-                      size: sizes.subtitleFontSize * 1.2,
-                    ),
-                    Flexible(
-                      child: Text(
-                        " ${exerciseRecord?.exercise?.name ?? 'Loading Exercise Name'}",
-                        style: TextStyle(
-                          fontSize: sizes.subtitleFontSize,
-                          fontWeight: FontWeight.bold,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+            SizedBox(
+              width: double.infinity,
+              child: Wrap(
+                alignment: WrapAlignment.spaceBetween,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                spacing: sizes.halfSpacing,
+                runSpacing: sizes.halfSpacing,
+                children: [
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.sports_gymnastics,
+                        size: sizes.subtitleFontSize * 1.2,
                       ),
-                    ),
-                  ],
-                ),
-                RelativeDateLabel(
-                  units: units,
-                  date: exerciseRecord?.recordDate ?? DateTime.now(),
-                  fontSize: sizes.fontSize,
-                  fontWeight: FontWeight.w600,
-                ),
-              ],
+                      Flexible(
+                        child: Text(
+                          " ${exerciseRecord?.exercise?.name ?? 'Loading Exercise Name'}",
+                          style: TextStyle(
+                            fontSize: sizes.subtitleFontSize,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                  RelativeDateLabel(
+                    units: units,
+                    date: exerciseRecord?.recordDate ?? DateTime.now(),
+                    fontSize: sizes.fontSize,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ],
+              ),
             ),
             SizedBox(height: sizes.spacing),
           ],
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            mainAxisSize: MainAxisSize.max,
-            children: [
-              ExerciseRecordReps(
-                units: units,
-                fontSize: sizes.subtitleFontSize,
-                reps: exerciseRecord?.reps ?? 0,
-                weight: exerciseRecord?.weight ?? 0,
+          LayoutBuilder(
+            builder: (context, constraints) => FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  minWidth: constraints.maxWidth.isFinite
+                      ? constraints.maxWidth
+                      : 0,
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  spacing: sizes.halfSpacing,
+                  children: [
+                    ExerciseRecordReps(
+                      units: units,
+                      fontSize: sizes.subtitleFontSize,
+                      reps: exerciseRecord?.reps ?? 0,
+                      weight: exerciseRecord?.weight ?? 0,
+                    ),
+                    MaxStrengthLabel(
+                      units: units,
+                      maxStrength: exerciseRecord?.maxStrength ?? 0,
+                      fontSize: sizes.fontSize,
+                    ),
+                  ],
+                ),
               ),
-              MaxStrengthLabel(
-                units: units,
-                maxStrength: exerciseRecord?.maxStrength ?? 0,
-                fontSize: sizes.fontSize,
-              ),
-            ],
+            ),
           ),
         ],
       ),

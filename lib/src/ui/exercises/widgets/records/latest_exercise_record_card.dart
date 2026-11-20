@@ -130,30 +130,35 @@ class LatestExerciseRecordCard extends StatelessWidget {
                       mainAxisSize: MainAxisSize.max,
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
-                        ExerciseRecordReps(
-                          units: units,
-                          fontSize: sizes.subtitleFontSize,
-                          reps: exerciseRecord?.reps ?? 0,
-                          weight: exerciseRecord?.weight ?? 0,
+                        Flexible(
+                          child: ExerciseRecordReps(
+                            units: units,
+                            fontSize: sizes.subtitleFontSize,
+                            reps: exerciseRecord?.reps ?? 0,
+                            weight: exerciseRecord?.weight ?? 0,
+                          ),
                         ),
                       ],
                     ),
                     SizedBox(height: sizes.spacing),
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        RelativeDateLabel(
-                          units: units,
-                          date: exerciseRecord?.recordDate ?? DateTime.now(),
-                          fontSize: sizes.subtitleFontSize,
-                        ),
-                        SizedBox(width: sizes.spacing),
-                        MaxStrengthLabel(
-                          units: units,
-                          maxStrength: exerciseRecord?.maxStrength ?? 0,
-                          fontSize: sizes.subtitleFontSize,
-                        ),
-                      ],
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          RelativeDateLabel(
+                            units: units,
+                            date: exerciseRecord?.recordDate ?? DateTime.now(),
+                            fontSize: sizes.subtitleFontSize,
+                          ),
+                          SizedBox(width: sizes.spacing),
+                          MaxStrengthLabel(
+                            units: units,
+                            maxStrength: exerciseRecord?.maxStrength ?? 0,
+                            fontSize: sizes.subtitleFontSize,
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),
