@@ -95,14 +95,11 @@ class _ExerciseFormState extends State<ExerciseForm> {
   @override
   void initState() {
     super.initState();
-    final cubit = context.read<ExerciseCubit>();
-    if (cubit.state.equipmentSelection.isEmpty) {
-      Future.microtask(() {
-        if (mounted) {
-          context.read<ExerciseCubit>().getSelectionEquipments();
-        }
-      });
-    }
+    Future.microtask(() {
+      if (mounted) {
+        context.read<ExerciseCubit>().getSelectionEquipments();
+      }
+    });
     _data = _FormData(
       name: widget.initialName,
       description: widget.initialDescription ?? '',
