@@ -19,7 +19,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../sizes/data_display_sizes.dart';
 import '../layout/app_elevated_button.dart';
-import '../mutation_button.dart';
+import '../layout/app_outlined_button.dart';
 
 class SaveButtons extends StatelessWidget {
   final ThemeData theme;
@@ -42,7 +42,7 @@ class SaveButtons extends StatelessWidget {
     return Row(
       children: [
         Expanded(
-          child: MutationButton(
+          child: AppOutlinedButton(
             onPressed: onCancel,
             theme: theme,
             isLoading: isLoading,

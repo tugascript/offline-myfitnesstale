@@ -64,10 +64,10 @@ class AppElevatedButton extends StatelessWidget {
       ),
       style: ElevatedButton.styleFrom(
         padding: EdgeInsets.symmetric(vertical: sizes.padding),
+        visualDensity: isDense ? VisualDensity.compact : VisualDensity.standard,
         backgroundColor: isLoading ? greyColor : baseColor,
         foregroundColor: theme.scaffoldBackgroundColor,
-        shape: BeveledRectangleBorder(),
-        visualDensity: isDense ? VisualDensity.compact : VisualDensity.standard,
+        shape: const BeveledRectangleBorder(),
       ),
     );
   }

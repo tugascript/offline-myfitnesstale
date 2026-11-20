@@ -28,9 +28,9 @@ import '../../core/sizes/data_display_sizes.dart';
 import '../../core/sizes/screen_size.dart';
 import '../../core/widgets/confirmation_dialog.dart';
 import '../../core/widgets/layout/app_elevated_button.dart';
+import '../../core/widgets/layout/app_outlined_button.dart';
 import '../../core/widgets/layout/app_scaffold.dart';
 import '../../core/widgets/layout/responsive_scaffold.dart';
-import '../../core/widgets/mutation_button.dart';
 import '../../core/widgets/video/app_video_player.dart';
 import '../view_models/exercise_cubit.dart';
 import '../view_models/states/exercise_state.dart';
@@ -250,7 +250,7 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
                     Row(
                       children: [
                         Expanded(
-                          child: MutationButton(
+                          child: AppOutlinedButton(
                             isLoading: exerciseState.isLoading,
                             theme: theme,
                             sizes: sizes,
@@ -270,7 +270,7 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
                         ),
                         SizedBox(width: sizes.spacing),
                         Expanded(
-                          child: MutationButton(
+                          child: AppOutlinedButton(
                             isLoading: exerciseState.isLoading,
                             theme: theme,
                             sizes: sizes,

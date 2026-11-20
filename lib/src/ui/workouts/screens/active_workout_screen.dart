@@ -27,8 +27,8 @@ import '../../core/sizes/data_display_sizes.dart';
 import '../../core/sizes/screen_size.dart';
 import '../../core/utils/converters.dart';
 import '../../core/widgets/layout/app_elevated_button.dart';
+import '../../core/widgets/layout/app_outlined_button.dart';
 import '../../core/widgets/layout/responsive_scaffold.dart';
-import '../../core/widgets/mutation_button.dart';
 import '../../home/view_models/profile_cubit.dart';
 import '../../home/view_models/states/profile_state.dart';
 import '../../workout_plans/view_models/workout_plan_record_cubit.dart';
@@ -334,7 +334,7 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
                       Row(
                         children: [
                           Expanded(
-                            child: MutationButton(
+                            child: AppOutlinedButton(
                               theme: theme,
                               sizes: sizes,
                               label: "CANCEL",

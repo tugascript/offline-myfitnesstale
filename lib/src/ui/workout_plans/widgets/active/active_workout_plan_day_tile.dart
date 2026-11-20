@@ -27,7 +27,7 @@ import '../../../core/sizes/data_display_sizes.dart';
 import '../../../core/utils/progress_status_presentation.dart';
 import '../../../core/widgets/confirmation_dialog.dart';
 import '../../../core/widgets/layout/app_elevated_button.dart';
-import '../../../core/widgets/mutation_button.dart';
+import '../../../core/widgets/layout/app_outlined_button.dart';
 
 enum DayProgressStatus { past, current, future }
 
@@ -240,7 +240,7 @@ class ActiveWorkoutPlanDayTile extends StatelessWidget {
                       SizedBox(height: sizes.spacing / 2),
                       SizedBox(
                         width: double.infinity,
-                        child: MutationButton(
+                        child: AppOutlinedButton(
                           theme: theme,
                           sizes: sizes,
                           isLoading: false,
@@ -382,7 +382,7 @@ class ActiveWorkoutPlanDayTile extends StatelessWidget {
             Row(
               children: [
                 Expanded(
-                  child: MutationButton(
+                  child: AppOutlinedButton(
                     theme: theme,
                     sizes: sizes,
                     isLoading: false,
@@ -422,7 +422,7 @@ class ActiveWorkoutPlanDayTile extends StatelessWidget {
               SizedBox(height: sizes.spacing / 2),
               SizedBox(
                 width: double.infinity,
-                child: MutationButton(
+                child: AppOutlinedButton(
                   theme: theme,
                   sizes: sizes,
                   isLoading: false,
