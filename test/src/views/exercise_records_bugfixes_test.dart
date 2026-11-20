@@ -27,6 +27,7 @@ import 'package:myfitnesstale/src/data/models/sqlite/exercise_record_model.dart'
 import 'package:myfitnesstale/src/data/repositories/exercises/dtos/exercise_dto.dart';
 import 'package:myfitnesstale/src/data/repositories/exercises/dtos/exercise_record_dto.dart';
 import 'package:myfitnesstale/src/data/repositories/exercises/exercise_record_repository.dart';
+import 'package:myfitnesstale/src/data/repositories/exercises/inputs/exercise_record_input.dart';
 import 'package:myfitnesstale/src/data/utils/dates.dart';
 import 'package:myfitnesstale/src/data/utils/enums.dart';
 import 'package:myfitnesstale/src/data/utils/json_data.dart';
@@ -36,6 +37,7 @@ import 'package:myfitnesstale/src/ui/core/widgets/layout/app_icon_button.dart';
 import 'package:myfitnesstale/src/ui/exercises/view_models/exercise_record_cubit.dart';
 import 'package:myfitnesstale/src/ui/exercises/view_models/states/exercise_record_state.dart';
 import 'package:myfitnesstale/src/ui/exercises/widgets/progress/exercise_progress_records_list.dart';
+import 'package:myfitnesstale/src/ui/exercises/widgets/progress/latest_exercise_progress_record.dart';
 import 'package:myfitnesstale/src/ui/exercises/widgets/records/exercise_records_history.dart';
 import 'package:myfitnesstale/src/ui/exercises/widgets/records/latest_exercise_record.dart';
 import 'package:myfitnesstale/src/utils/nullable.dart';
@@ -335,5 +337,148 @@ void main() {
     await cubit.deleteExerciseRecord(newerId);
     expect(cubit.state.latestExerciseRecord, isNotNull);
     expect(cubit.state.latestExerciseRecord!.weight, 80000);
+  });
+
+  testWidgets(
+    'LatestExerciseProgressRecord clears stale per-exercise latest while loading',
+    (tester) async {
+      final pending = Completer<void>();
+      final cubit = _ControlledExerciseRecordCubit(
+        ExerciseRecordState.initial().copyWith(
+          latestExerciseRecord: Nullable(recordA),
+        ),
+        pendingLatest: pending,
+      );
+      addTearDown(cubit.close);
+
+      final sizes = DataDisplaySizes.getDataDisplaySizes(ScreenSize.xs);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: BlocProvider<ExerciseRecordCubit>.value(
+              value: cubit,
+              child: LatestExerciseProgressRecord(
+                theme: ThemeData.light(),
+                sizes: sizes,
+                units: Units.metric,
+                onOpenExerciseRecords: (_) async {},
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      expect(find.textContaining('Alpha Press'), findsNothing);
+      expect(
+        find.byWidgetPredicate((w) => w is Skeletonizer && w.enabled),
+        findsOneWidget,
+      );
+
+      pending.complete();
+      await tester.pumpAndSettle();
+    },
+  );
+
+  test('createExerciseRecord preserves pagination scope, does not block on another exercise latest, and updateExerciseRecord uses DB latest', () async {
+    final testDatabase = TestDatabase();
+    await testDatabase.initialize();
+    addTearDown(testDatabase.destroy);
+
+    final db = await testDatabase.db;
+    final benchId = await db.insert(
+      Exercise.table,
+      Exercise.create(
+        name: 'Bench Press',
+        description: '',
+        muscleGroup: MuscleGroup.push,
+        muscles: emptyMuscles,
+      ).toMap(),
+    );
+    final squatId = await db.insert(
+      Exercise.table,
+      Exercise.create(
+        name: 'Back Squat',
+        description: '',
+        muscleGroup: MuscleGroup.legs,
+        muscles: emptyMuscles,
+      ).toMap(),
+    );
+
+    // Newer global record for squat
+    await db.insert(
+      ExerciseRecord.table,
+      ExerciseRecord.create(
+        exerciseId: squatId,
+        weight: 140000,
+        reps: 5,
+        recordDate: DateUtilities.getDateUnix(DateTime.utc(2026, 6, 1)),
+      ).toMap(),
+    );
+
+    final cubit = ExerciseRecordCubit(
+      exerciseRecordRepository: ExerciseRecordRepository.create(),
+    );
+    addTearDown(cubit.close);
+
+    // Load global latest (squat, 2026-06-01) and global progress pagination (exerciseId: null)
+    await cubit.getLatestExerciseRecord();
+    await cubit.getExerciseRecords(offset: 0);
+    expect(cubit.state.recordPagination.exerciseId, isNull);
+    expect(cubit.state.latestExerciseRecord?.exerciseId, squatId);
+
+    // Create an older record for bench (2026-05-01):
+    // 1) recordPagination.exerciseId must remain null
+    // 2) latestExerciseRecord must not stay blocked on squat's newer date
+    await cubit.createExerciseRecord(
+      ExerciseRecordInput(
+        exerciseId: benchId,
+        weight: 90000,
+        reps: 5,
+        recordDate: DateTime.utc(2026, 5, 1),
+      ),
+    );
+    expect(cubit.state.recordPagination.exerciseId, isNull);
+    expect(cubit.state.latestExerciseRecord?.exerciseId, benchId);
+    expect(cubit.state.latestExerciseRecord?.weight, 90000);
+
+    // Create a newer bench record (2026-07-01) outside a 2025-only date filter,
+    // then update an older 2025 bench record under that 2025 filter.
+    await cubit.createExerciseRecord(
+      ExerciseRecordInput(
+        exerciseId: benchId,
+        weight: 110000,
+        reps: 3,
+        recordDate: DateTime.utc(2026, 7, 1),
+      ),
+    );
+    final oldBenchId = await db.insert(
+      ExerciseRecord.table,
+      ExerciseRecord.create(
+        exerciseId: benchId,
+        weight: 70000,
+        reps: 8,
+        recordDate: DateUtilities.getDateUnix(DateTime.utc(2025, 2, 1)),
+      ).toMap(),
+    );
+
+    await cubit.getExerciseRecords(
+      exerciseId: benchId,
+      dateRange: (DateTime.utc(2025, 1, 1), DateTime.utc(2025, 12, 31)),
+      offset: 0,
+    );
+    await cubit.updateExerciseRecord(
+      oldBenchId,
+      ExerciseRecordInput(
+        exerciseId: benchId,
+        weight: 75000,
+        reps: 8,
+        recordDate: DateTime.utc(2025, 2, 1),
+      ),
+    );
+
+    // Latest should still be the 2026-07-01 record (110000), not the 2025 filtered page record.
+    expect(cubit.state.latestExerciseRecord?.weight, 110000);
   });
 }
