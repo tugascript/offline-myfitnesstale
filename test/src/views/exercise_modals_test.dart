@@ -1644,7 +1644,7 @@ void main() {
   );
 
   testWidgets(
-    'StrengthGoalsScreen uses core empty widgets, displays error SnackBar, and paginates history on scroll',
+    'StrengthGoalsListScreen uses core empty widgets, displays error SnackBar, and paginates history on scroll',
     (tester) async {
       final pastGoals = List.generate(
         10,
@@ -1667,7 +1667,10 @@ void main() {
 
       final emptyRouter = GoRouter(
         routes: [
-          GoRoute(path: '/', builder: (_, _) => const StrengthGoalsScreen()),
+          GoRoute(
+            path: '/',
+            builder: (_, _) => const StrengthGoalsListScreen(),
+          ),
         ],
       );
       addTearDown(emptyRouter.dispose);
@@ -1705,7 +1708,10 @@ void main() {
 
       final paginatedRouter = GoRouter(
         routes: [
-          GoRoute(path: '/', builder: (_, _) => const StrengthGoalsScreen()),
+          GoRoute(
+            path: '/',
+            builder: (_, _) => const StrengthGoalsListScreen(),
+          ),
         ],
       );
       addTearDown(paginatedRouter.dispose);

@@ -453,12 +453,17 @@ final class ExerciseRecordRepository implements Repository {
       );
 
       final int now = DateUtilities.getNowUtcUnix();
-      final int recordDateUnix = DateUtilities.getDateUnix(input.recordDate);
+      final int recordNumericDate = DateUtilities.getNumericDate(
+        input.recordDate.toLocal(),
+      );
       for (final goal in openGoals) {
+        final int goalStartNumericDate = DateUtilities.getNumericDate(
+          DateUtilities.getDateFromUnix(goal.startDate),
+        );
         final bool weightMet = weightProgress == ExerciseWeightProgress.negative
             ? input.weight <= goal.targetWeight
             : input.weight >= goal.targetWeight;
-        if (recordDateUnix >= goal.startDate &&
+        if (recordNumericDate >= goalStartNumericDate &&
             weightMet &&
             input.reps >= goal.targetReps) {
           final completedGoal = goal.copyWith(

@@ -496,7 +496,8 @@ void main() {
         ],
       ),
     ),
-    'populated strength screen': (sizes, theme) => const StrengthGoalsScreen(),
+    'populated strength screen': (sizes, theme) =>
+        const StrengthGoalsListScreen(),
     'exercise records & progress cards': (sizes, theme) =>
         SingleChildScrollView(
           child: Column(

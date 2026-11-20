@@ -593,13 +593,15 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('StrengthGoalsScreen renders narrow screen', (tester) async {
+    testWidgets('StrengthGoalsListScreen renders narrow screen', (
+      tester,
+    ) async {
       tester.view.devicePixelRatio = 1;
       tester.view.physicalSize = const Size(320, 640);
       addTearDown(tester.view.reset);
 
       await tester.pumpWidget(
-        buildAppHarness(child: const StrengthGoalsScreen()),
+        buildAppHarness(child: const StrengthGoalsListScreen()),
       );
       await tester.pump();
 

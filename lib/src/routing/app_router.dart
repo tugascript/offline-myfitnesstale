@@ -342,7 +342,7 @@ sealed class AppRouter {
     // Strength Goals
     GoRoute(
       path: Routes.strengthGoals.name,
-      builder: (context, state) => const StrengthGoalsScreen(),
+      builder: (context, state) => const StrengthGoalsListScreen(),
     ),
     // Foods (static before dynamic)
     GoRoute(
