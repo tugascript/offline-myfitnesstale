@@ -110,11 +110,18 @@ final class ExerciseRecordState extends Equatable {
   final bool _isLoading;
   final bool isLoadingLatest;
   final bool isLoadingRecords;
+  final bool isLoadingActiveGoal;
+  final bool isLoadingGoals;
   final ErrorState? error;
 
-  bool get isLoading => _isLoading || isLoadingLatest || isLoadingRecords;
-  bool get isLatestLoading => _isLoading || isLoadingLatest;
-  bool get isRecordsLoading => _isLoading || isLoadingRecords;
+  bool get isLoading =>
+      _isLoading ||
+      isLoadingLatest ||
+      isLoadingRecords ||
+      isLoadingActiveGoal ||
+      isLoadingGoals;
+  bool get isLatestLoading => isLoadingLatest;
+  bool get isRecordsLoading => isLoadingRecords;
 
   const ExerciseRecordState({
     this.recordsRequestId = 0,
@@ -132,6 +139,8 @@ final class ExerciseRecordState extends Equatable {
     required this._isLoading,
     this.isLoadingLatest = false,
     this.isLoadingRecords = false,
+    this.isLoadingActiveGoal = false,
+    this.isLoadingGoals = false,
     this.error,
   });
 
@@ -161,6 +170,8 @@ final class ExerciseRecordState extends Equatable {
     bool? isLoading,
     bool? isLoadingLatest,
     bool? isLoadingRecords,
+    bool? isLoadingActiveGoal,
+    bool? isLoadingGoals,
     Nullable<ErrorState>? error,
   }) {
     return ExerciseRecordState(
@@ -190,6 +201,8 @@ final class ExerciseRecordState extends Equatable {
       isLoading: isLoading ?? _isLoading,
       isLoadingLatest: isLoadingLatest ?? this.isLoadingLatest,
       isLoadingRecords: isLoadingRecords ?? this.isLoadingRecords,
+      isLoadingActiveGoal: isLoadingActiveGoal ?? this.isLoadingActiveGoal,
+      isLoadingGoals: isLoadingGoals ?? this.isLoadingGoals,
       error: error != null ? error.value : this.error,
     );
   }
@@ -211,6 +224,8 @@ final class ExerciseRecordState extends Equatable {
     _isLoading,
     isLoadingLatest,
     isLoadingRecords,
+    isLoadingActiveGoal,
+    isLoadingGoals,
     error,
   ];
 }
