@@ -48,6 +48,9 @@ Follow a strict MVVM flow aligned with the Flutter app architecture guide:
     - Consumes Cubit states via `BlocBuilder` / `BlocConsumer` / `context.watch`.
     - Dispatches user intents to Cubit methods.
     - Never calls repositories or DAOs directly.
+    - One public widget class per file (filename matches the class). Allowed in the same file: its State class, and
+      small private (_) helpers that are only used there. Do not put multiple public or reusable widgets in one file —
+      extract those.
     - When generating a screen, reuse shared UI in `lib/src/ui/core/widgets/` (including `layout/`) and feature widgets
       under `lib/src/ui/<feature>/widgets/`. Keep the screen a compact composition of those widgets plus Cubit wiring.
     - Resolve layout sizes in the screen with `BreakPoint.fromContext(context)` and the matching class in
