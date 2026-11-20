@@ -21,7 +21,7 @@ import 'package:skeletonizer/skeletonizer.dart';
 import '../../../../data/repositories/exercises/dtos/exercise_record_dto.dart';
 import '../../../../data/utils/enums.dart';
 import '../../../core/sizes/data_display_sizes.dart';
-import '../../exercise_record_reps.dart';
+import '../exercise_record_reps.dart';
 import '../max_strength_label.dart';
 import '../relative_date_label.dart';
 

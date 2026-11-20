@@ -44,19 +44,22 @@ class RelativeDateLabel extends StatelessWidget {
         ? ' ${Formatters.formatRelativeDate(units, date)}'
         : ' $prefix${Formatters.formatRelativeDate(units, date)}';
 
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(Icons.calendar_today, size: fontSize * 1.15, color: color),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: fontSize,
-            fontWeight: fontWeight,
-            color: color,
+    return FittedBox(
+      fit: BoxFit.scaleDown,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.calendar_today, size: fontSize * 1.15, color: color),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: fontSize,
+              fontWeight: fontWeight,
+              color: color,
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

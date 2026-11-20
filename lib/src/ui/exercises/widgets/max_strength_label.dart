@@ -40,15 +40,18 @@ class MaxStrengthLabel extends StatelessWidget {
         ? Converters.gramsToKg(maxStrength).toStringAsFixed(2)
         : Converters.gramsToLbs(maxStrength).toStringAsFixed(2);
 
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text('💪', style: TextStyle(fontSize: fontSize * 1.15)),
-        Text(
-          ' $maxStrengthValue $weightUnit',
-          style: TextStyle(fontSize: fontSize, fontWeight: FontWeight.w600),
-        ),
-      ],
+    return FittedBox(
+      fit: BoxFit.scaleDown,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text('💪', style: TextStyle(fontSize: fontSize * 1.15)),
+          Text(
+            ' $maxStrengthValue $weightUnit',
+            style: TextStyle(fontSize: fontSize, fontWeight: FontWeight.w600),
+          ),
+        ],
+      ),
     );
   }
 }

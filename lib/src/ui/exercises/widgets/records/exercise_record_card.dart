@@ -29,7 +29,7 @@ import '../../view_models/exercise_record_cubit.dart';
 import '../max_strength_label.dart';
 import '../relative_date_label.dart';
 import './editors/edit_exercise_record_modal.dart';
-import '../../exercise_record_reps.dart';
+import '../exercise_record_reps.dart';
 
 class ExerciseRecordCard extends StatelessWidget {
   final ThemeData theme;

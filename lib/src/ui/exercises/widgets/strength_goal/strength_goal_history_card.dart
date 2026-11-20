@@ -29,7 +29,7 @@ import '../../../core/widgets/layout/delete_icon_button.dart';
 import '../../../core/widgets/layout/edit_icon_button.dart';
 import '../../../core/widgets/layout/list_card.dart';
 import '../../../core/widgets/progress_status_badge.dart';
-import '../../exercise_record_reps.dart';
+import '../exercise_record_reps.dart';
 import '../../view_models/exercise_record_cubit.dart';
 import '../max_strength_label.dart';
 import '../records/editors/create_exercise_record_modal.dart';
@@ -111,20 +111,21 @@ class StrengthGoalHistoryCard extends StatelessWidget {
           ],
           SizedBox(height: sizes.spacing),
         ],
-        Row(
-          mainAxisSize: MainAxisSize.max,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        Wrap(
+          alignment: WrapAlignment.spaceBetween,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          spacing: sizes.spacing,
+          runSpacing: sizes.halfSpacing,
           children: [
-            Flexible(
+            FittedBox(
+              fit: BoxFit.scaleDown,
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Flexible(
-                    child: RelativeDateLabel(
-                      units: units,
-                      date: displayDate,
-                      fontSize: sizes.fontSize,
-                    ),
+                  RelativeDateLabel(
+                    units: units,
+                    date: displayDate,
+                    fontSize: sizes.fontSize,
                   ),
                   if (!hasExercise && !hasName) ...[
                     SizedBox(width: sizes.halfSpacing),

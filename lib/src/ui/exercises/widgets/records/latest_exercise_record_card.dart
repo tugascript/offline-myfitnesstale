@@ -29,7 +29,7 @@ import '../../../core/widgets/layout/edit_icon_button.dart';
 import '../../view_models/exercise_record_cubit.dart';
 import '../max_strength_label.dart';
 import '../relative_date_label.dart';
-import '../../exercise_record_reps.dart';
+import '../exercise_record_reps.dart';
 
 class LatestExerciseRecordCard extends StatelessWidget {
   final DataDisplaySizesList sizes;
