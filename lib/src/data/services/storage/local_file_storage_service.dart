@@ -74,14 +74,12 @@ final class LocalFileStorageService {
       return null;
     }
 
-    if (p.isAbsolute(trimmed)) {
-      return File(trimmed);
-    }
-
     try {
       final picturesDir = await getPicturesDirectory();
       final picturesRoot = p.normalize(p.absolute(picturesDir.path));
-      final resolvedPath = p.normalize(p.join(picturesRoot, trimmed));
+      final resolvedPath = p.isAbsolute(trimmed)
+          ? p.normalize(trimmed)
+          : p.normalize(p.join(picturesRoot, trimmed));
       if (!p.isWithin(picturesRoot, resolvedPath)) {
         _logger.warning('Rejected picture path outside storage root: $uri');
         return null;

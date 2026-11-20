@@ -1,0 +1,339 @@
+// Copyright (C) 2026 Afonso Barracha
+//
+// This file is part of My Fitness Tale.
+//
+// My Fitness Tale is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// My Fitness Tale is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with My Fitness Tale.  If not, see <https://www.gnu.org/licenses/>.
+
+import 'dart:async';
+
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart';
+import 'package:skeletonizer/skeletonizer.dart';
+
+import 'package:myfitnesstale/src/data/models/sqlite/exercise_model.dart';
+import 'package:myfitnesstale/src/data/models/sqlite/exercise_record_model.dart';
+import 'package:myfitnesstale/src/data/repositories/exercises/dtos/exercise_dto.dart';
+import 'package:myfitnesstale/src/data/repositories/exercises/dtos/exercise_record_dto.dart';
+import 'package:myfitnesstale/src/data/repositories/exercises/exercise_record_repository.dart';
+import 'package:myfitnesstale/src/data/utils/dates.dart';
+import 'package:myfitnesstale/src/data/utils/enums.dart';
+import 'package:myfitnesstale/src/data/utils/json_data.dart';
+import 'package:myfitnesstale/src/ui/core/sizes/data_display_sizes.dart';
+import 'package:myfitnesstale/src/ui/core/sizes/screen_size.dart';
+import 'package:myfitnesstale/src/ui/core/widgets/layout/app_icon_button.dart';
+import 'package:myfitnesstale/src/ui/exercises/view_models/exercise_record_cubit.dart';
+import 'package:myfitnesstale/src/ui/exercises/view_models/states/exercise_record_state.dart';
+import 'package:myfitnesstale/src/ui/exercises/widgets/progress/exercise_progress_records_list.dart';
+import 'package:myfitnesstale/src/ui/exercises/widgets/records/exercise_records_history.dart';
+import 'package:myfitnesstale/src/ui/exercises/widgets/records/latest_exercise_record.dart';
+import 'package:myfitnesstale/src/utils/nullable.dart';
+
+import '../../support/test_database.dart';
+
+class _ControlledExerciseRecordCubit extends ExerciseRecordCubit {
+  _ControlledExerciseRecordCubit(
+    ExerciseRecordState initialState, {
+    this.pendingLatest,
+    this.pendingRecords,
+  }) : super(exerciseRecordRepository: ExerciseRecordRepository.create()) {
+    emit(initialState);
+  }
+
+  final Completer<void>? pendingLatest;
+  final Completer<void>? pendingRecords;
+
+  @override
+  Future<void> getLatestExerciseRecord([int? exerciseId]) async {
+    emit(state.copyWith(isLoadingLatest: true));
+    await pendingLatest?.future;
+    if (isClosed) return;
+    emit(state.copyWith(isLoadingLatest: false));
+  }
+
+  @override
+  Future<void> getExerciseRecords({
+    int limit = 25,
+    int offset = 0,
+    (DateTime start, DateTime end)? dateRange,
+    int? exerciseId,
+  }) async {
+    emit(
+      state.copyWith(
+        isLoadingRecords: true,
+        exerciseRecords: offset == 0 ? const [] : state.exerciseRecords,
+      ),
+    );
+    await pendingRecords?.future;
+    if (isClosed) return;
+    emit(
+      state.copyWith(
+        isLoadingRecords: false,
+        recordPagination: state.recordPagination.copyWith(
+          exerciseId: Nullable(exerciseId),
+          dateRange: Nullable(dateRange),
+        ),
+      ),
+    );
+  }
+}
+
+void main() {
+  const testBreakPoint = BreakPoint(400, 800);
+  const emptyMuscles = TargetMuscles(primary: {}, secondary: {});
+  const exerciseA = ExerciseDto(
+    id: 1,
+    name: 'Alpha Press',
+    description: '',
+    muscleGroup: MuscleGroup.push,
+    muscles: emptyMuscles,
+    createdBy: CreatedBy.system,
+  );
+  const exerciseB = ExerciseDto(
+    id: 2,
+    name: 'Beta Row',
+    description: '',
+    muscleGroup: MuscleGroup.pull,
+    muscles: emptyMuscles,
+    createdBy: CreatedBy.system,
+  );
+
+  final recordA = ExerciseRecordDto(
+    id: 10,
+    exerciseId: 1,
+    weight: 100000,
+    reps: 5,
+    maxStrength: 116667,
+    recordDate: DateTime(2026, 3, 1),
+    exercise: exerciseA,
+  );
+
+  testWidgets('AppIconButton disables onPressed when isLoading is true', (
+    tester,
+  ) async {
+    var tapped = false;
+    final sizes = DataDisplaySizes.getDataDisplaySizes(ScreenSize.xs);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: AppIconButton(
+            sizes: sizes,
+            isLoading: true,
+            color: Colors.red,
+            icon: Icons.delete,
+            tooltip: 'Delete',
+            onPressed: () => tapped = true,
+          ),
+        ),
+      ),
+    );
+
+    final iconButton = tester.widget<IconButton>(find.byType(IconButton));
+    expect(iconButton.onPressed, isNull);
+
+    await tester.tap(find.byType(IconButton));
+    expect(tapped, isFalse);
+  });
+
+  testWidgets(
+    'LatestExerciseRecord ignores previous exercise record while loading',
+    (tester) async {
+      final pending = Completer<void>();
+      final cubit = _ControlledExerciseRecordCubit(
+        ExerciseRecordState.initial().copyWith(
+          latestExerciseRecord: Nullable(recordA),
+        ),
+        pendingLatest: pending,
+      );
+      addTearDown(cubit.close);
+
+      final sizes = DataDisplaySizes.getDataDisplaySizes(ScreenSize.xs);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: BlocProvider<ExerciseRecordCubit>.value(
+              value: cubit,
+              child: LatestExerciseRecord(
+                theme: ThemeData.light(),
+                sizes: sizes,
+                units: Units.metric,
+                exercise: exerciseB,
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      expect(find.textContaining('100.00 KG'), findsNothing);
+      expect(
+        find.byWidgetPredicate((w) => w is Skeletonizer && w.enabled),
+        findsOneWidget,
+      );
+
+      pending.complete();
+      await tester.pumpAndSettle();
+    },
+  );
+
+  testWidgets(
+    'ExerciseRecordsHistory does not show previous exercise records while switching',
+    (tester) async {
+      final pending = Completer<void>();
+      final cubit = _ControlledExerciseRecordCubit(
+        ExerciseRecordState.initial().copyWith(
+          exerciseRecords: [recordA],
+          recordPagination: const ExerciseRecordPagination(
+            exerciseId: 1,
+            limit: 1000,
+            offset: 0,
+            total: 1,
+          ),
+        ),
+        pendingRecords: pending,
+      );
+      addTearDown(cubit.close);
+
+      final sizes = DataDisplaySizes.getDataDisplaySizes(ScreenSize.xs);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: BlocProvider<ExerciseRecordCubit>.value(
+              value: cubit,
+              child: ExerciseRecordsHistory(
+                theme: ThemeData.light(),
+                breakPoint: testBreakPoint,
+                sizes: sizes,
+                units: Units.metric,
+                exercise: exerciseB,
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      expect(find.textContaining('100.00 KG'), findsNothing);
+
+      pending.complete();
+      await tester.pumpAndSettle();
+    },
+  );
+
+  testWidgets(
+    'ExerciseProgressRecordsList shows skeleton when loading with empty list and does not force skeleton with stale exerciseId when not loading',
+    (tester) async {
+      final sizes = DataDisplaySizes.getDataDisplaySizes(ScreenSize.xs);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: ExerciseProgressRecordsList(
+              sizes: sizes,
+              units: Units.metric,
+              isLoading: true,
+              exerciseRecords: const [],
+              pagination: const ExerciseRecordPagination(
+                limit: 20,
+                offset: 0,
+                total: 0,
+              ),
+              onTapExercise: (_) {},
+            ),
+          ),
+        ),
+      );
+
+      expect(
+        find.byWidgetPredicate((w) => w is Skeletonizer && w.enabled),
+        findsOneWidget,
+      );
+    },
+  );
+
+  test('ExerciseRecordCubit.getExerciseRecords clears records on offset 0 and deleteExerciseRecord fetches latest from DB', () async {
+    final testDatabase = TestDatabase();
+    await testDatabase.initialize();
+    addTearDown(testDatabase.destroy);
+
+    final db = await testDatabase.db;
+    final exerciseId = await db.insert(
+      Exercise.table,
+      Exercise.create(
+        name: 'Bench Press',
+        description: '',
+        muscleGroup: MuscleGroup.push,
+        muscles: emptyMuscles,
+      ).toMap(),
+    );
+
+    final olderUnix = DateUtilities.getDateUnix(DateTime.utc(2025, 1, 10));
+    final newerUnix = DateUtilities.getDateUnix(DateTime.utc(2026, 3, 10));
+
+    await db.insert(
+      ExerciseRecord.table,
+      ExerciseRecord.create(
+        exerciseId: exerciseId,
+        weight: 80000,
+        reps: 5,
+        recordDate: olderUnix,
+      ).toMap(),
+    );
+    final newerId = await db.insert(
+      ExerciseRecord.table,
+      ExerciseRecord.create(
+        exerciseId: exerciseId,
+        weight: 100000,
+        reps: 5,
+        recordDate: newerUnix,
+      ).toMap(),
+    );
+
+    final cubit = ExerciseRecordCubit(
+      exerciseRecordRepository: ExerciseRecordRepository.create(),
+    );
+    addTearDown(cubit.close);
+
+    await cubit.getLatestExerciseRecord(exerciseId);
+    expect(cubit.state.latestExerciseRecord?.id, newerId);
+
+    // Filter records to only 2026 so the 2025 record is not in state.exerciseRecords
+    await cubit.getExerciseRecords(
+      exerciseId: exerciseId,
+      dateRange: (DateTime(2026, 1, 1), DateTime(2026, 12, 31)),
+      offset: 0,
+    );
+    expect(cubit.state.exerciseRecords.length, 1);
+
+    // Verify offset 0 clears exerciseRecords while loading
+    final loadingFuture = cubit.getExerciseRecords(
+      exerciseId: exerciseId,
+      dateRange: (DateTime(2026, 1, 1), DateTime(2026, 12, 31)),
+      offset: 0,
+    );
+    expect(cubit.state.isLoadingRecords, isTrue);
+    expect(cubit.state.exerciseRecords, isEmpty);
+    await loadingFuture;
+    expect(cubit.state.exerciseRecords.length, 1);
+
+    // Deleting the latest (2026) record should fall back to the 2025 DB record,
+    // even though the 2025 record is not in the filtered in-memory page.
+    await cubit.deleteExerciseRecord(newerId);
+    expect(cubit.state.latestExerciseRecord, isNotNull);
+    expect(cubit.state.latestExerciseRecord!.weight, 80000);
+  });
+}

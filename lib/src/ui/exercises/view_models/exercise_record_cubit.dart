@@ -45,7 +45,13 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
   }) async {
     _logger.info("Getting exercise records");
     final requestId = state.recordsRequestId + 1;
-    emit(state.copyWith(recordsRequestId: requestId, isLoadingRecords: true));
+    emit(
+      state.copyWith(
+        recordsRequestId: requestId,
+        isLoadingRecords: true,
+        exerciseRecords: offset == 0 ? const [] : state.exerciseRecords,
+      ),
+    );
 
     final result = await _exerciseRecordService.getExerciseRecords(
       limit: limit,
@@ -345,6 +351,14 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
     final updatedRecords = state.exerciseRecords
         .where((r) => r.id != id)
         .toList();
+    var latestRecord = state.latestExerciseRecord;
+    if (latestRecord?.id == id) {
+      final latestResult = await _exerciseRecordService.getLatestRecord(
+        state.recordPagination.exerciseId ?? latestRecord!.exerciseId,
+      );
+      if (isClosed) return;
+      latestRecord = latestResult.isOk() ? latestResult.value : null;
+    }
     emit(
       state.copyWith(
         exerciseRecords: updatedRecords,
@@ -358,11 +372,7 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
               ? state.recordPagination.total - 1
               : 0,
         ),
-        latestExerciseRecord: Nullable(
-          state.latestExerciseRecord?.id == id
-              ? updatedRecords.firstOrNull
-              : state.latestExerciseRecord,
-        ),
+        latestExerciseRecord: Nullable(latestRecord),
         isLoading: false,
         error: const Nullable(null),
       ),

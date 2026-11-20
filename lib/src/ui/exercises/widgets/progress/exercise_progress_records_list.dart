@@ -76,8 +76,7 @@ class ExerciseProgressRecordsList extends StatelessWidget {
       );
     }
 
-    final isInitialLoading =
-        isLoading && (exerciseRecords.isEmpty || pagination.exerciseId != null);
+    final isInitialLoading = isLoading && exerciseRecords.isEmpty;
     final hasMore = exerciseRecords.length < pagination.total;
     final showLoadingMore =
         isLoading && !isInitialLoading && exerciseRecords.isNotEmpty && hasMore;

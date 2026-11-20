@@ -19,6 +19,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../../data/repositories/exercises/dtos/exercise_dto.dart';
+import '../../../../data/repositories/exercises/dtos/exercise_record_dto.dart';
 import '../../../../data/utils/enums.dart';
 import '../../../core/sizes/data_display_sizes.dart';
 import '../../../core/sizes/screen_size.dart';
@@ -200,7 +201,12 @@ class _ExerciseRecordsHistoryState extends State<ExerciseRecordsHistory> {
         SizedBox(height: widget.sizes.spacing),
         BlocBuilder<ExerciseRecordCubit, ExerciseRecordState>(
           builder: (context, state) {
-            if (!state.isLoading && state.exerciseRecords.isEmpty) {
+            final records =
+                state.recordPagination.exerciseId == widget.exercise.id
+                ? state.exerciseRecords
+                : const <ExerciseRecordDto>[];
+
+            if (!state.isLoading && records.isEmpty) {
               return NotFoundList(
                 height: widget.breakPoint.height / 3,
                 sizes: widget.sizes,
@@ -218,7 +224,7 @@ class _ExerciseRecordsHistoryState extends State<ExerciseRecordsHistory> {
                       sizes: widget.sizes,
                       units: widget.units,
                       exercise: widget.exercise,
-                      records: state.exerciseRecords,
+                      records: records,
                       isLoading: state.isLoading,
                     )
                   : Card(
@@ -232,7 +238,7 @@ class _ExerciseRecordsHistoryState extends State<ExerciseRecordsHistory> {
                           exercise: widget.exercise,
                           theme: widget.theme,
                           sizes: widget.sizes,
-                          records: state.exerciseRecords,
+                          records: records,
                           units: widget.units,
                           isLoading: state.isLoading,
                         ),

@@ -61,7 +61,10 @@ class _LatestExerciseRecordState extends State<LatestExerciseRecord> {
     return BlocBuilder<ExerciseRecordCubit, ExerciseRecordState>(
       builder: (context, state) {
         final isLoading = state.isLatestLoading;
-        final record = state.latestExerciseRecord;
+        final record =
+            state.latestExerciseRecord?.exerciseId == widget.exercise.id
+            ? state.latestExerciseRecord
+            : null;
 
         if (!isLoading && record == null) {
           return EmptyExerciseRecord(
