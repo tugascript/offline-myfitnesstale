@@ -16,6 +16,7 @@
 // along with My Fitness Tale.  If not, see <https://www.gnu.org/licenses/>.
 
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
@@ -27,13 +28,17 @@ import '../../../core/sizes/data_display_sizes.dart';
 import '../../../core/utils/converters.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../core/widgets/confirmation_dialog.dart';
+import '../../../core/widgets/layout/app_elevated_button.dart';
+import '../../../core/widgets/layout/app_outlined_button.dart';
 import '../../../core/widgets/layout/delete_icon_button.dart';
 import '../../../core/widgets/progress_status_badge.dart';
 import '../../../home/view_models/profile_cubit.dart';
+import '../../screens/exercise_records_screen.dart';
 import '../../view_models/exercise_record_cubit.dart';
 import '../../view_models/states/exercise_record_state.dart';
-import './edit_strength_goal_modal.dart';
-import './empty_active_strength_goal_card.dart';
+import '../records/editors/create_exercise_record_modal.dart';
+import 'edit_strength_goal_modal.dart';
+import 'empty_active_strength_goal_card.dart';
 
 final _skeletonStrengthGoal = StrengthGoalDto(
   id: 0,
@@ -78,8 +83,12 @@ class ActiveStrengthGoalCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final effectiveUnits =
         units ??
-        context.watch<ProfileCubit>().state.system?.units ??
-        Units.metric;
+            context
+                .watch<ProfileCubit>()
+                .state
+                .system
+                ?.units ??
+            Units.metric;
     final isDarkTheme = theme.brightness == Brightness.dark;
 
     return BlocBuilder<ExerciseRecordCubit, ExerciseRecordState>(
@@ -145,15 +154,16 @@ class ActiveStrengthGoalCard extends StatelessWidget {
                           onPressed: isSkeleton || goal == null
                               ? null
                               : () {
-                                  showDialog(
-                                    context: context,
-                                    builder: (ctx) => EditStrengthGoalModal(
-                                      theme: theme,
-                                      sizes: sizes,
-                                      existingGoal: goal,
-                                    ),
-                                  );
-                                },
+                            showDialog(
+                              context: context,
+                              builder: (ctx) =>
+                                  EditStrengthGoalModal(
+                                    theme: theme,
+                                    sizes: sizes,
+                                    existingGoal: goal,
+                                  ),
+                            );
+                          },
                         ),
                         if (!isSkeleton && goal != null)
                           DeleteIconButton(
@@ -164,18 +174,18 @@ class ActiveStrengthGoalCard extends StatelessWidget {
                             onDelete: () {
                               showDialog(
                                 context: context,
-                                builder: (ctx) => ConfirmationDialog(
-                                  title: 'Delete Strength Goal',
-                                  content:
-                                      'Are you sure you want to delete this strength goal?',
-                                  confirmLabel: 'Delete',
-                                  isDestructive: true,
-                                  onConfirm: () {
-                                    context
-                                        .read<ExerciseRecordCubit>()
-                                        .deleteStrengthGoal(goal.id);
-                                  },
-                                ),
+                                builder: (ctx) =>
+                                    ConfirmationDialog(
+                                      title: 'Delete Strength Goal',
+                                      content: 'Are you sure you want to delete this strength goal?',
+                                      confirmLabel: 'Delete',
+                                      isDestructive: true,
+                                      onConfirm: () {
+                                        context
+                                            .read<ExerciseRecordCubit>()
+                                            .deleteStrengthGoal(goal.id);
+                                      },
+                                    ),
                               );
                             },
                           ),
@@ -236,7 +246,8 @@ class ActiveStrengthGoalCard extends StatelessWidget {
                               ),
                               Flexible(
                                 child: Text(
-                                  ' Started: ${Formatters.formatRelativeDate(effectiveUnits, displayGoal.startDate)}',
+                                  ' Started: ${Formatters.formatRelativeDate(
+                                      effectiveUnits, displayGoal.startDate)}',
                                   style: TextStyle(
                                     fontSize: sizes.fontSize,
                                     fontWeight: FontWeight.w600,
@@ -300,6 +311,67 @@ class ActiveStrengthGoalCard extends StatelessWidget {
                               ),
                             ),
                           ],
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: sizes.spacing),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: SizedBox(
+                            width: double.infinity,
+                            child: AppElevatedButton(
+                              key: const ValueKey(
+                                'active-strength-goal-records-add-btn',
+                              ),
+                              isLoading: state.isLoading,
+                              sizes: sizes,
+                              label: 'Add a Record',
+                              icon: Icons.add,
+                              isDense: true,
+                              onPressed: isSkeleton || goal == null
+                                  ? null
+                                  : () {
+                                showDialog(
+                                  context: context,
+                                  builder: (ctx) =>
+                                      CreateExerciseRecordModal(
+                                        theme: theme,
+                                        sizes: sizes,
+                                        units: effectiveUnits,
+                                        exerciseId:
+                                        displayGoal.exerciseId,
+                                      ),
+                                );
+                              },
+                              theme: theme,
+                            ),
+                          ),
+                        ),
+                        SizedBox(width: sizes.spacing),
+                        Expanded(
+                          child: AppOutlinedButton(
+                            key: const ValueKey(
+                              'active-strength-goal-records-btn',
+                            ),
+                            isLoading: state.isLoading,
+                            theme: theme,
+                            sizes: sizes,
+                            label: 'Records',
+                            icon: Icons.history,
+                            isDense: true,
+                            filled: true,
+                            color: theme.colorScheme.secondary,
+                            onPressed: isSkeleton || goal == null
+                                ? null
+                                : () {
+                              context.push(
+                                ExerciseRecordsScreen.location(
+                                  displayGoal.exerciseId,
+                                ),
+                              );
+                            },
+                          ),
                         ),
                       ],
                     ),

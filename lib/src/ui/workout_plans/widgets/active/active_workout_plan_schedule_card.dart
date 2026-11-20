@@ -26,7 +26,7 @@ import '../../../../data/repositories/workout_plans/dtos/workout_plan_workout_re
 import '../../../../data/repositories/workout_plans/utils/workout_plan_schedule_utils.dart';
 import '../../../core/sizes/data_display_sizes.dart';
 import '../../../core/widgets/confirmation_dialog.dart';
-import '../../../core/widgets/mutation_button.dart';
+import '../../../core/widgets/layout/app_outlined_button.dart';
 import '../../view_models/workout_plan_record_cubit.dart';
 import '../workout_plan_week_group_selector.dart';
 import '../workout_plan_week_strip.dart';
@@ -434,7 +434,7 @@ class _ActiveWorkoutPlanScheduleCardState
         ),
         if (_canSkipWeek(currentGroup, weekNum)) ...[
           SizedBox(height: widget.sizes.spacing),
-          MutationButton(
+          AppOutlinedButton(
             theme: widget.theme,
             sizes: widget.sizes,
             isLoading: false,

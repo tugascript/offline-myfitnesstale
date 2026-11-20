@@ -18,7 +18,7 @@
 import 'package:material_ui/material_ui.dart';
 
 import '../sizes/data_display_sizes.dart';
-import './mutation_button.dart';
+import 'layout/app_outlined_button.dart';
 
 class MutationButtons extends StatelessWidget {
   final ThemeData theme;
@@ -45,7 +45,7 @@ class MutationButtons extends StatelessWidget {
       child: Row(
         children: [
           Expanded(
-            child: MutationButton(
+            child: AppOutlinedButton(
               isLoading: isLoading,
               theme: theme,
               sizes: sizes,
@@ -56,7 +56,7 @@ class MutationButtons extends StatelessWidget {
           ),
           SizedBox(width: sizes.spacing),
           Expanded(
-            child: MutationButton(
+            child: AppOutlinedButton(
               isLoading: isLoading,
               theme: theme,
               sizes: sizes,

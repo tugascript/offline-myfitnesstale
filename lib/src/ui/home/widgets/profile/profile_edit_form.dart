@@ -22,7 +22,7 @@ import '../../../../data/repositories/profile/dtos/system_dto.dart';
 import '../../../../data/utils/enums.dart';
 import '../../../core/sizes/data_display_sizes.dart';
 import '../../../core/widgets/layout/app_elevated_button.dart';
-import '../../../core/widgets/mutation_button.dart';
+import '../../../core/widgets/layout/app_outlined_button.dart';
 import 'height_input.dart';
 
 class ProfileEditForm extends StatefulWidget {
@@ -186,7 +186,7 @@ class _ProfileEditFormState extends State<ProfileEditForm> {
           SizedBox(height: sizes.spacing * 1.5),
           LayoutBuilder(
             builder: (context, constraints) {
-              final cancel = MutationButton(
+              final cancel = AppOutlinedButton(
                 onPressed: widget.onCancel,
                 theme: theme,
                 sizes: sizes,

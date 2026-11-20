@@ -21,8 +21,8 @@ import 'package:material_ui/material_ui.dart';
 import '../../../../data/utils/enums.dart';
 import '../../../../data/utils/json_data.dart';
 import '../../../core/sizes/data_display_sizes.dart';
+import '../../../core/widgets/layout/app_outlined_button.dart';
 import '../../../core/widgets/layout/app_text_form_field.dart';
-import '../../../core/widgets/mutation_button.dart';
 import '../workout_set_exercise_difficulty_input.dart';
 
 class ActiveSetExerciseLog extends StatefulWidget {
@@ -380,7 +380,7 @@ class _ActiveSetExerciseLogState extends State<ActiveSetExerciseLog> {
             SizedBox(height: widget.sizes.inputSpacing),
             SizedBox(
               width: double.infinity,
-              child: MutationButton(
+              child: AppOutlinedButton(
                 theme: widget.theme,
                 isLoading: widget.isLoading,
                 sizes: widget.sizes,
@@ -405,7 +405,7 @@ class _ActiveSetExerciseLogState extends State<ActiveSetExerciseLog> {
               SizedBox(height: widget.sizes.inputSpacing),
               SizedBox(
                 width: double.infinity,
-                child: MutationButton(
+                child: AppOutlinedButton(
                   theme: widget.theme,
                   sizes: widget.sizes,
                   isLoading: widget.isLoading,

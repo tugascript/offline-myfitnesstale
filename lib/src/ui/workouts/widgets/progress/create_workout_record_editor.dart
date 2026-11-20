@@ -30,8 +30,8 @@ import '../../../core/sizes/data_display_sizes.dart';
 import '../../../core/utils/converters.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../core/widgets/detail_number.dart';
+import '../../../core/widgets/layout/app_outlined_button.dart';
 import '../../../core/widgets/layout/app_text_form_field.dart';
-import '../../../core/widgets/mutation_button.dart';
 import '../../../workout_plans/view_models/workout_plan_record_cubit.dart';
 import '../../view_models/states/workout_record_state.dart';
 import '../../view_models/workout_record_cubit.dart';
@@ -632,7 +632,7 @@ class _CreateWorkoutRecordEditorState extends State<CreateWorkoutRecordEditor> {
               );
             }),
             SizedBox(height: widget.sizes.spacing),
-            MutationButton(
+            AppOutlinedButton(
               theme: widget.theme,
               sizes: widget.sizes,
               isLoading: state.isLoading,

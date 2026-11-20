@@ -17,10 +17,10 @@
 
 import 'package:material_ui/material_ui.dart';
 
-import '../sizes/data_display_sizes.dart';
-import '../themes/colors.dart';
+import '../../sizes/data_display_sizes.dart';
+import '../../themes/colors.dart';
 
-class MutationButton extends StatelessWidget {
+class AppOutlinedButton extends StatelessWidget {
   final ThemeData theme;
   final DataDisplaySizesList sizes;
   final bool isLoading;
@@ -29,8 +29,9 @@ class MutationButton extends StatelessWidget {
   final String label;
   final IconData icon;
   final bool isDense;
+  final bool filled;
 
-  const MutationButton({
+  const AppOutlinedButton({
     super.key,
     required this.theme,
     required this.sizes,
@@ -40,6 +41,7 @@ class MutationButton extends StatelessWidget {
     this.label = 'EDIT',
     this.icon = Icons.edit,
     this.isDense = false,
+    this.filled = false,
   });
 
   @override
@@ -50,7 +52,7 @@ class MutationButton extends StatelessWidget {
         : baseColor;
     return OutlinedButton.icon(
       onPressed: isLoading ? null : onPressed,
-      icon: Icon(icon, size: sizes.fontSize, fontWeight: FontWeight.w600),
+      icon: Icon(icon, size: sizes.btnIconSize, fontWeight: FontWeight.w600),
       label: Text(
         label.toUpperCase(),
         style: TextStyle(
@@ -61,7 +63,9 @@ class MutationButton extends StatelessWidget {
       style: OutlinedButton.styleFrom(
         padding: EdgeInsets.symmetric(vertical: sizes.padding),
         visualDensity: isDense ? VisualDensity.compact : VisualDensity.standard,
-        backgroundColor: theme.scaffoldBackgroundColor,
+        backgroundColor: filled
+            ? theme.cardColor
+            : theme.scaffoldBackgroundColor,
         foregroundColor: btnColor,
         side: BorderSide(color: btnColor, width: 1),
         shape: const BeveledRectangleBorder(),
