@@ -113,6 +113,7 @@ class _ExerciseRecordFormState extends State<ExerciseRecordForm> {
                 child: AppTextFormField(
                   theme: widget.theme,
                   readOnly: true,
+                  maxLines: 1,
                   fontSize: widget.sizes.subtitleFontSize,
                   padding: widget.sizes.padding * 2,
                   isLoading: widget.isLoading,

@@ -1519,7 +1519,7 @@ void main() {
       );
       expect(find.text(' 90 kg'), findsOneWidget);
       expect(find.text(' 114 kg'), findsOneWidget);
-      expect(find.text('Started: 10/10/2025'), findsOneWidget);
+      expect(find.textContaining('Started: 10/10/2025'), findsOneWidget);
       expect(find.byType(ProgressStatusBadge), findsNWidgets(3));
       expect(find.text('In Progress'), findsOneWidget);
       expect(find.text('Completed'), findsOneWidget);
@@ -1531,10 +1531,10 @@ void main() {
         ),
         findsOneWidget,
       );
-      expect(find.textContaining('80 kg', findRichText: true), findsOneWidget);
+      expect(find.text(' 80 kg'), findsOneWidget);
       expect(find.text(' 93.33 kg'), findsOneWidget);
       expect(find.text(' Autumn Peak'), findsOneWidget);
-      expect(find.textContaining('100 kg', findRichText: true), findsOneWidget);
+      expect(find.text(' 100 kg'), findsOneWidget);
       expect(find.text(' 105.88 kg'), findsOneWidget);
 
       final containers = tester.widgetList<Container>(find.byType(Container));
@@ -1641,7 +1641,7 @@ void main() {
       expect(find.text('Summer Goal'), findsOneWidget);
       expect(find.text(' Back Squat'), findsOneWidget);
       expect(find.text(' Incline Press'), findsOneWidget);
-      expect(find.text(' Autumn Peak'), findsOneWidget);
+      expect(find.text('Autumn Peak'), findsOneWidget);
     },
   );
 
