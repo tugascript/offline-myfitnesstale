@@ -194,7 +194,10 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
   }
 
   Future<void> _syncRecordMutationState(ExerciseRecordDto record) async {
+    final initialRecordsRequestId = state.recordsRequestId;
+    final initialLatestRequestId = state.latestRequestId;
     final currentPagination = state.recordPagination;
+    final initialLatestExerciseId = state.latestExerciseId;
     final shouldRefreshRecords =
         currentPagination.exerciseId == null ||
         currentPagination.exerciseId == record.exerciseId;
@@ -215,7 +218,7 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
           "Failed to refresh exercise records after mutation",
           recordsResult.error,
         );
-      } else {
+      } else if (state.recordsRequestId == initialRecordsRequestId) {
         final paginatedData = recordsResult.value;
         refreshedRecords = paginatedData.data;
         refreshedPagination = currentPagination.copyWith(
@@ -227,32 +230,40 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
     }
 
     final shouldRefreshLatest =
-        state.latestExerciseId == null ||
-        state.latestExerciseId == record.exerciseId;
+        initialLatestExerciseId == null ||
+        initialLatestExerciseId == record.exerciseId;
     Nullable<ExerciseRecordDto>? refreshedLatest;
     if (shouldRefreshLatest) {
       final latestResult = await _exerciseRecordService.getLatestRecord(
-        state.latestExerciseId,
+        initialLatestExerciseId,
       );
       if (isClosed) return;
-      if (latestResult.isOk()) {
-        refreshedLatest = Nullable(latestResult.value);
-      } else if (latestResult.error.type == SingleErrorTypes.notFound) {
-        refreshedLatest = const Nullable(null);
-      } else {
-        _logger.warning(
-          "Failed to refresh latest exercise record after mutation",
-          latestResult.error,
-        );
+      if (state.latestRequestId == initialLatestRequestId) {
+        if (latestResult.isOk()) {
+          refreshedLatest = Nullable(latestResult.value);
+        } else if (latestResult.error.type == SingleErrorTypes.notFound) {
+          refreshedLatest = const Nullable(null);
+        } else {
+          _logger.warning(
+            "Failed to refresh latest exercise record after mutation",
+            latestResult.error,
+          );
+        }
       }
     }
 
     emit(
       state.copyWith(
         selectedExerciseRecord: Nullable(record),
-        exerciseRecords: refreshedRecords,
-        recordPagination: refreshedPagination,
-        latestExerciseRecord: refreshedLatest,
+        exerciseRecords: state.recordsRequestId == initialRecordsRequestId
+            ? refreshedRecords
+            : null,
+        recordPagination: state.recordsRequestId == initialRecordsRequestId
+            ? refreshedPagination
+            : null,
+        latestExerciseRecord: state.latestRequestId == initialLatestRequestId
+            ? refreshedLatest
+            : null,
         isLoading: false,
         error: const Nullable(null),
       ),
