@@ -87,12 +87,12 @@ class _LatestExerciseProgressRecordState
             : state.latestExerciseRecord;
 
         if (!effectiveLoading &&
-            state.error != null &&
+            state.latestError != null &&
             (isScoped || record == null)) {
           return ExerciseProgressErrorCard(
             theme: widget.theme,
             sizes: widget.sizes,
-            message: state.error!.description,
+            message: state.latestError!.description,
             onRetry: _retryLoad,
           );
         }

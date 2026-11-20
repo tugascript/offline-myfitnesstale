@@ -69,14 +69,14 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
         case SingleErrorTypes.notFound:
         case SingleErrorTypes.invalidInput:
         case SingleErrorTypes.operationFailure:
+          final errorState = ErrorState(
+            type: error.type.name,
+            description: "Failed to get exercise records",
+          );
           emit(
             state.copyWith(
-              error: Nullable(
-                ErrorState(
-                  type: error.type.name,
-                  description: "Failed to get exercise records",
-                ),
-              ),
+              error: Nullable(errorState),
+              recordsError: Nullable(errorState),
               isLoadingRecords: false,
             ),
           );
@@ -100,6 +100,7 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
         ),
         isLoadingRecords: false,
         error: const Nullable(null),
+        recordsError: const Nullable(null),
       ),
     );
   }
@@ -127,19 +128,20 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
               latestExerciseId: Nullable(exerciseId),
               isLoadingLatest: false,
               error: const Nullable(null),
+              latestError: const Nullable(null),
             ),
           );
           return;
         case SingleErrorTypes.invalidInput:
         case SingleErrorTypes.operationFailure:
+          final errorState = ErrorState(
+            type: error.type.name,
+            description: "Failed to get latest exercise record",
+          );
           emit(
             state.copyWith(
-              error: Nullable(
-                ErrorState(
-                  type: error.type.name,
-                  description: "Failed to get latest exercise record",
-                ),
-              ),
+              error: Nullable(errorState),
+              latestError: Nullable(errorState),
               isLoadingLatest: false,
             ),
           );
@@ -153,6 +155,7 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
         latestExerciseId: Nullable(exerciseId),
         isLoadingLatest: false,
         error: const Nullable(null),
+        latestError: const Nullable(null),
       ),
     );
   }

@@ -214,12 +214,12 @@ class _ExerciseProgressHistoryState extends State<ExerciseProgressHistory> {
                 : const <ExerciseRecordDto>[];
             final effectiveLoading = isLoading || _waitingForPostFrame;
             if (!effectiveLoading &&
-                state.error != null &&
+                state.recordsError != null &&
                 (isScoped || records.isEmpty)) {
               return ExerciseProgressErrorCard(
                 theme: widget.theme,
                 sizes: widget.sizes,
-                message: state.error!.description,
+                message: state.recordsError!.description,
                 onRetry: _retryLoad,
               );
             }

@@ -28,6 +28,8 @@ import 'package:myfitnesstale/src/data/models/sqlite/strength_goal_model.dart';
 import 'package:myfitnesstale/src/data/repositories/exercises/dtos/exercise_dto.dart';
 import 'package:myfitnesstale/src/data/repositories/exercises/dtos/exercise_record_dto.dart';
 import 'package:myfitnesstale/src/data/repositories/exercises/exercise_record_repository.dart';
+import 'package:myfitnesstale/src/data/repositories/exercises/exercise_repository.dart';
+import 'package:myfitnesstale/src/data/repositories/exercises/inputs/equipment_input.dart';
 import 'package:myfitnesstale/src/data/repositories/exercises/inputs/exercise_record_input.dart';
 import 'package:myfitnesstale/src/data/utils/dates.dart';
 import 'package:myfitnesstale/src/data/utils/enums.dart';
@@ -36,6 +38,7 @@ import 'package:myfitnesstale/src/ui/core/sizes/data_display_sizes.dart';
 import 'package:myfitnesstale/src/ui/core/sizes/screen_size.dart';
 import 'package:myfitnesstale/src/ui/core/view_models/states/common_state.dart';
 import 'package:myfitnesstale/src/ui/core/widgets/layout/app_icon_button.dart';
+import 'package:myfitnesstale/src/ui/exercises/view_models/exercise_cubit.dart';
 import 'package:myfitnesstale/src/ui/exercises/view_models/exercise_record_cubit.dart';
 import 'package:myfitnesstale/src/ui/exercises/view_models/states/exercise_record_state.dart';
 import 'package:myfitnesstale/src/ui/exercises/widgets/progress/exercise_progress_error_card.dart';
@@ -73,15 +76,15 @@ class _ControlledExerciseRecordCubit extends ExerciseRecordCubit {
     await pendingLatest?.future;
     if (isClosed) return;
     if (failLatest) {
+      const err = ErrorState(
+        type: 'operationFailure',
+        description: 'Failed to get latest exercise record',
+      );
       emit(
         state.copyWith(
           isLoadingLatest: false,
-          error: const Nullable(
-            ErrorState(
-              type: 'operationFailure',
-              description: 'Failed to get latest exercise record',
-            ),
-          ),
+          error: const Nullable(err),
+          latestError: const Nullable(err),
         ),
       );
       return;
@@ -91,6 +94,7 @@ class _ControlledExerciseRecordCubit extends ExerciseRecordCubit {
         isLoadingLatest: false,
         latestExerciseId: Nullable(exerciseId),
         error: const Nullable(null),
+        latestError: const Nullable(null),
       ),
     );
   }
@@ -112,15 +116,15 @@ class _ControlledExerciseRecordCubit extends ExerciseRecordCubit {
     await pendingRecords?.future;
     if (isClosed) return;
     if (failRecords) {
+      const err = ErrorState(
+        type: 'operationFailure',
+        description: 'Failed to get exercise records',
+      );
       emit(
         state.copyWith(
           isLoadingRecords: false,
-          error: const Nullable(
-            ErrorState(
-              type: 'operationFailure',
-              description: 'Failed to get exercise records',
-            ),
-          ),
+          error: const Nullable(err),
+          recordsError: const Nullable(err),
         ),
       );
       return;
@@ -133,6 +137,7 @@ class _ControlledExerciseRecordCubit extends ExerciseRecordCubit {
           dateRange: Nullable(dateRange),
         ),
         error: const Nullable(null),
+        recordsError: const Nullable(null),
       ),
     );
   }
@@ -757,5 +762,87 @@ void main() {
       whereArgs: [goalId],
     );
     expect(goalRows.single[StrengthGoalColumns.status.name], 'completed');
+  });
+
+  testWidgets(
+    'successful getLatestExerciseRecord does not clear recordsError from concurrent history failure',
+    (tester) async {
+      final pendingLatest = Completer<void>();
+      final cubit = _ControlledExerciseRecordCubit(
+        ExerciseRecordState.initial(),
+        pendingLatest: pendingLatest,
+        failRecords: true,
+        failLatest: false,
+      );
+      addTearDown(cubit.close);
+
+      final sizes = DataDisplaySizes.getDataDisplaySizes(ScreenSize.xs);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: BlocProvider<ExerciseRecordCubit>.value(
+              value: cubit,
+              child: Column(
+                children: [
+                  LatestExerciseProgressRecord(
+                    theme: ThemeData.light(),
+                    sizes: sizes,
+                    units: Units.metric,
+                    onOpenExerciseRecords: (_) async {},
+                  ),
+                  Expanded(
+                    child: ExerciseProgressHistory(
+                      theme: ThemeData.light(),
+                      breakPoint: testBreakPoint,
+                      sizes: sizes,
+                      units: Units.metric,
+                      dateRange: DateTimeRange(
+                        start: DateTime(2026, 1, 1),
+                        end: DateTime(2026, 3, 1),
+                      ),
+                      onDateRangeChanged: (_) {},
+                      onOpenExerciseRecords: (_) async {},
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      // History failed while latest is still in flight; now latest succeeds
+      pendingLatest.complete();
+      await tester.pumpAndSettle();
+
+      // History must still show its error/retry card, not "Empty history"
+      expect(find.byType(ExerciseProgressErrorCard), findsOneWidget);
+      expect(find.text('Empty history'), findsNothing);
+    },
+  );
+
+  test('updateEquipmentFavorite removes unfavorited equipment from favorites list and decrements total', () async {
+    final testDatabase = TestDatabase();
+    await testDatabase.initialize();
+    addTearDown(testDatabase.destroy);
+
+    final exerciseCubit = ExerciseCubit(
+      exerciseRepository: ExerciseRepository.create(),
+    );
+    addTearDown(exerciseCubit.close);
+
+    await exerciseCubit.createEquipment(
+      const EquipmentInput(name: 'Fav Barbell', isFavorite: true),
+    );
+    await exerciseCubit.getEquipments(limit: 20, offset: 0, isFavorite: true);
+    expect(exerciseCubit.state.equipments.length, 1);
+    expect(exerciseCubit.state.equipmentPagination.total, 1);
+
+    final id = exerciseCubit.state.equipments.single.id;
+    await exerciseCubit.updateEquipmentFavorite(id, false);
+    expect(exerciseCubit.state.equipments, isEmpty);
+    expect(exerciseCubit.state.equipmentPagination.total, 0);
   });
 }

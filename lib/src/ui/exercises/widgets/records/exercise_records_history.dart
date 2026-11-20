@@ -208,11 +208,11 @@ class _ExerciseRecordsHistoryState extends State<ExerciseRecordsHistory> {
                 ? state.exerciseRecords
                 : const <ExerciseRecordDto>[];
 
-            if (!isLoading && state.error != null && records.isEmpty) {
+            if (!isLoading && state.recordsError != null && records.isEmpty) {
               return ExerciseProgressErrorCard(
                 theme: widget.theme,
                 sizes: widget.sizes,
-                message: state.error!.description,
+                message: state.recordsError!.description,
                 onRetry: () {
                   context.read<ExerciseRecordCubit>().getExerciseRecords(
                     dateRange: (_dateRange.start, _dateRange.end),
