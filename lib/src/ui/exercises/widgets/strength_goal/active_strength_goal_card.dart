@@ -83,9 +83,10 @@ class ActiveStrengthGoalCard extends StatelessWidget {
     return BlocBuilder<ExerciseRecordCubit, ExerciseRecordState>(
       builder: (context, state) {
         final goal = state.activeStrengthGoal;
-        final isSkeleton = state.isLoading && goal == null;
+        final isGoalLoading = state.isActiveGoalLoading;
+        final isSkeleton = isGoalLoading && goal == null;
 
-        if (!state.isLoading && goal == null) {
+        if (!isGoalLoading && goal == null) {
           return EmptyActiveStrengthGoalCard(
             theme: theme,
             sizes: sizes,

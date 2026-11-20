@@ -124,6 +124,9 @@ final class ExerciseRecordState extends Equatable {
       isLoadingGoals;
   bool get isLatestLoading => isLoadingLatest;
   bool get isRecordsLoading => isLoadingRecords;
+  bool get isActiveGoalLoading => isLoadingActiveGoal;
+  bool get isGoalsLoading => isLoadingGoals;
+  bool get isMutating => _isLoading;
 
   const ExerciseRecordState({
     this.recordsRequestId = 0,
