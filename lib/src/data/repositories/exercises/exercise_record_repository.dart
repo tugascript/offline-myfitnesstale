@@ -101,11 +101,14 @@ final class ExerciseRecordRepository implements Repository {
           exerciseRecord,
           txn,
         );
-        await _completeMatchingStrengthGoals(
+        final completionResult = await _completeMatchingStrengthGoals(
           txn,
           input,
           exercise.weightProgress,
         );
+        if (completionResult.isErr()) {
+          throw completionResult.error;
+        }
 
         return recordId;
       });
@@ -117,6 +120,9 @@ final class ExerciseRecordRepository implements Repository {
         ),
       );
     } catch (e) {
+      if (e is ServiceError<SingleErrorTypes>) {
+        return err(e);
+      }
       _logger.severe('Failed to create exercise record', e);
       return err(
         ServiceError(
@@ -401,11 +407,14 @@ final class ExerciseRecordRepository implements Repository {
       );
       await _exerciseRecordDao.startTransaction((txn) async {
         await _exerciseRecordDao.update(updatedExerciseRecord, txn);
-        await _completeMatchingStrengthGoals(
+        final completionResult = await _completeMatchingStrengthGoals(
           txn,
           input,
           exercise.weightProgress,
         );
+        if (completionResult.isErr()) {
+          throw completionResult.error;
+        }
       });
       _logger.info('Updated exercise record with id $id');
       return ok(
@@ -415,6 +424,9 @@ final class ExerciseRecordRepository implements Repository {
         ),
       );
     } catch (e) {
+      if (e is ServiceError<SingleErrorTypes>) {
+        return err(e);
+      }
       _logger.severe('Failed to update exercise record with id $id', e);
       return err(
         ServiceError(
@@ -426,31 +438,47 @@ final class ExerciseRecordRepository implements Repository {
     }
   }
 
-  Future<void> _completeMatchingStrengthGoals(
+  Future<Result<void, ServiceError<SingleErrorTypes>>>
+  _completeMatchingStrengthGoals(
     Transaction txn,
     ExerciseRecordInput input,
     ExerciseWeightProgress weightProgress,
   ) async {
-    final openGoals = await _strengthGoalDao.selectMany(
-      where:
-          '${StrengthGoalColumns.exerciseId.equal} AND ${StrengthGoalColumns.status.equal}',
-      whereArgs: [input.exerciseId, ProgressStatus.inProgress.value],
-      trx: txn,
-    );
+    try {
+      final openGoals = await _strengthGoalDao.selectMany(
+        where:
+            '${StrengthGoalColumns.exerciseId.equal} AND ${StrengthGoalColumns.status.equal}',
+        whereArgs: [input.exerciseId, ProgressStatus.inProgress.value],
+        trx: txn,
+      );
 
-    final int now = DateUtilities.getNowUtcUnix();
-    for (final goal in openGoals) {
-      final bool weightMet = weightProgress == ExerciseWeightProgress.negative
-          ? input.weight <= goal.targetWeight
-          : input.weight >= goal.targetWeight;
-      if (weightMet && input.reps >= goal.targetReps) {
-        final completedGoal = goal.copyWith(
-          status: ProgressStatus.completed,
-          completedAt: Nullable(now),
-          updatedAt: now,
-        );
-        await _strengthGoalDao.update(completedGoal, txn);
+      final int now = DateUtilities.getNowUtcUnix();
+      final int recordDateUnix = DateUtilities.getDateUnix(input.recordDate);
+      for (final goal in openGoals) {
+        final bool weightMet = weightProgress == ExerciseWeightProgress.negative
+            ? input.weight <= goal.targetWeight
+            : input.weight >= goal.targetWeight;
+        if (recordDateUnix >= goal.startDate &&
+            weightMet &&
+            input.reps >= goal.targetReps) {
+          final completedGoal = goal.copyWith(
+            status: ProgressStatus.completed,
+            completedAt: Nullable(now),
+            updatedAt: now,
+          );
+          await _strengthGoalDao.update(completedGoal, txn);
+        }
       }
+      return ok(null);
+    } catch (e) {
+      _logger.severe('Failed to complete matching strength goals', e);
+      return err(
+        ServiceError(
+          type: SingleErrorTypes.operationFailure,
+          description:
+              'Failed to complete matching strength goals with error ${e.toString()}',
+        ),
+      );
     }
   }
 
