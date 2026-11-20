@@ -111,35 +111,37 @@ class UpdateExerciseRecordCard extends StatelessWidget {
                       required int reps,
                       required DateTime date,
                     }) async {
+                      final cubit = context.read<ExerciseRecordCubit>();
                       final existingPicture = record.picture;
                       final existingVideo = record.video;
-                      await context
-                          .read<ExerciseRecordCubit>()
-                          .updateExerciseRecord(
-                            record.id,
-                            ExerciseRecordInput(
-                              exerciseId: exerciseId,
-                              weight: weight,
-                              reps: reps,
-                              recordDate: date,
-                              picture: Nullable(
-                                existingPicture != null
-                                    ? PictureData(
-                                        uri: existingPicture.uri,
-                                        storage: existingPicture.storage,
-                                      )
-                                    : null,
-                              ),
-                              video: Nullable(
-                                existingVideo != null
-                                    ? VideoData(
-                                        uri: existingVideo.uri,
-                                        platform: existingVideo.platform,
-                                      )
-                                    : null,
-                              ),
-                            ),
-                          );
+                      await cubit.updateExerciseRecord(
+                        record.id,
+                        ExerciseRecordInput(
+                          exerciseId: exerciseId,
+                          weight: weight,
+                          reps: reps,
+                          recordDate: date,
+                          picture: Nullable(
+                            existingPicture != null
+                                ? PictureData(
+                                    uri: existingPicture.uri,
+                                    storage: existingPicture.storage,
+                                  )
+                                : null,
+                          ),
+                          video: Nullable(
+                            existingVideo != null
+                                ? VideoData(
+                                    uri: existingVideo.uri,
+                                    platform: existingVideo.platform,
+                                  )
+                                : null,
+                          ),
+                        ),
+                      );
+                      if (cubit.state.error != null) {
+                        return;
+                      }
                       if (context.mounted) {
                         onClose();
                       }
