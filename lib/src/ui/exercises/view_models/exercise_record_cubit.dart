@@ -123,6 +123,7 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
           emit(
             state.copyWith(
               latestExerciseRecord: const Nullable(null),
+              latestExerciseId: Nullable(exerciseId),
               isLoadingLatest: false,
             ),
           );
@@ -147,6 +148,7 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
     emit(
       state.copyWith(
         latestExerciseRecord: Nullable(result.value),
+        latestExerciseId: Nullable(exerciseId),
         isLoadingLatest: false,
         error: const Nullable(null),
       ),
@@ -182,8 +184,11 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
     }
 
     final currentPagination = state.recordPagination;
+    final targetExerciseId = currentPagination.exerciseId == null
+        ? null
+        : input.exerciseId;
     final recordsResult = await _exerciseRecordService.getExerciseRecords(
-      exerciseId: currentPagination.exerciseId,
+      exerciseId: targetExerciseId,
       limit: currentPagination.limit,
       dateRange: currentPagination.dateRange,
     );
@@ -212,25 +217,30 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
     }
 
     final record = result.value;
+    final latestScopeId = state.latestExerciseId == null
+        ? null
+        : input.exerciseId;
+    final latestResult = await _exerciseRecordService.getLatestRecord(
+      latestScopeId,
+    );
+    if (isClosed) return;
+
     final paginatedData = recordsResult.value;
     final records = paginatedData.data;
-    final existingLatest = state.latestExerciseRecord;
-    final nextLatest =
-        existingLatest != null &&
-            existingLatest.exerciseId == record.exerciseId &&
-            existingLatest.recordDate.isAfter(record.recordDate)
-        ? existingLatest
-        : record;
+    final nextLatest = latestResult.isOk() ? latestResult.value : record;
     emit(
       state.copyWith(
         selectedExerciseRecord: Nullable(record),
         exerciseRecords: records,
         recordPagination: state.recordPagination.copyWith(
+          exerciseId: Nullable(targetExerciseId),
           limit: paginatedData.limit,
           offset: paginatedData.offset,
           total: paginatedData.total,
         ),
         latestExerciseRecord: Nullable(nextLatest),
+        latestExerciseId: Nullable(latestScopeId),
+        isLoading: false,
         error: const Nullable(null),
       ),
     );
@@ -267,8 +277,11 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
     _logger.info("Exercise record updated successfully");
     final exerciseRecord = result.value;
     final currentPagination = state.recordPagination;
+    final targetExerciseId = currentPagination.exerciseId == null
+        ? null
+        : input.exerciseId;
     final recordsResult = await _exerciseRecordService.getExerciseRecords(
-      exerciseId: currentPagination.exerciseId,
+      exerciseId: targetExerciseId,
       limit: currentPagination.limit,
       dateRange: currentPagination.dateRange,
     );

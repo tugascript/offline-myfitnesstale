@@ -58,6 +58,7 @@ class ExerciseProgressHistory extends StatefulWidget {
 
 class _ExerciseProgressHistoryState extends State<ExerciseProgressHistory> {
   final ScrollController _scrollController = ScrollController();
+  bool _refetchingScopedRecords = false;
 
   @override
   void initState() {
@@ -178,10 +179,29 @@ class _ExerciseProgressHistoryState extends State<ExerciseProgressHistory> {
         BlocBuilder<ExerciseRecordCubit, ExerciseRecordState>(
           builder: (context, state) {
             final isLoading = state.isRecordsLoading;
-            final records = state.recordPagination.exerciseId == null
+            final isScoped = state.recordPagination.exerciseId != null;
+            final isCurrentRoute = ModalRoute.of(context)?.isCurrent ?? true;
+            if (!isScoped) {
+              _refetchingScopedRecords = false;
+            } else if (!isLoading &&
+                isCurrentRoute &&
+                !_refetchingScopedRecords) {
+              _refetchingScopedRecords = true;
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (!mounted) return;
+                context.read<ExerciseRecordCubit>().getExerciseRecords(
+                  dateRange: (widget.dateRange.start, widget.dateRange.end),
+                  limit: ExerciseProgressHistory.pageSize,
+                  offset: 0,
+                );
+              });
+            }
+
+            final records = !isScoped
                 ? state.exerciseRecords
                 : const <ExerciseRecordDto>[];
-            if (!isLoading && records.isEmpty) {
+            final effectiveLoading = isLoading || isScoped;
+            if (!effectiveLoading && records.isEmpty) {
               return NotFoundList(
                 height: widget.breakPoint.height / 3,
                 sizes: widget.sizes,
@@ -195,7 +215,7 @@ class _ExerciseProgressHistoryState extends State<ExerciseProgressHistory> {
               child: ExerciseProgressRecordsList(
                 sizes: widget.sizes,
                 units: widget.units,
-                isLoading: isLoading,
+                isLoading: effectiveLoading,
                 exerciseRecords: records,
                 pagination: state.recordPagination,
                 scrollController: _scrollController,
