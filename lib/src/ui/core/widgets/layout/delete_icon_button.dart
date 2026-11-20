@@ -19,29 +19,33 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../sizes/data_display_sizes.dart';
 import '../../themes/colors.dart';
+import 'app_icon_button.dart';
 
 class DeleteIconButton extends StatelessWidget {
   final DataDisplaySizesList sizes;
+  final bool isLoading;
   final void Function() onDelete;
+  final bool small;
 
   const DeleteIconButton({
     super.key,
     required this.sizes,
     required this.onDelete,
+    required this.isLoading,
+    this.small = false,
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return IconButton(
-      visualDensity: VisualDensity.compact,
-      icon: Icon(
-        Icons.delete,
-        color: ThemedColors.themedRed.fromBrightness(theme.brightness),
-        size: sizes.mediumIconSize,
-      ),
+    return AppIconButton(
+      icon: Icons.delete,
       onPressed: onDelete,
       tooltip: 'Delete',
+      sizes: sizes,
+      small: small,
+      isLoading: isLoading,
+      color: ThemedColors.themedRed.fromBrightness(theme.brightness),
     );
   }
 }

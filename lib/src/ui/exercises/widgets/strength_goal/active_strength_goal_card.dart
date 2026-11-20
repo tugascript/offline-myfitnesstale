@@ -31,6 +31,7 @@ import '../../../core/widgets/confirmation_dialog.dart';
 import '../../../core/widgets/layout/app_elevated_button.dart';
 import '../../../core/widgets/layout/app_outlined_button.dart';
 import '../../../core/widgets/layout/delete_icon_button.dart';
+import '../../../core/widgets/layout/edit_icon_button.dart';
 import '../../../core/widgets/progress_status_badge.dart';
 import '../../../home/view_models/profile_cubit.dart';
 import '../../screens/exercise_records_screen.dart';
@@ -83,13 +84,8 @@ class ActiveStrengthGoalCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final effectiveUnits =
         units ??
-            context
-                .watch<ProfileCubit>()
-                .state
-                .system
-                ?.units ??
-            Units.metric;
-    final isDarkTheme = theme.brightness == Brightness.dark;
+        context.watch<ProfileCubit>().state.system?.units ??
+        Units.metric;
 
     return BlocBuilder<ExerciseRecordCubit, ExerciseRecordState>(
       builder: (context, state) {
@@ -113,7 +109,6 @@ class ActiveStrengthGoalCard extends StatelessWidget {
           effectiveUnits,
           displayGoal.targetMaxStrength,
         );
-        final iconColor = isDarkTheme ? Colors.grey[400] : Colors.grey[600];
 
         return Card(
           margin: EdgeInsets.zero,
@@ -143,52 +138,46 @@ class ActiveStrengthGoalCard extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        IconButton(
-                          key: const ValueKey('active-strength-goal-edit-btn'),
-                          visualDensity: VisualDensity.compact,
-                          icon: Icon(
-                            Icons.edit_outlined,
-                            size: sizes.titleFontSize * 1.2,
-                            color: iconColor,
+                        if (!isSkeleton && goal != null) ...[
+                          EditIconButton(
+                            sizes: sizes,
+                            isLoading: state.isLoading,
+                            onEdit: () {
+                              showDialog(
+                                context: context,
+                                builder: (ctx) => EditStrengthGoalModal(
+                                  theme: theme,
+                                  sizes: sizes,
+                                  existingGoal: goal,
+                                ),
+                              );
+                            },
                           ),
-                          onPressed: isSkeleton || goal == null
-                              ? null
-                              : () {
-                            showDialog(
-                              context: context,
-                              builder: (ctx) =>
-                                  EditStrengthGoalModal(
-                                    theme: theme,
-                                    sizes: sizes,
-                                    existingGoal: goal,
-                                  ),
-                            );
-                          },
-                        ),
-                        if (!isSkeleton && goal != null)
+                          SizedBox(width: sizes.quarterSpacing),
                           DeleteIconButton(
                             key: const ValueKey(
                               'active-strength-goal-delete-btn',
                             ),
                             sizes: sizes,
+                            isLoading: state.isLoading,
                             onDelete: () {
                               showDialog(
                                 context: context,
-                                builder: (ctx) =>
-                                    ConfirmationDialog(
-                                      title: 'Delete Strength Goal',
-                                      content: 'Are you sure you want to delete this strength goal?',
-                                      confirmLabel: 'Delete',
-                                      isDestructive: true,
-                                      onConfirm: () {
-                                        context
-                                            .read<ExerciseRecordCubit>()
-                                            .deleteStrengthGoal(goal.id);
-                                      },
-                                    ),
+                                builder: (ctx) => ConfirmationDialog(
+                                  title: 'Delete Strength Goal',
+                                  content: 'Are you sure you want to delete this strength goal?',
+                                  confirmLabel: 'Delete',
+                                  isDestructive: true,
+                                  onConfirm: () {
+                                    context
+                                        .read<ExerciseRecordCubit>()
+                                        .deleteStrengthGoal(goal.id);
+                                  },
+                                ),
                               );
                             },
                           ),
+                        ],
                       ],
                     ),
                     if (displayGoal.exercise != null) ...[
@@ -246,8 +235,7 @@ class ActiveStrengthGoalCard extends StatelessWidget {
                               ),
                               Flexible(
                                 child: Text(
-                                  ' Started: ${Formatters.formatRelativeDate(
-                                      effectiveUnits, displayGoal.startDate)}',
+                                  ' Started: ${Formatters.formatRelativeDate(effectiveUnits, displayGoal.startDate)}',
                                   style: TextStyle(
                                     fontSize: sizes.fontSize,
                                     fontWeight: FontWeight.w600,
@@ -332,18 +320,18 @@ class ActiveStrengthGoalCard extends StatelessWidget {
                               onPressed: isSkeleton || goal == null
                                   ? null
                                   : () {
-                                showDialog(
-                                  context: context,
-                                  builder: (ctx) =>
-                                      CreateExerciseRecordModal(
-                                        theme: theme,
-                                        sizes: sizes,
-                                        units: effectiveUnits,
-                                        exerciseId:
-                                        displayGoal.exerciseId,
-                                      ),
-                                );
-                              },
+                                      showDialog(
+                                        context: context,
+                                        builder: (ctx) =>
+                                            CreateExerciseRecordModal(
+                                              theme: theme,
+                                              sizes: sizes,
+                                              units: effectiveUnits,
+                                              exerciseId:
+                                                  displayGoal.exerciseId,
+                                            ),
+                                      );
+                                    },
                               theme: theme,
                             ),
                           ),
@@ -365,12 +353,12 @@ class ActiveStrengthGoalCard extends StatelessWidget {
                             onPressed: isSkeleton || goal == null
                                 ? null
                                 : () {
-                              context.push(
-                                ExerciseRecordsScreen.location(
-                                  displayGoal.exerciseId,
-                                ),
-                              );
-                            },
+                                    context.push(
+                                      ExerciseRecordsScreen.location(
+                                        displayGoal.exerciseId,
+                                      ),
+                                    );
+                                  },
                           ),
                         ),
                       ],
