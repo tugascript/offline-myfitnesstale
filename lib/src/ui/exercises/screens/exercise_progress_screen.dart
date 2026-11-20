@@ -20,6 +20,7 @@ import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../data/utils/enums.dart';
+import '../../../routing/routes.dart';
 import '../../core/sizes/data_display_sizes.dart';
 import '../../core/sizes/screen_size.dart';
 import '../../core/widgets/layout/responsive_scaffold.dart';
@@ -29,7 +30,6 @@ import '../view_models/exercise_record_cubit.dart';
 import '../view_models/states/exercise_record_state.dart';
 import '../widgets/progress/exercise_progress_history.dart';
 import '../widgets/progress/latest_exercise_progress_record.dart';
-import './exercise_records_screen.dart';
 
 class ExerciseProgressScreen extends StatefulWidget {
   const ExerciseProgressScreen({super.key});
@@ -55,7 +55,9 @@ class _ExerciseProgressScreenState extends State<ExerciseProgressScreen> {
   }
 
   Future<void> _openExerciseRecords(int exerciseId) async {
-    await context.push<void>(ExerciseRecordsScreen.location(exerciseId));
+    await context.push<void>(
+      Routes.exerciseRecords.name.replaceFirst(':id', exerciseId.toString()),
+    );
     if (!mounted) {
       return;
     }

@@ -41,6 +41,7 @@ class EditIconButton extends StatelessWidget {
     return AppIconButton(
       icon: Icons.edit_outlined,
       sizes: sizes,
+      small: small,
       isLoading: isLoading,
       color: ThemedColors.themedGrey.fromBrightness(theme.brightness),
       onPressed: onEdit,

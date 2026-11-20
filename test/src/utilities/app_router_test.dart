@@ -37,7 +37,7 @@ import 'package:myfitnesstale/src/routing/app_router.dart';
 import 'package:myfitnesstale/src/routing/routes.dart';
 import 'package:myfitnesstale/src/ui/core/screens/not_found_screen.dart';
 import 'package:myfitnesstale/src/ui/exercises/screens/exercise_progress_screen.dart';
-import 'package:myfitnesstale/src/ui/exercises/screens/exercise_records_screen.dart';
+import 'package:myfitnesstale/src/ui/exercises/screens/exercise_records_list_screen.dart';
 import 'package:myfitnesstale/src/ui/exercises/view_models/exercise_cubit.dart';
 import 'package:myfitnesstale/src/ui/exercises/view_models/exercise_record_cubit.dart';
 import 'package:myfitnesstale/src/ui/home/view_models/profile_cubit.dart';
@@ -321,10 +321,13 @@ void main() {
   });
 
   testWidgets('exercise records resolve with a parsed ID', (tester) async {
-    await pumpRoute(tester, ExerciseRecordsScreen.location(17));
+    await pumpRoute(
+      tester,
+      Routes.exerciseRecords.name.replaceFirst(':id', '17'),
+    );
 
-    final view = tester.widget<ExerciseRecordsScreen>(
-      find.byType(ExerciseRecordsScreen),
+    final view = tester.widget<ExerciseRecordsListScreen>(
+      find.byType(ExerciseRecordsListScreen),
     );
     expect(view.exerciseId, 17);
   });

@@ -37,7 +37,6 @@ import '../view_models/states/exercise_state.dart';
 import '../widgets/details/edit_exercise_modal.dart';
 import '../widgets/details/exercise_header_card.dart';
 import '../widgets/strength_goal/create_strength_goal_modal.dart';
-import './exercise_records_screen.dart';
 
 const _skeletonExercise = ExerciseDto(
   id: 0,
@@ -235,7 +234,10 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
                             );
                             if (created == true && context.mounted) {
                               context.push(
-                                ExerciseRecordsScreen.location(exercise.id),
+                                Routes.exerciseRecords.name.replaceFirst(
+                                  ':id',
+                                  exercise.id.toString(),
+                                ),
                               );
                             }
                           },

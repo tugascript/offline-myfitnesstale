@@ -22,7 +22,7 @@ import '../ui/exercises/screens/equipment_details_screen.dart';
 import '../ui/exercises/screens/equipments_list_screen.dart';
 import '../ui/exercises/screens/exercise_detail_screen.dart';
 import '../ui/exercises/screens/exercise_progress_screen.dart';
-import '../ui/exercises/screens/exercise_records_screen.dart';
+import '../ui/exercises/screens/exercise_records_list_screen.dart';
 import '../ui/exercises/screens/exercises_list_screen.dart';
 import '../ui/exercises/screens/strength_goals_list_screen.dart';
 import '../ui/foods/screens/food_creation_screen.dart';
@@ -275,7 +275,7 @@ sealed class AppRouter {
         if (id == null) {
           return const NotFoundScreen();
         }
-        return ExerciseRecordsScreen(exerciseId: id);
+        return ExerciseRecordsListScreen(exerciseId: id);
       },
     ),
     GoRoute(

@@ -25,6 +25,8 @@ import '../../../../../data/utils/enums.dart';
 import '../../../../../data/utils/json_data.dart';
 import '../../../../../utils/nullable.dart';
 import '../../../../core/sizes/data_display_sizes.dart';
+import '../../../../core/themes/colors.dart';
+import '../../../../core/widgets/layout/app_icon_button.dart';
 import '../../../view_models/exercise_record_cubit.dart';
 import './exercise_record_form.dart';
 
@@ -78,15 +80,14 @@ class UpdateExerciseRecordCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  IconButton(
-                    visualDensity: VisualDensity.compact,
-                    icon: Icon(
-                      Icons.close,
-                      size: sizes.titleFontSize * 1.2,
-                      color: theme.colorScheme.brightness == Brightness.dark
-                          ? Colors.grey[400]
-                          : Colors.grey[600],
+                  AppIconButton(
+                    sizes: sizes,
+                    isLoading: isLoading,
+                    color: ThemedColors.themedGrey.fromBrightness(
+                      theme.brightness,
                     ),
+                    icon: Icons.close,
+                    tooltip: 'Close',
                     onPressed: onClose,
                   ),
                 ],

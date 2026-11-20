@@ -19,7 +19,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../data/utils/enums.dart';
-import '../../../routing/routes.dart';
 import '../../core/screens/entity_error_screen.dart';
 import '../../core/screens/loading_screen.dart';
 import '../../core/sizes/data_display_sizes.dart';
@@ -33,21 +32,19 @@ import '../widgets/records/editors/create_exercise_record_modal.dart';
 import '../widgets/records/exercise_records_history.dart';
 import '../widgets/records/latest_exercise_record.dart';
 
-class ExerciseRecordsScreen extends StatefulWidget {
+class ExerciseRecordsListScreen extends StatefulWidget {
   static const name = "exercises-records";
 
   final int exerciseId;
 
-  const ExerciseRecordsScreen({super.key, required this.exerciseId});
-
-  static String location(int exerciseId) =>
-      Routes.exerciseRecords.name.replaceFirst(':id', exerciseId.toString());
+  const ExerciseRecordsListScreen({super.key, required this.exerciseId});
 
   @override
-  State<ExerciseRecordsScreen> createState() => _ExerciseRecordsScreenState();
+  State<ExerciseRecordsListScreen> createState() =>
+      _ExerciseRecordsListScreenState();
 }
 
-class _ExerciseRecordsScreenState extends State<ExerciseRecordsScreen> {
+class _ExerciseRecordsListScreenState extends State<ExerciseRecordsListScreen> {
   @override
   void initState() {
     super.initState();
