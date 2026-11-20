@@ -24,6 +24,7 @@ import 'package:skeletonizer/skeletonizer.dart';
 
 import 'package:myfitnesstale/src/data/models/sqlite/exercise_model.dart';
 import 'package:myfitnesstale/src/data/models/sqlite/exercise_record_model.dart';
+import 'package:myfitnesstale/src/data/models/sqlite/strength_goal_model.dart';
 import 'package:myfitnesstale/src/data/repositories/exercises/dtos/exercise_dto.dart';
 import 'package:myfitnesstale/src/data/repositories/exercises/dtos/exercise_record_dto.dart';
 import 'package:myfitnesstale/src/data/repositories/exercises/exercise_record_repository.dart';
@@ -445,9 +446,9 @@ void main() {
     expect(cubit.state.latestExerciseRecord?.exerciseId, squatId);
 
     // Now scope cubit to squat (e.g. visited squat records), then create for bench:
-    // 1) recordPagination.exerciseId must update to benchId
-    // 2) exerciseRecords must contain bench, not squat
-    // 3) latestExerciseRecord must update to bench, not stay blocked by squat
+    // 1) recordPagination.exerciseId must remain squatId (not overwritten with benchId)
+    // 2) exerciseRecords must still contain squat, not bench
+    // 3) latestExerciseRecord / latestExerciseId must remain squat, not overwritten with bench
     await cubit.getLatestExerciseRecord(squatId);
     await cubit.getExerciseRecords(exerciseId: squatId, offset: 0);
     await cubit.createExerciseRecord(
@@ -459,13 +460,13 @@ void main() {
       ),
     );
     expect(cubit.state.isLoading, isFalse);
-    expect(cubit.state.recordPagination.exerciseId, benchId);
+    expect(cubit.state.recordPagination.exerciseId, squatId);
     expect(
-      cubit.state.exerciseRecords.every((r) => r.exerciseId == benchId),
+      cubit.state.exerciseRecords.every((r) => r.exerciseId == squatId),
       isTrue,
     );
-    expect(cubit.state.latestExerciseRecord?.exerciseId, benchId);
-    expect(cubit.state.latestExerciseRecord?.weight, 95000);
+    expect(cubit.state.latestExerciseId, squatId);
+    expect(cubit.state.latestExerciseRecord?.exerciseId, squatId);
 
     // Create a newer bench record (2026-07-01) outside a 2025-only date filter,
     // then update an older 2025 bench record under that 2025 filter.
@@ -505,4 +506,70 @@ void main() {
     // Latest should still be the 2026-07-01 record (110000), not the 2025 filtered page record.
     expect(cubit.state.latestExerciseRecord?.weight, 110000);
   });
+
+  test(
+    'updateExerciseRecord completes matching in-progress strength goals',
+    () async {
+      final testDatabase = TestDatabase();
+      await testDatabase.initialize();
+      addTearDown(testDatabase.destroy);
+
+      final db = await testDatabase.db;
+      final benchId = await db.insert(
+        Exercise.table,
+        Exercise.create(
+          name: 'Bench Press',
+          description: '',
+          muscleGroup: MuscleGroup.push,
+          muscles: emptyMuscles,
+        ).toMap(),
+      );
+      final goalId = await db.insert(
+        StrengthGoal.table,
+        StrengthGoal.create(
+          exerciseId: benchId,
+          targetWeight: 100000,
+          targetReps: 5,
+          targetMaxStrength: 116667,
+          startDate: DateUtilities.getDateUnix(DateTime.utc(2026, 4, 1)),
+          name: '2 Plates',
+        ).toMap(),
+      );
+      final recordId = await db.insert(
+        ExerciseRecord.table,
+        ExerciseRecord.create(
+          exerciseId: benchId,
+          weight: 90000,
+          reps: 5,
+          recordDate: DateUtilities.getDateUnix(DateTime.utc(2026, 5, 1)),
+        ).toMap(),
+      );
+
+      final cubit = ExerciseRecordCubit(
+        exerciseRecordRepository: ExerciseRecordRepository.create(),
+      );
+      addTearDown(cubit.close);
+
+      await cubit.getActiveStrengthGoal(exerciseId: benchId);
+      expect(cubit.state.activeStrengthGoal?.id, goalId);
+
+      await cubit.updateExerciseRecord(
+        recordId,
+        ExerciseRecordInput(
+          exerciseId: benchId,
+          weight: 100000,
+          reps: 5,
+          recordDate: DateTime.utc(2026, 5, 1),
+        ),
+      );
+
+      final goalRows = await db.query(
+        StrengthGoal.table,
+        where: '${StrengthGoalColumns.id.name} = ?',
+        whereArgs: [goalId],
+      );
+      expect(goalRows.single[StrengthGoalColumns.status.name], 'completed');
+      expect(cubit.state.activeStrengthGoal, isNull);
+    },
+  );
 }

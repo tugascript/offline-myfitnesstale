@@ -46,6 +46,9 @@ class LatestExerciseProgressRecord extends StatefulWidget {
 
 class _LatestExerciseProgressRecordState
     extends State<LatestExerciseProgressRecord> {
+  bool _refetchTriggered = false;
+  bool _waitingForPostFrame = false;
+
   @override
   void initState() {
     super.initState();
@@ -57,15 +60,31 @@ class _LatestExerciseProgressRecordState
     return BlocBuilder<ExerciseRecordCubit, ExerciseRecordState>(
       builder: (context, state) {
         final isLoading = state.isLatestLoading;
-        final record = isLoading || state.latestExerciseId != null
+        final isScoped = state.latestExerciseId != null;
+        final isCurrentRoute = ModalRoute.of(context)?.isCurrent ?? true;
+        if (!isScoped) {
+          _refetchTriggered = false;
+          _waitingForPostFrame = false;
+        } else if (!isLoading && isCurrentRoute && !_refetchTriggered) {
+          _refetchTriggered = true;
+          _waitingForPostFrame = true;
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (!mounted) return;
+            _waitingForPostFrame = false;
+            context.read<ExerciseRecordCubit>().getLatestExerciseRecord();
+          });
+        }
+
+        final effectiveLoading = isLoading || _waitingForPostFrame;
+        final record = effectiveLoading || isScoped
             ? null
             : state.latestExerciseRecord;
 
-        if (!isLoading && record == null) {
+        if (!effectiveLoading && record == null) {
           return EmptyExerciseProgressRecord(
             sizes: widget.sizes,
             theme: widget.theme,
-            isLoading: isLoading,
+            isLoading: effectiveLoading,
           );
         }
 
@@ -73,7 +92,7 @@ class _LatestExerciseProgressRecordState
           sizes: widget.sizes,
           theme: widget.theme,
           units: widget.units,
-          isLoading: isLoading,
+          isLoading: effectiveLoading,
           exerciseRecord: record,
           onOpenExerciseRecords: widget.onOpenExerciseRecords,
         );

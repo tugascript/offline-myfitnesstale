@@ -18,6 +18,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:logging/logging.dart';
 
+import '../../../data/repositories/exercises/dtos/exercise_record_dto.dart';
 import '../../../data/repositories/exercises/dtos/strength_goal_dto.dart';
 import '../../../data/repositories/exercises/exercise_record_repository.dart';
 import '../../../data/repositories/exercises/inputs/exercise_record_input.dart';
@@ -183,63 +184,73 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
       }
     }
 
+    final record = result.value;
     final currentPagination = state.recordPagination;
-    final targetExerciseId = currentPagination.exerciseId == null
-        ? null
-        : input.exerciseId;
-    final recordsResult = await _exerciseRecordService.getExerciseRecords(
-      exerciseId: targetExerciseId,
-      limit: currentPagination.limit,
-      dateRange: currentPagination.dateRange,
-    );
-    if (isClosed) return;
+    final shouldRefreshRecords =
+        currentPagination.exerciseId == null ||
+        currentPagination.exerciseId == input.exerciseId;
 
-    if (recordsResult.isErr()) {
-      final error = recordsResult.error;
-      _logger.warning("Failed to get exercise records", error);
-      switch (error.type) {
-        case SingleErrorTypes.notFound:
-        case SingleErrorTypes.invalidInput:
-        case SingleErrorTypes.operationFailure:
-          emit(
-            state.copyWith(
-              error: Nullable(
-                ErrorState(
-                  type: error.type.name,
-                  description: "Failed to get exercise records",
+    List<ExerciseRecordDto>? refreshedRecords;
+    ExerciseRecordPagination? refreshedPagination;
+    if (shouldRefreshRecords) {
+      final recordsResult = await _exerciseRecordService.getExerciseRecords(
+        exerciseId: currentPagination.exerciseId,
+        limit: currentPagination.limit,
+        dateRange: currentPagination.dateRange,
+      );
+      if (isClosed) return;
+
+      if (recordsResult.isErr()) {
+        final error = recordsResult.error;
+        _logger.warning("Failed to get exercise records", error);
+        switch (error.type) {
+          case SingleErrorTypes.notFound:
+          case SingleErrorTypes.invalidInput:
+          case SingleErrorTypes.operationFailure:
+            emit(
+              state.copyWith(
+                error: Nullable(
+                  ErrorState(
+                    type: error.type.name,
+                    description: "Failed to get exercise records",
+                  ),
                 ),
+                isLoading: false,
               ),
-              isLoading: false,
-            ),
-          );
-          return;
+            );
+            return;
+        }
       }
+
+      final paginatedData = recordsResult.value;
+      refreshedRecords = paginatedData.data;
+      refreshedPagination = currentPagination.copyWith(
+        limit: paginatedData.limit,
+        offset: paginatedData.offset,
+        total: paginatedData.total,
+      );
     }
 
-    final record = result.value;
-    final latestScopeId = state.latestExerciseId == null
-        ? null
-        : input.exerciseId;
-    final latestResult = await _exerciseRecordService.getLatestRecord(
-      latestScopeId,
-    );
-    if (isClosed) return;
+    final shouldRefreshLatest =
+        state.latestExerciseId == null ||
+        state.latestExerciseId == input.exerciseId;
+    Nullable<ExerciseRecordDto>? refreshedLatest;
+    if (shouldRefreshLatest) {
+      final latestResult = await _exerciseRecordService.getLatestRecord(
+        state.latestExerciseId,
+      );
+      if (isClosed) return;
+      refreshedLatest = Nullable(
+        latestResult.isOk() ? latestResult.value : record,
+      );
+    }
 
-    final paginatedData = recordsResult.value;
-    final records = paginatedData.data;
-    final nextLatest = latestResult.isOk() ? latestResult.value : record;
     emit(
       state.copyWith(
         selectedExerciseRecord: Nullable(record),
-        exerciseRecords: records,
-        recordPagination: state.recordPagination.copyWith(
-          exerciseId: Nullable(targetExerciseId),
-          limit: paginatedData.limit,
-          offset: paginatedData.offset,
-          total: paginatedData.total,
-        ),
-        latestExerciseRecord: Nullable(nextLatest),
-        latestExerciseId: Nullable(latestScopeId),
+        exerciseRecords: refreshedRecords,
+        recordPagination: refreshedPagination,
+        latestExerciseRecord: refreshedLatest,
         isLoading: false,
         error: const Nullable(null),
       ),
@@ -328,6 +339,7 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
         error: const Nullable(null),
       ),
     );
+    await _refreshStrengthGoals();
   }
 
   Future<void> deleteExerciseRecord(int id) async {

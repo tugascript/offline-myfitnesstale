@@ -58,7 +58,8 @@ class ExerciseProgressHistory extends StatefulWidget {
 
 class _ExerciseProgressHistoryState extends State<ExerciseProgressHistory> {
   final ScrollController _scrollController = ScrollController();
-  bool _refetchingScopedRecords = false;
+  bool _refetchTriggered = false;
+  bool _waitingForPostFrame = false;
 
   @override
   void initState() {
@@ -182,13 +183,14 @@ class _ExerciseProgressHistoryState extends State<ExerciseProgressHistory> {
             final isScoped = state.recordPagination.exerciseId != null;
             final isCurrentRoute = ModalRoute.of(context)?.isCurrent ?? true;
             if (!isScoped) {
-              _refetchingScopedRecords = false;
-            } else if (!isLoading &&
-                isCurrentRoute &&
-                !_refetchingScopedRecords) {
-              _refetchingScopedRecords = true;
+              _refetchTriggered = false;
+              _waitingForPostFrame = false;
+            } else if (!isLoading && isCurrentRoute && !_refetchTriggered) {
+              _refetchTriggered = true;
+              _waitingForPostFrame = true;
               WidgetsBinding.instance.addPostFrameCallback((_) {
                 if (!mounted) return;
+                _waitingForPostFrame = false;
                 context.read<ExerciseRecordCubit>().getExerciseRecords(
                   dateRange: (widget.dateRange.start, widget.dateRange.end),
                   limit: ExerciseProgressHistory.pageSize,
@@ -200,7 +202,7 @@ class _ExerciseProgressHistoryState extends State<ExerciseProgressHistory> {
             final records = !isScoped
                 ? state.exerciseRecords
                 : const <ExerciseRecordDto>[];
-            final effectiveLoading = isLoading || isScoped;
+            final effectiveLoading = isLoading || _waitingForPostFrame;
             if (!effectiveLoading && records.isEmpty) {
               return NotFoundList(
                 height: widget.breakPoint.height / 3,

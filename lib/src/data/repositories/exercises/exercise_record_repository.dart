@@ -16,6 +16,7 @@
 // along with My Fitness Tale.  If not, see <https://www.gnu.org/licenses/>.
 
 import 'package:logging/logging.dart';
+import 'package:sqflite/sqflite.dart';
 
 import '../../../utils/errors.dart';
 import '../../../utils/nullable.dart';
@@ -100,25 +101,7 @@ final class ExerciseRecordRepository implements Repository {
           exerciseRecord,
           txn,
         );
-        final openGoals = await _strengthGoalDao.selectMany(
-          where:
-              '${StrengthGoalColumns.exerciseId.equal} AND ${StrengthGoalColumns.status.equal}',
-          whereArgs: [input.exerciseId, ProgressStatus.inProgress.value],
-          trx: txn,
-        );
-
-        final int now = DateUtilities.getNowUtcUnix();
-        for (final goal in openGoals) {
-          if (input.weight >= goal.targetWeight &&
-              input.reps >= goal.targetReps) {
-            final completedGoal = goal.copyWith(
-              status: ProgressStatus.completed,
-              completedAt: Nullable(now),
-              updatedAt: now,
-            );
-            await _strengthGoalDao.update(completedGoal, txn);
-          }
-        }
+        await _completeMatchingStrengthGoals(txn, input);
 
         return recordId;
       });
@@ -412,7 +395,10 @@ final class ExerciseRecordRepository implements Repository {
         recordDate: DateUtilities.getDateUnix(input.recordDate),
         updatedAt: DateUtilities.getNowUtcUnix(),
       );
-      await _exerciseRecordDao.update(updatedExerciseRecord);
+      await _exerciseRecordDao.startTransaction((txn) async {
+        await _exerciseRecordDao.update(updatedExerciseRecord, txn);
+        await _completeMatchingStrengthGoals(txn, input);
+      });
       _logger.info('Updated exercise record with id $id');
       return ok(
         ExerciseRecordDto.fromModel(
@@ -429,6 +415,30 @@ final class ExerciseRecordRepository implements Repository {
               'Failed to update exercise record with error ${e.toString()}',
         ),
       );
+    }
+  }
+
+  Future<void> _completeMatchingStrengthGoals(
+    Transaction txn,
+    ExerciseRecordInput input,
+  ) async {
+    final openGoals = await _strengthGoalDao.selectMany(
+      where:
+          '${StrengthGoalColumns.exerciseId.equal} AND ${StrengthGoalColumns.status.equal}',
+      whereArgs: [input.exerciseId, ProgressStatus.inProgress.value],
+      trx: txn,
+    );
+
+    final int now = DateUtilities.getNowUtcUnix();
+    for (final goal in openGoals) {
+      if (input.weight >= goal.targetWeight && input.reps >= goal.targetReps) {
+        final completedGoal = goal.copyWith(
+          status: ProgressStatus.completed,
+          completedAt: Nullable(now),
+          updatedAt: now,
+        );
+        await _strengthGoalDao.update(completedGoal, txn);
+      }
     }
   }
 
