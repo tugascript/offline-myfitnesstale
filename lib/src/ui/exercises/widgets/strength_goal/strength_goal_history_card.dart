@@ -23,16 +23,17 @@ import '../../../../data/repositories/exercises/dtos/strength_goal_dto.dart';
 import '../../../../data/utils/enums.dart';
 import '../../../../routing/routes.dart';
 import '../../../core/sizes/data_display_sizes.dart';
-import '../../../core/utils/converters.dart';
-import '../../../core/utils/formatters.dart';
 import '../../../core/widgets/confirmation_dialog.dart';
 import '../../../core/widgets/layout/app_icon_button.dart';
 import '../../../core/widgets/layout/delete_icon_button.dart';
 import '../../../core/widgets/layout/edit_icon_button.dart';
 import '../../../core/widgets/layout/list_card.dart';
 import '../../../core/widgets/progress_status_badge.dart';
+import '../../exercise_record_reps.dart';
 import '../../view_models/exercise_record_cubit.dart';
+import '../max_strength_label.dart';
 import '../records/editors/create_exercise_record_modal.dart';
+import '../relative_date_label.dart';
 import 'edit_strength_goal_modal.dart';
 
 class StrengthGoalHistoryCard extends StatelessWidget {
@@ -51,21 +52,11 @@ class StrengthGoalHistoryCard extends StatelessWidget {
     this.isSkeleton = false,
   });
 
-  String _formatWeight(int grams) {
-    final value = units == Units.imperial
-        ? Converters.gramsToLbs(grams)
-        : Converters.gramsToKg(grams);
-    final suffix = units == Units.imperial ? 'lb' : 'kg';
-    return '${Formatters.formatWeight(value)} $suffix';
-  }
-
   @override
   Widget build(BuildContext context) {
     final hasExercise = goal.exercise != null;
     final hasName = goal.name != null && goal.name!.trim().isNotEmpty;
     final displayDate = goal.completedAt ?? goal.startDate;
-    final weightString = _formatWeight(goal.targetWeight);
-    final maxStrengthString = _formatWeight(goal.targetMaxStrength);
 
     return ListCard(
       key: isSkeleton ? null : ValueKey('strength-goal-history-${goal.id}'),
@@ -128,14 +119,11 @@ class StrengthGoalHistoryCard extends StatelessWidget {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.calendar_today, size: sizes.iconFontSize),
                   Flexible(
-                    child: Text(
-                      ' ${Formatters.formatRelativeDate(units, displayDate)}',
-                      style: TextStyle(
-                        fontSize: sizes.fontSize,
-                        fontWeight: FontWeight.w600,
-                      ),
+                    child: RelativeDateLabel(
+                      units: units,
+                      date: displayDate,
+                      fontSize: sizes.fontSize,
                     ),
                   ),
                   if (!hasExercise && !hasName) ...[
@@ -145,41 +133,16 @@ class StrengthGoalHistoryCard extends StatelessWidget {
                 ],
               ),
             ),
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.repeat_one, size: sizes.fontSize * 1.2),
-                Text(
-                  ' ${goal.targetReps} ',
-                  style: TextStyle(
-                    fontSize: sizes.fontSize,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                Icon(Icons.close, size: sizes.fontSize),
-                Text(' ', style: TextStyle(fontSize: sizes.fontSize)),
-                Icon(Icons.scale, size: sizes.fontSize * 1.2),
-                Text(
-                  ' $weightString',
-                  style: TextStyle(
-                    fontSize: sizes.fontSize,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
+            ExerciseRecordReps(
+              units: units,
+              fontSize: sizes.fontSize,
+              reps: goal.targetReps,
+              weight: goal.targetWeight,
             ),
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text('💪', style: TextStyle(fontSize: sizes.fontSize * 1.2)),
-                Text(
-                  ' $maxStrengthString',
-                  style: TextStyle(
-                    fontSize: sizes.fontSize,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
+            MaxStrengthLabel(
+              units: units,
+              maxStrength: goal.targetMaxStrength,
+              fontSize: sizes.fontSize,
             ),
           ],
         ),

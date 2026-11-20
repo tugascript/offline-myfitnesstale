@@ -22,13 +22,13 @@ import '../../../../../data/repositories/exercises/dtos/exercise_dto.dart';
 import '../../../../../data/repositories/exercises/dtos/exercise_record_dto.dart';
 import '../../../../../data/utils/enums.dart';
 import '../../../../core/sizes/data_display_sizes.dart';
-import '../../../../core/utils/converters.dart';
-import '../../../../core/utils/formatters.dart';
 import '../../../../core/widgets/confirmation_dialog.dart';
 import '../../../../core/widgets/layout/app_modal.dart';
 import '../../../../core/widgets/mutation_buttons.dart';
 import '../../../view_models/exercise_record_cubit.dart';
-import '../exercise_record_reps.dart';
+import '../../max_strength_label.dart';
+import '../../relative_date_label.dart';
+import '../../../exercise_record_reps.dart';
 import './edit_exercise_record_modal.dart';
 
 class ExerciseRecordPointDetailsModal extends StatelessWidget {
@@ -73,12 +73,6 @@ class ExerciseRecordPointDetailsModal extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isMetric = units == Units.metric;
-    final weightUnit = isMetric ? "KG" : "LBS";
-    final maxStrengthValue = isMetric
-        ? Converters.gramsToKg(record.maxStrength).toStringAsFixed(2)
-        : Converters.gramsToLbs(record.maxStrength).toStringAsFixed(2);
-
     return AppModal(
       theme: theme,
       sizes: sizes,
@@ -96,17 +90,10 @@ class ExerciseRecordPointDetailsModal extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
           ),
           SizedBox(height: sizes.spacing),
-          Row(
-            children: [
-              Text("💪", style: TextStyle(fontSize: sizes.fontSize * 1.2)),
-              Text(
-                " $maxStrengthValue $weightUnit",
-                style: TextStyle(
-                  fontSize: sizes.subtitleFontSize,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
+          MaxStrengthLabel(
+            units: units,
+            maxStrength: record.maxStrength,
+            fontSize: sizes.subtitleFontSize,
           ),
           SizedBox(height: sizes.spacing),
           ExerciseRecordReps(
@@ -116,17 +103,11 @@ class ExerciseRecordPointDetailsModal extends StatelessWidget {
             weight: record.weight,
           ),
           SizedBox(height: sizes.spacing),
-          Row(
-            children: [
-              Icon(Icons.calendar_today, size: sizes.subtitleFontSize * 1.2),
-              Text(
-                " ${Formatters.formatRelativeDate(units, record.recordDate)}",
-                style: TextStyle(
-                  fontSize: sizes.fontSize,
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ],
+          RelativeDateLabel(
+            units: units,
+            date: record.recordDate,
+            fontSize: sizes.fontSize,
+            color: theme.colorScheme.onSurfaceVariant,
           ),
           SizedBox(height: sizes.spacing),
           MutationButtons(

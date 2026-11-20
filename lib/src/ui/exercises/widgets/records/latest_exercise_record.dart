@@ -28,9 +28,8 @@ import './empty_exercise_record.dart';
 import './latest_exercise_record_card.dart';
 
 class LatestExerciseRecord extends StatefulWidget {
-  final DataDisplaySizesList sizes;
   final ThemeData theme;
-
+  final DataDisplaySizesList sizes;
   final Units units;
   final ExerciseDto exercise;
 
@@ -61,7 +60,10 @@ class _LatestExerciseRecordState extends State<LatestExerciseRecord> {
   Widget build(BuildContext context) {
     return BlocBuilder<ExerciseRecordCubit, ExerciseRecordState>(
       builder: (context, state) {
-        if (!state.isLoading && state.latestExerciseRecord == null) {
+        final isLoading = state.isLatestLoading;
+        final record = state.latestExerciseRecord;
+
+        if (!isLoading && record == null) {
           return EmptyExerciseRecord(
             sizes: widget.sizes,
             theme: widget.theme,
@@ -71,14 +73,14 @@ class _LatestExerciseRecordState extends State<LatestExerciseRecord> {
           );
         }
 
-        if (_editOpen && state.latestExerciseRecord != null) {
+        if (_editOpen && record != null) {
           return UpdateExerciseRecordCard(
             theme: widget.theme,
             sizes: widget.sizes,
             units: widget.units,
-            isLoading: state.isLoading,
+            isLoading: isLoading,
             exercise: widget.exercise,
-            record: state.latestExerciseRecord!,
+            record: record,
             onClose: () {
               setState(() {
                 _editOpen = false;
@@ -91,9 +93,9 @@ class _LatestExerciseRecordState extends State<LatestExerciseRecord> {
           sizes: widget.sizes,
           theme: widget.theme,
           units: widget.units,
-          isLoading: state.isLoading,
+          isLoading: isLoading,
           exercise: widget.exercise,
-          exerciseRecord: state.latestExerciseRecord,
+          exerciseRecord: record,
           onEdit: () {
             setState(() {
               _editOpen = true;
