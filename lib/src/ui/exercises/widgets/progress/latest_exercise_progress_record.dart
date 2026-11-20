@@ -23,6 +23,7 @@ import '../../../core/sizes/data_display_sizes.dart';
 import '../../view_models/exercise_record_cubit.dart';
 import '../../view_models/states/exercise_record_state.dart';
 import './empty_exercise_progress_record.dart';
+import './exercise_progress_error_card.dart';
 import './latest_exercise_progress_record_card.dart';
 
 class LatestExerciseProgressRecord extends StatefulWidget {
@@ -55,6 +56,11 @@ class _LatestExerciseProgressRecordState
     context.read<ExerciseRecordCubit>().getLatestExerciseRecord();
   }
 
+  void _retryLoad() {
+    _refetchTriggered = false;
+    context.read<ExerciseRecordCubit>().getLatestExerciseRecord();
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<ExerciseRecordCubit, ExerciseRecordState>(
@@ -79,6 +85,17 @@ class _LatestExerciseProgressRecordState
         final record = effectiveLoading || isScoped
             ? null
             : state.latestExerciseRecord;
+
+        if (!effectiveLoading &&
+            state.error != null &&
+            (isScoped || record == null)) {
+          return ExerciseProgressErrorCard(
+            theme: widget.theme,
+            sizes: widget.sizes,
+            message: state.error!.description,
+            onRetry: _retryLoad,
+          );
+        }
 
         if (!effectiveLoading && record == null) {
           return EmptyExerciseProgressRecord(
