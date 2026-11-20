@@ -844,5 +844,10 @@ void main() {
     await exerciseCubit.updateEquipmentFavorite(id, false);
     expect(exerciseCubit.state.equipments, isEmpty);
     expect(exerciseCubit.state.equipmentPagination.total, 0);
+
+    await exerciseCubit.updateEquipmentFavorite(id, true);
+    expect(exerciseCubit.state.equipments.length, 1);
+    expect(exerciseCubit.state.equipments.single.id, id);
+    expect(exerciseCubit.state.equipmentPagination.total, 1);
   });
 }

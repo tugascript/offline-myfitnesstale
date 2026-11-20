@@ -20,6 +20,7 @@ import 'dart:math';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:logging/logging.dart';
 
+import '../../../data/repositories/exercises/dtos/equipment_dto.dart';
 import '../../../data/repositories/exercises/exercise_repository.dart';
 import '../../../data/repositories/exercises/inputs/equipment_input.dart';
 import '../../../data/repositories/exercises/inputs/exercise_input.dart';
@@ -729,25 +730,58 @@ class ExerciseCubit extends Cubit<ExerciseState>
       if (isClosed) return;
       final selected = state.selectedEquipment;
       final pagination = state.equipmentPagination;
-      final removedFromFavorites = pagination.isFavorite && !isFavorite;
-      final wasInList =
-          removedFromFavorites && state.equipments.any((e) => e.id == id);
-      final updatedEquipments = removedFromFavorites
-          ? state.equipments.where((e) => e.id != id).toList()
-          : state.equipments
-                .map((e) => e.id == id ? updatedEquipment : e)
-                .toList();
+      List<EquipmentDto>? refreshedEquipments;
+      EquipmentPagination? refreshedPagination;
+
+      if (pagination.isFavorite) {
+        final equipmentsResult = await _exerciseService.getEquipments(
+          name: pagination.name,
+          rarity: pagination.rarity,
+          isFavorite: pagination.isFavorite,
+          createdBy: pagination.createdBy,
+          limit: pagination.limit,
+          offset: 0,
+        );
+        if (isClosed) return;
+        if (equipmentsResult.isOk()) {
+          refreshedEquipments = equipmentsResult.value.data;
+          refreshedPagination = pagination.copyWith(
+            offset: 0,
+            total: equipmentsResult.value.total,
+          );
+        } else {
+          _logger.warning(
+            'Failed to refresh favorite equipments after toggle: ${equipmentsResult.error}',
+          );
+          final wasInList = state.equipments.any((e) => e.id == id);
+          refreshedEquipments = !isFavorite
+              ? state.equipments.where((e) => e.id != id).toList()
+              : wasInList
+              ? state.equipments
+                    .map((e) => e.id == id ? updatedEquipment : e)
+                    .toList()
+              : [updatedEquipment, ...state.equipments];
+          refreshedPagination = pagination.copyWith(
+            total: !isFavorite && wasInList && pagination.total > 0
+                ? pagination.total - 1
+                : isFavorite && !wasInList
+                ? pagination.total + 1
+                : pagination.total,
+          );
+        }
+      } else {
+        refreshedEquipments = state.equipments
+            .map((e) => e.id == id ? updatedEquipment : e)
+            .toList();
+      }
+
       emit(
         state.copyWith(
           selectedEquipment: selected?.equipment.id == id
               ? Nullable(selected!.copyWith(equipment: updatedEquipment))
               : null,
-          equipments: updatedEquipments,
-          equipmentPagination: wasInList
-              ? pagination.copyWith(
-                  total: pagination.total > 0 ? pagination.total - 1 : 0,
-                )
-              : null,
+          equipments: refreshedEquipments,
+          equipmentPagination: refreshedPagination,
           isLoading: false,
           error: const Nullable(null),
         ),
