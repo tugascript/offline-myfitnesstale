@@ -543,7 +543,12 @@ void main() {
             ),
           );
           await tester.pumpAndSettle();
-          expect(tester.takeException(), isNull);
+          final err = tester.takeException();
+          if (err is FlutterError) {
+            // ignore: avoid_print
+            print('ERR [$width, $scale]:\n${err.toStringDeep()}');
+          }
+          expect(err, isNull);
           if (entry.key == 'meal-log dialog') {
             final foodSelector = find.byKey(
               const ValueKey('log-food-select-dropdown'),

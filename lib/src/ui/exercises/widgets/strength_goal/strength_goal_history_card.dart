@@ -29,8 +29,8 @@ import '../../../core/widgets/layout/delete_icon_button.dart';
 import '../../../core/widgets/layout/edit_icon_button.dart';
 import '../../../core/widgets/layout/list_card.dart';
 import '../../../core/widgets/progress_status_badge.dart';
-import '../exercise_record_reps.dart';
 import '../../view_models/exercise_record_cubit.dart';
+import '../exercise_record_reps.dart';
 import '../max_strength_label.dart';
 import '../records/editors/create_exercise_record_modal.dart';
 import '../relative_date_label.dart';
@@ -111,11 +111,9 @@ class StrengthGoalHistoryCard extends StatelessWidget {
           ],
           SizedBox(height: sizes.spacing),
         ],
-        Wrap(
-          alignment: WrapAlignment.spaceBetween,
-          crossAxisAlignment: WrapCrossAlignment.center,
-          spacing: sizes.spacing,
-          runSpacing: sizes.halfSpacing,
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             FittedBox(
               fit: BoxFit.scaleDown,
