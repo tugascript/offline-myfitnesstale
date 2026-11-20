@@ -23,6 +23,7 @@ import '../../../../data/utils/enums.dart';
 import '../../../core/sizes/data_display_sizes.dart';
 import '../../view_models/exercise_record_cubit.dart';
 import '../../view_models/states/exercise_record_state.dart';
+import '../progress/exercise_progress_error_card.dart';
 import './editors/update_exercise_record_card.dart';
 import './empty_exercise_record.dart';
 import './latest_exercise_record_card.dart';
@@ -65,6 +66,19 @@ class _LatestExerciseRecordState extends State<LatestExerciseRecord> {
             state.latestExerciseRecord?.exerciseId == widget.exercise.id
             ? state.latestExerciseRecord
             : null;
+
+        if (!isLoading && state.error != null && record == null) {
+          return ExerciseProgressErrorCard(
+            theme: widget.theme,
+            sizes: widget.sizes,
+            message: state.error!.description,
+            onRetry: () {
+              context.read<ExerciseRecordCubit>().getLatestExerciseRecord(
+                widget.exercise.id,
+              );
+            },
+          );
+        }
 
         if (!isLoading && record == null) {
           return EmptyExerciseRecord(

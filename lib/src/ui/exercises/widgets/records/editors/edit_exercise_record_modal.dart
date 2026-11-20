@@ -71,9 +71,10 @@ class EditExerciseRecordModal extends StatelessWidget {
               required int reps,
               required DateTime date,
             }) async {
+              final cubit = context.read<ExerciseRecordCubit>();
               final existingPicture = record.picture;
               final existingVideo = record.video;
-              await context.read<ExerciseRecordCubit>().updateExerciseRecord(
+              await cubit.updateExerciseRecord(
                 record.id,
                 ExerciseRecordInput(
                   exerciseId: exerciseId,
@@ -98,6 +99,9 @@ class EditExerciseRecordModal extends StatelessWidget {
                   ),
                 ),
               );
+              if (cubit.state.error != null) {
+                return;
+              }
               if (context.mounted) {
                 Navigator.pop(context);
               }

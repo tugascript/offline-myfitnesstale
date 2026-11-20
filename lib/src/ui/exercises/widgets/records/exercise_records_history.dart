@@ -29,6 +29,7 @@ import '../../../core/widgets/layout/app_text_form_field.dart';
 import '../../../core/widgets/not_found_list.dart';
 import '../../view_models/exercise_record_cubit.dart';
 import '../../view_models/states/exercise_record_state.dart';
+import '../progress/exercise_progress_error_card.dart';
 import './exercise_records_chart.dart';
 import './exercise_records_list.dart';
 
@@ -205,6 +206,22 @@ class _ExerciseRecordsHistoryState extends State<ExerciseRecordsHistory> {
                 state.recordPagination.exerciseId == widget.exercise.id
                 ? state.exerciseRecords
                 : const <ExerciseRecordDto>[];
+
+            if (!state.isLoading && state.error != null && records.isEmpty) {
+              return ExerciseProgressErrorCard(
+                theme: widget.theme,
+                sizes: widget.sizes,
+                message: state.error!.description,
+                onRetry: () {
+                  context.read<ExerciseRecordCubit>().getExerciseRecords(
+                    dateRange: (_dateRange.start, _dateRange.end),
+                    exerciseId: widget.exercise.id,
+                    limit: 1000,
+                    offset: 0,
+                  );
+                },
+              );
+            }
 
             if (!state.isLoading && records.isEmpty) {
               return NotFoundList(

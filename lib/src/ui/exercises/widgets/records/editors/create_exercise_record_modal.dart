@@ -64,16 +64,18 @@ class CreateExerciseRecordModal extends StatelessWidget {
                   required int reps,
                   required DateTime date,
                 }) async {
-                  await context
-                      .read<ExerciseRecordCubit>()
-                      .createExerciseRecord(
-                        ExerciseRecordInput(
-                          exerciseId: exerciseId,
-                          weight: weight,
-                          reps: reps,
-                          recordDate: date,
-                        ),
-                      );
+                  final cubit = context.read<ExerciseRecordCubit>();
+                  await cubit.createExerciseRecord(
+                    ExerciseRecordInput(
+                      exerciseId: exerciseId,
+                      weight: weight,
+                      reps: reps,
+                      recordDate: date,
+                    ),
+                  );
+                  if (cubit.state.error != null) {
+                    return;
+                  }
                   if (context.mounted) {
                     Navigator.pop(context);
                   }
