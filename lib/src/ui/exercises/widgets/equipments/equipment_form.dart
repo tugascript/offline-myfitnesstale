@@ -15,6 +15,7 @@
 // You should have received a copy of the GNU General Public License
 // along with My Fitness Tale.  If not, see <https://www.gnu.org/licenses/>.
 
+import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:image_picker/image_picker.dart';
@@ -52,7 +53,7 @@ class EquipmentForm extends StatefulWidget {
   final LocalFileStorageService? storageService;
   final EquipmentImagePicker? pickImageBytes;
   final EquipmentPictureEditor? editPictureBytes;
-  final void Function({
+  final FutureOr<void> Function({
     required String name,
     required EquipmentRarity rarity,
     required PictureData? picture,
@@ -94,6 +95,9 @@ class _EquipmentFormState extends State<EquipmentForm> {
   Uint8List? _uploadedBytes;
   String? _uploadError;
   bool _isPickingOrEditing = false;
+  bool _isSubmitting = false;
+
+  bool get _isBusy => widget.isLoading || _isPickingOrEditing || _isSubmitting;
 
   LocalFileStorageService get _storageService =>
       widget.storageService ?? LocalFileStorageService.create();
@@ -140,7 +144,7 @@ class _EquipmentFormState extends State<EquipmentForm> {
   }
 
   Future<void> _pickAndEdit(ImageSource source) async {
-    if (widget.isLoading || _isPickingOrEditing) return;
+    if (_isBusy) return;
 
     setState(() {
       _isPickingOrEditing = true;
@@ -181,7 +185,7 @@ class _EquipmentFormState extends State<EquipmentForm> {
   }
 
   Future<void> _recropCurrentPhoto() async {
-    if (widget.isLoading || _isPickingOrEditing) return;
+    if (_isBusy) return;
 
     Uint8List? sourceBytes = _rawPickedBytes ?? _uploadedBytes;
     if (sourceBytes == null &&
@@ -240,7 +244,9 @@ class _EquipmentFormState extends State<EquipmentForm> {
     });
   }
 
-  void _handleSubmit() {
+  Future<void> _handleSubmit() async {
+    if (_isBusy) return;
+
     final isFormValid = _formKey.currentState!.validate();
     if (_sourceMode == _PictureSourceMode.upload &&
         _uploadedBytes == null &&
@@ -283,17 +289,29 @@ class _EquipmentFormState extends State<EquipmentForm> {
         }
     }
 
-    widget.onSubmit(
-      name: _name.trim(),
-      rarity: _rarity,
-      picture: picture,
-      uploadedPictureBytes: uploadedBytes,
-    );
+    setState(() {
+      _isSubmitting = true;
+    });
+
+    try {
+      await widget.onSubmit(
+        name: _name.trim(),
+        rarity: _rarity,
+        picture: picture,
+        uploadedPictureBytes: uploadedBytes,
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSubmitting = false;
+        });
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final isBusy = widget.isLoading || _isPickingOrEditing;
+    final isBusy = _isBusy;
     final isDarkTheme = widget.theme.brightness == Brightness.dark;
     final urlText = _urlController.text.trim();
     final hasValidPreviewUrl = PictureUtils.isValidNetworkUrl(urlText);
