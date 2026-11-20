@@ -37,6 +37,7 @@ class ExerciseRecordCard extends StatelessWidget {
   final Units units;
   final ExerciseDto exercise;
   final ExerciseRecordDto record;
+  final bool isLoading;
 
   const ExerciseRecordCard({
     super.key,
@@ -45,6 +46,7 @@ class ExerciseRecordCard extends StatelessWidget {
     required this.units,
     required this.exercise,
     required this.record,
+    this.isLoading = false,
   });
 
   @override
@@ -105,14 +107,14 @@ class ExerciseRecordCard extends StatelessWidget {
                     EditIconButton(
                       sizes: sizes,
                       small: true,
-                      isLoading: false,
+                      isLoading: isLoading,
                       onEdit: () {
                         showDialog(
                           context: context,
                           builder: (context) => EditExerciseRecordModal(
                             theme: theme,
                             sizes: sizes,
-                            isLoading: false,
+                            isLoading: isLoading,
                             exercise: exercise,
                             units: units,
                             record: record,
@@ -123,7 +125,7 @@ class ExerciseRecordCard extends StatelessWidget {
                     DeleteIconButton(
                       sizes: sizes,
                       small: true,
-                      isLoading: false,
+                      isLoading: isLoading,
                       onDelete: () {
                         showDialog(
                           context: context,

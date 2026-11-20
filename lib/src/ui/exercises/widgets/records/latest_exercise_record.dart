@@ -111,6 +111,7 @@ class _LatestExerciseRecordState extends State<LatestExerciseRecord> {
           theme: widget.theme,
           units: widget.units,
           isLoading: isLoading,
+          isMutating: state.isLoading,
           exercise: widget.exercise,
           exerciseRecord: record,
           onEdit: () {

@@ -244,6 +244,7 @@ class _ExerciseRecordsHistoryState extends State<ExerciseRecordsHistory> {
                       exercise: widget.exercise,
                       records: records,
                       isLoading: isLoading,
+                      isMutating: state.isLoading,
                     )
                   : Card(
                       margin: EdgeInsets.zero,

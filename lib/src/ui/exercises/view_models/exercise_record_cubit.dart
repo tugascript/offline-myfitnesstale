@@ -338,12 +338,27 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
         .where((r) => r.id != id)
         .toList();
     var latestRecord = state.latestExerciseRecord;
+    ErrorState? nextLatestError;
     if (latestRecord?.id == id) {
       final latestResult = await _exerciseRecordService.getLatestRecord(
         state.recordPagination.exerciseId ?? latestRecord!.exerciseId,
       );
       if (isClosed) return;
-      latestRecord = latestResult.isOk() ? latestResult.value : null;
+      if (latestResult.isOk()) {
+        latestRecord = latestResult.value;
+      } else if (latestResult.error.type == SingleErrorTypes.notFound) {
+        latestRecord = null;
+      } else {
+        _logger.warning(
+          "Failed to fetch latest exercise record after delete",
+          latestResult.error,
+        );
+        latestRecord = null;
+        nextLatestError = ErrorState(
+          type: latestResult.error.type.name,
+          description: "Failed to get latest exercise record",
+        );
+      }
     }
     emit(
       state.copyWith(
@@ -359,8 +374,9 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
               : state.recordPagination.total,
         ),
         latestExerciseRecord: Nullable(latestRecord),
+        latestError: Nullable(nextLatestError),
         isLoading: false,
-        error: const Nullable(null),
+        error: Nullable(nextLatestError),
       ),
     );
   }

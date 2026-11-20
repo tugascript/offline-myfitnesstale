@@ -27,6 +27,7 @@ import '../../../../../utils/nullable.dart';
 import '../../../../core/sizes/data_display_sizes.dart';
 import '../../../../core/widgets/layout/app_modal.dart';
 import '../../../view_models/exercise_record_cubit.dart';
+import '../../../view_models/states/exercise_record_state.dart';
 import './exercise_record_form.dart';
 
 class EditExerciseRecordModal extends StatelessWidget {
@@ -53,57 +54,59 @@ class EditExerciseRecordModal extends StatelessWidget {
     return AppModal(
       theme: theme,
       sizes: sizes,
-      child: ExerciseRecordForm(
-        theme: theme,
-        sizes: sizes,
-        isLoading: isLoading,
-        submitLabel: "UPDATE ${exercise.name} RECORD",
-        submitIcon: Icons.save,
-        units: units,
-        exerciseId: exercise.id,
-        initialDate: record.recordDate,
-        initialWeight: record.weight,
-        initialReps: record.reps,
-        onSubmit:
-            ({
-              required int exerciseId,
-              required int weight,
-              required int reps,
-              required DateTime date,
-            }) async {
-              final existingPicture = record.picture;
-              final existingVideo = record.video;
-              final updated = await context
-                  .read<ExerciseRecordCubit>()
-                  .updateExerciseRecord(
-                    record.id,
-                    ExerciseRecordInput(
-                      exerciseId: exerciseId,
-                      weight: weight,
-                      reps: reps,
-                      recordDate: date,
-                      picture: Nullable(
-                        existingPicture != null
-                            ? PictureData(
-                                uri: existingPicture.uri,
-                                storage: existingPicture.storage,
-                              )
-                            : null,
+      child: BlocBuilder<ExerciseRecordCubit, ExerciseRecordState>(
+        builder: (context, state) => ExerciseRecordForm(
+          theme: theme,
+          sizes: sizes,
+          isLoading: isLoading || state.isLoading,
+          submitLabel: "UPDATE ${exercise.name} RECORD",
+          submitIcon: Icons.save,
+          units: units,
+          exerciseId: exercise.id,
+          initialDate: record.recordDate,
+          initialWeight: record.weight,
+          initialReps: record.reps,
+          onSubmit:
+              ({
+                required int exerciseId,
+                required int weight,
+                required int reps,
+                required DateTime date,
+              }) async {
+                final existingPicture = record.picture;
+                final existingVideo = record.video;
+                final updated = await context
+                    .read<ExerciseRecordCubit>()
+                    .updateExerciseRecord(
+                      record.id,
+                      ExerciseRecordInput(
+                        exerciseId: exerciseId,
+                        weight: weight,
+                        reps: reps,
+                        recordDate: date,
+                        picture: Nullable(
+                          existingPicture != null
+                              ? PictureData(
+                                  uri: existingPicture.uri,
+                                  storage: existingPicture.storage,
+                                )
+                              : null,
+                        ),
+                        video: Nullable(
+                          existingVideo != null
+                              ? VideoData(
+                                  uri: existingVideo.uri,
+                                  platform: existingVideo.platform,
+                                )
+                              : null,
+                        ),
                       ),
-                      video: Nullable(
-                        existingVideo != null
-                            ? VideoData(
-                                uri: existingVideo.uri,
-                                platform: existingVideo.platform,
-                              )
-                            : null,
-                      ),
-                    ),
-                  );
-              if (updated && context.mounted) {
-                Navigator.pop(context);
-              }
-            },
+                    );
+                if (updated && context.mounted) {
+                  Navigator.pop(context);
+                }
+              },
+        ),
       ),
     );
   }
