@@ -27,6 +27,7 @@ import '../../../core/widgets/layout/app_text_form_field.dart';
 import '../../../core/widgets/not_found_list.dart';
 import '../../view_models/exercise_record_cubit.dart';
 import '../../view_models/states/exercise_record_state.dart';
+import './exercise_progress_error_card.dart';
 import './exercise_progress_records_list.dart';
 
 class ExerciseProgressHistory extends StatefulWidget {
@@ -142,6 +143,15 @@ class _ExerciseProgressHistoryState extends State<ExerciseProgressHistory> {
     }
   }
 
+  void _retryLoad() {
+    _refetchTriggered = false;
+    context.read<ExerciseRecordCubit>().getExerciseRecords(
+      dateRange: (widget.dateRange.start, widget.dateRange.end),
+      limit: ExerciseProgressHistory.pageSize,
+      offset: 0,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final dateRangeText =
@@ -203,6 +213,16 @@ class _ExerciseProgressHistoryState extends State<ExerciseProgressHistory> {
                 ? state.exerciseRecords
                 : const <ExerciseRecordDto>[];
             final effectiveLoading = isLoading || _waitingForPostFrame;
+            if (!effectiveLoading &&
+                state.error != null &&
+                (isScoped || records.isEmpty)) {
+              return ExerciseProgressErrorCard(
+                theme: widget.theme,
+                sizes: widget.sizes,
+                message: state.error!.description,
+                onRetry: _retryLoad,
+              );
+            }
             if (!effectiveLoading && records.isEmpty) {
               return NotFoundList(
                 height: widget.breakPoint.height / 3,

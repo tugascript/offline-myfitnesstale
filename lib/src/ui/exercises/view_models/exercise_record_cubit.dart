@@ -185,13 +185,19 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
     }
 
     final record = result.value;
+    await _syncRecordMutationState(record);
+  }
+
+  Future<void> _syncRecordMutationState(ExerciseRecordDto record) async {
     final currentPagination = state.recordPagination;
     final shouldRefreshRecords =
         currentPagination.exerciseId == null ||
-        currentPagination.exerciseId == input.exerciseId;
+        currentPagination.exerciseId == record.exerciseId;
 
     List<ExerciseRecordDto>? refreshedRecords;
     ExerciseRecordPagination? refreshedPagination;
+    ErrorState? refreshError;
+
     if (shouldRefreshRecords) {
       final recordsResult = await _exerciseRecordService.getExerciseRecords(
         exerciseId: currentPagination.exerciseId,
@@ -203,46 +209,44 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
       if (recordsResult.isErr()) {
         final error = recordsResult.error;
         _logger.warning("Failed to get exercise records", error);
-        switch (error.type) {
-          case SingleErrorTypes.notFound:
-          case SingleErrorTypes.invalidInput:
-          case SingleErrorTypes.operationFailure:
-            emit(
-              state.copyWith(
-                error: Nullable(
-                  ErrorState(
-                    type: error.type.name,
-                    description: "Failed to get exercise records",
-                  ),
-                ),
-                isLoading: false,
-              ),
-            );
-            return;
-        }
+        refreshError = ErrorState(
+          type: error.type.name,
+          description: "Failed to get exercise records",
+        );
+      } else {
+        final paginatedData = recordsResult.value;
+        refreshedRecords = paginatedData.data;
+        refreshedPagination = currentPagination.copyWith(
+          limit: paginatedData.limit,
+          offset: paginatedData.offset,
+          total: paginatedData.total,
+        );
       }
-
-      final paginatedData = recordsResult.value;
-      refreshedRecords = paginatedData.data;
-      refreshedPagination = currentPagination.copyWith(
-        limit: paginatedData.limit,
-        offset: paginatedData.offset,
-        total: paginatedData.total,
-      );
     }
 
     final shouldRefreshLatest =
         state.latestExerciseId == null ||
-        state.latestExerciseId == input.exerciseId;
+        state.latestExerciseId == record.exerciseId;
     Nullable<ExerciseRecordDto>? refreshedLatest;
     if (shouldRefreshLatest) {
       final latestResult = await _exerciseRecordService.getLatestRecord(
         state.latestExerciseId,
       );
       if (isClosed) return;
-      refreshedLatest = Nullable(
-        latestResult.isOk() ? latestResult.value : record,
-      );
+      if (latestResult.isOk()) {
+        refreshedLatest = Nullable(latestResult.value);
+      } else if (latestResult.error.type == SingleErrorTypes.notFound) {
+        refreshedLatest = const Nullable(null);
+      } else {
+        _logger.warning(
+          "Failed to fetch latest exercise record",
+          latestResult.error,
+        );
+        refreshError ??= ErrorState(
+          type: latestResult.error.type.name,
+          description: "Failed to get latest exercise record",
+        );
+      }
     }
 
     emit(
@@ -252,7 +256,7 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
         recordPagination: refreshedPagination,
         latestExerciseRecord: refreshedLatest,
         isLoading: false,
-        error: const Nullable(null),
+        error: Nullable(refreshError),
       ),
     );
     await _refreshStrengthGoals();
@@ -287,59 +291,7 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
 
     _logger.info("Exercise record updated successfully");
     final exerciseRecord = result.value;
-    final currentPagination = state.recordPagination;
-    final targetExerciseId = currentPagination.exerciseId == null
-        ? null
-        : input.exerciseId;
-    final recordsResult = await _exerciseRecordService.getExerciseRecords(
-      exerciseId: targetExerciseId,
-      limit: currentPagination.limit,
-      dateRange: currentPagination.dateRange,
-    );
-    if (recordsResult.isErr()) {
-      final error = recordsResult.error;
-      _logger.warning("Failed to get exercise records", error);
-      switch (error.type) {
-        case SingleErrorTypes.notFound:
-        case SingleErrorTypes.invalidInput:
-        case SingleErrorTypes.operationFailure:
-          emit(
-            state.copyWith(
-              error: Nullable(
-                ErrorState(
-                  type: error.type.name,
-                  description: "Failed to get exercise records",
-                ),
-              ),
-              isLoading: false,
-            ),
-          );
-          return;
-      }
-    }
-
-    final latestResult = await _exerciseRecordService.getLatestRecord(
-      currentPagination.exerciseId ?? exerciseRecord.exerciseId,
-    );
-    if (isClosed) return;
-
-    final paginatedData = recordsResult.value;
-    final latestRecord = latestResult.isOk() ? latestResult.value : null;
-    emit(
-      state.copyWith(
-        exerciseRecords: paginatedData.data,
-        recordPagination: state.recordPagination.copyWith(
-          limit: paginatedData.limit,
-          offset: paginatedData.offset,
-          total: paginatedData.total,
-        ),
-        selectedExerciseRecord: Nullable(exerciseRecord),
-        latestExerciseRecord: Nullable(latestRecord),
-        isLoading: false,
-        error: const Nullable(null),
-      ),
-    );
-    await _refreshStrengthGoals();
+    await _syncRecordMutationState(exerciseRecord);
   }
 
   Future<void> deleteExerciseRecord(int id) async {

@@ -34,9 +34,12 @@ import 'package:myfitnesstale/src/data/utils/enums.dart';
 import 'package:myfitnesstale/src/data/utils/json_data.dart';
 import 'package:myfitnesstale/src/ui/core/sizes/data_display_sizes.dart';
 import 'package:myfitnesstale/src/ui/core/sizes/screen_size.dart';
+import 'package:myfitnesstale/src/ui/core/view_models/states/common_state.dart';
 import 'package:myfitnesstale/src/ui/core/widgets/layout/app_icon_button.dart';
 import 'package:myfitnesstale/src/ui/exercises/view_models/exercise_record_cubit.dart';
 import 'package:myfitnesstale/src/ui/exercises/view_models/states/exercise_record_state.dart';
+import 'package:myfitnesstale/src/ui/exercises/widgets/progress/exercise_progress_error_card.dart';
+import 'package:myfitnesstale/src/ui/exercises/widgets/progress/exercise_progress_history.dart';
 import 'package:myfitnesstale/src/ui/exercises/widgets/progress/exercise_progress_records_list.dart';
 import 'package:myfitnesstale/src/ui/exercises/widgets/progress/latest_exercise_progress_record.dart';
 import 'package:myfitnesstale/src/ui/exercises/widgets/records/exercise_records_history.dart';
@@ -50,19 +53,46 @@ class _ControlledExerciseRecordCubit extends ExerciseRecordCubit {
     ExerciseRecordState initialState, {
     this.pendingLatest,
     this.pendingRecords,
+    this.failLatest = false,
+    this.failRecords = false,
   }) : super(exerciseRecordRepository: ExerciseRecordRepository.create()) {
     emit(initialState);
   }
 
   final Completer<void>? pendingLatest;
   final Completer<void>? pendingRecords;
+  bool failLatest;
+  bool failRecords;
+  int latestCalls = 0;
+  int listCalls = 0;
 
   @override
   Future<void> getLatestExerciseRecord([int? exerciseId]) async {
+    latestCalls++;
     emit(state.copyWith(isLoadingLatest: true));
     await pendingLatest?.future;
     if (isClosed) return;
-    emit(state.copyWith(isLoadingLatest: false));
+    if (failLatest) {
+      emit(
+        state.copyWith(
+          isLoadingLatest: false,
+          error: const Nullable(
+            ErrorState(
+              type: 'operationFailure',
+              description: 'Failed to get latest exercise record',
+            ),
+          ),
+        ),
+      );
+      return;
+    }
+    emit(
+      state.copyWith(
+        isLoadingLatest: false,
+        latestExerciseId: Nullable(exerciseId),
+        error: const Nullable(null),
+      ),
+    );
   }
 
   @override
@@ -72,6 +102,7 @@ class _ControlledExerciseRecordCubit extends ExerciseRecordCubit {
     (DateTime start, DateTime end)? dateRange,
     int? exerciseId,
   }) async {
+    listCalls++;
     emit(
       state.copyWith(
         isLoadingRecords: true,
@@ -80,6 +111,20 @@ class _ControlledExerciseRecordCubit extends ExerciseRecordCubit {
     );
     await pendingRecords?.future;
     if (isClosed) return;
+    if (failRecords) {
+      emit(
+        state.copyWith(
+          isLoadingRecords: false,
+          error: const Nullable(
+            ErrorState(
+              type: 'operationFailure',
+              description: 'Failed to get exercise records',
+            ),
+          ),
+        ),
+      );
+      return;
+    }
     emit(
       state.copyWith(
         isLoadingRecords: false,
@@ -87,6 +132,7 @@ class _ControlledExerciseRecordCubit extends ExerciseRecordCubit {
           exerciseId: Nullable(exerciseId),
           dateRange: Nullable(dateRange),
         ),
+        error: const Nullable(null),
       ),
     );
   }
@@ -488,6 +534,7 @@ void main() {
       ).toMap(),
     );
 
+    await cubit.getLatestExerciseRecord(benchId);
     await cubit.getExerciseRecords(
       exerciseId: benchId,
       dateRange: (DateTime.utc(2025, 1, 1), DateTime.utc(2025, 12, 31)),
@@ -570,6 +617,79 @@ void main() {
       );
       expect(goalRows.single[StrengthGoalColumns.status.name], 'completed');
       expect(cubit.state.activeStrengthGoal, isNull);
+    },
+  );
+
+  testWidgets(
+    'Progress widgets show retry card when scoped refetch fails and recover on retry',
+    (tester) async {
+      final cubit = _ControlledExerciseRecordCubit(
+        ExerciseRecordState.initial().copyWith(
+          latestExerciseRecord: Nullable(recordA),
+          latestExerciseId: const Nullable(1),
+          exerciseRecords: [recordA],
+          recordPagination: const ExerciseRecordPagination(
+            exerciseId: 1,
+            limit: 20,
+            offset: 0,
+            total: 1,
+          ),
+        ),
+        failLatest: true,
+        failRecords: true,
+      );
+      addTearDown(cubit.close);
+
+      final sizes = DataDisplaySizes.getDataDisplaySizes(ScreenSize.xs);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: BlocProvider<ExerciseRecordCubit>.value(
+              value: cubit,
+              child: Column(
+                children: [
+                  LatestExerciseProgressRecord(
+                    theme: ThemeData.light(),
+                    sizes: sizes,
+                    units: Units.metric,
+                    onOpenExerciseRecords: (_) async {},
+                  ),
+                  Expanded(
+                    child: ExerciseProgressHistory(
+                      theme: ThemeData.light(),
+                      breakPoint: testBreakPoint,
+                      sizes: sizes,
+                      units: Units.metric,
+                      dateRange: DateTimeRange(
+                        start: DateTime(2026, 1, 1),
+                        end: DateTime(2026, 3, 1),
+                      ),
+                      onDateRangeChanged: (_) {},
+                      onOpenExerciseRecords: (_) async {},
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byType(ExerciseProgressErrorCard), findsNWidgets(2));
+      expect(find.text('Empty history'), findsNothing);
+      expect(find.text('No exercise records'), findsNothing);
+
+      cubit.failLatest = false;
+      cubit.failRecords = false;
+      final retries = find.text('RETRY');
+      expect(retries, findsNWidgets(2));
+      await tester.tap(retries.first);
+      await tester.tap(retries.last);
+      await tester.pumpAndSettle();
+
+      expect(find.byType(ExerciseProgressErrorCard), findsNothing);
     },
   );
 }
