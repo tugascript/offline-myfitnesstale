@@ -36,6 +36,7 @@ import 'package:myfitnesstale/src/data/utils/json_data.dart';
 import 'package:myfitnesstale/src/ui/core/sizes/data_display_sizes.dart';
 import 'package:myfitnesstale/src/ui/core/sizes/screen_size.dart';
 import 'package:myfitnesstale/src/ui/core/utils/formatters.dart';
+import 'package:myfitnesstale/src/routing/routes.dart';
 import 'package:myfitnesstale/src/ui/core/view_models/states/common_state.dart';
 import 'package:myfitnesstale/src/ui/core/widgets/layout/app_text_button.dart';
 import 'package:myfitnesstale/src/ui/core/widgets/layout/list_card.dart';
@@ -880,7 +881,7 @@ void main() {
   );
 
   testWidgets(
-    'ExerciseDetailScreen Create Goal button uses trophy icon, hides exercise dropdown, creates goal, and pushes to records page',
+    'ExerciseDetailScreen Create Goal button uses trophy icon, hides exercise dropdown, creates goal, and pushes to strength goals page',
     (tester) async {
       final exercise = _sampleExercise(id: 33, name: 'Overhead Press');
       final exerciseCubit = _FakeExerciseCubit(initialExercise: exercise);
@@ -898,10 +899,9 @@ void main() {
             builder: (_, _) => const ExerciseDetailScreen(exerciseId: 33),
           ),
           GoRoute(
-            path: '/exercises/:id/records',
-            builder: (_, state) => Scaffold(
-              body: Text('Records for ${state.pathParameters['id']}'),
-            ),
+            path: Routes.strengthGoals.name,
+            builder: (_, _) =>
+                const Scaffold(body: Text('Strength Goals Destination')),
           ),
         ],
       );
@@ -961,12 +961,12 @@ void main() {
       expect(recordCubit.createdStrengthGoals.first.targetReps, 5);
       expect(recordCubit.createdStrengthGoals.first.targetMaxStrength, 93333);
       expect(find.byType(CreateStrengthGoalModal), findsNothing);
-      expect(find.text('Records for 33'), findsOneWidget);
+      expect(find.text('Strength Goals Destination'), findsOneWidget);
     },
   );
 
   testWidgets(
-    'ExerciseDetailScreen cancelling CreateStrengthGoalModal does not push to records page',
+    'ExerciseDetailScreen cancelling CreateStrengthGoalModal does not push to strength goals page',
     (tester) async {
       final exercise = _sampleExercise(id: 34, name: 'Barbell Squat');
       final exerciseCubit = _FakeExerciseCubit(initialExercise: exercise);
@@ -984,10 +984,9 @@ void main() {
             builder: (_, _) => const ExerciseDetailScreen(exerciseId: 34),
           ),
           GoRoute(
-            path: '/exercises/:id/records',
-            builder: (_, state) => Scaffold(
-              body: Text('Records for ${state.pathParameters['id']}'),
-            ),
+            path: Routes.strengthGoals.name,
+            builder: (_, _) =>
+                const Scaffold(body: Text('Strength Goals Destination')),
           ),
         ],
       );
@@ -1018,7 +1017,7 @@ void main() {
 
       expect(find.byType(CreateStrengthGoalModal), findsNothing);
       expect(recordCubit.createdStrengthGoals, isEmpty);
-      expect(find.text('Records for 34'), findsNothing);
+      expect(find.text('Strength Goals Destination'), findsNothing);
       expect(find.byType(ExerciseDetailScreen), findsOneWidget);
     },
   );
@@ -1042,10 +1041,9 @@ void main() {
             builder: (_, _) => const ExerciseDetailScreen(exerciseId: 35),
           ),
           GoRoute(
-            path: '/exercises/:id/records',
-            builder: (_, state) => Scaffold(
-              body: Text('Records for ${state.pathParameters['id']}'),
-            ),
+            path: Routes.strengthGoals.name,
+            builder: (_, _) =>
+                const Scaffold(body: Text('Strength Goals Destination')),
           ),
         ],
       );
@@ -1086,7 +1084,7 @@ void main() {
       expect(recordCubit.createdStrengthGoals, hasLength(1));
       expect(find.byType(CreateStrengthGoalModal), findsOneWidget);
       expect(find.text('Failed to create strength goal'), findsOneWidget);
-      expect(find.text('Records for 35'), findsNothing);
+      expect(find.text('Strength Goals Destination'), findsNothing);
     },
   );
 

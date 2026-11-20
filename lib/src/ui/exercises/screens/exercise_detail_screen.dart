@@ -233,12 +233,7 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
                               ),
                             );
                             if (created == true && context.mounted) {
-                              context.push(
-                                Routes.exerciseRecords.name.replaceFirst(
-                                  ':id',
-                                  exercise.id.toString(),
-                                ),
-                              );
+                              context.push(Routes.strengthGoals.name);
                             }
                           },
                           label: 'Create Goal',
