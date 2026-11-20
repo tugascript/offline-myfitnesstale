@@ -126,9 +126,15 @@ transaction and do not schedule reminders.
 ### Equipment, exercises, and progress
 
 - Browses, searches, filters, favorites, creates, edits, and deletes equipment
-  and exercises using shared `EquipmentInput` and `ExerciseInput` PUT semantics (`Nullable<T>` in `copyWith` clears
-  omitted nullable fields and replaces
-  equipment links atomically).
+  (including persisted `equipments.rarity`) and exercises (including persisted
+  `exercises.weight_progress` for positive/negative progression) using modal
+  flows (`CreateEquipmentModal`, `EditEquipmentModal`, `CreateExerciseModal`,
+  `EditExerciseModal`) and shared `EquipmentInput` / `ExerciseInput` PUT
+  semantics (`Nullable<T>` in `copyWith` clears omitted nullable fields and
+  replaces equipment links atomically).
+- Supports local picture upload, cropping/compression, and sandboxed file
+  storage (`LocalFileStorageService`) for equipment, and validated YouTube
+  video IDs for exercises.
 - Maintains exercise/equipment relationships.
 - Exercise details use a reusable, swipeable Diagram/Data carousel. Its clean
   front/back anatomical SVG dynamically paints primary target muscles in dark
@@ -136,13 +142,14 @@ transaction and do not schedule reminders.
   groups, primary and secondary muscles, and equipment. The carousel supports
   responsive sizing, large text, touch indicators, and an optional pixelated
   rendering mode.
-- Creates, edits, deletes, and filters exercise records using shared
-  `ExerciseRecordInput` PUT semantics.
+- Creates, edits, deletes, and filters exercise records via modal/inline editors
+  (`CreateExerciseRecordModal`, `EditExerciseRecordModal`,
+  `UpdateExerciseRecordCard`) using shared `ExerciseRecordInput` PUT semantics.
 - Shows estimated-max progress and kg/lb summaries.
 - Provides aggregate Exercise Progress ordered by exercise name.
 
 Aggregate progress intentionally reads at most the most recent 1,000 exercise
-records. Media fields exist, but there is no picker, upload, or storage flow.
+records.
 
 ### Workouts and history
 
@@ -214,9 +221,15 @@ layers. Historical plan summaries do not expose child-workout detail.
 
 ### Strength goals
 
-- Creates, updates, completes, and deletes strength goals per exercise.
+- Creates, updates, completes, and deletes strength goals per exercise via modal
+  flows (`CreateStrengthGoalModal`, `EditStrengthGoalModal`).
 - Tracks in-progress active goal per exercise separately from historical goals.
 - Completing a goal sets status to completed and sets completion timestamp.
+- Automatically completes matching in-progress goals inside
+  `createExerciseRecord` and `updateExerciseRecord` transactions when
+  `recordDate >= startDate`, `reps >= targetReps`, and `weight` meets
+  `targetWeight` according to the exercise's `weightProgress` (`<=` for
+  `negative`, `>=` for `positive`).
 - Stores weights in grams and calculates target progress.
 - Starting a new strength goal abandons prior in-progress goals for that exercise.
 

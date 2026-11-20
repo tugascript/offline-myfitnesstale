@@ -745,6 +745,24 @@ void main() {
     );
     expect(goalRows.single[StrengthGoalColumns.status.name], 'in_progress');
 
+    // Qualifying record predating goal.startDate (2026-03-01 < 2026-04-01) must NOT complete it
+    final predatingAssist = await repo.createExerciseRecord(
+      ExerciseRecordInput(
+        exerciseId: assistedId,
+        weight: 10000,
+        reps: 8,
+        recordDate: DateTime.utc(2026, 3, 1),
+      ),
+    );
+    expect(predatingAssist.isOk(), isTrue);
+
+    goalRows = await db.query(
+      StrengthGoal.table,
+      where: '${StrengthGoalColumns.id.name} = ?',
+      whereArgs: [goalId],
+    );
+    expect(goalRows.single[StrengthGoalColumns.status.name], 'in_progress');
+
     // 10 kg assistance (less help) MUST complete the 20 kg assistance goal
     final lighterAssist = await repo.createExerciseRecord(
       ExerciseRecordInput(
