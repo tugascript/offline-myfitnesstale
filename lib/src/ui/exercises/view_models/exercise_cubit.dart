@@ -543,7 +543,7 @@ class ExerciseCubit extends Cubit<ExerciseState>
     );
   }
 
-  Future<void> createEquipment(
+  Future<bool> createEquipment(
     EquipmentInput input, [
     CreatedBy createdBy = CreatedBy.user,
   ]) async {
@@ -568,7 +568,7 @@ class ExerciseCubit extends Cubit<ExerciseState>
               isLoading: false,
             ),
           );
-          return;
+          return false;
       }
     }
 
@@ -582,20 +582,19 @@ class ExerciseCubit extends Cubit<ExerciseState>
       offset: 0,
     );
     if (equipmentsResult.isErr()) {
-      final error = equipmentsResult.error;
-      _logger.warning("Failed to get equipments, error: $error");
+      _logger.warning(
+        "Failed to refresh equipments after create, error: ${equipmentsResult.error}",
+      );
       emit(
         state.copyWith(
-          error: Nullable(
-            ErrorState(
-              type: error.type.name,
-              description: "Failed to get equipments",
-            ),
-          ),
           isLoading: false,
+          selectedEquipment: Nullable(
+            SelectedEquipment(equipment: result.value, relatedExercises: []),
+          ),
+          error: const Nullable(null),
         ),
       );
-      return;
+      return true;
     }
 
     final paginatedData = equipmentsResult.value;
@@ -616,6 +615,7 @@ class ExerciseCubit extends Cubit<ExerciseState>
         error: const Nullable(null),
       ),
     );
+    return true;
   }
 
   Future<void> deleteEquipment(int id) async {
@@ -743,7 +743,7 @@ class ExerciseCubit extends Cubit<ExerciseState>
     });
   }
 
-  Future<void> updateEquipment(int id, EquipmentInput input) async {
+  Future<bool> updateEquipment(int id, EquipmentInput input) async {
     _logger.info('updateEquipment: updating equipment');
     emit(state.copyWith(isLoading: true));
 
@@ -764,7 +764,7 @@ class ExerciseCubit extends Cubit<ExerciseState>
               isLoading: false,
             ),
           );
-          return;
+          return false;
         case SingleErrorTypes.invalidInput:
         case SingleErrorTypes.operationFailure:
           emit(
@@ -778,7 +778,7 @@ class ExerciseCubit extends Cubit<ExerciseState>
               isLoading: false,
             ),
           );
-          return;
+          return false;
       }
     }
 
@@ -786,20 +786,9 @@ class ExerciseCubit extends Cubit<ExerciseState>
       id,
     );
     if (exercisesResult.isErr()) {
-      final error = exercisesResult.error;
-      _logger.warning("Failed to get exercises for equipment, error: $error");
-      emit(
-        state.copyWith(
-          error: Nullable(
-            ErrorState(
-              type: error.type.name,
-              description: "Failed to get exercises for equipment",
-            ),
-          ),
-          isLoading: false,
-        ),
+      _logger.warning(
+        "Failed to refresh exercises for equipment after update, error: ${exercisesResult.error}",
       );
-      return;
     }
 
     final pagination = state.equipmentPagination;
@@ -812,20 +801,24 @@ class ExerciseCubit extends Cubit<ExerciseState>
       offset: 0,
     );
     if (equipmentsResult.isErr()) {
-      final error = equipmentsResult.error;
-      _logger.warning("Failed to get equipments, error: $error");
+      _logger.warning(
+        "Failed to refresh equipments after update, error: ${equipmentsResult.error}",
+      );
       emit(
         state.copyWith(
-          error: Nullable(
-            ErrorState(
-              type: error.type.name,
-              description: "Failed to get equipments",
+          isLoading: false,
+          selectedEquipment: Nullable(
+            SelectedEquipment(
+              equipment: result.value,
+              relatedExercises: exercisesResult.isOk()
+                  ? exercisesResult.value
+                  : state.selectedEquipment?.relatedExercises ?? const [],
             ),
           ),
-          isLoading: false,
+          error: const Nullable(null),
         ),
       );
-      return;
+      return true;
     }
 
     final paginatedData = equipmentsResult.value;
@@ -843,12 +836,15 @@ class ExerciseCubit extends Cubit<ExerciseState>
         selectedEquipment: Nullable(
           SelectedEquipment(
             equipment: result.value,
-            relatedExercises: exercisesResult.value,
+            relatedExercises: exercisesResult.isOk()
+                ? exercisesResult.value
+                : state.selectedEquipment?.relatedExercises ?? const [],
           ),
         ),
         error: const Nullable(null),
       ),
     );
+    return true;
   }
 
   Future<void> getSelectionEquipments() async {

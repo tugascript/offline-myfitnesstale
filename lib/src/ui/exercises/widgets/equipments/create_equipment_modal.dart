@@ -84,7 +84,7 @@ class CreateEquipmentModal extends StatelessWidget {
                   );
                 }
 
-                await cubit.createEquipment(
+                final created = await cubit.createEquipment(
                   EquipmentInput(
                     name: name,
                     rarity: rarity,
@@ -92,7 +92,7 @@ class CreateEquipmentModal extends StatelessWidget {
                   ),
                 );
 
-                if (cubit.state.error != null) {
+                if (!created) {
                   if (newlySavedUri != null) {
                     await resolvedStorage.deletePicture(newlySavedUri);
                   }

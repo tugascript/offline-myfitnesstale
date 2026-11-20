@@ -101,7 +101,11 @@ final class ExerciseRecordRepository implements Repository {
           exerciseRecord,
           txn,
         );
-        await _completeMatchingStrengthGoals(txn, input);
+        await _completeMatchingStrengthGoals(
+          txn,
+          input,
+          exercise.weightProgress,
+        );
 
         return recordId;
       });
@@ -397,7 +401,11 @@ final class ExerciseRecordRepository implements Repository {
       );
       await _exerciseRecordDao.startTransaction((txn) async {
         await _exerciseRecordDao.update(updatedExerciseRecord, txn);
-        await _completeMatchingStrengthGoals(txn, input);
+        await _completeMatchingStrengthGoals(
+          txn,
+          input,
+          exercise.weightProgress,
+        );
       });
       _logger.info('Updated exercise record with id $id');
       return ok(
@@ -421,6 +429,7 @@ final class ExerciseRecordRepository implements Repository {
   Future<void> _completeMatchingStrengthGoals(
     Transaction txn,
     ExerciseRecordInput input,
+    ExerciseWeightProgress weightProgress,
   ) async {
     final openGoals = await _strengthGoalDao.selectMany(
       where:
@@ -431,7 +440,10 @@ final class ExerciseRecordRepository implements Repository {
 
     final int now = DateUtilities.getNowUtcUnix();
     for (final goal in openGoals) {
-      if (input.weight >= goal.targetWeight && input.reps >= goal.targetReps) {
+      final bool weightMet = weightProgress == ExerciseWeightProgress.negative
+          ? input.weight <= goal.targetWeight
+          : input.weight >= goal.targetWeight;
+      if (weightMet && input.reps >= goal.targetReps) {
         final completedGoal = goal.copyWith(
           status: ProgressStatus.completed,
           completedAt: Nullable(now),

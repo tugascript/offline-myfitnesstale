@@ -692,4 +692,70 @@ void main() {
       expect(find.byType(ExerciseProgressErrorCard), findsNothing);
     },
   );
+
+  test('negative weightProgress goal completes at <= targetWeight and not at > targetWeight', () async {
+    final testDatabase = TestDatabase();
+    await testDatabase.initialize();
+    addTearDown(testDatabase.destroy);
+
+    final db = await testDatabase.db;
+    final assistedId = await db.insert(
+      Exercise.table,
+      Exercise.create(
+        name: 'Assisted Pull-Up',
+        description: '',
+        muscleGroup: MuscleGroup.pull,
+        muscles: emptyMuscles,
+        weightProgress: ExerciseWeightProgress.negative,
+      ).toMap(),
+    );
+    final goalId = await db.insert(
+      StrengthGoal.table,
+      StrengthGoal.create(
+        exerciseId: assistedId,
+        targetWeight: 20000, // 20 kg assistance
+        targetReps: 8,
+        targetMaxStrength: 25333,
+        startDate: DateUtilities.getDateUnix(DateTime.utc(2026, 4, 1)),
+      ).toMap(),
+    );
+
+    final repo = ExerciseRecordRepository.create();
+
+    // 40 kg assistance (more help) must NOT complete a 20 kg assistance goal
+    final heavierAssist = await repo.createExerciseRecord(
+      ExerciseRecordInput(
+        exerciseId: assistedId,
+        weight: 40000,
+        reps: 8,
+        recordDate: DateTime.utc(2026, 5, 1),
+      ),
+    );
+    expect(heavierAssist.isOk(), isTrue);
+
+    var goalRows = await db.query(
+      StrengthGoal.table,
+      where: '${StrengthGoalColumns.id.name} = ?',
+      whereArgs: [goalId],
+    );
+    expect(goalRows.single[StrengthGoalColumns.status.name], 'in_progress');
+
+    // 10 kg assistance (less help) MUST complete the 20 kg assistance goal
+    final lighterAssist = await repo.createExerciseRecord(
+      ExerciseRecordInput(
+        exerciseId: assistedId,
+        weight: 10000,
+        reps: 8,
+        recordDate: DateTime.utc(2026, 5, 2),
+      ),
+    );
+    expect(lighterAssist.isOk(), isTrue);
+
+    goalRows = await db.query(
+      StrengthGoal.table,
+      where: '${StrengthGoalColumns.id.name} = ?',
+      whereArgs: [goalId],
+    );
+    expect(goalRows.single[StrengthGoalColumns.status.name], 'completed');
+  });
 }
