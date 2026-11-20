@@ -613,6 +613,9 @@ class ExerciseCubit extends Cubit<ExerciseState>
         selectedEquipment: Nullable(
           SelectedEquipment(equipment: result.value, relatedExercises: []),
         ),
+        equipmentSelection: state.equipmentSelection.isNotEmpty
+            ? {...state.equipmentSelection, result.value.id: result.value.name}
+            : null,
         error: const Nullable(null),
       ),
     );
@@ -676,6 +679,9 @@ class ExerciseCubit extends Cubit<ExerciseState>
             ? const Nullable(null)
             : null,
         equipmentPagination: pagination.copyWith(total: pagination.total - 1),
+        equipmentSelection: state.equipmentSelection.isNotEmpty
+            ? (Map<int, String>.of(state.equipmentSelection)..remove(id))
+            : null,
         error: const Nullable(null),
       ),
     );
@@ -861,6 +867,12 @@ class ExerciseCubit extends Cubit<ExerciseState>
                   : state.selectedEquipment?.relatedExercises ?? const [],
             ),
           ),
+          equipmentSelection: state.equipmentSelection.isNotEmpty
+              ? {
+                  ...state.equipmentSelection,
+                  result.value.id: result.value.name,
+                }
+              : null,
           error: const Nullable(null),
         ),
       );
@@ -887,6 +899,9 @@ class ExerciseCubit extends Cubit<ExerciseState>
                 : state.selectedEquipment?.relatedExercises ?? const [],
           ),
         ),
+        equipmentSelection: state.equipmentSelection.isNotEmpty
+            ? {...state.equipmentSelection, result.value.id: result.value.name}
+            : null,
         error: const Nullable(null),
       ),
     );

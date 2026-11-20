@@ -306,6 +306,8 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
   }
 
   Future<void> deleteExerciseRecord(int id) async {
+    final initialRecordsRequestId = state.recordsRequestId;
+    final initialLatestRequestId = state.latestRequestId;
     emit(state.copyWith(isLoading: true));
 
     final result = await _exerciseRecordService.deleteExerciseRecord(id);
@@ -344,10 +346,6 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
       }
     }
 
-    final wasInPage = state.exerciseRecords.any((r) => r.id == id);
-    final updatedRecords = state.exerciseRecords
-        .where((r) => r.id != id)
-        .toList();
     var latestRecord = state.latestExerciseRecord;
     ErrorState? nextLatestError;
     if (latestRecord?.id == id) {
@@ -355,22 +353,33 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
         state.recordPagination.exerciseId ?? latestRecord!.exerciseId,
       );
       if (isClosed) return;
-      if (latestResult.isOk()) {
-        latestRecord = latestResult.value;
-      } else if (latestResult.error.type == SingleErrorTypes.notFound) {
-        latestRecord = null;
-      } else {
-        _logger.warning(
-          "Failed to fetch latest exercise record after delete",
-          latestResult.error,
-        );
-        latestRecord = null;
-        nextLatestError = ErrorState(
-          type: latestResult.error.type.name,
-          description: "Failed to get latest exercise record",
-        );
+      if (state.latestRequestId == initialLatestRequestId) {
+        if (latestResult.isOk()) {
+          latestRecord = latestResult.value;
+        } else if (latestResult.error.type == SingleErrorTypes.notFound) {
+          latestRecord = null;
+        } else {
+          _logger.warning(
+            "Failed to fetch latest exercise record after delete",
+            latestResult.error,
+          );
+          latestRecord = null;
+          nextLatestError = ErrorState(
+            type: latestResult.error.type.name,
+            description: "Failed to get latest exercise record",
+          );
+        }
       }
     }
+
+    final recordsUnchanged = state.recordsRequestId == initialRecordsRequestId;
+    final latestUnchanged = state.latestRequestId == initialLatestRequestId;
+    final wasInPage =
+        recordsUnchanged && state.exerciseRecords.any((r) => r.id == id);
+    final updatedRecords = recordsUnchanged
+        ? state.exerciseRecords.where((r) => r.id != id).toList()
+        : null;
+
     emit(
       state.copyWith(
         exerciseRecords: updatedRecords,
@@ -379,15 +388,17 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
               ? null
               : state.selectedExerciseRecord,
         ),
-        recordPagination: state.recordPagination.copyWith(
-          total: wasInPage && state.recordPagination.total > 0
-              ? state.recordPagination.total - 1
-              : state.recordPagination.total,
-        ),
-        latestExerciseRecord: Nullable(latestRecord),
-        latestError: Nullable(nextLatestError),
+        recordPagination: recordsUnchanged
+            ? state.recordPagination.copyWith(
+                total: wasInPage && state.recordPagination.total > 0
+                    ? state.recordPagination.total - 1
+                    : state.recordPagination.total,
+              )
+            : null,
+        latestExerciseRecord: latestUnchanged ? Nullable(latestRecord) : null,
+        latestError: latestUnchanged ? Nullable(nextLatestError) : null,
         isLoading: false,
-        error: Nullable(nextLatestError),
+        error: latestUnchanged ? Nullable(nextLatestError) : null,
       ),
     );
   }
