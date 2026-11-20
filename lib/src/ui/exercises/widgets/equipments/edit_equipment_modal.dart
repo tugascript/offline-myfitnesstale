@@ -91,7 +91,7 @@ class EditEquipmentModal extends StatelessWidget {
                   );
                 }
 
-                await cubit.updateEquipment(
+                final updated = await cubit.updateEquipment(
                   equipment.id,
                   EquipmentInput(
                     name: name,
@@ -101,7 +101,7 @@ class EditEquipmentModal extends StatelessWidget {
                   ),
                 );
 
-                if (cubit.state.error != null) {
+                if (!updated) {
                   if (newlySavedUri != null) {
                     await resolvedStorage.deletePicture(newlySavedUri);
                   }

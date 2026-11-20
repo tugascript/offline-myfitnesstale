@@ -104,7 +104,7 @@ class _FakeExerciseCubit extends ExerciseCubit {
   Future<void> getEquipment(int id) async {}
 
   @override
-  Future<void> createEquipment(
+  Future<bool> createEquipment(
     EquipmentInput input, [
     CreatedBy createdBy = CreatedBy.user,
   ]) async {
@@ -121,7 +121,7 @@ class _FakeExerciseCubit extends ExerciseCubit {
           isLoading: false,
         ),
       );
-      return;
+      return false;
     }
 
     final created = EquipmentDto(
@@ -149,10 +149,11 @@ class _FakeExerciseCubit extends ExerciseCubit {
         error: const Nullable(null),
       ),
     );
+    return true;
   }
 
   @override
-  Future<void> updateEquipment(int id, EquipmentInput input) async {
+  Future<bool> updateEquipment(int id, EquipmentInput input) async {
     updatedCalls.add((id, input));
     if (shouldFail) {
       emit(
@@ -166,7 +167,7 @@ class _FakeExerciseCubit extends ExerciseCubit {
           isLoading: false,
         ),
       );
-      return;
+      return false;
     }
 
     final updated = EquipmentDto(
@@ -193,6 +194,7 @@ class _FakeExerciseCubit extends ExerciseCubit {
         error: const Nullable(null),
       ),
     );
+    return true;
   }
 }
 
