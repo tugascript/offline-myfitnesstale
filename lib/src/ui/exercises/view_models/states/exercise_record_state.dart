@@ -101,6 +101,7 @@ final class ExerciseRecordState extends Equatable {
   final List<ExerciseRecordDto> exerciseRecords;
   final ExerciseRecordDto? selectedExerciseRecord;
   final ExerciseRecordDto? latestExerciseRecord;
+  final int? latestExerciseId;
   final ExerciseRecordPagination recordPagination;
   final StrengthGoalDto? activeStrengthGoal;
   final List<StrengthGoalDto> strengthGoals;
@@ -122,6 +123,7 @@ final class ExerciseRecordState extends Equatable {
     required this.exerciseRecords,
     this.selectedExerciseRecord,
     this.latestExerciseRecord,
+    this.latestExerciseId,
     required this.recordPagination,
     this.activeStrengthGoal,
     this.strengthGoals = const [],
@@ -150,6 +152,7 @@ final class ExerciseRecordState extends Equatable {
     List<ExerciseRecordDto>? exerciseRecords,
     Nullable<ExerciseRecordDto>? selectedExerciseRecord,
     Nullable<ExerciseRecordDto>? latestExerciseRecord,
+    Nullable<int>? latestExerciseId,
     ExerciseRecordPagination? recordPagination,
     Nullable<StrengthGoalDto>? activeStrengthGoal,
     List<StrengthGoalDto>? strengthGoals,
@@ -171,6 +174,9 @@ final class ExerciseRecordState extends Equatable {
       latestExerciseRecord: latestExerciseRecord != null
           ? latestExerciseRecord.value
           : this.latestExerciseRecord,
+      latestExerciseId: latestExerciseId != null
+          ? latestExerciseId.value
+          : this.latestExerciseId,
       recordPagination: recordPagination ?? this.recordPagination,
       activeStrengthGoal: activeStrengthGoal != null
           ? activeStrengthGoal.value
@@ -196,6 +202,7 @@ final class ExerciseRecordState extends Equatable {
     exerciseRecords,
     selectedExerciseRecord,
     latestExerciseRecord,
+    latestExerciseId,
     recordPagination,
     activeStrengthGoal,
     strengthGoals,

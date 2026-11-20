@@ -428,9 +428,10 @@ void main() {
     expect(cubit.state.recordPagination.exerciseId, isNull);
     expect(cubit.state.latestExerciseRecord?.exerciseId, squatId);
 
-    // Create an older record for bench (2026-05-01):
+    // Create an older record for bench (2026-05-01) while in global scope:
     // 1) recordPagination.exerciseId must remain null
-    // 2) latestExerciseRecord must not stay blocked on squat's newer date
+    // 2) latestExerciseRecord must remain squat (2026-06-01), the true app-wide latest
+    // 3) isLoading must be false
     await cubit.createExerciseRecord(
       ExerciseRecordInput(
         exerciseId: benchId,
@@ -439,9 +440,32 @@ void main() {
         recordDate: DateTime.utc(2026, 5, 1),
       ),
     );
+    expect(cubit.state.isLoading, isFalse);
     expect(cubit.state.recordPagination.exerciseId, isNull);
+    expect(cubit.state.latestExerciseRecord?.exerciseId, squatId);
+
+    // Now scope cubit to squat (e.g. visited squat records), then create for bench:
+    // 1) recordPagination.exerciseId must update to benchId
+    // 2) exerciseRecords must contain bench, not squat
+    // 3) latestExerciseRecord must update to bench, not stay blocked by squat
+    await cubit.getLatestExerciseRecord(squatId);
+    await cubit.getExerciseRecords(exerciseId: squatId, offset: 0);
+    await cubit.createExerciseRecord(
+      ExerciseRecordInput(
+        exerciseId: benchId,
+        weight: 95000,
+        reps: 5,
+        recordDate: DateTime.utc(2026, 5, 2),
+      ),
+    );
+    expect(cubit.state.isLoading, isFalse);
+    expect(cubit.state.recordPagination.exerciseId, benchId);
+    expect(
+      cubit.state.exerciseRecords.every((r) => r.exerciseId == benchId),
+      isTrue,
+    );
     expect(cubit.state.latestExerciseRecord?.exerciseId, benchId);
-    expect(cubit.state.latestExerciseRecord?.weight, 90000);
+    expect(cubit.state.latestExerciseRecord?.weight, 95000);
 
     // Create a newer bench record (2026-07-01) outside a 2025-only date filter,
     // then update an older 2025 bench record under that 2025 filter.
