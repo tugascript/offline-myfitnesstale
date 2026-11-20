@@ -17,8 +17,8 @@
 
 import 'package:material_ui/material_ui.dart';
 
-import '../../data/utils/enums.dart';
-import '../core/utils/converters.dart';
+import '../../../data/utils/enums.dart';
+import '../../core/utils/converters.dart';
 
 class ExerciseRecordReps extends StatelessWidget {
   final Units units;
@@ -37,27 +37,30 @@ class ExerciseRecordReps extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final iconSize = fontSize * 1.15;
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(Icons.repeat_one, size: iconSize),
-        Text(
-          " $reps ",
-          style: TextStyle(fontSize: fontSize, fontWeight: FontWeight.w400),
-        ),
-        Icon(Icons.close, size: fontSize),
-        Text(
-          " ",
-          style: TextStyle(fontSize: fontSize, fontWeight: FontWeight.w400),
-        ),
-        Icon(Icons.scale, size: iconSize),
-        Text(
-          units == Units.imperial
-              ? " ${Converters.gramsToLbs(weight).toStringAsFixed(2)} LBS"
-              : " ${Converters.gramsToKg(weight).toStringAsFixed(2)} KG",
-          style: TextStyle(fontSize: fontSize, fontWeight: FontWeight.w400),
-        ),
-      ],
+    return FittedBox(
+      fit: BoxFit.scaleDown,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.repeat_one, size: iconSize),
+          Text(
+            " $reps ",
+            style: TextStyle(fontSize: fontSize, fontWeight: FontWeight.w400),
+          ),
+          Icon(Icons.close, size: fontSize),
+          Text(
+            " ",
+            style: TextStyle(fontSize: fontSize, fontWeight: FontWeight.w400),
+          ),
+          Icon(Icons.scale, size: iconSize),
+          Text(
+            units == Units.imperial
+                ? " ${Converters.gramsToLbs(weight).toStringAsFixed(2)} LBS"
+                : " ${Converters.gramsToKg(weight).toStringAsFixed(2)} KG",
+            style: TextStyle(fontSize: fontSize, fontWeight: FontWeight.w400),
+          ),
+        ],
+      ),
     );
   }
 }

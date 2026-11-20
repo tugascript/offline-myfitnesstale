@@ -315,8 +315,8 @@ void main() {
       );
       expect(find.text('Latest Record'), findsOneWidget);
       expect(find.text('Exercise Records'), findsOneWidget);
-      expect(find.textContaining('100 kg'), findsWidgets);
-      expect(find.textContaining('110 kg'), findsWidgets);
+      expect(find.textContaining('100.00 KG'), findsWidgets);
+      expect(find.textContaining('110.00 KG'), findsWidgets);
       expect(find.textContaining('Alpha Press'), findsWidgets);
 
       final firstListCard = tester.getTopLeft(
@@ -355,8 +355,8 @@ void main() {
     await tester.pumpWidget(buildHarness(units: Units.imperial));
     await tester.pumpAndSettle();
 
-    expect(find.textContaining('220.46 lb'), findsWidgets);
-    expect(find.textContaining('kg'), findsNothing);
+    expect(find.textContaining('220.46 LBS'), findsWidgets);
+    expect(find.textContaining('KG'), findsNothing);
   });
 
   testWidgets(

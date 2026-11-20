@@ -1518,7 +1518,7 @@ void main() {
         findsOneWidget,
       );
       expect(find.text(' 90 kg'), findsOneWidget);
-      expect(find.text(' 114 kg'), findsOneWidget);
+      expect(find.text(' 114.00 KG'), findsOneWidget);
       expect(find.textContaining('Started: 10/10/2025'), findsOneWidget);
       expect(find.byType(ProgressStatusBadge), findsNWidgets(3));
       expect(find.text('In Progress'), findsOneWidget);
@@ -1531,11 +1531,11 @@ void main() {
         ),
         findsOneWidget,
       );
-      expect(find.text(' 80 kg'), findsOneWidget);
-      expect(find.text(' 93.33 kg'), findsOneWidget);
+      expect(find.text(' 80.00 KG'), findsOneWidget);
+      expect(find.text(' 93.33 KG'), findsOneWidget);
       expect(find.text(' Autumn Peak'), findsOneWidget);
-      expect(find.text(' 100 kg'), findsOneWidget);
-      expect(find.text(' 105.88 kg'), findsOneWidget);
+      expect(find.text(' 100.00 KG'), findsOneWidget);
+      expect(find.text(' 105.88 KG'), findsOneWidget);
 
       final containers = tester.widgetList<Container>(find.byType(Container));
       for (final container in containers) {

@@ -26,8 +26,6 @@ import '../../../../data/utils/enums.dart';
 import '../../../../data/utils/json_data.dart';
 import '../../../../routing/routes.dart';
 import '../../../core/sizes/data_display_sizes.dart';
-import '../../../core/utils/converters.dart';
-import '../../../core/utils/formatters.dart';
 import '../../../core/widgets/confirmation_dialog.dart';
 import '../../../core/widgets/layout/app_elevated_button.dart';
 import '../../../core/widgets/layout/app_outlined_button.dart';
@@ -37,9 +35,10 @@ import '../../../core/widgets/progress_status_badge.dart';
 import '../../../home/view_models/profile_cubit.dart';
 import '../../view_models/exercise_record_cubit.dart';
 import '../../view_models/states/exercise_record_state.dart';
+import '../exercise_record_reps.dart';
 import '../max_strength_label.dart';
-import '../relative_date_label.dart';
 import '../records/editors/create_exercise_record_modal.dart';
+import '../relative_date_label.dart';
 import 'edit_strength_goal_modal.dart';
 import 'empty_active_strength_goal_card.dart';
 
@@ -74,14 +73,6 @@ class ActiveStrengthGoalCard extends StatelessWidget {
     this.units,
   });
 
-  String _formatWeight(Units effectiveUnits, int grams) {
-    final value = effectiveUnits == Units.imperial
-        ? Converters.gramsToLbs(grams)
-        : Converters.gramsToKg(grams);
-    final suffix = effectiveUnits == Units.imperial ? 'lb' : 'kg';
-    return '${Formatters.formatWeight(value)} $suffix';
-  }
-
   @override
   Widget build(BuildContext context) {
     final effectiveUnits =
@@ -103,11 +94,6 @@ class ActiveStrengthGoalCard extends StatelessWidget {
         }
 
         final displayGoal = goal ?? _skeletonStrengthGoal;
-        final weightString = _formatWeight(
-          effectiveUnits,
-          displayGoal.targetWeight,
-        );
-
         return Card(
           margin: EdgeInsets.zero,
           child: SizedBox(
@@ -240,35 +226,17 @@ class ActiveStrengthGoalCard extends StatelessWidget {
                     ),
                     SizedBox(height: sizes.spacing),
                     Row(
-                      mainAxisSize: MainAxisSize.max,
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children: [
-                            Icon(Icons.repeat_one, size: sizes.fontSize * 1.2),
-                            Text(
-                              ' ${displayGoal.targetReps} ',
-                              style: TextStyle(
-                                fontSize: sizes.fontSize,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            Icon(Icons.close, size: sizes.fontSize),
-                            Text(
-                              ' ',
-                              style: TextStyle(fontSize: sizes.fontSize),
-                            ),
-                            Icon(Icons.scale, size: sizes.fontSize * 1.2),
-                            Text(
-                              ' $weightString',
-                              style: TextStyle(
-                                fontSize: sizes.fontSize,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: ExerciseRecordReps(
+                            units: effectiveUnits,
+                            fontSize: sizes.fontSize,
+                            reps: displayGoal.targetReps,
+                            weight: displayGoal.targetWeight,
+                          ),
                         ),
                         MaxStrengthLabel(
                           units: effectiveUnits,

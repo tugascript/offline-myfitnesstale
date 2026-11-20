@@ -28,7 +28,7 @@ import '../../../../core/widgets/mutation_buttons.dart';
 import '../../../view_models/exercise_record_cubit.dart';
 import '../../max_strength_label.dart';
 import '../../relative_date_label.dart';
-import '../../../exercise_record_reps.dart';
+import '../../exercise_record_reps.dart';
 import './edit_exercise_record_modal.dart';
 
 class ExerciseRecordPointDetailsModal extends StatelessWidget {

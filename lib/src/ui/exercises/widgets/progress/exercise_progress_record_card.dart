@@ -22,7 +22,7 @@ import '../../../../data/utils/enums.dart';
 import '../../../core/sizes/data_display_sizes.dart';
 import '../max_strength_label.dart';
 import '../relative_date_label.dart';
-import '../../exercise_record_reps.dart';
+import '../exercise_record_reps.dart';
 
 class ExerciseProgressRecordCard extends StatelessWidget {
   final DataDisplaySizesList sizes;
