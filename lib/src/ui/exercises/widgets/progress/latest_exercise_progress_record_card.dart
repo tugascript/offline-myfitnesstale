@@ -77,7 +77,7 @@ class LatestExerciseProgressRecordCard extends StatelessWidget {
                     ),
                     Icon(
                       Icons.arrow_forward_ios,
-                      size: sizes.titleFontSize,
+                      size: sizes.titleIconSize,
                       color: Colors.grey,
                     ),
                   ],

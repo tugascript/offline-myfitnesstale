@@ -23,13 +23,13 @@ import '../../../../data/repositories/exercises/dtos/exercise_dto.dart';
 import '../../../../data/repositories/exercises/dtos/exercise_record_dto.dart';
 import '../../../../data/utils/enums.dart';
 import '../../../core/sizes/data_display_sizes.dart';
-import '../../../core/utils/converters.dart';
-import '../../../core/utils/formatters.dart';
 import '../../../core/widgets/confirmation_dialog.dart';
 import '../../../core/widgets/layout/delete_icon_button.dart';
 import '../../../core/widgets/layout/edit_icon_button.dart';
 import '../../view_models/exercise_record_cubit.dart';
-import './exercise_record_reps.dart';
+import '../max_strength_label.dart';
+import '../relative_date_label.dart';
+import '../../exercise_record_reps.dart';
 
 class LatestExerciseRecordCard extends StatelessWidget {
   final DataDisplaySizesList sizes;
@@ -142,33 +142,16 @@ class LatestExerciseRecordCard extends StatelessWidget {
                     Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(
-                          Icons.calendar_today,
-                          size: sizes.iconSubtitleFontSize,
-                        ),
-                        Text(
-                          " ${Formatters.formatRelativeDate(units, exerciseRecord?.recordDate ?? DateTime.now())}",
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: sizes.subtitleFontSize,
-                            fontWeight: FontWeight.w400,
-                          ),
+                        RelativeDateLabel(
+                          units: units,
+                          date: exerciseRecord?.recordDate ?? DateTime.now(),
+                          fontSize: sizes.subtitleFontSize,
                         ),
                         SizedBox(width: sizes.spacing),
-                        Text(
-                          "💪",
-                          style: TextStyle(
-                            fontSize: sizes.iconSubtitleFontSize,
-                          ),
-                        ),
-                        Text(
-                          units == Units.imperial
-                              ? " ${Converters.gramsToLbs(exerciseRecord?.maxStrength ?? 0).toStringAsFixed(2)} LBS"
-                              : " ${Converters.gramsToKg(exerciseRecord?.maxStrength ?? 0).toStringAsFixed(2)} KG",
-                          style: TextStyle(
-                            fontSize: sizes.subtitleFontSize,
-                            fontWeight: FontWeight.w600,
-                          ),
+                        MaxStrengthLabel(
+                          units: units,
+                          maxStrength: exerciseRecord?.maxStrength ?? 0,
+                          fontSize: sizes.subtitleFontSize,
                         ),
                       ],
                     ),

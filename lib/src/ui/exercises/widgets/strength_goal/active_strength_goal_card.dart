@@ -37,6 +37,8 @@ import '../../../core/widgets/progress_status_badge.dart';
 import '../../../home/view_models/profile_cubit.dart';
 import '../../view_models/exercise_record_cubit.dart';
 import '../../view_models/states/exercise_record_state.dart';
+import '../max_strength_label.dart';
+import '../relative_date_label.dart';
 import '../records/editors/create_exercise_record_modal.dart';
 import 'edit_strength_goal_modal.dart';
 import 'empty_active_strength_goal_card.dart';
@@ -104,10 +106,6 @@ class ActiveStrengthGoalCard extends StatelessWidget {
         final weightString = _formatWeight(
           effectiveUnits,
           displayGoal.targetWeight,
-        );
-        final maxStrengthString = _formatWeight(
-          effectiveUnits,
-          displayGoal.targetMaxStrength,
         );
 
         return Card(
@@ -226,23 +224,12 @@ class ActiveStrengthGoalCard extends StatelessWidget {
                         spacing: sizes.spacing,
                         runSpacing: sizes.halfSpacing,
                         children: [
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.calendar_today,
-                                size: sizes.iconFontSize,
-                              ),
-                              Flexible(
-                                child: Text(
-                                  ' Started: ${Formatters.formatRelativeDate(effectiveUnits, displayGoal.startDate)}',
-                                  style: TextStyle(
-                                    fontSize: sizes.fontSize,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ),
-                            ],
+                          RelativeDateLabel(
+                            units: effectiveUnits,
+                            date: displayGoal.startDate,
+                            fontSize: sizes.fontSize,
+                            prefix: 'Started: ',
+                            fontWeight: FontWeight.w600,
                           ),
                           ProgressStatusBadge(
                             status: displayGoal.status,
@@ -283,22 +270,10 @@ class ActiveStrengthGoalCard extends StatelessWidget {
                             ),
                           ],
                         ),
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children: [
-                            Text(
-                              '💪',
-                              style: TextStyle(fontSize: sizes.fontSize * 1.2),
-                            ),
-                            Text(
-                              ' $maxStrengthString',
-                              style: TextStyle(
-                                fontSize: sizes.fontSize,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
+                        MaxStrengthLabel(
+                          units: effectiveUnits,
+                          maxStrength: displayGoal.targetMaxStrength,
+                          fontSize: sizes.fontSize,
                         ),
                       ],
                     ),

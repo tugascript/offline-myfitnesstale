@@ -21,8 +21,9 @@ import 'package:skeletonizer/skeletonizer.dart';
 import '../../../../data/repositories/exercises/dtos/exercise_record_dto.dart';
 import '../../../../data/utils/enums.dart';
 import '../../../core/sizes/data_display_sizes.dart';
-import '../../../core/utils/converters.dart';
-import '../../../core/utils/formatters.dart';
+import '../../exercise_record_reps.dart';
+import '../max_strength_label.dart';
+import '../relative_date_label.dart';
 
 class ExerciseProgressHead extends StatelessWidget {
   final DataDisplaySizesList sizes;
@@ -41,14 +42,6 @@ class ExerciseProgressHead extends StatelessWidget {
     required this.exerciseRecord,
   });
 
-  String _formatWeight(int grams) {
-    final value = units == Units.metric
-        ? Converters.gramsToKg(grams)
-        : Converters.gramsToLbs(grams);
-    final suffix = units == Units.metric ? 'kg' : 'lb';
-    return '${Formatters.formatWeight(value)} $suffix';
-  }
-
   @override
   Widget build(BuildContext context) {
     final isSkeleton = isLoading || exerciseRecord == null;
@@ -62,21 +55,34 @@ class ExerciseProgressHead extends StatelessWidget {
         children: [
           if (isSkeleton || exerciseRecord?.exercise != null) ...[
             Row(
-              mainAxisSize: MainAxisSize.min,
+              mainAxisSize: MainAxisSize.max,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Icon(
-                  Icons.sports_gymnastics,
-                  size: sizes.subtitleFontSize * 1.2,
-                ),
-                Flexible(
-                  child: Text(
-                    " ${exerciseRecord?.exercise?.name ?? 'Loading Exercise Name'}",
-                    style: TextStyle(
-                      fontSize: sizes.subtitleFontSize,
-                      fontWeight: FontWeight.bold,
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.sports_gymnastics,
+                      size: sizes.subtitleFontSize * 1.2,
                     ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
+                    Flexible(
+                      child: Text(
+                        " ${exerciseRecord?.exercise?.name ?? 'Loading Exercise Name'}",
+                        style: TextStyle(
+                          fontSize: sizes.subtitleFontSize,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+                RelativeDateLabel(
+                  units: units,
+                  date: exerciseRecord?.recordDate ?? DateTime.now(),
+                  fontSize: sizes.fontSize,
+                  fontWeight: FontWeight.w600,
                 ),
               ],
             ),
@@ -86,115 +92,21 @@ class ExerciseProgressHead extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             mainAxisSize: MainAxisSize.max,
             children: [
-              Flexible(
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.calendar_today, size: sizes.fontSize * 1.2),
-                    Flexible(
-                      child: Text(
-                        " ${Formatters.formatRelativeDate(units, exerciseRecord?.recordDate ?? DateTime.now())}",
-                        style: TextStyle(
-                          fontSize: sizes.fontSize,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+              ExerciseRecordReps(
+                units: units,
+                fontSize: sizes.subtitleFontSize,
+                reps: exerciseRecord?.reps ?? 0,
+                weight: exerciseRecord?.weight ?? 0,
               ),
-              SizedBox(width: sizes.spacing),
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text("💪", style: TextStyle(fontSize: sizes.fontSize * 1.2)),
-                  Text(
-                    " ${_formatWeight(exerciseRecord?.maxStrength ?? 0)}",
-                    style: TextStyle(
-                      fontSize: sizes.fontSize,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          SizedBox(height: sizes.spacing),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              Expanded(
-                child: _ExerciseStatText(
-                  theme: theme,
-                  leading: Icon(Icons.scale, size: sizes.fontSize * 1.2),
-                  label: 'Weight',
-                  value: _formatWeight(exerciseRecord?.weight ?? 0),
-                  fontSize: sizes.fontSize,
-                ),
-              ),
-              Expanded(
-                child: _ExerciseStatText(
-                  theme: theme,
-                  leading: Icon(Icons.repeat_one, size: sizes.fontSize * 1.2),
-                  label: 'Reps',
-                  value: '${exerciseRecord?.reps ?? 0}',
-                  fontSize: sizes.fontSize,
-                ),
+              MaxStrengthLabel(
+                units: units,
+                maxStrength: exerciseRecord?.maxStrength ?? 0,
+                fontSize: sizes.fontSize,
               ),
             ],
           ),
         ],
       ),
-    );
-  }
-}
-
-class _ExerciseStatText extends StatelessWidget {
-  final ThemeData theme;
-  final Widget leading;
-  final String label;
-  final String value;
-  final double fontSize;
-
-  const _ExerciseStatText({
-    required this.theme,
-    required this.leading,
-    required this.label,
-    required this.value,
-    required this.fontSize,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final isDarkTheme = theme.brightness == Brightness.dark;
-
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        leading,
-        SizedBox(width: fontSize / 4),
-        Flexible(
-          child: Text.rich(
-            TextSpan(
-              text: '$label: ',
-              style: TextStyle(
-                fontSize: fontSize,
-                color: isDarkTheme ? Colors.grey[400] : Colors.grey[600],
-                fontWeight: FontWeight.w600,
-              ),
-              children: [
-                TextSpan(
-                  text: value,
-                  style: TextStyle(
-                    fontSize: fontSize,
-                    color: theme.colorScheme.onSurface,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
     );
   }
 }

@@ -22,14 +22,14 @@ import '../../../../data/repositories/exercises/dtos/exercise_dto.dart';
 import '../../../../data/repositories/exercises/dtos/exercise_record_dto.dart';
 import '../../../../data/utils/enums.dart';
 import '../../../core/sizes/data_display_sizes.dart';
-import '../../../core/utils/converters.dart';
-import '../../../core/utils/formatters.dart';
 import '../../../core/widgets/confirmation_dialog.dart';
 import '../../../core/widgets/layout/delete_icon_button.dart';
 import '../../../core/widgets/layout/edit_icon_button.dart';
 import '../../view_models/exercise_record_cubit.dart';
+import '../max_strength_label.dart';
+import '../relative_date_label.dart';
 import './editors/edit_exercise_record_modal.dart';
-import './exercise_record_reps.dart';
+import '../../exercise_record_reps.dart';
 
 class ExerciseRecordCard extends StatelessWidget {
   final ThemeData theme;
@@ -49,12 +49,6 @@ class ExerciseRecordCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isMetric = units == Units.metric;
-    final weightUnit = isMetric ? "KG" : "LBS";
-    final maxStrengthValue = isMetric
-        ? Converters.gramsToKg(record.maxStrength).toStringAsFixed(2)
-        : Converters.gramsToLbs(record.maxStrength).toStringAsFixed(2);
-
     return Card(
       clipBehavior: Clip.antiAlias,
       margin: EdgeInsets.symmetric(vertical: sizes.margins / 2),
@@ -72,21 +66,10 @@ class ExerciseRecordCard extends StatelessWidget {
                   reps: record.reps,
                   weight: record.weight,
                 ),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      "💪",
-                      style: TextStyle(fontSize: sizes.subtitleFontSize * 1.2),
-                    ),
-                    Text(
-                      " $maxStrengthValue $weightUnit",
-                      style: TextStyle(
-                        fontSize: sizes.subtitleFontSize,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
+                MaxStrengthLabel(
+                  units: units,
+                  maxStrength: record.maxStrength,
+                  fontSize: sizes.subtitleFontSize,
                 ),
               ],
             ),
@@ -94,18 +77,10 @@ class ExerciseRecordCard extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               mainAxisSize: MainAxisSize.max,
               children: [
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.calendar_today, size: sizes.fontSize * 1.2),
-                    Text(
-                      " ${Formatters.formatRelativeDate(units, record.recordDate)}",
-                      style: TextStyle(
-                        fontSize: sizes.fontSize,
-                        fontWeight: FontWeight.w400,
-                      ),
-                    ),
-                  ],
+                RelativeDateLabel(
+                  units: units,
+                  date: record.recordDate,
+                  fontSize: sizes.fontSize,
                 ),
                 Row(
                   mainAxisSize: MainAxisSize.min,

@@ -189,7 +189,6 @@ class _ExerciseProgressHistoryState extends State<ExerciseProgressHistory> {
             return SizedBox(
               height: widget.breakPoint.height / 2.35,
               child: ExerciseProgressRecordsList(
-                theme: widget.theme,
                 sizes: widget.sizes,
                 units: widget.units,
                 isLoading: isLoading,
