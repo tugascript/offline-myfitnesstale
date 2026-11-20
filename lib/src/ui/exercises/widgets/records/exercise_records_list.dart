@@ -31,6 +31,7 @@ class ExerciseRecordsList extends StatelessWidget {
 
   final ExerciseDto exercise;
   final bool isLoading;
+  final bool isMutating;
   final List<ExerciseRecordDto> records;
 
   const ExerciseRecordsList({
@@ -40,6 +41,7 @@ class ExerciseRecordsList extends StatelessWidget {
     required this.units,
     required this.exercise,
     required this.isLoading,
+    this.isMutating = false,
     required this.records,
   });
 
@@ -67,6 +69,7 @@ class ExerciseRecordsList extends StatelessWidget {
             units: units,
             exercise: exercise,
             record: record,
+            isLoading: isMutating,
           );
         },
       ),

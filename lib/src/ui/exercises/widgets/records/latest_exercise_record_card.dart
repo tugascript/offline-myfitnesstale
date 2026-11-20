@@ -37,6 +37,7 @@ class LatestExerciseRecordCard extends StatelessWidget {
   final Units units;
 
   final bool isLoading;
+  final bool isMutating;
   final ExerciseDto exercise;
   final ExerciseRecordDto? exerciseRecord;
   final VoidCallback onEdit;
@@ -47,6 +48,7 @@ class LatestExerciseRecordCard extends StatelessWidget {
     required this.theme,
     required this.units,
     required this.isLoading,
+    this.isMutating = false,
     required this.exercise,
     required this.exerciseRecord,
     required this.onEdit,
@@ -88,14 +90,14 @@ class LatestExerciseRecordCard extends StatelessWidget {
                         EditIconButton(
                           key: const ValueKey('latest-exercise-record-edit'),
                           sizes: sizes,
-                          isLoading: isLoading,
+                          isLoading: isLoading || isMutating,
                           onEdit: onEdit,
                         ),
                         SizedBox(width: sizes.quarterSpacing),
                         DeleteIconButton(
                           key: const ValueKey('latest-exercise-record-delete'),
                           sizes: sizes,
-                          isLoading: isLoading,
+                          isLoading: isLoading || isMutating,
                           onDelete: () {
                             showDialog(
                               context: context,
