@@ -549,6 +549,7 @@ class ExerciseCubit extends Cubit<ExerciseState>
     CreatedBy createdBy = CreatedBy.user,
   ]) async {
     _logger.info('createEquipment: creating equipment');
+    final initialEquipmentsRequestId = state.equipmentsRequestId;
     emit(state.copyWith(isLoading: true));
 
     final result = await _exerciseService.createEquipment(input, createdBy);
@@ -599,17 +600,21 @@ class ExerciseCubit extends Cubit<ExerciseState>
     }
 
     final paginatedData = equipmentsResult.value;
+    final equipmentsCurrent =
+        state.equipmentsRequestId == initialEquipmentsRequestId;
     _logger.info('Equipment created successfully');
     emit(
       state.copyWith(
         isLoading: false,
-        equipments: paginatedData.data,
-        equipmentPagination: pagination.copyWith(
-          name: pagination.name,
-          limit: pagination.limit,
-          offset: 0,
-          total: paginatedData.total,
-        ),
+        equipments: equipmentsCurrent ? paginatedData.data : null,
+        equipmentPagination: equipmentsCurrent
+            ? pagination.copyWith(
+                name: pagination.name,
+                limit: pagination.limit,
+                offset: 0,
+                total: paginatedData.total,
+              )
+            : null,
         selectedEquipment: Nullable(
           SelectedEquipment(equipment: result.value, relatedExercises: []),
         ),
@@ -797,6 +802,7 @@ class ExerciseCubit extends Cubit<ExerciseState>
 
   Future<bool> updateEquipment(int id, EquipmentInput input) async {
     _logger.info('updateEquipment: updating equipment');
+    final initialEquipmentsRequestId = state.equipmentsRequestId;
     emit(state.copyWith(isLoading: true));
 
     final result = await _exerciseService.updateEquipment(id, input);
@@ -880,17 +886,21 @@ class ExerciseCubit extends Cubit<ExerciseState>
     }
 
     final paginatedData = equipmentsResult.value;
+    final equipmentsCurrent =
+        state.equipmentsRequestId == initialEquipmentsRequestId;
     _logger.info('Equipment updated successfully');
     emit(
       state.copyWith(
         isLoading: false,
-        equipments: paginatedData.data,
-        equipmentPagination: pagination.copyWith(
-          name: pagination.name,
-          limit: pagination.limit,
-          offset: 0,
-          total: paginatedData.total,
-        ),
+        equipments: equipmentsCurrent ? paginatedData.data : null,
+        equipmentPagination: equipmentsCurrent
+            ? pagination.copyWith(
+                name: pagination.name,
+                limit: pagination.limit,
+                offset: 0,
+                total: paginatedData.total,
+              )
+            : null,
         selectedEquipment: Nullable(
           SelectedEquipment(
             equipment: result.value,

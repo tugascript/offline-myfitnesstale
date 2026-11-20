@@ -161,6 +161,8 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
   }
 
   Future<bool> createExerciseRecord(ExerciseRecordInput input) async {
+    final initialRecordsRequestId = state.recordsRequestId;
+    final initialLatestRequestId = state.latestRequestId;
     emit(state.copyWith(isLoading: true));
 
     final result = await _exerciseRecordService.createExerciseRecord(input);
@@ -189,18 +191,25 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
     }
 
     final record = result.value;
-    await _syncRecordMutationState(record);
+    await _syncRecordMutationState(
+      record,
+      initialRecordsRequestId: initialRecordsRequestId,
+      initialLatestRequestId: initialLatestRequestId,
+    );
     return true;
   }
 
-  Future<void> _syncRecordMutationState(ExerciseRecordDto record) async {
-    final initialRecordsRequestId = state.recordsRequestId;
-    final initialLatestRequestId = state.latestRequestId;
+  Future<void> _syncRecordMutationState(
+    ExerciseRecordDto record, {
+    required int initialRecordsRequestId,
+    required int initialLatestRequestId,
+  }) async {
     final currentPagination = state.recordPagination;
     final initialLatestExerciseId = state.latestExerciseId;
     final shouldRefreshRecords =
-        currentPagination.exerciseId == null ||
-        currentPagination.exerciseId == record.exerciseId;
+        state.recordsRequestId == initialRecordsRequestId &&
+        (currentPagination.exerciseId == null ||
+            currentPagination.exerciseId == record.exerciseId);
 
     List<ExerciseRecordDto>? refreshedRecords;
     ExerciseRecordPagination? refreshedPagination;
@@ -230,8 +239,9 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
     }
 
     final shouldRefreshLatest =
-        initialLatestExerciseId == null ||
-        initialLatestExerciseId == record.exerciseId;
+        state.latestRequestId == initialLatestRequestId &&
+        (initialLatestExerciseId == null ||
+            initialLatestExerciseId == record.exerciseId);
     Nullable<ExerciseRecordDto>? refreshedLatest;
     if (shouldRefreshLatest) {
       final latestResult = await _exerciseRecordService.getLatestRecord(
@@ -264,7 +274,6 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
         latestExerciseRecord: state.latestRequestId == initialLatestRequestId
             ? refreshedLatest
             : null,
-        isLoading: false,
         error: const Nullable(null),
       ),
     );
@@ -272,6 +281,8 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
   }
 
   Future<bool> updateExerciseRecord(int id, ExerciseRecordInput input) async {
+    final initialRecordsRequestId = state.recordsRequestId;
+    final initialLatestRequestId = state.latestRequestId;
     emit(state.copyWith(isLoading: true));
 
     final result = await _exerciseRecordService.updateExerciseRecord(id, input);
@@ -301,7 +312,11 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
 
     _logger.info("Exercise record updated successfully");
     final exerciseRecord = result.value;
-    await _syncRecordMutationState(exerciseRecord);
+    await _syncRecordMutationState(
+      exerciseRecord,
+      initialRecordsRequestId: initialRecordsRequestId,
+      initialLatestRequestId: initialLatestRequestId,
+    );
     return true;
   }
 
@@ -405,11 +420,14 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
 
   Future<void> getActiveStrengthGoal({int? exerciseId}) async {
     _logger.info("Getting active strength goal");
-    emit(state.copyWith(isLoadingActiveGoal: true));
+    final requestId = state.activeGoalRequestId + 1;
+    emit(
+      state.copyWith(activeGoalRequestId: requestId, isLoadingActiveGoal: true),
+    );
     final result = await _exerciseRecordService.getActiveStrengthGoal(
       exerciseId: exerciseId,
     );
-    if (isClosed) return;
+    if (isClosed || requestId != state.activeGoalRequestId) return;
     if (result.isErr()) {
       final error = result.error;
       if (error.type == SingleErrorTypes.notFound) {
@@ -581,8 +599,14 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
     final exerciseId = state.strengthGoalPagination.exerciseId;
     final skipInProgress = state.strengthGoalPagination.skipInProgress;
     final limit = state.strengthGoalPagination.limit;
-    final requestId = state.goalsRequestId + 1;
-    emit(state.copyWith(goalsRequestId: requestId));
+    final goalsReqId = state.goalsRequestId + 1;
+    final activeReqId = state.activeGoalRequestId + 1;
+    emit(
+      state.copyWith(
+        goalsRequestId: goalsReqId,
+        activeGoalRequestId: activeReqId,
+      ),
+    );
 
     final activeFuture = _exerciseRecordService.getActiveStrengthGoal(
       exerciseId: exerciseId,
@@ -597,29 +621,30 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
     final activeResult = await activeFuture;
     final listResult = await listFuture;
     if (isClosed) return;
-    if (requestId != state.goalsRequestId) {
-      emit(state.copyWith(isLoading: false));
-      return;
-    }
+
+    final activeCurrent = activeReqId == state.activeGoalRequestId;
+    final goalsCurrent = goalsReqId == state.goalsRequestId;
 
     Nullable<StrengthGoalDto>? activeStrengthGoal;
     ErrorState? error;
 
-    if (activeResult.isErr()) {
-      if (activeResult.error.type == SingleErrorTypes.notFound) {
-        activeStrengthGoal = const Nullable(null);
+    if (activeCurrent) {
+      if (activeResult.isErr()) {
+        if (activeResult.error.type == SingleErrorTypes.notFound) {
+          activeStrengthGoal = const Nullable(null);
+        } else {
+          _logger.warning('Failed to load active entity', activeResult.error);
+          error = ErrorState(
+            type: activeResult.error.type.name,
+            description: activeResult.error.description,
+          );
+        }
       } else {
-        _logger.warning('Failed to load active entity', activeResult.error);
-        error = ErrorState(
-          type: activeResult.error.type.name,
-          description: activeResult.error.description,
-        );
+        activeStrengthGoal = Nullable(activeResult.value);
       }
-    } else {
-      activeStrengthGoal = Nullable(activeResult.value);
     }
 
-    if (listResult.isErr()) {
+    if (goalsCurrent && listResult.isErr()) {
       _logger.warning("Failed to get strength goals", listResult.error);
       error ??= ErrorState(
         type: listResult.error.type.name,
@@ -630,8 +655,10 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
     emit(
       state.copyWith(
         activeStrengthGoal: activeStrengthGoal,
-        strengthGoals: listResult.isOk() ? listResult.value.data : null,
-        strengthGoalPagination: listResult.isOk()
+        strengthGoals: goalsCurrent && listResult.isOk()
+            ? listResult.value.data
+            : null,
+        strengthGoalPagination: goalsCurrent && listResult.isOk()
             ? StrengthGoalPagination(
                 exerciseId: exerciseId,
                 skipInProgress: skipInProgress,
@@ -641,9 +668,9 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
               )
             : null,
         isLoading: false,
-        isLoadingGoals: false,
-        isLoadingActiveGoal: false,
-        error: Nullable(error),
+        isLoadingGoals: goalsCurrent ? false : null,
+        isLoadingActiveGoal: activeCurrent ? false : null,
+        error: activeCurrent || goalsCurrent ? Nullable(error) : null,
       ),
     );
   }

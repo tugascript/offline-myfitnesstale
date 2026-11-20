@@ -98,6 +98,7 @@ final class ExerciseRecordState extends Equatable {
   final int recordsRequestId;
   final int latestRequestId;
   final int goalsRequestId;
+  final int activeGoalRequestId;
   final List<ExerciseRecordDto> exerciseRecords;
   final ExerciseRecordDto? selectedExerciseRecord;
   final ExerciseRecordDto? latestExerciseRecord;
@@ -132,6 +133,7 @@ final class ExerciseRecordState extends Equatable {
     this.recordsRequestId = 0,
     this.latestRequestId = 0,
     this.goalsRequestId = 0,
+    this.activeGoalRequestId = 0,
     required this.exerciseRecords,
     this.selectedExerciseRecord,
     this.latestExerciseRecord,
@@ -165,6 +167,7 @@ final class ExerciseRecordState extends Equatable {
     int? recordsRequestId,
     int? latestRequestId,
     int? goalsRequestId,
+    int? activeGoalRequestId,
     List<ExerciseRecordDto>? exerciseRecords,
     Nullable<ExerciseRecordDto>? selectedExerciseRecord,
     Nullable<ExerciseRecordDto>? latestExerciseRecord,
@@ -187,6 +190,7 @@ final class ExerciseRecordState extends Equatable {
       recordsRequestId: recordsRequestId ?? this.recordsRequestId,
       latestRequestId: latestRequestId ?? this.latestRequestId,
       goalsRequestId: goalsRequestId ?? this.goalsRequestId,
+      activeGoalRequestId: activeGoalRequestId ?? this.activeGoalRequestId,
       exerciseRecords: exerciseRecords ?? this.exerciseRecords,
       selectedExerciseRecord: selectedExerciseRecord != null
           ? selectedExerciseRecord.value
@@ -225,6 +229,7 @@ final class ExerciseRecordState extends Equatable {
     recordsRequestId,
     latestRequestId,
     goalsRequestId,
+    activeGoalRequestId,
     exerciseRecords,
     selectedExerciseRecord,
     latestExerciseRecord,
