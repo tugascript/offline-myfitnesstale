@@ -615,6 +615,8 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
               )
             : null,
         isLoading: false,
+        isLoadingGoals: false,
+        isLoadingActiveGoal: false,
         error: Nullable(error),
       ),
     );

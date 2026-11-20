@@ -83,12 +83,20 @@ class _ExerciseRecordsHistoryState extends State<ExerciseRecordsHistory> {
     final DateTime firstDate = DateTime(2025).isAfter(oneYearAgo)
         ? DateTime(2025)
         : oneYearAgo;
+    final DateTime initialStart = _dateRange.start.isBefore(firstDate)
+        ? firstDate
+        : (_dateRange.start.isAfter(now) ? now : _dateRange.start);
+    final DateTime initialEnd = _dateRange.end.isAfter(now)
+        ? now
+        : (_dateRange.end.isBefore(initialStart)
+              ? initialStart
+              : _dateRange.end);
 
     final DateTimeRange? picked = await showDateRangePicker(
       context: context,
       firstDate: firstDate,
       lastDate: now,
-      initialDateRange: _dateRange,
+      initialDateRange: DateTimeRange(start: initialStart, end: initialEnd),
       initialEntryMode: DatePickerEntryMode.calendarOnly,
       builder: (context, child) {
         final bodyLarge = widget.theme.textTheme.bodyLarge;
