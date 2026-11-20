@@ -111,39 +111,50 @@ class StrengthGoalHistoryCard extends StatelessWidget {
           ],
           SizedBox(height: sizes.spacing),
         ],
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            FittedBox(
-              fit: BoxFit.scaleDown,
+        LayoutBuilder(
+          builder: (context, constraints) => FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                minWidth: constraints.maxWidth.isFinite
+                    ? constraints.maxWidth
+                    : 0,
+              ),
               child: Row(
-                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                spacing: sizes.halfSpacing,
                 children: [
-                  RelativeDateLabel(
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      RelativeDateLabel(
+                        units: units,
+                        date: displayDate,
+                        fontSize: sizes.fontSize,
+                      ),
+                      if (!hasExercise && !hasName) ...[
+                        SizedBox(width: sizes.halfSpacing),
+                        ProgressStatusBadge(status: goal.status, sizes: sizes),
+                      ],
+                    ],
+                  ),
+                  ExerciseRecordReps(
                     units: units,
-                    date: displayDate,
+                    fontSize: sizes.fontSize,
+                    reps: goal.targetReps,
+                    weight: goal.targetWeight,
+                  ),
+                  MaxStrengthLabel(
+                    units: units,
+                    maxStrength: goal.targetMaxStrength,
                     fontSize: sizes.fontSize,
                   ),
-                  if (!hasExercise && !hasName) ...[
-                    SizedBox(width: sizes.halfSpacing),
-                    ProgressStatusBadge(status: goal.status, sizes: sizes),
-                  ],
                 ],
               ),
             ),
-            ExerciseRecordReps(
-              units: units,
-              fontSize: sizes.fontSize,
-              reps: goal.targetReps,
-              weight: goal.targetWeight,
-            ),
-            MaxStrengthLabel(
-              units: units,
-              maxStrength: goal.targetMaxStrength,
-              fontSize: sizes.fontSize,
-            ),
-          ],
+          ),
         ),
         SizedBox(height: sizes.spacing),
         Row(

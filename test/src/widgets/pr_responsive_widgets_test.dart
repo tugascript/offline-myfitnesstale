@@ -34,6 +34,7 @@ import 'package:myfitnesstale/src/data/utils/json_data.dart';
 import 'package:myfitnesstale/src/data/utils/enums.dart';
 import 'package:myfitnesstale/src/data/models/sqlite/exercise_model.dart';
 import 'package:myfitnesstale/src/data/repositories/exercises/dtos/exercise_dto.dart';
+import 'package:myfitnesstale/src/data/repositories/exercises/dtos/exercise_record_dto.dart';
 import 'package:myfitnesstale/src/data/repositories/exercises/exercise_record_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/exercises/exercise_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/foods/dtos/food_dto.dart';
@@ -45,6 +46,10 @@ import 'package:myfitnesstale/src/data/repositories/exercises/dtos/strength_goal
 import 'package:myfitnesstale/src/ui/core/sizes/data_display_sizes.dart';
 import 'package:myfitnesstale/src/ui/core/sizes/screen_size.dart';
 import 'package:myfitnesstale/src/ui/exercises/screens/strength_goals_list_screen.dart';
+import 'package:myfitnesstale/src/ui/exercises/widgets/progress/exercise_progress_head.dart';
+import 'package:myfitnesstale/src/ui/exercises/widgets/progress/exercise_progress_record_card.dart';
+import 'package:myfitnesstale/src/ui/exercises/widgets/records/exercise_record_card.dart';
+import 'package:myfitnesstale/src/ui/exercises/widgets/records/latest_exercise_record_card.dart';
 import 'package:myfitnesstale/src/ui/foods/screens/food_creation_screen.dart';
 import 'package:myfitnesstale/src/ui/foods/screens/food_details_screen.dart';
 import 'package:myfitnesstale/src/ui/foods/screens/food_update_screen.dart';
@@ -226,6 +231,15 @@ final _strengthGoal = StrengthGoalDto(
   exerciseId: 1,
   status: ProgressStatus.inProgress,
   startDate: _date,
+  exercise: _exercise,
+);
+final _exerciseRecord = ExerciseRecordDto(
+  id: 1,
+  exerciseId: 1,
+  weight: 100000,
+  reps: 12,
+  maxStrength: 120000,
+  recordDate: _date,
   exercise: _exercise,
 );
 
@@ -483,6 +497,42 @@ void main() {
       ),
     ),
     'populated strength screen': (sizes, theme) => const StrengthGoalsScreen(),
+    'exercise records & progress cards': (sizes, theme) =>
+        SingleChildScrollView(
+          child: Column(
+            children: [
+              ExerciseProgressHead(
+                sizes: sizes,
+                theme: theme,
+                units: Units.metric,
+                isLoading: false,
+                exerciseRecord: _exerciseRecord,
+              ),
+              ExerciseProgressRecordCard(
+                sizes: sizes,
+                units: Units.metric,
+                record: _exerciseRecord,
+                onTapExercise: (_) {},
+              ),
+              LatestExerciseRecordCard(
+                sizes: sizes,
+                theme: theme,
+                units: Units.metric,
+                isLoading: false,
+                exercise: _exercise,
+                exerciseRecord: _exerciseRecord,
+                onEdit: () {},
+              ),
+              ExerciseRecordCard(
+                theme: theme,
+                sizes: sizes,
+                units: Units.metric,
+                exercise: _exercise,
+                record: _exerciseRecord,
+              ),
+            ],
+          ),
+        ),
   };
   for (final entry in contents.entries) {
     for (final width in [320.0, 600.0, 1200.0]) {
@@ -543,12 +593,7 @@ void main() {
             ),
           );
           await tester.pumpAndSettle();
-          final err = tester.takeException();
-          if (err is FlutterError) {
-            // ignore: avoid_print
-            print('ERR [$width, $scale]:\n${err.toStringDeep()}');
-          }
-          expect(err, isNull);
+          expect(tester.takeException(), isNull);
           if (entry.key == 'meal-log dialog') {
             final foodSelector = find.byKey(
               const ValueKey('log-food-select-dropdown'),
