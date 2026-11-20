@@ -63,6 +63,22 @@ void main() {
     expect(await storage.resolvePictureFile('sub/../../outside.jpg'), isNull);
   });
 
+  test('resolvePictureFile rejects absolute paths outside pictures root and allows inside', () async {
+    final externalFile = File(p.join(tempDir.path, 'outside.jpg'));
+    await externalFile.writeAsBytes([1, 2, 3]);
+    expect(await storage.resolvePictureFile(externalFile.path), isNull);
+
+    final savedUri = await storage.savePictureBytes(
+      Uint8List.fromList([4, 5, 6]),
+      prefix: 'inside',
+    );
+    final picturesDir = await storage.getPicturesDirectory();
+    final insideAbsPath = p.join(picturesDir.path, savedUri);
+    final resolved = await storage.resolvePictureFile(insideAbsPath);
+    expect(resolved, isNotNull);
+    expect(await resolved!.readAsBytes(), [4, 5, 6]);
+  });
+
   test(
     'deletePicture deletes managed file and refuses external files',
     () async {

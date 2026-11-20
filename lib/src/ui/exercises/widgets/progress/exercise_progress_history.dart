@@ -18,6 +18,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:material_ui/material_ui.dart';
 
+import '../../../../data/repositories/exercises/dtos/exercise_record_dto.dart';
 import '../../../../data/utils/enums.dart';
 import '../../../core/sizes/data_display_sizes.dart';
 import '../../../core/sizes/screen_size.dart';
@@ -177,7 +178,10 @@ class _ExerciseProgressHistoryState extends State<ExerciseProgressHistory> {
         BlocBuilder<ExerciseRecordCubit, ExerciseRecordState>(
           builder: (context, state) {
             final isLoading = state.isRecordsLoading;
-            if (!isLoading && state.exerciseRecords.isEmpty) {
+            final records = state.recordPagination.exerciseId == null
+                ? state.exerciseRecords
+                : const <ExerciseRecordDto>[];
+            if (!isLoading && records.isEmpty) {
               return NotFoundList(
                 height: widget.breakPoint.height / 3,
                 sizes: widget.sizes,
@@ -192,7 +196,7 @@ class _ExerciseProgressHistoryState extends State<ExerciseProgressHistory> {
                 sizes: widget.sizes,
                 units: widget.units,
                 isLoading: isLoading,
-                exerciseRecords: state.exerciseRecords,
+                exerciseRecords: records,
                 pagination: state.recordPagination,
                 scrollController: _scrollController,
                 onTapExercise: widget.onOpenExerciseRecords,

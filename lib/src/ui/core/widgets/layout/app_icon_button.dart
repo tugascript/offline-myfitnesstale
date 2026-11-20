@@ -51,7 +51,7 @@ class AppIconButton extends StatelessWidget {
         color: isLoading ? greyedOut : color,
         size: small ? sizes.btnMediumIconSize : sizes.mediumIconSize,
       ),
-      onPressed: onPressed,
+      onPressed: isLoading ? null : onPressed,
       tooltip: tooltip,
     );
   }
