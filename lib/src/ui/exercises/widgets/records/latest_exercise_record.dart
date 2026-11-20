@@ -67,11 +67,11 @@ class _LatestExerciseRecordState extends State<LatestExerciseRecord> {
             ? state.latestExerciseRecord
             : null;
 
-        if (!isLoading && state.error != null && record == null) {
+        if (!isLoading && state.latestError != null && record == null) {
           return ExerciseProgressErrorCard(
             theme: widget.theme,
             sizes: widget.sizes,
-            message: state.error!.description,
+            message: state.latestError!.description,
             onRetry: () {
               context.read<ExerciseRecordCubit>().getLatestExerciseRecord(
                 widget.exercise.id,

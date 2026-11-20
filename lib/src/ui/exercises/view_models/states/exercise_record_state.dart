@@ -113,6 +113,8 @@ final class ExerciseRecordState extends Equatable {
   final bool isLoadingActiveGoal;
   final bool isLoadingGoals;
   final ErrorState? error;
+  final ErrorState? latestError;
+  final ErrorState? recordsError;
 
   bool get isLoading =>
       _isLoading ||
@@ -142,6 +144,8 @@ final class ExerciseRecordState extends Equatable {
     this.isLoadingActiveGoal = false,
     this.isLoadingGoals = false,
     this.error,
+    this.latestError,
+    this.recordsError,
   });
 
   factory ExerciseRecordState.initial() {
@@ -173,6 +177,8 @@ final class ExerciseRecordState extends Equatable {
     bool? isLoadingActiveGoal,
     bool? isLoadingGoals,
     Nullable<ErrorState>? error,
+    Nullable<ErrorState>? latestError,
+    Nullable<ErrorState>? recordsError,
   }) {
     return ExerciseRecordState(
       recordsRequestId: recordsRequestId ?? this.recordsRequestId,
@@ -204,6 +210,10 @@ final class ExerciseRecordState extends Equatable {
       isLoadingActiveGoal: isLoadingActiveGoal ?? this.isLoadingActiveGoal,
       isLoadingGoals: isLoadingGoals ?? this.isLoadingGoals,
       error: error != null ? error.value : this.error,
+      latestError: latestError != null ? latestError.value : this.latestError,
+      recordsError: recordsError != null
+          ? recordsError.value
+          : this.recordsError,
     );
   }
 
@@ -227,5 +237,7 @@ final class ExerciseRecordState extends Equatable {
     isLoadingActiveGoal,
     isLoadingGoals,
     error,
+    latestError,
+    recordsError,
   ];
 }

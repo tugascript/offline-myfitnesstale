@@ -728,14 +728,26 @@ class ExerciseCubit extends Cubit<ExerciseState>
       final updatedEquipment = result.value;
       if (isClosed) return;
       final selected = state.selectedEquipment;
+      final pagination = state.equipmentPagination;
+      final removedFromFavorites = pagination.isFavorite && !isFavorite;
+      final wasInList =
+          removedFromFavorites && state.equipments.any((e) => e.id == id);
+      final updatedEquipments = removedFromFavorites
+          ? state.equipments.where((e) => e.id != id).toList()
+          : state.equipments
+                .map((e) => e.id == id ? updatedEquipment : e)
+                .toList();
       emit(
         state.copyWith(
           selectedEquipment: selected?.equipment.id == id
               ? Nullable(selected!.copyWith(equipment: updatedEquipment))
               : null,
-          equipments: state.equipments
-              .map((e) => e.id == id ? updatedEquipment : e)
-              .toList(),
+          equipments: updatedEquipments,
+          equipmentPagination: wasInList
+              ? pagination.copyWith(
+                  total: pagination.total > 0 ? pagination.total - 1 : 0,
+                )
+              : null,
           isLoading: false,
           error: const Nullable(null),
         ),
