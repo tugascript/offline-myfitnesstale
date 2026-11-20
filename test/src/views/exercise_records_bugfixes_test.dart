@@ -780,6 +780,38 @@ void main() {
       whereArgs: [goalId],
     );
     expect(goalRows.single[StrengthGoalColumns.status.name], 'completed');
+
+    // Qualifying record at midnight on the same calendar day as a goal created later
+    // that day (14:30) MUST complete the goal.
+    final sameDayGoalId = await db.insert(
+      StrengthGoal.table,
+      StrengthGoal.create(
+        exerciseId: assistedId,
+        targetWeight: 20000,
+        targetReps: 8,
+        targetMaxStrength: 25333,
+        startDate: DateUtilities.getDateUnix(DateTime(2026, 6, 10, 14, 30)),
+      ).toMap(),
+    );
+    final sameDayRecord = await repo.createExerciseRecord(
+      ExerciseRecordInput(
+        exerciseId: assistedId,
+        weight: 10000,
+        reps: 8,
+        recordDate: DateTime(2026, 6, 10),
+      ),
+    );
+    expect(sameDayRecord.isOk(), isTrue);
+
+    final sameDayGoalRows = await db.query(
+      StrengthGoal.table,
+      where: '${StrengthGoalColumns.id.name} = ?',
+      whereArgs: [sameDayGoalId],
+    );
+    expect(
+      sameDayGoalRows.single[StrengthGoalColumns.status.name],
+      'completed',
+    );
   });
 
   testWidgets(

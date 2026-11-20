@@ -30,16 +30,17 @@ import '../widgets/strength_goal/active_strength_goal_card.dart';
 import '../widgets/strength_goal/create_strength_goal_modal.dart';
 import '../widgets/strength_goal/strength_goal_history.dart';
 
-class StrengthGoalsScreen extends StatefulWidget {
+class StrengthGoalsListScreen extends StatefulWidget {
   static const name = 'strength-goals';
 
-  const StrengthGoalsScreen({super.key});
+  const StrengthGoalsListScreen({super.key});
 
   @override
-  State<StrengthGoalsScreen> createState() => _StrengthGoalsScreenState();
+  State<StrengthGoalsListScreen> createState() =>
+      _StrengthGoalsListScreenState();
 }
 
-class _StrengthGoalsScreenState extends State<StrengthGoalsScreen> {
+class _StrengthGoalsListScreenState extends State<StrengthGoalsListScreen> {
   @override
   void initState() {
     super.initState();
