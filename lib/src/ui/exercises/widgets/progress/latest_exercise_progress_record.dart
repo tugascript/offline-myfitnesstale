@@ -57,9 +57,7 @@ class _LatestExerciseProgressRecordState
     return BlocBuilder<ExerciseRecordCubit, ExerciseRecordState>(
       builder: (context, state) {
         final isLoading = state.isLatestLoading;
-        final record = isLoading && state.latestExerciseRecord?.exercise == null
-            ? null
-            : state.latestExerciseRecord;
+        final record = isLoading ? null : state.latestExerciseRecord;
 
         if (!isLoading && record == null) {
           return EmptyExerciseProgressRecord(
