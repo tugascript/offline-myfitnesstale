@@ -71,38 +71,36 @@ class EditExerciseRecordModal extends StatelessWidget {
               required int reps,
               required DateTime date,
             }) async {
-              final cubit = context.read<ExerciseRecordCubit>();
               final existingPicture = record.picture;
               final existingVideo = record.video;
-              await cubit.updateExerciseRecord(
-                record.id,
-                ExerciseRecordInput(
-                  exerciseId: exerciseId,
-                  weight: weight,
-                  reps: reps,
-                  recordDate: date,
-                  picture: Nullable(
-                    existingPicture != null
-                        ? PictureData(
-                            uri: existingPicture.uri,
-                            storage: existingPicture.storage,
-                          )
-                        : null,
-                  ),
-                  video: Nullable(
-                    existingVideo != null
-                        ? VideoData(
-                            uri: existingVideo.uri,
-                            platform: existingVideo.platform,
-                          )
-                        : null,
-                  ),
-                ),
-              );
-              if (cubit.state.error != null) {
-                return;
-              }
-              if (context.mounted) {
+              final updated = await context
+                  .read<ExerciseRecordCubit>()
+                  .updateExerciseRecord(
+                    record.id,
+                    ExerciseRecordInput(
+                      exerciseId: exerciseId,
+                      weight: weight,
+                      reps: reps,
+                      recordDate: date,
+                      picture: Nullable(
+                        existingPicture != null
+                            ? PictureData(
+                                uri: existingPicture.uri,
+                                storage: existingPicture.storage,
+                              )
+                            : null,
+                      ),
+                      video: Nullable(
+                        existingVideo != null
+                            ? VideoData(
+                                uri: existingVideo.uri,
+                                platform: existingVideo.platform,
+                              )
+                            : null,
+                      ),
+                    ),
+                  );
+              if (updated && context.mounted) {
                 Navigator.pop(context);
               }
             },

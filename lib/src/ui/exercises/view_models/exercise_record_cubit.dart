@@ -126,6 +126,7 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
               latestExerciseRecord: const Nullable(null),
               latestExerciseId: Nullable(exerciseId),
               isLoadingLatest: false,
+              error: const Nullable(null),
             ),
           );
           return;
@@ -156,11 +157,11 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
     );
   }
 
-  Future<void> createExerciseRecord(ExerciseRecordInput input) async {
+  Future<bool> createExerciseRecord(ExerciseRecordInput input) async {
     emit(state.copyWith(isLoading: true));
 
     final result = await _exerciseRecordService.createExerciseRecord(input);
-    if (isClosed) return;
+    if (isClosed) return false;
 
     if (result.isErr()) {
       final error = result.error;
@@ -180,12 +181,13 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
               isLoading: false,
             ),
           );
-          return;
+          return false;
       }
     }
 
     final record = result.value;
     await _syncRecordMutationState(record);
+    return true;
   }
 
   Future<void> _syncRecordMutationState(ExerciseRecordDto record) async {
@@ -196,7 +198,6 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
 
     List<ExerciseRecordDto>? refreshedRecords;
     ExerciseRecordPagination? refreshedPagination;
-    ErrorState? refreshError;
 
     if (shouldRefreshRecords) {
       final recordsResult = await _exerciseRecordService.getExerciseRecords(
@@ -207,11 +208,9 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
       if (isClosed) return;
 
       if (recordsResult.isErr()) {
-        final error = recordsResult.error;
-        _logger.warning("Failed to get exercise records", error);
-        refreshError = ErrorState(
-          type: error.type.name,
-          description: "Failed to get exercise records",
+        _logger.warning(
+          "Failed to refresh exercise records after mutation",
+          recordsResult.error,
         );
       } else {
         final paginatedData = recordsResult.value;
@@ -239,12 +238,8 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
         refreshedLatest = const Nullable(null);
       } else {
         _logger.warning(
-          "Failed to fetch latest exercise record",
+          "Failed to refresh latest exercise record after mutation",
           latestResult.error,
-        );
-        refreshError ??= ErrorState(
-          type: latestResult.error.type.name,
-          description: "Failed to get latest exercise record",
         );
       }
     }
@@ -256,16 +251,17 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
         recordPagination: refreshedPagination,
         latestExerciseRecord: refreshedLatest,
         isLoading: false,
-        error: Nullable(refreshError),
+        error: const Nullable(null),
       ),
     );
     await _refreshStrengthGoals();
   }
 
-  Future<void> updateExerciseRecord(int id, ExerciseRecordInput input) async {
+  Future<bool> updateExerciseRecord(int id, ExerciseRecordInput input) async {
     emit(state.copyWith(isLoading: true));
 
     final result = await _exerciseRecordService.updateExerciseRecord(id, input);
+    if (isClosed) return false;
 
     if (result.isErr()) {
       final error = result.error;
@@ -285,19 +281,21 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
               isLoading: false,
             ),
           );
-          return;
+          return false;
       }
     }
 
     _logger.info("Exercise record updated successfully");
     final exerciseRecord = result.value;
     await _syncRecordMutationState(exerciseRecord);
+    return true;
   }
 
   Future<void> deleteExerciseRecord(int id) async {
     emit(state.copyWith(isLoading: true));
 
     final result = await _exerciseRecordService.deleteExerciseRecord(id);
+    if (isClosed) return;
 
     if (result.isErr()) {
       final error = result.error;
@@ -332,6 +330,7 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
       }
     }
 
+    final wasInPage = state.exerciseRecords.any((r) => r.id == id);
     final updatedRecords = state.exerciseRecords
         .where((r) => r.id != id)
         .toList();
@@ -352,9 +351,9 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
               : state.selectedExerciseRecord,
         ),
         recordPagination: state.recordPagination.copyWith(
-          total: state.recordPagination.total > 0
+          total: wasInPage && state.recordPagination.total > 0
               ? state.recordPagination.total - 1
-              : 0,
+              : state.recordPagination.total,
         ),
         latestExerciseRecord: Nullable(latestRecord),
         isLoading: false,
@@ -365,17 +364,18 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
 
   Future<void> getActiveStrengthGoal({int? exerciseId}) async {
     _logger.info("Getting active strength goal");
-    emit(state.copyWith(isLoading: true));
+    emit(state.copyWith(isLoadingActiveGoal: true));
     final result = await _exerciseRecordService.getActiveStrengthGoal(
       exerciseId: exerciseId,
     );
+    if (isClosed) return;
     if (result.isErr()) {
       final error = result.error;
       if (error.type == SingleErrorTypes.notFound) {
         emit(
           state.copyWith(
             activeStrengthGoal: const Nullable(null),
-            isLoading: false,
+            isLoadingActiveGoal: false,
             error: const Nullable(null),
           ),
         );
@@ -383,7 +383,7 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
         _logger.warning('Failed to load active entity', error);
         emit(
           state.copyWith(
-            isLoading: false,
+            isLoadingActiveGoal: false,
             error: Nullable(
               ErrorState(type: error.type.name, description: error.description),
             ),
@@ -395,7 +395,7 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
     emit(
       state.copyWith(
         activeStrengthGoal: Nullable(result.value),
-        isLoading: false,
+        isLoadingActiveGoal: false,
         error: const Nullable(null),
       ),
     );
@@ -409,7 +409,7 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
   }) async {
     _logger.info("Getting strength goals");
     final requestId = state.goalsRequestId + 1;
-    emit(state.copyWith(goalsRequestId: requestId, isLoading: true));
+    emit(state.copyWith(goalsRequestId: requestId, isLoadingGoals: true));
     final result = await _exerciseRecordService.getStrengthGoals(
       exerciseId: exerciseId,
       skipInProgress: skipInProgress,
@@ -425,7 +425,7 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
           error: Nullable(
             ErrorState(type: error.type.name, description: error.description),
           ),
-          isLoading: false,
+          isLoadingGoals: false,
         ),
       );
       return;
@@ -442,7 +442,7 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
           limit: limit,
           offset: offset,
         ),
-        isLoading: false,
+        isLoadingGoals: false,
         error: const Nullable(null),
       ),
     );

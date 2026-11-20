@@ -202,12 +202,13 @@ class _ExerciseRecordsHistoryState extends State<ExerciseRecordsHistory> {
         SizedBox(height: widget.sizes.spacing),
         BlocBuilder<ExerciseRecordCubit, ExerciseRecordState>(
           builder: (context, state) {
+            final isLoading = state.isRecordsLoading;
             final records =
                 state.recordPagination.exerciseId == widget.exercise.id
                 ? state.exerciseRecords
                 : const <ExerciseRecordDto>[];
 
-            if (!state.isLoading && state.error != null && records.isEmpty) {
+            if (!isLoading && state.error != null && records.isEmpty) {
               return ExerciseProgressErrorCard(
                 theme: widget.theme,
                 sizes: widget.sizes,
@@ -223,7 +224,7 @@ class _ExerciseRecordsHistoryState extends State<ExerciseRecordsHistory> {
               );
             }
 
-            if (!state.isLoading && records.isEmpty) {
+            if (!isLoading && records.isEmpty) {
               return NotFoundList(
                 height: widget.breakPoint.height / 3,
                 sizes: widget.sizes,
@@ -242,7 +243,7 @@ class _ExerciseRecordsHistoryState extends State<ExerciseRecordsHistory> {
                       units: widget.units,
                       exercise: widget.exercise,
                       records: records,
-                      isLoading: state.isLoading,
+                      isLoading: isLoading,
                     )
                   : Card(
                       margin: EdgeInsets.zero,
@@ -257,7 +258,7 @@ class _ExerciseRecordsHistoryState extends State<ExerciseRecordsHistory> {
                           sizes: widget.sizes,
                           records: records,
                           units: widget.units,
-                          isLoading: state.isLoading,
+                          isLoading: isLoading,
                         ),
                       ),
                     ),
