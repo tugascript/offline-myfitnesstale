@@ -585,7 +585,11 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
 
     final activeResult = await activeFuture;
     final listResult = await listFuture;
-    if (isClosed || requestId != state.goalsRequestId) return;
+    if (isClosed) return;
+    if (requestId != state.goalsRequestId) {
+      emit(state.copyWith(isLoading: false));
+      return;
+    }
 
     Nullable<StrengthGoalDto>? activeStrengthGoal;
     ErrorState? error;
