@@ -42,6 +42,7 @@ class StrengthGoalHistoryCard extends StatelessWidget {
   final Units units;
   final StrengthGoalDto goal;
   final bool isSkeleton;
+  final bool isMutating;
 
   const StrengthGoalHistoryCard({
     super.key,
@@ -50,6 +51,7 @@ class StrengthGoalHistoryCard extends StatelessWidget {
     required this.units,
     required this.goal,
     this.isSkeleton = false,
+    this.isMutating = false,
   });
 
   @override
@@ -57,6 +59,7 @@ class StrengthGoalHistoryCard extends StatelessWidget {
     final hasExercise = goal.exercise != null;
     final hasName = goal.name != null && goal.name!.trim().isNotEmpty;
     final displayDate = goal.completedAt ?? goal.startDate;
+    final disableActions = isSkeleton || isMutating;
 
     return ListCard(
       key: isSkeleton ? null : ValueKey('strength-goal-history-${goal.id}'),
@@ -166,11 +169,11 @@ class StrengthGoalHistoryCard extends StatelessWidget {
                   : ValueKey('strength-goal-history-add-record-${goal.id}'),
               sizes: sizes,
               small: true,
-              isLoading: isSkeleton,
+              isLoading: disableActions,
               color: theme.colorScheme.primary,
               icon: Icons.add,
               tooltip: 'Add a Record',
-              onPressed: isSkeleton
+              onPressed: disableActions
                   ? null
                   : () {
                       showDialog(
@@ -211,9 +214,9 @@ class StrengthGoalHistoryCard extends StatelessWidget {
                   : ValueKey('strength-goal-history-edit-${goal.id}'),
               sizes: sizes,
               small: true,
-              isLoading: isSkeleton,
+              isLoading: disableActions,
               onEdit: () {
-                if (isSkeleton) return;
+                if (disableActions) return;
                 showDialog(
                   context: context,
                   builder: (ctx) => EditStrengthGoalModal(
@@ -230,9 +233,9 @@ class StrengthGoalHistoryCard extends StatelessWidget {
                   : ValueKey('strength-goal-history-delete-${goal.id}'),
               sizes: sizes,
               small: true,
-              isLoading: isSkeleton,
+              isLoading: disableActions,
               onDelete: () {
-                if (isSkeleton) return;
+                if (disableActions) return;
                 showDialog(
                   context: context,
                   builder: (ctx) => ConfirmationDialog(

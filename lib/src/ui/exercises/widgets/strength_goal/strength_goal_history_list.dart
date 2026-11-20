@@ -78,7 +78,7 @@ class StrengthGoalHistoryList extends StatelessWidget {
         final history = state.strengthGoals
             .where((g) => g.id != state.activeStrengthGoal?.id)
             .toList();
-        final isInitialLoading = state.isLoading && history.isEmpty;
+        final isInitialLoading = state.isGoalsLoading && history.isEmpty;
 
         if (!isInitialLoading && history.isEmpty) {
           return NotFoundList(
@@ -91,7 +91,7 @@ class StrengthGoalHistoryList extends StatelessWidget {
         final hasMore =
             state.strengthGoals.length < state.strengthGoalPagination.total;
         final showLoadingMore =
-            state.isLoading &&
+            state.isGoalsLoading &&
             !isInitialLoading &&
             history.isNotEmpty &&
             hasMore;
@@ -134,6 +134,7 @@ class StrengthGoalHistoryList extends StatelessWidget {
                 sizes: sizes,
                 units: effectiveUnits,
                 goal: history[index],
+                isMutating: state.isMutating,
               );
             },
           ),
