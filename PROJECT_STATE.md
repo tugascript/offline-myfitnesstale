@@ -707,6 +707,20 @@ PR #36 review follow-up:
 - The repository-wide formatting check reports 13 other files needing formatting.
   No device journey was run; reminder scheduling remains unimplemented.
 
+### DAO transaction isolate regression (21 November 2026)
+
+- `Dao.startTransaction` keeps the open database connection and callback in
+  their owning isolate. Wrapping them in `Isolate.run` caused FFI transactions
+  to fail with `Database not found`; sqflite already dispatches SQLite work to
+  a background executor.
+- `test/src/services/dao_transaction_test.dart` covers committed writes and
+  callback state, rollback on an `Err` result with a successful retry, and
+  rollback with propagation of callback exceptions. All three tests reproduced
+  the isolate regression and pass after the fix.
+- Dependency resolution, repository-wide formatting, static analysis, and
+  whitespace checks passed. The host suite passed 688 tests with one existing
+  test skipped. Device integration journeys were not run.
+
 ## Known gaps and release blockers
 
 - No fitness-data import/export, backup/restore, cloud sync, or account system.
