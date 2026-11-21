@@ -18,8 +18,8 @@
 import 'package:logging/logging.dart';
 import 'package:sqflite/sqflite.dart';
 
-import '../../models/sqlite/model.dart';
 import '../../../utils/result.dart';
+import '../../models/sqlite/model.dart';
 import '../common.dart';
 import './database_helper.dart';
 
@@ -242,6 +242,8 @@ final class Dao<T extends Model> {
   }) async {
     _logger.info("startTransaction");
     final db = await _databaseHelper.db;
+    // Keep the connection and callback in their owning isolate. Sqflite
+    // dispatches database work to its background executor.
     try {
       return await db.transaction<R>((txn) async {
         final result = await action(txn);
