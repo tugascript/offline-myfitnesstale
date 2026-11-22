@@ -503,7 +503,15 @@ final class DatabaseHelper {
       createdAt: startedAt,
       updatedAt: failedAt,
     );
-    await db.insert(Migration.table, failedMigration.toMap());
+    try {
+      await db.insert(Migration.table, failedMigration.toMap());
+    } catch (recordError, recordStackTrace) {
+      Logger('Database').severe(
+        'Failed to persist migration failure record for v$version ($name, ${direction.value})',
+        recordError,
+        recordStackTrace,
+      );
+    }
   }
 
   Future<void> _executeStatements(DatabaseExecutor executor, String sql) async {
