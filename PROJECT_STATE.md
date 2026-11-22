@@ -744,11 +744,13 @@ The current create schema is version 1. `DatabaseHelper` ensures the
 `migrations` table (`Migration` model) exists first in `onOpen` before running
 schema creation, roll-forward upgrades, or `rollbackTo` / `onDowngrade`
 rollbacks inside explicit SQLite transactions (`PRAGMA user_version` is updated
-inside each transaction). Each execution inserts a `pending` `Migration` row
-and updates it to `applied` or `rolled_back` inside the transaction, or records
-`failed` with `failed_at` and `failure` outside the transaction if it rolls
-back. Because no public release or external beta compatibility baseline exists,
-development databases are disposable and may be recreated after schema changes.
+inside each transaction). Each execution inserts an `applied` or `rolled_back`
+`Migration` row atomically inside the transaction, or inserts a `failed` row
+with `failed_at` and `failure` outside the transaction if it rolls back (and
+backfills a baseline v1 `applied` row only for pre-existing `user_version == 1`
+databases lacking one). Because no public release or external beta compatibility
+baseline exists, development databases are disposable and may be recreated after
+schema changes.
 
 The backup tables were added to the version 1 create schema without an upgrade
 migration. Existing development databases created before this addition require

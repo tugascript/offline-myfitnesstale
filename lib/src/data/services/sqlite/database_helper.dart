@@ -20,7 +20,6 @@ import 'package:logging/logging.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
-import '../../../utils/nullable.dart';
 import '../../models/sqlite/backup_config_model.dart';
 import '../../models/sqlite/backup_model.dart';
 import '../../models/sqlite/backup_passkeys_model.dart';
@@ -82,6 +81,7 @@ final class DatabaseHelper {
 
   factory DatabaseHelper() => _instance;
   static Database? _db;
+  static Future<Database>? _initFuture;
   String _databaseName = _productionDatabaseName;
   int _targetVersion = _databaseVersion;
   List<DatabaseMigration> _registeredMigrations = _defaultMigrations;
@@ -89,13 +89,25 @@ final class DatabaseHelper {
 
   DatabaseHelper._();
 
-  Future<Database> get db async {
+  Future<Database> get db {
     if (_db != null) {
-      return _db!;
+      return Future.value(_db!);
     }
 
-    _db = await _initDb();
-    return _db!;
+    if (_initFuture != null) {
+      return _initFuture!;
+    }
+
+    final future = _initDb()
+        .then((database) {
+          _db = database;
+          return database;
+        })
+        .whenComplete(() {
+          _initFuture = null;
+        });
+    _initFuture = future;
+    return future;
   }
 
   Future<void> initialize() async {
@@ -132,6 +144,14 @@ final class DatabaseHelper {
   }
 
   Future<void> resetForTesting({bool resetMigrations = true}) async {
+    final pendingInit = _initFuture;
+    if (pendingInit != null) {
+      try {
+        await pendingInit;
+      } catch (_) {}
+      _initFuture = null;
+    }
+
     if (resetMigrations) {
       _targetVersion = _databaseVersion;
       _registeredMigrations = _defaultMigrations;
@@ -230,7 +250,7 @@ final class DatabaseHelper {
       return;
     }
 
-    await _ensureBaselineMigrationRecord(db);
+    await _ensureBaselineMigrationRecord(db, currentVersion);
 
     if (currentVersion < _targetVersion) {
       await _onUpgrade(db, currentVersion, _targetVersion);
@@ -243,7 +263,14 @@ final class DatabaseHelper {
     await _executeStatements(db, Migration.tableCreate);
   }
 
-  Future<void> _ensureBaselineMigrationRecord(Database db) async {
+  Future<void> _ensureBaselineMigrationRecord(
+    Database db,
+    int currentVersion,
+  ) async {
+    if (currentVersion != 1) {
+      return;
+    }
+
     final existing = await db.query(
       Migration.table,
       columns: [MigrationColumns.id.value],
@@ -315,12 +342,7 @@ final class DatabaseHelper {
       MealPlanDayRecord.tableCreate,
     ];
 
-    final persistedPending = await _insertPendingMigration(
-      db: db,
-      version: version,
-      name: _initialSchemaMigrationName,
-      direction: MigrationDirection.up,
-    );
+    final int startedAt = DateUtilities.getNowUtcUnix();
 
     try {
       await db.transaction((txn) async {
@@ -332,24 +354,26 @@ final class DatabaseHelper {
           await _onCreateExtraStepForTesting!(txn);
         }
 
-        final int now = DateUtilities.getNowUtcUnix();
-        final appliedMigration = persistedPending.copyWith(
+        final int finishedAt = DateUtilities.getNowUtcUnix();
+        final appliedMigration = Migration(
+          version: version,
+          name: _initialSchemaMigrationName,
           status: MigrationStatus.applied,
-          appliedAt: Nullable(now),
-          updatedAt: now,
+          direction: MigrationDirection.up,
+          appliedAt: finishedAt,
+          createdAt: startedAt,
+          updatedAt: finishedAt,
         );
-        await txn.update(
-          Migration.table,
-          appliedMigration.toMap(),
-          where: MigrationColumns.id.equal,
-          whereArgs: [persistedPending.id],
-        );
+        await txn.insert(Migration.table, appliedMigration.toMap());
         await txn.execute('PRAGMA user_version = $version');
       });
     } catch (error, stackTrace) {
       await _recordMigrationFailure(
         db: db,
-        pendingMigration: persistedPending,
+        version: version,
+        name: _initialSchemaMigrationName,
+        direction: MigrationDirection.up,
+        startedAt: startedAt,
         error: error,
         stackTrace: stackTrace,
       );
@@ -363,35 +387,32 @@ final class DatabaseHelper {
     ];
 
     for (final migration in steps) {
-      final persistedPending = await _insertPendingMigration(
-        db: db,
-        version: migration.version,
-        name: migration.name,
-        direction: MigrationDirection.up,
-      );
+      final int startedAt = DateUtilities.getNowUtcUnix();
 
       try {
         await db.transaction((txn) async {
           await migration.up(txn);
 
-          final int now = DateUtilities.getNowUtcUnix();
-          final appliedMigration = persistedPending.copyWith(
+          final int finishedAt = DateUtilities.getNowUtcUnix();
+          final appliedMigration = Migration(
+            version: migration.version,
+            name: migration.name,
             status: MigrationStatus.applied,
-            appliedAt: Nullable(now),
-            updatedAt: now,
+            direction: MigrationDirection.up,
+            appliedAt: finishedAt,
+            createdAt: startedAt,
+            updatedAt: finishedAt,
           );
-          await txn.update(
-            Migration.table,
-            appliedMigration.toMap(),
-            where: MigrationColumns.id.equal,
-            whereArgs: [persistedPending.id],
-          );
+          await txn.insert(Migration.table, appliedMigration.toMap());
           await txn.execute('PRAGMA user_version = ${migration.version}');
         });
       } catch (error, stackTrace) {
         await _recordMigrationFailure(
           db: db,
-          pendingMigration: persistedPending,
+          version: migration.version,
+          name: migration.name,
+          direction: MigrationDirection.up,
+          startedAt: startedAt,
           error: error,
           stackTrace: stackTrace,
         );
@@ -414,35 +435,32 @@ final class DatabaseHelper {
     ];
 
     for (final migration in steps) {
-      final persistedPending = await _insertPendingMigration(
-        db: db,
-        version: migration.version,
-        name: migration.name,
-        direction: MigrationDirection.down,
-      );
+      final int startedAt = DateUtilities.getNowUtcUnix();
 
       try {
         await db.transaction((txn) async {
           await migration.down(txn);
 
-          final int now = DateUtilities.getNowUtcUnix();
-          final rolledBackMigration = persistedPending.copyWith(
+          final int finishedAt = DateUtilities.getNowUtcUnix();
+          final rolledBackMigration = Migration(
+            version: migration.version,
+            name: migration.name,
             status: MigrationStatus.rolledBack,
-            rolledBackAt: Nullable(now),
-            updatedAt: now,
+            direction: MigrationDirection.down,
+            rolledBackAt: finishedAt,
+            createdAt: startedAt,
+            updatedAt: finishedAt,
           );
-          await txn.update(
-            Migration.table,
-            rolledBackMigration.toMap(),
-            where: MigrationColumns.id.equal,
-            whereArgs: [persistedPending.id],
-          );
+          await txn.insert(Migration.table, rolledBackMigration.toMap());
           await txn.execute('PRAGMA user_version = ${migration.version - 1}');
         });
       } catch (error, stackTrace) {
         await _recordMigrationFailure(
           db: db,
-          pendingMigration: persistedPending,
+          version: migration.version,
+          name: migration.name,
+          direction: MigrationDirection.down,
+          startedAt: startedAt,
           error: error,
           stackTrace: stackTrace,
         );
@@ -460,50 +478,32 @@ final class DatabaseHelper {
     throw StateError('No DatabaseMigration registered for version $version.');
   }
 
-  Future<Migration> _insertPendingMigration({
+  Future<void> _recordMigrationFailure({
     required Database db,
     required int version,
     required String name,
     required MigrationDirection direction,
-  }) async {
-    final pendingMigration = Migration.create(
-      version: version,
-      name: name,
-      status: MigrationStatus.pending,
-      direction: direction,
-    );
-    final int migrationId = await db.insert(
-      Migration.table,
-      pendingMigration.toMap(),
-    );
-    return pendingMigration.copyWith(id: Nullable(migrationId));
-  }
-
-  Future<void> _recordMigrationFailure({
-    required Database db,
-    required Migration pendingMigration,
+    required int startedAt,
     required Object error,
     required StackTrace stackTrace,
   }) async {
     Logger('Database').severe(
-      'Migration v${pendingMigration.version} (${pendingMigration.name}, '
-      '${pendingMigration.direction.value}) failed',
+      'Migration v$version ($name, ${direction.value}) failed',
       error,
       stackTrace,
     );
     final int failedAt = DateUtilities.getNowUtcUnix();
-    final failedMigration = pendingMigration.copyWith(
+    final failedMigration = Migration(
+      version: version,
+      name: name,
       status: MigrationStatus.failed,
-      failedAt: Nullable(failedAt),
-      failure: Nullable(error.toString()),
+      direction: direction,
+      failedAt: failedAt,
+      failure: error.toString(),
+      createdAt: startedAt,
       updatedAt: failedAt,
     );
-    await db.update(
-      Migration.table,
-      failedMigration.toMap(),
-      where: MigrationColumns.id.equal,
-      whereArgs: [pendingMigration.id],
-    );
+    await db.insert(Migration.table, failedMigration.toMap());
   }
 
   Future<void> _executeStatements(DatabaseExecutor executor, String sql) async {

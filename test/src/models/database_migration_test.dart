@@ -368,6 +368,71 @@ void main() {
     });
 
     test(
+      'does not insert synthetic v1 record for legacy database above version 1',
+      () async {
+        final legacyDb = await openDatabase(
+          join(tempDirectory.path, 'app.db'),
+          version: 2,
+          onCreate: (db, _) async {
+            for (final statement in Profile.tableCreate.split(';')) {
+              if (statement.trim().isNotEmpty) {
+                await db.execute(statement.trim());
+              }
+            }
+          },
+        );
+        await legacyDb.close();
+
+        databaseHelper.configureMigrationsForTesting(targetVersion: 2);
+        await databaseHelper.initialize();
+
+        expect(await (await databaseHelper.db).getVersion(), 2);
+        expect(await databaseHelper.getMigrations(), isEmpty);
+      },
+    );
+
+    test('serializes concurrent db getter calls and allows retry after failed init', () async {
+      int createInvocations = 0;
+      databaseHelper.configureMigrationsForTesting(
+        onCreateExtraStep: (txn) async {
+          createInvocations++;
+          throw StateError('Transient init failure');
+        },
+      );
+
+      final failedFutures = [
+        databaseHelper.db,
+        databaseHelper.db,
+        databaseHelper.db,
+      ];
+      for (final future in failedFutures) {
+        await expectLater(future, throwsA(isA<StateError>()));
+      }
+      expect(createInvocations, 1);
+
+      createInvocations = 0;
+      databaseHelper.configureMigrationsForTesting(
+        onCreateExtraStep: (txn) async {
+          createInvocations++;
+        },
+      );
+
+      final dbs = await Future.wait([
+        databaseHelper.db,
+        databaseHelper.db,
+        databaseHelper.db,
+      ]);
+      expect(createInvocations, 1);
+      expect(dbs.toSet(), hasLength(1));
+
+      final migrations = await databaseHelper.getMigrations();
+      expect(migrations.map((m) => (m.version, m.status)), [
+        (1, MigrationStatus.failed),
+        (1, MigrationStatus.applied),
+      ]);
+    });
+
+    test(
       'validates rollback target bounds and missing migration steps',
       () async {
         await databaseHelper.initialize();
