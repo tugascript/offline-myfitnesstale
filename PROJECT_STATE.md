@@ -24,7 +24,7 @@ reminder preferences do not schedule notifications.
 Repository facts at this review:
 
 - 486 Dart source files under `lib/`;
-- 45 SQLite tables in the create schema, including strength goals and the three backup tables;
+- 46 SQLite tables (`migrations` created before transactional schema setup, plus 45 domain/backup tables in the create schema);
 - database schema version 1;
 - 89 seeded exercises and 25 seeded equipment entries;
 - 16 optional starter workouts and one 16-week starter plan;
@@ -740,9 +740,15 @@ PR #36 review follow-up:
 
 ## Database policy
 
-The current create schema is version 1. Because no public release or external
-beta compatibility baseline exists, development databases are disposable and
-may be recreated after schema changes.
+The current create schema is version 1. `DatabaseHelper` ensures the
+`migrations` table (`Migration` model) exists first in `onOpen` before running
+schema creation, roll-forward upgrades, or `rollbackTo` / `onDowngrade`
+rollbacks inside explicit SQLite transactions (`PRAGMA user_version` is updated
+inside each transaction). Each execution inserts a `pending` `Migration` row
+and updates it to `applied` or `rolled_back` inside the transaction, or records
+`failed` with `failed_at` and `failure` outside the transaction if it rolls
+back. Because no public release or external beta compatibility baseline exists,
+development databases are disposable and may be recreated after schema changes.
 
 The backup tables were added to the version 1 create schema without an upgrade
 migration. Existing development databases created before this addition require

@@ -578,3 +578,29 @@ enum EquipmentRarity {
         orElse: () => EquipmentRarity.veryCommon,
       );
 }
+
+enum MigrationStatus {
+  pending("pending"),
+  applied("applied"),
+  rolledBack("rolled_back"),
+  failed("failed");
+
+  final String value;
+
+  const MigrationStatus(this.value);
+
+  static MigrationStatus fromValue(String v) => MigrationStatus.values
+      .firstWhere((s) => s.value == v, orElse: () => MigrationStatus.pending);
+}
+
+enum MigrationDirection {
+  up("up"),
+  down("down");
+
+  final String value;
+
+  const MigrationDirection(this.value);
+
+  static MigrationDirection fromValue(String v) => MigrationDirection.values
+      .firstWhere((d) => d.value == v, orElse: () => MigrationDirection.up);
+}
