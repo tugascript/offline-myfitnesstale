@@ -70,9 +70,9 @@ import 'package:myfitnesstale/src/ui/exercises/widgets/strength_goal/edit_streng
 import 'package:myfitnesstale/src/ui/foods/widgets/food_form_widget.dart';
 import 'package:myfitnesstale/src/ui/macros/widgets/goals/macro_goal_form_modal.dart';
 import 'package:myfitnesstale/src/ui/macros/widgets/log_food_modal.dart';
-import 'package:myfitnesstale/src/ui/macros/widgets/macro_tracker_day_widget.dart';
-import 'package:myfitnesstale/src/ui/macros/widgets/macro_tracker_month_widget.dart';
-import 'package:myfitnesstale/src/ui/macros/widgets/macro_tracker_week_widget.dart';
+import 'package:myfitnesstale/src/ui/macros/widgets/tracker/macro_tracker_day_widget.dart';
+import 'package:myfitnesstale/src/ui/macros/widgets/tracker/macro_tracker_month_widget.dart';
+import 'package:myfitnesstale/src/ui/macros/widgets/tracker/macro_tracker_week_widget.dart';
 import 'package:myfitnesstale/src/ui/meal_plans/widgets/meal_plan_form_widget.dart';
 import 'package:myfitnesstale/src/ui/recipes/widgets/recipe_form_widget.dart';
 import 'package:myfitnesstale/src/data/repositories/foods/food_repository.dart';

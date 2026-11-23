@@ -17,7 +17,7 @@
 
 import 'package:material_ui/material_ui.dart';
 
-import '../../core/sizes/data_display_sizes.dart';
+import '../../../core/sizes/data_display_sizes.dart';
 
 class MacroProgressBar extends StatelessWidget {
   final String label;
