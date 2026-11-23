@@ -22,13 +22,22 @@ import '../../../core/sizes/data_display_sizes.dart';
 import '../../utils/tacker_scope.dart';
 
 class MacroTrackerDateNavigator extends StatelessWidget {
+  static const int historyWindowDays = 365;
   static final _dayFormat = DateFormat('EEE, MMM d, yyyy');
   static final _weekBoundFormat = DateFormat('MMM d');
   static final _monthFormat = DateFormat('MMMM yyyy');
 
+  static DateTime defaultFirstDate(DateTime referenceDate) {
+    final today = DateUtils.dateOnly(referenceDate);
+    return DateTime(today.year, today.month, today.day - historyWindowDays);
+  }
+
   final DataDisplaySizesList sizes;
   final TrackerScope scope;
   final DateTime selectedDate;
+  final DateTime? firstDate;
+  final DateTime? lastDate;
+  final bool canGoPrevious;
   final bool canGoNext;
   final VoidCallback onPrevious;
   final VoidCallback onNext;
@@ -39,6 +48,9 @@ class MacroTrackerDateNavigator extends StatelessWidget {
     required this.sizes,
     required this.scope,
     required this.selectedDate,
+    this.firstDate,
+    this.lastDate,
+    required this.canGoPrevious,
     required this.canGoNext,
     required this.onPrevious,
     required this.onNext,
@@ -69,22 +81,34 @@ class MacroTrackerDateNavigator extends StatelessWidget {
         IconButton(
           key: const ValueKey('macro-tracker-prev-btn'),
           icon: Icon(Icons.chevron_left, size: sizes.buttonIconSize),
-          onPressed: onPrevious,
+          onPressed: canGoPrevious ? onPrevious : null,
         ),
         Expanded(
           child: TextButton(
             key: const ValueKey('macro-tracker-date-btn'),
             onPressed: () async {
-              final now = DateTime.now();
-              final today = DateUtils.dateOnly(now);
-              final initialDate = selectedDate.isAfter(today)
-                  ? today
-                  : selectedDate;
+              final today = DateUtils.dateOnly(DateTime.now());
+              final effectiveLastDate = DateUtils.dateOnly(lastDate ?? today);
+              final rawFirstDate = DateUtils.dateOnly(
+                firstDate ?? defaultFirstDate(effectiveLastDate),
+              );
+              final effectiveFirstDate = rawFirstDate.isAfter(effectiveLastDate)
+                  ? effectiveLastDate
+                  : rawFirstDate;
+              final selected = DateUtils.dateOnly(selectedDate);
+              final DateTime initialDate;
+              if (selected.isAfter(effectiveLastDate)) {
+                initialDate = effectiveLastDate;
+              } else if (selected.isBefore(effectiveFirstDate)) {
+                initialDate = effectiveFirstDate;
+              } else {
+                initialDate = selected;
+              }
               final picked = await showDatePicker(
                 context: context,
                 initialDate: initialDate,
-                firstDate: now.subtract(const Duration(days: 365)),
-                lastDate: now,
+                firstDate: effectiveFirstDate,
+                lastDate: effectiveLastDate,
               );
               if (picked != null) {
                 onDatePicked(picked);
