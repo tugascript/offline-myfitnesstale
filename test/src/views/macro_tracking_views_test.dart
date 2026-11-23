@@ -816,7 +816,7 @@ void main() {
     );
 
     testWidgets(
-      'MacroTrackerDateNavigator disables next button when canGoNext is false',
+      'MacroTrackerDateNavigator disables chevrons according to canGoPrevious and canGoNext',
       (tester) async {
         final sizes = DataDisplaySizes.getDataDisplaySizes(ScreenSize.md);
         var nextCalls = 0;
@@ -829,6 +829,7 @@ void main() {
                 sizes: sizes,
                 scope: TrackerScope.day,
                 selectedDate: DateTime(2026, 11, 24),
+                canGoPrevious: true,
                 canGoNext: false,
                 onPrevious: () => prevCalls++,
                 onNext: () => nextCalls++,
@@ -838,16 +839,84 @@ void main() {
           ),
         );
 
-        final disabledBtn = tester.widget<IconButton>(
+        final disabledNextBtn = tester.widget<IconButton>(
           find.byKey(const ValueKey('macro-tracker-next-btn')),
         );
-        expect(disabledBtn.onPressed, isNull);
+        expect(disabledNextBtn.onPressed, isNull);
 
         await tester.tap(find.byKey(const ValueKey('macro-tracker-next-btn')));
         await tester.tap(find.byKey(const ValueKey('macro-tracker-prev-btn')));
         await tester.pump();
         expect(nextCalls, 0);
         expect(prevCalls, 1);
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: MacroTrackerDateNavigator(
+                sizes: sizes,
+                scope: TrackerScope.day,
+                selectedDate: DateTime(2025, 11, 24),
+                canGoPrevious: false,
+                canGoNext: true,
+                onPrevious: () => prevCalls++,
+                onNext: () => nextCalls++,
+                onDatePicked: (_) {},
+              ),
+            ),
+          ),
+        );
+
+        final disabledPrevBtn = tester.widget<IconButton>(
+          find.byKey(const ValueKey('macro-tracker-prev-btn')),
+        );
+        expect(disabledPrevBtn.onPressed, isNull);
+
+        await tester.tap(find.byKey(const ValueKey('macro-tracker-prev-btn')));
+        await tester.tap(find.byKey(const ValueKey('macro-tracker-next-btn')));
+        await tester.pump();
+        expect(prevCalls, 1);
+        expect(nextCalls, 1);
+      },
+    );
+
+    testWidgets(
+      'MacroTrackerDateNavigator clamps initialDate when selectedDate precedes firstDate',
+      (tester) async {
+        final sizes = DataDisplaySizes.getDataDisplaySizes(ScreenSize.md);
+        final today = DateUtils.dateOnly(DateTime.now());
+        final firstDate = MacroTrackerDateNavigator.defaultFirstDate(today);
+        final thirteenMonthsAgo = DateTime(today.year, today.month - 13, 1);
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: MacroTrackerDateNavigator(
+                sizes: sizes,
+                scope: TrackerScope.month,
+                selectedDate: thirteenMonthsAgo,
+                firstDate: firstDate,
+                lastDate: today,
+                canGoPrevious: false,
+                canGoNext: true,
+                onPrevious: () {},
+                onNext: () {},
+                onDatePicked: (_) {},
+              ),
+            ),
+          ),
+        );
+
+        await tester.tap(find.byKey(const ValueKey('macro-tracker-date-btn')));
+        await tester.pumpAndSettle();
+
+        expect(tester.takeException(), isNull);
+        final picker = tester.widget<DatePickerDialog>(
+          find.byType(DatePickerDialog),
+        );
+        expect(picker.initialDate, firstDate);
+        expect(picker.firstDate, firstDate);
+        expect(picker.lastDate, today);
       },
     );
 
@@ -1028,13 +1097,67 @@ void main() {
     );
 
     testWidgets(
-      'MacroTrackerWeekWidget disables days after today and allows selecting today and earlier',
+      'MacroTrackerScreen aligns previous navigation with one-year picker minimum',
+      (tester) async {
+        await tester.pumpWidget(
+          buildAppHarness(child: const MacroTrackerScreen()),
+        );
+        await tester.pumpAndSettle();
+
+        final today = DateUtils.dateOnly(DateTime.now());
+        final minDate = MacroTrackerDateNavigator.defaultFirstDate(today);
+        final maxMonthSteps =
+            (today.year - minDate.year) * 12 + (today.month - minDate.month);
+
+        IconButton prevButton() => tester.widget<IconButton>(
+          find.byKey(const ValueKey('macro-tracker-prev-btn')),
+        );
+
+        await tester.tap(find.text('Month'));
+        await tester.pumpAndSettle();
+
+        for (var i = 0; i < maxMonthSteps; i++) {
+          expect(prevButton().onPressed, isNotNull);
+          await tester.tap(
+            find.byKey(const ValueKey('macro-tracker-prev-btn')),
+          );
+          await tester.pumpAndSettle();
+        }
+
+        // At the earliest month containing minDate, further backward navigation is disabled.
+        expect(prevButton().onPressed, isNull);
+
+        // Tapping the date header at the lower bound opens the picker cleanly.
+        await tester.tap(find.byKey(const ValueKey('macro-tracker-date-btn')));
+        await tester.pumpAndSettle();
+
+        expect(tester.takeException(), isNull);
+        final picker = tester.widget<DatePickerDialog>(
+          find.byType(DatePickerDialog),
+        );
+        expect(picker.initialDate, minDate);
+        expect(picker.firstDate, minDate);
+        expect(picker.lastDate, today);
+
+        await tester.tap(find.text('Cancel'));
+        await tester.pumpAndSettle();
+
+        // Switching to Day scope stays clamped at minDate with previous disabled.
+        await tester.tap(find.text('Day'));
+        await tester.pumpAndSettle();
+        expect(prevButton().onPressed, isNull);
+      },
+    );
+
+    testWidgets(
+      'MacroTrackerWeekWidget disables days outside the allowed history range',
       (tester) async {
         final macroCubit = _TestMacroTrackingCubit(hasLoadedActiveGoal: true);
         addTearDown(macroCubit.close);
         final sizes = DataDisplaySizes.getDataDisplaySizes(ScreenSize.md);
         final theme = ThemeData.light();
         final today = DateUtils.dateOnly(DateTime.now());
+        final minDate = MacroTrackerDateNavigator.defaultFirstDate(today);
         DateTime? pickedDate;
 
         Future<void> pumpWeek(DateTime date) async {
@@ -1092,17 +1215,35 @@ void main() {
         await tester.tap(find.byType(ListTile).first);
         await tester.pump();
         expect(pickedDate, isNull);
+
+        // Week entirely before minDate: all visible days are disabled.
+        pickedDate = null;
+        await pumpWeek(DateTime(minDate.year, minDate.month, minDate.day - 7));
+        final expiredWeekTiles = tester
+            .widgetList<ListTile>(find.byType(ListTile))
+            .toList();
+        expect(expiredWeekTiles, isNotEmpty);
+        for (final tile in expiredWeekTiles) {
+          expect(tile.enabled, isFalse);
+          expect(tile.onTap, isNull);
+          expect(tile.trailing, isNull);
+        }
+
+        await tester.tap(find.byType(ListTile).first);
+        await tester.pump();
+        expect(pickedDate, isNull);
       },
     );
 
     testWidgets(
-      'MacroTrackerMonthWidget disables days after today and allows selecting today and earlier',
+      'MacroTrackerMonthWidget disables days outside the allowed history range',
       (tester) async {
         final macroCubit = _TestMacroTrackingCubit(hasLoadedActiveGoal: true);
         addTearDown(macroCubit.close);
         final sizes = DataDisplaySizes.getDataDisplaySizes(ScreenSize.md);
         final theme = ThemeData.light();
         final today = DateUtils.dateOnly(DateTime.now());
+        final minDate = MacroTrackerDateNavigator.defaultFirstDate(today);
         DateTime? pickedDate;
 
         Future<void> pumpMonth(DateTime date) async {
@@ -1144,6 +1285,22 @@ void main() {
             .toList();
         expect(futureMonthTiles, isNotEmpty);
         for (final tile in futureMonthTiles) {
+          expect(tile.enabled, isFalse);
+          expect(tile.onTap, isNull);
+        }
+
+        await tester.tap(find.byType(ListTile).first);
+        await tester.pump();
+        expect(pickedDate, isNull);
+
+        // Month before minDate: all visible days are disabled.
+        pickedDate = null;
+        await pumpMonth(DateTime(minDate.year, minDate.month - 1, 1));
+        final expiredMonthTiles = tester
+            .widgetList<ListTile>(find.byType(ListTile))
+            .toList();
+        expect(expiredMonthTiles, isNotEmpty);
+        for (final tile in expiredMonthTiles) {
           expect(tile.enabled, isFalse);
           expect(tile.onTap, isNull);
         }

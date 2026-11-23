@@ -24,6 +24,7 @@ import '../../../../data/utils/dates.dart';
 import '../../../core/sizes/data_display_sizes.dart';
 import '../../view_models/macro_tracking_cubit.dart';
 import '../../view_models/states/macro_tracking_state.dart';
+import 'macro_tracker_date_navigator.dart';
 
 class MacroTrackerWeekWidget extends StatelessWidget {
   static final _dayFormat = DateFormat('EEEE, MMM d');
@@ -50,6 +51,7 @@ class MacroTrackerWeekWidget extends StatelessWidget {
       builder: (context, state) {
         final logs = state.rangeLogs;
         final today = DateUtils.dateOnly(DateTime.now());
+        final minDate = MacroTrackerDateNavigator.defaultFirstDate(today);
         final startOfWeek = DateTime(
           selectedDate.year,
           selectedDate.month,
@@ -65,7 +67,8 @@ class MacroTrackerWeekWidget extends StatelessWidget {
               startOfWeek.month,
               startOfWeek.day + index,
             );
-            final isFutureDay = dayDate.isAfter(today);
+            final isOutOfRange =
+                dayDate.isAfter(today) || dayDate.isBefore(minDate);
             final numDate = DateUtilities.getNumericDate(dayDate);
             final dayLog = logs.where((l) => l.date == numDate);
             final log = dayLog.isNotEmpty ? dayLog.first : null;
@@ -74,7 +77,7 @@ class MacroTrackerWeekWidget extends StatelessWidget {
                 .targetCalories;
 
             final isSelectedDay =
-                !isFutureDay && DateUtils.isSameDay(dayDate, selectedDate);
+                !isOutOfRange && DateUtils.isSameDay(dayDate, selectedDate);
 
             return Card(
               color: isSelectedDay
@@ -82,15 +85,15 @@ class MacroTrackerWeekWidget extends StatelessWidget {
                   : null,
               margin: EdgeInsets.zero,
               child: Opacity(
-                opacity: isFutureDay ? 0.5 : 1,
+                opacity: isOutOfRange ? 0.5 : 1,
                 child: ListTile(
-                  enabled: !isFutureDay,
+                  enabled: !isOutOfRange,
                   title: Text(
                     _dayFormat.format(dayDate),
                     style: TextStyle(
                       fontSize: sizes.fontSize,
                       fontWeight: FontWeight.bold,
-                      color: isFutureDay ? theme.disabledColor : null,
+                      color: isOutOfRange ? theme.disabledColor : null,
                     ),
                   ),
                   subtitle: Text(
@@ -99,15 +102,15 @@ class MacroTrackerWeekWidget extends StatelessWidget {
                         : 'No foods logged${targetCal != null ? ' • Target: $targetCal kcal' : ''}',
                     style: TextStyle(
                       fontSize: sizes.fontSize * 0.85,
-                      color: isFutureDay
+                      color: isOutOfRange
                           ? theme.disabledColor
                           : Colors.grey[600],
                     ),
                   ),
-                  trailing: isFutureDay
+                  trailing: isOutOfRange
                       ? null
                       : Icon(Icons.chevron_right, size: sizes.buttonIconSize),
-                  onTap: isFutureDay
+                  onTap: isOutOfRange
                       ? null
                       : () {
                           onSelectDate(dayDate);

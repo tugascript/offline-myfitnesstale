@@ -196,8 +196,42 @@ class _MacroTrackerScreenState extends State<MacroTrackerScreen> {
     _loadRangeForCurrentScope();
   }
 
+  DateTime get _today => DateUtils.dateOnly(DateTime.now());
+
+  DateTime _minDate(DateTime today) =>
+      MacroTrackerDateNavigator.defaultFirstDate(today);
+
+  bool get _canGoPrevious {
+    final today = _today;
+    final minDate = _minDate(today);
+    final selected = DateUtils.dateOnly(_selectedDate);
+    final DateTime previousPeriodEnd;
+    switch (_scope) {
+      case TrackerScope.day:
+        previousPeriodEnd = DateTime(
+          selected.year,
+          selected.month,
+          selected.day - 1,
+        );
+      case TrackerScope.week:
+        final weekStart = DateTime(
+          selected.year,
+          selected.month,
+          selected.day - (selected.weekday - 1),
+        );
+        previousPeriodEnd = DateTime(
+          weekStart.year,
+          weekStart.month,
+          weekStart.day - 1,
+        );
+      case TrackerScope.month:
+        previousPeriodEnd = DateTime(selected.year, selected.month, 0);
+    }
+    return !previousPeriodEnd.isBefore(minDate);
+  }
+
   bool get _canGoNext {
-    final today = DateUtils.dateOnly(DateTime.now());
+    final today = _today;
     final selected = DateUtils.dateOnly(_selectedDate);
     final DateTime nextPeriodStart;
     switch (_scope) {
@@ -225,37 +259,39 @@ class _MacroTrackerScreenState extends State<MacroTrackerScreen> {
   }
 
   void _prevPeriod() {
+    if (!_canGoPrevious) return;
+    final today = _today;
+    final minDate = _minDate(today);
+    DateTime prevDate;
+    switch (_scope) {
+      case TrackerScope.day:
+        prevDate = DateTime(
+          _selectedDate.year,
+          _selectedDate.month,
+          _selectedDate.day - 1,
+        );
+      case TrackerScope.week:
+        prevDate = DateTime(
+          _selectedDate.year,
+          _selectedDate.month,
+          _selectedDate.day - 7,
+        );
+      case TrackerScope.month:
+        prevDate = DateTime(_selectedDate.year, _selectedDate.month - 1, 1);
+    }
+    if (prevDate.isBefore(minDate)) {
+      prevDate = minDate;
+    }
     setState(() {
-      switch (_scope) {
-        case TrackerScope.day:
-          _selectedDate = DateTime(
-            _selectedDate.year,
-            _selectedDate.month,
-            _selectedDate.day - 1,
-          );
-          break;
-        case TrackerScope.week:
-          _selectedDate = DateTime(
-            _selectedDate.year,
-            _selectedDate.month,
-            _selectedDate.day - 7,
-          );
-          break;
-        case TrackerScope.month:
-          _selectedDate = DateTime(
-            _selectedDate.year,
-            _selectedDate.month - 1,
-            1,
-          );
-          break;
-      }
+      _selectedDate = prevDate;
     });
     _loadPeriodData();
   }
 
   void _nextPeriod() {
     if (!_canGoNext) return;
-    final today = DateUtils.dateOnly(DateTime.now());
+    final today = _today;
+    final minDate = _minDate(today);
     DateTime nextDate;
     switch (_scope) {
       case TrackerScope.day:
@@ -275,6 +311,8 @@ class _MacroTrackerScreenState extends State<MacroTrackerScreen> {
     }
     if (nextDate.isAfter(today)) {
       nextDate = today;
+    } else if (nextDate.isBefore(minDate)) {
+      nextDate = minDate;
     }
     setState(() {
       _selectedDate = nextDate;
@@ -283,10 +321,12 @@ class _MacroTrackerScreenState extends State<MacroTrackerScreen> {
   }
 
   void _onDatePicked(DateTime picked) {
-    final today = DateUtils.dateOnly(DateTime.now());
-    if (DateUtils.dateOnly(picked).isAfter(today)) return;
+    final today = _today;
+    final minDate = _minDate(today);
+    final pickedDate = DateUtils.dateOnly(picked);
+    if (pickedDate.isAfter(today) || pickedDate.isBefore(minDate)) return;
     setState(() {
-      _selectedDate = picked;
+      _selectedDate = pickedDate;
     });
     _loadPeriodData();
   }
@@ -303,6 +343,8 @@ class _MacroTrackerScreenState extends State<MacroTrackerScreen> {
     final theme = Theme.of(context);
     final breakpoints = BreakPoint.fromContext(context);
     final sizes = DataDisplaySizes.getDataDisplaySizes(breakpoints.screenSize);
+    final today = _today;
+    final minDate = _minDate(today);
 
     return BlocListener<MealPlanRecordCubit, MealPlanRecordState>(
       listenWhen: (previous, current) =>
@@ -336,6 +378,9 @@ class _MacroTrackerScreenState extends State<MacroTrackerScreen> {
                     sizes: sizes,
                     scope: _scope,
                     selectedDate: _selectedDate,
+                    firstDate: minDate,
+                    lastDate: today,
+                    canGoPrevious: _canGoPrevious,
                     canGoNext: _canGoNext,
                     onPrevious: _prevPeriod,
                     onNext: _nextPeriod,
@@ -379,10 +424,12 @@ class _MacroTrackerScreenState extends State<MacroTrackerScreen> {
   }
 
   void _selectDay(DateTime date) {
-    final today = DateUtils.dateOnly(DateTime.now());
-    if (DateUtils.dateOnly(date).isAfter(today)) return;
+    final today = _today;
+    final minDate = _minDate(today);
+    final targetDate = DateUtils.dateOnly(date);
+    if (targetDate.isAfter(today) || targetDate.isBefore(minDate)) return;
     setState(() {
-      _selectedDate = date;
+      _selectedDate = targetDate;
       _scope = TrackerScope.day;
     });
     _animateToScope(TrackerScope.day);
