@@ -740,6 +740,25 @@ PR #36 review follow-up:
 
 ## Database policy
 
+Native SQLite migration coverage is in
+`integration_test/database_migration_journey_test.dart`: concurrent initialization,
+legacy-v1 ledger adoption, close/reopen, failed create/upgrade/rollback recovery,
+version and ledger consistency, profile preservation, and foreign-key/integrity
+checks using the platform sqflite plugin. The Android runner
+`tool/test_android_database_migrations.sh` additionally force-stops the app inside
+create, upgrade, and rollback transactions and verifies recovery in a fresh
+process. Only `integration_test.db` is used. Run instructions and remaining
+lifecycle limits are in `integration_test/DATABASE_MIGRATIONS.md`.
+
+Verification on 23 November 2026: all five native journeys and all three
+force-stop/recovery pairs passed on a physical Pixel 7 (Android API 37).
+Dependency resolution, formatting (619 files unchanged), analysis (no issues),
+the host suite (696 passed, one existing skip), shell syntax, and whitespace
+checks passed. The interrupted invocations intentionally report incomplete
+tests after force-stop; each following recovery invocation passed. Older Android
+APIs, iOS, power loss, OS upgrades, and APK downgrade compatibility remain
+unverified by this suite.
+
 The current create schema is version 1. `DatabaseHelper` ensures the
 `migrations` table (`Migration` model) exists first in `onOpen` before running
 schema creation, roll-forward upgrades, or `rollbackTo` / `onDowngrade`

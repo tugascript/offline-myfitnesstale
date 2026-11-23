@@ -92,6 +92,8 @@ flutter test integration_test -d <device-id>
 
 The test harness uses a dedicated `integration_test.db` and refuses to delete data while the
 production `app.db` is selected.
+For native SQLite migration checks and Android process-termination recovery,
+see [Database migration verification](integration_test/DATABASE_MIGRATIONS.md).
 
 ## How the app is organized
 
