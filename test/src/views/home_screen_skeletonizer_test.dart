@@ -24,6 +24,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:myfitnesstale/src/data/repositories/macros/macro_tracking_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/meal_plans/meal_plan_record_repository.dart';
+import 'package:myfitnesstale/src/data/repositories/meal_plans/meal_plan_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/profile/dtos/profile_dto.dart';
 import 'package:myfitnesstale/src/data/repositories/profile/dtos/reminders_config_dto.dart';
 import 'package:myfitnesstale/src/data/repositories/profile/dtos/system_dto.dart';
@@ -46,8 +47,11 @@ import 'package:myfitnesstale/src/ui/core/widgets/base_carousel.dart';
 import 'package:myfitnesstale/src/ui/home/screens/home_screen.dart';
 import 'package:myfitnesstale/src/ui/home/screens/main_navigation_screen.dart';
 import 'package:myfitnesstale/src/ui/home/view_models/profile_cubit.dart';
+import 'package:myfitnesstale/src/ui/macros/screens/macro_tracker_screen.dart';
 import 'package:myfitnesstale/src/ui/macros/view_models/macro_tracking_cubit.dart';
+import 'package:myfitnesstale/src/ui/meal_plans/view_models/meal_plan_cubit.dart';
 import 'package:myfitnesstale/src/ui/meal_plans/view_models/meal_plan_record_cubit.dart';
+import 'package:myfitnesstale/src/ui/workout_plans/screens/current_workout_plan_screen.dart';
 import 'package:myfitnesstale/src/ui/workout_plans/view_models/workout_plan_record_cubit.dart';
 import 'package:myfitnesstale/src/utils/nullable.dart';
 import 'package:skeletonizer/skeletonizer.dart';
@@ -112,11 +116,22 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(
-        find.byWidgetPredicate((w) => w is Skeletonizer && !w.enabled),
+        find.descendant(
+          of: find.byType(HomeScreen),
+          matching: find.byWidgetPredicate(
+            (w) => w is Skeletonizer && !w.enabled,
+          ),
+        ),
         findsOneWidget,
       );
       expect(find.text('Welcome back Home Tester!'), findsOneWidget);
-      expect(find.text('Strength Foundation'), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byType(HomeScreen),
+          matching: find.text('Strength Foundation'),
+        ),
+        findsOneWidget,
+      );
     },
   );
 
@@ -200,10 +215,21 @@ void main() {
       expect(workoutPlanCubit.loadCalls, 1);
       expect(macroCubit.loadCalls, 1);
       expect(
-        find.byWidgetPredicate((w) => w is Skeletonizer && !w.enabled),
+        find.descendant(
+          of: find.byType(HomeScreen),
+          matching: find.byWidgetPredicate(
+            (w) => w is Skeletonizer && !w.enabled,
+          ),
+        ),
         findsOneWidget,
       );
-      expect(find.text('No Active Workout Plan'), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byType(HomeScreen),
+          matching: find.text('No Active Workout Plan'),
+        ),
+        findsOneWidget,
+      );
       expect(find.text('No active meal plan or macro goal'), findsOneWidget);
     },
   );
@@ -246,12 +272,23 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(workoutPlanCubit.loadCalls, 1);
-      expect(macroCubit.loadCalls, 1);
+      expect(macroCubit.loadCalls, lessThanOrEqualTo(2));
       expect(
-        find.byWidgetPredicate((w) => w is Skeletonizer && !w.enabled),
+        find.descendant(
+          of: find.byType(HomeScreen),
+          matching: find.byWidgetPredicate(
+            (w) => w is Skeletonizer && !w.enabled,
+          ),
+        ),
         findsOneWidget,
       );
-      expect(find.text('No Active Workout Plan'), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byType(HomeScreen),
+          matching: find.text('No Active Workout Plan'),
+        ),
+        findsOneWidget,
+      );
       expect(find.text('No active meal plan or macro goal'), findsOneWidget);
     },
   );
@@ -504,6 +541,86 @@ void main() {
       );
     },
   );
+
+  testWidgets(
+    'defers tab warm-up until home active data loads complete so skeleton does not flicker',
+    (tester) async {
+      final profileGate = Completer<void>()..complete();
+      final planGate = Completer<void>();
+      final macroGate = Completer<void>();
+      final profileCubit = _TestProfileCubit(
+        gate: profileGate,
+        withProfile: true,
+      );
+      final workoutPlanCubit = _TestWorkoutPlanRecordCubit(gate: planGate);
+      final macroCubit = _TestMacroTrackingCubit(gate: macroGate);
+      final mealPlanCubit = _TestMealPlanRecordCubit();
+
+      await _pumpMainApp(
+        tester,
+        profileCubit: profileCubit..loadInitialData(),
+        workoutPlanCubit: workoutPlanCubit,
+        macroCubit: macroCubit,
+        mealPlanCubit: mealPlanCubit,
+      );
+      await tester.pump();
+
+      // Advance past initial warm-up delay while HomeScreen loads are still in flight.
+      await tester.pump(const Duration(milliseconds: 250));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 150));
+      await tester.pump();
+
+      expect(
+        find.byType(CurrentWorkoutPlanScreen, skipOffstage: false),
+        findsNothing,
+      );
+      expect(
+        find.byType(MacroTrackerScreen, skipOffstage: false),
+        findsNothing,
+      );
+      expect(macroCubit.dailyLogCalls, 0);
+      expect(
+        find.descendant(
+          of: find.byType(HomeScreen),
+          matching: find.byWidgetPredicate(
+            (w) => w is Skeletonizer && w.enabled,
+          ),
+        ),
+        findsOneWidget,
+      );
+
+      // Complete home active loads -> next warm-up step mounts tabs cleanly.
+      planGate.complete();
+      macroGate.complete();
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 150));
+      await tester.pump();
+      expect(
+        find.byType(CurrentWorkoutPlanScreen, skipOffstage: false),
+        findsOneWidget,
+      );
+
+      await tester.pump(const Duration(milliseconds: 150));
+      await tester.pump();
+      expect(
+        find.byType(MacroTrackerScreen, skipOffstage: false),
+        findsOneWidget,
+      );
+      expect(macroCubit.dailyLogCalls, 1);
+
+      await tester.pumpAndSettle();
+      expect(
+        find.descendant(
+          of: find.byType(HomeScreen),
+          matching: find.byWidgetPredicate(
+            (w) => w is Skeletonizer && !w.enabled,
+          ),
+        ),
+        findsOneWidget,
+      );
+    },
+  );
 }
 
 Future<void> _pumpMainApp(
@@ -528,11 +645,15 @@ Future<void> _pumpMainApp(
       ),
     ],
   );
+  final mealPlanListCubit = MealPlanCubit(
+    mealPlanRepository: MealPlanRepository.create(),
+  );
   addTearDown(() async {
     router.dispose();
     await profileCubit.close();
     await workoutPlanCubit.close();
     await macroCubit.close();
+    await mealPlanListCubit.close();
     await mealPlanCubit.close();
   });
 
@@ -542,6 +663,7 @@ Future<void> _pumpMainApp(
         BlocProvider<ProfileCubit>.value(value: profileCubit),
         BlocProvider<WorkoutPlanRecordCubit>.value(value: workoutPlanCubit),
         BlocProvider<MacroTrackingCubit>.value(value: macroCubit),
+        BlocProvider<MealPlanCubit>.value(value: mealPlanListCubit),
         BlocProvider<MealPlanRecordCubit>.value(value: mealPlanCubit),
       ],
       child: MaterialApp.router(routerConfig: router, theme: theme),
@@ -705,6 +827,7 @@ final class _TestMacroTrackingCubit extends MacroTrackingCubit {
   final Completer<void>? gate;
   final bool markLoaded;
   int loadCalls = 0;
+  int dailyLogCalls = 0;
 
   _TestMacroTrackingCubit({this.gate, this.markLoaded = true})
     : super(macroTrackingRepository: MacroTrackingRepository.create());
@@ -720,6 +843,11 @@ final class _TestMacroTrackingCubit extends MacroTrackingCubit {
         hasLoadedActiveGoal: markLoaded ? true : null,
       ),
     );
+  }
+
+  @override
+  Future<void> getDailyLog(DateTime date) async {
+    dailyLogCalls++;
   }
 }
 

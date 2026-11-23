@@ -25,12 +25,15 @@ import 'package:skeletonizer/skeletonizer.dart';
 
 import 'package:myfitnesstale/src/utils/nullable.dart';
 import 'package:myfitnesstale/src/ui/core/view_models/states/common_state.dart';
+import 'package:myfitnesstale/src/ui/core/widgets/layout/app_elevated_button.dart';
+import 'package:myfitnesstale/src/ui/core/widgets/layout/app_text_button.dart';
 import 'package:myfitnesstale/src/ui/workout_plans/view_models/states/workout_plan_record_state.dart';
 import 'package:myfitnesstale/src/ui/workout_plans/view_models/workout_plan_record_cubit.dart';
 import 'package:myfitnesstale/src/data/utils/enums.dart';
 import 'package:myfitnesstale/src/ui/workout_plans/screens/current_workout_plan_screen.dart';
 import 'package:myfitnesstale/src/ui/workout_plans/widgets/active/active_workout_plan_content.dart';
 import 'package:myfitnesstale/src/ui/workout_plans/widgets/active/active_workout_plan_dummy_data.dart';
+import 'package:myfitnesstale/src/ui/workout_plans/widgets/active/current_workout_plan_placeholder.dart';
 import 'package:myfitnesstale/src/data/repositories/workout_plans/workout_plan_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/workouts/workout_record_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/workout_plans/workout_plan_record_repository.dart';
@@ -150,6 +153,18 @@ void main() {
       find.byKey(const ValueKey('current-plan-browse-plans')),
       findsOneWidget,
     );
+    expect(find.byType(AppTextButton), findsOneWidget);
+    expect(find.byType(AppElevatedButton), findsNothing);
+    final placeholderBox = tester.getRect(
+      find.byType(CurrentWorkoutPlanPlaceholder),
+    );
+    final emptyColumn = find.descendant(
+      of: find.byType(CurrentWorkoutPlanPlaceholder),
+      matching: find.byType(Column),
+    );
+    final columnRect = tester.getRect(emptyColumn);
+    expect(columnRect.center.dx, moreOrLessEquals(placeholderBox.center.dx));
+    expect(columnRect.center.dy, moreOrLessEquals(placeholderBox.center.dy));
   });
 
   testWidgets('renders active content and observes plan updates', (
@@ -286,4 +301,22 @@ void main() {
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets(
+    'reuses already-loaded Cubit state without redundant reload or skeleton',
+    (tester) async {
+      final cubit = _Cubit()
+        ..publish(activeState().copyWith(hasLoadedActivePlan: true));
+      await pumpView(tester, cubit);
+
+      expect(cubit.loads, 0);
+      expect(find.text('My current plan'), findsOneWidget);
+      expect(
+        find.byWidgetPredicate(
+          (widget) => widget is Skeletonizer && widget.enabled,
+        ),
+        findsNothing,
+      );
+    },
+  );
 }

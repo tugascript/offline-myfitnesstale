@@ -19,11 +19,13 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:material_ui/material_ui.dart';
 
+import '../../../data/repositories/meal_plans/dtos/meal_plan_record_dto.dart';
 import '../../core/sizes/data_display_sizes.dart';
 import '../../core/sizes/screen_size.dart';
 import '../../core/widgets/layout/app_scaffold.dart';
 import '../../meal_plans/view_models/meal_plan_cubit.dart';
 import '../../meal_plans/view_models/meal_plan_record_cubit.dart';
+import '../../meal_plans/view_models/states/meal_plan_record_state.dart';
 import '../view_models/macro_tracking_cubit.dart';
 import '../widgets/log_food_modal.dart';
 import '../widgets/macro_tracker_day_widget.dart';
@@ -48,29 +50,55 @@ class _MacroTrackerScreenState extends State<MacroTrackerScreen> {
   @override
   void initState() {
     super.initState();
-    _loadData();
+    _loadInitialData();
   }
 
-  void _loadData() {
+  Future<void> _loadInitialData() async {
     final macroCubit = context.read<MacroTrackingCubit>();
-    macroCubit.getActiveMacroGoal();
-    macroCubit.getDailyLog(_selectedDate);
-
-    // Also get active meal plan record
-    final recordCubit = context.read<MealPlanRecordCubit>();
-    recordCubit.getActiveMealPlanRecord().then((_) {
+    if (macroCubit.state.isLoading) {
+      await macroCubit.stream.firstWhere((state) => !state.isLoading);
       if (!mounted) return;
-      final record = recordCubit.state.activeRecord;
-      final plan = context.read<MealPlanCubit>().state.selectedMealPlan;
-      if (record != null &&
-          (plan?.id != record.mealPlanId ||
-              plan?.version != record.mealPlanVersion)) {
-        context.read<MealPlanCubit>().getMealPlan(
-          record.mealPlanId,
-          version: record.mealPlanVersion,
-        );
-      }
-    });
+    }
+
+    final macroState = macroCubit.state;
+    if (!macroState.hasLoadedActiveGoal &&
+        !macroState.isLoading &&
+        macroState.error == null) {
+      macroCubit.getActiveMacroGoal();
+    }
+    if (macroState.selectedDailyLog == null ||
+        !DateUtils.isSameDay(macroState.selectedDate, _selectedDate)) {
+      macroCubit.getDailyLog(_selectedDate);
+    }
+
+    final recordCubit = context.read<MealPlanRecordCubit>();
+    final recordState = recordCubit.state;
+    if (recordState.hasLoadedActiveRecord) {
+      _syncSelectedMealPlan(recordState.activeRecord);
+    } else if (!recordState.isLoading && recordState.error == null) {
+      recordCubit.getActiveMealPlanRecord().then((_) {
+        if (!mounted) return;
+        _syncSelectedMealPlan(recordCubit.state.activeRecord);
+      });
+    }
+  }
+
+  void _syncSelectedMealPlan(MealPlanRecordDto? record) {
+    if (record == null) return;
+    final mealPlanCubit = context.read<MealPlanCubit>();
+    final plan = mealPlanCubit.state.selectedMealPlan;
+    if (plan?.id != record.mealPlanId ||
+        plan?.version != record.mealPlanVersion) {
+      mealPlanCubit.getMealPlan(
+        record.mealPlanId,
+        version: record.mealPlanVersion,
+      );
+    }
+  }
+
+  void _loadPeriodData() {
+    final macroCubit = context.read<MacroTrackingCubit>();
+    macroCubit.getDailyLog(_selectedDate);
 
     // If week or month, load date range
     if (_scope == TrackerScope.week) {
@@ -90,7 +118,7 @@ class _MacroTrackerScreenState extends State<MacroTrackerScreen> {
     setState(() {
       _scope = newScope;
     });
-    _loadData();
+    _loadPeriodData();
   }
 
   void _prevPeriod() {
@@ -111,7 +139,7 @@ class _MacroTrackerScreenState extends State<MacroTrackerScreen> {
           break;
       }
     });
-    _loadData();
+    _loadPeriodData();
   }
 
   void _nextPeriod() {
@@ -132,14 +160,14 @@ class _MacroTrackerScreenState extends State<MacroTrackerScreen> {
           break;
       }
     });
-    _loadData();
+    _loadPeriodData();
   }
 
   void _goToToday() {
     setState(() {
       _selectedDate = DateTime.now();
     });
-    _loadData();
+    _loadPeriodData();
   }
 
   @override
@@ -148,127 +176,134 @@ class _MacroTrackerScreenState extends State<MacroTrackerScreen> {
     final breakpoints = BreakPoint.fromContext(context);
     final sizes = DataDisplaySizes.getDataDisplaySizes(breakpoints.screenSize);
 
-    return AppScaffold(
-      title: 'Macro Tracker',
-      body: Padding(
-        padding: EdgeInsets.all(sizes.viewPadding),
-        child: Column(
-          children: [
-            // Scope & Date Header
-            Wrap(
-              alignment: WrapAlignment.spaceBetween,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              runSpacing: sizes.spacing / 2,
-              children: [
-                SegmentedButton<TrackerScope>(
-                  key: const ValueKey('macro-tracker-scope-selector'),
-                  showSelectedIcon: false,
-                  style: const ButtonStyle(
-                    shape: WidgetStatePropertyAll(RoundedRectangleBorder()),
-                  ),
-                  segments: [
-                    ButtonSegment(
-                      value: TrackerScope.day,
-                      label: Text(
-                        'Day',
-                        style: TextStyle(fontSize: sizes.fontSize),
-                      ),
+    return BlocListener<MealPlanRecordCubit, MealPlanRecordState>(
+      listenWhen: (previous, current) =>
+          previous.activeRecord != current.activeRecord,
+      listener: (context, state) {
+        _syncSelectedMealPlan(state.activeRecord);
+      },
+      child: AppScaffold(
+        title: 'Macro Tracker',
+        body: Padding(
+          padding: EdgeInsets.all(sizes.viewPadding),
+          child: Column(
+            children: [
+              // Scope & Date Header
+              Wrap(
+                alignment: WrapAlignment.spaceBetween,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                runSpacing: sizes.spacing / 2,
+                children: [
+                  SegmentedButton<TrackerScope>(
+                    key: const ValueKey('macro-tracker-scope-selector'),
+                    showSelectedIcon: false,
+                    style: const ButtonStyle(
+                      shape: WidgetStatePropertyAll(RoundedRectangleBorder()),
                     ),
-                    ButtonSegment(
-                      value: TrackerScope.week,
-                      label: Text(
-                        'Week',
-                        style: TextStyle(fontSize: sizes.fontSize),
+                    segments: [
+                      ButtonSegment(
+                        value: TrackerScope.day,
+                        label: Text(
+                          'Day',
+                          style: TextStyle(fontSize: sizes.fontSize),
+                        ),
                       ),
-                    ),
-                    ButtonSegment(
-                      value: TrackerScope.month,
-                      label: Text(
-                        'Month',
-                        style: TextStyle(fontSize: sizes.fontSize),
+                      ButtonSegment(
+                        value: TrackerScope.week,
+                        label: Text(
+                          'Week',
+                          style: TextStyle(fontSize: sizes.fontSize),
+                        ),
                       ),
-                    ),
-                  ],
-                  selected: {_scope},
-                  onSelectionChanged: (val) {
-                    _onScopeChanged(val.first);
-                  },
-                ),
-                TextButton(
-                  key: const ValueKey('macro-tracker-today-btn'),
-                  onPressed: _goToToday,
-                  child: Text(
-                    'Today',
-                    style: TextStyle(fontSize: sizes.fontSize),
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(height: sizes.spacing / 2),
-            // Date Navigator
-            Row(
-              children: [
-                IconButton(
-                  key: const ValueKey('macro-tracker-prev-btn'),
-                  icon: Icon(Icons.chevron_left, size: sizes.buttonIconSize),
-                  onPressed: _prevPeriod,
-                ),
-                Expanded(
-                  child: TextButton(
-                    key: const ValueKey('macro-tracker-date-btn'),
-                    onPressed: () async {
-                      final picked = await showDatePicker(
-                        context: context,
-                        initialDate: _selectedDate,
-                        firstDate: DateTime(2020),
-                        lastDate: DateTime(2035),
-                      );
-                      if (picked != null) {
-                        setState(() {
-                          _selectedDate = picked;
-                        });
-                        _loadData();
-                      }
+                      ButtonSegment(
+                        value: TrackerScope.month,
+                        label: Text(
+                          'Month',
+                          style: TextStyle(fontSize: sizes.fontSize),
+                        ),
+                      ),
+                    ],
+                    selected: {_scope},
+                    onSelectionChanged: (val) {
+                      _onScopeChanged(val.first);
                     },
+                  ),
+                  TextButton(
+                    key: const ValueKey('macro-tracker-today-btn'),
+                    onPressed: _goToToday,
                     child: Text(
-                      _formatHeaderDate(),
-                      textAlign: TextAlign.center,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: sizes.subtitleFontSize,
-                        fontWeight: FontWeight.bold,
+                      'Today',
+                      style: TextStyle(fontSize: sizes.fontSize),
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: sizes.spacing / 2),
+              // Date Navigator
+              Row(
+                children: [
+                  IconButton(
+                    key: const ValueKey('macro-tracker-prev-btn'),
+                    icon: Icon(Icons.chevron_left, size: sizes.buttonIconSize),
+                    onPressed: _prevPeriod,
+                  ),
+                  Expanded(
+                    child: TextButton(
+                      key: const ValueKey('macro-tracker-date-btn'),
+                      onPressed: () async {
+                        final picked = await showDatePicker(
+                          context: context,
+                          initialDate: _selectedDate,
+                          firstDate: DateTime(2020),
+                          lastDate: DateTime(2035),
+                        );
+                        if (picked != null) {
+                          setState(() {
+                            _selectedDate = picked;
+                          });
+                          _loadPeriodData();
+                        }
+                      },
+                      child: Text(
+                        _formatHeaderDate(),
+                        textAlign: TextAlign.center,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: sizes.subtitleFontSize,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ),
-                ),
-                IconButton(
-                  key: const ValueKey('macro-tracker-next-btn'),
-                  icon: Icon(Icons.chevron_right, size: sizes.buttonIconSize),
-                  onPressed: _nextPeriod,
-                ),
-              ],
-            ),
-            SizedBox(height: sizes.spacing),
-            // Scope Body
-            Expanded(child: _buildScopeBody(theme, sizes)),
-          ],
+                  IconButton(
+                    key: const ValueKey('macro-tracker-next-btn'),
+                    icon: Icon(Icons.chevron_right, size: sizes.buttonIconSize),
+                    onPressed: _nextPeriod,
+                  ),
+                ],
+              ),
+              SizedBox(height: sizes.spacing),
+              // Scope Body
+              Expanded(child: _buildScopeBody(theme, sizes)),
+            ],
+          ),
         ),
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        key: const ValueKey('macro-tracker-log-food-fab'),
-        icon: Icon(Icons.add, size: sizes.buttonIconSize),
-        label: Text('Log Food', style: TextStyle(fontSize: sizes.fontSize)),
-        onPressed: () {
-          showDialog(
-            context: context,
-            builder: (_) => LogFoodModal(
-              theme: theme,
-              sizes: sizes,
-              selectedDate: _selectedDate,
-            ),
-          );
-        },
+        floatingActionButton: FloatingActionButton.extended(
+          key: const ValueKey('macro-tracker-log-food-fab'),
+          icon: Icon(Icons.add, size: sizes.buttonIconSize),
+          label: Text('Log Food', style: TextStyle(fontSize: sizes.fontSize)),
+          onPressed: () {
+            showDialog(
+              context: context,
+              builder: (_) => LogFoodModal(
+                theme: theme,
+                sizes: sizes,
+                selectedDate: _selectedDate,
+              ),
+            );
+          },
+        ),
       ),
     );
   }
@@ -293,7 +328,7 @@ class _MacroTrackerScreenState extends State<MacroTrackerScreen> {
       _selectedDate = date;
       _scope = TrackerScope.day;
     });
-    _loadData();
+    _loadPeriodData();
   }
 
   Widget _buildScopeBody(ThemeData theme, DataDisplaySizesList sizes) {

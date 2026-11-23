@@ -76,6 +76,8 @@ final class DataDisplaySizesList {
 
   double get btnMediumIconSize => subtitleFontSize * 1.2;
 
+  double get doubleBtnIconSize => subtitleFontSize * 2;
+
   double get profileLabelWidth => subtitleFontSize * 9.5;
 
   const DataDisplaySizesList({

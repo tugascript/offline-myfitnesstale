@@ -23,6 +23,7 @@ import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:myfitnesstale/src/data/repositories/macros/macro_tracking_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/meal_plans/meal_plan_record_repository.dart';
+import 'package:myfitnesstale/src/data/repositories/meal_plans/meal_plan_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/onboarding/inputs/onboarding_input.dart';
 import 'package:myfitnesstale/src/data/repositories/profile/dtos/profile_dto.dart';
 import 'package:myfitnesstale/src/data/repositories/profile/dtos/reminders_config_dto.dart';
@@ -41,6 +42,7 @@ import 'package:myfitnesstale/src/ui/home/screens/main_navigation_screen.dart';
 import 'package:myfitnesstale/src/ui/home/screens/profile/onboarding_screen.dart';
 import 'package:myfitnesstale/src/ui/home/view_models/profile_cubit.dart';
 import 'package:myfitnesstale/src/ui/macros/view_models/macro_tracking_cubit.dart';
+import 'package:myfitnesstale/src/ui/meal_plans/view_models/meal_plan_cubit.dart';
 import 'package:myfitnesstale/src/ui/meal_plans/view_models/meal_plan_record_cubit.dart';
 import 'package:myfitnesstale/src/ui/workout_plans/view_models/workout_plan_record_cubit.dart';
 import 'package:myfitnesstale/src/utils/nullable.dart';
@@ -228,7 +230,13 @@ void main() {
         findsOneWidget,
       );
       expect(find.text('Welcome back Empty Home Tester!'), findsOneWidget);
-      expect(find.text('No Active Workout Plan'), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byType(HomeScreen),
+          matching: find.text('No Active Workout Plan'),
+        ),
+        findsOneWidget,
+      );
       expect(find.text('No active meal plan or macro goal'), findsOneWidget);
     },
   );
@@ -243,6 +251,9 @@ Future<void> _pumpOnboardingRouter(
   final resolvedWorkoutCubit =
       workoutPlanRecordCubit ?? _NoopWorkoutPlanRecordCubit();
   final resolvedMacroCubit = macroTrackingCubit ?? _NoopMacroTrackingCubit();
+  final mealPlanCubit = MealPlanCubit(
+    mealPlanRepository: MealPlanRepository.create(),
+  );
   final mealPlanRecordCubit = _NoopMealPlanRecordCubit();
   final router = GoRouter(
     initialLocation: Routes.onboarding.name,
@@ -261,6 +272,7 @@ Future<void> _pumpOnboardingRouter(
     router.dispose();
     await resolvedWorkoutCubit.close();
     await resolvedMacroCubit.close();
+    await mealPlanCubit.close();
     await mealPlanRecordCubit.close();
   });
 
@@ -270,6 +282,7 @@ Future<void> _pumpOnboardingRouter(
         BlocProvider<ProfileCubit>.value(value: profileCubit),
         BlocProvider<WorkoutPlanRecordCubit>.value(value: resolvedWorkoutCubit),
         BlocProvider<MacroTrackingCubit>.value(value: resolvedMacroCubit),
+        BlocProvider<MealPlanCubit>.value(value: mealPlanCubit),
         BlocProvider<MealPlanRecordCubit>.value(value: mealPlanRecordCubit),
       ],
       child: MaterialApp.router(routerConfig: router),
@@ -320,6 +333,9 @@ final class _NoopMacroTrackingCubit extends MacroTrackingCubit {
     await gate?.future;
     emit(state.copyWith(isLoading: false, hasLoadedActiveGoal: true));
   }
+
+  @override
+  Future<void> getDailyLog(DateTime date) async {}
 }
 
 final class _NoopMealPlanRecordCubit extends MealPlanRecordCubit {
