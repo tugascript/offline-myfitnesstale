@@ -204,15 +204,18 @@ class _HomeScreenState extends State<HomeScreen> {
                         }
 
                         final hasWorkoutError =
+                            !workoutPlanState.hasLoadedActivePlan &&
                             workoutPlanState.error != null &&
                             workoutPlanState.currentPlanRecord.workoutPlan ==
                                 null &&
                             !workoutPlanState.isLoading;
                         final hasMacroError =
+                            !macroState.hasLoadedActiveGoal &&
                             macroState.error != null &&
                             macroState.activeGoal == null &&
                             !macroState.isLoading;
                         final hasMealPlanError =
+                            !mealPlanState.hasLoadedActiveRecord &&
                             mealPlanState.error != null &&
                             mealPlanState.activeRecord == null &&
                             !mealPlanState.isLoading;
@@ -225,13 +228,16 @@ class _HomeScreenState extends State<HomeScreen> {
                             !profileState.isInitiated ||
                             profileState.profile == null;
                         final isWorkoutSkeleton =
+                            !workoutPlanState.hasLoadedActivePlan &&
                             workoutPlanState.isLoading &&
                             workoutPlanState.currentPlanRecord.workoutPlan ==
                                 null;
                         final isNutritionSkeleton =
-                            (macroState.isLoading &&
+                            (!macroState.hasLoadedActiveGoal &&
+                                macroState.isLoading &&
                                 macroState.activeGoal == null) ||
-                            (mealPlanState.isLoading &&
+                            (!mealPlanState.hasLoadedActiveRecord &&
+                                mealPlanState.isLoading &&
                                 mealPlanState.activeRecord == null);
                         final isLoading =
                             isProfileSkeleton ||

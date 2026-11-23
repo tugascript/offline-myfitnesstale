@@ -43,10 +43,18 @@ class _CurrentWorkoutPlanScreenState extends State<CurrentWorkoutPlanScreen> {
   bool _refreshing = false;
   bool _hasLoaded = false;
 
+  bool _canReuseLoadedState(WorkoutPlanRecordState state) =>
+      state.hasLoadedActivePlan && !state.isLoading && state.error == null;
+
   @override
   void initState() {
     super.initState();
-    if (widget.isVisible) _scheduleRefresh();
+    final cubit = context.read<WorkoutPlanRecordCubit>();
+    if (_canReuseLoadedState(cubit.state)) {
+      _hasLoaded = true;
+    } else if (widget.isVisible) {
+      _scheduleRefresh();
+    }
   }
 
   @override
@@ -56,7 +64,12 @@ class _CurrentWorkoutPlanScreenState extends State<CurrentWorkoutPlanScreen> {
         !oldWidget.isVisible &&
         !_hasLoaded &&
         !_refreshing) {
-      _scheduleRefresh();
+      final cubit = context.read<WorkoutPlanRecordCubit>();
+      if (_canReuseLoadedState(cubit.state)) {
+        _hasLoaded = true;
+      } else {
+        _scheduleRefresh();
+      }
     }
   }
 
@@ -66,7 +79,7 @@ class _CurrentWorkoutPlanScreenState extends State<CurrentWorkoutPlanScreen> {
     });
   }
 
-  Future<void> _refresh() async {
+  Future<void> _refresh({bool force = false}) async {
     if (_refreshing) return;
     setState(() => _refreshing = true);
     final cubit = context.read<WorkoutPlanRecordCubit>();
@@ -77,7 +90,9 @@ class _CurrentWorkoutPlanScreenState extends State<CurrentWorkoutPlanScreen> {
         await cubit.stream.firstWhere((state) => !state.isLoading);
       }
       if (!mounted) return;
-      await cubit.getLatestActivePlanRecord();
+      if (force || !_canReuseLoadedState(cubit.state)) {
+        await cubit.getLatestActivePlanRecord();
+      }
     } finally {
       if (mounted) {
         setState(() {
@@ -90,7 +105,7 @@ class _CurrentWorkoutPlanScreenState extends State<CurrentWorkoutPlanScreen> {
 
   Future<void> _openAllPlans() async {
     await context.push(Routes.workoutPlanList.name);
-    if (mounted) await _refresh();
+    if (mounted) await _refresh(force: true);
   }
 
   @override
@@ -116,7 +131,7 @@ class _CurrentWorkoutPlanScreenState extends State<CurrentWorkoutPlanScreen> {
               return CurrentWorkoutPlanPlaceholder(
                 sizes: sizes,
                 errorDescription: state.error!.description,
-                onRetry: _refresh,
+                onRetry: () => _refresh(force: true),
               );
             }
             final current = state.currentPlanRecord;
@@ -125,7 +140,7 @@ class _CurrentWorkoutPlanScreenState extends State<CurrentWorkoutPlanScreen> {
                     ProgressStatus.inProgress) {
               return CurrentWorkoutPlanPlaceholder(
                 sizes: sizes,
-                onRetry: _refresh,
+                onRetry: () => _refresh(force: true),
                 onBrowsePlans: _openAllPlans,
               );
             }

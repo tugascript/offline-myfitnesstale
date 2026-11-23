@@ -131,7 +131,8 @@ git diff --check
 
 ## Project References and Documentation
 
-- `README.md` — Product overview, architecture orientation, and setup.
+- `README.md` — Product overview, architecture orientation, setup, and directory layout (see
+  [How the app is organized](./README.md#how-the-app-is-organized)).
 - `PROJECT_STATE.md` — Code-grounded capabilities, invariants, known gaps, and test evidence. Update this file whenever
   behavior, schema, or limitations change.
 - `project.md` — Roadmap, delivery priorities, and release criteria.

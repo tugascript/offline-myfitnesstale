@@ -19,6 +19,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../../core/sizes/data_display_sizes.dart';
 import '../../../core/widgets/layout/app_elevated_button.dart';
+import '../../../core/widgets/layout/app_text_button.dart';
 
 class CurrentWorkoutPlanPlaceholder extends StatelessWidget {
   final DataDisplaySizesList sizes;
@@ -38,56 +39,63 @@ class CurrentWorkoutPlanPlaceholder extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final hasError = errorDescription != null;
-    return SingleChildScrollView(
-      child: SizedBox(
-        width: double.infinity,
-        child: Column(
-          children: [
-            Icon(
-              hasError ? Icons.error_outline : Icons.snooze,
-              size: sizes.subtitleFontSize * 2,
-            ),
-            SizedBox(height: sizes.spacing),
-            Text(
-              hasError
-                  ? 'Could not load current plan'
-                  : 'No Active Workout Plan',
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: sizes.subtitleFontSize),
-            ),
-            SizedBox(height: sizes.spacing),
-            Text(
-              errorDescription ??
-                  'Choose an existing plan or create a new one to get started.',
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: sizes.fontSize),
-            ),
-            if (hasError) ...[
-              SizedBox(height: sizes.spacing),
-              AppElevatedButton(
-                theme: theme,
-                isLoading: false,
-                sizes: sizes,
-                onPressed: onRetry,
-                label: 'Retry',
-                icon: Icons.refresh,
-              ),
-            ] else if (onBrowsePlans != null) ...[
-              SizedBox(height: sizes.spacing),
-              SizedBox(
-                width: double.infinity,
-                child: AppElevatedButton(
-                  key: const ValueKey('current-plan-browse-plans'),
-                  theme: theme,
-                  isLoading: false,
-                  sizes: sizes,
-                  onPressed: onBrowsePlans,
-                  label: 'Browse Plans',
-                  icon: Icons.book,
+    return LayoutBuilder(
+      builder: (context, constraints) => SingleChildScrollView(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            minWidth: constraints.maxWidth,
+            maxWidth: constraints.maxWidth,
+            minHeight: constraints.hasBoundedHeight
+                ? constraints.maxHeight
+                : 0.0,
+          ),
+          child: Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Icon(
+                  hasError ? Icons.error_outline : Icons.snooze,
+                  size: sizes.doubleBtnIconSize,
                 ),
-              ),
-            ],
-          ],
+                SizedBox(height: sizes.spacing),
+                Text(
+                  hasError
+                      ? 'Could not load current plan'
+                      : 'No Active Workout Plan',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: sizes.subtitleFontSize),
+                ),
+                SizedBox(height: sizes.spacing),
+                Text(
+                  errorDescription ?? 'Choose an existing plan or create a new one to get started.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: sizes.fontSize),
+                ),
+                if (hasError) ...[
+                  SizedBox(height: sizes.spacing),
+                  AppElevatedButton(
+                    theme: theme,
+                    isLoading: false,
+                    sizes: sizes,
+                    onPressed: onRetry,
+                    label: 'Retry',
+                    icon: Icons.refresh,
+                  ),
+                ] else if (onBrowsePlans != null) ...[
+                  SizedBox(height: sizes.spacing),
+                  AppTextButton(
+                    key: const ValueKey('current-plan-browse-plans'),
+                    isLoading: false,
+                    sizes: sizes,
+                    onPressed: onBrowsePlans,
+                    label: 'Browse Plans',
+                    icon: Icons.book_outlined,
+                  ),
+                ],
+              ],
+            ),
+          ),
         ),
       ),
     );

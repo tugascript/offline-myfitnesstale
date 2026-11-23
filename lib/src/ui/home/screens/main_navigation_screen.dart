@@ -15,6 +15,8 @@
 // You should have received a copy of the GNU General Public License
 // along with My Fitness Tale.  If not, see <https://www.gnu.org/licenses/>.
 
+import 'dart:async';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
@@ -23,7 +25,10 @@ import '../../../routing/routes.dart';
 import '../../core/sizes/data_display_sizes.dart';
 import '../../core/sizes/screen_size.dart';
 import '../../macros/screens/macro_tracker_screen.dart';
+import '../../macros/view_models/macro_tracking_cubit.dart';
+import '../../meal_plans/view_models/meal_plan_record_cubit.dart';
 import '../../workout_plans/screens/current_workout_plan_screen.dart';
+import '../../workout_plans/view_models/workout_plan_record_cubit.dart';
 import '../view_models/profile_cubit.dart';
 import '../view_models/states/profile_state.dart';
 import './home_screen.dart';
@@ -70,8 +75,13 @@ class MainNavigationScreen extends StatefulWidget {
 }
 
 class _MainNavigationScreenState extends State<MainNavigationScreen> {
+  static const Duration _initialWarmUpDelay = Duration(milliseconds: 250);
+  static const Duration _warmUpStepDelay = Duration(milliseconds: 150);
+
   int _currentIndex = 0;
   final Set<int> _visitedIndices = {0};
+  Timer? _warmUpTimer;
+  bool _warmUpStarted = false;
 
   bool _shouldRedirectToOnboarding(ProfileState state) =>
       !state.isLoading &&
@@ -93,8 +103,58 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
 
   @override
   void dispose() {
+    _warmUpTimer?.cancel();
     _PageBuilder.clearBuiltPages();
     super.dispose();
+  }
+
+  int? _nextUnvisitedIndex() {
+    for (var i = 0; i < _PageBuilder.pagesCount; i++) {
+      if (!_visitedIndices.contains(i)) {
+        return i;
+      }
+    }
+    return null;
+  }
+
+  bool _isHomeActiveDataLoading() {
+    final workoutState = context.read<WorkoutPlanRecordCubit>().state;
+    final macroState = context.read<MacroTrackingCubit>().state;
+    final mealPlanState = context.read<MealPlanRecordCubit>().state;
+    return workoutState.isLoading ||
+        macroState.isLoading ||
+        mealPlanState.isLoading;
+  }
+
+  void _startWarmUpIfNeeded() {
+    if (_warmUpStarted || _nextUnvisitedIndex() == null) return;
+    _warmUpStarted = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _scheduleNextWarmUp(_initialWarmUpDelay);
+    });
+  }
+
+  void _scheduleNextWarmUp(Duration delay) {
+    if (!mounted || _nextUnvisitedIndex() == null) return;
+    _warmUpTimer?.cancel();
+    _warmUpTimer = Timer(delay, () {
+      if (!mounted) return;
+      final profileState = context.read<ProfileCubit>().state;
+      if (profileState.profile == null || profileState.isLoading) {
+        _warmUpStarted = false;
+        return;
+      }
+      if (_isHomeActiveDataLoading()) {
+        _scheduleNextWarmUp(_warmUpStepDelay);
+        return;
+      }
+      final nextIndex = _nextUnvisitedIndex();
+      if (nextIndex == null) return;
+      setState(() {
+        _visitedIndices.add(nextIndex);
+      });
+      _scheduleNextWarmUp(_warmUpStepDelay);
+    });
   }
 
   @override
@@ -124,6 +184,13 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
           return Scaffold(body: CreateProfileButtonScreen());
         }
 
+        if (!hasStartupError &&
+            !isHomeLoading &&
+            !state.isLoading &&
+            state.profile != null) {
+          _startWarmUpIfNeeded();
+        }
+
         final activeIndex = isHomeLoading ? 0 : _currentIndex;
 
         return Scaffold(
@@ -131,9 +198,12 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
             index: activeIndex,
             children: List.generate(_PageBuilder.pagesCount, (index) {
               if (_visitedIndices.contains(index)) {
-                return _PageBuilder.getPage(
-                  index,
-                  isVisible: activeIndex == index,
+                return TickerMode(
+                  enabled: activeIndex == index,
+                  child: _PageBuilder.getPage(
+                    index,
+                    isVisible: activeIndex == index,
+                  ),
                 );
               }
               return const SizedBox.shrink();

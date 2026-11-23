@@ -49,9 +49,11 @@ import 'package:myfitnesstale/src/ui/exercises/screens/strength_goals_list_scree
 import 'package:myfitnesstale/src/ui/foods/screens/foods_screen.dart';
 import 'package:myfitnesstale/src/ui/home/screens/home_screen.dart';
 import 'package:myfitnesstale/src/ui/home/screens/main_navigation_screen.dart';
+import 'package:myfitnesstale/src/ui/home/screens/profile/profile_screen.dart';
 import 'package:myfitnesstale/src/ui/macros/screens/macro_goals_screen.dart';
 import 'package:myfitnesstale/src/ui/macros/screens/macro_tracker_screen.dart';
 import 'package:myfitnesstale/src/ui/recipes/screens/recipes_screen.dart';
+import 'package:myfitnesstale/src/ui/workout_plans/screens/current_workout_plan_screen.dart';
 import 'package:myfitnesstale/src/ui/home/widgets/active/active_meal_plan_widget.dart';
 import 'package:myfitnesstale/src/ui/home/widgets/active/active_plans_carousel.dart';
 import 'package:myfitnesstale/src/ui/home/widgets/quick_actions_widget.dart';
@@ -120,6 +122,8 @@ class _TestRecipeCubit extends RecipeCubit {
 class _TestMealPlanCubit extends MealPlanCubit {
   _TestMealPlanCubit() : super(mealPlanRepository: MealPlanRepository.create());
 
+  int getMealPlanCalls = 0;
+
   @override
   Future<void> getMealPlans({
     String? search,
@@ -127,28 +131,60 @@ class _TestMealPlanCubit extends MealPlanCubit {
     int limit = 20,
     int offset = 0,
   }) async {}
+
+  @override
+  Future<void> getMealPlan(int id, {int? version}) async {
+    getMealPlanCalls++;
+  }
 }
 
 class _TestMealPlanRecordCubit extends MealPlanRecordCubit {
-  _TestMealPlanRecordCubit()
-    : super(mealPlanRecordRepository: MealPlanRecordRepository.create());
+  _TestMealPlanRecordCubit({bool hasLoadedActiveRecord = false})
+    : super(mealPlanRecordRepository: MealPlanRecordRepository.create()) {
+    if (hasLoadedActiveRecord) {
+      emit(state.copyWith(hasLoadedActiveRecord: true));
+    }
+  }
+
+  int activeRecordCalls = 0;
 
   @override
-  Future<void> getActiveMealPlanRecord() async {}
+  Future<void> getActiveMealPlanRecord() async {
+    activeRecordCalls++;
+  }
 }
 
 class _TestMacroTrackingCubit extends MacroTrackingCubit {
-  _TestMacroTrackingCubit()
-    : super(macroTrackingRepository: MacroTrackingRepository.create());
+  _TestMacroTrackingCubit({bool hasLoadedActiveGoal = false})
+    : super(macroTrackingRepository: MacroTrackingRepository.create()) {
+    if (hasLoadedActiveGoal) {
+      emit(state.copyWith(hasLoadedActiveGoal: true));
+    }
+  }
+
+  int activeGoalCalls = 0;
+  int dailyLogCalls = 0;
+
+  void beginActiveGoalLoad() {
+    emit(state.copyWith(isLoading: true));
+  }
+
+  void completeActiveGoalLoad() {
+    emit(state.copyWith(isLoading: false, hasLoadedActiveGoal: true));
+  }
 
   @override
-  Future<void> getActiveMacroGoal() async {}
+  Future<void> getActiveMacroGoal() async {
+    activeGoalCalls++;
+  }
 
   @override
   Future<void> getMacroGoals({int limit = 20, int offset = 0}) async {}
 
   @override
-  Future<void> getDailyLog(DateTime date) async {}
+  Future<void> getDailyLog(DateTime date) async {
+    dailyLogCalls++;
+  }
 
   @override
   Future<void> getDailyLogsForRange({
@@ -517,7 +553,7 @@ void main() {
       );
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 300));
-      expect(find.byType(MacroTrackerScreen), findsNothing);
+      expect(find.byType(MacroTrackerScreen).hitTestable(), findsNothing);
       await tester.tap(find.text('Macros'));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 300));
@@ -547,6 +583,145 @@ void main() {
       );
       expect(tester.takeException(), isNull);
     });
+
+    testWidgets(
+      'warms up unvisited tabs offscreen in staggered steps after home settles',
+      (tester) async {
+        await tester.pumpWidget(
+          buildAppHarness(child: const MainNavigationScreen()),
+        );
+        await tester.pump();
+
+        expect(
+          find.byType(CurrentWorkoutPlanScreen, skipOffstage: false),
+          findsNothing,
+        );
+        expect(
+          find.byType(MacroTrackerScreen, skipOffstage: false),
+          findsNothing,
+        );
+        expect(find.byType(ProfileScreen, skipOffstage: false), findsNothing);
+
+        await tester.pump(const Duration(milliseconds: 250));
+        await tester.pump();
+        expect(
+          find.byType(CurrentWorkoutPlanScreen, skipOffstage: false),
+          findsOneWidget,
+        );
+        expect(find.byType(CurrentWorkoutPlanScreen), findsNothing);
+        expect(
+          find.byType(MacroTrackerScreen, skipOffstage: false),
+          findsNothing,
+        );
+
+        await tester.pump(const Duration(milliseconds: 150));
+        await tester.pump();
+        expect(
+          find.byType(MacroTrackerScreen, skipOffstage: false),
+          findsOneWidget,
+        );
+        expect(find.byType(MacroTrackerScreen), findsNothing);
+        expect(find.byType(ProfileScreen, skipOffstage: false), findsNothing);
+
+        await tester.pump(const Duration(milliseconds: 150));
+        await tester.pump();
+        expect(find.byType(ProfileScreen, skipOffstage: false), findsOneWidget);
+        expect(find.byType(ProfileScreen), findsNothing);
+      },
+    );
+
+    testWidgets(
+      'MacroTrackerScreen reuses loaded active macro goal and meal plan record',
+      (tester) async {
+        final macroCubit = _TestMacroTrackingCubit(hasLoadedActiveGoal: true);
+        final mealPlanRecordCubit = _TestMealPlanRecordCubit(
+          hasLoadedActiveRecord: true,
+        );
+        final mealPlanCubit = _TestMealPlanCubit();
+        final router = GoRouter(
+          initialLocation: '/',
+          routes: [
+            GoRoute(
+              path: '/',
+              builder: (context, state) => const MacroTrackerScreen(),
+            ),
+          ],
+        );
+        addTearDown(() async {
+          router.dispose();
+          await macroCubit.close();
+          await mealPlanRecordCubit.close();
+          await mealPlanCubit.close();
+        });
+
+        await tester.pumpWidget(
+          MultiBlocProvider(
+            providers: [
+              BlocProvider<MacroTrackingCubit>.value(value: macroCubit),
+              BlocProvider<MealPlanRecordCubit>.value(
+                value: mealPlanRecordCubit,
+              ),
+              BlocProvider<MealPlanCubit>.value(value: mealPlanCubit),
+            ],
+            child: MaterialApp.router(routerConfig: router),
+          ),
+        );
+        await tester.pump();
+
+        expect(macroCubit.activeGoalCalls, 0);
+        expect(mealPlanRecordCubit.activeRecordCalls, 0);
+        expect(macroCubit.dailyLogCalls, 1);
+      },
+    );
+
+    testWidgets(
+      'MacroTrackerScreen waits for in-flight active goal load before fetching daily log',
+      (tester) async {
+        final macroCubit = _TestMacroTrackingCubit()..beginActiveGoalLoad();
+        final mealPlanRecordCubit = _TestMealPlanRecordCubit(
+          hasLoadedActiveRecord: true,
+        );
+        final mealPlanCubit = _TestMealPlanCubit();
+        final router = GoRouter(
+          initialLocation: '/',
+          routes: [
+            GoRoute(
+              path: '/',
+              builder: (context, state) => const MacroTrackerScreen(),
+            ),
+          ],
+        );
+        addTearDown(() async {
+          router.dispose();
+          await macroCubit.close();
+          await mealPlanRecordCubit.close();
+          await mealPlanCubit.close();
+        });
+
+        await tester.pumpWidget(
+          MultiBlocProvider(
+            providers: [
+              BlocProvider<MacroTrackingCubit>.value(value: macroCubit),
+              BlocProvider<MealPlanRecordCubit>.value(
+                value: mealPlanRecordCubit,
+              ),
+              BlocProvider<MealPlanCubit>.value(value: mealPlanCubit),
+            ],
+            child: MaterialApp.router(routerConfig: router),
+          ),
+        );
+        await tester.pump();
+
+        expect(macroCubit.dailyLogCalls, 0);
+        expect(macroCubit.activeGoalCalls, 0);
+
+        macroCubit.completeActiveGoalLoad();
+        await tester.pump();
+
+        expect(macroCubit.activeGoalCalls, 0);
+        expect(macroCubit.dailyLogCalls, 1);
+      },
+    );
   });
 
   group('Responsive Narrow and Scaled Layouts', () {
