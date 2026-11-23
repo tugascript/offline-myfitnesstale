@@ -19,15 +19,15 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 
-import '../../../routing/routes.dart';
-import '../../core/sizes/data_display_sizes.dart';
-import '../../core/widgets/confirmation_dialog.dart';
-import '../view_models/macro_tracking_cubit.dart';
-import '../view_models/states/macro_tracking_state.dart';
-import './log_food_modal.dart';
-import './macro_progress_bar.dart';
-import './nutrition_timeline_widget.dart';
-import './planned_meals_widget.dart';
+import '../../../../routing/routes.dart';
+import '../../../core/sizes/data_display_sizes.dart';
+import '../../../core/widgets/confirmation_dialog.dart';
+import '../../view_models/macro_tracking_cubit.dart';
+import '../../view_models/states/macro_tracking_state.dart';
+import '../log_food_modal.dart';
+import 'macro_progress_bar.dart';
+import '../nutrition_timeline_widget.dart';
+import '../planned_meals_widget.dart';
 
 class MacroTrackerDayWidget extends StatelessWidget {
   final DataDisplaySizesList sizes;
@@ -44,6 +44,9 @@ class MacroTrackerDayWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<MacroTrackingCubit, MacroTrackingState>(
+      buildWhen: (previous, current) =>
+          previous.selectedDailyLog != current.selectedDailyLog ||
+          previous.activeGoal != current.activeGoal,
       builder: (context, state) {
         final dailyLog = state.selectedDailyLog;
         final activeGoal = state.activeGoal;

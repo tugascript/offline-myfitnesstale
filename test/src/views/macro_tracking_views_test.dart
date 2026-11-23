@@ -52,6 +52,12 @@ import 'package:myfitnesstale/src/ui/home/screens/main_navigation_screen.dart';
 import 'package:myfitnesstale/src/ui/home/screens/profile/profile_screen.dart';
 import 'package:myfitnesstale/src/ui/macros/screens/macro_goals_screen.dart';
 import 'package:myfitnesstale/src/ui/macros/screens/macro_tracker_screen.dart';
+import 'package:myfitnesstale/src/ui/macros/utils/tacker_scope.dart';
+import 'package:myfitnesstale/src/ui/macros/widgets/tracker/macro_tracker_date_navigator.dart';
+import 'package:myfitnesstale/src/ui/macros/widgets/tracker/macro_tracker_day_widget.dart';
+import 'package:myfitnesstale/src/ui/macros/widgets/tracker/macro_tracker_month_widget.dart';
+import 'package:myfitnesstale/src/ui/macros/widgets/tracker/macro_tracker_scope_selection.dart';
+import 'package:myfitnesstale/src/ui/macros/widgets/tracker/macro_tracker_week_widget.dart';
 import 'package:myfitnesstale/src/ui/recipes/screens/recipes_screen.dart';
 import 'package:myfitnesstale/src/ui/workout_plans/screens/current_workout_plan_screen.dart';
 import 'package:myfitnesstale/src/ui/home/widgets/active/active_meal_plan_widget.dart';
@@ -164,6 +170,7 @@ class _TestMacroTrackingCubit extends MacroTrackingCubit {
 
   int activeGoalCalls = 0;
   int dailyLogCalls = 0;
+  int rangeLogCalls = 0;
 
   void beginActiveGoalLoad() {
     emit(state.copyWith(isLoading: true));
@@ -190,7 +197,9 @@ class _TestMacroTrackingCubit extends MacroTrackingCubit {
   Future<void> getDailyLogsForRange({
     required DateTime start,
     required DateTime end,
-  }) async {}
+  }) async {
+    rangeLogCalls++;
+  }
 }
 
 class _TestExerciseRecordCubit extends ExerciseRecordCubit {
@@ -575,11 +584,11 @@ void main() {
       await tester.pump(const Duration(milliseconds: 300));
       expect(
         tester
-            .widget<SegmentedButton<TrackerScope>>(
-              find.byType(SegmentedButton<TrackerScope>),
+            .widget<MacroTrackerScopeSelection>(
+              find.byType(MacroTrackerScopeSelection),
             )
-            .selected,
-        {TrackerScope.week},
+            .scope,
+        TrackerScope.week,
       );
       expect(tester.takeException(), isNull);
     });
@@ -720,6 +729,428 @@ void main() {
 
         expect(macroCubit.activeGoalCalls, 0);
         expect(macroCubit.dailyLogCalls, 1);
+      },
+    );
+
+    testWidgets(
+      'MacroTrackerScopeSelection renders underline indicators and responds to tap and swipe',
+      (tester) async {
+        final theme = ThemeData.light();
+        final sizes = DataDisplaySizes.getDataDisplaySizes(ScreenSize.md);
+        TrackerScope selected = TrackerScope.day;
+        var todayTapped = false;
+
+        await tester.pumpWidget(
+          MaterialApp(
+            theme: theme,
+            home: Scaffold(
+              body: StatefulBuilder(
+                builder: (context, setState) => MacroTrackerScopeSelection(
+                  sizes: sizes,
+                  theme: theme,
+                  scope: selected,
+                  onScopeChanged: (next) => setState(() => selected = next),
+                  onGoToToday: () => todayTapped = true,
+                ),
+              ),
+            ),
+          ),
+        );
+
+        expect(find.byType(SegmentedButton<TrackerScope>), findsNothing);
+        expect(
+          tester
+              .widget<Container>(
+                find.byKey(const ValueKey('macro-tracker-scope-indicator')),
+              )
+              .color,
+          theme.colorScheme.primary,
+        );
+        expect(
+          tester
+              .widget<Align>(
+                find.byKey(
+                  const ValueKey('macro-tracker-scope-indicator-align'),
+                ),
+              )
+              .alignment,
+          const Alignment(-1, 0),
+        );
+
+        await tester.tap(find.text('Month'));
+        await tester.pump();
+        expect(selected, TrackerScope.month);
+        expect(
+          tester
+              .widget<Align>(
+                find.byKey(
+                  const ValueKey('macro-tracker-scope-indicator-align'),
+                ),
+              )
+              .alignment,
+          const Alignment(1, 0),
+        );
+
+        await tester.fling(
+          find.byKey(const ValueKey('macro-tracker-scope-selector')),
+          const Offset(200, 0),
+          500,
+        );
+        await tester.pump();
+        expect(selected, TrackerScope.week);
+        expect(
+          tester
+              .widget<Align>(
+                find.byKey(
+                  const ValueKey('macro-tracker-scope-indicator-align'),
+                ),
+              )
+              .alignment,
+          const Alignment(0, 0),
+        );
+
+        await tester.tap(find.byKey(const ValueKey('macro-tracker-today-btn')));
+        await tester.pump();
+        expect(todayTapped, isTrue);
+      },
+    );
+
+    testWidgets(
+      'MacroTrackerDateNavigator disables next button when canGoNext is false',
+      (tester) async {
+        final sizes = DataDisplaySizes.getDataDisplaySizes(ScreenSize.md);
+        var nextCalls = 0;
+        var prevCalls = 0;
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: MacroTrackerDateNavigator(
+                sizes: sizes,
+                scope: TrackerScope.day,
+                selectedDate: DateTime(2026, 11, 24),
+                canGoNext: false,
+                onPrevious: () => prevCalls++,
+                onNext: () => nextCalls++,
+                onDatePicked: (_) {},
+              ),
+            ),
+          ),
+        );
+
+        final disabledBtn = tester.widget<IconButton>(
+          find.byKey(const ValueKey('macro-tracker-next-btn')),
+        );
+        expect(disabledBtn.onPressed, isNull);
+
+        await tester.tap(find.byKey(const ValueKey('macro-tracker-next-btn')));
+        await tester.tap(find.byKey(const ValueKey('macro-tracker-prev-btn')));
+        await tester.pump();
+        expect(nextCalls, 0);
+        expect(prevCalls, 1);
+      },
+    );
+
+    testWidgets(
+      'MacroTrackerScreen supports horizontal scrolling between Day, Week, and Month',
+      (tester) async {
+        final macroCubit = _TestMacroTrackingCubit(hasLoadedActiveGoal: true);
+        final mealPlanRecordCubit = _TestMealPlanRecordCubit(
+          hasLoadedActiveRecord: true,
+        );
+        final mealPlanCubit = _TestMealPlanCubit();
+        final router = GoRouter(
+          initialLocation: '/',
+          routes: [
+            GoRoute(
+              path: '/',
+              builder: (context, state) => const MacroTrackerScreen(),
+            ),
+          ],
+        );
+        addTearDown(() async {
+          router.dispose();
+          await macroCubit.close();
+          await mealPlanRecordCubit.close();
+          await mealPlanCubit.close();
+        });
+
+        await tester.pumpWidget(
+          MultiBlocProvider(
+            providers: [
+              BlocProvider<MacroTrackingCubit>.value(value: macroCubit),
+              BlocProvider<MealPlanRecordCubit>.value(
+                value: mealPlanRecordCubit,
+              ),
+              BlocProvider<MealPlanCubit>.value(value: mealPlanCubit),
+            ],
+            child: MaterialApp.router(routerConfig: router),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.byType(MacroTrackerDayWidget), findsOneWidget);
+        expect(macroCubit.rangeLogCalls, 0);
+
+        // Swipe left from Day -> Week
+        await tester.drag(
+          find.byKey(const ValueKey('macro-tracker-scope-pager')),
+          const Offset(-500, 0),
+        );
+        await tester.pumpAndSettle();
+
+        expect(
+          tester
+              .widget<MacroTrackerScopeSelection>(
+                find.byType(MacroTrackerScopeSelection),
+              )
+              .scope,
+          TrackerScope.week,
+        );
+        expect(find.byType(MacroTrackerWeekWidget), findsOneWidget);
+        expect(macroCubit.rangeLogCalls, 1);
+
+        // Swipe left from Week -> Month
+        await tester.drag(
+          find.byKey(const ValueKey('macro-tracker-scope-pager')),
+          const Offset(-500, 0),
+        );
+        await tester.pumpAndSettle();
+
+        expect(
+          tester
+              .widget<MacroTrackerScopeSelection>(
+                find.byType(MacroTrackerScopeSelection),
+              )
+              .scope,
+          TrackerScope.month,
+        );
+        expect(find.byType(MacroTrackerMonthWidget), findsOneWidget);
+        expect(macroCubit.rangeLogCalls, 2);
+        expect(macroCubit.dailyLogCalls, 1);
+
+        // Jump straight back to Day via tap without an intermediate Week fetch
+        await tester.tap(find.text('Day'));
+        await tester.pumpAndSettle();
+
+        expect(
+          tester
+              .widget<MacroTrackerScopeSelection>(
+                find.byType(MacroTrackerScopeSelection),
+              )
+              .scope,
+          TrackerScope.day,
+        );
+        expect(find.byType(MacroTrackerDayWidget), findsOneWidget);
+        expect(macroCubit.rangeLogCalls, 2);
+
+        // Tap Month from Day: should trigger only one range load (no Week load)
+        await tester.tap(find.text('Month'));
+        await tester.pumpAndSettle();
+
+        expect(
+          tester
+              .widget<MacroTrackerScopeSelection>(
+                find.byType(MacroTrackerScopeSelection),
+              )
+              .scope,
+          TrackerScope.month,
+        );
+        expect(macroCubit.rangeLogCalls, 3);
+
+        // Tapping a day row in Month returns to Day scope and syncs the PageView
+        await tester.tap(find.byType(ListTile).first);
+        await tester.pumpAndSettle();
+
+        expect(
+          tester
+              .widget<MacroTrackerScopeSelection>(
+                find.byType(MacroTrackerScopeSelection),
+              )
+              .scope,
+          TrackerScope.day,
+        );
+        expect(find.byType(MacroTrackerDayWidget), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'MacroTrackerScreen disables next chevron when next period is past today',
+      (tester) async {
+        await tester.pumpWidget(
+          buildAppHarness(child: const MacroTrackerScreen()),
+        );
+        await tester.pumpAndSettle();
+
+        IconButton nextButton() => tester.widget<IconButton>(
+          find.byKey(const ValueKey('macro-tracker-next-btn')),
+        );
+
+        // Day scope on today -> next disabled
+        expect(nextButton().onPressed, isNull);
+
+        // Step to yesterday -> next enabled
+        await tester.tap(find.byKey(const ValueKey('macro-tracker-prev-btn')));
+        await tester.pumpAndSettle();
+        expect(nextButton().onPressed, isNotNull);
+
+        // Step back to today -> next disabled again
+        await tester.tap(find.byKey(const ValueKey('macro-tracker-next-btn')));
+        await tester.pumpAndSettle();
+        expect(nextButton().onPressed, isNull);
+
+        // Week scope on current week -> next disabled; previous week -> enabled
+        await tester.tap(find.text('Week'));
+        await tester.pumpAndSettle();
+        expect(nextButton().onPressed, isNull);
+
+        await tester.tap(find.byKey(const ValueKey('macro-tracker-prev-btn')));
+        await tester.pumpAndSettle();
+        expect(nextButton().onPressed, isNotNull);
+
+        await tester.tap(find.byKey(const ValueKey('macro-tracker-next-btn')));
+        await tester.pumpAndSettle();
+        expect(nextButton().onPressed, isNull);
+
+        // Month scope on current month -> next disabled; previous month -> enabled
+        await tester.tap(find.text('Month'));
+        await tester.pumpAndSettle();
+        expect(nextButton().onPressed, isNull);
+
+        await tester.tap(find.byKey(const ValueKey('macro-tracker-prev-btn')));
+        await tester.pumpAndSettle();
+        expect(nextButton().onPressed, isNotNull);
+
+        await tester.tap(find.byKey(const ValueKey('macro-tracker-today-btn')));
+        await tester.pumpAndSettle();
+        expect(nextButton().onPressed, isNull);
+      },
+    );
+
+    testWidgets(
+      'MacroTrackerWeekWidget disables days after today and allows selecting today and earlier',
+      (tester) async {
+        final macroCubit = _TestMacroTrackingCubit(hasLoadedActiveGoal: true);
+        addTearDown(macroCubit.close);
+        final sizes = DataDisplaySizes.getDataDisplaySizes(ScreenSize.md);
+        final theme = ThemeData.light();
+        final today = DateUtils.dateOnly(DateTime.now());
+        DateTime? pickedDate;
+
+        Future<void> pumpWeek(DateTime date) async {
+          await tester.pumpWidget(
+            BlocProvider<MacroTrackingCubit>.value(
+              value: macroCubit,
+              child: MaterialApp(
+                theme: theme,
+                home: Scaffold(
+                  body: MacroTrackerWeekWidget(
+                    sizes: sizes,
+                    theme: theme,
+                    selectedDate: date,
+                    onSelectDate: (d) => pickedDate = d,
+                  ),
+                ),
+              ),
+            ),
+          );
+          await tester.pumpAndSettle();
+        }
+
+        // Current week: today is selectable; any remaining days after today are disabled.
+        await pumpWeek(today);
+        final currentWeekTiles = tester
+            .widgetList<ListTile>(find.byType(ListTile))
+            .toList();
+        final todayIndex = today.weekday - 1;
+        expect(currentWeekTiles[todayIndex].enabled, isTrue);
+        expect(currentWeekTiles[todayIndex].onTap, isNotNull);
+
+        for (var i = todayIndex + 1; i < currentWeekTiles.length; i++) {
+          expect(currentWeekTiles[i].enabled, isFalse);
+          expect(currentWeekTiles[i].onTap, isNull);
+          expect(currentWeekTiles[i].trailing, isNull);
+        }
+
+        await tester.tap(find.byType(ListTile).at(todayIndex));
+        await tester.pump();
+        expect(pickedDate, today);
+
+        // Next week: all visible days are after today and cannot be selected.
+        pickedDate = null;
+        await pumpWeek(DateTime(today.year, today.month, today.day + 7));
+        final futureWeekTiles = tester
+            .widgetList<ListTile>(find.byType(ListTile))
+            .toList();
+        expect(futureWeekTiles, isNotEmpty);
+        for (final tile in futureWeekTiles) {
+          expect(tile.enabled, isFalse);
+          expect(tile.onTap, isNull);
+          expect(tile.trailing, isNull);
+        }
+
+        await tester.tap(find.byType(ListTile).first);
+        await tester.pump();
+        expect(pickedDate, isNull);
+      },
+    );
+
+    testWidgets(
+      'MacroTrackerMonthWidget disables days after today and allows selecting today and earlier',
+      (tester) async {
+        final macroCubit = _TestMacroTrackingCubit(hasLoadedActiveGoal: true);
+        addTearDown(macroCubit.close);
+        final sizes = DataDisplaySizes.getDataDisplaySizes(ScreenSize.md);
+        final theme = ThemeData.light();
+        final today = DateUtils.dateOnly(DateTime.now());
+        DateTime? pickedDate;
+
+        Future<void> pumpMonth(DateTime date) async {
+          await tester.pumpWidget(
+            BlocProvider<MacroTrackingCubit>.value(
+              value: macroCubit,
+              child: MaterialApp(
+                theme: theme,
+                home: Scaffold(
+                  body: MacroTrackerMonthWidget(
+                    sizes: sizes,
+                    theme: theme,
+                    selectedDate: date,
+                    onSelectDate: (d) => pickedDate = d,
+                  ),
+                ),
+              ),
+            ),
+          );
+          await tester.pumpAndSettle();
+        }
+
+        // Current month: day 1 is selectable.
+        await pumpMonth(today);
+        final firstDayTile = tester.widget<ListTile>(
+          find.byType(ListTile).first,
+        );
+        expect(firstDayTile.enabled, isTrue);
+        expect(firstDayTile.onTap, isNotNull);
+        await tester.tap(find.byType(ListTile).first);
+        await tester.pump();
+        expect(pickedDate, DateTime(today.year, today.month, 1));
+
+        // Next month: all visible days are after today and cannot be selected.
+        pickedDate = null;
+        await pumpMonth(DateTime(today.year, today.month + 1, 1));
+        final futureMonthTiles = tester
+            .widgetList<ListTile>(find.byType(ListTile))
+            .toList();
+        expect(futureMonthTiles, isNotEmpty);
+        for (final tile in futureMonthTiles) {
+          expect(tile.enabled, isFalse);
+          expect(tile.onTap, isNull);
+        }
+
+        await tester.tap(find.byType(ListTile).first);
+        await tester.pump();
+        expect(pickedDate, isNull);
       },
     );
   });

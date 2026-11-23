@@ -16,7 +16,6 @@
 // along with My Fitness Tale.  If not, see <https://www.gnu.org/licenses/>.
 
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:intl/intl.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../data/repositories/meal_plans/dtos/meal_plan_record_dto.dart';
@@ -26,13 +25,12 @@ import '../../core/widgets/layout/app_scaffold.dart';
 import '../../meal_plans/view_models/meal_plan_cubit.dart';
 import '../../meal_plans/view_models/meal_plan_record_cubit.dart';
 import '../../meal_plans/view_models/states/meal_plan_record_state.dart';
+import '../utils/tacker_scope.dart';
 import '../view_models/macro_tracking_cubit.dart';
 import '../widgets/log_food_modal.dart';
-import '../widgets/macro_tracker_day_widget.dart';
-import '../widgets/macro_tracker_month_widget.dart';
-import '../widgets/macro_tracker_week_widget.dart';
-
-enum TrackerScope { day, week, month }
+import '../widgets/tracker/macro_tacker_scope_widget.dart';
+import '../widgets/tracker/macro_tracker_date_navigator.dart';
+import '../widgets/tracker/macro_tracker_scope_selection.dart';
 
 class MacroTrackerScreen extends StatefulWidget {
   static const name = 'macro_tracker';
@@ -46,11 +44,21 @@ class MacroTrackerScreen extends StatefulWidget {
 class _MacroTrackerScreenState extends State<MacroTrackerScreen> {
   TrackerScope _scope = TrackerScope.day;
   DateTime _selectedDate = DateTime.now();
+  late final PageController _pageController;
+  int? _animatingToPage;
+  bool _pendingRangeLoad = false;
 
   @override
   void initState() {
     super.initState();
+    _pageController = PageController(initialPage: _scope.index);
     _loadInitialData();
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadInitialData() async {
@@ -96,16 +104,15 @@ class _MacroTrackerScreenState extends State<MacroTrackerScreen> {
     }
   }
 
-  void _loadPeriodData() {
+  void _loadRangeForCurrentScope() {
     final macroCubit = context.read<MacroTrackingCubit>();
-    macroCubit.getDailyLog(_selectedDate);
-
-    // If week or month, load date range
     if (_scope == TrackerScope.week) {
-      final start = _selectedDate.subtract(
-        Duration(days: _selectedDate.weekday - 1),
+      final start = DateTime(
+        _selectedDate.year,
+        _selectedDate.month,
+        _selectedDate.day - (_selectedDate.weekday - 1),
       );
-      final end = start.add(const Duration(days: 6));
+      final end = DateTime(start.year, start.month, start.day + 6);
       macroCubit.getDailyLogsForRange(start: start, end: end);
     } else if (_scope == TrackerScope.month) {
       final start = DateTime(_selectedDate.year, _selectedDate.month, 1);
@@ -114,21 +121,125 @@ class _MacroTrackerScreenState extends State<MacroTrackerScreen> {
     }
   }
 
+  void _loadPeriodData() {
+    _pendingRangeLoad = false;
+    context.read<MacroTrackingCubit>().getDailyLog(_selectedDate);
+    _loadRangeForCurrentScope();
+  }
+
+  void _animateToScope(TrackerScope targetScope) {
+    if (!_pageController.hasClients) return;
+    final targetPage = targetScope.index;
+    _animatingToPage = targetPage;
+    _pageController
+        .animateToPage(
+          targetPage,
+          duration: const Duration(milliseconds: 250),
+          curve: Curves.easeOutCubic,
+        )
+        .whenComplete(() {
+          if (!mounted) return;
+          if (_animatingToPage == targetPage) {
+            _animatingToPage = null;
+          }
+          if (!_pageController.hasClients) return;
+          final settledPage = _pageController.page?.round();
+          if (settledPage != null &&
+              settledPage >= 0 &&
+              settledPage < TrackerScope.values.length) {
+            final settledScope = TrackerScope.values[settledPage];
+            if (settledScope != _scope) {
+              setState(() {
+                _scope = settledScope;
+              });
+              _pendingRangeLoad = settledScope != TrackerScope.day;
+            }
+          }
+          if (_pendingRangeLoad && _animatingToPage == null) {
+            _pendingRangeLoad = false;
+            _loadRangeForCurrentScope();
+          }
+        });
+  }
+
   void _onScopeChanged(TrackerScope newScope) {
+    if (_scope == newScope) return;
+    _pendingRangeLoad = newScope != TrackerScope.day;
     setState(() {
       _scope = newScope;
     });
-    _loadPeriodData();
+    if (_pageController.hasClients) {
+      _animateToScope(newScope);
+    } else if (_pendingRangeLoad) {
+      _pendingRangeLoad = false;
+      _loadRangeForCurrentScope();
+    }
+  }
+
+  void _onPageChanged(TrackerScope newScope) {
+    if (_animatingToPage != null) {
+      if (newScope.index == _animatingToPage) {
+        _animatingToPage = null;
+      }
+      return;
+    }
+    if (_scope == newScope) return;
+    _pendingRangeLoad = newScope != TrackerScope.day;
+    setState(() {
+      _scope = newScope;
+    });
+  }
+
+  void _onScopeScrollSettled() {
+    if (!_pendingRangeLoad || _animatingToPage != null) return;
+    _pendingRangeLoad = false;
+    _loadRangeForCurrentScope();
+  }
+
+  bool get _canGoNext {
+    final today = DateUtils.dateOnly(DateTime.now());
+    final selected = DateUtils.dateOnly(_selectedDate);
+    final DateTime nextPeriodStart;
+    switch (_scope) {
+      case TrackerScope.day:
+        nextPeriodStart = DateTime(
+          selected.year,
+          selected.month,
+          selected.day + 1,
+        );
+      case TrackerScope.week:
+        final weekStart = DateTime(
+          selected.year,
+          selected.month,
+          selected.day - (selected.weekday - 1),
+        );
+        nextPeriodStart = DateTime(
+          weekStart.year,
+          weekStart.month,
+          weekStart.day + 7,
+        );
+      case TrackerScope.month:
+        nextPeriodStart = DateTime(selected.year, selected.month + 1, 1);
+    }
+    return !nextPeriodStart.isAfter(today);
   }
 
   void _prevPeriod() {
     setState(() {
       switch (_scope) {
         case TrackerScope.day:
-          _selectedDate = _selectedDate.subtract(const Duration(days: 1));
+          _selectedDate = DateTime(
+            _selectedDate.year,
+            _selectedDate.month,
+            _selectedDate.day - 1,
+          );
           break;
         case TrackerScope.week:
-          _selectedDate = _selectedDate.subtract(const Duration(days: 7));
+          _selectedDate = DateTime(
+            _selectedDate.year,
+            _selectedDate.month,
+            _selectedDate.day - 7,
+          );
           break;
         case TrackerScope.month:
           _selectedDate = DateTime(
@@ -143,22 +254,39 @@ class _MacroTrackerScreenState extends State<MacroTrackerScreen> {
   }
 
   void _nextPeriod() {
+    if (!_canGoNext) return;
+    final today = DateUtils.dateOnly(DateTime.now());
+    DateTime nextDate;
+    switch (_scope) {
+      case TrackerScope.day:
+        nextDate = DateTime(
+          _selectedDate.year,
+          _selectedDate.month,
+          _selectedDate.day + 1,
+        );
+      case TrackerScope.week:
+        nextDate = DateTime(
+          _selectedDate.year,
+          _selectedDate.month,
+          _selectedDate.day + 7,
+        );
+      case TrackerScope.month:
+        nextDate = DateTime(_selectedDate.year, _selectedDate.month + 1, 1);
+    }
+    if (nextDate.isAfter(today)) {
+      nextDate = today;
+    }
     setState(() {
-      switch (_scope) {
-        case TrackerScope.day:
-          _selectedDate = _selectedDate.add(const Duration(days: 1));
-          break;
-        case TrackerScope.week:
-          _selectedDate = _selectedDate.add(const Duration(days: 7));
-          break;
-        case TrackerScope.month:
-          _selectedDate = DateTime(
-            _selectedDate.year,
-            _selectedDate.month + 1,
-            1,
-          );
-          break;
-      }
+      _selectedDate = nextDate;
+    });
+    _loadPeriodData();
+  }
+
+  void _onDatePicked(DateTime picked) {
+    final today = DateUtils.dateOnly(DateTime.now());
+    if (DateUtils.dateOnly(picked).isAfter(today)) return;
+    setState(() {
+      _selectedDate = picked;
     });
     _loadPeriodData();
   }
@@ -184,115 +312,57 @@ class _MacroTrackerScreenState extends State<MacroTrackerScreen> {
       },
       child: AppScaffold(
         title: 'Macro Tracker',
-        body: Padding(
-          padding: EdgeInsets.all(sizes.viewPadding),
-          child: Column(
-            children: [
-              // Scope & Date Header
-              Wrap(
-                alignment: WrapAlignment.spaceBetween,
-                crossAxisAlignment: WrapCrossAlignment.center,
-                runSpacing: sizes.spacing / 2,
+        body: Column(
+          children: [
+            Padding(
+              padding: EdgeInsets.fromLTRB(
+                sizes.viewPadding,
+                sizes.viewPadding,
+                sizes.viewPadding,
+                0,
+              ),
+              child: Column(
                 children: [
-                  SegmentedButton<TrackerScope>(
-                    key: const ValueKey('macro-tracker-scope-selector'),
-                    showSelectedIcon: false,
-                    style: const ButtonStyle(
-                      shape: WidgetStatePropertyAll(RoundedRectangleBorder()),
-                    ),
-                    segments: [
-                      ButtonSegment(
-                        value: TrackerScope.day,
-                        label: Text(
-                          'Day',
-                          style: TextStyle(fontSize: sizes.fontSize),
-                        ),
-                      ),
-                      ButtonSegment(
-                        value: TrackerScope.week,
-                        label: Text(
-                          'Week',
-                          style: TextStyle(fontSize: sizes.fontSize),
-                        ),
-                      ),
-                      ButtonSegment(
-                        value: TrackerScope.month,
-                        label: Text(
-                          'Month',
-                          style: TextStyle(fontSize: sizes.fontSize),
-                        ),
-                      ),
-                    ],
-                    selected: {_scope},
-                    onSelectionChanged: (val) {
-                      _onScopeChanged(val.first);
-                    },
+                  MacroTrackerScopeSelection(
+                    sizes: sizes,
+                    theme: theme,
+                    scope: _scope,
+                    onScopeChanged: _onScopeChanged,
+                    onGoToToday: _goToToday,
+                    pageController: _pageController,
                   ),
-                  TextButton(
-                    key: const ValueKey('macro-tracker-today-btn'),
-                    onPressed: _goToToday,
-                    child: Text(
-                      'Today',
-                      style: TextStyle(fontSize: sizes.fontSize),
-                    ),
+                  SizedBox(height: sizes.halfSpacing),
+                  MacroTrackerDateNavigator(
+                    sizes: sizes,
+                    scope: _scope,
+                    selectedDate: _selectedDate,
+                    canGoNext: _canGoNext,
+                    onPrevious: _prevPeriod,
+                    onNext: _nextPeriod,
+                    onDatePicked: _onDatePicked,
                   ),
                 ],
               ),
-              SizedBox(height: sizes.spacing / 2),
-              // Date Navigator
-              Row(
-                children: [
-                  IconButton(
-                    key: const ValueKey('macro-tracker-prev-btn'),
-                    icon: Icon(Icons.chevron_left, size: sizes.buttonIconSize),
-                    onPressed: _prevPeriod,
-                  ),
-                  Expanded(
-                    child: TextButton(
-                      key: const ValueKey('macro-tracker-date-btn'),
-                      onPressed: () async {
-                        final picked = await showDatePicker(
-                          context: context,
-                          initialDate: _selectedDate,
-                          firstDate: DateTime(2020),
-                          lastDate: DateTime(2035),
-                        );
-                        if (picked != null) {
-                          setState(() {
-                            _selectedDate = picked;
-                          });
-                          _loadPeriodData();
-                        }
-                      },
-                      child: Text(
-                        _formatHeaderDate(),
-                        textAlign: TextAlign.center,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: sizes.subtitleFontSize,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ),
-                  IconButton(
-                    key: const ValueKey('macro-tracker-next-btn'),
-                    icon: Icon(Icons.chevron_right, size: sizes.buttonIconSize),
-                    onPressed: _nextPeriod,
-                  ),
-                ],
+            ),
+            SizedBox(height: sizes.spacing),
+            // Scope Body
+            Expanded(
+              child: MacroTackerScopeWidget(
+                sizes: sizes,
+                theme: theme,
+                selectedDate: _selectedDate,
+                onSelectDate: _selectDay,
+                pageController: _pageController,
+                onScopeChanged: _onPageChanged,
+                onScrollSettled: _onScopeScrollSettled,
               ),
-              SizedBox(height: sizes.spacing),
-              // Scope Body
-              Expanded(child: _buildScopeBody(theme, sizes)),
-            ],
-          ),
+            ),
+          ],
         ),
-        floatingActionButton: FloatingActionButton.extended(
+        floatingActionButton: FloatingActionButton(
           key: const ValueKey('macro-tracker-log-food-fab'),
-          icon: Icon(Icons.add, size: sizes.buttonIconSize),
-          label: Text('Log Food', style: TextStyle(fontSize: sizes.fontSize)),
+          shape: BeveledRectangleBorder(),
+          child: Icon(Icons.add, size: sizes.buttonIconSize),
           onPressed: () {
             showDialog(
               context: context,
@@ -308,51 +378,14 @@ class _MacroTrackerScreenState extends State<MacroTrackerScreen> {
     );
   }
 
-  String _formatHeaderDate() {
-    switch (_scope) {
-      case TrackerScope.day:
-        return DateFormat('EEE, MMM d, yyyy').format(_selectedDate);
-      case TrackerScope.week:
-        final start = _selectedDate.subtract(
-          Duration(days: _selectedDate.weekday - 1),
-        );
-        final end = start.add(const Duration(days: 6));
-        return '${DateFormat('MMM d').format(start)} - ${DateFormat('MMM d').format(end)}';
-      case TrackerScope.month:
-        return DateFormat('MMMM yyyy').format(_selectedDate);
-    }
-  }
-
   void _selectDay(DateTime date) {
+    final today = DateUtils.dateOnly(DateTime.now());
+    if (DateUtils.dateOnly(date).isAfter(today)) return;
     setState(() {
       _selectedDate = date;
       _scope = TrackerScope.day;
     });
+    _animateToScope(TrackerScope.day);
     _loadPeriodData();
-  }
-
-  Widget _buildScopeBody(ThemeData theme, DataDisplaySizesList sizes) {
-    switch (_scope) {
-      case TrackerScope.day:
-        return MacroTrackerDayWidget(
-          theme: theme,
-          sizes: sizes,
-          selectedDate: _selectedDate,
-        );
-      case TrackerScope.week:
-        return MacroTrackerWeekWidget(
-          theme: theme,
-          sizes: sizes,
-          selectedDate: _selectedDate,
-          onSelectDate: _selectDay,
-        );
-      case TrackerScope.month:
-        return MacroTrackerMonthWidget(
-          theme: theme,
-          sizes: sizes,
-          selectedDate: _selectedDate,
-          onSelectDate: _selectDay,
-        );
-    }
   }
 }

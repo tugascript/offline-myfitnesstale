@@ -15,16 +15,19 @@
 // You should have received a copy of the GNU General Public License
 // along with My Fitness Tale.  If not, see <https://www.gnu.org/licenses/>.
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:material_ui/material_ui.dart';
 
-import '../../../data/utils/dates.dart';
-import '../../core/sizes/data_display_sizes.dart';
-import '../view_models/macro_tracking_cubit.dart';
-import '../view_models/states/macro_tracking_state.dart';
+import '../../../../data/utils/dates.dart';
+import '../../../core/sizes/data_display_sizes.dart';
+import '../../view_models/macro_tracking_cubit.dart';
+import '../../view_models/states/macro_tracking_state.dart';
 
 class MacroTrackerMonthWidget extends StatelessWidget {
+  static final _dayFormat = DateFormat('EEE, MMM d');
+
   final DataDisplaySizesList sizes;
   final ThemeData theme;
   final DateTime selectedDate;
@@ -41,8 +44,12 @@ class MacroTrackerMonthWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<MacroTrackingCubit, MacroTrackingState>(
+      buildWhen: (previous, current) =>
+          !listEquals(previous.rangeLogs, current.rangeLogs) ||
+          previous.activeGoal != current.activeGoal,
       builder: (context, state) {
         final logs = state.rangeLogs;
+        final today = DateUtils.dateOnly(DateTime.now());
         final daysInMonth = DateTime(
           selectedDate.year,
           selectedDate.month + 1,
@@ -58,6 +65,9 @@ class MacroTrackerMonthWidget extends StatelessWidget {
               selectedDate.month,
               index + 1,
             );
+            final isFutureDay = dayDate.isAfter(today);
+            final isSelectedDay =
+                !isFutureDay && DateUtils.isSameDay(dayDate, selectedDate);
             final numDate = DateUtilities.getNumericDate(dayDate);
             final dayLog = logs.where((l) => l.date == numDate);
             final log = dayLog.isNotEmpty ? dayLog.first : null;
@@ -66,32 +76,50 @@ class MacroTrackerMonthWidget extends StatelessWidget {
                 .targetCalories;
 
             return Card(
+              color: isSelectedDay
+                  ? theme.primaryColor.withValues(alpha: 0.1)
+                  : null,
               margin: EdgeInsets.zero,
-              child: ListTile(
-                title: Text(
-                  DateFormat('EEE, MMM d').format(dayDate),
-                  style: TextStyle(fontSize: sizes.fontSize),
-                ),
-                subtitle: targetCal != null
-                    ? Text(
-                        'Target: $targetCal kcal',
-                        style: TextStyle(
-                          fontSize: sizes.smallFontSize,
-                          color: Colors.grey[600],
-                        ),
-                      )
-                    : null,
-                trailing: Text(
-                  log != null ? '${log.totalCalories} kcal' : '-',
-                  style: TextStyle(
-                    fontSize: sizes.fontSize,
-                    fontWeight: FontWeight.bold,
-                    color: log != null ? theme.primaryColor : Colors.grey,
+              child: Opacity(
+                opacity: isFutureDay ? 0.5 : 1,
+                child: ListTile(
+                  enabled: !isFutureDay,
+                  title: Text(
+                    _dayFormat.format(dayDate),
+                    style: TextStyle(
+                      fontSize: sizes.fontSize,
+                      color: isFutureDay ? theme.disabledColor : null,
+                    ),
                   ),
+                  subtitle: targetCal != null
+                      ? Text(
+                          'Target: $targetCal kcal',
+                          style: TextStyle(
+                            fontSize: sizes.smallFontSize,
+                            color: isFutureDay
+                                ? theme.disabledColor
+                                : Colors.grey[600],
+                          ),
+                        )
+                      : null,
+                  trailing: Text(
+                    log != null ? '${log.totalCalories} kcal' : '-',
+                    style: TextStyle(
+                      fontSize: sizes.fontSize,
+                      fontWeight: FontWeight.bold,
+                      color: isFutureDay
+                          ? theme.disabledColor
+                          : log != null
+                          ? theme.primaryColor
+                          : Colors.grey,
+                    ),
+                  ),
+                  onTap: isFutureDay
+                      ? null
+                      : () {
+                          onSelectDate(dayDate);
+                        },
                 ),
-                onTap: () {
-                  onSelectDate(dayDate);
-                },
               ),
             );
           },
