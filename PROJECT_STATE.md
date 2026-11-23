@@ -747,7 +747,10 @@ version and ledger consistency, profile preservation, and foreign-key/integrity
 checks using the platform sqflite plugin. The Android runner
 `tool/test_android_database_migrations.sh` additionally force-stops the app inside
 create, upgrade, and rollback transactions and verifies recovery in a fresh
-process. Only `integration_test.db` is used. Run instructions and remaining
+process. The iOS simulator runner `tool/test_ios_database_migrations.sh` runs the
+same native journeys and kills the app with `SIGKILL` inside each transaction,
+then verifies recovery in a fresh process while preserving the database sandbox.
+Only `integration_test.db` is used. Run instructions and remaining
 lifecycle limits are in `integration_test/DATABASE_MIGRATIONS.md`.
 
 Verification on 23 November 2026: all five native journeys and all three
@@ -755,9 +758,17 @@ force-stop/recovery pairs passed on a physical Pixel 7 (Android API 37).
 Dependency resolution, formatting (619 files unchanged), analysis (no issues),
 the host suite (696 passed, one existing skip), shell syntax, and whitespace
 checks passed. The interrupted invocations intentionally report incomplete
-tests after force-stop; each following recovery invocation passed. Older Android
-APIs, iOS, power loss, OS upgrades, and APK downgrade compatibility remain
-unverified by this suite.
+tests after force-stop; each following recovery invocation passed.
+
+iOS verification on 23 November 2026: all five native journeys and all three
+SIGKILL/recovery pairs passed on the dedicated iPhone 17 Pro simulator running
+iOS 26.5. Recovery preserved the per-run profile fixture, schema version, ledger,
+and SQLite integrity after interrupted creation, upgrade, and rollback. The host
+suite passed 696 tests with one existing skip; dependency resolution, formatting
+(619 files unchanged), analysis, shell syntax, and whitespace checks passed.
+Older Android APIs, physical iOS process termination, background suspension,
+locked-device data protection, jetsam, power loss, OS upgrades, and app-binary
+downgrade compatibility remain unverified by this suite.
 
 The current create schema is version 1. `DatabaseHelper` ensures the
 `migrations` table (`Migration` model) exists first in `onOpen` before running

@@ -36,8 +36,8 @@ void main() {
   });
 
   if (_phase != 'all') {
-    testWidgets('Android migration process recovery ($_phase)', (tester) async {
-      expect(Platform.isAndroid, isTrue);
+    testWidgets('native migration process recovery ($_phase)', (tester) async {
+      expect(Platform.isAndroid || Platform.isIOS, isTrue);
       expect(
         _phase,
         isIn([
@@ -320,7 +320,7 @@ Future<void> _processRecovery(DatabaseHelper helper) async {
 }
 
 Future<void> _waitForForceStop() async {
-  // The host runner waits for this unique marker before adb force-stop. All SQL
+  // The host runner waits for this unique marker before killing the app. All SQL
   // above has completed, but the migration callback/transaction cannot commit.
   debugPrint('MIGRATION_INTERRUPT_READY:$_phase:$_fixture');
   await Completer<void>().future;
