@@ -85,11 +85,11 @@ class _MacroTrackerScreenState extends State<MacroTrackerScreen> {
       final recordCubit = context.read<MealPlanRecordCubit>();
       final recordState = recordCubit.state;
       if (recordState.hasLoadedActiveRecord) {
-        _syncSelectedMealPlan(recordState.activeRecord);
+        _syncActiveMealPlan(recordState.activeRecord);
       } else if (!recordState.isLoading && recordState.error == null) {
         recordCubit.getActiveMealPlanRecord().then((_) {
           if (!mounted) return;
-          _syncSelectedMealPlan(recordCubit.state.activeRecord);
+          _syncActiveMealPlan(recordCubit.state.activeRecord);
         });
       }
 
@@ -139,13 +139,13 @@ class _MacroTrackerScreenState extends State<MacroTrackerScreen> {
     return true;
   }
 
-  void _syncSelectedMealPlan(MealPlanRecordDto? record) {
+  void _syncActiveMealPlan(MealPlanRecordDto? record) {
     if (record == null) return;
     final mealPlanCubit = context.read<MealPlanCubit>();
-    final plan = mealPlanCubit.state.selectedMealPlan;
+    final plan = mealPlanCubit.state.activeMealPlan;
     if (plan?.id != record.mealPlanId ||
         plan?.version != record.mealPlanVersion) {
-      mealPlanCubit.getMealPlan(
+      mealPlanCubit.getActiveMealPlan(
         record.mealPlanId,
         version: record.mealPlanVersion,
       );
@@ -418,7 +418,7 @@ class _MacroTrackerScreenState extends State<MacroTrackerScreen> {
           listenWhen: (previous, current) =>
               previous.activeRecord != current.activeRecord,
           listener: (context, state) {
-            _syncSelectedMealPlan(state.activeRecord);
+            _syncActiveMealPlan(state.activeRecord);
           },
         ),
         BlocListener<MacroTrackingCubit, MacroTrackingState>(

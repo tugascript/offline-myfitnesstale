@@ -381,12 +381,16 @@ class _Plans extends MealPlanCubit {
       state.copyWith(
         mealPlans: [_plan],
         selectedMealPlan: const Nullable(_plan),
+        activeMealPlan: const Nullable(_plan),
       ),
     );
   }
 
   @override
   Future<void> getMealPlan(int id, {int? version}) async {}
+
+  @override
+  Future<void> getActiveMealPlan(int id, {int? version}) async {}
 
   @override
   Future<void> getMealPlans({

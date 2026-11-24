@@ -68,6 +68,8 @@ import 'package:myfitnesstale/src/ui/home/widgets/quick_actions_widget.dart';
 import 'package:myfitnesstale/src/data/repositories/foods/food_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/recipes/recipe_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/macros/macro_tracking_repository.dart';
+import 'package:myfitnesstale/src/data/repositories/meal_plans/dtos/meal_plan_dto.dart';
+import 'package:myfitnesstale/src/data/repositories/meal_plans/dtos/meal_plan_record_dto.dart';
 import 'package:myfitnesstale/src/data/repositories/meal_plans/meal_plan_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/meal_plans/meal_plan_record_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/weight/weight_record_repository.dart';
@@ -128,9 +130,18 @@ class _TestRecipeCubit extends RecipeCubit {
 }
 
 class _TestMealPlanCubit extends MealPlanCubit {
-  _TestMealPlanCubit() : super(mealPlanRepository: MealPlanRepository.create());
+  _TestMealPlanCubit({MealPlanDto? selectedMealPlan, this.activeMealPlanResult})
+    : super(mealPlanRepository: MealPlanRepository.create()) {
+    if (selectedMealPlan != null) {
+      emit(state.copyWith(selectedMealPlan: Nullable(selectedMealPlan)));
+    }
+  }
 
+  final MealPlanDto? activeMealPlanResult;
   int getMealPlanCalls = 0;
+  int getActiveMealPlanCalls = 0;
+  int? lastActiveMealPlanId;
+  int? lastActiveMealPlanVersion;
 
   @override
   Future<void> getMealPlans({
@@ -144,13 +155,31 @@ class _TestMealPlanCubit extends MealPlanCubit {
   Future<void> getMealPlan(int id, {int? version}) async {
     getMealPlanCalls++;
   }
+
+  @override
+  Future<void> getActiveMealPlan(int id, {int? version}) async {
+    getActiveMealPlanCalls++;
+    lastActiveMealPlanId = id;
+    lastActiveMealPlanVersion = version;
+    final plan = activeMealPlanResult;
+    if (plan != null && !isClosed) {
+      emit(state.copyWith(activeMealPlan: Nullable(plan)));
+    }
+  }
 }
 
 class _TestMealPlanRecordCubit extends MealPlanRecordCubit {
-  _TestMealPlanRecordCubit({bool hasLoadedActiveRecord = false})
-    : super(mealPlanRecordRepository: MealPlanRecordRepository.create()) {
-    if (hasLoadedActiveRecord) {
-      emit(state.copyWith(hasLoadedActiveRecord: true));
+  _TestMealPlanRecordCubit({
+    bool hasLoadedActiveRecord = false,
+    MealPlanRecordDto? activeRecord,
+  }) : super(mealPlanRecordRepository: MealPlanRecordRepository.create()) {
+    if (hasLoadedActiveRecord || activeRecord != null) {
+      emit(
+        state.copyWith(
+          hasLoadedActiveRecord: hasLoadedActiveRecord,
+          activeRecord: activeRecord != null ? Nullable(activeRecord) : null,
+        ),
+      );
     }
   }
 
@@ -797,6 +826,220 @@ void main() {
 
         expect(macroCubit.activeGoalCalls, 1);
         expect(macroCubit.dailyLogCalls, 1);
+      },
+    );
+
+    testWidgets(
+      'MacroTrackerScreen offscreen warm-up syncs activeMealPlan without replacing selectedMealPlan',
+      (tester) async {
+        final today = DateUtils.dateOnly(DateTime.now());
+        const activePlan = MealPlanDto(
+          id: 10,
+          name: 'Active Tracker Plan',
+          version: 2,
+          totalWeeks: 1,
+          totalDays: 1,
+          totalMeals: 1,
+          isFavorite: false,
+          createdBy: CreatedBy.user,
+          weeks: [
+            MealPlanWeekDto(
+              id: 100,
+              mealPlanId: 10,
+              planVersion: 2,
+              weekNumber: 1,
+              phase: MealPlanPhase.maintain,
+              targetCalories: 400,
+              targetProtein: 30,
+              targetCarbs: 45,
+              targetFat: 10,
+              totalDays: 1,
+              totalMeals: 1,
+              createdBy: CreatedBy.user,
+              days: [
+                MealPlanDayDto(
+                  id: 101,
+                  mealPlanId: 10,
+                  mealPlanWeekId: 100,
+                  planVersion: 2,
+                  day: 1,
+                  targetCalories: 400,
+                  targetProtein: 30,
+                  targetCarbs: 45,
+                  targetFat: 10,
+                  totalMeals: 1,
+                  createdBy: CreatedBy.user,
+                  meals: [
+                    MealPlanMealDto(
+                      id: 102,
+                      position: 1,
+                      mealPlanId: 10,
+                      mealPlanWeekId: 100,
+                      mealPlanDayId: 101,
+                      planVersion: 2,
+                      mealType: MealType.breakfast,
+                      name: 'Active Plan Oatmeal',
+                      totalCalories: 400,
+                      totalProtein: 30,
+                      totalCarbs: 45,
+                      totalFat: 10,
+                      createdBy: CreatedBy.user,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ],
+        );
+        const editedPlan = MealPlanDto(
+          id: 20,
+          name: 'Edited Route Plan',
+          version: 1,
+          totalWeeks: 1,
+          totalDays: 1,
+          totalMeals: 1,
+          isFavorite: false,
+          createdBy: CreatedBy.user,
+          weeks: [
+            MealPlanWeekDto(
+              id: 200,
+              mealPlanId: 20,
+              planVersion: 1,
+              weekNumber: 1,
+              phase: MealPlanPhase.cut,
+              targetCalories: 350,
+              targetProtein: 35,
+              targetCarbs: 20,
+              targetFat: 12,
+              totalDays: 1,
+              totalMeals: 1,
+              createdBy: CreatedBy.user,
+              days: [
+                MealPlanDayDto(
+                  id: 201,
+                  mealPlanId: 20,
+                  mealPlanWeekId: 200,
+                  planVersion: 1,
+                  day: 1,
+                  targetCalories: 350,
+                  targetProtein: 35,
+                  targetCarbs: 20,
+                  targetFat: 12,
+                  totalMeals: 1,
+                  createdBy: CreatedBy.user,
+                  meals: [
+                    MealPlanMealDto(
+                      id: 202,
+                      position: 1,
+                      mealPlanId: 20,
+                      mealPlanWeekId: 200,
+                      mealPlanDayId: 201,
+                      planVersion: 1,
+                      mealType: MealType.lunch,
+                      name: 'Edited Plan Salad',
+                      totalCalories: 350,
+                      totalProtein: 35,
+                      totalCarbs: 20,
+                      totalFat: 12,
+                      createdBy: CreatedBy.user,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ],
+        );
+        final activeRecord = MealPlanRecordDto(
+          id: 1,
+          mealPlanId: activePlan.id,
+          mealPlanVersion: activePlan.version,
+          status: ProgressStatus.inProgress,
+          startedAt: today,
+          currentWeek: 1,
+          currentDay: 1,
+          planName: activePlan.name,
+          totalWeeks: 1,
+          totalDays: 1,
+          weeks: [
+            MealPlanWeekRecordDto(
+              id: 1,
+              mealPlanRecordId: 1,
+              mealPlanWeekId: 100,
+              week: 1,
+              status: ProgressStatus.inProgress,
+              currentDay: 1,
+              totalCalories: 0,
+              totalProtein: 0,
+              totalCarbs: 0,
+              totalFat: 0,
+              days: const [
+                MealPlanDayRecordDto(
+                  id: 1,
+                  mealPlanRecordId: 1,
+                  mealPlanWeekRecordId: 1,
+                  mealPlanDayId: 101,
+                  dailyLogId: 1,
+                  week: 1,
+                  day: 1,
+                  status: ProgressStatus.inProgress,
+                  totalCalories: 0,
+                  totalProtein: 0,
+                  totalCarbs: 0,
+                  totalFat: 0,
+                ),
+              ],
+            ),
+          ],
+        );
+
+        final macroCubit = _TestMacroTrackingCubit(hasLoadedActiveGoal: true);
+        final mealPlanRecordCubit = _TestMealPlanRecordCubit(
+          hasLoadedActiveRecord: true,
+          activeRecord: activeRecord,
+        );
+        final mealPlanCubit = _TestMealPlanCubit(
+          selectedMealPlan: editedPlan,
+          activeMealPlanResult: activePlan,
+        );
+        final router = GoRouter(
+          initialLocation: '/',
+          routes: [
+            GoRoute(
+              path: '/',
+              builder: (context, state) =>
+                  const MacroTrackerScreen(isVisible: false),
+            ),
+          ],
+        );
+        addTearDown(() async {
+          router.dispose();
+          await macroCubit.close();
+          await mealPlanRecordCubit.close();
+          await mealPlanCubit.close();
+        });
+
+        await tester.pumpWidget(
+          MultiBlocProvider(
+            providers: [
+              BlocProvider<MacroTrackingCubit>.value(value: macroCubit),
+              BlocProvider<MealPlanRecordCubit>.value(
+                value: mealPlanRecordCubit,
+              ),
+              BlocProvider<MealPlanCubit>.value(value: mealPlanCubit),
+            ],
+            child: MaterialApp.router(routerConfig: router),
+          ),
+        );
+        await tester.pump();
+
+        expect(mealPlanCubit.getMealPlanCalls, 0);
+        expect(mealPlanCubit.getActiveMealPlanCalls, 1);
+        expect(mealPlanCubit.lastActiveMealPlanId, activePlan.id);
+        expect(mealPlanCubit.lastActiveMealPlanVersion, activePlan.version);
+        expect(mealPlanCubit.state.selectedMealPlan, editedPlan);
+        expect(mealPlanCubit.state.activeMealPlan, activePlan);
+        expect(find.text('Active Plan Oatmeal'), findsOneWidget);
+        expect(find.text('Edited Plan Salad'), findsNothing);
       },
     );
 
