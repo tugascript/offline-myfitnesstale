@@ -20,6 +20,8 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../../../data/utils/enums.dart';
 import '../../../core/sizes/data_display_sizes.dart';
+import '../../../core/widgets/layout/app_text_button.dart';
+import '../../../core/widgets/layout/empty_card.dart';
 import '../../view_models/states/workout_plan_record_state.dart';
 import '../../view_models/workout_plan_record_cubit.dart';
 import './empty_workout_plan_record.dart';
@@ -76,7 +78,30 @@ class _LatestWorkoutPlanRecordState extends State<LatestWorkoutPlanRecord> {
             ? null
             : record;
 
-        if (!state.isLoading && matchingRecord == null) {
+        if (!state.isLoadingLatest && state.latestError != null) {
+          return EmptyCard(
+            sizes: widget.sizes,
+            emoji: '⚠️',
+            emptyText: 'Could not load latest workout plan record',
+            actions: [
+              AppTextButton(
+                key: const ValueKey('latest-workout-plan-record-retry'),
+                isLoading: false,
+                sizes: widget.sizes,
+                isDense: true,
+                label: 'Retry',
+                icon: Icons.refresh,
+                onPressed: () {
+                  context
+                      .read<WorkoutPlanRecordCubit>()
+                      .getLatestWorkoutPlanRecord(widget.workoutPlanId);
+                },
+              ),
+            ],
+          );
+        }
+
+        if (!state.isLoadingLatest && matchingRecord == null) {
           return EmptyWorkoutPlanRecord(
             sizes: widget.sizes,
             isLoading: state.isLoading,
@@ -88,7 +113,7 @@ class _LatestWorkoutPlanRecordState extends State<LatestWorkoutPlanRecord> {
           sizes: widget.sizes,
           theme: widget.theme,
           units: widget.units,
-          isLoading: state.isLoading,
+          isLoading: state.isLoadingLatest,
           workoutPlanId: widget.workoutPlanId,
           workoutPlanVersion: widget.workoutPlanVersion,
           workoutPlanRecord: matchingRecord,

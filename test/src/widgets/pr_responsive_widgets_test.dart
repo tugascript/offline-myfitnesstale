@@ -247,6 +247,8 @@ class _Macros extends MacroTrackingCubit {
     emit(
       state.copyWith(
         activeGoal: const Nullable(_macroGoal),
+        hasLoadedActiveGoal: true,
+        hasLoadedGoalHistory: true,
         selectedDailyLog: Nullable(
           DailyNutritionLogDto(
             id: 1,

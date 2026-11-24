@@ -49,9 +49,12 @@ final class MacroTrackingState extends Equatable {
   final List<DailyNutritionLogDto> rangeLogs;
   final bool hasLoadedActiveGoal;
   final bool isLoadingActiveGoal;
+  final bool hasLoadedGoalHistory;
+  final bool isLoadingGoalHistory;
   final bool isLoading;
   final ErrorState? error;
   final ErrorState? activeGoalError;
+  final ErrorState? goalHistoryError;
 
   const MacroTrackingState({
     this.goalsRequestId = 0,
@@ -63,9 +66,12 @@ final class MacroTrackingState extends Equatable {
     this.rangeLogs = const [],
     this.hasLoadedActiveGoal = false,
     this.isLoadingActiveGoal = false,
+    this.hasLoadedGoalHistory = false,
+    this.isLoadingGoalHistory = false,
     required this.isLoading,
     this.error,
     this.activeGoalError,
+    this.goalHistoryError,
   });
 
   factory MacroTrackingState.initial() {
@@ -77,6 +83,8 @@ final class MacroTrackingState extends Equatable {
       rangeLogs: const [],
       hasLoadedActiveGoal: false,
       isLoadingActiveGoal: false,
+      hasLoadedGoalHistory: false,
+      isLoadingGoalHistory: false,
       isLoading: false,
     );
   }
@@ -91,9 +99,12 @@ final class MacroTrackingState extends Equatable {
     List<DailyNutritionLogDto>? rangeLogs,
     bool? hasLoadedActiveGoal,
     bool? isLoadingActiveGoal,
+    bool? hasLoadedGoalHistory,
+    bool? isLoadingGoalHistory,
     bool? isLoading,
     Nullable<ErrorState>? error,
     Nullable<ErrorState>? activeGoalError,
+    Nullable<ErrorState>? goalHistoryError,
   }) {
     return MacroTrackingState(
       goalsRequestId: goalsRequestId ?? this.goalsRequestId,
@@ -107,11 +118,16 @@ final class MacroTrackingState extends Equatable {
       rangeLogs: rangeLogs ?? this.rangeLogs,
       hasLoadedActiveGoal: hasLoadedActiveGoal ?? this.hasLoadedActiveGoal,
       isLoadingActiveGoal: isLoadingActiveGoal ?? this.isLoadingActiveGoal,
+      hasLoadedGoalHistory: hasLoadedGoalHistory ?? this.hasLoadedGoalHistory,
+      isLoadingGoalHistory: isLoadingGoalHistory ?? this.isLoadingGoalHistory,
       isLoading: isLoading ?? this.isLoading,
       error: error != null ? error.value : this.error,
       activeGoalError: activeGoalError != null
           ? activeGoalError.value
           : this.activeGoalError,
+      goalHistoryError: goalHistoryError != null
+          ? goalHistoryError.value
+          : this.goalHistoryError,
     );
   }
 
@@ -132,8 +148,11 @@ final class MacroTrackingState extends Equatable {
     rangeLogs,
     hasLoadedActiveGoal,
     isLoadingActiveGoal,
+    hasLoadedGoalHistory,
+    isLoadingGoalHistory,
     isLoading,
     error,
     activeGoalError,
+    goalHistoryError,
   ];
 }

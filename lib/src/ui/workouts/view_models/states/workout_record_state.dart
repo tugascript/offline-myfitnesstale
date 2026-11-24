@@ -83,7 +83,11 @@ final class WorkoutRecordState extends Equatable {
   final WorkoutRecordDto? selectedWorkoutRecord;
   final WorkoutRecordPagination pagination;
   final bool isLoading;
+  final bool isLoadingLatest;
+  final bool isLoadingRecords;
   final ErrorState? error;
+  final ErrorState? latestError;
+  final ErrorState? recordsError;
 
   const WorkoutRecordState({
     this.recordsRequestId = 0,
@@ -92,7 +96,11 @@ final class WorkoutRecordState extends Equatable {
     this.selectedWorkoutRecord,
     required this.pagination,
     required this.isLoading,
+    this.isLoadingLatest = false,
+    this.isLoadingRecords = false,
     this.error,
+    this.latestError,
+    this.recordsError,
   });
 
   factory WorkoutRecordState.initial() {
@@ -100,6 +108,8 @@ final class WorkoutRecordState extends Equatable {
       workoutRecords: [],
       pagination: WorkoutRecordPagination.initial(),
       isLoading: false,
+      isLoadingLatest: false,
+      isLoadingRecords: false,
     );
   }
 
@@ -110,7 +120,11 @@ final class WorkoutRecordState extends Equatable {
     Nullable<WorkoutRecordDto>? selectedWorkoutRecord,
     WorkoutRecordPagination? pagination,
     bool? isLoading,
+    bool? isLoadingLatest,
+    bool? isLoadingRecords,
     Nullable<ErrorState>? error,
+    Nullable<ErrorState>? latestError,
+    Nullable<ErrorState>? recordsError,
   }) {
     return WorkoutRecordState(
       recordsRequestId: recordsRequestId ?? this.recordsRequestId,
@@ -123,7 +137,13 @@ final class WorkoutRecordState extends Equatable {
           : this.selectedWorkoutRecord,
       pagination: pagination ?? this.pagination,
       isLoading: isLoading ?? this.isLoading,
+      isLoadingLatest: isLoadingLatest ?? this.isLoadingLatest,
+      isLoadingRecords: isLoadingRecords ?? this.isLoadingRecords,
       error: error != null ? error.value : this.error,
+      latestError: latestError != null ? latestError.value : this.latestError,
+      recordsError: recordsError != null
+          ? recordsError.value
+          : this.recordsError,
     );
   }
 
@@ -135,6 +155,10 @@ final class WorkoutRecordState extends Equatable {
     selectedWorkoutRecord,
     pagination,
     isLoading,
+    isLoadingLatest,
+    isLoadingRecords,
     error,
+    latestError,
+    recordsError,
   ];
 }

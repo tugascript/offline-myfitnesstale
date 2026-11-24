@@ -22,7 +22,9 @@ import 'package:material_ui/material_ui.dart';
 import '../../../../../data/utils/enums.dart';
 import '../../../../core/sizes/data_display_sizes.dart';
 import '../../../../core/sizes/screen_size.dart';
+import '../../../../core/widgets/layout/app_text_button.dart';
 import '../../../../core/widgets/layout/app_text_form_field.dart';
+import '../../../../core/widgets/layout/empty_card.dart';
 import '../../../../core/widgets/not_found_list.dart';
 import '../../../view_models/states/workout_record_state.dart';
 import '../../../view_models/workout_record_cubit.dart';
@@ -166,7 +168,36 @@ class _WorkoutRecordHistoryState extends State<WorkoutRecordHistory> {
         SizedBox(height: widget.sizes.spacing),
         BlocBuilder<WorkoutRecordCubit, WorkoutRecordState>(
           builder: (context, state) {
-            if (!state.isLoading && state.workoutRecords.isEmpty) {
+            if (!state.isLoadingRecords &&
+                state.workoutRecords.isEmpty &&
+                state.recordsError != null) {
+              return EmptyCard(
+                sizes: widget.sizes,
+                emoji: '⚠️',
+                emptyText: 'Could not load workout records',
+                actions: [
+                  AppTextButton(
+                    key: const ValueKey('workout-records-history-retry'),
+                    isLoading: false,
+                    sizes: widget.sizes,
+                    isDense: true,
+                    label: 'Retry',
+                    icon: Icons.refresh,
+                    onPressed: () {
+                      context.read<WorkoutRecordCubit>().getWorkoutRecords(
+                        workoutId: widget.workoutId,
+                        dateRange: (_dateRange.start, _dateRange.end),
+                        skipSkipped: true,
+                        limit: 20,
+                        offset: 0,
+                      );
+                    },
+                  ),
+                ],
+              );
+            }
+
+            if (!state.isLoadingRecords && state.workoutRecords.isEmpty) {
               return NotFoundList(
                 height: widget.breakPoint.height / 3,
                 sizes: widget.sizes,
@@ -180,7 +211,7 @@ class _WorkoutRecordHistoryState extends State<WorkoutRecordHistory> {
               child: SingleWorkoutRecordList(
                 sizes: widget.sizes,
                 units: widget.units,
-                isLoading: state.isLoading,
+                isLoading: state.isLoadingRecords,
                 workoutRecords: state.workoutRecords,
                 pagination: state.pagination,
                 workoutId: widget.workoutId,

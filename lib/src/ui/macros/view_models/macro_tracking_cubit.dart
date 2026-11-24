@@ -83,7 +83,7 @@ class MacroTrackingCubit extends Cubit<MacroTrackingState> {
             activeGoal: const Nullable(null),
             hasLoadedActiveGoal: true,
             isLoadingActiveGoal: false,
-            isLoading: false,
+            isLoading: state.isLoadingGoalHistory,
             activeGoalError: const Nullable(null),
           ),
         );
@@ -98,7 +98,7 @@ class MacroTrackingCubit extends Cubit<MacroTrackingState> {
             activeGoal: const Nullable(null),
             hasLoadedActiveGoal: false,
             isLoadingActiveGoal: false,
-            isLoading: false,
+            isLoading: state.isLoadingGoalHistory,
             activeGoalError: Nullable(errorState),
             error: Nullable(errorState),
           ),
@@ -112,7 +112,7 @@ class MacroTrackingCubit extends Cubit<MacroTrackingState> {
         activeGoal: Nullable(result.value),
         hasLoadedActiveGoal: true,
         isLoadingActiveGoal: false,
-        isLoading: false,
+        isLoading: state.isLoadingGoalHistory,
         activeGoalError: const Nullable(null),
       ),
     );
@@ -121,7 +121,20 @@ class MacroTrackingCubit extends Cubit<MacroTrackingState> {
   Future<void> getMacroGoals({int limit = 20, int offset = 0}) async {
     _logger.info('Getting macro goals');
     final requestId = state.goalsRequestId + 1;
-    emit(state.copyWith(goalsRequestId: requestId, isLoading: true));
+    final previousGoalHistoryError = state.goalHistoryError;
+    emit(
+      state.copyWith(
+        goalsRequestId: requestId,
+        isLoading: true,
+        isLoadingGoalHistory: true,
+        goalHistoryError: const Nullable(null),
+        error:
+            previousGoalHistoryError != null &&
+                state.error == previousGoalHistoryError
+            ? const Nullable(null)
+            : null,
+      ),
+    );
 
     final result = await _macroService.getMacroGoals(
       limit: limit,
@@ -131,12 +144,18 @@ class MacroTrackingCubit extends Cubit<MacroTrackingState> {
     if (result.isErr()) {
       final error = result.error;
       _logger.warning('Failed to get macro goals', error);
+      final errorState = ErrorState(
+        type: error.type.name,
+        description: error.description,
+      );
       emit(
         state.copyWith(
-          error: Nullable(
-            ErrorState(type: error.type.name, description: error.description),
-          ),
-          isLoading: false,
+          goalHistory: offset == 0 ? const [] : null,
+          hasLoadedGoalHistory: offset == 0 ? false : null,
+          goalHistoryError: Nullable(errorState),
+          error: Nullable(errorState),
+          isLoadingGoalHistory: false,
+          isLoading: state.isLoadingActiveGoal ? true : false,
         ),
       );
       return;
@@ -152,8 +171,15 @@ class MacroTrackingCubit extends Cubit<MacroTrackingState> {
           limit: limit,
           offset: offset,
         ),
-        isLoading: false,
-        error: const Nullable(null),
+        hasLoadedGoalHistory: true,
+        isLoadingGoalHistory: false,
+        isLoading: state.isLoadingActiveGoal ? true : false,
+        goalHistoryError: const Nullable(null),
+        error:
+            previousGoalHistoryError != null &&
+                state.error == previousGoalHistoryError
+            ? const Nullable(null)
+            : null,
       ),
     );
   }
@@ -221,7 +247,9 @@ class MacroTrackingCubit extends Cubit<MacroTrackingState> {
       state.copyWith(
         isLoading: true,
         isLoadingActiveGoal: true,
+        isLoadingGoalHistory: true,
         activeGoalError: const Nullable(null),
+        goalHistoryError: const Nullable(null),
         error: const Nullable(null),
       ),
     );
@@ -281,7 +309,13 @@ class MacroTrackingCubit extends Cubit<MacroTrackingState> {
     final requestId = state.goalsRequestId + 1;
     final activeRequestId = ++_activeGoalRequestId;
     _activeGoalLoad = null;
-    emit(state.copyWith(goalsRequestId: requestId));
+    emit(
+      state.copyWith(
+        goalsRequestId: requestId,
+        isLoadingGoalHistory: true,
+        goalHistoryError: const Nullable(null),
+      ),
+    );
 
     final activeFuture = _macroService.getActiveMacroGoal();
     final historyFuture = _macroService.getMacroGoals(limit: limit, offset: 0);
@@ -300,6 +334,8 @@ class MacroTrackingCubit extends Cubit<MacroTrackingState> {
     Nullable<MacroGoalDto>? activeGoal;
     bool? hasLoadedActiveGoal;
     Nullable<ErrorState>? activeGoalError;
+    Nullable<ErrorState>? goalHistoryError;
+    bool? hasLoadedGoalHistory;
     ErrorState? error;
 
     if (activeIsCurrent) {
@@ -331,19 +367,27 @@ class MacroTrackingCubit extends Cubit<MacroTrackingState> {
       }
     }
 
-    if (historyIsCurrent && historyResult.isErr()) {
-      _logger.warning('Failed to get macro goals', historyResult.error);
-      error ??= ErrorState(
-        type: historyResult.error.type.name,
-        description: historyResult.error.description,
-      );
+    if (historyIsCurrent) {
+      if (historyResult.isErr()) {
+        _logger.warning('Failed to get macro goals', historyResult.error);
+        final historyError = ErrorState(
+          type: historyResult.error.type.name,
+          description: historyResult.error.description,
+        );
+        goalHistoryError = Nullable(historyError);
+        hasLoadedGoalHistory = false;
+        error ??= historyError;
+      } else {
+        goalHistoryError = const Nullable(null);
+        hasLoadedGoalHistory = true;
+      }
     }
 
     emit(
       state.copyWith(
         activeGoal: activeGoal,
-        goalHistory: historyIsCurrent && historyResult.isOk()
-            ? historyResult.value.data
+        goalHistory: historyIsCurrent
+            ? (historyResult.isOk() ? historyResult.value.data : const [])
             : null,
         goalPagination: historyIsCurrent && historyResult.isOk()
             ? MacroGoalPagination(
@@ -354,11 +398,14 @@ class MacroTrackingCubit extends Cubit<MacroTrackingState> {
             : null,
         hasLoadedActiveGoal: hasLoadedActiveGoal,
         isLoadingActiveGoal: activeIsCurrent ? false : null,
+        hasLoadedGoalHistory: hasLoadedGoalHistory,
+        isLoadingGoalHistory: historyIsCurrent ? false : null,
         isLoading:
             historyIsCurrent && (activeIsCurrent || !state.isLoadingActiveGoal)
             ? false
             : null,
         activeGoalError: activeGoalError,
+        goalHistoryError: goalHistoryError,
         error: (activeIsCurrent && historyIsCurrent) || error != null
             ? Nullable(error)
             : null,
