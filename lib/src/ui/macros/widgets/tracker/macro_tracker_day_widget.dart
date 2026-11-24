@@ -28,7 +28,6 @@ import '../../view_models/states/macro_tracking_state.dart';
 import '../log_food_modal.dart';
 import 'macro_progress_bar.dart';
 import '../nutrition_timeline_widget.dart';
-import '../planned_meals_widget.dart';
 
 class MacroTrackerDayWidget extends StatelessWidget {
   final DataDisplaySizesList sizes;
@@ -245,8 +244,6 @@ class MacroTrackerDayWidget extends StatelessWidget {
               ),
             ),
             SizedBox(height: sizes.spacing * 1.5),
-            PlannedMealsWidget(sizes: sizes, selectedDate: selectedDate),
-            SizedBox(height: sizes.spacing),
             NutritionTimelineWidget(
               meals: dailyLog?.meals ?? const [],
               selectedDate: selectedDate,

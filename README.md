@@ -19,7 +19,7 @@ an on-device SQLite database which acts as the main source of truth.
 - Weight records, charts, and weight goals;
 - Strength goals and anatomical muscle targeting views;
 - Multi-week workout plans, active-plan progress, and plan history;
-- Food and recipe libraries, versioned meal plans, and meal-plan execution;
+- Food and recipe libraries;
 - Flat and calorie-cycling macro goals;
 - Daily nutrition tracking with food, recipe, and quick-add entries, water intake,
   and day/week/month summaries.
@@ -151,7 +151,7 @@ SQLite Model -> DAO -> Repository -> Cubit/ViewModel -> Screen/Widget
 ```
 
 Feature folders under `ui/` and `data/repositories/` are grouped around equipment, exercises, profile/onboarding,
-weight, workouts, workout plans, foods, recipes, meal plans, and macros. Repository folders also
+weight, workouts, workout plans, foods, recipes, and macros. Repository folders also
 include `onboarding/`, `profile/`, and `core/`; profile/onboarding UI lives under `ui/home/`.
 Feature UI state lives in `view_models/states/`, shared state in `ui/core/view_models/states/`, and
 presentation converters/formatters in `ui/core/utils/`. Workout-plan scheduling helpers live in
@@ -161,7 +161,7 @@ presentation converters/formatters in `ui/core/utils/`. Workout-plan scheduling 
 ### Local data model
 
 `DatabaseHelper` in `lib/src/data/services/sqlite` creates the SQLite schema and enables
-foreign-key enforcement. The version 1 create schema currently registers 45 tables, including
+foreign-key enforcement. The version 1 create schema currently registers 37 tables, including
 three backup foundation tables:
 
 - `backup_configs`: provider, schedule, enabled flag, and encryption preference;
@@ -230,19 +230,6 @@ erDiagram
     meal_logs ||--|{ meal_log_items: snapshots
     foods |o--o{ meal_log_items: sources
     food_portions |o--o{ meal_log_items: measures
-    meal_plans ||--o{ meal_plan_weeks: contains
-    meal_plan_weeks ||--o{ meal_plan_days: contains
-    meal_plan_days ||--o{ meal_plan_meals: schedules
-    recipes |o--o{ meal_plan_meals: supplies
-    meal_plan_meals ||--o{ meal_plan_meal_items: contains
-    foods |o--o{ meal_plan_meal_items: supplies
-    food_portions |o--o{ meal_plan_meal_items: measures
-    meal_plans ||--o{ meal_plan_records: produces
-    meal_plan_records ||--o{ meal_plan_week_records: contains
-    meal_plan_weeks ||--o{ meal_plan_week_records: instantiates
-    meal_plan_week_records ||--o{ meal_plan_day_records: contains
-    meal_plan_days ||--o{ meal_plan_day_records: instantiates
-    daily_nutrition_logs ||--o| meal_plan_day_records: tracks
 ```
 
 </details>

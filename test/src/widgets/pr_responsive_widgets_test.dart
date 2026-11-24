@@ -25,8 +25,6 @@ import 'package:myfitnesstale/src/ui/exercises/view_models/exercise_cubit.dart';
 import 'package:myfitnesstale/src/ui/exercises/view_models/exercise_record_cubit.dart';
 import 'package:myfitnesstale/src/ui/foods/view_models/food_cubit.dart';
 import 'package:myfitnesstale/src/ui/macros/view_models/macro_tracking_cubit.dart';
-import 'package:myfitnesstale/src/ui/meal_plans/view_models/meal_plan_cubit.dart';
-import 'package:myfitnesstale/src/ui/meal_plans/view_models/meal_plan_record_cubit.dart';
 import 'package:myfitnesstale/src/ui/home/view_models/profile_cubit.dart';
 import 'package:myfitnesstale/src/ui/recipes/view_models/recipe_cubit.dart';
 import 'package:myfitnesstale/src/ui/workout_plans/view_models/workout_plan_record_cubit.dart';
@@ -39,8 +37,6 @@ import 'package:myfitnesstale/src/data/repositories/exercises/exercise_record_re
 import 'package:myfitnesstale/src/data/repositories/exercises/exercise_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/foods/dtos/food_dto.dart';
 import 'package:myfitnesstale/src/data/repositories/macros/dtos/macro_tracking_dto.dart';
-import 'package:myfitnesstale/src/data/repositories/meal_plans/dtos/meal_plan_dto.dart';
-import 'package:myfitnesstale/src/data/repositories/meal_plans/dtos/meal_plan_record_dto.dart';
 import 'package:myfitnesstale/src/data/repositories/recipes/dtos/recipe_dto.dart';
 import 'package:myfitnesstale/src/data/repositories/exercises/dtos/strength_goal_dto.dart';
 import 'package:myfitnesstale/src/ui/core/sizes/data_display_sizes.dart';
@@ -56,10 +52,6 @@ import 'package:myfitnesstale/src/ui/foods/screens/food_update_screen.dart';
 import 'package:myfitnesstale/src/ui/foods/screens/foods_screen.dart';
 import 'package:myfitnesstale/src/ui/macros/screens/macro_goals_screen.dart';
 import 'package:myfitnesstale/src/ui/macros/screens/macro_tracker_screen.dart';
-import 'package:myfitnesstale/src/ui/meal_plans/screens/meal_plan_creation_screen.dart';
-import 'package:myfitnesstale/src/ui/meal_plans/screens/meal_plan_details_screen.dart';
-import 'package:myfitnesstale/src/ui/meal_plans/screens/meal_plan_list_screen.dart';
-import 'package:myfitnesstale/src/ui/meal_plans/screens/meal_plan_update_screen.dart';
 import 'package:myfitnesstale/src/ui/recipes/screens/recipe_creation_screen.dart';
 import 'package:myfitnesstale/src/ui/recipes/screens/recipe_details_screen.dart';
 import 'package:myfitnesstale/src/ui/recipes/screens/recipe_update_screen.dart';
@@ -73,13 +65,10 @@ import 'package:myfitnesstale/src/ui/macros/widgets/log_food_modal.dart';
 import 'package:myfitnesstale/src/ui/macros/widgets/tracker/macro_tracker_day_widget.dart';
 import 'package:myfitnesstale/src/ui/macros/widgets/tracker/macro_tracker_month_widget.dart';
 import 'package:myfitnesstale/src/ui/macros/widgets/tracker/macro_tracker_week_widget.dart';
-import 'package:myfitnesstale/src/ui/meal_plans/widgets/meal_plan_form_widget.dart';
 import 'package:myfitnesstale/src/ui/recipes/widgets/recipe_form_widget.dart';
 import 'package:myfitnesstale/src/data/repositories/foods/food_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/recipes/recipe_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/macros/macro_tracking_repository.dart';
-import 'package:myfitnesstale/src/data/repositories/meal_plans/meal_plan_repository.dart';
-import 'package:myfitnesstale/src/data/repositories/meal_plans/meal_plan_record_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/workout_plans/workout_plan_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/workouts/workout_record_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/workout_plans/workout_plan_record_repository.dart';
@@ -127,79 +116,6 @@ const _recipe = RecipeDto(
       totalFat: 8,
       foodName: 'Fortified rolled oats with a long brand name',
       portionName: 'One large measuring cup of rolled oats',
-    ),
-  ],
-);
-const _plan = MealPlanDto(
-  id: 1,
-  name: 'A long personalized weekly meal plan name',
-  version: 1,
-  totalWeeks: 1,
-  totalDays: 1,
-  totalMeals: 1,
-  isFavorite: true,
-  createdBy: CreatedBy.user,
-  weeks: [
-    MealPlanWeekDto(
-      id: 1,
-      mealPlanId: 1,
-      planVersion: 1,
-      weekNumber: 1,
-      phase: MealPlanPhase.maintain,
-      targetCalories: 380,
-      targetProtein: 10,
-      targetCarbs: 60,
-      targetFat: 8,
-      totalDays: 1,
-      totalMeals: 1,
-      createdBy: CreatedBy.user,
-      days: [
-        MealPlanDayDto(
-          id: 1,
-          mealPlanId: 1,
-          mealPlanWeekId: 1,
-          planVersion: 1,
-          day: 1,
-          name: 'A long breakfast planning day name',
-          targetCalories: 380,
-          targetProtein: 10,
-          targetCarbs: 60,
-          targetFat: 8,
-          totalMeals: 1,
-          createdBy: CreatedBy.user,
-          meals: [
-            MealPlanMealDto(
-              id: 1,
-              position: 1,
-              mealPlanId: 1,
-              mealPlanWeekId: 1,
-              mealPlanDayId: 1,
-              planVersion: 1,
-              mealType: MealType.breakfast,
-              name: 'A long breakfast meal name',
-              totalCalories: 380,
-              totalProtein: 10,
-              totalCarbs: 60,
-              totalFat: 8,
-              createdBy: CreatedBy.user,
-              items: [
-                MealPlanMealItemDto(
-                  id: 1,
-                  mealPlanMealId: 1,
-                  foodId: 1,
-                  portionId: 1,
-                  amount: 1,
-                  totalCalories: 380,
-                  totalProtein: 10,
-                  totalCarbs: 60,
-                  totalFat: 8,
-                  foodName: 'Fortified rolled oats',
-                ),
-              ],
-            ),
-          ],
-        ),
-      ],
     ),
   ],
 );
@@ -375,57 +291,6 @@ class _Macros extends MacroTrackingCubit {
   }) async {}
 }
 
-class _Plans extends MealPlanCubit {
-  _Plans() : super(mealPlanRepository: MealPlanRepository.create()) {
-    emit(
-      state.copyWith(
-        mealPlans: [_plan],
-        selectedMealPlan: const Nullable(_plan),
-        activeMealPlan: const Nullable(_plan),
-      ),
-    );
-  }
-
-  @override
-  Future<void> getMealPlan(int id, {int? version}) async {}
-
-  @override
-  Future<void> getActiveMealPlan(int id, {int? version}) async {}
-
-  @override
-  Future<void> getMealPlans({
-    String? search,
-    bool? isFavorite,
-    int limit = 20,
-    int offset = 0,
-  }) async {}
-}
-
-class _Records extends MealPlanRecordCubit {
-  _Records()
-    : super(mealPlanRecordRepository: MealPlanRecordRepository.create()) {
-    emit(
-      state.copyWith(
-        activeRecord: Nullable(
-          MealPlanRecordDto(
-            id: 1,
-            mealPlanId: 1,
-            mealPlanVersion: 1,
-            status: ProgressStatus.inProgress,
-            startedAt: _date,
-            currentWeek: 1,
-            currentDay: 1,
-            planName: _plan.name,
-          ),
-        ),
-      ),
-    );
-  }
-
-  @override
-  Future<void> getActiveMealPlanRecord() async {}
-}
-
 typedef _Content = Widget Function(DataDisplaySizesList sizes, ThemeData theme);
 
 void main() {
@@ -438,12 +303,6 @@ void main() {
     'recipe creation screen': (_, _) => const RecipeCreationScreen(),
     'recipe update screen': (_, _) => const RecipeUpdateScreen(recipeId: 1),
     'recipe details screen': (_, _) => const RecipeDetailsScreen(recipeId: 1),
-    'meal-plans screen': (_, _) => const MealPlanListScreen(),
-    'meal-plan creation screen': (_, _) => const MealPlanCreationScreen(),
-    'meal-plan update screen': (_, _) =>
-        const MealPlanUpdateScreen(mealPlanId: 1),
-    'meal-plan details screen': (_, _) =>
-        const MealPlanDetailsScreen(mealPlanId: 1),
     'macro-goals screen': (_, _) => const MacroGoalsScreen(),
     'macro-tracker screen': (_, _) => const MacroTrackerScreen(),
     'food editor': (sizes, theme) => SingleChildScrollView(
@@ -458,12 +317,6 @@ void main() {
       sizes: sizes,
       theme: theme,
       initialRecipe: _recipe,
-      onSubmit: (_) {},
-    ),
-    'meal-plan editor': (sizes, theme) => MealPlanFormWidget(
-      sizes: sizes,
-      theme: theme,
-      initialPlan: _plan,
       onSubmit: (_) {},
     ),
     'macro-goal dialog': (sizes, theme) => MacroGoalFormModal(
@@ -570,8 +423,6 @@ void main() {
                   ),
                 ),
                 BlocProvider<MacroTrackingCubit>(create: (_) => _Macros()),
-                BlocProvider<MealPlanCubit>(create: (_) => _Plans()),
-                BlocProvider<MealPlanRecordCubit>(create: (_) => _Records()),
               ],
               child: MaterialApp.router(
                 builder: (context, child) => MediaQuery(

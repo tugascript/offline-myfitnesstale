@@ -23,12 +23,6 @@ import 'package:myfitnesstale/src/data/repositories/exercises/inputs/exercise_in
 import 'package:myfitnesstale/src/data/repositories/foods/food_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/foods/inputs/food_input.dart';
 import 'package:myfitnesstale/src/data/repositories/foods/inputs/food_portion_input.dart';
-import 'package:myfitnesstale/src/data/repositories/meal_plans/inputs/meal_plan_day_input.dart';
-import 'package:myfitnesstale/src/data/repositories/meal_plans/inputs/meal_plan_input.dart';
-import 'package:myfitnesstale/src/data/repositories/meal_plans/inputs/meal_plan_meal_input.dart';
-import 'package:myfitnesstale/src/data/repositories/meal_plans/inputs/meal_plan_meal_item_input.dart';
-import 'package:myfitnesstale/src/data/repositories/meal_plans/inputs/meal_plan_week_input.dart';
-import 'package:myfitnesstale/src/data/repositories/meal_plans/meal_plan_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/recipes/inputs/recipe_input.dart';
 import 'package:myfitnesstale/src/data/repositories/recipes/inputs/recipe_item_input.dart';
 import 'package:myfitnesstale/src/data/repositories/recipes/recipe_repository.dart';
@@ -151,81 +145,6 @@ void main() {
       expect(threeToggles.every((r) => r.isOk()), isTrue);
       expect((await foodRepo.getFood(foodId)).value.isFavorite, isTrue);
     });
-
-    test(
-      'MealPlanRepository.toggleFavorite serializes concurrent toggles',
-      () async {
-        final foodRepo = FoodRepository.create();
-        final mealPlanRepo = MealPlanRepository.create();
-
-        final food = (await foodRepo.createFood(
-          const FoodInput(
-            name: 'Chicken Breast',
-            category: FoodCategory.meatAndPoultry,
-            servingSizeBaseGrams: 100,
-            caloriesBase: 165,
-            proteinBase: 31,
-            carbsBase: 0,
-            fatBase: 4,
-            portions: [],
-          ),
-        )).value;
-
-        final created = await mealPlanRepo.createMealPlan(
-          MealPlanInput(
-            name: 'Lean Plan',
-            weeks: [
-              MealPlanWeekInput(
-                weekNumber: 1,
-                phase: MealPlanPhase.cut,
-                days: [
-                  MealPlanDayInput(
-                    day: 1,
-                    meals: [
-                      MealPlanMealInput(
-                        position: 0,
-                        mealType: MealType.lunch,
-                        name: 'Lunch',
-                        items: [
-                          MealPlanMealItemInput(foodId: food.id, amount: 150),
-                        ],
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ],
-          ),
-        );
-        expect(created.isOk(), isTrue);
-        final planId = created.value.id;
-
-        final twoToggles = await Future.wait([
-          mealPlanRepo.toggleFavorite(planId),
-          mealPlanRepo.toggleFavorite(planId),
-        ]);
-        expect(twoToggles.every((r) => r.isOk()), isTrue);
-        expect(
-          twoToggles.map((r) => r.value.isFavorite).toSet(),
-          equals({true, false}),
-        );
-        expect(
-          (await mealPlanRepo.getMealPlan(planId)).value.isFavorite,
-          isFalse,
-        );
-
-        final threeToggles = await Future.wait([
-          mealPlanRepo.toggleFavorite(planId),
-          mealPlanRepo.toggleFavorite(planId),
-          mealPlanRepo.toggleFavorite(planId),
-        ]);
-        expect(threeToggles.every((r) => r.isOk()), isTrue);
-        expect(
-          (await mealPlanRepo.getMealPlan(planId)).value.isFavorite,
-          isTrue,
-        );
-      },
-    );
 
     test('ExerciseRepository.updateExerciseFavorite runs in transaction with joined equipment and preserves concurrent edits', () async {
       final repo = ExerciseRepository.create();

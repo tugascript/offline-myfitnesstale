@@ -25,8 +25,6 @@ import '../../core/widgets/layout/app_elevated_button.dart';
 import '../../core/widgets/layout/responsive_scaffold.dart';
 import '../../macros/view_models/macro_tracking_cubit.dart';
 import '../../macros/view_models/states/macro_tracking_state.dart';
-import '../../meal_plans/view_models/meal_plan_record_cubit.dart';
-import '../../meal_plans/view_models/states/meal_plan_record_state.dart';
 import '../../workout_plans/view_models/states/workout_plan_record_state.dart';
 import '../../workout_plans/view_models/workout_plan_record_cubit.dart';
 import '../view_models/profile_cubit.dart';
@@ -47,7 +45,6 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   bool _hasAttemptedWorkoutLoad = false;
   bool _hasAttemptedMacroLoad = false;
-  bool _hasAttemptedMealPlanLoad = false;
 
   @override
   void initState() {
@@ -88,20 +85,6 @@ class _HomeScreenState extends State<HomeScreen> {
       } else if (macroState.hasLoadedActiveGoal ||
           macroState.activeGoal != null) {
         _hasAttemptedMacroLoad = true;
-      }
-    }
-
-    if (!_hasAttemptedMealPlanLoad) {
-      final mealPlanCubit = context.read<MealPlanRecordCubit>();
-      final mealPlanState = mealPlanCubit.state;
-      if (!mealPlanState.isLoading &&
-          !mealPlanState.hasLoadedActiveRecord &&
-          mealPlanState.activeRecord == null) {
-        _hasAttemptedMealPlanLoad = true;
-        mealPlanCubit.getActiveMealPlanRecord();
-      } else if (mealPlanState.hasLoadedActiveRecord ||
-          mealPlanState.activeRecord != null) {
-        _hasAttemptedMealPlanLoad = true;
       }
     }
   }
@@ -176,128 +159,100 @@ class _HomeScreenState extends State<HomeScreen> {
               builder: (context, workoutPlanState) {
                 return BlocBuilder<MacroTrackingCubit, MacroTrackingState>(
                   builder: (context, macroState) {
-                    return BlocBuilder<
-                      MealPlanRecordCubit,
-                      MealPlanRecordState
-                    >(
-                      builder: (context, mealPlanState) {
-                        final hasProfileError =
-                            profileState.profile == null &&
-                            profileState.error != null &&
-                            !profileState.isLoading;
+                    final hasProfileError =
+                        profileState.profile == null &&
+                        profileState.error != null &&
+                        !profileState.isLoading;
 
-                        if (hasProfileError) {
-                          return Padding(
-                            padding: EdgeInsets.all(sizes.viewPadding),
-                            child: _buildStartupErrorCard(
-                              cardKey: const ValueKey(
-                                'home-startup-error-card',
+                    if (hasProfileError) {
+                      return Padding(
+                        padding: EdgeInsets.all(sizes.viewPadding),
+                        child: _buildStartupErrorCard(
+                          cardKey: const ValueKey('home-startup-error-card'),
+                          theme: theme,
+                          sizes: sizes,
+                          message: profileState.error!.description,
+                          onRetry: () =>
+                              context.read<ProfileCubit>().loadInitialData(),
+                        ),
+                      );
+                    }
+
+                    final hasWorkoutError =
+                        !workoutPlanState.hasLoadedActivePlan &&
+                        workoutPlanState.error != null &&
+                        workoutPlanState.currentPlanRecord.workoutPlan ==
+                            null &&
+                        !workoutPlanState.isLoading;
+                    final hasMacroError =
+                        !macroState.hasLoadedActiveGoal &&
+                        macroState.error != null &&
+                        macroState.activeGoal == null &&
+                        !macroState.isLoading;
+                    final hasActiveLoadError = hasWorkoutError || hasMacroError;
+
+                    final isProfileSkeleton =
+                        !profileState.isInitiated ||
+                        profileState.profile == null;
+                    final isWorkoutSkeleton =
+                        !workoutPlanState.hasLoadedActivePlan &&
+                        workoutPlanState.isLoading &&
+                        workoutPlanState.currentPlanRecord.workoutPlan == null;
+                    final isNutritionSkeleton =
+                        !macroState.hasLoadedActiveGoal &&
+                        macroState.isLoading &&
+                        macroState.activeGoal == null;
+                    final isLoading =
+                        isProfileSkeleton ||
+                        isWorkoutSkeleton ||
+                        isNutritionSkeleton;
+
+                    return Skeletonizer(
+                      enabled: isLoading,
+                      child: Container(
+                        padding: EdgeInsets.all(sizes.viewPadding),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Welcome Section
+                            WelcomeSection(sizes: sizes),
+                            SizedBox(height: sizes.betweenSpacing),
+
+                            if (hasActiveLoadError) ...[
+                              _buildStartupErrorCard(
+                                cardKey: const ValueKey(
+                                  'home-active-load-error-card',
+                                ),
+                                theme: theme,
+                                sizes: sizes,
+                                message:
+                                    workoutPlanState.error?.description ??
+                                    macroState.error!.description,
+                                onRetry: () {
+                                  if (hasWorkoutError) {
+                                    context
+                                        .read<WorkoutPlanRecordCubit>()
+                                        .getLatestActivePlanRecord();
+                                  }
+                                  if (hasMacroError) {
+                                    context
+                                        .read<MacroTrackingCubit>()
+                                        .getActiveMacroGoal();
+                                  }
+                                },
                               ),
-                              theme: theme,
-                              sizes: sizes,
-                              message: profileState.error!.description,
-                              onRetry: () => context
-                                  .read<ProfileCubit>()
-                                  .loadInitialData(),
-                            ),
-                          );
-                        }
+                              SizedBox(height: sizes.betweenSpacing),
+                            ],
 
-                        final hasWorkoutError =
-                            !workoutPlanState.hasLoadedActivePlan &&
-                            workoutPlanState.error != null &&
-                            workoutPlanState.currentPlanRecord.workoutPlan ==
-                                null &&
-                            !workoutPlanState.isLoading;
-                        final hasMacroError =
-                            !macroState.hasLoadedActiveGoal &&
-                            macroState.error != null &&
-                            macroState.activeGoal == null &&
-                            !macroState.isLoading;
-                        final hasMealPlanError =
-                            !mealPlanState.hasLoadedActiveRecord &&
-                            mealPlanState.error != null &&
-                            mealPlanState.activeRecord == null &&
-                            !mealPlanState.isLoading;
-                        final hasActiveLoadError =
-                            hasWorkoutError ||
-                            hasMacroError ||
-                            hasMealPlanError;
+                            // Active workout plan and macro goal
+                            ActivePlansCarousel(theme: theme, sizes: sizes),
+                            SizedBox(height: sizes.betweenSpacing),
 
-                        final isProfileSkeleton =
-                            !profileState.isInitiated ||
-                            profileState.profile == null;
-                        final isWorkoutSkeleton =
-                            !workoutPlanState.hasLoadedActivePlan &&
-                            workoutPlanState.isLoading &&
-                            workoutPlanState.currentPlanRecord.workoutPlan ==
-                                null;
-                        final isNutritionSkeleton =
-                            (!macroState.hasLoadedActiveGoal &&
-                                macroState.isLoading &&
-                                macroState.activeGoal == null) ||
-                            (!mealPlanState.hasLoadedActiveRecord &&
-                                mealPlanState.isLoading &&
-                                mealPlanState.activeRecord == null);
-                        final isLoading =
-                            isProfileSkeleton ||
-                            isWorkoutSkeleton ||
-                            isNutritionSkeleton;
-
-                        return Skeletonizer(
-                          enabled: isLoading,
-                          child: Container(
-                            padding: EdgeInsets.all(sizes.viewPadding),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                // Welcome Section
-                                WelcomeSection(sizes: sizes),
-                                SizedBox(height: sizes.betweenSpacing),
-
-                                if (hasActiveLoadError) ...[
-                                  _buildStartupErrorCard(
-                                    cardKey: const ValueKey(
-                                      'home-active-load-error-card',
-                                    ),
-                                    theme: theme,
-                                    sizes: sizes,
-                                    message:
-                                        workoutPlanState.error?.description ??
-                                        macroState.error?.description ??
-                                        mealPlanState.error!.description,
-                                    onRetry: () {
-                                      if (hasWorkoutError) {
-                                        context
-                                            .read<WorkoutPlanRecordCubit>()
-                                            .getLatestActivePlanRecord();
-                                      }
-                                      if (hasMacroError) {
-                                        context
-                                            .read<MacroTrackingCubit>()
-                                            .getActiveMacroGoal();
-                                      }
-                                      if (hasMealPlanError) {
-                                        context
-                                            .read<MealPlanRecordCubit>()
-                                            .getActiveMealPlanRecord();
-                                      }
-                                    },
-                                  ),
-                                  SizedBox(height: sizes.betweenSpacing),
-                                ],
-
-                                // Active workout and meal plans
-                                ActivePlansCarousel(theme: theme, sizes: sizes),
-                                SizedBox(height: sizes.betweenSpacing),
-
-                                // Quick Actions
-                                QuickActionsWidget(theme: theme, sizes: sizes),
-                              ],
-                            ),
-                          ),
-                        );
-                      },
+                            // Quick Actions
+                            QuickActionsWidget(theme: theme, sizes: sizes),
+                          ],
+                        ),
+                      ),
                     );
                   },
                 );

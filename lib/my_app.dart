@@ -23,8 +23,6 @@ import 'src/data/repositories/exercises/exercise_record_repository.dart';
 import 'src/data/repositories/exercises/exercise_repository.dart';
 import 'src/data/repositories/foods/food_repository.dart';
 import 'src/data/repositories/macros/macro_tracking_repository.dart';
-import 'src/data/repositories/meal_plans/meal_plan_record_repository.dart';
-import 'src/data/repositories/meal_plans/meal_plan_repository.dart';
 import 'src/data/repositories/onboarding/onboarding_repository.dart';
 import 'src/data/repositories/profile/profile_repository.dart';
 import 'src/data/repositories/recipes/recipe_repository.dart';
@@ -41,8 +39,6 @@ import 'src/ui/foods/view_models/food_cubit.dart';
 import 'src/ui/home/view_models/profile_cubit.dart';
 import 'src/ui/home/view_models/states/profile_state.dart';
 import 'src/ui/macros/view_models/macro_tracking_cubit.dart';
-import 'src/ui/meal_plans/view_models/meal_plan_cubit.dart';
-import 'src/ui/meal_plans/view_models/meal_plan_record_cubit.dart';
 import 'src/ui/recipes/view_models/recipe_cubit.dart';
 import 'src/ui/weight/view_models/weight_record_cubit.dart';
 import 'src/ui/workout_plans/view_models/workout_plan_cubit.dart';
@@ -71,8 +67,6 @@ class MyApp extends StatelessWidget {
     final foodRepository = FoodRepository.create();
     final recipeRepository = RecipeRepository.create();
     final macroTrackingRepository = MacroTrackingRepository.create();
-    final mealPlanRepository = MealPlanRepository.create();
-    final mealPlanRecordRepository = MealPlanRecordRepository.create();
     final onboardingRepository = OnboardingRepository.create(
       profileService: profileRepository,
       exerciseService: exerciseRepository,
@@ -140,15 +134,6 @@ class MyApp extends StatelessWidget {
         BlocProvider<MacroTrackingCubit>(
           create: (BuildContext context) => MacroTrackingCubit(
             macroTrackingRepository: macroTrackingRepository,
-          ),
-        ),
-        BlocProvider<MealPlanCubit>(
-          create: (BuildContext context) =>
-              MealPlanCubit(mealPlanRepository: mealPlanRepository),
-        ),
-        BlocProvider<MealPlanRecordCubit>(
-          create: (BuildContext context) => MealPlanRecordCubit(
-            mealPlanRecordRepository: mealPlanRecordRepository,
           ),
         ),
       ],

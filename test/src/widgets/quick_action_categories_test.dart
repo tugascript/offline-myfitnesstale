@@ -44,7 +44,6 @@ const _groups = {
   },
   'nutrition': {
     'Macro Goals': '/macro-goals',
-    'Meal Plans': '/meal-plans',
     'Recipes': '/recipes',
     'Foods': '/foods',
   },

@@ -23,19 +23,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:myfitnesstale/src/data/repositories/foods/food_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/foods/inputs/food_input.dart';
 import 'package:myfitnesstale/src/data/repositories/foods/inputs/food_portion_input.dart';
-import 'package:myfitnesstale/src/data/repositories/meal_plans/inputs/meal_plan_day_input.dart';
-import 'package:myfitnesstale/src/data/repositories/meal_plans/inputs/meal_plan_input.dart';
-import 'package:myfitnesstale/src/data/repositories/meal_plans/inputs/meal_plan_meal_input.dart';
-import 'package:myfitnesstale/src/data/repositories/meal_plans/inputs/meal_plan_meal_item_input.dart';
-import 'package:myfitnesstale/src/data/repositories/meal_plans/inputs/meal_plan_week_input.dart';
-import 'package:myfitnesstale/src/data/repositories/meal_plans/meal_plan_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/recipes/inputs/recipe_input.dart';
 import 'package:myfitnesstale/src/data/repositories/recipes/inputs/recipe_item_input.dart';
 import 'package:myfitnesstale/src/data/repositories/recipes/recipe_repository.dart';
 import 'package:myfitnesstale/src/data/utils/enums.dart';
 import 'package:myfitnesstale/src/ui/core/view_models/favorite_request_serializer.dart';
 import 'package:myfitnesstale/src/ui/foods/view_models/food_cubit.dart';
-import 'package:myfitnesstale/src/ui/meal_plans/view_models/meal_plan_cubit.dart';
 import 'package:myfitnesstale/src/ui/recipes/view_models/recipe_cubit.dart';
 
 import '../../support/test_database.dart';
@@ -206,66 +199,6 @@ void main() {
       final pendingBeforeClose = cubit.toggleFavorite(food.id);
       await cubit.close();
       expect(await pendingBeforeClose, isA<bool>());
-    });
-
-    test('MealPlanCubit.toggleFavorite serializes concurrent toggles and preserves selected details', () async {
-      final foodRepo = FoodRepository.create();
-      final mealPlanRepo = MealPlanRepository.create();
-      final food = (await foodRepo.createFood(
-        const FoodInput(
-          name: 'Rice',
-          category: FoodCategory.grainsAndCereals,
-          servingSizeBaseGrams: 100,
-          caloriesBase: 130,
-          proteinBase: 3,
-          carbsBase: 28,
-          fatBase: 0,
-          portions: [],
-        ),
-      )).value;
-      final plan = (await mealPlanRepo.createMealPlan(
-        MealPlanInput(
-          name: 'Bulk Plan',
-          weeks: [
-            MealPlanWeekInput(
-              weekNumber: 1,
-              phase: MealPlanPhase.bulk,
-              days: [
-                MealPlanDayInput(
-                  day: 1,
-                  meals: [
-                    MealPlanMealInput(
-                      position: 0,
-                      mealType: MealType.dinner,
-                      name: 'Dinner',
-                      items: [
-                        MealPlanMealItemInput(foodId: food.id, amount: 200),
-                      ],
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ],
-        ),
-      )).value;
-
-      final cubit = MealPlanCubit(mealPlanRepository: mealPlanRepo);
-      addTearDown(cubit.close);
-      await cubit.getMealPlan(plan.id);
-      await cubit.getMealPlans();
-
-      final twoResults = await Future.wait([
-        cubit.toggleFavorite(plan.id),
-        cubit.toggleFavorite(plan.id),
-      ]);
-      expect(twoResults, equals([true, true]));
-      expect(cubit.state.selectedMealPlan?.isFavorite, isFalse);
-      expect(cubit.state.selectedMealPlan?.weeks, hasLength(1));
-      expect(
-        cubit.state.mealPlans.firstWhere((p) => p.id == plan.id).isFavorite,
-        isFalse,
-      );
     });
   });
 }

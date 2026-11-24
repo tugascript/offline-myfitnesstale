@@ -89,7 +89,7 @@ Follow a strict MVVM flow aligned with the Flutter app architecture guide:
 
 - **Reminders**: Switches persist preferences only; no background notification scheduling engine exists yet. Do not
   assume notifications fire or add external notification services without being tasked.
-- **Meals & Macros**: Food, recipe, meal-plan, meal-plan execution, macro-goal, and daily nutrition tracking flows are
+- **Meals & Macros**: Food, recipe, macro-goal, and daily nutrition tracking flows are
   implemented for offline use. Keep cloud and AI capabilities deferred to Phase 2/3, and describe any remaining roadmap
   work as incomplete.
 - **Cloud, Sync & Paid Plans**: All offline features (including advanced workouts and unlimited workout plans) are

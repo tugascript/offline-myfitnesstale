@@ -479,21 +479,6 @@ enum MealType {
   );
 }
 
-enum MealPlanPhase {
-  cut("cut"),
-  maintain("maintain"),
-  bulk("bulk");
-
-  final String value;
-
-  const MealPlanPhase(this.value);
-
-  static MealPlanPhase fromValue(String v) => MealPlanPhase.values.firstWhere(
-    (p) => p.value == v,
-    orElse: () => MealPlanPhase.maintain,
-  );
-}
-
 enum MacroGoalType {
   flat("flat"),
   calorieCycling("calorie_cycling");

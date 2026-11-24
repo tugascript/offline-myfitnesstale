@@ -23,8 +23,6 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:myfitnesstale/src/data/repositories/macros/macro_tracking_repository.dart';
-import 'package:myfitnesstale/src/data/repositories/meal_plans/meal_plan_record_repository.dart';
-import 'package:myfitnesstale/src/data/repositories/meal_plans/meal_plan_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/profile/dtos/profile_dto.dart';
 import 'package:myfitnesstale/src/data/repositories/profile/dtos/reminders_config_dto.dart';
 import 'package:myfitnesstale/src/data/repositories/profile/dtos/system_dto.dart';
@@ -49,8 +47,6 @@ import 'package:myfitnesstale/src/ui/home/screens/main_navigation_screen.dart';
 import 'package:myfitnesstale/src/ui/home/view_models/profile_cubit.dart';
 import 'package:myfitnesstale/src/ui/macros/screens/macro_tracker_screen.dart';
 import 'package:myfitnesstale/src/ui/macros/view_models/macro_tracking_cubit.dart';
-import 'package:myfitnesstale/src/ui/meal_plans/view_models/meal_plan_cubit.dart';
-import 'package:myfitnesstale/src/ui/meal_plans/view_models/meal_plan_record_cubit.dart';
 import 'package:myfitnesstale/src/ui/workout_plans/screens/current_workout_plan_screen.dart';
 import 'package:myfitnesstale/src/ui/workout_plans/view_models/workout_plan_record_cubit.dart';
 import 'package:myfitnesstale/src/utils/nullable.dart';
@@ -70,14 +66,12 @@ void main() {
       );
       final workoutPlanCubit = _TestWorkoutPlanRecordCubit(gate: planGate);
       final macroCubit = _TestMacroTrackingCubit(gate: macroGate);
-      final mealPlanCubit = _TestMealPlanRecordCubit();
 
       await _pumpMainApp(
         tester,
         profileCubit: profileCubit..loadInitialData(),
         workoutPlanCubit: workoutPlanCubit,
         macroCubit: macroCubit,
-        mealPlanCubit: mealPlanCubit,
       );
 
       // Initial load: HomeScreen is visible with Skeletonizer enabled, no LoadingScreen/spinner
@@ -145,14 +139,12 @@ void main() {
       );
       final workoutPlanCubit = _TestWorkoutPlanRecordCubit();
       final macroCubit = _TestMacroTrackingCubit();
-      final mealPlanCubit = _TestMealPlanRecordCubit();
 
       await _pumpMainApp(
         tester,
         profileCubit: profileCubit..loadInitialData(),
         workoutPlanCubit: workoutPlanCubit,
         macroCubit: macroCubit,
-        mealPlanCubit: mealPlanCubit,
       );
 
       expect(find.byType(HomeScreen), findsOneWidget);
@@ -187,14 +179,12 @@ void main() {
         gate: macroGate,
         markLoaded: true,
       );
-      final mealPlanCubit = _TestMealPlanRecordCubit();
 
       await _pumpMainApp(
         tester,
         profileCubit: profileCubit..loadInitialData(),
         workoutPlanCubit: workoutPlanCubit,
         macroCubit: macroCubit,
-        mealPlanCubit: mealPlanCubit,
       );
 
       profileGate.complete();
@@ -230,7 +220,7 @@ void main() {
         ),
         findsOneWidget,
       );
-      expect(find.text('No active meal plan or macro goal'), findsOneWidget);
+      expect(find.text('No active macro goal'), findsOneWidget);
     },
   );
 
@@ -253,14 +243,12 @@ void main() {
         gate: macroGate,
         markLoaded: false,
       );
-      final mealPlanCubit = _TestMealPlanRecordCubit();
 
       await _pumpMainApp(
         tester,
         profileCubit: profileCubit..loadInitialData(),
         workoutPlanCubit: workoutPlanCubit,
         macroCubit: macroCubit,
-        mealPlanCubit: mealPlanCubit,
       );
 
       profileGate.complete();
@@ -289,7 +277,7 @@ void main() {
         ),
         findsOneWidget,
       );
-      expect(find.text('No active meal plan or macro goal'), findsOneWidget);
+      expect(find.text('No active macro goal'), findsOneWidget);
     },
   );
 
@@ -320,14 +308,12 @@ void main() {
           gate: macroGate,
           markLoaded: true,
         );
-        final mealPlanCubit = _TestMealPlanRecordCubit();
 
         await _pumpMainApp(
           tester,
           profileCubit: profileCubit..loadInitialData(),
           workoutPlanCubit: workoutPlanCubit,
           macroCubit: macroCubit,
-          mealPlanCubit: mealPlanCubit,
           theme: ThemeGenerator.defaultTheme,
         );
         expect(
@@ -433,30 +419,6 @@ void main() {
     },
   );
 
-  testWidgets('loads active meal plan record on cold launch', (tester) async {
-    final profileGate = Completer<void>()..complete();
-    final profileCubit = _TestProfileCubit(
-      gate: profileGate,
-      withProfile: true,
-    );
-    final workoutPlanCubit = _TestWorkoutPlanRecordCubit(
-      returnActivePlan: false,
-    );
-    final macroCubit = _TestMacroTrackingCubit();
-    final mealPlanCubit = _TestMealPlanRecordCubit();
-
-    await _pumpMainApp(
-      tester,
-      profileCubit: profileCubit..loadInitialData(),
-      workoutPlanCubit: workoutPlanCubit,
-      macroCubit: macroCubit,
-      mealPlanCubit: mealPlanCubit,
-    );
-    await tester.pumpAndSettle();
-
-    expect(mealPlanCubit.loadCalls, 1);
-  });
-
   testWidgets(
     'shows startup error with retry instead of masking profile load failure',
     (tester) async {
@@ -468,14 +430,12 @@ void main() {
       );
       final workoutPlanCubit = _TestWorkoutPlanRecordCubit();
       final macroCubit = _TestMacroTrackingCubit();
-      final mealPlanCubit = _TestMealPlanRecordCubit();
 
       await _pumpMainApp(
         tester,
         profileCubit: profileCubit..loadInitialData(),
         workoutPlanCubit: workoutPlanCubit,
         macroCubit: macroCubit,
-        mealPlanCubit: mealPlanCubit,
       );
       await tester.pumpAndSettle();
 
@@ -504,45 +464,6 @@ void main() {
   );
 
   testWidgets(
-    'shows retry card when active meal plan load fails and retries cleanly',
-    (tester) async {
-      final profileGate = Completer<void>()..complete();
-      final profileCubit = _TestProfileCubit(
-        gate: profileGate,
-        withProfile: true,
-      );
-      final workoutPlanCubit = _TestWorkoutPlanRecordCubit();
-      final macroCubit = _TestMacroTrackingCubit();
-      final mealPlanCubit = _TestMealPlanRecordCubit(failFirstLoad: true);
-
-      await _pumpMainApp(
-        tester,
-        profileCubit: profileCubit..loadInitialData(),
-        workoutPlanCubit: workoutPlanCubit,
-        macroCubit: macroCubit,
-        mealPlanCubit: mealPlanCubit,
-      );
-      await tester.pumpAndSettle();
-
-      expect(
-        find.byKey(const ValueKey('home-active-load-error-card')),
-        findsOneWidget,
-      );
-      expect(find.text('Failed to load meal plan'), findsOneWidget);
-      expect(find.text('RETRY'), findsOneWidget);
-
-      await tester.tap(find.text('RETRY'));
-      await tester.pumpAndSettle();
-
-      expect(mealPlanCubit.loadCalls, 2);
-      expect(
-        find.byKey(const ValueKey('home-active-load-error-card')),
-        findsNothing,
-      );
-    },
-  );
-
-  testWidgets(
     'defers tab warm-up until home active data loads complete so skeleton does not flicker',
     (tester) async {
       final profileGate = Completer<void>()..complete();
@@ -554,14 +475,12 @@ void main() {
       );
       final workoutPlanCubit = _TestWorkoutPlanRecordCubit(gate: planGate);
       final macroCubit = _TestMacroTrackingCubit(gate: macroGate);
-      final mealPlanCubit = _TestMealPlanRecordCubit();
 
       await _pumpMainApp(
         tester,
         profileCubit: profileCubit..loadInitialData(),
         workoutPlanCubit: workoutPlanCubit,
         macroCubit: macroCubit,
-        mealPlanCubit: mealPlanCubit,
       );
       await tester.pump();
 
@@ -621,7 +540,12 @@ void main() {
       );
 
       // Opening the warmed-up Macros tab loads today's diary once visible.
-      await tester.tap(find.text('Macros'));
+      await tester.tap(
+        find.descendant(
+          of: find.byType(BottomNavigationBar),
+          matching: find.text('Macros'),
+        ),
+      );
       await tester.pumpAndSettle();
       expect(macroCubit.dailyLogCalls, 1);
     },
@@ -637,14 +561,12 @@ void main() {
       );
       final workoutPlanCubit = _TestWorkoutPlanRecordCubit();
       final macroCubit = _TestMacroTrackingCubit(failFirstLoad: true);
-      final mealPlanCubit = _TestMealPlanRecordCubit();
 
       await _pumpMainApp(
         tester,
         profileCubit: profileCubit..loadInitialData(),
         workoutPlanCubit: workoutPlanCubit,
         macroCubit: macroCubit,
-        mealPlanCubit: mealPlanCubit,
       );
       await tester.pump();
       // Advance through staggered warm-up timers (Plan at 250ms, Macros at +150ms).
@@ -678,7 +600,12 @@ void main() {
       );
 
       // Diary query runs once the Macros tab becomes visible.
-      await tester.tap(find.text('Macros'));
+      await tester.tap(
+        find.descendant(
+          of: find.byType(BottomNavigationBar),
+          matching: find.text('Macros'),
+        ),
+      );
       await tester.pumpAndSettle();
       expect(macroCubit.dailyLogCalls, 1);
     },
@@ -694,14 +621,12 @@ void main() {
       );
       final workoutPlanCubit = _TestWorkoutPlanRecordCubit();
       final macroCubit = _TestMacroTrackingCubit(failFirstLoad: true);
-      final mealPlanCubit = _TestMealPlanRecordCubit();
 
       await _pumpMainApp(
         tester,
         profileCubit: profileCubit..loadInitialData(),
         workoutPlanCubit: workoutPlanCubit,
         macroCubit: macroCubit,
-        mealPlanCubit: mealPlanCubit,
       );
       await tester.pump();
       // Mount MacroTrackerScreen offscreen first via warm-up timers.
@@ -721,7 +646,12 @@ void main() {
         findsOneWidget,
       );
 
-      await tester.tap(find.text('Macros'));
+      await tester.tap(
+        find.descendant(
+          of: find.byType(BottomNavigationBar),
+          matching: find.text('Macros'),
+        ),
+      );
       await tester.pumpAndSettle();
 
       expect(macroCubit.loadCalls, 2);
@@ -735,7 +665,6 @@ Future<void> _pumpMainApp(
   required ProfileCubit profileCubit,
   required WorkoutPlanRecordCubit workoutPlanCubit,
   required MacroTrackingCubit macroCubit,
-  required MealPlanRecordCubit mealPlanCubit,
   ThemeData? theme,
 }) async {
   final router = GoRouter(
@@ -752,16 +681,11 @@ Future<void> _pumpMainApp(
       ),
     ],
   );
-  final mealPlanListCubit = MealPlanCubit(
-    mealPlanRepository: MealPlanRepository.create(),
-  );
   addTearDown(() async {
     router.dispose();
     await profileCubit.close();
     await workoutPlanCubit.close();
     await macroCubit.close();
-    await mealPlanListCubit.close();
-    await mealPlanCubit.close();
   });
 
   await tester.pumpWidget(
@@ -770,8 +694,6 @@ Future<void> _pumpMainApp(
         BlocProvider<ProfileCubit>.value(value: profileCubit),
         BlocProvider<WorkoutPlanRecordCubit>.value(value: workoutPlanCubit),
         BlocProvider<MacroTrackingCubit>.value(value: macroCubit),
-        BlocProvider<MealPlanCubit>.value(value: mealPlanListCubit),
-        BlocProvider<MealPlanRecordCubit>.value(value: mealPlanCubit),
       ],
       child: MaterialApp.router(routerConfig: router, theme: theme),
     ),
@@ -979,40 +901,6 @@ final class _TestMacroTrackingCubit extends MacroTrackingCubit {
     emit(
       state.copyWith(
         selectedDate: date,
-        isLoading: false,
-        error: const Nullable(null),
-      ),
-    );
-  }
-}
-
-final class _TestMealPlanRecordCubit extends MealPlanRecordCubit {
-  final bool failFirstLoad;
-  int loadCalls = 0;
-
-  _TestMealPlanRecordCubit({this.failFirstLoad = false})
-    : super(mealPlanRecordRepository: MealPlanRecordRepository.create());
-
-  @override
-  Future<void> getActiveMealPlanRecord() async {
-    loadCalls++;
-    if (failFirstLoad && loadCalls == 1) {
-      emit(
-        state.copyWith(
-          isLoading: false,
-          error: const Nullable(
-            ErrorState(
-              type: 'operationFailure',
-              description: 'Failed to load meal plan',
-            ),
-          ),
-        ),
-      );
-      return;
-    }
-    emit(
-      state.copyWith(
-        hasLoadedActiveRecord: true,
         isLoading: false,
         error: const Nullable(null),
       ),

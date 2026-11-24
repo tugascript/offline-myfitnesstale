@@ -64,13 +64,6 @@ import 'package:myfitnesstale/src/data/repositories/workout_plans/inputs/workout
 import 'package:myfitnesstale/src/data/repositories/workout_plans/inputs/workout_plan_workout_batch_create_input.dart';
 import 'package:myfitnesstale/src/ui/workout_plans/view_models/workout_plan_cubit.dart';
 import 'package:myfitnesstale/src/ui/workout_plans/view_models/workout_plan_record_cubit.dart';
-import 'package:myfitnesstale/src/data/repositories/meal_plans/inputs/meal_plan_day_input.dart';
-import 'package:myfitnesstale/src/data/repositories/meal_plans/inputs/meal_plan_input.dart';
-import 'package:myfitnesstale/src/data/repositories/meal_plans/inputs/meal_plan_week_input.dart';
-import 'package:myfitnesstale/src/data/repositories/meal_plans/meal_plan_record_repository.dart';
-import 'package:myfitnesstale/src/data/repositories/meal_plans/meal_plan_repository.dart';
-import 'package:myfitnesstale/src/ui/meal_plans/view_models/meal_plan_cubit.dart';
-import 'package:myfitnesstale/src/ui/meal_plans/view_models/meal_plan_record_cubit.dart';
 import 'package:myfitnesstale/src/ui/workouts/view_models/states/active_workout_state.dart';
 import 'package:myfitnesstale/src/ui/workouts/view_models/states/workout_state.dart';
 import 'package:myfitnesstale/src/utils/nullable.dart';
@@ -907,93 +900,6 @@ void main() {
         expect(cubit.state.foods.map((food) => food.name), ['Apricot']);
       },
     );
-
-    test('MealPlanCubit.getActiveMealPlan preserves selectedMealPlan, loading, and error state', () async {
-      final repository = MealPlanRepository.create();
-      MealPlanInput planInput(String name) => MealPlanInput(
-        name: name,
-        weeks: const [
-          MealPlanWeekInput(
-            weekNumber: 1,
-            phase: MealPlanPhase.maintain,
-            days: [MealPlanDayInput(day: 1, name: 'Day 1')],
-          ),
-        ],
-      );
-
-      final activePlan = (await repository.createMealPlan(
-        planInput('Active Tracker Plan'),
-      )).value;
-      final editedPlan = (await repository.createMealPlan(
-        planInput('Details Route Plan'),
-      )).value;
-      final cubit = MealPlanCubit(mealPlanRepository: repository);
-      addTearDown(cubit.close);
-
-      await cubit.getMealPlan(editedPlan.id, version: editedPlan.version);
-      expect(cubit.state.selectedMealPlan?.id, editedPlan.id);
-      expect(cubit.state.activeMealPlan, isNull);
-
-      await cubit.getActiveMealPlan(activePlan.id, version: activePlan.version);
-      expect(cubit.state.selectedMealPlan?.id, editedPlan.id);
-      expect(cubit.state.activeMealPlan?.id, activePlan.id);
-      expect(cubit.state.isLoading, isFalse);
-      expect(cubit.state.error, isNull);
-
-      // Missing active plan fails silently without disturbing shared details/edit state.
-      await cubit.getActiveMealPlan(999999);
-      expect(cubit.state.selectedMealPlan?.id, editedPlan.id);
-      expect(cubit.state.activeMealPlan?.id, activePlan.id);
-      expect(cubit.state.error, isNull);
-
-      // Deleting the active plan clears activeMealPlan while keeping selectedMealPlan intact.
-      expect(await cubit.deleteMealPlan(activePlan.id), isTrue);
-      expect(cubit.state.activeMealPlan, isNull);
-      expect(cubit.state.selectedMealPlan?.id, editedPlan.id);
-    });
-
-    test('MealPlanRecordCubit.handleDeletedMealPlan clears and refreshes activeRecord when active meal plan is deleted', () async {
-      final planRepo = MealPlanRepository.create();
-      final recordRepo = MealPlanRecordRepository.create();
-      final planCubit = MealPlanCubit(mealPlanRepository: planRepo);
-      final recordCubit = MealPlanRecordCubit(
-        mealPlanRecordRepository: recordRepo,
-      );
-      addTearDown(() async {
-        await planCubit.close();
-        await recordCubit.close();
-      });
-
-      final created = (await planRepo.createMealPlan(
-        const MealPlanInput(
-          name: 'Deletable Active Meal Plan',
-          weeks: [
-            MealPlanWeekInput(
-              weekNumber: 1,
-              phase: MealPlanPhase.maintain,
-              days: [MealPlanDayInput(day: 1, name: 'Day 1')],
-            ),
-          ],
-        ),
-      )).value;
-
-      final started = await recordRepo.startMealPlan(
-        mealPlanId: created.id,
-        version: created.version,
-      );
-      expect(started.isOk(), isTrue);
-
-      await recordCubit.getActiveMealPlanRecord();
-      expect(recordCubit.state.hasLoadedActiveRecord, isTrue);
-      expect(recordCubit.state.activeRecord?.mealPlanId, created.id);
-
-      expect(await planCubit.deleteMealPlan(created.id), isTrue);
-      await recordCubit.handleDeletedMealPlan(created.id);
-
-      expect(recordCubit.state.hasLoadedActiveRecord, isTrue);
-      expect(recordCubit.state.activeRecord, isNull);
-      expect(recordCubit.state.error, isNull);
-    });
 
     test('WorkoutPlanRecordCubit.handleDeletedWorkoutPlan clears and refreshes active execution when active workout plan is deleted', () async {
       final db = await testDatabase.db;
