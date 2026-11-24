@@ -15,6 +15,8 @@
 // You should have received a copy of the GNU General Public License
 // along with My Fitness Tale.  If not, see <https://www.gnu.org/licenses/>.
 
+import 'dart:async';
+
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -161,13 +163,16 @@ class _TestMealPlanRecordCubit extends MealPlanRecordCubit {
 }
 
 class _TestMacroTrackingCubit extends MacroTrackingCubit {
-  _TestMacroTrackingCubit({bool hasLoadedActiveGoal = false})
-    : super(macroTrackingRepository: MacroTrackingRepository.create()) {
+  _TestMacroTrackingCubit({
+    bool hasLoadedActiveGoal = false,
+    this.activeGoalCompleter,
+  }) : super(macroTrackingRepository: MacroTrackingRepository.create()) {
     if (hasLoadedActiveGoal) {
       emit(state.copyWith(hasLoadedActiveGoal: true));
     }
   }
 
+  final Completer<void>? activeGoalCompleter;
   int activeGoalCalls = 0;
   int dailyLogCalls = 0;
   int rangeLogCalls = 0;
@@ -183,6 +188,14 @@ class _TestMacroTrackingCubit extends MacroTrackingCubit {
   @override
   Future<void> getActiveMacroGoal() async {
     activeGoalCalls++;
+    final completer = activeGoalCompleter;
+    if (completer != null) {
+      emit(state.copyWith(isLoading: true));
+      await completer.future;
+      if (!isClosed) {
+        emit(state.copyWith(isLoading: false, hasLoadedActiveGoal: true));
+      }
+    }
   }
 
   @override
@@ -733,6 +746,61 @@ void main() {
     );
 
     testWidgets(
+      'MacroTrackerScreen awaits its own active macro goal load before fetching daily log',
+      (tester) async {
+        final activeGoalCompleter = Completer<void>();
+        final macroCubit = _TestMacroTrackingCubit(
+          activeGoalCompleter: activeGoalCompleter,
+        );
+        final mealPlanRecordCubit = _TestMealPlanRecordCubit(
+          hasLoadedActiveRecord: true,
+        );
+        final mealPlanCubit = _TestMealPlanCubit();
+        final router = GoRouter(
+          initialLocation: '/',
+          routes: [
+            GoRoute(
+              path: '/',
+              builder: (context, state) => const MacroTrackerScreen(),
+            ),
+          ],
+        );
+        addTearDown(() async {
+          if (!activeGoalCompleter.isCompleted) {
+            activeGoalCompleter.complete();
+          }
+          router.dispose();
+          await macroCubit.close();
+          await mealPlanRecordCubit.close();
+          await mealPlanCubit.close();
+        });
+
+        await tester.pumpWidget(
+          MultiBlocProvider(
+            providers: [
+              BlocProvider<MacroTrackingCubit>.value(value: macroCubit),
+              BlocProvider<MealPlanRecordCubit>.value(
+                value: mealPlanRecordCubit,
+              ),
+              BlocProvider<MealPlanCubit>.value(value: mealPlanCubit),
+            ],
+            child: MaterialApp.router(routerConfig: router),
+          ),
+        );
+        await tester.pump();
+
+        expect(macroCubit.activeGoalCalls, 1);
+        expect(macroCubit.dailyLogCalls, 0);
+
+        activeGoalCompleter.complete();
+        await tester.pump();
+
+        expect(macroCubit.activeGoalCalls, 1);
+        expect(macroCubit.dailyLogCalls, 1);
+      },
+    );
+
+    testWidgets(
       'MacroTrackerScopeSelection renders underline indicators and responds to tap and swipe',
       (tester) async {
         final theme = ThemeData.light();
@@ -1040,6 +1108,75 @@ void main() {
           TrackerScope.day,
         );
         expect(find.byType(MacroTrackerDayWidget), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'MacroTrackerScreen keeps scope synced when manual swipe interrupts programmatic change',
+      (tester) async {
+        final macroCubit = _TestMacroTrackingCubit(hasLoadedActiveGoal: true);
+        final mealPlanRecordCubit = _TestMealPlanRecordCubit(
+          hasLoadedActiveRecord: true,
+        );
+        final mealPlanCubit = _TestMealPlanCubit();
+        final router = GoRouter(
+          initialLocation: '/',
+          routes: [
+            GoRoute(
+              path: '/',
+              builder: (context, state) => const MacroTrackerScreen(),
+            ),
+          ],
+        );
+        addTearDown(() async {
+          router.dispose();
+          await macroCubit.close();
+          await mealPlanRecordCubit.close();
+          await mealPlanCubit.close();
+        });
+
+        await tester.pumpWidget(
+          MultiBlocProvider(
+            providers: [
+              BlocProvider<MacroTrackingCubit>.value(value: macroCubit),
+              BlocProvider<MealPlanRecordCubit>.value(
+                value: mealPlanRecordCubit,
+              ),
+              BlocProvider<MealPlanCubit>.value(value: mealPlanCubit),
+            ],
+            child: MaterialApp.router(routerConfig: router),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        TrackerScope currentScope() => tester
+            .widget<MacroTrackerScopeSelection>(
+              find.byType(MacroTrackerScopeSelection),
+            )
+            .scope;
+
+        // Start programmatic animation Day -> Month, then interrupt with a manual swipe back to Day.
+        await tester.tap(find.text('Month'));
+        await tester.pump(const Duration(milliseconds: 50));
+        await tester.drag(
+          find.byKey(const ValueKey('macro-tracker-scope-pager')),
+          const Offset(500, 0),
+        );
+        await tester.pumpAndSettle();
+
+        expect(currentScope(), TrackerScope.day);
+        expect(find.byType(MacroTrackerDayWidget), findsOneWidget);
+        expect(macroCubit.rangeLogCalls, 0);
+
+        // Start programmatic animation Day -> Month, then rapidly retarget back to Day mid-animation.
+        await tester.tap(find.text('Month'));
+        await tester.pump(const Duration(milliseconds: 80));
+        await tester.tap(find.text('Day'));
+        await tester.pumpAndSettle();
+
+        expect(currentScope(), TrackerScope.day);
+        expect(find.byType(MacroTrackerDayWidget), findsOneWidget);
+        expect(macroCubit.rangeLogCalls, 0);
       },
     );
 

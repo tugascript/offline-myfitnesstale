@@ -46,6 +46,8 @@ class _MacroTrackerScreenState extends State<MacroTrackerScreen> {
   DateTime _selectedDate = DateTime.now();
   late final PageController _pageController;
   int? _animatingToPage;
+  int _animationToken = 0;
+  bool _isUserDragging = false;
   bool _pendingRangeLoad = false;
 
   @override
@@ -62,23 +64,6 @@ class _MacroTrackerScreenState extends State<MacroTrackerScreen> {
   }
 
   Future<void> _loadInitialData() async {
-    final macroCubit = context.read<MacroTrackingCubit>();
-    if (macroCubit.state.isLoading) {
-      await macroCubit.stream.firstWhere((state) => !state.isLoading);
-      if (!mounted) return;
-    }
-
-    final macroState = macroCubit.state;
-    if (!macroState.hasLoadedActiveGoal &&
-        !macroState.isLoading &&
-        macroState.error == null) {
-      macroCubit.getActiveMacroGoal();
-    }
-    if (macroState.selectedDailyLog == null ||
-        !DateUtils.isSameDay(macroState.selectedDate, _selectedDate)) {
-      macroCubit.getDailyLog(_selectedDate);
-    }
-
     final recordCubit = context.read<MealPlanRecordCubit>();
     final recordState = recordCubit.state;
     if (recordState.hasLoadedActiveRecord) {
@@ -88,6 +73,25 @@ class _MacroTrackerScreenState extends State<MacroTrackerScreen> {
         if (!mounted) return;
         _syncSelectedMealPlan(recordCubit.state.activeRecord);
       });
+    }
+
+    final macroCubit = context.read<MacroTrackingCubit>();
+    if (macroCubit.state.isLoading) {
+      await macroCubit.stream.firstWhere((state) => !state.isLoading);
+      if (!mounted) return;
+    }
+
+    var macroState = macroCubit.state;
+    if (!macroState.hasLoadedActiveGoal &&
+        !macroState.isLoading &&
+        macroState.error == null) {
+      await macroCubit.getActiveMacroGoal();
+      if (!mounted) return;
+      macroState = macroCubit.state;
+    }
+    if (macroState.selectedDailyLog == null ||
+        !DateUtils.isSameDay(macroState.selectedDate, _selectedDate)) {
+      macroCubit.getDailyLog(_selectedDate);
     }
   }
 
@@ -127,10 +131,32 @@ class _MacroTrackerScreenState extends State<MacroTrackerScreen> {
     _loadRangeForCurrentScope();
   }
 
+  void _reconcileAndLoadSettledScope() {
+    if (!_pageController.hasClients) return;
+    final settledPage = _pageController.page?.round();
+    if (settledPage != null &&
+        settledPage >= 0 &&
+        settledPage < TrackerScope.values.length) {
+      final settledScope = TrackerScope.values[settledPage];
+      if (settledScope != _scope) {
+        setState(() {
+          _scope = settledScope;
+        });
+        _pendingRangeLoad = settledScope != TrackerScope.day;
+      }
+    }
+    if (_pendingRangeLoad) {
+      _pendingRangeLoad = false;
+      _loadRangeForCurrentScope();
+    }
+  }
+
   void _animateToScope(TrackerScope targetScope) {
     if (!_pageController.hasClients) return;
     final targetPage = targetScope.index;
+    final token = ++_animationToken;
     _animatingToPage = targetPage;
+    _isUserDragging = false;
     _pageController
         .animateToPage(
           targetPage,
@@ -138,27 +164,14 @@ class _MacroTrackerScreenState extends State<MacroTrackerScreen> {
           curve: Curves.easeOutCubic,
         )
         .whenComplete(() {
-          if (!mounted) return;
-          if (_animatingToPage == targetPage) {
-            _animatingToPage = null;
+          if (!mounted || token != _animationToken) return;
+          _animatingToPage = null;
+          if (_isUserDragging) return;
+          final page = _pageController.hasClients ? _pageController.page : null;
+          if (page != null && (page - page.round()).abs() > 0.01) {
+            return;
           }
-          if (!_pageController.hasClients) return;
-          final settledPage = _pageController.page?.round();
-          if (settledPage != null &&
-              settledPage >= 0 &&
-              settledPage < TrackerScope.values.length) {
-            final settledScope = TrackerScope.values[settledPage];
-            if (settledScope != _scope) {
-              setState(() {
-                _scope = settledScope;
-              });
-              _pendingRangeLoad = settledScope != TrackerScope.day;
-            }
-          }
-          if (_pendingRangeLoad && _animatingToPage == null) {
-            _pendingRangeLoad = false;
-            _loadRangeForCurrentScope();
-          }
+          _reconcileAndLoadSettledScope();
         });
   }
 
@@ -176,11 +189,16 @@ class _MacroTrackerScreenState extends State<MacroTrackerScreen> {
     }
   }
 
+  void _onUserScrollStart() {
+    if (!_isUserDragging || _animatingToPage != null) {
+      _isUserDragging = true;
+      _animatingToPage = null;
+      _animationToken++;
+    }
+  }
+
   void _onPageChanged(TrackerScope newScope) {
     if (_animatingToPage != null) {
-      if (newScope.index == _animatingToPage) {
-        _animatingToPage = null;
-      }
       return;
     }
     if (_scope == newScope) return;
@@ -191,9 +209,9 @@ class _MacroTrackerScreenState extends State<MacroTrackerScreen> {
   }
 
   void _onScopeScrollSettled() {
-    if (!_pendingRangeLoad || _animatingToPage != null) return;
-    _pendingRangeLoad = false;
-    _loadRangeForCurrentScope();
+    _isUserDragging = false;
+    if (_animatingToPage != null) return;
+    _reconcileAndLoadSettledScope();
   }
 
   DateTime get _today => DateUtils.dateOnly(DateTime.now());
@@ -399,6 +417,7 @@ class _MacroTrackerScreenState extends State<MacroTrackerScreen> {
                 onSelectDate: _selectDay,
                 pageController: _pageController,
                 onScopeChanged: _onPageChanged,
+                onUserScrollStart: _onUserScrollStart,
                 onScrollSettled: _onScopeScrollSettled,
               ),
             ),
