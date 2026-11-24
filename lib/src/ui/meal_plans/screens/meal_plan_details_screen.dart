@@ -218,11 +218,11 @@ class _MealPlanDetailsScreenState extends State<MealPlanDetailsScreen> {
                       );
                     },
                     onDelete: () {
-                      final mealPlanCubit = context.read<MealPlanCubit>();
-                      final mealPlanRecordCubit = context
+                      final mealPlanCubit = this.context.read<MealPlanCubit>();
+                      final mealPlanRecordCubit = this.context
                           .read<MealPlanRecordCubit>();
                       showDialog(
-                        context: context,
+                        context: this.context,
                         builder: (_) => ConfirmationDialog(
                           title: 'Delete ${plan.name}',
                           content: 'Are you sure you want to delete this meal plan? All associated weeks, days, and meals will also be deleted.',
@@ -235,10 +235,10 @@ class _MealPlanDetailsScreenState extends State<MealPlanDetailsScreen> {
                               plan.id,
                             );
                             if (!mounted) return;
-                            if (context.canPop()) {
-                              context.pop();
+                            if (this.context.canPop()) {
+                              this.context.pop();
                             } else {
-                              context.go(Routes.mealPlanList.name);
+                              this.context.go(Routes.mealPlanList.name);
                             }
                           },
                         ),

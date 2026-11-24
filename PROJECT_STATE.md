@@ -336,34 +336,39 @@ above a keyboard inset.
 - `MacroTrackerScreen` reuses already-loaded active macro goal and meal-plan record state when available, serializes
   daily and range log queries behind a goal-specific completion signal (`MacroTrackingState.isLoadingActiveGoal`) so
   targets do not briefly fall back to defaults or overwrite active-goal errors, defers all hidden diary and range
-  queries until `isVisible` is `true` (with request-ID response guards in `MacroTrackingCubit.getDailyLog` and
-  `getDailyLogsForRange`) so offscreen warm-up or goal recovery cannot race with a visible `/macro-tracker` route,
-  rebases an untouched `Today` selection across midnight on tab activation while preserving explicit historical dates
-  (clamped into `[today - 365 days, today]`), avoids duplicate active meal-plan fetches when the active record
-  transitions from `null`, reconciles daily log/range state and retries active meal-plan sync whenever the warmed-up
-  tab becomes visible, syncs the active meal plan into `MealPlanState.activeMealPlan` via
+  queries until `isVisible` is `true`—including rechecking `isVisible` after awaiting active-goal readiness in period
+  and range loads (with request-ID response guards in `MacroTrackingCubit.getDailyLog` and `getDailyLogsForRange`)—so
+  offscreen warm-up, tab switches, or goal recovery cannot race with a visible `/macro-tracker` route, verifies that a
+  cached `selectedDailyLog.date` matches `DateUtilities.getNumericDate(_selectedDate)` before reusing it on activation
+  or goal recovery, rebases an untouched `Today` selection across midnight on tab activation while preserving explicit
+  historical dates (clamped into `[today - 365 days, today]`), avoids duplicate active meal-plan fetches when the active
+  record transitions from `null`, reconciles daily log/range state and retries active meal-plan sync whenever the
+  warmed-up tab becomes visible, syncs the active meal plan into `MealPlanState.activeMealPlan` via
   `MealPlanCubit.getActiveMealPlan` so offscreen warm-up never overwrites `selectedMealPlan` used by meal-plan
   details/edit routes, and exposes a `'Log Food'` tooltip on its icon FAB for screen-reader accessibility. Deleting an
-  active user-authored meal plan in `MealPlanDetailsScreen` clears and reloads `MealPlanRecordCubit.activeRecord` via
-  `handleDeletedMealPlan` so Home and the warmed-up tracker never display a deleted plan.
+  active user-authored workout or meal plan in `WorkoutPlanDetailScreen` or `MealPlanDetailsScreen` clears and reloads
+  the corresponding active-plan record cubit (`handleDeletedWorkoutPlan` / `handleDeletedMealPlan`) and navigates back
+  using the screen State's `this.context` after `mounted` checks so Home and warmed-up tabs never display a deleted
+  plan or fail on a disposed builder context.
 - Validation on 15 October 2026: full host suite passed (315 tests, one skipped), including new persistence and timeline
   interaction coverage for same-hour/identical-time entries, midnight, historical dates, food/recipe logging, time
   adjustment, deletion, totals, and 320px/200% text. Dependency resolution and `git diff --check` passed. Analysis
   reported only 30 existing informational lints; changed nutrition files have no analysis issues and pass formatting.
   The repository-wide format check still flags 357 other files under the current SDK; those files were left unchanged.
   No device nutrition journey was run.
-- Tracker UI, bounds, and tab warm-up verification on 24 November 2026: full host suite passed (729 tests, one
+- Tracker UI, bounds, and tab warm-up verification on 24 November 2026: full host suite passed (733 tests, one
   skipped), including underline scope selector with >=48dp accessible tap target height, horizontal `PageView` swipe
-  and interrupted-animation sync, goal-gated daily/range loading, failed active-goal preservation across offscreen
-  warm-up with Home retry and tab activation recovery, deferred hidden diary queries with `MacroTrackingCubit`
-  request-ID response guards, date-synced water controls in `MacroTrackerDayWidget`, midnight `Today` rebasing with
-  explicit custom-date preservation, single-fetch active meal-plan synchronization on record load, active workout and
-  meal plan cache invalidation on template deletion (`WorkoutPlanRecordCubit.handleDeletedWorkoutPlan`,
-  `MealPlanRecordCubit.handleDeletedMealPlan`, and `CurrentWorkoutPlanScreen` activation revalidation),
-  diary/range/meal-plan reconciliation on tab activation, isolated tracker `activeMealPlan` loading without replacing
-  shared `selectedMealPlan`, accessible `'Log Food'` FAB tooltip, 365-day lower/upper navigation and date-picker
-  clamping, and staggered offscreen tab warm-up. `flutter pub get`, repository-wide `dart format`, `dart analyze`, and
-  `git diff --check` passed; no device journey was run.
+  and interrupted-animation sync, goal-gated daily/range loading, post-await `isVisible` guards on period and range
+  continuations, cached `selectedDailyLog.date` validation on activation and goal recovery, failed active-goal
+  preservation across offscreen warm-up with Home retry and tab activation recovery, deferred hidden diary queries with
+  `MacroTrackingCubit` request-ID response guards, date-synced water controls in `MacroTrackerDayWidget`, midnight
+  `Today` rebasing with explicit custom-date preservation, single-fetch active meal-plan synchronization on record load,
+  active workout and meal plan cache invalidation on template deletion (`WorkoutPlanRecordCubit.handleDeletedWorkoutPlan`,
+  `MealPlanRecordCubit.handleDeletedMealPlan`, State-context pop after `WorkoutPlanDetailScreen` delete, and
+  `CurrentWorkoutPlanScreen` activation revalidation), diary/range/meal-plan reconciliation on tab activation, isolated
+  tracker `activeMealPlan` loading without replacing shared `selectedMealPlan`, accessible `'Log Food'` FAB tooltip,
+  365-day lower/upper navigation and date-picker clamping, and staggered offscreen tab warm-up. `flutter pub get`,
+  repository-wide `dart format`, `dart analyze`, and `git diff --check` passed; no device journey was run.
 - UI: Swipeable Day, Week, and Month tracker views bounded to the last 365 days through today; meal logging modal with
   portion calculator; the active plan's meals appear on their scheduled dates and can be logged into the diary;
   responsive layouts supporting 320px narrow screens and 200% font scaling.
