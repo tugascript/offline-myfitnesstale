@@ -57,7 +57,7 @@ class _Cubit extends WorkoutPlanRecordCubit {
     loads++;
     emit(state.copyWith(isLoading: true, error: const Nullable(null)));
     await pending?.future;
-    emit(nextState);
+    emit(nextState.copyWith(hasLoadedActivePlan: nextState.error == null));
   }
 
   @override

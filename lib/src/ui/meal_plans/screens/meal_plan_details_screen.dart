@@ -218,15 +218,23 @@ class _MealPlanDetailsScreenState extends State<MealPlanDetailsScreen> {
                       );
                     },
                     onDelete: () {
+                      final mealPlanCubit = context.read<MealPlanCubit>();
+                      final mealPlanRecordCubit = context
+                          .read<MealPlanRecordCubit>();
                       showDialog(
                         context: context,
-                        builder: (ctx) => ConfirmationDialog(
+                        builder: (_) => ConfirmationDialog(
                           title: 'Delete ${plan.name}',
                           content: 'Are you sure you want to delete this meal plan? All associated weeks, days, and meals will also be deleted.',
-                          onConfirm: () {
-                            context.read<MealPlanCubit>().deleteMealPlan(
+                          onConfirm: () async {
+                            final deleted = await mealPlanCubit.deleteMealPlan(
                               plan.id,
                             );
+                            if (!deleted) return;
+                            await mealPlanRecordCubit.handleDeletedMealPlan(
+                              plan.id,
+                            );
+                            if (!mounted) return;
                             if (context.canPop()) {
                               context.pop();
                             } else {

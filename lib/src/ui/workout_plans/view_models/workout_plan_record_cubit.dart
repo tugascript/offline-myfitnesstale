@@ -548,11 +548,29 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
     return true;
   }
 
+  Future<void> handleDeletedWorkoutPlan(int workoutPlanId) async {
+    final current = state.currentPlanRecord;
+    final matchesActive =
+        current.workoutPlan?.id == workoutPlanId ||
+        current.currentPlanRecord?.workoutPlanId == workoutPlanId;
+    if (!matchesActive) return;
+
+    emit(
+      state.copyWith(
+        currentPlanRecord: CurrentWorkoutPlanRecordState.initial(),
+        hasLoadedActivePlan: false,
+        error: const Nullable(null),
+      ),
+    );
+    await getLatestActivePlanRecord();
+  }
+
   Future<void> getLatestActivePlanRecord() async {
     _logger.info('Getting latest active plan record');
     emit(state.copyWith(isLoading: true));
 
     final result = await _workoutPlanRecordService.getLatestActivePlanRecord();
+    if (isClosed) return;
     if (result.isErr()) {
       final error = result.error;
       switch (error.type) {

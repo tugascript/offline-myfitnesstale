@@ -60,10 +60,7 @@ class _CurrentWorkoutPlanScreenState extends State<CurrentWorkoutPlanScreen> {
   @override
   void didUpdateWidget(CurrentWorkoutPlanScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.isVisible &&
-        !oldWidget.isVisible &&
-        !_hasLoaded &&
-        !_refreshing) {
+    if (widget.isVisible && !oldWidget.isVisible && !_refreshing) {
       final cubit = context.read<WorkoutPlanRecordCubit>();
       if (_canReuseLoadedState(cubit.state)) {
         _hasLoaded = true;

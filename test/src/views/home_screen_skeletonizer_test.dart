@@ -607,7 +607,7 @@ void main() {
         find.byType(MacroTrackerScreen, skipOffstage: false),
         findsOneWidget,
       );
-      expect(macroCubit.dailyLogCalls, 1);
+      expect(macroCubit.dailyLogCalls, 0);
 
       await tester.pumpAndSettle();
       expect(
@@ -619,6 +619,11 @@ void main() {
         ),
         findsOneWidget,
       );
+
+      // Opening the warmed-up Macros tab loads today's diary once visible.
+      await tester.tap(find.text('Macros'));
+      await tester.pumpAndSettle();
+      expect(macroCubit.dailyLogCalls, 1);
     },
   );
 
@@ -666,11 +671,16 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(macroCubit.loadCalls, 2);
-      expect(macroCubit.dailyLogCalls, 1);
+      expect(macroCubit.dailyLogCalls, 0);
       expect(
         find.byKey(const ValueKey('home-active-load-error-card')),
         findsNothing,
       );
+
+      // Diary query runs once the Macros tab becomes visible.
+      await tester.tap(find.text('Macros'));
+      await tester.pumpAndSettle();
+      expect(macroCubit.dailyLogCalls, 1);
     },
   );
 

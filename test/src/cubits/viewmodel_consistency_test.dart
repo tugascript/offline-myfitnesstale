@@ -28,10 +28,12 @@ import 'package:myfitnesstale/src/data/repositories/exercises/inputs/equipment_i
 import 'package:myfitnesstale/src/data/repositories/exercises/inputs/exercise_input.dart';
 import 'package:myfitnesstale/src/data/repositories/foods/food_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/foods/inputs/food_input.dart';
+import 'package:myfitnesstale/src/data/repositories/macros/macro_tracking_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/onboarding/onboarding_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/profile/profile_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/weight/inputs/weight_goal_input.dart';
 import 'package:myfitnesstale/src/data/repositories/weight/weight_record_repository.dart';
+import 'package:myfitnesstale/src/data/repositories/workout_plans/inputs/workout_plan_record_input.dart';
 import 'package:myfitnesstale/src/data/repositories/workout_plans/workout_plan_record_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/workout_plans/workout_plan_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/workouts/workout_record_repository.dart';
@@ -52,6 +54,7 @@ import 'package:myfitnesstale/src/ui/foods/view_models/food_cubit.dart';
 import 'package:myfitnesstale/src/ui/foods/view_models/states/food_state.dart';
 import 'package:myfitnesstale/src/ui/home/view_models/profile_cubit.dart';
 import 'package:myfitnesstale/src/ui/home/view_models/states/profile_state.dart';
+import 'package:myfitnesstale/src/ui/macros/view_models/macro_tracking_cubit.dart';
 import 'package:myfitnesstale/src/ui/weight/view_models/states/weight_record_state.dart';
 import 'package:myfitnesstale/src/ui/weight/view_models/weight_record_cubit.dart';
 import 'package:myfitnesstale/src/ui/workout_plans/view_models/states/workout_plan_state.dart';
@@ -64,8 +67,10 @@ import 'package:myfitnesstale/src/ui/workout_plans/view_models/workout_plan_reco
 import 'package:myfitnesstale/src/data/repositories/meal_plans/inputs/meal_plan_day_input.dart';
 import 'package:myfitnesstale/src/data/repositories/meal_plans/inputs/meal_plan_input.dart';
 import 'package:myfitnesstale/src/data/repositories/meal_plans/inputs/meal_plan_week_input.dart';
+import 'package:myfitnesstale/src/data/repositories/meal_plans/meal_plan_record_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/meal_plans/meal_plan_repository.dart';
 import 'package:myfitnesstale/src/ui/meal_plans/view_models/meal_plan_cubit.dart';
+import 'package:myfitnesstale/src/ui/meal_plans/view_models/meal_plan_record_cubit.dart';
 import 'package:myfitnesstale/src/ui/workouts/view_models/states/active_workout_state.dart';
 import 'package:myfitnesstale/src/ui/workouts/view_models/states/workout_state.dart';
 import 'package:myfitnesstale/src/utils/nullable.dart';
@@ -945,6 +950,142 @@ void main() {
       expect(await cubit.deleteMealPlan(activePlan.id), isTrue);
       expect(cubit.state.activeMealPlan, isNull);
       expect(cubit.state.selectedMealPlan?.id, editedPlan.id);
+    });
+
+    test('MealPlanRecordCubit.handleDeletedMealPlan clears and refreshes activeRecord when active meal plan is deleted', () async {
+      final planRepo = MealPlanRepository.create();
+      final recordRepo = MealPlanRecordRepository.create();
+      final planCubit = MealPlanCubit(mealPlanRepository: planRepo);
+      final recordCubit = MealPlanRecordCubit(
+        mealPlanRecordRepository: recordRepo,
+      );
+      addTearDown(() async {
+        await planCubit.close();
+        await recordCubit.close();
+      });
+
+      final created = (await planRepo.createMealPlan(
+        const MealPlanInput(
+          name: 'Deletable Active Meal Plan',
+          weeks: [
+            MealPlanWeekInput(
+              weekNumber: 1,
+              phase: MealPlanPhase.maintain,
+              days: [MealPlanDayInput(day: 1, name: 'Day 1')],
+            ),
+          ],
+        ),
+      )).value;
+
+      final started = await recordRepo.startMealPlan(
+        mealPlanId: created.id,
+        version: created.version,
+      );
+      expect(started.isOk(), isTrue);
+
+      await recordCubit.getActiveMealPlanRecord();
+      expect(recordCubit.state.hasLoadedActiveRecord, isTrue);
+      expect(recordCubit.state.activeRecord?.mealPlanId, created.id);
+
+      expect(await planCubit.deleteMealPlan(created.id), isTrue);
+      await recordCubit.handleDeletedMealPlan(created.id);
+
+      expect(recordCubit.state.hasLoadedActiveRecord, isTrue);
+      expect(recordCubit.state.activeRecord, isNull);
+      expect(recordCubit.state.error, isNull);
+    });
+
+    test('WorkoutPlanRecordCubit.handleDeletedWorkoutPlan clears and refreshes active execution when active workout plan is deleted', () async {
+      final db = await testDatabase.db;
+      final workoutId = await db.insert(
+        Workout.table,
+        Workout.create(
+          name: 'Deletable Plan Workout',
+          difficulty: Difficulty.beginner,
+        ).toMap(),
+      );
+      final planRepo = WorkoutPlanRepository.create();
+      final recordRepo = WorkoutPlanRecordRepository.create();
+      final planCubit = WorkoutPlanCubit(workoutPlanRepository: planRepo);
+      final recordCubit = WorkoutPlanRecordCubit(
+        workoutPlanRecordRepository: recordRepo,
+        workoutPlanRepository: planRepo,
+      );
+      addTearDown(() async {
+        await planCubit.close();
+        await recordCubit.close();
+      });
+
+      final created = (await planRepo.createWorkoutPlan(
+        const WorkoutPlanInput(
+          name: 'Deletable Active Workout Plan',
+          totalWeeks: 1,
+          difficulty: Difficulty.beginner,
+          isFavorite: false,
+        ),
+      )).value;
+      final withWeeks = await planRepo.createWorkoutPlanVersionWithWeeks(
+        workoutPlanId: created.id,
+        weeks: [
+          WorkoutPlanWeekBatchCreateInput(
+            startWeek: 1,
+            endWeek: 1,
+            scheduleMode: WorkoutPlanWeekScheduleMode.manual,
+            days: [
+              WorkoutPlanDayBatchCreateInput(
+                day: 1,
+                workouts: [
+                  WorkoutPlanWorkoutBatchCreateInput(workoutId: workoutId),
+                ],
+              ),
+            ],
+          ),
+        ],
+      );
+      expect(withWeeks.isOk(), isTrue);
+
+      final started = await recordRepo.createWorkoutPlanRecord(
+        WorkoutPlanRecordInput(workoutPlanId: created.id),
+      );
+      expect(started.isOk(), isTrue);
+
+      await recordCubit.getLatestActivePlanRecord();
+      expect(recordCubit.state.hasLoadedActivePlan, isTrue);
+      expect(recordCubit.state.currentPlanRecord.workoutPlan?.id, created.id);
+
+      expect(await planCubit.deleteWorkoutPlan(created.id), isTrue);
+      await recordCubit.handleDeletedWorkoutPlan(created.id);
+
+      expect(recordCubit.state.hasLoadedActivePlan, isTrue);
+      expect(recordCubit.state.currentPlanRecord.workoutPlan, isNull);
+      expect(recordCubit.state.currentPlanRecord.currentPlanRecord, isNull);
+      expect(recordCubit.state.error, isNull);
+    });
+
+    test('MacroTrackingCubit.getDailyLog discards stale earlier response when newer date request is issued', () async {
+      final macroRepo = MacroTrackingRepository.create();
+      final cubit = MacroTrackingCubit(macroTrackingRepository: macroRepo);
+      addTearDown(cubit.close);
+
+      final day1 = DateTime(2026, 11, 23);
+      final day2 = DateTime(2026, 11, 24);
+      await macroRepo.updateWaterIntake(date: day1, waterIntakeMl: 750);
+      await macroRepo.updateWaterIntake(date: day2, waterIntakeMl: 1500);
+
+      final emittedDates = <int?>[];
+      final sub = cubit.stream.listen((state) {
+        if (!state.isLoading && state.selectedDailyLog != null) {
+          emittedDates.add(state.selectedDailyLog?.date);
+        }
+      });
+      addTearDown(sub.cancel);
+
+      await Future.wait([cubit.getDailyLog(day1), cubit.getDailyLog(day2)]);
+      await Future<void>.delayed(Duration.zero);
+
+      expect(cubit.state.selectedDailyLog?.date, 20261124);
+      expect(cubit.state.selectedDailyLog?.waterIntakeMl, 1500);
+      expect(emittedDates, [20261124]);
     });
   });
 }

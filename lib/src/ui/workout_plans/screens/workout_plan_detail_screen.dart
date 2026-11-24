@@ -170,6 +170,8 @@ class WorkoutPlanDetailScreen extends StatefulWidget {
 }
 
 class _WorkoutPlanDetailScreenState extends State<WorkoutPlanDetailScreen> {
+  bool _isDeleting = false;
+
   @override
   void initState() {
     super.initState();
@@ -283,16 +285,26 @@ class _WorkoutPlanDetailScreenState extends State<WorkoutPlanDetailScreen> {
                         onEdit: () =>
                             context.push('/workout-plans/${plan.id}/edit'),
                         onDelete: () {
+                          final workoutPlanCubit = context
+                              .read<WorkoutPlanCubit>();
+                          final workoutPlanRecordCubit = context
+                              .read<WorkoutPlanRecordCubit>();
                           showDialog(
                             context: context,
-                            builder: (context) => ConfirmationDialog(
+                            builder: (_) => ConfirmationDialog(
                               title: 'Delete Workout Plan',
                               content: 'Are you sure you want to delete this workout plan? This action cannot be undone.',
                               onConfirm: () async {
-                                await context
-                                    .read<WorkoutPlanCubit>()
+                                _isDeleting = true;
+                                final deleted = await workoutPlanCubit
                                     .deleteWorkoutPlan(plan.id);
-                                if (context.mounted) {
+                                if (!deleted) {
+                                  _isDeleting = false;
+                                  return;
+                                }
+                                await workoutPlanRecordCubit
+                                    .handleDeletedWorkoutPlan(plan.id);
+                                if (mounted) {
                                   Navigator.of(context).pop();
                                 }
                               },
@@ -324,6 +336,10 @@ class _WorkoutPlanDetailScreenState extends State<WorkoutPlanDetailScreen> {
               backgroundColor: Colors.red,
             ),
           );
+          return;
+        }
+
+        if (_isDeleting) {
           return;
         }
 

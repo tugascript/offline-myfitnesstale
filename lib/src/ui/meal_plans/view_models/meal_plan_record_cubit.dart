@@ -35,11 +35,25 @@ class MealPlanRecordCubit extends Cubit<MealPlanRecordState> {
   }) : _recordService = mealPlanRecordRepository,
        super(MealPlanRecordState.initial());
 
+  Future<void> handleDeletedMealPlan(int mealPlanId) async {
+    if (state.activeRecord?.mealPlanId != mealPlanId) return;
+
+    emit(
+      state.copyWith(
+        activeRecord: const Nullable(null),
+        hasLoadedActiveRecord: false,
+        error: const Nullable(null),
+      ),
+    );
+    await getActiveMealPlanRecord();
+  }
+
   Future<void> getActiveMealPlanRecord() async {
     _logger.info('Getting active meal plan record');
     emit(state.copyWith(isLoading: true));
 
     final result = await _recordService.getActiveMealPlanRecord();
+    if (isClosed) return;
     if (result.isErr()) {
       final error = result.error;
       if (error.type == SingleErrorTypes.notFound) {
