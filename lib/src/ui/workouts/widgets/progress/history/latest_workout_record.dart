@@ -211,8 +211,8 @@ class _EmptyWorkoutRecord extends StatelessWidget {
                   fontWeight: FontWeight.bold,
                 ),
               ),
+              SizedBox(height: sizes.spacing),
               if (workoutId != null) ...[
-                SizedBox(height: sizes.spacing),
                 Wrap(
                   alignment: WrapAlignment.center,
                   spacing: sizes.halfSpacing,
@@ -240,8 +240,7 @@ class _EmptyWorkoutRecord extends StatelessWidget {
                     ),
                   ],
                 ),
-              ] else ...[
-                SizedBox(height: sizes.spacing),
+              ] else
                 SizedBox(
                   width: double.infinity,
                   child: AppTextButton(
@@ -253,7 +252,6 @@ class _EmptyWorkoutRecord extends StatelessWidget {
                     icon: Icons.fitness_center,
                   ),
                 ),
-              ],
             ],
           ),
         ),
