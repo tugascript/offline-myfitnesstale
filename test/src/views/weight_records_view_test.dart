@@ -28,6 +28,7 @@ import 'package:myfitnesstale/src/data/repositories/weight/dtos/weight_record_dt
 import 'package:myfitnesstale/src/data/repositories/weight/weight_record_repository.dart';
 import 'package:myfitnesstale/src/data/utils/enums.dart';
 import 'package:myfitnesstale/src/routing/routes.dart';
+import 'package:myfitnesstale/src/ui/core/view_models/states/common_state.dart';
 import 'package:myfitnesstale/src/ui/core/widgets/icons_switch.dart';
 import 'package:myfitnesstale/src/ui/core/widgets/not_found_list.dart';
 import 'package:myfitnesstale/src/ui/home/view_models/profile_cubit.dart';
@@ -67,18 +68,25 @@ class _ProfileCubit extends ProfileCubit {
 }
 
 class _FakeWeightRecordCubit extends WeightRecordCubit {
+  int latestLoadCalls = 0;
+  int recordsLoadCalls = 0;
+
   _FakeWeightRecordCubit()
     : super(weightRecordRepository: WeightRecordRepository.create());
 
   @override
-  Future<void> getLatestRecordedWeightRecord() async {}
+  Future<void> getLatestRecordedWeightRecord() async {
+    latestLoadCalls++;
+  }
 
   @override
   Future<void> getWeightRecords({
     (DateTime start, DateTime end)? dateRange,
     int limit = 20,
     int offset = 0,
-  }) async {}
+  }) async {
+    recordsLoadCalls++;
+  }
 
   void setLoadingFlags({
     bool? isLoading,
@@ -103,12 +111,48 @@ class _FakeWeightRecordCubit extends WeightRecordCubit {
       state.copyWith(
         latestWeightRecord: Nullable(record),
         isLoadingLatest: false,
+        latestError: const Nullable(null),
       ),
     );
   }
 
   void setRecords(List<WeightRecordDto> records) {
-    emit(state.copyWith(weightRecords: records, isLoadingRecords: false));
+    emit(
+      state.copyWith(
+        weightRecords: records,
+        isLoadingRecords: false,
+        recordsError: const Nullable(null),
+      ),
+    );
+  }
+
+  void emitLatestError(String description) {
+    final errorState = ErrorState(
+      type: 'operationFailure',
+      description: description,
+    );
+    emit(
+      state.copyWith(
+        latestWeightRecord: const Nullable(null),
+        isLoadingLatest: false,
+        latestError: Nullable(errorState),
+        error: Nullable(errorState),
+      ),
+    );
+  }
+
+  void emitRecordsError(String description) {
+    final errorState = ErrorState(
+      type: 'operationFailure',
+      description: description,
+    );
+    emit(
+      state.copyWith(
+        isLoadingRecords: false,
+        recordsError: Nullable(errorState),
+        error: Nullable(errorState),
+      ),
+    );
   }
 }
 
@@ -246,6 +290,46 @@ void main() {
         ),
         findsOneWidget,
       );
+    },
+  );
+
+  testWidgets(
+    'LatestWeightRecord and WeightRecordsHistory show error/retry cards instead of empty states on load failure',
+    (tester) async {
+      tester.view.physicalSize = const Size(800, 1200);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+
+      final cubit = _FakeWeightRecordCubit();
+      addTearDown(cubit.close);
+
+      await tester.pumpWidget(buildScreen(cubit));
+      await tester.pump();
+
+      cubit.emitLatestError('Failed to get latest weight record');
+      cubit.emitRecordsError('Failed to get weight records');
+      await tester.pump();
+      await tester.pump();
+
+      expect(find.byType(EmptyWeightRecord), findsNothing);
+      expect(find.byType(NotFoundList), findsNothing);
+      expect(find.text('Empty history'), findsNothing);
+      expect(find.text('Failed to get latest weight record'), findsOneWidget);
+      expect(find.text('Failed to get weight records'), findsOneWidget);
+
+      final latestCallsBefore = cubit.latestLoadCalls;
+      await tester.tap(
+        find.byKey(const ValueKey('latest-weight-record-retry')),
+      );
+      await tester.pump();
+      expect(cubit.latestLoadCalls, latestCallsBefore + 1);
+
+      final recordsCallsBefore = cubit.recordsLoadCalls;
+      await tester.tap(
+        find.byKey(const ValueKey('weight-records-history-retry')),
+      );
+      await tester.pump();
+      expect(cubit.recordsLoadCalls, recordsCallsBefore + 1);
     },
   );
 }

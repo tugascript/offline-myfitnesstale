@@ -108,9 +108,7 @@ class _MacroGoalsScreenState extends State<MacroGoalsScreen> {
                   activeGoal: state.activeGoal,
                   isLoading: state.isLoadingActiveGoal,
                   hasLoaded: state.hasLoadedActiveGoal,
-                  hasError:
-                      state.activeGoalError != null ||
-                      (!state.hasLoadedActiveGoal && state.error != null),
+                  hasError: state.activeGoalError != null,
                   onCreateGoal: () => _openGoalModal(theme, sizes),
                   onEditGoal: (goal) =>
                       _openGoalModal(theme, sizes, existingGoal: goal),

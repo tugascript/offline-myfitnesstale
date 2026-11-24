@@ -50,7 +50,7 @@ class ActiveMacroGoal extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (!isLoading && hasError && activeGoal == null) {
+    if (!isLoading && hasError) {
       return EmptyCard(
         sizes: sizes,
         emoji: '⚠️',

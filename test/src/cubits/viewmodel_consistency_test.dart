@@ -1254,5 +1254,140 @@ void main() {
       expect(cubit.state.weightRecords, isNotEmpty);
       expect(cubit.state.isLoading, isFalse);
     });
+
+    test('MacroTrackingCubit clears stale activeGoal on reload failure and preserves unrelated history errors on active goal success', () async {
+      var failWeekGoalReads = false;
+      final helper = DatabaseHelper();
+      final repo = MacroTrackingRepository(
+        weekMacroGoalDao: Dao<WeekMacroGoal>(
+          databaseHelper: helper,
+          tableName: WeekMacroGoal.table,
+          fromMap: (map) {
+            if (failWeekGoalReads) {
+              throw StateError('Simulated macro goal read failure');
+            }
+            return WeekMacroGoal.fromMap(map);
+          },
+        ),
+        dayMacroGoalDao: Dao<DayMacroGoal>(
+          databaseHelper: helper,
+          tableName: DayMacroGoal.table,
+          fromMap: DayMacroGoal.fromMap,
+        ),
+        dailyLogDao: Dao<DailyNutritionLog>(
+          databaseHelper: helper,
+          tableName: DailyNutritionLog.table,
+          fromMap: DailyNutritionLog.fromMap,
+        ),
+        mealLogDao: Dao<MealLog>(
+          databaseHelper: helper,
+          tableName: MealLog.table,
+          fromMap: MealLog.fromMap,
+        ),
+        mealLogItemDao: Dao<MealLogItem>(
+          databaseHelper: helper,
+          tableName: MealLogItem.table,
+          fromMap: MealLogItem.fromMap,
+        ),
+        foodDao: Dao<Food>(
+          databaseHelper: helper,
+          tableName: Food.table,
+          fromMap: Food.fromMap,
+        ),
+        foodPortionDao: Dao<FoodPortion>(
+          databaseHelper: helper,
+          tableName: FoodPortion.table,
+          fromMap: FoodPortion.fromMap,
+        ),
+        recipeDao: Dao<Recipe>(
+          databaseHelper: helper,
+          tableName: Recipe.table,
+          fromMap: Recipe.fromMap,
+        ),
+      );
+      final cubit = MacroTrackingCubit(macroTrackingRepository: repo);
+      addTearDown(cubit.close);
+
+      await cubit.createMacroGoal(
+        const WeekMacroGoalInput(
+          name: 'Cut Plan',
+          targetCalories: 2100,
+          targetProtein: 160,
+          targetCarbs: 210,
+          targetFat: 65,
+          isActive: true,
+        ),
+      );
+      expect(cubit.state.activeGoal, isNotNull);
+      expect(cubit.state.hasLoadedActiveGoal, isTrue);
+
+      // Reload failure must clear stale activeGoal, reset hasLoadedActiveGoal, and set activeGoalError.
+      failWeekGoalReads = true;
+      await cubit.getActiveMacroGoal();
+      expect(cubit.state.activeGoal, isNull);
+      expect(cubit.state.hasLoadedActiveGoal, isFalse);
+      expect(cubit.state.activeGoalError, isNotNull);
+      expect(cubit.state.error, isNotNull);
+
+      // History failure sets shared error; a subsequent successful active goal load must NOT wipe it.
+      await cubit.getMacroGoals();
+      final historyError = cubit.state.error;
+      expect(historyError, isNotNull);
+
+      failWeekGoalReads = false;
+      await cubit.getActiveMacroGoal();
+      expect(cubit.state.activeGoal, isNotNull);
+      expect(cubit.state.hasLoadedActiveGoal, isTrue);
+      expect(cubit.state.activeGoalError, isNull);
+      expect(cubit.state.error, historyError);
+    });
+
+    test('WeightRecordCubit sets latestError and recordsError on failure and clears them on recovery', () async {
+      var failRecordReads = false;
+      final helper = DatabaseHelper();
+      final repo = WeightRecordRepository(
+        weightRecordDao: Dao<WeightRecord>(
+          databaseHelper: helper,
+          tableName: WeightRecord.table,
+          fromMap: (map) {
+            if (failRecordReads) {
+              throw StateError('Simulated weight record read failure');
+            }
+            return WeightRecord.fromMap(map);
+          },
+        ),
+        weightGoalDao: Dao<WeightGoal>(
+          databaseHelper: helper,
+          tableName: WeightGoal.table,
+          fromMap: WeightGoal.fromMap,
+        ),
+      );
+      final cubit = WeightRecordCubit(weightRecordRepository: repo);
+      addTearDown(cubit.close);
+
+      await cubit.createWeightRecord(
+        WeightRecordInput(weight: 75000, recordDate: DateTime(2026, 3, 3)),
+      );
+      expect(cubit.state.latestWeightRecord, isNotNull);
+
+      failRecordReads = true;
+      await cubit.getLatestRecordedWeightRecord();
+      expect(cubit.state.latestWeightRecord, isNull);
+      expect(cubit.state.latestError, isNotNull);
+      expect(cubit.state.isLoadingLatest, isFalse);
+
+      await cubit.getWeightRecords();
+      expect(cubit.state.recordsError, isNotNull);
+      expect(cubit.state.isLoadingRecords, isFalse);
+
+      failRecordReads = false;
+      await cubit.getLatestRecordedWeightRecord();
+      expect(cubit.state.latestWeightRecord, isNotNull);
+      expect(cubit.state.latestError, isNull);
+      expect(cubit.state.recordsError, isNotNull);
+
+      await cubit.getWeightRecords();
+      expect(cubit.state.recordsError, isNull);
+    });
   });
 }

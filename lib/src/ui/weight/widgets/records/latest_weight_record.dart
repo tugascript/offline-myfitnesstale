@@ -20,6 +20,8 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../../../data/utils/enums.dart';
 import '../../../core/sizes/data_display_sizes.dart';
+import '../../../core/widgets/layout/app_text_button.dart';
+import '../../../core/widgets/layout/empty_card.dart';
 import '../../view_models/states/weight_record_state.dart';
 import '../../view_models/weight_record_cubit.dart';
 import './editor/edit_weight_record_modal.dart';
@@ -54,6 +56,29 @@ class _LatestWeightRecordState extends State<LatestWeightRecord> {
   Widget build(BuildContext context) {
     return BlocBuilder<WeightRecordCubit, WeightRecordState>(
       builder: (context, state) {
+        if (!state.isLoadingLatest && state.latestError != null) {
+          return EmptyCard(
+            sizes: widget.sizes,
+            emoji: '⚠️',
+            emptyText: state.latestError!.description,
+            actions: [
+              AppTextButton(
+                key: const ValueKey('latest-weight-record-retry'),
+                isLoading: false,
+                sizes: widget.sizes,
+                isDense: true,
+                label: 'Retry',
+                icon: Icons.refresh,
+                onPressed: () {
+                  context
+                      .read<WeightRecordCubit>()
+                      .getLatestRecordedWeightRecord();
+                },
+              ),
+            ],
+          );
+        }
+
         if (!state.isLoadingLatest && state.latestWeightRecord == null) {
           return EmptyWeightRecord(sizes: widget.sizes, theme: widget.theme);
         }

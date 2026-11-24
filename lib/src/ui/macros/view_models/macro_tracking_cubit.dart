@@ -59,11 +59,17 @@ class MacroTrackingCubit extends Cubit<MacroTrackingState> {
   Future<void> _loadActiveMacroGoal() async {
     _logger.info('Getting active macro goal');
     final activeRequestId = ++_activeGoalRequestId;
+    final previousActiveGoalError = state.activeGoalError;
     emit(
       state.copyWith(
         isLoading: true,
         isLoadingActiveGoal: true,
         activeGoalError: const Nullable(null),
+        error:
+            previousActiveGoalError != null &&
+                state.error == previousActiveGoalError
+            ? const Nullable(null)
+            : null,
       ),
     );
 
@@ -79,7 +85,6 @@ class MacroTrackingCubit extends Cubit<MacroTrackingState> {
             isLoadingActiveGoal: false,
             isLoading: false,
             activeGoalError: const Nullable(null),
-            error: const Nullable(null),
           ),
         );
       } else {
@@ -90,6 +95,8 @@ class MacroTrackingCubit extends Cubit<MacroTrackingState> {
         );
         emit(
           state.copyWith(
+            activeGoal: const Nullable(null),
+            hasLoadedActiveGoal: false,
             isLoadingActiveGoal: false,
             isLoading: false,
             activeGoalError: Nullable(errorState),
@@ -107,7 +114,6 @@ class MacroTrackingCubit extends Cubit<MacroTrackingState> {
         isLoadingActiveGoal: false,
         isLoading: false,
         activeGoalError: const Nullable(null),
-        error: const Nullable(null),
       ),
     );
   }
@@ -313,6 +319,8 @@ class MacroTrackingCubit extends Cubit<MacroTrackingState> {
             hasLoadedActiveGoal = true;
             activeGoalError = const Nullable(null);
           } else {
+            activeGoal = const Nullable(null);
+            hasLoadedActiveGoal = false;
             activeGoalError = Nullable(error);
           }
         }
