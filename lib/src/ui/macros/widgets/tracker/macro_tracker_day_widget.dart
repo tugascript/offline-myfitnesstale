@@ -16,18 +16,16 @@
 // along with My Fitness Tale.  If not, see <https://www.gnu.org/licenses/>.
 
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../../data/utils/dates.dart';
-import '../../../../routing/routes.dart';
 import '../../../core/sizes/data_display_sizes.dart';
 import '../../../core/widgets/confirmation_dialog.dart';
 import '../../view_models/macro_tracking_cubit.dart';
 import '../../view_models/states/macro_tracking_state.dart';
 import '../log_food_modal.dart';
-import 'macro_progress_bar.dart';
 import '../nutrition_timeline_widget.dart';
+import 'macro_progress_bar.dart';
 
 class MacroTrackerDayWidget extends StatelessWidget {
   final DataDisplaySizesList sizes;
@@ -97,7 +95,7 @@ class MacroTrackerDayWidget extends StatelessWidget {
                     SizedBox(height: sizes.spacing),
                     LinearProgressIndicator(
                       value: calProgress,
-                      minHeight: sizes.spacing / 2,
+                      minHeight: sizes.halfSpacing,
                       borderRadius: BorderRadius.zero,
                       backgroundColor: Colors.grey.withValues(alpha: 0.2),
                       valueColor: AlwaysStoppedAnimation<Color>(
@@ -218,7 +216,7 @@ class MacroTrackerDayWidget extends StatelessWidget {
                         ),
                       ],
                     ),
-                    SizedBox(height: sizes.spacing / 2),
+                    SizedBox(height: sizes.halfSpacing),
                     LinearProgressIndicator(
                       value: targetWater > 0
                           ? (currentWater / targetWater).clamp(0.0, 1.0)
@@ -257,7 +255,7 @@ class MacroTrackerDayWidget extends StatelessWidget {
                 ),
               ),
             ),
-            SizedBox(height: sizes.buttonSize * 2),
+            SizedBox(height: sizes.buttonSize * 1.5),
           ],
         );
       },

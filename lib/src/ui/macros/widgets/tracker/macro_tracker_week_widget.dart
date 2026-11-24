@@ -85,7 +85,7 @@ class MacroTrackerWeekWidget extends StatelessWidget {
                 0,
                 index == 0 ? sizes.halfSpacing : sizes.quarterSpacing,
                 0,
-                sizes.quarterSpacing,
+                index == 6 ? sizes.halfSpacing : sizes.quarterSpacing,
               ),
               child: Card(
                 color: isSelectedDay

@@ -29,9 +29,8 @@ import '../view_models/macro_tracking_cubit.dart';
 import '../view_models/states/macro_tracking_state.dart';
 import '../widgets/goals/macro_goal_form_modal.dart';
 import '../widgets/log_food_modal.dart';
-import '../widgets/tracker/macro_tracker_content.dart';
+import '../widgets/tracker/macro_tracker_body.dart';
 import '../widgets/tracker/macro_tracker_date_navigator.dart';
-import '../widgets/tracker/macro_tracker_placeholder.dart';
 
 class MacroTrackerScreen extends StatefulWidget {
   static const name = 'macro_tracker';
@@ -64,7 +63,9 @@ class _MacroTrackerScreenState extends State<MacroTrackerScreen> {
   bool _isGoalModalOpen = false;
 
   DateTime _currentNow() => widget.now?.call() ?? DateTime.now();
+
   DateTime get _today => DateUtils.dateOnly(_currentNow());
+
   DateTime _minDate(DateTime today) =>
       MacroTrackerDateNavigator.defaultFirstDate(today);
 
@@ -343,86 +344,32 @@ class _MacroTrackerScreenState extends State<MacroTrackerScreen> {
           previous.error != current.error,
       builder: (context, state) {
         final hasActiveGoal = state.activeGoal != null;
-        final hasInitialGoalError =
-            !hasActiveGoal && !state.hasLoadedActiveGoal && state.error != null;
-        final isWaitingForGoal =
-            !hasActiveGoal &&
-            !state.hasLoadedActiveGoal &&
-            state.isLoadingActiveGoal;
 
-        final Widget body;
-        if (hasActiveGoal || isWaitingForGoal) {
-          body = MacroTrackerContent(
+        return AppScaffold(
+          title: 'Macro Tracker',
+          body: MacroTrackerBody(
+            state: state,
             sizes: sizes,
             theme: theme,
             scope: _scope,
             selectedDate: _selectedDate,
             firstDate: minDate,
             lastDate: today,
-            isLoading: isWaitingForGoal,
             onScopeChanged: (scope) => setState(() => _scope = scope),
             onLoadRange: () => _loadTrackerData(
               retryFailedGoal: widget.isVisible,
               loadDailyLog: false,
               loadRange: true,
             ),
-            onPrevious: () {
-              final prev = _scope.previousDate(_selectedDate, minDate);
-              _updateSelectedDate(
-                prev,
-                isCustom: !DateUtils.isSameDay(prev, today),
-              );
-            },
-            onNext: () {
-              final next = _scope.nextDate(_selectedDate, minDate, today);
-              _updateSelectedDate(
-                next,
-                isCustom: !DateUtils.isSameDay(next, today),
-              );
-            },
-            onDatePicked: (picked) {
-              final date = DateUtils.dateOnly(picked);
-              if (date.isAfter(today) || date.isBefore(minDate)) return;
-              _updateSelectedDate(
-                date,
-                isCustom: !DateUtils.isSameDay(date, today),
-              );
-            },
+            onDateSelected: _updateSelectedDate,
             onGoToToday: () =>
                 _updateSelectedDate(_currentNow(), isCustom: false),
-            onSelectDay: (date) => _updateSelectedDate(
-              date,
-              isCustom: !DateUtils.isSameDay(date, today),
-              resetToDay: true,
+            onRetry: () => _loadTrackerData(
+              retryFailedGoal: true,
+              loadRange: _scope != TrackerScope.day,
             ),
-          );
-        } else if (hasInitialGoalError) {
-          body = Padding(
-            padding: EdgeInsets.all(sizes.viewPadding),
-            child: MacroTrackerPlaceholder(
-              sizes: sizes,
-              errorDescription: state.error!.description,
-              isLoading: state.isLoadingActiveGoal,
-              onRetry: () => _loadTrackerData(
-                retryFailedGoal: true,
-                loadRange: _scope != TrackerScope.day,
-              ),
-            ),
-          );
-        } else {
-          body = Padding(
-            padding: EdgeInsets.all(sizes.viewPadding),
-            child: MacroTrackerPlaceholder(
-              sizes: sizes,
-              isLoading: state.isLoading,
-              onCreateGoal: _openCreateMacroGoalModal,
-            ),
-          );
-        }
-
-        return AppScaffold(
-          title: 'Macro Tracker',
-          body: body,
+            onCreateGoal: _openCreateMacroGoalModal,
+          ),
           floatingActionButton: hasActiveGoal
               ? FloatingActionButton(
                   key: const ValueKey('macro-tracker-log-food-fab'),

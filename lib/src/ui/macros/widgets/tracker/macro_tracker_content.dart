@@ -226,7 +226,10 @@ class _MacroTrackerContentState extends State<MacroTrackerContent> {
           SizedBox(height: sizes.spacing),
           ColoredBox(
             color: widget.theme.colorScheme.surface,
-            child: const SizedBox(height: 2, width: double.infinity),
+            child: SizedBox(
+              height: sizes.quarterSpacing,
+              width: double.infinity,
+            ),
           ),
           Expanded(
             child: widget.isLoading

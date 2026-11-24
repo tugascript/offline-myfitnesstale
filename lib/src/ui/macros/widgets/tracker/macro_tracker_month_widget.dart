@@ -84,7 +84,9 @@ class MacroTrackerMonthWidget extends StatelessWidget {
                 0,
                 index == 0 ? sizes.halfSpacing : sizes.quarterSpacing,
                 0,
-                sizes.quarterSpacing,
+                index == (daysInMonth - 1)
+                    ? sizes.halfSpacing
+                    : sizes.quarterSpacing,
               ),
               child: Card(
                 color: isSelectedDay

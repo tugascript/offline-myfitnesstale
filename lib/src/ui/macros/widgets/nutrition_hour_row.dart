@@ -50,7 +50,9 @@ class NutritionHourRow extends StatelessWidget {
     final calories = meals.fold(0, (sum, meal) => sum + meal.totalCalories);
     return Container(
       decoration: BoxDecoration(
-        border: Border(left: BorderSide(color: color)),
+        border: Border(
+          left: BorderSide(color: color, width: sizes.quarterSpacing),
+        ),
       ),
       padding: EdgeInsets.only(left: sizes.padding, bottom: sizes.spacing),
       child: Column(

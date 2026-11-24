@@ -48,12 +48,7 @@ class MacroTackerScopeWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final pagePadding = EdgeInsets.fromLTRB(
-      sizes.viewPadding,
-      0,
-      sizes.viewPadding,
-      sizes.viewPadding,
-    );
+    final pagePadding = EdgeInsets.symmetric(horizontal: sizes.viewPadding);
 
     return NotificationListener<ScrollNotification>(
       onNotification: (notification) {
