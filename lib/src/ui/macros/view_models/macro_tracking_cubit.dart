@@ -31,16 +31,32 @@ import './states/macro_tracking_state.dart';
 class MacroTrackingCubit extends Cubit<MacroTrackingState> {
   final MacroTrackingRepository _macroService;
   final Logger _logger = Logger('MacroTrackingCubit');
+  Future<void>? _activeGoalLoad;
 
   MacroTrackingCubit({required MacroTrackingRepository macroTrackingRepository})
     : _macroService = macroTrackingRepository,
       super(MacroTrackingState.initial());
 
-  Future<void> getActiveMacroGoal() async {
+  Future<void> getActiveMacroGoal() {
+    final inFlight = _activeGoalLoad;
+    if (inFlight != null) return inFlight;
+
+    final future = _loadActiveMacroGoal();
+    _activeGoalLoad = future;
+    future.whenComplete(() {
+      if (identical(_activeGoalLoad, future)) {
+        _activeGoalLoad = null;
+      }
+    });
+    return future;
+  }
+
+  Future<void> _loadActiveMacroGoal() async {
     _logger.info('Getting active macro goal');
-    emit(state.copyWith(isLoading: true));
+    emit(state.copyWith(isLoading: true, isLoadingActiveGoal: true));
 
     final result = await _macroService.getActiveMacroGoal();
+    if (isClosed) return;
     if (result.isErr()) {
       final error = result.error;
       if (error.type == SingleErrorTypes.notFound) {
@@ -48,6 +64,7 @@ class MacroTrackingCubit extends Cubit<MacroTrackingState> {
           state.copyWith(
             activeGoal: const Nullable(null),
             hasLoadedActiveGoal: true,
+            isLoadingActiveGoal: false,
             isLoading: false,
             error: const Nullable(null),
           ),
@@ -56,6 +73,7 @@ class MacroTrackingCubit extends Cubit<MacroTrackingState> {
         _logger.warning('Failed to load active entity', error);
         emit(
           state.copyWith(
+            isLoadingActiveGoal: false,
             isLoading: false,
             error: Nullable(
               ErrorState(type: error.type.name, description: error.description),
@@ -70,6 +88,7 @@ class MacroTrackingCubit extends Cubit<MacroTrackingState> {
       state.copyWith(
         activeGoal: Nullable(result.value),
         hasLoadedActiveGoal: true,
+        isLoadingActiveGoal: false,
         isLoading: false,
         error: const Nullable(null),
       ),

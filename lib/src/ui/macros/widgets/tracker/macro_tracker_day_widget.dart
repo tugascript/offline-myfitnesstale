@@ -202,7 +202,10 @@ class MacroTrackerDayWidget extends StatelessWidget {
                             );
                             context
                                 .read<MacroTrackingCubit>()
-                                .updateWaterIntake(newWater);
+                                .updateWaterIntake(
+                                  newWater,
+                                  date: selectedDate,
+                                );
                           },
                         ),
                         IconButton(
@@ -211,7 +214,10 @@ class MacroTrackerDayWidget extends StatelessWidget {
                           onPressed: () {
                             context
                                 .read<MacroTrackingCubit>()
-                                .updateWaterIntake(currentWater + 250);
+                                .updateWaterIntake(
+                                  currentWater + 250,
+                                  date: selectedDate,
+                                );
                           },
                         ),
                       ],
