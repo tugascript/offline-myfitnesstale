@@ -28,6 +28,8 @@ import '../../../utils/nullable.dart';
 import '../../core/view_models/states/common_state.dart';
 import './states/macro_tracking_state.dart';
 
+enum MacroGoalSaveStatus { saved, savedRefreshFailed, failed }
+
 class MacroTrackingCubit extends Cubit<MacroTrackingState> {
   final MacroTrackingRepository _macroService;
   final Logger _logger = Logger('MacroTrackingCubit');
@@ -137,12 +139,12 @@ class MacroTrackingCubit extends Cubit<MacroTrackingState> {
     );
   }
 
-  Future<bool> createMacroGoal(WeekMacroGoalInput input) async {
+  Future<MacroGoalSaveStatus> createMacroGoal(WeekMacroGoalInput input) async {
     _logger.info('Creating macro goal: ${input.name}');
     emit(state.copyWith(isLoading: true, error: const Nullable(null)));
 
     final result = await _macroService.createMacroGoal(input);
-    if (isClosed) return false;
+    if (isClosed) return MacroGoalSaveStatus.failed;
 
     if (result.isErr()) {
       final error = result.error;
@@ -155,19 +157,24 @@ class MacroTrackingCubit extends Cubit<MacroTrackingState> {
           isLoading: false,
         ),
       );
-      return false;
+      return MacroGoalSaveStatus.failed;
     }
 
-    await _refreshMacroGoals();
-    return true;
+    final refreshed = await _refreshMacroGoals(savedGoal: result.value);
+    return refreshed
+        ? MacroGoalSaveStatus.saved
+        : MacroGoalSaveStatus.savedRefreshFailed;
   }
 
-  Future<bool> updateMacroGoal(int id, WeekMacroGoalInput input) async {
+  Future<MacroGoalSaveStatus> updateMacroGoal(
+    int id,
+    WeekMacroGoalInput input,
+  ) async {
     _logger.info('Updating macro goal $id');
     emit(state.copyWith(isLoading: true, error: const Nullable(null)));
 
     final result = await _macroService.updateMacroGoal(id, input);
-    if (isClosed) return false;
+    if (isClosed) return MacroGoalSaveStatus.failed;
 
     if (result.isErr()) {
       final error = result.error;
@@ -180,11 +187,25 @@ class MacroTrackingCubit extends Cubit<MacroTrackingState> {
           isLoading: false,
         ),
       );
-      return false;
+      return MacroGoalSaveStatus.failed;
     }
 
-    await _refreshMacroGoals();
-    return true;
+    final refreshed = await _refreshMacroGoals(savedGoal: result.value);
+    return refreshed
+        ? MacroGoalSaveStatus.saved
+        : MacroGoalSaveStatus.savedRefreshFailed;
+  }
+
+  Future<bool> refreshMacroGoals() {
+    _logger.info('Refreshing macro goals');
+    emit(
+      state.copyWith(
+        isLoading: true,
+        isLoadingActiveGoal: true,
+        error: const Nullable(null),
+      ),
+    );
+    return _refreshMacroGoals();
   }
 
   Future<bool> completeMacroGoal(int id) async {
@@ -233,7 +254,7 @@ class MacroTrackingCubit extends Cubit<MacroTrackingState> {
     return true;
   }
 
-  Future<void> _refreshMacroGoals() async {
+  Future<bool> _refreshMacroGoals({MacroGoalDto? savedGoal}) async {
     final limit = state.goalPagination.limit;
     final requestId = state.goalsRequestId + 1;
     emit(state.copyWith(goalsRequestId: requestId));
@@ -243,7 +264,8 @@ class MacroTrackingCubit extends Cubit<MacroTrackingState> {
 
     final activeResult = await activeFuture;
     final historyResult = await historyFuture;
-    if (isClosed || requestId != state.goalsRequestId) return;
+    if (isClosed) return false;
+    final historyIsCurrent = requestId == state.goalsRequestId;
 
     Nullable<MacroGoalDto>? activeGoal;
     ErrorState? error;
@@ -257,12 +279,15 @@ class MacroTrackingCubit extends Cubit<MacroTrackingState> {
           type: activeResult.error.type.name,
           description: activeResult.error.description,
         );
+        if (savedGoal != null && savedGoal.isActive) {
+          activeGoal = Nullable(savedGoal);
+        }
       }
     } else {
       activeGoal = Nullable(activeResult.value);
     }
 
-    if (historyResult.isErr()) {
+    if (historyIsCurrent && historyResult.isErr()) {
       _logger.warning('Failed to get macro goals', historyResult.error);
       error ??= ErrorState(
         type: historyResult.error.type.name,
@@ -273,8 +298,10 @@ class MacroTrackingCubit extends Cubit<MacroTrackingState> {
     emit(
       state.copyWith(
         activeGoal: activeGoal,
-        goalHistory: historyResult.isOk() ? historyResult.value.data : null,
-        goalPagination: historyResult.isOk()
+        goalHistory: historyIsCurrent && historyResult.isOk()
+            ? historyResult.value.data
+            : null,
+        goalPagination: historyIsCurrent && historyResult.isOk()
             ? MacroGoalPagination(
                 total: historyResult.value.total,
                 limit: limit,
@@ -284,13 +311,16 @@ class MacroTrackingCubit extends Cubit<MacroTrackingState> {
         hasLoadedActiveGoal:
             activeResult.isOk() ||
                 (activeResult.isErr() &&
-                    activeResult.error.type == SingleErrorTypes.notFound)
+                    activeResult.error.type == SingleErrorTypes.notFound) ||
+                (savedGoal != null && savedGoal.isActive)
             ? true
             : null,
-        isLoading: false,
-        error: Nullable(error),
+        isLoadingActiveGoal: false,
+        isLoading: historyIsCurrent ? false : null,
+        error: historyIsCurrent || error != null ? Nullable(error) : null,
       ),
     );
+    return error == null;
   }
 
   Future<void> setSelectedDate(DateTime date) async {

@@ -34,25 +34,31 @@ import 'package:myfitnesstale/src/data/repositories/macros/macro_tracking_reposi
 import 'package:myfitnesstale/src/utils/nullable.dart';
 
 class _Macros extends MacroTrackingCubit {
-  _Macros({this.nextResult = true, this.errorDescription, this.submitCompleter})
-    : super(macroTrackingRepository: MacroTrackingRepository.create());
+  _Macros({
+    this.nextStatus = MacroGoalSaveStatus.saved,
+    this.nextRefreshResult = true,
+    this.errorDescription,
+    this.submitCompleter,
+  }) : super(macroTrackingRepository: MacroTrackingRepository.create());
 
   WeekMacroGoalInput? submitted;
   int? updatedId;
   int createCalls = 0;
   int updateCalls = 0;
-  bool nextResult;
+  int refreshCalls = 0;
+  MacroGoalSaveStatus nextStatus;
+  bool nextRefreshResult;
   String? errorDescription;
-  Completer<bool>? submitCompleter;
+  Completer<MacroGoalSaveStatus>? submitCompleter;
 
   @override
-  Future<bool> createMacroGoal(WeekMacroGoalInput input) async {
+  Future<MacroGoalSaveStatus> createMacroGoal(WeekMacroGoalInput input) async {
     createCalls++;
     submitted = input;
-    final success = submitCompleter != null
+    final status = submitCompleter != null
         ? await submitCompleter!.future
-        : nextResult;
-    if (!success && errorDescription != null) {
+        : nextStatus;
+    if (status != MacroGoalSaveStatus.saved && errorDescription != null) {
       emit(
         state.copyWith(
           error: Nullable(
@@ -61,18 +67,21 @@ class _Macros extends MacroTrackingCubit {
         ),
       );
     }
-    return success;
+    return status;
   }
 
   @override
-  Future<bool> updateMacroGoal(int id, WeekMacroGoalInput input) async {
+  Future<MacroGoalSaveStatus> updateMacroGoal(
+    int id,
+    WeekMacroGoalInput input,
+  ) async {
     updateCalls++;
     submitted = input;
     updatedId = id;
-    final success = submitCompleter != null
+    final status = submitCompleter != null
         ? await submitCompleter!.future
-        : nextResult;
-    if (!success && errorDescription != null) {
+        : nextStatus;
+    if (status != MacroGoalSaveStatus.saved && errorDescription != null) {
       emit(
         state.copyWith(
           error: Nullable(
@@ -81,7 +90,22 @@ class _Macros extends MacroTrackingCubit {
         ),
       );
     }
-    return success;
+    return status;
+  }
+
+  @override
+  Future<bool> refreshMacroGoals() async {
+    refreshCalls++;
+    if (!nextRefreshResult && errorDescription != null) {
+      emit(
+        state.copyWith(
+          error: Nullable(
+            ErrorState(type: 'storage', description: errorDescription!),
+          ),
+        ),
+      );
+    }
+    return nextRefreshResult;
   }
 }
 
@@ -581,7 +605,7 @@ void main() {
         tester,
         defaults: MacroGoalFormDefaults.recommended2000Kcal,
         cubit: _Macros(
-          nextResult: false,
+          nextStatus: MacroGoalSaveStatus.failed,
           errorDescription: 'Database write failed',
         ),
       );
@@ -609,7 +633,7 @@ void main() {
       expect(tester.widget<TextFormField>(field('fat')).controller!.text, '60');
       expect(macros.createCalls, 1);
 
-      macros.nextResult = true;
+      macros.nextStatus = MacroGoalSaveStatus.saved;
       await tester.ensureVisible(submit);
       await tester.tap(submit);
       await tester.pumpAndSettle();
@@ -634,7 +658,10 @@ void main() {
           isActive: true,
           phase: WeightGoalPhase.bulk,
         ),
-        cubit: _Macros(nextResult: false, errorDescription: 'Update failed'),
+        cubit: _Macros(
+          nextStatus: MacroGoalSaveStatus.failed,
+          errorDescription: 'Update failed',
+        ),
       );
 
       await tester.enterText(field('protein'), '190');
@@ -654,7 +681,7 @@ void main() {
       expect(macros.updatedId, 77);
       expect(macros.updateCalls, 1);
 
-      macros.nextResult = true;
+      macros.nextStatus = MacroGoalSaveStatus.saved;
       await tester.ensureVisible(submit);
       await tester.tap(submit);
       await tester.pumpAndSettle();
@@ -665,9 +692,9 @@ void main() {
   );
 
   testWidgets(
-    'modal awaits in-flight submission before popping and prevents duplicate taps',
+    'modal awaits in-flight submission, blocks barrier/back/close dismissal, and prevents duplicate taps',
     (tester) async {
-      final completer = Completer<bool>();
+      final completer = Completer<MacroGoalSaveStatus>();
       final macros = await open(
         tester,
         defaults: MacroGoalFormDefaults.recommended2000Kcal,
@@ -690,15 +717,72 @@ void main() {
       await tester.pump();
       expect(find.byType(MacroGoalFormModal), findsOneWidget);
 
+      // Barrier tap and back navigation are blocked by PopScope while submitting.
+      await tester.tapAt(const Offset(5, 5));
+      await tester.pump();
+      expect(find.byType(MacroGoalFormModal), findsOneWidget);
+
+      await Navigator.of(tester.element(find.byType(MacroGoalFormModal)))
+          .maybePop();
+      await tester.pump();
+      expect(find.byType(MacroGoalFormModal), findsOneWidget);
+
       // Second tap while submitting is ignored.
       await tester.tap(submit, warnIfMissed: false);
       await tester.pump();
       expect(macros.createCalls, 1);
 
-      completer.complete(true);
+      completer.complete(MacroGoalSaveStatus.saved);
       await tester.pumpAndSettle();
 
       expect(find.byType(MacroGoalFormModal), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'refresh failure after save reports error and offers reload without retrying write',
+    (tester) async {
+      final macros = await open(
+        tester,
+        defaults: MacroGoalFormDefaults.recommended2000Kcal,
+        cubit: _Macros(
+          nextStatus: MacroGoalSaveStatus.savedRefreshFailed,
+          nextRefreshResult: false,
+          errorDescription: 'Active goal read failed',
+        ),
+      );
+
+      final submit = find.byKey(const ValueKey('macro-goal-submit-button'));
+      await tester.ensureVisible(submit);
+      await tester.tap(submit);
+      await tester.pumpAndSettle();
+
+      expect(find.byType(MacroGoalFormModal), findsOneWidget);
+      expect(macros.createCalls, 1);
+      expect(submit, findsNothing);
+      expect(
+        find.textContaining('Macro goal saved, but failed to refresh goals'),
+        findsOneWidget,
+      );
+      expect(find.textContaining('Active goal read failed'), findsOneWidget);
+
+      final reload = find.byKey(const ValueKey('macro-goal-reload-button'));
+      expect(reload, findsOneWidget);
+
+      // First reload attempt fails -> modal stays open, no duplicate write.
+      await tester.tap(reload);
+      await tester.pumpAndSettle();
+      expect(find.byType(MacroGoalFormModal), findsOneWidget);
+      expect(macros.createCalls, 1);
+      expect(macros.refreshCalls, 1);
+
+      // Second reload succeeds -> modal closes without retrying create.
+      macros.nextRefreshResult = true;
+      await tester.tap(reload);
+      await tester.pumpAndSettle();
+      expect(find.byType(MacroGoalFormModal), findsNothing);
+      expect(macros.createCalls, 1);
+      expect(macros.refreshCalls, 2);
     },
   );
 }

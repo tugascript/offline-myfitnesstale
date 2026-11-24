@@ -82,9 +82,9 @@ class _MacroGoalsScreenState extends State<MacroGoalsScreen> {
         padding: EdgeInsets.all(sizes.viewPadding),
         child: BlocConsumer<MacroTrackingCubit, MacroTrackingState>(
           listener: (context, state) {
-            if (state.error == null) {
+            if (state.error == null || state.isLoading) {
               _lastShownError = null;
-            } else if (!state.isLoading && state.error != _lastShownError) {
+            } else if (state.error != _lastShownError) {
               _lastShownError = state.error;
               if (!_isGoalModalOpen) {
                 ScaffoldMessenger.of(context).showSnackBar(
