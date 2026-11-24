@@ -84,13 +84,12 @@ class MacroTrackerDayWidget extends StatelessWidget {
                   children: [
                     Text(
                       'Calories: $currentCal / $targetCal kcal',
+                      textAlign: TextAlign.center,
+                      softWrap: true,
                       style: TextStyle(
                         fontSize: sizes.subtitleFontSize,
                         fontWeight: FontWeight.bold,
                       ),
-                      maxLines: 1,
-                      softWrap: true,
-                      overflow: TextOverflow.ellipsis,
                     ),
                     SizedBox(height: sizes.spacing),
                     LinearProgressIndicator(

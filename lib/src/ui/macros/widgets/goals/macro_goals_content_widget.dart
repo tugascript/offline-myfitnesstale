@@ -31,12 +31,16 @@ class MacroGoalsContentWidget extends StatelessWidget {
   final MacroTrackingState state;
   final ThemeData theme;
   final DataDisplaySizesList sizes;
+  final VoidCallback? onCreateGoal;
+  final ValueChanged<MacroGoalDto>? onEditGoal;
 
   const MacroGoalsContentWidget({
     super.key,
     required this.state,
     required this.theme,
     required this.sizes,
+    this.onCreateGoal,
+    this.onEditGoal,
   });
 
   static const Map<DayOfWeek, String> _dayLabels = {
@@ -125,7 +129,11 @@ class MacroGoalsContentWidget extends StatelessWidget {
                 child: InkWell(
                   key: const ValueKey('macro-goal-set-button'),
                   onTap: () {
-                    showDialog(
+                    if (onCreateGoal != null) {
+                      onCreateGoal!();
+                      return;
+                    }
+                    showDialog<void>(
                       context: context,
                       builder: (_) =>
                           MacroGoalFormModal(theme: theme, sizes: sizes),
@@ -200,7 +208,11 @@ class MacroGoalsContentWidget extends StatelessWidget {
                             size: sizes.buttonIconSize,
                           ),
                           onPressed: () {
-                            showDialog(
+                            if (onEditGoal != null) {
+                              onEditGoal!(activeGoal);
+                              return;
+                            }
+                            showDialog<void>(
                               context: context,
                               builder: (_) => MacroGoalFormModal(
                                 theme: theme,

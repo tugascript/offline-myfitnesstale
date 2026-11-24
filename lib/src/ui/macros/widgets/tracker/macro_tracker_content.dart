@@ -234,11 +234,8 @@ class _MacroTrackerContentState extends State<MacroTrackerContent> {
           Expanded(
             child: widget.isLoading
                 ? Padding(
-                    padding: EdgeInsets.fromLTRB(
-                      sizes.viewPadding,
-                      0,
-                      sizes.viewPadding,
-                      sizes.viewPadding,
+                    padding: EdgeInsets.symmetric(
+                      horizontal: sizes.viewPadding,
                     ),
                     child: MacroTrackerDayWidget(
                       theme: widget.theme,

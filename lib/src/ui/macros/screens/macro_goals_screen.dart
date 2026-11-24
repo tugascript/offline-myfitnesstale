@@ -18,8 +18,10 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:material_ui/material_ui.dart';
 
+import '../../../data/repositories/macros/dtos/macro_tracking_dto.dart';
 import '../../core/sizes/data_display_sizes.dart';
 import '../../core/sizes/screen_size.dart';
+import '../../core/view_models/states/common_state.dart';
 import '../../core/widgets/layout/app_scaffold.dart';
 import '../view_models/macro_tracking_cubit.dart';
 import '../view_models/states/macro_tracking_state.dart';
@@ -36,12 +38,36 @@ class MacroGoalsScreen extends StatefulWidget {
 }
 
 class _MacroGoalsScreenState extends State<MacroGoalsScreen> {
+  bool _isGoalModalOpen = false;
+  ErrorState? _lastShownError;
+
   @override
   void initState() {
     super.initState();
     final cubit = context.read<MacroTrackingCubit>();
     cubit.getActiveMacroGoal();
     cubit.getMacroGoals();
+  }
+
+  Future<void> _openGoalModal(
+    ThemeData theme,
+    DataDisplaySizesList sizes, {
+    MacroGoalDto? existingGoal,
+  }) async {
+    if (_isGoalModalOpen || !mounted) return;
+    _isGoalModalOpen = true;
+    try {
+      await showDialog<void>(
+        context: context,
+        builder: (_) => MacroGoalFormModal(
+          theme: theme,
+          sizes: sizes,
+          existingGoal: existingGoal,
+        ),
+      );
+    } finally {
+      _isGoalModalOpen = false;
+    }
   }
 
   @override
@@ -56,15 +82,20 @@ class _MacroGoalsScreenState extends State<MacroGoalsScreen> {
         padding: EdgeInsets.all(sizes.viewPadding),
         child: BlocConsumer<MacroTrackingCubit, MacroTrackingState>(
           listener: (context, state) {
-            if (!state.isLoading && state.error != null) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    state.error!.description,
-                    style: TextStyle(fontSize: sizes.fontSize),
+            if (state.error == null) {
+              _lastShownError = null;
+            } else if (!state.isLoading && state.error != _lastShownError) {
+              _lastShownError = state.error;
+              if (!_isGoalModalOpen) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      state.error!.description,
+                      style: TextStyle(fontSize: sizes.fontSize),
+                    ),
                   ),
-                ),
-              );
+                );
+              }
             }
           },
           builder: (context, state) {
@@ -72,18 +103,16 @@ class _MacroGoalsScreenState extends State<MacroGoalsScreen> {
               state: state,
               theme: theme,
               sizes: sizes,
+              onCreateGoal: () => _openGoalModal(theme, sizes),
+              onEditGoal: (goal) =>
+                  _openGoalModal(theme, sizes, existingGoal: goal),
             );
           },
         ),
       ),
       floatingActionButton: FloatingActionButton(
         key: const ValueKey('macro-goal-add-fab'),
-        onPressed: () {
-          showDialog(
-            context: context,
-            builder: (_) => MacroGoalFormModal(theme: theme, sizes: sizes),
-          );
-        },
+        onPressed: () => _openGoalModal(theme, sizes),
         child: Icon(Icons.add, size: sizes.buttonIconSize),
       ),
     );

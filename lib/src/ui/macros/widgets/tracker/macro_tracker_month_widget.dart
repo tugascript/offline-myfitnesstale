@@ -59,9 +59,9 @@ class MacroTrackerMonthWidget extends StatelessWidget {
         ).day;
 
         return ListView.separated(
+          padding: EdgeInsets.symmetric(vertical: sizes.halfSpacing),
           itemCount: daysInMonth,
-          shrinkWrap: true,
-          separatorBuilder: (_, _) => SizedBox(height: sizes.quarterSpacing),
+          separatorBuilder: (_, _) => SizedBox(height: sizes.halfSpacing),
           itemBuilder: (context, index) {
             final dayDate = DateTime(
               selectedDate.year,
@@ -79,60 +79,50 @@ class MacroTrackerMonthWidget extends StatelessWidget {
                 ?.effectiveGoalForDate(dayDate)
                 .targetCalories;
 
-            return Padding(
-              padding: EdgeInsets.fromLTRB(
-                0,
-                index == 0 ? sizes.halfSpacing : sizes.quarterSpacing,
-                0,
-                index == (daysInMonth - 1)
-                    ? sizes.halfSpacing
-                    : sizes.quarterSpacing,
-              ),
-              child: Card(
-                color: isSelectedDay
-                    ? theme.primaryColor.withValues(alpha: 0.1)
-                    : null,
-                margin: EdgeInsets.zero,
-                child: Opacity(
-                  opacity: isOutOfRange ? 0.5 : 1,
-                  child: ListTile(
-                    enabled: !isOutOfRange,
-                    title: Text(
-                      _dayFormat.format(dayDate),
-                      style: TextStyle(
-                        fontSize: sizes.fontSize,
-                        color: isOutOfRange ? theme.disabledColor : null,
-                      ),
+            return Card(
+              color: isSelectedDay
+                  ? theme.primaryColor.withValues(alpha: 0.1)
+                  : null,
+              margin: EdgeInsets.zero,
+              child: Opacity(
+                opacity: isOutOfRange ? 0.5 : 1,
+                child: ListTile(
+                  enabled: !isOutOfRange,
+                  title: Text(
+                    _dayFormat.format(dayDate),
+                    style: TextStyle(
+                      fontSize: sizes.fontSize,
+                      color: isOutOfRange ? theme.disabledColor : null,
                     ),
-                    subtitle: targetCal != null
-                        ? Text(
-                            'Target: $targetCal kcal',
-                            style: TextStyle(
-                              fontSize: sizes.smallFontSize,
-                              color: isOutOfRange
-                                  ? theme.disabledColor
-                                  : Colors.grey[600],
-                            ),
-                          )
-                        : null,
-                    trailing: Text(
-                      log != null ? '${log.totalCalories} kcal' : '-',
-                      style: TextStyle(
-                        fontSize: sizes.fontSize,
-                        fontWeight: FontWeight.bold,
-                        color: isOutOfRange
-                            ? theme.disabledColor
-                            : log != null
-                            ? theme.primaryColor
-                            : Colors.grey,
-                      ),
-                    ),
-                    onTap: isOutOfRange
-                        ? null
-                        : () {
-                            onSelectDate(dayDate);
-                          },
                   ),
+                  subtitle: targetCal != null
+                      ? Text(
+                          'Target: $targetCal kcal',
+                          style: TextStyle(
+                            fontSize: sizes.smallFontSize,
+                            color: isOutOfRange
+                                ? theme.disabledColor
+                                : Colors.grey[600],
+                          ),
+                        )
+                      : null,
+                  trailing: Text(
+                    log != null ? '${log.totalCalories} kcal' : '-',
+                    style: TextStyle(
+                      fontSize: sizes.fontSize,
+                      fontWeight: FontWeight.bold,
+                      color: isOutOfRange
+                          ? theme.disabledColor
+                          : log != null
+                          ? theme.primaryColor
+                          : Colors.grey,
+                    ),
+                  ),
+                  onTap: isOutOfRange
+                      ? null
+                      : () {
+                          onSelectDate(dayDate);
+                        },
                 ),
               ),
             );

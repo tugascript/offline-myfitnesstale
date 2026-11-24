@@ -22,6 +22,7 @@ import '../../../core/widgets/layout/app_elevated_button.dart';
 import '../../../core/widgets/layout/app_text_button.dart';
 
 class MacroTrackerPlaceholder extends StatelessWidget {
+  final ThemeData theme;
   final DataDisplaySizesList sizes;
   final String? errorDescription;
   final bool isLoading;
@@ -30,6 +31,7 @@ class MacroTrackerPlaceholder extends StatelessWidget {
 
   const MacroTrackerPlaceholder({
     super.key,
+    required this.theme,
     required this.sizes,
     this.errorDescription,
     this.isLoading = false,
@@ -39,7 +41,6 @@ class MacroTrackerPlaceholder extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final hasError = errorDescription != null;
     return LayoutBuilder(
       builder: (context, constraints) => SingleChildScrollView(

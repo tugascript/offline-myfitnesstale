@@ -55,6 +55,8 @@ import 'package:myfitnesstale/src/ui/home/screens/profile/profile_screen.dart';
 import 'package:myfitnesstale/src/ui/macros/screens/macro_goals_screen.dart';
 import 'package:myfitnesstale/src/ui/macros/screens/macro_tracker_screen.dart';
 import 'package:myfitnesstale/src/ui/macros/utils/tacker_scope.dart';
+import 'package:myfitnesstale/src/ui/macros/utils/tracker_body_states.dart';
+import 'package:myfitnesstale/src/ui/macros/view_models/states/macro_tracking_state.dart';
 import 'package:myfitnesstale/src/ui/macros/widgets/goals/macro_goal_form_modal.dart';
 import 'package:myfitnesstale/src/ui/macros/widgets/tracker/macro_tracker_date_navigator.dart';
 import 'package:myfitnesstale/src/ui/macros/widgets/tracker/macro_tracker_day_widget.dart';
@@ -247,6 +249,7 @@ class _TestMacroTrackingCubit extends MacroTrackingCubit {
   }
 
   String? createGoalError;
+  String? updateGoalError;
 
   @override
   Future<bool> createMacroGoal(WeekMacroGoalInput input) async {
@@ -290,6 +293,27 @@ class _TestMacroTrackingCubit extends MacroTrackingCubit {
           error: const Nullable(null),
         ),
       );
+    }
+    return true;
+  }
+
+  @override
+  Future<bool> updateMacroGoal(int id, WeekMacroGoalInput input) async {
+    if (updateGoalError != null) {
+      if (!isClosed) {
+        emit(
+          state.copyWith(
+            isLoading: false,
+            error: Nullable(
+              ErrorState(
+                type: 'operationFailure',
+                description: updateGoalError!,
+              ),
+            ),
+          ),
+        );
+      }
+      return false;
     }
     return true;
   }
@@ -2866,6 +2890,123 @@ void main() {
         expect(find.byType(MacroGoalFormModal), findsOneWidget);
       },
     );
+
+    testWidgets(
+      'MacroGoalsScreen suppresses duplicate SnackBar when MacroGoalFormModal fails on create or edit',
+      (tester) async {
+        final macroCubit =
+            _TestMacroTrackingCubit(
+                hasLoadedActiveGoal: true,
+                activeGoal: _sampleActiveMacroGoal,
+              )
+              ..createGoalError = 'Create failed'
+              ..updateGoalError = 'Update failed';
+        addTearDown(macroCubit.close);
+
+        await tester.pumpWidget(
+          buildAppHarness(
+            macroCubit: macroCubit,
+            child: const MacroGoalsScreen(),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        // Open edit modal from MacroGoalsContentWidget and submit a failing update.
+        await tester.tap(find.byKey(const ValueKey('macro-goal-edit-btn')));
+        await tester.pumpAndSettle();
+        expect(find.byType(MacroGoalFormModal), findsOneWidget);
+
+        final submit = find.byKey(const ValueKey('macro-goal-submit-button'));
+        await tester.ensureVisible(submit);
+        await tester.tap(submit);
+        await tester.pumpAndSettle();
+
+        expect(find.byType(MacroGoalFormModal), findsOneWidget);
+        expect(find.text('Update failed'), findsOneWidget);
+        expect(find.byType(SnackBar), findsNothing);
+
+        // Close edit modal, then open create modal from FAB and submit a failing create.
+        await tester.tap(
+          find.byKey(const ValueKey('macro-goal-modal-close-btn')),
+        );
+        await tester.pumpAndSettle();
+        expect(find.byType(MacroGoalFormModal), findsNothing);
+
+        await tester.tap(find.byKey(const ValueKey('macro-goal-add-fab')));
+        await tester.pumpAndSettle();
+        expect(find.byType(MacroGoalFormModal), findsOneWidget);
+
+        await tester.ensureVisible(submit);
+        await tester.tap(submit);
+        await tester.pumpAndSettle();
+
+        expect(find.byType(MacroGoalFormModal), findsOneWidget);
+        expect(find.text('Create failed'), findsOneWidget);
+        expect(find.byType(SnackBar), findsNothing);
+
+        // Close modal and emit a non-modal error -> SnackBar still appears.
+        await tester.tap(
+          find.byKey(const ValueKey('macro-goal-modal-close-btn')),
+        );
+        await tester.pumpAndSettle();
+
+        macroCubit.emit(
+          macroCubit.state.copyWith(
+            isLoading: false,
+            error: const Nullable(
+              ErrorState(
+                type: 'operationFailure',
+                description: 'Delete failed',
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        expect(find.byType(SnackBar), findsOneWidget);
+        expect(find.text('Delete failed'), findsOneWidget);
+      },
+    );
+
+    test('TrackerBodyStates.fromState stays in waitingForGoal until active goal load completes or fails', () {
+      final unloadedIdle = MacroTrackingState.initial();
+      expect(
+        TrackerBodyStates.fromState(unloadedIdle),
+        TrackerBodyStates.waitingForGoal,
+      );
+
+      final unloadedLoading = unloadedIdle.copyWith(
+        isLoading: true,
+        isLoadingActiveGoal: true,
+      );
+      expect(
+        TrackerBodyStates.fromState(unloadedLoading),
+        TrackerBodyStates.waitingForGoal,
+      );
+
+      final unloadedError = unloadedIdle.copyWith(
+        error: const Nullable(
+          ErrorState(type: 'operationFailure', description: 'Load failed'),
+        ),
+      );
+      expect(
+        TrackerBodyStates.fromState(unloadedError),
+        TrackerBodyStates.initialGoalError,
+      );
+
+      final loadedNoGoal = unloadedIdle.copyWith(hasLoadedActiveGoal: true);
+      expect(
+        TrackerBodyStates.fromState(loadedNoGoal),
+        TrackerBodyStates.noGoal,
+      );
+
+      final loadedWithGoal = loadedNoGoal.copyWith(
+        activeGoal: const Nullable(_sampleActiveMacroGoal),
+      );
+      expect(
+        TrackerBodyStates.fromState(loadedWithGoal),
+        TrackerBodyStates.activeGoal,
+      );
+    });
   });
 
   group('Responsive Narrow and Scaled Layouts', () {

@@ -682,6 +682,14 @@ void main() {
       expect(find.byType(MacroGoalFormModal), findsOneWidget);
       expect(macros.createCalls, 1);
 
+      final closeBtnFinder = find.byKey(
+        const ValueKey('macro-goal-modal-close-btn'),
+      );
+      expect(tester.widget<IconButton>(closeBtnFinder).onPressed, isNull);
+      await tester.tap(closeBtnFinder, warnIfMissed: false);
+      await tester.pump();
+      expect(find.byType(MacroGoalFormModal), findsOneWidget);
+
       // Second tap while submitting is ignored.
       await tester.tap(submit, warnIfMissed: false);
       await tester.pump();

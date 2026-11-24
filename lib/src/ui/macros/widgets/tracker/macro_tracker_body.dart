@@ -56,14 +56,7 @@ class MacroTrackerBody extends StatelessWidget {
     required this.onGoToToday,
     required this.onRetry,
     required this.onCreateGoal,
-  }) : bodyStates = TrackerBodyStates.fromState(
-         StateData(
-           hasActiveGoal: state.activeGoal != null,
-           hasError: state.error != null,
-           hasLoadedActiveGoal: state.hasLoadedActiveGoal,
-           isLoadingActiveGoal: state.isLoadingActiveGoal,
-         ),
-       );
+  }) : bodyStates = TrackerBodyStates.fromState(state);
 
   @override
   Widget build(BuildContext context) => switch (bodyStates) {
@@ -102,8 +95,8 @@ class MacroTrackerBody extends StatelessWidget {
       padding: EdgeInsets.all(sizes.viewPadding),
       child: MacroTrackerPlaceholder(
         sizes: sizes,
+        theme: theme,
         errorDescription: state.error!.description,
-        isLoading: state.isLoadingActiveGoal,
         onRetry: onRetry,
       ),
     ),
@@ -111,6 +104,7 @@ class MacroTrackerBody extends StatelessWidget {
       padding: EdgeInsets.all(sizes.viewPadding),
       child: MacroTrackerPlaceholder(
         sizes: sizes,
+        theme: theme,
         isLoading: state.isLoadingActiveGoal,
         onCreateGoal: onCreateGoal,
       ),
