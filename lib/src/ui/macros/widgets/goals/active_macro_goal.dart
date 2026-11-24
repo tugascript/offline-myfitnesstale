@@ -26,6 +26,9 @@ class ActiveMacroGoal extends StatelessWidget {
   final ThemeData theme;
   final DataDisplaySizesList sizes;
   final MacroGoalDto? activeGoal;
+  final bool isLoading;
+  final bool hasLoaded;
+  final bool hasError;
   final VoidCallback? onCreateGoal;
   final ValueChanged<MacroGoalDto>? onEditGoal;
 
@@ -34,13 +37,17 @@ class ActiveMacroGoal extends StatelessWidget {
     required this.theme,
     required this.sizes,
     required this.activeGoal,
+    this.isLoading = false,
+    this.hasLoaded = true,
+    this.hasError = false,
     this.onCreateGoal,
     this.onEditGoal,
   });
 
   @override
   Widget build(BuildContext context) {
-    if (activeGoal == null) {
+    final isWaitingForActiveGoal = isLoading || (!hasLoaded && !hasError);
+    if (activeGoal == null && !isWaitingForActiveGoal) {
       return EmptyActiveMacroGoal(
         theme: theme,
         sizes: sizes,
@@ -51,7 +58,8 @@ class ActiveMacroGoal extends StatelessWidget {
     return CurrentMacroGoal(
       theme: theme,
       sizes: sizes,
-      goal: activeGoal!,
+      goal: activeGoal,
+      isLoading: isLoading || activeGoal == null,
       onEditGoal: onEditGoal,
     );
   }
