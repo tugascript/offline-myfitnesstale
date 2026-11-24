@@ -304,9 +304,7 @@ class _MacroTrackerScreenState extends State<MacroTrackerScreen> {
     if (justLoaded) {
       if (state.activeGoal == null) {
         _deferredInitialLogLoad = false;
-        if (widget.isVisible && !state.isLoadingActiveGoal) {
-          _scheduleGoalPromptIfNeeded(state);
-        }
+        _scheduleGoalPromptIfNeeded(state);
         return;
       }
       if (!_deferredInitialLogLoad) return;
@@ -320,9 +318,18 @@ class _MacroTrackerScreenState extends State<MacroTrackerScreen> {
         if (_scope != TrackerScope.day) {
           setState(() => _scope = TrackerScope.day);
         }
+        _scheduleGoalPromptIfNeeded(state);
         return;
       }
       _reconcileIfVisible(state);
+      return;
+    }
+
+    if (state.hasLoadedActiveGoal &&
+        state.activeGoal == null &&
+        !state.isLoadingActiveGoal &&
+        !state.isLoading) {
+      _scheduleGoalPromptIfNeeded(state);
     }
   }
 
@@ -349,6 +356,8 @@ class _MacroTrackerScreenState extends State<MacroTrackerScreen> {
           (!previous.hasLoadedActiveGoal && current.hasLoadedActiveGoal) ||
           (previous.hasLoadedActiveGoal &&
               (previous.activeGoal == null) != (current.activeGoal == null)) ||
+          (previous.isLoading && !current.isLoading) ||
+          (previous.isLoadingActiveGoal && !current.isLoadingActiveGoal) ||
           previous.error != current.error,
       listener: (context, state) => _onStateChanged(context, state, sizes),
       buildWhen: (previous, current) =>

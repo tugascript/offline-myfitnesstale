@@ -2831,6 +2831,34 @@ void main() {
         expect(find.byType(SnackBar), findsNothing);
       },
     );
+
+    testWidgets(
+      'MacroTrackerScreen opens pending goal prompt once unrelated cubit loading finishes',
+      (tester) async {
+        final macroCubit = _TestMacroTrackingCubit(
+          hasLoadedActiveGoal: true,
+          returnActiveGoalOnLoad: false,
+        );
+        addTearDown(macroCubit.close);
+
+        // Simulate an unrelated cubit call (e.g. getMacroGoals) in flight.
+        macroCubit.emit(macroCubit.state.copyWith(isLoading: true));
+
+        await tester.pumpWidget(
+          buildAppHarness(
+            macroCubit: macroCubit,
+            child: const MacroTrackerScreen(goalPromptTrigger: 1),
+          ),
+        );
+        await tester.pump();
+        expect(find.byType(MacroGoalFormModal), findsNothing);
+
+        // Once the unrelated call completes, the pending prompt should open.
+        macroCubit.emit(macroCubit.state.copyWith(isLoading: false));
+        await tester.pumpAndSettle();
+        expect(find.byType(MacroGoalFormModal), findsOneWidget);
+      },
+    );
   });
 
   group('Responsive Narrow and Scaled Layouts', () {
