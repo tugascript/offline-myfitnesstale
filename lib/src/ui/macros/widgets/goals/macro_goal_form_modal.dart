@@ -128,7 +128,9 @@ class _MacroGoalFormModalState extends State<MacroGoalFormModal> {
                         Icons.close,
                         size: widget.sizes.buttonIconSize,
                       ),
-                      onPressed: () => Navigator.of(context).pop(),
+                      onPressed: _isSubmitting
+                          ? null
+                          : () => Navigator.of(context).pop(),
                     ),
                   ],
                 ),

@@ -59,9 +59,9 @@ class MacroTrackerWeekWidget extends StatelessWidget {
         );
 
         return ListView.separated(
-          shrinkWrap: true,
+          padding: EdgeInsets.symmetric(vertical: sizes.halfSpacing),
           itemCount: 7,
-          separatorBuilder: (_, _) => SizedBox(height: sizes.quarterSpacing),
+          separatorBuilder: (_, _) => SizedBox(height: sizes.halfSpacing),
           itemBuilder: (context, index) {
             final dayDate = DateTime(
               startOfWeek.year,
@@ -80,50 +80,42 @@ class MacroTrackerWeekWidget extends StatelessWidget {
             final isSelectedDay =
                 !isOutOfRange && DateUtils.isSameDay(dayDate, selectedDate);
 
-            return Padding(
-              padding: EdgeInsets.fromLTRB(
-                0,
-                index == 0 ? sizes.halfSpacing : sizes.quarterSpacing,
-                0,
-                index == 6 ? sizes.halfSpacing : sizes.quarterSpacing,
-              ),
-              child: Card(
-                color: isSelectedDay
-                    ? theme.primaryColor.withValues(alpha: 0.1)
-                    : null,
-                margin: EdgeInsets.zero,
-                child: Opacity(
-                  opacity: isOutOfRange ? 0.5 : 1,
-                  child: ListTile(
-                    enabled: !isOutOfRange,
-                    title: Text(
-                      _dayFormat.format(dayDate),
-                      style: TextStyle(
-                        fontSize: sizes.fontSize,
-                        fontWeight: FontWeight.bold,
-                        color: isOutOfRange ? theme.disabledColor : null,
-                      ),
+            return Card(
+              color: isSelectedDay
+                  ? theme.primaryColor.withValues(alpha: 0.1)
+                  : null,
+              margin: EdgeInsets.zero,
+              child: Opacity(
+                opacity: isOutOfRange ? 0.5 : 1,
+                child: ListTile(
+                  enabled: !isOutOfRange,
+                  title: Text(
+                    _dayFormat.format(dayDate),
+                    style: TextStyle(
+                      fontSize: sizes.fontSize,
+                      fontWeight: FontWeight.bold,
+                      color: isOutOfRange ? theme.disabledColor : null,
                     ),
-                    subtitle: Text(
-                      log != null
-                          ? '${log.totalCalories}${targetCal != null ? ' / $targetCal' : ''} kcal • P: ${log.totalProtein}g C: ${log.totalCarbs}g F: ${log.totalFat}g'
-                          : 'No foods logged${targetCal != null ? ' • Target: $targetCal kcal' : ''}',
-                      style: TextStyle(
-                        fontSize: sizes.fontSize * 0.85,
-                        color: isOutOfRange
-                            ? theme.disabledColor
-                            : Colors.grey[600],
-                      ),
-                    ),
-                    trailing: isOutOfRange
-                        ? null
-                        : Icon(Icons.chevron_right, size: sizes.buttonIconSize),
-                    onTap: isOutOfRange
-                        ? null
-                        : () {
-                            onSelectDate(dayDate);
-                          },
                   ),
+                  subtitle: Text(
+                    log != null
+                        ? '${log.totalCalories}${targetCal != null ? ' / $targetCal' : ''} kcal • P: ${log.totalProtein}g C: ${log.totalCarbs}g F: ${log.totalFat}g'
+                        : 'No foods logged${targetCal != null ? ' • Target: $targetCal kcal' : ''}',
+                    style: TextStyle(
+                      fontSize: sizes.fontSize * 0.85,
+                      color: isOutOfRange
+                          ? theme.disabledColor
+                          : Colors.grey[600],
+                    ),
+                  ),
+                  trailing: isOutOfRange
+                      ? null
+                      : Icon(Icons.chevron_right, size: sizes.buttonIconSize),
+                  onTap: isOutOfRange
+                      ? null
+                      : () {
+                          onSelectDate(dayDate);
+                        },
                 ),
               ),
             );

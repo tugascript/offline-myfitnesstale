@@ -15,19 +15,7 @@
 // You should have received a copy of the GNU General Public License
 // along with My Fitness Tale.  If not, see <https://www.gnu.org/licenses/>.
 
-final class StateData {
-  final bool hasActiveGoal;
-  final bool hasError;
-  final bool hasLoadedActiveGoal;
-  final bool isLoadingActiveGoal;
-
-  const StateData({
-    required this.hasActiveGoal,
-    required this.hasError,
-    required this.hasLoadedActiveGoal,
-    required this.isLoadingActiveGoal,
-  });
-}
+import '../view_models/states/macro_tracking_state.dart';
 
 enum TrackerBodyStates {
   activeGoal,
@@ -35,20 +23,15 @@ enum TrackerBodyStates {
   waitingForGoal,
   noGoal;
 
-  factory TrackerBodyStates.fromState(StateData state) {
-    final hasInitialGoalError =
-        !state.hasActiveGoal && !state.hasLoadedActiveGoal && state.hasError;
-    final isWaitingForGoal =
-        !state.hasLoadedActiveGoal && state.isLoadingActiveGoal;
-
-    if (state.hasActiveGoal) {
+  factory TrackerBodyStates.fromState(MacroTrackingState state) {
+    if (state.activeGoal != null) {
       return TrackerBodyStates.activeGoal;
     }
-    if (isWaitingForGoal) {
+    if (!state.hasLoadedActiveGoal) {
+      if (state.error != null && !state.isLoadingActiveGoal) {
+        return TrackerBodyStates.initialGoalError;
+      }
       return TrackerBodyStates.waitingForGoal;
-    }
-    if (hasInitialGoalError) {
-      return TrackerBodyStates.initialGoalError;
     }
 
     return TrackerBodyStates.noGoal;
