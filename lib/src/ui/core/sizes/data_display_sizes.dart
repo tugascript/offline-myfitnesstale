@@ -52,6 +52,8 @@ final class DataDisplaySizesList {
 
   double get thirdPadding => padding / 3;
 
+  double get doublePadding => padding * 2;
+
   double get halfSpacing => spacing / 2;
 
   double get quarterSpacing => spacing / 4;
@@ -59,6 +61,8 @@ final class DataDisplaySizesList {
   double get betweenSpacing => spacing * 1.25;
 
   double get doubleSpacing => spacing * 2;
+
+  double get doubleTitleFontSize => titleFontSize * 2;
 
   double get mainTitleFontSize => titleFontSize * 1.25;
 
