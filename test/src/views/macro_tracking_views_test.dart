@@ -246,8 +246,26 @@ class _TestMacroTrackingCubit extends MacroTrackingCubit {
     }
   }
 
+  String? createGoalError;
+
   @override
   Future<bool> createMacroGoal(WeekMacroGoalInput input) async {
+    if (createGoalError != null) {
+      if (!isClosed) {
+        emit(
+          state.copyWith(
+            isLoading: false,
+            error: Nullable(
+              ErrorState(
+                type: 'operationFailure',
+                description: createGoalError!,
+              ),
+            ),
+          ),
+        );
+      }
+      return false;
+    }
     createdGoals.add(input);
     if (!isClosed) {
       emit(
@@ -2778,6 +2796,39 @@ void main() {
         setHostState(() => isVisible = true);
         await tester.pumpAndSettle();
         expect(find.byType(MacroGoalFormModal), findsNothing);
+      },
+    );
+
+    testWidgets(
+      'MacroTrackerScreen does not show duplicate SnackBar when MacroGoalFormModal submit fails',
+      (tester) async {
+        final macroCubit = _TestMacroTrackingCubit(
+          hasLoadedActiveGoal: true,
+          returnActiveGoalOnLoad: false,
+        )..createGoalError = 'Failed to persist goal';
+        addTearDown(macroCubit.close);
+
+        await tester.pumpWidget(
+          buildAppHarness(
+            macroCubit: macroCubit,
+            child: const MacroTrackerScreen(goalPromptTrigger: 1),
+          ),
+        );
+        await tester.pumpAndSettle();
+        expect(find.byType(MacroGoalFormModal), findsOneWidget);
+
+        final submit = find.byKey(const ValueKey('macro-goal-submit-button'));
+        await tester.ensureVisible(submit);
+        await tester.tap(submit);
+        await tester.pumpAndSettle();
+
+        expect(find.byType(MacroGoalFormModal), findsOneWidget);
+        expect(
+          find.byKey(const ValueKey('macro-goal-submit-error')),
+          findsOneWidget,
+        );
+        expect(find.text('Failed to persist goal'), findsOneWidget);
+        expect(find.byType(SnackBar), findsNothing);
       },
     );
   });

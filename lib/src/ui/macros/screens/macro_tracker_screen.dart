@@ -289,7 +289,7 @@ class _MacroTrackerScreenState extends State<MacroTrackerScreen> {
         state.hasLoadedActiveGoal &&
         !state.isLoading) {
       _lastShownError = state.error;
-      if (widget.isVisible) {
+      if (widget.isVisible && !_isGoalModalOpen) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
