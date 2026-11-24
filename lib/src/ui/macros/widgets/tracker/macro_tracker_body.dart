@@ -111,7 +111,7 @@ class MacroTrackerBody extends StatelessWidget {
       padding: EdgeInsets.all(sizes.viewPadding),
       child: MacroTrackerPlaceholder(
         sizes: sizes,
-        isLoading: state.isLoading,
+        isLoading: state.isLoadingActiveGoal,
         onCreateGoal: onCreateGoal,
       ),
     ),
