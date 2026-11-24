@@ -15,11 +15,14 @@
 // You should have received a copy of the GNU General Public License
 // along with My Fitness Tale.  If not, see <https://www.gnu.org/licenses/>.
 
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../core/sizes/data_display_sizes.dart';
 import '../../core/sizes/screen_size.dart';
 import '../../core/widgets/layout/app_scaffold.dart';
+import '../view_models/states/weight_record_state.dart';
+import '../view_models/weight_record_cubit.dart';
 import '../widgets/goal/active/active_weight_goal.dart';
 import '../widgets/goal/editor/create_weight_goal_modal.dart';
 import '../widgets/goal/history/weight_goal_history.dart';
@@ -36,16 +39,30 @@ class WeightGoalScreen extends StatelessWidget {
     final sizes = DataDisplaySizes.getDataDisplaySizes(breakpoints.screenSize);
     return AppScaffold(
       title: "Weight Goals",
-      body: Padding(
-        padding: EdgeInsets.all(sizes.viewPadding),
-        child: Column(
-          children: [
-            ActiveWeightGoal(sizes: sizes, theme: theme),
-            SizedBox(height: sizes.spacing * 2),
-            Expanded(
-              child: WeightGoalHistory(sizes: sizes, theme: theme),
-            ),
-          ],
+      body: BlocListener<WeightRecordCubit, WeightRecordState>(
+        listenWhen: (previous, current) =>
+            current.error != null && current.error != previous.error,
+        listener: (context, state) {
+          if (state.error != null) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(state.error!.description),
+                backgroundColor: theme.colorScheme.error,
+              ),
+            );
+          }
+        },
+        child: Padding(
+          padding: EdgeInsets.all(sizes.viewPadding),
+          child: Column(
+            children: [
+              ActiveWeightGoal(sizes: sizes, theme: theme),
+              SizedBox(height: sizes.spacing * 2),
+              Expanded(
+                child: WeightGoalHistory(sizes: sizes, theme: theme),
+              ),
+            ],
+          ),
         ),
       ),
       floatingActionButton: FloatingActionButton(

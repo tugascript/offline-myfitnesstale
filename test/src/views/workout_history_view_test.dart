@@ -25,15 +25,23 @@ import 'package:myfitnesstale/src/data/models/sqlite/workout_record_model.dart';
 import 'package:myfitnesstale/src/data/repositories/profile/dtos/profile_dto.dart';
 import 'package:myfitnesstale/src/data/repositories/profile/dtos/system_dto.dart';
 import 'package:myfitnesstale/src/data/repositories/profile/profile_repository.dart';
+import 'package:myfitnesstale/src/data/repositories/workouts/dtos/workout_record_dto.dart';
 import 'package:myfitnesstale/src/data/repositories/workouts/workout_record_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/workouts/workout_repository.dart';
 import 'package:myfitnesstale/src/data/utils/enums.dart';
+import 'package:myfitnesstale/src/data/utils/json_data.dart';
 import 'package:myfitnesstale/src/routing/routes.dart';
+import 'package:myfitnesstale/src/ui/core/sizes/data_display_sizes.dart';
+import 'package:myfitnesstale/src/ui/core/sizes/screen_size.dart';
 import 'package:myfitnesstale/src/ui/home/view_models/profile_cubit.dart';
 import 'package:myfitnesstale/src/ui/home/view_models/states/profile_state.dart';
 import 'package:myfitnesstale/src/ui/workouts/screens/workout_history_screen.dart';
 import 'package:myfitnesstale/src/ui/workouts/view_models/workout_cubit.dart';
 import 'package:myfitnesstale/src/ui/workouts/view_models/workout_record_cubit.dart';
+import 'package:myfitnesstale/src/ui/workouts/widgets/progress/history/empty_workout_record.dart';
+import 'package:myfitnesstale/src/ui/workouts/widgets/progress/history/latest_workout_record.dart';
+import 'package:myfitnesstale/src/ui/workouts/widgets/progress/history/latest_workout_record_card.dart';
+import 'package:myfitnesstale/src/utils/nullable.dart';
 
 import '../../support/test_database.dart';
 
@@ -75,6 +83,12 @@ class _SpyWorkoutRecordCubit extends WorkoutRecordCubit {
 
   final List<({int? workoutId, bool skipSkipped})> latestCalls = [];
   final List<({int? workoutId, bool? skipSkipped})> listCalls = [];
+
+  void seedLatestRecord(WorkoutRecordDto? record) {
+    emit(
+      state.copyWith(latestWorkoutRecord: Nullable(record), isLoading: false),
+    );
+  }
 
   @override
   Future<void> getLatestWorkoutRecord({
@@ -238,6 +252,68 @@ void main() {
       expect(cubit.state.pagination.skipSkipped, isTrue);
       expect(find.text('No workout records'), findsOneWidget);
       expect(find.text('Empty history'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'LatestWorkoutRecord refetches on workoutId change and ignores mismatched cached record',
+    (tester) async {
+      final spyCubit = _SpyWorkoutRecordCubit();
+      addTearDown(spyCubit.close);
+      spyCubit.seedLatestRecord(
+        WorkoutRecordDto(
+          id: 10,
+          workoutId: 1,
+          version: 1,
+          currentSetPosition: 0,
+          currentSetNumber: 1,
+          currentExercisePosition: 0,
+          totalSets: 3,
+          totalReps: 30,
+          totalRestSecs: 90,
+          totalVolume: 1500000,
+          muscles: const TargetMuscles(primary: {}, secondary: {}),
+          startedAt: DateTime(2026, 3, 1),
+          completedAt: DateTime(2026, 3, 1, 0, 30),
+        ),
+      );
+
+      Widget buildWidget(int workoutId) {
+        final sizes = DataDisplaySizes.getDataDisplaySizes(ScreenSize.xs);
+        return BlocProvider<WorkoutRecordCubit>.value(
+          value: spyCubit,
+          child: MaterialApp(
+            home: Scaffold(
+              body: Builder(
+                builder: (context) => LatestWorkoutRecord(
+                  sizes: sizes,
+                  theme: Theme.of(context),
+                  units: Units.metric,
+                  workoutId: workoutId,
+                  workoutVersion: 1,
+                ),
+              ),
+            ),
+          ),
+        );
+      }
+
+      await tester.pumpWidget(buildWidget(1));
+      await tester.pump();
+
+      expect(spyCubit.latestCalls, [(workoutId: 1, skipSkipped: true)]);
+      expect(find.byType(LatestWorkoutRecordCard), findsOneWidget);
+      expect(find.byType(EmptyWorkoutRecord), findsNothing);
+
+      await tester.pumpWidget(buildWidget(2));
+      await tester.pump();
+
+      expect(spyCubit.latestCalls, [
+        (workoutId: 1, skipSkipped: true),
+        (workoutId: 2, skipSkipped: true),
+      ]);
+      expect(find.byType(LatestWorkoutRecordCard), findsNothing);
+      expect(find.byType(EmptyWorkoutRecord), findsOneWidget);
     },
   );
 }

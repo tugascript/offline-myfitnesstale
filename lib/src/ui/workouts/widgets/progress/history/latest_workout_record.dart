@@ -56,10 +56,27 @@ class _LatestWorkoutRecordState extends State<LatestWorkoutRecord> {
   }
 
   @override
+  void didUpdateWidget(covariant LatestWorkoutRecord oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.workoutId != widget.workoutId) {
+      context.read<WorkoutRecordCubit>().getLatestWorkoutRecord(
+        workoutId: widget.workoutId,
+        skipSkipped: true,
+      );
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return BlocBuilder<WorkoutRecordCubit, WorkoutRecordState>(
       builder: (context, state) {
-        if (!state.isLoading && state.latestWorkoutRecord == null) {
+        final record = state.latestWorkoutRecord;
+        final matchingRecord =
+            (widget.workoutId != null && record?.workoutId != widget.workoutId)
+            ? null
+            : record;
+
+        if (!state.isLoading && matchingRecord == null) {
           return EmptyWorkoutRecord(
             sizes: widget.sizes,
             isLoading: state.isLoading,
@@ -75,7 +92,7 @@ class _LatestWorkoutRecordState extends State<LatestWorkoutRecord> {
           isLoading: state.isLoading,
           workoutId: widget.workoutId,
           workoutVersion: widget.workoutVersion,
-          workoutRecord: state.latestWorkoutRecord,
+          workoutRecord: matchingRecord,
         );
       },
     );

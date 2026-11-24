@@ -43,15 +43,31 @@ class WeightRecordCubit extends Cubit<WeightRecordState> {
     if (result.isErr()) {
       final error = result.error;
       _logger.warning("Failed to get active weight goal", error);
-      emit(
-        state.copyWith(
-          error: Nullable(
-            ErrorState(type: error.type.name, description: error.description),
-          ),
-          isLoading: false,
-        ),
-      );
-      return;
+      switch (error.type) {
+        case SingleErrorTypes.notFound:
+          emit(
+            state.copyWith(
+              activeWeightGoal: const Nullable(null),
+              isLoading: false,
+              error: const Nullable(null),
+            ),
+          );
+          return;
+        case SingleErrorTypes.invalidInput:
+        case SingleErrorTypes.operationFailure:
+          emit(
+            state.copyWith(
+              error: Nullable(
+                ErrorState(
+                  type: error.type.name,
+                  description: error.description,
+                ),
+              ),
+              isLoading: false,
+            ),
+          );
+          return;
+      }
     }
 
     _logger.info("Active weight goal retrieved successfully");
