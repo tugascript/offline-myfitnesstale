@@ -224,4 +224,47 @@ void main() {
     expect(find.text('Mon, Tue, Wed, Thu, Fri'), findsOneWidget);
     expect(find.text('Sat, Sun'), findsOneWidget);
   });
+
+  testWidgets(
+    'loading active macro goal skeleton fits at 320px and 200% text',
+    (tester) async {
+      await pumpNarrow(
+        tester,
+        ActiveMacroGoal(
+          sizes: sizes,
+          theme: ThemeData(),
+          activeGoal: null,
+          isLoading: true,
+          hasLoaded: false,
+        ),
+      );
+      expect(find.text('No active macro goal'), findsNothing);
+      expect(find.text('Active Macro Target'), findsOneWidget);
+
+      await pumpNarrow(
+        tester,
+        ActiveMacroGoal(
+          sizes: sizes,
+          theme: ThemeData(),
+          activeGoal: null,
+          isLoading: false,
+          hasLoaded: false,
+        ),
+      );
+      expect(find.text('No active macro goal'), findsNothing);
+      expect(find.text('Active Macro Target'), findsOneWidget);
+
+      await pumpNarrow(
+        tester,
+        ActiveMacroGoal(
+          sizes: sizes,
+          theme: ThemeData(),
+          activeGoal: null,
+          isLoading: false,
+          hasLoaded: true,
+        ),
+      );
+      expect(find.text('No active macro goal'), findsOneWidget);
+    },
+  );
 }

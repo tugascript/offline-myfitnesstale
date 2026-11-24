@@ -57,6 +57,8 @@ import 'package:myfitnesstale/src/ui/macros/screens/macro_tracker_screen.dart';
 import 'package:myfitnesstale/src/ui/macros/utils/tacker_scope.dart';
 import 'package:myfitnesstale/src/ui/macros/utils/tracker_body_states.dart';
 import 'package:myfitnesstale/src/ui/macros/view_models/states/macro_tracking_state.dart';
+import 'package:myfitnesstale/src/ui/macros/widgets/goals/current_macro_goal.dart';
+import 'package:myfitnesstale/src/ui/macros/widgets/goals/empty_active_macro_goal.dart';
 import 'package:myfitnesstale/src/ui/macros/widgets/goals/macro_goal_form_modal.dart';
 import 'package:myfitnesstale/src/ui/macros/widgets/tracker/macro_tracker_date_navigator.dart';
 import 'package:myfitnesstale/src/ui/macros/widgets/tracker/macro_tracker_day_widget.dart';
@@ -3112,6 +3114,91 @@ void main() {
         await tester.tap(find.byKey(const ValueKey('macro-tracker-prev-btn')));
         await tester.pumpAndSettle();
         expect(find.text('Diary load failed'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'MacroGoalsScreen hides empty state during active goal load and shows skeleton until loaded',
+      (tester) async {
+        final loadCompleter = Completer<void>();
+        final macroCubit = _TestMacroTrackingCubit(
+          activeGoalCompleter: loadCompleter,
+          returnActiveGoalOnLoad: true,
+        );
+        addTearDown(macroCubit.close);
+
+        await tester.pumpWidget(
+          buildAppHarness(
+            macroCubit: macroCubit,
+            child: const MacroGoalsScreen(),
+          ),
+        );
+        await tester.pump();
+
+        expect(find.byType(EmptyActiveMacroGoal), findsNothing);
+        expect(find.text('No active macro goal'), findsNothing);
+        expect(find.byType(CurrentMacroGoal), findsOneWidget);
+        expect(
+          find.descendant(
+            of: find.byType(CurrentMacroGoal),
+            matching: find.byWidgetPredicate(
+              (w) => w is Skeletonizer && w.enabled,
+            ),
+          ),
+          findsOneWidget,
+        );
+
+        loadCompleter.complete();
+        await tester.pumpAndSettle();
+
+        expect(find.byType(EmptyActiveMacroGoal), findsNothing);
+        expect(find.byType(CurrentMacroGoal), findsOneWidget);
+        expect(
+          find.descendant(
+            of: find.byType(CurrentMacroGoal),
+            matching: find.byWidgetPredicate(
+              (w) => w is Skeletonizer && !w.enabled,
+            ),
+          ),
+          findsOneWidget,
+        );
+        expect(find.textContaining('Daily Target'), findsOneWidget);
+
+        macroCubit.completeActiveGoalLoad(withGoal: false);
+        await tester.pumpAndSettle();
+
+        expect(find.byType(EmptyActiveMacroGoal), findsOneWidget);
+        expect(find.text('No active macro goal'), findsOneWidget);
+
+        macroCubit.beginActiveGoalLoad();
+        await tester.pump();
+        await tester.pump();
+
+        expect(find.byType(EmptyActiveMacroGoal), findsNothing);
+        expect(
+          find.descendant(
+            of: find.byType(CurrentMacroGoal),
+            matching: find.byWidgetPredicate(
+              (w) => w is Skeletonizer && w.enabled,
+            ),
+          ),
+          findsOneWidget,
+        );
+
+        macroCubit.failActiveGoalLoad('Active goal load failed');
+        await tester.pumpAndSettle();
+
+        expect(
+          find.descendant(
+            of: find.byType(CurrentMacroGoal),
+            matching: find.byWidgetPredicate(
+              (w) => w is Skeletonizer && w.enabled,
+            ),
+          ),
+          findsNothing,
+        );
+        expect(find.byType(SnackBar), findsOneWidget);
+        expect(find.text('Active goal load failed'), findsOneWidget);
       },
     );
   });
