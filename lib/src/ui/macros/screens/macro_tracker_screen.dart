@@ -36,8 +36,9 @@ import '../widgets/tracker/macro_tracker_scope_selection.dart';
 class MacroTrackerScreen extends StatefulWidget {
   static const name = 'macro_tracker';
   final bool isVisible;
+  final DateTime Function()? now;
 
-  const MacroTrackerScreen({super.key, this.isVisible = true});
+  const MacroTrackerScreen({super.key, this.isVisible = true, this.now});
 
   @override
   State<MacroTrackerScreen> createState() => _MacroTrackerScreenState();
@@ -45,7 +46,8 @@ class MacroTrackerScreen extends StatefulWidget {
 
 class _MacroTrackerScreenState extends State<MacroTrackerScreen> {
   TrackerScope _scope = TrackerScope.day;
-  DateTime _selectedDate = DateTime.now();
+  late DateTime _selectedDate;
+  bool _hasCustomSelectedDate = false;
   late final PageController _pageController;
   int? _animatingToPage;
   int _animationToken = 0;
@@ -54,10 +56,14 @@ class _MacroTrackerScreenState extends State<MacroTrackerScreen> {
   int _periodLoadToken = 0;
   int _rangeLoadToken = 0;
   bool _deferredInitialLogLoad = false;
+  bool _hasMountedListeners = false;
+
+  DateTime _currentNow() => widget.now?.call() ?? DateTime.now();
 
   @override
   void initState() {
     super.initState();
+    _selectedDate = _currentNow();
     _pageController = PageController(initialPage: _scope.index);
     _reconcileTrackerData(
       retryFailedGoal: widget.isVisible,
@@ -69,6 +75,18 @@ class _MacroTrackerScreenState extends State<MacroTrackerScreen> {
   void didUpdateWidget(MacroTrackerScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.isVisible && !oldWidget.isVisible) {
+      final currentNow = _currentNow();
+      final today = DateUtils.dateOnly(currentNow);
+      final minDate = _minDate(today);
+      if (!_hasCustomSelectedDate &&
+          !DateUtils.isSameDay(_selectedDate, today)) {
+        _selectedDate = currentNow;
+      } else if (DateUtils.dateOnly(_selectedDate).isBefore(minDate)) {
+        _selectedDate = minDate;
+      } else if (DateUtils.dateOnly(_selectedDate).isAfter(today)) {
+        _selectedDate = currentNow;
+        _hasCustomSelectedDate = false;
+      }
       _reconcileTrackerData(
         retryFailedGoal: true,
         retryFailedMealPlanRecord: true,
@@ -90,9 +108,17 @@ class _MacroTrackerScreenState extends State<MacroTrackerScreen> {
       _syncActiveMealPlan(recordState.activeRecord);
     } else if (!recordState.isLoading &&
         (recordState.error == null || retryFailedRecord)) {
-      recordCubit.getActiveMealPlanRecord().then((_) {
+      final previousRecord = recordState.activeRecord;
+      final loadFuture = recordCubit.getActiveMealPlanRecord();
+      final changedBeforeListenerMount =
+          !_hasMountedListeners &&
+          recordCubit.state.activeRecord != previousRecord;
+      loadFuture.then((_) {
         if (!mounted) return;
-        _syncActiveMealPlan(recordCubit.state.activeRecord);
+        final latestRecord = recordCubit.state.activeRecord;
+        if (changedBeforeListenerMount || latestRecord == previousRecord) {
+          _syncActiveMealPlan(latestRecord);
+        }
       });
     }
   }
@@ -151,8 +177,11 @@ class _MacroTrackerScreenState extends State<MacroTrackerScreen> {
     if (!mounted || periodToken != _periodLoadToken) return;
 
     final macroState = macroCubit.state;
-    if (macroState.selectedDailyLog == null ||
-        !DateUtils.isSameDay(macroState.selectedDate, _selectedDate)) {
+    final needsDailyLog =
+        macroState.selectedDailyLog == null ||
+        (widget.isVisible &&
+            !DateUtils.isSameDay(macroState.selectedDate, _selectedDate));
+    if (needsDailyLog) {
       macroCubit.getDailyLog(_selectedDate);
     }
     if (rangeToken != null &&
@@ -310,7 +339,7 @@ class _MacroTrackerScreenState extends State<MacroTrackerScreen> {
     _reconcileAndLoadSettledScope();
   }
 
-  DateTime get _today => DateUtils.dateOnly(DateTime.now());
+  DateTime get _today => DateUtils.dateOnly(_currentNow());
 
   DateTime _minDate(DateTime today) =>
       MacroTrackerDateNavigator.defaultFirstDate(today);
@@ -398,6 +427,7 @@ class _MacroTrackerScreenState extends State<MacroTrackerScreen> {
     }
     setState(() {
       _selectedDate = prevDate;
+      _hasCustomSelectedDate = !DateUtils.isSameDay(prevDate, today);
     });
     _loadPeriodData();
   }
@@ -430,6 +460,7 @@ class _MacroTrackerScreenState extends State<MacroTrackerScreen> {
     }
     setState(() {
       _selectedDate = nextDate;
+      _hasCustomSelectedDate = !DateUtils.isSameDay(nextDate, today);
     });
     _loadPeriodData();
   }
@@ -441,19 +472,22 @@ class _MacroTrackerScreenState extends State<MacroTrackerScreen> {
     if (pickedDate.isAfter(today) || pickedDate.isBefore(minDate)) return;
     setState(() {
       _selectedDate = pickedDate;
+      _hasCustomSelectedDate = !DateUtils.isSameDay(pickedDate, today);
     });
     _loadPeriodData();
   }
 
   void _goToToday() {
     setState(() {
-      _selectedDate = DateTime.now();
+      _selectedDate = _currentNow();
+      _hasCustomSelectedDate = false;
     });
     _loadPeriodData();
   }
 
   @override
   Widget build(BuildContext context) {
+    _hasMountedListeners = true;
     final theme = Theme.of(context);
     final breakpoints = BreakPoint.fromContext(context);
     final sizes = DataDisplaySizes.getDataDisplaySizes(breakpoints.screenSize);
@@ -477,13 +511,16 @@ class _MacroTrackerScreenState extends State<MacroTrackerScreen> {
             _deferredInitialLogLoad = false;
             final latest = context.read<MacroTrackingCubit>().state;
             if (latest.isLoadingActiveGoal) return;
-            if (latest.selectedDailyLog == null ||
-                !DateUtils.isSameDay(latest.selectedDate, _selectedDate) ||
-                _scope != TrackerScope.day) {
+            final needsDailyLog =
+                latest.selectedDailyLog == null ||
+                (widget.isVisible &&
+                    !DateUtils.isSameDay(latest.selectedDate, _selectedDate));
+            final needsRange = widget.isVisible && _scope != TrackerScope.day;
+            if (needsDailyLog || needsRange) {
               _reconcileTrackerData(
                 retryFailedGoal: false,
                 retryFailedMealPlanRecord: false,
-                reconcileRange: _scope != TrackerScope.day,
+                reconcileRange: needsRange,
               );
             }
           },
@@ -569,6 +606,7 @@ class _MacroTrackerScreenState extends State<MacroTrackerScreen> {
     if (targetDate.isAfter(today) || targetDate.isBefore(minDate)) return;
     setState(() {
       _selectedDate = targetDate;
+      _hasCustomSelectedDate = !DateUtils.isSameDay(targetDate, today);
       _scope = TrackerScope.day;
     });
     _animateToScope(TrackerScope.day);
