@@ -50,7 +50,7 @@ class _ActiveWeightGoalState extends State<ActiveWeightGoal> {
   Widget build(BuildContext context) {
     return BlocBuilder<WeightRecordCubit, WeightRecordState>(
       builder: (context, state) {
-        if (state.activeWeightGoal == null) {
+        if (!state.isLoading && state.activeWeightGoal == null) {
           return EmptyWeightGoal(theme: widget.theme, sizes: widget.sizes);
         }
 

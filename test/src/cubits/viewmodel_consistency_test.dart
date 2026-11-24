@@ -698,6 +698,11 @@ void main() {
         expect(cubit.state.error, isNull);
         expect(cubit.state.activeWeightGoal?.targetWeight, 74000);
         expect(cubit.state.weightGoals, hasLength(1));
+
+        await cubit.deleteWeightGoal(cubit.state.activeWeightGoal!.id);
+        await cubit.getActiveWeightGoal();
+        expect(cubit.state.activeWeightGoal, isNull);
+        expect(cubit.state.error, isNull);
       },
     );
 
