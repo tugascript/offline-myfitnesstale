@@ -19,6 +19,8 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../../../data/repositories/macros/dtos/macro_tracking_dto.dart';
 import '../../../core/sizes/data_display_sizes.dart';
+import '../../../core/widgets/layout/app_text_button.dart';
+import '../../../core/widgets/layout/empty_card.dart';
 import './current_macro_goal.dart';
 import './empty_active_macro_goal.dart';
 
@@ -31,6 +33,7 @@ class ActiveMacroGoal extends StatelessWidget {
   final bool hasError;
   final VoidCallback? onCreateGoal;
   final ValueChanged<MacroGoalDto>? onEditGoal;
+  final VoidCallback? onRetry;
 
   const ActiveMacroGoal({
     super.key,
@@ -42,11 +45,32 @@ class ActiveMacroGoal extends StatelessWidget {
     this.hasError = false,
     this.onCreateGoal,
     this.onEditGoal,
+    this.onRetry,
   });
 
   @override
   Widget build(BuildContext context) {
-    final isWaitingForActiveGoal = isLoading || (!hasLoaded && !hasError);
+    if (!isLoading && hasError && activeGoal == null) {
+      return EmptyCard(
+        sizes: sizes,
+        emoji: '⚠️',
+        emptyText: 'Could not load active macro goal',
+        actions: [
+          if (onRetry != null)
+            AppTextButton(
+              key: const ValueKey('macro-goal-retry-button'),
+              isLoading: false,
+              sizes: sizes,
+              isDense: true,
+              label: 'Retry',
+              icon: Icons.refresh,
+              onPressed: onRetry,
+            ),
+        ],
+      );
+    }
+
+    final isWaitingForActiveGoal = isLoading || !hasLoaded;
     if (activeGoal == null && !isWaitingForActiveGoal) {
       return EmptyActiveMacroGoal(
         theme: theme,

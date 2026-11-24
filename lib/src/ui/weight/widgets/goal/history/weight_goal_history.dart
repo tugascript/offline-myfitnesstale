@@ -67,7 +67,7 @@ class _WeightGoalHistoryState extends State<WeightGoalHistory> {
   void _onScroll() {
     if (_isBottom) {
       final cubit = context.read<WeightRecordCubit>();
-      if (!cubit.state.isLoading &&
+      if (!cubit.state.isLoadingGoals &&
           cubit.state.goalPagination.total > cubit.state.weightGoals.length) {
         final pagination = cubit.state.goalPagination;
         cubit.getWeightGoals(
@@ -90,7 +90,7 @@ class _WeightGoalHistoryState extends State<WeightGoalHistory> {
   Widget build(BuildContext context) {
     return BlocBuilder<WeightRecordCubit, WeightRecordState>(
       builder: (context, weightState) {
-        if (!weightState.isLoading && weightState.weightGoals.isEmpty) {
+        if (!weightState.isLoadingGoals && weightState.weightGoals.isEmpty) {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -134,11 +134,12 @@ class _WeightGoalHistoryState extends State<WeightGoalHistory> {
             Expanded(
               child: Skeletonizer(
                 enabled:
-                    weightState.isLoading && weightState.weightGoals.isEmpty,
+                    weightState.isLoadingGoals &&
+                    weightState.weightGoals.isEmpty,
                 child: BlocBuilder<ProfileCubit, ProfileState>(
                   builder: (context, state) {
                     final stateIsLoading =
-                        weightState.isLoading &&
+                        weightState.isLoadingGoals &&
                         weightState.weightGoals.isEmpty;
                     return ListView.builder(
                       controller: _scrollController,

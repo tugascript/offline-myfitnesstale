@@ -51,6 +51,7 @@ final class MacroTrackingState extends Equatable {
   final bool isLoadingActiveGoal;
   final bool isLoading;
   final ErrorState? error;
+  final ErrorState? activeGoalError;
 
   const MacroTrackingState({
     this.goalsRequestId = 0,
@@ -64,6 +65,7 @@ final class MacroTrackingState extends Equatable {
     this.isLoadingActiveGoal = false,
     required this.isLoading,
     this.error,
+    this.activeGoalError,
   });
 
   factory MacroTrackingState.initial() {
@@ -91,6 +93,7 @@ final class MacroTrackingState extends Equatable {
     bool? isLoadingActiveGoal,
     bool? isLoading,
     Nullable<ErrorState>? error,
+    Nullable<ErrorState>? activeGoalError,
   }) {
     return MacroTrackingState(
       goalsRequestId: goalsRequestId ?? this.goalsRequestId,
@@ -106,6 +109,9 @@ final class MacroTrackingState extends Equatable {
       isLoadingActiveGoal: isLoadingActiveGoal ?? this.isLoadingActiveGoal,
       isLoading: isLoading ?? this.isLoading,
       error: error != null ? error.value : this.error,
+      activeGoalError: activeGoalError != null
+          ? activeGoalError.value
+          : this.activeGoalError,
     );
   }
 
@@ -128,5 +134,6 @@ final class MacroTrackingState extends Equatable {
     isLoadingActiveGoal,
     isLoading,
     error,
+    activeGoalError,
   ];
 }

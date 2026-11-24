@@ -59,7 +59,13 @@ class MacroTrackingCubit extends Cubit<MacroTrackingState> {
   Future<void> _loadActiveMacroGoal() async {
     _logger.info('Getting active macro goal');
     final activeRequestId = ++_activeGoalRequestId;
-    emit(state.copyWith(isLoading: true, isLoadingActiveGoal: true));
+    emit(
+      state.copyWith(
+        isLoading: true,
+        isLoadingActiveGoal: true,
+        activeGoalError: const Nullable(null),
+      ),
+    );
 
     final result = await _macroService.getActiveMacroGoal();
     if (isClosed || activeRequestId != _activeGoalRequestId) return;
@@ -72,18 +78,22 @@ class MacroTrackingCubit extends Cubit<MacroTrackingState> {
             hasLoadedActiveGoal: true,
             isLoadingActiveGoal: false,
             isLoading: false,
+            activeGoalError: const Nullable(null),
             error: const Nullable(null),
           ),
         );
       } else {
         _logger.warning('Failed to load active entity', error);
+        final errorState = ErrorState(
+          type: error.type.name,
+          description: error.description,
+        );
         emit(
           state.copyWith(
             isLoadingActiveGoal: false,
             isLoading: false,
-            error: Nullable(
-              ErrorState(type: error.type.name, description: error.description),
-            ),
+            activeGoalError: Nullable(errorState),
+            error: Nullable(errorState),
           ),
         );
       }
@@ -96,6 +106,7 @@ class MacroTrackingCubit extends Cubit<MacroTrackingState> {
         hasLoadedActiveGoal: true,
         isLoadingActiveGoal: false,
         isLoading: false,
+        activeGoalError: const Nullable(null),
         error: const Nullable(null),
       ),
     );
@@ -204,6 +215,7 @@ class MacroTrackingCubit extends Cubit<MacroTrackingState> {
       state.copyWith(
         isLoading: true,
         isLoadingActiveGoal: true,
+        activeGoalError: const Nullable(null),
         error: const Nullable(null),
       ),
     );
@@ -281,6 +293,7 @@ class MacroTrackingCubit extends Cubit<MacroTrackingState> {
 
     Nullable<MacroGoalDto>? activeGoal;
     bool? hasLoadedActiveGoal;
+    Nullable<ErrorState>? activeGoalError;
     ErrorState? error;
 
     if (activeIsCurrent) {
@@ -288,6 +301,7 @@ class MacroTrackingCubit extends Cubit<MacroTrackingState> {
         if (activeResult.error.type == SingleErrorTypes.notFound) {
           activeGoal = const Nullable(null);
           hasLoadedActiveGoal = true;
+          activeGoalError = const Nullable(null);
         } else {
           _logger.warning('Failed to load active entity', activeResult.error);
           error = ErrorState(
@@ -297,11 +311,15 @@ class MacroTrackingCubit extends Cubit<MacroTrackingState> {
           if (savedGoal != null && savedGoal.isActive) {
             activeGoal = Nullable(savedGoal);
             hasLoadedActiveGoal = true;
+            activeGoalError = const Nullable(null);
+          } else {
+            activeGoalError = Nullable(error);
           }
         }
       } else {
         activeGoal = Nullable(activeResult.value);
         hasLoadedActiveGoal = true;
+        activeGoalError = const Nullable(null);
       }
     }
 
@@ -332,6 +350,7 @@ class MacroTrackingCubit extends Cubit<MacroTrackingState> {
             historyIsCurrent && (activeIsCurrent || !state.isLoadingActiveGoal)
             ? false
             : null,
+        activeGoalError: activeGoalError,
         error: (activeIsCurrent && historyIsCurrent) || error != null
             ? Nullable(error)
             : null,

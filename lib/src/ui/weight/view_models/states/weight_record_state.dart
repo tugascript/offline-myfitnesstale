@@ -106,6 +106,7 @@ final class WeightGoalPaginationState extends Equatable {
 final class WeightRecordState extends Equatable {
   final int recordsRequestId;
   final int goalsRequestId;
+  final int activeGoalRequestId;
   final List<WeightRecordDto> weightRecords;
   final WeightRecordDto? selectedWeightRecord;
   final WeightRecordDto? latestWeightRecord;
@@ -114,12 +115,19 @@ final class WeightRecordState extends Equatable {
   final WeightGoalDto? selectedWeightGoal;
   final WeightGoalDto? activeWeightGoal;
   final WeightGoalPaginationState goalPagination;
-  final bool isLoading;
+  final bool _isLoading;
+  final bool isLoadingActiveGoal;
+  final bool hasLoadedActiveGoal;
+  final bool isLoadingGoals;
   final ErrorState? error;
+  final ErrorState? activeGoalError;
+
+  bool get isLoading => _isLoading || isLoadingActiveGoal || isLoadingGoals;
 
   const WeightRecordState({
     this.recordsRequestId = 0,
     this.goalsRequestId = 0,
+    this.activeGoalRequestId = 0,
     required this.weightRecords,
     this.selectedWeightRecord,
     this.latestWeightRecord,
@@ -128,8 +136,12 @@ final class WeightRecordState extends Equatable {
     this.selectedWeightGoal,
     this.activeWeightGoal,
     required this.goalPagination,
-    required this.isLoading,
+    required this._isLoading,
+    this.isLoadingActiveGoal = false,
+    this.hasLoadedActiveGoal = false,
+    this.isLoadingGoals = false,
     this.error,
+    this.activeGoalError,
   });
 
   factory WeightRecordState.initial() {
@@ -145,6 +157,7 @@ final class WeightRecordState extends Equatable {
   WeightRecordState copyWith({
     int? recordsRequestId,
     int? goalsRequestId,
+    int? activeGoalRequestId,
     List<WeightRecordDto>? weightRecords,
     Nullable<WeightRecordDto>? selectedWeightRecord,
     Nullable<WeightRecordDto>? latestWeightRecord,
@@ -154,11 +167,16 @@ final class WeightRecordState extends Equatable {
     Nullable<WeightGoalDto>? activeWeightGoal,
     WeightGoalPaginationState? goalPagination,
     bool? isLoading,
+    bool? isLoadingActiveGoal,
+    bool? hasLoadedActiveGoal,
+    bool? isLoadingGoals,
     Nullable<ErrorState>? error,
+    Nullable<ErrorState>? activeGoalError,
   }) {
     return WeightRecordState(
       recordsRequestId: recordsRequestId ?? this.recordsRequestId,
       goalsRequestId: goalsRequestId ?? this.goalsRequestId,
+      activeGoalRequestId: activeGoalRequestId ?? this.activeGoalRequestId,
       weightRecords: weightRecords ?? this.weightRecords,
       selectedWeightRecord: selectedWeightRecord != null
           ? selectedWeightRecord.value
@@ -175,8 +193,14 @@ final class WeightRecordState extends Equatable {
           ? activeWeightGoal.value
           : this.activeWeightGoal,
       goalPagination: goalPagination ?? this.goalPagination,
-      isLoading: isLoading ?? this.isLoading,
+      isLoading: isLoading ?? _isLoading,
+      isLoadingActiveGoal: isLoadingActiveGoal ?? this.isLoadingActiveGoal,
+      hasLoadedActiveGoal: hasLoadedActiveGoal ?? this.hasLoadedActiveGoal,
+      isLoadingGoals: isLoadingGoals ?? this.isLoadingGoals,
       error: error != null ? error.value : this.error,
+      activeGoalError: activeGoalError != null
+          ? activeGoalError.value
+          : this.activeGoalError,
     );
   }
 
@@ -184,6 +208,7 @@ final class WeightRecordState extends Equatable {
   List<Object?> get props => [
     recordsRequestId,
     goalsRequestId,
+    activeGoalRequestId,
     weightRecords,
     selectedWeightRecord,
     latestWeightRecord,
@@ -192,7 +217,11 @@ final class WeightRecordState extends Equatable {
     selectedWeightGoal,
     activeWeightGoal,
     goalPagination,
-    isLoading,
+    _isLoading,
+    isLoadingActiveGoal,
+    hasLoadedActiveGoal,
+    isLoadingGoals,
     error,
+    activeGoalError,
   ];
 }

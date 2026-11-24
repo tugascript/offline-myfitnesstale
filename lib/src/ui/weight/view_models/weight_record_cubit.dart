@@ -38,8 +38,16 @@ class WeightRecordCubit extends Cubit<WeightRecordState> {
 
   Future<void> getActiveWeightGoal() async {
     _logger.info("Getting active weight goal");
-    emit(state.copyWith(isLoading: true));
+    final requestId = state.activeGoalRequestId + 1;
+    emit(
+      state.copyWith(
+        activeGoalRequestId: requestId,
+        isLoadingActiveGoal: true,
+        activeGoalError: const Nullable(null),
+      ),
+    );
     final result = await _weightRecordService.getActiveWeightGoal();
+    if (isClosed || requestId != state.activeGoalRequestId) return;
     if (result.isErr()) {
       final error = result.error;
       _logger.warning("Failed to get active weight goal", error);
@@ -48,22 +56,26 @@ class WeightRecordCubit extends Cubit<WeightRecordState> {
           emit(
             state.copyWith(
               activeWeightGoal: const Nullable(null),
-              isLoading: false,
+              hasLoadedActiveGoal: true,
+              isLoadingActiveGoal: false,
+              activeGoalError: const Nullable(null),
               error: const Nullable(null),
             ),
           );
           return;
         case SingleErrorTypes.invalidInput:
         case SingleErrorTypes.operationFailure:
+          final errorState = ErrorState(
+            type: error.type.name,
+            description: error.description,
+          );
           emit(
             state.copyWith(
-              error: Nullable(
-                ErrorState(
-                  type: error.type.name,
-                  description: error.description,
-                ),
-              ),
-              isLoading: false,
+              activeWeightGoal: const Nullable(null),
+              hasLoadedActiveGoal: false,
+              isLoadingActiveGoal: false,
+              activeGoalError: Nullable(errorState),
+              error: Nullable(errorState),
             ),
           );
           return;
@@ -74,8 +86,10 @@ class WeightRecordCubit extends Cubit<WeightRecordState> {
     emit(
       state.copyWith(
         activeWeightGoal: Nullable(result.value),
-        isLoading: false,
-        error: Nullable(null),
+        hasLoadedActiveGoal: true,
+        isLoadingActiveGoal: false,
+        activeGoalError: const Nullable(null),
+        error: const Nullable(null),
       ),
     );
   }
@@ -84,6 +98,7 @@ class WeightRecordCubit extends Cubit<WeightRecordState> {
     _logger.info("Creating weight goal");
     emit(state.copyWith(isLoading: true));
     final result = await _weightRecordService.createWeightGoal(input);
+    if (isClosed) return;
     if (result.isErr()) {
       final error = result.error;
       _logger.warning("Failed to create weight goal", error);
@@ -118,16 +133,25 @@ class WeightRecordCubit extends Cubit<WeightRecordState> {
     }
 
     final weightGoal = result.value;
+    final updatesActiveGoal = weightGoal.status == ProgressStatus.inProgress;
     final weighGoalsResult = await _weightRecordService.getWeightGoals(
       skipInProgress: state.goalPagination.skipInProgress,
       limit: state.goalPagination.limit,
       offset: 0,
     );
+    if (isClosed) return;
     if (weighGoalsResult.isErr()) {
       final error = weighGoalsResult.error;
       _logger.warning("Failed to get weight goals", error);
       emit(
         state.copyWith(
+          activeGoalRequestId: updatesActiveGoal
+              ? state.activeGoalRequestId + 1
+              : null,
+          activeWeightGoal: updatesActiveGoal ? Nullable(weightGoal) : null,
+          hasLoadedActiveGoal: updatesActiveGoal ? true : null,
+          isLoadingActiveGoal: updatesActiveGoal ? false : null,
+          activeGoalError: updatesActiveGoal ? const Nullable(null) : null,
           error: Nullable(
             ErrorState(type: error.type.name, description: error.description),
           ),
@@ -140,18 +164,22 @@ class WeightRecordCubit extends Cubit<WeightRecordState> {
 
     emit(
       state.copyWith(
+        activeGoalRequestId: updatesActiveGoal
+            ? state.activeGoalRequestId + 1
+            : null,
         weightGoals: weighGoals.data,
         selectedWeightGoal: Nullable(weightGoal),
-        activeWeightGoal: weightGoal.status == ProgressStatus.inProgress
-            ? Nullable(weightGoal)
-            : null,
+        activeWeightGoal: updatesActiveGoal ? Nullable(weightGoal) : null,
+        hasLoadedActiveGoal: updatesActiveGoal ? true : null,
+        isLoadingActiveGoal: updatesActiveGoal ? false : null,
+        activeGoalError: updatesActiveGoal ? const Nullable(null) : null,
         goalPagination: state.goalPagination.copyWith(
           total: weighGoals.total,
           limit: weighGoals.limit,
           offset: weighGoals.offset,
         ),
         isLoading: false,
-        error: Nullable(null),
+        error: const Nullable(null),
       ),
     );
   }
@@ -159,6 +187,7 @@ class WeightRecordCubit extends Cubit<WeightRecordState> {
   Future<void> updateWeightGoal(int id, WeightGoalInput input) async {
     emit(state.copyWith(isLoading: true));
     final result = await _weightRecordService.updateWeightGoal(id, input);
+    if (isClosed) return;
     if (result.isErr()) {
       final error = result.error;
       _logger.warning("Failed to update weight goal", error);
@@ -194,16 +223,31 @@ class WeightRecordCubit extends Cubit<WeightRecordState> {
     }
 
     final weightGoal = result.value;
+    final updatesActiveGoal =
+        weightGoal.status == ProgressStatus.inProgress ||
+        state.activeWeightGoal?.id == weightGoal.id;
     final weighGoalsResult = await _weightRecordService.getWeightGoals(
       skipInProgress: state.goalPagination.skipInProgress,
       limit: state.goalPagination.limit,
       offset: 0,
     );
+    if (isClosed) return;
     if (weighGoalsResult.isErr()) {
       final error = weighGoalsResult.error;
       _logger.warning("Failed to get weight goals", error);
       emit(
         state.copyWith(
+          activeGoalRequestId: updatesActiveGoal
+              ? state.activeGoalRequestId + 1
+              : null,
+          activeWeightGoal: weightGoal.status == ProgressStatus.inProgress
+              ? Nullable(weightGoal)
+              : state.activeWeightGoal?.id == weightGoal.id
+              ? const Nullable(null)
+              : null,
+          hasLoadedActiveGoal: updatesActiveGoal ? true : null,
+          isLoadingActiveGoal: updatesActiveGoal ? false : null,
+          activeGoalError: updatesActiveGoal ? const Nullable(null) : null,
           error: Nullable(
             ErrorState(type: error.type.name, description: error.description),
           ),
@@ -216,6 +260,9 @@ class WeightRecordCubit extends Cubit<WeightRecordState> {
 
     emit(
       state.copyWith(
+        activeGoalRequestId: updatesActiveGoal
+            ? state.activeGoalRequestId + 1
+            : null,
         weightGoals: weighGoals.data,
         selectedWeightGoal: Nullable(weightGoal),
         activeWeightGoal: weightGoal.status == ProgressStatus.inProgress
@@ -223,13 +270,16 @@ class WeightRecordCubit extends Cubit<WeightRecordState> {
             : state.activeWeightGoal?.id == weightGoal.id
             ? const Nullable(null)
             : null,
+        hasLoadedActiveGoal: updatesActiveGoal ? true : null,
+        isLoadingActiveGoal: updatesActiveGoal ? false : null,
+        activeGoalError: updatesActiveGoal ? const Nullable(null) : null,
         goalPagination: state.goalPagination.copyWith(
           total: weighGoals.total,
           limit: weighGoals.limit,
           offset: weighGoals.offset,
         ),
         isLoading: false,
-        error: Nullable(null),
+        error: const Nullable(null),
       ),
     );
   }
@@ -238,6 +288,7 @@ class WeightRecordCubit extends Cubit<WeightRecordState> {
     emit(state.copyWith(isLoading: true));
 
     final result = await _weightRecordService.deleteWeightGoal(id);
+    if (isClosed) return;
     if (result.isErr()) {
       final error = result.error;
       switch (error.type) {
@@ -271,15 +322,22 @@ class WeightRecordCubit extends Cubit<WeightRecordState> {
       }
     }
 
+    final deletedActiveGoal = state.activeWeightGoal?.id == id;
     emit(
       state.copyWith(
+        activeGoalRequestId: deletedActiveGoal
+            ? state.activeGoalRequestId + 1
+            : null,
         weightGoals: state.weightGoals.where((g) => g.id != id).toList(),
         selectedWeightGoal: Nullable(
           state.selectedWeightGoal?.id == id ? null : state.selectedWeightGoal,
         ),
         activeWeightGoal: Nullable(
-          state.activeWeightGoal?.id == id ? null : state.activeWeightGoal,
+          deletedActiveGoal ? null : state.activeWeightGoal,
         ),
+        hasLoadedActiveGoal: deletedActiveGoal ? true : null,
+        isLoadingActiveGoal: deletedActiveGoal ? false : null,
+        activeGoalError: deletedActiveGoal ? const Nullable(null) : null,
         goalPagination: state.goalPagination.copyWith(
           total: state.goalPagination.total > 0
               ? state.goalPagination.total - 1
@@ -297,7 +355,7 @@ class WeightRecordCubit extends Cubit<WeightRecordState> {
     int offset = kDefaultOffset,
   }) async {
     final requestId = state.goalsRequestId + 1;
-    emit(state.copyWith(goalsRequestId: requestId, isLoading: true));
+    emit(state.copyWith(goalsRequestId: requestId, isLoadingGoals: true));
     final result = await _weightRecordService.getWeightGoals(
       skipInProgress: skipInProgress,
       limit: limit,
@@ -312,7 +370,7 @@ class WeightRecordCubit extends Cubit<WeightRecordState> {
           error: Nullable(
             ErrorState(type: error.type.name, description: error.description),
           ),
-          isLoading: false,
+          isLoadingGoals: false,
         ),
       );
       return;
@@ -332,7 +390,7 @@ class WeightRecordCubit extends Cubit<WeightRecordState> {
           offset: weightPagination.offset,
           skipInProgress: skipInProgress,
         ),
-        isLoading: false,
+        isLoadingGoals: false,
         error: const Nullable(null),
       ),
     );

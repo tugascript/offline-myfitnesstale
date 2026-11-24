@@ -108,10 +108,14 @@ class _MacroGoalsScreenState extends State<MacroGoalsScreen> {
                   activeGoal: state.activeGoal,
                   isLoading: state.isLoadingActiveGoal,
                   hasLoaded: state.hasLoadedActiveGoal,
-                  hasError: state.error != null,
+                  hasError:
+                      state.activeGoalError != null ||
+                      (!state.hasLoadedActiveGoal && state.error != null),
                   onCreateGoal: () => _openGoalModal(theme, sizes),
                   onEditGoal: (goal) =>
                       _openGoalModal(theme, sizes, existingGoal: goal),
+                  onRetry: () =>
+                      context.read<MacroTrackingCubit>().getActiveMacroGoal(),
                 ),
                 SizedBox(height: sizes.spacing * 2),
                 MacroGoalHistory(
