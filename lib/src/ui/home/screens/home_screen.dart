@@ -77,7 +77,7 @@ class _HomeScreenState extends State<HomeScreen> {
     if (!_hasAttemptedMacroLoad) {
       final macroCubit = context.read<MacroTrackingCubit>();
       final macroState = macroCubit.state;
-      if (!macroState.isLoading &&
+      if (!macroState.isLoadingActiveGoal &&
           !macroState.hasLoadedActiveGoal &&
           macroState.activeGoal == null) {
         _hasAttemptedMacroLoad = true;
@@ -188,7 +188,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         !macroState.hasLoadedActiveGoal &&
                         macroState.error != null &&
                         macroState.activeGoal == null &&
-                        !macroState.isLoading;
+                        !macroState.isLoadingActiveGoal;
                     final hasActiveLoadError = hasWorkoutError || hasMacroError;
 
                     final isProfileSkeleton =
@@ -200,7 +200,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         workoutPlanState.currentPlanRecord.workoutPlan == null;
                     final isNutritionSkeleton =
                         !macroState.hasLoadedActiveGoal &&
-                        macroState.isLoading &&
+                        macroState.isLoadingActiveGoal &&
                         macroState.activeGoal == null;
                     final isLoading =
                         isProfileSkeleton ||
