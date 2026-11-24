@@ -110,6 +110,18 @@ Future<void> _visitBottomNavigation(
   for (final entry in destinations.entries) {
     await harness.selectBottomNavigation(tester, entry.key);
     await harness.pumpUntilFound(tester, find.textContaining(entry.value));
+    if (entry.key == 'Macros') {
+      await harness.pumpUntilFound(tester, find.text('Create Macro Goal'));
+      expect(
+        find.byKey(const ValueKey('macro-goal-recommended-note')),
+        findsOneWidget,
+      );
+      await harness.tapAndWait(
+        tester,
+        control: find.byKey(const ValueKey('macro-goal-modal-close-btn')),
+        destination: find.text('No Active Macro Goal'),
+      );
+    }
     expect(find.textContaining('Not Found'), findsNothing);
   }
 }

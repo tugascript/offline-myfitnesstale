@@ -28,12 +28,14 @@ import '../../../core/widgets/icons_switch.dart';
 import '../../../core/widgets/layout/app_elevated_button.dart';
 import '../../../core/widgets/layout/app_text_form_field.dart';
 import '../../../core/widgets/layout/responsive_fields.dart';
+import '../../utils/macro_goal_form_defaults.dart';
 import './macro_goal_day_group_card.dart';
 
 class MacroGoalForm extends StatefulWidget {
   final ThemeData theme;
   final DataDisplaySizesList sizes;
   final MacroGoalDto? existingGoal;
+  final MacroGoalFormDefaults? defaults;
   final bool isLoading;
   final String? submitLabel;
   final IconData? submitIcon;
@@ -44,6 +46,7 @@ class MacroGoalForm extends StatefulWidget {
     required this.theme,
     required this.sizes,
     this.existingGoal,
+    this.defaults,
     this.isLoading = false,
     this.submitLabel,
     this.submitIcon,
@@ -80,13 +83,14 @@ class _MacroGoalFormState extends State<MacroGoalForm> {
   void initState() {
     super.initState();
     final g = widget.existingGoal;
+    final d = widget.defaults;
     final goalType = g?.goalType ?? MacroGoalType.flat;
-    final name = g?.name ?? 'Daily Target';
-    final calories = g?.targetCalories ?? 2000;
-    final protein = g?.targetProtein ?? 150;
-    final carbs = g?.targetCarbs ?? 200;
-    final fat = g?.targetFat ?? 65;
-    final water = g?.targetWaterIntakeMl ?? 2500;
+    final name = g?.name ?? d?.name ?? 'Daily Target';
+    final calories = g?.targetCalories ?? d?.targetCalories ?? 2000;
+    final protein = g?.targetProtein ?? d?.targetProtein ?? 150;
+    final carbs = g?.targetCarbs ?? d?.targetCarbs ?? 200;
+    final fat = g?.targetFat ?? d?.targetFat ?? 65;
+    final water = g?.targetWaterIntakeMl ?? d?.targetWaterIntakeMl ?? 2500;
     bool calcFromMacros = true;
     if (g != null) {
       calcFromMacros =
@@ -95,6 +99,14 @@ class _MacroGoalFormState extends State<MacroGoalForm> {
             protein: g.targetProtein,
             carbs: g.targetCarbs,
             fats: g.targetFat,
+          );
+    } else if (d?.targetCalories != null) {
+      calcFromMacros =
+          calories ==
+          Converters.macrosToCalories(
+            protein: protein,
+            carbs: carbs,
+            fats: fat,
           );
     }
 
@@ -117,7 +129,9 @@ class _MacroGoalFormState extends State<MacroGoalForm> {
     _carbsController = TextEditingController(text: _data.carbs.toString());
     _fatController = TextEditingController(text: _data.fat.toString());
     _waterController = TextEditingController(
-      text: g?.targetWaterIntakeMl?.toString() ?? '2500',
+      text: g != null
+          ? (g.targetWaterIntakeMl?.toString() ?? '2500')
+          : (d?.targetWaterIntakeMl?.toString() ?? '2500'),
     );
 
     for (final controller in [
@@ -171,15 +185,21 @@ class _MacroGoalFormState extends State<MacroGoalForm> {
     }
     _data.dayGroups.clear();
     _data.cyclingGroupsCustomized = false;
+    final defaultProtein = widget.defaults?.targetProtein ?? 150;
+    final defaultCarbs = widget.defaults?.targetCarbs ?? 200;
+    final defaultFat = widget.defaults?.targetFat ?? 65;
     final baseProtein = _proteinController.text.isNotEmpty
         ? _proteinController.text
-        : '150';
+        : defaultProtein.toString();
     final baseCarbs = _carbsController.text.isNotEmpty
         ? _carbsController.text
-        : '200';
-    final baseFat = _fatController.text.isNotEmpty ? _fatController.text : '65';
+        : defaultCarbs.toString();
+    final baseFat = _fatController.text.isNotEmpty
+        ? _fatController.text
+        : defaultFat.toString();
     final baseWater = _waterController.text;
-    final weekendCarbs = ((int.tryParse(baseCarbs) ?? 200) + 50).toString();
+    final weekendCarbs = ((int.tryParse(baseCarbs) ?? defaultCarbs) + 50)
+        .toString();
     final existingDay =
         widget.existingGoal != null && widget.existingGoal!.days.length == 1
         ? widget.existingGoal!.days.first
@@ -323,26 +343,33 @@ class _MacroGoalFormState extends State<MacroGoalForm> {
     setState(() {
       _data.cyclingGroupsCustomized = true;
       _dayValidationError = null;
+      final defaultCalories = (widget.defaults?.targetCalories ?? 2000)
+          .toString();
+      final defaultProtein = (widget.defaults?.targetProtein ?? 150).toString();
+      final defaultCarbs = (widget.defaults?.targetCarbs ?? 200).toString();
+      final defaultFat = (widget.defaults?.targetFat ?? 65).toString();
       _data.dayGroups.add(
         DayGroupFormState(
           calories:
               sourceGroup?.caloriesController.text ??
               (_caloriesController.text.isNotEmpty
                   ? _caloriesController.text
-                  : '2000'),
+                  : defaultCalories),
           protein:
               sourceGroup?.proteinController.text ??
               (_proteinController.text.isNotEmpty
                   ? _proteinController.text
-                  : '150'),
+                  : defaultProtein),
           carbs:
               sourceGroup?.carbsController.text ??
               (_carbsController.text.isNotEmpty
                   ? _carbsController.text
-                  : '200'),
+                  : defaultCarbs),
           fat:
               sourceGroup?.fatController.text ??
-              (_fatController.text.isNotEmpty ? _fatController.text : '65'),
+              (_fatController.text.isNotEmpty
+                  ? _fatController.text
+                  : defaultFat),
           water: sourceGroup?.waterController.text ?? _waterController.text,
           days: initialDays,
           preservedFiber:

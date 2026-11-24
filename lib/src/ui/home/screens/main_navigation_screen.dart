@@ -46,13 +46,20 @@ sealed class _PageBuilder {
 
   static final Map<int, Widget> _builtPages = {};
 
-  static Widget getPage(int index, {required bool isVisible}) {
+  static Widget getPage(
+    int index, {
+    required bool isVisible,
+    int macroGoalPromptTrigger = 0,
+  }) {
     // Rebuild visibility-aware tabs so their cached State sees tab activation.
     if (index == 1) {
       return CurrentWorkoutPlanScreen(isVisible: isVisible);
     }
     if (index == 2) {
-      return MacroTrackerScreen(isVisible: isVisible);
+      return MacroTrackerScreen(
+        isVisible: isVisible,
+        goalPromptTrigger: macroGoalPromptTrigger,
+      );
     }
     if (_builtPages.containsKey(index)) {
       return _builtPages[index]!;
@@ -81,6 +88,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   static const Duration _warmUpStepDelay = Duration(milliseconds: 150);
 
   int _currentIndex = 0;
+  int _macroTabTapCount = 0;
   final Set<int> _visitedIndices = {0};
   Timer? _warmUpTimer;
   bool _warmUpStarted = false;
@@ -202,6 +210,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
                   child: _PageBuilder.getPage(
                     index,
                     isVisible: activeIndex == index,
+                    macroGoalPromptTrigger: _macroTabTapCount,
                   ),
                 );
               }
@@ -217,6 +226,9 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
               setState(() {
                 _visitedIndices.add(index);
                 _currentIndex = index;
+                if (index == 2) {
+                  _macroTabTapCount++;
+                }
               });
             },
             selectedItemColor: Theme.of(context).primaryColor,
