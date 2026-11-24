@@ -181,6 +181,8 @@ class _TestMealPlanRecordCubit extends MealPlanRecordCubit {
   _TestMealPlanRecordCubit({
     bool hasLoadedActiveRecord = false,
     MealPlanRecordDto? activeRecord,
+    this.recordToEmitOnLoad,
+    this.activeRecordCompleter,
   }) : super(mealPlanRecordRepository: MealPlanRecordRepository.create()) {
     if (hasLoadedActiveRecord || activeRecord != null) {
       emit(
@@ -192,11 +194,26 @@ class _TestMealPlanRecordCubit extends MealPlanRecordCubit {
     }
   }
 
+  final MealPlanRecordDto? recordToEmitOnLoad;
+  final Completer<void>? activeRecordCompleter;
   int activeRecordCalls = 0;
 
   @override
   Future<void> getActiveMealPlanRecord() async {
     activeRecordCalls++;
+    final completer = activeRecordCompleter;
+    if (completer != null) {
+      await completer.future;
+    }
+    final record = recordToEmitOnLoad;
+    if (record != null && !isClosed) {
+      emit(
+        state.copyWith(
+          hasLoadedActiveRecord: true,
+          activeRecord: Nullable(record),
+        ),
+      );
+    }
   }
 }
 
@@ -308,8 +325,13 @@ class _TestMacroTrackingCubit extends MacroTrackingCubit {
     rangeLogCalls++;
   }
 
+  int waterUpdateCalls = 0;
+  int? lastWaterIntakeMl;
+
   @override
   Future<bool> updateWaterIntake(int waterIntakeMl, {DateTime? date}) async {
+    waterUpdateCalls++;
+    lastWaterIntakeMl = waterIntakeMl;
     lastWaterDate = date ?? state.selectedDate;
     return true;
   }
@@ -1455,6 +1477,393 @@ void main() {
         );
         expect(fab.tooltip, 'Log Food');
         expect(find.byTooltip('Log Food'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'MacroTrackerDayWidget disables water controls until loaded log matches selectedDate',
+      (tester) async {
+        final today = DateTime(2026, 11, 24);
+        final yesterday = DateTime(2026, 11, 23);
+        final macroCubit = _TestMacroTrackingCubit(hasLoadedActiveGoal: true);
+        final mealPlanRecordCubit = _TestMealPlanRecordCubit(
+          hasLoadedActiveRecord: true,
+        );
+        final mealPlanCubit = _TestMealPlanCubit();
+        final theme = ThemeData.light();
+        final sizes = DataDisplaySizes.getDataDisplaySizes(ScreenSize.md);
+        addTearDown(() async {
+          await macroCubit.close();
+          await mealPlanRecordCubit.close();
+          await mealPlanCubit.close();
+        });
+
+        // Seed yesterday's log while displaying today.
+        macroCubit.seedDailyLog(
+          yesterday,
+          const DailyNutritionLogDto(
+            id: 1,
+            date: 20261123,
+            waterIntakeMl: 1250,
+            totalCalories: 900,
+            totalProtein: 70,
+            totalCarbs: 90,
+            totalFat: 25,
+            totalFiber: 10,
+          ),
+        );
+
+        await tester.pumpWidget(
+          MultiBlocProvider(
+            providers: [
+              BlocProvider<MacroTrackingCubit>.value(value: macroCubit),
+              BlocProvider<MealPlanRecordCubit>.value(
+                value: mealPlanRecordCubit,
+              ),
+              BlocProvider<MealPlanCubit>.value(value: mealPlanCubit),
+            ],
+            child: MaterialApp(
+              home: Scaffold(
+                body: MacroTrackerDayWidget(
+                  theme: theme,
+                  sizes: sizes,
+                  selectedDate: today,
+                ),
+              ),
+            ),
+          ),
+        );
+        await tester.pump();
+
+        final waterCard = find.ancestor(
+          of: find.byIcon(Icons.water_drop),
+          matching: find.byType(Card),
+        );
+        final removeBtnFinder = find.descendant(
+          of: waterCard,
+          matching: find.ancestor(
+            of: find.byIcon(Icons.remove),
+            matching: find.byType(IconButton),
+          ),
+        );
+        final addBtnFinder = find.descendant(
+          of: waterCard,
+          matching: find.ancestor(
+            of: find.byIcon(Icons.add),
+            matching: find.byType(IconButton),
+          ),
+        );
+        expect(tester.widget<IconButton>(removeBtnFinder).onPressed, isNull);
+        expect(tester.widget<IconButton>(addBtnFinder).onPressed, isNull);
+        expect(find.text('Water: 0 / 2500 ml'), findsOneWidget);
+
+        await tester.tap(addBtnFinder);
+        await tester.tap(removeBtnFinder);
+        await tester.pump();
+        expect(macroCubit.waterUpdateCalls, 0);
+
+        // Once today's log loads, controls enable and apply adjustments to today's intake.
+        macroCubit.seedDailyLog(
+          today,
+          const DailyNutritionLogDto(
+            id: 2,
+            date: 20261124,
+            waterIntakeMl: 500,
+            totalCalories: 0,
+            totalProtein: 0,
+            totalCarbs: 0,
+            totalFat: 0,
+            totalFiber: 0,
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(tester.widget<IconButton>(removeBtnFinder).onPressed, isNotNull);
+        expect(tester.widget<IconButton>(addBtnFinder).onPressed, isNotNull);
+        expect(find.text('Water: 500 / 2500 ml'), findsOneWidget);
+
+        await tester.tap(addBtnFinder);
+        await tester.pump();
+        expect(macroCubit.waterUpdateCalls, 1);
+        expect(macroCubit.lastWaterIntakeMl, 750);
+        expect(DateUtils.isSameDay(macroCubit.lastWaterDate, today), isTrue);
+      },
+    );
+
+    testWidgets(
+      'MacroTrackerScreen rebases untouched Today across midnight while preserving custom date',
+      (tester) async {
+        var fakeNow = DateTime(2026, 11, 24, 23, 55);
+        final macroCubit = _TestMacroTrackingCubit(
+          hasLoadedActiveGoal: true,
+          updateStateOnDailyLog: true,
+        );
+        final mealPlanRecordCubit = _TestMealPlanRecordCubit(
+          hasLoadedActiveRecord: true,
+        );
+        final mealPlanCubit = _TestMealPlanCubit();
+        final isVisible = ValueNotifier<bool>(false);
+        final router = GoRouter(
+          initialLocation: '/',
+          routes: [
+            GoRoute(
+              path: '/',
+              builder: (context, state) => ValueListenableBuilder<bool>(
+                valueListenable: isVisible,
+                builder: (context, visible, _) =>
+                    MacroTrackerScreen(isVisible: visible, now: () => fakeNow),
+              ),
+            ),
+          ],
+        );
+        addTearDown(() async {
+          router.dispose();
+          isVisible.dispose();
+          await macroCubit.close();
+          await mealPlanRecordCubit.close();
+          await mealPlanCubit.close();
+        });
+
+        await tester.pumpWidget(
+          MultiBlocProvider(
+            providers: [
+              BlocProvider<MacroTrackingCubit>.value(value: macroCubit),
+              BlocProvider<MealPlanRecordCubit>.value(
+                value: mealPlanRecordCubit,
+              ),
+              BlocProvider<MealPlanCubit>.value(value: mealPlanCubit),
+            ],
+            child: MaterialApp.router(routerConfig: router),
+          ),
+        );
+        await tester.pump();
+
+        expect(macroCubit.dailyLogCalls, 1);
+        expect(
+          DateUtils.isSameDay(
+            macroCubit.lastDailyLogDate,
+            DateTime(2026, 11, 24),
+          ),
+          isTrue,
+        );
+
+        // Cross midnight and activate the warmed-up Macros tab -> untouched Today rebases to Nov 25.
+        fakeNow = DateTime(2026, 11, 25, 0, 5);
+        isVisible.value = true;
+        await tester.pumpAndSettle();
+
+        expect(macroCubit.dailyLogCalls, 2);
+        expect(
+          DateUtils.isSameDay(
+            macroCubit.lastDailyLogDate,
+            DateTime(2026, 11, 25),
+          ),
+          isTrue,
+        );
+
+        // Explicitly select yesterday (Nov 24), deactivate, cross midnight to Nov 26, and reactivate -> preserves Nov 24.
+        await tester.tap(find.byIcon(Icons.chevron_left));
+        await tester.pumpAndSettle();
+        expect(macroCubit.dailyLogCalls, 3);
+        expect(
+          DateUtils.isSameDay(
+            macroCubit.lastDailyLogDate,
+            DateTime(2026, 11, 24),
+          ),
+          isTrue,
+        );
+
+        isVisible.value = false;
+        await tester.pump();
+        fakeNow = DateTime(2026, 11, 26, 8, 0);
+        isVisible.value = true;
+        await tester.pumpAndSettle();
+
+        // Still on custom date Nov 24 (log already matches Nov 24, so no rebased fetch to Nov 26).
+        expect(macroCubit.dailyLogCalls, 3);
+        expect(
+          DateUtils.isSameDay(
+            macroCubit.state.selectedDate,
+            DateTime(2026, 11, 24),
+          ),
+          isTrue,
+        );
+      },
+    );
+
+    testWidgets(
+      'MacroTrackerScreen syncs active meal plan only once when active record loads from null',
+      (tester) async {
+        final today = DateUtils.dateOnly(DateTime.now());
+        final record = MealPlanRecordDto(
+          id: 1,
+          mealPlanId: 10,
+          mealPlanVersion: 1,
+          status: ProgressStatus.inProgress,
+          startedAt: today,
+          currentWeek: 1,
+          currentDay: 1,
+          planName: 'Active Plan',
+        );
+        final recordCompleter = Completer<void>();
+        final macroCubit = _TestMacroTrackingCubit(hasLoadedActiveGoal: true);
+        final mealPlanRecordCubit = _TestMealPlanRecordCubit(
+          hasLoadedActiveRecord: false,
+          recordToEmitOnLoad: record,
+          activeRecordCompleter: recordCompleter,
+        );
+        final mealPlanCubit = _TestMealPlanCubit();
+        final router = GoRouter(
+          initialLocation: '/',
+          routes: [
+            GoRoute(
+              path: '/',
+              builder: (context, state) => const MacroTrackerScreen(),
+            ),
+          ],
+        );
+        addTearDown(() async {
+          router.dispose();
+          await macroCubit.close();
+          await mealPlanRecordCubit.close();
+          await mealPlanCubit.close();
+        });
+
+        await tester.pumpWidget(
+          MultiBlocProvider(
+            providers: [
+              BlocProvider<MacroTrackingCubit>.value(value: macroCubit),
+              BlocProvider<MealPlanRecordCubit>.value(
+                value: mealPlanRecordCubit,
+              ),
+              BlocProvider<MealPlanCubit>.value(value: mealPlanCubit),
+            ],
+            child: MaterialApp.router(routerConfig: router),
+          ),
+        );
+        await tester.pump();
+        expect(mealPlanRecordCubit.activeRecordCalls, 1);
+        expect(mealPlanCubit.getActiveMealPlanCalls, 0);
+
+        recordCompleter.complete();
+        await tester.pump();
+
+        expect(mealPlanRecordCubit.activeRecordCalls, 1);
+        expect(mealPlanCubit.getActiveMealPlanCalls, 1);
+      },
+    );
+
+    testWidgets(
+      'MacroTrackerScreen offscreen warm-up does not overwrite a visible route selected diary date',
+      (tester) async {
+        final today = DateUtils.dateOnly(DateTime.now());
+        final yesterday = DateTime(today.year, today.month, today.day - 1);
+        final macroCubit = _TestMacroTrackingCubit(
+          hasLoadedActiveGoal: true,
+          updateStateOnDailyLog: true,
+        );
+        macroCubit.seedDailyLog(
+          yesterday,
+          DailyNutritionLogDto(
+            id: 55,
+            date:
+                yesterday.year * 10000 + yesterday.month * 100 + yesterday.day,
+            waterIntakeMl: 1000,
+            totalCalories: 700,
+            totalProtein: 50,
+            totalCarbs: 70,
+            totalFat: 20,
+            totalFiber: 8,
+          ),
+        );
+        final mealPlanRecordCubit = _TestMealPlanRecordCubit(
+          hasLoadedActiveRecord: true,
+        );
+        final mealPlanCubit = _TestMealPlanCubit();
+        final isVisible = ValueNotifier<bool>(false);
+        final router = GoRouter(
+          initialLocation: '/',
+          routes: [
+            GoRoute(
+              path: '/',
+              builder: (context, state) => ValueListenableBuilder<bool>(
+                valueListenable: isVisible,
+                builder: (context, visible, _) =>
+                    MacroTrackerScreen(isVisible: visible),
+              ),
+            ),
+          ],
+        );
+        addTearDown(() async {
+          router.dispose();
+          isVisible.dispose();
+          await macroCubit.close();
+          await mealPlanRecordCubit.close();
+          await mealPlanCubit.close();
+        });
+
+        await tester.pumpWidget(
+          MultiBlocProvider(
+            providers: [
+              BlocProvider<MacroTrackingCubit>.value(value: macroCubit),
+              BlocProvider<MealPlanRecordCubit>.value(
+                value: mealPlanRecordCubit,
+              ),
+              BlocProvider<MealPlanCubit>.value(value: mealPlanCubit),
+            ],
+            child: MaterialApp.router(routerConfig: router),
+          ),
+        );
+        await tester.pump();
+
+        // Hidden tab must not overwrite the visible route's yesterday diary.
+        expect(macroCubit.dailyLogCalls, 0);
+        expect(
+          DateUtils.isSameDay(macroCubit.state.selectedDate, yesterday),
+          isTrue,
+        );
+
+        // Once the tab becomes visible, it reconciles to today.
+        isVisible.value = true;
+        await tester.pumpAndSettle();
+
+        expect(macroCubit.dailyLogCalls, 1);
+        expect(DateUtils.isSameDay(macroCubit.lastDailyLogDate, today), isTrue);
+        expect(
+          DateUtils.isSameDay(macroCubit.state.selectedDate, today),
+          isTrue,
+        );
+      },
+    );
+
+    testWidgets(
+      'MacroTrackerScopeSelection buttons meet accessible minimum tap target height',
+      (tester) async {
+        for (final screenSize in [ScreenSize.xs, ScreenSize.md]) {
+          final sizes = DataDisplaySizes.getDataDisplaySizes(screenSize);
+          await tester.pumpWidget(
+            MaterialApp(
+              home: Scaffold(
+                body: MacroTrackerScopeSelection(
+                  sizes: sizes,
+                  theme: ThemeData.light(),
+                  scope: TrackerScope.day,
+                  onScopeChanged: (_) {},
+                  onGoToToday: () {},
+                ),
+              ),
+            ),
+          );
+          await tester.pump();
+
+          for (final label in ['Day', 'Week', 'Month']) {
+            final inkWell = find.ancestor(
+              of: find.text(label),
+              matching: find.byType(InkWell),
+            );
+            expect(tester.getSize(inkWell).height, greaterThanOrEqualTo(48.0));
+          }
+        }
       },
     );
 

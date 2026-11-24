@@ -318,37 +318,47 @@ above a keyboard inset.
   Dependency resolution, changed-file formatting, and `git diff --check` passed. Analysis reports one unrelated
   informational lint and no errors/warnings. The repository-wide format check flags 339 other files; no device journey
   was run.
-- Water intake: Updates daily water consumption with quick adjust controls.
+- Water intake: Updates daily water consumption with quick adjust controls; `MacroTrackerDayWidget` hides stale
+  previous-day values and disables both `-` and `+` water controls until `selectedDailyLog.date` matches
+  `selectedDate`.
 - Logging modal tabs (Food, Recipe, Quick Add) each occupy one third of the content width, with centered labels that
   wrap at large text scales. The selected underline spans the full tab width with square ends.
 - The Day/Week/Month scope selector (`MacroTrackerScopeSelection`) uses a square-cornered strip with an animated
   primary-colored bottom underline synchronized with horizontal `PageView` swipes across Day, Week, and Month views
-  (`MacroTackerScopeWidget`), replacing the filled segmented control. The `Today` shortcut sits inline when space
-  allows and wraps below on narrow widths or large text scales.
+  (`MacroTackerScopeWidget`), replacing the filled segmented control. Each scope button enforces an accessible minimum
+  tap target height (`DataDisplaySizesList.minTapTargetHeight`, at least 48dp while scaling up on larger breakpoints
+  and text scales). The `Today` shortcut sits inline when space allows and wraps below on narrow widths or large text
+  scales.
 - Tracker date navigation (`MacroTrackerDateNavigator`), the date picker, and Week/Month day lists are bounded to the
   preceding 365 days through today (`[today - 365 days, today]`): boundary chevrons and out-of-range days are disabled,
   period steps and picker initial dates are clamped into range, and nutrition records older than 365 days cannot be
   opened from the tracker UI.
 - `MacroTrackerScreen` reuses already-loaded active macro goal and meal-plan record state when available, serializes
   daily and range log queries behind a goal-specific completion signal (`MacroTrackingState.isLoadingActiveGoal`) so
-  targets do not briefly fall back to defaults or overwrite active-goal errors, reconciles daily log/range state and
-  retries active meal-plan sync whenever the warmed-up tab becomes visible, syncs the active meal plan into
-  `MealPlanState.activeMealPlan` via `MealPlanCubit.getActiveMealPlan` so offscreen warm-up never overwrites
-  `selectedMealPlan` used by meal-plan details/edit routes, and exposes a `'Log Food'` tooltip on its icon FAB for
-  screen-reader accessibility.
+  targets do not briefly fall back to defaults or overwrite active-goal errors, defers mismatched-date diary
+  reconciliation while offscreen so hidden tab warm-up cannot overwrite a visible `/macro-tracker` route's selected
+  date, rebases an untouched `Today` selection across midnight on tab activation while preserving explicit historical
+  dates (clamped into `[today - 365 days, today]`), avoids duplicate active meal-plan fetches when the active record
+  transitions from `null`, reconciles daily log/range state and retries active meal-plan sync whenever the warmed-up
+  tab becomes visible, syncs the active meal plan into `MealPlanState.activeMealPlan` via
+  `MealPlanCubit.getActiveMealPlan` so offscreen warm-up never overwrites `selectedMealPlan` used by meal-plan
+  details/edit routes, and exposes a `'Log Food'` tooltip on its icon FAB for screen-reader accessibility.
 - Validation on 15 October 2026: full host suite passed (315 tests, one skipped), including new persistence and timeline
   interaction coverage for same-hour/identical-time entries, midnight, historical dates, food/recipe logging, time
   adjustment, deletion, totals, and 320px/200% text. Dependency resolution and `git diff --check` passed. Analysis
   reported only 30 existing informational lints; changed nutrition files have no analysis issues and pass formatting.
   The repository-wide format check still flags 357 other files under the current SDK; those files were left unchanged.
   No device nutrition journey was run.
-- Tracker UI, bounds, and tab warm-up verification on 24 November 2026: full host suite passed (718 tests, one
-  skipped), including underline scope selector, horizontal `PageView` swipe and interrupted-animation sync, goal-gated
-  daily/range loading, failed active-goal preservation across offscreen warm-up with Home retry and tab activation
-  recovery, diary/range/meal-plan reconciliation on tab activation, isolated tracker `activeMealPlan` loading without
-  replacing shared `selectedMealPlan`, accessible `'Log Food'` FAB tooltip, 365-day lower/upper navigation and
-  date-picker clamping, and staggered offscreen tab warm-up. `flutter pub get`, repository-wide `dart format`,
-  `dart analyze`, and `git diff --check` passed; no device journey was run.
+- Tracker UI, bounds, and tab warm-up verification on 24 November 2026: full host suite passed (723 tests, one
+  skipped), including underline scope selector with >=48dp accessible tap target height, horizontal `PageView` swipe
+  and interrupted-animation sync, goal-gated daily/range loading, failed active-goal preservation across offscreen
+  warm-up with Home retry and tab activation recovery, date-synced water controls in `MacroTrackerDayWidget`,
+  midnight `Today` rebasing with explicit custom-date preservation, single-fetch active meal-plan synchronization on
+  record load, visibility-gated diary reconciliation during offscreen warm-up, diary/range/meal-plan reconciliation on
+  tab activation, isolated tracker `activeMealPlan` loading without replacing shared `selectedMealPlan`, accessible
+  `'Log Food'` FAB tooltip, 365-day lower/upper navigation and date-picker clamping, and staggered offscreen tab
+  warm-up. `flutter pub get`, repository-wide `dart format`, `dart analyze`, and `git diff --check` passed; no device
+  journey was run.
 - UI: Swipeable Day, Week, and Month tracker views bounded to the last 365 days through today; meal logging modal with
   portion calculator; the active plan's meals appear on their scheduled dates and can be logged into the diary;
   responsive layouts supporting 320px narrow screens and 200% font scaling.

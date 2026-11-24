@@ -71,7 +71,7 @@ class MacroTrackerScopeSelection extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               for (var i = 0; i < scopes.length; i++)
                 Expanded(
@@ -81,25 +81,31 @@ class MacroTrackerScopeSelection extends StatelessWidget {
                     button: true,
                     child: InkWell(
                       onTap: () => onScopeChanged(scopes[i]),
-                      child: Padding(
-                        padding: EdgeInsets.only(
-                          top: sizes.quarterSpacing,
-                          bottom: sizes.halfSpacing,
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(
+                          minHeight: sizes.minTapTargetHeight,
                         ),
-                        child: Text(
-                          _labelForScope(scopes[i]),
-                          textAlign: TextAlign.center,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontSize: sizes.fontSize,
-                            fontWeight: (page - i).abs() < 0.5
-                                ? FontWeight.bold
-                                : FontWeight.w600,
-                            color: Color.lerp(
-                              colors.onSurfaceVariant,
-                              colors.primary,
-                              (1.0 - (page - i).abs()).clamp(0.0, 1.0),
+                        child: Center(
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(
+                              vertical: sizes.quarterSpacing,
+                            ),
+                            child: Text(
+                              _labelForScope(scopes[i]),
+                              textAlign: TextAlign.center,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: sizes.fontSize,
+                                fontWeight: (page - i).abs() < 0.5
+                                    ? FontWeight.bold
+                                    : FontWeight.w600,
+                                color: Color.lerp(
+                                  colors.onSurfaceVariant,
+                                  colors.primary,
+                                  (1.0 - (page - i).abs()).clamp(0.0, 1.0),
+                                ),
+                              ),
                             ),
                           ),
                         ),

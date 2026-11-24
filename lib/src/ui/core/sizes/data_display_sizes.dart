@@ -78,6 +78,11 @@ final class DataDisplaySizesList {
 
   double get doubleBtnIconSize => subtitleFontSize * 2;
 
+  double get minTapTargetHeight {
+    final scaled = buttonSize * 0.75;
+    return scaled < 48 ? 48 : scaled;
+  }
+
   double get profileLabelWidth => subtitleFontSize * 9.5;
 
   const DataDisplaySizesList({

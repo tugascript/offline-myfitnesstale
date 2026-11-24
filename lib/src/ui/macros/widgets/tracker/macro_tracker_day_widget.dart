@@ -19,6 +19,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 
+import '../../../../data/utils/dates.dart';
 import '../../../../routing/routes.dart';
 import '../../../core/sizes/data_display_sizes.dart';
 import '../../../core/widgets/confirmation_dialog.dart';
@@ -43,12 +44,16 @@ class MacroTrackerDayWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final selectedNumericDate = DateUtilities.getNumericDate(selectedDate);
     return BlocBuilder<MacroTrackingCubit, MacroTrackingState>(
       buildWhen: (previous, current) =>
           previous.selectedDailyLog != current.selectedDailyLog ||
           previous.activeGoal != current.activeGoal,
       builder: (context, state) {
-        final dailyLog = state.selectedDailyLog;
+        final rawDailyLog = state.selectedDailyLog;
+        final isLogSynced =
+            rawDailyLog != null && rawDailyLog.date == selectedNumericDate;
+        final dailyLog = isLogSynced ? rawDailyLog : null;
         final activeGoal = state.activeGoal;
         final dayGoal = activeGoal?.effectiveGoalForDate(selectedDate);
 
@@ -195,30 +200,34 @@ class MacroTrackerDayWidget extends StatelessWidget {
                         IconButton(
                           visualDensity: VisualDensity.compact,
                           icon: Icon(Icons.remove, size: sizes.compactIconSize),
-                          onPressed: () {
-                            final newWater = (currentWater - 250).clamp(
-                              0,
-                              100000,
-                            );
-                            context
-                                .read<MacroTrackingCubit>()
-                                .updateWaterIntake(
-                                  newWater,
-                                  date: selectedDate,
-                                );
-                          },
+                          onPressed: isLogSynced
+                              ? () {
+                                  final newWater = (currentWater - 250).clamp(
+                                    0,
+                                    100000,
+                                  );
+                                  context
+                                      .read<MacroTrackingCubit>()
+                                      .updateWaterIntake(
+                                        newWater,
+                                        date: selectedDate,
+                                      );
+                                }
+                              : null,
                         ),
                         IconButton(
                           visualDensity: VisualDensity.compact,
                           icon: Icon(Icons.add, size: sizes.compactIconSize),
-                          onPressed: () {
-                            context
-                                .read<MacroTrackingCubit>()
-                                .updateWaterIntake(
-                                  currentWater + 250,
-                                  date: selectedDate,
-                                );
-                          },
+                          onPressed: isLogSynced
+                              ? () {
+                                  context
+                                      .read<MacroTrackingCubit>()
+                                      .updateWaterIntake(
+                                        currentWater + 250,
+                                        date: selectedDate,
+                                      );
+                                }
+                              : null,
                         ),
                       ],
                     ),
