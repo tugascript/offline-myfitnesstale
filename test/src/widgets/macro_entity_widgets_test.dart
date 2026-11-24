@@ -22,9 +22,8 @@ import 'package:myfitnesstale/src/data/utils/enums.dart';
 import 'package:myfitnesstale/src/data/utils/json_data.dart';
 import 'package:myfitnesstale/src/data/repositories/foods/inputs/food_input.dart';
 import 'package:myfitnesstale/src/ui/foods/widgets/food_form_widget.dart';
-import 'package:myfitnesstale/src/ui/macros/view_models/states/macro_tracking_state.dart';
 import 'package:myfitnesstale/src/data/repositories/macros/dtos/macro_tracking_dto.dart';
-import 'package:myfitnesstale/src/ui/macros/widgets/goals/macro_goals_content_widget.dart';
+import 'package:myfitnesstale/src/ui/macros/widgets/goals/active_macro_goal.dart';
 import 'package:myfitnesstale/src/data/repositories/foods/dtos/food_dto.dart';
 import 'package:myfitnesstale/src/data/repositories/recipes/dtos/recipe_dto.dart';
 import 'package:myfitnesstale/src/ui/core/sizes/data_display_sizes.dart';
@@ -151,23 +150,19 @@ void main() {
   testWidgets('active macro goal fits at 320px and 200% text', (tester) async {
     await pumpNarrow(
       tester,
-      MacroGoalsContentWidget(
+      ActiveMacroGoal(
         sizes: sizes,
         theme: ThemeData(),
-        state: MacroTrackingState(
-          selectedDate: DateTime(2026, 10, 13),
-          isLoading: false,
-          activeGoal: const MacroGoalDto(
-            id: 1,
-            name: 'Daily target',
-            targetCalories: 2000,
-            targetProtein: 100,
-            targetCarbs: 200,
-            targetFat: 60,
-            targetWaterIntakeMl: 2500,
-            isActive: true,
-            phase: WeightGoalPhase.maintain,
-          ),
+        activeGoal: const MacroGoalDto(
+          id: 1,
+          name: 'Daily target',
+          targetCalories: 2000,
+          targetProtein: 100,
+          targetCarbs: 200,
+          targetFat: 60,
+          targetWaterIntakeMl: 2500,
+          isActive: true,
+          phase: WeightGoalPhase.maintain,
         ),
       ),
     );
@@ -179,53 +174,49 @@ void main() {
   ) async {
     await pumpNarrow(
       tester,
-      MacroGoalsContentWidget(
+      ActiveMacroGoal(
         sizes: sizes,
         theme: ThemeData(),
-        state: MacroTrackingState(
-          selectedDate: DateTime(2026, 10, 13),
-          isLoading: false,
-          activeGoal: const MacroGoalDto(
-            id: 2,
-            name: 'Weekend Refeed',
-            targetCalories: 2000,
-            targetProtein: 160,
-            targetCarbs: 193,
-            targetFat: 63,
-            targetWaterIntakeMl: 2500,
-            totalTargetCalories: 14000,
-            goalType: MacroGoalType.calorieCycling,
-            days: [
-              DayMacroGoalDto(
-                id: 1,
-                weekMacroGoalId: 2,
-                days: [
-                  DayOfWeek.monday,
-                  DayOfWeek.tuesday,
-                  DayOfWeek.wednesday,
-                  DayOfWeek.thursday,
-                  DayOfWeek.friday,
-                ],
-                name: 'Weekdays',
-                targetCalories: 1800,
-                targetProtein: 160,
-                targetCarbs: 150,
-                targetFat: 60,
-              ),
-              DayMacroGoalDto(
-                id: 2,
-                weekMacroGoalId: 2,
-                days: [DayOfWeek.saturday, DayOfWeek.sunday],
-                name: 'Weekend Cheat',
-                targetCalories: 2500,
-                targetProtein: 160,
-                targetCarbs: 300,
-                targetFat: 70,
-              ),
-            ],
-            isActive: true,
-            phase: WeightGoalPhase.cut,
-          ),
+        activeGoal: const MacroGoalDto(
+          id: 2,
+          name: 'Weekend Refeed',
+          targetCalories: 2000,
+          targetProtein: 160,
+          targetCarbs: 193,
+          targetFat: 63,
+          targetWaterIntakeMl: 2500,
+          totalTargetCalories: 14000,
+          goalType: MacroGoalType.calorieCycling,
+          days: [
+            DayMacroGoalDto(
+              id: 1,
+              weekMacroGoalId: 2,
+              days: [
+                DayOfWeek.monday,
+                DayOfWeek.tuesday,
+                DayOfWeek.wednesday,
+                DayOfWeek.thursday,
+                DayOfWeek.friday,
+              ],
+              name: 'Weekdays',
+              targetCalories: 1800,
+              targetProtein: 160,
+              targetCarbs: 150,
+              targetFat: 60,
+            ),
+            DayMacroGoalDto(
+              id: 2,
+              weekMacroGoalId: 2,
+              days: [DayOfWeek.saturday, DayOfWeek.sunday],
+              name: 'Weekend Cheat',
+              targetCalories: 2500,
+              targetProtein: 160,
+              targetCarbs: 300,
+              targetFat: 70,
+            ),
+          ],
+          isActive: true,
+          phase: WeightGoalPhase.cut,
         ),
       ),
     );

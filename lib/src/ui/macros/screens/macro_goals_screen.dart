@@ -25,8 +25,9 @@ import '../../core/view_models/states/common_state.dart';
 import '../../core/widgets/layout/app_scaffold.dart';
 import '../view_models/macro_tracking_cubit.dart';
 import '../view_models/states/macro_tracking_state.dart';
+import '../widgets/goals/active_macro_goal.dart';
 import '../widgets/goals/macro_goal_form_modal.dart';
-import '../widgets/goals/macro_goals_content_widget.dart';
+import '../widgets/goals/macro_goal_history.dart';
 
 class MacroGoalsScreen extends StatefulWidget {
   static const name = 'macro_goals';
@@ -99,13 +100,25 @@ class _MacroGoalsScreenState extends State<MacroGoalsScreen> {
             }
           },
           builder: (context, state) {
-            return MacroGoalsContentWidget(
-              state: state,
-              theme: theme,
-              sizes: sizes,
-              onCreateGoal: () => _openGoalModal(theme, sizes),
-              onEditGoal: (goal) =>
-                  _openGoalModal(theme, sizes, existingGoal: goal),
+            return Column(
+              children: [
+                ActiveMacroGoal(
+                  theme: theme,
+                  sizes: sizes,
+                  activeGoal: state.activeGoal,
+                  onCreateGoal: () => _openGoalModal(theme, sizes),
+                  onEditGoal: (goal) =>
+                      _openGoalModal(theme, sizes, existingGoal: goal),
+                ),
+                SizedBox(height: sizes.spacing * 2),
+                Expanded(
+                  child: MacroGoalHistory(
+                    sizes: sizes,
+                    goals: state.goalHistory,
+                    activeGoalId: state.activeGoal?.id,
+                  ),
+                ),
+              ],
             );
           },
         ),
