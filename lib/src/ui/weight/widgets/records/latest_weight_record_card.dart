@@ -162,8 +162,7 @@ class LatestWeightRecordCard extends StatelessWidget {
                               context: context,
                               builder: (context) => ConfirmationDialog(
                                 title: 'Delete Weight Log',
-                                content:
-                                    'Are you sure you want to delete this weight log? This action cannot be undone.',
+                                content: 'Are you sure you want to delete this weight log? This action cannot be undone.',
                                 onConfirm: () async {
                                   if (weightRecord != null) {
                                     await context

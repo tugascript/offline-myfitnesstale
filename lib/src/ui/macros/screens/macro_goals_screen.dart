@@ -22,7 +22,7 @@ import '../../../data/repositories/macros/dtos/macro_tracking_dto.dart';
 import '../../core/sizes/data_display_sizes.dart';
 import '../../core/sizes/screen_size.dart';
 import '../../core/view_models/states/common_state.dart';
-import '../../core/widgets/layout/app_scaffold.dart';
+import '../../core/widgets/layout/responsive_scaffold.dart';
 import '../view_models/macro_tracking_cubit.dart';
 import '../view_models/states/macro_tracking_state.dart';
 import '../widgets/goals/active_macro_goal.dart';
@@ -77,7 +77,7 @@ class _MacroGoalsScreenState extends State<MacroGoalsScreen> {
     final breakpoints = BreakPoint.fromContext(context);
     final sizes = DataDisplaySizes.getDataDisplaySizes(breakpoints.screenSize);
 
-    return AppScaffold(
+    return ResponsiveScaffold(
       title: 'Macro Goals',
       body: Padding(
         padding: EdgeInsets.all(sizes.viewPadding),
@@ -111,12 +111,10 @@ class _MacroGoalsScreenState extends State<MacroGoalsScreen> {
                       _openGoalModal(theme, sizes, existingGoal: goal),
                 ),
                 SizedBox(height: sizes.spacing * 2),
-                Expanded(
-                  child: MacroGoalHistory(
-                    sizes: sizes,
-                    goals: state.goalHistory,
-                    activeGoalId: state.activeGoal?.id,
-                  ),
+                MacroGoalHistory(
+                  sizes: sizes,
+                  goals: state.goalHistory,
+                  activeGoalId: state.activeGoal?.id,
                 ),
               ],
             );

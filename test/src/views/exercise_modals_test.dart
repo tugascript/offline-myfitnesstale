@@ -1686,7 +1686,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('No Active Strength Goal'), findsOneWidget);
+      expect(find.text('No active strength goal'), findsOneWidget);
       expect(find.byType(AppTextButton), findsOneWidget);
       expect(find.text('Goal History'), findsOneWidget);
       expect(find.byType(NotFoundList), findsOneWidget);

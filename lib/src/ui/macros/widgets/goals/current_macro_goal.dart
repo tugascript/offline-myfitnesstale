@@ -132,10 +132,7 @@ class CurrentMacroGoal extends StatelessWidget {
                 ),
                 IconButton(
                   key: const ValueKey('macro-goal-edit-btn'),
-                  icon: Icon(
-                    Icons.edit_outlined,
-                    size: sizes.buttonIconSize,
-                  ),
+                  icon: Icon(Icons.edit_outlined, size: sizes.buttonIconSize),
                   onPressed: () {
                     if (onEditGoal != null) {
                       onEditGoal!(goal);
@@ -231,9 +228,9 @@ class CurrentMacroGoal extends StatelessWidget {
                     ),
                   ),
                   onPressed: () {
-                    context
-                        .read<MacroTrackingCubit>()
-                        .completeMacroGoal(goal.id);
+                    context.read<MacroTrackingCubit>().completeMacroGoal(
+                      goal.id,
+                    );
                   },
                 ),
                 SizedBox(width: sizes.spacing),
@@ -259,9 +256,9 @@ class CurrentMacroGoal extends StatelessWidget {
                         content:
                             'Are you sure you want to delete this macro goal?',
                         onConfirm: () {
-                          context
-                              .read<MacroTrackingCubit>()
-                              .deleteMacroGoal(goal.id);
+                          context.read<MacroTrackingCubit>().deleteMacroGoal(
+                            goal.id,
+                          );
                         },
                       ),
                     );

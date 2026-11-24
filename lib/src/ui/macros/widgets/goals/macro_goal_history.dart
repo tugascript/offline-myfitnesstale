@@ -51,70 +51,68 @@ class MacroGoalHistory extends StatelessWidget {
           ),
         ),
         SizedBox(height: sizes.spacing),
-        Expanded(
-          child: history.isEmpty
-              ? Center(
-                  child: Text(
-                    'No past macro goals.',
-                    style: TextStyle(
-                      fontSize: sizes.fontSize,
-                      color: Colors.grey,
-                    ),
+        history.isEmpty
+            ? Center(
+                child: Text(
+                  'No past macro goals.',
+                  style: TextStyle(
+                    fontSize: sizes.fontSize,
+                    color: Colors.grey,
                   ),
-                )
-              : ListView.separated(
-                  itemCount: history.length,
-                  separatorBuilder: (_, _) =>
-                      SizedBox(height: sizes.spacing / 2),
-                  itemBuilder: (context, index) {
-                    final g = history[index];
+                ),
+              )
+            : ListView.separated(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: history.length,
+                separatorBuilder: (_, _) => SizedBox(height: sizes.spacing / 2),
+                itemBuilder: (context, index) {
+                  final g = history[index];
 
-                    return Card(
-                      margin: EdgeInsets.zero,
-                      child: ListTile(
-                        title: Text(
-                          '${g.goalType == MacroGoalType.calorieCycling ? 'Daily Average: ' : ''}'
-                          '${g.targetCalories} kcal • P: ${g.targetProtein}g C: ${g.targetCarbs}g F: ${g.targetFat}g',
-                          style: TextStyle(
-                            fontSize: sizes.fontSize,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        subtitle: Text(
-                          '${g.goalType == MacroGoalType.calorieCycling ? 'Calorie Cycling • ' : ''}'
-                          'Water: ${g.targetWaterIntakeMl ?? 0}ml • ${g.name}',
-                          style: TextStyle(
-                            fontSize: sizes.fontSize * 0.9,
-                            color: Colors.grey[600],
-                          ),
-                        ),
-                        trailing: IconButton(
-                          icon: Icon(
-                            Icons.delete_outline,
-                            color: Colors.grey,
-                            size: sizes.buttonIconSize,
-                          ),
-                          onPressed: () {
-                            showDialog(
-                              context: context,
-                              builder: (_) => ConfirmationDialog(
-                                title: 'Delete Past Goal',
-                                content:
-                                    'Are you sure you want to delete this past goal?',
-                                onConfirm: () {
-                                  context
-                                      .read<MacroTrackingCubit>()
-                                      .deleteMacroGoal(g.id);
-                                },
-                              ),
-                            );
-                          },
+                  return Card(
+                    margin: EdgeInsets.zero,
+                    child: ListTile(
+                      title: Text(
+                        '${g.goalType == MacroGoalType.calorieCycling ? 'Daily Average: ' : ''}'
+                        '${g.targetCalories} kcal • P: ${g.targetProtein}g C: ${g.targetCarbs}g F: ${g.targetFat}g',
+                        style: TextStyle(
+                          fontSize: sizes.fontSize,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
-                    );
-                  },
-                ),
-        ),
+                      subtitle: Text(
+                        '${g.goalType == MacroGoalType.calorieCycling ? 'Calorie Cycling • ' : ''}'
+                        'Water: ${g.targetWaterIntakeMl ?? 0}ml • ${g.name}',
+                        style: TextStyle(
+                          fontSize: sizes.fontSize * 0.9,
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                      trailing: IconButton(
+                        icon: Icon(
+                          Icons.delete_outline,
+                          color: Colors.grey,
+                          size: sizes.buttonIconSize,
+                        ),
+                        onPressed: () {
+                          showDialog(
+                            context: context,
+                            builder: (_) => ConfirmationDialog(
+                              title: 'Delete Past Goal',
+                              content: 'Are you sure you want to delete this past goal?',
+                              onConfirm: () {
+                                context
+                                    .read<MacroTrackingCubit>()
+                                    .deleteMacroGoal(g.id);
+                              },
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  );
+                },
+              ),
       ],
     );
   }
