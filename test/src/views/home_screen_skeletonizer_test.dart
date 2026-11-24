@@ -712,6 +712,60 @@ void main() {
       expect(macroCubit.dailyLogCalls, 0);
     },
   );
+
+  testWidgets(
+    'unrelated MacroTrackingCubit loading does not hide Home active-macro error card or enable skeleton',
+    (tester) async {
+      final profileGate = Completer<void>()..complete();
+      final profileCubit = _TestProfileCubit(
+        gate: profileGate,
+        withProfile: true,
+      );
+      final workoutPlanCubit = _TestWorkoutPlanRecordCubit();
+      final macroCubit = _TestMacroTrackingCubit(failFirstLoad: true);
+
+      await _pumpMainApp(
+        tester,
+        profileCubit: profileCubit..loadInitialData(),
+        workoutPlanCubit: workoutPlanCubit,
+        macroCubit: macroCubit,
+      );
+      await tester.pumpAndSettle();
+
+      expect(
+        find.byKey(const ValueKey('home-active-load-error-card')),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(
+          of: find.byType(HomeScreen),
+          matching: find.byWidgetPredicate(
+            (w) => w is Skeletonizer && w.enabled,
+          ),
+        ),
+        findsNothing,
+      );
+
+      // Simulate an unrelated cubit call (e.g. getMacroGoals) setting isLoading
+      // without changing isLoadingActiveGoal.
+      macroCubit.emit(macroCubit.state.copyWith(isLoading: true));
+      await tester.pump();
+
+      expect(
+        find.byKey(const ValueKey('home-active-load-error-card')),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(
+          of: find.byType(HomeScreen),
+          matching: find.byWidgetPredicate(
+            (w) => w is Skeletonizer && w.enabled,
+          ),
+        ),
+        findsNothing,
+      );
+    },
+  );
 }
 
 Future<void> _pumpMainApp(
