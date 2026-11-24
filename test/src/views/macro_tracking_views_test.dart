@@ -2952,7 +2952,7 @@ void main() {
         );
         await tester.pumpAndSettle();
 
-        // Open edit modal from MacroGoalsContentWidget and submit a failing update.
+        // Open edit modal from ActiveMacroGoal and submit a failing update.
         await tester.tap(find.byKey(const ValueKey('macro-goal-edit-btn')));
         await tester.pumpAndSettle();
         expect(find.byType(MacroGoalFormModal), findsOneWidget);
