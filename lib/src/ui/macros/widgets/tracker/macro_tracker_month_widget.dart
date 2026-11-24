@@ -60,7 +60,8 @@ class MacroTrackerMonthWidget extends StatelessWidget {
 
         return ListView.separated(
           itemCount: daysInMonth,
-          separatorBuilder: (_, _) => SizedBox(height: sizes.spacing / 2),
+          shrinkWrap: true,
+          separatorBuilder: (_, _) => SizedBox(height: sizes.quarterSpacing),
           itemBuilder: (context, index) {
             final dayDate = DateTime(
               selectedDate.year,
@@ -78,50 +79,58 @@ class MacroTrackerMonthWidget extends StatelessWidget {
                 ?.effectiveGoalForDate(dayDate)
                 .targetCalories;
 
-            return Card(
-              color: isSelectedDay
-                  ? theme.primaryColor.withValues(alpha: 0.1)
-                  : null,
-              margin: EdgeInsets.zero,
-              child: Opacity(
-                opacity: isOutOfRange ? 0.5 : 1,
-                child: ListTile(
-                  enabled: !isOutOfRange,
-                  title: Text(
-                    _dayFormat.format(dayDate),
-                    style: TextStyle(
-                      fontSize: sizes.fontSize,
-                      color: isOutOfRange ? theme.disabledColor : null,
+            return Padding(
+              padding: EdgeInsets.fromLTRB(
+                0,
+                index == 0 ? sizes.halfSpacing : sizes.quarterSpacing,
+                0,
+                sizes.quarterSpacing,
+              ),
+              child: Card(
+                color: isSelectedDay
+                    ? theme.primaryColor.withValues(alpha: 0.1)
+                    : null,
+                margin: EdgeInsets.zero,
+                child: Opacity(
+                  opacity: isOutOfRange ? 0.5 : 1,
+                  child: ListTile(
+                    enabled: !isOutOfRange,
+                    title: Text(
+                      _dayFormat.format(dayDate),
+                      style: TextStyle(
+                        fontSize: sizes.fontSize,
+                        color: isOutOfRange ? theme.disabledColor : null,
+                      ),
                     ),
-                  ),
-                  subtitle: targetCal != null
-                      ? Text(
-                          'Target: $targetCal kcal',
-                          style: TextStyle(
-                            fontSize: sizes.smallFontSize,
-                            color: isOutOfRange
-                                ? theme.disabledColor
-                                : Colors.grey[600],
-                          ),
-                        )
-                      : null,
-                  trailing: Text(
-                    log != null ? '${log.totalCalories} kcal' : '-',
-                    style: TextStyle(
-                      fontSize: sizes.fontSize,
-                      fontWeight: FontWeight.bold,
-                      color: isOutOfRange
-                          ? theme.disabledColor
-                          : log != null
-                          ? theme.primaryColor
-                          : Colors.grey,
+                    subtitle: targetCal != null
+                        ? Text(
+                            'Target: $targetCal kcal',
+                            style: TextStyle(
+                              fontSize: sizes.smallFontSize,
+                              color: isOutOfRange
+                                  ? theme.disabledColor
+                                  : Colors.grey[600],
+                            ),
+                          )
+                        : null,
+                    trailing: Text(
+                      log != null ? '${log.totalCalories} kcal' : '-',
+                      style: TextStyle(
+                        fontSize: sizes.fontSize,
+                        fontWeight: FontWeight.bold,
+                        color: isOutOfRange
+                            ? theme.disabledColor
+                            : log != null
+                            ? theme.primaryColor
+                            : Colors.grey,
+                      ),
                     ),
+                    onTap: isOutOfRange
+                        ? null
+                        : () {
+                            onSelectDate(dayDate);
+                          },
                   ),
-                  onTap: isOutOfRange
-                      ? null
-                      : () {
-                          onSelectDate(dayDate);
-                        },
                 ),
               ),
             );

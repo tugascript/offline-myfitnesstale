@@ -69,6 +69,8 @@ Follow a strict MVVM flow aligned with the Flutter app architecture guide:
 - **Corners**: Keep surface UI square. Prefer theme shapes (`BeveledRectangleBorder`, `BorderRadius.zero`). Do not add
   rounded corners on cards, badges, chips, buttons, dialogs, or similar surfaces. Omit `borderRadius` or set
   `BorderRadius.zero`; do not use `BorderRadius.circular(...)` for those widgets.
+- **Loading States**: Use `Skeletonizer` wrapping the target screen or content layout for data-loading states (matching
+  `HomeScreen` and `CurrentWorkoutPlanScreen`) instead of bare centered `CircularProgressIndicator` placeholders.
 
 ## Data and Persistence Conventions
 

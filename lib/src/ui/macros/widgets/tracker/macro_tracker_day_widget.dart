@@ -76,6 +76,7 @@ class MacroTrackerDayWidget extends StatelessWidget {
 
         return ListView(
           children: [
+            SizedBox(height: sizes.halfSpacing),
             // Macro Target Summary Card
             Card(
               margin: EdgeInsets.zero,
@@ -83,28 +84,15 @@ class MacroTrackerDayWidget extends StatelessWidget {
                 padding: EdgeInsets.all(sizes.padding / 1.5),
                 child: Column(
                   children: [
-                    Wrap(
-                      alignment: WrapAlignment.spaceBetween,
-                      crossAxisAlignment: WrapCrossAlignment.center,
-                      runSpacing: sizes.spacing / 2,
-                      children: [
-                        Text(
-                          'Calories: $currentCal / $targetCal kcal',
-                          style: TextStyle(
-                            fontSize: sizes.subtitleFontSize,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        if (activeGoal == null)
-                          TextButton(
-                            onPressed: () =>
-                                context.push(Routes.macroGoals.name),
-                            child: Text(
-                              'Set Goal',
-                              style: TextStyle(fontSize: sizes.fontSize),
-                            ),
-                          ),
-                      ],
+                    Text(
+                      'Calories: $currentCal / $targetCal kcal',
+                      style: TextStyle(
+                        fontSize: sizes.subtitleFontSize,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      maxLines: 1,
+                      softWrap: true,
+                      overflow: TextOverflow.ellipsis,
                     ),
                     SizedBox(height: sizes.spacing),
                     LinearProgressIndicator(

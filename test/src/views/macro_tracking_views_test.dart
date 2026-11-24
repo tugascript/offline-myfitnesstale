@@ -21,6 +21,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 
 import 'package:myfitnesstale/src/utils/nullable.dart';
 import 'package:myfitnesstale/src/ui/workouts/view_models/active_workout_cubit.dart';
@@ -2684,6 +2685,22 @@ void main() {
         );
         await tester.pump();
         expect(find.byType(MacroGoalFormModal), findsNothing);
+        expect(
+          find.descendant(
+            of: find.byType(MacroTrackerScreen),
+            matching: find.byWidgetPredicate(
+              (w) => w is Skeletonizer && w.enabled && w.ignorePointers,
+            ),
+          ),
+          findsOneWidget,
+        );
+        expect(
+          find.descendant(
+            of: find.byType(MacroTrackerScreen),
+            matching: find.byType(CircularProgressIndicator),
+          ),
+          findsNothing,
+        );
 
         // Leave Macros tab before active goal query finishes.
         await tester.tap(
