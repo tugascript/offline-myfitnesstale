@@ -198,7 +198,7 @@ void main() {
       await tester.tap(find.byKey(const ValueKey('active-weight-goal-delete')));
       await harness.pumpUntilFound(tester, find.text('DELETE WEIGHT GOAL'));
       await tester.tap(find.text('CONFIRM'));
-      await harness.pumpUntilFound(tester, find.text('No Weight Goal'));
+      await harness.pumpUntilFound(tester, find.text('No weight goals'));
       expect(await _count(db, WeightRecord.table), 0);
       expect(await _count(db, WeightGoal.table), 0);
     },
