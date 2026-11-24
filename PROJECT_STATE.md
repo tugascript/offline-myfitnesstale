@@ -321,16 +321,30 @@ above a keyboard inset.
 - Water intake: Updates daily water consumption with quick adjust controls.
 - Logging modal tabs (Food, Recipe, Quick Add) each occupy one third of the content width, with centered labels that
   wrap at large text scales. The selected underline spans the full tab width with square ends.
-- The Day/Week/Month selector has square corners and indicates selection through its themed fill without a tick icon.
+- The Day/Week/Month scope selector (`MacroTrackerScopeSelection`) uses a square-cornered strip with an animated
+  primary-colored bottom underline synchronized with horizontal `PageView` swipes across Day, Week, and Month views
+  (`MacroTackerScopeWidget`), replacing the filled segmented control. The `Today` shortcut sits inline when space
+  allows and wraps below on narrow widths or large text scales.
+- Tracker date navigation (`MacroTrackerDateNavigator`), the date picker, and Week/Month day lists are bounded to the
+  preceding 365 days through today (`[today - 365 days, today]`): boundary chevrons and out-of-range days are disabled,
+  period steps and picker initial dates are clamped into range, and nutrition records older than 365 days cannot be
+  opened from the tracker UI.
+- `MacroTrackerScreen` reuses already-loaded active macro goal and meal-plan record state when available and awaits
+  active macro goal loading before fetching the daily log so targets do not briefly fall back to defaults.
 - Validation on 15 October 2026: full host suite passed (315 tests, one skipped), including new persistence and timeline
   interaction coverage for same-hour/identical-time entries, midnight, historical dates, food/recipe logging, time
   adjustment, deletion, totals, and 320px/200% text. Dependency resolution and `git diff --check` passed. Analysis
   reported only 30 existing informational lints; changed nutrition files have no analysis issues and pass formatting.
   The repository-wide format check still flags 357 other files under the current SDK; those files were left unchanged.
   No device nutrition journey was run.
-- UI: Day, Week, and Month tracker views; meal logging modal with portion calculator; the active plan's meals appear on
-  their scheduled dates and can be logged into the diary; responsive layouts supporting 320px narrow screens and 200%
-  font scaling.
+- Tracker UI, bounds, and tab warm-up verification on 24 November 2026: full host suite passed (711 tests, one
+  skipped), including underline scope selector, horizontal `PageView` swipe and interrupted-animation sync, sequential
+  active-goal/daily-log loading, 365-day lower/upper navigation and date-picker clamping, and staggered offscreen tab
+  warm-up. `flutter pub get`, repository-wide `dart format`, `dart analyze`, and `git diff --check` passed; no device
+  journey was run.
+- UI: Swipeable Day, Week, and Month tracker views bounded to the last 365 days through today; meal logging modal with
+  portion calculator; the active plan's meals appear on their scheduled dates and can be logged into the diary;
+  responsive layouts supporting 320px narrow screens and 200% font scaling.
 
 ## Navigation
 
@@ -340,9 +354,16 @@ enum rather than a separate `routeName` API. An `IndexedStack` preserves four
 primary destinations:
 
 1. Home;
-2. Plans;
-3. Tracker (daily nutrition, with day/week/month scopes);
+2. Plan (`CurrentWorkoutPlanScreen`);
+3. Macros (`MacroTrackerScreen`, daily nutrition with day/week/month scopes);
 4. Profile.
+
+After Home startup loading settles, `MainNavigationScreen` warms up unvisited
+tabs offscreen in staggered steps (`250ms` initial delay, `150ms` per remaining
+tab) while pausing offscreen tickers with `TickerMode`, deferring warm-up while
+Home active-data Cubits are loading. `CurrentWorkoutPlanScreen` and
+`MacroTrackerScreen` reuse already-loaded Cubit state during warm-up and tab
+switches.
 
 Meal plans remain accessible from Home quick actions and the meal card.
 
@@ -736,6 +757,8 @@ PR #36 review follow-up:
 - No media selection/storage workflow for exercises.
 - No unified chronological activity timeline.
 - No historical child-workout detail in plan history.
+- Macro tracker navigation, date picker, and Week/Month day selection are limited to the preceding 365 days through
+  today; nutrition records older than 365 days remain in SQLite but are currently inaccessible through the tracker UI.
 - OS termination during an active timer remains an unverified lifecycle case.
 
 ## Database policy
