@@ -338,7 +338,7 @@ class WorkoutPlanCubit extends Cubit<WorkoutPlanState>
     });
   }
 
-  Future<void> deleteWorkoutPlan(int id) async {
+  Future<bool> deleteWorkoutPlan(int id) async {
     _logger.info('Deleting workout plan $id');
     emit(state.copyWith(isLoading: true));
 
@@ -355,11 +355,11 @@ class WorkoutPlanCubit extends Cubit<WorkoutPlanState>
           isLoading: false,
         ),
       );
-      return;
+      return false;
     }
 
     _logger.info('Workout plan $id deleted successfully');
-    if (isClosed) return;
+    if (isClosed) return true;
     await _refreshWorkoutPlans(
       state.copyWith(
         selectedWorkoutPlan: state.selectedWorkoutPlan?.id == id
@@ -369,5 +369,6 @@ class WorkoutPlanCubit extends Cubit<WorkoutPlanState>
         error: const Nullable(null),
       ),
     );
+    return true;
   }
 }

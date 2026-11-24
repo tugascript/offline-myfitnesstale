@@ -175,12 +175,12 @@ class _MacroTrackerScreenState extends State<MacroTrackerScreen> {
       return;
     }
     if (!mounted || periodToken != _periodLoadToken) return;
+    if (!widget.isVisible) return;
 
     final macroState = macroCubit.state;
     final needsDailyLog =
         macroState.selectedDailyLog == null ||
-        (widget.isVisible &&
-            !DateUtils.isSameDay(macroState.selectedDate, _selectedDate));
+        !DateUtils.isSameDay(macroState.selectedDate, _selectedDate);
     if (needsDailyLog) {
       macroCubit.getDailyLog(_selectedDate);
     }
@@ -509,13 +509,13 @@ class _MacroTrackerScreenState extends State<MacroTrackerScreen> {
           listener: (context, state) {
             if (!_deferredInitialLogLoad) return;
             _deferredInitialLogLoad = false;
+            if (!widget.isVisible) return;
             final latest = context.read<MacroTrackingCubit>().state;
             if (latest.isLoadingActiveGoal) return;
             final needsDailyLog =
                 latest.selectedDailyLog == null ||
-                (widget.isVisible &&
-                    !DateUtils.isSameDay(latest.selectedDate, _selectedDate));
-            final needsRange = widget.isVisible && _scope != TrackerScope.day;
+                !DateUtils.isSameDay(latest.selectedDate, _selectedDate);
+            final needsRange = _scope != TrackerScope.day;
             if (needsDailyLog || needsRange) {
               _reconcileTrackerData(
                 retryFailedGoal: false,

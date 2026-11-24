@@ -32,6 +32,8 @@ class MacroTrackingCubit extends Cubit<MacroTrackingState> {
   final MacroTrackingRepository _macroService;
   final Logger _logger = Logger('MacroTrackingCubit');
   Future<void>? _activeGoalLoad;
+  int _dailyLogRequestId = 0;
+  int _rangeLogsRequestId = 0;
 
   MacroTrackingCubit({required MacroTrackingRepository macroTrackingRepository})
     : _macroService = macroTrackingRepository,
@@ -296,9 +298,11 @@ class MacroTrackingCubit extends Cubit<MacroTrackingState> {
 
   Future<void> getDailyLog(DateTime date) async {
     _logger.info('Getting daily log for $date');
+    final requestId = ++_dailyLogRequestId;
     emit(state.copyWith(isLoading: true));
 
     final result = await _macroService.getDailyLogByDate(date);
+    if (isClosed || requestId != _dailyLogRequestId) return;
     if (result.isErr()) {
       final error = result.error;
       _logger.warning('Failed to get daily log', error);
@@ -328,12 +332,14 @@ class MacroTrackingCubit extends Cubit<MacroTrackingState> {
     required DateTime end,
   }) async {
     _logger.info('Getting range daily logs from $start to $end');
+    final requestId = ++_rangeLogsRequestId;
     emit(state.copyWith(isLoading: true));
 
     final result = await _macroService.getDailyLogsForRange(
       start: start,
       end: end,
     );
+    if (isClosed || requestId != _rangeLogsRequestId) return;
     if (result.isErr()) {
       final error = result.error;
       _logger.warning('Failed to get range logs', error);
