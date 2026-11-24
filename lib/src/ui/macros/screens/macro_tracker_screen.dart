@@ -283,11 +283,9 @@ class _MacroTrackerScreenState extends State<MacroTrackerScreen> {
     _hadLoadedActiveGoal = state.hasLoadedActiveGoal;
     _hadActiveGoal = state.activeGoal != null;
 
-    if (state.error == null) {
+    if (state.error == null || state.isLoading) {
       _lastShownError = null;
-    } else if (state.error != _lastShownError &&
-        state.hasLoadedActiveGoal &&
-        !state.isLoading) {
+    } else if (state.error != _lastShownError && state.hasLoadedActiveGoal) {
       _lastShownError = state.error;
       if (widget.isVisible && !_isGoalModalOpen) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -356,7 +354,7 @@ class _MacroTrackerScreenState extends State<MacroTrackerScreen> {
           (!previous.hasLoadedActiveGoal && current.hasLoadedActiveGoal) ||
           (previous.hasLoadedActiveGoal &&
               (previous.activeGoal == null) != (current.activeGoal == null)) ||
-          (previous.isLoading && !current.isLoading) ||
+          previous.isLoading != current.isLoading ||
           (previous.isLoadingActiveGoal && !current.isLoadingActiveGoal) ||
           previous.error != current.error,
       listener: (context, state) => _onStateChanged(context, state, sizes),

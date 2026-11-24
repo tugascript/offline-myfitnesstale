@@ -17,8 +17,14 @@
 
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:myfitnesstale/src/data/models/sqlite/daily_nutrition_log_model.dart';
+import 'package:myfitnesstale/src/data/models/sqlite/day_macro_goal_model.dart';
 import 'package:myfitnesstale/src/data/models/sqlite/food_model.dart';
 import 'package:myfitnesstale/src/data/models/sqlite/food_portion_model.dart';
+import 'package:myfitnesstale/src/data/models/sqlite/meal_log_item_model.dart';
+import 'package:myfitnesstale/src/data/models/sqlite/meal_log_model.dart';
+import 'package:myfitnesstale/src/data/models/sqlite/recipe_model.dart';
+import 'package:myfitnesstale/src/data/models/sqlite/week_macro_goal_model.dart';
 import 'package:myfitnesstale/src/data/models/sqlite/weight_goal_model.dart';
 import 'package:myfitnesstale/src/data/models/sqlite/weight_record_model.dart';
 import 'package:myfitnesstale/src/data/models/sqlite/workout_model.dart';
@@ -28,6 +34,7 @@ import 'package:myfitnesstale/src/data/repositories/exercises/inputs/equipment_i
 import 'package:myfitnesstale/src/data/repositories/exercises/inputs/exercise_input.dart';
 import 'package:myfitnesstale/src/data/repositories/foods/food_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/foods/inputs/food_input.dart';
+import 'package:myfitnesstale/src/data/repositories/macros/inputs/week_macro_goal_input.dart';
 import 'package:myfitnesstale/src/data/repositories/macros/macro_tracking_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/onboarding/onboarding_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/profile/profile_repository.dart';
@@ -992,6 +999,84 @@ void main() {
       expect(cubit.state.selectedDailyLog?.date, 20261124);
       expect(cubit.state.selectedDailyLog?.waterIntakeMl, 1500);
       expect(emittedDates, [20261124]);
+    });
+
+    test('MacroTrackingCubit.createMacroGoal reports savedRefreshFailed while preserving committed active goal and recovers via refreshMacroGoals', () async {
+      var failReads = true;
+      final helper = DatabaseHelper();
+      final repo = MacroTrackingRepository(
+        foodDao: Dao<Food>(
+          databaseHelper: helper,
+          tableName: Food.table,
+          fromMap: Food.fromMap,
+        ),
+        recipeDao: Dao<Recipe>(
+          databaseHelper: helper,
+          tableName: Recipe.table,
+          fromMap: Recipe.fromMap,
+        ),
+        foodPortionDao: Dao<FoodPortion>(
+          databaseHelper: helper,
+          tableName: FoodPortion.table,
+          fromMap: FoodPortion.fromMap,
+        ),
+        weekMacroGoalDao: Dao<WeekMacroGoal>(
+          databaseHelper: helper,
+          tableName: WeekMacroGoal.table,
+          fromMap: (map) {
+            if (failReads) throw StateError('simulated read failure');
+            return WeekMacroGoal.fromMap(map);
+          },
+        ),
+        dayMacroGoalDao: Dao<DayMacroGoal>(
+          databaseHelper: helper,
+          tableName: DayMacroGoal.table,
+          fromMap: DayMacroGoal.fromMap,
+        ),
+        dailyLogDao: Dao<DailyNutritionLog>(
+          databaseHelper: helper,
+          tableName: DailyNutritionLog.table,
+          fromMap: DailyNutritionLog.fromMap,
+        ),
+        mealLogDao: Dao<MealLog>(
+          databaseHelper: helper,
+          tableName: MealLog.table,
+          fromMap: MealLog.fromMap,
+        ),
+        mealLogItemDao: Dao<MealLogItem>(
+          databaseHelper: helper,
+          tableName: MealLogItem.table,
+          fromMap: MealLogItem.fromMap,
+        ),
+      );
+      final cubit = MacroTrackingCubit(macroTrackingRepository: repo);
+      addTearDown(cubit.close);
+
+      final status = await cubit.createMacroGoal(
+        const WeekMacroGoalInput(
+          name: 'Saved Goal',
+          targetCalories: 2000,
+          targetProtein: 150,
+          targetCarbs: 215,
+          targetFat: 60,
+          isActive: true,
+        ),
+      );
+
+      expect(status, MacroGoalSaveStatus.savedRefreshFailed);
+      expect(cubit.state.activeGoal, isNotNull);
+      expect(cubit.state.activeGoal?.name, 'Saved Goal');
+      expect(cubit.state.hasLoadedActiveGoal, isTrue);
+      expect(cubit.state.isLoading, isFalse);
+      expect(cubit.state.isLoadingActiveGoal, isFalse);
+      expect(cubit.state.error, isNotNull);
+
+      failReads = false;
+      final refreshed = await cubit.refreshMacroGoals();
+      expect(refreshed, isTrue);
+      expect(cubit.state.activeGoal?.name, 'Saved Goal');
+      expect(cubit.state.goalHistory, isNotEmpty);
+      expect(cubit.state.error, isNull);
     });
   });
 }

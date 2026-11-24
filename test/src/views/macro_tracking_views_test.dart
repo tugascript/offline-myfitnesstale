@@ -250,9 +250,11 @@ class _TestMacroTrackingCubit extends MacroTrackingCubit {
 
   String? createGoalError;
   String? updateGoalError;
+  String? completeGoalError;
+  String? dailyLogError;
 
   @override
-  Future<bool> createMacroGoal(WeekMacroGoalInput input) async {
+  Future<MacroGoalSaveStatus> createMacroGoal(WeekMacroGoalInput input) async {
     if (createGoalError != null) {
       if (!isClosed) {
         emit(
@@ -267,7 +269,7 @@ class _TestMacroTrackingCubit extends MacroTrackingCubit {
           ),
         );
       }
-      return false;
+      return MacroGoalSaveStatus.failed;
     }
     createdGoals.add(input);
     if (!isClosed) {
@@ -294,11 +296,14 @@ class _TestMacroTrackingCubit extends MacroTrackingCubit {
         ),
       );
     }
-    return true;
+    return MacroGoalSaveStatus.saved;
   }
 
   @override
-  Future<bool> updateMacroGoal(int id, WeekMacroGoalInput input) async {
+  Future<MacroGoalSaveStatus> updateMacroGoal(
+    int id,
+    WeekMacroGoalInput input,
+  ) async {
     if (updateGoalError != null) {
       if (!isClosed) {
         emit(
@@ -308,6 +313,29 @@ class _TestMacroTrackingCubit extends MacroTrackingCubit {
               ErrorState(
                 type: 'operationFailure',
                 description: updateGoalError!,
+              ),
+            ),
+          ),
+        );
+      }
+      return MacroGoalSaveStatus.failed;
+    }
+    return MacroGoalSaveStatus.saved;
+  }
+
+  @override
+  Future<bool> completeMacroGoal(int id) async {
+    if (completeGoalError != null) {
+      if (!isClosed) {
+        // Mirrors real cubit: starts loading without clearing prior error.
+        emit(state.copyWith(isLoading: true));
+        emit(
+          state.copyWith(
+            isLoading: false,
+            error: Nullable(
+              ErrorState(
+                type: 'operationFailure',
+                description: completeGoalError!,
               ),
             ),
           ),
@@ -325,6 +353,19 @@ class _TestMacroTrackingCubit extends MacroTrackingCubit {
   Future<void> getDailyLog(DateTime date) async {
     dailyLogCalls++;
     lastDailyLogDate = date;
+    if (dailyLogError != null && !isClosed) {
+      // Mirrors real cubit: starts loading without clearing prior error.
+      emit(state.copyWith(isLoading: true));
+      emit(
+        state.copyWith(
+          isLoading: false,
+          error: Nullable(
+            ErrorState(type: 'operationFailure', description: dailyLogError!),
+          ),
+        ),
+      );
+      return;
+    }
     if (updateStateOnDailyLog && !isClosed) {
       emit(
         state.copyWith(
@@ -3007,6 +3048,72 @@ void main() {
         TrackerBodyStates.activeGoal,
       );
     });
+
+    testWidgets(
+      'MacroGoalsScreen reports repeated identical failure when retrying Deactivate',
+      (tester) async {
+        final macroCubit = _TestMacroTrackingCubit(
+          hasLoadedActiveGoal: true,
+          activeGoal: _sampleActiveMacroGoal,
+        )..completeGoalError = 'Deactivate failed';
+        addTearDown(macroCubit.close);
+
+        await tester.pumpWidget(
+          buildAppHarness(
+            macroCubit: macroCubit,
+            child: const MacroGoalsScreen(),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        final deactivateBtn = find.byKey(
+          const ValueKey('macro-goal-deactivate-btn'),
+        );
+        await tester.tap(deactivateBtn);
+        await tester.pumpAndSettle();
+        expect(find.text('Deactivate failed'), findsOneWidget);
+
+        // Dismiss the first SnackBar and retry with the same error.
+        ScaffoldMessenger.of(tester.element(find.byType(MacroGoalsScreen)))
+            .hideCurrentSnackBar();
+        await tester.pumpAndSettle();
+        expect(find.text('Deactivate failed'), findsNothing);
+
+        await tester.tap(deactivateBtn);
+        await tester.pumpAndSettle();
+        expect(find.text('Deactivate failed'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'MacroTrackerScreen reports repeated identical failure on retried diary load',
+      (tester) async {
+        final macroCubit = _TestMacroTrackingCubit(
+          hasLoadedActiveGoal: true,
+          activeGoal: _sampleActiveMacroGoal,
+        )..dailyLogError = 'Diary load failed';
+        addTearDown(macroCubit.close);
+
+        await tester.pumpWidget(
+          buildAppHarness(
+            macroCubit: macroCubit,
+            child: const MacroTrackerScreen(),
+          ),
+        );
+        await tester.pumpAndSettle();
+        expect(find.text('Diary load failed'), findsOneWidget);
+
+        ScaffoldMessenger.of(tester.element(find.byType(MacroTrackerScreen)))
+            .hideCurrentSnackBar();
+        await tester.pumpAndSettle();
+        expect(find.text('Diary load failed'), findsNothing);
+
+        // Navigate to previous day -> triggers another getDailyLog with same error.
+        await tester.tap(find.byKey(const ValueKey('macro-tracker-prev-btn')));
+        await tester.pumpAndSettle();
+        expect(find.text('Diary load failed'), findsOneWidget);
+      },
+    );
   });
 
   group('Responsive Narrow and Scaled Layouts', () {
