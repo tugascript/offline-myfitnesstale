@@ -22,20 +22,29 @@ import '../../../data/utils/dates.dart';
 import '../../core/sizes/data_display_sizes.dart';
 import '../../core/sizes/screen_size.dart';
 import '../../core/widgets/layout/app_scaffold.dart';
+import '../utils/macro_goal_form_defaults.dart';
 import '../utils/tacker_scope.dart';
 import '../view_models/macro_tracking_cubit.dart';
 import '../view_models/states/macro_tracking_state.dart';
+import '../widgets/goals/macro_goal_form_modal.dart';
 import '../widgets/log_food_modal.dart';
 import '../widgets/tracker/macro_tacker_scope_widget.dart';
 import '../widgets/tracker/macro_tracker_date_navigator.dart';
+import '../widgets/tracker/macro_tracker_placeholder.dart';
 import '../widgets/tracker/macro_tracker_scope_selection.dart';
 
 class MacroTrackerScreen extends StatefulWidget {
   static const name = 'macro_tracker';
   final bool isVisible;
+  final int goalPromptTrigger;
   final DateTime Function()? now;
 
-  const MacroTrackerScreen({super.key, this.isVisible = true, this.now});
+  const MacroTrackerScreen({
+    super.key,
+    this.isVisible = true,
+    this.goalPromptTrigger = 0,
+    this.now,
+  });
 
   @override
   State<MacroTrackerScreen> createState() => _MacroTrackerScreenState();
@@ -53,6 +62,8 @@ class _MacroTrackerScreenState extends State<MacroTrackerScreen> {
   int _periodLoadToken = 0;
   int _rangeLoadToken = 0;
   bool _deferredInitialLogLoad = false;
+  int _handledGoalPromptTrigger = 0;
+  bool _isGoalModalOpen = false;
 
   DateTime _currentNow() => widget.now?.call() ?? DateTime.now();
 
@@ -67,6 +78,10 @@ class _MacroTrackerScreenState extends State<MacroTrackerScreen> {
   @override
   void didUpdateWidget(MacroTrackerScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (!widget.isVisible && oldWidget.isVisible) {
+      _handledGoalPromptTrigger = widget.goalPromptTrigger;
+      return;
+    }
     if (widget.isVisible && !oldWidget.isVisible) {
       final currentNow = _currentNow();
       final today = DateUtils.dateOnly(currentNow);
@@ -84,6 +99,12 @@ class _MacroTrackerScreenState extends State<MacroTrackerScreen> {
         retryFailedGoal: true,
         reconcileRange: _scope != TrackerScope.day,
       );
+    } else if (widget.isVisible &&
+        widget.goalPromptTrigger != oldWidget.goalPromptTrigger) {
+      _reconcileTrackerData(
+        retryFailedGoal: true,
+        reconcileRange: _scope != TrackerScope.day,
+      );
     }
   }
 
@@ -91,6 +112,52 @@ class _MacroTrackerScreenState extends State<MacroTrackerScreen> {
   void dispose() {
     _pageController.dispose();
     super.dispose();
+  }
+
+  Future<void> _openCreateMacroGoalModal() async {
+    if (!mounted || _isGoalModalOpen) return;
+    _isGoalModalOpen = true;
+    final theme = Theme.of(context);
+    final sizes = DataDisplaySizes.getDataDisplaySizes(
+      BreakPoint.fromContext(context).screenSize,
+    );
+    try {
+      await showDialog<void>(
+        context: context,
+        builder: (_) => MacroGoalFormModal(
+          theme: theme,
+          sizes: sizes,
+          defaults: MacroGoalFormDefaults.recommended2000Kcal,
+        ),
+      );
+    } finally {
+      _isGoalModalOpen = false;
+    }
+  }
+
+  void _scheduleGoalPromptIfNeeded(MacroTrackingState state) {
+    if (!mounted || !widget.isVisible) return;
+    if (widget.goalPromptTrigger <= _handledGoalPromptTrigger) return;
+    if (!state.hasLoadedActiveGoal ||
+        state.isLoadingActiveGoal ||
+        state.isLoading) {
+      return;
+    }
+
+    _handledGoalPromptTrigger = widget.goalPromptTrigger;
+    if (state.activeGoal != null || _isGoalModalOpen) return;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !widget.isVisible || _isGoalModalOpen) return;
+      final latest = context.read<MacroTrackingCubit>().state;
+      if (!latest.hasLoadedActiveGoal ||
+          latest.isLoadingActiveGoal ||
+          latest.isLoading ||
+          latest.activeGoal != null) {
+        return;
+      }
+      _openCreateMacroGoalModal();
+    });
   }
 
   Future<bool> _ensureActiveGoalReady(
@@ -152,6 +219,14 @@ class _MacroTrackerScreenState extends State<MacroTrackerScreen> {
     if (!widget.isVisible) return;
 
     final macroState = macroCubit.state;
+    if (macroState.activeGoal == null) {
+      _scheduleGoalPromptIfNeeded(macroState);
+      return;
+    }
+    if (widget.goalPromptTrigger > _handledGoalPromptTrigger) {
+      _handledGoalPromptTrigger = widget.goalPromptTrigger;
+    }
+
     if (!_hasMatchingDailyLog(macroState)) {
       macroCubit.getDailyLog(_selectedDate);
     }
@@ -191,7 +266,8 @@ class _MacroTrackerScreenState extends State<MacroTrackerScreen> {
     if (!mounted ||
         !widget.isVisible ||
         rangeToken != _rangeLoadToken ||
-        _scope == TrackerScope.day) {
+        _scope == TrackerScope.day ||
+        macroCubit.state.activeGoal == null) {
       return;
     }
     _dispatchRangeLoad(macroCubit);
@@ -208,7 +284,10 @@ class _MacroTrackerScreenState extends State<MacroTrackerScreen> {
     )) {
       return;
     }
-    if (!mounted || !widget.isVisible || periodToken != _periodLoadToken) {
+    if (!mounted ||
+        !widget.isVisible ||
+        periodToken != _periodLoadToken ||
+        macroCubit.state.activeGoal == null) {
       return;
     }
     macroCubit.getDailyLog(_selectedDate);
@@ -454,93 +533,202 @@ class _MacroTrackerScreenState extends State<MacroTrackerScreen> {
     final today = _today;
     final minDate = _minDate(today);
 
-    return BlocListener<MacroTrackingCubit, MacroTrackingState>(
-      listenWhen: (previous, current) =>
-          !previous.hasLoadedActiveGoal && current.hasLoadedActiveGoal,
-      listener: (context, state) {
-        if (!_deferredInitialLogLoad) return;
-        _deferredInitialLogLoad = false;
-        if (!widget.isVisible) return;
-        final latest = context.read<MacroTrackingCubit>().state;
-        if (latest.isLoadingActiveGoal) return;
-        final needsDailyLog = !_hasMatchingDailyLog(latest);
-        final needsRange = _scope != TrackerScope.day;
-        if (needsDailyLog || needsRange) {
-          _reconcileTrackerData(
-            retryFailedGoal: false,
-            reconcileRange: needsRange,
-          );
-        }
-      },
-      child: AppScaffold(
-        title: 'Macro Tracker',
-        body: Column(
-          children: [
-            Padding(
-              padding: EdgeInsets.fromLTRB(
-                sizes.viewPadding,
-                sizes.viewPadding,
-                sizes.viewPadding,
-                0,
-              ),
-              child: Column(
-                children: [
-                  MacroTrackerScopeSelection(
-                    sizes: sizes,
-                    theme: theme,
-                    scope: _scope,
-                    onScopeChanged: _onScopeChanged,
-                    onGoToToday: _goToToday,
-                    pageController: _pageController,
-                  ),
-                  SizedBox(height: sizes.halfSpacing),
-                  MacroTrackerDateNavigator(
-                    sizes: sizes,
-                    scope: _scope,
-                    selectedDate: _selectedDate,
-                    firstDate: minDate,
-                    lastDate: today,
-                    canGoPrevious: _canGoPrevious,
-                    canGoNext: _canGoNext,
-                    onPrevious: _prevPeriod,
-                    onNext: _nextPeriod,
-                    onDatePicked: _onDatePicked,
-                  ),
-                ],
-              ),
-            ),
-            SizedBox(height: sizes.spacing),
-            // Scope Body
-            Expanded(
-              child: MacroTackerScopeWidget(
-                sizes: sizes,
-                theme: theme,
-                selectedDate: _selectedDate,
-                onSelectDate: _selectDay,
-                pageController: _pageController,
-                onScopeChanged: _onPageChanged,
-                onUserScrollStart: _onUserScrollStart,
-                onScrollSettled: _onScopeScrollSettled,
-              ),
-            ),
-          ],
+    return MultiBlocListener(
+      listeners: [
+        BlocListener<MacroTrackingCubit, MacroTrackingState>(
+          listenWhen: (previous, current) =>
+              !previous.hasLoadedActiveGoal && current.hasLoadedActiveGoal,
+          listener: (context, state) {
+            if (state.activeGoal == null) {
+              _deferredInitialLogLoad = false;
+              if (!widget.isVisible) return;
+              final latest = context.read<MacroTrackingCubit>().state;
+              if (latest.isLoadingActiveGoal) return;
+              _scheduleGoalPromptIfNeeded(latest);
+              return;
+            }
+
+            if (!_deferredInitialLogLoad) return;
+            _deferredInitialLogLoad = false;
+            if (!widget.isVisible) return;
+            final latest = context.read<MacroTrackingCubit>().state;
+            if (latest.isLoadingActiveGoal) return;
+            final needsDailyLog = !_hasMatchingDailyLog(latest);
+            final needsRange = _scope != TrackerScope.day;
+            if (needsDailyLog || needsRange) {
+              _reconcileTrackerData(
+                retryFailedGoal: false,
+                reconcileRange: needsRange,
+              );
+            }
+          },
         ),
-        floatingActionButton: FloatingActionButton(
-          key: const ValueKey('macro-tracker-log-food-fab'),
-          tooltip: 'Log Food',
-          shape: BeveledRectangleBorder(),
-          child: Icon(Icons.add, size: sizes.buttonIconSize),
-          onPressed: () {
-            showDialog(
-              context: context,
-              builder: (_) => LogFoodModal(
-                theme: theme,
-                sizes: sizes,
-                selectedDate: _selectedDate,
+        BlocListener<MacroTrackingCubit, MacroTrackingState>(
+          listenWhen: (previous, current) =>
+              previous.hasLoadedActiveGoal &&
+              ((previous.activeGoal == null) != (current.activeGoal == null)),
+          listener: (context, state) {
+            if (state.activeGoal == null) {
+              if (_scope != TrackerScope.day) {
+                setState(() {
+                  _scope = TrackerScope.day;
+                });
+              }
+              return;
+            }
+
+            if (!widget.isVisible) return;
+            final latest = context.read<MacroTrackingCubit>().state;
+            if (latest.isLoadingActiveGoal) return;
+            final needsDailyLog = !_hasMatchingDailyLog(latest);
+            final needsRange = _scope != TrackerScope.day;
+            if (needsDailyLog || needsRange) {
+              _reconcileTrackerData(
+                retryFailedGoal: false,
+                reconcileRange: needsRange,
+              );
+            }
+          },
+        ),
+        BlocListener<MacroTrackingCubit, MacroTrackingState>(
+          listenWhen: (previous, current) =>
+              previous.error != current.error &&
+              current.error != null &&
+              current.hasLoadedActiveGoal &&
+              !current.isLoading,
+          listener: (context, state) {
+            if (!widget.isVisible) return;
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  state.error!.description,
+                  style: TextStyle(fontSize: sizes.fontSize),
+                ),
               ),
             );
           },
         ),
+      ],
+      child: BlocBuilder<MacroTrackingCubit, MacroTrackingState>(
+        buildWhen: (previous, current) =>
+            (previous.activeGoal == null) != (current.activeGoal == null) ||
+            previous.hasLoadedActiveGoal != current.hasLoadedActiveGoal ||
+            previous.isLoadingActiveGoal != current.isLoadingActiveGoal ||
+            previous.isLoading != current.isLoading ||
+            previous.error != current.error,
+        builder: (context, state) {
+          final hasActiveGoal = state.activeGoal != null;
+          final hasInitialGoalError =
+              !hasActiveGoal &&
+              !state.hasLoadedActiveGoal &&
+              state.error != null;
+          final isWaitingForGoal =
+              !hasActiveGoal &&
+              !state.hasLoadedActiveGoal &&
+              state.isLoadingActiveGoal;
+
+          final Widget body;
+          if (hasActiveGoal) {
+            body = Column(
+              children: [
+                Padding(
+                  padding: EdgeInsets.fromLTRB(
+                    sizes.viewPadding,
+                    sizes.viewPadding,
+                    sizes.viewPadding,
+                    0,
+                  ),
+                  child: Column(
+                    children: [
+                      MacroTrackerScopeSelection(
+                        sizes: sizes,
+                        theme: theme,
+                        scope: _scope,
+                        onScopeChanged: _onScopeChanged,
+                        onGoToToday: _goToToday,
+                        pageController: _pageController,
+                      ),
+                      SizedBox(height: sizes.halfSpacing),
+                      MacroTrackerDateNavigator(
+                        sizes: sizes,
+                        scope: _scope,
+                        selectedDate: _selectedDate,
+                        firstDate: minDate,
+                        lastDate: today,
+                        canGoPrevious: _canGoPrevious,
+                        canGoNext: _canGoNext,
+                        onPrevious: _prevPeriod,
+                        onNext: _nextPeriod,
+                        onDatePicked: _onDatePicked,
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(height: sizes.spacing),
+                // Scope Body
+                Expanded(
+                  child: MacroTackerScopeWidget(
+                    sizes: sizes,
+                    theme: theme,
+                    selectedDate: _selectedDate,
+                    onSelectDate: _selectDay,
+                    pageController: _pageController,
+                    onScopeChanged: _onPageChanged,
+                    onUserScrollStart: _onUserScrollStart,
+                    onScrollSettled: _onScopeScrollSettled,
+                  ),
+                ),
+              ],
+            );
+          } else if (hasInitialGoalError) {
+            body = Padding(
+              padding: EdgeInsets.all(sizes.viewPadding),
+              child: MacroTrackerPlaceholder(
+                sizes: sizes,
+                errorDescription: state.error!.description,
+                isLoading: state.isLoadingActiveGoal,
+                onRetry: () => _reconcileTrackerData(
+                  retryFailedGoal: true,
+                  reconcileRange: _scope != TrackerScope.day,
+                ),
+              ),
+            );
+          } else if (isWaitingForGoal) {
+            body = const Center(child: CircularProgressIndicator());
+          } else {
+            body = Padding(
+              padding: EdgeInsets.all(sizes.viewPadding),
+              child: MacroTrackerPlaceholder(
+                sizes: sizes,
+                isLoading: state.isLoading,
+                onCreateGoal: _openCreateMacroGoalModal,
+              ),
+            );
+          }
+
+          return AppScaffold(
+            title: 'Macro Tracker',
+            body: body,
+            floatingActionButton: hasActiveGoal
+                ? FloatingActionButton(
+                    key: const ValueKey('macro-tracker-log-food-fab'),
+                    tooltip: 'Log Food',
+                    shape: BeveledRectangleBorder(),
+                    child: Icon(Icons.add, size: sizes.buttonIconSize),
+                    onPressed: () {
+                      showDialog(
+                        context: context,
+                        builder: (_) => LogFoodModal(
+                          theme: theme,
+                          sizes: sizes,
+                          selectedDate: _selectedDate,
+                        ),
+                      );
+                    },
+                  )
+                : null,
+          );
+        },
       ),
     );
   }

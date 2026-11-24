@@ -329,6 +329,15 @@ above a keyboard inset.
   preceding 365 days through today (`[today - 365 days, today]`): boundary chevrons and out-of-range days are disabled,
   period steps and picker initial dates are clamped into range, and nutrition records older than 365 days cannot be
   opened from the tracker UI.
+- `MacroTrackerScreen` requires an active macro goal before displaying the diary or food-logging FAB: when no active
+  goal exists, it skips daily/range log fetches and renders `MacroTrackerPlaceholder` (`No Active Macro Goal` with a
+  `Set Macro Goal` action, or a retry state if the initial lookup failed). Accessing the **Macros** tab from
+  `MainNavigationScreen` without an active goal automatically opens `MacroGoalFormModal` with passed
+  `MacroGoalFormDefaults.recommended2000Kcal` (`150g` protein, `215g` carbs, `60g` fat = `2000 kcal`, `2500 ml` water,
+  plus a recommended-target helper note and close button). Passing defaults is scoped to this entry point so
+  `MacroGoalForm` retains its existing built-in defaults everywhere else; offscreen tab warm-up never pops up the
+  modal, dismissing it leaves the placeholder available (and re-tapping the Macros tab or `Set Macro Goal` reopens it),
+  and saving a goal transitions directly into the tracker and loads today's diary.
 - `MacroTrackerScreen` reuses already-loaded active macro goal state when available, serializes
   daily and range log queries behind a goal-specific completion signal (`MacroTrackingState.isLoadingActiveGoal`) so
   targets do not briefly fall back to defaults or overwrite active-goal errors, defers all hidden diary and range

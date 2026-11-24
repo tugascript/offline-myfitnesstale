@@ -54,9 +54,11 @@ import 'package:myfitnesstale/src/ui/home/screens/profile/profile_screen.dart';
 import 'package:myfitnesstale/src/ui/macros/screens/macro_goals_screen.dart';
 import 'package:myfitnesstale/src/ui/macros/screens/macro_tracker_screen.dart';
 import 'package:myfitnesstale/src/ui/macros/utils/tacker_scope.dart';
+import 'package:myfitnesstale/src/ui/macros/widgets/goals/macro_goal_form_modal.dart';
 import 'package:myfitnesstale/src/ui/macros/widgets/tracker/macro_tracker_date_navigator.dart';
 import 'package:myfitnesstale/src/ui/macros/widgets/tracker/macro_tracker_day_widget.dart';
 import 'package:myfitnesstale/src/ui/macros/widgets/tracker/macro_tracker_month_widget.dart';
+import 'package:myfitnesstale/src/ui/macros/widgets/tracker/macro_tracker_placeholder.dart';
 import 'package:myfitnesstale/src/ui/macros/widgets/tracker/macro_tracker_scope_selection.dart';
 import 'package:myfitnesstale/src/ui/macros/widgets/tracker/macro_tracker_week_widget.dart';
 import 'package:myfitnesstale/src/ui/recipes/screens/recipes_screen.dart';
@@ -68,6 +70,7 @@ import 'package:myfitnesstale/src/ui/home/widgets/quick_actions_widget.dart';
 import 'package:myfitnesstale/src/data/repositories/foods/food_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/recipes/recipe_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/macros/dtos/macro_tracking_dto.dart';
+import 'package:myfitnesstale/src/data/repositories/macros/inputs/week_macro_goal_input.dart';
 import 'package:myfitnesstale/src/data/repositories/macros/macro_tracking_repository.dart';
 import 'package:myfitnesstale/src/ui/core/view_models/states/common_state.dart';
 import 'package:myfitnesstale/src/data/repositories/weight/weight_record_repository.dart';
@@ -127,32 +130,59 @@ class _TestRecipeCubit extends RecipeCubit {
   }) async {}
 }
 
+const _sampleActiveMacroGoal = MacroGoalDto(
+  id: 1,
+  name: 'Daily Target',
+  targetCalories: 2000,
+  targetProtein: 150,
+  targetCarbs: 215,
+  targetFat: 60,
+  targetWaterIntakeMl: 2500,
+  isActive: true,
+  phase: WeightGoalPhase.maintain,
+);
+
 class _TestMacroTrackingCubit extends MacroTrackingCubit {
   _TestMacroTrackingCubit({
     bool hasLoadedActiveGoal = false,
+    MacroGoalDto? activeGoal,
     this.activeGoalCompleter,
     this.updateStateOnDailyLog = false,
+    this.returnActiveGoalOnLoad = true,
+    this.emitOnActiveGoalCall = false,
   }) : super(macroTrackingRepository: MacroTrackingRepository.create()) {
-    if (hasLoadedActiveGoal) {
-      emit(state.copyWith(hasLoadedActiveGoal: true));
+    if (hasLoadedActiveGoal || activeGoal != null) {
+      emit(
+        state.copyWith(
+          hasLoadedActiveGoal: hasLoadedActiveGoal ? true : null,
+          activeGoal: activeGoal != null ? Nullable(activeGoal) : null,
+        ),
+      );
     }
   }
 
   final Completer<void>? activeGoalCompleter;
   final bool updateStateOnDailyLog;
+  final bool returnActiveGoalOnLoad;
+  final bool emitOnActiveGoalCall;
   int activeGoalCalls = 0;
   int dailyLogCalls = 0;
   int rangeLogCalls = 0;
   DateTime? lastDailyLogDate;
   DateTime? lastWaterDate;
+  final List<WeekMacroGoalInput> createdGoals = [];
 
   void beginActiveGoalLoad() {
     emit(state.copyWith(isLoading: true, isLoadingActiveGoal: true));
   }
 
-  void completeActiveGoalLoad() {
+  void completeActiveGoalLoad({bool? withGoal}) {
+    final shouldSetGoal = withGoal ?? returnActiveGoalOnLoad;
     emit(
       state.copyWith(
+        activeGoal: shouldSetGoal
+            ? const Nullable(_sampleActiveMacroGoal)
+            : const Nullable(null),
         isLoading: false,
         isLoadingActiveGoal: false,
         hasLoadedActiveGoal: true,
@@ -188,13 +218,61 @@ class _TestMacroTrackingCubit extends MacroTrackingCubit {
       if (!isClosed) {
         emit(
           state.copyWith(
+            activeGoal: returnActiveGoalOnLoad
+                ? const Nullable(_sampleActiveMacroGoal)
+                : const Nullable(null),
             isLoading: false,
             isLoadingActiveGoal: false,
             hasLoadedActiveGoal: true,
+            error: const Nullable(null),
           ),
         );
       }
+      return;
     }
+    if (emitOnActiveGoalCall && !isClosed) {
+      emit(
+        state.copyWith(
+          activeGoal: returnActiveGoalOnLoad
+              ? const Nullable(_sampleActiveMacroGoal)
+              : const Nullable(null),
+          isLoading: false,
+          isLoadingActiveGoal: false,
+          hasLoadedActiveGoal: true,
+          error: const Nullable(null),
+        ),
+      );
+    }
+  }
+
+  @override
+  Future<bool> createMacroGoal(WeekMacroGoalInput input) async {
+    createdGoals.add(input);
+    if (!isClosed) {
+      emit(
+        state.copyWith(
+          activeGoal: Nullable(
+            MacroGoalDto(
+              id: createdGoals.length,
+              name: input.name ?? 'Daily Target',
+              targetCalories: input.targetCalories,
+              targetProtein: input.targetProtein,
+              targetCarbs: input.targetCarbs,
+              targetFat: input.targetFat,
+              targetWaterIntakeMl: input.targetWaterIntakeMl.value,
+              goalType: input.goalType,
+              isActive: input.isActive,
+              phase: input.phase,
+            ),
+          ),
+          hasLoadedActiveGoal: true,
+          isLoadingActiveGoal: false,
+          isLoading: false,
+          error: const Nullable(null),
+        ),
+      );
+    }
+    return true;
   }
 
   @override
@@ -374,7 +452,12 @@ class _TestWorkoutPlanRecordCubit extends WorkoutPlanRecordCubit {
 }
 
 void main() {
-  Widget buildAppHarness({required Widget child, TextScaler? textScaler}) {
+  Widget buildAppHarness({
+    required Widget child,
+    TextScaler? textScaler,
+    MacroTrackingCubit? macroCubit,
+    MacroGoalDto? activeMacroGoal,
+  }) {
     final router = GoRouter(
       initialLocation: '/',
       routes: [
@@ -429,9 +512,15 @@ void main() {
         ),
         BlocProvider<FoodCubit>(create: (_) => _TestFoodCubit()),
         BlocProvider<RecipeCubit>(create: (_) => _TestRecipeCubit()),
-        BlocProvider<MacroTrackingCubit>(
-          create: (_) => _TestMacroTrackingCubit(),
-        ),
+        if (macroCubit != null)
+          BlocProvider<MacroTrackingCubit>.value(value: macroCubit)
+        else
+          BlocProvider<MacroTrackingCubit>(
+            create: (_) => _TestMacroTrackingCubit(
+              hasLoadedActiveGoal: activeMacroGoal != null,
+              activeGoal: activeMacroGoal,
+            ),
+          ),
       ],
       child: MaterialApp.router(
         routerConfig: router,
@@ -667,6 +756,7 @@ void main() {
       await tester.pumpWidget(
         buildAppHarness(
           textScaler: const TextScaler.linear(2.0),
+          activeMacroGoal: _sampleActiveMacroGoal,
           child: const MainNavigationScreen(),
         ),
       );
@@ -756,7 +846,10 @@ void main() {
     testWidgets('MacroTrackerScreen reuses loaded active macro goal', (
       tester,
     ) async {
-      final macroCubit = _TestMacroTrackingCubit(hasLoadedActiveGoal: true);
+      final macroCubit = _TestMacroTrackingCubit(
+        hasLoadedActiveGoal: true,
+        activeGoal: _sampleActiveMacroGoal,
+      );
       final router = GoRouter(
         initialLocation: '/',
         routes: [
@@ -871,6 +964,7 @@ void main() {
 
         final macroCubit = _TestMacroTrackingCubit(
           hasLoadedActiveGoal: true,
+          activeGoal: _sampleActiveMacroGoal,
           updateStateOnDailyLog: true,
         );
         final isVisible = ValueNotifier<bool>(false);
@@ -966,7 +1060,9 @@ void main() {
     testWidgets(
       'MacroTrackerScreen serializes date and scope changes behind in-flight active goal load',
       (tester) async {
-        final macroCubit = _TestMacroTrackingCubit()..beginActiveGoalLoad();
+        final macroCubit = _TestMacroTrackingCubit(
+          activeGoal: _sampleActiveMacroGoal,
+        )..beginActiveGoalLoad();
         final router = GoRouter(
           initialLocation: '/',
           routes: [
@@ -1030,7 +1126,10 @@ void main() {
     testWidgets(
       'MacroTrackerScreen food-logging FAB exposes Log Food accessible tooltip',
       (tester) async {
-        final macroCubit = _TestMacroTrackingCubit(hasLoadedActiveGoal: true);
+        final macroCubit = _TestMacroTrackingCubit(
+          hasLoadedActiveGoal: true,
+          activeGoal: _sampleActiveMacroGoal,
+        );
         final router = GoRouter(
           initialLocation: '/',
           routes: [
@@ -1165,6 +1264,7 @@ void main() {
         var fakeNow = DateTime(2026, 11, 24, 23, 55);
         final macroCubit = _TestMacroTrackingCubit(
           hasLoadedActiveGoal: true,
+          activeGoal: _sampleActiveMacroGoal,
           updateStateOnDailyLog: true,
         );
         final isVisible = ValueNotifier<bool>(false);
@@ -1249,6 +1349,7 @@ void main() {
         final yesterday = DateTime(today.year, today.month, today.day - 1);
         final macroCubit = _TestMacroTrackingCubit(
           hasLoadedActiveGoal: true,
+          activeGoal: _sampleActiveMacroGoal,
           updateStateOnDailyLog: true,
         );
         macroCubit.seedDailyLog(
@@ -1410,8 +1511,10 @@ void main() {
     testWidgets(
       'MacroTrackerScreen skips pending period and range continuations if tab hides while awaiting active goal',
       (tester) async {
-        final macroCubit = _TestMacroTrackingCubit(updateStateOnDailyLog: true)
-          ..beginActiveGoalLoad();
+        final macroCubit = _TestMacroTrackingCubit(
+          activeGoal: _sampleActiveMacroGoal,
+          updateStateOnDailyLog: true,
+        )..beginActiveGoalLoad();
         final isVisible = ValueNotifier<bool>(true);
         final router = GoRouter(
           initialLocation: '/',
@@ -1490,6 +1593,7 @@ void main() {
         final yesterday = DateTime(today.year, today.month, today.day - 1);
         final macroCubit = _TestMacroTrackingCubit(
           hasLoadedActiveGoal: true,
+          activeGoal: _sampleActiveMacroGoal,
           updateStateOnDailyLog: true,
         );
         // Simulate a late water-update response replacing selectedDailyLog with
@@ -1919,7 +2023,10 @@ void main() {
     testWidgets(
       'MacroTrackerScreen supports horizontal scrolling between Day, Week, and Month',
       (tester) async {
-        final macroCubit = _TestMacroTrackingCubit(hasLoadedActiveGoal: true);
+        final macroCubit = _TestMacroTrackingCubit(
+          hasLoadedActiveGoal: true,
+          activeGoal: _sampleActiveMacroGoal,
+        );
         final router = GoRouter(
           initialLocation: '/',
           routes: [
@@ -2030,7 +2137,10 @@ void main() {
     testWidgets(
       'MacroTrackerScreen keeps scope synced when manual swipe interrupts programmatic change',
       (tester) async {
-        final macroCubit = _TestMacroTrackingCubit(hasLoadedActiveGoal: true);
+        final macroCubit = _TestMacroTrackingCubit(
+          hasLoadedActiveGoal: true,
+          activeGoal: _sampleActiveMacroGoal,
+        );
         final router = GoRouter(
           initialLocation: '/',
           routes: [
@@ -2088,7 +2198,10 @@ void main() {
       'MacroTrackerScreen disables next chevron when next period is past today',
       (tester) async {
         await tester.pumpWidget(
-          buildAppHarness(child: const MacroTrackerScreen()),
+          buildAppHarness(
+            activeMacroGoal: _sampleActiveMacroGoal,
+            child: const MacroTrackerScreen(),
+          ),
         );
         await tester.pumpAndSettle();
 
@@ -2141,7 +2254,10 @@ void main() {
       'MacroTrackerScreen aligns previous navigation with one-year picker minimum',
       (tester) async {
         await tester.pumpWidget(
-          buildAppHarness(child: const MacroTrackerScreen()),
+          buildAppHarness(
+            activeMacroGoal: _sampleActiveMacroGoal,
+            child: const MacroTrackerScreen(),
+          ),
         );
         await tester.pumpAndSettle();
 
@@ -2351,6 +2467,237 @@ void main() {
         expect(pickedDate, isNull);
       },
     );
+
+    testWidgets(
+      'MainNavigationScreen Macros tab without active goal shows placeholder and auto-opens 2000 kcal modal',
+      (tester) async {
+        final macroCubit = _TestMacroTrackingCubit(
+          emitOnActiveGoalCall: true,
+          returnActiveGoalOnLoad: false,
+        );
+        addTearDown(macroCubit.close);
+
+        await tester.pumpWidget(
+          buildAppHarness(
+            macroCubit: macroCubit,
+            child: const MainNavigationScreen(),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        // Offscreen warm-up does not open the modal while on Home.
+        expect(find.byType(MacroGoalFormModal), findsNothing);
+
+        final macrosTab = find.descendant(
+          of: find.byType(BottomNavigationBar),
+          matching: find.text('Macros'),
+        );
+        await tester.tap(macrosTab);
+        await tester.pumpAndSettle();
+
+        expect(find.byType(MacroGoalFormModal), findsOneWidget);
+        expect(find.text('Create Macro Goal'), findsOneWidget);
+        expect(
+          find.byKey(const ValueKey('macro-goal-recommended-note')),
+          findsOneWidget,
+        );
+        expect(find.textContaining('2000 kcal'), findsWidgets);
+
+        Finder goalField(String name) => find.descendant(
+          of: find.byKey(ValueKey('macro-goal-$name-input')),
+          matching: find.byType(TextFormField),
+        );
+        expect(
+          tester.widget<TextFormField>(goalField('calories')).controller?.text,
+          '2000',
+        );
+        expect(
+          tester.widget<TextFormField>(goalField('protein')).controller?.text,
+          '150',
+        );
+        expect(
+          tester.widget<TextFormField>(goalField('carbs')).controller?.text,
+          '215',
+        );
+        expect(
+          tester.widget<TextFormField>(goalField('fat')).controller?.text,
+          '60',
+        );
+        expect(
+          tester.widget<TextFormField>(goalField('water')).controller?.text,
+          '2500',
+        );
+
+        expect(find.byType(MacroTrackerPlaceholder), findsOneWidget);
+        expect(
+          find.byKey(const ValueKey('macro-tracker-log-food-fab')),
+          findsNothing,
+        );
+        expect(macroCubit.dailyLogCalls, 0);
+      },
+    );
+
+    testWidgets(
+      'MainNavigationScreen Macros tab modal dismissal keeps placeholder and reopens via button or tab re-tap',
+      (tester) async {
+        final macroCubit = _TestMacroTrackingCubit(
+          hasLoadedActiveGoal: true,
+          returnActiveGoalOnLoad: false,
+        );
+        addTearDown(macroCubit.close);
+
+        await tester.pumpWidget(
+          buildAppHarness(
+            macroCubit: macroCubit,
+            child: const MainNavigationScreen(),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        final macrosTab = find.descendant(
+          of: find.byType(BottomNavigationBar),
+          matching: find.text('Macros'),
+        );
+        await tester.tap(macrosTab);
+        await tester.pumpAndSettle();
+        expect(find.byType(MacroGoalFormModal), findsOneWidget);
+
+        // Dismiss via close button: placeholder stays visible without looping.
+        await tester.tap(
+          find.byKey(const ValueKey('macro-goal-modal-close-btn')),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.byType(MacroGoalFormModal), findsNothing);
+        expect(find.text('No Active Macro Goal'), findsOneWidget);
+        expect(
+          find.byKey(const ValueKey('macro-tracker-set-goal-btn')),
+          findsOneWidget,
+        );
+        expect(
+          find.byKey(const ValueKey('macro-tracker-log-food-fab')),
+          findsNothing,
+        );
+
+        // Reopen via placeholder button with 2000 kcal recommended defaults.
+        await tester.tap(
+          find.byKey(const ValueKey('macro-tracker-set-goal-btn')),
+        );
+        await tester.pumpAndSettle();
+        expect(find.byType(MacroGoalFormModal), findsOneWidget);
+        expect(
+          find.byKey(const ValueKey('macro-goal-recommended-note')),
+          findsOneWidget,
+        );
+
+        await tester.tap(
+          find.byKey(const ValueKey('macro-goal-modal-close-btn')),
+        );
+        await tester.pumpAndSettle();
+        expect(find.byType(MacroGoalFormModal), findsNothing);
+
+        // Re-tapping Macros bottom nav item while already on Macros tab reopens modal.
+        await tester.tap(macrosTab);
+        await tester.pumpAndSettle();
+        expect(find.byType(MacroGoalFormModal), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'MainNavigationScreen Macros tab modal submission creates 2000 kcal goal and transitions to tracker',
+      (tester) async {
+        final macroCubit = _TestMacroTrackingCubit(
+          hasLoadedActiveGoal: true,
+          returnActiveGoalOnLoad: false,
+          updateStateOnDailyLog: true,
+        );
+        addTearDown(macroCubit.close);
+
+        await tester.pumpWidget(
+          buildAppHarness(
+            macroCubit: macroCubit,
+            child: const MainNavigationScreen(),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        final macrosTab = find.descendant(
+          of: find.byType(BottomNavigationBar),
+          matching: find.text('Macros'),
+        );
+        await tester.tap(macrosTab);
+        await tester.pumpAndSettle();
+        expect(find.byType(MacroGoalFormModal), findsOneWidget);
+
+        final createButton = find.byKey(
+          const ValueKey('macro-goal-submit-button'),
+        );
+        await tester.ensureVisible(createButton);
+        await tester.tap(createButton);
+        await tester.pumpAndSettle();
+
+        expect(find.byType(MacroGoalFormModal), findsNothing);
+        expect(macroCubit.createdGoals, hasLength(1));
+        final createdDay = macroCubit.createdGoals.single.days.single;
+        expect(createdDay.targetCalories, 2000);
+        expect(createdDay.targetProtein, 150);
+        expect(createdDay.targetCarbs, 215);
+        expect(createdDay.targetFat, 60);
+        expect(createdDay.targetWaterIntakeMl.value, 2500);
+
+        expect(find.byType(MacroTrackerPlaceholder), findsNothing);
+        expect(
+          find.byKey(const ValueKey('macro-tracker-log-food-fab')),
+          findsOneWidget,
+        );
+        expect(find.byType(MacroTrackerDayWidget), findsOneWidget);
+        expect(macroCubit.dailyLogCalls, 1);
+      },
+    );
+
+    testWidgets(
+      'MainNavigationScreen switching away from Macros before in-flight active goal completes does not pop modal',
+      (tester) async {
+        final goalCompleter = Completer<void>();
+        final macroCubit = _TestMacroTrackingCubit(
+          activeGoalCompleter: goalCompleter,
+          returnActiveGoalOnLoad: false,
+        );
+        addTearDown(() async {
+          if (!goalCompleter.isCompleted) {
+            goalCompleter.complete();
+          }
+          await macroCubit.close();
+        });
+
+        await tester.pumpWidget(
+          buildAppHarness(
+            macroCubit: macroCubit,
+            child: const MainNavigationScreen(),
+          ),
+        );
+        await tester.pump();
+
+        final bottomNav = find.byType(BottomNavigationBar);
+        await tester.tap(
+          find.descendant(of: bottomNav, matching: find.text('Macros')),
+        );
+        await tester.pump();
+        expect(find.byType(MacroGoalFormModal), findsNothing);
+
+        // Leave Macros tab before active goal query finishes.
+        await tester.tap(
+          find.descendant(of: bottomNav, matching: find.text('Home')),
+        );
+        await tester.pump();
+
+        goalCompleter.complete();
+        await tester.pumpAndSettle();
+
+        // Modal must not pop up over Home.
+        expect(find.byType(MacroGoalFormModal), findsNothing);
+      },
+    );
   });
 
   group('Responsive Narrow and Scaled Layouts', () {
@@ -2364,6 +2711,7 @@ void main() {
       await tester.pumpWidget(
         buildAppHarness(
           textScaler: const TextScaler.linear(2.0),
+          activeMacroGoal: _sampleActiveMacroGoal,
           child: const MacroTrackerScreen(),
         ),
       );
@@ -2372,6 +2720,37 @@ void main() {
       expect(find.textContaining('Macro Tracker'), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
+
+    testWidgets(
+      'MacroTrackerPlaceholder renders narrow screen with large text',
+      (tester) async {
+        tester.view.devicePixelRatio = 1;
+        tester.view.physicalSize = const Size(320, 640);
+        addTearDown(tester.view.reset);
+
+        final macroCubit = _TestMacroTrackingCubit(
+          hasLoadedActiveGoal: true,
+          returnActiveGoalOnLoad: false,
+        );
+        addTearDown(macroCubit.close);
+
+        await tester.pumpWidget(
+          buildAppHarness(
+            textScaler: const TextScaler.linear(2.0),
+            macroCubit: macroCubit,
+            child: const MacroTrackerScreen(),
+          ),
+        );
+        await tester.pump();
+
+        expect(find.text('No Active Macro Goal'), findsOneWidget);
+        expect(
+          find.byKey(const ValueKey('macro-tracker-set-goal-btn')),
+          findsOneWidget,
+        );
+        expect(tester.takeException(), isNull);
+      },
+    );
 
     testWidgets('FoodsScreen renders narrow screen', (tester) async {
       tester.view.devicePixelRatio = 1;

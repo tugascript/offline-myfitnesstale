@@ -22,6 +22,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:material_ui/material_ui.dart';
+import 'package:myfitnesstale/src/data/repositories/macros/dtos/macro_tracking_dto.dart';
 import 'package:myfitnesstale/src/data/repositories/macros/macro_tracking_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/profile/dtos/profile_dto.dart';
 import 'package:myfitnesstale/src/data/repositories/profile/dtos/reminders_config_dto.dart';
@@ -47,6 +48,7 @@ import 'package:myfitnesstale/src/ui/home/screens/main_navigation_screen.dart';
 import 'package:myfitnesstale/src/ui/home/view_models/profile_cubit.dart';
 import 'package:myfitnesstale/src/ui/macros/screens/macro_tracker_screen.dart';
 import 'package:myfitnesstale/src/ui/macros/view_models/macro_tracking_cubit.dart';
+import 'package:myfitnesstale/src/ui/macros/widgets/goals/macro_goal_form_modal.dart';
 import 'package:myfitnesstale/src/ui/workout_plans/screens/current_workout_plan_screen.dart';
 import 'package:myfitnesstale/src/ui/workout_plans/view_models/workout_plan_record_cubit.dart';
 import 'package:myfitnesstale/src/utils/nullable.dart';
@@ -474,7 +476,10 @@ void main() {
         withProfile: true,
       );
       final workoutPlanCubit = _TestWorkoutPlanRecordCubit(gate: planGate);
-      final macroCubit = _TestMacroTrackingCubit(gate: macroGate);
+      final macroCubit = _TestMacroTrackingCubit(
+        gate: macroGate,
+        returnActiveGoal: true,
+      );
 
       await _pumpMainApp(
         tester,
@@ -560,7 +565,10 @@ void main() {
         withProfile: true,
       );
       final workoutPlanCubit = _TestWorkoutPlanRecordCubit();
-      final macroCubit = _TestMacroTrackingCubit(failFirstLoad: true);
+      final macroCubit = _TestMacroTrackingCubit(
+        failFirstLoad: true,
+        returnActiveGoal: true,
+      );
 
       await _pumpMainApp(
         tester,
@@ -620,7 +628,10 @@ void main() {
         withProfile: true,
       );
       final workoutPlanCubit = _TestWorkoutPlanRecordCubit();
-      final macroCubit = _TestMacroTrackingCubit(failFirstLoad: true);
+      final macroCubit = _TestMacroTrackingCubit(
+        failFirstLoad: true,
+        returnActiveGoal: true,
+      );
 
       await _pumpMainApp(
         tester,
@@ -656,6 +667,49 @@ void main() {
 
       expect(macroCubit.loadCalls, 2);
       expect(macroCubit.dailyLogCalls, 1);
+    },
+  );
+
+  testWidgets(
+    'offscreen warm-up does not pop up MacroGoalFormModal when no active macro goal exists',
+    (tester) async {
+      final profileGate = Completer<void>()..complete();
+      final profileCubit = _TestProfileCubit(
+        gate: profileGate,
+        withProfile: true,
+      );
+      final workoutPlanCubit = _TestWorkoutPlanRecordCubit();
+      final macroCubit = _TestMacroTrackingCubit(returnActiveGoal: false);
+
+      await _pumpMainApp(
+        tester,
+        profileCubit: profileCubit..loadInitialData(),
+        workoutPlanCubit: workoutPlanCubit,
+        macroCubit: macroCubit,
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 250));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 150));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.byType(MacroTrackerScreen, skipOffstage: false),
+        findsOneWidget,
+      );
+      expect(find.byType(MacroGoalFormModal), findsNothing);
+      expect(macroCubit.dailyLogCalls, 0);
+
+      await tester.tap(
+        find.descendant(
+          of: find.byType(BottomNavigationBar),
+          matching: find.text('Macros'),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byType(MacroGoalFormModal), findsOneWidget);
+      expect(macroCubit.dailyLogCalls, 0);
     },
   );
 }
@@ -856,6 +910,7 @@ final class _TestMacroTrackingCubit extends MacroTrackingCubit {
   final Completer<void>? gate;
   final bool markLoaded;
   final bool failFirstLoad;
+  final bool returnActiveGoal;
   int loadCalls = 0;
   int dailyLogCalls = 0;
 
@@ -863,6 +918,7 @@ final class _TestMacroTrackingCubit extends MacroTrackingCubit {
     this.gate,
     this.markLoaded = true,
     this.failFirstLoad = false,
+    this.returnActiveGoal = false,
   }) : super(macroTrackingRepository: MacroTrackingRepository.create());
 
   @override
@@ -887,6 +943,21 @@ final class _TestMacroTrackingCubit extends MacroTrackingCubit {
     }
     emit(
       state.copyWith(
+        activeGoal: returnActiveGoal
+            ? const Nullable(
+                MacroGoalDto(
+                  id: 1,
+                  name: 'Daily Target',
+                  targetCalories: 2000,
+                  targetProtein: 150,
+                  targetCarbs: 215,
+                  targetFat: 60,
+                  targetWaterIntakeMl: 2500,
+                  isActive: true,
+                  phase: WeightGoalPhase.maintain,
+                ),
+              )
+            : const Nullable(null),
         isLoading: false,
         isLoadingActiveGoal: false,
         hasLoadedActiveGoal: markLoaded ? true : null,

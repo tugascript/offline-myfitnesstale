@@ -20,6 +20,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../../../data/repositories/macros/dtos/macro_tracking_dto.dart';
 import '../../../core/sizes/data_display_sizes.dart';
+import '../../utils/macro_goal_form_defaults.dart';
 import '../../view_models/macro_tracking_cubit.dart';
 import './macro_goal_form.dart';
 
@@ -27,16 +28,22 @@ class MacroGoalFormModal extends StatelessWidget {
   final ThemeData theme;
   final DataDisplaySizesList sizes;
   final MacroGoalDto? existingGoal;
+  final MacroGoalFormDefaults? defaults;
 
   const MacroGoalFormModal({
     super.key,
     required this.theme,
     required this.sizes,
     this.existingGoal,
+    this.defaults,
   });
 
   @override
   Widget build(BuildContext context) {
+    final recommendedNote = existingGoal == null
+        ? defaults?.recommendedNote
+        : null;
+
     return Dialog(
       backgroundColor: theme.scaffoldBackgroundColor,
       shape: BeveledRectangleBorder(
@@ -55,20 +62,46 @@ class MacroGoalFormModal extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text(
-                  existingGoal != null
-                      ? 'Edit Macro Goal'
-                      : 'Create Macro Goal',
-                  style: TextStyle(
-                    fontSize: sizes.titleFontSize,
-                    fontWeight: FontWeight.bold,
-                  ),
+                Wrap(
+                  alignment: WrapAlignment.spaceBetween,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: sizes.spacing / 2,
+                  runSpacing: sizes.spacing / 2,
+                  children: [
+                    Text(
+                      existingGoal != null
+                          ? 'Edit Macro Goal'
+                          : 'Create Macro Goal',
+                      style: TextStyle(
+                        fontSize: sizes.titleFontSize,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    IconButton(
+                      key: const ValueKey('macro-goal-modal-close-btn'),
+                      tooltip: 'Close',
+                      icon: Icon(Icons.close, size: sizes.buttonIconSize),
+                      onPressed: () => Navigator.of(context).pop(),
+                    ),
+                  ],
                 ),
+                if (recommendedNote != null) ...[
+                  SizedBox(height: sizes.halfSpacing),
+                  Text(
+                    recommendedNote,
+                    key: const ValueKey('macro-goal-recommended-note'),
+                    style: TextStyle(
+                      fontSize: sizes.smallFontSize,
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
                 SizedBox(height: sizes.spacing),
                 MacroGoalForm(
                   theme: theme,
                   sizes: sizes,
                   existingGoal: existingGoal,
+                  defaults: defaults,
                   onSubmit: (input) {
                     final cubit = context.read<MacroTrackingCubit>();
                     if (existingGoal != null) {

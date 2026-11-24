@@ -25,6 +25,7 @@ import 'package:myfitnesstale/src/data/repositories/macros/dtos/macro_tracking_d
 import 'package:myfitnesstale/src/data/repositories/macros/inputs/week_macro_goal_input.dart';
 import 'package:myfitnesstale/src/ui/core/sizes/data_display_sizes.dart';
 import 'package:myfitnesstale/src/ui/core/sizes/screen_size.dart';
+import 'package:myfitnesstale/src/ui/macros/utils/macro_goal_form_defaults.dart';
 import 'package:myfitnesstale/src/ui/macros/widgets/goals/macro_goal_form_modal.dart';
 import 'package:myfitnesstale/src/data/repositories/macros/macro_tracking_repository.dart';
 
@@ -60,7 +61,11 @@ void main() {
   String calories(WidgetTester tester) =>
       tester.widget<TextFormField>(field('calories')).controller!.text;
 
-  Future<_Macros> open(WidgetTester tester, {MacroGoalDto? goal}) async {
+  Future<_Macros> open(
+    WidgetTester tester, {
+    MacroGoalDto? goal,
+    MacroGoalFormDefaults? defaults,
+  }) async {
     tester.view.physicalSize = const Size(600, 1000);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
@@ -83,6 +88,7 @@ void main() {
                         sizes: sizes,
                         theme: Theme.of(context),
                         existingGoal: goal,
+                        defaults: defaults,
                       ),
                     ),
                   ),
@@ -437,5 +443,97 @@ void main() {
 
     expect(macros.submitted, isNotNull);
     expect(macros.submitted!.days[0].targetCalories, 1850);
+  });
+
+  testWidgets(
+    'passing recommended2000Kcal defaults prefills exact 2000 kcal macros and note',
+    (tester) async {
+      final macros = await open(
+        tester,
+        defaults: MacroGoalFormDefaults.recommended2000Kcal,
+      );
+
+      expect(
+        find.byKey(const ValueKey('macro-goal-recommended-note')),
+        findsOneWidget,
+      );
+      expect(find.textContaining('2000 kcal'), findsOneWidget);
+      expect(tester.widget<CheckboxListTile>(checkbox).value, isTrue);
+      expect(calories(tester), '2000');
+      expect(
+        tester.widget<TextFormField>(field('protein')).controller!.text,
+        '150',
+      );
+      expect(
+        tester.widget<TextFormField>(field('carbs')).controller!.text,
+        '215',
+      );
+      expect(tester.widget<TextFormField>(field('fat')).controller!.text, '60');
+      expect(
+        tester.widget<TextFormField>(field('water')).controller!.text,
+        '2500',
+      );
+
+      final submit = find.byKey(const ValueKey('macro-goal-submit-button'));
+      await tester.ensureVisible(submit);
+      await tester.tap(submit);
+      await tester.pumpAndSettle();
+
+      expect(macros.submitted?.targetCalories, 2000);
+      expect(macros.submitted?.targetProtein, 150);
+      expect(macros.submitted?.targetCarbs, 215);
+      expect(macros.submitted?.targetFat, 60);
+      expect(macros.submitted?.targetWaterIntakeMl.value, 2500);
+    },
+  );
+
+  testWidgets(
+    'existingGoal takes precedence over passed defaults and hides recommended note',
+    (tester) async {
+      await open(
+        tester,
+        defaults: MacroGoalFormDefaults.recommended2000Kcal,
+        goal: const MacroGoalDto(
+          id: 42,
+          name: 'Cut Plan',
+          targetCalories: 1700,
+          targetProtein: 140,
+          targetCarbs: 150,
+          targetFat: 60,
+          isActive: true,
+          phase: WeightGoalPhase.cut,
+        ),
+      );
+
+      expect(
+        find.byKey(const ValueKey('macro-goal-recommended-note')),
+        findsNothing,
+      );
+      expect(calories(tester), '1700');
+      expect(
+        tester.widget<TextFormField>(field('protein')).controller!.text,
+        '140',
+      );
+      expect(
+        tester.widget<TextFormField>(field('carbs')).controller!.text,
+        '150',
+      );
+    },
+  );
+
+  testWidgets('close button dismisses modal without submitting', (
+    tester,
+  ) async {
+    final macros = await open(
+      tester,
+      defaults: MacroGoalFormDefaults.recommended2000Kcal,
+    );
+
+    expect(find.byType(MacroGoalFormModal), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('macro-goal-modal-close-btn')));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(MacroGoalFormModal), findsNothing);
+    expect(macros.submitted, isNull);
   });
 }
