@@ -35,6 +35,7 @@ import 'package:myfitnesstale/src/ui/weight/screens/weight_goals_screen.dart';
 import 'package:myfitnesstale/src/ui/weight/view_models/weight_record_cubit.dart';
 import 'package:myfitnesstale/src/ui/weight/widgets/goal/active/current_weight_goal.dart';
 import 'package:myfitnesstale/src/ui/weight/widgets/goal/active/empty_weight_goal.dart';
+import 'package:myfitnesstale/src/ui/weight/widgets/goal/editor/update_weight_goal_card.dart';
 import 'package:myfitnesstale/src/utils/nullable.dart';
 
 import '../../support/test_database.dart';
@@ -251,6 +252,49 @@ void main() {
       expect(find.byType(EmptyWeightGoal), findsOneWidget);
       expect(find.text('No weight goals'), findsOneWidget);
       expect(find.byType(SnackBar), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'UpdateWeightGoalCard does not show loading during unrelated goal/record fetches',
+    (tester) async {
+      tester.view.physicalSize = const Size(800, 1200);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+
+      final cubit = _FakeWeightRecordCubit();
+      addTearDown(cubit.close);
+
+      await tester.pumpWidget(buildScreen(cubit));
+      await tester.pump();
+
+      cubit.setActiveGoal(
+        WeightGoalDto(
+          id: 1,
+          targetWeight: 72500,
+          startDate: DateTime.utc(2026, 1, 1),
+          status: ProgressStatus.inProgress,
+          phase: WeightGoalPhase.maintain,
+        ),
+      );
+      await tester.pump();
+      await tester.pump();
+
+      // Open the inline edit card.
+      await tester.tap(find.byIcon(Icons.edit_outlined));
+      await tester.pump();
+
+      // Trigger unrelated fetches while not mutating.
+      cubit.setHistoryLoading(true);
+      await tester.pump();
+      await tester.pump();
+
+      expect(cubit.state.isLoading, isTrue);
+      expect(cubit.state.isMutating, isFalse);
+      final updateCard = tester.widget<UpdateWeightGoalCard>(
+        find.byType(UpdateWeightGoalCard),
+      );
+      expect(updateCard.isLoading, isFalse);
     },
   );
 }

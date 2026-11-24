@@ -124,6 +124,8 @@ final class WeightRecordState extends Equatable {
   final bool isLoadingGoals;
   final ErrorState? error;
   final ErrorState? activeGoalError;
+  final ErrorState? latestError;
+  final ErrorState? recordsError;
 
   bool get isLoading =>
       _isLoading ||
@@ -131,6 +133,7 @@ final class WeightRecordState extends Equatable {
       isLoadingRecords ||
       isLoadingActiveGoal ||
       isLoadingGoals;
+  bool get isMutating => _isLoading;
 
   const WeightRecordState({
     this.recordsRequestId = 0,
@@ -153,6 +156,8 @@ final class WeightRecordState extends Equatable {
     this.isLoadingGoals = false,
     this.error,
     this.activeGoalError,
+    this.latestError,
+    this.recordsError,
   });
 
   factory WeightRecordState.initial() {
@@ -186,6 +191,8 @@ final class WeightRecordState extends Equatable {
     bool? isLoadingGoals,
     Nullable<ErrorState>? error,
     Nullable<ErrorState>? activeGoalError,
+    Nullable<ErrorState>? latestError,
+    Nullable<ErrorState>? recordsError,
   }) {
     return WeightRecordState(
       recordsRequestId: recordsRequestId ?? this.recordsRequestId,
@@ -218,6 +225,10 @@ final class WeightRecordState extends Equatable {
       activeGoalError: activeGoalError != null
           ? activeGoalError.value
           : this.activeGoalError,
+      latestError: latestError != null ? latestError.value : this.latestError,
+      recordsError: recordsError != null
+          ? recordsError.value
+          : this.recordsError,
     );
   }
 
@@ -243,5 +254,7 @@ final class WeightRecordState extends Equatable {
     isLoadingGoals,
     error,
     activeGoalError,
+    latestError,
+    recordsError,
   ];
 }

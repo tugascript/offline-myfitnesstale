@@ -50,7 +50,7 @@ class CreateWeightRecordModal extends StatelessWidget {
               builder: (context, weightRecordState) => WeightRecordForm(
                 theme: theme,
                 sizes: sizes,
-                isLoading: weightRecordState.isLoading,
+                isLoading: weightRecordState.isMutating,
                 submitLabel: "LOG WEIGHT",
                 initialDate: DateTime.now(),
                 initialWeight: 0,

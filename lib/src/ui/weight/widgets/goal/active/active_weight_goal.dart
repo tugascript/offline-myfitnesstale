@@ -85,7 +85,7 @@ class _ActiveWeightGoalState extends State<ActiveWeightGoal> {
             theme: widget.theme,
             sizes: widget.sizes,
             weightGoal: activeGoal,
-            isLoading: state.isLoading,
+            isLoading: state.isMutating,
             submitLabel: "Update",
             initialWeight: activeGoal.targetWeight,
             initialPhase: activeGoal.phase,

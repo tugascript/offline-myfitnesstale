@@ -51,7 +51,7 @@ class CreateWeightGoalModal extends StatelessWidget {
               return WeightGoalForm(
                 theme: theme,
                 sizes: sizes,
-                isLoading: weightRecordState.isLoading,
+                isLoading: weightRecordState.isMutating,
                 submitLabel: "CREATE WEIGHT GOAL",
                 initialWeight: 0,
                 initialPhase: WeightGoalPhase.cut,

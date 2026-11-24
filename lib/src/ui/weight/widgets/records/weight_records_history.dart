@@ -23,7 +23,9 @@ import '../../../../data/utils/enums.dart';
 import '../../../core/sizes/data_display_sizes.dart';
 import '../../../core/sizes/screen_size.dart';
 import '../../../core/widgets/icons_switch.dart';
+import '../../../core/widgets/layout/app_text_button.dart';
 import '../../../core/widgets/layout/app_text_form_field.dart';
+import '../../../core/widgets/layout/empty_card.dart';
 import '../../../core/widgets/not_found_list.dart';
 import '../../view_models/states/weight_record_state.dart';
 import '../../view_models/weight_record_cubit.dart';
@@ -207,6 +209,31 @@ class _WeightRecordsHistoryState extends State<WeightRecordsHistory> {
         SizedBox(height: widget.sizes.spacing),
         BlocBuilder<WeightRecordCubit, WeightRecordState>(
           builder: (context, state) {
+            if (!state.isLoadingRecords && state.recordsError != null) {
+              return EmptyCard(
+                sizes: widget.sizes,
+                emoji: '⚠️',
+                emptyText: state.recordsError!.description,
+                actions: [
+                  AppTextButton(
+                    key: const ValueKey('weight-records-history-retry'),
+                    isLoading: false,
+                    sizes: widget.sizes,
+                    isDense: true,
+                    label: 'Retry',
+                    icon: Icons.refresh,
+                    onPressed: () {
+                      context.read<WeightRecordCubit>().getWeightRecords(
+                        dateRange: (_dateRange.start, _dateRange.end),
+                        limit: 1000,
+                        offset: 0,
+                      );
+                    },
+                  ),
+                ],
+              );
+            }
+
             if (!state.isLoadingRecords && state.weightRecords.isEmpty) {
               return NotFoundList(
                 height: widget.breakPoint.height / 3,
