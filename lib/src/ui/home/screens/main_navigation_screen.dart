@@ -48,9 +48,12 @@ sealed class _PageBuilder {
   static final Map<int, Widget> _builtPages = {};
 
   static Widget getPage(int index, {required bool isVisible}) {
-    // Rebuild this configuration so its cached State sees tab activation.
+    // Rebuild visibility-aware tabs so their cached State sees tab activation.
     if (index == 1) {
       return CurrentWorkoutPlanScreen(isVisible: isVisible);
+    }
+    if (index == 2) {
+      return MacroTrackerScreen(isVisible: isVisible);
     }
     if (_builtPages.containsKey(index)) {
       return _builtPages[index]!;

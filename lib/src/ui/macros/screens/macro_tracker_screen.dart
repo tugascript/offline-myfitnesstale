@@ -27,6 +27,7 @@ import '../../meal_plans/view_models/meal_plan_record_cubit.dart';
 import '../../meal_plans/view_models/states/meal_plan_record_state.dart';
 import '../utils/tacker_scope.dart';
 import '../view_models/macro_tracking_cubit.dart';
+import '../view_models/states/macro_tracking_state.dart';
 import '../widgets/log_food_modal.dart';
 import '../widgets/tracker/macro_tacker_scope_widget.dart';
 import '../widgets/tracker/macro_tracker_date_navigator.dart';
@@ -34,8 +35,9 @@ import '../widgets/tracker/macro_tracker_scope_selection.dart';
 
 class MacroTrackerScreen extends StatefulWidget {
   static const name = 'macro_tracker';
+  final bool isVisible;
 
-  const MacroTrackerScreen({super.key});
+  const MacroTrackerScreen({super.key, this.isVisible = true});
 
   @override
   State<MacroTrackerScreen> createState() => _MacroTrackerScreenState();
@@ -49,12 +51,25 @@ class _MacroTrackerScreenState extends State<MacroTrackerScreen> {
   int _animationToken = 0;
   bool _isUserDragging = false;
   bool _pendingRangeLoad = false;
+  bool _isLoadingInitialData = false;
+  bool _deferredInitialLogLoad = false;
 
   @override
   void initState() {
     super.initState();
     _pageController = PageController(initialPage: _scope.index);
-    _loadInitialData();
+    _loadInitialData(retryFailedGoal: widget.isVisible);
+  }
+
+  @override
+  void didUpdateWidget(MacroTrackerScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.isVisible && !oldWidget.isVisible && !_isLoadingInitialData) {
+      final macroState = context.read<MacroTrackingCubit>().state;
+      if (!macroState.hasLoadedActiveGoal && !macroState.isLoading) {
+        _loadInitialData(retryFailedGoal: true);
+      }
+    }
   }
 
   @override
@@ -63,36 +78,65 @@ class _MacroTrackerScreenState extends State<MacroTrackerScreen> {
     super.dispose();
   }
 
-  Future<void> _loadInitialData() async {
-    final recordCubit = context.read<MealPlanRecordCubit>();
-    final recordState = recordCubit.state;
-    if (recordState.hasLoadedActiveRecord) {
-      _syncSelectedMealPlan(recordState.activeRecord);
-    } else if (!recordState.isLoading && recordState.error == null) {
-      recordCubit.getActiveMealPlanRecord().then((_) {
+  Future<void> _loadInitialData({bool retryFailedGoal = false}) async {
+    if (_isLoadingInitialData) return;
+    _isLoadingInitialData = true;
+    try {
+      final recordCubit = context.read<MealPlanRecordCubit>();
+      final recordState = recordCubit.state;
+      if (recordState.hasLoadedActiveRecord) {
+        _syncSelectedMealPlan(recordState.activeRecord);
+      } else if (!recordState.isLoading && recordState.error == null) {
+        recordCubit.getActiveMealPlanRecord().then((_) {
+          if (!mounted) return;
+          _syncSelectedMealPlan(recordCubit.state.activeRecord);
+        });
+      }
+
+      final macroCubit = context.read<MacroTrackingCubit>();
+      if (macroCubit.state.isLoading) {
+        await macroCubit.stream.firstWhere((state) => !state.isLoading);
         if (!mounted) return;
-        _syncSelectedMealPlan(recordCubit.state.activeRecord);
-      });
-    }
+      }
 
-    final macroCubit = context.read<MacroTrackingCubit>();
-    if (macroCubit.state.isLoading) {
-      await macroCubit.stream.firstWhere((state) => !state.isLoading);
-      if (!mounted) return;
+      var macroState = macroCubit.state;
+      if (!macroState.hasLoadedActiveGoal &&
+          !macroState.isLoading &&
+          (macroState.error == null || retryFailedGoal)) {
+        await macroCubit.getActiveMacroGoal();
+        if (!mounted) return;
+        macroState = macroCubit.state;
+      }
+      // Do not issue a daily-log query while active-goal loading is in an
+      // error state; a successful log query clears MacroTrackingState.error
+      // and would dismiss Home's active-load retry card.
+      if (!macroState.hasLoadedActiveGoal && macroState.error != null) {
+        _deferredInitialLogLoad = true;
+        return;
+      }
+      _deferredInitialLogLoad = false;
+      if (macroState.selectedDailyLog == null ||
+          !DateUtils.isSameDay(macroState.selectedDate, _selectedDate)) {
+        macroCubit.getDailyLog(_selectedDate);
+      }
+    } finally {
+      _isLoadingInitialData = false;
     }
+  }
 
-    var macroState = macroCubit.state;
-    if (!macroState.hasLoadedActiveGoal &&
-        !macroState.isLoading &&
-        macroState.error == null) {
-      await macroCubit.getActiveMacroGoal();
-      if (!mounted) return;
-      macroState = macroCubit.state;
+  Future<bool> _ensureActiveGoalNotFailed(MacroTrackingCubit macroCubit) async {
+    final macroState = macroCubit.state;
+    if (!macroState.hasLoadedActiveGoal && macroState.error != null) {
+      if (!macroState.isLoading) {
+        await macroCubit.getActiveMacroGoal();
+        if (!mounted) return false;
+      }
+      final refreshed = macroCubit.state;
+      if (!refreshed.hasLoadedActiveGoal && refreshed.error != null) {
+        return false;
+      }
     }
-    if (macroState.selectedDailyLog == null ||
-        !DateUtils.isSameDay(macroState.selectedDate, _selectedDate)) {
-      macroCubit.getDailyLog(_selectedDate);
-    }
+    return true;
   }
 
   void _syncSelectedMealPlan(MealPlanRecordDto? record) {
@@ -108,8 +152,10 @@ class _MacroTrackerScreenState extends State<MacroTrackerScreen> {
     }
   }
 
-  void _loadRangeForCurrentScope() {
+  Future<void> _loadRangeForCurrentScope() async {
+    if (_scope == TrackerScope.day) return;
     final macroCubit = context.read<MacroTrackingCubit>();
+    if (!await _ensureActiveGoalNotFailed(macroCubit)) return;
     if (_scope == TrackerScope.week) {
       final start = DateTime(
         _selectedDate.year,
@@ -125,10 +171,12 @@ class _MacroTrackerScreenState extends State<MacroTrackerScreen> {
     }
   }
 
-  void _loadPeriodData() {
+  Future<void> _loadPeriodData() async {
     _pendingRangeLoad = false;
-    context.read<MacroTrackingCubit>().getDailyLog(_selectedDate);
-    _loadRangeForCurrentScope();
+    final macroCubit = context.read<MacroTrackingCubit>();
+    if (!await _ensureActiveGoalNotFailed(macroCubit)) return;
+    macroCubit.getDailyLog(_selectedDate);
+    await _loadRangeForCurrentScope();
   }
 
   void _reconcileAndLoadSettledScope() {
@@ -364,12 +412,30 @@ class _MacroTrackerScreenState extends State<MacroTrackerScreen> {
     final today = _today;
     final minDate = _minDate(today);
 
-    return BlocListener<MealPlanRecordCubit, MealPlanRecordState>(
-      listenWhen: (previous, current) =>
-          previous.activeRecord != current.activeRecord,
-      listener: (context, state) {
-        _syncSelectedMealPlan(state.activeRecord);
-      },
+    return MultiBlocListener(
+      listeners: [
+        BlocListener<MealPlanRecordCubit, MealPlanRecordState>(
+          listenWhen: (previous, current) =>
+              previous.activeRecord != current.activeRecord,
+          listener: (context, state) {
+            _syncSelectedMealPlan(state.activeRecord);
+          },
+        ),
+        BlocListener<MacroTrackingCubit, MacroTrackingState>(
+          listenWhen: (previous, current) =>
+              !previous.hasLoadedActiveGoal && current.hasLoadedActiveGoal,
+          listener: (context, state) {
+            if (!_deferredInitialLogLoad || _isLoadingInitialData) return;
+            _deferredInitialLogLoad = false;
+            final latest = context.read<MacroTrackingCubit>().state;
+            if (latest.isLoading) return;
+            if (latest.selectedDailyLog == null ||
+                !DateUtils.isSameDay(latest.selectedDate, _selectedDate)) {
+              _loadPeriodData();
+            }
+          },
+        ),
+      ],
       child: AppScaffold(
         title: 'Macro Tracker',
         body: Column(

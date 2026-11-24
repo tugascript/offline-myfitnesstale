@@ -621,6 +621,103 @@ void main() {
       );
     },
   );
+
+  testWidgets(
+    'preserves active macro goal failure across offscreen tracker warm-up and recovers on Home retry',
+    (tester) async {
+      final profileGate = Completer<void>()..complete();
+      final profileCubit = _TestProfileCubit(
+        gate: profileGate,
+        withProfile: true,
+      );
+      final workoutPlanCubit = _TestWorkoutPlanRecordCubit();
+      final macroCubit = _TestMacroTrackingCubit(failFirstLoad: true);
+      final mealPlanCubit = _TestMealPlanRecordCubit();
+
+      await _pumpMainApp(
+        tester,
+        profileCubit: profileCubit..loadInitialData(),
+        workoutPlanCubit: workoutPlanCubit,
+        macroCubit: macroCubit,
+        mealPlanCubit: mealPlanCubit,
+      );
+      await tester.pump();
+      // Advance through staggered warm-up timers (Plan at 250ms, Macros at +150ms).
+      await tester.pump(const Duration(milliseconds: 250));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 150));
+      await tester.pumpAndSettle();
+
+      // Offscreen warm-up mounted MacroTrackerScreen without wiping Home's error.
+      expect(
+        find.byType(MacroTrackerScreen, skipOffstage: false),
+        findsOneWidget,
+      );
+      expect(macroCubit.loadCalls, 1);
+      expect(macroCubit.dailyLogCalls, 0);
+      expect(
+        find.byKey(const ValueKey('home-active-load-error-card')),
+        findsOneWidget,
+      );
+      expect(find.text('Failed to load macro goal'), findsOneWidget);
+      expect(find.text('RETRY'), findsOneWidget);
+
+      await tester.tap(find.text('RETRY'));
+      await tester.pumpAndSettle();
+
+      expect(macroCubit.loadCalls, 2);
+      expect(macroCubit.dailyLogCalls, 1);
+      expect(
+        find.byKey(const ValueKey('home-active-load-error-card')),
+        findsNothing,
+      );
+    },
+  );
+
+  testWidgets(
+    'opening Macros tab retries a previously failed active macro goal before loading daily log',
+    (tester) async {
+      final profileGate = Completer<void>()..complete();
+      final profileCubit = _TestProfileCubit(
+        gate: profileGate,
+        withProfile: true,
+      );
+      final workoutPlanCubit = _TestWorkoutPlanRecordCubit();
+      final macroCubit = _TestMacroTrackingCubit(failFirstLoad: true);
+      final mealPlanCubit = _TestMealPlanRecordCubit();
+
+      await _pumpMainApp(
+        tester,
+        profileCubit: profileCubit..loadInitialData(),
+        workoutPlanCubit: workoutPlanCubit,
+        macroCubit: macroCubit,
+        mealPlanCubit: mealPlanCubit,
+      );
+      await tester.pump();
+      // Mount MacroTrackerScreen offscreen first via warm-up timers.
+      await tester.pump(const Duration(milliseconds: 250));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 150));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.byType(MacroTrackerScreen, skipOffstage: false),
+        findsOneWidget,
+      );
+      expect(macroCubit.loadCalls, 1);
+      expect(macroCubit.dailyLogCalls, 0);
+      expect(
+        find.byKey(const ValueKey('home-active-load-error-card')),
+        findsOneWidget,
+      );
+
+      await tester.tap(find.text('Macros'));
+      await tester.pumpAndSettle();
+
+      expect(macroCubit.loadCalls, 2);
+      expect(macroCubit.dailyLogCalls, 1);
+    },
+  );
 }
 
 Future<void> _pumpMainApp(
@@ -826,21 +923,40 @@ final class _TestWorkoutPlanRecordCubit extends WorkoutPlanRecordCubit {
 final class _TestMacroTrackingCubit extends MacroTrackingCubit {
   final Completer<void>? gate;
   final bool markLoaded;
+  final bool failFirstLoad;
   int loadCalls = 0;
   int dailyLogCalls = 0;
 
-  _TestMacroTrackingCubit({this.gate, this.markLoaded = true})
-    : super(macroTrackingRepository: MacroTrackingRepository.create());
+  _TestMacroTrackingCubit({
+    this.gate,
+    this.markLoaded = true,
+    this.failFirstLoad = false,
+  }) : super(macroTrackingRepository: MacroTrackingRepository.create());
 
   @override
   Future<void> getActiveMacroGoal() async {
     loadCalls++;
     emit(state.copyWith(isLoading: true));
     await gate?.future;
+    if (failFirstLoad && loadCalls == 1) {
+      emit(
+        state.copyWith(
+          isLoading: false,
+          error: const Nullable(
+            ErrorState(
+              type: 'operationFailure',
+              description: 'Failed to load macro goal',
+            ),
+          ),
+        ),
+      );
+      return;
+    }
     emit(
       state.copyWith(
         isLoading: false,
         hasLoadedActiveGoal: markLoaded ? true : null,
+        error: const Nullable(null),
       ),
     );
   }
@@ -848,6 +964,13 @@ final class _TestMacroTrackingCubit extends MacroTrackingCubit {
   @override
   Future<void> getDailyLog(DateTime date) async {
     dailyLogCalls++;
+    emit(
+      state.copyWith(
+        selectedDate: date,
+        isLoading: false,
+        error: const Nullable(null),
+      ),
+    );
   }
 }
 
