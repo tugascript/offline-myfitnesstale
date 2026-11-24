@@ -37,6 +37,7 @@ import 'package:myfitnesstale/src/ui/weight/screens/weight_records_screen.dart';
 import 'package:myfitnesstale/src/ui/weight/view_models/weight_record_cubit.dart';
 import 'package:myfitnesstale/src/ui/weight/widgets/records/empty_weight_record.dart';
 import 'package:myfitnesstale/src/ui/weight/widgets/records/latest_weight_record_card.dart';
+import 'package:myfitnesstale/src/ui/weight/widgets/records/weight_records_chart.dart';
 import 'package:myfitnesstale/src/ui/weight/widgets/records/weight_records_list.dart';
 import 'package:myfitnesstale/src/utils/nullable.dart';
 
@@ -330,6 +331,63 @@ void main() {
       );
       await tester.pump();
       expect(cubit.recordsLoadCalls, recordsCallsBefore + 1);
+    },
+  );
+
+  testWidgets(
+    'WeightRecordsHistory chart view skeletonizes during initial load and date-range reloads instead of showing stale chart data',
+    (tester) async {
+      final cubit = _FakeWeightRecordCubit();
+      addTearDown(cubit.close);
+
+      await tester.pumpWidget(buildScreen(cubit));
+      await tester.pump();
+
+      // Initial load in chart view: skeletonizes instead of showing "No data available".
+      cubit.setLoadingFlags(isLoadingRecords: true);
+      await tester.pump();
+      await tester.pump();
+
+      expect(find.byType(WeightRecordsChart), findsNothing);
+      expect(find.text('No data available'), findsNothing);
+      expect(
+        find.byWidgetPredicate((w) => w is Skeletonizer && w.enabled),
+        findsOneWidget,
+      );
+
+      // Load completes with previous-range data -> chart renders cleanly.
+      final previousRangeRecords = [
+        WeightRecordDto(
+          id: 1,
+          weight: 75000,
+          recordDate: DateTime.now().subtract(const Duration(days: 5)),
+        ),
+        WeightRecordDto(
+          id: 2,
+          weight: 74500,
+          recordDate: DateTime.now().subtract(const Duration(days: 2)),
+        ),
+      ];
+      cubit.setRecords(previousRangeRecords);
+      await tester.pump();
+      await tester.pump();
+
+      expect(find.byType(WeightRecordsChart), findsOneWidget);
+      expect(
+        find.byWidgetPredicate((w) => w is Skeletonizer && w.enabled),
+        findsNothing,
+      );
+
+      // Date-range reload begins while previous-range records are still in state -> skeletonizes and hides stale chart.
+      cubit.setLoadingFlags(isLoadingRecords: true);
+      await tester.pump();
+      await tester.pump();
+
+      expect(find.byType(WeightRecordsChart), findsNothing);
+      expect(
+        find.byWidgetPredicate((w) => w is Skeletonizer && w.enabled),
+        findsOneWidget,
+      );
     },
   );
 }

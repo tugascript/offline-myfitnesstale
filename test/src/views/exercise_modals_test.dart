@@ -255,6 +255,7 @@ class _FakeExerciseRecordCubit extends ExerciseRecordCubit {
   final List<StrengthGoalInput> createdStrengthGoals = [];
   final List<(int, StrengthGoalInput)> updatedStrengthGoals = [];
   final List<(int, int)> getStrengthGoalsCalls = [];
+  int getActiveStrengthGoalCalls = 0;
 
   _FakeExerciseRecordCubit({
     this.shouldFail = false,
@@ -282,8 +283,25 @@ class _FakeExerciseRecordCubit extends ExerciseRecordCubit {
     );
   }
 
+  void emitActiveGoalError(String description) {
+    final errorState = ErrorState(
+      type: 'operationFailure',
+      description: description,
+    );
+    emit(
+      state.copyWith(
+        activeStrengthGoal: const Nullable(null),
+        activeGoalError: Nullable(errorState),
+        error: Nullable(errorState),
+        isLoadingActiveGoal: false,
+      ),
+    );
+  }
+
   @override
-  Future<void> getActiveStrengthGoal({int? exerciseId}) async {}
+  Future<void> getActiveStrengthGoal({int? exerciseId}) async {
+    getActiveStrengthGoalCalls++;
+  }
 
   @override
   Future<void> getStrengthGoals({
@@ -1739,6 +1757,63 @@ void main() {
         paginatedCubit.getStrengthGoalsCalls.any((call) => call.$2 == 10),
         isTrue,
       );
+    },
+  );
+
+  testWidgets(
+    'ActiveStrengthGoalCard shows error and retry action on activeGoalError instead of stale or empty goal',
+    (tester) async {
+      final profileCubit = _FakeProfileCubit();
+      final recordCubit = _FakeExerciseRecordCubit(
+        activeStrengthGoal: StrengthGoalDto(
+          id: 11,
+          name: 'Bench 100kg',
+          targetReps: 5,
+          targetWeight: 100000,
+          targetMaxStrength: 116667,
+          exerciseId: 1,
+          status: ProgressStatus.inProgress,
+          startDate: DateTime(2026, 1, 1),
+        ),
+      );
+      addTearDown(profileCubit.close);
+      addTearDown(recordCubit.close);
+
+      await tester.pumpWidget(
+        MultiBlocProvider(
+          providers: [
+            BlocProvider<ExerciseRecordCubit>.value(value: recordCubit),
+            BlocProvider<ProfileCubit>.value(value: profileCubit),
+          ],
+          child: MaterialApp(
+            home: Scaffold(
+              body: ActiveStrengthGoalCard(
+                theme: ThemeData.light(),
+                sizes: DataDisplaySizes.getDataDisplaySizes(ScreenSize.xs),
+                units: Units.metric,
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Bench 100kg'), findsOneWidget);
+      expect(find.text('Could not load active strength goal'), findsNothing);
+
+      recordCubit.emitActiveGoalError('Failed to load active strength goal');
+      await tester.pumpAndSettle();
+
+      expect(find.text('Could not load active strength goal'), findsOneWidget);
+      expect(find.text('Bench 100kg'), findsNothing);
+      expect(find.text('No active strength goal'), findsNothing);
+
+      await tester.tap(
+        find.byKey(const ValueKey('active-strength-goal-retry')),
+      );
+      await tester.pump();
+
+      expect(recordCubit.getActiveStrengthGoalCalls, 1);
     },
   );
 }

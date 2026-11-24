@@ -31,6 +31,9 @@ import 'package:myfitnesstale/src/data/repositories/exercises/exercise_record_re
 import 'package:myfitnesstale/src/data/repositories/exercises/exercise_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/exercises/inputs/equipment_input.dart';
 import 'package:myfitnesstale/src/data/repositories/exercises/inputs/exercise_record_input.dart';
+import 'package:myfitnesstale/src/data/repositories/exercises/inputs/strength_goal_input.dart';
+import 'package:myfitnesstale/src/data/services/sqlite/dao.dart';
+import 'package:myfitnesstale/src/data/services/sqlite/database_helper.dart';
 import 'package:myfitnesstale/src/data/utils/dates.dart';
 import 'package:myfitnesstale/src/data/utils/enums.dart';
 import 'package:myfitnesstale/src/data/utils/json_data.dart';
@@ -899,5 +902,94 @@ void main() {
     expect(exerciseCubit.state.equipments.length, 1);
     expect(exerciseCubit.state.equipments.single.id, id);
     expect(exerciseCubit.state.equipmentPagination.total, 1);
+  });
+
+  test('getActiveStrengthGoal clears stale activeStrengthGoal on non-notFound failure and preserves unrelated errors on recovery', () async {
+    final testDatabase = TestDatabase();
+    await testDatabase.initialize();
+    addTearDown(testDatabase.destroy);
+
+    final db = await testDatabase.db;
+    final exerciseId = await db.insert(
+      Exercise.table,
+      Exercise.create(
+        name: 'Overhead Press',
+        description: 'Press overhead',
+        muscleGroup: MuscleGroup.push,
+        muscles: emptyMuscles,
+      ).toMap(),
+    );
+
+    var failStrengthGoalRead = false;
+    final helper = DatabaseHelper();
+    final repo = ExerciseRecordRepository(
+      exerciseRecordDao: Dao(
+        databaseHelper: helper,
+        tableName: ExerciseRecord.table,
+        fromMap: ExerciseRecord.fromMap,
+      ),
+      exerciseDao: Dao(
+        databaseHelper: helper,
+        tableName: Exercise.table,
+        fromMap: Exercise.fromMap,
+      ),
+      strengthGoalDao: Dao(
+        databaseHelper: helper,
+        tableName: StrengthGoal.table,
+        fromMap: (map) {
+          if (failStrengthGoalRead) {
+            throw StateError('Simulated strength goal read failure');
+          }
+          return StrengthGoal.fromMap(map);
+        },
+      ),
+    );
+
+    final created = await repo.createStrengthGoal(
+      StrengthGoalInput(
+        exerciseId: exerciseId,
+        name: const Nullable('Press 80kg'),
+        targetReps: 5,
+        targetWeight: 80000,
+        targetMaxStrength: 93333,
+        startDate: DateTime(2026, 6, 1),
+      ),
+    );
+    expect(created.isOk(), isTrue);
+
+    final cubit = ExerciseRecordCubit(exerciseRecordRepository: repo);
+    addTearDown(cubit.close);
+
+    // Initial load succeeds.
+    await cubit.getActiveStrengthGoal();
+    expect(cubit.state.activeStrengthGoal, isNotNull);
+    expect(cubit.state.activeGoalError, isNull);
+
+    // Failed reload must clear stale activeStrengthGoal and record activeGoalError.
+    failStrengthGoalRead = true;
+    await cubit.getActiveStrengthGoal();
+    expect(cubit.state.activeStrengthGoal, isNull);
+    expect(cubit.state.activeGoalError, isNotNull);
+    expect(cubit.state.error, equals(cubit.state.activeGoalError));
+    expect(cubit.state.isLoadingActiveGoal, isFalse);
+
+    // Recovery restores activeStrengthGoal and clears activeGoalError.
+    failStrengthGoalRead = false;
+    await cubit.getActiveStrengthGoal();
+    expect(cubit.state.activeStrengthGoal, isNotNull);
+    expect(cubit.state.activeGoalError, isNull);
+    expect(cubit.state.error, isNull);
+
+    // An unrelated getStrengthGoals() failure should not be wiped by active goal success.
+    failStrengthGoalRead = true;
+    await cubit.getStrengthGoals();
+    final unrelatedError = cubit.state.error;
+    expect(unrelatedError, isNotNull);
+
+    failStrengthGoalRead = false;
+    await cubit.getActiveStrengthGoal();
+    expect(cubit.state.activeStrengthGoal, isNotNull);
+    expect(cubit.state.activeGoalError, isNull);
+    expect(cubit.state.error, equals(unrelatedError));
   });
 }
