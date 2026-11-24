@@ -46,8 +46,10 @@ class PlannedMealsWidget extends StatelessWidget {
         if (activeRecord == null) return const SizedBox.shrink();
 
         return BlocBuilder<MealPlanCubit, MealPlanState>(
+          buildWhen: (previous, current) =>
+              previous.activeMealPlan != current.activeMealPlan,
           builder: (context, planState) {
-            final plan = planState.selectedMealPlan;
+            final plan = planState.activeMealPlan;
             final plannedMeals = _plannedMealsForSelectedDate(
               activeRecord,
               plan?.id == activeRecord.mealPlanId &&

@@ -62,6 +62,7 @@ final class MealPlanState extends Equatable {
   final int mealPlansRequestId;
   final List<MealPlanDto> mealPlans;
   final MealPlanDto? selectedMealPlan;
+  final MealPlanDto? activeMealPlan;
   final MealPlanPagination mealPlanPagination;
   final MealPlanPagination? pendingMealPlansQuery;
   final bool _isLoading;
@@ -74,6 +75,7 @@ final class MealPlanState extends Equatable {
     this.pendingMealPlansQuery,
     this.mealPlans = const [],
     this.selectedMealPlan,
+    this.activeMealPlan,
     this.mealPlanPagination = const MealPlanPagination(),
     this._isLoading = false,
     this.error,
@@ -85,6 +87,7 @@ final class MealPlanState extends Equatable {
     int? mealPlansRequestId,
     List<MealPlanDto>? mealPlans,
     Nullable<MealPlanDto>? selectedMealPlan,
+    Nullable<MealPlanDto>? activeMealPlan,
     MealPlanPagination? mealPlanPagination,
     bool? isLoading,
     Nullable<MealPlanPagination>? pendingMealPlansQuery,
@@ -95,6 +98,9 @@ final class MealPlanState extends Equatable {
     selectedMealPlan: selectedMealPlan != null
         ? selectedMealPlan.value
         : this.selectedMealPlan,
+    activeMealPlan: activeMealPlan != null
+        ? activeMealPlan.value
+        : this.activeMealPlan,
     mealPlanPagination: mealPlanPagination ?? this.mealPlanPagination,
     isLoading: isLoading ?? _isLoading,
     pendingMealPlansQuery: pendingMealPlansQuery != null
@@ -108,6 +114,7 @@ final class MealPlanState extends Equatable {
     mealPlansRequestId,
     mealPlans,
     selectedMealPlan,
+    activeMealPlan,
     mealPlanPagination,
     _isLoading,
     pendingMealPlansQuery,

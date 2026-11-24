@@ -32,6 +32,7 @@ class MealPlanCubit extends Cubit<MealPlanState>
     with FavoriteRequestSerializer {
   final MealPlanRepository _mealPlanService;
   final Logger _logger = Logger('MealPlanCubit');
+  int _activeMealPlanRequestId = 0;
 
   MealPlanCubit({required MealPlanRepository mealPlanRepository})
     : _mealPlanService = mealPlanRepository,
@@ -148,6 +149,20 @@ class MealPlanCubit extends Cubit<MealPlanState>
     );
   }
 
+  Future<void> getActiveMealPlan(int id, {int? version}) async {
+    _logger.info('Getting active meal plan $id');
+    final requestId = ++_activeMealPlanRequestId;
+
+    final result = await _mealPlanService.getMealPlan(id, version: version);
+    if (isClosed || requestId != _activeMealPlanRequestId) return;
+    if (result.isErr()) {
+      _logger.warning('Failed to get active meal plan $id', result.error);
+      return;
+    }
+
+    emit(state.copyWith(activeMealPlan: Nullable(result.value)));
+  }
+
   Future<bool> createMealPlan(
     MealPlanInput input, [
     CreatedBy createdBy = CreatedBy.user,
@@ -208,6 +223,11 @@ class MealPlanCubit extends Cubit<MealPlanState>
     await _refreshMealPlans(
       state.copyWith(
         selectedMealPlan: Nullable(updated),
+        activeMealPlan:
+            state.activeMealPlan?.id == updated.id &&
+                state.activeMealPlan?.version == updated.version
+            ? Nullable(updated)
+            : null,
         isLoading: false,
         error: const Nullable(null),
       ),
@@ -237,10 +257,14 @@ class MealPlanCubit extends Cubit<MealPlanState>
       final updated = result.value;
       if (isClosed) return true;
       final selected = state.selectedMealPlan;
+      final active = state.activeMealPlan;
       await _refreshMealPlans(
         state.copyWith(
           selectedMealPlan: selected != null && selected.id == id
               ? Nullable(selected.copyWith(isFavorite: updated.isFavorite))
+              : null,
+          activeMealPlan: active != null && active.id == id
+              ? Nullable(active.copyWith(isFavorite: updated.isFavorite))
               : null,
           error: const Nullable(null),
         ),
@@ -272,6 +296,9 @@ class MealPlanCubit extends Cubit<MealPlanState>
     await _refreshMealPlans(
       state.copyWith(
         selectedMealPlan: state.selectedMealPlan?.id == id
+            ? const Nullable(null)
+            : null,
+        activeMealPlan: state.activeMealPlan?.id == id
             ? const Nullable(null)
             : null,
         isLoading: false,
