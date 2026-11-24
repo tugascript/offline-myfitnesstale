@@ -39,6 +39,7 @@ import 'package:myfitnesstale/src/data/repositories/macros/macro_tracking_reposi
 import 'package:myfitnesstale/src/data/repositories/onboarding/onboarding_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/profile/profile_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/weight/inputs/weight_goal_input.dart';
+import 'package:myfitnesstale/src/data/repositories/weight/inputs/weight_record_input.dart';
 import 'package:myfitnesstale/src/data/repositories/weight/weight_record_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/workout_plans/inputs/workout_plan_record_input.dart';
 import 'package:myfitnesstale/src/data/repositories/workout_plans/workout_plan_record_repository.dart';
@@ -1219,6 +1220,39 @@ void main() {
       expect(cubit.state.isLoadingActiveGoal, isFalse);
       expect(cubit.state.activeGoalError, isNull);
       expect(cubit.state.error, isNull);
+    });
+
+    test('WeightRecordCubit isolates record/latest loading flags and drops stale overlapping latest fetches', () async {
+      final cubit = WeightRecordCubit(
+        weightRecordRepository: WeightRecordRepository.create(),
+      );
+      addTearDown(cubit.close);
+
+      final staleLatest = cubit.getLatestRecordedWeightRecord();
+      expect(cubit.state.isLoadingLatest, isTrue);
+      expect(cubit.state.isLoadingRecords, isFalse);
+      expect(cubit.state.isLoadingActiveGoal, isFalse);
+      expect(cubit.state.isLoadingGoals, isFalse);
+
+      await cubit.createWeightRecord(
+        WeightRecordInput(weight: 76200, recordDate: DateTime(2026, 3, 2)),
+      );
+      await staleLatest;
+
+      expect(cubit.state.latestWeightRecord?.weight, 76200);
+      expect(cubit.state.isLoadingLatest, isFalse);
+      expect(cubit.state.isLoadingRecords, isFalse);
+
+      final recordsFuture = cubit.getWeightRecords();
+      expect(cubit.state.isLoadingRecords, isTrue);
+      expect(cubit.state.isLoadingLatest, isFalse);
+      expect(cubit.state.isLoadingActiveGoal, isFalse);
+      expect(cubit.state.isLoadingGoals, isFalse);
+
+      await recordsFuture;
+      expect(cubit.state.isLoadingRecords, isFalse);
+      expect(cubit.state.weightRecords, isNotEmpty);
+      expect(cubit.state.isLoading, isFalse);
     });
   });
 }

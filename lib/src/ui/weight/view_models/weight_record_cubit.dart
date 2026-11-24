@@ -403,7 +403,7 @@ class WeightRecordCubit extends Cubit<WeightRecordState> {
   }) async {
     _logger.info("Getting weight records");
     final requestId = state.recordsRequestId + 1;
-    emit(state.copyWith(recordsRequestId: requestId, isLoading: true));
+    emit(state.copyWith(recordsRequestId: requestId, isLoadingRecords: true));
     _logger.info("Fetching paginated weight records");
     final result = await _weightRecordService.getWeightRecords(
       dateRange: dateRange,
@@ -425,7 +425,7 @@ class WeightRecordCubit extends Cubit<WeightRecordState> {
                   description: "Failed to get weight records",
                 ),
               ),
-              isLoading: false,
+              isLoadingRecords: false,
             ),
           );
           return;
@@ -446,7 +446,7 @@ class WeightRecordCubit extends Cubit<WeightRecordState> {
           total: paginatedData.total,
           dateRange: Nullable(dateRange),
         ),
-        isLoading: false,
+        isLoadingRecords: false,
         error: const Nullable(null),
       ),
     );
@@ -454,8 +454,10 @@ class WeightRecordCubit extends Cubit<WeightRecordState> {
 
   Future<void> getLatestRecordedWeightRecord() async {
     _logger.info("Getting latest weight record");
-    emit(state.copyWith(isLoading: true));
+    final requestId = state.latestRequestId + 1;
+    emit(state.copyWith(latestRequestId: requestId, isLoadingLatest: true));
     final result = await _weightRecordService.getLatestRecorded();
+    if (isClosed || requestId != state.latestRequestId) return;
     if (result.isErr()) {
       final error = result.error;
       _logger.warning("Failed to fetch latest weight record", error);
@@ -464,7 +466,7 @@ class WeightRecordCubit extends Cubit<WeightRecordState> {
           emit(
             state.copyWith(
               latestWeightRecord: const Nullable(null),
-              isLoading: false,
+              isLoadingLatest: false,
               error: const Nullable(null),
             ),
           );
@@ -479,7 +481,7 @@ class WeightRecordCubit extends Cubit<WeightRecordState> {
                   description: "Failed to get latest weight record",
                 ),
               ),
-              isLoading: false,
+              isLoadingLatest: false,
             ),
           );
           return;
@@ -489,7 +491,7 @@ class WeightRecordCubit extends Cubit<WeightRecordState> {
     emit(
       state.copyWith(
         latestWeightRecord: Nullable(result.value),
-        isLoading: false,
+        isLoadingLatest: false,
         error: const Nullable(null),
       ),
     );
@@ -498,6 +500,7 @@ class WeightRecordCubit extends Cubit<WeightRecordState> {
   Future<void> createWeightRecord(WeightRecordInput input) async {
     emit(state.copyWith(isLoading: true));
     final result = await _weightRecordService.createWeightRecord(input);
+    if (isClosed) return;
     if (result.isErr()) {
       final error = result.error;
       _logger.warning("Failed to create weight record", error);
@@ -520,6 +523,7 @@ class WeightRecordCubit extends Cubit<WeightRecordState> {
     }
 
     final weightRecordsResult = await _weightRecordService.getWeightRecords();
+    if (isClosed) return;
     if (weightRecordsResult.isErr()) {
       final error = weightRecordsResult.error;
       _logger.warning("Failed to fetch weight records", error);
@@ -544,6 +548,8 @@ class WeightRecordCubit extends Cubit<WeightRecordState> {
     final weightRecords = weightRecordsResult.value;
     emit(
       state.copyWith(
+        recordsRequestId: state.recordsRequestId + 1,
+        latestRequestId: state.latestRequestId + 1,
         weightRecords: weightRecords.data,
         selectedWeightRecord: Nullable(result.value),
         recordPagination: state.recordPagination.copyWith(
@@ -553,6 +559,8 @@ class WeightRecordCubit extends Cubit<WeightRecordState> {
         ),
         latestWeightRecord: Nullable(weightRecords.data.firstOrNull),
         isLoading: false,
+        isLoadingRecords: false,
+        isLoadingLatest: false,
         error: const Nullable(null),
       ),
     );
@@ -561,6 +569,7 @@ class WeightRecordCubit extends Cubit<WeightRecordState> {
   Future<void> updateWeightRecord(int id, WeightRecordInput input) async {
     emit(state.copyWith(isLoading: true));
     final result = await _weightRecordService.updateWeightRecord(id, input);
+    if (isClosed) return;
     if (result.isErr()) {
       final error = result.error;
       _logger.warning("Failed to update weight record", error);
@@ -599,6 +608,8 @@ class WeightRecordCubit extends Cubit<WeightRecordState> {
     final weightRecord = result.value;
     emit(
       state.copyWith(
+        recordsRequestId: state.recordsRequestId + 1,
+        latestRequestId: state.latestRequestId + 1,
         weightRecords: state.weightRecords
             .map((w) => w.id == weightRecord.id ? weightRecord : w)
             .toList(),
@@ -609,6 +620,8 @@ class WeightRecordCubit extends Cubit<WeightRecordState> {
               : state.latestWeightRecord,
         ),
         isLoading: false,
+        isLoadingRecords: false,
+        isLoadingLatest: false,
         error: Nullable(null),
       ),
     );
@@ -618,6 +631,7 @@ class WeightRecordCubit extends Cubit<WeightRecordState> {
     emit(state.copyWith(isLoading: true));
 
     final result = await _weightRecordService.deleteWeightRecord(id);
+    if (isClosed) return;
     if (result.isErr()) {
       final error = result.error;
       switch (error.type) {
@@ -656,6 +670,8 @@ class WeightRecordCubit extends Cubit<WeightRecordState> {
         .toList();
     emit(
       state.copyWith(
+        recordsRequestId: state.recordsRequestId + 1,
+        latestRequestId: state.latestRequestId + 1,
         weightRecords: updatedRecords,
         selectedWeightRecord: Nullable(
           state.selectedWeightRecord?.id == id
@@ -673,6 +689,8 @@ class WeightRecordCubit extends Cubit<WeightRecordState> {
               : state.latestWeightRecord,
         ),
         isLoading: false,
+        isLoadingRecords: false,
+        isLoadingLatest: false,
         error: const Nullable(null),
       ),
     );

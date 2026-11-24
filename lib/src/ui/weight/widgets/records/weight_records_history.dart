@@ -207,7 +207,7 @@ class _WeightRecordsHistoryState extends State<WeightRecordsHistory> {
         SizedBox(height: widget.sizes.spacing),
         BlocBuilder<WeightRecordCubit, WeightRecordState>(
           builder: (context, state) {
-            if (!state.isLoading && state.weightRecords.isEmpty) {
+            if (!state.isLoadingRecords && state.weightRecords.isEmpty) {
               return NotFoundList(
                 height: widget.breakPoint.height / 3,
                 sizes: widget.sizes,
@@ -225,7 +225,7 @@ class _WeightRecordsHistoryState extends State<WeightRecordsHistory> {
                       sizes: widget.sizes,
                       units: widget.units,
                       records: state.weightRecords,
-                      isLoading: state.isLoading,
+                      isLoading: state.isLoadingRecords,
                     )
                   : Card(
                       margin: EdgeInsets.zero,
