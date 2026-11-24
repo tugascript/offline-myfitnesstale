@@ -364,7 +364,6 @@ class _MacroTrackerScreenState extends State<MacroTrackerScreen> {
           (previous.activeGoal == null) != (current.activeGoal == null) ||
           previous.hasLoadedActiveGoal != current.hasLoadedActiveGoal ||
           previous.isLoadingActiveGoal != current.isLoadingActiveGoal ||
-          previous.isLoading != current.isLoading ||
           previous.error != current.error,
       builder: (context, state) {
         final hasActiveGoal = state.activeGoal != null;

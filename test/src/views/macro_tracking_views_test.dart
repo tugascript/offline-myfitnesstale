@@ -2852,6 +2852,13 @@ void main() {
         );
         await tester.pump();
         expect(find.byType(MacroGoalFormModal), findsNothing);
+        final setGoalButton = tester.widget<TextButton>(
+          find.descendant(
+            of: find.byKey(const ValueKey('macro-tracker-set-goal-btn')),
+            matching: find.byType(TextButton),
+          ),
+        );
+        expect(setGoalButton.onPressed, isNotNull);
 
         // Once the unrelated call completes, the pending prompt should open.
         macroCubit.emit(macroCubit.state.copyWith(isLoading: false));
