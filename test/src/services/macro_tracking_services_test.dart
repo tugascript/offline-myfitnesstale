@@ -19,7 +19,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:myfitnesstale/src/data/models/sqlite/day_macro_goal_model.dart';
 import 'package:myfitnesstale/src/data/models/sqlite/food_model.dart';
 import 'package:myfitnesstale/src/data/models/sqlite/food_portion_model.dart';
-import 'package:myfitnesstale/src/data/models/sqlite/meal_plan_record_model.dart';
 import 'package:myfitnesstale/src/data/models/sqlite/week_macro_goal_model.dart';
 import 'package:myfitnesstale/src/data/repositories/foods/food_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/foods/inputs/food_input.dart';
@@ -27,13 +26,6 @@ import 'package:myfitnesstale/src/data/repositories/foods/inputs/food_portion_in
 import 'package:myfitnesstale/src/data/repositories/macros/inputs/day_macro_goal_input.dart';
 import 'package:myfitnesstale/src/data/repositories/macros/inputs/week_macro_goal_input.dart';
 import 'package:myfitnesstale/src/data/repositories/macros/macro_tracking_repository.dart';
-import 'package:myfitnesstale/src/data/repositories/meal_plans/inputs/meal_plan_day_input.dart';
-import 'package:myfitnesstale/src/data/repositories/meal_plans/inputs/meal_plan_input.dart';
-import 'package:myfitnesstale/src/data/repositories/meal_plans/inputs/meal_plan_meal_input.dart';
-import 'package:myfitnesstale/src/data/repositories/meal_plans/inputs/meal_plan_meal_item_input.dart';
-import 'package:myfitnesstale/src/data/repositories/meal_plans/inputs/meal_plan_week_input.dart';
-import 'package:myfitnesstale/src/data/repositories/meal_plans/meal_plan_record_repository.dart';
-import 'package:myfitnesstale/src/data/repositories/meal_plans/meal_plan_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/recipes/inputs/recipe_input.dart';
 import 'package:myfitnesstale/src/data/repositories/recipes/inputs/recipe_item_input.dart';
 import 'package:myfitnesstale/src/data/repositories/recipes/recipe_repository.dart';
@@ -48,8 +40,6 @@ void main() {
   final foodService = FoodRepository.create();
   final recipeService = RecipeRepository.create();
   final macroTrackingService = MacroTrackingRepository.create();
-  final mealPlanService = MealPlanRepository.create();
-  final mealPlanRecordService = MealPlanRecordRepository.create();
 
   setUpAll(() async {
     await testDatabase.initialize();
@@ -513,186 +503,5 @@ void main() {
       );
       expect(dayRowsAfterDelete, isEmpty);
     });
-  });
-
-  group('MealPlanRepository', () {
-    test('meal-plan save of a week with a day, meal, and item', () async {
-      final eggResult = await foodService.createFood(
-        FoodInput(
-          name: 'Whole Egg',
-          category: FoodCategory.dairyAndEggs,
-          caloriesBase: 143,
-          proteinBase: 13,
-          carbsBase: 1,
-          fatBase: 10,
-          servingSizeBaseGrams: 100,
-          portions: const [],
-        ),
-      );
-      final egg = eggResult.value;
-
-      final planResult = await mealPlanService.createMealPlan(
-        MealPlanInput(
-          name: 'Simple 1-Week Cut',
-          description: Nullable('Single week test plan'),
-          weeks: [
-            MealPlanWeekInput(
-              weekNumber: 1,
-              phase: MealPlanPhase.cut,
-              days: [
-                MealPlanDayInput(
-                  day: 1,
-                  name: 'Monday',
-                  meals: [
-                    MealPlanMealInput(
-                      position: 1,
-                      timeOfDay: '08:00',
-                      mealType: MealType.breakfast,
-                      name: 'Morning Eggs',
-                      items: [
-                        MealPlanMealItemInput(foodId: egg.id, amount: 150),
-                      ],
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ],
-        ),
-      );
-      expect(planResult.isOk(), isTrue);
-      final plan = planResult.value;
-      expect(plan.name, 'Simple 1-Week Cut');
-      expect(plan.totalWeeks, 1);
-      expect(plan.totalDays, 1);
-      expect(plan.totalMeals, 1);
-
-      // Load with full tree
-      final fetchedResult = await mealPlanService.getMealPlan(plan.id);
-      expect(fetchedResult.isOk(), isTrue);
-      final fetched = fetchedResult.value;
-      expect(fetched.weeks.length, 1);
-      expect(fetched.weeks.first.days.length, 1);
-      expect(fetched.weeks.first.days.first.meals.length, 1);
-      expect(fetched.weeks.first.days.first.meals.first.items.length, 1);
-      expect(
-        fetched.weeks.first.days.first.meals.first.items.first.totalCalories,
-        (143 * 1.5).round(),
-      );
-    });
-  });
-
-  group('MealPlanRecordRepository', () {
-    test(
-      'starting a second meal plan abandons the previous in-progress record',
-      () async {
-        final eggResult = await foodService.createFood(
-          FoodInput(
-            name: 'Egg White',
-            category: FoodCategory.dairyAndEggs,
-            caloriesBase: 52,
-            proteinBase: 11,
-            carbsBase: 1,
-            fatBase: 0,
-            servingSizeBaseGrams: 100,
-            portions: const [],
-          ),
-        );
-        final egg = eggResult.value;
-
-        final plan1Result = await mealPlanService.createMealPlan(
-          MealPlanInput(
-            name: 'Plan 1',
-            weeks: [
-              MealPlanWeekInput(
-                weekNumber: 1,
-                phase: MealPlanPhase.cut,
-                days: [
-                  MealPlanDayInput(
-                    day: 1,
-                    meals: [
-                      MealPlanMealInput(
-                        position: 1,
-                        mealType: MealType.breakfast,
-                        name: 'Meal',
-                        items: [
-                          MealPlanMealItemInput(foodId: egg.id, amount: 100),
-                        ],
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ],
-          ),
-        );
-        final plan1 = plan1Result.value;
-
-        final plan2Result = await mealPlanService.createMealPlan(
-          MealPlanInput(
-            name: 'Plan 2',
-            weeks: [
-              MealPlanWeekInput(
-                weekNumber: 1,
-                phase: MealPlanPhase.bulk,
-                days: [
-                  MealPlanDayInput(
-                    day: 1,
-                    meals: [
-                      MealPlanMealInput(
-                        position: 1,
-                        mealType: MealType.breakfast,
-                        name: 'Meal',
-                        items: [
-                          MealPlanMealItemInput(foodId: egg.id, amount: 100),
-                        ],
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ],
-          ),
-        );
-        final plan2 = plan2Result.value;
-
-        // Start plan 1
-        final start1 = await mealPlanRecordService.startMealPlan(
-          mealPlanId: plan1.id,
-        );
-        expect(start1.isOk(), isTrue);
-        expect(start1.value.status, ProgressStatus.inProgress);
-        final record1Id = start1.value.id;
-
-        // Verify active
-        final active1 = await mealPlanRecordService.getActiveMealPlanRecord();
-        expect(active1.isOk(), isTrue);
-        expect(active1.value.id, record1Id);
-
-        // Start plan 2
-        final start2 = await mealPlanRecordService.startMealPlan(
-          mealPlanId: plan2.id,
-        );
-        expect(start2.isOk(), isTrue);
-        expect(start2.value.status, ProgressStatus.inProgress);
-        final record2Id = start2.value.id;
-
-        // Verify record 1 is abandoned and record 2 is in-progress
-        final db = await testDatabase.db;
-        final rec1Rows = await db.query(
-          MealPlanRecord.table,
-          where: '${MealPlanRecordColumns.id.value} = ?',
-          whereArgs: [record1Id],
-        );
-        expect(
-          rec1Rows.first[MealPlanRecordColumns.status.value],
-          ProgressStatus.abandoned.value,
-        );
-
-        final active2 = await mealPlanRecordService.getActiveMealPlanRecord();
-        expect(active2.isOk(), isTrue);
-        expect(active2.value.id, record2Id);
-      },
-    );
   });
 }

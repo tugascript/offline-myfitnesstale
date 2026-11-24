@@ -1,7 +1,7 @@
 # My Fitness Tale: Delivery Plan
 
 Entity model and file structure last aligned with the code and
-[README.md](README.md) on 17 November 2026. For the
+[README.md](README.md) on 24 November 2026. For the
 code-grounded implementation snapshot, see [PROJECT_STATE.md](PROJECT_STATE.md).
 
 ## Product objective
@@ -17,7 +17,7 @@ Gamification and social networking are outside the first major release.
 
 ### Phase 1: complete and consolidate the mobile fitness features
 
-The core exercise, workout, plan, weight, food, recipe, meal-plan, and macro-tracking
+The core exercise, workout, plan, weight, food, recipe, and macro-tracking
 flows are implemented offline. The immediate goal is to consolidate shared domain
 helpers and verify the complete mobile feature set before freezing the SQLite schema
 for backup and release.
@@ -25,16 +25,16 @@ for backup and release.
 #### Completed foundation — Offline meal and macro tracking
 
 The app now includes the local SQLite schema and end-to-end flows for foods, recipes,
-versioned meal plans, meal-plan execution, weekly macro goals, and daily nutrition:
+weekly macro goals, and daily nutrition:
 
 - weekly goals support flat targets and calorie-cycling day groups;
 - the diary supports timestamped food, recipe, and standalone quick-add snapshots,
-  water tracking, planned meals, and day/week/month views;
+  water tracking, and day/week/month views;
 - nutrition mutations use local transactions and preserve immutable logged snapshots.
 
 Remaining P1 work is verification and consolidation, not initial implementation:
 
-- add device-journey coverage for nutrition and meal-plan execution;
+- add device-journey coverage for nutrition tracking;
 - keep narrow-screen and 200% text-scale coverage current as shared widgets evolve;
 - consolidate duplicated date, progress, and nutrition calculations where a tested
   domain helper can replace UI/repository duplication.
@@ -63,7 +63,7 @@ preservation and release readiness:
 #### P2 — Add local backup and restore
 
 The version 1 schema already includes the backup foundation: `backup_configs`,
-`backup_passkeys`, and `backups`, bringing the create schema to 45 tables. Backup
+`backup_passkeys`, and `backups`, bringing the create schema to 37 tables. Backup
 history optionally references configuration and passkey rows with `ON DELETE SET NULL`.
 `data/services/backup/backup_crypto.dart` supplies passkey hashing/verification and key
 derivation; `data/services/secure_storage/secure_storage_service.dart` wraps platform
@@ -214,7 +214,7 @@ Before release, verify:
 4. weight records, chart points, and weight-goal CRUD;
 5. equipment, exercises, filters, favorites, and exercise records;
 6. workout creation/editing, live completion/cancellation/resume, and history;
-7. workout- and meal-plan creation/editing, scheduling, progress, restart, and history;
+7. workout-plan creation/editing, scheduling, progress, restart, and history;
 8. foods, recipes, macro goals, diary logging, water, and day/week/month nutrition views;
 9. narrow layouts, large text, screen readers, and interrupted app lifecycles;
 10. backup/export followed by a verified restore on a clean installation.

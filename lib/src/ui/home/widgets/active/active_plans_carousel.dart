@@ -20,7 +20,7 @@ import 'package:material_ui/material_ui.dart';
 import '../../../core/sizes/data_display_sizes.dart';
 import '../../../core/widgets/base_carousel.dart';
 import '../../../core/widgets/layout/titled_section.dart';
-import './active_meal_plan_widget.dart';
+import './active_macro_goal_widget.dart';
 import './active_plan_widget.dart';
 
 class ActivePlansCarousel extends StatelessWidget {
@@ -41,13 +41,13 @@ class ActivePlansCarousel extends StatelessWidget {
       sizes: sizes,
       theme: theme,
       keyPrefix: 'active-plans',
-      labels: const ['Workout', 'Meal'],
+      labels: const ['Workout', 'Macros'],
       crossAxisAlignment: CrossAxisAlignment.stretch,
       semanticLabelBuilder: (label, index, total) =>
-          '$label plan, ${index + 1} of $total',
+          '$label, ${index + 1} of $total',
       children: [
         ActivePlanWidget(sizes: sizes, showTitle: false),
-        ActiveMealPlanWidget(sizes: sizes, showTitle: false),
+        ActiveMacroGoalWidget(sizes: sizes, showTitle: false),
       ],
     ),
   );

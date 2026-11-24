@@ -19,8 +19,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:myfitnesstale/src/data/models/sqlite/daily_nutrition_log_model.dart';
 import 'package:myfitnesstale/src/data/models/sqlite/day_macro_goal_model.dart';
 import 'package:myfitnesstale/src/data/models/sqlite/food_portion_model.dart';
-import 'package:myfitnesstale/src/data/models/sqlite/meal_plan_day_record_model.dart';
-import 'package:myfitnesstale/src/data/models/sqlite/meal_plan_week_model.dart';
 import 'package:myfitnesstale/src/data/models/sqlite/recipe_item_model.dart';
 import 'package:myfitnesstale/src/data/models/sqlite/week_macro_goal_model.dart';
 import 'package:myfitnesstale/src/data/models/sqlite/weight_goal_model.dart';
@@ -45,11 +43,6 @@ import 'package:myfitnesstale/src/data/repositories/foods/inputs/food_input.dart
 import 'package:myfitnesstale/src/data/repositories/foods/inputs/food_portion_input.dart';
 import 'package:myfitnesstale/src/data/repositories/macros/inputs/week_macro_goal_input.dart';
 import 'package:myfitnesstale/src/data/repositories/macros/macro_tracking_repository.dart';
-import 'package:myfitnesstale/src/data/repositories/meal_plans/inputs/meal_plan_day_input.dart';
-import 'package:myfitnesstale/src/data/repositories/meal_plans/inputs/meal_plan_input.dart';
-import 'package:myfitnesstale/src/data/repositories/meal_plans/inputs/meal_plan_week_input.dart';
-import 'package:myfitnesstale/src/data/repositories/meal_plans/meal_plan_record_repository.dart';
-import 'package:myfitnesstale/src/data/repositories/meal_plans/meal_plan_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/recipes/inputs/recipe_input.dart';
 import 'package:myfitnesstale/src/data/repositories/recipes/inputs/recipe_item_input.dart';
 import 'package:myfitnesstale/src/data/repositories/recipes/recipe_repository.dart';
@@ -82,7 +75,6 @@ import 'package:myfitnesstale/src/data/services/sqlite/database_helper.dart';
 import 'package:myfitnesstale/src/data/utils/enums.dart';
 import 'package:myfitnesstale/src/data/utils/json_data.dart';
 import 'package:myfitnesstale/src/ui/exercises/view_models/exercise_record_cubit.dart';
-import 'package:myfitnesstale/src/ui/meal_plans/view_models/meal_plan_cubit.dart';
 import 'package:myfitnesstale/src/utils/errors.dart';
 import 'package:myfitnesstale/src/utils/nullable.dart';
 import 'package:sqflite/sqflite.dart';
@@ -947,32 +939,6 @@ void main() {
     },
   );
 
-  test('concurrent meal plan updates save distinct versions', () async {
-    final repo = MealPlanRepository.create();
-    MealPlanInput input(String name) => MealPlanInput(
-      name: name,
-      weeks: const [
-        MealPlanWeekInput(weekNumber: 1, phase: MealPlanPhase.maintain),
-      ],
-    );
-    final plan = (await repo.createMealPlan(input('Initial plan'))).value;
-
-    final results = await Future.wait([
-      repo.updateMealPlan(plan.id, input('First edit')),
-      repo.updateMealPlan(plan.id, input('Second edit')),
-    ]);
-
-    expect(results.every((result) => result.isOk()), isTrue);
-    expect(results.map((result) => result.value.version).toSet(), {2, 3});
-    for (final result in results) {
-      final saved = (await repo.getMealPlan(
-        plan.id,
-        version: result.value.version,
-      )).value;
-      expect(saved.weeks.single.id, result.value.weeks.single.id);
-    }
-  });
-
   test('macro diary lookups return typed SQLite failures', () async {
     final repo = MacroTrackingRepository.create();
     final food = (await FoodRepository.create().createFood(
@@ -1049,126 +1015,6 @@ void main() {
     );
     expect(page.error.type, OperationErrorTypes.operationFailure);
     expect(rows.error.type, SingleErrorTypes.operationFailure);
-  });
-
-  test(
-    'starting an older meal plan version uses its schedule and totals',
-    () async {
-      final plans = MealPlanRepository.create();
-      final records = MealPlanRecordRepository.create();
-      MealPlanInput input(List<MealPlanDayInput> days) => MealPlanInput(
-        name: uniqueName('Versioned meal plan'),
-        weeks: [
-          MealPlanWeekInput(
-            weekNumber: 1,
-            phase: MealPlanPhase.maintain,
-            days: days,
-          ),
-        ],
-      );
-      final original = (await plans.createMealPlan(
-        input(const [MealPlanDayInput(day: 1)]),
-      )).value;
-      final edited = (await plans.updateMealPlan(
-        original.id,
-        input(const [MealPlanDayInput(day: 1), MealPlanDayInput(day: 2)]),
-      )).value;
-      expect(edited.totalDays, 2);
-
-      final started = (await records.startMealPlan(
-        mealPlanId: original.id,
-        version: original.version,
-      )).value;
-      final active = (await records.getActiveMealPlanRecord()).value;
-      expect(started.totalDays, 1);
-      expect(active.totalDays, 1);
-      expect(
-        active.weeks.single.days.single.mealPlanDayId,
-        original.weeks.single.days.single.id,
-      );
-    },
-  );
-
-  test(
-    'starting a replacement meal plan rolls back when a day fails to save',
-    () async {
-      final plans = MealPlanRepository.create();
-      final records = MealPlanRecordRepository.create();
-      final plan = (await plans.createMealPlan(
-        MealPlanInput(
-          name: uniqueName('Meal plan with one day'),
-          weeks: const [
-            MealPlanWeekInput(
-              weekNumber: 1,
-              phase: MealPlanPhase.maintain,
-              days: [MealPlanDayInput(day: 1)],
-            ),
-          ],
-        ),
-      )).value;
-      final active = (await records.startMealPlan(mealPlanId: plan.id)).value;
-      final db = await testDatabase.db;
-      await db.execute("""
-      CREATE TEMP TRIGGER fail_meal_plan_day_record
-      BEFORE INSERT ON ${MealPlanDayRecord.table}
-      BEGIN SELECT RAISE(ABORT, 'forced test failure'); END
-    """);
-      addTearDown(() => db.execute('DROP TRIGGER fail_meal_plan_day_record'));
-
-      final failed = await records.startMealPlan(mealPlanId: plan.id);
-      expect(failed.error.type, SingleErrorTypes.operationFailure);
-      expect((await records.getActiveMealPlanRecord()).value.id, active.id);
-    },
-  );
-
-  test(
-    'a rejected schedule row rolls back the entire meal plan version',
-    () async {
-      final plans = MealPlanRepository.create();
-      MealPlanInput input(int day) => MealPlanInput(
-        name: uniqueName('Meal plan schedule'),
-        weeks: [
-          MealPlanWeekInput(
-            weekNumber: 1,
-            phase: MealPlanPhase.maintain,
-            days: [MealPlanDayInput(day: day)],
-          ),
-        ],
-      );
-      final plan = (await plans.createMealPlan(input(1))).value;
-
-      final failed = await plans.updateMealPlan(plan.id, input(8));
-
-      expect(failed.error.type, SingleErrorTypes.operationFailure);
-      expect((await plans.getMealPlan(plan.id)).value.version, plan.version);
-      final db = await testDatabase.db;
-      final weeks = await db.query(
-        MealPlanWeek.table,
-        where: MealPlanWeekColumns.mealPlanId.equal,
-        whereArgs: [plan.id],
-      );
-      expect(weeks.single[MealPlanWeekColumns.planVersion.value], plan.version);
-    },
-  );
-
-  test('favoriting an open meal plan preserves its loaded weeks', () async {
-    final repo = MealPlanRepository.create();
-    final plan = (await repo.createMealPlan(
-      const MealPlanInput(
-        name: 'Favorite plan',
-        weeks: [
-          MealPlanWeekInput(weekNumber: 1, phase: MealPlanPhase.maintain),
-        ],
-      ),
-    )).value;
-    final cubit = MealPlanCubit(mealPlanRepository: repo);
-    addTearDown(cubit.close);
-
-    await cubit.getMealPlan(plan.id);
-    expect(cubit.state.selectedMealPlan!.weeks, hasLength(1));
-    expect(await cubit.toggleFavorite(plan.id), isTrue);
-    expect(cubit.state.selectedMealPlan!.isFavorite, isTrue);
-    expect(cubit.state.selectedMealPlan!.weeks, hasLength(1));
   });
 
   test('batch workout save returns sets in read order and preserves absent children', () async {

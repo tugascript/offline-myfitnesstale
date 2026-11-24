@@ -1,7 +1,7 @@
 # My Fitness Tale: Current Project State
 
-Entity model and file structure reviewed on 17 November 2026 from branch
-`tugascript/onboarding-home-ui-update` at commit `d89d1e1`, including the
+Entity model and file structure reviewed on 24 November 2026 from branch
+`tugascript/remove-mealplan` at commit `1c7b727`, including the
 current working tree. Test results below retain their original dates.
 This file records what the code does now. See
 [README.md](README.md) for the product overview and [project.md](project.md)
@@ -12,7 +12,7 @@ for planned work.
 My Fitness Tale is a local-first Flutter fitness tracker for Android and iOS.
 The implemented app covers onboarding, profiles, equipment, exercises,
 exercise progress, workouts, workout history, weight tracking, weight goals,
-strength goals, multi-week workout and meal plans, foods, recipes, macro goals,
+strength goals, multi-week workout plans, foods, recipes, macro goals,
 and daily nutrition tracking. Data is stored in SQLite and all implemented
 offline features are completely free and do not require a backend or account.
 
@@ -23,12 +23,12 @@ reminder preferences do not schedule notifications.
 
 Repository facts at this review:
 
-- 486 Dart source files under `lib/`;
-- 46 SQLite tables (`migrations` created before transactional schema setup, plus 45 domain/backup tables in the create schema);
+- 500 Dart source files under `lib/`;
+- 38 SQLite tables (`migrations` created before transactional schema setup, plus 37 domain/backup tables in the create schema);
 - database schema version 1;
 - 89 seeded exercises and 25 seeded equipment entries;
 - 16 optional starter workouts and one 16-week starter plan;
-- 71 host test files and six device journey files (plus the shared integration harness);
+- 82 host test files and eight device journey files (plus the shared integration harness);
 - no repository CI configuration;
 - no backend implementation in the current working tree.
 
@@ -52,24 +52,27 @@ mechanism; after restore they must be derived again from the passkey and salt.
 
 ### Home active plans
 
-- Workout and meal plan cards share a horizontally swipeable carousel with
-  tappable line indicators above Workout and Meal labels and one static “Active plans” heading;
+- Workout plan (`ActivePlanWidget`) and active macro goal (`ActiveMacroGoalWidget`)
+  cards share a horizontally swipeable carousel with tappable line indicators
+  above Workout and Macros labels and one static “Active plans” heading;
   both empty slides remain available.
-- The selector spans the plan-card width, with equal-width Workout and Meal
-  buttons and full-width line indicators. Both empty cards offer Browse Plans
-  buttons linking to their respective plan libraries.
-- Feature Cubits remain independent. Both cards stay mounted and the carousel
+- The selector spans the card width, with equal-width Workout and Macros
+  buttons and full-width line indicators. The empty workout card offers a
+  Browse Plans button linking to the workout plans library; the empty macro goal
+  card (`EmptyMacroGoal`) offers a Set Macro Goal button linking to macro goals.
+- Feature Cubits remain independent (`WorkoutPlanRecordCubit` and
+  `MacroTrackingCubit`). Both cards stay mounted and the carousel
   stretches both cards to the taller card's natural height, including at large
   text scales.
-- Meal cards use the workout card's spacing, themed highlight, and
-  empty-state styling, with links to plan details. Tapping an active meal or
-  macro card still opens the tracker; the separate Open Tracker button is removed.
+- The active macro goal card uses the workout card's spacing, themed highlight,
+  and empty-state styling. Tapping an active macro goal card opens the macro
+  tracker.
 
 ### Home shortcuts
 
 - Quick Actions has four categories: Workout Plans, Weight Goals,
   Exercises, and Nutrition. Their modal bottom sheets expose all
-  fourteen entries, including Exercise Progress as the entry to records.
+  thirteen entries, including Exercise Progress as the entry to records.
 - Menus have a title, close button, destination icons and chevrons. They support
   swipe, outside-tap, and system Back dismissal; selecting a destination closes
   the sheet completely before opening the existing routed page.
@@ -233,16 +236,12 @@ layers. Historical plan summaries do not expose child-workout detail.
 - Stores weights in grams and calculates target progress.
 - Starting a new strength goal abandons prior in-progress goals for that exercise.
 
-### Foods, recipes, and meal plans
+### Foods and recipes
 
 - Foods & portions: Full CRUD for user-authored foods and portions in a single transaction; filters by name, category,
   and favorite; prevents mutation/deletion of machine-authored foods (`CreatedBy.system`).
 - Recipes & items: Aggregates recipe items (pointing to foods and portions); calculates serving totals for calories,
   protein, carbs, fat, and micronutrients inside the transaction; prevents mutation/deletion of system-authored recipes.
-- Meal plans: Multi-week meal schedule aggregates (weeks, days, meals, items) created and versioned with transactions
-  and denormalized total updates; supports favorites and system authoring protection.
-- Meal-plan records: Tracks execution of meal plans with week and day records; enforces single active meal-plan
-  invariant; allows starting and advancing/completing days.
 
 The 13 October 2026 refactor applies food/repository PUT conventions across the
 nutrition and strength-goal flows. Create and update share complete inputs under
@@ -257,18 +256,15 @@ no separate generic `Repository<T>` layer. `Dao.rawCount` supports integer
 aggregate queries on custom SQLite helpers, and `WorkoutPlanRecordRepository`
 progress count/percentage methods return `Result` values rather than throwing.
 
-Recipe replacement rolls back on invalid ingredient references. Meal-plan
-replacement creates a new schedule version and retains previous weeks, days,
-and meals for execution records. Meal-week fiber totals now round-trip through
-SQLite, and the existing strength-goal table is registered in the create schema.
-Schema version remains 1 under the pre-beta reset policy.
+Recipe replacement rolls back on invalid ingredient references, and the existing
+strength-goal table is registered in the create schema. Schema version remains 1
+under the pre-beta reset policy.
 
-Food and recipe details and list items, meal-plan schedules and list items,
-macro-goal content, and tracker day/week/month and planned-meal sections live
-in their entity widget folders. Screens compose these widgets and dispatch Cubit
-actions. Regression tests cover complete updates, nullable clearing, rollback,
-originating meal-plan versions, pagination/filter preservation, and populated
-entity widgets at 320px with 200% text scaling.
+Food and recipe details and list items, macro-goal content, and tracker
+day/week/month sections live in their entity widget folders. Screens compose
+these widgets and dispatch Cubit actions. Regression tests cover complete
+updates, nullable clearing, rollback, pagination/filter preservation, and
+populated entity widgets at 320px with 200% text scaling.
 
 The PR's nutrition and strength-goal screens resolve `DataDisplaySizesList`
 from their screen breakpoints and pass it to child widgets. Padding, spacing,
@@ -277,7 +273,7 @@ field groups and dashboard actions reflow according to available width and
 text scaling. Strength-goal content scrolls as a whole, and the meal-log dialog
 uses naturally sized tab content instead of a fixed-height viewport.
 
-`pr_responsive_widgets_test.dart` covers 150 populated screen/widget scenarios
+`pr_responsive_widgets_test.dart` covers 120 populated screen/widget scenarios
 at 320px, 600px, and 1200px with 100% and 200% text. Dialog checks also cover
 long food selections, both food/recipe tabs, and reaching the confirm action
 above a keyboard inset.
@@ -300,11 +296,11 @@ above a keyboard inset.
   informational lint. The repository-wide format check still flags 340 other files.
 - Daily nutrition logs: Get-or-create per numeric local date (`YYYYMMDD`); each food or recipe submission retains its
   own timestamp and immutable nutrition snapshot, including submissions at identical times; recalculates meal and daily
-  totals. Meal categories remain metadata for meal plans rather than diary grouping.
+  totals.
 - Daily diary: A square-edged 24-hour timeline groups all entries by local hour, orders entries by time, and offers an
   add action per hour. Logging prefills the selected date/hour, allows time adjustment, and requires no meal-category
-  selection. Calories/macros, water controls, and scheduled plan meals remain above the timeline. Week/month views and
-  date navigation remain available.
+  selection. Calories/macros and water controls remain above the timeline. Week/month views and date navigation remain
+  available.
 - Existing diary entries retain their stored timestamps; older entries previously merged by category share the original
   meal timestamp because individual item times were never stored. No schema change or data reset is required.
 - Quick Add: The logging modal includes a third tab for a one-time name and total protein/carbs/fat, with calories
@@ -333,7 +329,7 @@ above a keyboard inset.
   preceding 365 days through today (`[today - 365 days, today]`): boundary chevrons and out-of-range days are disabled,
   period steps and picker initial dates are clamped into range, and nutrition records older than 365 days cannot be
   opened from the tracker UI.
-- `MacroTrackerScreen` reuses already-loaded active macro goal and meal-plan record state when available, serializes
+- `MacroTrackerScreen` reuses already-loaded active macro goal state when available, serializes
   daily and range log queries behind a goal-specific completion signal (`MacroTrackingState.isLoadingActiveGoal`) so
   targets do not briefly fall back to defaults or overwrite active-goal errors, defers all hidden diary and range
   queries until `isVisible` is `true`—including rechecking `isVisible` after awaiting active-goal readiness in period
@@ -341,15 +337,11 @@ above a keyboard inset.
   offscreen warm-up, tab switches, or goal recovery cannot race with a visible `/macro-tracker` route, verifies that a
   cached `selectedDailyLog.date` matches `DateUtilities.getNumericDate(_selectedDate)` before reusing it on activation
   or goal recovery, rebases an untouched `Today` selection across midnight on tab activation while preserving explicit
-  historical dates (clamped into `[today - 365 days, today]`), avoids duplicate active meal-plan fetches when the active
-  record transitions from `null`, reconciles daily log/range state and retries active meal-plan sync whenever the
-  warmed-up tab becomes visible, syncs the active meal plan into `MealPlanState.activeMealPlan` via
-  `MealPlanCubit.getActiveMealPlan` so offscreen warm-up never overwrites `selectedMealPlan` used by meal-plan
-  details/edit routes, and exposes a `'Log Food'` tooltip on its icon FAB for screen-reader accessibility. Deleting an
-  active user-authored workout or meal plan in `WorkoutPlanDetailScreen` or `MealPlanDetailsScreen` clears and reloads
-  the corresponding active-plan record cubit (`handleDeletedWorkoutPlan` / `handleDeletedMealPlan`) and navigates back
-  using the screen State's `this.context` after `mounted` checks so Home and warmed-up tabs never display a deleted
-  plan or fail on a disposed builder context.
+  historical dates (clamped into `[today - 365 days, today]`), reconciles daily log/range state whenever the
+  warmed-up tab becomes visible, and exposes a `'Log Food'` tooltip on its icon FAB for screen-reader accessibility.
+  Deleting an active user-authored workout plan in `WorkoutPlanDetailScreen` clears and reloads the active-plan record
+  cubit (`handleDeletedWorkoutPlan`) and navigates back using the screen State's `this.context` after `mounted` checks
+  so Home and warmed-up tabs never display a deleted plan or fail on a disposed builder context.
 - Validation on 15 October 2026: full host suite passed (315 tests, one skipped), including new persistence and timeline
   interaction coverage for same-hour/identical-time entries, midnight, historical dates, food/recipe logging, time
   adjustment, deletion, totals, and 320px/200% text. Dependency resolution and `git diff --check` passed. Analysis
@@ -370,8 +362,7 @@ above a keyboard inset.
   365-day lower/upper navigation and date-picker clamping, and staggered offscreen tab warm-up. `flutter pub get`,
   repository-wide `dart format`, `dart analyze`, and `git diff --check` passed; no device journey was run.
 - UI: Swipeable Day, Week, and Month tracker views bounded to the last 365 days through today; meal logging modal with
-  portion calculator; the active plan's meals appear on their scheduled dates and can be logged into the diary;
-  responsive layouts supporting 320px narrow screens and 200% font scaling.
+  portion calculator; responsive layouts supporting 320px narrow screens and 200% font scaling.
 
 ## Navigation
 
@@ -391,9 +382,7 @@ tab) while pausing offscreen tickers with `TickerMode`, deferring warm-up while
 Home active-data Cubits are loading. `CurrentWorkoutPlanScreen` and
 `MacroTrackerScreen` reuse valid loaded Cubit state during warm-up and tab
 switches, while revalidating when active-plan caches are invalidated (such as
-after deleting an active workout or meal plan template).
-
-Meal plans remain accessible from Home quick actions and the meal card.
+after deleting an active workout plan template).
 
 History is accessible through Home quick actions: Workout History and Workout Plan
 History under Workout Plans, Exercise Progress under Exercises, and Weight Records
@@ -406,7 +395,6 @@ Other notable routes include:
 - `/workout-plans/:id/history`;
 - `/foods`;
 - `/recipes`;
-- `/meal-plans`;
 - `/macros/tracker`;
 - `/macros/goals`;
 - `/settings/reminders`.
@@ -459,7 +447,7 @@ these legacy test folder names do not mirror the current production-layer names.
 - `go_router` provides a flat route table and parameter validation.
 - App-scoped `flutter_bloc` Cubits under `view_models/` provide state.
 - Paginated reads tracked by request ID keep those IDs in immutable Cubit
-  state and discard superseded responses. Food, recipe, meal plan, exercise,
+  state and discard superseded responses. Food, recipe, exercise,
   workout, and workout plan mutations reload the loaded prefix using the
   latest list filters so the next page starts at the correct offset.
 - `sqflite`, models (`lib/src/data/models/sqlite`), DAOs
@@ -514,7 +502,7 @@ instances. Production uses `AppRouter.router`. Used fonts are bundled under
   `backup_passkey_modal.dart`, and `data_export.dart`. They do not persist preferences
   or passkeys, derive keys, or produce backup/export files.
 
-The [README entity diagram](README.md#local-data-model) summarizes all 45 tables.
+The [README entity diagram](README.md#local-data-model) summarizes all 37 tables.
 It shows domain relationships; for example, `strength_goals.exercise_id` is indexed
 but has no declared SQLite foreign-key constraint.
 
@@ -770,10 +758,27 @@ PR #36 review follow-up:
   whitespace checks passed. The host suite passed 688 tests with one existing
   test skipped. Device integration journeys were not run.
 
+### Meal-plan removal verification (24 November 2026)
+
+- Removed the meal-plans feature end to end: 8 SQLite meal-plan models and
+  tables (create schema reduced from 45 to 37 tables, schema version remains 1
+  under the pre-release policy), `MealPlanPhase`, `lib/src/data/repositories/meal_plans/`,
+  `lib/src/ui/meal_plans/`, `/meal-plans*` routes, `PlannedMealsWidget`, and
+  `MealPlanRepository`/`MealPlanRecordRepository`/`MealPlanCubit`/`MealPlanRecordCubit`
+  wiring across `MyApp`, Home, and `MacroTrackerScreen`.
+- Replaced Home's second `ActivePlansCarousel` slide with `ActiveMacroGoalWidget`
+  and `EmptyMacroGoal` (labels `Workout` and `Macros`), keeping Foods, Recipes,
+  Macro Goals, and Daily Nutrition tracking intact. Removed `Meal Plans` from
+  Home's Nutrition quick-action menu (13 total destinations).
+- `flutter pub get`, repository-wide `dart format --output=none --set-exit-if-changed lib test integration_test`
+  (593 files unchanged), `dart analyze` (no issues), `flutter test` (679 passed,
+  1 existing skip), and `git diff --check` all passed. Device integration
+  journeys were not run.
+
 ## Known gaps and release blockers
 
 - No fitness-data import/export, backup/restore, cloud sync, or account system.
-- Meal, macro, food, recipe, and meal-plan tracking and execution flows are fully implemented offline. No local AI
+- Food, recipe, macro-goal, and daily nutrition tracking flows are fully implemented offline. No local AI
   trainer.
 - No Apple Watch or Wear OS app.
 - Reminder preferences do not deliver notifications.

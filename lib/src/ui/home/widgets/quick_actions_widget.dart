@@ -123,7 +123,7 @@ class QuickActionsWidget extends StatelessWidget {
     QuickActionCategory(
       id: 'nutrition',
       title: 'Nutrition',
-      subtitle: 'Plan meals and manage your food',
+      subtitle: 'Track macros and manage your food',
       icon: Icons.restaurant_menu,
       destinations: [
         QuickActionDestination(
@@ -131,12 +131,6 @@ class QuickActionsWidget extends StatelessWidget {
           'Macro Goals',
           Icons.pie_chart_outline,
           Routes.macroGoals.name,
-        ),
-        QuickActionDestination(
-          'meal-plans',
-          'Meal Plans',
-          Icons.restaurant_menu,
-          Routes.mealPlanList.name,
         ),
         QuickActionDestination(
           'recipe',

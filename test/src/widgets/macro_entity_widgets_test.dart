@@ -27,12 +27,10 @@ import 'package:myfitnesstale/src/data/repositories/macros/dtos/macro_tracking_d
 import 'package:myfitnesstale/src/ui/macros/widgets/goals/macro_goals_content_widget.dart';
 import 'package:myfitnesstale/src/data/repositories/foods/dtos/food_dto.dart';
 import 'package:myfitnesstale/src/data/repositories/recipes/dtos/recipe_dto.dart';
-import 'package:myfitnesstale/src/data/repositories/meal_plans/dtos/meal_plan_dto.dart';
 import 'package:myfitnesstale/src/ui/core/sizes/data_display_sizes.dart';
 import 'package:myfitnesstale/src/ui/core/sizes/screen_size.dart';
 import 'package:myfitnesstale/src/ui/foods/widgets/food_details_widget.dart';
 import 'package:myfitnesstale/src/ui/recipes/widgets/recipe_details_widget.dart';
-import 'package:myfitnesstale/src/ui/meal_plans/widgets/meal_plan_schedule_widget.dart';
 
 void main() {
   final sizes = DataDisplaySizes.getDataDisplaySizes(ScreenSize.xs);
@@ -234,79 +232,5 @@ void main() {
     expect(find.textContaining('Calorie Cycling'), findsOneWidget);
     expect(find.text('Mon, Tue, Wed, Thu, Fri'), findsOneWidget);
     expect(find.text('Sat, Sun'), findsOneWidget);
-  });
-
-  testWidgets('populated meal schedule fits at 320px and 200% text', (
-    tester,
-  ) async {
-    await pumpNarrow(
-      tester,
-      MealPlanScheduleWidget(
-        theme: ThemeData(),
-        sizes: sizes,
-        plan: const MealPlanDto(
-          id: 1,
-          name: 'Plan',
-          version: 1,
-          totalWeeks: 1,
-          totalDays: 1,
-          totalMeals: 1,
-          isFavorite: false,
-          createdBy: CreatedBy.user,
-          weeks: [
-            MealPlanWeekDto(
-              id: 1,
-              mealPlanId: 1,
-              planVersion: 1,
-              weekNumber: 1,
-              phase: MealPlanPhase.maintain,
-              targetCalories: 200,
-              targetProtein: 5,
-              targetCarbs: 30,
-              targetFat: 4,
-              totalDays: 1,
-              totalMeals: 1,
-              createdBy: CreatedBy.user,
-              days: [
-                MealPlanDayDto(
-                  id: 1,
-                  mealPlanId: 1,
-                  mealPlanWeekId: 1,
-                  planVersion: 1,
-                  day: 1,
-                  targetCalories: 200,
-                  targetProtein: 5,
-                  targetCarbs: 30,
-                  targetFat: 4,
-                  totalMeals: 1,
-                  createdBy: CreatedBy.user,
-                  meals: [
-                    MealPlanMealDto(
-                      id: 1,
-                      position: 1,
-                      mealPlanId: 1,
-                      mealPlanWeekId: 1,
-                      mealPlanDayId: 1,
-                      planVersion: 1,
-                      mealType: MealType.breakfast,
-                      totalCalories: 200,
-                      totalProtein: 5,
-                      totalCarbs: 30,
-                      totalFat: 4,
-                      name: 'Fortified rolled oats breakfast',
-                      createdBy: CreatedBy.user,
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-    expect(
-      find.text('Fortified rolled oats breakfast (breakfast)'),
-      findsOneWidget,
-    );
   });
 }

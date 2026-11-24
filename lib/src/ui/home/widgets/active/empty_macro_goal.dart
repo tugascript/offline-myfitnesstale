@@ -23,15 +23,11 @@ import '../../../core/sizes/data_display_sizes.dart';
 import '../../../core/widgets/layout/app_text_button.dart';
 import './active_plan_frame.dart';
 
-class EmptyMealPlanOrMacroGoal extends StatelessWidget {
+class EmptyMacroGoal extends StatelessWidget {
   final DataDisplaySizesList sizes;
   final bool showTitle;
 
-  const EmptyMealPlanOrMacroGoal({
-    super.key,
-    required this.sizes,
-    this.showTitle = true,
-  });
+  const EmptyMacroGoal({super.key, required this.sizes, this.showTitle = true});
 
   @override
   Widget build(BuildContext context) {
@@ -40,12 +36,12 @@ class EmptyMealPlanOrMacroGoal extends StatelessWidget {
     final spacing = sizes.spacing / 3;
 
     return ActivePlanFrame(
-      title: 'Active Meal Plan',
+      title: 'Active Macro Goal',
       sizes: sizes,
       showTitle: showTitle,
       child: InkWell(
-        key: const ValueKey('empty-active-meal-plan-card'),
-        onTap: () => context.push(Routes.mealPlanList.name),
+        key: const ValueKey('empty-active-macro-goal-card'),
+        onTap: () => context.push(Routes.macroGoals.name),
         child: Padding(
           padding: EdgeInsets.all(sizes.padding),
           child: SizedBox(
@@ -55,7 +51,7 @@ class EmptyMealPlanOrMacroGoal extends StatelessWidget {
                 Icon(Icons.snooze, size: sizes.subtitleFontSize * 2),
                 SizedBox(height: spacing),
                 Text(
-                  'No active meal plan or macro goal',
+                  'No active macro goal',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: sizes.subtitleFontSize,
@@ -65,7 +61,7 @@ class EmptyMealPlanOrMacroGoal extends StatelessWidget {
                 ),
                 SizedBox(height: spacing),
                 Text(
-                  'Start a meal plan or set a daily macro goal',
+                  'Set a daily macro goal to track nutrition',
                   textAlign: TextAlign.center,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -75,28 +71,14 @@ class EmptyMealPlanOrMacroGoal extends StatelessWidget {
                   ),
                 ),
                 SizedBox(height: sizes.spacing),
-                Wrap(
-                  alignment: WrapAlignment.center,
-                  spacing: sizes.doubleSpacing,
-                  runSpacing: sizes.spacing,
-                  children: [
-                    AppTextButton(
-                      onPressed: () => context.push(Routes.mealPlanList.name),
-                      icon: Icons.restaurant_menu,
-                      label: 'Browse Plans',
-                      isLoading: false,
-                      isDense: true,
-                      sizes: sizes,
-                    ),
-                    AppTextButton(
-                      onPressed: () => context.push(Routes.macroGoals.name),
-                      icon: Icons.flag_outlined,
-                      label: 'Set Macro Goal',
-                      isLoading: false,
-                      isDense: true,
-                      sizes: sizes,
-                    ),
-                  ],
+                AppTextButton(
+                  key: const ValueKey('active-macro-goal-set'),
+                  onPressed: () => context.push(Routes.macroGoals.name),
+                  icon: Icons.flag_outlined,
+                  label: 'Set Macro Goal',
+                  isLoading: false,
+                  isDense: true,
+                  sizes: sizes,
                 ),
               ],
             ),

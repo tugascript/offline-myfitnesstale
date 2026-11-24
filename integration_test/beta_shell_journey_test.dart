@@ -130,7 +130,6 @@ Future<void> _visitQuickActions(
     'strength-goals': ('exercises', 'Strength Goals'),
     'equipments': ('exercises', 'Equipments'),
     'macro-goals': ('nutrition', 'Macro Goals'),
-    'meal-plans': ('nutrition', 'Meal Plans'),
     'recipe': ('nutrition', 'Recipes'),
     'food': ('nutrition', 'Foods'),
   };

@@ -33,14 +33,6 @@ import '../../models/sqlite/food_model.dart';
 import '../../models/sqlite/food_portion_model.dart';
 import '../../models/sqlite/meal_log_item_model.dart';
 import '../../models/sqlite/meal_log_model.dart';
-import '../../models/sqlite/meal_plan_day_model.dart';
-import '../../models/sqlite/meal_plan_day_record_model.dart';
-import '../../models/sqlite/meal_plan_meal_item_model.dart';
-import '../../models/sqlite/meal_plan_meal_model.dart';
-import '../../models/sqlite/meal_plan_model.dart';
-import '../../models/sqlite/meal_plan_record_model.dart';
-import '../../models/sqlite/meal_plan_week_model.dart';
-import '../../models/sqlite/meal_plan_week_record_model.dart';
 import '../../models/sqlite/migration_model.dart';
 import '../../models/sqlite/profile_model.dart';
 import '../../models/sqlite/recipe_item_model.dart';
@@ -332,14 +324,6 @@ final class DatabaseHelper {
       DailyNutritionLog.tableCreate,
       MealLog.tableCreate,
       MealLogItem.tableCreate,
-      MealPlan.tableCreate,
-      MealPlanWeek.tableCreate,
-      MealPlanDay.tableCreate,
-      MealPlanMeal.tableCreate,
-      MealPlanMealItem.tableCreate,
-      MealPlanRecord.tableCreate,
-      MealPlanWeekRecord.tableCreate,
-      MealPlanDayRecord.tableCreate,
     ];
 
     final int startedAt = DateUtilities.getNowUtcUnix();

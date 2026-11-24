@@ -26,7 +26,6 @@ import '../../core/sizes/data_display_sizes.dart';
 import '../../core/sizes/screen_size.dart';
 import '../../macros/screens/macro_tracker_screen.dart';
 import '../../macros/view_models/macro_tracking_cubit.dart';
-import '../../meal_plans/view_models/meal_plan_record_cubit.dart';
 import '../../workout_plans/screens/current_workout_plan_screen.dart';
 import '../../workout_plans/view_models/workout_plan_record_cubit.dart';
 import '../view_models/profile_cubit.dart';
@@ -123,10 +122,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   bool _isHomeActiveDataLoading() {
     final workoutState = context.read<WorkoutPlanRecordCubit>().state;
     final macroState = context.read<MacroTrackingCubit>().state;
-    final mealPlanState = context.read<MealPlanRecordCubit>().state;
-    return workoutState.isLoading ||
-        macroState.isLoading ||
-        mealPlanState.isLoading;
+    return workoutState.isLoading || macroState.isLoading;
   }
 
   void _startWarmUpIfNeeded() {

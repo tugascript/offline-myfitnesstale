@@ -54,11 +54,7 @@ enum Routes {
   recipeUpdate('/recipes/:id/edit'),
   recipeDetails('/recipes/:id'),
   macroGoals('/macro-goals'),
-  macroTracker('/macro-tracker'),
-  mealPlanList('/meal-plans'),
-  mealPlanCreation('/meal-plans/create'),
-  mealPlanUpdate('/meal-plans/:id/edit'),
-  mealPlanDetails('/meal-plans/:id');
+  macroTracker('/macro-tracker');
 
   final String name;
 

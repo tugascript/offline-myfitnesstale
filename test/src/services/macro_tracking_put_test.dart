@@ -17,9 +17,6 @@
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:myfitnesstale/src/data/models/sqlite/exercise_model.dart';
-import 'package:myfitnesstale/src/data/models/sqlite/food_model.dart';
-import 'package:myfitnesstale/src/data/models/sqlite/meal_plan_model.dart';
-import 'package:myfitnesstale/src/data/models/sqlite/meal_plan_record_model.dart';
 import 'package:myfitnesstale/src/data/repositories/exercises/exercise_record_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/exercises/inputs/strength_goal_input.dart';
 import 'package:myfitnesstale/src/data/repositories/foods/food_repository.dart';
@@ -27,13 +24,6 @@ import 'package:myfitnesstale/src/data/repositories/foods/inputs/food_input.dart
 import 'package:myfitnesstale/src/data/repositories/foods/inputs/food_portion_input.dart';
 import 'package:myfitnesstale/src/data/repositories/macros/inputs/week_macro_goal_input.dart';
 import 'package:myfitnesstale/src/data/repositories/macros/macro_tracking_repository.dart';
-import 'package:myfitnesstale/src/data/repositories/meal_plans/inputs/meal_plan_day_input.dart';
-import 'package:myfitnesstale/src/data/repositories/meal_plans/inputs/meal_plan_input.dart';
-import 'package:myfitnesstale/src/data/repositories/meal_plans/inputs/meal_plan_meal_input.dart';
-import 'package:myfitnesstale/src/data/repositories/meal_plans/inputs/meal_plan_meal_item_input.dart';
-import 'package:myfitnesstale/src/data/repositories/meal_plans/inputs/meal_plan_week_input.dart';
-import 'package:myfitnesstale/src/data/repositories/meal_plans/meal_plan_record_repository.dart';
-import 'package:myfitnesstale/src/data/repositories/meal_plans/meal_plan_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/recipes/inputs/recipe_input.dart';
 import 'package:myfitnesstale/src/data/repositories/recipes/inputs/recipe_item_input.dart';
 import 'package:myfitnesstale/src/data/repositories/recipes/recipe_repository.dart';
@@ -43,7 +33,6 @@ import 'package:myfitnesstale/src/data/repositories/weight/weight_record_reposit
 import 'package:myfitnesstale/src/data/utils/enums.dart';
 import 'package:myfitnesstale/src/data/utils/json_data.dart';
 import 'package:myfitnesstale/src/ui/foods/view_models/food_cubit.dart';
-import 'package:myfitnesstale/src/ui/meal_plans/view_models/meal_plan_cubit.dart';
 import 'package:myfitnesstale/src/ui/weight/view_models/weight_record_cubit.dart';
 import 'package:myfitnesstale/src/utils/errors.dart';
 import 'package:myfitnesstale/src/utils/nullable.dart';
@@ -95,29 +84,6 @@ void main() {
       expect(cubit.state.foods.length, 1);
     },
   );
-
-  test('meal-plan Cubit preserves favorite filters after a PUT', () async {
-    final service = MealPlanRepository.create();
-    final plan = (await service.createMealPlan(
-      const MealPlanInput(name: 'Favorite paging plan', weeks: []),
-    )).value;
-    await service.toggleFavorite(plan.id);
-    final cubit = MealPlanCubit(
-      mealPlanRepository: MealPlanRepository.create(),
-    );
-    addTearDown(cubit.close);
-    await cubit.getMealPlans(isFavorite: true, limit: 1);
-    expect(
-      await cubit.updateMealPlan(
-        plan.id,
-        const MealPlanInput(name: 'Favorite renamed', weeks: []),
-      ),
-      isTrue,
-    );
-    expect(cubit.state.mealPlanPagination.isFavorite, isTrue);
-    expect(cubit.state.mealPlanPagination.limit, 1);
-    expect(cubit.state.mealPlans.every((p) => p.isFavorite), isTrue);
-  });
 
   test(
     'strength-goal create and update share input and clear completion',
@@ -313,173 +279,6 @@ void main() {
       expect(empty.value.servingCalories, 0);
       expect(empty.value.servingMicros, isNull);
       expect(empty.value.items, isEmpty);
-    },
-  );
-
-  test(
-    'meal-plan PUT keeps originating versions and rolls back invalid input',
-    () async {
-      final food = (await FoodRepository.create().createFood(foodInput)).value;
-      List<MealPlanWeekInput> weeks(int foodId) => [
-        MealPlanWeekInput(
-          weekNumber: 1,
-          phase: MealPlanPhase.maintain,
-          days: [
-            MealPlanDayInput(
-              day: 1,
-              meals: [
-                MealPlanMealInput(
-                  position: 1,
-                  mealType: MealType.breakfast,
-                  name: 'Breakfast',
-                  items: [MealPlanMealItemInput(foodId: foodId, amount: 100)],
-                ),
-              ],
-            ),
-          ],
-        ),
-      ];
-      final service = MealPlanRepository.create();
-      final invalidCreate = await service.createMealPlan(
-        MealPlanInput(name: 'Invalid create', weeks: weeks(-1)),
-      );
-      expect(invalidCreate.error.type, SingleErrorTypes.notFound);
-
-      final created = (await service.createMealPlan(
-        MealPlanInput(
-          name: 'Original',
-          description: const Nullable('Original description'),
-          weeks: weeks(food.id),
-        ),
-      )).value;
-      final recordService = MealPlanRecordRepository.create();
-      final started = await recordService.startMealPlan(mealPlanId: created.id);
-      expect(started.isOk(), isTrue);
-      final originalDayId = started.value.weeks.first.days.first.mealPlanDayId;
-      final replaced = await service.updateMealPlan(
-        created.id,
-        MealPlanInput(name: 'Edited', weeks: weeks(food.id)),
-      );
-      expect(replaced.isOk(), isTrue);
-      expect(replaced.value.version, created.version + 1);
-      expect(replaced.value.description, isNull);
-      final original = await service.getMealPlan(
-        created.id,
-        version: created.version,
-      );
-      expect(original.value.version, created.version);
-      expect(original.value.weeks.first.days.first.id, originalDayId);
-      final active = (await recordService.getActiveMealPlanRecord()).value;
-      expect(active.mealPlanVersion, created.version);
-      expect(active.weeks.first.days.first.mealPlanDayId, originalDayId);
-      final invalid = await service.updateMealPlan(
-        created.id,
-        MealPlanInput(name: 'Invalid', weeks: weeks(-1)),
-      );
-      expect(invalid.error.type, SingleErrorTypes.notFound);
-      expect((await service.getMealPlan(created.id)).value, replaced.value);
-      expect(
-        (await recordService.completeCurrentDay(recordId: active.id)).isOk(),
-        isTrue,
-      );
-    },
-  );
-
-  test(
-    'meal-plan chunks reference queries when distinct IDs exceed SQLite limit',
-    () async {
-      final db = await database.db;
-      final batch = db.batch();
-      for (int i = 0; i < 1005; i++) {
-        batch.insert(
-          Food.table,
-          Food.create(
-            name: 'Bulk food $i',
-            category: FoodCategory.grainsAndCereals,
-            servingSizeBaseGrams: 100,
-            caloriesBase: 100,
-            proteinBase: 10,
-            carbsBase: 10,
-            fatBase: 2,
-          ).toMap(),
-        );
-      }
-      final insertedIds = (await batch.commit()).cast<int>();
-
-      final service = MealPlanRepository.create();
-      final items = [
-        for (final foodId in insertedIds)
-          MealPlanMealItemInput(foodId: foodId, amount: 10),
-      ];
-      final created = await service.createMealPlan(
-        MealPlanInput(
-          name: 'Large reference plan',
-          weeks: [
-            MealPlanWeekInput(
-              weekNumber: 1,
-              phase: MealPlanPhase.maintain,
-              days: [
-                MealPlanDayInput(
-                  day: 1,
-                  meals: [
-                    MealPlanMealInput(
-                      position: 1,
-                      mealType: MealType.breakfast,
-                      name: 'Mega breakfast',
-                      items: items,
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ],
-        ),
-      );
-      expect(created.isOk(), isTrue);
-      expect(
-        created.value.weeks.single.days.single.meals.single.items.length,
-        1005,
-      );
-
-      final fetched = await service.getMealPlan(created.value.id);
-      expect(fetched.isOk(), isTrue);
-      expect(
-        fetched.value.weeks.single.days.single.meals.single.items.length,
-        1005,
-      );
-
-      final planBatch = db.batch();
-      for (int i = 0; i < 1005; i++) {
-        planBatch.insert(
-          MealPlan.table,
-          MealPlan.create(
-            name: 'Bulk plan $i',
-            version: 1,
-            totalWeeks: 1,
-            totalDays: 1,
-            totalMeals: 1,
-          ).toMap(),
-        );
-      }
-      final planIds = (await planBatch.commit()).cast<int>();
-      final recordBatch = db.batch();
-      for (final planId in planIds) {
-        recordBatch.insert(
-          MealPlanRecord.table,
-          MealPlanRecord.create(
-            mealPlanId: planId,
-            mealPlanVersion: 1,
-            status: ProgressStatus.completed,
-            startedAt: 1000,
-          ).toMap(),
-        );
-      }
-      await recordBatch.commit(noResult: true);
-
-      final recordsResult = await MealPlanRecordRepository.create()
-          .getMealPlanRecords(limit: 1005);
-      expect(recordsResult.isOk(), isTrue);
-      expect(recordsResult.value.data.length, 1005);
     },
   );
 

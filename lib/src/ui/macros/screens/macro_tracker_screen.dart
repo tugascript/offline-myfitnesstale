@@ -18,14 +18,10 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:material_ui/material_ui.dart';
 
-import '../../../data/repositories/meal_plans/dtos/meal_plan_record_dto.dart';
 import '../../../data/utils/dates.dart';
 import '../../core/sizes/data_display_sizes.dart';
 import '../../core/sizes/screen_size.dart';
 import '../../core/widgets/layout/app_scaffold.dart';
-import '../../meal_plans/view_models/meal_plan_cubit.dart';
-import '../../meal_plans/view_models/meal_plan_record_cubit.dart';
-import '../../meal_plans/view_models/states/meal_plan_record_state.dart';
 import '../utils/tacker_scope.dart';
 import '../view_models/macro_tracking_cubit.dart';
 import '../view_models/states/macro_tracking_state.dart';
@@ -57,7 +53,6 @@ class _MacroTrackerScreenState extends State<MacroTrackerScreen> {
   int _periodLoadToken = 0;
   int _rangeLoadToken = 0;
   bool _deferredInitialLogLoad = false;
-  bool _hasMountedListeners = false;
 
   DateTime _currentNow() => widget.now?.call() ?? DateTime.now();
 
@@ -66,10 +61,7 @@ class _MacroTrackerScreenState extends State<MacroTrackerScreen> {
     super.initState();
     _selectedDate = _currentNow();
     _pageController = PageController(initialPage: _scope.index);
-    _reconcileTrackerData(
-      retryFailedGoal: widget.isVisible,
-      retryFailedMealPlanRecord: widget.isVisible,
-    );
+    _reconcileTrackerData(retryFailedGoal: widget.isVisible);
   }
 
   @override
@@ -90,7 +82,6 @@ class _MacroTrackerScreenState extends State<MacroTrackerScreen> {
       }
       _reconcileTrackerData(
         retryFailedGoal: true,
-        retryFailedMealPlanRecord: true,
         reconcileRange: _scope != TrackerScope.day,
       );
     }
@@ -100,28 +91,6 @@ class _MacroTrackerScreenState extends State<MacroTrackerScreen> {
   void dispose() {
     _pageController.dispose();
     super.dispose();
-  }
-
-  void _syncActiveMealPlanRecord({required bool retryFailedRecord}) {
-    final recordCubit = context.read<MealPlanRecordCubit>();
-    final recordState = recordCubit.state;
-    if (recordState.hasLoadedActiveRecord) {
-      _syncActiveMealPlan(recordState.activeRecord);
-    } else if (!recordState.isLoading &&
-        (recordState.error == null || retryFailedRecord)) {
-      final previousRecord = recordState.activeRecord;
-      final loadFuture = recordCubit.getActiveMealPlanRecord();
-      final changedBeforeListenerMount =
-          !_hasMountedListeners &&
-          recordCubit.state.activeRecord != previousRecord;
-      loadFuture.then((_) {
-        if (!mounted) return;
-        final latestRecord = recordCubit.state.activeRecord;
-        if (changedBeforeListenerMount || latestRecord == previousRecord) {
-          _syncActiveMealPlan(latestRecord);
-        }
-      });
-    }
   }
 
   Future<bool> _ensureActiveGoalReady(
@@ -168,11 +137,8 @@ class _MacroTrackerScreenState extends State<MacroTrackerScreen> {
 
   Future<void> _reconcileTrackerData({
     required bool retryFailedGoal,
-    required bool retryFailedMealPlanRecord,
     bool reconcileRange = false,
   }) async {
-    _syncActiveMealPlanRecord(retryFailedRecord: retryFailedMealPlanRecord);
-
     final periodToken = ++_periodLoadToken;
     final rangeToken = reconcileRange ? ++_rangeLoadToken : null;
     final macroCubit = context.read<MacroTrackingCubit>();
@@ -193,19 +159,6 @@ class _MacroTrackerScreenState extends State<MacroTrackerScreen> {
         rangeToken == _rangeLoadToken &&
         _scope != TrackerScope.day) {
       _dispatchRangeLoad(macroCubit);
-    }
-  }
-
-  void _syncActiveMealPlan(MealPlanRecordDto? record) {
-    if (record == null) return;
-    final mealPlanCubit = context.read<MealPlanCubit>();
-    final plan = mealPlanCubit.state.activeMealPlan;
-    if (plan?.id != record.mealPlanId ||
-        plan?.version != record.mealPlanVersion) {
-      mealPlanCubit.getActiveMealPlan(
-        record.mealPlanId,
-        version: record.mealPlanVersion,
-      );
     }
   }
 
@@ -495,43 +448,30 @@ class _MacroTrackerScreenState extends State<MacroTrackerScreen> {
 
   @override
   Widget build(BuildContext context) {
-    _hasMountedListeners = true;
     final theme = Theme.of(context);
     final breakpoints = BreakPoint.fromContext(context);
     final sizes = DataDisplaySizes.getDataDisplaySizes(breakpoints.screenSize);
     final today = _today;
     final minDate = _minDate(today);
 
-    return MultiBlocListener(
-      listeners: [
-        BlocListener<MealPlanRecordCubit, MealPlanRecordState>(
-          listenWhen: (previous, current) =>
-              previous.activeRecord != current.activeRecord,
-          listener: (context, state) {
-            _syncActiveMealPlan(state.activeRecord);
-          },
-        ),
-        BlocListener<MacroTrackingCubit, MacroTrackingState>(
-          listenWhen: (previous, current) =>
-              !previous.hasLoadedActiveGoal && current.hasLoadedActiveGoal,
-          listener: (context, state) {
-            if (!_deferredInitialLogLoad) return;
-            _deferredInitialLogLoad = false;
-            if (!widget.isVisible) return;
-            final latest = context.read<MacroTrackingCubit>().state;
-            if (latest.isLoadingActiveGoal) return;
-            final needsDailyLog = !_hasMatchingDailyLog(latest);
-            final needsRange = _scope != TrackerScope.day;
-            if (needsDailyLog || needsRange) {
-              _reconcileTrackerData(
-                retryFailedGoal: false,
-                retryFailedMealPlanRecord: false,
-                reconcileRange: needsRange,
-              );
-            }
-          },
-        ),
-      ],
+    return BlocListener<MacroTrackingCubit, MacroTrackingState>(
+      listenWhen: (previous, current) =>
+          !previous.hasLoadedActiveGoal && current.hasLoadedActiveGoal,
+      listener: (context, state) {
+        if (!_deferredInitialLogLoad) return;
+        _deferredInitialLogLoad = false;
+        if (!widget.isVisible) return;
+        final latest = context.read<MacroTrackingCubit>().state;
+        if (latest.isLoadingActiveGoal) return;
+        final needsDailyLog = !_hasMatchingDailyLog(latest);
+        final needsRange = _scope != TrackerScope.day;
+        if (needsDailyLog || needsRange) {
+          _reconcileTrackerData(
+            retryFailedGoal: false,
+            reconcileRange: needsRange,
+          );
+        }
+      },
       child: AppScaffold(
         title: 'Macro Tracker',
         body: Column(

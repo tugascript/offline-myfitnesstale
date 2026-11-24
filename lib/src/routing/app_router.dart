@@ -34,10 +34,6 @@ import '../ui/home/screens/profile/create_profile_screen.dart';
 import '../ui/home/screens/profile/onboarding_screen.dart';
 import '../ui/macros/screens/macro_goals_screen.dart';
 import '../ui/macros/screens/macro_tracker_screen.dart';
-import '../ui/meal_plans/screens/meal_plan_creation_screen.dart';
-import '../ui/meal_plans/screens/meal_plan_details_screen.dart';
-import '../ui/meal_plans/screens/meal_plan_list_screen.dart';
-import '../ui/meal_plans/screens/meal_plan_update_screen.dart';
 import '../ui/recipes/screens/recipe_creation_screen.dart';
 import '../ui/recipes/screens/recipe_details_screen.dart';
 import '../ui/recipes/screens/recipe_update_screen.dart';
@@ -410,35 +406,6 @@ sealed class AppRouter {
     GoRoute(
       path: Routes.macroTracker.name,
       builder: (context, state) => const MacroTrackerScreen(),
-    ),
-    // Meal Plans (static before dynamic)
-    GoRoute(
-      path: Routes.mealPlanList.name,
-      builder: (context, state) => const MealPlanListScreen(),
-    ),
-    GoRoute(
-      path: Routes.mealPlanCreation.name,
-      builder: (context, state) => const MealPlanCreationScreen(),
-    ),
-    GoRoute(
-      path: Routes.mealPlanUpdate.name,
-      builder: (context, state) {
-        final id = int.tryParse(state.pathParameters['id'] ?? '');
-        if (id == null) {
-          return const NotFoundScreen();
-        }
-        return MealPlanUpdateScreen(mealPlanId: id);
-      },
-    ),
-    GoRoute(
-      path: Routes.mealPlanDetails.name,
-      builder: (context, state) {
-        final id = int.tryParse(state.pathParameters['id'] ?? '');
-        if (id == null) {
-          return const NotFoundScreen();
-        }
-        return MealPlanDetailsScreen(mealPlanId: id);
-      },
     ),
   ];
 
