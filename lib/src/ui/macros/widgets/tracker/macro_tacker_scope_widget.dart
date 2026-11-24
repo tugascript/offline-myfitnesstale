@@ -15,6 +15,7 @@
 // You should have received a copy of the GNU General Public License
 // along with My Fitness Tale.  If not, see <https://www.gnu.org/licenses/>.
 
+import 'package:flutter/rendering.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../core/sizes/data_display_sizes.dart';
@@ -30,6 +31,7 @@ class MacroTackerScopeWidget extends StatelessWidget {
   final ValueChanged<DateTime> onSelectDate;
   final PageController pageController;
   final ValueChanged<TrackerScope> onScopeChanged;
+  final VoidCallback? onUserScrollStart;
   final VoidCallback onScrollSettled;
 
   const MacroTackerScopeWidget({
@@ -40,6 +42,7 @@ class MacroTackerScopeWidget extends StatelessWidget {
     required this.onSelectDate,
     required this.pageController,
     required this.onScopeChanged,
+    this.onUserScrollStart,
     required this.onScrollSettled,
   });
 
@@ -52,10 +55,20 @@ class MacroTackerScopeWidget extends StatelessWidget {
       sizes.viewPadding,
     );
 
-    return NotificationListener<ScrollEndNotification>(
+    return NotificationListener<ScrollNotification>(
       onNotification: (notification) {
-        if (notification.depth == 0 &&
-            notification.metrics.axis == Axis.horizontal) {
+        if (notification.depth != 0 ||
+            notification.metrics.axis != Axis.horizontal) {
+          return false;
+        }
+        if ((notification is UserScrollNotification &&
+                notification.direction != ScrollDirection.idle) ||
+            (notification is ScrollStartNotification &&
+                notification.dragDetails != null) ||
+            (notification is ScrollUpdateNotification &&
+                notification.dragDetails != null)) {
+          onUserScrollStart?.call();
+        } else if (notification is ScrollEndNotification) {
           onScrollSettled();
         }
         return false;
