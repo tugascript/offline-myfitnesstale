@@ -120,6 +120,11 @@ class _MacroGoalsScreenState extends State<MacroGoalsScreen> {
                   sizes: sizes,
                   goals: state.goalHistory,
                   activeGoalId: state.activeGoal?.id,
+                  isLoading: state.isLoadingGoalHistory,
+                  hasLoaded: state.hasLoadedGoalHistory,
+                  hasError: state.goalHistoryError != null,
+                  onRetry: () =>
+                      context.read<MacroTrackingCubit>().getMacroGoals(),
                 ),
               ],
             );

@@ -22,7 +22,9 @@ import 'package:material_ui/material_ui.dart';
 import '../../../../data/utils/enums.dart';
 import '../../../core/sizes/data_display_sizes.dart';
 import '../../../core/sizes/screen_size.dart';
+import '../../../core/widgets/layout/app_text_button.dart';
 import '../../../core/widgets/layout/app_text_form_field.dart';
+import '../../../core/widgets/layout/empty_card.dart';
 import '../../../core/widgets/not_found_list.dart';
 import '../../view_models/states/workout_plan_record_state.dart';
 import '../../view_models/workout_plan_record_cubit.dart';
@@ -109,7 +111,7 @@ class _WorkoutPlanRecordHistoryState extends State<WorkoutPlanRecordHistory> {
         _scrollController.position.maxScrollExtent * 0.9;
     final hasMore = state.planRecords.length < state.pagination.total;
 
-    if (isNearBottom && hasMore && !state.isLoading) {
+    if (isNearBottom && hasMore && !state.isLoadingHistory) {
       cubit.getWorkoutPlanRecords(
         workoutPlanId: widget.workoutPlanId,
         progressStatus: state.pagination.progressStatus,
@@ -212,7 +214,38 @@ class _WorkoutPlanRecordHistoryState extends State<WorkoutPlanRecordHistory> {
         SizedBox(height: widget.sizes.spacing),
         BlocBuilder<WorkoutPlanRecordCubit, WorkoutPlanRecordState>(
           builder: (context, state) {
-            if (!state.isLoading && state.planRecords.isEmpty) {
+            if (!state.isLoadingHistory &&
+                state.planRecords.isEmpty &&
+                state.historyError != null) {
+              return EmptyCard(
+                sizes: widget.sizes,
+                emoji: '⚠️',
+                emptyText: 'Could not load workout plan history',
+                actions: [
+                  AppTextButton(
+                    key: const ValueKey('workout-plan-history-retry'),
+                    isLoading: false,
+                    sizes: widget.sizes,
+                    isDense: true,
+                    label: 'Retry',
+                    icon: Icons.refresh,
+                    onPressed: () {
+                      context
+                          .read<WorkoutPlanRecordCubit>()
+                          .getWorkoutPlanRecords(
+                            workoutPlanId: widget.workoutPlanId,
+                            progressStatus: state.pagination.progressStatus,
+                            dateRange: (_dateRange.start, _dateRange.end),
+                            limit: _pageSize,
+                            offset: 0,
+                          );
+                    },
+                  ),
+                ],
+              );
+            }
+
+            if (!state.isLoadingHistory && state.planRecords.isEmpty) {
               return NotFoundList(
                 height: widget.breakPoint.height / 3,
                 sizes: widget.sizes,
@@ -226,7 +259,7 @@ class _WorkoutPlanRecordHistoryState extends State<WorkoutPlanRecordHistory> {
               child: SingleWorkoutPlanRecordList(
                 sizes: widget.sizes,
                 units: widget.units,
-                isLoading: state.isLoading,
+                isLoading: state.isLoadingHistory,
                 planRecords: state.planRecords,
                 pagination: state.pagination,
                 workoutPlanId: widget.workoutPlanId,

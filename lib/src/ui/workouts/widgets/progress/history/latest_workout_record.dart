@@ -20,6 +20,8 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../../../../data/utils/enums.dart';
 import '../../../../core/sizes/data_display_sizes.dart';
+import '../../../../core/widgets/layout/app_text_button.dart';
+import '../../../../core/widgets/layout/empty_card.dart';
 import '../../../view_models/states/workout_record_state.dart';
 import '../../../view_models/workout_record_cubit.dart';
 import './empty_workout_record.dart';
@@ -76,7 +78,31 @@ class _LatestWorkoutRecordState extends State<LatestWorkoutRecord> {
             ? null
             : record;
 
-        if (!state.isLoading && matchingRecord == null) {
+        if (!state.isLoadingLatest && state.latestError != null) {
+          return EmptyCard(
+            sizes: widget.sizes,
+            emoji: '⚠️',
+            emptyText: 'Could not load latest workout record',
+            actions: [
+              AppTextButton(
+                key: const ValueKey('latest-workout-record-retry'),
+                isLoading: false,
+                sizes: widget.sizes,
+                isDense: true,
+                label: 'Retry',
+                icon: Icons.refresh,
+                onPressed: () {
+                  context.read<WorkoutRecordCubit>().getLatestWorkoutRecord(
+                    workoutId: widget.workoutId,
+                    skipSkipped: true,
+                  );
+                },
+              ),
+            ],
+          );
+        }
+
+        if (!state.isLoadingLatest && matchingRecord == null) {
           return EmptyWorkoutRecord(
             sizes: widget.sizes,
             isLoading: state.isLoading,
@@ -89,7 +115,7 @@ class _LatestWorkoutRecordState extends State<LatestWorkoutRecord> {
           sizes: widget.sizes,
           theme: widget.theme,
           units: widget.units,
-          isLoading: state.isLoading,
+          isLoading: state.isLoadingLatest,
           workoutId: widget.workoutId,
           workoutVersion: widget.workoutVersion,
           workoutRecord: matchingRecord,

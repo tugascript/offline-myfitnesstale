@@ -34,6 +34,7 @@ class WorkoutRecordCubit extends Cubit<WorkoutRecordState> {
       super(WorkoutRecordState.initial());
 
   final Logger _logger = Logger('WorkoutRecordCubit');
+  int _latestRecordRequestId = 0;
 
   Future<void> getWorkoutRecords({
     int? workoutId,
@@ -46,7 +47,18 @@ class WorkoutRecordCubit extends Cubit<WorkoutRecordState> {
     final requestId = state.recordsRequestId + 1;
     final isLoadMore = (offset ?? state.pagination.offset) > 0;
     final resolvedSkipSkipped = skipSkipped ?? state.pagination.skipSkipped;
-    emit(state.copyWith(recordsRequestId: requestId, isLoading: true));
+    final previousRecordsError = state.recordsError;
+    emit(
+      state.copyWith(
+        recordsRequestId: requestId,
+        isLoadingRecords: true,
+        recordsError: const Nullable(null),
+        error:
+            previousRecordsError != null && state.error == previousRecordsError
+            ? const Nullable(null)
+            : null,
+      ),
+    );
 
     final result = await _workoutRecordService.getWorkoutRecords(
       workoutId: workoutId,
@@ -60,35 +72,30 @@ class WorkoutRecordCubit extends Cubit<WorkoutRecordState> {
       final error = result.error;
       _logger.warning("Failed to get workout records", error);
 
+      final ErrorState errorState;
       switch (error.type) {
         case SingleErrorTypes.invalidInput:
         case SingleErrorTypes.notFound:
-          emit(
-            state.copyWith(
-              error: Nullable(
-                ErrorState(
-                  type: error.type.name,
-                  description: error.description,
-                ),
-              ),
-              isLoading: false,
-            ),
+          errorState = ErrorState(
+            type: error.type.name,
+            description: error.description,
           );
-          return;
+          break;
         case SingleErrorTypes.operationFailure:
-          emit(
-            state.copyWith(
-              error: Nullable(
-                ErrorState(
-                  type: error.type.name,
-                  description: "Failed to get workout records",
-                ),
-              ),
-              isLoading: false,
-            ),
+          errorState = ErrorState(
+            type: error.type.name,
+            description: "Failed to get workout records",
           );
-          return;
+          break;
       }
+      emit(
+        state.copyWith(
+          error: Nullable(errorState),
+          recordsError: Nullable(errorState),
+          isLoadingRecords: false,
+        ),
+      );
+      return;
     }
 
     _logger.info('Workout records: ${result.value.data}');
@@ -107,8 +114,12 @@ class WorkoutRecordCubit extends Cubit<WorkoutRecordState> {
           limit: paginatedData.limit,
           offset: paginatedData.offset,
         ),
-        isLoading: false,
-        error: const Nullable(null),
+        isLoadingRecords: false,
+        recordsError: const Nullable(null),
+        error:
+            previousRecordsError != null && state.error == previousRecordsError
+            ? const Nullable(null)
+            : null,
       ),
     );
   }
@@ -118,12 +129,23 @@ class WorkoutRecordCubit extends Cubit<WorkoutRecordState> {
     bool skipSkipped = false,
   }) async {
     _logger.info('Getting latest workout record for workout $workoutId');
-    emit(state.copyWith(isLoading: true));
+    final requestId = ++_latestRecordRequestId;
+    final previousLatestError = state.latestError;
+    emit(
+      state.copyWith(
+        isLoadingLatest: true,
+        latestError: const Nullable(null),
+        error: previousLatestError != null && state.error == previousLatestError
+            ? const Nullable(null)
+            : null,
+      ),
+    );
 
     final result = await _workoutRecordService.getLatestWorkoutRecord(
       workoutId: workoutId,
       skipSkipped: skipSkipped,
     );
+    if (isClosed || requestId != _latestRecordRequestId) return;
     if (result.isErr()) {
       final error = result.error;
       _logger.warning("Failed to get latest workout record", error);
@@ -133,21 +155,22 @@ class WorkoutRecordCubit extends Cubit<WorkoutRecordState> {
           emit(
             state.copyWith(
               latestWorkoutRecord: const Nullable(null),
-              isLoading: false,
+              latestError: const Nullable(null),
+              isLoadingLatest: false,
             ),
           );
           return;
         case SingleErrorTypes.operationFailure:
+          final errorState = ErrorState(
+            type: error.type.name,
+            description: "Failed to get latest workout record",
+          );
           emit(
             state.copyWith(
-              error: Nullable(
-                ErrorState(
-                  type: error.type.name,
-                  description: "Failed to get latest workout record",
-                ),
-              ),
+              error: Nullable(errorState),
+              latestError: Nullable(errorState),
               latestWorkoutRecord: const Nullable(null),
-              isLoading: false,
+              isLoadingLatest: false,
             ),
           );
           return;
@@ -160,8 +183,8 @@ class WorkoutRecordCubit extends Cubit<WorkoutRecordState> {
     emit(
       state.copyWith(
         latestWorkoutRecord: Nullable(result.value),
-        error: const Nullable(null),
-        isLoading: false,
+        latestError: const Nullable(null),
+        isLoadingLatest: false,
       ),
     );
   }

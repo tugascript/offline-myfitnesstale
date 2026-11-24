@@ -68,6 +68,7 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
         state.pagination.progressStatus != progressStatus ||
         state.pagination.dateRange != dateRange;
     final clearStaleRecords = offset == 0 && filtersChanged;
+    final previousHistoryError = state.historyError;
 
     emit(
       state.copyWith(
@@ -83,8 +84,12 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
                 total: 0,
               )
             : null,
-        isLoading: true,
-        error: const Nullable(null),
+        isLoadingHistory: true,
+        historyError: const Nullable(null),
+        error:
+            previousHistoryError != null && state.error == previousHistoryError
+            ? const Nullable(null)
+            : null,
       ),
     );
 
@@ -100,15 +105,15 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
     }
 
     if (result.isErr()) {
+      final errorState = ErrorState(
+        type: result.error.type.name,
+        description: result.error.description,
+      );
       emit(
         state.copyWith(
-          isLoading: false,
-          error: Nullable(
-            ErrorState(
-              type: result.error.type.name,
-              description: result.error.description,
-            ),
-          ),
+          isLoadingHistory: false,
+          historyError: Nullable(errorState),
+          error: Nullable(errorState),
         ),
       );
       return;
@@ -128,8 +133,12 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
           offset: page.offset,
           total: page.total,
         ),
-        isLoading: false,
-        error: const Nullable(null),
+        isLoadingHistory: false,
+        historyError: const Nullable(null),
+        error:
+            previousHistoryError != null && state.error == previousHistoryError
+            ? const Nullable(null)
+            : null,
       ),
     );
   }
@@ -137,7 +146,16 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
   Future<void> getLatestWorkoutPlanRecord([int? workoutPlanId]) async {
     _logger.info('Getting latest workout plan record for plan $workoutPlanId');
     final requestId = ++_latestRecordRequestId;
-    emit(state.copyWith(isLoading: true));
+    final previousLatestError = state.latestError;
+    emit(
+      state.copyWith(
+        isLoadingLatest: true,
+        latestError: const Nullable(null),
+        error: previousLatestError != null && state.error == previousLatestError
+            ? const Nullable(null)
+            : null,
+      ),
+    );
 
     final result = await _workoutPlanRecordService.getLatestWorkoutPlanRecord(
       workoutPlanId,
@@ -154,20 +172,22 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
           emit(
             state.copyWith(
               latestWorkoutPlanRecord: const Nullable(null),
-              isLoading: false,
+              latestError: const Nullable(null),
+              isLoadingLatest: false,
             ),
           );
           return;
         case SingleErrorTypes.operationFailure:
+          final errorState = ErrorState(
+            type: error.type.name,
+            description: error.description,
+          );
           emit(
             state.copyWith(
-              error: Nullable(
-                ErrorState(
-                  type: error.type.name,
-                  description: error.description,
-                ),
-              ),
-              isLoading: false,
+              latestWorkoutPlanRecord: const Nullable(null),
+              latestError: Nullable(errorState),
+              error: Nullable(errorState),
+              isLoadingLatest: false,
             ),
           );
           return;
@@ -177,8 +197,8 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
     emit(
       state.copyWith(
         latestWorkoutPlanRecord: Nullable(result.value),
-        isLoading: false,
-        error: const Nullable(null),
+        latestError: const Nullable(null),
+        isLoadingLatest: false,
       ),
     );
   }

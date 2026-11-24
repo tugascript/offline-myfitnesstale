@@ -155,7 +155,11 @@ final class WorkoutPlanRecordState extends Equatable {
   final WorkoutPlanRecordPagination pagination;
   final bool hasLoadedActivePlan;
   final bool isLoading;
+  final bool isLoadingLatest;
+  final bool isLoadingHistory;
   final ErrorState? error;
+  final ErrorState? latestError;
+  final ErrorState? historyError;
 
   const WorkoutPlanRecordState({
     this.historyRequestId = 0,
@@ -165,7 +169,11 @@ final class WorkoutPlanRecordState extends Equatable {
     required this.pagination,
     this.hasLoadedActivePlan = false,
     required this.isLoading,
+    this.isLoadingLatest = false,
+    this.isLoadingHistory = false,
     this.error,
+    this.latestError,
+    this.historyError,
   });
 
   factory WorkoutPlanRecordState.initial() {
@@ -175,6 +183,8 @@ final class WorkoutPlanRecordState extends Equatable {
       pagination: WorkoutPlanRecordPagination.initial(),
       hasLoadedActivePlan: false,
       isLoading: false,
+      isLoadingLatest: false,
+      isLoadingHistory: false,
     );
   }
 
@@ -186,7 +196,11 @@ final class WorkoutPlanRecordState extends Equatable {
     WorkoutPlanRecordPagination? pagination,
     bool? hasLoadedActivePlan,
     bool? isLoading,
+    bool? isLoadingLatest,
+    bool? isLoadingHistory,
     Nullable<ErrorState>? error,
+    Nullable<ErrorState>? latestError,
+    Nullable<ErrorState>? historyError,
   }) {
     return WorkoutPlanRecordState(
       historyRequestId: historyRequestId ?? this.historyRequestId,
@@ -198,7 +212,13 @@ final class WorkoutPlanRecordState extends Equatable {
       pagination: pagination ?? this.pagination,
       hasLoadedActivePlan: hasLoadedActivePlan ?? this.hasLoadedActivePlan,
       isLoading: isLoading ?? this.isLoading,
+      isLoadingLatest: isLoadingLatest ?? this.isLoadingLatest,
+      isLoadingHistory: isLoadingHistory ?? this.isLoadingHistory,
       error: error != null ? error.value : this.error,
+      latestError: latestError != null ? latestError.value : this.latestError,
+      historyError: historyError != null
+          ? historyError.value
+          : this.historyError,
     );
   }
 
@@ -211,6 +231,10 @@ final class WorkoutPlanRecordState extends Equatable {
     pagination,
     hasLoadedActivePlan,
     isLoading,
+    isLoadingLatest,
+    isLoadingHistory,
     error,
+    latestError,
+    historyError,
   ];
 }

@@ -60,6 +60,7 @@ import 'package:myfitnesstale/src/ui/macros/view_models/states/macro_tracking_st
 import 'package:myfitnesstale/src/ui/macros/widgets/goals/current_macro_goal.dart';
 import 'package:myfitnesstale/src/ui/macros/widgets/goals/empty_active_macro_goal.dart';
 import 'package:myfitnesstale/src/ui/macros/widgets/goals/macro_goal_form_modal.dart';
+import 'package:myfitnesstale/src/ui/macros/widgets/goals/macro_goal_history.dart';
 import 'package:myfitnesstale/src/ui/macros/widgets/tracker/macro_tracker_date_navigator.dart';
 import 'package:myfitnesstale/src/ui/macros/widgets/tracker/macro_tracker_day_widget.dart';
 import 'package:myfitnesstale/src/ui/macros/widgets/tracker/macro_tracker_month_widget.dart';
@@ -152,6 +153,7 @@ class _TestMacroTrackingCubit extends MacroTrackingCubit {
     bool hasLoadedActiveGoal = false,
     MacroGoalDto? activeGoal,
     this.activeGoalCompleter,
+    this.goalHistoryCompleter,
     this.updateStateOnDailyLog = false,
     this.returnActiveGoalOnLoad = true,
     this.emitOnActiveGoalCall = false,
@@ -167,10 +169,12 @@ class _TestMacroTrackingCubit extends MacroTrackingCubit {
   }
 
   final Completer<void>? activeGoalCompleter;
+  final Completer<void>? goalHistoryCompleter;
   final bool updateStateOnDailyLog;
   final bool returnActiveGoalOnLoad;
   final bool emitOnActiveGoalCall;
   int activeGoalCalls = 0;
+  int goalHistoryCalls = 0;
   int dailyLogCalls = 0;
   int rangeLogCalls = 0;
   DateTime? lastDailyLogDate;
@@ -221,12 +225,18 @@ class _TestMacroTrackingCubit extends MacroTrackingCubit {
   }
 
   void failHistoryLoad([String message = 'History failed']) {
+    final errorState = ErrorState(
+      type: 'operationFailure',
+      description: message,
+    );
     emit(
       state.copyWith(
+        goalHistory: const [],
         isLoading: false,
-        error: Nullable(
-          ErrorState(type: 'operationFailure', description: message),
-        ),
+        isLoadingGoalHistory: false,
+        hasLoadedGoalHistory: false,
+        goalHistoryError: Nullable(errorState),
+        error: Nullable(errorState),
       ),
     );
   }
@@ -377,7 +387,38 @@ class _TestMacroTrackingCubit extends MacroTrackingCubit {
   }
 
   @override
-  Future<void> getMacroGoals({int limit = 20, int offset = 0}) async {}
+  Future<void> getMacroGoals({int limit = 20, int offset = 0}) async {
+    goalHistoryCalls++;
+    final completer = goalHistoryCompleter;
+    if (completer != null) {
+      emit(
+        state.copyWith(
+          isLoadingGoalHistory: true,
+          goalHistoryError: const Nullable(null),
+        ),
+      );
+      await completer.future;
+      if (!isClosed) {
+        emit(
+          state.copyWith(
+            hasLoadedGoalHistory: true,
+            isLoadingGoalHistory: false,
+            goalHistoryError: const Nullable(null),
+          ),
+        );
+      }
+      return;
+    }
+    if (!isClosed) {
+      emit(
+        state.copyWith(
+          hasLoadedGoalHistory: true,
+          isLoadingGoalHistory: false,
+          goalHistoryError: const Nullable(null),
+        ),
+      );
+    }
+  }
 
   @override
   Future<void> getDailyLog(DateTime date) async {
@@ -3283,6 +3324,61 @@ void main() {
 
         expect(find.text('Could not load active macro goal'), findsNothing);
         expect(find.textContaining('Daily Target'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'MacroGoalsScreen hides empty history copy during getMacroGoals load and shows retry on history failure',
+      (tester) async {
+        tester.view.devicePixelRatio = 1.0;
+        tester.view.physicalSize = const Size(800, 1200);
+        addTearDown(tester.view.reset);
+
+        final historyCompleter = Completer<void>();
+        final macroCubit = _TestMacroTrackingCubit(
+          hasLoadedActiveGoal: true,
+          activeGoal: _sampleActiveMacroGoal,
+          goalHistoryCompleter: historyCompleter,
+        );
+        addTearDown(macroCubit.close);
+
+        await tester.pumpWidget(
+          buildAppHarness(
+            macroCubit: macroCubit,
+            child: const MacroGoalsScreen(),
+          ),
+        );
+        await tester.pump();
+
+        // While getMacroGoals is in flight, empty copy must not flash and skeleton is shown.
+        expect(find.text('No past macro goals.'), findsNothing);
+        expect(
+          find.descendant(
+            of: find.byType(MacroGoalHistory),
+            matching: find.byWidgetPredicate(
+              (w) => w is Skeletonizer && w.enabled,
+            ),
+          ),
+          findsOneWidget,
+        );
+
+        historyCompleter.complete();
+        await tester.pumpAndSettle();
+
+        expect(find.text('No past macro goals.'), findsOneWidget);
+
+        // On history error, show error/retry card instead of empty copy.
+        macroCubit.failHistoryLoad('History load failed');
+        await tester.pumpAndSettle();
+
+        expect(find.text('No past macro goals.'), findsNothing);
+        expect(find.text('Could not load macro goal history'), findsOneWidget);
+        final callsBeforeRetry = macroCubit.goalHistoryCalls;
+        await tester.tap(
+          find.byKey(const ValueKey('macro-goal-history-retry')),
+        );
+        await tester.pump();
+        expect(macroCubit.goalHistoryCalls, callsBeforeRetry + 1);
       },
     );
   });

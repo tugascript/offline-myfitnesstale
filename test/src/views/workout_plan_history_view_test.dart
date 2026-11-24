@@ -84,6 +84,7 @@ class _WorkoutPlanRecordCubit extends WorkoutPlanRecordCubit {
   }
 
   int loadCalls = 0;
+  int latestCalls = 0;
 
   void failWithLoadedRecords(String description) {
     emit(
@@ -91,6 +92,18 @@ class _WorkoutPlanRecordCubit extends WorkoutPlanRecordCubit {
         error: Nullable(
           ErrorState(type: 'operationFailure', description: description),
         ),
+      ),
+    );
+  }
+
+  void failLatestRecord(String description) {
+    final err = ErrorState(type: 'operationFailure', description: description);
+    emit(
+      state.copyWith(
+        latestWorkoutPlanRecord: const Nullable(null),
+        latestError: Nullable(err),
+        error: Nullable(err),
+        isLoadingLatest: false,
       ),
     );
   }
@@ -107,7 +120,9 @@ class _WorkoutPlanRecordCubit extends WorkoutPlanRecordCubit {
   }
 
   @override
-  Future<void> getLatestWorkoutPlanRecord([int? workoutPlanId]) async {}
+  Future<void> getLatestWorkoutPlanRecord([int? workoutPlanId]) async {
+    latestCalls++;
+  }
 }
 
 void main() {
@@ -295,4 +310,43 @@ void main() {
     expect(find.text('Refresh failed'), findsOneWidget);
     expect(find.byType(SnackBar), findsOneWidget);
   });
+
+  testWidgets(
+    'LatestWorkoutPlanRecord shows error and retry action on latestError instead of empty or stale state',
+    (tester) async {
+      final cubit = await pumpView(
+        tester,
+        WorkoutPlanRecordState.initial().copyWith(
+          latestWorkoutPlanRecord: Nullable(
+            record(1, ProgressStatus.inProgress),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Latest Record'), findsOneWidget);
+      expect(
+        find.text('Could not load latest workout plan record'),
+        findsNothing,
+      );
+
+      cubit.failLatestRecord('Latest plan load failed');
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text('Could not load latest workout plan record'),
+        findsOneWidget,
+      );
+      expect(find.text('No workout plan records'), findsNothing);
+      expect(find.text('Latest Record'), findsNothing);
+
+      final callsBeforeRetry = cubit.latestCalls;
+      await tester.tap(
+        find.byKey(const ValueKey('latest-workout-plan-record-retry')),
+      );
+      await tester.pump();
+
+      expect(cubit.latestCalls, callsBeforeRetry + 1);
+    },
+  );
 }
