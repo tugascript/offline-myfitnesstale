@@ -265,6 +265,25 @@ void main() {
         ),
       );
       expect(find.text('No active macro goal'), findsOneWidget);
+
+      var retried = false;
+      await pumpNarrow(
+        tester,
+        ActiveMacroGoal(
+          sizes: sizes,
+          theme: ThemeData(),
+          activeGoal: null,
+          isLoading: false,
+          hasLoaded: false,
+          hasError: true,
+          onRetry: () => retried = true,
+        ),
+      );
+      expect(find.text('No active macro goal'), findsNothing);
+      expect(find.text('Could not load active macro goal'), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('macro-goal-retry-button')));
+      await tester.pump();
+      expect(retried, isTrue);
     },
   );
 }

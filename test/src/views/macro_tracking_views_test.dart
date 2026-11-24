@@ -3188,6 +3188,13 @@ void main() {
         macroCubit.failActiveGoalLoad('Active goal load failed');
         await tester.pumpAndSettle();
 
+        expect(find.byType(EmptyActiveMacroGoal), findsNothing);
+        expect(find.text('No active macro goal'), findsNothing);
+        expect(find.text('Could not load active macro goal'), findsOneWidget);
+        expect(
+          find.byKey(const ValueKey('macro-goal-retry-button')),
+          findsOneWidget,
+        );
         expect(
           find.descendant(
             of: find.byType(CurrentMacroGoal),
@@ -3199,6 +3206,11 @@ void main() {
         );
         expect(find.byType(SnackBar), findsOneWidget);
         expect(find.text('Active goal load failed'), findsOneWidget);
+
+        final callsBeforeRetry = macroCubit.activeGoalCalls;
+        await tester.tap(find.byKey(const ValueKey('macro-goal-retry-button')));
+        await tester.pump();
+        expect(macroCubit.activeGoalCalls, callsBeforeRetry + 1);
       },
     );
   });

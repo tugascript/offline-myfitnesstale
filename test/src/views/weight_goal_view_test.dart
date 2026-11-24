@@ -65,15 +65,26 @@ class _ProfileCubit extends ProfileCubit {
 }
 
 class _FakeWeightRecordCubit extends WeightRecordCubit {
-  _FakeWeightRecordCubit({bool initialLoading = false})
-    : super(weightRecordRepository: WeightRecordRepository.create()) {
-    if (initialLoading) {
-      emit(state.copyWith(isLoading: true));
+  int activeGoalLoadCalls = 0;
+
+  _FakeWeightRecordCubit({
+    bool initialLoading = false,
+    bool initialHistoryLoading = false,
+  }) : super(weightRecordRepository: WeightRecordRepository.create()) {
+    if (initialLoading || initialHistoryLoading) {
+      emit(
+        state.copyWith(
+          isLoadingActiveGoal: initialLoading,
+          isLoadingGoals: initialHistoryLoading,
+        ),
+      );
     }
   }
 
   @override
-  Future<void> getActiveWeightGoal() async {}
+  Future<void> getActiveWeightGoal() async {
+    activeGoalLoadCalls++;
+  }
 
   @override
   Future<void> getWeightGoals({
@@ -82,21 +93,33 @@ class _FakeWeightRecordCubit extends WeightRecordCubit {
     int offset = 0,
   }) async {}
 
-  void setLoading(bool isLoading) {
-    emit(state.copyWith(isLoading: isLoading));
+  void setHistoryLoading(bool isLoadingGoals) {
+    emit(state.copyWith(isLoadingGoals: isLoadingGoals));
   }
 
   void setActiveGoal(WeightGoalDto? goal) {
-    emit(state.copyWith(activeWeightGoal: Nullable(goal), isLoading: false));
-  }
-
-  void emitError(String description) {
     emit(
       state.copyWith(
-        isLoading: false,
-        error: Nullable(
-          ErrorState(type: 'operationFailure', description: description),
-        ),
+        activeWeightGoal: Nullable(goal),
+        hasLoadedActiveGoal: true,
+        isLoadingActiveGoal: false,
+        activeGoalError: const Nullable(null),
+      ),
+    );
+  }
+
+  void emitActiveGoalError(String description) {
+    final errorState = ErrorState(
+      type: 'operationFailure',
+      description: description,
+    );
+    emit(
+      state.copyWith(
+        activeWeightGoal: const Nullable(null),
+        hasLoadedActiveGoal: false,
+        isLoadingActiveGoal: false,
+        activeGoalError: Nullable(errorState),
+        error: Nullable(errorState),
       ),
     );
   }
@@ -135,15 +158,24 @@ void main() {
   }
 
   testWidgets(
-    'WeightGoalScreen shows skeleton during load, empty or active goal when loaded, and SnackBar on error',
+    'WeightGoalScreen keeps skeleton when history finishes first, shows active/empty goal when loaded, and shows retry card + SnackBar on error',
     (tester) async {
-      final cubit = _FakeWeightRecordCubit(initialLoading: true);
+      final cubit = _FakeWeightRecordCubit(
+        initialLoading: true,
+        initialHistoryLoading: true,
+      );
       addTearDown(cubit.close);
 
       await tester.pumpWidget(buildScreen(cubit));
       await tester.pump();
 
+      // History completes while active goal is still loading: must NOT flash EmptyWeightGoal.
+      cubit.setHistoryLoading(false);
+      await tester.pump();
+      await tester.pump();
+
       expect(find.byType(EmptyWeightGoal), findsNothing);
+      expect(find.text('No weight goals'), findsNothing);
       expect(find.byType(CurrentWeightGoal), findsOneWidget);
       expect(
         find.descendant(
@@ -165,6 +197,7 @@ void main() {
         ),
       );
       await tester.pump();
+      await tester.pump();
 
       expect(find.byType(EmptyWeightGoal), findsNothing);
       expect(find.byType(CurrentWeightGoal), findsOneWidget);
@@ -172,16 +205,28 @@ void main() {
 
       cubit.setActiveGoal(null);
       await tester.pump();
+      await tester.pump();
 
       expect(find.byType(EmptyWeightGoal), findsOneWidget);
       expect(find.text('No weight goals'), findsOneWidget);
       expect(find.byType(SnackBar), findsNothing);
 
-      cubit.emitError('Failed to get active weight goal');
+      cubit.emitActiveGoalError('Failed to get active weight goal');
       await tester.pumpAndSettle();
 
+      expect(find.byType(EmptyWeightGoal), findsNothing);
+      expect(find.text('Could not load active weight goal'), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('active-weight-goal-retry')),
+        findsOneWidget,
+      );
       expect(find.byType(SnackBar), findsOneWidget);
       expect(find.text('Failed to get active weight goal'), findsOneWidget);
+
+      final callsBeforeRetry = cubit.activeGoalLoadCalls;
+      await tester.tap(find.byKey(const ValueKey('active-weight-goal-retry')));
+      await tester.pump();
+      expect(cubit.activeGoalLoadCalls, callsBeforeRetry + 1);
     },
   );
 
@@ -200,6 +245,8 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(cubit.state.activeWeightGoal, isNull);
+      expect(cubit.state.hasLoadedActiveGoal, isTrue);
+      expect(cubit.state.activeGoalError, isNull);
       expect(cubit.state.error, isNull);
       expect(find.byType(EmptyWeightGoal), findsOneWidget);
       expect(find.text('No weight goals'), findsOneWidget);

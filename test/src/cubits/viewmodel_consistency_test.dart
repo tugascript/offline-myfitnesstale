@@ -1146,5 +1146,79 @@ void main() {
       expect(cubit.state.isLoading, isFalse);
       expect(cubit.state.error, isNull);
     });
+
+    test('WeightRecordCubit guards activeWeightGoal against stale loads, clears stale goal on error, and preserves active goal for non-inProgress creates', () async {
+      var failGoalReads = false;
+      final helper = DatabaseHelper();
+      final repo = WeightRecordRepository(
+        weightRecordDao: Dao<WeightRecord>(
+          databaseHelper: helper,
+          tableName: WeightRecord.table,
+          fromMap: WeightRecord.fromMap,
+        ),
+        weightGoalDao: Dao<WeightGoal>(
+          databaseHelper: helper,
+          tableName: WeightGoal.table,
+          fromMap: (map) {
+            if (failGoalReads) {
+              throw StateError('Simulated active weight goal read failure');
+            }
+            return WeightGoal.fromMap(map);
+          },
+        ),
+      );
+      final cubit = WeightRecordCubit(weightRecordRepository: repo);
+      addTearDown(cubit.close);
+
+      // Overlapping stale getActiveWeightGoal must not overwrite a newly created active goal.
+      final staleLoad = cubit.getActiveWeightGoal();
+      expect(cubit.state.isLoadingActiveGoal, isTrue);
+
+      await cubit.createWeightGoal(
+        WeightGoalInput(
+          targetWeight: 73000,
+          startDate: DateTime(2026, 3, 1),
+          phase: WeightGoalPhase.cut,
+        ),
+      );
+      await staleLoad;
+
+      expect(cubit.state.activeWeightGoal?.targetWeight, 73000);
+      expect(cubit.state.hasLoadedActiveGoal, isTrue);
+      expect(cubit.state.isLoadingActiveGoal, isFalse);
+      expect(cubit.state.activeGoalError, isNull);
+
+      // Creating a completed historical goal must keep the existing inProgress active goal.
+      final activeId = cubit.state.activeWeightGoal!.id;
+      await cubit.createWeightGoal(
+        WeightGoalInput(
+          targetWeight: 78000,
+          startDate: DateTime(2025, 10, 1),
+          completedAt: Nullable(DateTime(2025, 12, 1)),
+          phase: WeightGoalPhase.bulk,
+          status: ProgressStatus.completed,
+        ),
+      );
+      expect(cubit.state.activeWeightGoal?.id, activeId);
+      expect(cubit.state.activeWeightGoal?.targetWeight, 73000);
+
+      // A failed getActiveWeightGoal reload clears stale activeWeightGoal and sets activeGoalError.
+      failGoalReads = true;
+      await cubit.getActiveWeightGoal();
+      expect(cubit.state.activeWeightGoal, isNull);
+      expect(cubit.state.hasLoadedActiveGoal, isFalse);
+      expect(cubit.state.isLoadingActiveGoal, isFalse);
+      expect(cubit.state.activeGoalError, isNotNull);
+      expect(cubit.state.error, isNotNull);
+
+      // Retrying after recovery restores activeWeightGoal and clears activeGoalError.
+      failGoalReads = false;
+      await cubit.getActiveWeightGoal();
+      expect(cubit.state.activeWeightGoal?.id, activeId);
+      expect(cubit.state.hasLoadedActiveGoal, isTrue);
+      expect(cubit.state.isLoadingActiveGoal, isFalse);
+      expect(cubit.state.activeGoalError, isNull);
+      expect(cubit.state.error, isNull);
+    });
   });
 }
