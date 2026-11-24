@@ -1078,5 +1078,68 @@ void main() {
       expect(cubit.state.goalHistory, isNotEmpty);
       expect(cubit.state.error, isNull);
     });
+
+    test('MacroTrackingCubit guards activeGoal against stale getActiveMacroGoal and concurrent history pagination', () async {
+      final macroRepo = MacroTrackingRepository.create();
+      final cubit = MacroTrackingCubit(macroTrackingRepository: macroRepo);
+      addTearDown(cubit.close);
+
+      // Start an active-goal load when no active goal exists, then immediately
+      // create a new active goal; the earlier load must not overwrite it.
+      final staleLoad = cubit.getActiveMacroGoal();
+      final createStatus = await cubit.createMacroGoal(
+        const WeekMacroGoalInput(
+          name: 'Fresh Active Goal',
+          targetCalories: 2100,
+          targetProtein: 160,
+          targetCarbs: 220,
+          targetFat: 65,
+          isActive: true,
+        ),
+      );
+      await staleLoad;
+
+      expect(createStatus, MacroGoalSaveStatus.saved);
+      expect(cubit.state.activeGoal?.name, 'Fresh Active Goal');
+      expect(cubit.state.hasLoadedActiveGoal, isTrue);
+      expect(cubit.state.isLoadingActiveGoal, isFalse);
+
+      // Deactivate and concurrently create a replacement goal: the older
+      // deactivation refresh must not overwrite the newer active goal.
+      final firstId = cubit.state.activeGoal!.id;
+      final deactivateFuture = cubit.completeMacroGoal(firstId);
+      final replacementFuture = cubit.createMacroGoal(
+        const WeekMacroGoalInput(
+          name: 'Replacement Active Goal',
+          targetCalories: 2200,
+          targetProtein: 170,
+          targetCarbs: 230,
+          targetFat: 65,
+          isActive: true,
+        ),
+      );
+      final results = await Future.wait<Object>([
+        deactivateFuture,
+        replacementFuture,
+      ]);
+
+      expect(results[0], isTrue);
+      expect(results[1], MacroGoalSaveStatus.saved);
+      expect(cubit.state.activeGoal?.name, 'Replacement Active Goal');
+      expect(cubit.state.hasLoadedActiveGoal, isTrue);
+      expect(cubit.state.isLoadingActiveGoal, isFalse);
+      expect(cubit.state.isLoading, isFalse);
+
+      // Concurrent history pagination supersedes goalsRequestId without
+      // blocking refreshMacroGoals from settling active-goal state.
+      final refreshFuture = cubit.refreshMacroGoals();
+      final historyFuture = cubit.getMacroGoals(limit: 10, offset: 0);
+      await Future.wait([refreshFuture, historyFuture]);
+
+      expect(cubit.state.activeGoal?.name, 'Replacement Active Goal');
+      expect(cubit.state.isLoadingActiveGoal, isFalse);
+      expect(cubit.state.isLoading, isFalse);
+      expect(cubit.state.error, isNull);
+    });
   });
 }

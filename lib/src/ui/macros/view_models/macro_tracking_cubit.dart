@@ -34,6 +34,7 @@ class MacroTrackingCubit extends Cubit<MacroTrackingState> {
   final MacroTrackingRepository _macroService;
   final Logger _logger = Logger('MacroTrackingCubit');
   Future<void>? _activeGoalLoad;
+  int _activeGoalRequestId = 0;
   int _dailyLogRequestId = 0;
   int _rangeLogsRequestId = 0;
 
@@ -57,10 +58,11 @@ class MacroTrackingCubit extends Cubit<MacroTrackingState> {
 
   Future<void> _loadActiveMacroGoal() async {
     _logger.info('Getting active macro goal');
+    final activeRequestId = ++_activeGoalRequestId;
     emit(state.copyWith(isLoading: true, isLoadingActiveGoal: true));
 
     final result = await _macroService.getActiveMacroGoal();
-    if (isClosed) return;
+    if (isClosed || activeRequestId != _activeGoalRequestId) return;
     if (result.isErr()) {
       final error = result.error;
       if (error.type == SingleErrorTypes.notFound) {
@@ -213,6 +215,7 @@ class MacroTrackingCubit extends Cubit<MacroTrackingState> {
     emit(state.copyWith(isLoading: true));
 
     final result = await _macroService.completeMacroGoal(id);
+    if (isClosed) return false;
     if (result.isErr()) {
       final error = result.error;
       _logger.warning('Failed to complete macro goal $id', error);
@@ -236,6 +239,7 @@ class MacroTrackingCubit extends Cubit<MacroTrackingState> {
     emit(state.copyWith(isLoading: true));
 
     final result = await _macroService.deleteMacroGoal(id);
+    if (isClosed) return false;
     if (result.isErr()) {
       final error = result.error;
       _logger.warning('Failed to delete macro goal $id', error);
@@ -257,6 +261,8 @@ class MacroTrackingCubit extends Cubit<MacroTrackingState> {
   Future<bool> _refreshMacroGoals({MacroGoalDto? savedGoal}) async {
     final limit = state.goalPagination.limit;
     final requestId = state.goalsRequestId + 1;
+    final activeRequestId = ++_activeGoalRequestId;
+    _activeGoalLoad = null;
     emit(state.copyWith(goalsRequestId: requestId));
 
     final activeFuture = _macroService.getActiveMacroGoal();
@@ -265,26 +271,38 @@ class MacroTrackingCubit extends Cubit<MacroTrackingState> {
     final activeResult = await activeFuture;
     final historyResult = await historyFuture;
     if (isClosed) return false;
+
+    final activeIsCurrent = activeRequestId == _activeGoalRequestId;
     final historyIsCurrent = requestId == state.goalsRequestId;
 
+    if (!activeIsCurrent && !historyIsCurrent) {
+      return state.error == null;
+    }
+
     Nullable<MacroGoalDto>? activeGoal;
+    bool? hasLoadedActiveGoal;
     ErrorState? error;
 
-    if (activeResult.isErr()) {
-      if (activeResult.error.type == SingleErrorTypes.notFound) {
-        activeGoal = const Nullable(null);
-      } else {
-        _logger.warning('Failed to load active entity', activeResult.error);
-        error = ErrorState(
-          type: activeResult.error.type.name,
-          description: activeResult.error.description,
-        );
-        if (savedGoal != null && savedGoal.isActive) {
-          activeGoal = Nullable(savedGoal);
+    if (activeIsCurrent) {
+      if (activeResult.isErr()) {
+        if (activeResult.error.type == SingleErrorTypes.notFound) {
+          activeGoal = const Nullable(null);
+          hasLoadedActiveGoal = true;
+        } else {
+          _logger.warning('Failed to load active entity', activeResult.error);
+          error = ErrorState(
+            type: activeResult.error.type.name,
+            description: activeResult.error.description,
+          );
+          if (savedGoal != null && savedGoal.isActive) {
+            activeGoal = Nullable(savedGoal);
+            hasLoadedActiveGoal = true;
+          }
         }
+      } else {
+        activeGoal = Nullable(activeResult.value);
+        hasLoadedActiveGoal = true;
       }
-    } else {
-      activeGoal = Nullable(activeResult.value);
     }
 
     if (historyIsCurrent && historyResult.isErr()) {
@@ -308,16 +326,15 @@ class MacroTrackingCubit extends Cubit<MacroTrackingState> {
                 offset: 0,
               )
             : null,
-        hasLoadedActiveGoal:
-            activeResult.isOk() ||
-                (activeResult.isErr() &&
-                    activeResult.error.type == SingleErrorTypes.notFound) ||
-                (savedGoal != null && savedGoal.isActive)
-            ? true
+        hasLoadedActiveGoal: hasLoadedActiveGoal,
+        isLoadingActiveGoal: activeIsCurrent ? false : null,
+        isLoading:
+            historyIsCurrent && (activeIsCurrent || !state.isLoadingActiveGoal)
+            ? false
             : null,
-        isLoadingActiveGoal: false,
-        isLoading: historyIsCurrent ? false : null,
-        error: historyIsCurrent || error != null ? Nullable(error) : null,
+        error: (activeIsCurrent && historyIsCurrent) || error != null
+            ? Nullable(error)
+            : null,
       ),
     );
     return error == null;
