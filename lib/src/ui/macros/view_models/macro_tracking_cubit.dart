@@ -139,9 +139,10 @@ class MacroTrackingCubit extends Cubit<MacroTrackingState> {
 
   Future<bool> createMacroGoal(WeekMacroGoalInput input) async {
     _logger.info('Creating macro goal: ${input.name}');
-    emit(state.copyWith(isLoading: true));
+    emit(state.copyWith(isLoading: true, error: const Nullable(null)));
 
     final result = await _macroService.createMacroGoal(input);
+    if (isClosed) return false;
 
     if (result.isErr()) {
       final error = result.error;
@@ -163,9 +164,10 @@ class MacroTrackingCubit extends Cubit<MacroTrackingState> {
 
   Future<bool> updateMacroGoal(int id, WeekMacroGoalInput input) async {
     _logger.info('Updating macro goal $id');
-    emit(state.copyWith(isLoading: true));
+    emit(state.copyWith(isLoading: true, error: const Nullable(null)));
 
     final result = await _macroService.updateMacroGoal(id, input);
+    if (isClosed) return false;
 
     if (result.isErr()) {
       final error = result.error;

@@ -2715,6 +2715,71 @@ void main() {
         expect(find.byType(MacroGoalFormModal), findsNothing);
       },
     );
+
+    testWidgets(
+      'leaving MacroTrackerScreen during in-flight active-goal load does not consume goalPromptTrigger',
+      (tester) async {
+        final goalCompleter = Completer<void>();
+        final macroCubit = _TestMacroTrackingCubit(
+          activeGoalCompleter: goalCompleter,
+          returnActiveGoalOnLoad: false,
+        );
+        addTearDown(() async {
+          if (!goalCompleter.isCompleted) {
+            goalCompleter.complete();
+          }
+          await macroCubit.close();
+        });
+
+        var isVisible = true;
+        const trigger = 1;
+        late StateSetter setHostState;
+
+        await tester.pumpWidget(
+          buildAppHarness(
+            macroCubit: macroCubit,
+            child: StatefulBuilder(
+              builder: (context, setState) {
+                setHostState = setState;
+                return MacroTrackerScreen(
+                  isVisible: isVisible,
+                  goalPromptTrigger: trigger,
+                );
+              },
+            ),
+          ),
+        );
+        await tester.pump();
+        expect(find.byType(MacroGoalFormModal), findsNothing);
+
+        // Hide screen while active-goal load is still in flight.
+        setHostState(() => isVisible = false);
+        await tester.pump();
+
+        // Active-goal load finishes while hidden: modal must not open.
+        goalCompleter.complete();
+        await tester.pumpAndSettle();
+        expect(find.byType(MacroGoalFormModal), findsNothing);
+
+        // Returning with the same trigger should still open the modal once.
+        setHostState(() => isVisible = true);
+        await tester.pumpAndSettle();
+        expect(find.byType(MacroGoalFormModal), findsOneWidget);
+
+        // Dismissing consumes the trigger so toggling visibility does not reopen.
+        await tester.tap(
+          find.byKey(const ValueKey('macro-goal-modal-close-btn')),
+        );
+        await tester.pumpAndSettle();
+        expect(find.byType(MacroGoalFormModal), findsNothing);
+
+        setHostState(() => isVisible = false);
+        await tester.pump();
+        setHostState(() => isVisible = true);
+        await tester.pumpAndSettle();
+        expect(find.byType(MacroGoalFormModal), findsNothing);
+      },
+    );
   });
 
   group('Responsive Narrow and Scaled Layouts', () {
