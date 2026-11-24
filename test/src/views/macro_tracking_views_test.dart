@@ -64,6 +64,7 @@ import 'package:myfitnesstale/src/ui/macros/widgets/tracker/macro_tracker_week_w
 import 'package:myfitnesstale/src/ui/meal_plans/screens/meal_plan_details_screen.dart';
 import 'package:myfitnesstale/src/ui/recipes/screens/recipes_screen.dart';
 import 'package:myfitnesstale/src/ui/workout_plans/screens/current_workout_plan_screen.dart';
+import 'package:myfitnesstale/src/ui/workout_plans/screens/workout_plan_detail_screen.dart';
 import 'package:myfitnesstale/src/ui/home/widgets/active/active_meal_plan_widget.dart';
 import 'package:myfitnesstale/src/ui/home/widgets/active/active_plans_carousel.dart';
 import 'package:myfitnesstale/src/ui/home/widgets/quick_actions_widget.dart';
@@ -374,8 +375,36 @@ class _TestExerciseRecordCubit extends ExerciseRecordCubit {
   }) async {}
 }
 
+class _TestWorkoutPlanCubit extends WorkoutPlanCubit {
+  _TestWorkoutPlanCubit({WorkoutPlanDto? selectedWorkoutPlan})
+    : super(workoutPlanRepository: WorkoutPlanRepository.create()) {
+    if (selectedWorkoutPlan != null) {
+      emit(state.copyWith(selectedWorkoutPlan: Nullable(selectedWorkoutPlan)));
+    }
+  }
+
+  @override
+  Future<void> getWorkoutPlan(int id, {bool isRefresh = false}) async {}
+
+  @override
+  Future<bool> deleteWorkoutPlan(int id) async {
+    if (!isClosed) {
+      emit(
+        state.copyWith(
+          selectedWorkoutPlan: state.selectedWorkoutPlan?.id == id
+              ? const Nullable(null)
+              : null,
+          isLoading: false,
+          error: const Nullable(null),
+        ),
+      );
+    }
+    return true;
+  }
+}
+
 class _TestWorkoutPlanRecordCubit extends WorkoutPlanRecordCubit {
-  _TestWorkoutPlanRecordCubit({this.clearOnLoad = false})
+  _TestWorkoutPlanRecordCubit({this.clearOnLoad = false, this.loadCompleter})
     : super(
         workoutPlanRecordRepository: WorkoutPlanRecordRepository.create(),
         workoutPlanRepository: WorkoutPlanRepository.create(),
@@ -383,6 +412,7 @@ class _TestWorkoutPlanRecordCubit extends WorkoutPlanRecordCubit {
       );
 
   final bool clearOnLoad;
+  final Completer<void>? loadCompleter;
   int loadCalls = 0;
 
   void showPlan({bool inProgress = false}) {
@@ -431,6 +461,10 @@ class _TestWorkoutPlanRecordCubit extends WorkoutPlanRecordCubit {
   @override
   Future<void> getLatestActivePlanRecord() async {
     loadCalls++;
+    final completer = loadCompleter;
+    if (completer != null) {
+      await completer.future;
+    }
     if (!isClosed) {
       emit(
         state.copyWith(
@@ -2079,6 +2113,332 @@ void main() {
         expect(mealPlanCubit.state.activeMealPlan, isNull);
         expect(mealPlanRecordCubit.state.activeRecord, isNull);
         expect(mealPlanRecordCubit.activeRecordCalls, 1);
+      },
+    );
+
+    testWidgets(
+      'MacroTrackerScreen skips pending period and range continuations if tab hides while awaiting active goal',
+      (tester) async {
+        final macroCubit = _TestMacroTrackingCubit(updateStateOnDailyLog: true)
+          ..beginActiveGoalLoad();
+        final mealPlanRecordCubit = _TestMealPlanRecordCubit(
+          hasLoadedActiveRecord: true,
+        );
+        final mealPlanCubit = _TestMealPlanCubit();
+        final isVisible = ValueNotifier<bool>(true);
+        final router = GoRouter(
+          initialLocation: '/',
+          routes: [
+            GoRoute(
+              path: '/',
+              builder: (context, state) => ValueListenableBuilder<bool>(
+                valueListenable: isVisible,
+                builder: (context, visible, _) =>
+                    MacroTrackerScreen(isVisible: visible),
+              ),
+            ),
+          ],
+        );
+        addTearDown(() async {
+          router.dispose();
+          isVisible.dispose();
+          await macroCubit.close();
+          await mealPlanRecordCubit.close();
+          await mealPlanCubit.close();
+        });
+
+        await tester.pumpWidget(
+          MultiBlocProvider(
+            providers: [
+              BlocProvider<MacroTrackingCubit>.value(value: macroCubit),
+              BlocProvider<MealPlanRecordCubit>.value(
+                value: mealPlanRecordCubit,
+              ),
+              BlocProvider<MealPlanCubit>.value(value: mealPlanCubit),
+            ],
+            child: MaterialApp.router(routerConfig: router),
+          ),
+        );
+        await tester.pump();
+
+        // Trigger a date change (_loadPeriodData) while active goal is in flight.
+        await tester.tap(find.byKey(const ValueKey('macro-tracker-prev-btn')));
+        await tester.pump();
+        expect(macroCubit.dailyLogCalls, 0);
+
+        // Leave the Macros tab before the active goal finishes loading.
+        isVisible.value = false;
+        await tester.pump();
+
+        macroCubit.completeActiveGoalLoad();
+        await tester.pumpAndSettle();
+
+        expect(macroCubit.dailyLogCalls, 0);
+        expect(macroCubit.rangeLogCalls, 0);
+
+        // Return to the Macros tab -> reconciles the deferred daily log load.
+        isVisible.value = true;
+        await tester.pumpAndSettle();
+        expect(macroCubit.dailyLogCalls, 1);
+        expect(macroCubit.rangeLogCalls, 0);
+
+        // Trigger a scope change to Week (_loadRangeForCurrentScope) while a new
+        // active-goal load is in flight, then leave the tab before it finishes.
+        macroCubit.beginActiveGoalLoad();
+        await tester.tap(find.text('Week'));
+        await tester.pumpAndSettle();
+        expect(macroCubit.rangeLogCalls, 0);
+
+        isVisible.value = false;
+        await tester.pump();
+
+        macroCubit.completeActiveGoalLoad();
+        await tester.pumpAndSettle();
+
+        expect(macroCubit.rangeLogCalls, 0);
+
+        // Returning to the Macros tab reconciles the deferred Week range load.
+        isVisible.value = true;
+        await tester.pumpAndSettle();
+        expect(macroCubit.rangeLogCalls, 1);
+      },
+    );
+
+    testWidgets(
+      'MacroTrackerScreen reloads daily log on activation when cached log date disagrees with selectedDate',
+      (tester) async {
+        final today = DateUtils.dateOnly(DateTime.now());
+        final yesterday = DateTime(today.year, today.month, today.day - 1);
+        final macroCubit = _TestMacroTrackingCubit(
+          hasLoadedActiveGoal: true,
+          updateStateOnDailyLog: true,
+        );
+        // Simulate a late water-update response replacing selectedDailyLog with
+        // yesterday's log while selectedDate remains today.
+        macroCubit.seedDailyLog(
+          today,
+          DailyNutritionLogDto(
+            id: 77,
+            date:
+                yesterday.year * 10000 + yesterday.month * 100 + yesterday.day,
+            waterIntakeMl: 500,
+            totalCalories: 400,
+            totalProtein: 30,
+            totalCarbs: 40,
+            totalFat: 10,
+            totalFiber: 5,
+          ),
+        );
+        final mealPlanRecordCubit = _TestMealPlanRecordCubit(
+          hasLoadedActiveRecord: true,
+        );
+        final mealPlanCubit = _TestMealPlanCubit();
+        final isVisible = ValueNotifier<bool>(false);
+        final router = GoRouter(
+          initialLocation: '/',
+          routes: [
+            GoRoute(
+              path: '/',
+              builder: (context, state) => ValueListenableBuilder<bool>(
+                valueListenable: isVisible,
+                builder: (context, visible, _) =>
+                    MacroTrackerScreen(isVisible: visible),
+              ),
+            ),
+          ],
+        );
+        addTearDown(() async {
+          router.dispose();
+          isVisible.dispose();
+          await macroCubit.close();
+          await mealPlanRecordCubit.close();
+          await mealPlanCubit.close();
+        });
+
+        await tester.pumpWidget(
+          MultiBlocProvider(
+            providers: [
+              BlocProvider<MacroTrackingCubit>.value(value: macroCubit),
+              BlocProvider<MealPlanRecordCubit>.value(
+                value: mealPlanRecordCubit,
+              ),
+              BlocProvider<MealPlanCubit>.value(value: mealPlanCubit),
+            ],
+            child: MaterialApp.router(routerConfig: router),
+          ),
+        );
+        await tester.pump();
+        expect(macroCubit.dailyLogCalls, 0);
+
+        isVisible.value = true;
+        await tester.pumpAndSettle();
+
+        expect(macroCubit.dailyLogCalls, 1);
+        expect(DateUtils.isSameDay(macroCubit.lastDailyLogDate, today), isTrue);
+        expect(
+          macroCubit.state.selectedDailyLog?.date,
+          today.year * 10000 + today.month * 100 + today.day,
+        );
+      },
+    );
+
+    testWidgets(
+      'MacroTrackerScreen reloads daily log on goal recovery when cached log date disagrees with selectedDate',
+      (tester) async {
+        final today = DateUtils.dateOnly(DateTime.now());
+        final yesterday = DateTime(today.year, today.month, today.day - 1);
+        final macroCubit = _TestMacroTrackingCubit(updateStateOnDailyLog: true)
+          ..failActiveGoalLoad();
+        macroCubit.seedDailyLog(
+          today,
+          DailyNutritionLogDto(
+            id: 78,
+            date:
+                yesterday.year * 10000 + yesterday.month * 100 + yesterday.day,
+            waterIntakeMl: 500,
+            totalCalories: 400,
+            totalProtein: 30,
+            totalCarbs: 40,
+            totalFat: 10,
+            totalFiber: 5,
+          ),
+        );
+        final mealPlanRecordCubit = _TestMealPlanRecordCubit(
+          hasLoadedActiveRecord: true,
+        );
+        final mealPlanCubit = _TestMealPlanCubit();
+        final router = GoRouter(
+          initialLocation: '/',
+          routes: [
+            GoRoute(
+              path: '/',
+              builder: (context, state) => const MacroTrackerScreen(),
+            ),
+          ],
+        );
+        addTearDown(() async {
+          router.dispose();
+          await macroCubit.close();
+          await mealPlanRecordCubit.close();
+          await mealPlanCubit.close();
+        });
+
+        await tester.pumpWidget(
+          MultiBlocProvider(
+            providers: [
+              BlocProvider<MacroTrackingCubit>.value(value: macroCubit),
+              BlocProvider<MealPlanRecordCubit>.value(
+                value: mealPlanRecordCubit,
+              ),
+              BlocProvider<MealPlanCubit>.value(value: mealPlanCubit),
+            ],
+            child: MaterialApp.router(routerConfig: router),
+          ),
+        );
+        await tester.pump();
+        expect(macroCubit.dailyLogCalls, 0);
+
+        macroCubit.completeActiveGoalLoad();
+        await tester.pumpAndSettle();
+
+        expect(macroCubit.dailyLogCalls, 1);
+        expect(DateUtils.isSameDay(macroCubit.lastDailyLogDate, today), isTrue);
+        expect(
+          macroCubit.state.selectedDailyLog?.date,
+          today.year * 10000 + today.month * 100 + today.day,
+        );
+      },
+    );
+
+    testWidgets(
+      'WorkoutPlanDetailScreen pops cleanly via State context when deleting plan disposes inner record builder',
+      (tester) async {
+        const activePlan = WorkoutPlanDto(
+          id: 1,
+          name: 'Deletable Active Workout Plan',
+          currentVersion: 1,
+          totalWeeks: 1,
+          totalDays: 7,
+          totalWorkouts: 3,
+          difficulty: Difficulty.beginner,
+          isFavorite: false,
+          createdBy: CreatedBy.user,
+        );
+        final refreshCompleter = Completer<void>();
+        final workoutPlanCubit = _TestWorkoutPlanCubit(
+          selectedWorkoutPlan: activePlan,
+        );
+        final workoutPlanRecordCubit = _TestWorkoutPlanRecordCubit(
+          clearOnLoad: true,
+          loadCompleter: refreshCompleter,
+        )..showPlan(inProgress: true);
+        final router = GoRouter(
+          initialLocation: '/',
+          routes: [
+            GoRoute(
+              path: '/',
+              builder: (context, state) => Scaffold(
+                body: ElevatedButton(
+                  onPressed: () => context.push('/workout-plans/1'),
+                  child: const Text('Open Plan Details'),
+                ),
+              ),
+            ),
+            GoRoute(
+              path: '/workout-plans/1',
+              builder: (context, state) =>
+                  const WorkoutPlanDetailScreen(workoutPlanId: 1),
+            ),
+          ],
+        );
+        addTearDown(() async {
+          if (!refreshCompleter.isCompleted) {
+            refreshCompleter.complete();
+          }
+          router.dispose();
+          await workoutPlanCubit.close();
+          await workoutPlanRecordCubit.close();
+        });
+
+        await tester.pumpWidget(
+          MultiBlocProvider(
+            providers: [
+              BlocProvider<WorkoutPlanCubit>.value(value: workoutPlanCubit),
+              BlocProvider<WorkoutPlanRecordCubit>.value(
+                value: workoutPlanRecordCubit,
+              ),
+            ],
+            child: MaterialApp.router(routerConfig: router),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.text('Open Plan Details'));
+        await tester.pumpAndSettle();
+        expect(
+          find.textContaining('DELETABLE ACTIVE WORKOUT PLAN'),
+          findsOneWidget,
+        );
+
+        final deleteButton = find.text('DELETE');
+        await tester.ensureVisible(deleteButton);
+        await tester.tap(deleteButton);
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.text('CONFIRM'));
+        // Allow deleteWorkoutPlan to clear selectedWorkoutPlan and rebuild the
+        // screen into the fallback branch (disposing the nested BlocBuilder
+        // context) while handleDeletedWorkoutPlan is still awaiting refresh.
+        await tester.pump();
+        await tester.pump();
+        expect(find.text('Workout plan not found'), findsOneWidget);
+
+        refreshCompleter.complete();
+        await tester.pumpAndSettle();
+
+        expect(tester.takeException(), isNull);
+        expect(find.text('Open Plan Details'), findsOneWidget);
+        expect(workoutPlanRecordCubit.loadCalls, 1);
       },
     );
 

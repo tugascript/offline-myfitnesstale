@@ -19,6 +19,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../data/repositories/meal_plans/dtos/meal_plan_record_dto.dart';
+import '../../../data/utils/dates.dart';
 import '../../core/sizes/data_display_sizes.dart';
 import '../../core/sizes/screen_size.dart';
 import '../../core/widgets/layout/app_scaffold.dart';
@@ -158,6 +159,13 @@ class _MacroTrackerScreenState extends State<MacroTrackerScreen> {
     return true;
   }
 
+  bool _hasMatchingDailyLog(MacroTrackingState state) {
+    final dailyLog = state.selectedDailyLog;
+    return dailyLog != null &&
+        dailyLog.date == DateUtilities.getNumericDate(_selectedDate) &&
+        DateUtils.isSameDay(state.selectedDate, _selectedDate);
+  }
+
   Future<void> _reconcileTrackerData({
     required bool retryFailedGoal,
     required bool retryFailedMealPlanRecord,
@@ -178,10 +186,7 @@ class _MacroTrackerScreenState extends State<MacroTrackerScreen> {
     if (!widget.isVisible) return;
 
     final macroState = macroCubit.state;
-    final needsDailyLog =
-        macroState.selectedDailyLog == null ||
-        !DateUtils.isSameDay(macroState.selectedDate, _selectedDate);
-    if (needsDailyLog) {
+    if (!_hasMatchingDailyLog(macroState)) {
       macroCubit.getDailyLog(_selectedDate);
     }
     if (rangeToken != null &&
@@ -231,6 +236,7 @@ class _MacroTrackerScreenState extends State<MacroTrackerScreen> {
       return;
     }
     if (!mounted ||
+        !widget.isVisible ||
         rangeToken != _rangeLoadToken ||
         _scope == TrackerScope.day) {
       return;
@@ -249,7 +255,9 @@ class _MacroTrackerScreenState extends State<MacroTrackerScreen> {
     )) {
       return;
     }
-    if (!mounted || periodToken != _periodLoadToken) return;
+    if (!mounted || !widget.isVisible || periodToken != _periodLoadToken) {
+      return;
+    }
     macroCubit.getDailyLog(_selectedDate);
     if (rangeToken == _rangeLoadToken && _scope != TrackerScope.day) {
       _dispatchRangeLoad(macroCubit);
@@ -512,9 +520,7 @@ class _MacroTrackerScreenState extends State<MacroTrackerScreen> {
             if (!widget.isVisible) return;
             final latest = context.read<MacroTrackingCubit>().state;
             if (latest.isLoadingActiveGoal) return;
-            final needsDailyLog =
-                latest.selectedDailyLog == null ||
-                !DateUtils.isSameDay(latest.selectedDate, _selectedDate);
+            final needsDailyLog = !_hasMatchingDailyLog(latest);
             final needsRange = _scope != TrackerScope.day;
             if (needsDailyLog || needsRange) {
               _reconcileTrackerData(

@@ -285,12 +285,12 @@ class _WorkoutPlanDetailScreenState extends State<WorkoutPlanDetailScreen> {
                         onEdit: () =>
                             context.push('/workout-plans/${plan.id}/edit'),
                         onDelete: () {
-                          final workoutPlanCubit = context
+                          final workoutPlanCubit = this.context
                               .read<WorkoutPlanCubit>();
-                          final workoutPlanRecordCubit = context
+                          final workoutPlanRecordCubit = this.context
                               .read<WorkoutPlanRecordCubit>();
                           showDialog(
-                            context: context,
+                            context: this.context,
                             builder: (_) => ConfirmationDialog(
                               title: 'Delete Workout Plan',
                               content: 'Are you sure you want to delete this workout plan? This action cannot be undone.',
@@ -305,7 +305,7 @@ class _WorkoutPlanDetailScreenState extends State<WorkoutPlanDetailScreen> {
                                 await workoutPlanRecordCubit
                                     .handleDeletedWorkoutPlan(plan.id);
                                 if (mounted) {
-                                  Navigator.of(context).pop();
+                                  Navigator.of(this.context).pop();
                                 }
                               },
                             ),
