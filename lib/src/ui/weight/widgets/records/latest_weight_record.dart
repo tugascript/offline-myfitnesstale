@@ -54,7 +54,7 @@ class _LatestWeightRecordState extends State<LatestWeightRecord> {
   Widget build(BuildContext context) {
     return BlocBuilder<WeightRecordCubit, WeightRecordState>(
       builder: (context, state) {
-        if (!state.isLoading && state.latestWeightRecord == null) {
+        if (!state.isLoadingLatest && state.latestWeightRecord == null) {
           return EmptyWeightRecord(sizes: widget.sizes, theme: widget.theme);
         }
 
@@ -62,7 +62,7 @@ class _LatestWeightRecordState extends State<LatestWeightRecord> {
           sizes: widget.sizes,
           theme: widget.theme,
           units: widget.units,
-          isLoading: state.isLoading,
+          isLoading: state.isLoadingLatest,
           weightRecord: state.latestWeightRecord,
           onEdit: () {
             if (state.latestWeightRecord != null) {
