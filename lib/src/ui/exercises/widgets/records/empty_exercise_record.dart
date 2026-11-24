@@ -19,6 +19,8 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../../../data/utils/enums.dart';
 import '../../../core/sizes/data_display_sizes.dart';
+import '../../../core/widgets/layout/app_text_button.dart';
+import '../../../core/widgets/layout/empty_card.dart';
 import './editors/create_exercise_record_modal.dart';
 
 class EmptyExerciseRecord extends StatelessWidget {
@@ -39,12 +41,18 @@ class EmptyExerciseRecord extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      margin: EdgeInsets.zero,
-      child: SizedBox(
-        width: double.infinity,
-        child: InkWell(
-          onTap: () {
+    return EmptyCard(
+      sizes: sizes,
+      emoji: '💪',
+      emptyText: 'No $exerciseName records',
+      actions: [
+        AppTextButton(
+          isLoading: false,
+          sizes: sizes,
+          isDense: true,
+          label: 'Add your first record',
+          icon: Icons.add,
+          onPressed: () {
             showDialog(
               context: context,
               builder: (context) => CreateExerciseRecordModal(
@@ -55,41 +63,8 @@ class EmptyExerciseRecord extends StatelessWidget {
               ),
             );
           },
-          child: Padding(
-            padding: EdgeInsets.symmetric(
-              vertical: sizes.padding * 2,
-              horizontal: sizes.padding,
-            ),
-            child: Column(
-              children: [
-                Icon(Icons.fitness_center, size: sizes.titleFontSize * 2),
-                SizedBox(height: sizes.spacing),
-                Text(
-                  "No $exerciseName records",
-                  style: TextStyle(
-                    fontSize: sizes.titleFontSize,
-                    fontWeight: FontWeight.bold,
-                    color: theme.brightness == Brightness.dark
-                        ? Colors.grey[200]
-                        : Colors.grey[800],
-                  ),
-                ),
-                SizedBox(height: sizes.spacing),
-                Text(
-                  "Tap to add your first record",
-                  style: TextStyle(
-                    fontSize: sizes.subtitleFontSize,
-                    fontWeight: FontWeight.w600,
-                    color: theme.brightness == Brightness.dark
-                        ? Colors.grey[400]
-                        : Colors.grey[600],
-                  ),
-                ),
-              ],
-            ),
-          ),
         ),
-      ),
+      ],
     );
   }
 }

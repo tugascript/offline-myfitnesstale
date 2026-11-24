@@ -19,6 +19,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../../core/sizes/data_display_sizes.dart';
 import '../../../core/widgets/layout/app_text_button.dart';
+import '../../../core/widgets/layout/empty_card.dart';
 import './create_strength_goal_modal.dart';
 
 class EmptyActiveStrengthGoalCard extends StatelessWidget {
@@ -35,63 +36,30 @@ class EmptyActiveStrengthGoalCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDarkTheme = theme.brightness == Brightness.dark;
-    final subtitleColor = isDarkTheme ? Colors.grey[400] : Colors.grey[600];
-
-    return Card(
-      margin: EdgeInsets.zero,
-      child: SizedBox(
-        width: double.infinity,
-        child: Padding(
-          padding: EdgeInsets.symmetric(
-            horizontal: sizes.padding,
-            vertical: sizes.padding * 2,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.emoji_events_outlined, size: sizes.titleFontSize * 2),
-              SizedBox(height: sizes.spacing),
-              Text(
-                'No Active Strength Goal',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: sizes.titleFontSize,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              SizedBox(height: sizes.halfSpacing),
-              Text(
-                'Set a target weight and reps for an exercise to stay motivated.',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: sizes.fontSize,
-                  color: subtitleColor,
-                ),
-              ),
-              SizedBox(height: sizes.spacing),
-              SizedBox(
-                width: double.infinity,
-                child: AppTextButton(
-                  key: const ValueKey('strength-goal-set-active-button'),
-                  isLoading: isLoading,
-                  sizes: sizes,
-                  isDense: true,
-                  onPressed: () {
-                    showDialog(
-                      context: context,
-                      builder: (ctx) =>
-                          CreateStrengthGoalModal(theme: theme, sizes: sizes),
-                    );
-                  },
-                  label: 'Set Goal',
-                  icon: Icons.add,
-                ),
-              ),
-            ],
+    return EmptyCard(
+      sizes: sizes,
+      emoji: '🏆',
+      emptyText: 'No active strength goal',
+      actions: [
+        SizedBox(
+          width: double.infinity,
+          child: AppTextButton(
+            key: const ValueKey('strength-goal-set-active-button'),
+            isLoading: isLoading,
+            sizes: sizes,
+            isDense: true,
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (ctx) =>
+                    CreateStrengthGoalModal(theme: theme, sizes: sizes),
+              );
+            },
+            label: 'Set exercise strength goal',
+            icon: Icons.add,
           ),
         ),
-      ),
+      ],
     );
   }
 }
