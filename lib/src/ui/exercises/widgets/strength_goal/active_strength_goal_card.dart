@@ -29,8 +29,10 @@ import '../../../core/sizes/data_display_sizes.dart';
 import '../../../core/widgets/confirmation_dialog.dart';
 import '../../../core/widgets/layout/app_elevated_button.dart';
 import '../../../core/widgets/layout/app_outlined_button.dart';
+import '../../../core/widgets/layout/app_text_button.dart';
 import '../../../core/widgets/layout/delete_icon_button.dart';
 import '../../../core/widgets/layout/edit_icon_button.dart';
+import '../../../core/widgets/layout/empty_card.dart';
 import '../../../core/widgets/progress_status_badge.dart';
 import '../../../home/view_models/profile_cubit.dart';
 import '../../view_models/exercise_record_cubit.dart';
@@ -86,11 +88,34 @@ class ActiveStrengthGoalCard extends StatelessWidget {
         final isGoalLoading = state.isActiveGoalLoading;
         final isSkeleton = isGoalLoading && goal == null;
 
+        if (!isGoalLoading && state.activeGoalError != null) {
+          return EmptyCard(
+            sizes: sizes,
+            emoji: '⚠️',
+            emptyText: 'Could not load active strength goal',
+            actions: [
+              AppTextButton(
+                key: const ValueKey('active-strength-goal-retry'),
+                isLoading: false,
+                sizes: sizes,
+                isDense: true,
+                label: 'Retry',
+                icon: Icons.refresh,
+                onPressed: () {
+                  context.read<ExerciseRecordCubit>().getActiveStrengthGoal(
+                    exerciseId: state.strengthGoalPagination.exerciseId,
+                  );
+                },
+              ),
+            ],
+          );
+        }
+
         if (!isGoalLoading && goal == null) {
           return EmptyActiveStrengthGoalCard(
             theme: theme,
             sizes: sizes,
-            isLoading: state.isLoading,
+            isLoading: state.isMutating,
           );
         }
 

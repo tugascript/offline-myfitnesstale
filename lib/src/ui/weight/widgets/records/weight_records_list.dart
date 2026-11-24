@@ -48,7 +48,7 @@ class WeightRecordsList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Skeletonizer(
-      enabled: isLoading && records.isEmpty,
+      enabled: isLoading,
       child: ListView.builder(
         itemCount: isLoading && records.isEmpty ? 2 : records.length,
         itemBuilder: (context, index) {
