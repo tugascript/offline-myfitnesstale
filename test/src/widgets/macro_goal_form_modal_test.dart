@@ -15,10 +15,13 @@
 // You should have received a copy of the GNU General Public License
 // along with My Fitness Tale.  If not, see <https://www.gnu.org/licenses/>.
 
+import 'dart:async';
+
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:myfitnesstale/src/ui/core/view_models/states/common_state.dart';
 import 'package:myfitnesstale/src/ui/macros/view_models/macro_tracking_cubit.dart';
 import 'package:myfitnesstale/src/data/utils/enums.dart';
 import 'package:myfitnesstale/src/data/repositories/macros/dtos/macro_tracking_dto.dart';
@@ -28,24 +31,57 @@ import 'package:myfitnesstale/src/ui/core/sizes/screen_size.dart';
 import 'package:myfitnesstale/src/ui/macros/utils/macro_goal_form_defaults.dart';
 import 'package:myfitnesstale/src/ui/macros/widgets/goals/macro_goal_form_modal.dart';
 import 'package:myfitnesstale/src/data/repositories/macros/macro_tracking_repository.dart';
+import 'package:myfitnesstale/src/utils/nullable.dart';
 
 class _Macros extends MacroTrackingCubit {
-  _Macros() : super(macroTrackingRepository: MacroTrackingRepository.create());
+  _Macros({this.nextResult = true, this.errorDescription, this.submitCompleter})
+    : super(macroTrackingRepository: MacroTrackingRepository.create());
 
   WeekMacroGoalInput? submitted;
   int? updatedId;
+  int createCalls = 0;
+  int updateCalls = 0;
+  bool nextResult;
+  String? errorDescription;
+  Completer<bool>? submitCompleter;
 
   @override
   Future<bool> createMacroGoal(WeekMacroGoalInput input) async {
+    createCalls++;
     submitted = input;
-    return true;
+    final success = submitCompleter != null
+        ? await submitCompleter!.future
+        : nextResult;
+    if (!success && errorDescription != null) {
+      emit(
+        state.copyWith(
+          error: Nullable(
+            ErrorState(type: 'storage', description: errorDescription!),
+          ),
+        ),
+      );
+    }
+    return success;
   }
 
   @override
   Future<bool> updateMacroGoal(int id, WeekMacroGoalInput input) async {
+    updateCalls++;
     submitted = input;
     updatedId = id;
-    return true;
+    final success = submitCompleter != null
+        ? await submitCompleter!.future
+        : nextResult;
+    if (!success && errorDescription != null) {
+      emit(
+        state.copyWith(
+          error: Nullable(
+            ErrorState(type: 'storage', description: errorDescription!),
+          ),
+        ),
+      );
+    }
+    return success;
   }
 }
 
@@ -65,12 +101,13 @@ void main() {
     WidgetTester tester, {
     MacroGoalDto? goal,
     MacroGoalFormDefaults? defaults,
+    _Macros? cubit,
   }) async {
     tester.view.physicalSize = const Size(600, 1000);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
-    final macros = _Macros();
+    final macros = cubit ?? _Macros();
     addTearDown(macros.close);
     await tester.pumpWidget(
       BlocProvider<MacroTrackingCubit>.value(
@@ -536,4 +573,124 @@ void main() {
     expect(find.byType(MacroGoalFormModal), findsNothing);
     expect(macros.submitted, isNull);
   });
+
+  testWidgets(
+    'create failure keeps modal open, preserves 2000 kcal defaults, and pops on retry success',
+    (tester) async {
+      final macros = await open(
+        tester,
+        defaults: MacroGoalFormDefaults.recommended2000Kcal,
+        cubit: _Macros(
+          nextResult: false,
+          errorDescription: 'Database write failed',
+        ),
+      );
+
+      final submit = find.byKey(const ValueKey('macro-goal-submit-button'));
+      await tester.ensureVisible(submit);
+      await tester.tap(submit);
+      await tester.pumpAndSettle();
+
+      expect(find.byType(MacroGoalFormModal), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('macro-goal-submit-error')),
+        findsOneWidget,
+      );
+      expect(find.text('Database write failed'), findsOneWidget);
+      expect(calories(tester), '2000');
+      expect(
+        tester.widget<TextFormField>(field('protein')).controller!.text,
+        '150',
+      );
+      expect(
+        tester.widget<TextFormField>(field('carbs')).controller!.text,
+        '215',
+      );
+      expect(tester.widget<TextFormField>(field('fat')).controller!.text, '60');
+      expect(macros.createCalls, 1);
+
+      macros.nextResult = true;
+      await tester.ensureVisible(submit);
+      await tester.tap(submit);
+      await tester.pumpAndSettle();
+
+      expect(find.byType(MacroGoalFormModal), findsNothing);
+      expect(macros.createCalls, 2);
+    },
+  );
+
+  testWidgets(
+    'update failure keeps modal open, preserves edited fields, and pops on retry success',
+    (tester) async {
+      final macros = await open(
+        tester,
+        goal: const MacroGoalDto(
+          id: 77,
+          name: 'Lean Bulk',
+          targetCalories: 2400,
+          targetProtein: 180,
+          targetCarbs: 270,
+          targetFat: 67,
+          isActive: true,
+          phase: WeightGoalPhase.bulk,
+        ),
+        cubit: _Macros(nextResult: false, errorDescription: 'Update failed'),
+      );
+
+      await tester.enterText(field('protein'), '190');
+      await tester.pump();
+
+      final submit = find.byKey(const ValueKey('macro-goal-submit-button'));
+      await tester.ensureVisible(submit);
+      await tester.tap(submit);
+      await tester.pumpAndSettle();
+
+      expect(find.byType(MacroGoalFormModal), findsOneWidget);
+      expect(find.text('Update failed'), findsOneWidget);
+      expect(
+        tester.widget<TextFormField>(field('protein')).controller!.text,
+        '190',
+      );
+      expect(macros.updatedId, 77);
+      expect(macros.updateCalls, 1);
+
+      macros.nextResult = true;
+      await tester.ensureVisible(submit);
+      await tester.tap(submit);
+      await tester.pumpAndSettle();
+
+      expect(find.byType(MacroGoalFormModal), findsNothing);
+      expect(macros.updateCalls, 2);
+    },
+  );
+
+  testWidgets(
+    'modal awaits in-flight submission before popping and prevents duplicate taps',
+    (tester) async {
+      final completer = Completer<bool>();
+      final macros = await open(
+        tester,
+        defaults: MacroGoalFormDefaults.recommended2000Kcal,
+        cubit: _Macros(submitCompleter: completer),
+      );
+
+      final submit = find.byKey(const ValueKey('macro-goal-submit-button'));
+      await tester.ensureVisible(submit);
+      await tester.tap(submit);
+      await tester.pump();
+
+      expect(find.byType(MacroGoalFormModal), findsOneWidget);
+      expect(macros.createCalls, 1);
+
+      // Second tap while submitting is ignored.
+      await tester.tap(submit, warnIfMissed: false);
+      await tester.pump();
+      expect(macros.createCalls, 1);
+
+      completer.complete(true);
+      await tester.pumpAndSettle();
+
+      expect(find.byType(MacroGoalFormModal), findsNothing);
+    },
+  );
 }

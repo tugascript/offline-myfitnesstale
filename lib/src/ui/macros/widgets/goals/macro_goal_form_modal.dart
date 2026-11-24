@@ -19,12 +19,13 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../../data/repositories/macros/dtos/macro_tracking_dto.dart';
+import '../../../../data/repositories/macros/inputs/week_macro_goal_input.dart';
 import '../../../core/sizes/data_display_sizes.dart';
 import '../../utils/macro_goal_form_defaults.dart';
 import '../../view_models/macro_tracking_cubit.dart';
 import './macro_goal_form.dart';
 
-class MacroGoalFormModal extends StatelessWidget {
+class MacroGoalFormModal extends StatefulWidget {
   final ThemeData theme;
   final DataDisplaySizesList sizes;
   final MacroGoalDto? existingGoal;
@@ -39,23 +40,66 @@ class MacroGoalFormModal extends StatelessWidget {
   });
 
   @override
+  State<MacroGoalFormModal> createState() => _MacroGoalFormModalState();
+}
+
+class _MacroGoalFormModalState extends State<MacroGoalFormModal> {
+  bool _isSubmitting = false;
+  String? _submitError;
+
+  Future<void> _handleSubmit(WeekMacroGoalInput input) async {
+    if (_isSubmitting) return;
+    setState(() {
+      _isSubmitting = true;
+      _submitError = null;
+    });
+
+    final cubit = context.read<MacroTrackingCubit>();
+    final existingGoal = widget.existingGoal;
+    final bool success;
+    try {
+      success = existingGoal != null
+          ? await cubit.updateMacroGoal(existingGoal.id, input)
+          : await cubit.createMacroGoal(input);
+    } finally {
+      if (mounted) {
+        setState(() => _isSubmitting = false);
+      }
+    }
+
+    if (!mounted) return;
+    if (success) {
+      Navigator.of(context).pop();
+      return;
+    }
+
+    setState(() {
+      _submitError =
+          cubit.state.error?.description ?? 'Failed to save macro goal';
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final recommendedNote = existingGoal == null
-        ? defaults?.recommendedNote
+    final recommendedNote = widget.existingGoal == null
+        ? widget.defaults?.recommendedNote
         : null;
 
     return Dialog(
-      backgroundColor: theme.scaffoldBackgroundColor,
+      backgroundColor: widget.theme.scaffoldBackgroundColor,
       shape: BeveledRectangleBorder(
-        side: BorderSide(color: theme.colorScheme.outlineVariant, width: 0.5),
+        side: BorderSide(
+          color: widget.theme.colorScheme.outlineVariant,
+          width: 0.5,
+        ),
       ),
-      insetPadding: EdgeInsets.all(sizes.margins),
+      insetPadding: EdgeInsets.all(widget.sizes.margins),
       child: ConstrainedBox(
-        constraints: BoxConstraints(maxWidth: sizes.modalMaxWidth),
+        constraints: BoxConstraints(maxWidth: widget.sizes.modalMaxWidth),
         child: Padding(
           padding: EdgeInsets.symmetric(
-            vertical: sizes.padding * 2,
-            horizontal: sizes.padding,
+            vertical: widget.sizes.padding * 2,
+            horizontal: widget.sizes.padding,
           ),
           child: SingleChildScrollView(
             child: Column(
@@ -65,52 +109,60 @@ class MacroGoalFormModal extends StatelessWidget {
                 Wrap(
                   alignment: WrapAlignment.spaceBetween,
                   crossAxisAlignment: WrapCrossAlignment.center,
-                  spacing: sizes.spacing / 2,
-                  runSpacing: sizes.spacing / 2,
+                  spacing: widget.sizes.spacing / 2,
+                  runSpacing: widget.sizes.spacing / 2,
                   children: [
                     Text(
-                      existingGoal != null
+                      widget.existingGoal != null
                           ? 'Edit Macro Goal'
                           : 'Create Macro Goal',
                       style: TextStyle(
-                        fontSize: sizes.titleFontSize,
+                        fontSize: widget.sizes.titleFontSize,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                     IconButton(
                       key: const ValueKey('macro-goal-modal-close-btn'),
                       tooltip: 'Close',
-                      icon: Icon(Icons.close, size: sizes.buttonIconSize),
+                      icon: Icon(
+                        Icons.close,
+                        size: widget.sizes.buttonIconSize,
+                      ),
                       onPressed: () => Navigator.of(context).pop(),
                     ),
                   ],
                 ),
                 if (recommendedNote != null) ...[
-                  SizedBox(height: sizes.halfSpacing),
+                  SizedBox(height: widget.sizes.halfSpacing),
                   Text(
                     recommendedNote,
                     key: const ValueKey('macro-goal-recommended-note'),
                     style: TextStyle(
-                      fontSize: sizes.smallFontSize,
-                      color: theme.colorScheme.onSurfaceVariant,
+                      fontSize: widget.sizes.smallFontSize,
+                      color: widget.theme.colorScheme.onSurfaceVariant,
                     ),
                   ),
                 ],
-                SizedBox(height: sizes.spacing),
+                if (_submitError != null) ...[
+                  SizedBox(height: widget.sizes.halfSpacing),
+                  Text(
+                    _submitError!,
+                    key: const ValueKey('macro-goal-submit-error'),
+                    style: TextStyle(
+                      fontSize: widget.sizes.smallFontSize,
+                      color: widget.theme.colorScheme.error,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+                SizedBox(height: widget.sizes.spacing),
                 MacroGoalForm(
-                  theme: theme,
-                  sizes: sizes,
-                  existingGoal: existingGoal,
-                  defaults: defaults,
-                  onSubmit: (input) {
-                    final cubit = context.read<MacroTrackingCubit>();
-                    if (existingGoal != null) {
-                      cubit.updateMacroGoal(existingGoal!.id, input);
-                    } else {
-                      cubit.createMacroGoal(input);
-                    }
-                    Navigator.of(context).pop();
-                  },
+                  theme: widget.theme,
+                  sizes: widget.sizes,
+                  existingGoal: widget.existingGoal,
+                  defaults: widget.defaults,
+                  isLoading: _isSubmitting,
+                  onSubmit: _handleSubmit,
                 ),
               ],
             ),

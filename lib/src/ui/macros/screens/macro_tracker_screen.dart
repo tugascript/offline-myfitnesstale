@@ -61,6 +61,7 @@ class _MacroTrackerScreenState extends State<MacroTrackerScreen> {
   ErrorState? _lastShownError;
   int _handledGoalPromptTrigger = 0;
   bool _isGoalModalOpen = false;
+  bool _isGoalPromptScheduled = false;
 
   DateTime _currentNow() => widget.now?.call() ?? DateTime.now();
 
@@ -83,7 +84,6 @@ class _MacroTrackerScreenState extends State<MacroTrackerScreen> {
   void didUpdateWidget(MacroTrackerScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (!widget.isVisible && oldWidget.isVisible) {
-      _handledGoalPromptTrigger = widget.goalPromptTrigger;
       return;
     }
     if (widget.isVisible && !oldWidget.isVisible) {
@@ -145,20 +145,35 @@ class _MacroTrackerScreenState extends State<MacroTrackerScreen> {
       return;
     }
 
-    _handledGoalPromptTrigger = widget.goalPromptTrigger;
-    if (state.activeGoal != null || _isGoalModalOpen) return;
+    if (state.activeGoal != null || _isGoalModalOpen) {
+      _handledGoalPromptTrigger = widget.goalPromptTrigger;
+      return;
+    }
+    if (_isGoalPromptScheduled) return;
 
+    _isGoalPromptScheduled = true;
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted || !widget.isVisible || _isGoalModalOpen) return;
+      _isGoalPromptScheduled = false;
+      if (!mounted || !widget.isVisible) return;
+      if (widget.goalPromptTrigger <= _handledGoalPromptTrigger) return;
+      if (_isGoalModalOpen) {
+        _handledGoalPromptTrigger = widget.goalPromptTrigger;
+        return;
+      }
       final latest = context.read<MacroTrackingCubit>().state;
       if (!latest.hasLoadedActiveGoal ||
           latest.isLoadingActiveGoal ||
-          latest.isLoading ||
-          latest.activeGoal != null) {
+          latest.isLoading) {
         return;
       }
+      if (latest.activeGoal != null) {
+        _handledGoalPromptTrigger = widget.goalPromptTrigger;
+        return;
+      }
+      _handledGoalPromptTrigger = widget.goalPromptTrigger;
       _openCreateMacroGoalModal();
     });
+    WidgetsBinding.instance.ensureVisualUpdate();
   }
 
   Future<bool> _ensureActiveGoalReady(
