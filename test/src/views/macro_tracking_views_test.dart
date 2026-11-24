@@ -67,7 +67,9 @@ import 'package:myfitnesstale/src/ui/home/widgets/active/active_plans_carousel.d
 import 'package:myfitnesstale/src/ui/home/widgets/quick_actions_widget.dart';
 import 'package:myfitnesstale/src/data/repositories/foods/food_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/recipes/recipe_repository.dart';
+import 'package:myfitnesstale/src/data/repositories/macros/dtos/macro_tracking_dto.dart';
 import 'package:myfitnesstale/src/data/repositories/macros/macro_tracking_repository.dart';
+import 'package:myfitnesstale/src/ui/core/view_models/states/common_state.dart';
 import 'package:myfitnesstale/src/data/repositories/meal_plans/dtos/meal_plan_dto.dart';
 import 'package:myfitnesstale/src/data/repositories/meal_plans/dtos/meal_plan_record_dto.dart';
 import 'package:myfitnesstale/src/data/repositories/meal_plans/meal_plan_repository.dart';
@@ -130,14 +132,18 @@ class _TestRecipeCubit extends RecipeCubit {
 }
 
 class _TestMealPlanCubit extends MealPlanCubit {
-  _TestMealPlanCubit({MealPlanDto? selectedMealPlan, this.activeMealPlanResult})
-    : super(mealPlanRepository: MealPlanRepository.create()) {
+  _TestMealPlanCubit({
+    MealPlanDto? selectedMealPlan,
+    this.activeMealPlanResult,
+    this.failFirstActiveMealPlan = false,
+  }) : super(mealPlanRepository: MealPlanRepository.create()) {
     if (selectedMealPlan != null) {
       emit(state.copyWith(selectedMealPlan: Nullable(selectedMealPlan)));
     }
   }
 
   final MealPlanDto? activeMealPlanResult;
+  final bool failFirstActiveMealPlan;
   int getMealPlanCalls = 0;
   int getActiveMealPlanCalls = 0;
   int? lastActiveMealPlanId;
@@ -161,6 +167,9 @@ class _TestMealPlanCubit extends MealPlanCubit {
     getActiveMealPlanCalls++;
     lastActiveMealPlanId = id;
     lastActiveMealPlanVersion = version;
+    if (failFirstActiveMealPlan && getActiveMealPlanCalls == 1) {
+      return;
+    }
     final plan = activeMealPlanResult;
     if (plan != null && !isClosed) {
       emit(state.copyWith(activeMealPlan: Nullable(plan)));
@@ -195,6 +204,7 @@ class _TestMacroTrackingCubit extends MacroTrackingCubit {
   _TestMacroTrackingCubit({
     bool hasLoadedActiveGoal = false,
     this.activeGoalCompleter,
+    this.updateStateOnDailyLog = false,
   }) : super(macroTrackingRepository: MacroTrackingRepository.create()) {
     if (hasLoadedActiveGoal) {
       emit(state.copyWith(hasLoadedActiveGoal: true));
@@ -202,16 +212,43 @@ class _TestMacroTrackingCubit extends MacroTrackingCubit {
   }
 
   final Completer<void>? activeGoalCompleter;
+  final bool updateStateOnDailyLog;
   int activeGoalCalls = 0;
   int dailyLogCalls = 0;
   int rangeLogCalls = 0;
+  DateTime? lastDailyLogDate;
+  DateTime? lastWaterDate;
 
   void beginActiveGoalLoad() {
-    emit(state.copyWith(isLoading: true));
+    emit(state.copyWith(isLoading: true, isLoadingActiveGoal: true));
   }
 
   void completeActiveGoalLoad() {
-    emit(state.copyWith(isLoading: false, hasLoadedActiveGoal: true));
+    emit(
+      state.copyWith(
+        isLoading: false,
+        isLoadingActiveGoal: false,
+        hasLoadedActiveGoal: true,
+        error: const Nullable(null),
+      ),
+    );
+  }
+
+  void failActiveGoalLoad([String message = 'Goal failed']) {
+    emit(
+      state.copyWith(
+        isLoading: false,
+        isLoadingActiveGoal: false,
+        hasLoadedActiveGoal: false,
+        error: Nullable(
+          ErrorState(type: 'operationFailure', description: message),
+        ),
+      ),
+    );
+  }
+
+  void seedDailyLog(DateTime date, DailyNutritionLogDto log) {
+    emit(state.copyWith(selectedDate: date, selectedDailyLog: Nullable(log)));
   }
 
   @override
@@ -219,10 +256,16 @@ class _TestMacroTrackingCubit extends MacroTrackingCubit {
     activeGoalCalls++;
     final completer = activeGoalCompleter;
     if (completer != null) {
-      emit(state.copyWith(isLoading: true));
+      emit(state.copyWith(isLoading: true, isLoadingActiveGoal: true));
       await completer.future;
       if (!isClosed) {
-        emit(state.copyWith(isLoading: false, hasLoadedActiveGoal: true));
+        emit(
+          state.copyWith(
+            isLoading: false,
+            isLoadingActiveGoal: false,
+            hasLoadedActiveGoal: true,
+          ),
+        );
       }
     }
   }
@@ -233,6 +276,28 @@ class _TestMacroTrackingCubit extends MacroTrackingCubit {
   @override
   Future<void> getDailyLog(DateTime date) async {
     dailyLogCalls++;
+    lastDailyLogDate = date;
+    if (updateStateOnDailyLog && !isClosed) {
+      emit(
+        state.copyWith(
+          selectedDate: date,
+          selectedDailyLog: Nullable(
+            DailyNutritionLogDto(
+              id: date.day,
+              date: date.year * 10000 + date.month * 100 + date.day,
+              waterIntakeMl: 0,
+              totalCalories: 0,
+              totalProtein: 0,
+              totalCarbs: 0,
+              totalFat: 0,
+              totalFiber: 0,
+            ),
+          ),
+          isLoading: false,
+          error: const Nullable(null),
+        ),
+      );
+    }
   }
 
   @override
@@ -241,6 +306,12 @@ class _TestMacroTrackingCubit extends MacroTrackingCubit {
     required DateTime end,
   }) async {
     rangeLogCalls++;
+  }
+
+  @override
+  Future<bool> updateWaterIntake(int waterIntakeMl, {DateTime? date}) async {
+    lastWaterDate = date ?? state.selectedDate;
+    return true;
   }
 }
 
@@ -1040,6 +1111,350 @@ void main() {
         expect(mealPlanCubit.state.activeMealPlan, activePlan);
         expect(find.text('Active Plan Oatmeal'), findsOneWidget);
         expect(find.text('Edited Plan Salad'), findsNothing);
+      },
+    );
+
+    testWidgets(
+      'MacroTrackerScreen activation reconciles daily log, range, and retries failed active meal plan sync',
+      (tester) async {
+        final today = DateUtils.dateOnly(DateTime.now());
+        final yesterday = DateTime(today.year, today.month, today.day - 1);
+        const activePlan = MealPlanDto(
+          id: 10,
+          name: 'Active Tracker Plan',
+          version: 1,
+          totalWeeks: 1,
+          totalDays: 1,
+          totalMeals: 1,
+          isFavorite: false,
+          createdBy: CreatedBy.user,
+          weeks: [
+            MealPlanWeekDto(
+              id: 100,
+              mealPlanId: 10,
+              planVersion: 1,
+              weekNumber: 1,
+              phase: MealPlanPhase.maintain,
+              targetCalories: 400,
+              targetProtein: 30,
+              targetCarbs: 45,
+              targetFat: 10,
+              totalDays: 1,
+              totalMeals: 1,
+              createdBy: CreatedBy.user,
+              days: [
+                MealPlanDayDto(
+                  id: 101,
+                  mealPlanId: 10,
+                  mealPlanWeekId: 100,
+                  planVersion: 1,
+                  day: 1,
+                  targetCalories: 400,
+                  targetProtein: 30,
+                  targetCarbs: 45,
+                  targetFat: 10,
+                  totalMeals: 1,
+                  createdBy: CreatedBy.user,
+                  meals: [
+                    MealPlanMealDto(
+                      id: 102,
+                      position: 1,
+                      mealPlanId: 10,
+                      mealPlanWeekId: 100,
+                      mealPlanDayId: 101,
+                      planVersion: 1,
+                      mealType: MealType.breakfast,
+                      name: 'Recovered Planned Meal',
+                      totalCalories: 400,
+                      totalProtein: 30,
+                      totalCarbs: 45,
+                      totalFat: 10,
+                      createdBy: CreatedBy.user,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ],
+        );
+        final activeRecord = MealPlanRecordDto(
+          id: 1,
+          mealPlanId: activePlan.id,
+          mealPlanVersion: activePlan.version,
+          status: ProgressStatus.inProgress,
+          startedAt: today,
+          currentWeek: 1,
+          currentDay: 1,
+          planName: activePlan.name,
+          totalWeeks: 1,
+          totalDays: 1,
+          weeks: [
+            MealPlanWeekRecordDto(
+              id: 1,
+              mealPlanRecordId: 1,
+              mealPlanWeekId: 100,
+              week: 1,
+              status: ProgressStatus.inProgress,
+              currentDay: 1,
+              totalCalories: 0,
+              totalProtein: 0,
+              totalCarbs: 0,
+              totalFat: 0,
+              days: const [
+                MealPlanDayRecordDto(
+                  id: 1,
+                  mealPlanRecordId: 1,
+                  mealPlanWeekRecordId: 1,
+                  mealPlanDayId: 101,
+                  dailyLogId: 1,
+                  week: 1,
+                  day: 1,
+                  status: ProgressStatus.inProgress,
+                  totalCalories: 0,
+                  totalProtein: 0,
+                  totalCarbs: 0,
+                  totalFat: 0,
+                ),
+              ],
+            ),
+          ],
+        );
+
+        final macroCubit = _TestMacroTrackingCubit(
+          hasLoadedActiveGoal: true,
+          updateStateOnDailyLog: true,
+        );
+        final mealPlanRecordCubit = _TestMealPlanRecordCubit(
+          hasLoadedActiveRecord: true,
+          activeRecord: activeRecord,
+        );
+        final mealPlanCubit = _TestMealPlanCubit(
+          activeMealPlanResult: activePlan,
+          failFirstActiveMealPlan: true,
+        );
+        final isVisible = ValueNotifier<bool>(false);
+        final router = GoRouter(
+          initialLocation: '/',
+          routes: [
+            GoRoute(
+              path: '/',
+              builder: (context, state) => ValueListenableBuilder<bool>(
+                valueListenable: isVisible,
+                builder: (context, visible, _) =>
+                    MacroTrackerScreen(isVisible: visible),
+              ),
+            ),
+          ],
+        );
+        addTearDown(() async {
+          router.dispose();
+          isVisible.dispose();
+          await macroCubit.close();
+          await mealPlanRecordCubit.close();
+          await mealPlanCubit.close();
+        });
+
+        await tester.pumpWidget(
+          MultiBlocProvider(
+            providers: [
+              BlocProvider<MacroTrackingCubit>.value(value: macroCubit),
+              BlocProvider<MealPlanRecordCubit>.value(
+                value: mealPlanRecordCubit,
+              ),
+              BlocProvider<MealPlanCubit>.value(value: mealPlanCubit),
+            ],
+            child: MaterialApp.router(routerConfig: router),
+          ),
+        );
+        await tester.pump();
+
+        // Offscreen warm-up loaded today's log, while the active meal plan fetch failed.
+        expect(macroCubit.dailyLogCalls, 1);
+        expect(mealPlanCubit.getActiveMealPlanCalls, 1);
+        expect(mealPlanCubit.state.activeMealPlan, isNull);
+        expect(find.text('Recovered Planned Meal'), findsNothing);
+
+        // Simulate another tracker route changing the shared cubit's date to yesterday.
+        macroCubit.seedDailyLog(
+          yesterday,
+          DailyNutritionLogDto(
+            id: 99,
+            date:
+                yesterday.year * 10000 + yesterday.month * 100 + yesterday.day,
+            waterIntakeMl: 750,
+            totalCalories: 500,
+            totalProtein: 30,
+            totalCarbs: 50,
+            totalFat: 15,
+            totalFiber: 5,
+          ),
+        );
+        await tester.pump();
+
+        // Activating the warmed-up Macros tab reconciles today's diary and retries active meal plan sync.
+        isVisible.value = true;
+        await tester.pumpAndSettle();
+
+        expect(macroCubit.dailyLogCalls, 2);
+        expect(DateUtils.isSameDay(macroCubit.lastDailyLogDate, today), isTrue);
+        expect(
+          DateUtils.isSameDay(macroCubit.state.selectedDate, today),
+          isTrue,
+        );
+        expect(mealPlanCubit.getActiveMealPlanCalls, 2);
+        expect(mealPlanCubit.state.activeMealPlan, activePlan);
+        expect(find.text('Recovered Planned Meal'), findsOneWidget);
+
+        // Switch to Week scope, deactivate, mutate shared date, then reactivate -> reconciles range too.
+        await tester.tap(find.text('Week'));
+        await tester.pumpAndSettle();
+        final rangeCallsBeforeDeactivate = macroCubit.rangeLogCalls;
+        expect(rangeCallsBeforeDeactivate, 1);
+
+        isVisible.value = false;
+        await tester.pump();
+        macroCubit.seedDailyLog(
+          yesterday,
+          DailyNutritionLogDto(
+            id: 98,
+            date:
+                yesterday.year * 10000 + yesterday.month * 100 + yesterday.day,
+            waterIntakeMl: 500,
+            totalCalories: 300,
+            totalProtein: 20,
+            totalCarbs: 30,
+            totalFat: 10,
+            totalFiber: 3,
+          ),
+        );
+        isVisible.value = true;
+        await tester.pumpAndSettle();
+
+        expect(macroCubit.dailyLogCalls, 3);
+        expect(DateUtils.isSameDay(macroCubit.lastDailyLogDate, today), isTrue);
+        expect(macroCubit.rangeLogCalls, rangeCallsBeforeDeactivate + 1);
+      },
+    );
+
+    testWidgets(
+      'MacroTrackerScreen serializes date and scope changes behind in-flight active goal load',
+      (tester) async {
+        final macroCubit = _TestMacroTrackingCubit()..beginActiveGoalLoad();
+        final mealPlanRecordCubit = _TestMealPlanRecordCubit(
+          hasLoadedActiveRecord: true,
+        );
+        final mealPlanCubit = _TestMealPlanCubit();
+        final router = GoRouter(
+          initialLocation: '/',
+          routes: [
+            GoRoute(
+              path: '/',
+              builder: (context, state) => const MacroTrackerScreen(),
+            ),
+          ],
+        );
+        addTearDown(() async {
+          router.dispose();
+          await macroCubit.close();
+          await mealPlanRecordCubit.close();
+          await mealPlanCubit.close();
+        });
+
+        await tester.pumpWidget(
+          MultiBlocProvider(
+            providers: [
+              BlocProvider<MacroTrackingCubit>.value(value: macroCubit),
+              BlocProvider<MealPlanRecordCubit>.value(
+                value: mealPlanRecordCubit,
+              ),
+              BlocProvider<MealPlanCubit>.value(value: mealPlanCubit),
+            ],
+            child: MaterialApp.router(routerConfig: router),
+          ),
+        );
+        await tester.pump();
+
+        // Trigger date and scope changes while the initial active-goal load is still running.
+        await tester.tap(find.byIcon(Icons.chevron_left));
+        await tester.pump();
+        await tester.tap(find.text('Week'));
+        await tester.pumpAndSettle();
+
+        // Log queries must stay blocked until the in-flight active-goal request finishes.
+        expect(macroCubit.activeGoalCalls, 0);
+        expect(macroCubit.dailyLogCalls, 0);
+        expect(macroCubit.rangeLogCalls, 0);
+
+        // If the active-goal request fails, neither log query runs and the error is preserved.
+        macroCubit.failActiveGoalLoad('Failed to load macro goal');
+        await tester.pump();
+
+        expect(macroCubit.activeGoalCalls, 0);
+        expect(macroCubit.dailyLogCalls, 0);
+        expect(macroCubit.rangeLogCalls, 0);
+        expect(
+          macroCubit.state.error?.description,
+          'Failed to load macro goal',
+        );
+
+        // Once the active goal subsequently loads, deferred log and range queries reconcile.
+        macroCubit.completeActiveGoalLoad();
+        await tester.pump();
+
+        expect(macroCubit.dailyLogCalls, 1);
+        expect(macroCubit.rangeLogCalls, 1);
+        final today = DateUtils.dateOnly(DateTime.now());
+        final yesterday = DateTime(today.year, today.month, today.day - 1);
+        expect(
+          DateUtils.isSameDay(macroCubit.lastDailyLogDate, yesterday),
+          isTrue,
+        );
+      },
+    );
+
+    testWidgets(
+      'MacroTrackerScreen food-logging FAB exposes Log Food accessible tooltip',
+      (tester) async {
+        final macroCubit = _TestMacroTrackingCubit(hasLoadedActiveGoal: true);
+        final mealPlanRecordCubit = _TestMealPlanRecordCubit(
+          hasLoadedActiveRecord: true,
+        );
+        final mealPlanCubit = _TestMealPlanCubit();
+        final router = GoRouter(
+          initialLocation: '/',
+          routes: [
+            GoRoute(
+              path: '/',
+              builder: (context, state) => const MacroTrackerScreen(),
+            ),
+          ],
+        );
+        addTearDown(() async {
+          router.dispose();
+          await macroCubit.close();
+          await mealPlanRecordCubit.close();
+          await mealPlanCubit.close();
+        });
+
+        await tester.pumpWidget(
+          MultiBlocProvider(
+            providers: [
+              BlocProvider<MacroTrackingCubit>.value(value: macroCubit),
+              BlocProvider<MealPlanRecordCubit>.value(
+                value: mealPlanRecordCubit,
+              ),
+              BlocProvider<MealPlanCubit>.value(value: mealPlanCubit),
+            ],
+            child: MaterialApp.router(routerConfig: router),
+          ),
+        );
+        await tester.pump();
+
+        final fab = tester.widget<FloatingActionButton>(
+          find.byKey(const ValueKey('macro-tracker-log-food-fab')),
+        );
+        expect(fab.tooltip, 'Log Food');
+        expect(find.byTooltip('Log Food'), findsOneWidget);
       },
     );
 

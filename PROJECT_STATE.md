@@ -329,24 +329,26 @@ above a keyboard inset.
   preceding 365 days through today (`[today - 365 days, today]`): boundary chevrons and out-of-range days are disabled,
   period steps and picker initial dates are clamped into range, and nutrition records older than 365 days cannot be
   opened from the tracker UI.
-- `MacroTrackerScreen` reuses already-loaded active macro goal and meal-plan record state when available, awaits
-  active macro goal loading before fetching the daily log so targets do not briefly fall back to defaults, defers
-  daily-log fetches while an active-goal load is in error during offscreen warm-up so Home's retry card is preserved
-  until Home retries or the Macros tab becomes visible, and syncs the active meal plan into `MealPlanState.activeMealPlan`
-  via `MealPlanCubit.getActiveMealPlan` so offscreen warm-up never overwrites `selectedMealPlan` used by meal-plan
-  details/edit routes.
+- `MacroTrackerScreen` reuses already-loaded active macro goal and meal-plan record state when available, serializes
+  daily and range log queries behind a goal-specific completion signal (`MacroTrackingState.isLoadingActiveGoal`) so
+  targets do not briefly fall back to defaults or overwrite active-goal errors, reconciles daily log/range state and
+  retries active meal-plan sync whenever the warmed-up tab becomes visible, syncs the active meal plan into
+  `MealPlanState.activeMealPlan` via `MealPlanCubit.getActiveMealPlan` so offscreen warm-up never overwrites
+  `selectedMealPlan` used by meal-plan details/edit routes, and exposes a `'Log Food'` tooltip on its icon FAB for
+  screen-reader accessibility.
 - Validation on 15 October 2026: full host suite passed (315 tests, one skipped), including new persistence and timeline
   interaction coverage for same-hour/identical-time entries, midnight, historical dates, food/recipe logging, time
   adjustment, deletion, totals, and 320px/200% text. Dependency resolution and `git diff --check` passed. Analysis
   reported only 30 existing informational lints; changed nutrition files have no analysis issues and pass formatting.
   The repository-wide format check still flags 357 other files under the current SDK; those files were left unchanged.
   No device nutrition journey was run.
-- Tracker UI, bounds, and tab warm-up verification on 24 November 2026: full host suite passed (715 tests, one
-  skipped), including underline scope selector, horizontal `PageView` swipe and interrupted-animation sync, sequential
-  active-goal/daily-log loading, failed active-goal preservation across offscreen warm-up with Home retry and tab
-  activation recovery, isolated tracker `activeMealPlan` loading without replacing shared `selectedMealPlan`, 365-day
-  lower/upper navigation and date-picker clamping, and staggered offscreen tab warm-up. `flutter pub get`,
-  repository-wide `dart format`, `dart analyze`, and `git diff --check` passed; no device journey was run.
+- Tracker UI, bounds, and tab warm-up verification on 24 November 2026: full host suite passed (718 tests, one
+  skipped), including underline scope selector, horizontal `PageView` swipe and interrupted-animation sync, goal-gated
+  daily/range loading, failed active-goal preservation across offscreen warm-up with Home retry and tab activation
+  recovery, diary/range/meal-plan reconciliation on tab activation, isolated tracker `activeMealPlan` loading without
+  replacing shared `selectedMealPlan`, accessible `'Log Food'` FAB tooltip, 365-day lower/upper navigation and
+  date-picker clamping, and staggered offscreen tab warm-up. `flutter pub get`, repository-wide `dart format`,
+  `dart analyze`, and `git diff --check` passed; no device journey was run.
 - UI: Swipeable Day, Week, and Month tracker views bounded to the last 365 days through today; meal logging modal with
   portion calculator; the active plan's meals appear on their scheduled dates and can be logged into the diary;
   responsive layouts supporting 320px narrow screens and 200% font scaling.

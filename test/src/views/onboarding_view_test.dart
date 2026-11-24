@@ -329,9 +329,15 @@ final class _NoopMacroTrackingCubit extends MacroTrackingCubit {
     if (!simulateNotFoundLoad) {
       return;
     }
-    emit(state.copyWith(isLoading: true));
+    emit(state.copyWith(isLoading: true, isLoadingActiveGoal: true));
     await gate?.future;
-    emit(state.copyWith(isLoading: false, hasLoadedActiveGoal: true));
+    emit(
+      state.copyWith(
+        isLoading: false,
+        isLoadingActiveGoal: false,
+        hasLoadedActiveGoal: true,
+      ),
+    );
   }
 
   @override

@@ -936,12 +936,13 @@ final class _TestMacroTrackingCubit extends MacroTrackingCubit {
   @override
   Future<void> getActiveMacroGoal() async {
     loadCalls++;
-    emit(state.copyWith(isLoading: true));
+    emit(state.copyWith(isLoading: true, isLoadingActiveGoal: true));
     await gate?.future;
     if (failFirstLoad && loadCalls == 1) {
       emit(
         state.copyWith(
           isLoading: false,
+          isLoadingActiveGoal: false,
           error: const Nullable(
             ErrorState(
               type: 'operationFailure',
@@ -955,6 +956,7 @@ final class _TestMacroTrackingCubit extends MacroTrackingCubit {
     emit(
       state.copyWith(
         isLoading: false,
+        isLoadingActiveGoal: false,
         hasLoadedActiveGoal: markLoaded ? true : null,
         error: const Nullable(null),
       ),

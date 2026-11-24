@@ -48,6 +48,7 @@ final class MacroTrackingState extends Equatable {
   final DateTime selectedDate;
   final List<DailyNutritionLogDto> rangeLogs;
   final bool hasLoadedActiveGoal;
+  final bool isLoadingActiveGoal;
   final bool isLoading;
   final ErrorState? error;
 
@@ -60,6 +61,7 @@ final class MacroTrackingState extends Equatable {
     required this.selectedDate,
     this.rangeLogs = const [],
     this.hasLoadedActiveGoal = false,
+    this.isLoadingActiveGoal = false,
     required this.isLoading,
     this.error,
   });
@@ -72,6 +74,7 @@ final class MacroTrackingState extends Equatable {
       selectedDate: DateTime(now.year, now.month, now.day),
       rangeLogs: const [],
       hasLoadedActiveGoal: false,
+      isLoadingActiveGoal: false,
       isLoading: false,
     );
   }
@@ -85,6 +88,7 @@ final class MacroTrackingState extends Equatable {
     DateTime? selectedDate,
     List<DailyNutritionLogDto>? rangeLogs,
     bool? hasLoadedActiveGoal,
+    bool? isLoadingActiveGoal,
     bool? isLoading,
     Nullable<ErrorState>? error,
   }) {
@@ -99,6 +103,7 @@ final class MacroTrackingState extends Equatable {
       selectedDate: selectedDate ?? this.selectedDate,
       rangeLogs: rangeLogs ?? this.rangeLogs,
       hasLoadedActiveGoal: hasLoadedActiveGoal ?? this.hasLoadedActiveGoal,
+      isLoadingActiveGoal: isLoadingActiveGoal ?? this.isLoadingActiveGoal,
       isLoading: isLoading ?? this.isLoading,
       error: error != null ? error.value : this.error,
     );
@@ -120,6 +125,7 @@ final class MacroTrackingState extends Equatable {
     selectedDate,
     rangeLogs,
     hasLoadedActiveGoal,
+    isLoadingActiveGoal,
     isLoading,
     error,
   ];
