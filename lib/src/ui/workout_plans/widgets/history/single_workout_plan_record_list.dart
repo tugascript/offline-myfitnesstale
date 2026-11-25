@@ -24,6 +24,7 @@ import '../../../../data/utils/enums.dart';
 import '../../../core/sizes/data_display_sizes.dart';
 import '../../../core/utils/progress_status_presentation.dart';
 import '../../../core/widgets/layout/app_text_button.dart';
+import '../../../core/widgets/layout/delete_icon_button.dart';
 import '../../../core/widgets/not_found_list.dart';
 import '../../view_models/states/workout_plan_record_state.dart';
 
@@ -31,6 +32,7 @@ class SingleWorkoutPlanRecordList extends StatelessWidget {
   final DataDisplaySizesList sizes;
   final Units units;
   final bool isLoading;
+  final bool isMutating;
   final int? workoutPlanId;
   final int? workoutPlanVersion;
   final List<WorkoutPlanRecordDto> planRecords;
@@ -38,12 +40,14 @@ class SingleWorkoutPlanRecordList extends StatelessWidget {
   final ScrollController? scrollController;
   final String? loadMoreError;
   final VoidCallback? onRetryLoadMore;
+  final ValueChanged<WorkoutPlanRecordDto>? onDeleteRecord;
 
   const SingleWorkoutPlanRecordList({
     super.key,
     required this.sizes,
     required this.units,
     required this.isLoading,
+    this.isMutating = false,
     this.workoutPlanId,
     this.workoutPlanVersion,
     required this.planRecords,
@@ -51,6 +55,7 @@ class SingleWorkoutPlanRecordList extends StatelessWidget {
     this.scrollController,
     this.loadMoreError,
     this.onRetryLoadMore,
+    this.onDeleteRecord,
   });
 
   @override
@@ -76,6 +81,7 @@ class SingleWorkoutPlanRecordList extends StatelessWidget {
       enabled: isLoading && planRecords.isEmpty,
       child: ListView.builder(
         controller: scrollController,
+        padding: EdgeInsets.only(bottom: sizes.spacing * 4),
         itemCount: isLoading && planRecords.isEmpty
             ? 2
             : planRecords.length + (showFooter ? 1 : 0),
@@ -124,12 +130,17 @@ class SingleWorkoutPlanRecordList extends StatelessWidget {
             );
           }
 
+          final record = planRecords[index];
           return _SingleWorkoutPlanRecordCard(
             sizes: sizes,
             units: units,
-            record: planRecords[index],
+            record: record,
             workoutPlanId: workoutPlanId,
             workoutPlanVersion: workoutPlanVersion,
+            isMutating: isMutating,
+            onDelete: onDeleteRecord != null
+                ? () => onDeleteRecord!(record)
+                : null,
           );
         },
       ),
@@ -143,6 +154,8 @@ class _SingleWorkoutPlanRecordCard extends StatelessWidget {
   final WorkoutPlanRecordDto record;
   final int? workoutPlanId;
   final int? workoutPlanVersion;
+  final bool isMutating;
+  final VoidCallback? onDelete;
 
   const _SingleWorkoutPlanRecordCard({
     required this.sizes,
@@ -150,6 +163,8 @@ class _SingleWorkoutPlanRecordCard extends StatelessWidget {
     required this.record,
     this.workoutPlanId,
     this.workoutPlanVersion,
+    this.isMutating = false,
+    this.onDelete,
   });
 
   @override
@@ -202,8 +217,25 @@ class _SingleWorkoutPlanRecordCard extends StatelessWidget {
               ),
             ],
             SizedBox(height: sizes.spacing / 2),
-            Text(
-              'Last reached: Week ${record.currentWeek} • Day ${record.currentDay} • Workout ${record.currentWorkoutPosition}',
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Expanded(
+                  child: Text(
+                    'Last reached: Week ${record.currentWeek} • Day ${record.currentDay} • Workout ${record.currentWorkoutPosition}',
+                  ),
+                ),
+                if (onDelete != null) ...[
+                  SizedBox(width: sizes.halfSpacing),
+                  DeleteIconButton(
+                    key: ValueKey('workout-plan-record-delete-${record.id}'),
+                    sizes: sizes,
+                    small: true,
+                    isLoading: isMutating,
+                    onDelete: onDelete!,
+                  ),
+                ],
+              ],
             ),
           ],
         ),

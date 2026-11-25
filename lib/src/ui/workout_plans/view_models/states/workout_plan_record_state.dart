@@ -152,6 +152,7 @@ final class WorkoutPlanRecordState extends Equatable {
   final CurrentWorkoutPlanRecordState currentPlanRecord;
   final List<WorkoutPlanRecordDto> planRecords;
   final WorkoutPlanRecordDto? latestWorkoutPlanRecord;
+  final int? latestWorkoutPlanId;
   final WorkoutPlanRecordPagination pagination;
   final bool hasLoadedActivePlan;
   final bool isLoading;
@@ -166,6 +167,7 @@ final class WorkoutPlanRecordState extends Equatable {
     required this.currentPlanRecord,
     required this.planRecords,
     this.latestWorkoutPlanRecord,
+    this.latestWorkoutPlanId,
     required this.pagination,
     this.hasLoadedActivePlan = false,
     required this.isLoading,
@@ -193,6 +195,7 @@ final class WorkoutPlanRecordState extends Equatable {
     CurrentWorkoutPlanRecordState? currentPlanRecord,
     List<WorkoutPlanRecordDto>? planRecords,
     Nullable<WorkoutPlanRecordDto>? latestWorkoutPlanRecord,
+    Nullable<int>? latestWorkoutPlanId,
     WorkoutPlanRecordPagination? pagination,
     bool? hasLoadedActivePlan,
     bool? isLoading,
@@ -209,6 +212,9 @@ final class WorkoutPlanRecordState extends Equatable {
       latestWorkoutPlanRecord: latestWorkoutPlanRecord != null
           ? latestWorkoutPlanRecord.value
           : this.latestWorkoutPlanRecord,
+      latestWorkoutPlanId: latestWorkoutPlanId != null
+          ? latestWorkoutPlanId.value
+          : this.latestWorkoutPlanId,
       pagination: pagination ?? this.pagination,
       hasLoadedActivePlan: hasLoadedActivePlan ?? this.hasLoadedActivePlan,
       isLoading: isLoading ?? this.isLoading,
@@ -228,6 +234,7 @@ final class WorkoutPlanRecordState extends Equatable {
     currentPlanRecord,
     planRecords,
     latestWorkoutPlanRecord,
+    latestWorkoutPlanId,
     pagination,
     hasLoadedActivePlan,
     isLoading,

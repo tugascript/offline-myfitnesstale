@@ -334,6 +334,86 @@ void main() {
 
       expect(tester.takeException(), isNull);
       expect(find.text('Latest Record'), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('latest-workout-plan-record-delete')),
+        findsOneWidget,
+      );
+    },
+  );
+
+  testWidgets(
+    'SingleWorkoutPlanRecordList invokes onDeleteRecord, disables while mutating, and fits 320px at 200% text scale',
+    (tester) async {
+      final deleted = <WorkoutPlanRecordDto>[];
+      final rec = sampleRecord(
+        startedAt: DateTime.utc(2026, 6, 1),
+        plan: samplePlan('Upper Lower'),
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: MediaQuery(
+            data: const MediaQueryData(
+              size: Size(320, 640),
+              textScaler: TextScaler.linear(2.0),
+            ),
+            child: Scaffold(
+              body: SizedBox(
+                width: 320,
+                height: 400,
+                child: SingleWorkoutPlanRecordList(
+                  sizes: sizes,
+                  units: Units.metric,
+                  isLoading: false,
+                  planRecords: [rec],
+                  pagination: const WorkoutPlanRecordPagination(
+                    limit: 20,
+                    offset: 0,
+                    total: 1,
+                  ),
+                  onDeleteRecord: deleted.add,
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+
+      expect(tester.takeException(), isNull);
+      final deleteButton = find.byKey(
+        ValueKey('workout-plan-record-delete-${rec.id}'),
+      );
+      expect(deleteButton, findsOneWidget);
+
+      await tester.ensureVisible(deleteButton);
+      await tester.pumpAndSettle();
+      await tester.tap(deleteButton);
+      await tester.pump();
+      expect(deleted, [rec]);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: SingleWorkoutPlanRecordList(
+              sizes: sizes,
+              units: Units.metric,
+              isLoading: false,
+              isMutating: true,
+              planRecords: [rec],
+              pagination: const WorkoutPlanRecordPagination(
+                limit: 20,
+                offset: 0,
+                total: 1,
+              ),
+              onDeleteRecord: deleted.add,
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(deleteButton);
+      await tester.pump();
+      expect(deleted, [rec]);
     },
   );
 }

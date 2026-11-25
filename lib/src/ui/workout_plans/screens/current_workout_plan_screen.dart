@@ -23,6 +23,7 @@ import '../../../data/utils/enums.dart';
 import '../../../routing/routes.dart';
 import '../../core/sizes/data_display_sizes.dart';
 import '../../core/sizes/screen_size.dart';
+import '../../core/widgets/confirmation_dialog.dart';
 import '../../core/widgets/layout/app_scaffold.dart';
 import '../view_models/states/workout_plan_record_state.dart';
 import '../view_models/workout_plan_record_cubit.dart';
@@ -105,6 +106,22 @@ class _CurrentWorkoutPlanScreenState extends State<CurrentWorkoutPlanScreen> {
     if (mounted) await _refresh(force: true);
   }
 
+  void _confirmDeleteRecord(int recordId) {
+    final cubit = context.read<WorkoutPlanRecordCubit>();
+    showDialog(
+      context: context,
+      builder: (_) => ConfirmationDialog(
+        title: 'Delete Workout Plan Record',
+        content: 'Are you sure you want to delete this workout plan record? This action cannot be undone.',
+        confirmLabel: 'Delete',
+        isDestructive: true,
+        onConfirm: () {
+          cubit.deleteWorkoutPlanRecord(recordId);
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final sizes = DataDisplaySizes.getDataDisplaySizes(
@@ -132,9 +149,10 @@ class _CurrentWorkoutPlanScreenState extends State<CurrentWorkoutPlanScreen> {
               );
             }
             final current = state.currentPlanRecord;
+            final activeRecord = current.currentPlanRecord;
             if (current.workoutPlan == null ||
-                current.currentPlanRecord?.status !=
-                    ProgressStatus.inProgress) {
+                activeRecord == null ||
+                activeRecord.status != ProgressStatus.inProgress) {
               return CurrentWorkoutPlanPlaceholder(
                 sizes: sizes,
                 onRetry: () => _refresh(force: true),
@@ -145,6 +163,7 @@ class _CurrentWorkoutPlanScreenState extends State<CurrentWorkoutPlanScreen> {
               state: current,
               isLoading: false,
               sizes: sizes,
+              onDelete: () => _confirmDeleteRecord(activeRecord.id),
             );
           },
         ),

@@ -114,6 +114,7 @@ class _LatestWorkoutPlanRecordState extends State<LatestWorkoutPlanRecord> {
           theme: widget.theme,
           units: widget.units,
           isLoading: state.isLoadingLatest,
+          isMutating: state.isLoading,
           workoutPlanId: widget.workoutPlanId,
           workoutPlanVersion: widget.workoutPlanVersion,
           workoutPlanRecord: matchingRecord,

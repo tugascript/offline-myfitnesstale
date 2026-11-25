@@ -101,15 +101,16 @@ class _WorkoutPlanHistoryScreenState extends State<WorkoutPlanHistoryScreen> {
                       WorkoutPlanRecordCubit,
                       WorkoutPlanRecordState
                     >(
+                      listenWhen: (previous, current) =>
+                          current.error != null &&
+                          current.error != previous.error,
                       listener: (context, state) {
-                        if (state.error != null) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(state.error!.description),
-                              backgroundColor: theme.colorScheme.error,
-                            ),
-                          );
-                        }
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(state.error!.description),
+                            backgroundColor: theme.colorScheme.error,
+                          ),
+                        );
                       },
                       builder: (context, state) {
                         return Column(

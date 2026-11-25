@@ -176,6 +176,7 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
           emit(
             state.copyWith(
               latestWorkoutPlanRecord: const Nullable(null),
+              latestWorkoutPlanId: Nullable(workoutPlanId),
               latestError: const Nullable(null),
               isLoadingLatest: false,
             ),
@@ -189,6 +190,7 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
           emit(
             state.copyWith(
               latestWorkoutPlanRecord: const Nullable(null),
+              latestWorkoutPlanId: Nullable(workoutPlanId),
               latestError: Nullable(errorState),
               error: Nullable(errorState),
               isLoadingLatest: false,
@@ -201,6 +203,7 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
     emit(
       state.copyWith(
         latestWorkoutPlanRecord: Nullable(result.value),
+        latestWorkoutPlanId: Nullable(workoutPlanId),
         latestError: const Nullable(null),
         isLoadingLatest: false,
       ),
@@ -572,6 +575,136 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
     return true;
   }
 
+  Future<bool> deleteWorkoutPlanRecord(int id) async {
+    _logger.info('Deleting workout plan record $id');
+    final initialHistoryRequestId = state.historyRequestId;
+    final initialLatestRequestId = _latestRecordRequestId;
+    final latestFilterPlanId = state.latestWorkoutPlanId;
+    final deletedCurrentActive =
+        state.currentPlanRecord.currentPlanRecord?.id == id;
+    final deletedLatest = state.latestWorkoutPlanRecord?.id == id;
+
+    emit(state.copyWith(isLoading: true, error: const Nullable(null)));
+
+    final result = await _workoutPlanRecordService.deleteWorkoutPlanRecord(id);
+    if (isClosed) return false;
+
+    if (result.isErr()) {
+      final error = result.error;
+      _logger.warning('Failed to delete workout plan record $id', error);
+      final description = error.type == SingleErrorTypes.operationFailure
+          ? 'Failed to delete workout plan record'
+          : error.description;
+      emit(
+        state.copyWith(
+          error: Nullable(
+            ErrorState(type: error.type.name, description: description),
+          ),
+          isLoading: false,
+        ),
+      );
+      return false;
+    }
+
+    WorkoutPlanRecordDto? nextLatest = state.latestWorkoutPlanRecord;
+    ErrorState? nextLatestError = state.latestError;
+    if (deletedLatest) {
+      final latestResult = await _workoutPlanRecordService
+          .getLatestWorkoutPlanRecord(latestFilterPlanId);
+      if (isClosed) return true;
+      if (_latestRecordRequestId == initialLatestRequestId) {
+        if (latestResult.isOk()) {
+          nextLatest = latestResult.value;
+          nextLatestError = null;
+        } else if (latestResult.error.type == SingleErrorTypes.notFound ||
+            latestResult.error.type == SingleErrorTypes.invalidInput) {
+          nextLatest = null;
+          nextLatestError = null;
+        } else {
+          _logger.warning(
+            'Failed to refresh latest workout plan record after delete',
+            latestResult.error,
+          );
+          nextLatest = null;
+          nextLatestError = ErrorState(
+            type: latestResult.error.type.name,
+            description: latestResult.error.description,
+          );
+        }
+      }
+    }
+
+    CurrentWorkoutPlanRecordState? nextCurrentPlanRecord;
+    bool? nextHasLoadedActivePlan;
+    ErrorState? activeRefreshError;
+    if (deletedCurrentActive) {
+      final activeResult = await _workoutPlanRecordService
+          .getLatestActivePlanRecord();
+      if (isClosed) return true;
+      if (activeResult.isErr()) {
+        final activeError = activeResult.error;
+        if (activeError.type == SingleErrorTypes.notFound) {
+          nextCurrentPlanRecord = CurrentWorkoutPlanRecordState.initial();
+          nextHasLoadedActivePlan = true;
+        } else {
+          nextCurrentPlanRecord = CurrentWorkoutPlanRecordState.initial();
+          activeRefreshError = ErrorState(
+            type: activeError.type.name,
+            description: 'Failed to get latest active plan record',
+          );
+        }
+      } else {
+        final hydrated = await _hydrateActivePlanState(activeResult.value);
+        if (isClosed) return true;
+        if (hydrated.isErr()) {
+          nextCurrentPlanRecord = CurrentWorkoutPlanRecordState.initial();
+          activeRefreshError = ErrorState(
+            type: hydrated.error.type.name,
+            description: hydrated.error.description,
+          );
+        } else {
+          nextCurrentPlanRecord = hydrated.value;
+          nextHasLoadedActivePlan = true;
+        }
+      }
+    }
+
+    final historyUnchanged = state.historyRequestId == initialHistoryRequestId;
+    final latestUnchanged = _latestRecordRequestId == initialLatestRequestId;
+    final wasInPage =
+        historyUnchanged && state.planRecords.any((r) => r.id == id);
+    final updatedRecords = historyUnchanged
+        ? state.planRecords.where((r) => r.id != id).toList()
+        : null;
+    final nextError =
+        activeRefreshError ??
+        (latestUnchanged && deletedLatest ? nextLatestError : null);
+
+    emit(
+      state.copyWith(
+        planRecords: updatedRecords,
+        pagination: historyUnchanged
+            ? state.pagination.copyWith(
+                total: wasInPage && state.pagination.total > 0
+                    ? state.pagination.total - 1
+                    : state.pagination.total,
+              )
+            : null,
+        latestWorkoutPlanRecord: latestUnchanged && deletedLatest
+            ? Nullable(nextLatest)
+            : null,
+        latestError: latestUnchanged && deletedLatest
+            ? Nullable(nextLatestError)
+            : null,
+        currentPlanRecord: nextCurrentPlanRecord,
+        hasLoadedActivePlan: nextHasLoadedActivePlan,
+        isLoading: false,
+        error: Nullable(nextError),
+      ),
+    );
+    return true;
+  }
+
   Future<void> handleDeletedWorkoutPlan(int workoutPlanId) async {
     final current = state.currentPlanRecord;
     final matchesActive =
@@ -587,6 +720,42 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
       ),
     );
     await getLatestActivePlanRecord();
+  }
+
+  Future<Result<CurrentWorkoutPlanRecordState, ServiceError<SingleErrorTypes>>>
+  _hydrateActivePlanState(WorkoutPlanRecordDto record) async {
+    final planResult = await _workoutPlanService.getWorkoutPlan(
+      record.workoutPlanId,
+      planVersion: record.workoutPlanVersion,
+    );
+    if (planResult.isErr()) {
+      return err(
+        ServiceError(
+          type: planResult.error.type,
+          description: 'Failed to load workout plan details',
+        ),
+      );
+    }
+
+    final plan = planResult.value;
+    final countsFuture = _loadProgressCounts(record, plan);
+    final todaysWorkoutsFuture = _resolveTodaysWorkouts(record, plan);
+    final counts = await countsFuture;
+    final todaysWorkouts = await todaysWorkoutsFuture;
+
+    return ok(
+      state.currentPlanRecord.copyWith(
+        currentPlanRecord: Nullable(record),
+        workoutPlan: Nullable(plan),
+        completedWorkouts: counts?.$1,
+        totalWorkouts: counts?.$2,
+        todaysWorkouts:
+            todaysWorkouts ??
+            (state.currentPlanRecord.currentPlanRecord?.id == record.id
+                ? state.currentPlanRecord.todaysWorkouts
+                : const []),
+      ),
+    );
   }
 
   Future<void> getLatestActivePlanRecord() async {
@@ -625,18 +794,15 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
       }
     }
 
-    final record = result.value;
-    final planResult = await _workoutPlanService.getWorkoutPlan(
-      record.workoutPlanId,
-      planVersion: record.workoutPlanVersion,
-    );
-    if (planResult.isErr()) {
+    final hydrated = await _hydrateActivePlanState(result.value);
+    if (isClosed) return;
+    if (hydrated.isErr()) {
       emit(
         state.copyWith(
           error: Nullable(
             ErrorState(
-              type: planResult.error.type.name,
-              description: 'Failed to load workout plan details',
+              type: hydrated.error.type.name,
+              description: hydrated.error.description,
             ),
           ),
           isLoading: false,
@@ -645,25 +811,9 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
       return;
     }
 
-    final plan = planResult.value;
-    final countsFuture = _loadProgressCounts(record, plan);
-    final todaysWorkoutsFuture = _resolveTodaysWorkouts(record, plan);
-    final counts = await countsFuture;
-    final todaysWorkouts = await todaysWorkoutsFuture;
-
     emit(
       state.copyWith(
-        currentPlanRecord: state.currentPlanRecord.copyWith(
-          currentPlanRecord: Nullable(record),
-          workoutPlan: Nullable(plan),
-          completedWorkouts: counts?.$1,
-          totalWorkouts: counts?.$2,
-          todaysWorkouts:
-              todaysWorkouts ??
-              (state.currentPlanRecord.currentPlanRecord?.id == record.id
-                  ? state.currentPlanRecord.todaysWorkouts
-                  : const []),
-        ),
+        currentPlanRecord: hydrated.value,
         hasLoadedActivePlan: true,
         isLoading: false,
         error: const Nullable(null),
