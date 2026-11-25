@@ -26,6 +26,11 @@ import 'json_data.dart';
 sealed class ExerciseDetails extends Equatable implements JsonData {
   const ExerciseDetails();
 
+  ExerciseType get type => switch (this) {
+    StrengthExerciseDetails() => ExerciseType.strength,
+    CardioExerciseDetails() => ExerciseType.cardio,
+  };
+
   factory ExerciseDetails.fromJson(ExerciseType type, String json) =>
       switch (type) {
         ExerciseType.strength => StrengthExerciseDetails.fromJson(json),
