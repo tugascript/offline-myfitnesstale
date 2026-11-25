@@ -77,6 +77,19 @@ class _ExerciseRecordsHistoryState extends State<ExerciseRecordsHistory> {
     );
   }
 
+  @override
+  void didUpdateWidget(covariant ExerciseRecordsHistory oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.exercise.id != widget.exercise.id) {
+      context.read<ExerciseRecordCubit>().getExerciseRecords(
+        dateRange: (_dateRange.start, _dateRange.end),
+        exerciseId: widget.exercise.id,
+        limit: 1000,
+        offset: 0,
+      );
+    }
+  }
+
   Future<void> _selectDateRange() async {
     final DateTime now = DateTime.now();
     final DateTime oneYearAgo = now.subtract(const Duration(days: 365));
@@ -216,7 +229,7 @@ class _ExerciseRecordsHistoryState extends State<ExerciseRecordsHistory> {
                 ? state.exerciseRecords
                 : const <ExerciseRecordDto>[];
 
-            if (!isLoading && state.recordsError != null && records.isEmpty) {
+            if (!isLoading && state.recordsError != null) {
               return ExerciseProgressErrorCard(
                 theme: widget.theme,
                 sizes: widget.sizes,

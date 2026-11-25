@@ -23,6 +23,7 @@ import '../../../../data/repositories/workout_plans/dtos/workout_plan_record_dto
 import '../../../../data/utils/enums.dart';
 import '../../../core/sizes/data_display_sizes.dart';
 import '../../../core/utils/progress_status_presentation.dart';
+import '../../../core/widgets/layout/app_text_button.dart';
 import '../../../core/widgets/not_found_list.dart';
 import '../../view_models/states/workout_plan_record_state.dart';
 
@@ -35,6 +36,8 @@ class SingleWorkoutPlanRecordList extends StatelessWidget {
   final List<WorkoutPlanRecordDto> planRecords;
   final WorkoutPlanRecordPagination pagination;
   final ScrollController? scrollController;
+  final String? loadMoreError;
+  final VoidCallback? onRetryLoadMore;
 
   const SingleWorkoutPlanRecordList({
     super.key,
@@ -46,6 +49,8 @@ class SingleWorkoutPlanRecordList extends StatelessWidget {
     required this.planRecords,
     required this.pagination,
     this.scrollController,
+    this.loadMoreError,
+    this.onRetryLoadMore,
   });
 
   @override
@@ -60,6 +65,12 @@ class SingleWorkoutPlanRecordList extends StatelessWidget {
 
     final hasMore = planRecords.length < pagination.total;
     final showLoadingIndicator = isLoading && planRecords.isNotEmpty && hasMore;
+    final showLoadMoreError =
+        !isLoading &&
+        planRecords.isNotEmpty &&
+        loadMoreError != null &&
+        onRetryLoadMore != null;
+    final showFooter = showLoadingIndicator || showLoadMoreError;
 
     return Skeletonizer(
       enabled: isLoading && planRecords.isEmpty,
@@ -67,7 +78,7 @@ class SingleWorkoutPlanRecordList extends StatelessWidget {
         controller: scrollController,
         itemCount: isLoading && planRecords.isEmpty
             ? 2
-            : planRecords.length + (showLoadingIndicator ? 1 : 0),
+            : planRecords.length + (showFooter ? 1 : 0),
         itemBuilder: (context, index) {
           if (isLoading && planRecords.isEmpty) {
             return _SingleWorkoutPlanRecordCard(
@@ -80,6 +91,33 @@ class SingleWorkoutPlanRecordList extends StatelessWidget {
           }
 
           if (index == planRecords.length) {
+            if (showLoadMoreError) {
+              return Padding(
+                padding: EdgeInsets.all(sizes.padding),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      loadMoreError!,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: sizes.fontSize),
+                    ),
+                    SizedBox(height: sizes.spacing / 2),
+                    AppTextButton(
+                      key: const ValueKey(
+                        'workout-plan-history-load-more-retry',
+                      ),
+                      isLoading: false,
+                      sizes: sizes,
+                      isDense: true,
+                      label: 'Retry',
+                      icon: Icons.refresh,
+                      onPressed: onRetryLoadMore,
+                    ),
+                  ],
+                ),
+              );
+            }
             return Padding(
               padding: EdgeInsets.all(sizes.padding),
               child: const Center(child: CircularProgressIndicator()),

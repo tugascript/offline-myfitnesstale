@@ -111,6 +111,10 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
       );
       emit(
         state.copyWith(
+          planRecords: offset == 0 ? const [] : null,
+          pagination: offset == 0
+              ? state.pagination.copyWith(offset: 0, total: 0)
+              : null,
           isLoadingHistory: false,
           historyError: Nullable(errorState),
           error: Nullable(errorState),

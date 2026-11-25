@@ -371,4 +371,44 @@ void main() {
       expect(emptyCard.isLoading, isFalse);
     },
   );
+
+  testWidgets(
+    'WorkoutPlanRecordHistory renders inline retry footer on load-more historyError while keeping loaded records',
+    (tester) async {
+      final cubit = await pumpView(
+        tester,
+        WorkoutPlanRecordState.initial().copyWith(
+          planRecords: [record(1, ProgressStatus.inProgress)],
+          pagination: const WorkoutPlanRecordPagination(
+            workoutPlanId: 9,
+            limit: 20,
+            offset: 0,
+            total: 5,
+          ),
+          historyError: const Nullable(
+            ErrorState(
+              type: 'operationFailure',
+              description: 'Load more plan history failed',
+            ),
+          ),
+          isLoadingHistory: false,
+        ),
+      );
+      await tester.pump();
+
+      expect(find.text('In Progress'), findsOneWidget);
+      expect(find.text('Load more plan history failed'), findsOneWidget);
+      final retryButton = find.byKey(
+        const ValueKey('workout-plan-history-load-more-retry'),
+      );
+      expect(retryButton, findsOneWidget);
+
+      final callsBefore = cubit.loadCalls;
+      await tester.ensureVisible(retryButton);
+      await tester.pumpAndSettle();
+      await tester.tap(retryButton);
+      await tester.pump();
+      expect(cubit.loadCalls, callsBefore + 1);
+    },
+  );
 }

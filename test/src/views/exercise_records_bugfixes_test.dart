@@ -1006,4 +1006,249 @@ void main() {
     expect(cubit.state.goalsError, isNull);
     expect(cubit.state.error, isNull);
   });
+
+  test('getLatestExerciseRecord clears stale latestExerciseRecord on failure and preserves unrelated errors on recovery', () async {
+    final testDatabase = TestDatabase();
+    await testDatabase.initialize();
+    addTearDown(testDatabase.destroy);
+
+    final db = await testDatabase.db;
+    final exerciseId = await db.insert(
+      Exercise.table,
+      Exercise.create(
+        name: 'Incline Bench',
+        description: 'Press incline',
+        muscleGroup: MuscleGroup.push,
+        muscles: emptyMuscles,
+      ).toMap(),
+    );
+
+    var failRecordRead = false;
+    final helper = DatabaseHelper();
+    final repo = ExerciseRecordRepository(
+      exerciseRecordDao: Dao(
+        databaseHelper: helper,
+        tableName: ExerciseRecord.table,
+        fromMap: (map) {
+          if (failRecordRead) {
+            throw StateError('Simulated latest record read failure');
+          }
+          return ExerciseRecord.fromMap(map);
+        },
+      ),
+      exerciseDao: Dao(
+        databaseHelper: helper,
+        tableName: Exercise.table,
+        fromMap: Exercise.fromMap,
+      ),
+      strengthGoalDao: Dao(
+        databaseHelper: helper,
+        tableName: StrengthGoal.table,
+        fromMap: StrengthGoal.fromMap,
+      ),
+    );
+
+    final created = await repo.createExerciseRecord(
+      ExerciseRecordInput(
+        exerciseId: exerciseId,
+        weight: 90000,
+        reps: 6,
+        recordDate: DateTime(2026, 6, 15),
+      ),
+    );
+    expect(created.isOk(), isTrue);
+
+    final cubit = ExerciseRecordCubit(exerciseRecordRepository: repo);
+    addTearDown(cubit.close);
+
+    await cubit.getLatestExerciseRecord(exerciseId);
+    expect(cubit.state.latestExerciseRecord, isNotNull);
+    expect(cubit.state.latestError, isNull);
+
+    // Failed reload must clear stale latestExerciseRecord so retry UI can show.
+    failRecordRead = true;
+    await cubit.getLatestExerciseRecord(exerciseId);
+    expect(cubit.state.latestExerciseRecord, isNull);
+    expect(cubit.state.latestExerciseId, exerciseId);
+    expect(cubit.state.latestError, isNotNull);
+    expect(cubit.state.isLoadingLatest, isFalse);
+
+    // Concurrent history failure sets recordsError + shared error; latest recovery must keep it.
+    await cubit.getExerciseRecords(exerciseId: exerciseId, offset: 0);
+    final recordsError = cubit.state.recordsError;
+    expect(recordsError, isNotNull);
+
+    failRecordRead = false;
+    await cubit.getLatestExerciseRecord(exerciseId);
+    expect(cubit.state.latestExerciseRecord, isNotNull);
+    expect(cubit.state.latestError, isNull);
+    expect(cubit.state.error, equals(recordsError));
+  });
+
+  testWidgets(
+    'ExerciseRecordsHistory renders error card on recordsError even with non-empty records, and ExerciseProgressHistory renders load-more retry footer',
+    (tester) async {
+      final sizes = DataDisplaySizes.getDataDisplaySizes(ScreenSize.xs);
+      const err = ErrorState(
+        type: 'operationFailure',
+        description: 'Failed to get exercise records',
+      );
+
+      // ExerciseRecordsHistory should not mask recordsError behind non-empty records.
+      final scopedCubit = _ControlledExerciseRecordCubit(
+        ExerciseRecordState.initial().copyWith(
+          exerciseRecords: [recordA],
+          recordPagination: const ExerciseRecordPagination(
+            exerciseId: 1,
+            limit: 1000,
+            offset: 0,
+            total: 2,
+          ),
+        ),
+      );
+      addTearDown(scopedCubit.close);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: BlocProvider<ExerciseRecordCubit>.value(
+              value: scopedCubit,
+              child: ExerciseRecordsHistory(
+                theme: ThemeData.light(),
+                breakPoint: testBreakPoint,
+                sizes: sizes,
+                units: Units.metric,
+                exercise: exerciseA,
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      scopedCubit.emit(
+        scopedCubit.state.copyWith(
+          exerciseRecords: [recordA],
+          recordPagination: const ExerciseRecordPagination(
+            exerciseId: 1,
+            limit: 1000,
+            offset: 0,
+            total: 2,
+          ),
+          isLoadingRecords: false,
+          recordsError: const Nullable(err),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.byType(ExerciseProgressErrorCard), findsOneWidget);
+
+      // ExerciseProgressHistory keeps loaded records and renders inline Retry on load-more failure.
+      final progressCubit = _ControlledExerciseRecordCubit(
+        ExerciseRecordState.initial(),
+      );
+      addTearDown(progressCubit.close);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: BlocProvider<ExerciseRecordCubit>.value(
+              value: progressCubit,
+              child: ExerciseProgressHistory(
+                theme: ThemeData.light(),
+                breakPoint: testBreakPoint,
+                sizes: sizes,
+                units: Units.metric,
+                dateRange: DateTimeRange(
+                  start: DateTime(2026, 1, 1),
+                  end: DateTime(2026, 3, 1),
+                ),
+                onDateRangeChanged: (_) {},
+                onOpenExerciseRecords: (_) async {},
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      progressCubit.emit(
+        progressCubit.state.copyWith(
+          exerciseRecords: [recordA],
+          recordPagination: const ExerciseRecordPagination(
+            exerciseId: null,
+            limit: 20,
+            offset: 0,
+            total: 5,
+          ),
+          isLoadingRecords: false,
+          recordsError: const Nullable(err),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final retryButton = find.byKey(
+        const ValueKey('exercise-progress-history-load-more-retry'),
+      );
+      expect(retryButton, findsOneWidget);
+      await tester.ensureVisible(retryButton);
+      final callsBefore = progressCubit.listCalls;
+      await tester.tap(retryButton);
+      await tester.pumpAndSettle();
+      expect(progressCubit.listCalls, callsBefore + 1);
+    },
+  );
+
+  testWidgets(
+    'LatestExerciseRecord and ExerciseRecordsHistory refetch when exercise changes via didUpdateWidget',
+    (tester) async {
+      final sizes = DataDisplaySizes.getDataDisplaySizes(ScreenSize.xs);
+      final cubit = _ControlledExerciseRecordCubit(
+        ExerciseRecordState.initial(),
+      );
+      addTearDown(cubit.close);
+
+      Widget buildHost(ExerciseDto exercise) {
+        return MaterialApp(
+          home: Scaffold(
+            body: BlocProvider<ExerciseRecordCubit>.value(
+              value: cubit,
+              child: SingleChildScrollView(
+                child: Column(
+                  children: [
+                    LatestExerciseRecord(
+                      theme: ThemeData.light(),
+                      sizes: sizes,
+                      units: Units.metric,
+                      exercise: exercise,
+                    ),
+                    ExerciseRecordsHistory(
+                      theme: ThemeData.light(),
+                      breakPoint: testBreakPoint,
+                      sizes: sizes,
+                      units: Units.metric,
+                      exercise: exercise,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      }
+
+      await tester.pumpWidget(buildHost(exerciseA));
+      await tester.pumpAndSettle();
+      expect(cubit.latestCalls, 1);
+      expect(cubit.listCalls, 1);
+      expect(cubit.state.latestExerciseId, exerciseA.id);
+      expect(cubit.state.recordPagination.exerciseId, exerciseA.id);
+
+      await tester.pumpWidget(buildHost(exerciseB));
+      await tester.pumpAndSettle();
+      expect(cubit.latestCalls, 2);
+      expect(cubit.listCalls, 2);
+      expect(cubit.state.latestExerciseId, exerciseB.id);
+      expect(cubit.state.recordPagination.exerciseId, exerciseB.id);
+    },
+  );
 }

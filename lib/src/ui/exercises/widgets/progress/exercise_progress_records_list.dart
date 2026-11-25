@@ -23,6 +23,7 @@ import '../../../../data/repositories/exercises/dtos/exercise_record_dto.dart';
 import '../../../../data/utils/enums.dart';
 import '../../../../data/utils/json_data.dart';
 import '../../../core/sizes/data_display_sizes.dart';
+import '../../../core/widgets/layout/app_text_button.dart';
 import '../../../core/widgets/not_found_list.dart';
 import '../../view_models/states/exercise_record_state.dart';
 import './exercise_progress_record_card.dart';
@@ -54,6 +55,8 @@ class ExerciseProgressRecordsList extends StatelessWidget {
   final ExerciseRecordPagination pagination;
   final ScrollController? scrollController;
   final ValueChanged<int> onTapExercise;
+  final String? loadMoreError;
+  final VoidCallback? onRetryLoadMore;
 
   const ExerciseProgressRecordsList({
     super.key,
@@ -64,6 +67,8 @@ class ExerciseProgressRecordsList extends StatelessWidget {
     required this.pagination,
     this.scrollController,
     required this.onTapExercise,
+    this.loadMoreError,
+    this.onRetryLoadMore,
   });
 
   @override
@@ -80,6 +85,12 @@ class ExerciseProgressRecordsList extends StatelessWidget {
     final hasMore = exerciseRecords.length < pagination.total;
     final showLoadingMore =
         isLoading && !isInitialLoading && exerciseRecords.isNotEmpty && hasMore;
+    final showLoadMoreError =
+        !isLoading &&
+        exerciseRecords.isNotEmpty &&
+        loadMoreError != null &&
+        onRetryLoadMore != null;
+    final showFooter = showLoadingMore || showLoadMoreError;
 
     return Skeletonizer(
       enabled: isInitialLoading,
@@ -87,7 +98,7 @@ class ExerciseProgressRecordsList extends StatelessWidget {
         controller: scrollController,
         itemCount: isInitialLoading
             ? 3
-            : exerciseRecords.length + (showLoadingMore ? 1 : 0),
+            : exerciseRecords.length + (showFooter ? 1 : 0),
         itemBuilder: (context, index) {
           if (isInitialLoading) {
             return ExerciseProgressRecordCard(
@@ -99,6 +110,33 @@ class ExerciseProgressRecordsList extends StatelessWidget {
           }
 
           if (index == exerciseRecords.length) {
+            if (showLoadMoreError) {
+              return Padding(
+                padding: EdgeInsets.all(sizes.padding),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      loadMoreError!,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: sizes.fontSize),
+                    ),
+                    SizedBox(height: sizes.spacing / 2),
+                    AppTextButton(
+                      key: const ValueKey(
+                        'exercise-progress-history-load-more-retry',
+                      ),
+                      isLoading: false,
+                      sizes: sizes,
+                      isDense: true,
+                      label: 'Retry',
+                      icon: Icons.refresh,
+                      onPressed: onRetryLoadMore,
+                    ),
+                  ],
+                ),
+              );
+            }
             return Skeletonizer(
               enabled: true,
               child: ExerciseProgressRecordCard(

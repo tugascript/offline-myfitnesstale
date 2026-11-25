@@ -91,7 +91,10 @@ class _ExerciseProgressHistoryState extends State<ExerciseProgressHistory> {
         _scrollController.position.maxScrollExtent * 0.9;
     final hasMore = state.exerciseRecords.length < state.recordPagination.total;
 
-    if (isNearBottom && hasMore && !state.isRecordsLoading) {
+    if (isNearBottom &&
+        hasMore &&
+        !state.isRecordsLoading &&
+        state.recordsError == null) {
       cubit.getExerciseRecords(
         dateRange: (widget.dateRange.start, widget.dateRange.end),
         limit: state.recordPagination.limit,
@@ -242,6 +245,16 @@ class _ExerciseProgressHistoryState extends State<ExerciseProgressHistory> {
                 pagination: state.recordPagination,
                 scrollController: _scrollController,
                 onTapExercise: widget.onOpenExerciseRecords,
+                loadMoreError: !isScoped
+                    ? state.recordsError?.description
+                    : null,
+                onRetryLoadMore: () {
+                  context.read<ExerciseRecordCubit>().getExerciseRecords(
+                    dateRange: (widget.dateRange.start, widget.dateRange.end),
+                    limit: state.recordPagination.limit,
+                    offset: state.exerciseRecords.length,
+                  );
+                },
               ),
             );
           },
