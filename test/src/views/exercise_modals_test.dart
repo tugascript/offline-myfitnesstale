@@ -1936,4 +1936,90 @@ void main() {
       expect(recordCubit.getStrengthGoalsCalls.length, callsBeforeRetry + 1);
     },
   );
+
+  testWidgets(
+    'StrengthGoalHistory renders inline load-more retry footer and pauses scroll fetches on goalsError',
+    (tester) async {
+      tester.view.physicalSize = const Size(800, 1200);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+
+      final profileCubit = _FakeProfileCubit();
+      final recordCubit = _FakeExerciseRecordCubit();
+      addTearDown(profileCubit.close);
+      addTearDown(recordCubit.close);
+
+      final router = GoRouter(
+        routes: [
+          GoRoute(
+            path: '/',
+            builder: (_, _) => const StrengthGoalsListScreen(),
+          ),
+        ],
+      );
+      addTearDown(router.dispose);
+
+      await tester.pumpWidget(
+        MultiBlocProvider(
+          providers: [
+            BlocProvider<ExerciseRecordCubit>.value(value: recordCubit),
+            BlocProvider<ProfileCubit>.value(value: profileCubit),
+          ],
+          child: MaterialApp.router(routerConfig: router),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final pastGoal = StrengthGoalDto(
+        id: 77,
+        name: 'Past Squat Goal',
+        targetReps: 5,
+        targetWeight: 120000,
+        targetMaxStrength: 140000,
+        exerciseId: 1,
+        status: ProgressStatus.completed,
+        startDate: DateTime(2026, 1, 1),
+        completedAt: DateTime(2026, 2, 1),
+        exercise: _sampleExercise(id: 1, name: 'Back Squat'),
+      );
+
+      recordCubit.emit(
+        recordCubit.state.copyWith(
+          strengthGoals: [pastGoal],
+          strengthGoalPagination: const StrengthGoalPagination(
+            skipInProgress: true,
+            limit: 20,
+            offset: 0,
+            total: 5,
+          ),
+          isLoadingGoals: false,
+          goalsError: const Nullable(
+            ErrorState(
+              type: 'operationFailure',
+              description: 'Failed to load more strength goals',
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Past Squat Goal'), findsOneWidget);
+      expect(find.text('Failed to load more strength goals'), findsOneWidget);
+      final retryButton = find.byKey(
+        const ValueKey('strength-goal-history-load-more-retry'),
+      );
+      expect(retryButton, findsOneWidget);
+
+      final callsBeforeScroll = recordCubit.getStrengthGoalsCalls.length;
+      await tester.drag(find.byType(ListView), const Offset(0, -300));
+      await tester.pump();
+      expect(recordCubit.getStrengthGoalsCalls.length, callsBeforeScroll);
+
+      await tester.ensureVisible(retryButton);
+      await tester.tap(retryButton);
+      await tester.pump();
+      expect(recordCubit.getStrengthGoalsCalls.length, callsBeforeScroll + 1);
+      expect(recordCubit.getStrengthGoalsCalls.last.$2, 1);
+    },
+  );
 }

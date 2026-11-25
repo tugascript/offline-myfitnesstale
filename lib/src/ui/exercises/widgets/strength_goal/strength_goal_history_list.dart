@@ -24,6 +24,7 @@ import '../../../../data/repositories/exercises/dtos/strength_goal_dto.dart';
 import '../../../../data/utils/enums.dart';
 import '../../../../data/utils/json_data.dart';
 import '../../../core/sizes/data_display_sizes.dart';
+import '../../../core/widgets/layout/app_text_button.dart';
 import '../../../core/widgets/not_found_list.dart';
 import '../../../home/view_models/profile_cubit.dart';
 import '../../view_models/exercise_record_cubit.dart';
@@ -95,6 +96,11 @@ class StrengthGoalHistoryList extends StatelessWidget {
             !isInitialLoading &&
             history.isNotEmpty &&
             hasMore;
+        final showLoadMoreError =
+            !state.isGoalsLoading &&
+            history.isNotEmpty &&
+            state.goalsError != null;
+        final showFooter = showLoadingMore || showLoadMoreError;
 
         return Skeletonizer(
           enabled: isInitialLoading,
@@ -104,7 +110,7 @@ class StrengthGoalHistoryList extends StatelessWidget {
             physics: shrinkWrap ? const NeverScrollableScrollPhysics() : null,
             itemCount: isInitialLoading
                 ? 3
-                : history.length + (showLoadingMore ? 1 : 0),
+                : history.length + (showFooter ? 1 : 0),
             itemBuilder: (context, index) {
               if (isInitialLoading) {
                 return StrengthGoalHistoryCard(
@@ -117,6 +123,43 @@ class StrengthGoalHistoryList extends StatelessWidget {
               }
 
               if (index == history.length) {
+                if (showLoadMoreError) {
+                  return Padding(
+                    padding: EdgeInsets.all(sizes.padding),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          state.goalsError!.description,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(fontSize: sizes.fontSize),
+                        ),
+                        SizedBox(height: sizes.spacing / 2),
+                        AppTextButton(
+                          key: const ValueKey(
+                            'strength-goal-history-load-more-retry',
+                          ),
+                          isLoading: false,
+                          sizes: sizes,
+                          isDense: true,
+                          label: 'Retry',
+                          icon: Icons.refresh,
+                          onPressed: () {
+                            final pagination = state.strengthGoalPagination;
+                            context
+                                .read<ExerciseRecordCubit>()
+                                .getStrengthGoals(
+                                  exerciseId: pagination.exerciseId,
+                                  skipInProgress: pagination.skipInProgress,
+                                  limit: pagination.limit,
+                                  offset: state.strengthGoals.length,
+                                );
+                          },
+                        ),
+                      ],
+                    ),
+                  );
+                }
                 return Skeletonizer(
                   enabled: true,
                   child: StrengthGoalHistoryCard(
