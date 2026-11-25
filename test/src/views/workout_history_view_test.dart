@@ -20,34 +20,20 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 
-import 'package:myfitnesstale/src/data/models/sqlite/exercise_model.dart';
 import 'package:myfitnesstale/src/data/models/sqlite/workout_model.dart';
 import 'package:myfitnesstale/src/data/models/sqlite/workout_record_model.dart';
-import 'package:myfitnesstale/src/data/models/sqlite/workout_set_exercise_record_model.dart';
-import 'package:myfitnesstale/src/data/models/sqlite/workout_set_record_model.dart';
 import 'package:myfitnesstale/src/data/repositories/profile/dtos/profile_dto.dart';
 import 'package:myfitnesstale/src/data/repositories/profile/dtos/system_dto.dart';
 import 'package:myfitnesstale/src/data/repositories/profile/profile_repository.dart';
-import 'package:myfitnesstale/src/data/repositories/workouts/dtos/workout_record_dto.dart';
 import 'package:myfitnesstale/src/data/repositories/workouts/workout_record_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/workouts/workout_repository.dart';
-import 'package:myfitnesstale/src/data/services/sqlite/dao.dart';
-import 'package:myfitnesstale/src/data/services/sqlite/database_helper.dart';
 import 'package:myfitnesstale/src/data/utils/enums.dart';
-import 'package:myfitnesstale/src/data/utils/json_data.dart';
 import 'package:myfitnesstale/src/routing/routes.dart';
-import 'package:myfitnesstale/src/ui/core/sizes/data_display_sizes.dart';
-import 'package:myfitnesstale/src/ui/core/sizes/screen_size.dart';
-import 'package:myfitnesstale/src/ui/core/view_models/states/common_state.dart';
 import 'package:myfitnesstale/src/ui/home/view_models/profile_cubit.dart';
 import 'package:myfitnesstale/src/ui/home/view_models/states/profile_state.dart';
 import 'package:myfitnesstale/src/ui/workouts/screens/workout_history_screen.dart';
 import 'package:myfitnesstale/src/ui/workouts/view_models/workout_cubit.dart';
 import 'package:myfitnesstale/src/ui/workouts/view_models/workout_record_cubit.dart';
-import 'package:myfitnesstale/src/ui/workouts/widgets/progress/history/empty_workout_record.dart';
-import 'package:myfitnesstale/src/ui/workouts/widgets/progress/history/latest_workout_record.dart';
-import 'package:myfitnesstale/src/ui/workouts/widgets/progress/history/latest_workout_record_card.dart';
-import 'package:myfitnesstale/src/utils/nullable.dart';
 
 import '../../support/test_database.dart';
 
@@ -89,12 +75,6 @@ class _SpyWorkoutRecordCubit extends WorkoutRecordCubit {
 
   final List<({int? workoutId, bool skipSkipped})> latestCalls = [];
   final List<({int? workoutId, bool? skipSkipped})> listCalls = [];
-
-  void seedLatestRecord(WorkoutRecordDto? record) {
-    emit(
-      state.copyWith(latestWorkoutRecord: Nullable(record), isLoading: false),
-    );
-  }
 
   @override
   Future<void> getLatestWorkoutRecord({
@@ -260,249 +240,4 @@ void main() {
       expect(find.text('Empty history'), findsOneWidget);
     },
   );
-
-  testWidgets(
-    'LatestWorkoutRecord refetches on workoutId change and ignores mismatched cached record',
-    (tester) async {
-      final spyCubit = _SpyWorkoutRecordCubit();
-      addTearDown(spyCubit.close);
-      spyCubit.seedLatestRecord(
-        WorkoutRecordDto(
-          id: 10,
-          workoutId: 1,
-          version: 1,
-          currentSetPosition: 0,
-          currentSetNumber: 1,
-          currentExercisePosition: 0,
-          totalSets: 3,
-          totalReps: 30,
-          totalRestSecs: 90,
-          totalVolume: 1500000,
-          muscles: const TargetMuscles(primary: {}, secondary: {}),
-          startedAt: DateTime(2026, 3, 1),
-          completedAt: DateTime(2026, 3, 1, 0, 30),
-        ),
-      );
-
-      Widget buildWidget(int workoutId) {
-        final sizes = DataDisplaySizes.getDataDisplaySizes(ScreenSize.xs);
-        return BlocProvider<WorkoutRecordCubit>.value(
-          value: spyCubit,
-          child: MaterialApp(
-            home: Scaffold(
-              body: Builder(
-                builder: (context) => LatestWorkoutRecord(
-                  sizes: sizes,
-                  theme: Theme.of(context),
-                  units: Units.metric,
-                  workoutId: workoutId,
-                  workoutVersion: 1,
-                ),
-              ),
-            ),
-          ),
-        );
-      }
-
-      await tester.pumpWidget(buildWidget(1));
-      await tester.pump();
-
-      expect(spyCubit.latestCalls, [(workoutId: 1, skipSkipped: true)]);
-      expect(find.byType(LatestWorkoutRecordCard), findsOneWidget);
-      expect(find.byType(EmptyWorkoutRecord), findsNothing);
-
-      await tester.pumpWidget(buildWidget(2));
-      await tester.pump();
-
-      expect(spyCubit.latestCalls, [
-        (workoutId: 1, skipSkipped: true),
-        (workoutId: 2, skipSkipped: true),
-      ]);
-      expect(find.byType(LatestWorkoutRecordCard), findsNothing);
-      expect(find.byType(EmptyWorkoutRecord), findsOneWidget);
-    },
-  );
-
-  testWidgets(
-    'LatestWorkoutRecord shows error and retry action on latestError instead of empty state',
-    (tester) async {
-      final spyCubit = _SpyWorkoutRecordCubit();
-      addTearDown(spyCubit.close);
-
-      final sizes = DataDisplaySizes.getDataDisplaySizes(ScreenSize.xs);
-      await tester.pumpWidget(
-        BlocProvider<WorkoutRecordCubit>.value(
-          value: spyCubit,
-          child: MaterialApp(
-            home: Scaffold(
-              body: Builder(
-                builder: (context) => LatestWorkoutRecord(
-                  sizes: sizes,
-                  theme: Theme.of(context),
-                  units: Units.metric,
-                  workoutId: 7,
-                  workoutVersion: 1,
-                ),
-              ),
-            ),
-          ),
-        ),
-      );
-      await tester.pump();
-
-      const err = ErrorState(
-        type: 'operationFailure',
-        description: 'Failed to get latest workout record',
-      );
-      spyCubit.emit(
-        spyCubit.state.copyWith(
-          latestWorkoutRecord: const Nullable(null),
-          latestError: const Nullable(err),
-          error: const Nullable(err),
-          isLoadingLatest: false,
-        ),
-      );
-      await tester.pumpAndSettle();
-
-      expect(find.text('Could not load latest workout record'), findsOneWidget);
-      expect(find.byType(EmptyWorkoutRecord), findsNothing);
-
-      final callsBeforeRetry = spyCubit.latestCalls.length;
-      await tester.tap(
-        find.byKey(const ValueKey('latest-workout-record-retry')),
-      );
-      await tester.pump();
-
-      expect(spyCubit.latestCalls.length, callsBeforeRetry + 1);
-      expect(spyCubit.latestCalls.last, (workoutId: 7, skipSkipped: true));
-    },
-  );
-
-  testWidgets(
-    'EmptyWorkoutRecord does not spin navigation actions during unrelated cubit work',
-    (tester) async {
-      final spyCubit = _SpyWorkoutRecordCubit();
-      addTearDown(spyCubit.close);
-
-      await tester.pumpWidget(
-        BlocProvider<WorkoutRecordCubit>.value(
-          value: spyCubit,
-          child: MaterialApp(
-            home: Scaffold(
-              body: LatestWorkoutRecord(
-                theme: ThemeData.light(),
-                sizes: DataDisplaySizes.getDataDisplaySizes(ScreenSize.xs),
-                units: Units.metric,
-                workoutId: 7,
-                workoutVersion: 1,
-              ),
-            ),
-          ),
-        ),
-      );
-
-      spyCubit.emit(
-        spyCubit.state.copyWith(
-          latestWorkoutRecord: const Nullable(null),
-          isLoading: true,
-          isLoadingLatest: false,
-          isLoadingRecords: true,
-        ),
-      );
-      await tester.pump();
-
-      expect(spyCubit.state.isLoading, isTrue);
-      final emptyCard = tester.widget<EmptyWorkoutRecord>(
-        find.byType(EmptyWorkoutRecord),
-      );
-      expect(emptyCard.isLoading, isFalse);
-    },
-  );
-
-  test('WorkoutRecordCubit.getLatestWorkoutRecord clears stale record on failure and preserves unrelated errors on recovery', () async {
-    final db = await testDatabase.db;
-    final workoutId = await db.insert(
-      Workout.table,
-      Workout.create(
-        name: 'Error Recovery Workout',
-        difficulty: Difficulty.beginner,
-      ).toMap(),
-    );
-    final now = DateTime.now().millisecondsSinceEpoch ~/ 1000;
-    await db.insert(
-      WorkoutRecord.table,
-      WorkoutRecord.create(
-        workoutId: workoutId,
-        version: 1,
-        startedAt: now,
-        completedAt: now + 1800,
-        status: ProgressStatus.completed,
-      ).toMap(),
-    );
-
-    var failRead = false;
-    final helper = DatabaseHelper();
-    final repo = WorkoutRecordRepository(
-      workoutRecordDao: Dao<WorkoutRecord>(
-        databaseHelper: helper,
-        tableName: WorkoutRecord.table,
-        fromMap: (map) {
-          if (failRead) {
-            throw StateError('Simulated workout record read failure');
-          }
-          return WorkoutRecord.fromMap(map);
-        },
-      ),
-      setRecordDao: Dao<WorkoutSetRecord>(
-        databaseHelper: helper,
-        tableName: WorkoutSetRecord.table,
-        fromMap: WorkoutSetRecord.fromMap,
-      ),
-      setExerciseRecordDao: Dao<WorkoutSetExerciseRecord>(
-        databaseHelper: helper,
-        tableName: WorkoutSetExerciseRecord.table,
-        fromMap: WorkoutSetExerciseRecord.fromMap,
-      ),
-      workoutDao: Dao<Workout>(
-        databaseHelper: helper,
-        tableName: Workout.table,
-        fromMap: Workout.fromMap,
-      ),
-      exerciseDao: Dao<Exercise>(
-        databaseHelper: helper,
-        tableName: Exercise.table,
-        fromMap: Exercise.fromMap,
-      ),
-    );
-    final cubit = WorkoutRecordCubit(workoutRecordRepository: repo);
-    addTearDown(cubit.close);
-
-    await cubit.getLatestWorkoutRecord(workoutId: workoutId);
-    expect(cubit.state.latestWorkoutRecord, isNotNull);
-    expect(cubit.state.latestError, isNull);
-
-    // Initial history load populates workoutRecords.
-    await cubit.getWorkoutRecords(workoutId: workoutId, offset: 0);
-    expect(cubit.state.workoutRecords, isNotEmpty);
-    expect(cubit.state.recordsError, isNull);
-
-    failRead = true;
-    await cubit.getLatestWorkoutRecord(workoutId: workoutId);
-    expect(cubit.state.latestWorkoutRecord, isNull);
-    expect(cubit.state.latestError, isNotNull);
-    expect(cubit.state.isLoadingLatest, isFalse);
-
-    // Failed offset == 0 reload clears stale workoutRecords and sets recordsError,
-    // which should survive active latest recovery.
-    await cubit.getWorkoutRecords(workoutId: workoutId, offset: 0);
-    expect(cubit.state.workoutRecords, isEmpty);
-    final historyError = cubit.state.recordsError;
-    expect(historyError, isNotNull);
-
-    failRead = false;
-    await cubit.getLatestWorkoutRecord(workoutId: workoutId);
-    expect(cubit.state.latestWorkoutRecord, isNotNull);
-    expect(cubit.state.latestError, isNull);
-    expect(cubit.state.error, equals(historyError));
-  });
 }

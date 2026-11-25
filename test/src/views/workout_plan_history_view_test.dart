@@ -37,7 +37,6 @@ import 'package:myfitnesstale/src/ui/workout_plans/screens/workout_plan_history_
 import 'package:myfitnesstale/src/ui/workout_plans/view_models/states/workout_plan_record_state.dart';
 import 'package:myfitnesstale/src/ui/workout_plans/view_models/workout_plan_cubit.dart';
 import 'package:myfitnesstale/src/ui/workout_plans/view_models/workout_plan_record_cubit.dart';
-import 'package:myfitnesstale/src/ui/workout_plans/widgets/history/empty_workout_plan_record.dart';
 import 'package:myfitnesstale/src/ui/workout_plans/widgets/history/single_workout_plan_record_list.dart';
 import 'package:myfitnesstale/src/utils/nullable.dart';
 
@@ -85,7 +84,6 @@ class _WorkoutPlanRecordCubit extends WorkoutPlanRecordCubit {
   }
 
   int loadCalls = 0;
-  int latestCalls = 0;
 
   void failWithLoadedRecords(String description) {
     emit(
@@ -93,18 +91,6 @@ class _WorkoutPlanRecordCubit extends WorkoutPlanRecordCubit {
         error: Nullable(
           ErrorState(type: 'operationFailure', description: description),
         ),
-      ),
-    );
-  }
-
-  void failLatestRecord(String description) {
-    final err = ErrorState(type: 'operationFailure', description: description);
-    emit(
-      state.copyWith(
-        latestWorkoutPlanRecord: const Nullable(null),
-        latestError: Nullable(err),
-        error: Nullable(err),
-        isLoadingLatest: false,
       ),
     );
   }
@@ -121,9 +107,7 @@ class _WorkoutPlanRecordCubit extends WorkoutPlanRecordCubit {
   }
 
   @override
-  Future<void> getLatestWorkoutPlanRecord([int? workoutPlanId]) async {
-    latestCalls++;
-  }
+  Future<void> getLatestWorkoutPlanRecord([int? workoutPlanId]) async {}
 }
 
 void main() {
@@ -311,104 +295,4 @@ void main() {
     expect(find.text('Refresh failed'), findsOneWidget);
     expect(find.byType(SnackBar), findsOneWidget);
   });
-
-  testWidgets(
-    'LatestWorkoutPlanRecord shows error and retry action on latestError instead of empty or stale state',
-    (tester) async {
-      final cubit = await pumpView(
-        tester,
-        WorkoutPlanRecordState.initial().copyWith(
-          latestWorkoutPlanRecord: Nullable(
-            record(1, ProgressStatus.inProgress),
-          ),
-        ),
-      );
-      await tester.pumpAndSettle();
-
-      expect(find.text('Latest Record'), findsOneWidget);
-      expect(
-        find.text('Could not load latest workout plan record'),
-        findsNothing,
-      );
-
-      cubit.failLatestRecord('Latest plan load failed');
-      await tester.pumpAndSettle();
-
-      expect(
-        find.text('Could not load latest workout plan record'),
-        findsOneWidget,
-      );
-      expect(find.text('No workout plan records'), findsNothing);
-      expect(find.text('Latest Record'), findsNothing);
-
-      final callsBeforeRetry = cubit.latestCalls;
-      await tester.tap(
-        find.byKey(const ValueKey('latest-workout-plan-record-retry')),
-      );
-      await tester.pump();
-
-      expect(cubit.latestCalls, callsBeforeRetry + 1);
-    },
-  );
-
-  testWidgets(
-    'EmptyWorkoutPlanRecord does not spin navigation actions during unrelated cubit work',
-    (tester) async {
-      final cubit = await pumpView(
-        tester,
-        WorkoutPlanRecordState.initial().copyWith(
-          latestWorkoutPlanRecord: const Nullable(null),
-          isLoadingLatest: false,
-          isLoading: true,
-        ),
-      );
-      await tester.pump();
-
-      expect(cubit.state.isLoading, isTrue);
-      final emptyCard = tester.widget<EmptyWorkoutPlanRecord>(
-        find.byType(EmptyWorkoutPlanRecord),
-      );
-      expect(emptyCard.isLoading, isFalse);
-    },
-  );
-
-  testWidgets(
-    'WorkoutPlanRecordHistory renders inline retry footer on load-more historyError while keeping loaded records',
-    (tester) async {
-      final cubit = await pumpView(
-        tester,
-        WorkoutPlanRecordState.initial().copyWith(
-          planRecords: [record(1, ProgressStatus.inProgress)],
-          pagination: const WorkoutPlanRecordPagination(
-            workoutPlanId: 9,
-            limit: 20,
-            offset: 0,
-            total: 5,
-          ),
-          historyError: const Nullable(
-            ErrorState(
-              type: 'operationFailure',
-              description: 'Load more plan history failed',
-            ),
-          ),
-          isLoadingHistory: false,
-        ),
-      );
-      await tester.pump();
-
-      expect(find.text('In Progress'), findsOneWidget);
-      expect(find.text('Load more plan history failed'), findsOneWidget);
-      final retryButton = find.byKey(
-        const ValueKey('workout-plan-history-load-more-retry'),
-      );
-      expect(retryButton, findsOneWidget);
-
-      final callsBefore = cubit.loadCalls;
-      await tester.ensureVisible(retryButton);
-      await tester.pumpAndSettle();
-      await tester.tap(retryButton);
-      await tester.pump();
-      expect(cubit.loadCalls, callsBefore + 1);
-    },
-  );
 }

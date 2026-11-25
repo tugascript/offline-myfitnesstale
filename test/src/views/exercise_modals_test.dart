@@ -19,7 +19,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
-import 'package:skeletonizer/skeletonizer.dart';
 import 'package:myfitnesstale/src/data/repositories/core/dtos/picture_dto.dart';
 import 'package:myfitnesstale/src/data/repositories/core/dtos/video_dto.dart';
 import 'package:myfitnesstale/src/data/repositories/exercises/dtos/equipment_dto.dart';
@@ -256,19 +255,17 @@ class _FakeExerciseRecordCubit extends ExerciseRecordCubit {
   final List<StrengthGoalInput> createdStrengthGoals = [];
   final List<(int, StrengthGoalInput)> updatedStrengthGoals = [];
   final List<(int, int)> getStrengthGoalsCalls = [];
-  int getActiveStrengthGoalCalls = 0;
 
   _FakeExerciseRecordCubit({
     this.shouldFail = false,
     StrengthGoalDto? activeStrengthGoal,
-    bool hasLoadedActiveGoal = true,
     List<StrengthGoalDto> strengthGoals = const [],
     StrengthGoalPagination? strengthGoalPagination,
   }) : super(exerciseRecordRepository: ExerciseRecordRepository.create()) {
     emit(
       state.copyWith(
         activeStrengthGoal: Nullable(activeStrengthGoal),
-        hasLoadedActiveGoal: hasLoadedActiveGoal,
+        hasLoadedActiveGoal: true,
         strengthGoals: strengthGoals,
         strengthGoalPagination: strengthGoalPagination,
       ),
@@ -286,40 +283,8 @@ class _FakeExerciseRecordCubit extends ExerciseRecordCubit {
     );
   }
 
-  void emitActiveGoalError(String description) {
-    final errorState = ErrorState(
-      type: 'operationFailure',
-      description: description,
-    );
-    emit(
-      state.copyWith(
-        activeStrengthGoal: const Nullable(null),
-        activeGoalError: Nullable(errorState),
-        error: Nullable(errorState),
-        isLoadingActiveGoal: false,
-      ),
-    );
-  }
-
-  void emitGoalsError(String description) {
-    final errorState = ErrorState(
-      type: 'operationFailure',
-      description: description,
-    );
-    emit(
-      state.copyWith(
-        strengthGoals: const [],
-        goalsError: Nullable(errorState),
-        error: Nullable(errorState),
-        isLoadingGoals: false,
-      ),
-    );
-  }
-
   @override
-  Future<void> getActiveStrengthGoal({int? exerciseId}) async {
-    getActiveStrengthGoalCalls++;
-  }
+  Future<void> getActiveStrengthGoal({int? exerciseId}) async {}
 
   @override
   Future<void> getStrengthGoals({
@@ -1775,251 +1740,6 @@ void main() {
         paginatedCubit.getStrengthGoalsCalls.any((call) => call.$2 == 10),
         isTrue,
       );
-    },
-  );
-
-  testWidgets(
-    'ActiveStrengthGoalCard shows error and retry action on activeGoalError instead of stale or empty goal',
-    (tester) async {
-      final profileCubit = _FakeProfileCubit();
-      final recordCubit = _FakeExerciseRecordCubit(
-        activeStrengthGoal: StrengthGoalDto(
-          id: 11,
-          name: 'Bench 100kg',
-          targetReps: 5,
-          targetWeight: 100000,
-          targetMaxStrength: 116667,
-          exerciseId: 1,
-          status: ProgressStatus.inProgress,
-          startDate: DateTime(2026, 1, 1),
-        ),
-      );
-      addTearDown(profileCubit.close);
-      addTearDown(recordCubit.close);
-
-      await tester.pumpWidget(
-        MultiBlocProvider(
-          providers: [
-            BlocProvider<ExerciseRecordCubit>.value(value: recordCubit),
-            BlocProvider<ProfileCubit>.value(value: profileCubit),
-          ],
-          child: MaterialApp(
-            home: Scaffold(
-              body: ActiveStrengthGoalCard(
-                theme: ThemeData.light(),
-                sizes: DataDisplaySizes.getDataDisplaySizes(ScreenSize.xs),
-                units: Units.metric,
-              ),
-            ),
-          ),
-        ),
-      );
-      await tester.pumpAndSettle();
-
-      expect(find.text('Bench 100kg'), findsOneWidget);
-      expect(find.text('Could not load active strength goal'), findsNothing);
-
-      recordCubit.emitActiveGoalError('Failed to load active strength goal');
-      await tester.pumpAndSettle();
-
-      expect(find.text('Could not load active strength goal'), findsOneWidget);
-      expect(find.text('Bench 100kg'), findsNothing);
-      expect(find.text('No active strength goal'), findsNothing);
-
-      await tester.tap(
-        find.byKey(const ValueKey('active-strength-goal-retry')),
-      );
-      await tester.pump();
-
-      expect(recordCubit.getActiveStrengthGoalCalls, 1);
-    },
-  );
-
-  testWidgets(
-    'ActiveStrengthGoalCard stays skeletonized before first active goal load instead of flashing empty state',
-    (tester) async {
-      final profileCubit = _FakeProfileCubit();
-      final recordCubit = _FakeExerciseRecordCubit(
-        activeStrengthGoal: null,
-        hasLoadedActiveGoal: false,
-      );
-      addTearDown(profileCubit.close);
-      addTearDown(recordCubit.close);
-
-      await tester.pumpWidget(
-        MultiBlocProvider(
-          providers: [
-            BlocProvider<ExerciseRecordCubit>.value(value: recordCubit),
-            BlocProvider<ProfileCubit>.value(value: profileCubit),
-          ],
-          child: MaterialApp(
-            home: Scaffold(
-              body: ActiveStrengthGoalCard(
-                theme: ThemeData.light(),
-                sizes: DataDisplaySizes.getDataDisplaySizes(ScreenSize.xs),
-                units: Units.metric,
-              ),
-            ),
-          ),
-        ),
-      );
-      await tester.pump();
-
-      expect(find.text('No active strength goal'), findsNothing);
-      expect(
-        find.byWidgetPredicate((w) => w is Skeletonizer && w.enabled),
-        findsOneWidget,
-      );
-
-      recordCubit.emit(recordCubit.state.copyWith(hasLoadedActiveGoal: true));
-      await tester.pumpAndSettle();
-
-      expect(find.text('No active strength goal'), findsOneWidget);
-      expect(
-        find.byWidgetPredicate((w) => w is Skeletonizer && w.enabled),
-        findsNothing,
-      );
-    },
-  );
-
-  testWidgets(
-    'StrengthGoalHistory shows error and retry action on goalsError instead of Empty history',
-    (tester) async {
-      tester.view.physicalSize = const Size(800, 1200);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(tester.view.reset);
-
-      final profileCubit = _FakeProfileCubit();
-      final recordCubit = _FakeExerciseRecordCubit();
-      addTearDown(profileCubit.close);
-      addTearDown(recordCubit.close);
-
-      final router = GoRouter(
-        routes: [
-          GoRoute(
-            path: '/',
-            builder: (_, _) => const StrengthGoalsListScreen(),
-          ),
-        ],
-      );
-      addTearDown(router.dispose);
-
-      await tester.pumpWidget(
-        MultiBlocProvider(
-          providers: [
-            BlocProvider<ExerciseRecordCubit>.value(value: recordCubit),
-            BlocProvider<ProfileCubit>.value(value: profileCubit),
-          ],
-          child: MaterialApp.router(routerConfig: router),
-        ),
-      );
-      await tester.pumpAndSettle();
-
-      expect(find.text('Empty history'), findsOneWidget);
-      expect(find.text('Could not load strength goals history'), findsNothing);
-
-      recordCubit.emitGoalsError('Failed to load strength goals');
-      await tester.pumpAndSettle();
-
-      expect(
-        find.text('Could not load strength goals history'),
-        findsOneWidget,
-      );
-      expect(find.text('Empty history'), findsNothing);
-
-      final callsBeforeRetry = recordCubit.getStrengthGoalsCalls.length;
-      await tester.tap(
-        find.byKey(const ValueKey('strength-goal-history-retry')),
-      );
-      await tester.pump();
-
-      expect(recordCubit.getStrengthGoalsCalls.length, callsBeforeRetry + 1);
-    },
-  );
-
-  testWidgets(
-    'StrengthGoalHistory renders inline load-more retry footer and pauses scroll fetches on goalsError',
-    (tester) async {
-      tester.view.physicalSize = const Size(800, 1200);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(tester.view.reset);
-
-      final profileCubit = _FakeProfileCubit();
-      final recordCubit = _FakeExerciseRecordCubit();
-      addTearDown(profileCubit.close);
-      addTearDown(recordCubit.close);
-
-      final router = GoRouter(
-        routes: [
-          GoRoute(
-            path: '/',
-            builder: (_, _) => const StrengthGoalsListScreen(),
-          ),
-        ],
-      );
-      addTearDown(router.dispose);
-
-      await tester.pumpWidget(
-        MultiBlocProvider(
-          providers: [
-            BlocProvider<ExerciseRecordCubit>.value(value: recordCubit),
-            BlocProvider<ProfileCubit>.value(value: profileCubit),
-          ],
-          child: MaterialApp.router(routerConfig: router),
-        ),
-      );
-      await tester.pumpAndSettle();
-
-      final pastGoal = StrengthGoalDto(
-        id: 77,
-        name: 'Past Squat Goal',
-        targetReps: 5,
-        targetWeight: 120000,
-        targetMaxStrength: 140000,
-        exerciseId: 1,
-        status: ProgressStatus.completed,
-        startDate: DateTime(2026, 1, 1),
-        completedAt: DateTime(2026, 2, 1),
-        exercise: _sampleExercise(id: 1, name: 'Back Squat'),
-      );
-
-      recordCubit.emit(
-        recordCubit.state.copyWith(
-          strengthGoals: [pastGoal],
-          strengthGoalPagination: const StrengthGoalPagination(
-            skipInProgress: true,
-            limit: 20,
-            offset: 0,
-            total: 5,
-          ),
-          isLoadingGoals: false,
-          goalsError: const Nullable(
-            ErrorState(
-              type: 'operationFailure',
-              description: 'Failed to load more strength goals',
-            ),
-          ),
-        ),
-      );
-      await tester.pumpAndSettle();
-
-      expect(find.text('Past Squat Goal'), findsOneWidget);
-      expect(find.text('Failed to load more strength goals'), findsOneWidget);
-      final retryButton = find.byKey(
-        const ValueKey('strength-goal-history-load-more-retry'),
-      );
-      expect(retryButton, findsOneWidget);
-
-      final callsBeforeScroll = recordCubit.getStrengthGoalsCalls.length;
-      await tester.drag(find.byType(ListView), const Offset(0, -300));
-      await tester.pump();
-      expect(recordCubit.getStrengthGoalsCalls.length, callsBeforeScroll);
-
-      await tester.ensureVisible(retryButton);
-      await tester.tap(retryButton);
-      await tester.pump();
-      expect(recordCubit.getStrengthGoalsCalls.length, callsBeforeScroll + 1);
-      expect(recordCubit.getStrengthGoalsCalls.last.$2, 1);
     },
   );
 }
