@@ -48,6 +48,7 @@ class _Cubit extends WorkoutPlanRecordCubit {
 
   int loads = 0;
   final List<int> deletedRecordIds = [];
+  bool failNextDelete = false;
   WorkoutPlanRecordState nextState = WorkoutPlanRecordState.initial();
   Completer<void>? pending;
 
@@ -64,6 +65,22 @@ class _Cubit extends WorkoutPlanRecordCubit {
   @override
   Future<bool> deleteWorkoutPlanRecord(int id) async {
     deletedRecordIds.add(id);
+    if (failNextDelete) {
+      failNextDelete = false;
+      emit(state.copyWith(isLoading: true, error: const Nullable(null)));
+      emit(
+        state.copyWith(
+          isLoading: false,
+          error: const Nullable(
+            ErrorState(
+              type: 'operationFailure',
+              description: 'Failed to delete workout plan record',
+            ),
+          ),
+        ),
+      );
+      return false;
+    }
     emit(
       state.copyWith(
         currentPlanRecord: CurrentWorkoutPlanRecordState.initial(),
@@ -366,6 +383,60 @@ void main() {
       expect(cubit.deletedRecordIds, [recordId]);
       expect(find.text('No Active Workout Plan'), findsOneWidget);
       expect(deleteButton, findsNothing);
+    },
+  );
+
+  testWidgets(
+    'shows snackbar and retains active plan content when deleting active record fails',
+    (tester) async {
+      final initialActive = activeState();
+      final recordId = initialActive.currentPlanRecord.currentPlanRecord!.id;
+      final cubit = _Cubit()
+        ..nextState = initialActive
+        ..failNextDelete = true;
+      await pumpView(tester, cubit);
+      await tester.pumpAndSettle();
+
+      final deleteButton = find.byKey(
+        const ValueKey('current-workout-plan-record-delete'),
+      );
+      await tester.tap(deleteButton);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('DELETE'));
+      await tester.pumpAndSettle();
+
+      expect(cubit.deletedRecordIds, [recordId]);
+      expect(find.byType(SnackBar), findsOneWidget);
+      expect(find.text('Failed to delete workout plan record'), findsOneWidget);
+      expect(find.byType(ActiveWorkoutPlanContent), findsOneWidget);
+      expect(find.text('My current plan'), findsOneWidget);
+      expect(find.byType(CurrentWorkoutPlanPlaceholder), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'does not show snackbar for shared cubit errors while screen is hidden',
+    (tester) async {
+      final visible = ValueNotifier(false);
+      addTearDown(visible.dispose);
+      final cubit = _Cubit()
+        ..publish(activeState().copyWith(hasLoadedActivePlan: true));
+      await pumpView(tester, cubit, visible: visible);
+      await tester.pumpAndSettle();
+
+      cubit.publish(
+        cubit.state.copyWith(
+          error: const Nullable(
+            ErrorState(
+              type: 'operationFailure',
+              description: 'Failed to delete workout plan record',
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byType(SnackBar), findsNothing);
     },
   );
 }
