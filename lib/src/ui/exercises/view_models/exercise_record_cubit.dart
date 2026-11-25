@@ -444,6 +444,7 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
         emit(
           state.copyWith(
             activeStrengthGoal: const Nullable(null),
+            hasLoadedActiveGoal: true,
             isLoadingActiveGoal: false,
             activeGoalError: const Nullable(null),
           ),
@@ -457,6 +458,7 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
         emit(
           state.copyWith(
             activeStrengthGoal: const Nullable(null),
+            hasLoadedActiveGoal: false,
             isLoadingActiveGoal: false,
             activeGoalError: Nullable(errorState),
             error: Nullable(errorState),
@@ -468,6 +470,7 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
     emit(
       state.copyWith(
         activeStrengthGoal: Nullable(result.value),
+        hasLoadedActiveGoal: true,
         isLoadingActiveGoal: false,
         activeGoalError: const Nullable(null),
       ),
@@ -642,6 +645,7 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
     final goalsCurrent = goalsReqId == state.goalsRequestId;
 
     Nullable<StrengthGoalDto>? activeStrengthGoal;
+    bool? hasLoadedActiveGoal;
     Nullable<ErrorState>? activeGoalError;
     ErrorState? error;
 
@@ -649,10 +653,12 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
       if (activeResult.isErr()) {
         if (activeResult.error.type == SingleErrorTypes.notFound) {
           activeStrengthGoal = const Nullable(null);
+          hasLoadedActiveGoal = true;
           activeGoalError = const Nullable(null);
         } else {
           _logger.warning('Failed to load active entity', activeResult.error);
           activeStrengthGoal = const Nullable(null);
+          hasLoadedActiveGoal = false;
           error = ErrorState(
             type: activeResult.error.type.name,
             description: activeResult.error.description,
@@ -661,6 +667,7 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
         }
       } else {
         activeStrengthGoal = Nullable(activeResult.value);
+        hasLoadedActiveGoal = true;
         activeGoalError = const Nullable(null);
       }
     }
@@ -676,6 +683,7 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
     emit(
       state.copyWith(
         activeStrengthGoal: activeStrengthGoal,
+        hasLoadedActiveGoal: hasLoadedActiveGoal,
         activeGoalError: activeGoalError,
         strengthGoals: goalsCurrent && listResult.isOk()
             ? listResult.value.data

@@ -124,6 +124,7 @@ final class WeightRecordState extends Equatable {
   final bool isLoadingGoals;
   final ErrorState? error;
   final ErrorState? activeGoalError;
+  final ErrorState? goalsError;
   final ErrorState? latestError;
   final ErrorState? recordsError;
 
@@ -156,6 +157,7 @@ final class WeightRecordState extends Equatable {
     this.isLoadingGoals = false,
     this.error,
     this.activeGoalError,
+    this.goalsError,
     this.latestError,
     this.recordsError,
   });
@@ -191,6 +193,7 @@ final class WeightRecordState extends Equatable {
     bool? isLoadingGoals,
     Nullable<ErrorState>? error,
     Nullable<ErrorState>? activeGoalError,
+    Nullable<ErrorState>? goalsError,
     Nullable<ErrorState>? latestError,
     Nullable<ErrorState>? recordsError,
   }) {
@@ -225,6 +228,7 @@ final class WeightRecordState extends Equatable {
       activeGoalError: activeGoalError != null
           ? activeGoalError.value
           : this.activeGoalError,
+      goalsError: goalsError != null ? goalsError.value : this.goalsError,
       latestError: latestError != null ? latestError.value : this.latestError,
       recordsError: recordsError != null
           ? recordsError.value
@@ -254,6 +258,7 @@ final class WeightRecordState extends Equatable {
     isLoadingGoals,
     error,
     activeGoalError,
+    goalsError,
     latestError,
     recordsError,
   ];

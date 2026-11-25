@@ -19,6 +19,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 import 'package:myfitnesstale/src/data/repositories/core/dtos/picture_dto.dart';
 import 'package:myfitnesstale/src/data/repositories/core/dtos/video_dto.dart';
 import 'package:myfitnesstale/src/data/repositories/exercises/dtos/equipment_dto.dart';
@@ -260,12 +261,14 @@ class _FakeExerciseRecordCubit extends ExerciseRecordCubit {
   _FakeExerciseRecordCubit({
     this.shouldFail = false,
     StrengthGoalDto? activeStrengthGoal,
+    bool hasLoadedActiveGoal = true,
     List<StrengthGoalDto> strengthGoals = const [],
     StrengthGoalPagination? strengthGoalPagination,
   }) : super(exerciseRecordRepository: ExerciseRecordRepository.create()) {
     emit(
       state.copyWith(
         activeStrengthGoal: Nullable(activeStrengthGoal),
+        hasLoadedActiveGoal: hasLoadedActiveGoal,
         strengthGoals: strengthGoals,
         strengthGoalPagination: strengthGoalPagination,
       ),
@@ -1814,6 +1817,53 @@ void main() {
       await tester.pump();
 
       expect(recordCubit.getActiveStrengthGoalCalls, 1);
+    },
+  );
+
+  testWidgets(
+    'ActiveStrengthGoalCard stays skeletonized before first active goal load instead of flashing empty state',
+    (tester) async {
+      final profileCubit = _FakeProfileCubit();
+      final recordCubit = _FakeExerciseRecordCubit(
+        activeStrengthGoal: null,
+        hasLoadedActiveGoal: false,
+      );
+      addTearDown(profileCubit.close);
+      addTearDown(recordCubit.close);
+
+      await tester.pumpWidget(
+        MultiBlocProvider(
+          providers: [
+            BlocProvider<ExerciseRecordCubit>.value(value: recordCubit),
+            BlocProvider<ProfileCubit>.value(value: profileCubit),
+          ],
+          child: MaterialApp(
+            home: Scaffold(
+              body: ActiveStrengthGoalCard(
+                theme: ThemeData.light(),
+                sizes: DataDisplaySizes.getDataDisplaySizes(ScreenSize.xs),
+                units: Units.metric,
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      expect(find.text('No active strength goal'), findsNothing);
+      expect(
+        find.byWidgetPredicate((w) => w is Skeletonizer && w.enabled),
+        findsOneWidget,
+      );
+
+      recordCubit.emit(recordCubit.state.copyWith(hasLoadedActiveGoal: true));
+      await tester.pumpAndSettle();
+
+      expect(find.text('No active strength goal'), findsOneWidget);
+      expect(
+        find.byWidgetPredicate((w) => w is Skeletonizer && w.enabled),
+        findsNothing,
+      );
     },
   );
 }

@@ -37,6 +37,7 @@ import 'package:myfitnesstale/src/ui/workout_plans/screens/workout_plan_history_
 import 'package:myfitnesstale/src/ui/workout_plans/view_models/states/workout_plan_record_state.dart';
 import 'package:myfitnesstale/src/ui/workout_plans/view_models/workout_plan_cubit.dart';
 import 'package:myfitnesstale/src/ui/workout_plans/view_models/workout_plan_record_cubit.dart';
+import 'package:myfitnesstale/src/ui/workout_plans/widgets/history/empty_workout_plan_record.dart';
 import 'package:myfitnesstale/src/ui/workout_plans/widgets/history/single_workout_plan_record_list.dart';
 import 'package:myfitnesstale/src/utils/nullable.dart';
 
@@ -347,6 +348,27 @@ void main() {
       await tester.pump();
 
       expect(cubit.latestCalls, callsBeforeRetry + 1);
+    },
+  );
+
+  testWidgets(
+    'EmptyWorkoutPlanRecord does not spin navigation actions during unrelated cubit work',
+    (tester) async {
+      final cubit = await pumpView(
+        tester,
+        WorkoutPlanRecordState.initial().copyWith(
+          latestWorkoutPlanRecord: const Nullable(null),
+          isLoadingLatest: false,
+          isLoading: true,
+        ),
+      );
+      await tester.pump();
+
+      expect(cubit.state.isLoading, isTrue);
+      final emptyCard = tester.widget<EmptyWorkoutPlanRecord>(
+        find.byType(EmptyWorkoutPlanRecord),
+      );
+      expect(emptyCard.isLoading, isFalse);
     },
   );
 }

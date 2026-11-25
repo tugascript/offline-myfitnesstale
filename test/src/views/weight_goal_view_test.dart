@@ -67,6 +67,7 @@ class _ProfileCubit extends ProfileCubit {
 
 class _FakeWeightRecordCubit extends WeightRecordCubit {
   int activeGoalLoadCalls = 0;
+  int goalsLoadCalls = 0;
 
   _FakeWeightRecordCubit({
     bool initialLoading = false,
@@ -92,7 +93,9 @@ class _FakeWeightRecordCubit extends WeightRecordCubit {
     bool skipInProgress = false,
     int limit = 20,
     int offset = 0,
-  }) async {}
+  }) async {
+    goalsLoadCalls++;
+  }
 
   void setHistoryLoading(bool isLoadingGoals) {
     emit(state.copyWith(isLoadingGoals: isLoadingGoals));
@@ -120,6 +123,21 @@ class _FakeWeightRecordCubit extends WeightRecordCubit {
         hasLoadedActiveGoal: false,
         isLoadingActiveGoal: false,
         activeGoalError: Nullable(errorState),
+        error: Nullable(errorState),
+      ),
+    );
+  }
+
+  void emitGoalsError(String description) {
+    final errorState = ErrorState(
+      type: 'operationFailure',
+      description: description,
+    );
+    emit(
+      state.copyWith(
+        weightGoals: const [],
+        isLoadingGoals: false,
+        goalsError: Nullable(errorState),
         error: Nullable(errorState),
       ),
     );
@@ -295,6 +313,38 @@ void main() {
         find.byType(UpdateWeightGoalCard),
       );
       expect(updateCard.isLoading, isFalse);
+    },
+  );
+
+  testWidgets(
+    'WeightGoalHistory shows error and retry action on goalsError instead of Empty history',
+    (tester) async {
+      tester.view.physicalSize = const Size(800, 1200);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+
+      final cubit = _FakeWeightRecordCubit();
+      addTearDown(cubit.close);
+
+      await tester.pumpWidget(buildScreen(cubit));
+      await tester.pump();
+      cubit.setActiveGoal(null);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Empty history'), findsOneWidget);
+      expect(find.text('Could not load weight goals history'), findsNothing);
+
+      cubit.emitGoalsError('Failed to load weight goals');
+      await tester.pumpAndSettle();
+
+      expect(find.text('Could not load weight goals history'), findsOneWidget);
+      expect(find.text('Empty history'), findsNothing);
+
+      final callsBeforeRetry = cubit.goalsLoadCalls;
+      await tester.tap(find.byKey(const ValueKey('weight-goal-history-retry')));
+      await tester.pump();
+
+      expect(cubit.goalsLoadCalls, callsBeforeRetry + 1);
     },
   );
 }

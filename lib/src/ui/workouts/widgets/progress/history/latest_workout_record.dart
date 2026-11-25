@@ -105,7 +105,7 @@ class _LatestWorkoutRecordState extends State<LatestWorkoutRecord> {
         if (!state.isLoadingLatest && matchingRecord == null) {
           return EmptyWorkoutRecord(
             sizes: widget.sizes,
-            isLoading: state.isLoading,
+            isLoading: false,
             workoutId: widget.workoutId,
             workoutVersion: widget.workoutVersion,
           );
