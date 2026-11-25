@@ -53,7 +53,9 @@ void main() {
     required int planId,
     required ProgressStatus status,
     required int timestamp,
+    int? createdAt,
   }) {
+    final resolvedCreatedAt = createdAt ?? timestamp;
     return database.insert(
       WorkoutPlanRecord.table,
       WorkoutPlanRecord(
@@ -65,8 +67,8 @@ void main() {
         currentDay: 1,
         currentWorkoutPosition: 1,
         completedAt: status == ProgressStatus.completed ? timestamp + 60 : null,
-        createdAt: timestamp,
-        updatedAt: timestamp,
+        createdAt: resolvedCreatedAt,
+        updatedAt: resolvedCreatedAt,
       ).toMap(),
     );
   }
@@ -796,5 +798,201 @@ void main() {
     expect(cubit.state.isLoading, isFalse);
     expect(cubit.state.latestWorkoutPlanRecord, isNull);
     expect(cubit.state.planRecords, isEmpty);
+  });
+
+  test('in-flight getLatestActivePlanRecord does not restore a deleted active execution', () async {
+    final database = await testDatabase.db;
+    final planOne = await seedPlan(database, name: 'Active Plan One');
+    final planTwo = await seedPlan(database, name: 'Active Plan Two');
+    final olderActiveId = await seedRecord(
+      database,
+      planId: planOne,
+      status: ProgressStatus.inProgress,
+      timestamp: 100,
+    );
+    final newestActiveId = await seedRecord(
+      database,
+      planId: planTwo,
+      status: ProgressStatus.inProgress,
+      timestamp: 200,
+    );
+
+    final cubit = WorkoutPlanRecordCubit(
+      workoutPlanRecordRepository: WorkoutPlanRecordRepository.create(),
+      workoutPlanRepository: WorkoutPlanRepository.create(),
+      workoutRecordRepository: WorkoutRecordRepository.create(),
+    );
+    addTearDown(cubit.close);
+
+    // Start active-plan fetch first, then delete the newest active execution while it is in flight.
+    final activeLoadFuture = cubit.getLatestActivePlanRecord();
+    final deleteNewestFuture = cubit.deleteWorkoutPlanRecord(newestActiveId);
+
+    expect(await deleteNewestFuture, isTrue);
+    await activeLoadFuture;
+
+    expect(cubit.state.isLoading, isFalse);
+    expect(cubit.state.hasLoadedActivePlan, isTrue);
+    expect(cubit.state.currentPlanRecord.currentPlanRecord?.id, olderActiveId);
+    expect(cubit.state.currentPlanRecord.workoutPlan?.id, planOne);
+
+    // Deleting the last remaining active execution during an in-flight read clears currentPlanRecord.
+    final secondActiveLoadFuture = cubit.getLatestActivePlanRecord();
+    final deleteOlderFuture = cubit.deleteWorkoutPlanRecord(olderActiveId);
+
+    expect(await deleteOlderFuture, isTrue);
+    await secondActiveLoadFuture;
+
+    expect(cubit.state.isLoading, isFalse);
+    expect(cubit.state.hasLoadedActivePlan, isTrue);
+    expect(cubit.state.currentPlanRecord.currentPlanRecord, isNull);
+    expect(cubit.state.currentPlanRecord.workoutPlan, isNull);
+  });
+
+  test('deleting all loaded history rows automatically refills remaining matching records from offset zero', () async {
+    final database = await testDatabase.db;
+    final planId = await seedPlan(database, name: 'Refill History Plan');
+    final r1 = await seedRecord(
+      database,
+      planId: planId,
+      status: ProgressStatus.completed,
+      timestamp: 100,
+    );
+    final r2 = await seedRecord(
+      database,
+      planId: planId,
+      status: ProgressStatus.completed,
+      timestamp: 200,
+    );
+    final r3 = await seedRecord(
+      database,
+      planId: planId,
+      status: ProgressStatus.completed,
+      timestamp: 300,
+    );
+
+    final cubit = WorkoutPlanRecordCubit(
+      workoutPlanRecordRepository: WorkoutPlanRecordRepository.create(),
+      workoutPlanRepository: WorkoutPlanRepository.create(),
+      workoutRecordRepository: WorkoutRecordRepository.create(),
+    );
+    addTearDown(cubit.close);
+
+    await cubit.getWorkoutPlanRecords(
+      workoutPlanId: planId,
+      limit: 2,
+      offset: 0,
+    );
+    expect(cubit.state.planRecords.map((r) => r.id), [r3, r2]);
+    expect(cubit.state.pagination.total, 3);
+
+    expect(await cubit.deleteWorkoutPlanRecord(r3), isTrue);
+    expect(cubit.state.planRecords.map((r) => r.id), [r2]);
+    expect(cubit.state.pagination.total, 2);
+
+    // Deleting the final loaded row must refill with r1 instead of leaving an empty list with total=1.
+    expect(await cubit.deleteWorkoutPlanRecord(r2), isTrue);
+    expect(cubit.state.isLoadingHistory, isFalse);
+    expect(cubit.state.planRecords.map((r) => r.id), [r1]);
+    expect(cubit.state.pagination.total, 1);
+
+    // Deleting the final remaining record leaves an empty list with total=0.
+    expect(await cubit.deleteWorkoutPlanRecord(r1), isTrue);
+    expect(cubit.state.planRecords, isEmpty);
+    expect(cubit.state.pagination.total, 0);
+  });
+
+  test('deleting an off-page record reconciles pagination total only when it matches current history filters', () async {
+    final database = await testDatabase.db;
+    final planOne = await seedPlan(database, name: 'Filtered Plan One');
+    final planTwo = await seedPlan(database, name: 'Filtered Plan Two');
+
+    // Seed an off-page record for planOne that has the newest startedAt (so Latest Card picks it)
+    // but oldest createdAt (so it is off page 1 of history).
+    final offPageLatestId = await seedRecord(
+      database,
+      planId: planOne,
+      status: ProgressStatus.completed,
+      timestamp: 1772000500,
+      createdAt: 1772000000,
+    );
+    final inPageOneId = await seedRecord(
+      database,
+      planId: planOne,
+      status: ProgressStatus.completed,
+      timestamp: 1772000100,
+      createdAt: 1772000100,
+    );
+    final inPageTwoId = await seedRecord(
+      database,
+      planId: planOne,
+      status: ProgressStatus.completed,
+      timestamp: 1772000200,
+      createdAt: 1772000200,
+    );
+    // Out-of-date-range record for planOne and unrelated planTwo record.
+    final outsideRangeId = await seedRecord(
+      database,
+      planId: planOne,
+      status: ProgressStatus.completed,
+      timestamp: 1760000000,
+      createdAt: 1760000000,
+    );
+    final otherPlanId = await seedRecord(
+      database,
+      planId: planTwo,
+      status: ProgressStatus.completed,
+      timestamp: 1772000300,
+      createdAt: 1772000300,
+    );
+
+    final cubit = WorkoutPlanRecordCubit(
+      workoutPlanRecordRepository: WorkoutPlanRecordRepository.create(),
+      workoutPlanRepository: WorkoutPlanRepository.create(),
+      workoutRecordRepository: WorkoutRecordRepository.create(),
+    );
+    addTearDown(cubit.close);
+
+    final start = DateTime.fromMillisecondsSinceEpoch(
+      1771000000 * 1000,
+      isUtc: true,
+    );
+    final end = DateTime.fromMillisecondsSinceEpoch(
+      1773000000 * 1000,
+      isUtc: true,
+    );
+
+    await cubit.getLatestWorkoutPlanRecord(planOne);
+    await cubit.getWorkoutPlanRecords(
+      workoutPlanId: planOne,
+      progressStatus: ProgressStatus.completed,
+      dateRange: (start, end),
+      limit: 2,
+      offset: 0,
+    );
+
+    expect(cubit.state.latestWorkoutPlanRecord?.id, offPageLatestId);
+    expect(cubit.state.planRecords.map((r) => r.id), [
+      inPageTwoId,
+      inPageOneId,
+    ]);
+    expect(cubit.state.pagination.total, 3);
+
+    // Deleting an unrelated plan's record must not change planOne's pagination total.
+    expect(await cubit.deleteWorkoutPlanRecord(otherPlanId), isTrue);
+    expect(cubit.state.pagination.total, 3);
+
+    // Deleting a record outside the active date filter must not change pagination total.
+    expect(await cubit.deleteWorkoutPlanRecord(outsideRangeId), isTrue);
+    expect(cubit.state.pagination.total, 3);
+
+    // Deleting the matching off-page record via Latest Card must decrement pagination total to 2.
+    expect(await cubit.deleteWorkoutPlanRecord(offPageLatestId), isTrue);
+    expect(cubit.state.planRecords.map((r) => r.id), [
+      inPageTwoId,
+      inPageOneId,
+    ]);
+    expect(cubit.state.pagination.total, 2);
+    expect(cubit.state.latestWorkoutPlanRecord?.id, inPageTwoId);
   });
 }
