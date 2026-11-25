@@ -378,6 +378,47 @@ void main() {
     },
   );
 
+  testWidgets(
+    'EmptyWorkoutRecord does not spin navigation actions during unrelated cubit work',
+    (tester) async {
+      final spyCubit = _SpyWorkoutRecordCubit();
+      addTearDown(spyCubit.close);
+
+      await tester.pumpWidget(
+        BlocProvider<WorkoutRecordCubit>.value(
+          value: spyCubit,
+          child: MaterialApp(
+            home: Scaffold(
+              body: LatestWorkoutRecord(
+                theme: ThemeData.light(),
+                sizes: DataDisplaySizes.getDataDisplaySizes(ScreenSize.xs),
+                units: Units.metric,
+                workoutId: 7,
+                workoutVersion: 1,
+              ),
+            ),
+          ),
+        ),
+      );
+
+      spyCubit.emit(
+        spyCubit.state.copyWith(
+          latestWorkoutRecord: const Nullable(null),
+          isLoading: true,
+          isLoadingLatest: false,
+          isLoadingRecords: true,
+        ),
+      );
+      await tester.pump();
+
+      expect(spyCubit.state.isLoading, isTrue);
+      final emptyCard = tester.widget<EmptyWorkoutRecord>(
+        find.byType(EmptyWorkoutRecord),
+      );
+      expect(emptyCard.isLoading, isFalse);
+    },
+  );
+
   test('WorkoutRecordCubit.getLatestWorkoutRecord clears stale record on failure and preserves unrelated errors on recovery', () async {
     final db = await testDatabase.db;
     final workoutId = await db.insert(

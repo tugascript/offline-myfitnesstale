@@ -482,7 +482,9 @@ class _TestMacroTrackingCubit extends MacroTrackingCubit {
 
 class _TestExerciseRecordCubit extends ExerciseRecordCubit {
   _TestExerciseRecordCubit()
-    : super(exerciseRecordRepository: ExerciseRecordRepository.create());
+    : super(exerciseRecordRepository: ExerciseRecordRepository.create()) {
+    emit(state.copyWith(hasLoadedActiveGoal: true));
+  }
 
   @override
   Future<void> getActiveStrengthGoal({int? exerciseId}) async {}

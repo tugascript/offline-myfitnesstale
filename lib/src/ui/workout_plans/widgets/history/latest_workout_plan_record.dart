@@ -104,7 +104,7 @@ class _LatestWorkoutPlanRecordState extends State<LatestWorkoutPlanRecord> {
         if (!state.isLoadingLatest && matchingRecord == null) {
           return EmptyWorkoutPlanRecord(
             sizes: widget.sizes,
-            isLoading: state.isLoading,
+            isLoading: false,
             workoutPlanId: widget.workoutPlanId,
           );
         }

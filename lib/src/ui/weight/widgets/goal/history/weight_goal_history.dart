@@ -22,6 +22,8 @@ import 'package:skeletonizer/skeletonizer.dart';
 import '../../../../../data/repositories/weight/dtos/weight_goal_dto.dart';
 import '../../../../../data/utils/enums.dart';
 import '../../../../core/sizes/data_display_sizes.dart';
+import '../../../../core/widgets/layout/app_text_button.dart';
+import '../../../../core/widgets/layout/empty_card.dart';
 import '../../../../core/widgets/not_found_list.dart';
 import '../../../../home/view_models/profile_cubit.dart';
 import '../../../../home/view_models/states/profile_state.dart';
@@ -90,6 +92,51 @@ class _WeightGoalHistoryState extends State<WeightGoalHistory> {
   Widget build(BuildContext context) {
     return BlocBuilder<WeightRecordCubit, WeightRecordState>(
       builder: (context, weightState) {
+        if (!weightState.isLoadingGoals &&
+            weightState.weightGoals.isEmpty &&
+            weightState.goalsError != null) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                "Weight Goals History",
+                style: TextStyle(
+                  fontSize: widget.sizes.titleFontSize,
+                  fontWeight: FontWeight.bold,
+                ),
+                textAlign: TextAlign.start,
+              ),
+              SizedBox(height: widget.sizes.spacing),
+              Expanded(
+                child: SingleChildScrollView(
+                  child: EmptyCard(
+                    sizes: widget.sizes,
+                    emoji: '⚠️',
+                    emptyText: 'Could not load weight goals history',
+                    actions: [
+                      AppTextButton(
+                        key: const ValueKey('weight-goal-history-retry'),
+                        isLoading: false,
+                        sizes: widget.sizes,
+                        isDense: true,
+                        label: 'Retry',
+                        icon: Icons.refresh,
+                        onPressed: () {
+                          context.read<WeightRecordCubit>().getWeightGoals(
+                            skipInProgress: true,
+                            offset: 0,
+                            limit: 20,
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          );
+        }
+
         if (!weightState.isLoadingGoals && weightState.weightGoals.isEmpty) {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,

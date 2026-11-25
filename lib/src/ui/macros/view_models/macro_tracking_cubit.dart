@@ -276,8 +276,7 @@ class MacroTrackingCubit extends Cubit<MacroTrackingState> {
       return false;
     }
 
-    await _refreshMacroGoals();
-    return true;
+    return await _refreshMacroGoals();
   }
 
   Future<bool> deleteMacroGoal(int id) async {
@@ -300,8 +299,7 @@ class MacroTrackingCubit extends Cubit<MacroTrackingState> {
       return false;
     }
 
-    await _refreshMacroGoals();
-    return true;
+    return await _refreshMacroGoals();
   }
 
   Future<bool> _refreshMacroGoals({MacroGoalDto? savedGoal}) async {
@@ -383,6 +381,13 @@ class MacroTrackingCubit extends Cubit<MacroTrackingState> {
       }
     }
 
+    final nextLoadingActiveGoal = activeIsCurrent
+        ? false
+        : state.isLoadingActiveGoal;
+    final nextLoadingGoalHistory = historyIsCurrent
+        ? false
+        : state.isLoadingGoalHistory;
+
     emit(
       state.copyWith(
         activeGoal: activeGoal,
@@ -400,8 +405,7 @@ class MacroTrackingCubit extends Cubit<MacroTrackingState> {
         isLoadingActiveGoal: activeIsCurrent ? false : null,
         hasLoadedGoalHistory: hasLoadedGoalHistory,
         isLoadingGoalHistory: historyIsCurrent ? false : null,
-        isLoading:
-            historyIsCurrent && (activeIsCurrent || !state.isLoadingActiveGoal)
+        isLoading: !nextLoadingActiveGoal && !nextLoadingGoalHistory
             ? false
             : null,
         activeGoalError: activeGoalError,

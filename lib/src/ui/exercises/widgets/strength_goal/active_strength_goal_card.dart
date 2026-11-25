@@ -86,7 +86,11 @@ class ActiveStrengthGoalCard extends StatelessWidget {
       builder: (context, state) {
         final goal = state.activeStrengthGoal;
         final isGoalLoading = state.isActiveGoalLoading;
-        final isSkeleton = isGoalLoading && goal == null;
+        final isSkeleton =
+            isGoalLoading ||
+            (!state.hasLoadedActiveGoal &&
+                state.activeGoalError == null &&
+                goal == null);
 
         if (!isGoalLoading && state.activeGoalError != null) {
           return EmptyCard(
@@ -111,7 +115,7 @@ class ActiveStrengthGoalCard extends StatelessWidget {
           );
         }
 
-        if (!isGoalLoading && goal == null) {
+        if (!isGoalLoading && state.hasLoadedActiveGoal && goal == null) {
           return EmptyActiveStrengthGoalCard(
             theme: theme,
             sizes: sizes,

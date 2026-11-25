@@ -112,6 +112,7 @@ final class ExerciseRecordState extends Equatable {
   final bool isLoadingLatest;
   final bool isLoadingRecords;
   final bool isLoadingActiveGoal;
+  final bool hasLoadedActiveGoal;
   final bool isLoadingGoals;
   final ErrorState? error;
   final ErrorState? latestError;
@@ -148,6 +149,7 @@ final class ExerciseRecordState extends Equatable {
     this.isLoadingLatest = false,
     this.isLoadingRecords = false,
     this.isLoadingActiveGoal = false,
+    this.hasLoadedActiveGoal = false,
     this.isLoadingGoals = false,
     this.error,
     this.latestError,
@@ -183,6 +185,7 @@ final class ExerciseRecordState extends Equatable {
     bool? isLoadingLatest,
     bool? isLoadingRecords,
     bool? isLoadingActiveGoal,
+    bool? hasLoadedActiveGoal,
     bool? isLoadingGoals,
     Nullable<ErrorState>? error,
     Nullable<ErrorState>? latestError,
@@ -218,6 +221,7 @@ final class ExerciseRecordState extends Equatable {
       isLoadingLatest: isLoadingLatest ?? this.isLoadingLatest,
       isLoadingRecords: isLoadingRecords ?? this.isLoadingRecords,
       isLoadingActiveGoal: isLoadingActiveGoal ?? this.isLoadingActiveGoal,
+      hasLoadedActiveGoal: hasLoadedActiveGoal ?? this.hasLoadedActiveGoal,
       isLoadingGoals: isLoadingGoals ?? this.isLoadingGoals,
       error: error != null ? error.value : this.error,
       latestError: latestError != null ? latestError.value : this.latestError,
@@ -249,6 +253,7 @@ final class ExerciseRecordState extends Equatable {
     isLoadingLatest,
     isLoadingRecords,
     isLoadingActiveGoal,
+    hasLoadedActiveGoal,
     isLoadingGoals,
     error,
     latestError,
