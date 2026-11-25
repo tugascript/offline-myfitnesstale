@@ -86,7 +86,11 @@ class _WeightRecordsHistoryState extends State<WeightRecordsHistory> {
             ),
             end: initialRange.end,
           );
-    if (cubit.state.weightRecords.isEmpty) {
+    final matchesCachedRange =
+        dateRange != null &&
+        dateRange.$1 == _dateRange.start &&
+        dateRange.$2 == _dateRange.end;
+    if (cubit.state.weightRecords.isEmpty || !matchesCachedRange) {
       cubit.getWeightRecords(
         dateRange: (_dateRange.start, _dateRange.end),
         limit: 1000,

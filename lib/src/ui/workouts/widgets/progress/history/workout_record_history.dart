@@ -75,6 +75,20 @@ class _WorkoutRecordHistoryState extends State<WorkoutRecordHistory> {
     );
   }
 
+  @override
+  void didUpdateWidget(covariant WorkoutRecordHistory oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.workoutId != widget.workoutId) {
+      context.read<WorkoutRecordCubit>().getWorkoutRecords(
+        workoutId: widget.workoutId,
+        dateRange: (_dateRange.start, _dateRange.end),
+        skipSkipped: true,
+        limit: 20,
+        offset: 0,
+      );
+    }
+  }
+
   String _formatDate(DateTime date) {
     switch (widget.units) {
       case Units.metric:
