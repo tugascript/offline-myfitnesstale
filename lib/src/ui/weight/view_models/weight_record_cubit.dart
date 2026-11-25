@@ -32,10 +32,23 @@ import './states/weight_record_state.dart';
 class WeightRecordCubit extends Cubit<WeightRecordState> {
   final WeightRecordRepository _weightRecordService;
   final Logger _logger = Logger("WeightRecordCubit");
+  int _activeMutations = 0;
 
   WeightRecordCubit({required WeightRecordRepository weightRecordRepository})
     : _weightRecordService = weightRecordRepository,
       super(WeightRecordState.initial());
+
+  void _startMutation() {
+    _activeMutations++;
+    emit(state.copyWith(isLoading: true));
+  }
+
+  bool _finishMutation() {
+    if (_activeMutations > 0) {
+      _activeMutations--;
+    }
+    return _activeMutations > 0;
+  }
 
   Future<void> getActiveWeightGoal() async {
     _logger.info("Getting active weight goal");
@@ -101,158 +114,199 @@ class WeightRecordCubit extends Cubit<WeightRecordState> {
 
   Future<void> createWeightGoal(WeightGoalInput input) async {
     _logger.info("Creating weight goal");
-    emit(state.copyWith(isLoading: true));
-    final result = await _weightRecordService.createWeightGoal(input);
-    if (isClosed) return;
-    if (result.isErr()) {
-      final error = result.error;
-      _logger.warning("Failed to create weight goal", error);
-      switch (error.type) {
-        case OperationErrorTypes.invalidInput:
-          emit(
-            state.copyWith(
-              error: Nullable(
-                ErrorState(
-                  type: error.type.name,
-                  description: error.description,
+    _startMutation();
+    var finished = false;
+    try {
+      final result = await _weightRecordService.createWeightGoal(input);
+      if (isClosed) return;
+      if (result.isErr()) {
+        final error = result.error;
+        _logger.warning("Failed to create weight goal", error);
+        switch (error.type) {
+          case OperationErrorTypes.invalidInput:
+            finished = true;
+            emit(
+              state.copyWith(
+                error: Nullable(
+                  ErrorState(
+                    type: error.type.name,
+                    description: error.description,
+                  ),
                 ),
+                isLoading: _finishMutation(),
               ),
-              isLoading: false,
-            ),
-          );
-          return;
-        case OperationErrorTypes.operationFailure:
-          emit(
-            state.copyWith(
-              error: Nullable(
-                ErrorState(
-                  type: error.type.name,
-                  description: "Failed to create weight goal",
+            );
+            return;
+          case OperationErrorTypes.operationFailure:
+            finished = true;
+            emit(
+              state.copyWith(
+                error: Nullable(
+                  ErrorState(
+                    type: error.type.name,
+                    description: "Failed to create weight goal",
+                  ),
                 ),
+                isLoading: _finishMutation(),
               ),
-              isLoading: false,
-            ),
-          );
-          return;
+            );
+            return;
+        }
       }
-    }
 
-    final weightGoal = result.value;
-    final updatesActiveGoal = weightGoal.status == ProgressStatus.inProgress;
-    final weighGoalsResult = await _weightRecordService.getWeightGoals(
-      skipInProgress: state.goalPagination.skipInProgress,
-      limit: state.goalPagination.limit,
-      offset: 0,
-    );
-    if (isClosed) return;
-    if (weighGoalsResult.isErr()) {
-      final error = weighGoalsResult.error;
-      _logger.warning("Failed to get weight goals", error);
-      final errorState = ErrorState(
-        type: error.type.name,
-        description: error.description,
+      final weightGoal = result.value;
+      final updatesActiveGoal = weightGoal.status == ProgressStatus.inProgress;
+      final weighGoalsResult = await _weightRecordService.getWeightGoals(
+        skipInProgress: state.goalPagination.skipInProgress,
+        limit: state.goalPagination.limit,
+        offset: 0,
       );
+      if (isClosed) return;
+      if (weighGoalsResult.isErr()) {
+        final error = weighGoalsResult.error;
+        _logger.warning("Failed to get weight goals", error);
+        final errorState = ErrorState(
+          type: error.type.name,
+          description: error.description,
+        );
+        finished = true;
+        emit(
+          state.copyWith(
+            activeGoalRequestId: updatesActiveGoal
+                ? state.activeGoalRequestId + 1
+                : null,
+            activeWeightGoal: updatesActiveGoal ? Nullable(weightGoal) : null,
+            hasLoadedActiveGoal: updatesActiveGoal ? true : null,
+            isLoadingActiveGoal: updatesActiveGoal ? false : null,
+            activeGoalError: updatesActiveGoal ? const Nullable(null) : null,
+            goalsError: Nullable(errorState),
+            error: Nullable(errorState),
+            isLoading: _finishMutation(),
+          ),
+        );
+        return;
+      }
+      final weighGoals = weighGoalsResult.value;
+
+      finished = true;
       emit(
         state.copyWith(
           activeGoalRequestId: updatesActiveGoal
               ? state.activeGoalRequestId + 1
               : null,
+          weightGoals: weighGoals.data,
+          selectedWeightGoal: Nullable(weightGoal),
           activeWeightGoal: updatesActiveGoal ? Nullable(weightGoal) : null,
           hasLoadedActiveGoal: updatesActiveGoal ? true : null,
           isLoadingActiveGoal: updatesActiveGoal ? false : null,
           activeGoalError: updatesActiveGoal ? const Nullable(null) : null,
-          goalsError: Nullable(errorState),
-          error: Nullable(errorState),
-          isLoading: false,
+          goalsError: const Nullable(null),
+          goalPagination: state.goalPagination.copyWith(
+            total: weighGoals.total,
+            limit: weighGoals.limit,
+            offset: weighGoals.offset,
+          ),
+          isLoading: _finishMutation(),
+          error: const Nullable(null),
         ),
       );
-      return;
+    } finally {
+      if (!finished) {
+        _finishMutation();
+      }
     }
-    final weighGoals = weighGoalsResult.value;
-
-    emit(
-      state.copyWith(
-        activeGoalRequestId: updatesActiveGoal
-            ? state.activeGoalRequestId + 1
-            : null,
-        weightGoals: weighGoals.data,
-        selectedWeightGoal: Nullable(weightGoal),
-        activeWeightGoal: updatesActiveGoal ? Nullable(weightGoal) : null,
-        hasLoadedActiveGoal: updatesActiveGoal ? true : null,
-        isLoadingActiveGoal: updatesActiveGoal ? false : null,
-        activeGoalError: updatesActiveGoal ? const Nullable(null) : null,
-        goalsError: const Nullable(null),
-        goalPagination: state.goalPagination.copyWith(
-          total: weighGoals.total,
-          limit: weighGoals.limit,
-          offset: weighGoals.offset,
-        ),
-        isLoading: false,
-        error: const Nullable(null),
-      ),
-    );
   }
 
   Future<void> updateWeightGoal(int id, WeightGoalInput input) async {
-    emit(state.copyWith(isLoading: true));
-    final result = await _weightRecordService.updateWeightGoal(id, input);
-    if (isClosed) return;
-    if (result.isErr()) {
-      final error = result.error;
-      _logger.warning("Failed to update weight goal", error);
-      switch (error.type) {
-        case SingleErrorTypes.notFound:
-        case SingleErrorTypes.invalidInput:
-          emit(
-            state.copyWith(
-              error: Nullable(
-                ErrorState(
-                  type: error.type.name,
-                  description: error.description,
+    _startMutation();
+    var finished = false;
+    try {
+      final result = await _weightRecordService.updateWeightGoal(id, input);
+      if (isClosed) return;
+      if (result.isErr()) {
+        final error = result.error;
+        _logger.warning("Failed to update weight goal", error);
+        switch (error.type) {
+          case SingleErrorTypes.notFound:
+          case SingleErrorTypes.invalidInput:
+            finished = true;
+            emit(
+              state.copyWith(
+                error: Nullable(
+                  ErrorState(
+                    type: error.type.name,
+                    description: error.description,
+                  ),
                 ),
+                isLoading: _finishMutation(),
               ),
-              isLoading: false,
-            ),
-          );
-          return;
-        case SingleErrorTypes.operationFailure:
-          emit(
-            state.copyWith(
-              error: Nullable(
-                ErrorState(
-                  type: error.type.name,
-                  description: "Failed to update weight goal",
+            );
+            return;
+          case SingleErrorTypes.operationFailure:
+            finished = true;
+            emit(
+              state.copyWith(
+                error: Nullable(
+                  ErrorState(
+                    type: error.type.name,
+                    description: "Failed to update weight goal",
+                  ),
                 ),
+                isLoading: _finishMutation(),
               ),
-              isLoading: false,
-            ),
-          );
-          return;
+            );
+            return;
+        }
       }
-    }
 
-    final weightGoal = result.value;
-    final updatesActiveGoal =
-        weightGoal.status == ProgressStatus.inProgress ||
-        state.activeWeightGoal?.id == weightGoal.id;
-    final weighGoalsResult = await _weightRecordService.getWeightGoals(
-      skipInProgress: state.goalPagination.skipInProgress,
-      limit: state.goalPagination.limit,
-      offset: 0,
-    );
-    if (isClosed) return;
-    if (weighGoalsResult.isErr()) {
-      final error = weighGoalsResult.error;
-      _logger.warning("Failed to get weight goals", error);
-      final errorState = ErrorState(
-        type: error.type.name,
-        description: error.description,
+      final weightGoal = result.value;
+      final updatesActiveGoal =
+          weightGoal.status == ProgressStatus.inProgress ||
+          state.activeWeightGoal?.id == weightGoal.id;
+      final weighGoalsResult = await _weightRecordService.getWeightGoals(
+        skipInProgress: state.goalPagination.skipInProgress,
+        limit: state.goalPagination.limit,
+        offset: 0,
       );
+      if (isClosed) return;
+      if (weighGoalsResult.isErr()) {
+        final error = weighGoalsResult.error;
+        _logger.warning("Failed to get weight goals", error);
+        final errorState = ErrorState(
+          type: error.type.name,
+          description: error.description,
+        );
+        finished = true;
+        emit(
+          state.copyWith(
+            activeGoalRequestId: updatesActiveGoal
+                ? state.activeGoalRequestId + 1
+                : null,
+            activeWeightGoal: weightGoal.status == ProgressStatus.inProgress
+                ? Nullable(weightGoal)
+                : state.activeWeightGoal?.id == weightGoal.id
+                ? const Nullable(null)
+                : null,
+            hasLoadedActiveGoal: updatesActiveGoal ? true : null,
+            isLoadingActiveGoal: updatesActiveGoal ? false : null,
+            activeGoalError: updatesActiveGoal ? const Nullable(null) : null,
+            goalsError: Nullable(errorState),
+            error: Nullable(errorState),
+            isLoading: _finishMutation(),
+          ),
+        );
+        return;
+      }
+      final weighGoals = weighGoalsResult.value;
+
+      finished = true;
       emit(
         state.copyWith(
           activeGoalRequestId: updatesActiveGoal
               ? state.activeGoalRequestId + 1
               : null,
+          weightGoals: weighGoals.data,
+          selectedWeightGoal: Nullable(weightGoal),
           activeWeightGoal: weightGoal.status == ProgressStatus.inProgress
               ? Nullable(weightGoal)
               : state.activeWeightGoal?.id == weightGoal.id
@@ -261,106 +315,98 @@ class WeightRecordCubit extends Cubit<WeightRecordState> {
           hasLoadedActiveGoal: updatesActiveGoal ? true : null,
           isLoadingActiveGoal: updatesActiveGoal ? false : null,
           activeGoalError: updatesActiveGoal ? const Nullable(null) : null,
-          goalsError: Nullable(errorState),
-          error: Nullable(errorState),
-          isLoading: false,
+          goalsError: const Nullable(null),
+          goalPagination: state.goalPagination.copyWith(
+            total: weighGoals.total,
+            limit: weighGoals.limit,
+            offset: weighGoals.offset,
+          ),
+          isLoading: _finishMutation(),
+          error: const Nullable(null),
         ),
       );
-      return;
+    } finally {
+      if (!finished) {
+        _finishMutation();
+      }
     }
-    final weighGoals = weighGoalsResult.value;
-
-    emit(
-      state.copyWith(
-        activeGoalRequestId: updatesActiveGoal
-            ? state.activeGoalRequestId + 1
-            : null,
-        weightGoals: weighGoals.data,
-        selectedWeightGoal: Nullable(weightGoal),
-        activeWeightGoal: weightGoal.status == ProgressStatus.inProgress
-            ? Nullable(weightGoal)
-            : state.activeWeightGoal?.id == weightGoal.id
-            ? const Nullable(null)
-            : null,
-        hasLoadedActiveGoal: updatesActiveGoal ? true : null,
-        isLoadingActiveGoal: updatesActiveGoal ? false : null,
-        activeGoalError: updatesActiveGoal ? const Nullable(null) : null,
-        goalsError: const Nullable(null),
-        goalPagination: state.goalPagination.copyWith(
-          total: weighGoals.total,
-          limit: weighGoals.limit,
-          offset: weighGoals.offset,
-        ),
-        isLoading: false,
-        error: const Nullable(null),
-      ),
-    );
   }
 
   Future<void> deleteWeightGoal(int id) async {
-    emit(state.copyWith(isLoading: true));
+    _startMutation();
+    var finished = false;
+    try {
+      final result = await _weightRecordService.deleteWeightGoal(id);
+      if (isClosed) return;
+      if (result.isErr()) {
+        final error = result.error;
+        switch (error.type) {
+          case SingleErrorTypes.notFound:
+          case SingleErrorTypes.invalidInput:
+            finished = true;
+            emit(
+              state.copyWith(
+                error: Nullable(
+                  ErrorState(
+                    type: error.type.name,
+                    description: error.description,
+                  ),
+                ),
+                isLoading: _finishMutation(),
+              ),
+            );
+            return;
+          case SingleErrorTypes.operationFailure:
+            finished = true;
+            emit(
+              state.copyWith(
+                error: Nullable(
+                  ErrorState(
+                    type: error.type.name,
+                    description: "Failed to delete weight goal",
+                  ),
+                ),
+                isLoading: _finishMutation(),
+              ),
+            );
+            return;
+        }
+      }
 
-    final result = await _weightRecordService.deleteWeightGoal(id);
-    if (isClosed) return;
-    if (result.isErr()) {
-      final error = result.error;
-      switch (error.type) {
-        case SingleErrorTypes.notFound:
-        case SingleErrorTypes.invalidInput:
-          emit(
-            state.copyWith(
-              error: Nullable(
-                ErrorState(
-                  type: error.type.name,
-                  description: error.description,
-                ),
-              ),
-              isLoading: false,
-            ),
-          );
-          return;
-        case SingleErrorTypes.operationFailure:
-          emit(
-            state.copyWith(
-              error: Nullable(
-                ErrorState(
-                  type: error.type.name,
-                  description: "Failed to delete weight goal",
-                ),
-              ),
-              isLoading: false,
-            ),
-          );
-          return;
+      final deletedActiveGoal = state.activeWeightGoal?.id == id;
+      finished = true;
+      emit(
+        state.copyWith(
+          activeGoalRequestId: deletedActiveGoal
+              ? state.activeGoalRequestId + 1
+              : null,
+          weightGoals: state.weightGoals.where((g) => g.id != id).toList(),
+          selectedWeightGoal: Nullable(
+            state.selectedWeightGoal?.id == id
+                ? null
+                : state.selectedWeightGoal,
+          ),
+          activeWeightGoal: Nullable(
+            deletedActiveGoal ? null : state.activeWeightGoal,
+          ),
+          hasLoadedActiveGoal: deletedActiveGoal ? true : null,
+          isLoadingActiveGoal: deletedActiveGoal ? false : null,
+          activeGoalError: deletedActiveGoal ? const Nullable(null) : null,
+          goalsError: const Nullable(null),
+          goalPagination: state.goalPagination.copyWith(
+            total: state.goalPagination.total > 0
+                ? state.goalPagination.total - 1
+                : 0,
+          ),
+          isLoading: _finishMutation(),
+          error: const Nullable(null),
+        ),
+      );
+    } finally {
+      if (!finished) {
+        _finishMutation();
       }
     }
-
-    final deletedActiveGoal = state.activeWeightGoal?.id == id;
-    emit(
-      state.copyWith(
-        activeGoalRequestId: deletedActiveGoal
-            ? state.activeGoalRequestId + 1
-            : null,
-        weightGoals: state.weightGoals.where((g) => g.id != id).toList(),
-        selectedWeightGoal: Nullable(
-          state.selectedWeightGoal?.id == id ? null : state.selectedWeightGoal,
-        ),
-        activeWeightGoal: Nullable(
-          deletedActiveGoal ? null : state.activeWeightGoal,
-        ),
-        hasLoadedActiveGoal: deletedActiveGoal ? true : null,
-        isLoadingActiveGoal: deletedActiveGoal ? false : null,
-        activeGoalError: deletedActiveGoal ? const Nullable(null) : null,
-        goalsError: const Nullable(null),
-        goalPagination: state.goalPagination.copyWith(
-          total: state.goalPagination.total > 0
-              ? state.goalPagination.total - 1
-              : 0,
-        ),
-        isLoading: false,
-        error: const Nullable(null),
-      ),
-    );
   }
 
   Future<void> getWeightGoals({
@@ -561,242 +607,280 @@ class WeightRecordCubit extends Cubit<WeightRecordState> {
   }
 
   Future<void> createWeightRecord(WeightRecordInput input) async {
-    emit(state.copyWith(isLoading: true));
-    final result = await _weightRecordService.createWeightRecord(input);
-    if (isClosed) return;
-    if (result.isErr()) {
-      final error = result.error;
-      _logger.warning("Failed to create weight record", error);
-      switch (error.type) {
-        case OperationErrorTypes.invalidInput:
-        case OperationErrorTypes.operationFailure:
-          emit(
-            state.copyWith(
-              error: Nullable(
-                ErrorState(
-                  type: error.type.name,
-                  description: "Failed to create weight record",
+    _startMutation();
+    var finished = false;
+    try {
+      final result = await _weightRecordService.createWeightRecord(input);
+      if (isClosed) return;
+      if (result.isErr()) {
+        final error = result.error;
+        _logger.warning("Failed to create weight record", error);
+        switch (error.type) {
+          case OperationErrorTypes.invalidInput:
+          case OperationErrorTypes.operationFailure:
+            finished = true;
+            emit(
+              state.copyWith(
+                error: Nullable(
+                  ErrorState(
+                    type: error.type.name,
+                    description: "Failed to create weight record",
+                  ),
                 ),
+                isLoading: _finishMutation(),
               ),
-              isLoading: false,
-            ),
-          );
-          return;
+            );
+            return;
+        }
+      }
+
+      finished = true;
+      await _refreshWeightRecordState(
+        selectedWeightRecord: Nullable(result.value),
+      );
+    } finally {
+      if (!finished) {
+        _finishMutation();
       }
     }
-
-    await _refreshWeightRecordState(
-      selectedWeightRecord: Nullable(result.value),
-    );
   }
 
   Future<void> updateWeightRecord(int id, WeightRecordInput input) async {
-    emit(state.copyWith(isLoading: true));
-    final result = await _weightRecordService.updateWeightRecord(id, input);
-    if (isClosed) return;
-    if (result.isErr()) {
-      final error = result.error;
-      _logger.warning("Failed to update weight record", error);
-      switch (error.type) {
-        case SingleErrorTypes.notFound:
-        case SingleErrorTypes.invalidInput:
-          emit(
-            state.copyWith(
-              error: Nullable(
-                ErrorState(
-                  type: error.type.name,
-                  description: error.description,
+    _startMutation();
+    var finished = false;
+    try {
+      final result = await _weightRecordService.updateWeightRecord(id, input);
+      if (isClosed) return;
+      if (result.isErr()) {
+        final error = result.error;
+        _logger.warning("Failed to update weight record", error);
+        switch (error.type) {
+          case SingleErrorTypes.notFound:
+          case SingleErrorTypes.invalidInput:
+            finished = true;
+            emit(
+              state.copyWith(
+                error: Nullable(
+                  ErrorState(
+                    type: error.type.name,
+                    description: error.description,
+                  ),
                 ),
+                isLoading: _finishMutation(),
               ),
-              isLoading: false,
-            ),
-          );
-          return;
-        case SingleErrorTypes.operationFailure:
-          emit(
-            state.copyWith(
-              error: Nullable(
-                ErrorState(
-                  type: error.type.name,
-                  description: "Failed to update weight record",
+            );
+            return;
+          case SingleErrorTypes.operationFailure:
+            finished = true;
+            emit(
+              state.copyWith(
+                error: Nullable(
+                  ErrorState(
+                    type: error.type.name,
+                    description: "Failed to update weight record",
+                  ),
                 ),
+                isLoading: _finishMutation(),
               ),
-              isLoading: false,
-            ),
-          );
-          return;
+            );
+            return;
+        }
+      }
+
+      _logger.info("Weight record updated successfully");
+      finished = true;
+      await _refreshWeightRecordState(
+        selectedWeightRecord: Nullable(result.value),
+      );
+    } finally {
+      if (!finished) {
+        _finishMutation();
       }
     }
-
-    _logger.info("Weight record updated successfully");
-    await _refreshWeightRecordState(
-      selectedWeightRecord: Nullable(result.value),
-    );
   }
 
   Future<void> deleteWeightRecord(int id) async {
-    emit(state.copyWith(isLoading: true));
+    _startMutation();
+    var finished = false;
+    try {
+      final result = await _weightRecordService.deleteWeightRecord(id);
+      if (isClosed) return;
+      if (result.isErr()) {
+        final error = result.error;
+        switch (error.type) {
+          case SingleErrorTypes.notFound:
+          case SingleErrorTypes.invalidInput:
+            finished = true;
+            emit(
+              state.copyWith(
+                error: Nullable(
+                  ErrorState(
+                    type: error.type.name,
+                    description: error.description,
+                  ),
+                ),
+                isLoading: _finishMutation(),
+              ),
+            );
+            return;
+          case SingleErrorTypes.operationFailure:
+            finished = true;
+            emit(
+              state.copyWith(
+                error: Nullable(
+                  ErrorState(
+                    type: error.type.name,
+                    description: "Failed to delete weight record",
+                  ),
+                ),
+                isLoading: _finishMutation(),
+              ),
+            );
+            return;
+        }
+      }
 
-    final result = await _weightRecordService.deleteWeightRecord(id);
-    if (isClosed) return;
-    if (result.isErr()) {
-      final error = result.error;
-      switch (error.type) {
-        case SingleErrorTypes.notFound:
-        case SingleErrorTypes.invalidInput:
-          emit(
-            state.copyWith(
-              error: Nullable(
-                ErrorState(
-                  type: error.type.name,
-                  description: error.description,
-                ),
-              ),
-              isLoading: false,
-            ),
-          );
-          return;
-        case SingleErrorTypes.operationFailure:
-          emit(
-            state.copyWith(
-              error: Nullable(
-                ErrorState(
-                  type: error.type.name,
-                  description: "Failed to delete weight record",
-                ),
-              ),
-              isLoading: false,
-            ),
-          );
-          return;
+      finished = true;
+      await _refreshWeightRecordState(
+        selectedWeightRecord: state.selectedWeightRecord?.id == id
+            ? const Nullable(null)
+            : null,
+      );
+    } finally {
+      if (!finished) {
+        _finishMutation();
       }
     }
-
-    await _refreshWeightRecordState(
-      selectedWeightRecord: state.selectedWeightRecord?.id == id
-          ? const Nullable(null)
-          : null,
-    );
   }
 
   Future<void> _refreshWeightRecordState({
     Nullable<WeightRecordDto>? selectedWeightRecord,
   }) async {
-    final recordsRequestId = state.recordsRequestId + 1;
-    final latestRequestId = state.latestRequestId + 1;
-    final dateRange = state.recordPagination.dateRange;
-    final limit = state.recordPagination.limit;
-    final previousRecordsError = state.recordsError;
-    final previousLatestError = state.latestError;
+    var finished = false;
+    try {
+      final recordsRequestId = state.recordsRequestId + 1;
+      final latestRequestId = state.latestRequestId + 1;
+      final dateRange = state.recordPagination.dateRange;
+      final limit = state.recordPagination.limit;
+      final previousError = state.error;
+      final previousRecordsError = state.recordsError;
+      final previousLatestError = state.latestError;
 
-    emit(
-      state.copyWith(
-        recordsRequestId: recordsRequestId,
-        latestRequestId: latestRequestId,
-        selectedWeightRecord: selectedWeightRecord,
-        isLoadingRecords: true,
-        isLoadingLatest: true,
-        recordsError: const Nullable(null),
-        latestError: const Nullable(null),
-        error:
-            (previousRecordsError != null &&
-                    state.error == previousRecordsError) ||
-                (previousLatestError != null &&
-                    state.error == previousLatestError)
-            ? const Nullable(null)
-            : null,
-      ),
-    );
+      emit(
+        state.copyWith(
+          recordsRequestId: recordsRequestId,
+          latestRequestId: latestRequestId,
+          selectedWeightRecord: selectedWeightRecord,
+          isLoadingRecords: true,
+          isLoadingLatest: true,
+          recordsError: const Nullable(null),
+          latestError: const Nullable(null),
+          error:
+              (previousRecordsError != null &&
+                      state.error == previousRecordsError) ||
+                  (previousLatestError != null &&
+                      state.error == previousLatestError)
+              ? const Nullable(null)
+              : null,
+        ),
+      );
 
-    final recordsFuture = _weightRecordService.getWeightRecords(
-      dateRange: dateRange,
-      limit: limit,
-      offset: 0,
-    );
-    final latestFuture = _weightRecordService.getLatestRecorded();
+      final recordsFuture = _weightRecordService.getWeightRecords(
+        dateRange: dateRange,
+        limit: limit,
+        offset: 0,
+      );
+      final latestFuture = _weightRecordService.getLatestRecorded();
 
-    final recordsResult = await recordsFuture;
-    final latestResult = await latestFuture;
-    if (isClosed) return;
+      final recordsResult = await recordsFuture;
+      final latestResult = await latestFuture;
+      if (isClosed) return;
 
-    final recordsCurrent = recordsRequestId == state.recordsRequestId;
-    final latestCurrent = latestRequestId == state.latestRequestId;
+      final recordsCurrent = recordsRequestId == state.recordsRequestId;
+      final latestCurrent = latestRequestId == state.latestRequestId;
 
-    List<WeightRecordDto>? weightRecords;
-    WeightRecordPaginationState? recordPagination;
-    Nullable<ErrorState>? recordsError;
-    Nullable<WeightRecordDto>? latestWeightRecord;
-    Nullable<ErrorState>? latestError;
-    ErrorState? error;
+      List<WeightRecordDto>? weightRecords;
+      WeightRecordPaginationState? recordPagination;
+      Nullable<ErrorState>? recordsError;
+      Nullable<WeightRecordDto>? latestWeightRecord;
+      Nullable<ErrorState>? latestError;
+      ErrorState? error;
 
-    if (recordsCurrent) {
-      if (recordsResult.isErr()) {
-        final recordsErr = recordsResult.error;
-        _logger.warning("Failed to fetch weight records", recordsErr);
-        final errorState = ErrorState(
-          type: recordsErr.type.name,
-          description: "Failed to fetch weight records",
-        );
-        weightRecords = const [];
-        recordsError = Nullable(errorState);
-        error = errorState;
-      } else {
-        final paginatedData = recordsResult.value;
-        weightRecords = paginatedData.data;
-        recordPagination = state.recordPagination.copyWith(
-          total: paginatedData.total,
-          offset: paginatedData.offset,
-          limit: paginatedData.limit,
-          dateRange: Nullable(dateRange),
-        );
-        recordsError = const Nullable(null);
-      }
-    }
-
-    if (latestCurrent) {
-      if (latestResult.isErr()) {
-        final latestErr = latestResult.error;
-        if (latestErr.type == SingleErrorTypes.notFound) {
-          latestWeightRecord = const Nullable(null);
-          latestError = const Nullable(null);
-        } else {
-          _logger.warning("Failed to fetch latest weight record", latestErr);
+      if (recordsCurrent) {
+        if (recordsResult.isErr()) {
+          final recordsErr = recordsResult.error;
+          _logger.warning("Failed to fetch weight records", recordsErr);
           final errorState = ErrorState(
-            type: latestErr.type.name,
-            description: "Failed to get latest weight record",
+            type: recordsErr.type.name,
+            description: "Failed to fetch weight records",
           );
-          latestWeightRecord = const Nullable(null);
-          latestError = Nullable(errorState);
-          error ??= errorState;
+          weightRecords = const [];
+          recordsError = Nullable(errorState);
+          error = errorState;
+        } else {
+          final paginatedData = recordsResult.value;
+          weightRecords = paginatedData.data;
+          recordPagination = state.recordPagination.copyWith(
+            total: paginatedData.total,
+            offset: paginatedData.offset,
+            limit: paginatedData.limit,
+            dateRange: Nullable(dateRange),
+          );
+          recordsError = const Nullable(null);
         }
-      } else {
-        latestWeightRecord = Nullable(latestResult.value);
-        latestError = const Nullable(null);
+      }
+
+      if (latestCurrent) {
+        if (latestResult.isErr()) {
+          final latestErr = latestResult.error;
+          if (latestErr.type == SingleErrorTypes.notFound) {
+            latestWeightRecord = const Nullable(null);
+            latestError = const Nullable(null);
+          } else {
+            _logger.warning("Failed to fetch latest weight record", latestErr);
+            final errorState = ErrorState(
+              type: latestErr.type.name,
+              description: "Failed to get latest weight record",
+            );
+            latestWeightRecord = const Nullable(null);
+            latestError = Nullable(errorState);
+            error ??= errorState;
+          }
+        } else {
+          latestWeightRecord = Nullable(latestResult.value);
+          latestError = const Nullable(null);
+        }
+      }
+
+      final shouldClearSharedError =
+          error == null &&
+          previousError != null &&
+          state.error == previousError &&
+          state.error != state.activeGoalError &&
+          state.error != state.goalsError &&
+          (recordsCurrent || state.error != state.recordsError) &&
+          (latestCurrent || state.error != state.latestError);
+
+      finished = true;
+      emit(
+        state.copyWith(
+          weightRecords: weightRecords,
+          recordPagination: recordPagination,
+          latestWeightRecord: latestWeightRecord,
+          isLoading: _finishMutation(),
+          isLoadingRecords: recordsCurrent ? false : null,
+          isLoadingLatest: latestCurrent ? false : null,
+          recordsError: recordsError,
+          latestError: latestError,
+          error: error != null
+              ? Nullable(error)
+              : (shouldClearSharedError ? const Nullable(null) : null),
+        ),
+      );
+    } finally {
+      if (!finished) {
+        _finishMutation();
       }
     }
-
-    final shouldClearSharedError =
-        error == null &&
-        state.error != null &&
-        state.error != state.activeGoalError &&
-        state.error != state.goalsError &&
-        (recordsCurrent || state.error != state.recordsError) &&
-        (latestCurrent || state.error != state.latestError);
-
-    emit(
-      state.copyWith(
-        weightRecords: weightRecords,
-        recordPagination: recordPagination,
-        latestWeightRecord: latestWeightRecord,
-        isLoading: false,
-        isLoadingRecords: recordsCurrent ? false : null,
-        isLoadingLatest: latestCurrent ? false : null,
-        recordsError: recordsError,
-        latestError: latestError,
-        error: error != null
-            ? Nullable(error)
-            : (shouldClearSharedError ? const Nullable(null) : null),
-      ),
-    );
   }
 }
