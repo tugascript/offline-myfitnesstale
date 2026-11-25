@@ -102,6 +102,7 @@ class _WorkoutPlanHistoryScreenState extends State<WorkoutPlanHistoryScreen> {
                       WorkoutPlanRecordState
                     >(
                       listenWhen: (previous, current) =>
+                          (ModalRoute.of(context)?.isCurrent ?? true) &&
                           current.error != null &&
                           current.error != previous.error,
                       listener: (context, state) {

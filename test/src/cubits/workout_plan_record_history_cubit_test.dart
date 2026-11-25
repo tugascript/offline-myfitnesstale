@@ -995,4 +995,116 @@ void main() {
     expect(cubit.state.pagination.total, 2);
     expect(cubit.state.latestWorkoutPlanRecord?.id, inPageTwoId);
   });
+
+  test('overlapping deletions serialize reconciliation and never publish a deleted record as latest or active plan', () async {
+    final database = await testDatabase.db;
+    final planId = await seedPlan(database, name: 'Serialized Delete Plan');
+    final r1 = await seedRecord(
+      database,
+      planId: planId,
+      status: ProgressStatus.inProgress,
+      timestamp: 100,
+      createdAt: 100,
+    );
+    final r2 = await seedRecord(
+      database,
+      planId: planId,
+      status: ProgressStatus.inProgress,
+      timestamp: 200,
+      createdAt: 200,
+    );
+    final r3 = await seedRecord(
+      database,
+      planId: planId,
+      status: ProgressStatus.inProgress,
+      timestamp: 300,
+      createdAt: 300,
+    );
+
+    final cubit = WorkoutPlanRecordCubit(
+      workoutPlanRecordRepository: WorkoutPlanRecordRepository.create(),
+      workoutPlanRepository: WorkoutPlanRepository.create(),
+      workoutRecordRepository: WorkoutRecordRepository.create(),
+    );
+    addTearDown(cubit.close);
+
+    await cubit.getLatestActivePlanRecord();
+    await cubit.getLatestWorkoutPlanRecord(planId);
+    await cubit.getWorkoutPlanRecords(
+      workoutPlanId: planId,
+      limit: 2,
+      offset: 0,
+    );
+
+    expect(cubit.state.currentPlanRecord.currentPlanRecord?.id, r3);
+    expect(cubit.state.latestWorkoutPlanRecord?.id, r3);
+    expect(cubit.state.planRecords.map((r) => r.id), [r3, r2]);
+    expect(cubit.state.pagination.total, 3);
+
+    // Start deleting R3 and overlap deletion of R2 while R3 is in flight.
+    final deleteR3Future = cubit.deleteWorkoutPlanRecord(r3);
+    final deleteR2Future = cubit.deleteWorkoutPlanRecord(r2);
+
+    expect(await deleteR3Future, isTrue);
+    expect(await deleteR2Future, isTrue);
+
+    expect(cubit.state.isLoading, isFalse);
+    expect(cubit.state.isLoadingHistory, isFalse);
+    expect(cubit.state.currentPlanRecord.currentPlanRecord?.id, r1);
+    expect(cubit.state.latestWorkoutPlanRecord?.id, r1);
+    expect(cubit.state.planRecords.map((r) => r.id), [r1]);
+    expect(cubit.state.pagination.total, 1);
+
+    // Verify overlapping deletion of the last record alongside a missing ID settles cleanly.
+    final deleteR1Future = cubit.deleteWorkoutPlanRecord(r1);
+    final deleteMissingFuture = cubit.deleteWorkoutPlanRecord(999999);
+
+    expect(await deleteR1Future, isTrue);
+    expect(await deleteMissingFuture, isFalse);
+
+    expect(cubit.state.isLoading, isFalse);
+    expect(cubit.state.currentPlanRecord.currentPlanRecord, isNull);
+    expect(cubit.state.latestWorkoutPlanRecord, isNull);
+    expect(cubit.state.planRecords, isEmpty);
+    expect(cubit.state.pagination.total, 0);
+  });
+
+  test('superseded active-plan load completing after a newer load and deletion does not leave isLoading stuck true', () async {
+    final database = await testDatabase.db;
+    final planId = await seedPlan(database, name: 'Superseded Load Plan');
+    final completedId = await seedRecord(
+      database,
+      planId: planId,
+      status: ProgressStatus.completed,
+      timestamp: 200,
+    );
+
+    final cubit = WorkoutPlanRecordCubit(
+      workoutPlanRecordRepository: WorkoutPlanRecordRepository.create(),
+      workoutPlanRepository: WorkoutPlanRepository.create(),
+      workoutRecordRepository: WorkoutRecordRepository.create(),
+    );
+    addTearDown(cubit.close);
+
+    // Start a multi-query getOrCreateActivePlanRecord (no active record yet -> lookup + transaction),
+    // then supersede it with a single-query getLatestActivePlanRecord (immediate notFound).
+    var supersededCompleted = false;
+    final supersededLoad = cubit
+        .getOrCreateActivePlanRecord(planId)
+        .whenComplete(() => supersededCompleted = true);
+    final newerFastLoad = cubit.getLatestActivePlanRecord();
+
+    await newerFastLoad;
+    expect(supersededCompleted, isFalse);
+    expect(cubit.state.isLoading, isFalse);
+
+    // Deleting while the obsolete active-plan load is still unwinding must not stick isLoading=true.
+    final deleted = await cubit.deleteWorkoutPlanRecord(completedId);
+    expect(deleted, isTrue);
+    expect(cubit.state.isLoading, isFalse);
+
+    await supersededLoad;
+    expect(supersededCompleted, isTrue);
+    expect(cubit.state.isLoading, isFalse);
+  });
 }
