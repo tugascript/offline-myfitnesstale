@@ -584,6 +584,20 @@ enum CardioBaseMode {
       .firstWhere((t) => t.value == v, orElse: () => CardioBaseMode.time);
 }
 
+enum CardioSetType {
+  constant("constant"),
+  interval("interval");
+
+  final String value;
+
+  const CardioSetType(this.value);
+
+  factory CardioSetType.fromValue(String v) => CardioSetType.values.firstWhere(
+    (t) => t.value == v,
+    orElse: () => CardioSetType.constant,
+  );
+}
+
 enum EquipmentRarity {
   veryCommon("very_common"),
   common("common"),
