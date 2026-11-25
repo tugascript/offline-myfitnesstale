@@ -28,7 +28,8 @@ enum TrackerBodyStates {
       return TrackerBodyStates.activeGoal;
     }
     if (!state.hasLoadedActiveGoal) {
-      if (state.error != null && !state.isLoadingActiveGoal) {
+      final goalError = state.activeGoalError ?? state.error;
+      if (goalError != null && !state.isLoadingActiveGoal) {
         return TrackerBodyStates.initialGoalError;
       }
       return TrackerBodyStates.waitingForGoal;

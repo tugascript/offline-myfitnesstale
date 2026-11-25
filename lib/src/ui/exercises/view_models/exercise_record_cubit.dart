@@ -485,7 +485,17 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
   }) async {
     _logger.info("Getting strength goals");
     final requestId = state.goalsRequestId + 1;
-    emit(state.copyWith(goalsRequestId: requestId, isLoadingGoals: true));
+    final previousGoalsError = state.goalsError;
+    emit(
+      state.copyWith(
+        goalsRequestId: requestId,
+        isLoadingGoals: true,
+        goalsError: const Nullable(null),
+        error: previousGoalsError != null && state.error == previousGoalsError
+            ? const Nullable(null)
+            : null,
+      ),
+    );
     final result = await _exerciseRecordService.getStrengthGoals(
       exerciseId: exerciseId,
       skipInProgress: skipInProgress,
@@ -496,11 +506,15 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
     if (result.isErr()) {
       final error = result.error;
       _logger.warning("Failed to get strength goals", error);
+      final errorState = ErrorState(
+        type: error.type.name,
+        description: error.description,
+      );
       emit(
         state.copyWith(
-          error: Nullable(
-            ErrorState(type: error.type.name, description: error.description),
-          ),
+          strengthGoals: offset == 0 ? const [] : null,
+          goalsError: Nullable(errorState),
+          error: Nullable(errorState),
           isLoadingGoals: false,
         ),
       );
@@ -519,9 +533,10 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
           offset: offset,
         ),
         isLoadingGoals: false,
-        error: state.error != null && state.error == state.activeGoalError
-            ? null
-            : const Nullable(null),
+        goalsError: const Nullable(null),
+        error: previousGoalsError != null && state.error == previousGoalsError
+            ? const Nullable(null)
+            : null,
       ),
     );
   }
@@ -647,6 +662,7 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
     Nullable<StrengthGoalDto>? activeStrengthGoal;
     bool? hasLoadedActiveGoal;
     Nullable<ErrorState>? activeGoalError;
+    Nullable<ErrorState>? goalsError;
     ErrorState? error;
 
     if (activeCurrent) {
@@ -672,12 +688,18 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
       }
     }
 
-    if (goalsCurrent && listResult.isErr()) {
-      _logger.warning("Failed to get strength goals", listResult.error);
-      error ??= ErrorState(
-        type: listResult.error.type.name,
-        description: listResult.error.description,
-      );
+    if (goalsCurrent) {
+      if (listResult.isErr()) {
+        _logger.warning("Failed to get strength goals", listResult.error);
+        final listError = ErrorState(
+          type: listResult.error.type.name,
+          description: listResult.error.description,
+        );
+        goalsError = Nullable(listError);
+        error ??= listError;
+      } else {
+        goalsError = const Nullable(null);
+      }
     }
 
     emit(
@@ -685,8 +707,9 @@ class ExerciseRecordCubit extends Cubit<ExerciseRecordState> {
         activeStrengthGoal: activeStrengthGoal,
         hasLoadedActiveGoal: hasLoadedActiveGoal,
         activeGoalError: activeGoalError,
-        strengthGoals: goalsCurrent && listResult.isOk()
-            ? listResult.value.data
+        goalsError: goalsError,
+        strengthGoals: goalsCurrent
+            ? (listResult.isOk() ? listResult.value.data : const [])
             : null,
         strengthGoalPagination: goalsCurrent && listResult.isOk()
             ? StrengthGoalPagination(

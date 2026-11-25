@@ -61,6 +61,7 @@ import 'package:myfitnesstale/src/ui/macros/widgets/goals/current_macro_goal.dar
 import 'package:myfitnesstale/src/ui/macros/widgets/goals/empty_active_macro_goal.dart';
 import 'package:myfitnesstale/src/ui/macros/widgets/goals/macro_goal_form_modal.dart';
 import 'package:myfitnesstale/src/ui/macros/widgets/goals/macro_goal_history.dart';
+import 'package:myfitnesstale/src/ui/macros/widgets/tracker/macro_tracker_body.dart';
 import 'package:myfitnesstale/src/ui/macros/widgets/tracker/macro_tracker_date_navigator.dart';
 import 'package:myfitnesstale/src/ui/macros/widgets/tracker/macro_tracker_day_widget.dart';
 import 'package:myfitnesstale/src/ui/macros/widgets/tracker/macro_tracker_month_widget.dart';
@@ -3107,6 +3108,20 @@ void main() {
         TrackerBodyStates.initialGoalError,
       );
 
+      final unloadedActiveGoalErrorOnly = unloadedIdle.copyWith(
+        activeGoalError: const Nullable(
+          ErrorState(
+            type: 'operationFailure',
+            description: 'Active goal load failed',
+          ),
+        ),
+        error: const Nullable(null),
+      );
+      expect(
+        TrackerBodyStates.fromState(unloadedActiveGoalErrorOnly),
+        TrackerBodyStates.initialGoalError,
+      );
+
       final loadedNoGoal = unloadedIdle.copyWith(hasLoadedActiveGoal: true);
       expect(
         TrackerBodyStates.fromState(loadedNoGoal),
@@ -3121,6 +3136,55 @@ void main() {
         TrackerBodyStates.activeGoal,
       );
     });
+
+    testWidgets(
+      'MacroTrackerBody renders initialGoalError retry UI when activeGoalError persists after shared error clears',
+      (tester) async {
+        var retryTapped = false;
+        final state = MacroTrackingState.initial().copyWith(
+          activeGoalError: const Nullable(
+            ErrorState(
+              type: 'operationFailure',
+              description: 'Active goal load failed',
+            ),
+          ),
+          error: const Nullable(null),
+        );
+        final today = DateTime(2026, 3, 25);
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: MacroTrackerBody(
+                state: state,
+                theme: ThemeData.light(),
+                sizes: DataDisplaySizes.getDataDisplaySizes(ScreenSize.xs),
+                scope: TrackerScope.day,
+                selectedDate: today,
+                firstDate: DateTime(2025, 3, 25),
+                lastDate: today,
+                onScopeChanged: (_) {},
+                onLoadRange: () {},
+                onDateSelected: (_, {required isCustom, resetToDay = false}) {},
+                onGoToToday: () {},
+                onRetry: () => retryTapped = true,
+                onCreateGoal: () {},
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.text('Active goal load failed'), findsOneWidget);
+        final retryButton = find.byKey(
+          const ValueKey('macro-tracker-retry-goal'),
+        );
+        expect(retryButton, findsOneWidget);
+        await tester.tap(retryButton);
+        await tester.pump();
+        expect(retryTapped, isTrue);
+      },
+    );
 
     testWidgets(
       'MacroGoalsScreen reports repeated identical failure when retrying Deactivate',

@@ -980,16 +980,30 @@ void main() {
     expect(cubit.state.activeGoalError, isNull);
     expect(cubit.state.error, isNull);
 
-    // An unrelated getStrengthGoals() failure should not be wiped by active goal success.
+    // Initial history load populates strengthGoals and clears goalsError.
+    await cubit.getStrengthGoals();
+    expect(cubit.state.strengthGoals, isNotEmpty);
+    expect(cubit.state.goalsError, isNull);
+
+    // An offset == 0 getStrengthGoals() failure clears stale strengthGoals and sets goalsError,
+    // and active goal success must not wipe the unrelated goals error.
     failStrengthGoalRead = true;
     await cubit.getStrengthGoals();
+    expect(cubit.state.strengthGoals, isEmpty);
+    expect(cubit.state.goalsError, isNotNull);
     final unrelatedError = cubit.state.error;
-    expect(unrelatedError, isNotNull);
+    expect(unrelatedError, equals(cubit.state.goalsError));
 
     failStrengthGoalRead = false;
     await cubit.getActiveStrengthGoal();
     expect(cubit.state.activeStrengthGoal, isNotNull);
     expect(cubit.state.activeGoalError, isNull);
     expect(cubit.state.error, equals(unrelatedError));
+
+    // Recovering getStrengthGoals() restores goals and clears goalsError + matching shared error.
+    await cubit.getStrengthGoals();
+    expect(cubit.state.strengthGoals, isNotEmpty);
+    expect(cubit.state.goalsError, isNull);
+    expect(cubit.state.error, isNull);
   });
 }
