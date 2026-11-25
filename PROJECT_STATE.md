@@ -218,6 +218,7 @@ There is no import/export, local backup, or broader weight analytics.
   `WorkoutPlanRecordInput`, `WorkoutPlanDayRecordInput`, and
   `WorkoutPlanWorkoutRecordInput` PUT semantics.
 - Provides paginated, newest-first plan history filtered by plan and status.
+- Deletes workout plan records with a confirmation modal from `CurrentWorkoutPlanScreen`, `ActiveWorkoutPlanScreen`, and `WorkoutPlanHistoryScreen` (latest record card and history list), cascading child week/day/plan-workout records while preserving the workout plan template and standalone workout records.
 
 Date and progress calculations are still duplicated across UI and repository
 layers. Historical plan summaries do not expose child-workout detail.

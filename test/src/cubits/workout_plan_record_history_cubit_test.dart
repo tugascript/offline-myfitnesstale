@@ -276,4 +276,138 @@ void main() {
     await secondPlanLoad;
     expect(cubit.state.planRecords, isEmpty);
   });
+
+  test('deleteWorkoutPlanRecord deletes from SQLite, updates history pagination, and refreshes latest in single-plan and global scopes', () async {
+    final database = await testDatabase.db;
+    final firstPlanId = await seedPlan(database, name: 'Plan One');
+    final secondPlanId = await seedPlan(database, name: 'Plan Two');
+    final firstOlderId = await seedRecord(
+      database,
+      planId: firstPlanId,
+      status: ProgressStatus.abandoned,
+      timestamp: 100,
+    );
+    final firstNewerId = await seedRecord(
+      database,
+      planId: firstPlanId,
+      status: ProgressStatus.completed,
+      timestamp: 300,
+    );
+    final secondRecordId = await seedRecord(
+      database,
+      planId: secondPlanId,
+      status: ProgressStatus.completed,
+      timestamp: 200,
+    );
+
+    final cubit = WorkoutPlanRecordCubit(
+      workoutPlanRecordRepository: WorkoutPlanRecordRepository.create(),
+      workoutPlanRepository: WorkoutPlanRepository.create(),
+      workoutRecordRepository: WorkoutRecordRepository.create(),
+    );
+    addTearDown(cubit.close);
+
+    // Single-plan scope: deleting latest refreshes to next newest for that plan.
+    await cubit.getLatestWorkoutPlanRecord(firstPlanId);
+    await cubit.getWorkoutPlanRecords(workoutPlanId: firstPlanId);
+    expect(cubit.state.latestWorkoutPlanRecord?.id, firstNewerId);
+    expect(cubit.state.latestWorkoutPlanId, firstPlanId);
+    expect(cubit.state.planRecords.map((r) => r.id), [
+      firstNewerId,
+      firstOlderId,
+    ]);
+    expect(cubit.state.pagination.total, 2);
+
+    final deletedFirst = await cubit.deleteWorkoutPlanRecord(firstNewerId);
+    expect(deletedFirst, isTrue);
+    expect(cubit.state.latestWorkoutPlanRecord?.id, firstOlderId);
+    expect(cubit.state.planRecords.map((r) => r.id), [firstOlderId]);
+    expect(cubit.state.pagination.total, 1);
+    expect(cubit.state.error, isNull);
+
+    final remainingRows = await database.query(
+      WorkoutPlanRecord.table,
+      where: 'id = ?',
+      whereArgs: [firstNewerId],
+    );
+    expect(remainingRows, isEmpty);
+
+    // Global scope: deleting latest across all plans refreshes to next newest across all plans.
+    await cubit.getLatestWorkoutPlanRecord(null);
+    await cubit.getWorkoutPlanRecords(workoutPlanId: null);
+    expect(cubit.state.latestWorkoutPlanRecord?.id, secondRecordId);
+    expect(cubit.state.latestWorkoutPlanId, isNull);
+
+    final deletedSecond = await cubit.deleteWorkoutPlanRecord(secondRecordId);
+    expect(deletedSecond, isTrue);
+    expect(cubit.state.latestWorkoutPlanRecord?.id, firstOlderId);
+    expect(cubit.state.planRecords.map((r) => r.id), [firstOlderId]);
+    expect(cubit.state.pagination.total, 1);
+
+    // Deleting the final remaining record clears latest to null.
+    final deletedLast = await cubit.deleteWorkoutPlanRecord(firstOlderId);
+    expect(deletedLast, isTrue);
+    expect(cubit.state.latestWorkoutPlanRecord, isNull);
+    expect(cubit.state.planRecords, isEmpty);
+    expect(cubit.state.pagination.total, 0);
+  });
+
+  test('deleteWorkoutPlanRecord clears active currentPlanRecord when deleting the active execution', () async {
+    final database = await testDatabase.db;
+    final planId = await seedPlan(database, name: 'Active Plan');
+    final activeRecordId = await seedRecord(
+      database,
+      planId: planId,
+      status: ProgressStatus.inProgress,
+      timestamp: 500,
+    );
+
+    final cubit = WorkoutPlanRecordCubit(
+      workoutPlanRecordRepository: WorkoutPlanRecordRepository.create(),
+      workoutPlanRepository: WorkoutPlanRepository.create(),
+      workoutRecordRepository: WorkoutRecordRepository.create(),
+    );
+    addTearDown(cubit.close);
+
+    await cubit.getLatestActivePlanRecord();
+    expect(cubit.state.currentPlanRecord.currentPlanRecord?.id, activeRecordId);
+    expect(cubit.state.currentPlanRecord.workoutPlan?.id, planId);
+
+    final deleted = await cubit.deleteWorkoutPlanRecord(activeRecordId);
+    expect(deleted, isTrue);
+    expect(cubit.state.currentPlanRecord.currentPlanRecord, isNull);
+    expect(cubit.state.currentPlanRecord.workoutPlan, isNull);
+    expect(cubit.state.hasLoadedActivePlan, isTrue);
+    expect(cubit.state.isLoading, isFalse);
+    expect(cubit.state.error, isNull);
+  });
+
+  test('deleteWorkoutPlanRecord returns false and reports error for missing record while retaining state', () async {
+    final database = await testDatabase.db;
+    final planId = await seedPlan(database, name: 'Error Plan');
+    final recordId = await seedRecord(
+      database,
+      planId: planId,
+      status: ProgressStatus.completed,
+      timestamp: 600,
+    );
+
+    final cubit = WorkoutPlanRecordCubit(
+      workoutPlanRecordRepository: WorkoutPlanRecordRepository.create(),
+      workoutPlanRepository: WorkoutPlanRepository.create(),
+      workoutRecordRepository: WorkoutRecordRepository.create(),
+    );
+    addTearDown(cubit.close);
+
+    await cubit.getLatestWorkoutPlanRecord(planId);
+    await cubit.getWorkoutPlanRecords(workoutPlanId: planId);
+
+    final deleted = await cubit.deleteWorkoutPlanRecord(999999);
+    expect(deleted, isFalse);
+    expect(cubit.state.error, isNotNull);
+    expect(cubit.state.isLoading, isFalse);
+    expect(cubit.state.latestWorkoutPlanRecord?.id, recordId);
+    expect(cubit.state.planRecords.map((r) => r.id), [recordId]);
+    expect(cubit.state.pagination.total, 1);
+  });
 }

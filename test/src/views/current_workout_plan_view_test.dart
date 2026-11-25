@@ -47,6 +47,7 @@ class _Cubit extends WorkoutPlanRecordCubit {
       );
 
   int loads = 0;
+  final List<int> deletedRecordIds = [];
   WorkoutPlanRecordState nextState = WorkoutPlanRecordState.initial();
   Completer<void>? pending;
 
@@ -58,6 +59,20 @@ class _Cubit extends WorkoutPlanRecordCubit {
     emit(state.copyWith(isLoading: true, error: const Nullable(null)));
     await pending?.future;
     emit(nextState.copyWith(hasLoadedActivePlan: nextState.error == null));
+  }
+
+  @override
+  Future<bool> deleteWorkoutPlanRecord(int id) async {
+    deletedRecordIds.add(id);
+    emit(
+      state.copyWith(
+        currentPlanRecord: CurrentWorkoutPlanRecordState.initial(),
+        hasLoadedActivePlan: true,
+        isLoading: false,
+        error: const Nullable(null),
+      ),
+    );
+    return true;
   }
 
   @override
@@ -317,6 +332,40 @@ void main() {
         ),
         findsNothing,
       );
+    },
+  );
+
+  testWidgets(
+    'deletes active workout plan record after confirmation and shows empty state',
+    (tester) async {
+      final initialActive = activeState();
+      final recordId = initialActive.currentPlanRecord.currentPlanRecord!.id;
+      final cubit = _Cubit()..nextState = initialActive;
+      await pumpView(tester, cubit);
+      await tester.pumpAndSettle();
+
+      final deleteButton = find.byKey(
+        const ValueKey('current-workout-plan-record-delete'),
+      );
+      expect(deleteButton, findsOneWidget);
+
+      await tester.tap(deleteButton);
+      await tester.pumpAndSettle();
+      expect(find.text('DELETE WORKOUT PLAN RECORD'), findsOneWidget);
+
+      await tester.tap(find.text('CANCEL'));
+      await tester.pumpAndSettle();
+      expect(cubit.deletedRecordIds, isEmpty);
+      expect(find.text('My current plan'), findsOneWidget);
+
+      await tester.tap(deleteButton);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('DELETE'));
+      await tester.pumpAndSettle();
+
+      expect(cubit.deletedRecordIds, [recordId]);
+      expect(find.text('No Active Workout Plan'), findsOneWidget);
+      expect(deleteButton, findsNothing);
     },
   );
 }

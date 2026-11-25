@@ -16,11 +16,14 @@
 // along with My Fitness Tale.  If not, see <https://www.gnu.org/licenses/>.
 
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 
+import '../../../routing/routes.dart';
 import '../../core/screens/entity_error_screen.dart';
 import '../../core/sizes/data_display_sizes.dart';
 import '../../core/sizes/screen_size.dart';
+import '../../core/widgets/confirmation_dialog.dart';
 import '../../core/widgets/layout/app_scaffold.dart';
 import '../view_models/states/workout_plan_record_state.dart';
 import '../view_models/workout_plan_record_cubit.dart';
@@ -37,6 +40,8 @@ class ActiveWorkoutPlanScreen extends StatefulWidget {
 }
 
 class _ActiveWorkoutPlanScreenState extends State<ActiveWorkoutPlanScreen> {
+  bool _isDeleting = false;
+
   @override
   void initState() {
     super.initState();
@@ -52,14 +57,64 @@ class _ActiveWorkoutPlanScreenState extends State<ActiveWorkoutPlanScreen> {
     });
   }
 
+  void _confirmDeleteRecord(int recordId) {
+    final cubit = context.read<WorkoutPlanRecordCubit>();
+    showDialog(
+      context: context,
+      builder: (_) => ConfirmationDialog(
+        title: 'Delete Workout Plan Record',
+        content: 'Are you sure you want to delete this workout plan record? This action cannot be undone.',
+        confirmLabel: 'Delete',
+        isDestructive: true,
+        onConfirm: () async {
+          if (!mounted || _isDeleting) return;
+          setState(() => _isDeleting = true);
+          final deleted = await cubit.deleteWorkoutPlanRecord(recordId);
+          if (!mounted) return;
+          if (!deleted) {
+            setState(() => _isDeleting = false);
+            return;
+          }
+          if (context.canPop()) {
+            context.pop();
+          } else {
+            context.go(
+              Routes.workoutPlanDetail.name.replaceFirst(
+                ':id',
+                widget.workoutPlanId.toString(),
+              ),
+            );
+          }
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final breakpoints = BreakPoint.fromContext(context);
     final sizes = DataDisplaySizes.getDataDisplaySizes(breakpoints.screenSize);
 
     return BlocConsumer<WorkoutPlanRecordCubit, WorkoutPlanRecordState>(
+      listenWhen: (previous, current) =>
+          current.error != null &&
+          current.error != previous.error &&
+          current.currentPlanRecord.workoutPlan != null,
+      listener: (context, state) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(state.error!.description),
+            backgroundColor: theme.colorScheme.error,
+          ),
+        );
+      },
       builder: (context, state) {
-        if (state.currentPlanRecord.workoutPlan == null && !state.isLoading) {
+        final isBusy = state.isLoading || _isDeleting;
+        final current = state.currentPlanRecord;
+        final activeRecord = current.currentPlanRecord;
+
+        if (current.workoutPlan == null && !isBusy) {
           return EntityErrorScreen(
             sizes: sizes,
             entityName: "Workout Plan",
@@ -73,15 +128,21 @@ class _ActiveWorkoutPlanScreenState extends State<ActiveWorkoutPlanScreen> {
           body: Padding(
             padding: EdgeInsets.all(sizes.viewPadding),
             child: ActiveWorkoutPlanContent(
-              state: state.currentPlanRecord,
-              isLoading: state.isLoading,
+              state: current,
+              isLoading: isBusy,
               sizes: sizes,
+              deleteButtonKey: const ValueKey(
+                'active-workout-plan-record-delete',
+              ),
+              onDelete:
+                  !isBusy &&
+                      current.workoutPlan?.id == widget.workoutPlanId &&
+                      activeRecord != null
+                  ? () => _confirmDeleteRecord(activeRecord.id)
+                  : null,
             ),
           ),
         );
-      },
-      listener: (context, state) {
-        return;
       },
     );
   }

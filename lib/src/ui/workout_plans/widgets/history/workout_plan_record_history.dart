@@ -22,6 +22,7 @@ import 'package:material_ui/material_ui.dart';
 import '../../../../data/utils/enums.dart';
 import '../../../core/sizes/data_display_sizes.dart';
 import '../../../core/sizes/screen_size.dart';
+import '../../../core/widgets/confirmation_dialog.dart';
 import '../../../core/widgets/layout/app_text_button.dart';
 import '../../../core/widgets/layout/app_text_form_field.dart';
 import '../../../core/widgets/layout/empty_card.dart';
@@ -263,6 +264,7 @@ class _WorkoutPlanRecordHistoryState extends State<WorkoutPlanRecordHistory> {
                 sizes: widget.sizes,
                 units: widget.units,
                 isLoading: state.isLoadingHistory,
+                isMutating: state.isLoading,
                 planRecords: state.planRecords,
                 pagination: state.pagination,
                 workoutPlanId: widget.workoutPlanId,
@@ -276,6 +278,21 @@ class _WorkoutPlanRecordHistoryState extends State<WorkoutPlanRecordHistory> {
                     dateRange: (_dateRange.start, _dateRange.end),
                     limit: state.pagination.limit,
                     offset: state.planRecords.length,
+                  );
+                },
+                onDeleteRecord: (record) {
+                  final cubit = context.read<WorkoutPlanRecordCubit>();
+                  showDialog(
+                    context: context,
+                    builder: (_) => ConfirmationDialog(
+                      title: 'Delete Workout Plan Record',
+                      content: 'Are you sure you want to delete this workout plan record? This action cannot be undone.',
+                      confirmLabel: 'Delete',
+                      isDestructive: true,
+                      onConfirm: () {
+                        cubit.deleteWorkoutPlanRecord(record.id);
+                      },
+                    ),
                   );
                 },
               ),

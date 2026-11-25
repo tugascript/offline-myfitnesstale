@@ -20,6 +20,7 @@ import 'package:skeletonizer/skeletonizer.dart';
 
 import '../../../../data/repositories/workout_plans/utils/workout_plan_schedule_utils.dart';
 import '../../../core/sizes/data_display_sizes.dart';
+import '../../../core/widgets/layout/delete_icon_button.dart';
 import '../../view_models/states/workout_plan_record_state.dart';
 import '../plan_statistics_widget.dart';
 import './active_workout_plan_dummy_data.dart';
@@ -30,12 +31,16 @@ class ActiveWorkoutPlanContent extends StatelessWidget {
   final CurrentWorkoutPlanRecordState state;
   final DataDisplaySizesList sizes;
   final bool isLoading;
+  final VoidCallback? onDelete;
+  final Key deleteButtonKey;
 
   const ActiveWorkoutPlanContent({
     super.key,
     required this.state,
     required this.sizes,
     required this.isLoading,
+    this.onDelete,
+    this.deleteButtonKey = const ValueKey('current-workout-plan-record-delete'),
   });
 
   @override
@@ -90,12 +95,28 @@ class ActiveWorkoutPlanContent extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  plan.name,
-                  style: TextStyle(
-                    fontSize: sizes.titleFontSize,
-                    fontWeight: FontWeight.bold,
-                  ),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        plan.name,
+                        style: TextStyle(
+                          fontSize: sizes.titleFontSize,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    if (onDelete != null && !isLoading && record != null) ...[
+                      SizedBox(width: sizes.halfSpacing),
+                      DeleteIconButton(
+                        key: deleteButtonKey,
+                        sizes: sizes,
+                        isLoading: isLoading,
+                        onDelete: onDelete!,
+                      ),
+                    ],
+                  ],
                 ),
                 if (plan.description != null &&
                     plan.description!.isNotEmpty) ...[
