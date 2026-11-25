@@ -243,17 +243,7 @@ class MacroTrackingCubit extends Cubit<MacroTrackingState> {
 
   Future<bool> refreshMacroGoals() {
     _logger.info('Refreshing macro goals');
-    emit(
-      state.copyWith(
-        isLoading: true,
-        isLoadingActiveGoal: true,
-        isLoadingGoalHistory: true,
-        activeGoalError: const Nullable(null),
-        goalHistoryError: const Nullable(null),
-        error: const Nullable(null),
-      ),
-    );
-    return _refreshMacroGoals();
+    return _refreshMacroGoals(clearSharedError: true);
   }
 
   Future<bool> completeMacroGoal(int id) async {
@@ -302,16 +292,31 @@ class MacroTrackingCubit extends Cubit<MacroTrackingState> {
     return await _refreshMacroGoals();
   }
 
-  Future<bool> _refreshMacroGoals({MacroGoalDto? savedGoal}) async {
+  Future<bool> _refreshMacroGoals({
+    MacroGoalDto? savedGoal,
+    bool clearSharedError = false,
+  }) async {
     final limit = state.goalPagination.limit;
     final requestId = state.goalsRequestId + 1;
     final activeRequestId = ++_activeGoalRequestId;
+    final previousActiveGoalError = state.activeGoalError;
+    final previousGoalHistoryError = state.goalHistoryError;
+    final shouldClearSharedError =
+        clearSharedError ||
+        (previousActiveGoalError != null &&
+            state.error == previousActiveGoalError) ||
+        (previousGoalHistoryError != null &&
+            state.error == previousGoalHistoryError);
     _activeGoalLoad = null;
     emit(
       state.copyWith(
         goalsRequestId: requestId,
+        isLoading: true,
+        isLoadingActiveGoal: true,
         isLoadingGoalHistory: true,
+        activeGoalError: const Nullable(null),
         goalHistoryError: const Nullable(null),
+        error: shouldClearSharedError ? const Nullable(null) : null,
       ),
     );
 

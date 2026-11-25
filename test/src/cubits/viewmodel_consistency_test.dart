@@ -63,6 +63,7 @@ import 'package:myfitnesstale/src/ui/foods/view_models/states/food_state.dart';
 import 'package:myfitnesstale/src/ui/home/view_models/profile_cubit.dart';
 import 'package:myfitnesstale/src/ui/home/view_models/states/profile_state.dart';
 import 'package:myfitnesstale/src/ui/macros/view_models/macro_tracking_cubit.dart';
+import 'package:myfitnesstale/src/ui/macros/view_models/states/macro_tracking_state.dart';
 import 'package:myfitnesstale/src/ui/weight/view_models/states/weight_record_state.dart';
 import 'package:myfitnesstale/src/ui/weight/view_models/weight_record_cubit.dart';
 import 'package:myfitnesstale/src/ui/workout_plans/view_models/states/workout_plan_state.dart';
@@ -1195,6 +1196,138 @@ void main() {
       expect(cubit.state.weightRecords, hasLength(1));
       expect(cubit.state.weightRecords.single.weight, 80000);
       expect(cubit.state.latestWeightRecord?.weight, 80000);
+    });
+
+    test('WeightRecordCubit keeps isMutating true until overlapping mutations finish', () async {
+      final cubit = WeightRecordCubit(
+        weightRecordRepository: WeightRecordRepository.create(),
+      );
+      addTearDown(cubit.close);
+
+      final seenStates = <WeightRecordState>[];
+      final sub = cubit.stream.listen(seenStates.add);
+      addTearDown(sub.cancel);
+
+      final first = cubit.createWeightRecord(
+        WeightRecordInput(weight: 80000, recordDate: DateTime(2026, 3, 5)),
+      );
+      final second = cubit.createWeightRecord(
+        WeightRecordInput(weight: 79500, recordDate: DateTime(2026, 3, 6)),
+      );
+      await Future.wait([first, second]);
+      await Future<void>.delayed(Duration.zero);
+
+      final nonMutatingStates = seenStates.where((s) => !s.isMutating).toList();
+      expect(nonMutatingStates, hasLength(1));
+      expect(seenStates.last.isMutating, isFalse);
+      expect(cubit.state.isMutating, isFalse);
+      expect(cubit.state.weightRecords, hasLength(2));
+      expect(cubit.state.latestWeightRecord?.weight, 79500);
+    });
+
+    test('MacroTrackingCubit marks active goal loading and clears activeGoalError during mutation refresh', () async {
+      var failReads = true;
+      final helper = DatabaseHelper();
+      final repo = MacroTrackingRepository(
+        foodDao: Dao<Food>(
+          databaseHelper: helper,
+          tableName: Food.table,
+          fromMap: Food.fromMap,
+        ),
+        recipeDao: Dao<Recipe>(
+          databaseHelper: helper,
+          tableName: Recipe.table,
+          fromMap: Recipe.fromMap,
+        ),
+        foodPortionDao: Dao<FoodPortion>(
+          databaseHelper: helper,
+          tableName: FoodPortion.table,
+          fromMap: FoodPortion.fromMap,
+        ),
+        weekMacroGoalDao: Dao<WeekMacroGoal>(
+          databaseHelper: helper,
+          tableName: WeekMacroGoal.table,
+          fromMap: (map) {
+            if (failReads) throw StateError('simulated read failure');
+            return WeekMacroGoal.fromMap(map);
+          },
+        ),
+        dayMacroGoalDao: Dao<DayMacroGoal>(
+          databaseHelper: helper,
+          tableName: DayMacroGoal.table,
+          fromMap: DayMacroGoal.fromMap,
+        ),
+        dailyLogDao: Dao<DailyNutritionLog>(
+          databaseHelper: helper,
+          tableName: DailyNutritionLog.table,
+          fromMap: DailyNutritionLog.fromMap,
+        ),
+        mealLogDao: Dao<MealLog>(
+          databaseHelper: helper,
+          tableName: MealLog.table,
+          fromMap: MealLog.fromMap,
+        ),
+        mealLogItemDao: Dao<MealLogItem>(
+          databaseHelper: helper,
+          tableName: MealLogItem.table,
+          fromMap: MealLogItem.fromMap,
+        ),
+      );
+      final cubit = MacroTrackingCubit(macroTrackingRepository: repo);
+      addTearDown(cubit.close);
+
+      // Seed an active goal so getActiveMacroGoal hits fromMap and records an error.
+      failReads = false;
+      final seedStatus = await cubit.createMacroGoal(
+        const WeekMacroGoalInput(
+          name: 'Seed Goal',
+          targetCalories: 2000,
+          targetProtein: 150,
+          targetCarbs: 215,
+          targetFat: 60,
+          isActive: true,
+        ),
+      );
+      expect(seedStatus, MacroGoalSaveStatus.saved);
+
+      failReads = true;
+      await cubit.getActiveMacroGoal();
+      expect(cubit.state.activeGoalError, isNotNull);
+
+      failReads = false;
+      final seenStates = <MacroTrackingState>[];
+      final sub = cubit.stream.listen(seenStates.add);
+      addTearDown(sub.cancel);
+
+      final createStatus = await cubit.createMacroGoal(
+        const WeekMacroGoalInput(
+          name: 'Updated Goal',
+          targetCalories: 2100,
+          targetProtein: 160,
+          targetCarbs: 220,
+          targetFat: 65,
+          isActive: true,
+        ),
+      );
+      expect(createStatus, MacroGoalSaveStatus.saved);
+      expect(
+        seenStates.any(
+          (s) => s.isLoadingActiveGoal && s.activeGoalError == null,
+        ),
+        isTrue,
+      );
+      expect(cubit.state.isLoadingActiveGoal, isFalse);
+      expect(cubit.state.activeGoalError, isNull);
+      expect(cubit.state.activeGoal?.name, 'Updated Goal');
+
+      seenStates.clear();
+      final completed = await cubit.completeMacroGoal(
+        cubit.state.activeGoal!.id,
+      );
+      expect(completed, isTrue);
+      expect(seenStates.any((s) => s.isLoadingActiveGoal), isTrue);
+      expect(cubit.state.isLoadingActiveGoal, isFalse);
+      expect(cubit.state.activeGoal, isNull);
     });
   });
 }
