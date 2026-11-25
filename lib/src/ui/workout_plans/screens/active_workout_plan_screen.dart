@@ -98,6 +98,7 @@ class _ActiveWorkoutPlanScreenState extends State<ActiveWorkoutPlanScreen> {
 
     return BlocConsumer<WorkoutPlanRecordCubit, WorkoutPlanRecordState>(
       listenWhen: (previous, current) =>
+          (ModalRoute.of(context)?.isCurrent ?? true) &&
           current.error != null &&
           current.error != previous.error &&
           current.currentPlanRecord.workoutPlan != null,

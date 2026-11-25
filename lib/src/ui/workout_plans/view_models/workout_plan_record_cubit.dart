@@ -55,11 +55,15 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
   final Logger _logger = Logger('WorkoutPlanRecordCubit');
   int _latestRecordRequestId = 0;
   int _activePlanRequestId = 0;
+  int? _inFlightActivePlanRequestId;
   int _activeDeleteCount = 0;
-  int _activePlanLoadCount = 0;
+  Future<void>? _activeDeleteTail;
   Completer<void>? _deletesDoneCompleter;
   int _recordMutationVersion = 0;
   bool _historyNeedsRefill = false;
+
+  bool get _hasActivePlanLoadInFlight =>
+      _inFlightActivePlanRequestId == _activePlanRequestId;
 
   Future<void> getWorkoutPlanRecords({
     int? workoutPlanId,
@@ -265,7 +269,7 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
   Future<void> getOrCreateActivePlanRecord(int workoutPlanId) async {
     _logger.info('Getting active plan record');
     final requestId = ++_activePlanRequestId;
-    _activePlanLoadCount++;
+    _inFlightActivePlanRequestId = requestId;
     emit(state.copyWith(isLoading: true));
 
     try {
@@ -371,7 +375,9 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
         ),
       );
     } finally {
-      _activePlanLoadCount--;
+      if (_inFlightActivePlanRequestId == requestId) {
+        _inFlightActivePlanRequestId = null;
+      }
     }
   }
 
@@ -655,20 +661,32 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
 
   Future<bool> deleteWorkoutPlanRecord(int id) async {
     _logger.info('Deleting workout plan record $id');
+    if (isClosed) return false;
+
     _activeDeleteCount++;
     _deletesDoneCompleter ??= Completer<void>();
 
+    final previousDelete = _activeDeleteTail;
+    final currentDeleteDone = Completer<void>();
+    _activeDeleteTail = currentDeleteDone.future;
+
+    final initialHistoryRequestId = state.historyRequestId;
+    final initialLatestRequestId = _latestRecordRequestId;
+    final initialActivePlanRequestId = _activePlanRequestId;
+
     var deleted = false;
     try {
-      final initialHistoryRequestId = state.historyRequestId;
-      final initialLatestRequestId = _latestRecordRequestId;
-      final initialActivePlanRequestId = _activePlanRequestId;
+      emit(state.copyWith(isLoading: true, error: const Nullable(null)));
+
+      if (previousDelete != null) {
+        await previousDelete;
+        if (isClosed) return false;
+      }
+
       final latestFilterPlanId = state.latestWorkoutPlanId;
       final deletedCurrentActive =
           state.currentPlanRecord.currentPlanRecord?.id == id;
       final deletedLatest = state.latestWorkoutPlanRecord?.id == id;
-
-      emit(state.copyWith(isLoading: true, error: const Nullable(null)));
 
       final result = await _workoutPlanRecordService.deleteWorkoutPlanRecord(
         id,
@@ -686,7 +704,7 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
             error: Nullable(
               ErrorState(type: error.type.name, description: description),
             ),
-            isLoading: _activeDeleteCount > 1 || _activePlanLoadCount > 0,
+            isLoading: _activeDeleteCount > 1 || _hasActivePlanLoadInFlight,
           ),
         );
       } else {
@@ -701,45 +719,31 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
                 state.currentPlanRecord.currentPlanRecord?.id == id) &&
             _activePlanRequestId == initialActivePlanRequestId;
         if (shouldUpdateActivePlan) {
-          while (true) {
-            final mutationVersionBeforeActive = _recordMutationVersion;
-            final activeResult = await _workoutPlanRecordService
-                .getLatestActivePlanRecord();
-            if (isClosed) return true;
-            if (_activePlanRequestId != initialActivePlanRequestId) {
-              shouldUpdateActivePlan = false;
-              break;
+          final activeResult = await _workoutPlanRecordService
+              .getLatestActivePlanRecord();
+          if (isClosed) return true;
+          if (_activePlanRequestId != initialActivePlanRequestId) {
+            shouldUpdateActivePlan = false;
+          } else if (activeResult.isErr()) {
+            final activeError = activeResult.error;
+            if (activeError.type == SingleErrorTypes.notFound) {
+              nextCurrentPlanRecord = CurrentWorkoutPlanRecordState.initial();
+              nextHasLoadedActivePlan = true;
+              activeRefreshError = null;
+            } else {
+              nextCurrentPlanRecord = CurrentWorkoutPlanRecordState.initial();
+              nextHasLoadedActivePlan = false;
+              activeRefreshError = ErrorState(
+                type: activeError.type.name,
+                description: 'Failed to get latest active plan record',
+              );
             }
-            if (_recordMutationVersion != mutationVersionBeforeActive) {
-              continue;
-            }
-            if (activeResult.isErr()) {
-              final activeError = activeResult.error;
-              if (activeError.type == SingleErrorTypes.notFound) {
-                nextCurrentPlanRecord = CurrentWorkoutPlanRecordState.initial();
-                nextHasLoadedActivePlan = true;
-                activeRefreshError = null;
-              } else {
-                nextCurrentPlanRecord = CurrentWorkoutPlanRecordState.initial();
-                nextHasLoadedActivePlan = false;
-                activeRefreshError = ErrorState(
-                  type: activeError.type.name,
-                  description: 'Failed to get latest active plan record',
-                );
-              }
-              break;
-            }
-
+          } else {
             final hydrated = await _hydrateActivePlanState(activeResult.value);
             if (isClosed) return true;
             if (_activePlanRequestId != initialActivePlanRequestId) {
               shouldUpdateActivePlan = false;
-              break;
-            }
-            if (_recordMutationVersion != mutationVersionBeforeActive) {
-              continue;
-            }
-            if (hydrated.isErr()) {
+            } else if (hydrated.isErr()) {
               nextCurrentPlanRecord = CurrentWorkoutPlanRecordState.initial();
               nextHasLoadedActivePlan = false;
               activeRefreshError = ErrorState(
@@ -751,7 +755,6 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
               nextHasLoadedActivePlan = true;
               activeRefreshError = null;
             }
-            break;
           }
         }
 
@@ -761,60 +764,43 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
             (deletedLatest || state.latestWorkoutPlanRecord?.id == id) &&
             _latestRecordRequestId == initialLatestRequestId;
         if (shouldUpdateLatest) {
-          while (true) {
-            final mutationVersionBeforeLatest = _recordMutationVersion;
-            final latestResult = await _workoutPlanRecordService
-                .getLatestWorkoutPlanRecord(latestFilterPlanId);
-            if (isClosed) return true;
-            if (_latestRecordRequestId != initialLatestRequestId) {
-              shouldUpdateLatest = false;
-              break;
-            }
-            if (_recordMutationVersion != mutationVersionBeforeLatest) {
-              continue;
-            }
-            if (latestResult.isOk()) {
-              nextLatest = latestResult.value;
-              nextLatestError = null;
-            } else if (latestResult.error.type == SingleErrorTypes.notFound ||
-                latestResult.error.type == SingleErrorTypes.invalidInput) {
-              nextLatest = null;
-              nextLatestError = null;
-            } else {
-              _logger.warning(
-                'Failed to refresh latest workout plan record after delete',
-                latestResult.error,
-              );
-              nextLatest = null;
-              nextLatestError = ErrorState(
-                type: latestResult.error.type.name,
-                description: latestResult.error.description,
-              );
-            }
-            break;
+          final latestResult = await _workoutPlanRecordService
+              .getLatestWorkoutPlanRecord(latestFilterPlanId);
+          if (isClosed) return true;
+          if (_latestRecordRequestId != initialLatestRequestId) {
+            shouldUpdateLatest = false;
+          } else if (latestResult.isOk()) {
+            nextLatest = latestResult.value;
+            nextLatestError = null;
+          } else if (latestResult.error.type == SingleErrorTypes.notFound ||
+              latestResult.error.type == SingleErrorTypes.invalidInput) {
+            nextLatest = null;
+            nextLatestError = null;
+          } else {
+            _logger.warning(
+              'Failed to refresh latest workout plan record after delete',
+              latestResult.error,
+            );
+            nextLatest = null;
+            nextLatestError = ErrorState(
+              type: latestResult.error.type.name,
+              description: latestResult.error.description,
+            );
           }
         }
 
         int? reconciledHistoryTotal;
         if (state.pagination.total > 0 &&
             state.historyRequestId == initialHistoryRequestId) {
-          while (true) {
-            final pagination = state.pagination;
-            final mutationVersionBeforeCount = _recordMutationVersion;
-            final countResult = await _workoutPlanRecordService
-                .countWorkoutPlanRecords(
-                  workoutPlanId: pagination.workoutPlanId,
-                  status: pagination.progressStatus,
-                  dateRange: pagination.dateRange,
-                );
-            if (isClosed) return true;
-            if (state.historyRequestId != initialHistoryRequestId) {
-              reconciledHistoryTotal = null;
-              break;
-            }
-            if (_recordMutationVersion != mutationVersionBeforeCount) {
-              continue;
-            }
+          final pagination = state.pagination;
+          final countResult = await _workoutPlanRecordService
+              .countWorkoutPlanRecords(
+                workoutPlanId: pagination.workoutPlanId,
+                status: pagination.progressStatus,
+                dateRange: pagination.dateRange,
+              );
+          if (isClosed) return true;
+          if (state.historyRequestId == initialHistoryRequestId) {
             if (countResult.isOk()) {
               reconciledHistoryTotal = countResult.value;
             } else {
@@ -823,7 +809,6 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
                 countResult.error,
               );
             }
-            break;
           }
         }
 
@@ -868,17 +853,23 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
             hasLoadedActivePlan: shouldUpdateActivePlan
                 ? nextHasLoadedActivePlan
                 : null,
-            isLoading: _activeDeleteCount > 1 || _activePlanLoadCount > 0,
+            isLoading: _activeDeleteCount > 1 || _hasActivePlanLoadInFlight,
             error: Nullable(nextError),
           ),
         );
       }
     } finally {
+      if (identical(_activeDeleteTail, currentDeleteDone.future)) {
+        _activeDeleteTail = null;
+      }
       _activeDeleteCount--;
       if (_activeDeleteCount == 0) {
         final completer = _deletesDoneCompleter;
         _deletesDoneCompleter = null;
         completer?.complete();
+      }
+      if (!currentDeleteDone.isCompleted) {
+        currentDeleteDone.complete();
       }
     }
 
@@ -956,7 +947,7 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
   Future<void> getLatestActivePlanRecord() async {
     _logger.info('Getting latest active plan record');
     final requestId = ++_activePlanRequestId;
-    _activePlanLoadCount++;
+    _inFlightActivePlanRequestId = requestId;
     emit(state.copyWith(isLoading: true));
 
     try {
@@ -1039,7 +1030,9 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
         return;
       }
     } finally {
-      _activePlanLoadCount--;
+      if (_inFlightActivePlanRequestId == requestId) {
+        _inFlightActivePlanRequestId = null;
+      }
     }
   }
 

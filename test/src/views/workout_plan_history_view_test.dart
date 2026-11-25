@@ -33,10 +33,12 @@ import 'package:myfitnesstale/src/routing/routes.dart';
 import 'package:myfitnesstale/src/ui/core/view_models/states/common_state.dart';
 import 'package:myfitnesstale/src/ui/home/view_models/profile_cubit.dart';
 import 'package:myfitnesstale/src/ui/home/view_models/states/profile_state.dart';
+import 'package:myfitnesstale/src/ui/workout_plans/screens/active_workout_plan_screen.dart';
 import 'package:myfitnesstale/src/ui/workout_plans/screens/workout_plan_history_screen.dart';
 import 'package:myfitnesstale/src/ui/workout_plans/view_models/states/workout_plan_record_state.dart';
 import 'package:myfitnesstale/src/ui/workout_plans/view_models/workout_plan_cubit.dart';
 import 'package:myfitnesstale/src/ui/workout_plans/view_models/workout_plan_record_cubit.dart';
+import 'package:myfitnesstale/src/ui/workout_plans/widgets/active/active_workout_plan_dummy_data.dart';
 import 'package:myfitnesstale/src/ui/workout_plans/widgets/history/single_workout_plan_record_list.dart';
 import 'package:myfitnesstale/src/utils/nullable.dart';
 
@@ -110,6 +112,9 @@ class _WorkoutPlanRecordCubit extends WorkoutPlanRecordCubit {
 
   @override
   Future<void> getLatestWorkoutPlanRecord([int? workoutPlanId]) async {}
+
+  @override
+  Future<void> getOrCreateActivePlanRecord(int workoutPlanId) async {}
 
   @override
   Future<bool> deleteWorkoutPlanRecord(int id) async {
@@ -447,6 +452,108 @@ void main() {
 
       expect(cubit.deletedRecordIds, [11, 11]);
       expect(cubit.state.planRecords.map((r) => r.id), [10]);
+    },
+  );
+
+  testWidgets(
+    'does not enqueue duplicate error snackbars when covered by ActiveWorkoutPlanScreen',
+    (tester) async {
+      final activeRecord = record(15, ProgressStatus.inProgress);
+      final dummy = ActiveWorkoutPlanDummyData.dummyState;
+      final initialState = WorkoutPlanRecordState.initial().copyWith(
+        hasLoadedActivePlan: true,
+        latestWorkoutPlanRecord: Nullable(activeRecord),
+        planRecords: [activeRecord],
+        pagination: const WorkoutPlanRecordPagination(
+          workoutPlanId: 9,
+          limit: 20,
+          offset: 0,
+          total: 1,
+        ),
+        currentPlanRecord: dummy.copyWith(
+          workoutPlan: Nullable(
+            dummy.workoutPlan!.copyWith(id: 9, name: 'Active Split'),
+          ),
+          currentPlanRecord: Nullable(
+            dummy.currentPlanRecord!.copyWith(id: 15, workoutPlanId: 9),
+          ),
+        ),
+      );
+
+      final cubit = _WorkoutPlanRecordCubit(initialState);
+      final workoutPlanCubit = _WorkoutPlanCubit();
+      final profileCubit = _ProfileCubit();
+      addTearDown(() async {
+        await cubit.close();
+        await workoutPlanCubit.close();
+        await profileCubit.close();
+      });
+
+      final router = GoRouter(
+        initialLocation: WorkoutPlanHistoryScreen.location(9),
+        routes: [
+          GoRoute(
+            path: Routes.workoutPlanHistory.name,
+            builder: (context, state) =>
+                const WorkoutPlanHistoryScreen(workoutPlanId: 9),
+          ),
+          GoRoute(
+            path: Routes.activeWorkoutPlan.name,
+            builder: (context, state) =>
+                const ActiveWorkoutPlanScreen(workoutPlanId: 9),
+          ),
+        ],
+      );
+      addTearDown(router.dispose);
+
+      await tester.pumpWidget(
+        MultiBlocProvider(
+          providers: [
+            BlocProvider<WorkoutPlanCubit>.value(value: workoutPlanCubit),
+            BlocProvider<ProfileCubit>.value(value: profileCubit),
+            BlocProvider<WorkoutPlanRecordCubit>.value(value: cubit),
+          ],
+          child: MaterialApp.router(routerConfig: router),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Push ActiveWorkoutPlanScreen on top of WorkoutPlanHistoryScreen.
+      router.push('/workout-plans/9/active');
+      await tester.pumpAndSettle();
+      expect(find.byType(ActiveWorkoutPlanScreen), findsOneWidget);
+
+      // Fail a delete from ActiveWorkoutPlanScreen: only the active screen should show a SnackBar.
+      cubit.failNextDelete = true;
+      await tester.tap(
+        find.byKey(const ValueKey('active-workout-plan-record-delete')),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('DELETE'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(SnackBar), findsOneWidget);
+      expect(find.text('Failed to delete workout plan record'), findsOneWidget);
+
+      // Dismissing the single snackbar must NOT reveal a second duplicate queued by the hidden history screen.
+      ScaffoldMessenger.of(tester.element(find.byType(ActiveWorkoutPlanScreen)))
+          .hideCurrentSnackBar();
+      await tester.pumpAndSettle();
+      expect(find.byType(SnackBar), findsNothing);
+
+      // Pop back to WorkoutPlanHistoryScreen and verify it still displays errors when current.
+      router.pop();
+      await tester.pumpAndSettle();
+      expect(find.byType(WorkoutPlanHistoryScreen), findsOneWidget);
+      expect(find.byType(ActiveWorkoutPlanScreen), findsNothing);
+      final historyRoute = ModalRoute.of(
+        tester.element(find.byType(WorkoutPlanHistoryScreen)),
+      );
+      expect(historyRoute?.isCurrent, isTrue);
+      cubit.failWithLoadedRecords('History error when foreground');
+      await tester.pumpAndSettle();
+      expect(find.byType(SnackBar), findsOneWidget);
+      expect(find.text('History error when foreground'), findsOneWidget);
     },
   );
 }
