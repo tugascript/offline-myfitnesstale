@@ -215,7 +215,10 @@ class _ExerciseProgressHistoryState extends State<ExerciseProgressHistory> {
             final records = !isScoped
                 ? state.exerciseRecords
                 : const <ExerciseRecordDto>[];
-            final effectiveLoading = isLoading || _waitingForPostFrame;
+            final effectiveLoading =
+                isLoading ||
+                _waitingForPostFrame ||
+                (isScoped && state.recordsError == null);
             if (!effectiveLoading &&
                 state.recordsError != null &&
                 (isScoped || records.isEmpty)) {

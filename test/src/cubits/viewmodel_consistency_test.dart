@@ -1253,6 +1253,13 @@ void main() {
       expect(cubit.state.isLoadingRecords, isFalse);
       expect(cubit.state.weightRecords, isNotEmpty);
       expect(cubit.state.isLoading, isFalse);
+
+      final reloadFuture = cubit.getWeightRecords(offset: 0);
+      expect(cubit.state.isLoadingRecords, isTrue);
+      expect(cubit.state.weightRecords, isEmpty);
+      await reloadFuture;
+      expect(cubit.state.isLoadingRecords, isFalse);
+      expect(cubit.state.weightRecords, isNotEmpty);
     });
 
     test('MacroTrackingCubit clears stale activeGoal on reload failure and preserves unrelated history errors on active goal success', () async {

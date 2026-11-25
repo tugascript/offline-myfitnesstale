@@ -1251,4 +1251,96 @@ void main() {
       expect(cubit.state.recordPagination.exerciseId, exerciseB.id);
     },
   );
+
+  testWidgets(
+    'LatestExerciseProgressRecord and ExerciseProgressHistory stay loading instead of flashing empty while scoped data awaits unscoped refetch',
+    (tester) async {
+      final sizes = DataDisplaySizes.getDataDisplaySizes(ScreenSize.xs);
+      final pendingLatest = Completer<void>();
+      final pendingRecords = Completer<void>();
+      final cubit = _ControlledExerciseRecordCubit(
+        ExerciseRecordState.initial().copyWith(
+          latestExerciseId: const Nullable(1),
+          latestExerciseRecord: Nullable(recordA),
+          exerciseRecords: [recordA],
+          recordPagination: const ExerciseRecordPagination(
+            exerciseId: 1,
+            limit: 20,
+            offset: 0,
+            total: 1,
+          ),
+          isLoadingLatest: false,
+          isLoadingRecords: false,
+        ),
+        pendingLatest: pendingLatest,
+        pendingRecords: pendingRecords,
+      );
+      addTearDown(cubit.close);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: BlocProvider<ExerciseRecordCubit>.value(
+              value: cubit,
+              child: Column(
+                children: [
+                  LatestExerciseProgressRecord(
+                    theme: ThemeData.light(),
+                    sizes: sizes,
+                    units: Units.metric,
+                    onOpenExerciseRecords: (_) async {},
+                  ),
+                  Expanded(
+                    child: ExerciseProgressHistory(
+                      theme: ThemeData.light(),
+                      breakPoint: testBreakPoint,
+                      sizes: sizes,
+                      units: Units.metric,
+                      dateRange: DateTimeRange(
+                        start: DateTime(2026, 1, 1),
+                        end: DateTime(2026, 3, 1),
+                      ),
+                      onDateRangeChanged: (_) {},
+                      onOpenExerciseRecords: (_) async {},
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+
+      // Simulate returning to scoped state with loading temporarily false and no error.
+      cubit.emit(
+        cubit.state.copyWith(
+          latestExerciseId: const Nullable(1),
+          latestExerciseRecord: Nullable(recordA),
+          exerciseRecords: [recordA],
+          recordPagination: const ExerciseRecordPagination(
+            exerciseId: 1,
+            limit: 20,
+            offset: 0,
+            total: 1,
+          ),
+          isLoadingLatest: false,
+          isLoadingRecords: false,
+          latestError: const Nullable(null),
+          recordsError: const Nullable(null),
+        ),
+      );
+      await tester.pump();
+
+      expect(find.text('Empty history'), findsNothing);
+      expect(find.text('No records yet'), findsNothing);
+      expect(
+        find.byWidgetPredicate((w) => w is Skeletonizer && w.enabled),
+        findsWidgets,
+      );
+
+      pendingLatest.complete();
+      pendingRecords.complete();
+      await tester.pumpAndSettle();
+    },
+  );
 }

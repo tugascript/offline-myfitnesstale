@@ -81,7 +81,10 @@ class _LatestExerciseProgressRecordState
           });
         }
 
-        final effectiveLoading = isLoading || _waitingForPostFrame;
+        final effectiveLoading =
+            isLoading ||
+            _waitingForPostFrame ||
+            (isScoped && state.latestError == null);
         final record = effectiveLoading || isScoped
             ? null
             : state.latestExerciseRecord;

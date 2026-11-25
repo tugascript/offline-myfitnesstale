@@ -70,6 +70,7 @@ class _WeightGoalHistoryState extends State<WeightGoalHistory> {
     if (_isBottom) {
       final cubit = context.read<WeightRecordCubit>();
       if (!cubit.state.isLoadingGoals &&
+          cubit.state.goalsError == null &&
           cubit.state.goalPagination.total > cubit.state.weightGoals.length) {
         final pagination = cubit.state.goalPagination;
         cubit.getWeightGoals(
@@ -188,11 +189,16 @@ class _WeightGoalHistoryState extends State<WeightGoalHistory> {
                     final stateIsLoading =
                         weightState.isLoadingGoals &&
                         weightState.weightGoals.isEmpty;
+                    final showLoadMoreError =
+                        !weightState.isLoadingGoals &&
+                        weightState.weightGoals.isNotEmpty &&
+                        weightState.goalsError != null;
                     return ListView.builder(
                       controller: _scrollController,
                       itemCount: stateIsLoading
                           ? 3
-                          : weightState.weightGoals.length,
+                          : weightState.weightGoals.length +
+                                (showLoadMoreError ? 1 : 0),
                       itemBuilder: (context, index) {
                         if (stateIsLoading) {
                           return WeightGoalCard(
@@ -200,6 +206,47 @@ class _WeightGoalHistoryState extends State<WeightGoalHistory> {
                             units: state.system?.units ?? Units.metric,
                             weightGoal: WeightGoalDto.empty(),
                             sizes: widget.sizes,
+                          );
+                        }
+
+                        if (index == weightState.weightGoals.length) {
+                          return Padding(
+                            padding: EdgeInsets.all(widget.sizes.padding),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  weightState.goalsError!.description,
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontSize: widget.sizes.fontSize,
+                                  ),
+                                ),
+                                SizedBox(height: widget.sizes.spacing / 2),
+                                AppTextButton(
+                                  key: const ValueKey(
+                                    'weight-goal-history-load-more-retry',
+                                  ),
+                                  isLoading: false,
+                                  sizes: widget.sizes,
+                                  isDense: true,
+                                  label: 'Retry',
+                                  icon: Icons.refresh,
+                                  onPressed: () {
+                                    final pagination =
+                                        weightState.goalPagination;
+                                    context
+                                        .read<WeightRecordCubit>()
+                                        .getWeightGoals(
+                                          skipInProgress: true,
+                                          offset:
+                                              weightState.weightGoals.length,
+                                          limit: pagination.limit,
+                                        );
+                                  },
+                                ),
+                              ],
+                            ),
                           );
                         }
 

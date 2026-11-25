@@ -437,6 +437,7 @@ class WeightRecordCubit extends Cubit<WeightRecordState> {
     emit(
       state.copyWith(
         recordsRequestId: requestId,
+        weightRecords: offset == 0 ? const [] : null,
         isLoadingRecords: true,
         recordsError: const Nullable(null),
         error:
@@ -464,6 +465,7 @@ class WeightRecordCubit extends Cubit<WeightRecordState> {
           );
           emit(
             state.copyWith(
+              weightRecords: offset == 0 ? const [] : null,
               recordsError: Nullable(errorState),
               error: Nullable(errorState),
               isLoadingRecords: false,

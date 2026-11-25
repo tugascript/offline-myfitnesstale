@@ -347,4 +347,64 @@ void main() {
       expect(cubit.goalsLoadCalls, callsBeforeRetry + 1);
     },
   );
+
+  testWidgets(
+    'WeightGoalHistory pauses scroll pagination and shows inline retry footer on load-more goalsError',
+    (tester) async {
+      tester.view.physicalSize = const Size(800, 1200);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+
+      final cubit = _FakeWeightRecordCubit();
+      addTearDown(cubit.close);
+
+      await tester.pumpWidget(buildScreen(cubit));
+      await tester.pump();
+      cubit.setActiveGoal(null);
+      await tester.pumpAndSettle();
+
+      final pastGoal = WeightGoalDto(
+        id: 21,
+        targetWeight: 78000,
+        status: ProgressStatus.completed,
+        phase: WeightGoalPhase.maintain,
+        startDate: DateTime(2026, 1, 1),
+        completedAt: DateTime(2026, 2, 1),
+      );
+      cubit.emit(
+        cubit.state.copyWith(
+          weightGoals: [pastGoal],
+          goalPagination: cubit.state.goalPagination.copyWith(
+            total: 5,
+            limit: 20,
+            offset: 0,
+          ),
+          isLoadingGoals: false,
+          goalsError: const Nullable(
+            ErrorState(
+              type: 'operationFailure',
+              description: 'Failed to load more weight goals',
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Failed to load more weight goals'), findsOneWidget);
+      final retryButton = find.byKey(
+        const ValueKey('weight-goal-history-load-more-retry'),
+      );
+      expect(retryButton, findsOneWidget);
+
+      final callsBeforeScroll = cubit.goalsLoadCalls;
+      await tester.drag(find.byType(ListView), const Offset(0, -300));
+      await tester.pump();
+      expect(cubit.goalsLoadCalls, callsBeforeScroll);
+
+      await tester.ensureVisible(retryButton);
+      await tester.tap(retryButton);
+      await tester.pump();
+      expect(cubit.goalsLoadCalls, callsBeforeScroll + 1);
+    },
+  );
 }

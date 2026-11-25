@@ -74,7 +74,10 @@ class _StrengthGoalHistoryState extends State<StrengthGoalHistory> {
     final hasMore =
         state.strengthGoals.length < state.strengthGoalPagination.total;
 
-    if (isNearBottom && hasMore && !state.isGoalsLoading) {
+    if (isNearBottom &&
+        hasMore &&
+        !state.isGoalsLoading &&
+        state.goalsError == null) {
       cubit.getStrengthGoals(
         exerciseId: state.strengthGoalPagination.exerciseId,
         skipInProgress: state.strengthGoalPagination.skipInProgress,
