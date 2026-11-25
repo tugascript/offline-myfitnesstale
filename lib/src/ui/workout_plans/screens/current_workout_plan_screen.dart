@@ -124,6 +124,7 @@ class _CurrentWorkoutPlanScreenState extends State<CurrentWorkoutPlanScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final sizes = DataDisplaySizes.getDataDisplaySizes(
       BreakPoint.fromContext(context).screenSize,
     );
@@ -132,7 +133,24 @@ class _CurrentWorkoutPlanScreenState extends State<CurrentWorkoutPlanScreen> {
       showBackButton: false,
       body: Padding(
         padding: EdgeInsets.all(sizes.viewPadding),
-        child: BlocBuilder<WorkoutPlanRecordCubit, WorkoutPlanRecordState>(
+        child: BlocConsumer<WorkoutPlanRecordCubit, WorkoutPlanRecordState>(
+          listenWhen: (previous, current) =>
+              widget.isVisible &&
+              (ModalRoute.of(context)?.isCurrent ?? true) &&
+              current.error != null &&
+              current.error != previous.error &&
+              current.hasLoadedActivePlan &&
+              current.currentPlanRecord.workoutPlan != null &&
+              current.currentPlanRecord.currentPlanRecord?.status ==
+                  ProgressStatus.inProgress,
+          listener: (context, state) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(state.error!.description),
+                backgroundColor: theme.colorScheme.error,
+              ),
+            );
+          },
           builder: (context, state) {
             if (!_hasLoaded || _refreshing || state.isLoading) {
               return ActiveWorkoutPlanContent(
@@ -141,7 +159,7 @@ class _CurrentWorkoutPlanScreenState extends State<CurrentWorkoutPlanScreen> {
                 sizes: sizes,
               );
             }
-            if (state.error != null) {
+            if (state.error != null && !state.hasLoadedActivePlan) {
               return CurrentWorkoutPlanPlaceholder(
                 sizes: sizes,
                 errorDescription: state.error!.description,

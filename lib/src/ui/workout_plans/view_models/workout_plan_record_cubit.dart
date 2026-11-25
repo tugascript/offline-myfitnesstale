@@ -675,6 +675,7 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
             nextHasLoadedActivePlan = true;
           } else {
             nextCurrentPlanRecord = CurrentWorkoutPlanRecordState.initial();
+            nextHasLoadedActivePlan = false;
             activeRefreshError = ErrorState(
               type: activeError.type.name,
               description: 'Failed to get latest active plan record',
@@ -685,6 +686,7 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
           if (isClosed) return true;
           if (hydrated.isErr()) {
             nextCurrentPlanRecord = CurrentWorkoutPlanRecordState.initial();
+            nextHasLoadedActivePlan = false;
             activeRefreshError = ErrorState(
               type: hydrated.error.type.name,
               description: hydrated.error.description,
@@ -850,6 +852,7 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
         case SingleErrorTypes.operationFailure:
           emit(
             state.copyWith(
+              hasLoadedActivePlan: false,
               error: Nullable(
                 ErrorState(
                   type: error.type.name,
@@ -868,6 +871,7 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
     if (hydrated.isErr()) {
       emit(
         state.copyWith(
+          hasLoadedActivePlan: false,
           error: Nullable(
             ErrorState(
               type: hydrated.error.type.name,
