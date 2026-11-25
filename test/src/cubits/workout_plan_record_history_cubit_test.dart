@@ -690,4 +690,111 @@ void main() {
     expect(cubit.state.pagination.workoutPlanId, planTwo);
     expect(cubit.state.pagination.total, 1);
   });
+
+  test('in-flight getLatestWorkoutPlanRecord does not publish a deleted record after deletion succeeds', () async {
+    final database = await testDatabase.db;
+    final planId = await seedPlan(database, name: 'Concurrent Latest Plan');
+    final olderId = await seedRecord(
+      database,
+      planId: planId,
+      status: ProgressStatus.completed,
+      timestamp: 100,
+    );
+    final newestId = await seedRecord(
+      database,
+      planId: planId,
+      status: ProgressStatus.completed,
+      timestamp: 200,
+    );
+
+    final cubit = WorkoutPlanRecordCubit(
+      workoutPlanRecordRepository: WorkoutPlanRecordRepository.create(),
+      workoutPlanRepository: WorkoutPlanRepository.create(),
+      workoutRecordRepository: WorkoutRecordRepository.create(),
+    );
+    addTearDown(cubit.close);
+
+    await cubit.getWorkoutPlanRecords(workoutPlanId: planId);
+    expect(cubit.state.latestWorkoutPlanRecord, isNull);
+
+    // Start latest query first, then immediately delete the newest record while it is in flight.
+    final latestFuture = cubit.getLatestWorkoutPlanRecord(planId);
+    final deleteNewestFuture = cubit.deleteWorkoutPlanRecord(newestId);
+
+    expect(await deleteNewestFuture, isTrue);
+    await latestFuture;
+
+    expect(cubit.state.isLoading, isFalse);
+    expect(cubit.state.isLoadingLatest, isFalse);
+    expect(cubit.state.latestWorkoutPlanRecord?.id, olderId);
+    expect(cubit.state.planRecords.map((r) => r.id), [olderId]);
+
+    // Repeat for the final remaining record so latest settles to null instead of the deleted row.
+    final finalLatestFuture = cubit.getLatestWorkoutPlanRecord(planId);
+    final deleteOlderFuture = cubit.deleteWorkoutPlanRecord(olderId);
+
+    expect(await deleteOlderFuture, isTrue);
+    await finalLatestFuture;
+
+    expect(cubit.state.isLoading, isFalse);
+    expect(cubit.state.isLoadingLatest, isFalse);
+    expect(cubit.state.latestWorkoutPlanRecord, isNull);
+    expect(cubit.state.planRecords, isEmpty);
+  });
+
+  test('getLatestWorkoutPlanRecord started during deletion and overlapping deletions settle on remaining latest record', () async {
+    final database = await testDatabase.db;
+    final planId = await seedPlan(database, name: 'Latest During Delete');
+    final r1 = await seedRecord(
+      database,
+      planId: planId,
+      status: ProgressStatus.completed,
+      timestamp: 100,
+    );
+    final r2 = await seedRecord(
+      database,
+      planId: planId,
+      status: ProgressStatus.completed,
+      timestamp: 200,
+    );
+    final r3 = await seedRecord(
+      database,
+      planId: planId,
+      status: ProgressStatus.completed,
+      timestamp: 300,
+    );
+
+    final cubit = WorkoutPlanRecordCubit(
+      workoutPlanRecordRepository: WorkoutPlanRecordRepository.create(),
+      workoutPlanRepository: WorkoutPlanRepository.create(),
+      workoutRecordRepository: WorkoutRecordRepository.create(),
+    );
+    addTearDown(cubit.close);
+
+    await cubit.getLatestWorkoutPlanRecord(planId);
+    await cubit.getWorkoutPlanRecords(workoutPlanId: planId);
+    expect(cubit.state.latestWorkoutPlanRecord?.id, r3);
+
+    // Start deletion of latest, then request latest while deletion is in flight.
+    final deleteLatestFuture = cubit.deleteWorkoutPlanRecord(r3);
+    final refreshLatestFuture = cubit.getLatestWorkoutPlanRecord(planId);
+
+    expect(await deleteLatestFuture, isTrue);
+    await refreshLatestFuture;
+
+    expect(cubit.state.isLoading, isFalse);
+    expect(cubit.state.isLoadingLatest, isFalse);
+    expect(cubit.state.latestWorkoutPlanRecord?.id, r2);
+
+    // Concurrent deletions of both remaining records leave latest as null.
+    final deleteR2Future = cubit.deleteWorkoutPlanRecord(r2);
+    final deleteR1Future = cubit.deleteWorkoutPlanRecord(r1);
+
+    expect(await deleteR2Future, isTrue);
+    expect(await deleteR1Future, isTrue);
+
+    expect(cubit.state.isLoading, isFalse);
+    expect(cubit.state.latestWorkoutPlanRecord, isNull);
+    expect(cubit.state.planRecords, isEmpty);
+  });
 }
