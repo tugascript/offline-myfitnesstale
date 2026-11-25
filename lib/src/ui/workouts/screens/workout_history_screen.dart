@@ -57,7 +57,19 @@ class _WorkoutHistoryScreenState extends State<WorkoutHistoryScreen> {
   @override
   void initState() {
     super.initState();
+    _loadWorkoutIfNeeded();
+  }
 
+  @override
+  void didUpdateWidget(covariant WorkoutHistoryScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.workoutId != widget.workoutId ||
+        oldWidget.version != widget.version) {
+      _loadWorkoutIfNeeded();
+    }
+  }
+
+  void _loadWorkoutIfNeeded() {
     if (widget.workoutId != null) {
       final workoutCubit = context.read<WorkoutCubit>();
       if (widget.version == null ||
