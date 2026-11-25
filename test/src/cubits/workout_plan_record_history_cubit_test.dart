@@ -410,4 +410,284 @@ void main() {
     expect(cubit.state.planRecords.map((r) => r.id), [recordId]);
     expect(cubit.state.pagination.total, 1);
   });
+
+  test('loading next history page during deletion removes deleted row and does not skip next record', () async {
+    final database = await testDatabase.db;
+    final planId = await seedPlan(database, name: 'Concurrent Page Plan');
+    final r1 = await seedRecord(
+      database,
+      planId: planId,
+      status: ProgressStatus.completed,
+      timestamp: 100,
+    );
+    final r2 = await seedRecord(
+      database,
+      planId: planId,
+      status: ProgressStatus.completed,
+      timestamp: 200,
+    );
+    final r3 = await seedRecord(
+      database,
+      planId: planId,
+      status: ProgressStatus.completed,
+      timestamp: 300,
+    );
+    final r4 = await seedRecord(
+      database,
+      planId: planId,
+      status: ProgressStatus.completed,
+      timestamp: 400,
+    );
+    final r5 = await seedRecord(
+      database,
+      planId: planId,
+      status: ProgressStatus.completed,
+      timestamp: 500,
+    );
+
+    final cubit = WorkoutPlanRecordCubit(
+      workoutPlanRecordRepository: WorkoutPlanRecordRepository.create(),
+      workoutPlanRepository: WorkoutPlanRepository.create(),
+      workoutRecordRepository: WorkoutRecordRepository.create(),
+    );
+    addTearDown(cubit.close);
+
+    await cubit.getWorkoutPlanRecords(
+      workoutPlanId: planId,
+      limit: 2,
+      offset: 0,
+    );
+    expect(cubit.state.planRecords.map((r) => r.id), [r5, r4]);
+    expect(cubit.state.pagination.total, 5);
+
+    final deleteFuture = cubit.deleteWorkoutPlanRecord(r5);
+    final nextPageFuture = cubit.getWorkoutPlanRecords(
+      workoutPlanId: planId,
+      limit: 2,
+      offset: 2,
+    );
+
+    final deleted = await deleteFuture;
+    await nextPageFuture;
+
+    expect(deleted, isTrue);
+    expect(cubit.state.isLoading, isFalse);
+    expect(cubit.state.isLoadingHistory, isFalse);
+    expect(cubit.state.planRecords.map((r) => r.id), [r4, r3, r2]);
+    expect(cubit.state.pagination.total, 4);
+
+    await cubit.getWorkoutPlanRecords(
+      workoutPlanId: planId,
+      limit: 2,
+      offset: cubit.state.planRecords.length,
+    );
+    expect(cubit.state.planRecords.map((r) => r.id), [r4, r3, r2, r1]);
+    expect(cubit.state.pagination.total, 4);
+  });
+
+  test('deletion started during in-flight pagination reconciles loaded page and total', () async {
+    final database = await testDatabase.db;
+    final planId = await seedPlan(database, name: 'Delete During Page Plan');
+    final r1 = await seedRecord(
+      database,
+      planId: planId,
+      status: ProgressStatus.completed,
+      timestamp: 100,
+    );
+    final r2 = await seedRecord(
+      database,
+      planId: planId,
+      status: ProgressStatus.completed,
+      timestamp: 200,
+    );
+    final r3 = await seedRecord(
+      database,
+      planId: planId,
+      status: ProgressStatus.completed,
+      timestamp: 300,
+    );
+    final r4 = await seedRecord(
+      database,
+      planId: planId,
+      status: ProgressStatus.completed,
+      timestamp: 400,
+    );
+    final r5 = await seedRecord(
+      database,
+      planId: planId,
+      status: ProgressStatus.completed,
+      timestamp: 500,
+    );
+
+    final cubit = WorkoutPlanRecordCubit(
+      workoutPlanRecordRepository: WorkoutPlanRecordRepository.create(),
+      workoutPlanRepository: WorkoutPlanRepository.create(),
+      workoutRecordRepository: WorkoutRecordRepository.create(),
+    );
+    addTearDown(cubit.close);
+
+    await cubit.getWorkoutPlanRecords(
+      workoutPlanId: planId,
+      limit: 2,
+      offset: 0,
+    );
+    expect(cubit.state.planRecords.map((r) => r.id), [r5, r4]);
+
+    final nextPageFuture = cubit.getWorkoutPlanRecords(
+      workoutPlanId: planId,
+      limit: 2,
+      offset: 2,
+    );
+    final deleteFuture = cubit.deleteWorkoutPlanRecord(r5);
+
+    final deleted = await deleteFuture;
+    await nextPageFuture;
+
+    expect(deleted, isTrue);
+    expect(cubit.state.isLoading, isFalse);
+    expect(cubit.state.isLoadingHistory, isFalse);
+    expect(cubit.state.planRecords.map((r) => r.id), [r4, r3, r2]);
+    expect(cubit.state.pagination.total, 4);
+
+    // Deleting an off-page record during in-flight pagination must not append the deleted row.
+    final thirdPageFuture = cubit.getWorkoutPlanRecords(
+      workoutPlanId: planId,
+      limit: 2,
+      offset: cubit.state.planRecords.length,
+    );
+    final deleteOffPageFuture = cubit.deleteWorkoutPlanRecord(r1);
+
+    expect(await deleteOffPageFuture, isTrue);
+    await thirdPageFuture;
+
+    expect(cubit.state.planRecords.map((r) => r.id), [r4, r3, r2]);
+    expect(cubit.state.pagination.total, 3);
+  });
+
+  test('deleting only loaded record while paginating adjusts offset to zero and loads remaining records', () async {
+    final database = await testDatabase.db;
+    final planId = await seedPlan(database, name: 'Single Item Page Plan');
+    final r1 = await seedRecord(
+      database,
+      planId: planId,
+      status: ProgressStatus.completed,
+      timestamp: 100,
+    );
+    final r2 = await seedRecord(
+      database,
+      planId: planId,
+      status: ProgressStatus.completed,
+      timestamp: 200,
+    );
+    final r3 = await seedRecord(
+      database,
+      planId: planId,
+      status: ProgressStatus.completed,
+      timestamp: 300,
+    );
+
+    final cubit = WorkoutPlanRecordCubit(
+      workoutPlanRecordRepository: WorkoutPlanRecordRepository.create(),
+      workoutPlanRepository: WorkoutPlanRepository.create(),
+      workoutRecordRepository: WorkoutRecordRepository.create(),
+    );
+    addTearDown(cubit.close);
+
+    await cubit.getWorkoutPlanRecords(
+      workoutPlanId: planId,
+      limit: 1,
+      offset: 0,
+    );
+    expect(cubit.state.planRecords.map((r) => r.id), [r3]);
+    expect(cubit.state.pagination.total, 3);
+
+    final deleteFuture = cubit.deleteWorkoutPlanRecord(r3);
+    final nextPageFuture = cubit.getWorkoutPlanRecords(
+      workoutPlanId: planId,
+      limit: 1,
+      offset: 1,
+    );
+
+    expect(await deleteFuture, isTrue);
+    await nextPageFuture;
+
+    expect(cubit.state.planRecords.map((r) => r.id), [r2]);
+    expect(cubit.state.pagination.total, 2);
+
+    await cubit.getWorkoutPlanRecords(
+      workoutPlanId: planId,
+      limit: 1,
+      offset: cubit.state.planRecords.length,
+    );
+    expect(cubit.state.planRecords.map((r) => r.id), [r2, r1]);
+    expect(cubit.state.pagination.total, 2);
+  });
+
+  test('switching filters or failing delete during pagination leaves history consistent', () async {
+    final database = await testDatabase.db;
+    final planOne = await seedPlan(database, name: 'Switch Plan One');
+    final planTwo = await seedPlan(database, name: 'Switch Plan Two');
+    final p1Old = await seedRecord(
+      database,
+      planId: planOne,
+      status: ProgressStatus.completed,
+      timestamp: 100,
+    );
+    final p1New = await seedRecord(
+      database,
+      planId: planOne,
+      status: ProgressStatus.completed,
+      timestamp: 200,
+    );
+    final p2Record = await seedRecord(
+      database,
+      planId: planTwo,
+      status: ProgressStatus.completed,
+      timestamp: 300,
+    );
+
+    final cubit = WorkoutPlanRecordCubit(
+      workoutPlanRecordRepository: WorkoutPlanRecordRepository.create(),
+      workoutPlanRepository: WorkoutPlanRepository.create(),
+      workoutRecordRepository: WorkoutRecordRepository.create(),
+    );
+    addTearDown(cubit.close);
+
+    // Failed deletion during pagination keeps original offset and preserves delete error.
+    await cubit.getWorkoutPlanRecords(
+      workoutPlanId: planOne,
+      limit: 1,
+      offset: 0,
+    );
+    expect(cubit.state.planRecords.map((r) => r.id), [p1New]);
+
+    final failedDeleteFuture = cubit.deleteWorkoutPlanRecord(999999);
+    final loadMoreFuture = cubit.getWorkoutPlanRecords(
+      workoutPlanId: planOne,
+      limit: 1,
+      offset: 1,
+    );
+
+    expect(await failedDeleteFuture, isFalse);
+    await loadMoreFuture;
+
+    expect(cubit.state.planRecords.map((r) => r.id), [p1New, p1Old]);
+    expect(cubit.state.pagination.total, 2);
+    expect(cubit.state.error, isNotNull);
+
+    // Switching plans during deletion loads the new plan without decrementing its total.
+    final deleteFuture = cubit.deleteWorkoutPlanRecord(p1New);
+    final switchPlanFuture = cubit.getWorkoutPlanRecords(
+      workoutPlanId: planTwo,
+      limit: 20,
+      offset: 0,
+    );
+
+    expect(await deleteFuture, isTrue);
+    await switchPlanFuture;
+
+    expect(cubit.state.planRecords.map((r) => r.id), [p2Record]);
+    expect(cubit.state.pagination.workoutPlanId, planTwo);
+    expect(cubit.state.pagination.total, 1);
+  });
 }
