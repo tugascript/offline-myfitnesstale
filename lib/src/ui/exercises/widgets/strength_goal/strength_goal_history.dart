@@ -21,6 +21,8 @@ import 'package:material_ui/material_ui.dart';
 import '../../../../data/utils/enums.dart';
 import '../../../core/sizes/data_display_sizes.dart';
 import '../../../core/sizes/screen_size.dart';
+import '../../../core/widgets/layout/app_text_button.dart';
+import '../../../core/widgets/layout/empty_card.dart';
 import '../../../core/widgets/not_found_list.dart';
 import '../../view_models/exercise_record_cubit.dart';
 import '../../view_models/states/exercise_record_state.dart';
@@ -72,8 +74,10 @@ class _StrengthGoalHistoryState extends State<StrengthGoalHistory> {
     final hasMore =
         state.strengthGoals.length < state.strengthGoalPagination.total;
 
-    if (isNearBottom && hasMore && !state.isLoading) {
+    if (isNearBottom && hasMore && !state.isGoalsLoading) {
       cubit.getStrengthGoals(
+        exerciseId: state.strengthGoalPagination.exerciseId,
+        skipInProgress: state.strengthGoalPagination.skipInProgress,
         limit: state.strengthGoalPagination.limit,
         offset: state.strengthGoals.length,
       );
@@ -99,7 +103,36 @@ class _StrengthGoalHistoryState extends State<StrengthGoalHistory> {
                 .where((g) => g.id != state.activeStrengthGoal?.id)
                 .toList();
 
-            if (!state.isLoading && history.isEmpty) {
+            if (!state.isGoalsLoading &&
+                history.isEmpty &&
+                state.goalsError != null) {
+              return EmptyCard(
+                sizes: widget.sizes,
+                emoji: '⚠️',
+                emptyText: 'Could not load strength goals history',
+                actions: [
+                  AppTextButton(
+                    key: const ValueKey('strength-goal-history-retry'),
+                    isLoading: false,
+                    sizes: widget.sizes,
+                    isDense: true,
+                    label: 'Retry',
+                    icon: Icons.refresh,
+                    onPressed: () {
+                      final pagination = state.strengthGoalPagination;
+                      context.read<ExerciseRecordCubit>().getStrengthGoals(
+                        exerciseId: pagination.exerciseId,
+                        skipInProgress: pagination.skipInProgress,
+                        limit: pagination.limit,
+                        offset: 0,
+                      );
+                    },
+                  ),
+                ],
+              );
+            }
+
+            if (!state.isGoalsLoading && history.isEmpty) {
               return NotFoundList(
                 height: widget.breakPoint.height / 3,
                 sizes: widget.sizes,

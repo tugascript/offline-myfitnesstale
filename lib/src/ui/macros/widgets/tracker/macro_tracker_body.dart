@@ -96,7 +96,7 @@ class MacroTrackerBody extends StatelessWidget {
       child: MacroTrackerPlaceholder(
         sizes: sizes,
         theme: theme,
-        errorDescription: state.error!.description,
+        errorDescription: (state.activeGoalError ?? state.error)!.description,
         onRetry: onRetry,
       ),
     ),

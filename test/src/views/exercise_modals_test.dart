@@ -301,6 +301,21 @@ class _FakeExerciseRecordCubit extends ExerciseRecordCubit {
     );
   }
 
+  void emitGoalsError(String description) {
+    final errorState = ErrorState(
+      type: 'operationFailure',
+      description: description,
+    );
+    emit(
+      state.copyWith(
+        strengthGoals: const [],
+        goalsError: Nullable(errorState),
+        error: Nullable(errorState),
+        isLoadingGoals: false,
+      ),
+    );
+  }
+
   @override
   Future<void> getActiveStrengthGoal({int? exerciseId}) async {
     getActiveStrengthGoalCalls++;
@@ -1864,6 +1879,61 @@ void main() {
         find.byWidgetPredicate((w) => w is Skeletonizer && w.enabled),
         findsNothing,
       );
+    },
+  );
+
+  testWidgets(
+    'StrengthGoalHistory shows error and retry action on goalsError instead of Empty history',
+    (tester) async {
+      tester.view.physicalSize = const Size(800, 1200);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+
+      final profileCubit = _FakeProfileCubit();
+      final recordCubit = _FakeExerciseRecordCubit();
+      addTearDown(profileCubit.close);
+      addTearDown(recordCubit.close);
+
+      final router = GoRouter(
+        routes: [
+          GoRoute(
+            path: '/',
+            builder: (_, _) => const StrengthGoalsListScreen(),
+          ),
+        ],
+      );
+      addTearDown(router.dispose);
+
+      await tester.pumpWidget(
+        MultiBlocProvider(
+          providers: [
+            BlocProvider<ExerciseRecordCubit>.value(value: recordCubit),
+            BlocProvider<ProfileCubit>.value(value: profileCubit),
+          ],
+          child: MaterialApp.router(routerConfig: router),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Empty history'), findsOneWidget);
+      expect(find.text('Could not load strength goals history'), findsNothing);
+
+      recordCubit.emitGoalsError('Failed to load strength goals');
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text('Could not load strength goals history'),
+        findsOneWidget,
+      );
+      expect(find.text('Empty history'), findsNothing);
+
+      final callsBeforeRetry = recordCubit.getStrengthGoalsCalls.length;
+      await tester.tap(
+        find.byKey(const ValueKey('strength-goal-history-retry')),
+      );
+      await tester.pump();
+
+      expect(recordCubit.getStrengthGoalsCalls.length, callsBeforeRetry + 1);
     },
   );
 }

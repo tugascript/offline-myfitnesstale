@@ -190,17 +190,19 @@ class _MacroTrackerScreenState extends State<MacroTrackerScreen> {
     }
 
     var macroState = macroCubit.state;
+    final initialGoalError = macroState.activeGoalError ?? macroState.error;
     if (!waitedForInFlight &&
         !macroState.hasLoadedActiveGoal &&
         !macroState.isLoadingActiveGoal &&
-        (macroState.error == null || retryFailedGoal)) {
+        (initialGoalError == null || retryFailedGoal)) {
       _deferredInitialLogLoad = false;
       await macroCubit.getActiveMacroGoal();
       if (!mounted) return false;
       macroState = macroCubit.state;
     }
 
-    if (!macroState.hasLoadedActiveGoal && macroState.error != null) {
+    if (!macroState.hasLoadedActiveGoal &&
+        (macroState.activeGoalError ?? macroState.error) != null) {
       _deferredInitialLogLoad = true;
       return false;
     }
