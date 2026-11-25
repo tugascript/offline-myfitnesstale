@@ -134,20 +134,11 @@ final class WorkoutPlanRecordRepository implements Repository {
     );
   }
 
-  Future<
-    Result<
-      PaginatedDto<WorkoutPlanRecordDto, WorkoutPlanRecord>,
-      ServiceError<OperationErrorTypes>
-    >
-  >
-  getWorkoutPlanRecords({
+  WhereBuilder _buildHistoryWhere({
     int? workoutPlanId,
     ProgressStatus? status,
     (DateTime start, DateTime end)? dateRange,
-    int limit = kDefaultLimit,
-    int offset = kDefaultOffset,
-  }) async {
-    _logger.info('Getting workout plan records');
+  }) {
     final WhereBuilder query = WhereBuilder();
 
     if (workoutPlanId != null) {
@@ -185,6 +176,58 @@ final class WorkoutPlanRecordRepository implements Repository {
         DateUtilities.getDateUnix(endOfDay),
       );
     }
+
+    return query;
+  }
+
+  Future<Result<int, ServiceError<OperationErrorTypes>>>
+  countWorkoutPlanRecords({
+    int? workoutPlanId,
+    ProgressStatus? status,
+    (DateTime start, DateTime end)? dateRange,
+  }) async {
+    _logger.info('Counting workout plan records');
+    final query = _buildHistoryWhere(
+      workoutPlanId: workoutPlanId,
+      status: status,
+      dateRange: dateRange,
+    );
+    try {
+      final total = await _workoutPlanRecordDao.count(
+        where: query.where,
+        whereArgs: query.args,
+      );
+      return ok(total);
+    } catch (e) {
+      _logger.severe('Failed to count workout plan records', e);
+      return err(
+        const ServiceError(
+          type: OperationErrorTypes.operationFailure,
+          description: 'Failed to count workout plan records',
+        ),
+      );
+    }
+  }
+
+  Future<
+    Result<
+      PaginatedDto<WorkoutPlanRecordDto, WorkoutPlanRecord>,
+      ServiceError<OperationErrorTypes>
+    >
+  >
+  getWorkoutPlanRecords({
+    int? workoutPlanId,
+    ProgressStatus? status,
+    (DateTime start, DateTime end)? dateRange,
+    int limit = kDefaultLimit,
+    int offset = kDefaultOffset,
+  }) async {
+    _logger.info('Getting workout plan records');
+    final query = _buildHistoryWhere(
+      workoutPlanId: workoutPlanId,
+      status: status,
+      dateRange: dateRange,
+    );
 
     try {
       final pageResult = await fetchPaginatedWithTotal(
