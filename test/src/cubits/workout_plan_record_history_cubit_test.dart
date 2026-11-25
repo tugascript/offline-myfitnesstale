@@ -369,13 +369,20 @@ void main() {
     expect(cubit.state.latestWorkoutPlanRecord, isNotNull);
     expect(cubit.state.latestError, isNull);
 
+    await cubit.getWorkoutPlanRecords(workoutPlanId: planId, offset: 0);
+    expect(cubit.state.planRecords, isNotEmpty);
+    expect(cubit.state.historyError, isNull);
+
     failRead = true;
     await cubit.getLatestWorkoutPlanRecord(planId);
     expect(cubit.state.latestWorkoutPlanRecord, isNull);
     expect(cubit.state.latestError, isNotNull);
     expect(cubit.state.isLoadingLatest, isFalse);
 
-    await cubit.getWorkoutPlanRecords(workoutPlanId: planId);
+    // Same-filter offset == 0 failure must clear stale planRecords so retry UI renders.
+    await cubit.getWorkoutPlanRecords(workoutPlanId: planId, offset: 0);
+    expect(cubit.state.planRecords, isEmpty);
+    expect(cubit.state.pagination.total, 0);
     final historyError = cubit.state.historyError;
     expect(historyError, isNotNull);
 

@@ -481,14 +481,21 @@ void main() {
     expect(cubit.state.latestWorkoutRecord, isNotNull);
     expect(cubit.state.latestError, isNull);
 
+    // Initial history load populates workoutRecords.
+    await cubit.getWorkoutRecords(workoutId: workoutId, offset: 0);
+    expect(cubit.state.workoutRecords, isNotEmpty);
+    expect(cubit.state.recordsError, isNull);
+
     failRead = true;
     await cubit.getLatestWorkoutRecord(workoutId: workoutId);
     expect(cubit.state.latestWorkoutRecord, isNull);
     expect(cubit.state.latestError, isNotNull);
     expect(cubit.state.isLoadingLatest, isFalse);
 
-    // Unrelated history failure should survive active latest recovery.
-    await cubit.getWorkoutRecords(workoutId: workoutId);
+    // Failed offset == 0 reload clears stale workoutRecords and sets recordsError,
+    // which should survive active latest recovery.
+    await cubit.getWorkoutRecords(workoutId: workoutId, offset: 0);
+    expect(cubit.state.workoutRecords, isEmpty);
     final historyError = cubit.state.recordsError;
     expect(historyError, isNotNull);
 

@@ -51,6 +51,7 @@ class WorkoutRecordCubit extends Cubit<WorkoutRecordState> {
     emit(
       state.copyWith(
         recordsRequestId: requestId,
+        workoutRecords: !isLoadMore ? const [] : null,
         isLoadingRecords: true,
         recordsError: const Nullable(null),
         error:
@@ -90,6 +91,7 @@ class WorkoutRecordCubit extends Cubit<WorkoutRecordState> {
       }
       emit(
         state.copyWith(
+          workoutRecords: !isLoadMore ? const [] : null,
           error: Nullable(errorState),
           recordsError: Nullable(errorState),
           isLoadingRecords: false,

@@ -168,9 +168,7 @@ class _WorkoutRecordHistoryState extends State<WorkoutRecordHistory> {
         SizedBox(height: widget.sizes.spacing),
         BlocBuilder<WorkoutRecordCubit, WorkoutRecordState>(
           builder: (context, state) {
-            if (!state.isLoadingRecords &&
-                state.workoutRecords.isEmpty &&
-                state.recordsError != null) {
+            if (!state.isLoadingRecords && state.recordsError != null) {
               return EmptyCard(
                 sizes: widget.sizes,
                 emoji: '⚠️',

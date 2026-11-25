@@ -111,7 +111,10 @@ class _WorkoutPlanRecordHistoryState extends State<WorkoutPlanRecordHistory> {
         _scrollController.position.maxScrollExtent * 0.9;
     final hasMore = state.planRecords.length < state.pagination.total;
 
-    if (isNearBottom && hasMore && !state.isLoadingHistory) {
+    if (isNearBottom &&
+        hasMore &&
+        !state.isLoadingHistory &&
+        state.historyError == null) {
       cubit.getWorkoutPlanRecords(
         workoutPlanId: widget.workoutPlanId,
         progressStatus: state.pagination.progressStatus,
@@ -265,6 +268,16 @@ class _WorkoutPlanRecordHistoryState extends State<WorkoutPlanRecordHistory> {
                 workoutPlanId: widget.workoutPlanId,
                 workoutPlanVersion: widget.workoutPlanVersion,
                 scrollController: _scrollController,
+                loadMoreError: state.historyError?.description,
+                onRetryLoadMore: () {
+                  context.read<WorkoutPlanRecordCubit>().getWorkoutPlanRecords(
+                    workoutPlanId: widget.workoutPlanId,
+                    progressStatus: state.pagination.progressStatus,
+                    dateRange: (_dateRange.start, _dateRange.end),
+                    limit: state.pagination.limit,
+                    offset: state.planRecords.length,
+                  );
+                },
               ),
             );
           },

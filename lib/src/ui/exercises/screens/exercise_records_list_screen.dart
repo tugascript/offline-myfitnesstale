@@ -55,20 +55,35 @@ class _ExerciseRecordsListScreenState extends State<ExerciseRecordsListScreen> {
   }
 
   @override
+  void didUpdateWidget(covariant ExerciseRecordsListScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.exerciseId != widget.exerciseId) {
+      final cubit = context.read<ExerciseCubit>();
+      if (cubit.state.selectedExercise?.id != widget.exerciseId) {
+        cubit.getExercise(widget.exerciseId);
+      }
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final breakpoints = BreakPoint.fromContext(context);
     final sizes = DataDisplaySizes.getDataDisplaySizes(breakpoints.screenSize);
     return BlocBuilder<ExerciseCubit, ExerciseState>(
       builder: (context, exerciseState) {
-        if (exerciseState.isLoading && exerciseState.selectedExercise == null) {
+        final selectedExercise =
+            exerciseState.selectedExercise?.id == widget.exerciseId
+            ? exerciseState.selectedExercise
+            : null;
+        if (exerciseState.isLoading && selectedExercise == null) {
           return const LoadingScreen(
             title: "Exercise Records",
             message: "Loading exercise records...",
           );
         }
 
-        if (exerciseState.selectedExercise == null) {
+        if (selectedExercise == null) {
           return EntityErrorScreen(
             sizes: sizes,
             entityName: 'Exercise',
@@ -79,7 +94,7 @@ class _ExerciseRecordsListScreenState extends State<ExerciseRecordsListScreen> {
         return BlocBuilder<ProfileCubit, ProfileState>(
           builder: (context, profileState) {
             return ResponsiveScaffold(
-              title: "${exerciseState.selectedExercise?.name} Records",
+              title: "${selectedExercise.name} Records",
               isEntity: true,
               body: Padding(
                 padding: EdgeInsets.all(sizes.viewPadding),
@@ -89,7 +104,7 @@ class _ExerciseRecordsListScreenState extends State<ExerciseRecordsListScreen> {
                       sizes: sizes,
                       theme: theme,
                       units: profileState.system?.units ?? Units.metric,
-                      exercise: exerciseState.selectedExercise!,
+                      exercise: selectedExercise,
                     ),
                     SizedBox(height: sizes.spacing * 2),
                     ExerciseRecordsHistory(
@@ -97,7 +112,7 @@ class _ExerciseRecordsListScreenState extends State<ExerciseRecordsListScreen> {
                       breakPoint: breakpoints,
                       sizes: sizes,
                       units: profileState.system?.units ?? Units.metric,
-                      exercise: exerciseState.selectedExercise!,
+                      exercise: selectedExercise,
                     ),
                   ],
                 ),
