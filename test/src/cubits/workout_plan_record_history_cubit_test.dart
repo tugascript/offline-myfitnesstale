@@ -22,8 +22,12 @@ import 'package:myfitnesstale/src/utils/nullable.dart';
 import 'package:myfitnesstale/src/ui/workout_plans/view_models/states/workout_plan_record_state.dart';
 import 'package:myfitnesstale/src/ui/workout_plans/view_models/workout_plan_record_cubit.dart';
 import 'package:myfitnesstale/src/data/utils/enums.dart';
+import 'package:myfitnesstale/src/data/models/sqlite/workout_model.dart';
+import 'package:myfitnesstale/src/data/models/sqlite/workout_plan_day_model.dart';
 import 'package:myfitnesstale/src/data/models/sqlite/workout_plan_model.dart';
 import 'package:myfitnesstale/src/data/models/sqlite/workout_plan_record_model.dart';
+import 'package:myfitnesstale/src/data/models/sqlite/workout_plan_week_model.dart';
+import 'package:myfitnesstale/src/data/models/sqlite/workout_plan_workout_model.dart';
 
 import '../../support/test_database.dart';
 
@@ -46,6 +50,68 @@ void main() {
         totalWorkouts: 1,
       ).toMap(),
     );
+  }
+
+  Future<int> seedStartablePlan(
+    Database database, {
+    required String name,
+    int weeks = 1,
+  }) async {
+    final workoutId = await database.insert(
+      Workout.table,
+      Workout.create(
+        name: '$name Workout',
+        difficulty: Difficulty.beginner,
+      ).toMap(),
+    );
+    final planId = await database.insert(
+      WorkoutPlan.table,
+      WorkoutPlan.create(
+        name: name,
+        difficulty: Difficulty.beginner,
+        version: 1,
+        totalWeeks: weeks,
+        totalDays: weeks,
+        totalWorkouts: weeks,
+      ).toMap(),
+    );
+    for (var weekNumber = 1; weekNumber <= weeks; weekNumber++) {
+      final weekId = await database.insert(
+        WorkoutPlanWeek.table,
+        WorkoutPlanWeek.create(
+          workoutPlanId: planId,
+          planVersion: 1,
+          startWeek: weekNumber,
+          endWeek: weekNumber,
+          scheduleMode: WorkoutPlanWeekScheduleMode.manual,
+          totalDays: 1,
+          totalWorkouts: 1,
+        ).toMap(),
+      );
+      final dayId = await database.insert(
+        WorkoutPlanDay.table,
+        WorkoutPlanDay.create(
+          workoutPlanId: planId,
+          workoutPlanWeekId: weekId,
+          planVersion: 1,
+          day: 1,
+          totalWorkouts: 1,
+          isRestDay: false,
+        ).toMap(),
+      );
+      await database.insert(
+        WorkoutPlanWorkout.table,
+        WorkoutPlanWorkout.create(
+          position: 1,
+          workoutPlanId: planId,
+          workoutPlanWeekId: weekId,
+          workoutPlanDayId: dayId,
+          planVersion: 1,
+          workoutId: workoutId,
+        ).toMap(),
+      );
+    }
+    return planId;
   }
 
   Future<int> seedRecord(
@@ -1071,7 +1137,10 @@ void main() {
 
   test('superseded active-plan load completing after a newer load and deletion does not leave isLoading stuck true', () async {
     final database = await testDatabase.db;
-    final planId = await seedPlan(database, name: 'Superseded Load Plan');
+    final planId = await seedStartablePlan(
+      database,
+      name: 'Superseded Load Plan',
+    );
     final completedId = await seedRecord(
       database,
       planId: planId,
@@ -1086,15 +1155,28 @@ void main() {
     );
     addTearDown(cubit.close);
 
-    // Start a multi-query getOrCreateActivePlanRecord (no active record yet -> lookup + transaction),
-    // then supersede it with a single-query getLatestActivePlanRecord (immediate notFound).
+    // Create a full active plan record tree so the first getLatestActivePlanRecord performs
+    // multi-query tree hydration, then clear the active row before starting a second
+    // getLatestActivePlanRecord so the newer request finishes first in a single query.
+    await cubit.getOrCreateActivePlanRecord(planId);
+    final activeRecordId = cubit.state.currentPlanRecord.currentPlanRecord!.id;
+
     var supersededCompleted = false;
-    final supersededLoad = cubit
-        .getOrCreateActivePlanRecord(planId)
-        .whenComplete(() => supersededCompleted = true);
+    final supersededLoad = cubit.getLatestActivePlanRecord().whenComplete(
+      () => supersededCompleted = true,
+    );
+    // Let supersededLoad enqueue its initial SELECT on SQLite before marking the row completed.
+    await Future<void>.microtask(() {});
+    final markCompletedFuture = database.update(
+      WorkoutPlanRecord.table,
+      {WorkoutPlanRecordColumns.status.name: ProgressStatus.completed.value},
+      where: '${WorkoutPlanRecordColumns.id.name} = ?',
+      whereArgs: [activeRecordId],
+    );
     final newerFastLoad = cubit.getLatestActivePlanRecord();
 
     await newerFastLoad;
+    await markCompletedFuture;
     expect(supersededCompleted, isFalse);
     expect(cubit.state.isLoading, isFalse);
 
@@ -1106,5 +1188,57 @@ void main() {
     await supersededLoad;
     expect(supersededCompleted, isTrue);
     expect(cubit.state.isLoading, isFalse);
+  });
+
+  test('getLatestActivePlanRecord started during getOrCreateActivePlanRecord waits for creation and publishes the new active execution', () async {
+    final database = await testDatabase.db;
+    final firstPlanId = await seedStartablePlan(
+      database,
+      name: 'Concurrent Create Plan',
+    );
+    final secondPlanId = await seedStartablePlan(
+      database,
+      name: 'Second Create Plan',
+    );
+
+    final cubit = WorkoutPlanRecordCubit(
+      workoutPlanRecordRepository: WorkoutPlanRecordRepository.create(),
+      workoutPlanRepository: WorkoutPlanRepository.create(),
+      workoutRecordRepository: WorkoutRecordRepository.create(),
+    );
+    addTearDown(cubit.close);
+
+    // Start creating an active execution for a valid plan, then immediately request latest active plan.
+    // The read must wait for creation to commit rather than caching an empty active plan.
+    final createFuture = cubit.getOrCreateActivePlanRecord(firstPlanId);
+    final latestActiveFuture = cubit.getLatestActivePlanRecord();
+
+    await Future.wait([createFuture, latestActiveFuture]);
+
+    expect(cubit.state.isLoading, isFalse);
+    expect(cubit.state.hasLoadedActivePlan, isTrue);
+    expect(cubit.state.currentPlanRecord.workoutPlan?.id, firstPlanId);
+    expect(
+      cubit.state.currentPlanRecord.currentPlanRecord?.workoutPlanId,
+      firstPlanId,
+    );
+    expect(
+      cubit.state.currentPlanRecord.currentPlanRecord?.status,
+      ProgressStatus.inProgress,
+    );
+
+    // Also verify the reverse ordering: starting getLatestActivePlanRecord first, then creating another plan.
+    final initialReadFuture = cubit.getLatestActivePlanRecord();
+    final secondCreateFuture = cubit.getOrCreateActivePlanRecord(secondPlanId);
+
+    await Future.wait([initialReadFuture, secondCreateFuture]);
+
+    expect(cubit.state.isLoading, isFalse);
+    expect(cubit.state.hasLoadedActivePlan, isTrue);
+    expect(cubit.state.currentPlanRecord.workoutPlan?.id, secondPlanId);
+    expect(
+      cubit.state.currentPlanRecord.currentPlanRecord?.workoutPlanId,
+      secondPlanId,
+    );
   });
 }

@@ -556,4 +556,84 @@ void main() {
       expect(find.text('History error when foreground'), findsOneWidget);
     },
   );
+
+  testWidgets(
+    'disables latest record card navigation while deletion is pending and re-enables once idle',
+    (tester) async {
+      final activeRecord = record(18, ProgressStatus.inProgress);
+      final dummy = ActiveWorkoutPlanDummyData.dummyState;
+      final initialState = WorkoutPlanRecordState.initial().copyWith(
+        isLoading: true,
+        hasLoadedActivePlan: true,
+        latestWorkoutPlanRecord: Nullable(activeRecord),
+        planRecords: [activeRecord],
+        pagination: const WorkoutPlanRecordPagination(
+          workoutPlanId: 9,
+          limit: 20,
+          offset: 0,
+          total: 1,
+        ),
+        currentPlanRecord: dummy.copyWith(
+          workoutPlan: Nullable(
+            dummy.workoutPlan!.copyWith(id: 9, name: 'Active Split'),
+          ),
+          currentPlanRecord: Nullable(
+            dummy.currentPlanRecord!.copyWith(id: 18, workoutPlanId: 9),
+          ),
+        ),
+      );
+
+      final cubit = _WorkoutPlanRecordCubit(initialState);
+      final workoutPlanCubit = _WorkoutPlanCubit();
+      final profileCubit = _ProfileCubit();
+      addTearDown(() async {
+        await cubit.close();
+        await workoutPlanCubit.close();
+        await profileCubit.close();
+      });
+
+      final router = GoRouter(
+        initialLocation: WorkoutPlanHistoryScreen.location(9),
+        routes: [
+          GoRoute(
+            path: Routes.workoutPlanHistory.name,
+            builder: (context, state) =>
+                const WorkoutPlanHistoryScreen(workoutPlanId: 9),
+          ),
+          GoRoute(
+            path: Routes.activeWorkoutPlan.name,
+            builder: (context, state) =>
+                const ActiveWorkoutPlanScreen(workoutPlanId: 9),
+          ),
+        ],
+      );
+      addTearDown(router.dispose);
+
+      await tester.pumpWidget(
+        MultiBlocProvider(
+          providers: [
+            BlocProvider<WorkoutPlanCubit>.value(value: workoutPlanCubit),
+            BlocProvider<ProfileCubit>.value(value: profileCubit),
+            BlocProvider<WorkoutPlanRecordCubit>.value(value: cubit),
+          ],
+          child: MaterialApp.router(routerConfig: router),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // While isLoading (isMutating) is true, tapping Latest Record must not navigate.
+      await tester.tap(find.text('Latest Record'));
+      await tester.pumpAndSettle();
+      expect(find.byType(ActiveWorkoutPlanScreen), findsNothing);
+      expect(find.byType(WorkoutPlanHistoryScreen), findsOneWidget);
+
+      // Once mutation completes, tapping Latest Record navigates to ActiveWorkoutPlanScreen.
+      cubit.emit(cubit.state.copyWith(isLoading: false));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Latest Record'));
+      await tester.pumpAndSettle();
+      expect(find.byType(ActiveWorkoutPlanScreen), findsOneWidget);
+    },
+  );
 }
