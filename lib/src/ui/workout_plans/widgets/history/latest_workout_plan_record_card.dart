@@ -55,7 +55,7 @@ class LatestWorkoutPlanRecordCard extends StatelessWidget {
     return Card(
       margin: EdgeInsets.zero,
       child: InkWell(
-        onTap: isLoading || workoutPlanRecord == null
+        onTap: isLoading || isMutating || workoutPlanRecord == null
             ? null
             : () {
                 if (workoutPlanId != null &&

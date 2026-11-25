@@ -59,6 +59,8 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
   int _activeDeleteCount = 0;
   Future<void>? _activeDeleteTail;
   Completer<void>? _deletesDoneCompleter;
+  int _activeCreateCount = 0;
+  Completer<void>? _createsDoneCompleter;
   int _recordMutationVersion = 0;
   bool _historyNeedsRefill = false;
 
@@ -279,8 +281,20 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
       }
 
       final mutationVersionBeforeFetch = _recordMutationVersion;
-      final result = await _workoutPlanRecordService
-          .getOrCreateCurrentWorkoutPlanRecord(workoutPlanId);
+      _activeCreateCount++;
+      _createsDoneCompleter ??= Completer<void>();
+      final Result<WorkoutPlanRecordDto, ServiceError<SingleErrorTypes>> result;
+      try {
+        result = await _workoutPlanRecordService
+            .getOrCreateCurrentWorkoutPlanRecord(workoutPlanId);
+      } finally {
+        _activeCreateCount--;
+        if (_activeCreateCount == 0) {
+          final completer = _createsDoneCompleter;
+          _createsDoneCompleter = null;
+          completer?.complete();
+        }
+      }
       if (isClosed || requestId != _activePlanRequestId) return;
       if (result.isErr()) {
         final error = result.error;
@@ -952,8 +966,10 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
 
     try {
       while (true) {
-        while (_deletesDoneCompleter != null) {
-          await _deletesDoneCompleter!.future;
+        while (_deletesDoneCompleter != null || _createsDoneCompleter != null) {
+          final pendingCompleter =
+              _deletesDoneCompleter ?? _createsDoneCompleter!;
+          await pendingCompleter.future;
           if (isClosed || requestId != _activePlanRequestId) return;
         }
 
@@ -962,6 +978,7 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
             .getLatestActivePlanRecord();
         if (isClosed || requestId != _activePlanRequestId) return;
         if (_activeDeleteCount > 0 ||
+            _activeCreateCount > 0 ||
             _recordMutationVersion != mutationVersionBeforeFetch) {
           continue;
         }
@@ -1000,6 +1017,7 @@ class WorkoutPlanRecordCubit extends Cubit<WorkoutPlanRecordState> {
         final hydrated = await _hydrateActivePlanState(result.value);
         if (isClosed || requestId != _activePlanRequestId) return;
         if (_activeDeleteCount > 0 ||
+            _activeCreateCount > 0 ||
             _recordMutationVersion != mutationVersionBeforeFetch) {
           continue;
         }
