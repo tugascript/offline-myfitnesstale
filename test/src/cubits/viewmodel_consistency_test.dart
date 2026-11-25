@@ -39,6 +39,7 @@ import 'package:myfitnesstale/src/data/repositories/macros/macro_tracking_reposi
 import 'package:myfitnesstale/src/data/repositories/onboarding/onboarding_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/profile/profile_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/weight/inputs/weight_goal_input.dart';
+import 'package:myfitnesstale/src/data/repositories/weight/inputs/weight_record_input.dart';
 import 'package:myfitnesstale/src/data/repositories/weight/weight_record_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/workout_plans/inputs/workout_plan_record_input.dart';
 import 'package:myfitnesstale/src/data/repositories/workout_plans/workout_plan_record_repository.dart';
@@ -1140,6 +1141,60 @@ void main() {
       expect(cubit.state.isLoadingActiveGoal, isFalse);
       expect(cubit.state.isLoading, isFalse);
       expect(cubit.state.error, isNull);
+    });
+
+    test('WeightRecordCubit refetches active date-range history on update and delete when a history reload is pending', () async {
+      final cubit = WeightRecordCubit(
+        weightRecordRepository: WeightRecordRepository.create(),
+      );
+      addTearDown(cubit.close);
+
+      final range = (DateTime(2026, 3, 1), DateTime(2026, 3, 31));
+      await cubit.createWeightRecord(
+        WeightRecordInput(weight: 80000, recordDate: DateTime(2026, 3, 5)),
+      );
+      await cubit.createWeightRecord(
+        WeightRecordInput(weight: 79500, recordDate: DateTime(2026, 3, 10)),
+      );
+      final latestId = cubit.state.latestWeightRecord!.id;
+
+      // Pending offset == 0 reload clears weightRecords; editing must refetch,
+      // not discard the pending read and leave history empty.
+      final pendingEditReload = cubit.getWeightRecords(
+        dateRange: range,
+        limit: 1000,
+        offset: 0,
+      );
+      expect(cubit.state.isLoadingRecords, isTrue);
+      expect(cubit.state.weightRecords, isEmpty);
+
+      await cubit.updateWeightRecord(
+        latestId,
+        WeightRecordInput(weight: 79100, recordDate: DateTime(2026, 3, 10)),
+      );
+      await pendingEditReload;
+
+      expect(cubit.state.isLoading, isFalse);
+      expect(cubit.state.weightRecords, hasLength(2));
+      expect(cubit.state.latestWeightRecord?.weight, 79100);
+      expect(cubit.state.recordPagination.dateRange, range);
+      expect(cubit.state.recordPagination.limit, 1000);
+
+      // Same check for delete while a history reload is pending.
+      final pendingDeleteReload = cubit.getWeightRecords(
+        dateRange: range,
+        limit: 1000,
+        offset: 0,
+      );
+      expect(cubit.state.weightRecords, isEmpty);
+
+      await cubit.deleteWeightRecord(latestId);
+      await pendingDeleteReload;
+
+      expect(cubit.state.isLoading, isFalse);
+      expect(cubit.state.weightRecords, hasLength(1));
+      expect(cubit.state.weightRecords.single.weight, 80000);
+      expect(cubit.state.latestWeightRecord?.weight, 80000);
     });
   });
 }

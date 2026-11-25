@@ -18,6 +18,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:logging/logging.dart';
 
+import '../../../data/repositories/weight/dtos/weight_record_dto.dart';
 import '../../../data/repositories/weight/inputs/weight_goal_input.dart';
 import '../../../data/repositories/weight/inputs/weight_record_input.dart';
 import '../../../data/repositories/weight/weight_record_repository.dart';
@@ -438,6 +439,14 @@ class WeightRecordCubit extends Cubit<WeightRecordState> {
       state.copyWith(
         recordsRequestId: requestId,
         weightRecords: offset == 0 ? const [] : null,
+        recordPagination: offset == 0
+            ? state.recordPagination.copyWith(
+                dateRange: Nullable(dateRange),
+                limit: limit,
+                offset: 0,
+                total: 0,
+              )
+            : null,
         isLoadingRecords: true,
         recordsError: const Nullable(null),
         error:
@@ -576,49 +585,8 @@ class WeightRecordCubit extends Cubit<WeightRecordState> {
       }
     }
 
-    final weightRecordsResult = await _weightRecordService.getWeightRecords();
-    if (isClosed) return;
-    if (weightRecordsResult.isErr()) {
-      final error = weightRecordsResult.error;
-      _logger.warning("Failed to fetch weight records", error);
-      switch (error.type) {
-        case OperationErrorTypes.invalidInput:
-        case OperationErrorTypes.operationFailure:
-          emit(
-            state.copyWith(
-              error: Nullable(
-                ErrorState(
-                  type: error.type.name,
-                  description: "Failed to fetch weight records",
-                ),
-              ),
-              isLoading: false,
-            ),
-          );
-          return;
-      }
-    }
-
-    final weightRecords = weightRecordsResult.value;
-    emit(
-      state.copyWith(
-        recordsRequestId: state.recordsRequestId + 1,
-        latestRequestId: state.latestRequestId + 1,
-        weightRecords: weightRecords.data,
-        selectedWeightRecord: Nullable(result.value),
-        recordPagination: state.recordPagination.copyWith(
-          total: weightRecords.total,
-          offset: weightRecords.offset,
-          limit: weightRecords.limit,
-        ),
-        latestWeightRecord: Nullable(weightRecords.data.firstOrNull),
-        isLoading: false,
-        isLoadingRecords: false,
-        isLoadingLatest: false,
-        recordsError: const Nullable(null),
-        latestError: const Nullable(null),
-        error: const Nullable(null),
-      ),
+    await _refreshWeightRecordState(
+      selectedWeightRecord: Nullable(result.value),
     );
   }
 
@@ -661,27 +629,8 @@ class WeightRecordCubit extends Cubit<WeightRecordState> {
     }
 
     _logger.info("Weight record updated successfully");
-    final weightRecord = result.value;
-    emit(
-      state.copyWith(
-        recordsRequestId: state.recordsRequestId + 1,
-        latestRequestId: state.latestRequestId + 1,
-        weightRecords: state.weightRecords
-            .map((w) => w.id == weightRecord.id ? weightRecord : w)
-            .toList(),
-        selectedWeightRecord: Nullable(weightRecord),
-        latestWeightRecord: Nullable(
-          state.latestWeightRecord?.id == weightRecord.id
-              ? weightRecord
-              : state.latestWeightRecord,
-        ),
-        isLoading: false,
-        isLoadingRecords: false,
-        isLoadingLatest: false,
-        recordsError: const Nullable(null),
-        latestError: const Nullable(null),
-        error: Nullable(null),
-      ),
+    await _refreshWeightRecordState(
+      selectedWeightRecord: Nullable(result.value),
     );
   }
 
@@ -723,35 +672,130 @@ class WeightRecordCubit extends Cubit<WeightRecordState> {
       }
     }
 
-    final updatedRecords = state.weightRecords
-        .where((w) => w.id != id)
-        .toList();
+    await _refreshWeightRecordState(
+      selectedWeightRecord: state.selectedWeightRecord?.id == id
+          ? const Nullable(null)
+          : null,
+    );
+  }
+
+  Future<void> _refreshWeightRecordState({
+    Nullable<WeightRecordDto>? selectedWeightRecord,
+  }) async {
+    final recordsRequestId = state.recordsRequestId + 1;
+    final latestRequestId = state.latestRequestId + 1;
+    final dateRange = state.recordPagination.dateRange;
+    final limit = state.recordPagination.limit;
+    final previousRecordsError = state.recordsError;
+    final previousLatestError = state.latestError;
+
     emit(
       state.copyWith(
-        recordsRequestId: state.recordsRequestId + 1,
-        latestRequestId: state.latestRequestId + 1,
-        weightRecords: updatedRecords,
-        selectedWeightRecord: Nullable(
-          state.selectedWeightRecord?.id == id
-              ? null
-              : state.selectedWeightRecord,
-        ),
-        recordPagination: state.recordPagination.copyWith(
-          total: state.recordPagination.total > 0
-              ? state.recordPagination.total - 1
-              : 0,
-        ),
-        latestWeightRecord: Nullable(
-          state.latestWeightRecord?.id == id
-              ? updatedRecords.firstOrNull
-              : state.latestWeightRecord,
-        ),
-        isLoading: false,
-        isLoadingRecords: false,
-        isLoadingLatest: false,
+        recordsRequestId: recordsRequestId,
+        latestRequestId: latestRequestId,
+        selectedWeightRecord: selectedWeightRecord,
+        isLoadingRecords: true,
+        isLoadingLatest: true,
         recordsError: const Nullable(null),
         latestError: const Nullable(null),
-        error: const Nullable(null),
+        error:
+            (previousRecordsError != null &&
+                    state.error == previousRecordsError) ||
+                (previousLatestError != null &&
+                    state.error == previousLatestError)
+            ? const Nullable(null)
+            : null,
+      ),
+    );
+
+    final recordsFuture = _weightRecordService.getWeightRecords(
+      dateRange: dateRange,
+      limit: limit,
+      offset: 0,
+    );
+    final latestFuture = _weightRecordService.getLatestRecorded();
+
+    final recordsResult = await recordsFuture;
+    final latestResult = await latestFuture;
+    if (isClosed) return;
+
+    final recordsCurrent = recordsRequestId == state.recordsRequestId;
+    final latestCurrent = latestRequestId == state.latestRequestId;
+
+    List<WeightRecordDto>? weightRecords;
+    WeightRecordPaginationState? recordPagination;
+    Nullable<ErrorState>? recordsError;
+    Nullable<WeightRecordDto>? latestWeightRecord;
+    Nullable<ErrorState>? latestError;
+    ErrorState? error;
+
+    if (recordsCurrent) {
+      if (recordsResult.isErr()) {
+        final recordsErr = recordsResult.error;
+        _logger.warning("Failed to fetch weight records", recordsErr);
+        final errorState = ErrorState(
+          type: recordsErr.type.name,
+          description: "Failed to fetch weight records",
+        );
+        weightRecords = const [];
+        recordsError = Nullable(errorState);
+        error = errorState;
+      } else {
+        final paginatedData = recordsResult.value;
+        weightRecords = paginatedData.data;
+        recordPagination = state.recordPagination.copyWith(
+          total: paginatedData.total,
+          offset: paginatedData.offset,
+          limit: paginatedData.limit,
+          dateRange: Nullable(dateRange),
+        );
+        recordsError = const Nullable(null);
+      }
+    }
+
+    if (latestCurrent) {
+      if (latestResult.isErr()) {
+        final latestErr = latestResult.error;
+        if (latestErr.type == SingleErrorTypes.notFound) {
+          latestWeightRecord = const Nullable(null);
+          latestError = const Nullable(null);
+        } else {
+          _logger.warning("Failed to fetch latest weight record", latestErr);
+          final errorState = ErrorState(
+            type: latestErr.type.name,
+            description: "Failed to get latest weight record",
+          );
+          latestWeightRecord = const Nullable(null);
+          latestError = Nullable(errorState);
+          error ??= errorState;
+        }
+      } else {
+        latestWeightRecord = Nullable(latestResult.value);
+        latestError = const Nullable(null);
+      }
+    }
+
+    final shouldClearSharedError =
+        error == null &&
+        state.error != null &&
+        state.error != state.activeGoalError &&
+        state.error != state.goalsError &&
+        (recordsCurrent || state.error != state.recordsError) &&
+        (latestCurrent || state.error != state.latestError);
+
+    emit(
+      state.copyWith(
+        weightRecords: weightRecords,
+        recordPagination: recordPagination,
+        latestWeightRecord: latestWeightRecord,
+        isLoading: false,
+        isLoadingRecords: recordsCurrent ? false : null,
+        isLoadingLatest: latestCurrent ? false : null,
+        recordsError: recordsError,
+        latestError: latestError,
+        error: error != null
+            ? Nullable(error)
+            : (shouldClearSharedError ? const Nullable(null) : null),
       ),
     );
   }
