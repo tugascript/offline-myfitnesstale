@@ -467,6 +467,14 @@ final class WorkoutPlanRepository implements Repository {
           ),
         );
       }
+      if (workouts.any((workout) => workout.editorType == EditorType.cardio)) {
+        return err(
+          const ServiceError(
+            type: SingleErrorTypes.invalidInput,
+            description: 'Cardio workouts cannot be added to workout plans yet',
+          ),
+        );
+      }
 
       final workoutMap = <int, WorkoutDto>{
         for (final workout in workouts)
@@ -1297,6 +1305,18 @@ final class WorkoutPlanRepository implements Repository {
             ),
           );
         }
+        if (workoutModels.any(
+          (workout) => workout.editorType == EditorType.cardio,
+        )) {
+          _logger.warning('Cardio workouts cannot be added to workout plans');
+          return err(
+            const ServiceError(
+              type: SingleErrorTypes.invalidInput,
+              description:
+                  'Cardio workouts cannot be added to workout plans yet',
+            ),
+          );
+        }
 
         final workoutMap = workoutModels.fold<Map<int, WorkoutDto>>({}, (
           map,
@@ -1829,6 +1849,17 @@ final class WorkoutPlanRepository implements Repository {
           ),
         );
       }
+      if (workout.editorType == EditorType.cardio) {
+        _logger.warning(
+          'Cardio workout with id ${input.workoutId} cannot be added to a workout plan',
+        );
+        return err(
+          const ServiceError(
+            type: SingleErrorTypes.invalidInput,
+            description: 'Cardio workouts cannot be added to workout plans yet',
+          ),
+        );
+      }
 
       return await _planWorkoutDao.startTransaction((txn) async {
         final WorkoutPlanDay? planDay = await _dayDao.selectOne(
@@ -1962,6 +1993,17 @@ final class WorkoutPlanRepository implements Repository {
           ServiceError(
             type: SingleErrorTypes.notFound,
             description: 'Workout with id ${input.workoutId} not found',
+          ),
+        );
+      }
+      if (workout.editorType == EditorType.cardio) {
+        _logger.warning(
+          'Cardio workout with id ${input.workoutId} cannot be added to a workout plan',
+        );
+        return err(
+          const ServiceError(
+            type: SingleErrorTypes.invalidInput,
+            description: 'Cardio workouts cannot be added to workout plans yet',
           ),
         );
       }

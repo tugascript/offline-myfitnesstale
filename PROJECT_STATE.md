@@ -189,7 +189,9 @@ records.
   `WorkoutRecordInput`, `WorkoutSetRecordInput`, and
   `WorkoutSetExerciseRecordInput` PUT semantics. Cardio workout execution and
   cardio workout history are not yet implemented; cardio workout detail screens
-  omit strength-only Start Workout and History actions.
+  omit strength-only Start Workout and History actions, and workout plan
+  selection and mutations restrict plans to strength workouts until cardio
+  execution is supported.
 - Completes, cancels, and resumes active strength workouts within the covered
   lifecycle; manual completion requires confirmation, while finishing the final
   exercise completes the workout automatically.

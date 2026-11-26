@@ -91,6 +91,7 @@ class _WorkoutPlanWorkoutSearchModalState
                         required bool isFavorite,
                       }) {
                         context.read<WorkoutCubit>().getSelectionWorkouts(
+                          type: ExerciseType.strength,
                           name: name,
                           muscleGroup: muscleGroup,
                           isFavorite: isFavorite,

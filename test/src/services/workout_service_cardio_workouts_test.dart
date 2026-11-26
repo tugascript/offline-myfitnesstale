@@ -22,6 +22,13 @@ import 'package:myfitnesstale/src/data/models/sqlite/exercise_model.dart';
 import 'package:myfitnesstale/src/data/models/sqlite/workout_cardio_set_exercise_model.dart';
 import 'package:myfitnesstale/src/data/models/sqlite/workout_cardio_set_model.dart';
 import 'package:myfitnesstale/src/data/models/sqlite/workout_record_model.dart';
+import 'package:myfitnesstale/src/data/repositories/workout_plans/inputs/week_workout_input.dart';
+import 'package:myfitnesstale/src/data/repositories/workout_plans/inputs/workout_plan_day_batch_create_input.dart';
+import 'package:myfitnesstale/src/data/repositories/workout_plans/inputs/workout_plan_input.dart';
+import 'package:myfitnesstale/src/data/repositories/workout_plans/inputs/workout_plan_week_batch_create_input.dart';
+import 'package:myfitnesstale/src/data/repositories/workout_plans/inputs/workout_plan_workout_batch_create_input.dart';
+import 'package:myfitnesstale/src/data/repositories/workout_plans/inputs/workout_plan_workout_input.dart';
+import 'package:myfitnesstale/src/data/repositories/workout_plans/workout_plan_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/workouts/inputs/workout_cardio_set_exercise_upsert_input.dart';
 import 'package:myfitnesstale/src/data/repositories/workouts/inputs/workout_cardio_set_upsert_input.dart';
 import 'package:myfitnesstale/src/data/repositories/workouts/inputs/workout_input.dart';
@@ -40,6 +47,7 @@ import '../../support/test_database.dart';
 void main() {
   final testDatabase = TestDatabase();
   final workoutRepository = WorkoutRepository.create();
+  final workoutPlanRepository = WorkoutPlanRepository.create();
   int seedCounter = 0;
 
   String uniqueName(String prefix) => '$prefix-${seedCounter++}';
@@ -81,6 +89,7 @@ void main() {
   });
 
   tearDown(() async {
+    await testDatabase.clearWorkoutPlanTables();
     await testDatabase.clearWorkoutTables();
   });
 
@@ -741,5 +750,148 @@ void main() {
       await cubit.refreshWorkoutSets(workoutId);
       expect(cubit.state.selectedWorkout?.cardioSets?.length, 1);
     });
+
+    test('getSelectionWorkouts defaults to strength workouts and excludes cardio workouts', () async {
+      final strengthWorkout = (await workoutRepository.createWorkout(
+        const WorkoutInput(
+          name: 'Push Strength',
+          difficulty: Difficulty.beginner,
+          isFavorite: false,
+          editorType: EditorType.basic,
+        ),
+      )).value;
+      await workoutRepository.createWorkout(
+        const WorkoutInput(
+          name: 'Zone 2 Run',
+          difficulty: Difficulty.beginner,
+          isFavorite: false,
+          editorType: EditorType.cardio,
+        ),
+      );
+
+      final cubit = WorkoutCubit(workoutRepository: workoutRepository);
+      addTearDown(cubit.close);
+
+      await cubit.getSelectionWorkouts();
+      expect(cubit.state.error, isNull);
+      expect(cubit.state.workoutSelection.map((w) => w.id), [
+        strengthWorkout.id,
+      ]);
+    });
+  });
+
+  group('WorkoutPlanRepository cardio workout guards', () {
+    test(
+      'rejects cardio workouts across plan version, day, and workout mutations',
+      () async {
+        final strengthWorkout = (await workoutRepository.createWorkout(
+          const WorkoutInput(
+            name: 'Full Body Strength',
+            difficulty: Difficulty.intermediate,
+            isFavorite: false,
+            editorType: EditorType.basic,
+          ),
+        )).value;
+        final cardioWorkout = (await workoutRepository.createWorkout(
+          const WorkoutInput(
+            name: 'Tempo Cardio',
+            difficulty: Difficulty.intermediate,
+            isFavorite: false,
+            editorType: EditorType.cardio,
+          ),
+        )).value;
+
+        final plan = (await workoutPlanRepository.createWorkoutPlan(
+          const WorkoutPlanInput(
+            name: 'Strength Plan',
+            difficulty: Difficulty.intermediate,
+          ),
+        )).value;
+
+        // 1. Batch plan version creation rejects cardio workouts
+        final batchCardioResult = await workoutPlanRepository
+            .createWorkoutPlanVersionWithWeeks(
+              workoutPlanId: plan.id,
+              weeks: [
+                WorkoutPlanWeekBatchCreateInput(
+                  startWeek: 1,
+                  endWeek: 1,
+                  days: [
+                    WorkoutPlanDayBatchCreateInput(
+                      day: 1,
+                      workouts: [
+                        WorkoutPlanWorkoutBatchCreateInput(
+                          workoutId: cardioWorkout.id,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ],
+            );
+        expect(batchCardioResult.isErr(), isTrue);
+        expect(batchCardioResult.error.type, SingleErrorTypes.invalidInput);
+
+        // Seed a valid strength version so day/workout endpoints can be tested
+        final validVersion =
+            (await workoutPlanRepository.createWorkoutPlanVersionWithWeeks(
+              workoutPlanId: plan.id,
+              weeks: [
+                WorkoutPlanWeekBatchCreateInput(
+                  startWeek: 1,
+                  endWeek: 1,
+                  days: [
+                    WorkoutPlanDayBatchCreateInput(
+                      day: 1,
+                      workouts: [
+                        WorkoutPlanWorkoutBatchCreateInput(
+                          workoutId: strengthWorkout.id,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ],
+            )).value;
+        final weekId = validVersion.weeks!.first.id;
+        final dayId = validVersion.weeks!.first.days.first.id;
+        final planWorkoutId =
+            validVersion.weeks!.first.days.first.planWorkouts!.first.id;
+
+        // 2. createWorkoutPlanDay rejects cardio workouts
+        final createDayResult = await workoutPlanRepository
+            .createWorkoutPlanDay(
+              workoutPlanWeekId: weekId,
+              day: 2,
+              workouts: [WeekWorkoutInput(workoutId: cardioWorkout.id)],
+            );
+        expect(createDayResult.isErr(), isTrue);
+        expect(createDayResult.error.type, SingleErrorTypes.invalidInput);
+
+        // 3. createWorkoutPlanWorkout rejects cardio workouts
+        final createPlanWorkoutResult = await workoutPlanRepository
+            .createWorkoutPlanWorkout(
+              dayId,
+              WorkoutPlanWorkoutInput(workoutId: cardioWorkout.id),
+            );
+        expect(createPlanWorkoutResult.isErr(), isTrue);
+        expect(
+          createPlanWorkoutResult.error.type,
+          SingleErrorTypes.invalidInput,
+        );
+
+        // 4. updateWorkoutPlanWorkout rejects cardio workouts
+        final updatePlanWorkoutResult = await workoutPlanRepository
+            .updateWorkoutPlanWorkout(
+              planWorkoutId,
+              WorkoutPlanWorkoutInput(workoutId: cardioWorkout.id),
+            );
+        expect(updatePlanWorkoutResult.isErr(), isTrue);
+        expect(
+          updatePlanWorkoutResult.error.type,
+          SingleErrorTypes.invalidInput,
+        );
+      },
+    );
   });
 }

@@ -36,6 +36,7 @@ import 'package:myfitnesstale/src/ui/core/sizes/screen_size.dart';
 import 'package:myfitnesstale/src/ui/core/utils/converters.dart';
 import 'package:myfitnesstale/src/ui/core/widgets/created_by_checkbox.dart';
 import 'package:myfitnesstale/src/ui/exercises/view_models/exercise_cubit.dart';
+import 'package:myfitnesstale/src/ui/workout_plans/widgets/editor/workout_search/workout_plan_workout_search_modal.dart';
 import 'package:myfitnesstale/src/ui/workouts/screens/workout_detail_screen.dart';
 import 'package:myfitnesstale/src/ui/workouts/screens/workout_edit_screen.dart';
 import 'package:myfitnesstale/src/ui/workouts/screens/workouts_list_screen.dart';
@@ -172,6 +173,8 @@ class _FakeWorkoutCubit extends WorkoutCubit {
     );
   }
 
+  final List<ExerciseType> selectionTypes = [];
+
   @override
   Future<void> batchUpsertCardioWorkoutSets({
     required int workoutId,
@@ -179,6 +182,23 @@ class _FakeWorkoutCubit extends WorkoutCubit {
   }) async {
     savedCardioSets.add(sets);
     emit(state.copyWith(isLoading: false, error: const Nullable(null)));
+  }
+
+  @override
+  Future<void> getSelectionWorkouts({
+    ExerciseType type = ExerciseType.strength,
+    MuscleGroup? muscleGroup,
+    String name = '',
+    bool isFavorite = false,
+  }) async {
+    selectionTypes.add(type);
+    emit(
+      state.copyWith(
+        workoutSelection: workoutsToEmit,
+        isLoading: false,
+        error: const Nullable(null),
+      ),
+    );
   }
 }
 
@@ -830,6 +850,35 @@ void main() {
           '/workouts/55/edit',
           const WorkoutEditScreen(workoutId: 55),
         );
+      },
+    );
+
+    testWidgets(
+      'WorkoutPlanWorkoutSearchModal restricts plan workout selection searches to strength workouts',
+      (tester) async {
+        final cubit = _FakeWorkoutCubit();
+        addTearDown(cubit.close);
+
+        await tester.pumpWidget(
+          BlocProvider<WorkoutCubit>.value(
+            value: cubit,
+            child: MaterialApp(
+              home: Scaffold(
+                body: WorkoutPlanWorkoutSearchModal(
+                  sizes: DataDisplaySizes.getDataDisplaySizes(ScreenSize.sm),
+                  isLoading: false,
+                  onWorkoutSelected: (_) {},
+                ),
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.byIcon(Icons.search).last);
+        await tester.pumpAndSettle();
+
+        expect(cubit.selectionTypes, [ExerciseType.strength]);
       },
     );
   });
