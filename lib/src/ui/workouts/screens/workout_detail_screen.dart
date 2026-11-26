@@ -43,6 +43,7 @@ import '../widgets/details/workout_block_strip.dart';
 import '../widgets/details/workout_cardio_set_card.dart';
 import '../widgets/details/workout_header_card.dart';
 import '../widgets/details/workout_set_card.dart';
+import '../widgets/details/workout_skeleton_placeholder.dart';
 import './workout_history_screen.dart';
 
 const _skeletonExercise = ExerciseDto(
@@ -287,12 +288,26 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
             break;
           }
         }
-        final isSkeletonCardio =
-            cachedWorkout?.isCardio ??
-            (workoutState.pagination.type == ExerciseType.cardio);
+
+        if (isSkeletonLoading && cachedWorkout == null) {
+          return ResponsiveScaffold(
+            title: "Workout details",
+            isEntity: false,
+            body: Skeletonizer(
+              enabled: true,
+              child: WorkoutSkeletonPlaceholder(
+                theme: theme,
+                sizes: sizes,
+                sectionTitle: 'Workout Structure',
+              ),
+            ),
+          );
+        }
 
         final workout = isSkeletonLoading
-            ? (isSkeletonCardio ? _skeletonCardioWorkout : _skeletonWorkout)
+            ? (cachedWorkout!.isCardio
+                  ? _skeletonCardioWorkout
+                  : _skeletonWorkout)
             : workoutState.selectedWorkout!;
         final sets = workout.sets ?? const [];
         final cardioSets = workout.cardioSets ?? const [];
