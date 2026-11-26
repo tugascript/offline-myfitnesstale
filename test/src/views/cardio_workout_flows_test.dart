@@ -19,6 +19,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 
 import 'package:myfitnesstale/src/data/repositories/exercises/dtos/exercise_dto.dart';
 import 'package:myfitnesstale/src/data/repositories/exercises/exercise_repository.dart';
@@ -34,6 +35,7 @@ import 'package:myfitnesstale/src/data/utils/json_data.dart';
 import 'package:myfitnesstale/src/ui/core/sizes/data_display_sizes.dart';
 import 'package:myfitnesstale/src/ui/core/sizes/screen_size.dart';
 import 'package:myfitnesstale/src/ui/core/utils/converters.dart';
+import 'package:myfitnesstale/src/ui/core/view_models/states/common_state.dart';
 import 'package:myfitnesstale/src/ui/core/widgets/created_by_checkbox.dart';
 import 'package:myfitnesstale/src/ui/exercises/view_models/exercise_cubit.dart';
 import 'package:myfitnesstale/src/ui/workout_plans/widgets/editor/workout_search/workout_plan_workout_search_modal.dart';
@@ -45,6 +47,8 @@ import 'package:myfitnesstale/src/ui/workouts/view_models/workout_cubit.dart';
 import 'package:myfitnesstale/src/ui/workouts/widgets/details/cardio_editor/cardio_editor.dart';
 import 'package:myfitnesstale/src/ui/workouts/widgets/details/create_workout_modal.dart';
 import 'package:myfitnesstale/src/ui/workouts/widgets/details/workout_base_form.dart';
+import 'package:myfitnesstale/src/ui/workouts/widgets/details/workout_cardio_set_card.dart';
+import 'package:myfitnesstale/src/ui/workouts/widgets/details/workout_set_card.dart';
 import 'package:myfitnesstale/src/utils/nullable.dart';
 
 class _GetWorkoutsCall {
@@ -74,23 +78,32 @@ class _FakeWorkoutCubit extends WorkoutCubit {
   final List<WorkoutInput> createdInputs = [];
   final List<List<WorkoutCardioSetUpsertInput>> savedCardioSets = [];
   final List<WorkoutDto> workoutsToEmit;
+  final bool keepLoadingOnGetWorkout;
+  final ErrorState? batchUpsertCardioError;
+  final List<WorkoutCardioSetDto>? refreshedCardioSetsOnSave;
 
   _FakeWorkoutCubit({
     WorkoutDto? initialSelectedWorkout,
     this.workoutsToEmit = const [],
+    List<WorkoutDto>? initialWorkouts,
     ExerciseType initialType = ExerciseType.strength,
+    this.keepLoadingOnGetWorkout = false,
+    this.batchUpsertCardioError,
+    this.refreshedCardioSetsOnSave,
   }) : super(workoutRepository: WorkoutRepository.create()) {
+    final seedWorkouts =
+        initialWorkouts ??
+        (initialType == ExerciseType.cardio ? workoutsToEmit : const []);
     if (initialSelectedWorkout != null ||
-        initialType != ExerciseType.strength) {
+        initialType != ExerciseType.strength ||
+        seedWorkouts.isNotEmpty) {
       emit(
         state.copyWith(
           selectedWorkout: Nullable(initialSelectedWorkout),
-          workouts: initialType == ExerciseType.cardio
-              ? workoutsToEmit
-              : const [],
+          workouts: seedWorkouts,
           pagination: state.pagination.copyWith(
             type: initialType,
-            total: workoutsToEmit.length,
+            total: seedWorkouts.length,
           ),
         ),
       );
@@ -143,6 +156,10 @@ class _FakeWorkoutCubit extends WorkoutCubit {
 
   @override
   Future<void> getWorkout(int id, {int? version, bool refresh = false}) async {
+    if (keepLoadingOnGetWorkout) {
+      emit(state.copyWith(isLoading: true, error: const Nullable(null)));
+      return;
+    }
     emit(state.copyWith(isLoading: false, error: const Nullable(null)));
   }
 
@@ -181,7 +198,28 @@ class _FakeWorkoutCubit extends WorkoutCubit {
     required List<WorkoutCardioSetUpsertInput> sets,
   }) async {
     savedCardioSets.add(sets);
-    emit(state.copyWith(isLoading: false, error: const Nullable(null)));
+    emit(state.copyWith(isLoading: true, error: const Nullable(null)));
+    if (batchUpsertCardioError != null) {
+      emit(
+        state.copyWith(
+          isLoading: false,
+          error: Nullable(batchUpsertCardioError),
+        ),
+      );
+      return;
+    }
+
+    final current = state.selectedWorkout;
+    final updatedWorkout = current != null && refreshedCardioSetsOnSave != null
+        ? current.copyWith(cardioSets: Nullable(refreshedCardioSetsOnSave))
+        : current;
+    emit(
+      state.copyWith(
+        selectedWorkout: Nullable(updatedWorkout),
+        isLoading: false,
+        error: const Nullable(null),
+      ),
+    );
   }
 
   @override
@@ -735,9 +773,266 @@ void main() {
         expect(find.text('Go To Edit'), findsOneWidget);
       },
     );
+
+    testWidgets(
+      'WorkoutEditScreen shows Skeletonizer instead of CircularProgressIndicator while loading',
+      (tester) async {
+        final workoutCubit = _FakeWorkoutCubit(
+          initialType: ExerciseType.cardio,
+          keepLoadingOnGetWorkout: true,
+        );
+        final exerciseCubit = _FakeExerciseCubit(
+          cardioExercises: const [_runningExercise],
+        );
+        addTearDown(workoutCubit.close);
+        addTearDown(exerciseCubit.close);
+
+        final router = GoRouter(
+          initialLocation: '/workouts/55/edit',
+          routes: [
+            GoRoute(
+              path: '/workouts/55/edit',
+              builder: (_, _) => const WorkoutEditScreen(workoutId: 55),
+            ),
+          ],
+        );
+        addTearDown(router.dispose);
+
+        await tester.pumpWidget(
+          MultiBlocProvider(
+            providers: [
+              BlocProvider<WorkoutCubit>.value(value: workoutCubit),
+              BlocProvider<ExerciseCubit>.value(value: exerciseCubit),
+            ],
+            child: MaterialApp.router(routerConfig: router),
+          ),
+        );
+        await tester.pump();
+
+        expect(
+          find.byWidgetPredicate((w) => w is Skeletonizer && w.enabled),
+          findsOneWidget,
+        );
+        expect(find.byType(CircularProgressIndicator), findsNothing);
+        expect(find.text('Cardio'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'WorkoutEditScreen displays error description in a single SnackBar without duplicate toasts on cardio save failure',
+      (tester) async {
+        final cardioWorkout = _buildSampleCardioWorkout();
+        final workoutCubit = _FakeWorkoutCubit(
+          initialSelectedWorkout: cardioWorkout,
+          batchUpsertCardioError: const ErrorState(
+            type: 'invalidInput',
+            description: 'At least one cardio set is required',
+          ),
+        );
+        final exerciseCubit = _FakeExerciseCubit(
+          cardioExercises: const [_runningExercise, _rowingExercise],
+        );
+        addTearDown(workoutCubit.close);
+        addTearDown(exerciseCubit.close);
+
+        final router = GoRouter(
+          initialLocation: '/workouts/55/edit',
+          routes: [
+            GoRoute(
+              path: '/workouts/55/edit',
+              builder: (_, _) => const WorkoutEditScreen(workoutId: 55),
+            ),
+          ],
+        );
+        addTearDown(router.dispose);
+
+        await tester.pumpWidget(
+          MultiBlocProvider(
+            providers: [
+              BlocProvider<WorkoutCubit>.value(value: workoutCubit),
+              BlocProvider<ExerciseCubit>.value(value: exerciseCubit),
+            ],
+            child: MaterialApp.router(routerConfig: router),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        final saveButton = find.text('SAVE');
+        await tester.ensureVisible(saveButton);
+        await tester.tap(saveButton);
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 250));
+
+        expect(find.byType(SnackBar), findsOneWidget);
+        expect(
+          find.text('At least one cardio set is required'),
+          findsOneWidget,
+        );
+        expect(find.textContaining('ErrorState('), findsNothing);
+
+        // Dismiss the active SnackBar and confirm no duplicate SnackBar is queued.
+        ScaffoldMessenger.of(tester.element(find.byType(CardioEditor)))
+            .hideCurrentSnackBar();
+        await tester.pumpAndSettle();
+        expect(find.byType(SnackBar), findsNothing);
+      },
+    );
+
+    testWidgets(
+      'CardioEditor syncs displayed sets with persisted IDs when cannot pop after save',
+      (tester) async {
+        final emptyCardioWorkout = WorkoutDto(
+          id: 55,
+          name: 'Root Route Cardio',
+          muscleGroups: const {},
+          muscles: const TargetMuscles(primary: {}, secondary: {}),
+          difficulty: Difficulty.beginner,
+          version: 1,
+          isFavorite: false,
+          totalSets: 0,
+          totalReps: 0,
+          editorType: EditorType.cardio,
+          createdBy: CreatedBy.user,
+          cardioSets: const [],
+        );
+        final persistedSets = const [
+          WorkoutCardioSetDto(
+            id: 701,
+            position: 1,
+            setType: CardioSetType.constant,
+            restSecs: 60,
+            rounds: 1,
+            exercises: [
+              WorkoutCardioSetExerciseDto(
+                id: 801,
+                position: 1,
+                exerciseId: 102,
+                restSecs: 0,
+                mode: CardioBaseMode.units,
+                quantity: 500,
+                exercise: _rowingExercise,
+              ),
+            ],
+          ),
+        ];
+
+        final workoutCubit = _FakeWorkoutCubit(
+          initialSelectedWorkout: emptyCardioWorkout,
+          refreshedCardioSetsOnSave: persistedSets,
+        );
+        final exerciseCubit = _FakeExerciseCubit(
+          cardioExercises: const [_runningExercise, _rowingExercise],
+        );
+        addTearDown(workoutCubit.close);
+        addTearDown(exerciseCubit.close);
+
+        // Mounted as root route so context.canPop() is false.
+        final router = GoRouter(
+          initialLocation: '/workouts/55/edit',
+          routes: [
+            GoRoute(
+              path: '/workouts/55/edit',
+              builder: (_, _) => const WorkoutEditScreen(workoutId: 55),
+            ),
+          ],
+        );
+        addTearDown(router.dispose);
+
+        await tester.pumpWidget(
+          MultiBlocProvider(
+            providers: [
+              BlocProvider<WorkoutCubit>.value(value: workoutCubit),
+              BlocProvider<ExerciseCubit>.value(value: exerciseCubit),
+            ],
+            child: MaterialApp.router(routerConfig: router),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.text('Add Set'));
+        await tester.pumpAndSettle();
+
+        final addExerciseButton = find.text('Add Exercise');
+        await tester.ensureVisible(addExerciseButton);
+        await tester.tap(addExerciseButton);
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.text('Concept2 Rowing'));
+        await tester.pumpAndSettle();
+
+        final unitField = find.byWidgetPredicate(
+          (w) => w is TextField && w.decoration?.labelText == 'm',
+        );
+        await tester.ensureVisible(unitField);
+        await tester.enterText(unitField, '500');
+        await tester.pumpAndSettle();
+
+        // First save: newly created set/exercise have null IDs.
+        final saveButton = find.text('SAVE');
+        await tester.ensureVisible(saveButton);
+        await tester.tap(saveButton);
+        await tester.pumpAndSettle();
+
+        expect(workoutCubit.savedCardioSets, hasLength(1));
+        expect(workoutCubit.savedCardioSets.first.first.id, isNull);
+        expect(
+          workoutCubit.savedCardioSets.first.first.exercises.first.id,
+          isNull,
+        );
+
+        // Second save without leaving the screen must use synced persisted IDs.
+        await tester.ensureVisible(saveButton);
+        await tester.tap(saveButton);
+        await tester.pumpAndSettle();
+
+        expect(workoutCubit.savedCardioSets, hasLength(2));
+        expect(workoutCubit.savedCardioSets.last.first.id, 701);
+        expect(workoutCubit.savedCardioSets.last.first.exercises.first.id, 801);
+      },
+    );
   });
 
   group('WorkoutDetailScreen and responsiveness', () {
+    testWidgets(
+      'renders cardio skeleton structure while loading a cardio workout',
+      (tester) async {
+        final cachedCardio = _buildSampleCardioWorkout(id: 55);
+        final cubit = _FakeWorkoutCubit(
+          initialWorkouts: [cachedCardio],
+          keepLoadingOnGetWorkout: true,
+        );
+        addTearDown(cubit.close);
+
+        final router = GoRouter(
+          initialLocation: '/workouts/55',
+          routes: [
+            GoRoute(
+              path: '/workouts/55',
+              builder: (_, _) => const WorkoutDetailScreen(workoutId: 55),
+            ),
+          ],
+        );
+        addTearDown(router.dispose);
+
+        await tester.pumpWidget(
+          BlocProvider<WorkoutCubit>.value(
+            value: cubit,
+            child: MaterialApp.router(routerConfig: router),
+          ),
+        );
+        await tester.pump();
+
+        expect(
+          find.byWidgetPredicate((w) => w is Skeletonizer && w.enabled),
+          findsOneWidget,
+        );
+        expect(find.byType(WorkoutCardioSetCard), findsNWidgets(2));
+        expect(find.byType(WorkoutSetCard), findsNothing);
+        expect(find.text('START WORKOUT'), findsNothing);
+        expect(find.text('HISTORY'), findsNothing);
+      },
+    );
+
     testWidgets(
       'displays cardio sets, Cardio badge, Rounds, EDIT/DELETE, and omits Start Workout and History',
       (tester) async {
