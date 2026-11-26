@@ -518,6 +518,49 @@ void main() {
       expect(cubit.state.selectedExercise?.isFavorite, isFalse);
     });
 
+    test('ExerciseCubit clears prior error before retrying updateExercise and updateExerciseFavorite', () async {
+      final cubit = ExerciseCubit(
+        exerciseRepository: ExerciseRepository.create(),
+      );
+      addTearDown(cubit.close);
+
+      final emittedErrors = <ErrorState?>[];
+      final subscription = cubit.stream.listen(
+        (state) => emittedErrors.add(state.error),
+      );
+      addTearDown(subscription.cancel);
+
+      const missingId = 999999;
+      final invalidInput = ExerciseInput(
+        name: 'Missing Exercise',
+        details: const StrengthExerciseDetails(
+          muscleGroup: MuscleGroup.push,
+          muscles: TargetMuscles(primary: {Muscle.chest}, secondary: {}),
+          weightProgress: ExerciseWeightProgress.positive,
+        ),
+      );
+
+      await cubit.updateExercise(missingId, invalidInput);
+      await Future<void>.delayed(Duration.zero);
+      final firstUpdateError = cubit.state.error;
+      expect(firstUpdateError, isNotNull);
+
+      emittedErrors.clear();
+      await cubit.updateExercise(missingId, invalidInput);
+      await Future<void>.delayed(Duration.zero);
+      expect(emittedErrors, [null, firstUpdateError]);
+
+      await cubit.updateExerciseFavorite(missingId, true);
+      await Future<void>.delayed(Duration.zero);
+      final firstFavoriteError = cubit.state.error;
+      expect(firstFavoriteError, isNotNull);
+
+      emittedErrors.clear();
+      await cubit.updateExerciseFavorite(missingId, true);
+      await Future<void>.delayed(Duration.zero);
+      expect(emittedErrors, [null, firstFavoriteError]);
+    });
+
     test('WorkoutPlanCubit updates plans in-place, preserves loaded weeks, clears stale errors, and enforces WorkoutPlanState equality', () async {
       final db = await testDatabase.db;
       final workoutId = await db.insert(

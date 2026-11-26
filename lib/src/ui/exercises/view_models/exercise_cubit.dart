@@ -93,6 +93,7 @@ class ExerciseCubit extends Cubit<ExerciseState>
       (afterWrite ?? state).copyWith(
         exercisesRequestId: requestId,
         pendingExercisesQuery: Nullable(query),
+        error: const Nullable(null),
       ),
     );
 
@@ -165,7 +166,7 @@ class ExerciseCubit extends Cubit<ExerciseState>
 
   Future<void> getExercise(int id) async {
     _logger.info('getExercise: getting exercise by id: $id');
-    emit(state.copyWith(isLoading: true));
+    emit(state.copyWith(isLoading: true, error: const Nullable(null)));
 
     final result = await _exerciseService.getExercise(id);
     if (result.isErr()) {
@@ -217,7 +218,7 @@ class ExerciseCubit extends Cubit<ExerciseState>
     CreatedBy createdBy = CreatedBy.user,
   ]) async {
     _logger.info('createExercise: creating exercise');
-    emit(state.copyWith(isLoading: true));
+    emit(state.copyWith(isLoading: true, error: const Nullable(null)));
     final result = await _exerciseService.createExercise(input, createdBy);
 
     if (result.isErr()) {
@@ -267,7 +268,7 @@ class ExerciseCubit extends Cubit<ExerciseState>
 
   Future<void> updateExercise(int id, ExerciseInput input) async {
     _logger.info('updateExercise: updating exercise by id: $id');
-    emit(state.copyWith(isLoading: true));
+    emit(state.copyWith(isLoading: true, error: const Nullable(null)));
     final result = await _exerciseService.updateExercise(id, input);
 
     if (result.isErr()) {
@@ -319,7 +320,7 @@ class ExerciseCubit extends Cubit<ExerciseState>
       _logger.info(
         'updateExerciseFavorite: updating exercise favorite by id: $id',
       );
-      emit(state.copyWith(isLoading: true));
+      emit(state.copyWith(isLoading: true, error: const Nullable(null)));
       final result = await _exerciseService.updateExerciseFavorite(
         id,
         isFavorite,
@@ -374,7 +375,7 @@ class ExerciseCubit extends Cubit<ExerciseState>
 
   Future<void> deleteExercise(int id) async {
     _logger.info('deleteExercise: deleting exercise by id: $id');
-    emit(state.copyWith(isLoading: true));
+    emit(state.copyWith(isLoading: true, error: const Nullable(null)));
     final result = await _exerciseService.deleteExercise(id);
     if (result.isErr()) {
       final error = result.error;
