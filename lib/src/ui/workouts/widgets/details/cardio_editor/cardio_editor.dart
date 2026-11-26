@@ -170,11 +170,22 @@ class _CardioEditorState extends State<CardioEditor> {
     );
 
     if (mounted) {
-      if (workoutCubit.state.error == null && context.canPop()) {
+      final hasError = workoutCubit.state.error != null;
+      if (!hasError && context.canPop()) {
         context.pop();
+        setState(() {
+          _isCompleting = false;
+        });
+        return;
       }
 
+      final updatedWorkout = workoutCubit.state.selectedWorkout;
       setState(() {
+        if (!hasError &&
+            updatedWorkout != null &&
+            updatedWorkout.id == widget.workoutId) {
+          _displayedSets = _mapSets(updatedWorkout.cardioSets ?? []);
+        }
         _isCompleting = false;
       });
     }
@@ -191,17 +202,7 @@ class _CardioEditorState extends State<CardioEditor> {
           previous.selectedWorkout != current.selectedWorkout ||
           previous.isLoading != current.isLoading,
       listener: (context, state) {
-        if (state.isLoading) {
-          return;
-        }
-
-        if (state.error != null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(state.error?.description ?? 'Something went wrong'),
-              backgroundColor: Colors.red,
-            ),
-          );
+        if (state.isLoading || state.error != null) {
           return;
         }
 

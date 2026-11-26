@@ -677,6 +677,43 @@ void main() {
             );
         expect(missingExercise.isErr(), isTrue);
         expect(missingExercise.error.type, SingleErrorTypes.notFound);
+
+        // Seed a valid cardio set, then verify empty upsert is rejected and
+        // does not wipe existing cardio sets.
+        final seeded = await workoutRepository.batchUpsertCardioWorkoutSets(
+          workoutId: cardioWorkout.id,
+          inputs: [
+            WorkoutCardioSetUpsertInput(
+              setType: CardioSetType.constant,
+              position: 1,
+              exercises: [
+                WorkoutCardioSetExerciseUpsertInput(
+                  position: 1,
+                  exerciseId: cardioExId,
+                  mode: CardioBaseMode.time,
+                  quantity: 300,
+                ),
+              ],
+            ),
+          ],
+        );
+        expect(seeded.isOk(), isTrue);
+
+        final emptyInputs = await workoutRepository
+            .batchUpsertCardioWorkoutSets(
+              workoutId: cardioWorkout.id,
+              inputs: const [],
+            );
+        expect(emptyInputs.isErr(), isTrue);
+        expect(emptyInputs.error.type, SingleErrorTypes.invalidInput);
+
+        final remaining = await workoutRepository.getWorkout(cardioWorkout.id);
+        expect(remaining.isOk(), isTrue);
+        expect(remaining.value.cardioSets, hasLength(1));
+        expect(
+          remaining.value.cardioSets!.first.exercises!.first.quantity,
+          300,
+        );
       },
     );
   });

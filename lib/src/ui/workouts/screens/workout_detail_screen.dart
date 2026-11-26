@@ -21,6 +21,8 @@ import 'package:material_ui/material_ui.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
 import '../../../data/repositories/exercises/dtos/exercise_dto.dart';
+import '../../../data/repositories/workouts/dtos/workout_cardio_set_dto.dart';
+import '../../../data/repositories/workouts/dtos/workout_cardio_set_exercise_dto.dart';
 import '../../../data/repositories/workouts/dtos/workout_dto.dart';
 import '../../../data/repositories/workouts/dtos/workout_set_dto.dart';
 import '../../../data/repositories/workouts/dtos/workout_set_exercise_dto.dart';
@@ -53,6 +55,71 @@ const _skeletonExercise = ExerciseDto(
     weightProgress: ExerciseWeightProgress.positive,
   ),
   createdBy: CreatedBy.system,
+);
+
+const _skeletonCardioExercise = ExerciseDto(
+  id: 0,
+  name: 'Loading Cardio Exercise',
+  description: '',
+  details: CardioExerciseDetails(
+    defaultMode: CardioBaseMode.time,
+    unitType: CardioUnitType.distance,
+    unit: 'km',
+  ),
+  createdBy: CreatedBy.system,
+);
+
+const _skeletonCardioWorkout = WorkoutDto(
+  id: 0,
+  name: 'Loading Cardio Workout',
+  description: 'Loading workout description placeholder...',
+  muscleGroups: {},
+  muscles: TargetMuscles(primary: {}, secondary: {}),
+  difficulty: Difficulty.beginner,
+  version: 1,
+  isFavorite: false,
+  totalSets: 4,
+  totalReps: 0,
+  editorType: EditorType.cardio,
+  createdBy: CreatedBy.system,
+  cardioSets: [
+    WorkoutCardioSetDto(
+      id: -1,
+      position: 1,
+      setType: CardioSetType.constant,
+      restSecs: 60,
+      rounds: 1,
+      exercises: [
+        WorkoutCardioSetExerciseDto(
+          id: -1,
+          position: 1,
+          exerciseId: 0,
+          restSecs: 0,
+          mode: CardioBaseMode.time,
+          quantity: 1200,
+          exercise: _skeletonCardioExercise,
+        ),
+      ],
+    ),
+    WorkoutCardioSetDto(
+      id: -2,
+      position: 2,
+      setType: CardioSetType.interval,
+      restSecs: 90,
+      rounds: 3,
+      exercises: [
+        WorkoutCardioSetExerciseDto(
+          id: -2,
+          position: 1,
+          exerciseId: 0,
+          restSecs: 30,
+          mode: CardioBaseMode.time,
+          quantity: 180,
+          exercise: _skeletonCardioExercise,
+        ),
+      ],
+    ),
+  ],
 );
 
 const _skeletonWorkout = WorkoutDto(
@@ -213,8 +280,19 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
           );
         }
 
+        WorkoutDto? cachedWorkout;
+        for (final item in workoutState.workouts) {
+          if (item.id == widget.workoutId) {
+            cachedWorkout = item;
+            break;
+          }
+        }
+        final isSkeletonCardio =
+            cachedWorkout?.isCardio ??
+            (workoutState.pagination.type == ExerciseType.cardio);
+
         final workout = isSkeletonLoading
-            ? _skeletonWorkout
+            ? (isSkeletonCardio ? _skeletonCardioWorkout : _skeletonWorkout)
             : workoutState.selectedWorkout!;
         final sets = workout.sets ?? const [];
         final cardioSets = workout.cardioSets ?? const [];

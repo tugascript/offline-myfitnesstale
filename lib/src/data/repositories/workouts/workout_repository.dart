@@ -1678,6 +1678,15 @@ final class WorkoutRepository implements Repository {
   Result<void, ServiceError<SingleErrorTypes>> _validateCardioWorkoutSetInputs(
     List<WorkoutCardioSetUpsertInput> inputs,
   ) {
+    if (inputs.isEmpty) {
+      return err(
+        const ServiceError(
+          type: SingleErrorTypes.invalidInput,
+          description: 'At least one cardio set is required',
+        ),
+      );
+    }
+
     for (final setInput in inputs) {
       if (setInput.position < 1) {
         return err(
