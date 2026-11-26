@@ -29,6 +29,7 @@ import 'package:myfitnesstale/src/data/utils/exercise_details.dart';
 import 'package:myfitnesstale/src/data/utils/json_data.dart';
 import 'package:myfitnesstale/src/routing/routes.dart';
 import 'package:myfitnesstale/src/ui/core/view_models/states/common_state.dart';
+import 'package:myfitnesstale/src/ui/core/widgets/favourite_checkbox.dart';
 import 'package:myfitnesstale/src/ui/exercises/screens/exercises_list_screen.dart';
 import 'package:myfitnesstale/src/ui/exercises/view_models/exercise_cubit.dart';
 import 'package:myfitnesstale/src/ui/exercises/view_models/states/exercise_state.dart';
@@ -640,4 +641,116 @@ void main() {
     expect(find.byType(SnackBar), findsOneWidget);
     expect(find.text('Failed to load exercises'), findsOneWidget);
   });
+
+  testWidgets(
+    'preserves unsubmitted shared search filter edits when toggling between Strength and Cardio',
+    (tester) async {
+      final cubit = _ExerciseSearchCubit(blockEquipmentFetch: false);
+      addTearDown(cubit.close);
+
+      final router = GoRouter(
+        initialLocation: Routes.exercises.name,
+        routes: [
+          GoRoute(
+            path: Routes.exercises.name,
+            builder: (_, _) => const ExercisesListScreen(),
+          ),
+        ],
+      );
+      addTearDown(router.dispose);
+
+      await tester.pumpWidget(
+        BlocProvider<ExerciseCubit>.value(
+          value: cubit,
+          child: MaterialApp.router(routerConfig: router),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Edit shared filters on Strength form without tapping Search.
+      await tester.enterText(find.byType(TextFormField), 'Sprint');
+      await tester.pump();
+
+      await tester.tap(find.byType(HeartCheckbox));
+      await tester.pump();
+
+      await tester.tap(find.text('All Difficulties'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Intermediate').last);
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('All Equipment'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Treadmill').last);
+      await tester.pumpAndSettle();
+
+      // Toggle to Cardio without pressing Search first.
+      await tester.tap(
+        find.descendant(
+          of: find.byKey(const ValueKey('exercise-search-type-toggle')),
+          matching: find.text('Cardio'),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final toCardioCall = cubit.getExercisesCalls.last;
+      expect(toCardioCall.type, ExerciseType.cardio);
+      expect(toCardioCall.name, 'Sprint');
+      expect(toCardioCall.difficulty, Difficulty.intermediate);
+      expect(toCardioCall.equipmentId, 2);
+      expect(toCardioCall.isFavourite, isTrue);
+
+      final cardioField = tester.widget<TextFormField>(
+        find.byType(TextFormField),
+      );
+      expect(cardioField.controller?.text, 'Sprint');
+      expect(
+        tester.widget<HeartCheckbox>(find.byType(HeartCheckbox)).value,
+        isTrue,
+      );
+      expect(find.text('Intermediate'), findsOneWidget);
+      expect(find.text('Treadmill'), findsOneWidget);
+
+      // Edit shared filters on Cardio form without pressing Search.
+      await tester.tap(find.byIcon(Icons.clear));
+      await tester.pump();
+      await tester.enterText(find.byType(TextFormField), 'Row');
+      await tester.pump();
+
+      await tester.tap(find.byType(HeartCheckbox));
+      await tester.pump();
+
+      await tester.tap(find.text('Intermediate'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Advanced').last);
+      await tester.pumpAndSettle();
+
+      // Toggle back to Strength without pressing Search first.
+      await tester.tap(
+        find.descendant(
+          of: find.byKey(const ValueKey('exercise-search-type-toggle')),
+          matching: find.text('Strength'),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final toStrengthCall = cubit.getExercisesCalls.last;
+      expect(toStrengthCall.type, ExerciseType.strength);
+      expect(toStrengthCall.name, 'Row');
+      expect(toStrengthCall.difficulty, Difficulty.advanced);
+      expect(toStrengthCall.equipmentId, 2);
+      expect(toStrengthCall.isFavourite, isFalse);
+
+      final strengthField = tester.widget<TextFormField>(
+        find.byType(TextFormField),
+      );
+      expect(strengthField.controller?.text, 'Row');
+      expect(
+        tester.widget<HeartCheckbox>(find.byType(HeartCheckbox)).value,
+        isFalse,
+      );
+      expect(find.text('Advanced'), findsOneWidget);
+      expect(find.text('Treadmill'), findsOneWidget);
+    },
+  );
 }
