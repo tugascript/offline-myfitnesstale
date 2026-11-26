@@ -51,6 +51,7 @@ import 'package:myfitnesstale/src/ui/workouts/widgets/details/cardio_editor/card
 import 'package:myfitnesstale/src/ui/workouts/widgets/details/cardio_editor/cardio_rounds_input.dart';
 import 'package:myfitnesstale/src/ui/workouts/widgets/details/cardio_editor/cardio_set_editor.dart';
 import 'package:myfitnesstale/src/ui/workouts/widgets/details/create_workout_modal.dart';
+import 'package:myfitnesstale/src/ui/workouts/widgets/details/editors/set_exercise_search_modal.dart';
 import 'package:myfitnesstale/src/ui/workouts/widgets/details/workout_base_form.dart';
 import 'package:myfitnesstale/src/ui/workouts/widgets/details/workout_cardio_set_card.dart';
 import 'package:myfitnesstale/src/ui/workouts/widgets/details/workout_set_card.dart';
@@ -1778,6 +1779,131 @@ void main() {
         await tester.pumpAndSettle();
 
         expect(find.byType(SnackBar), findsNothing);
+      },
+    );
+
+    testWidgets(
+      'SetExerciseSearchModal filters out cached cardio exercises and blocks selection while loading',
+      (tester) async {
+        const strengthExercise = ExerciseDto(
+          id: 201,
+          name: 'Barbell Bench Press',
+          description: 'Strength press',
+          details: StrengthExerciseDetails(
+            muscleGroup: MuscleGroup.push,
+            muscles: TargetMuscles(primary: {Muscle.chest}, secondary: {}),
+            weightProgress: ExerciseWeightProgress.positive,
+          ),
+          createdBy: CreatedBy.system,
+        );
+
+        final exerciseCubit = _FakeExerciseCubit(
+          cardioExercises: const [_runningExercise],
+          initialSelection: const [_runningExercise, strengthExercise],
+          keepLoadingOnSearch: true,
+        );
+        addTearDown(exerciseCubit.close);
+
+        final selected = <ExerciseDto>[];
+        await tester.pumpWidget(
+          BlocProvider<ExerciseCubit>.value(
+            value: exerciseCubit,
+            child: MaterialApp(
+              home: Scaffold(
+                body: SetExerciseSearchModal(
+                  sizes: DataDisplaySizes.getDataDisplaySizes(ScreenSize.sm),
+                  isLoading: false,
+                  onExerciseSelected: selected.add,
+                ),
+              ),
+            ),
+          ),
+        );
+        await tester.pump();
+
+        // Cached cardio exercise is hidden; only strength exercise is shown
+        expect(find.text('Outdoor Running'), findsNothing);
+        expect(find.text('Barbell Bench Press'), findsOneWidget);
+
+        // While loading is in flight, tapping cached strength row is blocked
+        await tester.tap(find.text('Barbell Bench Press'), warnIfMissed: false);
+        await tester.pump();
+        expect(selected, isEmpty);
+
+        // Once search finishes, strength row becomes selectable while cardio remains hidden
+        exerciseCubit.emit(
+          exerciseCubit.state.copyWith(
+            isLoading: false,
+            exerciseSelection: const [_runningExercise, strengthExercise],
+          ),
+        );
+        await tester.pump();
+
+        expect(find.text('Outdoor Running'), findsNothing);
+        await tester.tap(find.text('Barbell Bench Press'));
+        await tester.pump();
+        expect(selected, const [strengthExercise]);
+      },
+    );
+
+    testWidgets(
+      'WorkoutsScreen resets unsubmitted muscle-group selection when switching Strength -> Cardio -> Strength while preserving shared draft filters',
+      (tester) async {
+        final workoutCubit = _FakeWorkoutCubit(
+          workoutsToEmit: [_buildSampleCardioWorkout(id: 55)],
+        );
+        addTearDown(workoutCubit.close);
+
+        final router = GoRouter(
+          initialLocation: '/workouts',
+          routes: [
+            GoRoute(
+              path: '/workouts',
+              builder: (_, _) => const WorkoutsScreen(),
+            ),
+          ],
+        );
+        addTearDown(router.dispose);
+
+        await tester.pumpWidget(
+          BlocProvider<WorkoutCubit>.value(
+            value: workoutCubit,
+            child: MaterialApp.router(routerConfig: router),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        // Enter a shared draft name and pick a muscle group without submitting
+        await tester.enterText(find.byType(TextField).first, 'Morning');
+        await tester.pumpAndSettle();
+
+        expect(find.text('All Muscle Groups'), findsOneWidget);
+        await tester.tap(find.text('All Muscle Groups'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Push').last);
+        await tester.pumpAndSettle();
+        expect(find.text('Push'), findsOneWidget);
+
+        // Switch to Cardio then back to Strength without ever submitting
+        final toggleFinder = find.byKey(
+          const ValueKey('workout-search-type-toggle'),
+        );
+        await tester.tap(
+          find.descendant(of: toggleFinder, matching: find.text('Cardio')),
+        );
+        await tester.pumpAndSettle();
+        expect(find.text('All Muscle Groups'), findsNothing);
+        expect(find.text('Push'), findsNothing);
+
+        await tester.tap(
+          find.descendant(of: toggleFinder, matching: find.text('Strength')),
+        );
+        await tester.pumpAndSettle();
+
+        // Muscle group selection is reset to All Muscle Groups, while shared Name draft is preserved
+        expect(find.text('All Muscle Groups'), findsOneWidget);
+        expect(find.text('Push'), findsNothing);
+        expect(find.text('Morning'), findsOneWidget);
       },
     );
   });
