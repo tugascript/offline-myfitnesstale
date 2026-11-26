@@ -15,6 +15,8 @@
 // You should have received a copy of the GNU General Public License
 // along with My Fitness Tale.  If not, see <https://www.gnu.org/licenses/>.
 
+import 'dart:math' as math;
+
 import 'package:material_ui/material_ui.dart';
 
 import '../../../../core/sizes/data_display_sizes.dart';
@@ -104,6 +106,7 @@ class _CardioDurationInputState extends State<CardioDurationInput> {
     final initialSeconds = _clampedSeconds(widget.seconds);
     showModalBottomSheet<void>(
       context: context,
+      isScrollControlled: true,
       shape: const BeveledRectangleBorder(),
       builder: (sheetContext) => _CardioDurationWheelSheet(
         sizes: widget.sizes,
@@ -201,110 +204,145 @@ class _CardioDurationWheelSheetState extends State<_CardioDurationWheelSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final wheelItemExtent = widget.sizes.subtitleFontSize * 3;
+    final maxSheetHeight = MediaQuery.sizeOf(context).height * 0.85;
+    final textScaler = MediaQuery.textScalerOf(context);
+    final wheelItemExtent = math.max(
+      widget.sizes.subtitleFontSize * 3,
+      textScaler.scale(widget.sizes.subtitleFontSize) * 1.5,
+    );
     final unitStyle = TextStyle(
       fontSize: widget.sizes.smallFontSize,
       fontWeight: FontWeight.w500,
     );
 
     return SafeArea(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Padding(
-            padding: EdgeInsets.all(widget.sizes.padding),
-            child: Row(
-              children: [
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: const Text('Cancel'),
-                ),
-                Expanded(
-                  child: Text(
-                    widget.title,
-                    textAlign: TextAlign.center,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: widget.sizes.subtitleFontSize,
-                      fontWeight: FontWeight.w600,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxHeight: maxSheetHeight),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: EdgeInsets.all(widget.sizes.padding),
+              child: Row(
+                children: [
+                  Flexible(
+                    child: TextButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: const Text(
+                        'Cancel',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
                   ),
-                ),
-                TextButton(onPressed: _confirm, child: const Text('Confirm')),
-              ],
-            ),
-          ),
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: widget.sizes.padding),
-            child: Row(
-              children: [
-                if (widget.allowHours)
                   Expanded(
                     child: Text(
-                      'Hours',
+                      widget.title,
                       textAlign: TextAlign.center,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: widget.sizes.subtitleFontSize,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  Flexible(
+                    child: TextButton(
+                      onPressed: _confirm,
+                      child: const Text(
+                        'Confirm',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: widget.sizes.padding),
+              child: Row(
+                children: [
+                  if (widget.allowHours)
+                    Expanded(
+                      child: Text(
+                        'Hours',
+                        textAlign: TextAlign.center,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: unitStyle,
+                      ),
+                    ),
+                  Expanded(
+                    child: Text(
+                      'Min',
+                      textAlign: TextAlign.center,
+                      maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: unitStyle,
                     ),
                   ),
-                Expanded(
-                  child: Text(
-                    'Min',
-                    textAlign: TextAlign.center,
-                    overflow: TextOverflow.ellipsis,
-                    style: unitStyle,
-                  ),
-                ),
-                Expanded(
-                  child: Text(
-                    'Sec',
-                    textAlign: TextAlign.center,
-                    overflow: TextOverflow.ellipsis,
-                    style: unitStyle,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          SizedBox(
-            height: wheelItemExtent * 5,
-            child: Row(
-              children: [
-                if (widget.allowHours) ...[
                   Expanded(
-                    child: AppNumberWheel(
-                      minValue: 0,
-                      maxValue: _maxHours,
-                      scrollController: _hoursController,
-                      itemExtent: wheelItemExtent,
-                      fontSize: widget.sizes.subtitleFontSize,
+                    child: Text(
+                      'Sec',
+                      textAlign: TextAlign.center,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: unitStyle,
                     ),
                   ),
-                  Text(':', style: TextStyle(fontSize: widget.sizes.fontSize)),
                 ],
-                Expanded(
-                  child: AppNumberWheel(
-                    minValue: 0,
-                    maxValue: _maxMinutes,
-                    scrollController: _minutesController,
-                    itemExtent: wheelItemExtent,
-                    fontSize: widget.sizes.subtitleFontSize,
-                  ),
-                ),
-                Text(':', style: TextStyle(fontSize: widget.sizes.fontSize)),
-                Expanded(
-                  child: AppNumberWheel(
-                    minValue: 0,
-                    maxValue: _maxSeconds,
-                    scrollController: _secondsController,
-                    itemExtent: wheelItemExtent,
-                    fontSize: widget.sizes.subtitleFontSize,
-                  ),
-                ),
-              ],
+              ),
             ),
-          ),
-        ],
+            Flexible(
+              child: SizedBox(
+                height: wheelItemExtent * 5,
+                child: Row(
+                  children: [
+                    if (widget.allowHours) ...[
+                      Expanded(
+                        child: AppNumberWheel(
+                          minValue: 0,
+                          maxValue: _maxHours,
+                          scrollController: _hoursController,
+                          itemExtent: wheelItemExtent,
+                          fontSize: widget.sizes.subtitleFontSize,
+                        ),
+                      ),
+                      Text(
+                        ':',
+                        style: TextStyle(fontSize: widget.sizes.fontSize),
+                      ),
+                    ],
+                    Expanded(
+                      child: AppNumberWheel(
+                        minValue: 0,
+                        maxValue: _maxMinutes,
+                        scrollController: _minutesController,
+                        itemExtent: wheelItemExtent,
+                        fontSize: widget.sizes.subtitleFontSize,
+                      ),
+                    ),
+                    Text(
+                      ':',
+                      style: TextStyle(fontSize: widget.sizes.fontSize),
+                    ),
+                    Expanded(
+                      child: AppNumberWheel(
+                        minValue: 0,
+                        maxValue: _maxSeconds,
+                        scrollController: _secondsController,
+                        itemExtent: wheelItemExtent,
+                        fontSize: widget.sizes.subtitleFontSize,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -44,7 +44,10 @@ import 'package:myfitnesstale/src/ui/workouts/screens/workout_edit_screen.dart';
 import 'package:myfitnesstale/src/ui/workouts/screens/workouts_list_screen.dart';
 import 'package:myfitnesstale/src/ui/workouts/view_models/states/workout_state.dart';
 import 'package:myfitnesstale/src/ui/workouts/view_models/workout_cubit.dart';
+import 'package:myfitnesstale/src/ui/workouts/widgets/details/cardio_editor/cardio_duration_input.dart';
 import 'package:myfitnesstale/src/ui/workouts/widgets/details/cardio_editor/cardio_editor.dart';
+import 'package:myfitnesstale/src/ui/workouts/widgets/details/cardio_editor/cardio_rounds_input.dart';
+import 'package:myfitnesstale/src/ui/workouts/widgets/details/cardio_editor/cardio_set_editor.dart';
 import 'package:myfitnesstale/src/ui/workouts/widgets/details/create_workout_modal.dart';
 import 'package:myfitnesstale/src/ui/workouts/widgets/details/workout_base_form.dart';
 import 'package:myfitnesstale/src/ui/workouts/widgets/details/workout_cardio_set_card.dart';
@@ -189,6 +192,31 @@ class _FakeWorkoutCubit extends WorkoutCubit {
         error: const Nullable(null),
       ),
     );
+  }
+
+  @override
+  Future<void> updateWorkout(int id, WorkoutInput input) async {
+    emit(state.copyWith(isLoading: true, error: const Nullable(null)));
+    final current = state.selectedWorkout;
+    if (current != null && current.id == id) {
+      emit(
+        state.copyWith(
+          selectedWorkout: Nullable(
+            current.copyWith(
+              name: input.name,
+              description: input.description,
+              difficulty: input.difficulty,
+              isFavorite: input.isFavorite,
+              editorType: input.editorType,
+            ),
+          ),
+          isLoading: false,
+          error: const Nullable(null),
+        ),
+      );
+      return;
+    }
+    emit(state.copyWith(isLoading: false, error: const Nullable(null)));
   }
 
   final List<ExerciseType> selectionTypes = [];
@@ -1027,6 +1055,168 @@ void main() {
         expect(workoutCubit.savedCardioSets, hasLength(2));
         expect(workoutCubit.savedCardioSets.last.first.id, 701);
         expect(workoutCubit.savedCardioSets.last.first.exercises.first.id, 801);
+      },
+    );
+
+    testWidgets(
+      'CardioEditor preserves unsaved draft edits when saving the workout header',
+      (tester) async {
+        final cardioWorkout = _buildSampleCardioWorkout();
+        final workoutCubit = _FakeWorkoutCubit(
+          initialSelectedWorkout: cardioWorkout,
+        );
+        final exerciseCubit = _FakeExerciseCubit(
+          cardioExercises: const [_runningExercise, _rowingExercise],
+        );
+        addTearDown(workoutCubit.close);
+        addTearDown(exerciseCubit.close);
+
+        final router = GoRouter(
+          initialLocation: '/workouts/55/edit',
+          routes: [
+            GoRoute(
+              path: '/workouts/55/edit',
+              builder: (_, _) => const WorkoutEditScreen(workoutId: 55),
+            ),
+          ],
+        );
+        addTearDown(router.dispose);
+
+        await tester.pumpWidget(
+          MultiBlocProvider(
+            providers: [
+              BlocProvider<WorkoutCubit>.value(value: workoutCubit),
+              BlocProvider<ExerciseCubit>.value(value: exerciseCubit),
+            ],
+            child: MaterialApp.router(routerConfig: router),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.byType(CardioSetEditor), findsNWidgets(2));
+
+        // Add a new unsaved cardio set (goes from 2 sets -> 3 sets)
+        final addSetButton = find.text('Add Set');
+        await tester.ensureVisible(addSetButton);
+        await tester.tap(addSetButton);
+        await tester.pumpAndSettle();
+        expect(find.byType(CardioSetEditor), findsNWidgets(3));
+
+        // Open header edit form, rename the workout, and save header
+        final editHeaderIcon = find.byKey(
+          const ValueKey('workout-header-edit'),
+        );
+        await tester.ensureVisible(editHeaderIcon);
+        await tester.tap(editHeaderIcon);
+        await tester.pumpAndSettle();
+
+        final nameField = find.byWidgetPredicate(
+          (w) => w is TextField && w.decoration?.labelText == 'Name',
+        );
+        await tester.ensureVisible(nameField);
+        await tester.enterText(nameField, 'Renamed Cardio Workout');
+        await tester.pumpAndSettle();
+
+        final updateHeaderButton = find.text('UPDATE WORKOUT');
+        await tester.ensureVisible(updateHeaderButton);
+        await tester.tap(updateHeaderButton);
+        await tester.pumpAndSettle();
+
+        // Header updated while unsaved 3rd cardio set remains intact
+        expect(
+          workoutCubit.state.selectedWorkout?.name,
+          'Renamed Cardio Workout',
+        );
+        expect(find.byType(CardioSetEditor), findsNWidgets(3));
+      },
+    );
+
+    testWidgets(
+      'CardioDurationInput and CardioRoundsInput picker sheets fit 320x480 viewport at 100% and 200% text scaling',
+      (tester) async {
+        tester.view.physicalSize = const Size(320, 480);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.reset);
+
+        final sizes = DataDisplaySizes.getDataDisplaySizes(ScreenSize.xs);
+
+        for (final scale in [1.0, 2.0]) {
+          int durationValue = 3665;
+          int restValue = 90;
+          int roundsValue = 4;
+
+          await tester.pumpWidget(
+            MaterialApp(
+              builder: (context, child) => MediaQuery(
+                data: MediaQuery.of(context)
+                    .copyWith(textScaler: TextScaler.linear(scale)),
+                child: child!,
+              ),
+              home: Scaffold(
+                body: SingleChildScrollView(
+                  child: Builder(
+                    builder: (context) => Column(
+                      children: [
+                        CardioDurationInput(
+                          theme: Theme.of(context),
+                          sizes: sizes,
+                          seconds: durationValue,
+                          labelText: 'Duration',
+                          sheetTitle: 'Duration',
+                          allowHours: true,
+                          minSeconds: 1,
+                          onChanged: (v) => durationValue = v,
+                        ),
+                        CardioDurationInput(
+                          theme: Theme.of(context),
+                          sizes: sizes,
+                          seconds: restValue,
+                          labelText: 'Rest',
+                          sheetTitle: 'Rest Between Sets',
+                          allowHours: false,
+                          minSeconds: 0,
+                          onChanged: (v) => restValue = v,
+                        ),
+                        CardioRoundsInput(
+                          theme: Theme.of(context),
+                          sizes: sizes,
+                          initialRounds: roundsValue,
+                          onChanged: (v) => roundsValue = v,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          );
+          await tester.pumpAndSettle();
+          expect(tester.takeException(), isNull);
+
+          // Open and confirm Duration (hours/min/sec) sheet
+          await tester.tap(find.text('1h 1m 5s'));
+          await tester.pumpAndSettle();
+          expect(tester.takeException(), isNull);
+          await tester.tap(find.text('Confirm'));
+          await tester.pumpAndSettle();
+          expect(tester.takeException(), isNull);
+
+          // Open and confirm Rest (min/sec) sheet
+          await tester.tap(find.text('1m 30s'));
+          await tester.pumpAndSettle();
+          expect(tester.takeException(), isNull);
+          await tester.tap(find.text('Confirm'));
+          await tester.pumpAndSettle();
+          expect(tester.takeException(), isNull);
+
+          // Open and confirm Rounds sheet
+          await tester.tap(find.text('4'));
+          await tester.pumpAndSettle();
+          expect(tester.takeException(), isNull);
+          await tester.tap(find.text('Confirm'));
+          await tester.pumpAndSettle();
+          expect(tester.takeException(), isNull);
+        }
       },
     );
   });
