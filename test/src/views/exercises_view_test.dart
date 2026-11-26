@@ -28,6 +28,7 @@ import 'package:myfitnesstale/src/data/utils/enums.dart';
 import 'package:myfitnesstale/src/data/utils/exercise_details.dart';
 import 'package:myfitnesstale/src/data/utils/json_data.dart';
 import 'package:myfitnesstale/src/routing/routes.dart';
+import 'package:myfitnesstale/src/ui/core/view_models/states/common_state.dart';
 import 'package:myfitnesstale/src/ui/exercises/screens/exercises_list_screen.dart';
 import 'package:myfitnesstale/src/ui/exercises/view_models/exercise_cubit.dart';
 import 'package:myfitnesstale/src/ui/exercises/view_models/states/exercise_state.dart';
@@ -170,6 +171,10 @@ class _ExerciseSearchCubit extends ExerciseCubit {
         pendingExercisesQuery: const Nullable(null),
       ),
     );
+  }
+
+  void emitError(ErrorState error) {
+    emit(state.copyWith(error: Nullable(error)));
   }
 }
 
@@ -524,4 +529,115 @@ void main() {
       expect(find.text('Bench Press'), findsNothing);
     },
   );
+
+  testWidgets(
+    'FAB opens CreateExerciseModal with Cardio type while Strength to Cardio reload is in flight',
+    (tester) async {
+      final fetchCompleter = Completer<void>();
+      final cubit = _ExerciseSearchCubit(blockEquipmentFetch: false);
+      addTearDown(() {
+        if (!fetchCompleter.isCompleted) {
+          fetchCompleter.complete();
+        }
+        return cubit.close();
+      });
+
+      final router = GoRouter(
+        initialLocation: Routes.exercises.name,
+        routes: [
+          GoRoute(
+            path: Routes.exercises.name,
+            builder: (_, _) => const ExercisesListScreen(),
+          ),
+        ],
+      );
+      addTearDown(router.dispose);
+
+      await tester.pumpWidget(
+        BlocProvider<ExerciseCubit>.value(
+          value: cubit,
+          child: MaterialApp.router(routerConfig: router),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      cubit.pendingExercisesFetch = fetchCompleter;
+
+      await tester.tap(
+        find.descendant(
+          of: find.byKey(const ValueKey('exercise-search-type-toggle')),
+          matching: find.text('Cardio'),
+        ),
+      );
+      await tester.pump();
+
+      expect(cubit.state.exercisePagination.type, ExerciseType.strength);
+      expect(cubit.state.pendingExercisesQuery?.type, ExerciseType.cardio);
+
+      await tester.tap(find.byKey(const ValueKey('exercise-add')));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      expect(find.byType(CreateExerciseModal), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('exercise-form-cardio-unit')),
+        findsOneWidget,
+      );
+    },
+  );
+
+  testWidgets('shows error snackbar even when a list query is still loading', (
+    tester,
+  ) async {
+    final fetchCompleter = Completer<void>();
+    final cubit = _ExerciseSearchCubit(blockEquipmentFetch: false);
+    addTearDown(() {
+      if (!fetchCompleter.isCompleted) {
+        fetchCompleter.complete();
+      }
+      return cubit.close();
+    });
+
+    final router = GoRouter(
+      initialLocation: Routes.exercises.name,
+      routes: [
+        GoRoute(
+          path: Routes.exercises.name,
+          builder: (_, _) => const ExercisesListScreen(),
+        ),
+      ],
+    );
+    addTearDown(router.dispose);
+
+    await tester.pumpWidget(
+      BlocProvider<ExerciseCubit>.value(
+        value: cubit,
+        child: MaterialApp.router(routerConfig: router),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    cubit.pendingExercisesFetch = fetchCompleter;
+
+    await tester.tap(
+      find.descendant(
+        of: find.byKey(const ValueKey('exercise-search-type-toggle')),
+        matching: find.text('Cardio'),
+      ),
+    );
+    await tester.pump();
+
+    expect(cubit.state.isLoading, isTrue);
+
+    cubit.emitError(
+      const ErrorState(
+        type: 'FetchFailed',
+        description: 'Failed to load exercises',
+      ),
+    );
+    await tester.pump();
+
+    expect(find.byType(SnackBar), findsOneWidget);
+    expect(find.text('Failed to load exercises'), findsOneWidget);
+  });
 }
