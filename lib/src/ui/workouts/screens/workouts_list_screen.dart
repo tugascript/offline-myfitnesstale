@@ -174,6 +174,7 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
                 ),
                 SizedBox(height: sizes.inputSpacing),
                 BaseCommonSearchForm(
+                  key: ValueKey('workout-search-form-${activeType.value}'),
                   theme: theme,
                   isLoading: state.isLoading,
                   nameLabel: "Workouts",
@@ -182,7 +183,11 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
                   spacing: sizes.inputSpacing,
                   initialName: _draft.name,
                   initialDifficulty: _draft.difficulty,
-                  initialMuscleGroup: isCardio ? null : pagination.muscleGroup,
+                  initialMuscleGroup: isCardio
+                      ? null
+                      : (pendingQuery != null
+                            ? pendingQuery.muscleGroup
+                            : pagination.muscleGroup),
                   initialIsFavorite: _draft.isFavorite,
                   initialCreatedBy: _draft.createdBy,
                   showMuscleGroup: !isCardio,

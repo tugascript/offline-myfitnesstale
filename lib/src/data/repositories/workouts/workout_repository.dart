@@ -914,6 +914,22 @@ final class WorkoutRepository implements Repository {
         );
       }
 
+      final bool hasNonStrength = exercises.any(
+        (exercise) => exercise.type != ExerciseType.strength,
+      );
+      if (hasNonStrength) {
+        _logger.warning(
+          'Cannot save non-strength exercises in strength workout $workoutId',
+        );
+        return err(
+          const ServiceError(
+            type: SingleErrorTypes.invalidInput,
+            description:
+                'Strength workouts can only contain strength exercises',
+          ),
+        );
+      }
+
       final exerciseMap = exercises.fold(<int, ExerciseDto>{}, (
         previousValue,
         element,

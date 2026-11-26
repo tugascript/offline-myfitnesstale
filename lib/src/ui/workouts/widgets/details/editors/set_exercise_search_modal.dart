@@ -72,6 +72,10 @@ class _SetExerciseSearchModalState extends State<SetExerciseSearchModal> {
           listenWhen: (previous, current) =>
               previous.isLoading && !current.isLoading,
           builder: (context, state) {
+            final isBusy = state.isLoading || widget.isLoading;
+            final strengthExercises = state.exerciseSelection
+                .where((exercise) => exercise.type == ExerciseType.strength)
+                .toList();
             return Column(
               children: [
                 ModalSearchForm(
@@ -97,11 +101,23 @@ class _SetExerciseSearchModalState extends State<SetExerciseSearchModal> {
                 ),
                 SizedBox(height: widget.sizes.spacing),
                 Expanded(
-                  child: SetExerciseSearchList(
-                    sizes: widget.sizes,
-                    isLoading: state.isLoading || widget.isLoading,
-                    exercises: state.exerciseSelection,
-                    onExerciseSelected: widget.onExerciseSelected,
+                  child: AbsorbPointer(
+                    absorbing: isBusy,
+                    child: Opacity(
+                      opacity: isBusy ? 0.6 : 1.0,
+                      child: SetExerciseSearchList(
+                        sizes: widget.sizes,
+                        isLoading: isBusy,
+                        exercises: strengthExercises,
+                        onExerciseSelected: (exercise) {
+                          if (isBusy ||
+                              exercise.type != ExerciseType.strength) {
+                            return;
+                          }
+                          widget.onExerciseSelected(exercise);
+                        },
+                      ),
+                    ),
                   ),
                 ),
               ],

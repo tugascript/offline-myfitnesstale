@@ -615,6 +615,63 @@ void main() {
           SingleErrorTypes.invalidInput,
         );
 
+        // Cardio exercise rejected as primary exercise in strength workout
+        final cardioExerciseInStrength = await workoutRepository
+            .batchUpsertWorkoutSets(
+              workoutId: strengthWorkout.id,
+              inputs: [
+                WorkoutSetUpsertInput(
+                  setType: WorkoutSetType.standard,
+                  minSets: 3,
+                  recommendedRestSecs: 60,
+                  position: 1,
+                  exercises: [
+                    WorkoutSetExerciseUpsertInput(
+                      position: 1,
+                      exerciseId: cardioExId,
+                      minReps: 10,
+                    ),
+                  ],
+                ),
+              ],
+            );
+        expect(cardioExerciseInStrength.isErr(), isTrue);
+        expect(
+          cardioExerciseInStrength.error.type,
+          SingleErrorTypes.invalidInput,
+        );
+
+        // Cardio exercise rejected as alternative exercise in strength workout
+        final cardioAlternativeInStrength = await workoutRepository
+            .batchUpsertWorkoutSets(
+              workoutId: strengthWorkout.id,
+              inputs: [
+                WorkoutSetUpsertInput(
+                  setType: WorkoutSetType.standard,
+                  minSets: 3,
+                  recommendedRestSecs: 60,
+                  position: 1,
+                  exercises: [
+                    WorkoutSetExerciseUpsertInput(
+                      position: 1,
+                      exerciseId: strengthExId,
+                      minReps: 10,
+                      alternativeExerciseIds: [cardioExId],
+                    ),
+                  ],
+                ),
+              ],
+            );
+        expect(cardioAlternativeInStrength.isErr(), isTrue);
+        expect(
+          cardioAlternativeInStrength.error.type,
+          SingleErrorTypes.invalidInput,
+        );
+        final untouchedStrength = (await workoutRepository.getWorkout(
+          strengthWorkout.id,
+        )).value;
+        expect(untouchedStrength.sets ?? const [], isEmpty);
+
         // Constant set with >1 round rejected
         final invalidConstantRounds = await workoutRepository
             .batchUpsertCardioWorkoutSets(
