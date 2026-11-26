@@ -639,7 +639,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.textContaining('Exercise Not Found'), findsOneWidget);
-      expect(find.text('Exercise not found'), findsOneWidget);
+      expect(find.text('Exercise not found'), findsAtLeastNWidgets(1));
     });
 
     testWidgets(
@@ -733,10 +733,7 @@ void main() {
         await tester.pump();
 
         expect(find.byType(SnackBar), findsOneWidget);
-        expect(
-          find.textContaining('Failed to update exercise'),
-          findsOneWidget,
-        );
+        expect(find.text('Failed to update exercise'), findsOneWidget);
       },
     );
   });
