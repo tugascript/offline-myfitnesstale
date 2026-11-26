@@ -141,11 +141,15 @@ class _WorkoutEditScreenState extends State<WorkoutEditScreen> {
     final screenSize = BreakPoint.fromContext(context).screenSize;
     final sizes = DataDisplaySizes.getDataDisplaySizes(screenSize);
     final theme = Theme.of(context);
+    final route = ModalRoute.of(context);
 
     return BlocConsumer<WorkoutCubit, WorkoutState>(
       listenWhen: (previous, current) =>
-          (previous.isLoading && !current.isLoading && current.error != null) ||
-          (previous.error != current.error && current.error != null),
+          (route?.isCurrent ?? true) &&
+          ((previous.isLoading &&
+                  !current.isLoading &&
+                  current.error != null) ||
+              (previous.error != current.error && current.error != null)),
       listener: (context, state) {
         if (state.isLoading || state.error == null) {
           return;

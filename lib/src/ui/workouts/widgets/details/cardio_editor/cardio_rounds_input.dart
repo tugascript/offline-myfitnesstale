@@ -50,8 +50,7 @@ class _CardioRoundsInputState extends State<CardioRoundsInput> {
   late final TextEditingController _controller;
 
   void _updateText() {
-    final rounds = widget.initialRounds.clamp(_roundsMin, _roundsMax);
-    _controller.text = '$rounds';
+    _controller.text = '${widget.initialRounds}';
   }
 
   @override

@@ -70,9 +70,8 @@ class _CardioDurationInputState extends State<CardioDurationInput> {
   }
 
   void _updateText() {
-    _controller.text = Converters.formatDuration(
-      _clampedSeconds(widget.seconds),
-    );
+    final displaySeconds = widget.seconds < 0 ? 0 : widget.seconds;
+    _controller.text = Converters.formatDuration(displaySeconds);
   }
 
   @override
@@ -85,9 +84,7 @@ class _CardioDurationInputState extends State<CardioDurationInput> {
   @override
   void didUpdateWidget(covariant CardioDurationInput oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.seconds != widget.seconds ||
-        oldWidget.allowHours != widget.allowHours ||
-        oldWidget.minSeconds != widget.minSeconds) {
+    if (oldWidget.seconds != widget.seconds) {
       _updateText();
     }
   }

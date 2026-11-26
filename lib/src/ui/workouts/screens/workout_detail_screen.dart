@@ -231,12 +231,14 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
     final isDarkTheme = theme.brightness == Brightness.dark;
     final breakpoints = BreakPoint.fromContext(context);
     final sizes = DataDisplaySizes.getDataDisplaySizes(breakpoints.screenSize);
+    final route = ModalRoute.of(context);
 
     return BlocConsumer<WorkoutCubit, WorkoutState>(
       listenWhen: (previous, current) =>
-          (previous.selectedWorkout != current.selectedWorkout &&
-              previous.isLoading != current.isLoading) ||
-          (previous.error != current.error && current.error != null),
+          (route?.isCurrent ?? true) &&
+          ((previous.selectedWorkout != current.selectedWorkout &&
+                  previous.isLoading != current.isLoading) ||
+              (previous.error != current.error && current.error != null)),
       listener: (context, workoutState) {
         if (workoutState.isLoading) {
           return;
@@ -321,8 +323,9 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
               confirmLabel: 'Delete',
               isDestructive: true,
               onConfirm: () {
-                context.read<WorkoutCubit>().deleteWorkout(widget.workoutId);
+                final cubit = context.read<WorkoutCubit>();
                 context.pop();
+                cubit.deleteWorkout(widget.workoutId);
               },
             ),
           );
