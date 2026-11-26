@@ -49,6 +49,7 @@ import 'package:myfitnesstale/src/ui/workouts/widgets/details/create_workout_mod
 import 'package:myfitnesstale/src/ui/workouts/widgets/details/workout_base_form.dart';
 import 'package:myfitnesstale/src/ui/workouts/widgets/details/workout_cardio_set_card.dart';
 import 'package:myfitnesstale/src/ui/workouts/widgets/details/workout_set_card.dart';
+import 'package:myfitnesstale/src/ui/workouts/widgets/details/workout_skeleton_placeholder.dart';
 import 'package:myfitnesstale/src/utils/nullable.dart';
 
 class _GetWorkoutsCall {
@@ -775,19 +776,20 @@ void main() {
     );
 
     testWidgets(
-      'WorkoutEditScreen shows Skeletonizer instead of CircularProgressIndicator while loading',
+      'WorkoutEditScreen shows neutral Skeletonizer on cold load and cardio Skeletonizer when cached',
       (tester) async {
-        final workoutCubit = _FakeWorkoutCubit(
-          initialType: ExerciseType.cardio,
+        // Cold load (not in state.workouts, default strength pagination) uses neutral placeholder
+        final coldCubit = _FakeWorkoutCubit(
+          initialType: ExerciseType.strength,
           keepLoadingOnGetWorkout: true,
         );
         final exerciseCubit = _FakeExerciseCubit(
           cardioExercises: const [_runningExercise],
         );
-        addTearDown(workoutCubit.close);
+        addTearDown(coldCubit.close);
         addTearDown(exerciseCubit.close);
 
-        final router = GoRouter(
+        final coldRouter = GoRouter(
           initialLocation: '/workouts/55/edit',
           routes: [
             GoRoute(
@@ -796,15 +798,15 @@ void main() {
             ),
           ],
         );
-        addTearDown(router.dispose);
+        addTearDown(coldRouter.dispose);
 
         await tester.pumpWidget(
           MultiBlocProvider(
             providers: [
-              BlocProvider<WorkoutCubit>.value(value: workoutCubit),
+              BlocProvider<WorkoutCubit>.value(value: coldCubit),
               BlocProvider<ExerciseCubit>.value(value: exerciseCubit),
             ],
-            child: MaterialApp.router(routerConfig: router),
+            child: MaterialApp.router(routerConfig: coldRouter),
           ),
         );
         await tester.pump();
@@ -814,6 +816,43 @@ void main() {
           findsOneWidget,
         );
         expect(find.byType(CircularProgressIndicator), findsNothing);
+        expect(find.byType(WorkoutSkeletonPlaceholder), findsOneWidget);
+        expect(find.text('Cardio'), findsNothing);
+        expect(find.text('Push'), findsNothing);
+
+        // Cached cardio workout uses cardio header skeleton
+        final cachedCubit = _FakeWorkoutCubit(
+          initialWorkouts: [_buildSampleCardioWorkout(id: 55)],
+          keepLoadingOnGetWorkout: true,
+        );
+        addTearDown(cachedCubit.close);
+
+        final cachedRouter = GoRouter(
+          initialLocation: '/workouts/55/edit',
+          routes: [
+            GoRoute(
+              path: '/workouts/55/edit',
+              builder: (_, _) => const WorkoutEditScreen(workoutId: 55),
+            ),
+          ],
+        );
+        addTearDown(cachedRouter.dispose);
+
+        await tester.pumpWidget(
+          MultiBlocProvider(
+            providers: [
+              BlocProvider<WorkoutCubit>.value(value: cachedCubit),
+              BlocProvider<ExerciseCubit>.value(value: exerciseCubit),
+            ],
+            child: MaterialApp.router(routerConfig: cachedRouter),
+          ),
+        );
+        await tester.pump();
+
+        expect(
+          find.byWidgetPredicate((w) => w is Skeletonizer && w.enabled),
+          findsOneWidget,
+        );
         expect(find.text('Cardio'), findsOneWidget);
       },
     );
@@ -1028,6 +1067,46 @@ void main() {
         );
         expect(find.byType(WorkoutCardioSetCard), findsNWidgets(2));
         expect(find.byType(WorkoutSetCard), findsNothing);
+        expect(find.text('START WORKOUT'), findsNothing);
+        expect(find.text('HISTORY'), findsNothing);
+      },
+    );
+
+    testWidgets(
+      'renders neutral skeleton without strength cards or actions on cold navigation when workout type is unknown',
+      (tester) async {
+        final cubit = _FakeWorkoutCubit(
+          initialType: ExerciseType.strength,
+          keepLoadingOnGetWorkout: true,
+        );
+        addTearDown(cubit.close);
+
+        final router = GoRouter(
+          initialLocation: '/workouts/55',
+          routes: [
+            GoRoute(
+              path: '/workouts/55',
+              builder: (_, _) => const WorkoutDetailScreen(workoutId: 55),
+            ),
+          ],
+        );
+        addTearDown(router.dispose);
+
+        await tester.pumpWidget(
+          BlocProvider<WorkoutCubit>.value(
+            value: cubit,
+            child: MaterialApp.router(routerConfig: router),
+          ),
+        );
+        await tester.pump();
+
+        expect(
+          find.byWidgetPredicate((w) => w is Skeletonizer && w.enabled),
+          findsOneWidget,
+        );
+        expect(find.byType(WorkoutSkeletonPlaceholder), findsOneWidget);
+        expect(find.byType(WorkoutSetCard), findsNothing);
+        expect(find.byType(WorkoutCardioSetCard), findsNothing);
         expect(find.text('START WORKOUT'), findsNothing);
         expect(find.text('HISTORY'), findsNothing);
       },

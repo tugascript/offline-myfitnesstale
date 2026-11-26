@@ -645,9 +645,23 @@ class WorkoutCubit extends Cubit<WorkoutState> with FavoriteRequestSerializer {
     }
 
     await getWorkout(workoutId, refresh: true);
-    if (isClosed) return;
-    if (state.workouts.isNotEmpty || state.pendingWorkoutsQuery != null) {
-      await _refreshWorkouts(state);
+    if (isClosed || state.error != null) return;
+
+    final updatedWorkout = state.selectedWorkout;
+    if (updatedWorkout != null &&
+        updatedWorkout.id == workoutId &&
+        state.workouts.any((w) => w.id == workoutId)) {
+      final listItem = updatedWorkout.copyWith(
+        sets: const Nullable(null),
+        cardioSets: const Nullable(null),
+      );
+      emit(
+        state.copyWith(
+          workouts: state.workouts
+              .map((w) => w.id == workoutId ? listItem : w)
+              .toList(),
+        ),
+      );
     }
   }
 

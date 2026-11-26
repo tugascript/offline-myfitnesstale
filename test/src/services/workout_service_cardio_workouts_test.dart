@@ -742,6 +742,7 @@ void main() {
       expect(cubit.state.pagination.type, ExerciseType.cardio);
       expect(cubit.state.pagination.muscleGroup, isNull);
       expect(cubit.state.workouts.map((w) => w.id), [workoutId]);
+      final workoutsRequestIdBeforeSave = cubit.state.workoutsRequestId;
 
       await cubit.batchUpsertCardioWorkoutSets(
         workoutId: workoutId,
@@ -764,9 +765,11 @@ void main() {
         ],
       );
       expect(cubit.state.error, isNull);
+      expect(cubit.state.workoutsRequestId, workoutsRequestIdBeforeSave);
       expect(cubit.state.selectedWorkout?.cardioSets?.length, 1);
       expect(cubit.state.selectedWorkout?.totalSets, 3);
       expect(cubit.state.workouts.first.totalSets, 3);
+      expect(cubit.state.workouts.first.cardioSets, isNull);
 
       await cubit.updateWorkoutFavorite(workoutId, true);
       expect(cubit.state.selectedWorkout?.isFavorite, isTrue);

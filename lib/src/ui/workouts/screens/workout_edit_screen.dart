@@ -36,6 +36,7 @@ import '../widgets/details/basic_editor/basic_editor.dart';
 import '../widgets/details/cardio_editor/cardio_editor.dart';
 import '../widgets/details/workout_header_card.dart';
 import '../widgets/details/workout_header_edit_card.dart';
+import '../widgets/details/workout_skeleton_placeholder.dart';
 
 const _skeletonStrengthEditWorkout = WorkoutDto(
   id: 0,
@@ -105,12 +106,19 @@ class _WorkoutEditScreenState extends State<WorkoutEditScreen> {
         break;
       }
     }
-    final isCardio =
-        cachedWorkout?.isCardio ??
-        (state.pagination.type == ExerciseType.cardio);
-    final placeholderWorkout = isCardio
-        ? _skeletonCardioEditWorkout
-        : _skeletonStrengthEditWorkout;
+    final header = cachedWorkout == null
+        ? null
+        : WorkoutHeaderCard(
+            actionButtonIcon: Icon(
+              Icons.edit_outlined,
+              color: theme.colorScheme.onSurface,
+            ),
+            actionButtonPress: _noopPress,
+            sizes: sizes,
+            workoutDto: cachedWorkout.isCardio
+                ? _skeletonCardioEditWorkout
+                : _skeletonStrengthEditWorkout,
+          );
 
     return ResponsiveScaffold(
       title: 'Edit Workout',
@@ -118,61 +126,11 @@ class _WorkoutEditScreenState extends State<WorkoutEditScreen> {
       isEntity: true,
       body: Skeletonizer(
         enabled: true,
-        child: Padding(
-          padding: EdgeInsets.all(sizes.viewPadding),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              WorkoutHeaderCard(
-                actionButtonIcon: Icon(
-                  Icons.edit_outlined,
-                  color: theme.colorScheme.onSurface,
-                ),
-                actionButtonPress: _noopPress,
-                sizes: sizes,
-                workoutDto: placeholderWorkout,
-              ),
-              SizedBox(height: sizes.spacing / 2),
-              Text(
-                'Sets',
-                style: TextStyle(
-                  fontSize: sizes.titleFontSize,
-                  fontWeight: FontWeight.bold,
-                  color: theme.colorScheme.brightness == Brightness.dark
-                      ? Colors.grey[200]
-                      : Colors.grey[800],
-                ),
-              ),
-              SizedBox(height: sizes.spacing),
-              for (int i = 0; i < 2; i++) ...[
-                Card(
-                  margin: EdgeInsets.zero,
-                  shape: const BeveledRectangleBorder(),
-                  child: Padding(
-                    padding: EdgeInsets.all(sizes.padding),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Loading Set Placeholder',
-                          style: TextStyle(
-                            fontSize: sizes.subtitleFontSize,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        SizedBox(height: sizes.halfSpacing),
-                        Text(
-                          'Loading exercise details placeholder...',
-                          style: TextStyle(fontSize: sizes.fontSize),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                if (i == 0) SizedBox(height: sizes.spacing),
-              ],
-            ],
-          ),
+        child: WorkoutSkeletonPlaceholder(
+          theme: theme,
+          sizes: sizes,
+          sectionTitle: 'Sets',
+          header: header,
         ),
       ),
     );
