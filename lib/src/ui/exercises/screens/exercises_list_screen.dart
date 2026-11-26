@@ -135,7 +135,7 @@ class _ExercisesListScreenState extends State<ExercisesListScreen> {
           listenWhen: (previous, current) =>
               previous.error != current.error && current.error != null,
           listener: (context, state) {
-            if (state.isLoading || state.error == null) {
+            if (state.error == null) {
               return;
             }
             ScaffoldMessenger.of(
@@ -263,11 +263,10 @@ class _ExercisesListScreenState extends State<ExercisesListScreen> {
           key: const ValueKey('exercise-add'),
           elevation: sizes.elevation,
           onPressed: () {
-            final initialType = context
-                .read<ExerciseCubit>()
-                .state
-                .exercisePagination
-                .type;
+            final state = context.read<ExerciseCubit>().state;
+            final initialType =
+                state.pendingExercisesQuery?.type ??
+                state.exercisePagination.type;
             showDialog(
               context: context,
               builder: (context) => CreateExerciseModal(
