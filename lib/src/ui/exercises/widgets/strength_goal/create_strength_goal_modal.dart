@@ -53,17 +53,12 @@ class _CreateStrengthGoalModalState extends State<CreateStrengthGoalModal> {
   void initState() {
     super.initState();
     if (widget.exerciseId == null) {
-      final exerciseState = context.read<ExerciseCubit>().state;
-      final hasStrengthExercises = exerciseState.exercises.any(
-        (exercise) => exercise.type == ExerciseType.strength,
-      );
-      if (!hasStrengthExercises) {
-        context.read<ExerciseCubit>().getExercises(
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        context.read<ExerciseCubit>().getSelectionExercises(
           type: ExerciseType.strength,
-          limit: 100,
-          offset: 0,
         );
-      }
+      });
     }
   }
 
@@ -119,7 +114,7 @@ class _CreateStrengthGoalModalState extends State<CreateStrengthGoalModal> {
         ? context
               .watch<ExerciseCubit>()
               .state
-              .exercises
+              .exerciseSelection
               .where((exercise) => exercise.type == ExerciseType.strength)
               .toList()
         : const <ExerciseDto>[];

@@ -69,11 +69,13 @@ class _FakeExerciseCubit extends ExerciseCubit {
   final List<(int, ExerciseInput)> updatedCalls = [];
   final List<({ExerciseType type, int? limit, int? offset})>
   getExercisesCallArgs = [];
+  final List<ExerciseType?> getSelectionExercisesTypes = [];
   int getExercisesCalls = 0;
 
   _FakeExerciseCubit({
     this.shouldFail = false,
     ExerciseDto? initialExercise,
+    List<ExerciseDto>? initialExerciseSelection,
     ExerciseType initialType = ExerciseType.strength,
     int initialOffset = 0,
   }) : super(exerciseRepository: ExerciseRepository.create()) {
@@ -81,6 +83,9 @@ class _FakeExerciseCubit extends ExerciseCubit {
       state.copyWith(
         equipmentSelection: const {1: 'Barbell', 2: 'Dumbbell'},
         exercises: initialExercise != null ? [initialExercise] : const [],
+        exerciseSelection:
+            initialExerciseSelection ??
+            (initialExercise != null ? [initialExercise] : const []),
         exercisePagination: state.exercisePagination.copyWith(
           type: initialType,
           offset: initialOffset,
@@ -93,6 +98,18 @@ class _FakeExerciseCubit extends ExerciseCubit {
 
   @override
   Future<void> getSelectionEquipments() async {}
+
+  @override
+  Future<void> getSelectionExercises({
+    ExerciseType? type,
+    MuscleGroup? muscleGroup,
+    CardioBaseMode? cardioBaseMode,
+    CardioUnitType? cardioUnitType,
+    String name = "",
+    bool isFavorite = false,
+  }) async {
+    getSelectionExercisesTypes.add(type);
+  }
 
   @override
   Future<void> getExercises({
@@ -1988,7 +2005,7 @@ void main() {
   );
 
   testWidgets(
-    'CreateStrengthGoalModal passes offset: 0 when loading strength options after browsing cardio page 2',
+    'CreateStrengthGoalModal loads strength options via getSelectionExercises without mutating cardio list pagination',
     (tester) async {
       const cardioExercise = ExerciseDto(
         id: 77,
@@ -2001,8 +2018,10 @@ void main() {
         ),
         createdBy: CreatedBy.user,
       );
+      final strengthExercise = _sampleExercise(id: 88, name: 'Deadlift');
       final exerciseCubit = _FakeExerciseCubit(
         initialExercise: cardioExercise,
+        initialExerciseSelection: [strengthExercise, cardioExercise],
         initialType: ExerciseType.cardio,
         initialOffset: 20,
       );
@@ -2011,6 +2030,8 @@ void main() {
       addTearDown(exerciseCubit.close);
       addTearDown(recordCubit.close);
       addTearDown(profileCubit.close);
+
+      final initialPagination = exerciseCubit.state.exercisePagination;
 
       await tester.pumpWidget(
         MultiBlocProvider(
@@ -2033,9 +2054,17 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(exerciseCubit.getExercisesCallArgs, [
-        (type: ExerciseType.strength, limit: 100, offset: 0),
-      ]);
+      expect(exerciseCubit.getSelectionExercisesTypes, [ExerciseType.strength]);
+      expect(exerciseCubit.getExercisesCalls, 0);
+      expect(exerciseCubit.state.exercisePagination, initialPagination);
+
+      // Dropdown only exposes strength options from exerciseSelection.
+      await tester.tap(
+        find.byKey(const ValueKey('strength-goal-exercise-dropdown')),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Deadlift'), findsWidgets);
+      expect(find.text('Treadmill Run'), findsNothing);
     },
   );
 }

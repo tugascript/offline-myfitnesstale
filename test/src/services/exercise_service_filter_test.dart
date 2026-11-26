@@ -713,13 +713,23 @@ void main() {
     expect(cubit.state.exercises, hasLength(1));
     expect(cubit.state.exercises.single.name, 'Rowing Sprint');
 
-    // Browse page 2 of cardio exercises (offset: 1), then switch to strength
-    // without passing offset; offset must reset to 0 instead of inheriting 1.
+    // Browse page 2 of cardio exercises (offset: 1), then fetch selection
+    // strength exercises; cardio list pagination/limit must remain untouched.
     await cubit.getExercises(type: ExerciseType.cardio, limit: 1, offset: 0);
     await cubit.getExercises(type: ExerciseType.cardio, limit: 1, offset: 1);
     expect(cubit.state.exercisePagination.offset, 1);
+    expect(cubit.state.exercisePagination.limit, 1);
 
-    await cubit.getExercises(type: ExerciseType.strength, limit: 100);
+    await cubit.getSelectionExercises(type: ExerciseType.strength);
+    expect(cubit.state.exerciseSelection, hasLength(1));
+    expect(cubit.state.exerciseSelection.single.name, 'Barbell Squat');
+    expect(cubit.state.exercisePagination.type, ExerciseType.cardio);
+    expect(cubit.state.exercisePagination.offset, 1);
+    expect(cubit.state.exercisePagination.limit, 1);
+    expect(cubit.state.exercises, hasLength(2));
+
+    // Switching list type without passing offset resets offset to 0.
+    await cubit.getExercises(type: ExerciseType.strength, limit: 20);
     expect(cubit.state.exercisePagination.type, ExerciseType.strength);
     expect(cubit.state.exercisePagination.offset, 0);
     expect(cubit.state.exercises, hasLength(1));

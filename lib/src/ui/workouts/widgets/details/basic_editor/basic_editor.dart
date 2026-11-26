@@ -72,7 +72,9 @@ class _BasicEditorState extends State<BasicEditor> {
         setExerciseId: exercise?.id,
       );
     }).toList();
-    context.read<ExerciseCubit>().getSelectionExercises();
+    context.read<ExerciseCubit>().getSelectionExercises(
+      type: ExerciseType.strength,
+    );
   }
 
   Future<void> _saveSets() async {
