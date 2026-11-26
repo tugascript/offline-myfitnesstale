@@ -41,10 +41,19 @@ class ExercisesListScreen extends StatefulWidget {
 
 class _ExercisesListScreenState extends State<ExercisesListScreen> {
   final ScrollController _scrollController = ScrollController();
+  late final _SharedSearchDraft _draft;
 
   @override
   void initState() {
     super.initState();
+    final pagination = context.read<ExerciseCubit>().state.exercisePagination;
+    _draft = _SharedSearchDraft(
+      name: pagination.name,
+      difficulty: pagination.difficulty,
+      equipmentId: pagination.equipmentId,
+      isFavorite: pagination.isFavorite,
+      createdBy: pagination.createdBy,
+    );
     _loadInitialData();
     _scrollController.addListener(_onScroll);
   }
@@ -107,14 +116,29 @@ class _ExercisesListScreenState extends State<ExercisesListScreen> {
     return currentScroll >= (maxScroll * 0.9);
   }
 
-  void _onTypeChanged(ExerciseType nextType, ExercisePagination pagination) {
+  void _updateDraft({
+    required String name,
+    required Difficulty? difficulty,
+    required int? equipmentId,
+    required bool isFavourite,
+    required CreatedBy? createdBy,
+  }) {
+    _draft
+      ..name = name
+      ..difficulty = difficulty
+      ..equipmentId = equipmentId
+      ..isFavorite = isFavourite
+      ..createdBy = createdBy;
+  }
+
+  void _onTypeChanged(ExerciseType nextType) {
     context.read<ExerciseCubit>().getExercises(
-      name: pagination.name,
+      name: _draft.name,
       type: nextType,
-      difficulty: pagination.difficulty,
-      equipmentId: pagination.equipmentId,
-      isFavourite: pagination.isFavorite,
-      createdBy: pagination.createdBy,
+      difficulty: _draft.difficulty,
+      equipmentId: _draft.equipmentId,
+      isFavourite: _draft.isFavorite,
+      createdBy: _draft.createdBy,
       limit: 20,
       offset: 0,
     );
@@ -158,7 +182,7 @@ class _ExercisesListScreenState extends State<ExercisesListScreen> {
                   selectedType: activeType,
                   sizes: sizes,
                   enabled: !state.isLoading,
-                  onChanged: (nextType) => _onTypeChanged(nextType, pagination),
+                  onChanged: _onTypeChanged,
                 ),
                 SizedBox(height: sizes.inputSpacing),
                 if (isCardio)
@@ -167,15 +191,16 @@ class _ExercisesListScreenState extends State<ExercisesListScreen> {
                     theme: theme,
                     sizes: sizes,
                     isLoading: state.isLoading,
-                    initialName: pagination.name,
-                    initialDifficulty: pagination.difficulty,
+                    initialName: _draft.name,
+                    initialDifficulty: _draft.difficulty,
                     initialCardioBaseMode: pagination.cardioBaseMode,
                     initialCardioUnitType: pagination.cardioUnitType,
-                    initialEquipmentId: pagination.equipmentId,
+                    initialEquipmentId: _draft.equipmentId,
                     equipmentSelection: state.equipmentSelection,
-                    initialIsFavorite: pagination.isFavorite,
-                    initialCreatedBy: pagination.createdBy,
+                    initialIsFavorite: _draft.isFavorite,
+                    initialCreatedBy: _draft.createdBy,
                     showCreatedBy: true,
+                    onSharedFiltersChanged: _updateDraft,
                     onSubmit:
                         ({
                           String? name,
@@ -186,6 +211,13 @@ class _ExercisesListScreenState extends State<ExercisesListScreen> {
                           bool isFavourite = false,
                           CreatedBy? createdBy,
                         }) {
+                          _updateDraft(
+                            name: name ?? '',
+                            difficulty: difficulty,
+                            equipmentId: equipmentId,
+                            isFavourite: isFavourite,
+                            createdBy: createdBy,
+                          );
                           context.read<ExerciseCubit>().getExercises(
                             name: name,
                             type: ExerciseType.cardio,
@@ -209,14 +241,15 @@ class _ExercisesListScreenState extends State<ExercisesListScreen> {
                     fontSize: sizes.fontSize,
                     spacing: sizes.inputSpacing,
                     isLoading: state.isLoading,
-                    initialName: pagination.name,
-                    initialDifficulty: pagination.difficulty,
+                    initialName: _draft.name,
+                    initialDifficulty: _draft.difficulty,
                     initialMuscleGroup: pagination.muscleGroup,
-                    initialEquipmentId: pagination.equipmentId,
+                    initialEquipmentId: _draft.equipmentId,
                     equipmentSelection: state.equipmentSelection,
-                    initialIsFavorite: pagination.isFavorite,
-                    initialCreatedBy: pagination.createdBy,
+                    initialIsFavorite: _draft.isFavorite,
+                    initialCreatedBy: _draft.createdBy,
                     showCreatedBy: true,
+                    onSharedFiltersChanged: _updateDraft,
                     onSubmit:
                         ({
                           String? name,
@@ -226,6 +259,13 @@ class _ExercisesListScreenState extends State<ExercisesListScreen> {
                           bool isFavourite = false,
                           CreatedBy? createdBy,
                         }) {
+                          _updateDraft(
+                            name: name ?? '',
+                            difficulty: difficulty,
+                            equipmentId: equipmentId,
+                            isFavourite: isFavourite,
+                            createdBy: createdBy,
+                          );
                           context.read<ExerciseCubit>().getExercises(
                             name: name,
                             type: ExerciseType.strength,
@@ -282,4 +322,20 @@ class _ExercisesListScreenState extends State<ExercisesListScreen> {
       ),
     );
   }
+}
+
+final class _SharedSearchDraft {
+  String name;
+  Difficulty? difficulty;
+  int? equipmentId;
+  bool isFavorite;
+  CreatedBy? createdBy;
+
+  _SharedSearchDraft({
+    required this.name,
+    required this.difficulty,
+    required this.equipmentId,
+    required this.isFavorite,
+    required this.createdBy,
+  });
 }

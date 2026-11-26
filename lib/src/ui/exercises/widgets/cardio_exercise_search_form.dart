@@ -49,6 +49,14 @@ class CardioExerciseSearchForm extends StatefulWidget {
     CreatedBy? createdBy,
   })
   onSubmit;
+  final void Function({
+    required String name,
+    required Difficulty? difficulty,
+    required int? equipmentId,
+    required bool isFavourite,
+    required CreatedBy? createdBy,
+  })?
+  onSharedFiltersChanged;
 
   const CardioExerciseSearchForm({
     super.key,
@@ -65,6 +73,7 @@ class CardioExerciseSearchForm extends StatefulWidget {
     this.initialCreatedBy,
     this.showCreatedBy = true,
     required this.onSubmit,
+    this.onSharedFiltersChanged,
   });
 
   @override
@@ -158,6 +167,7 @@ class _CardioExerciseSearchFormState extends State<CardioExerciseSearchForm> {
               setState(() {
                 _data.name = value;
               });
+              _notifySharedFiltersChanged();
             },
             onSaved: (value) {
               if (value != null) {
@@ -177,6 +187,7 @@ class _CardioExerciseSearchFormState extends State<CardioExerciseSearchForm> {
                         _data.name = '';
                       });
                       _nameController.clear();
+                      _notifySharedFiltersChanged();
                     },
                   )
                 : null,
@@ -190,6 +201,7 @@ class _CardioExerciseSearchFormState extends State<CardioExerciseSearchForm> {
                   setState(() {
                     _data.isFavourite = value;
                   });
+                  _notifySharedFiltersChanged();
                 },
               ),
               if (widget.showCreatedBy) ...[
@@ -200,6 +212,7 @@ class _CardioExerciseSearchFormState extends State<CardioExerciseSearchForm> {
                     setState(() {
                       _data.createdBy = value;
                     });
+                    _notifySharedFiltersChanged();
                   },
                 ),
               ],
@@ -218,6 +231,7 @@ class _CardioExerciseSearchFormState extends State<CardioExerciseSearchForm> {
                     setState(() {
                       _data.difficulty = value;
                     });
+                    _notifySharedFiltersChanged();
                   },
                   onSaved: (value) {
                     setState(() {
@@ -301,6 +315,7 @@ class _CardioExerciseSearchFormState extends State<CardioExerciseSearchForm> {
                       setState(() {
                         _data.equipmentId = value;
                       });
+                      _notifySharedFiltersChanged();
                     },
                     onSaved: (value) {
                       _data.equipmentId = value;
@@ -321,6 +336,16 @@ class _CardioExerciseSearchFormState extends State<CardioExerciseSearchForm> {
           ),
         ],
       ),
+    );
+  }
+
+  void _notifySharedFiltersChanged() {
+    widget.onSharedFiltersChanged?.call(
+      name: _data.name,
+      difficulty: _data.difficulty,
+      equipmentId: _data.equipmentId,
+      isFavourite: _data.isFavourite,
+      createdBy: _data.createdBy,
     );
   }
 

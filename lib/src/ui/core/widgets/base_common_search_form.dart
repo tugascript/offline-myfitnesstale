@@ -51,6 +51,14 @@ class BaseCommonSearchForm extends StatefulWidget {
     required CreatedBy? createdBy,
   })
   onSubmit;
+  final void Function({
+    required String name,
+    required Difficulty? difficulty,
+    required int? equipmentId,
+    required bool isFavourite,
+    required CreatedBy? createdBy,
+  })?
+  onSharedFiltersChanged;
 
   const BaseCommonSearchForm({
     super.key,
@@ -70,6 +78,7 @@ class BaseCommonSearchForm extends StatefulWidget {
     this.showMuscleGroup = true,
     this.showCreatedBy = false,
     required this.onSubmit,
+    this.onSharedFiltersChanged,
   });
 
   @override
@@ -151,6 +160,7 @@ class _BaseCommonSearchFormState extends State<BaseCommonSearchForm> {
               setState(() {
                 _data.name = value;
               });
+              _notifySharedFiltersChanged();
             },
             onSaved: (value) {
               if (value != null) {
@@ -170,6 +180,7 @@ class _BaseCommonSearchFormState extends State<BaseCommonSearchForm> {
                         _data.name = '';
                       });
                       _nameController.clear();
+                      _notifySharedFiltersChanged();
                     },
                   )
                 : null,
@@ -183,6 +194,7 @@ class _BaseCommonSearchFormState extends State<BaseCommonSearchForm> {
                   setState(() {
                     _data.isFavourite = value;
                   });
+                  _notifySharedFiltersChanged();
                 },
               ),
               if (widget.showCreatedBy) ...[
@@ -193,6 +205,7 @@ class _BaseCommonSearchFormState extends State<BaseCommonSearchForm> {
                     setState(() {
                       _data.createdBy = value;
                     });
+                    _notifySharedFiltersChanged();
                   },
                 ),
               ],
@@ -213,6 +226,7 @@ class _BaseCommonSearchFormState extends State<BaseCommonSearchForm> {
                     setState(() {
                       _data.difficulty = value;
                     });
+                    _notifySharedFiltersChanged();
                   },
                   onSaved: (value) {
                     setState(() {
@@ -279,6 +293,7 @@ class _BaseCommonSearchFormState extends State<BaseCommonSearchForm> {
                       setState(() {
                         _data.equipmentId = value;
                       });
+                      _notifySharedFiltersChanged();
                     },
                     onSaved: (value) {
                       _data.equipmentId = value;
@@ -298,6 +313,16 @@ class _BaseCommonSearchFormState extends State<BaseCommonSearchForm> {
           ],
         ],
       ),
+    );
+  }
+
+  void _notifySharedFiltersChanged() {
+    widget.onSharedFiltersChanged?.call(
+      name: _data.name,
+      difficulty: _data.difficulty,
+      equipmentId: _data.equipmentId,
+      isFavourite: _data.isFavourite,
+      createdBy: _data.createdBy,
     );
   }
 
