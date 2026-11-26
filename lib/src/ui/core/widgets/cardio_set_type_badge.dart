@@ -42,6 +42,7 @@ class CardioSetTypeBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final color = _getSetTypeColor(setType);
 
     return Container(
@@ -55,7 +56,10 @@ class CardioSetTypeBadge extends StatelessWidget {
       ),
       child: Text(
         EnumDisplayNames.getCardioSetTypeDisplayName(setType),
-        style: TextStyle(color: color, fontSize: sizes.smallFontSize),
+        style: TextStyle(
+          color: theme.colorScheme.onSurface,
+          fontSize: sizes.smallFontSize,
+        ),
       ),
     );
   }

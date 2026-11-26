@@ -109,6 +109,9 @@ class _CardioExerciseSearchModalState extends State<CardioExerciseSearchModal> {
           },
           builder: (context, state) {
             final isBusy = state.isLoading || widget.isLoading;
+            final cardioExercises = state.exerciseSelection
+                .where((exercise) => exercise.type == ExerciseType.cardio)
+                .toList();
             return Column(
               children: [
                 AppTextFormField(
@@ -198,11 +201,22 @@ class _CardioExerciseSearchModalState extends State<CardioExerciseSearchModal> {
                 ),
                 SizedBox(height: widget.sizes.spacing),
                 Expanded(
-                  child: SetExerciseSearchList(
-                    sizes: widget.sizes,
-                    isLoading: isBusy,
-                    exercises: state.exerciseSelection,
-                    onExerciseSelected: widget.onExerciseSelected,
+                  child: AbsorbPointer(
+                    absorbing: isBusy,
+                    child: Opacity(
+                      opacity: isBusy ? 0.6 : 1.0,
+                      child: SetExerciseSearchList(
+                        sizes: widget.sizes,
+                        isLoading: isBusy,
+                        exercises: cardioExercises,
+                        onExerciseSelected: (exercise) {
+                          if (isBusy || exercise.type != ExerciseType.cardio) {
+                            return;
+                          }
+                          widget.onExerciseSelected(exercise);
+                        },
+                      ),
+                    ),
                   ),
                 ),
               ],

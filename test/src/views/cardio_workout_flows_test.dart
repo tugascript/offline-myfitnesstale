@@ -36,6 +36,7 @@ import 'package:myfitnesstale/src/ui/core/sizes/data_display_sizes.dart';
 import 'package:myfitnesstale/src/ui/core/sizes/screen_size.dart';
 import 'package:myfitnesstale/src/ui/core/utils/converters.dart';
 import 'package:myfitnesstale/src/ui/core/view_models/states/common_state.dart';
+import 'package:myfitnesstale/src/ui/core/widgets/cardio_set_type_badge.dart';
 import 'package:myfitnesstale/src/ui/core/widgets/created_by_checkbox.dart';
 import 'package:myfitnesstale/src/ui/exercises/view_models/exercise_cubit.dart';
 import 'package:myfitnesstale/src/ui/workout_plans/widgets/editor/workout_search/workout_plan_workout_search_modal.dart';
@@ -46,6 +47,7 @@ import 'package:myfitnesstale/src/ui/workouts/view_models/states/workout_state.d
 import 'package:myfitnesstale/src/ui/workouts/view_models/workout_cubit.dart';
 import 'package:myfitnesstale/src/ui/workouts/widgets/details/cardio_editor/cardio_duration_input.dart';
 import 'package:myfitnesstale/src/ui/workouts/widgets/details/cardio_editor/cardio_editor.dart';
+import 'package:myfitnesstale/src/ui/workouts/widgets/details/cardio_editor/cardio_exercise_search_modal.dart';
 import 'package:myfitnesstale/src/ui/workouts/widgets/details/cardio_editor/cardio_rounds_input.dart';
 import 'package:myfitnesstale/src/ui/workouts/widgets/details/cardio_editor/cardio_set_editor.dart';
 import 'package:myfitnesstale/src/ui/workouts/widgets/details/create_workout_modal.dart';
@@ -272,9 +274,17 @@ class _FakeWorkoutCubit extends WorkoutCubit {
 class _FakeExerciseCubit extends ExerciseCubit {
   final List<ExerciseType?> requestedTypes = [];
   final List<ExerciseDto> cardioExercises;
+  final bool keepLoadingOnSearch;
 
-  _FakeExerciseCubit({required this.cardioExercises})
-    : super(exerciseRepository: ExerciseRepository.create());
+  _FakeExerciseCubit({
+    required this.cardioExercises,
+    List<ExerciseDto>? initialSelection,
+    this.keepLoadingOnSearch = false,
+  }) : super(exerciseRepository: ExerciseRepository.create()) {
+    if (initialSelection != null) {
+      emit(state.copyWith(exerciseSelection: initialSelection));
+    }
+  }
 
   @override
   Future<void> getSelectionExercises({
@@ -286,6 +296,10 @@ class _FakeExerciseCubit extends ExerciseCubit {
     bool isFavorite = false,
   }) async {
     requestedTypes.add(type);
+    if (keepLoadingOnSearch) {
+      emit(state.copyWith(isLoading: true, error: const Nullable(null)));
+      return;
+    }
     emit(
       state.copyWith(
         exerciseSelection: cardioExercises,
@@ -1216,6 +1230,105 @@ void main() {
           await tester.tap(find.text('Confirm'));
           await tester.pumpAndSettle();
           expect(tester.takeException(), isNull);
+        }
+      },
+    );
+
+    testWidgets(
+      'CardioExerciseSearchModal filters out cached strength exercises and blocks selection while loading',
+      (tester) async {
+        const strengthExercise = ExerciseDto(
+          id: 201,
+          name: 'Barbell Bench Press',
+          description: 'Strength press',
+          details: StrengthExerciseDetails(
+            muscleGroup: MuscleGroup.push,
+            muscles: TargetMuscles(primary: {Muscle.chest}, secondary: {}),
+            weightProgress: ExerciseWeightProgress.positive,
+          ),
+          createdBy: CreatedBy.system,
+        );
+
+        final exerciseCubit = _FakeExerciseCubit(
+          cardioExercises: const [_runningExercise],
+          initialSelection: const [strengthExercise, _runningExercise],
+          keepLoadingOnSearch: true,
+        );
+        addTearDown(exerciseCubit.close);
+
+        final selected = <ExerciseDto>[];
+        await tester.pumpWidget(
+          BlocProvider<ExerciseCubit>.value(
+            value: exerciseCubit,
+            child: MaterialApp(
+              home: Scaffold(
+                body: CardioExerciseSearchModal(
+                  sizes: DataDisplaySizes.getDataDisplaySizes(ScreenSize.sm),
+                  isLoading: false,
+                  onExerciseSelected: selected.add,
+                ),
+              ),
+            ),
+          ),
+        );
+        await tester.pump();
+
+        // Stale strength exercise is hidden; only cardio exercise is listed
+        expect(find.text('Barbell Bench Press'), findsNothing);
+        expect(find.text('Outdoor Running'), findsOneWidget);
+
+        // While loading is in flight, tapping cached cardio exercise does nothing
+        await tester.tap(find.text('Outdoor Running'), warnIfMissed: false);
+        await tester.pump();
+        expect(selected, isEmpty);
+
+        // Once search finishes, cardio exercise becomes selectable
+        exerciseCubit.emit(
+          exerciseCubit.state.copyWith(
+            isLoading: false,
+            exerciseSelection: const [strengthExercise, _runningExercise],
+          ),
+        );
+        await tester.pump();
+
+        expect(find.text('Barbell Bench Press'), findsNothing);
+        await tester.tap(find.text('Outdoor Running'));
+        await tester.pump();
+        expect(selected, const [_runningExercise]);
+      },
+    );
+
+    testWidgets(
+      'CardioSetTypeBadge uses contrasting theme onSurface foreground on light and dark themes',
+      (tester) async {
+        final sizes = DataDisplaySizes.getDataDisplaySizes(ScreenSize.sm);
+
+        for (final theme in [ThemeData.light(), ThemeData.dark()]) {
+          await tester.pumpWidget(
+            MaterialApp(
+              theme: theme,
+              home: Scaffold(
+                body: Row(
+                  children: [
+                    CardioSetTypeBadge(
+                      sizes: sizes,
+                      setType: CardioSetType.constant,
+                    ),
+                    CardioSetTypeBadge(
+                      sizes: sizes,
+                      setType: CardioSetType.interval,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+          await tester.pumpAndSettle();
+
+          final constantText = tester.widget<Text>(find.text('Constant'));
+          final intervalText = tester.widget<Text>(find.text('Interval'));
+          expect(constantText.style?.color, theme.colorScheme.onSurface);
+          expect(intervalText.style?.color, theme.colorScheme.onSurface);
         }
       },
     );
