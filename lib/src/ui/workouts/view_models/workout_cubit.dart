@@ -629,6 +629,7 @@ class WorkoutCubit extends Cubit<WorkoutState> with FavoriteRequestSerializer {
       workoutId: workoutId,
       inputs: sets,
     );
+    if (isClosed) return;
 
     if (result.isErr()) {
       final error = result.error;
@@ -644,25 +645,29 @@ class WorkoutCubit extends Cubit<WorkoutState> with FavoriteRequestSerializer {
       return;
     }
 
-    await getWorkout(workoutId, refresh: true);
-    if (isClosed || state.error != null) return;
+    final updatedWorkout = result.value;
+    final hasCachedListItem = state.workouts.any((w) => w.id == workoutId);
+    final updatedWorkouts = hasCachedListItem
+        ? state.workouts
+              .map(
+                (w) => w.id == workoutId
+                    ? updatedWorkout.copyWith(
+                        sets: const Nullable(null),
+                        cardioSets: const Nullable(null),
+                      )
+                    : w,
+              )
+              .toList()
+        : null;
 
-    final updatedWorkout = state.selectedWorkout;
-    if (updatedWorkout != null &&
-        updatedWorkout.id == workoutId &&
-        state.workouts.any((w) => w.id == workoutId)) {
-      final listItem = updatedWorkout.copyWith(
-        sets: const Nullable(null),
-        cardioSets: const Nullable(null),
-      );
-      emit(
-        state.copyWith(
-          workouts: state.workouts
-              .map((w) => w.id == workoutId ? listItem : w)
-              .toList(),
-        ),
-      );
-    }
+    emit(
+      state.copyWith(
+        selectedWorkout: Nullable(updatedWorkout),
+        workouts: updatedWorkouts,
+        isLoading: false,
+        error: const Nullable(null),
+      ),
+    );
   }
 
   Future<void> getSelectionWorkouts({
