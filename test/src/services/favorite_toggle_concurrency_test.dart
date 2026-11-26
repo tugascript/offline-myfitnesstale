@@ -31,6 +31,7 @@ import 'package:myfitnesstale/src/data/repositories/workout_plans/workout_plan_r
 import 'package:myfitnesstale/src/data/repositories/workouts/inputs/workout_input.dart';
 import 'package:myfitnesstale/src/data/repositories/workouts/workout_repository.dart';
 import 'package:myfitnesstale/src/data/utils/enums.dart';
+import 'package:myfitnesstale/src/data/utils/exercise_details.dart';
 import 'package:myfitnesstale/src/data/utils/json_data.dart';
 
 import '../../support/test_database.dart';
@@ -155,8 +156,11 @@ void main() {
       final created = await repo.createExercise(
         ExerciseInput(
           name: 'Goblet Squat',
-          muscleGroup: MuscleGroup.legs,
-          muscles: const TargetMuscles(primary: {Muscle.chest}, secondary: {}),
+          details: const StrengthExerciseDetails(
+            muscleGroup: MuscleGroup.legs,
+            muscles: TargetMuscles(primary: {Muscle.chest}, secondary: {}),
+            weightProgress: ExerciseWeightProgress.positive,
+          ),
           equipmentIds: {equipment.id},
         ),
       );
@@ -168,10 +172,10 @@ void main() {
           exerciseId,
           ExerciseInput(
             name: 'Goblet Squat Updated',
-            muscleGroup: MuscleGroup.legs,
-            muscles: const TargetMuscles(
-              primary: {Muscle.chest},
-              secondary: {},
+            details: const StrengthExerciseDetails(
+              muscleGroup: MuscleGroup.legs,
+              muscles: TargetMuscles(primary: {Muscle.chest}, secondary: {}),
+              weightProgress: ExerciseWeightProgress.positive,
             ),
             equipmentIds: {equipment.id},
             isFavorite: true,

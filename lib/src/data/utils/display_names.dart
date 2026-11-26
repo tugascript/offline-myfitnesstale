@@ -132,6 +132,39 @@ sealed class EnumDisplayNames {
     }
   }
 
+  static String getExerciseTypeDisplayName(ExerciseType? type) {
+    switch (type) {
+      case ExerciseType.strength:
+        return 'Strength';
+      case ExerciseType.cardio:
+        return 'Cardio';
+      case null:
+        return 'Unknown';
+    }
+  }
+
+  static String getCardioBaseModeDisplayName(CardioBaseMode? mode) {
+    switch (mode) {
+      case CardioBaseMode.time:
+        return 'Time';
+      case CardioBaseMode.units:
+        return 'Units';
+      case null:
+        return 'Unknown';
+    }
+  }
+
+  static String getCardioUnitTypeDisplayName(CardioUnitType? unitType) {
+    switch (unitType) {
+      case CardioUnitType.distance:
+        return 'Distance';
+      case CardioUnitType.action:
+        return 'Action';
+      case null:
+        return 'Unknown';
+    }
+  }
+
   static String getEquipmentRarityDisplayName(EquipmentRarity? rarity) {
     switch (rarity) {
       case EquipmentRarity.veryCommon:

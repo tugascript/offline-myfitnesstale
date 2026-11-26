@@ -25,6 +25,7 @@ import '../../../data/repositories/workouts/dtos/workout_dto.dart';
 import '../../../data/repositories/workouts/dtos/workout_set_dto.dart';
 import '../../../data/repositories/workouts/dtos/workout_set_exercise_dto.dart';
 import '../../../data/utils/enums.dart';
+import '../../../data/utils/exercise_details.dart';
 import '../../../data/utils/json_data.dart';
 import '../../core/sizes/data_display_sizes.dart';
 import '../../core/sizes/screen_size.dart';
@@ -44,8 +45,11 @@ const _skeletonExercise = ExerciseDto(
   id: 0,
   name: 'Loading Exercise Name',
   description: '',
-  muscleGroup: MuscleGroup.push,
-  muscles: TargetMuscles(primary: {}, secondary: {}),
+  details: StrengthExerciseDetails(
+    muscleGroup: MuscleGroup.push,
+    muscles: TargetMuscles(primary: {}, secondary: {}),
+    weightProgress: ExerciseWeightProgress.positive,
+  ),
   createdBy: CreatedBy.system,
 );
 

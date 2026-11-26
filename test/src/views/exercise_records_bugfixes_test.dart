@@ -151,16 +151,22 @@ void main() {
     id: 1,
     name: 'Alpha Press',
     description: '',
-    muscleGroup: MuscleGroup.push,
-    muscles: emptyMuscles,
+    details: StrengthExerciseDetails(
+      muscleGroup: MuscleGroup.push,
+      muscles: emptyMuscles,
+      weightProgress: ExerciseWeightProgress.positive,
+    ),
     createdBy: CreatedBy.system,
   );
   const exerciseB = ExerciseDto(
     id: 2,
     name: 'Beta Row',
     description: '',
-    muscleGroup: MuscleGroup.pull,
-    muscles: emptyMuscles,
+    details: StrengthExerciseDetails(
+      muscleGroup: MuscleGroup.pull,
+      muscles: emptyMuscles,
+      weightProgress: ExerciseWeightProgress.positive,
+    ),
     createdBy: CreatedBy.system,
   );
 

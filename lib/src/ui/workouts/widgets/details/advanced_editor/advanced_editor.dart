@@ -23,6 +23,7 @@ import '../../../../../data/repositories/workouts/dtos/workout_set_dto.dart';
 import '../../../../../data/repositories/workouts/inputs/complex_set_exercise_input.dart';
 import '../../../../../data/repositories/workouts/inputs/complex_set_input.dart';
 import '../../../../../data/utils/enums.dart';
+import '../../../../../data/utils/exercise_details.dart';
 import '../../../../core/sizes/data_display_sizes.dart';
 import '../../../../core/sizes/screen_size.dart';
 import '../../../../core/widgets/editors/save_buttons.dart';
@@ -55,7 +56,9 @@ class _AdvancedEditorState extends State<AdvancedEditor> {
   void initState() {
     super.initState();
     _displayedSets = _mapSets(widget.initialSets);
-    context.read<ExerciseCubit>().getSelectionExercises();
+    context.read<ExerciseCubit>().getSelectionExercises(
+      type: ExerciseType.strength,
+    );
   }
 
   List<ComplexSetEditorData> _mapSets(List<WorkoutSetDto> sets) {
@@ -78,7 +81,9 @@ class _AdvancedEditorState extends State<AdvancedEditor> {
             difficulty: exercise.difficulty,
             exerciseId: exercise.exerciseId,
             exerciseName: exercise.exercise?.name,
-            exerciseMuscleGroup: exercise.exercise?.muscleGroup,
+            exerciseMuscleGroup: exercise.exercise
+                ?.getDetails<StrengthExerciseDetails>()
+                ?.muscleGroup,
             alternativeExercises: (exercise.options ?? [])
                 .map(
                   (option) => AlternativeExerciseData(

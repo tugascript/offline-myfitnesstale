@@ -21,45 +21,135 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
+import 'package:myfitnesstale/src/data/repositories/exercises/dtos/exercise_dto.dart';
 import 'package:myfitnesstale/src/data/repositories/exercises/exercise_repository.dart';
 import 'package:myfitnesstale/src/data/utils/enums.dart';
+import 'package:myfitnesstale/src/data/utils/exercise_details.dart';
 import 'package:myfitnesstale/src/routing/routes.dart';
 import 'package:myfitnesstale/src/ui/exercises/screens/exercises_list_screen.dart';
 import 'package:myfitnesstale/src/ui/exercises/view_models/exercise_cubit.dart';
+import 'package:myfitnesstale/src/ui/exercises/view_models/states/exercise_state.dart';
+import 'package:myfitnesstale/src/ui/exercises/widgets/cardio_exercise_search_form.dart';
+import 'package:myfitnesstale/src/ui/exercises/widgets/details/create_exercise_modal.dart';
+import 'package:myfitnesstale/src/utils/nullable.dart';
+
+class _GetExercisesCall {
+  final String? name;
+  final ExerciseType type;
+  final MuscleGroup? muscleGroup;
+  final CardioBaseMode? cardioBaseMode;
+  final CardioUnitType? cardioUnitType;
+  final Difficulty? difficulty;
+  final int? equipmentId;
+  final bool isFavourite;
+  final CreatedBy? createdBy;
+
+  const _GetExercisesCall({
+    required this.name,
+    required this.type,
+    required this.muscleGroup,
+    required this.cardioBaseMode,
+    required this.cardioUnitType,
+    required this.difficulty,
+    required this.equipmentId,
+    required this.isFavourite,
+    required this.createdBy,
+  });
+}
 
 class _ExerciseSearchCubit extends ExerciseCubit {
   int equipmentFetchCount = 0;
   final equipmentFetchStarted = Completer<void>();
   final releaseEquipmentFetch = Completer<void>();
+  final bool blockEquipmentFetch;
+  final List<_GetExercisesCall> getExercisesCalls = [];
 
-  _ExerciseSearchCubit()
-    : super(exerciseRepository: ExerciseRepository.create()) {
-    emit(state.copyWith(equipmentSelection: const {1: 'Barbell'}));
-  }
-
-  @override
-  Future<void> getSelectionEquipments() async {
-    equipmentFetchCount += 1;
-    equipmentFetchStarted.complete();
-    await releaseEquipmentFetch.future;
+  _ExerciseSearchCubit({
+    this.blockEquipmentFetch = true,
+    List<ExerciseDto> initialExercises = const [],
+    ExercisePagination? initialPagination,
+  }) : super(exerciseRepository: ExerciseRepository.create()) {
     emit(
       state.copyWith(
-        equipmentSelection: const {1: 'Barbell', 2: 'Cable Machine'},
+        equipmentSelection: const {1: 'Barbell', 2: 'Treadmill'},
+        exercises: initialExercises,
+        exercisePagination:
+            initialPagination ??
+            state.exercisePagination.copyWith(total: initialExercises.length),
       ),
     );
   }
 
   @override
+  Future<void> getSelectionEquipments() async {
+    equipmentFetchCount += 1;
+    if (!equipmentFetchStarted.isCompleted) {
+      equipmentFetchStarted.complete();
+    }
+    if (blockEquipmentFetch) {
+      await releaseEquipmentFetch.future;
+      emit(
+        state.copyWith(
+          equipmentSelection: const {1: 'Barbell', 2: 'Cable Machine'},
+        ),
+      );
+    }
+  }
+
+  @override
   Future<void> getExercises({
     String? name,
+    ExerciseType type = ExerciseType.strength,
     MuscleGroup? muscleGroup,
+    CardioBaseMode? cardioBaseMode,
+    CardioUnitType? cardioUnitType,
     Difficulty? difficulty,
     int? equipmentId,
     int? limit,
     int? offset,
     bool isFavourite = false,
     CreatedBy? createdBy,
-  }) async {}
+  }) async {
+    final effectiveMuscleGroup = type == ExerciseType.strength
+        ? muscleGroup
+        : null;
+    final effectiveCardioBaseMode = type == ExerciseType.cardio
+        ? cardioBaseMode
+        : null;
+    final effectiveCardioUnitType = type == ExerciseType.cardio
+        ? cardioUnitType
+        : null;
+
+    getExercisesCalls.add(
+      _GetExercisesCall(
+        name: name,
+        type: type,
+        muscleGroup: effectiveMuscleGroup,
+        cardioBaseMode: effectiveCardioBaseMode,
+        cardioUnitType: effectiveCardioUnitType,
+        difficulty: difficulty,
+        equipmentId: equipmentId,
+        isFavourite: isFavourite,
+        createdBy: createdBy,
+      ),
+    );
+
+    emit(
+      state.copyWith(
+        exercisePagination: state.exercisePagination.copyWith(
+          name: name ?? '',
+          type: type,
+          muscleGroup: Nullable(effectiveMuscleGroup),
+          cardioBaseMode: Nullable(effectiveCardioBaseMode),
+          cardioUnitType: Nullable(effectiveCardioUnitType),
+          difficulty: Nullable(difficulty),
+          equipmentId: Nullable(equipmentId),
+          isFavorite: isFavourite,
+          createdBy: Nullable(createdBy),
+        ),
+      ),
+    );
+  }
 }
 
 void main() {
@@ -106,4 +196,188 @@ void main() {
     expect(find.text('Barbell'), findsOneWidget);
     expect(find.text('Cable Machine'), findsOneWidget);
   });
+
+  testWidgets(
+    'toggles between Strength and Cardio search UI, preserves shared filters, submits cardio filters, and defaults create modal to Cardio',
+    (tester) async {
+      final cubit = _ExerciseSearchCubit(
+        blockEquipmentFetch: false,
+        initialPagination: const ExercisePagination(
+          name: 'Run',
+          type: ExerciseType.strength,
+          muscleGroup: MuscleGroup.legs,
+          difficulty: Difficulty.intermediate,
+          equipmentId: 2,
+          isFavorite: true,
+          createdBy: CreatedBy.user,
+          total: 0,
+          limit: 20,
+          offset: 0,
+        ),
+      );
+      addTearDown(cubit.close);
+
+      final router = GoRouter(
+        initialLocation: Routes.exercises.name,
+        routes: [
+          GoRoute(
+            path: Routes.exercises.name,
+            builder: (_, _) => const ExercisesListScreen(),
+          ),
+        ],
+      );
+      addTearDown(router.dispose);
+
+      await tester.pumpWidget(
+        BlocProvider<ExerciseCubit>.value(
+          value: cubit,
+          child: MaterialApp.router(routerConfig: router),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(
+        find.byKey(const ValueKey('strength-exercise-search-form')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const ValueKey('cardio-exercise-search-form')),
+        findsNothing,
+      );
+
+      // Toggle to Cardio.
+      await tester.tap(
+        find.descendant(
+          of: find.byKey(const ValueKey('exercise-search-type-toggle')),
+          matching: find.text('Cardio'),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(
+        find.byKey(const ValueKey('cardio-exercise-search-form')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const ValueKey('strength-exercise-search-form')),
+        findsNothing,
+      );
+
+      final toggleCall = cubit.getExercisesCalls.last;
+      expect(toggleCall.type, ExerciseType.cardio);
+      expect(toggleCall.name, 'Run');
+      expect(toggleCall.difficulty, Difficulty.intermediate);
+      expect(toggleCall.equipmentId, 2);
+      expect(toggleCall.isFavourite, isTrue);
+      expect(toggleCall.createdBy, CreatedBy.user);
+      expect(toggleCall.muscleGroup, isNull);
+
+      // Pick Cardio Default Mode = Units and Unit Type = Action, then search.
+      await tester.tap(
+        find.byKey(const ValueKey('cardio-search-mode-dropdown')),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Units').last);
+      await tester.pumpAndSettle();
+
+      await tester.tap(
+        find.byKey(const ValueKey('cardio-search-unit-type-dropdown')),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Action').last);
+      await tester.pumpAndSettle();
+
+      await tester.tap(
+        find.descendant(
+          of: find.byType(CardioExerciseSearchForm),
+          matching: find.byIcon(Icons.search).last,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final searchCall = cubit.getExercisesCalls.last;
+      expect(searchCall.type, ExerciseType.cardio);
+      expect(searchCall.cardioBaseMode, CardioBaseMode.units);
+      expect(searchCall.cardioUnitType, CardioUnitType.action);
+
+      // Opening FAB while Cardio is active defaults CreateExerciseModal to Cardio.
+      await tester.tap(find.byKey(const ValueKey('exercise-add')));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(CreateExerciseModal), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('exercise-form-cardio-unit')),
+        findsOneWidget,
+      );
+    },
+  );
+
+  testWidgets(
+    'Cardio search screen fits 320px width at 200% text scaling without overflow',
+    (tester) async {
+      tester.view.physicalSize = const Size(320, 740);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      final cubit = _ExerciseSearchCubit(
+        blockEquipmentFetch: false,
+        initialExercises: const [
+          ExerciseDto(
+            id: 50,
+            name: 'Treadmill Interval Sprint',
+            description: 'High intensity intervals',
+            details: CardioExerciseDetails(
+              defaultMode: CardioBaseMode.time,
+              unitType: CardioUnitType.distance,
+              unit: 'km',
+            ),
+            difficulty: Difficulty.intermediate,
+            createdBy: CreatedBy.user,
+          ),
+        ],
+        initialPagination: const ExercisePagination(
+          name: '',
+          type: ExerciseType.cardio,
+          isFavorite: false,
+          total: 1,
+          limit: 20,
+          offset: 0,
+        ),
+      );
+      addTearDown(cubit.close);
+
+      final router = GoRouter(
+        initialLocation: Routes.exercises.name,
+        routes: [
+          GoRoute(
+            path: Routes.exercises.name,
+            builder: (_, _) => const ExercisesListScreen(),
+          ),
+        ],
+      );
+      addTearDown(router.dispose);
+
+      await tester.pumpWidget(
+        BlocProvider<ExerciseCubit>.value(
+          value: cubit,
+          child: MaterialApp.router(
+            routerConfig: router,
+            builder: (context, child) => MediaQuery(
+              data: MediaQuery.of(context)
+                  .copyWith(textScaler: const TextScaler.linear(2.0)),
+              child: child!,
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(
+        find.byKey(const ValueKey('cardio-exercise-search-form')),
+        findsOneWidget,
+      );
+    },
+  );
 }

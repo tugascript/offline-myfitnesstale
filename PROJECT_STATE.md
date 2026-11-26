@@ -129,22 +129,32 @@ transaction and do not schedule reminders.
 ### Equipment, exercises, and progress
 
 - Browses, searches, filters, favorites, creates, edits, and deletes equipment
-  (including persisted `equipments.rarity`) and exercises (including persisted
-  `exercises.weight_progress` for positive/negative progression) using modal
-  flows (`CreateEquipmentModal`, `EditEquipmentModal`, `CreateExerciseModal`,
-  `EditExerciseModal`) and shared `EquipmentInput` / `ExerciseInput` PUT
-  semantics (`Nullable<T>` in `copyWith` clears omitted nullable fields and
-  replaces equipment links atomically).
+  (including persisted `equipments.rarity`) and strength or cardio exercises
+  (persisted via `exercises.type` and JSON `exercises.details` —
+  `StrengthExerciseDetails` including `weightProgress` for positive/negative
+  progression, and `CardioExerciseDetails` with `defaultMode`, `unitType`, and
+  `unit`) using modal flows (`CreateEquipmentModal`, `EditEquipmentModal`,
+  `CreateExerciseModal`, `EditExerciseModal`) and shared `EquipmentInput` /
+  `ExerciseInput` PUT semantics (`Nullable<T>` in `copyWith` clears omitted
+  nullable fields and replaces equipment links atomically; exercise type is
+  selectable on creation and locked when editing).
+- Separates Strength and Cardio exercise search on `ExercisesListScreen` via an
+  `ExerciseTypeToggle`: Strength searches filter by muscle group, while Cardio
+  searches filter by default mode (`CardioBaseMode`) and unit type
+  (`CardioUnitType`) alongside shared name, difficulty, equipment, favorite, and
+  creator filters.
 - Supports local picture upload, cropping/compression, and sandboxed file
   storage (`LocalFileStorageService`) for equipment, and validated YouTube
   video IDs for exercises.
 - Maintains exercise/equipment relationships.
-- Exercise details use a reusable, swipeable Diagram/Data carousel. Its clean
-  front/back anatomical SVG dynamically paints primary target muscles in dark
-  orange and secondary targets in light orange; the companion page lists muscle
-  groups, primary and secondary muscles, and equipment. The carousel supports
-  responsive sizing, large text, touch indicators, and an optional pixelated
-  rendering mode.
+- Strength exercise details use a reusable, swipeable Diagram/Data carousel.
+  Its clean front/back anatomical SVG dynamically paints primary target muscles
+  in dark orange and secondary targets in light orange; the companion page lists
+  muscle groups, primary and secondary muscles, and equipment. The carousel
+  supports responsive sizing, large text, touch indicators, and an optional
+  pixelated rendering mode. Cardio exercise details render a dedicated cardio
+  metadata and equipment summary (`CardioExerciseDetailsSection`) and omit
+  strength-only progress/goal actions.
 - Creates, edits, deletes, and filters exercise records via modal/inline editors
   (`CreateExerciseRecordModal`, `EditExerciseRecordModal`,
   `UpdateExerciseRecordCard`) using shared `ExerciseRecordInput` PUT semantics.

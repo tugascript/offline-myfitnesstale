@@ -143,10 +143,18 @@ void main() {
         id: 2,
         name: 'Bench Press',
         description: '',
-        muscleGroup: MuscleGroup.push,
-        muscles: const TargetMuscles(primary: {}, secondary: {}),
+        details: const StrengthExerciseDetails(
+          muscleGroup: MuscleGroup.push,
+          muscles: TargetMuscles(primary: {}, secondary: {}),
+          weightProgress: ExerciseWeightProgress.positive,
+        ),
         createdBy: CreatedBy.system,
       );
+      expect(
+        exerciseDto.getDetails<StrengthExerciseDetails>()?.muscleGroup,
+        MuscleGroup.push,
+      );
+      expect(exerciseDto.getDetails<CardioExerciseDetails>(), isNull);
       expect(goal.copyWith().exercise, isNull);
       expect(
         goal.copyWith(exercise: Nullable(exerciseDto)).exercise,

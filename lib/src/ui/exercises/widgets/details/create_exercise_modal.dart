@@ -20,6 +20,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../../../data/repositories/exercises/inputs/exercise_input.dart';
 import '../../../../data/utils/enums.dart';
+import '../../../../data/utils/exercise_details.dart';
 import '../../../../data/utils/json_data.dart';
 import '../../../../utils/nullable.dart';
 import '../../../core/sizes/data_display_sizes.dart';
@@ -31,11 +32,13 @@ import './exercise_form.dart';
 class CreateExerciseModal extends StatelessWidget {
   final ThemeData theme;
   final DataDisplaySizesList sizes;
+  final ExerciseType initialType;
 
   const CreateExerciseModal({
     super.key,
     required this.theme,
     required this.sizes,
+    this.initialType = ExerciseType.strength,
   });
 
   @override
@@ -49,6 +52,8 @@ class CreateExerciseModal extends StatelessWidget {
           sizes: sizes,
           isLoading: state.isLoading,
           submitLabel: "CREATE EXERCISE",
+          initialType: initialType,
+          allowTypeSelection: true,
           initialName: '',
           initialDescription: null,
           initialVideoUrl: null,
@@ -64,13 +69,10 @@ class CreateExerciseModal extends StatelessWidget {
                 String? description,
                 String? videoUrl,
                 Difficulty? difficulty,
-                required ExerciseWeightProgress weightProgress,
+                required ExerciseDetails details,
                 required Set<int> equipmentIds,
                 required bool isFavorite,
-                required MuscleGroup muscleGroup,
                 required String name,
-                required Set<Muscle> primaryMuscles,
-                required Set<Muscle> secondaryMuscles,
               }) async {
                 final cubit = context.read<ExerciseCubit>();
                 await cubit.createExercise(
@@ -85,14 +87,9 @@ class CreateExerciseModal extends StatelessWidget {
                             )
                           : null,
                     ),
-                    muscleGroup: muscleGroup,
-                    muscles: TargetMuscles(
-                      primary: primaryMuscles,
-                      secondary: secondaryMuscles,
-                    ),
+                    details: details,
                     equipmentIds: equipmentIds,
                     difficulty: Nullable(difficulty),
-                    weightProgress: weightProgress,
                     isFavorite: isFavorite,
                   ),
                 );
