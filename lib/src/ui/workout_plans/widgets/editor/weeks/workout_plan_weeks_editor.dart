@@ -64,7 +64,9 @@ class _WorkoutPlanWeeksEditorState extends State<WorkoutPlanWeeksEditor> {
   void initState() {
     super.initState();
     _resetFromWidget();
-    context.read<WorkoutCubit>().getSelectionWorkouts();
+    context.read<WorkoutCubit>().getSelectionWorkouts(
+      type: ExerciseType.strength,
+    );
   }
 
   @override

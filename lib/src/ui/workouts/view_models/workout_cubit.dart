@@ -652,6 +652,7 @@ class WorkoutCubit extends Cubit<WorkoutState> with FavoriteRequestSerializer {
   }
 
   Future<void> getSelectionWorkouts({
+    ExerciseType type = ExerciseType.strength,
     MuscleGroup? muscleGroup,
     String name = "",
     bool isFavorite = false,
@@ -662,6 +663,7 @@ class WorkoutCubit extends Cubit<WorkoutState> with FavoriteRequestSerializer {
     );
 
     final result = await _workoutService.getAllWorkouts(
+      type: type,
       muscleGroup: muscleGroup,
       name: name,
       isFavorite: isFavorite,
