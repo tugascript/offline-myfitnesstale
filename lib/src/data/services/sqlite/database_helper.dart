@@ -43,6 +43,7 @@ import '../../models/sqlite/system_model.dart';
 import '../../models/sqlite/week_macro_goal_model.dart';
 import '../../models/sqlite/weight_goal_model.dart';
 import '../../models/sqlite/weight_record_model.dart';
+import '../../models/sqlite/workout_cardio_set_exercise_model.dart';
 import '../../models/sqlite/workout_cardio_set_model.dart';
 import '../../models/sqlite/workout_model.dart';
 import '../../models/sqlite/workout_plan_day_model.dart';
@@ -303,6 +304,7 @@ final class DatabaseHelper {
       Workout.tableCreate,
       WorkoutSet.tableCreate,
       WorkoutCardioSet.tableCreate,
+      WorkoutCardioSetExercise.tableCreate,
       WorkoutSetExercise.tableCreate,
       WorkoutSetExerciseOption.tableCreate,
       WorkoutRecord.tableCreate,
