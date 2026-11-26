@@ -30,6 +30,7 @@ import '../view_models/states/workout_state.dart';
 import '../view_models/workout_cubit.dart';
 import '../widgets/details/advanced_editor/advanced_editor.dart';
 import '../widgets/details/basic_editor/basic_editor.dart';
+import '../widgets/details/cardio_editor/cardio_editor.dart';
 import '../widgets/details/workout_header_card.dart';
 import '../widgets/details/workout_header_edit_card.dart';
 
@@ -94,10 +95,16 @@ class _WorkoutEditScreenState extends State<WorkoutEditScreen> {
         final bool hasComplexSets = (workout.sets ?? []).any(
           (set) => set.setType != WorkoutSetType.standard,
         );
+        final bool useCardioEditor = workout.editorType == EditorType.cardio;
         final bool useAdvancedEditor =
             workout.editorType == EditorType.advanced || hasComplexSets;
 
-        final Widget editor = useAdvancedEditor
+        final Widget editor = useCardioEditor
+            ? CardioEditor(
+                workoutId: widget.workoutId,
+                initialSets: workout.cardioSets ?? [],
+              )
+            : useAdvancedEditor
             ? AdvancedEditor(
                 workoutId: widget.workoutId,
                 initialSets: workout.sets ?? [],

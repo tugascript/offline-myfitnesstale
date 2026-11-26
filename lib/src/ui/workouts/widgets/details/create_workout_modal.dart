@@ -30,8 +30,13 @@ import './workout_base_form.dart';
 
 class CreateWorkoutDialog extends StatelessWidget {
   final DataDisplaySizesList sizes;
+  final EditorType initialEditorType;
 
-  const CreateWorkoutDialog({super.key, required this.sizes});
+  const CreateWorkoutDialog({
+    super.key,
+    required this.sizes,
+    this.initialEditorType = EditorType.basic,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -45,11 +50,12 @@ class CreateWorkoutDialog extends StatelessWidget {
             theme: theme,
             sizes: sizes,
             isLoading: state.isLoading,
+            isEditing: false,
             submitLabel: "CREATE WORKOUT",
             initialName: "",
             initialIsFavorite: false,
             initialDifficulty: Difficulty.beginner,
-            initialEditorType: EditorType.basic,
+            initialEditorType: initialEditorType,
             onSubmit:
                 ({
                   required String name,

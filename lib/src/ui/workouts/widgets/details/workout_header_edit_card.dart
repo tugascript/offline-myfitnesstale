@@ -83,6 +83,7 @@ class WorkoutHeaderEditCard extends StatelessWidget {
               theme: theme,
               sizes: sizes,
               isLoading: isLoading,
+              isEditing: true,
               submitLabel: 'UPDATE WORKOUT',
               initialName: workout.name,
               initialIsFavorite: workout.isFavorite,

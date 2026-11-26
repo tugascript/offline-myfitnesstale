@@ -22,6 +22,7 @@ import 'package:logging/logging.dart';
 
 import '../../../data/repositories/workouts/inputs/complex_set_input.dart';
 import '../../../data/repositories/workouts/inputs/standard_set_input.dart';
+import '../../../data/repositories/workouts/inputs/workout_cardio_set_upsert_input.dart';
 import '../../../data/repositories/workouts/inputs/workout_input.dart';
 import '../../../data/repositories/workouts/inputs/workout_set_exercise_upsert_input.dart';
 import '../../../data/repositories/workouts/inputs/workout_set_upsert_input.dart';
@@ -50,15 +51,19 @@ class WorkoutCubit extends Cubit<WorkoutState> with FavoriteRequestSerializer {
     int? offset,
     bool isFavorite = false,
     CreatedBy? createdBy,
+    ExerciseType type = ExerciseType.strength,
   }) => _loadWorkouts(
     WorkoutPagination(
       name: name ?? '',
       difficulty: difficulty,
-      muscleGroup: muscleGroup,
+      muscleGroup: type == ExerciseType.cardio ? null : muscleGroup,
       isFavorite: isFavorite,
       createdBy: createdBy,
+      type: type,
       limit: limit ?? state.pagination.limit,
-      offset: offset ?? state.pagination.offset,
+      offset:
+          offset ??
+          (type != state.pagination.type ? 0 : state.pagination.offset),
       total: 0,
     ),
   );
@@ -76,6 +81,7 @@ class WorkoutCubit extends Cubit<WorkoutState> with FavoriteRequestSerializer {
       (afterWrite ?? state).copyWith(
         workoutsRequestId: requestId,
         pendingWorkoutsQuery: Nullable(query),
+        error: const Nullable(null),
       ),
     );
 
@@ -85,6 +91,7 @@ class WorkoutCubit extends Cubit<WorkoutState> with FavoriteRequestSerializer {
       muscleGroup: query.muscleGroup,
       isFavorite: query.isFavorite,
       createdBy: query.createdBy,
+      type: query.type,
       limit: limit,
       offset: offset,
     );
@@ -275,6 +282,11 @@ class WorkoutCubit extends Cubit<WorkoutState> with FavoriteRequestSerializer {
             ? state.selectedWorkout?.sets
             : result.value.sets,
       ),
+      cardioSets: Nullable(
+        state.selectedWorkout?.id == id
+            ? state.selectedWorkout?.cardioSets
+            : result.value.cardioSets,
+      ),
     );
     if (isClosed) return;
     await _refreshWorkouts(
@@ -338,6 +350,11 @@ class WorkoutCubit extends Cubit<WorkoutState> with FavoriteRequestSerializer {
           state.selectedWorkout?.id == id
               ? state.selectedWorkout?.sets
               : result.value.sets,
+        ),
+        cardioSets: Nullable(
+          state.selectedWorkout?.id == id
+              ? state.selectedWorkout?.cardioSets
+              : result.value.cardioSets,
         ),
       );
       if (isClosed) return;
@@ -406,6 +423,42 @@ class WorkoutCubit extends Cubit<WorkoutState> with FavoriteRequestSerializer {
 
   Future<void> refreshWorkoutSets(int workoutId) async {
     _logger.info('Refreshing workout sets for workout $workoutId');
+
+    if (state.selectedWorkout?.id == workoutId &&
+        state.selectedWorkout?.isCardio == true) {
+      final cardioSets = await _workoutService.getWorkoutCardioSets(
+        workoutId,
+        version: state.selectedWorkout?.version,
+      );
+      if (cardioSets.isErr()) {
+        final error = cardioSets.error;
+        _logger.warning("Failed to get workout cardio sets", error);
+        emit(
+          state.copyWith(
+            error: Nullable(
+              ErrorState(type: error.type.name, description: error.description),
+            ),
+            isLoading: false,
+          ),
+        );
+        return;
+      }
+
+      emit(
+        state.copyWith(
+          selectedWorkout: state.selectedWorkout != null
+              ? Nullable(
+                  state.selectedWorkout!.copyWith(
+                    cardioSets: Nullable(cardioSets.value),
+                  ),
+                )
+              : null,
+          error: const Nullable(null),
+          isLoading: false,
+        ),
+      );
+      return;
+    }
 
     final sets = await _workoutService.getWorkoutSets(
       workoutId,
@@ -563,6 +616,39 @@ class WorkoutCubit extends Cubit<WorkoutState> with FavoriteRequestSerializer {
     }
 
     await getWorkout(workoutId, refresh: true);
+  }
+
+  Future<void> batchUpsertCardioWorkoutSets({
+    required int workoutId,
+    required List<WorkoutCardioSetUpsertInput> sets,
+  }) async {
+    _logger.info('Batch updating cardio workout sets for workout $workoutId');
+    emit(state.copyWith(isLoading: true, error: const Nullable(null)));
+
+    final result = await _workoutService.batchUpsertCardioWorkoutSets(
+      workoutId: workoutId,
+      inputs: sets,
+    );
+
+    if (result.isErr()) {
+      final error = result.error;
+      _logger.warning("Failed to batch upsert cardio workout sets", error);
+      emit(
+        state.copyWith(
+          error: Nullable(
+            ErrorState(type: error.type.name, description: error.description),
+          ),
+          isLoading: false,
+        ),
+      );
+      return;
+    }
+
+    await getWorkout(workoutId, refresh: true);
+    if (isClosed) return;
+    if (state.workouts.isNotEmpty || state.pendingWorkoutsQuery != null) {
+      await _refreshWorkouts(state);
+    }
   }
 
   Future<void> getSelectionWorkouts({

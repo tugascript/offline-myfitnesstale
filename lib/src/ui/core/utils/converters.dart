@@ -78,12 +78,25 @@ sealed class Converters {
     if (seconds < 60) {
       return "${seconds}s";
     }
-    final minutes = seconds ~/ 60;
-    final remainingSeconds = seconds % 60;
-    if (remainingSeconds == 0) {
-      return "${minutes}m";
+    if (seconds < 3600) {
+      final minutes = seconds ~/ 60;
+      final remainingSeconds = seconds % 60;
+      if (remainingSeconds == 0) {
+        return "${minutes}m";
+      }
+      return "${minutes}m ${remainingSeconds}s";
     }
-    return "${minutes}m ${remainingSeconds}s";
+    final hours = seconds ~/ 3600;
+    final minutes = (seconds % 3600) ~/ 60;
+    final remainingSeconds = seconds % 60;
+    final parts = <String>['${hours}h'];
+    if (minutes > 0) {
+      parts.add('${minutes}m');
+    }
+    if (remainingSeconds > 0) {
+      parts.add('${remainingSeconds}s');
+    }
+    return parts.join(' ');
   }
 
   static String formatDate(DateTime timestamp, {bool imperial = false}) {

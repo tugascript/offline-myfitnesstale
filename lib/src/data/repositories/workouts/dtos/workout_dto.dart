@@ -24,6 +24,7 @@ import '../../../utils/json_data.dart';
 import '../../core/dtos/dto.dart';
 import '../../core/dtos/picture_dto.dart';
 import '../../core/dtos/video_dto.dart';
+import './workout_cardio_set_dto.dart';
 import './workout_set_dto.dart';
 
 final class WorkoutDto extends Equatable implements ModelDto<Workout> {
@@ -46,6 +47,9 @@ final class WorkoutDto extends Equatable implements ModelDto<Workout> {
 
   // related data
   final List<WorkoutSetDto>? sets;
+  final List<WorkoutCardioSetDto>? cardioSets;
+
+  bool get isCardio => editorType == EditorType.cardio;
 
   const WorkoutDto({
     required this.id,
@@ -64,9 +68,14 @@ final class WorkoutDto extends Equatable implements ModelDto<Workout> {
     required this.editorType,
     required this.createdBy,
     this.sets,
+    this.cardioSets,
   });
 
-  factory WorkoutDto.fromModel(Workout model, {List<WorkoutSetDto>? sets}) {
+  factory WorkoutDto.fromModel(
+    Workout model, {
+    List<WorkoutSetDto>? sets,
+    List<WorkoutCardioSetDto>? cardioSets,
+  }) {
     return WorkoutDto(
       id: model.id!,
       name: model.name,
@@ -86,6 +95,7 @@ final class WorkoutDto extends Equatable implements ModelDto<Workout> {
       editorType: model.editorType,
       createdBy: model.createdBy,
       sets: sets,
+      cardioSets: cardioSets,
     );
   }
 
@@ -103,6 +113,7 @@ final class WorkoutDto extends Equatable implements ModelDto<Workout> {
     bool? isFavorite,
     int? version,
     Nullable<List<WorkoutSetDto>>? sets,
+    Nullable<List<WorkoutCardioSetDto>>? cardioSets,
     int? totalSets,
     int? totalReps,
     EditorType? editorType,
@@ -125,6 +136,7 @@ final class WorkoutDto extends Equatable implements ModelDto<Workout> {
       editorType: editorType ?? this.editorType,
       createdBy: createdBy ?? this.createdBy,
       sets: sets != null ? sets.value : this.sets,
+      cardioSets: cardioSets != null ? cardioSets.value : this.cardioSets,
     );
   }
 
@@ -146,5 +158,6 @@ final class WorkoutDto extends Equatable implements ModelDto<Workout> {
     editorType,
     createdBy,
     sets,
+    cardioSets,
   ];
 }

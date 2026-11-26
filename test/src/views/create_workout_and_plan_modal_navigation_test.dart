@@ -50,6 +50,7 @@ class _FakeWorkoutCubit extends WorkoutCubit {
     int? offset,
     bool isFavorite = false,
     CreatedBy? createdBy,
+    ExerciseType type = ExerciseType.strength,
   }) async {}
 
   @override

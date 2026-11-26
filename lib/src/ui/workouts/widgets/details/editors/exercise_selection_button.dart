@@ -24,6 +24,7 @@ class ExerciseSelectionButton extends StatelessWidget {
   final DataDisplaySizesList sizes;
   final ThemeData theme;
   final VoidCallback onPressed;
+  final IconData icon;
 
   const ExerciseSelectionButton({
     super.key,
@@ -31,6 +32,7 @@ class ExerciseSelectionButton extends StatelessWidget {
     required this.sizes,
     required this.theme,
     required this.onPressed,
+    this.icon = Icons.fitness_center,
   });
 
   @override
@@ -38,7 +40,7 @@ class ExerciseSelectionButton extends StatelessWidget {
     return SizedBox(
       height: sizes.fontSize * 3,
       child: OutlinedButton.icon(
-        icon: Icon(Icons.fitness_center, size: sizes.fontSize * 1.2),
+        icon: Icon(icon, size: sizes.fontSize * 1.2),
         label: Text(
           exerciseName == null ? "Select Exercise" : exerciseName!,
           softWrap: true,
