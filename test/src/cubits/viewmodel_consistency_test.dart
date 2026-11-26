@@ -32,6 +32,7 @@ import 'package:myfitnesstale/src/data/models/sqlite/workout_plan_week_model.dar
 import 'package:myfitnesstale/src/data/repositories/exercises/exercise_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/exercises/inputs/equipment_input.dart';
 import 'package:myfitnesstale/src/data/repositories/exercises/inputs/exercise_input.dart';
+import 'package:myfitnesstale/src/data/utils/exercise_details.dart';
 import 'package:myfitnesstale/src/data/repositories/foods/food_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/foods/inputs/food_input.dart';
 import 'package:myfitnesstale/src/data/repositories/macros/inputs/week_macro_goal_input.dart';
@@ -479,8 +480,11 @@ void main() {
       await cubit.createExercise(
         ExerciseInput(
           name: 'Bench Press',
-          muscleGroup: MuscleGroup.push,
-          muscles: const TargetMuscles(primary: {Muscle.chest}, secondary: {}),
+          details: const StrengthExerciseDetails(
+            muscleGroup: MuscleGroup.push,
+            muscles: TargetMuscles(primary: {Muscle.chest}, secondary: {}),
+            weightProgress: ExerciseWeightProgress.positive,
+          ),
           equipmentIds: {barbellId},
           isFavorite: true,
         ),
@@ -489,10 +493,10 @@ void main() {
       await cubit.createExercise(
         ExerciseInput(
           name: 'Overhead Press',
-          muscleGroup: MuscleGroup.push,
-          muscles: const TargetMuscles(
-            primary: {Muscle.shoulders},
-            secondary: {},
+          details: const StrengthExerciseDetails(
+            muscleGroup: MuscleGroup.push,
+            muscles: TargetMuscles(primary: {Muscle.shoulders}, secondary: {}),
+            weightProgress: ExerciseWeightProgress.positive,
           ),
           equipmentIds: {barbellId},
           isFavorite: true,

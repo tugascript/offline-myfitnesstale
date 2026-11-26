@@ -25,7 +25,10 @@ import '../../../core/view_models/states/common_state.dart';
 
 final class ExercisePagination extends Equatable {
   final String name;
+  final ExerciseType type;
   final MuscleGroup? muscleGroup;
+  final CardioBaseMode? cardioBaseMode;
+  final CardioUnitType? cardioUnitType;
   final Difficulty? difficulty;
   final int? equipmentId;
   final bool isFavorite;
@@ -35,7 +38,10 @@ final class ExercisePagination extends Equatable {
   final int offset;
 
   const ExercisePagination({
+    this.type = ExerciseType.strength,
     this.muscleGroup,
+    this.cardioBaseMode,
+    this.cardioUnitType,
     this.difficulty,
     this.equipmentId,
     required this.name,
@@ -49,6 +55,7 @@ final class ExercisePagination extends Equatable {
   factory ExercisePagination.initial() {
     return const ExercisePagination(
       name: "",
+      type: ExerciseType.strength,
       total: 0,
       limit: 10,
       offset: 0,
@@ -58,7 +65,10 @@ final class ExercisePagination extends Equatable {
 
   ExercisePagination copyWith({
     String? name,
+    ExerciseType? type,
     Nullable<MuscleGroup>? muscleGroup,
+    Nullable<CardioBaseMode>? cardioBaseMode,
+    Nullable<CardioUnitType>? cardioUnitType,
     Nullable<Difficulty>? difficulty,
     Nullable<int>? equipmentId,
     bool? isFavorite,
@@ -69,7 +79,14 @@ final class ExercisePagination extends Equatable {
   }) {
     return ExercisePagination(
       name: name ?? this.name,
+      type: type ?? this.type,
       muscleGroup: muscleGroup != null ? muscleGroup.value : this.muscleGroup,
+      cardioBaseMode: cardioBaseMode != null
+          ? cardioBaseMode.value
+          : this.cardioBaseMode,
+      cardioUnitType: cardioUnitType != null
+          ? cardioUnitType.value
+          : this.cardioUnitType,
       difficulty: difficulty != null ? difficulty.value : this.difficulty,
       equipmentId: equipmentId != null ? equipmentId.value : this.equipmentId,
       isFavorite: isFavorite ?? this.isFavorite,
@@ -83,7 +100,10 @@ final class ExercisePagination extends Equatable {
   @override
   List<Object?> get props => [
     name,
+    type,
     muscleGroup,
+    cardioBaseMode,
+    cardioUnitType,
     difficulty,
     equipmentId,
     isFavorite,

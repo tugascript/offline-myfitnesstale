@@ -19,6 +19,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../../../../data/utils/display_names.dart';
 import '../../../../../data/utils/enums.dart';
+import '../../../../../data/utils/exercise_details.dart';
 import '../../../../../data/utils/json_data.dart';
 import '../../../../core/sizes/data_display_sizes.dart';
 import '../../../../core/widgets/layout/app_dropdown.dart';
@@ -277,7 +278,9 @@ class _AdvancedSetEditorState extends State<AdvancedSetEditor> {
                         _updateExerciseAtIndex(index, (exercise) {
                           exercise.exerciseId = value.id;
                           exercise.exerciseName = value.name;
-                          exercise.exerciseMuscleGroup = value.muscleGroup;
+                          exercise.exerciseMuscleGroup = value
+                              .getDetails<StrengthExerciseDetails>()
+                              ?.muscleGroup;
                         });
                       },
                       onMinRepsChanged: (value) {
@@ -387,7 +390,9 @@ class _AdvancedSetEditorState extends State<AdvancedSetEditor> {
                     toMaxReps: false,
                     exerciseId: exercise.id,
                     exerciseName: exercise.name,
-                    exerciseMuscleGroup: exercise.muscleGroup,
+                    exerciseMuscleGroup: exercise
+                        .getDetails<StrengthExerciseDetails>()
+                        ?.muscleGroup,
                     alternativeExercises: const {},
                   ),
                 );
@@ -461,7 +466,9 @@ class _AdvancedSetEditorState extends State<AdvancedSetEditor> {
                       toMaxReps: lastExercise.toMaxReps,
                       exerciseId: exercise.id,
                       exerciseName: exercise.name,
-                      exerciseMuscleGroup: exercise.muscleGroup,
+                      exerciseMuscleGroup: exercise
+                          .getDetails<StrengthExerciseDetails>()
+                          ?.muscleGroup,
                       alternativeExercises: const {},
                       difficulty: _calculateDifficulty(
                         setType,
@@ -503,7 +510,9 @@ class _AdvancedSetEditorState extends State<AdvancedSetEditor> {
                       toMaxReps: lastExercise.toMaxReps,
                       exerciseId: exercise.id,
                       exerciseName: exercise.name,
-                      exerciseMuscleGroup: exercise.muscleGroup,
+                      exerciseMuscleGroup: exercise
+                          .getDetails<StrengthExerciseDetails>()
+                          ?.muscleGroup,
                       alternativeExercises: const {},
                       difficulty: _calculateDifficulty(
                         setType,
@@ -574,7 +583,9 @@ class _AdvancedSetEditorState extends State<AdvancedSetEditor> {
                       toMaxReps: lastExercise.toMaxReps,
                       exerciseId: exercise.id,
                       exerciseName: exercise.name,
-                      exerciseMuscleGroup: exercise.muscleGroup,
+                      exerciseMuscleGroup: exercise
+                          .getDetails<StrengthExerciseDetails>()
+                          ?.muscleGroup,
                       alternativeExercises: const {},
                       difficulty: _calculateDifficulty(
                         setType,

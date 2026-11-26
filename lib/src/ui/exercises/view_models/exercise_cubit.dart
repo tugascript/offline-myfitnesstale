@@ -49,7 +49,10 @@ class ExerciseCubit extends Cubit<ExerciseState>
 
   Future<void> getExercises({
     String? name,
+    ExerciseType type = ExerciseType.strength,
     MuscleGroup? muscleGroup,
+    CardioBaseMode? cardioBaseMode,
+    CardioUnitType? cardioUnitType,
     Difficulty? difficulty,
     int? equipmentId,
     int? limit,
@@ -59,7 +62,10 @@ class ExerciseCubit extends Cubit<ExerciseState>
   }) => _loadExercises(
     ExercisePagination(
       name: name ?? '',
-      muscleGroup: muscleGroup,
+      type: type,
+      muscleGroup: type == ExerciseType.strength ? muscleGroup : null,
+      cardioBaseMode: type == ExerciseType.cardio ? cardioBaseMode : null,
+      cardioUnitType: type == ExerciseType.cardio ? cardioUnitType : null,
       difficulty: difficulty,
       equipmentId: equipmentId,
       isFavorite: isFavourite,
@@ -88,7 +94,10 @@ class ExerciseCubit extends Cubit<ExerciseState>
 
     final result = await _exerciseService.getExercises(
       name: query.name,
+      type: query.type,
       muscleGroup: query.muscleGroup,
+      cardioBaseMode: query.cardioBaseMode,
+      cardioUnitType: query.cardioUnitType,
       isFavorite: query.isFavorite,
       difficulty: query.difficulty,
       equipmentId: query.equipmentId,
@@ -953,7 +962,10 @@ class ExerciseCubit extends Cubit<ExerciseState>
   }
 
   Future<void> getSelectionExercises({
+    ExerciseType? type,
     MuscleGroup? muscleGroup,
+    CardioBaseMode? cardioBaseMode,
+    CardioUnitType? cardioUnitType,
     String name = "",
     bool isFavorite = false,
   }) async {
@@ -962,7 +974,10 @@ class ExerciseCubit extends Cubit<ExerciseState>
       state.copyWith(selectionExercisesRequestId: requestId, isLoading: true),
     );
     final exercisesResult = await _exerciseService.getAllExercises(
+      type: type,
       muscleGroup: muscleGroup,
+      cardioBaseMode: cardioBaseMode,
+      cardioUnitType: cardioUnitType,
       name: name,
       isFavorite: isFavorite,
     );

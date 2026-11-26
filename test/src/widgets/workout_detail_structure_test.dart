@@ -26,6 +26,7 @@ import 'package:myfitnesstale/src/data/repositories/workouts/dtos/workout_set_dt
 import 'package:myfitnesstale/src/data/repositories/workouts/dtos/workout_set_exercise_dto.dart';
 import 'package:myfitnesstale/src/data/repositories/workouts/workout_repository.dart';
 import 'package:myfitnesstale/src/data/utils/enums.dart';
+import 'package:myfitnesstale/src/data/utils/exercise_details.dart';
 import 'package:myfitnesstale/src/data/utils/json_data.dart';
 import 'package:myfitnesstale/src/ui/core/sizes/data_display_sizes.dart';
 import 'package:myfitnesstale/src/ui/core/sizes/screen_size.dart';
@@ -68,10 +69,13 @@ void main() {
     id: 101,
     name: 'Bench Press',
     description: 'Flat barbell bench press',
-    muscleGroup: MuscleGroup.push,
-    muscles: TargetMuscles(
-      primary: {Muscle.chest},
-      secondary: {Muscle.triceps},
+    details: StrengthExerciseDetails(
+      muscleGroup: MuscleGroup.push,
+      muscles: TargetMuscles(
+        primary: {Muscle.chest},
+        secondary: {Muscle.triceps},
+      ),
+      weightProgress: ExerciseWeightProgress.positive,
     ),
     difficulty: Difficulty.intermediate,
     createdBy: CreatedBy.system,
@@ -81,8 +85,11 @@ void main() {
     id: 102,
     name: 'Dumbbell Fly',
     description: 'Flat dumbbell fly',
-    muscleGroup: MuscleGroup.push,
-    muscles: TargetMuscles(primary: {Muscle.chest}, secondary: {}),
+    details: StrengthExerciseDetails(
+      muscleGroup: MuscleGroup.push,
+      muscles: TargetMuscles(primary: {Muscle.chest}, secondary: {}),
+      weightProgress: ExerciseWeightProgress.positive,
+    ),
     difficulty: Difficulty.beginner,
     createdBy: CreatedBy.system,
   );
@@ -91,8 +98,11 @@ void main() {
     id: 103,
     name: 'Lateral Raise',
     description: 'Side dumbbell lateral raise',
-    muscleGroup: MuscleGroup.pull,
-    muscles: TargetMuscles(primary: {Muscle.sideDelts}, secondary: {}),
+    details: StrengthExerciseDetails(
+      muscleGroup: MuscleGroup.pull,
+      muscles: TargetMuscles(primary: {Muscle.sideDelts}, secondary: {}),
+      weightProgress: ExerciseWeightProgress.positive,
+    ),
     difficulty: Difficulty.beginner,
     createdBy: CreatedBy.system,
   );

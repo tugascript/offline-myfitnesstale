@@ -35,6 +35,7 @@ import 'package:myfitnesstale/src/data/repositories/workouts/dtos/workout_set_ex
 import 'package:myfitnesstale/src/data/repositories/workouts/workout_record_repository.dart';
 import 'package:myfitnesstale/src/data/repositories/workouts/workout_repository.dart';
 import 'package:myfitnesstale/src/data/utils/enums.dart';
+import 'package:myfitnesstale/src/data/utils/exercise_details.dart';
 import 'package:myfitnesstale/src/data/utils/json_data.dart';
 import 'package:myfitnesstale/src/ui/core/screens/loading_screen.dart';
 import 'package:myfitnesstale/src/ui/core/view_models/states/common_state.dart';
@@ -201,8 +202,11 @@ WorkoutDto _sampleWorkout({int id = 1, String name = 'Push Day'}) {
               id: 101,
               name: 'Bench Press',
               description: '',
-              muscleGroup: MuscleGroup.push,
-              muscles: TargetMuscles(primary: {Muscle.chest}, secondary: {}),
+              details: StrengthExerciseDetails(
+                muscleGroup: MuscleGroup.push,
+                muscles: TargetMuscles(primary: {Muscle.chest}, secondary: {}),
+                weightProgress: ExerciseWeightProgress.positive,
+              ),
               createdBy: CreatedBy.system,
             ),
           ),
@@ -497,8 +501,11 @@ void main() {
       id: id,
       name: name,
       description: 'Compound chest movement',
-      muscleGroup: MuscleGroup.push,
-      muscles: const TargetMuscles(primary: {Muscle.chest}, secondary: {}),
+      details: const StrengthExerciseDetails(
+        muscleGroup: MuscleGroup.push,
+        muscles: TargetMuscles(primary: {Muscle.chest}, secondary: {}),
+        weightProgress: ExerciseWeightProgress.positive,
+      ),
       difficulty: Difficulty.intermediate,
       equipments: const [
         EquipmentDto(id: 1, name: 'Barbell', createdBy: CreatedBy.system),

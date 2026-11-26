@@ -21,6 +21,7 @@ import 'package:skeletonizer/skeletonizer.dart';
 import '../../../../data/repositories/exercises/dtos/exercise_dto.dart';
 import '../../../../data/repositories/exercises/dtos/exercise_record_dto.dart';
 import '../../../../data/utils/enums.dart';
+import '../../../../data/utils/exercise_details.dart';
 import '../../../../data/utils/json_data.dart';
 import '../../../core/sizes/data_display_sizes.dart';
 import '../../../core/widgets/layout/app_text_button.dart';
@@ -39,8 +40,11 @@ final _skeletonExerciseRecord = ExerciseRecordDto(
     id: 0,
     name: 'Loading Exercise Name...',
     description: '',
-    muscleGroup: MuscleGroup.push,
-    muscles: TargetMuscles(primary: {}, secondary: {}),
+    details: StrengthExerciseDetails(
+      muscleGroup: MuscleGroup.push,
+      muscles: TargetMuscles(primary: {}, secondary: {}),
+      weightProgress: ExerciseWeightProgress.positive,
+    ),
     createdBy: CreatedBy.system,
   ),
 );

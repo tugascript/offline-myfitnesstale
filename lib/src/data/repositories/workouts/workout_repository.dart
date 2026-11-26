@@ -32,6 +32,7 @@ import '../../services/sqlite/dao.dart';
 import '../../services/sqlite/database_helper.dart';
 import '../../utils/dates.dart';
 import '../../utils/enums.dart';
+import '../../utils/exercise_details.dart';
 import '../../utils/json_data.dart';
 import '../../utils/where_builder.dart';
 import '../core/dtos/paginated_dto.dart';
@@ -251,10 +252,12 @@ final class WorkoutRepository implements Repository {
       for (final set in sets) {
         for (final setExercise in set.exercises ?? const []) {
           final exercise = setExercise.exercise;
-          if (exercise == null) continue;
-          muscleGroups.add(exercise.muscleGroup);
-          muscles.primary.addAll(exercise.muscles.primary);
-          muscles.secondary.addAll(exercise.muscles.secondary);
+          final strengthDetails = exercise
+              ?.getDetails<StrengthExerciseDetails>();
+          if (strengthDetails == null) continue;
+          muscleGroups.add(strengthDetails.muscleGroup);
+          muscles.primary.addAll(strengthDetails.muscles.primary);
+          muscles.secondary.addAll(strengthDetails.muscles.secondary);
           muscles.secondary.removeAll(muscles.primary);
         }
       }
@@ -339,11 +342,14 @@ final class WorkoutRepository implements Repository {
               int setTotalReps = 0;
               for (final exercise in set.exercises) {
                 setTotalReps += setNum * (exercise.maxReps ?? exercise.minReps);
-                muscleGroups.add(exercise.exercise.muscleGroup);
-
-                muscles.primary.addAll(exercise.exercise.muscles.primary);
-                muscles.secondary.addAll(exercise.exercise.muscles.secondary);
-                muscles.secondary.removeAll(muscles.primary);
+                final strengthDetails = exercise.exercise
+                    .getDetails<StrengthExerciseDetails>();
+                if (strengthDetails != null) {
+                  muscleGroups.add(strengthDetails.muscleGroup);
+                  muscles.primary.addAll(strengthDetails.muscles.primary);
+                  muscles.secondary.addAll(strengthDetails.muscles.secondary);
+                  muscles.secondary.removeAll(muscles.primary);
+                }
               }
               totalReps += setTotalReps;
               setTotals.add((
@@ -1086,14 +1092,15 @@ final class WorkoutRepository implements Repository {
         );
         if (updatedSetExercises.isNotEmpty) {
           for (final setExercise in updatedSetExercises) {
-            final exercise = exerciseMap[setExercise.exerciseId];
-            if (exercise == null) {
+            final strengthDetails = exerciseMap[setExercise.exerciseId]
+                ?.getDetails<StrengthExerciseDetails>();
+            if (strengthDetails == null) {
               continue;
             }
 
-            updatedMuscleGroups.add(exercise.muscleGroup);
-            updatedMuscles.primary.addAll(exercise.muscles.primary);
-            updatedMuscles.secondary.addAll(exercise.muscles.secondary);
+            updatedMuscleGroups.add(strengthDetails.muscleGroup);
+            updatedMuscles.primary.addAll(strengthDetails.muscles.primary);
+            updatedMuscles.secondary.addAll(strengthDetails.muscles.secondary);
             updatedMuscles.secondary.removeAll(updatedMuscles.primary);
           }
         }

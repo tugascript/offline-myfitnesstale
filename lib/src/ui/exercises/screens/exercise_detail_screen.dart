@@ -22,6 +22,7 @@ import 'package:skeletonizer/skeletonizer.dart';
 
 import '../../../data/repositories/exercises/dtos/exercise_dto.dart';
 import '../../../data/utils/enums.dart';
+import '../../../data/utils/exercise_details.dart';
 import '../../../data/utils/json_data.dart';
 import '../../../routing/routes.dart';
 import '../../core/sizes/data_display_sizes.dart';
@@ -42,8 +43,11 @@ const _skeletonExercise = ExerciseDto(
   id: 0,
   name: 'Loading Exercise Name',
   description: 'Loading exercise description placeholder...',
-  muscleGroup: MuscleGroup.push,
-  muscles: TargetMuscles(primary: {}, secondary: {}),
+  details: StrengthExerciseDetails(
+    muscleGroup: MuscleGroup.push,
+    muscles: TargetMuscles(primary: {}, secondary: {}),
+    weightProgress: ExerciseWeightProgress.positive,
+  ),
   difficulty: Difficulty.beginner,
   createdBy: CreatedBy.system,
 );
@@ -195,55 +199,59 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
                     SizedBox(height: sizes.spacing * 1.25),
                   ],
 
-                  // Action Buttons
-                  Row(
-                    children: [
-                      Expanded(
-                        child: AppElevatedButton(
-                          theme: theme,
-                          isLoading: exerciseState.isLoading,
-                          sizes: sizes,
-                          onPressed: () {
-                            context.push(
-                              Routes.exerciseRecords.name.replaceFirst(
-                                ":id",
-                                exercise.id.toString(),
-                              ),
-                            );
-                          },
-                          label: 'Log Progress',
-                          icon: Icons.history,
+                  // Action Buttons (Strength-only progress & goal tracking)
+                  if (isSkeletonLoading ||
+                      exercise.type == ExerciseType.strength) ...[
+                    Row(
+                      children: [
+                        Expanded(
+                          child: AppElevatedButton(
+                            theme: theme,
+                            isLoading: exerciseState.isLoading,
+                            sizes: sizes,
+                            onPressed: () {
+                              context.push(
+                                Routes.exerciseRecords.name.replaceFirst(
+                                  ":id",
+                                  exercise.id.toString(),
+                                ),
+                              );
+                            },
+                            label: 'Log Progress',
+                            icon: Icons.history,
+                          ),
                         ),
-                      ),
-                      SizedBox(width: sizes.spacing),
-                      Expanded(
-                        child: AppElevatedButton(
-                          key: const ValueKey('exercise-create-goal-button'),
-                          theme: theme,
-                          isLoading: exerciseState.isLoading,
-                          isSecondary: true,
-                          sizes: sizes,
-                          onPressed: () async {
-                            final created = await showDialog<bool>(
-                              context: context,
-                              builder: (context) => CreateStrengthGoalModal(
-                                theme: theme,
-                                sizes: sizes,
-                                exerciseId: exercise.id,
-                              ),
-                            );
-                            if (created == true && context.mounted) {
-                              context.push(Routes.strengthGoals.name);
-                            }
-                          },
-                          label: 'Create Goal',
-                          icon: Icons.emoji_events,
+                        SizedBox(width: sizes.spacing),
+                        Expanded(
+                          child: AppElevatedButton(
+                            key: const ValueKey('exercise-create-goal-button'),
+                            theme: theme,
+                            isLoading: exerciseState.isLoading,
+                            isSecondary: true,
+                            sizes: sizes,
+                            onPressed: () async {
+                              final created = await showDialog<bool>(
+                                context: context,
+                                builder: (context) => CreateStrengthGoalModal(
+                                  theme: theme,
+                                  sizes: sizes,
+                                  exerciseId: exercise.id,
+                                ),
+                              );
+                              if (created == true && context.mounted) {
+                                context.push(Routes.strengthGoals.name);
+                              }
+                            },
+                            label: 'Create Goal',
+                            icon: Icons.emoji_events,
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
+                      ],
+                    ),
+                    if (exercise.createdBy == CreatedBy.user)
+                      SizedBox(height: sizes.spacing),
+                  ],
                   if (exercise.createdBy == CreatedBy.user) ...[
-                    SizedBox(height: sizes.spacing),
                     Row(
                       children: [
                         Expanded(

@@ -51,6 +51,7 @@ class _SetExerciseSearchModalState extends State<SetExerciseSearchModal> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       context.read<ExerciseCubit>().getSelectionExercises(
+        type: ExerciseType.strength,
         muscleGroup: widget.initialMuscleGroup,
       );
     });
@@ -87,6 +88,7 @@ class _SetExerciseSearchModalState extends State<SetExerciseSearchModal> {
                         required bool isFavorite,
                       }) {
                         context.read<ExerciseCubit>().getSelectionExercises(
+                          type: ExerciseType.strength,
                           name: name,
                           muscleGroup: muscleGroup,
                           isFavorite: isFavorite,

@@ -25,7 +25,9 @@ import '../../core/widgets/base_common_search_form.dart';
 import '../../core/widgets/layout/app_scaffold.dart';
 import '../view_models/exercise_cubit.dart';
 import '../view_models/states/exercise_state.dart';
+import '../widgets/cardio_exercise_search_form.dart';
 import '../widgets/details/create_exercise_modal.dart';
+import '../widgets/exercise_type_toggle.dart';
 import '../widgets/exercises_list.dart';
 
 class ExercisesListScreen extends StatefulWidget {
@@ -55,8 +57,11 @@ class _ExercisesListScreenState extends State<ExercisesListScreen> {
       final pagination = cubit.state.exercisePagination;
       await cubit.getExercises(
         name: pagination.name,
+        type: pagination.type,
         difficulty: pagination.difficulty,
         muscleGroup: pagination.muscleGroup,
+        cardioBaseMode: pagination.cardioBaseMode,
+        cardioUnitType: pagination.cardioUnitType,
         equipmentId: pagination.equipmentId,
         isFavourite: pagination.isFavorite,
         createdBy: pagination.createdBy,
@@ -80,8 +85,11 @@ class _ExercisesListScreenState extends State<ExercisesListScreen> {
         final pagination = cubit.state.exercisePagination;
         cubit.getExercises(
           name: pagination.name,
+          type: pagination.type,
           difficulty: pagination.difficulty,
           muscleGroup: pagination.muscleGroup,
+          cardioBaseMode: pagination.cardioBaseMode,
+          cardioUnitType: pagination.cardioUnitType,
           equipmentId: pagination.equipmentId,
           isFavourite: pagination.isFavorite,
           createdBy: pagination.createdBy,
@@ -97,6 +105,19 @@ class _ExercisesListScreenState extends State<ExercisesListScreen> {
     final maxScroll = _scrollController.position.maxScrollExtent;
     final currentScroll = _scrollController.offset;
     return currentScroll >= (maxScroll * 0.9);
+  }
+
+  void _onTypeChanged(ExerciseType nextType, ExercisePagination pagination) {
+    context.read<ExerciseCubit>().getExercises(
+      name: pagination.name,
+      type: nextType,
+      difficulty: pagination.difficulty,
+      equipmentId: pagination.equipmentId,
+      isFavourite: pagination.isFavorite,
+      createdBy: pagination.createdBy,
+      limit: 20,
+      offset: 0,
+    );
   }
 
   @override
@@ -122,45 +143,98 @@ class _ExercisesListScreenState extends State<ExercisesListScreen> {
             ).showSnackBar(SnackBar(content: Text(state.error!.description)));
           },
           builder: (context, state) {
+            final pagination = state.exercisePagination;
+            final isCardio = pagination.type == ExerciseType.cardio;
+
             return Column(
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
-                BaseCommonSearchForm(
-                  theme: theme,
-                  nameLabel: "Exercise",
-                  padding: sizes.padding,
-                  fontSize: sizes.fontSize,
-                  spacing: sizes.inputSpacing,
-                  isLoading: state.isLoading,
-                  initialName: state.exercisePagination.name,
-                  initialDifficulty: state.exercisePagination.difficulty,
-                  initialMuscleGroup: state.exercisePagination.muscleGroup,
-                  initialEquipmentId: state.exercisePagination.equipmentId,
-                  equipmentSelection: state.equipmentSelection,
-                  initialIsFavorite: state.exercisePagination.isFavorite,
-                  initialCreatedBy: state.exercisePagination.createdBy,
-                  showCreatedBy: true,
-                  onSubmit:
-                      ({
-                        String? name,
-                        Difficulty? difficulty,
-                        MuscleGroup? muscleGroup,
-                        int? equipmentId,
-                        bool isFavourite = false,
-                        CreatedBy? createdBy,
-                      }) {
-                        context.read<ExerciseCubit>().getExercises(
-                          name: name,
-                          difficulty: difficulty,
-                          muscleGroup: muscleGroup,
-                          equipmentId: equipmentId,
-                          isFavourite: isFavourite,
-                          createdBy: createdBy,
-                          limit: 20,
-                          offset: 0,
-                        );
-                      },
+                ExerciseTypeToggle(
+                  key: const ValueKey('exercise-search-type-toggle'),
+                  selectedType: pagination.type,
+                  sizes: sizes,
+                  enabled: !state.isLoading,
+                  onChanged: (nextType) => _onTypeChanged(nextType, pagination),
                 ),
+                SizedBox(height: sizes.inputSpacing),
+                if (isCardio)
+                  CardioExerciseSearchForm(
+                    key: const ValueKey('cardio-exercise-search-form'),
+                    theme: theme,
+                    sizes: sizes,
+                    isLoading: state.isLoading,
+                    initialName: pagination.name,
+                    initialDifficulty: pagination.difficulty,
+                    initialCardioBaseMode: pagination.cardioBaseMode,
+                    initialCardioUnitType: pagination.cardioUnitType,
+                    initialEquipmentId: pagination.equipmentId,
+                    equipmentSelection: state.equipmentSelection,
+                    initialIsFavorite: pagination.isFavorite,
+                    initialCreatedBy: pagination.createdBy,
+                    showCreatedBy: true,
+                    onSubmit:
+                        ({
+                          String? name,
+                          Difficulty? difficulty,
+                          CardioBaseMode? cardioBaseMode,
+                          CardioUnitType? cardioUnitType,
+                          int? equipmentId,
+                          bool isFavourite = false,
+                          CreatedBy? createdBy,
+                        }) {
+                          context.read<ExerciseCubit>().getExercises(
+                            name: name,
+                            type: ExerciseType.cardio,
+                            difficulty: difficulty,
+                            cardioBaseMode: cardioBaseMode,
+                            cardioUnitType: cardioUnitType,
+                            equipmentId: equipmentId,
+                            isFavourite: isFavourite,
+                            createdBy: createdBy,
+                            limit: 20,
+                            offset: 0,
+                          );
+                        },
+                  )
+                else
+                  BaseCommonSearchForm(
+                    key: const ValueKey('strength-exercise-search-form'),
+                    theme: theme,
+                    nameLabel: "Exercise",
+                    padding: sizes.padding,
+                    fontSize: sizes.fontSize,
+                    spacing: sizes.inputSpacing,
+                    isLoading: state.isLoading,
+                    initialName: pagination.name,
+                    initialDifficulty: pagination.difficulty,
+                    initialMuscleGroup: pagination.muscleGroup,
+                    initialEquipmentId: pagination.equipmentId,
+                    equipmentSelection: state.equipmentSelection,
+                    initialIsFavorite: pagination.isFavorite,
+                    initialCreatedBy: pagination.createdBy,
+                    showCreatedBy: true,
+                    onSubmit:
+                        ({
+                          String? name,
+                          Difficulty? difficulty,
+                          MuscleGroup? muscleGroup,
+                          int? equipmentId,
+                          bool isFavourite = false,
+                          CreatedBy? createdBy,
+                        }) {
+                          context.read<ExerciseCubit>().getExercises(
+                            name: name,
+                            type: ExerciseType.strength,
+                            difficulty: difficulty,
+                            muscleGroup: muscleGroup,
+                            equipmentId: equipmentId,
+                            isFavourite: isFavourite,
+                            createdBy: createdBy,
+                            limit: 20,
+                            offset: 0,
+                          );
+                        },
+                  ),
                 SizedBox(height: sizes.inputSpacing),
                 Expanded(
                   child: ExercisesList(
@@ -183,10 +257,18 @@ class _ExercisesListScreenState extends State<ExercisesListScreen> {
           key: const ValueKey('exercise-add'),
           elevation: sizes.elevation,
           onPressed: () {
+            final initialType = context
+                .read<ExerciseCubit>()
+                .state
+                .exercisePagination
+                .type;
             showDialog(
               context: context,
-              builder: (context) =>
-                  CreateExerciseModal(theme: theme, sizes: sizes),
+              builder: (context) => CreateExerciseModal(
+                theme: theme,
+                sizes: sizes,
+                initialType: initialType,
+              ),
             );
           },
           shape: BeveledRectangleBorder(),

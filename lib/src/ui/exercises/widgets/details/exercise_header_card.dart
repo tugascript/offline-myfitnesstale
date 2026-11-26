@@ -18,10 +18,12 @@
 import 'package:material_ui/material_ui.dart';
 
 import '../../../../data/repositories/exercises/dtos/exercise_dto.dart';
+import '../../../../data/utils/exercise_details.dart';
 import '../../../core/sizes/data_display_sizes.dart';
 import '../../../core/widgets/base_details_header.dart';
 import '../../../core/widgets/difficulty_badge.dart';
 import '../../../core/widgets/muscles_carousel.dart';
+import './cardio_exercise_details_section.dart';
 
 class ExerciseHeaderCard extends StatelessWidget {
   final DataDisplaySizesList sizes;
@@ -40,6 +42,22 @@ class ExerciseHeaderCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final resolvedTheme = theme ?? Theme.of(context);
+    final detailsSection = switch (exerciseDto.details) {
+      StrengthExerciseDetails(:final muscleGroup, :final muscles) =>
+        MusclesCarousel(
+          sizes: sizes,
+          theme: resolvedTheme,
+          muscleGroup: muscleGroup,
+          muscles: muscles,
+          equipments: exerciseDto.equipments ?? const [],
+        ),
+      final CardioExerciseDetails cardioDetails => CardioExerciseDetailsSection(
+        theme: resolvedTheme,
+        sizes: sizes,
+        details: cardioDetails,
+        equipments: exerciseDto.equipments ?? const [],
+      ),
+    };
 
     return BaseDetailsHeader(
       padding: sizes.padding,
@@ -67,13 +85,7 @@ class ExerciseHeaderCard extends StatelessWidget {
           ],
         ),
         SizedBox(height: sizes.spacing),
-        MusclesCarousel(
-          sizes: sizes,
-          theme: resolvedTheme,
-          muscleGroup: exerciseDto.muscleGroup,
-          muscles: exerciseDto.muscles,
-          equipments: exerciseDto.equipments ?? const [],
-        ),
+        detailsSection,
         if (exerciseDto.description.isNotEmpty) ...[
           SizedBox(height: sizes.spacing),
           Text(

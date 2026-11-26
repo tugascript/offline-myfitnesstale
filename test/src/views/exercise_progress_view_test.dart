@@ -167,16 +167,22 @@ void main() {
     id: 1,
     name: 'Alpha Press',
     description: '',
-    muscleGroup: MuscleGroup.push,
-    muscles: muscles,
+    details: StrengthExerciseDetails(
+      muscleGroup: MuscleGroup.push,
+      muscles: muscles,
+      weightProgress: ExerciseWeightProgress.positive,
+    ),
     createdBy: CreatedBy.user,
   );
   const zulu = ExerciseDto(
     id: 2,
     name: 'Zulu Row',
     description: '',
-    muscleGroup: MuscleGroup.pull,
-    muscles: muscles,
+    details: StrengthExerciseDetails(
+      muscleGroup: MuscleGroup.pull,
+      muscles: muscles,
+      weightProgress: ExerciseWeightProgress.positive,
+    ),
     createdBy: CreatedBy.user,
   );
 

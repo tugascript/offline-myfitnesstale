@@ -54,8 +54,14 @@ class _CreateStrengthGoalModalState extends State<CreateStrengthGoalModal> {
     super.initState();
     if (widget.exerciseId == null) {
       final exerciseState = context.read<ExerciseCubit>().state;
-      if (exerciseState.exercises.isEmpty) {
-        context.read<ExerciseCubit>().getExercises(limit: 100);
+      final hasStrengthExercises = exerciseState.exercises.any(
+        (exercise) => exercise.type == ExerciseType.strength,
+      );
+      if (!hasStrengthExercises) {
+        context.read<ExerciseCubit>().getExercises(
+          type: ExerciseType.strength,
+          limit: 100,
+        );
       }
     }
   }
@@ -109,7 +115,12 @@ class _CreateStrengthGoalModalState extends State<CreateStrengthGoalModal> {
         context.watch<ProfileCubit>().state.system?.units ?? Units.metric;
     final showExerciseSelection = widget.exerciseId == null;
     final exercises = showExerciseSelection
-        ? context.watch<ExerciseCubit>().state.exercises
+        ? context
+              .watch<ExerciseCubit>()
+              .state
+              .exercises
+              .where((exercise) => exercise.type == ExerciseType.strength)
+              .toList()
         : const <ExerciseDto>[];
 
     return AppModal(
