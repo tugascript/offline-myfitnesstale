@@ -67,15 +67,23 @@ class _FakeExerciseCubit extends ExerciseCubit {
   final bool shouldFail;
   final List<ExerciseInput> createdInputs = [];
   final List<(int, ExerciseInput)> updatedCalls = [];
+  final List<({ExerciseType type, int? limit, int? offset})>
+  getExercisesCallArgs = [];
   int getExercisesCalls = 0;
 
-  _FakeExerciseCubit({this.shouldFail = false, ExerciseDto? initialExercise})
-    : super(exerciseRepository: ExerciseRepository.create()) {
+  _FakeExerciseCubit({
+    this.shouldFail = false,
+    ExerciseDto? initialExercise,
+    ExerciseType initialType = ExerciseType.strength,
+    int initialOffset = 0,
+  }) : super(exerciseRepository: ExerciseRepository.create()) {
     emit(
       state.copyWith(
         equipmentSelection: const {1: 'Barbell', 2: 'Dumbbell'},
         exercises: initialExercise != null ? [initialExercise] : const [],
         exercisePagination: state.exercisePagination.copyWith(
+          type: initialType,
+          offset: initialOffset,
           total: initialExercise != null ? 1 : 0,
         ),
         selectedExercise: Nullable(initialExercise),
@@ -101,6 +109,7 @@ class _FakeExerciseCubit extends ExerciseCubit {
     CreatedBy? createdBy,
   }) async {
     getExercisesCalls++;
+    getExercisesCallArgs.add((type: type, limit: limit, offset: offset));
   }
 
   @override
@@ -1975,6 +1984,58 @@ void main() {
       );
       expect(find.byType(EditExerciseModal), findsNothing);
       expect(find.text('Unit: miles'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'CreateStrengthGoalModal passes offset: 0 when loading strength options after browsing cardio page 2',
+    (tester) async {
+      const cardioExercise = ExerciseDto(
+        id: 77,
+        name: 'Treadmill Run',
+        description: '',
+        details: CardioExerciseDetails(
+          defaultMode: CardioBaseMode.time,
+          unitType: CardioUnitType.distance,
+          unit: 'km',
+        ),
+        createdBy: CreatedBy.user,
+      );
+      final exerciseCubit = _FakeExerciseCubit(
+        initialExercise: cardioExercise,
+        initialType: ExerciseType.cardio,
+        initialOffset: 20,
+      );
+      final recordCubit = _FakeExerciseRecordCubit();
+      final profileCubit = _FakeProfileCubit();
+      addTearDown(exerciseCubit.close);
+      addTearDown(recordCubit.close);
+      addTearDown(profileCubit.close);
+
+      await tester.pumpWidget(
+        MultiBlocProvider(
+          providers: [
+            BlocProvider<ExerciseCubit>.value(value: exerciseCubit),
+            BlocProvider<ExerciseRecordCubit>.value(value: recordCubit),
+            BlocProvider<ProfileCubit>.value(value: profileCubit),
+          ],
+          child: MaterialApp(
+            home: Builder(
+              builder: (context) => Scaffold(
+                body: CreateStrengthGoalModal(
+                  theme: Theme.of(context),
+                  sizes: DataDisplaySizes.getDataDisplaySizes(ScreenSize.md),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(exerciseCubit.getExercisesCallArgs, [
+        (type: ExerciseType.strength, limit: 100, offset: 0),
+      ]);
     },
   );
 }
