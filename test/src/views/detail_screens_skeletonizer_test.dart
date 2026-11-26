@@ -664,6 +664,81 @@ void main() {
         expect(tester.takeException(), isNull);
       },
     );
+
+    testWidgets(
+      'hides strength-only actions during skeleton load and when cardio exercise loads',
+      (tester) async {
+        final cubit = _TestExerciseCubit()
+          ..pending = Completer<void>()
+          ..nextExercise = const ExerciseDto(
+            id: 44,
+            name: 'Outdoor Run',
+            description: 'Steady cardio session',
+            details: CardioExerciseDetails(
+              defaultMode: CardioBaseMode.time,
+              unitType: CardioUnitType.distance,
+              unit: 'km',
+            ),
+            difficulty: Difficulty.beginner,
+            createdBy: CreatedBy.user,
+          );
+
+        await pumpExerciseScreen(tester, cubit: cubit, exerciseId: 44);
+
+        expect(find.text('Log Progress'), findsNothing);
+        expect(find.text('Create Goal'), findsNothing);
+        expect(
+          find.byKey(const ValueKey('exercise-create-goal-button')),
+          findsNothing,
+        );
+
+        cubit.pending!.complete();
+        await tester.pumpAndSettle();
+
+        expect(find.textContaining('OUTDOOR RUN'), findsOneWidget);
+        expect(find.text('Log Progress'), findsNothing);
+        expect(find.text('Create Goal'), findsNothing);
+      },
+    );
+
+    testWidgets(
+      'shows error snackbar even when a background list query keeps state.isLoading true',
+      (tester) async {
+        final cubit = _TestExerciseCubit()..nextExercise = sampleExercise();
+
+        await pumpExerciseScreen(tester, cubit: cubit);
+        await tester.pumpAndSettle();
+
+        cubit.emit(
+          cubit.state.copyWith(
+            pendingExercisesQuery: Nullable(
+              ExercisePagination.initial().copyWith(type: ExerciseType.cardio),
+            ),
+          ),
+        );
+        await tester.pump();
+
+        expect(cubit.state.isLoading, isTrue);
+
+        cubit.emit(
+          cubit.state.copyWith(
+            error: const Nullable(
+              ErrorState(
+                type: 'operationFailure',
+                description: 'Failed to update exercise',
+              ),
+            ),
+          ),
+        );
+        await tester.pump();
+
+        expect(find.byType(SnackBar), findsOneWidget);
+        expect(
+          find.textContaining('Failed to update exercise'),
+          findsOneWidget,
+        );
+      },
+    );
   });
 
   group('EquipmentDetailsScreen Skeletonizer', () {
