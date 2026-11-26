@@ -135,6 +135,7 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
     final theme = Theme.of(context);
     final breakPoints = BreakPoint.fromContext(context);
     final sizes = DataDisplaySizes.getDataDisplaySizes(breakPoints.screenSize);
+    final route = ModalRoute.of(context);
 
     return AppScaffold(
       title: 'Workouts',
@@ -142,7 +143,9 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
         padding: EdgeInsets.all(sizes.viewPadding),
         child: BlocConsumer<WorkoutCubit, WorkoutState>(
           listenWhen: (previous, current) =>
-              previous.error != current.error && current.error != null,
+              (route?.isCurrent ?? true) &&
+              previous.error != current.error &&
+              current.error != null,
           listener: (context, state) {
             if (state.error == null) {
               return;

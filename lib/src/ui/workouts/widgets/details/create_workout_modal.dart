@@ -64,7 +64,9 @@ class CreateWorkoutDialog extends StatelessWidget {
                   required EditorType editorType,
                   String? description,
                 }) async {
-                  await context.read<WorkoutCubit>().createWorkout(
+                  final workoutCubit = context.read<WorkoutCubit>();
+                  final messenger = ScaffoldMessenger.maybeOf(context);
+                  await workoutCubit.createWorkout(
                     WorkoutInput(
                       name: name,
                       isFavorite: isFavorite,
@@ -76,10 +78,13 @@ class CreateWorkoutDialog extends StatelessWidget {
                   await Future.delayed(const Duration(milliseconds: 10));
 
                   if (context.mounted) {
+                    final cubitState = workoutCubit.state;
                     Navigator.of(context).pop();
-                    final cubitState = context.read<WorkoutCubit>().state;
-                    if (cubitState.error == null &&
-                        cubitState.selectedWorkout != null) {
+                    if (cubitState.error != null) {
+                      messenger?.showSnackBar(
+                        SnackBar(content: Text(cubitState.error!.description)),
+                      );
+                    } else if (cubitState.selectedWorkout != null) {
                       context.push(
                         "/workouts/${cubitState.selectedWorkout!.id}/edit",
                       );

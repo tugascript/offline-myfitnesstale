@@ -86,6 +86,7 @@ class _FakeWorkoutCubit extends WorkoutCubit {
   final List<WorkoutDto> workoutsToEmit;
   final bool keepLoadingOnGetWorkout;
   final ErrorState? batchUpsertCardioError;
+  final ErrorState? createWorkoutError;
   final List<WorkoutCardioSetDto>? refreshedCardioSetsOnSave;
 
   _FakeWorkoutCubit({
@@ -95,6 +96,7 @@ class _FakeWorkoutCubit extends WorkoutCubit {
     ExerciseType initialType = ExerciseType.strength,
     this.keepLoadingOnGetWorkout = false,
     this.batchUpsertCardioError,
+    this.createWorkoutError,
     this.refreshedCardioSetsOnSave,
   }) : super(workoutRepository: WorkoutRepository.create()) {
     final seedWorkouts =
@@ -172,6 +174,13 @@ class _FakeWorkoutCubit extends WorkoutCubit {
   @override
   Future<void> createWorkout(WorkoutInput input) async {
     createdInputs.add(input);
+    if (createWorkoutError != null) {
+      emit(state.copyWith(isLoading: true, error: const Nullable(null)));
+      emit(
+        state.copyWith(isLoading: false, error: Nullable(createWorkoutError)),
+      );
+      return;
+    }
     emit(
       state.copyWith(
         selectedWorkout: Nullable(
@@ -1556,6 +1565,219 @@ void main() {
         await tester.pumpAndSettle();
 
         expect(cubit.selectionTypes, [ExerciseType.strength]);
+      },
+    );
+
+    testWidgets(
+      'CardioDurationInput displays stored rest durations beyond picker limit without clamping',
+      (tester) async {
+        final sizes = DataDisplaySizes.getDataDisplaySizes(ScreenSize.sm);
+        int restSeconds = 3600;
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: Builder(
+                builder: (context) => CardioDurationInput(
+                  theme: Theme.of(context),
+                  sizes: sizes,
+                  seconds: restSeconds,
+                  labelText: 'Rest',
+                  sheetTitle: 'Rest Between Sets',
+                  allowHours: false,
+                  minSeconds: 0,
+                  onChanged: (v) => restSeconds = v,
+                ),
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.text('1h'), findsOneWidget);
+        expect(find.text('59m 59s'), findsNothing);
+
+        // Opening and cancelling the picker preserves the unclamped value
+        await tester.tap(find.text('1h'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Cancel'));
+        await tester.pumpAndSettle();
+
+        expect(restSeconds, 3600);
+        expect(find.text('1h'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'CardioRoundsInput displays stored interval rounds beyond picker limit without clamping',
+      (tester) async {
+        final sizes = DataDisplaySizes.getDataDisplaySizes(ScreenSize.sm);
+        int rounds = 60;
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: Builder(
+                builder: (context) => CardioRoundsInput(
+                  theme: Theme.of(context),
+                  sizes: sizes,
+                  initialRounds: rounds,
+                  onChanged: (v) => rounds = v,
+                ),
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.text('60'), findsOneWidget);
+        expect(find.text('50'), findsNothing);
+
+        // Opening and cancelling the picker preserves the unclamped rounds
+        await tester.tap(find.text('60'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Cancel'));
+        await tester.pumpAndSettle();
+
+        expect(rounds, 60);
+        expect(find.text('60'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'Failed cardio save shows a single SnackBar across stacked Workouts -> Detail -> Edit routes',
+      (tester) async {
+        final cardioWorkout = _buildSampleCardioWorkout(id: 55);
+        final workoutCubit = _FakeWorkoutCubit(
+          initialSelectedWorkout: cardioWorkout,
+          initialWorkouts: [cardioWorkout],
+          workoutsToEmit: [cardioWorkout],
+          initialType: ExerciseType.cardio,
+          batchUpsertCardioError: const ErrorState(
+            type: 'operationFailure',
+            description: 'Failed to save cardio sets',
+          ),
+        );
+        final exerciseCubit = _FakeExerciseCubit(
+          cardioExercises: const [_runningExercise, _rowingExercise],
+        );
+        addTearDown(workoutCubit.close);
+        addTearDown(exerciseCubit.close);
+
+        final router = GoRouter(
+          initialLocation: '/workouts',
+          routes: [
+            GoRoute(
+              path: '/workouts',
+              builder: (_, _) => const WorkoutsScreen(),
+            ),
+            GoRoute(
+              path: '/workouts/:id',
+              builder: (_, state) => WorkoutDetailScreen(
+                workoutId: int.parse(state.pathParameters['id']!),
+              ),
+            ),
+            GoRoute(
+              path: '/workouts/:id/edit',
+              builder: (_, state) => WorkoutEditScreen(
+                workoutId: int.parse(state.pathParameters['id']!),
+              ),
+            ),
+          ],
+        );
+        addTearDown(router.dispose);
+
+        await tester.pumpWidget(
+          MultiBlocProvider(
+            providers: [
+              BlocProvider<WorkoutCubit>.value(value: workoutCubit),
+              BlocProvider<ExerciseCubit>.value(value: exerciseCubit),
+            ],
+            child: MaterialApp.router(routerConfig: router),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        // Push Detail then Edit so all three routes remain mounted in the stack
+        router.push('/workouts/55');
+        await tester.pumpAndSettle();
+        router.push('/workouts/55/edit');
+        await tester.pumpAndSettle();
+
+        final saveButton = find.text('SAVE');
+        await tester.ensureVisible(saveButton);
+        await tester.tap(saveButton);
+        await tester.pumpAndSettle();
+
+        expect(find.byType(SnackBar), findsOneWidget);
+        expect(find.text('Failed to save cardio sets'), findsOneWidget);
+
+        // Dismiss the active SnackBar and confirm no duplicate SnackBars were queued
+        final editContext = tester.element(find.byType(WorkoutEditScreen));
+        ScaffoldMessenger.of(editContext).hideCurrentSnackBar();
+        await tester.pumpAndSettle();
+
+        expect(find.byType(SnackBar), findsNothing);
+      },
+    );
+
+    testWidgets(
+      'Failed workout creation from CreateWorkoutDialog still shows a single error SnackBar',
+      (tester) async {
+        final workoutCubit = _FakeWorkoutCubit(
+          createWorkoutError: const ErrorState(
+            type: 'operationFailure',
+            description: 'Could not create workout',
+          ),
+        );
+        addTearDown(workoutCubit.close);
+
+        final router = GoRouter(
+          initialLocation: '/workouts',
+          routes: [
+            GoRoute(
+              path: '/workouts',
+              builder: (_, _) => const WorkoutsScreen(),
+            ),
+            GoRoute(
+              path: '/workouts/:id/edit',
+              builder: (_, state) =>
+                  Scaffold(body: Text('Edit ${state.pathParameters['id']}')),
+            ),
+          ],
+        );
+        addTearDown(router.dispose);
+
+        await tester.pumpWidget(
+          BlocProvider<WorkoutCubit>.value(
+            value: workoutCubit,
+            child: MaterialApp.router(routerConfig: router),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.byKey(const ValueKey('workout-add')));
+        await tester.pumpAndSettle();
+
+        await tester.enterText(
+          find.byWidgetPredicate(
+            (w) => w is TextField && w.decoration?.labelText == 'Name',
+          ),
+          'Evening Run',
+        );
+        await tester.tap(find.text('CREATE WORKOUT'));
+        await tester.pump(const Duration(milliseconds: 50));
+        await tester.pumpAndSettle();
+
+        expect(find.byType(SnackBar), findsOneWidget);
+        expect(find.text('Could not create workout'), findsOneWidget);
+
+        // Dismiss the active SnackBar and confirm no duplicate was queued
+        final listContext = tester.element(find.byType(WorkoutsScreen));
+        ScaffoldMessenger.of(listContext).hideCurrentSnackBar();
+        await tester.pumpAndSettle();
+
+        expect(find.byType(SnackBar), findsNothing);
       },
     );
   });
