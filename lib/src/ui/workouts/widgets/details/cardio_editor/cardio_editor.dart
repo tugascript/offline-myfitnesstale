@@ -169,26 +169,23 @@ class _CardioEditorState extends State<CardioEditor> {
       }).toList(),
     );
 
-    if (mounted) {
-      final hasError = workoutCubit.state.error != null;
-      if (!hasError && context.canPop()) {
-        context.pop();
-        setState(() {
-          _isCompleting = false;
-        });
-        return;
-      }
+    if (!mounted) return;
 
-      final updatedWorkout = workoutCubit.state.selectedWorkout;
-      setState(() {
-        if (!hasError &&
-            updatedWorkout != null &&
-            updatedWorkout.id == widget.workoutId) {
-          _displayedSets = _mapSets(updatedWorkout.cardioSets ?? []);
-        }
-        _isCompleting = false;
-      });
+    final hasError = workoutCubit.state.error != null;
+    if (!hasError && context.canPop()) {
+      context.pop();
+      return;
     }
+
+    final updatedWorkout = workoutCubit.state.selectedWorkout;
+    setState(() {
+      if (!hasError &&
+          updatedWorkout != null &&
+          updatedWorkout.id == widget.workoutId) {
+        _displayedSets = _mapSets(updatedWorkout.cardioSets ?? []);
+      }
+      _isCompleting = false;
+    });
   }
 
   @override

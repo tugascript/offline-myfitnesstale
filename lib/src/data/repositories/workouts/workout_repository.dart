@@ -1589,8 +1589,9 @@ final class WorkoutRepository implements Repository {
   _loadWorkoutCardioSets<E extends ErrorTypes>(
     int workoutId,
     int resolvedVersion,
-    E failureType,
-  ) async {
+    E failureType, {
+    Transaction? trx,
+  }) async {
     try {
       final setQuery = WhereBuilder()
         ..and(WorkoutCardioSetColumns.workoutId.equal, workoutId)
@@ -1599,6 +1600,7 @@ final class WorkoutRepository implements Repository {
         where: setQuery.where,
         whereArgs: setQuery.args,
         orderBy: [WorkoutCardioSetColumns.position.orderAsc],
+        trx: trx,
       );
       if (cardioSets.isEmpty) {
         _logger.info('No workout cardio sets found for workout id $workoutId');
@@ -1619,6 +1621,7 @@ final class WorkoutRepository implements Repository {
               WorkoutCardioSetExerciseColumns.workoutCardioSetId.orderAsc,
               WorkoutCardioSetExerciseColumns.position.orderAsc,
             ],
+            trx: trx,
           );
       if (cardioSetExercises.isEmpty) {
         return ok(
@@ -1634,6 +1637,7 @@ final class WorkoutRepository implements Repository {
         dao: _exerciseDao,
         column: ExerciseColumns.id,
         values: exerciseIds,
+        trx: trx,
       );
       if (exercisesResult.isErr()) return err(exercisesResult.error);
 
@@ -1769,7 +1773,7 @@ final class WorkoutRepository implements Repository {
     return ok(null);
   }
 
-  Future<Result<void, ServiceError<SingleErrorTypes>>>
+  Future<Result<WorkoutDto, ServiceError<SingleErrorTypes>>>
   batchUpsertCardioWorkoutSets({
     required int workoutId,
     required List<WorkoutCardioSetUpsertInput> inputs,
@@ -1822,7 +1826,7 @@ final class WorkoutRepository implements Repository {
       }
 
       return await _cardioSetDao.startTransaction<
-        Result<void, ServiceError<SingleErrorTypes>>
+        Result<WorkoutDto, ServiceError<SingleErrorTypes>>
       >((txn) async {
         final workout = await _workoutDao.selectOne(workoutId, txn);
         if (workout == null) {
@@ -2055,10 +2059,23 @@ final class WorkoutRepository implements Repository {
           updatedAt: DateUtilities.getNowUtcUnix(),
         );
         await _workoutDao.update(updatedWorkout, txn);
+        final loadedSetsResult = await _loadWorkoutCardioSets(
+          workoutId,
+          workoutVersion,
+          SingleErrorTypes.operationFailure,
+          trx: txn,
+        );
+        if (loadedSetsResult.isErr()) throw loadedSetsResult.error;
+
         _logger.info(
           'Batch upserting cardio workout sets completed successfully',
         );
-        return ok(null);
+        return ok(
+          WorkoutDto.fromModel(
+            updatedWorkout,
+            cardioSets: loadedSetsResult.value,
+          ),
+        );
       });
     } on ServiceError<SingleErrorTypes> catch (error) {
       return err(error);

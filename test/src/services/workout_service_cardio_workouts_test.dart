@@ -168,10 +168,13 @@ void main() {
               ],
             );
         expect(upsertResult.isOk(), isTrue);
+        expect(upsertResult.value.totalSets, 5);
+        expect(upsertResult.value.cardioSets, hasLength(2));
 
         final loadedResult = await workoutRepository.getWorkout(created.id);
         expect(loadedResult.isOk(), isTrue);
         final loaded = loadedResult.value;
+        expect(upsertResult.value, loaded);
         expect(loaded.totalSets, 5);
         expect(loaded.totalReps, 0);
         expect(loaded.muscleGroups, isEmpty);
