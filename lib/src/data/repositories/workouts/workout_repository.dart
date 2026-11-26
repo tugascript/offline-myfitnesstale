@@ -1691,7 +1691,18 @@ final class WorkoutRepository implements Repository {
       );
     }
 
+    final Set<int> seenSetIds = {};
+    final Set<int> seenExerciseRowIds = {};
+
     for (final setInput in inputs) {
+      if (setInput.id != null && !seenSetIds.add(setInput.id!)) {
+        return err(
+          const ServiceError(
+            type: SingleErrorTypes.invalidInput,
+            description: 'Duplicate cardio set IDs are not allowed',
+          ),
+        );
+      }
       if (setInput.position < 1) {
         return err(
           const ServiceError(
@@ -1744,6 +1755,15 @@ final class WorkoutRepository implements Repository {
       }
 
       for (final exerciseInput in setInput.exercises) {
+        if (exerciseInput.id != null &&
+            !seenExerciseRowIds.add(exerciseInput.id!)) {
+          return err(
+            const ServiceError(
+              type: SingleErrorTypes.invalidInput,
+              description: 'Duplicate cardio set exercise IDs are not allowed',
+            ),
+          );
+        }
         if (exerciseInput.position < 1) {
           return err(
             const ServiceError(

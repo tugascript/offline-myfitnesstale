@@ -717,6 +717,127 @@ void main() {
           remaining.value.cardioSets!.first.exercises!.first.quantity,
           300,
         );
+
+        final existingSetId = remaining.value.cardioSets!.first.id;
+        final existingExerciseRowId =
+            remaining.value.cardioSets!.first.exercises!.first.id;
+
+        // Duplicate non-null cardio set IDs rejected without mutating DB
+        final duplicateSetIds = await workoutRepository
+            .batchUpsertCardioWorkoutSets(
+              workoutId: cardioWorkout.id,
+              inputs: [
+                WorkoutCardioSetUpsertInput(
+                  id: existingSetId,
+                  setType: CardioSetType.constant,
+                  position: 1,
+                  exercises: [
+                    WorkoutCardioSetExerciseUpsertInput(
+                      id: existingExerciseRowId,
+                      position: 1,
+                      exerciseId: cardioExId,
+                      mode: CardioBaseMode.time,
+                      quantity: 111,
+                    ),
+                  ],
+                ),
+                WorkoutCardioSetUpsertInput(
+                  id: existingSetId,
+                  setType: CardioSetType.constant,
+                  position: 2,
+                  exercises: [
+                    WorkoutCardioSetExerciseUpsertInput(
+                      position: 1,
+                      exerciseId: cardioExId,
+                      mode: CardioBaseMode.time,
+                      quantity: 222,
+                    ),
+                  ],
+                ),
+              ],
+            );
+        expect(duplicateSetIds.isErr(), isTrue);
+        expect(duplicateSetIds.error.type, SingleErrorTypes.invalidInput);
+
+        // Duplicate non-null exercise-row IDs within a set rejected
+        final duplicateExerciseRowIds = await workoutRepository
+            .batchUpsertCardioWorkoutSets(
+              workoutId: cardioWorkout.id,
+              inputs: [
+                WorkoutCardioSetUpsertInput(
+                  id: existingSetId,
+                  setType: CardioSetType.interval,
+                  position: 1,
+                  rounds: 2,
+                  exercises: [
+                    WorkoutCardioSetExerciseUpsertInput(
+                      id: existingExerciseRowId,
+                      position: 1,
+                      exerciseId: cardioExId,
+                      mode: CardioBaseMode.time,
+                      quantity: 60,
+                    ),
+                    WorkoutCardioSetExerciseUpsertInput(
+                      id: existingExerciseRowId,
+                      position: 2,
+                      exerciseId: cardioExId,
+                      mode: CardioBaseMode.time,
+                      quantity: 90,
+                    ),
+                  ],
+                ),
+              ],
+            );
+        expect(duplicateExerciseRowIds.isErr(), isTrue);
+        expect(
+          duplicateExerciseRowIds.error.type,
+          SingleErrorTypes.invalidInput,
+        );
+
+        // Existing persisted row remains untouched after rejected batches
+        final afterRejected = await workoutRepository.getWorkout(
+          cardioWorkout.id,
+        );
+        expect(afterRejected.isOk(), isTrue);
+        expect(afterRejected.value.cardioSets, hasLength(1));
+        expect(
+          afterRejected.value.cardioSets!.first.exercises!.first.quantity,
+          300,
+        );
+
+        // Repeated exerciseId targets in distinct interval steps remain allowed
+        final repeatedExerciseTarget = await workoutRepository
+            .batchUpsertCardioWorkoutSets(
+              workoutId: cardioWorkout.id,
+              inputs: [
+                WorkoutCardioSetUpsertInput(
+                  id: existingSetId,
+                  setType: CardioSetType.interval,
+                  position: 1,
+                  rounds: 2,
+                  exercises: [
+                    WorkoutCardioSetExerciseUpsertInput(
+                      id: existingExerciseRowId,
+                      position: 1,
+                      exerciseId: cardioExId,
+                      mode: CardioBaseMode.time,
+                      quantity: 60,
+                    ),
+                    WorkoutCardioSetExerciseUpsertInput(
+                      position: 2,
+                      exerciseId: cardioExId,
+                      mode: CardioBaseMode.time,
+                      quantity: 120,
+                    ),
+                  ],
+                ),
+              ],
+            );
+        expect(repeatedExerciseTarget.isOk(), isTrue);
+        expect(
+          repeatedExerciseTarget.value.cardioSets!.first.exercises,
+          hasLength(2),
+        );
       },
     );
   });
