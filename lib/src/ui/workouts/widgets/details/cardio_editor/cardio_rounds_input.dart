@@ -15,6 +15,8 @@
 // You should have received a copy of the GNU General Public License
 // along with My Fitness Tale.  If not, see <https://www.gnu.org/licenses/>.
 
+import 'dart:math' as math;
+
 import 'package:material_ui/material_ui.dart';
 
 import '../../../../core/sizes/data_display_sizes.dart';
@@ -81,6 +83,7 @@ class _CardioRoundsInputState extends State<CardioRoundsInput> {
     final initial = widget.initialRounds.clamp(_roundsMin, _roundsMax);
     showModalBottomSheet<void>(
       context: context,
+      isScrollControlled: true,
       shape: const BeveledRectangleBorder(),
       builder: (sheetContext) => _CardioRoundsWheelSheet(
         sizes: widget.sizes,
@@ -153,45 +156,71 @@ class _CardioRoundsWheelSheetState extends State<_CardioRoundsWheelSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final wheelItemExtent = widget.sizes.subtitleFontSize * 3;
+    final maxSheetHeight = MediaQuery.sizeOf(context).height * 0.85;
+    final textScaler = MediaQuery.textScalerOf(context);
+    final wheelItemExtent = math.max(
+      widget.sizes.subtitleFontSize * 3,
+      textScaler.scale(widget.sizes.subtitleFontSize) * 1.5,
+    );
     return SafeArea(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Padding(
-            padding: EdgeInsets.all(widget.sizes.padding),
-            child: Row(
-              children: [
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: const Text('Cancel'),
-                ),
-                Expanded(
-                  child: Text(
-                    'Rounds',
-                    textAlign: TextAlign.center,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: widget.sizes.subtitleFontSize,
-                      fontWeight: FontWeight.w600,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxHeight: maxSheetHeight),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: EdgeInsets.all(widget.sizes.padding),
+              child: Row(
+                children: [
+                  Flexible(
+                    child: TextButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: const Text(
+                        'Cancel',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
                   ),
+                  Expanded(
+                    child: Text(
+                      'Rounds',
+                      textAlign: TextAlign.center,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: widget.sizes.subtitleFontSize,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  Flexible(
+                    child: TextButton(
+                      onPressed: _confirm,
+                      child: const Text(
+                        'Confirm',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Flexible(
+              child: SizedBox(
+                height: wheelItemExtent * 5,
+                child: AppNumberWheel(
+                  minValue: _roundsMin,
+                  maxValue: _roundsMax,
+                  scrollController: _controller,
+                  itemExtent: wheelItemExtent,
+                  fontSize: widget.sizes.subtitleFontSize,
                 ),
-                TextButton(onPressed: _confirm, child: const Text('Confirm')),
-              ],
+              ),
             ),
-          ),
-          SizedBox(
-            height: wheelItemExtent * 5,
-            child: AppNumberWheel(
-              minValue: _roundsMin,
-              maxValue: _roundsMax,
-              scrollController: _controller,
-              itemExtent: wheelItemExtent,
-              fontSize: widget.sizes.subtitleFontSize,
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

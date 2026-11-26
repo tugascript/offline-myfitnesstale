@@ -15,6 +15,7 @@
 // You should have received a copy of the GNU General Public License
 // along with My Fitness Tale.  If not, see <https://www.gnu.org/licenses/>.
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
@@ -49,16 +50,31 @@ class CardioEditor extends StatefulWidget {
 }
 
 class _CardioEditorState extends State<CardioEditor> {
+  late List<WorkoutCardioSetDto> _lastSyncedCardioSets;
   late List<CardioSetEditorData> _displayedSets;
   bool _isCompleting = false;
 
   @override
   void initState() {
     super.initState();
-    _displayedSets = _mapSets(widget.initialSets);
+    _lastSyncedCardioSets = List<WorkoutCardioSetDto>.unmodifiable(
+      widget.initialSets,
+    );
+    _displayedSets = _mapSets(_lastSyncedCardioSets);
     context.read<ExerciseCubit>().getSelectionExercises(
       type: ExerciseType.cardio,
     );
+  }
+
+  @override
+  void didUpdateWidget(covariant CardioEditor oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.workoutId != widget.workoutId) {
+      _lastSyncedCardioSets = List<WorkoutCardioSetDto>.unmodifiable(
+        widget.initialSets,
+      );
+      _displayedSets = _mapSets(_lastSyncedCardioSets);
+    }
   }
 
   List<CardioSetEditorData> _mapSets(List<WorkoutCardioSetDto> sets) {
@@ -182,7 +198,11 @@ class _CardioEditorState extends State<CardioEditor> {
       if (!hasError &&
           updatedWorkout != null &&
           updatedWorkout.id == widget.workoutId) {
-        _displayedSets = _mapSets(updatedWorkout.cardioSets ?? []);
+        final incomingSets = updatedWorkout.cardioSets ?? const [];
+        _lastSyncedCardioSets = List<WorkoutCardioSetDto>.unmodifiable(
+          incomingSets,
+        );
+        _displayedSets = _mapSets(incomingSets);
       }
       _isCompleting = false;
     });
@@ -196,21 +216,33 @@ class _CardioEditorState extends State<CardioEditor> {
 
     return BlocConsumer<WorkoutCubit, WorkoutState>(
       listenWhen: (previous, current) =>
-          previous.selectedWorkout != current.selectedWorkout ||
-          previous.isLoading != current.isLoading,
+          previous.selectedWorkout?.id != current.selectedWorkout?.id ||
+          !listEquals(
+            previous.selectedWorkout?.cardioSets,
+            current.selectedWorkout?.cardioSets,
+          ) ||
+          (previous.isLoading && !current.isLoading),
       listener: (context, state) {
-        if (state.isLoading || state.error != null) {
+        if (state.isLoading || state.error != null || _isCompleting) {
           return;
         }
 
         final selectedWorkout = state.selectedWorkout;
-        if (selectedWorkout != null &&
-            selectedWorkout.id == widget.workoutId &&
-            !_isCompleting) {
-          setState(() {
-            _displayedSets = _mapSets(selectedWorkout.cardioSets ?? []);
-          });
+        if (selectedWorkout == null || selectedWorkout.id != widget.workoutId) {
+          return;
         }
+
+        final incomingSets = selectedWorkout.cardioSets ?? const [];
+        if (listEquals(_lastSyncedCardioSets, incomingSets)) {
+          return;
+        }
+
+        setState(() {
+          _lastSyncedCardioSets = List<WorkoutCardioSetDto>.unmodifiable(
+            incomingSets,
+          );
+          _displayedSets = _mapSets(incomingSets);
+        });
       },
       builder: (context, state) {
         return Column(
