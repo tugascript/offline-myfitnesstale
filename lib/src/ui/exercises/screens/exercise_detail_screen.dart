@@ -103,11 +103,17 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
     final sizes = DataDisplaySizes.getDataDisplaySizes(breakpoints.screenSize);
 
     return BlocConsumer<ExerciseCubit, ExerciseState>(
+      listenWhen: (previous, current) {
+        final hasNewError =
+            previous.error != current.error && current.error != null;
+        final wasDeleted =
+            !current.isLoading &&
+            current.error == null &&
+            current.selectedExercise == null &&
+            current.exercises.isEmpty;
+        return hasNewError || wasDeleted;
+      },
       listener: (context, state) {
-        if (state.isLoading) {
-          return;
-        }
-
         if (state.error != null) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -115,12 +121,12 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
               backgroundColor: Colors.red,
             ),
           );
+          return;
         }
         // Navigate back if exercise was deleted
         if (state.selectedExercise == null &&
             state.exercises.isEmpty &&
-            !state.isLoading &&
-            state.error == null) {
+            !state.isLoading) {
           context.pop();
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -200,7 +206,7 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
                   ],
 
                   // Action Buttons (Strength-only progress & goal tracking)
-                  if (isSkeletonLoading ||
+                  if (!isSkeletonLoading &&
                       exercise.type == ExerciseType.strength) ...[
                     Row(
                       children: [
