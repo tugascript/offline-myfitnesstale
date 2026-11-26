@@ -108,6 +108,7 @@ class _TestWorkoutCubit extends WorkoutCubit {
     int? offset,
     bool isFavorite = false,
     CreatedBy? createdBy,
+    ExerciseType type = ExerciseType.strength,
   }) async {
     emit(
       state.copyWith(
@@ -118,6 +119,7 @@ class _TestWorkoutCubit extends WorkoutCubit {
             muscleGroup: muscleGroup,
             isFavorite: isFavorite,
             createdBy: createdBy,
+            type: type,
             limit: limit ?? state.pagination.limit,
             offset: offset ?? 0,
             total: state.pagination.total,
@@ -271,6 +273,10 @@ void main() {
       WidgetTester tester,
       _TestWorkoutCubit cubit,
     ) async {
+      tester.view.physicalSize = const Size(800, 900);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+
       final router = _routerFor(const WorkoutsScreen());
       addTearDown(cubit.close);
       addTearDown(router.dispose);

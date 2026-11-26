@@ -23,12 +23,12 @@ import '../../../core/sizes/data_display_sizes.dart';
 import '../../../core/widgets/layout/app_dropdown.dart';
 import '../../../core/widgets/layout/app_elevated_button.dart';
 import '../../../core/widgets/layout/app_text_form_field.dart';
-import '../../../core/widgets/layout/sharp_switch_title.dart';
 
 class WorkoutBaseForm extends StatefulWidget {
   final ThemeData theme;
   final DataDisplaySizesList sizes;
   final bool isLoading;
+  final bool isEditing;
   final String submitLabel;
 
   final String initialName;
@@ -51,6 +51,7 @@ class WorkoutBaseForm extends StatefulWidget {
     required this.theme,
     required this.sizes,
     required this.isLoading,
+    this.isEditing = false,
     required this.submitLabel,
     required this.initialName,
     required this.initialIsFavorite,
@@ -106,10 +107,17 @@ class _WorkoutBaseFormState extends State<WorkoutBaseForm> {
 
   @override
   Widget build(BuildContext context) {
-    final isAdvancedEditorEnabled = _data.editorType == EditorType.advanced;
-    final isAdvancedEditorLocked =
-        widget.initialEditorType == EditorType.advanced;
-    final canToggleAdvancedEditor = !isAdvancedEditorLocked;
+    final bool isEditorTypeLocked =
+        widget.isEditing && widget.initialEditorType != EditorType.basic;
+    final List<EditorType> editorTypeItems = !widget.isEditing
+        ? EditorType.values
+        : widget.initialEditorType == EditorType.basic
+        ? const [EditorType.basic, EditorType.advanced]
+        : [widget.initialEditorType];
+    final String lockedEditorMessage =
+        widget.initialEditorType == EditorType.cardio
+        ? 'Cardio workouts cannot be switched to strength editors.'
+        : 'This workout already uses Advanced Editor and cannot be changed.';
 
     return Form(
       key: _formKey,
@@ -219,29 +227,39 @@ class _WorkoutBaseFormState extends State<WorkoutBaseForm> {
             },
           ),
           SizedBox(height: widget.sizes.spacing),
-          SharpSwitchTitle(
-            contentPadding: EdgeInsets.zero,
-            title: 'Advanced Editor',
-            value: isAdvancedEditorEnabled,
-            enabled: canToggleAdvancedEditor,
-            thumbSize: widget.sizes.subtitleFontSize * 1.5,
-            switchPadding: EdgeInsets.all(widget.sizes.padding / 2),
+          AppDropdown<EditorType>(
+            key: const ValueKey('workout-form-editor-type'),
+            theme: widget.theme,
+            isLoading: widget.isLoading,
+            enabled: !isEditorTypeLocked,
+            value: _data.editorType,
+            filled: true,
+            labelText: 'Editor Type',
+            emptyLabel: 'Editor Type',
+            showEmptyValue: false,
+            items: editorTypeItems,
+            fontSize: widget.sizes.subtitleFontSize,
+            padding: widget.sizes.padding,
+            labelBuilder: EnumDisplayNames.getEditorTypeDisplayName,
             onChanged: (value) {
-              if (!canToggleAdvancedEditor) return;
-
+              if (value == null || isEditorTypeLocked) return;
               setState(() {
-                _data.editorType = value
-                    ? EditorType.advanced
-                    : EditorType.basic;
+                _data.editorType = value;
+              });
+            },
+            onSaved: (value) {
+              if (value == null || isEditorTypeLocked) return;
+              setState(() {
+                _data.editorType = value;
               });
             },
           ),
-          if (isAdvancedEditorLocked) ...[
+          if (isEditorTypeLocked) ...[
             SizedBox(height: widget.sizes.spacing / 2),
             Align(
               alignment: Alignment.centerLeft,
               child: Text(
-                'This workout already uses Advanced Editor and cannot be changed.',
+                lockedEditorMessage,
                 style: TextStyle(
                   fontSize: widget.sizes.smallFontSize,
                   color: widget.theme.colorScheme.secondary,

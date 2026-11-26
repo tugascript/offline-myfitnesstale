@@ -166,21 +166,37 @@ records.
 
 ### Workouts and history
 
-- Creates, edits, favorites, and deletes reusable, versioned workouts with basic
-  and advanced editors (`BasicEditor` and `AdvancedEditor`) using shared `WorkoutInput`
-  PUT semantics (`Nullable<T>` in `copyWith` clears omitted nullable fields across
-  `Workout`, `WorkoutSet`, `WorkoutSetExercise`, and `WorkoutSetExerciseOption`).
-- Supports standard and complex set types (drop, superset, giant, pyramid, circuit),
-  alternatives, rep ranges, rest, and difficulty without paywalls or entitlement gates.
-- Starts live workout records, logs decimal weight and reps, carries prior
-  values within a set group, and tracks rest/progress using `WorkoutRecordInput`,
-  `WorkoutSetRecordInput`, and `WorkoutSetExerciseRecordInput` PUT semantics.
-- Completes, cancels, and resumes active workouts within the covered lifecycle;
-  manual completion requires confirmation, while finishing the final exercise
-  completes the workout automatically.
-- Lists, creates, edits, and deletes completed workout history using shared
-  `WorkoutRecordBatchInput` PUT semantics. The empty workout-history actions
-  wrap onto separate rows when the available width cannot fit both labels.
+- Creates, edits, favorites, and deletes reusable, versioned strength and cardio
+  workouts with basic, advanced, and cardio editors (`BasicEditor`,
+  `AdvancedEditor`, and `CardioEditor`) using shared `WorkoutInput` PUT
+  semantics (`Nullable<T>` in `copyWith` clears omitted nullable fields across
+  `Workout`, `WorkoutSet`, `WorkoutSetExercise`, `WorkoutSetExerciseOption`,
+  `WorkoutCardioSet`, and `WorkoutCardioSetExercise`). Editor type is selectable
+  between Basic, Advanced, and Cardio on creation; strength workouts can upgrade
+  from Basic to Advanced, while Advanced and Cardio editor types are locked on
+  edit and cannot switch between strength and cardio.
+- Separates Strength and Cardio workout browsing on `WorkoutsScreen` via a
+  `WorkoutTypeToggle` (`ExerciseType.strength` filters `basic`/`advanced`,
+  `ExerciseType.cardio` filters `cardio` and hides muscle-group filtering).
+- Supports strength standard and complex set types (drop, superset, giant,
+  pyramid, circuit), alternatives, rep ranges, rest, and difficulty, as well as
+  cardio constant and interval sets (`workout_cardio_sets`,
+  `workout_cardio_set_exercises`) with time or exercise-unit targets, rounds,
+  and set/exercise rest durations, all offline without paywalls or entitlement
+  gates.
+- Starts live strength workout records, logs decimal weight and reps, carries
+  prior values within a set group, and tracks rest/progress using
+  `WorkoutRecordInput`, `WorkoutSetRecordInput`, and
+  `WorkoutSetExerciseRecordInput` PUT semantics. Cardio workout execution and
+  cardio workout history are not yet implemented; cardio workout detail screens
+  omit strength-only Start Workout and History actions.
+- Completes, cancels, and resumes active strength workouts within the covered
+  lifecycle; manual completion requires confirmation, while finishing the final
+  exercise completes the workout automatically.
+- Lists, creates, edits, and deletes completed strength workout history using
+  shared `WorkoutRecordBatchInput` PUT semantics. The empty workout-history
+  actions wrap onto separate rows when the available width cannot fit both
+  labels.
 
 ### Weight and goals
 

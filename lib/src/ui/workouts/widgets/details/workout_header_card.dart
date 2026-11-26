@@ -105,28 +105,50 @@ class WorkoutHeaderCard extends StatelessWidget {
         Wrap(
           spacing: sizes.spacing,
           runSpacing: sizes.spacing / 2,
+          crossAxisAlignment: WrapCrossAlignment.center,
           children: [
+            if (workoutDto.isCardio)
+              Chip(
+                shape: const BeveledRectangleBorder(),
+                side: BorderSide.none,
+                backgroundColor: theme.colorScheme.secondary.withValues(
+                  alpha: 0.2,
+                ),
+                visualDensity: VisualDensity.compact,
+                avatar: Icon(
+                  Icons.directions_run,
+                  size: sizes.fontSize,
+                  color: theme.colorScheme.onSurface,
+                ),
+                label: Text(
+                  'Cardio',
+                  style: TextStyle(fontSize: sizes.smallFontSize),
+                ),
+              ),
             TotalNumericString(
               leading: Icon(Icons.repeat, size: sizes.fontSize * 1.2),
-              name: 'Sets',
+              name: workoutDto.isCardio ? 'Rounds' : 'Sets',
               total: workoutDto.totalSets,
               fontSize: sizes.fontSize,
             ),
-            TotalNumericString(
-              leading: Icon(Icons.repeat_one, size: sizes.fontSize * 1.2),
-              name: 'Reps',
-              total: workoutDto.totalReps,
-              fontSize: sizes.fontSize,
-            ),
+            if (!workoutDto.isCardio)
+              TotalNumericString(
+                leading: Icon(Icons.repeat_one, size: sizes.fontSize * 1.2),
+                name: 'Reps',
+                total: workoutDto.totalReps,
+                fontSize: sizes.fontSize,
+              ),
           ],
         ),
-        SizedBox(height: sizes.spacing),
-        MusclesCarousel(
-          sizes: sizes,
-          theme: theme,
-          muscleGroups: workoutDto.muscleGroups,
-          muscles: workoutDto.muscles,
-        ),
+        if (!workoutDto.isCardio) ...[
+          SizedBox(height: sizes.spacing),
+          MusclesCarousel(
+            sizes: sizes,
+            theme: theme,
+            muscleGroups: workoutDto.muscleGroups,
+            muscles: workoutDto.muscles,
+          ),
+        ],
         if (workoutDto.description != null &&
             workoutDto.description!.isNotEmpty) ...[
           SizedBox(height: sizes.spacing),

@@ -33,10 +33,12 @@ import '../../core/widgets/action_buttons.dart';
 import '../../core/widgets/confirmation_dialog.dart';
 import '../../core/widgets/layout/app_scaffold.dart';
 import '../../core/widgets/layout/responsive_scaffold.dart';
+import '../../core/widgets/mutation_buttons.dart';
 import '../view_models/states/workout_state.dart';
 import '../view_models/workout_cubit.dart';
 import '../widgets/details/empty_sets_card.dart';
 import '../widgets/details/workout_block_strip.dart';
+import '../widgets/details/workout_cardio_set_card.dart';
 import '../widgets/details/workout_header_card.dart';
 import '../widgets/details/workout_set_card.dart';
 import './workout_history_screen.dart';
@@ -215,6 +217,23 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
             ? _skeletonWorkout
             : workoutState.selectedWorkout!;
         final sets = workout.sets ?? const [];
+        final cardioSets = workout.cardioSets ?? const [];
+
+        void showDeleteDialog() {
+          showDialog(
+            context: context,
+            builder: (context) => ConfirmationDialog(
+              title: 'Delete Workout',
+              content: 'Are you sure you want to delete this workout? This action cannot be undone.',
+              confirmLabel: 'Delete',
+              isDestructive: true,
+              onConfirm: () {
+                context.read<WorkoutCubit>().deleteWorkout(widget.workoutId);
+                context.pop();
+              },
+            ),
+          );
+        }
 
         return ResponsiveScaffold(
           title: isSkeletonLoading ? "Workout details" : workout.name,
@@ -249,86 +268,105 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
                     ),
                   ),
                   SizedBox(height: sizes.spacing),
-                  if (sets.length >= 4) ...[
-                    WorkoutBlockStrip(
-                      sets: sets,
-                      selectedBlockIndex: _selectedBlockIndex,
-                      sizes: sizes,
-                      theme: theme,
-                      onSelectBlock: (index) {
-                        setState(() {
-                          _selectedBlockIndex = index;
-                        });
-                        final blockContext = _getBlockKey(sets[index].id)
-                            .currentContext;
-                        if (blockContext != null) {
-                          Scrollable.ensureVisible(
-                            blockContext,
-                            duration: const Duration(milliseconds: 300),
-                            curve: Curves.easeInOut,
-                            alignment: 0.1,
-                          );
-                        }
-                      },
-                    ),
+                  if (workout.isCardio) ...[
+                    if (cardioSets.isEmpty)
+                      EmptySetsCard(sizes: sizes)
+                    else
+                      ...cardioSets.asMap().entries.map((entry) {
+                        final index = entry.key;
+                        return Padding(
+                          padding: EdgeInsets.only(
+                            bottom: index < cardioSets.length - 1
+                                ? sizes.spacing
+                                : 0,
+                          ),
+                          child: WorkoutCardioSetCard(
+                            theme: theme,
+                            sizes: sizes,
+                            set: entry.value,
+                            setNumber: index + 1,
+                          ),
+                        );
+                      }),
                     SizedBox(height: sizes.spacing),
-                  ],
-                  if (sets.isEmpty)
-                    EmptySetsCard(sizes: sizes)
-                  else
-                    ...sets.asMap().entries.map((entry) {
-                      final index = entry.key;
-                      return Padding(
-                        padding: EdgeInsets.only(
-                          bottom: index < sets.length - 1 ? sizes.spacing : 0,
-                        ),
-                        child: WorkoutSetCard(
-                          key: _getBlockKey(entry.value.id),
-                          theme: theme,
-                          isDarkTheme: isDarkTheme,
-                          sizes: sizes,
-                          set: entry.value,
-                          setNumber: index + 1,
-                          isSelected:
-                              sets.length >= 4 && _selectedBlockIndex == index,
-                        ),
-                      );
-                    }),
-                  SizedBox(height: sizes.spacing),
-                  ActionButtons(
-                    isLoading: workoutState.isLoading,
-                    theme: theme,
-                    sizes: sizes,
-                    showMutationBtns: workout.createdBy == CreatedBy.user,
-                    onStart: () =>
-                        context.push("/workouts/${workout.id}/active"),
-                    startLabel: 'Start Workout',
-                    onEdit: () => context.push('/workouts/${workout.id}/edit'),
-                    onHistory: () => context.push(
-                      WorkoutHistoryScreen.location(
-                        workoutId: workout.id,
-                        version: workout.version,
+                    if (!isSkeletonLoading &&
+                        workout.createdBy == CreatedBy.user)
+                      MutationButtons(
+                        theme: theme,
+                        sizes: sizes,
+                        isLoading: workoutState.isLoading,
+                        onEdit: () =>
+                            context.push('/workouts/${workout.id}/edit'),
+                        onDelete: showDeleteDialog,
                       ),
-                    ),
-                    historyLabel: 'History',
-                    onDelete: () {
-                      showDialog(
-                        context: context,
-                        builder: (context) => ConfirmationDialog(
-                          title: 'Delete Workout',
-                          content: 'Are you sure you want to delete this workout? This action cannot be undone.',
-                          confirmLabel: 'Delete',
-                          isDestructive: true,
-                          onConfirm: () {
-                            context.read<WorkoutCubit>().deleteWorkout(
-                              widget.workoutId,
+                  ] else ...[
+                    if (sets.length >= 4) ...[
+                      WorkoutBlockStrip(
+                        sets: sets,
+                        selectedBlockIndex: _selectedBlockIndex,
+                        sizes: sizes,
+                        theme: theme,
+                        onSelectBlock: (index) {
+                          setState(() {
+                            _selectedBlockIndex = index;
+                          });
+                          final blockContext = _getBlockKey(sets[index].id)
+                              .currentContext;
+                          if (blockContext != null) {
+                            Scrollable.ensureVisible(
+                              blockContext,
+                              duration: const Duration(milliseconds: 300),
+                              curve: Curves.easeInOut,
+                              alignment: 0.1,
                             );
-                            context.pop();
-                          },
+                          }
+                        },
+                      ),
+                      SizedBox(height: sizes.spacing),
+                    ],
+                    if (sets.isEmpty)
+                      EmptySetsCard(sizes: sizes)
+                    else
+                      ...sets.asMap().entries.map((entry) {
+                        final index = entry.key;
+                        return Padding(
+                          padding: EdgeInsets.only(
+                            bottom: index < sets.length - 1 ? sizes.spacing : 0,
+                          ),
+                          child: WorkoutSetCard(
+                            key: _getBlockKey(entry.value.id),
+                            theme: theme,
+                            isDarkTheme: isDarkTheme,
+                            sizes: sizes,
+                            set: entry.value,
+                            setNumber: index + 1,
+                            isSelected:
+                                sets.length >= 4 &&
+                                _selectedBlockIndex == index,
+                          ),
+                        );
+                      }),
+                    SizedBox(height: sizes.spacing),
+                    ActionButtons(
+                      isLoading: workoutState.isLoading,
+                      theme: theme,
+                      sizes: sizes,
+                      showMutationBtns: workout.createdBy == CreatedBy.user,
+                      onStart: () =>
+                          context.push("/workouts/${workout.id}/active"),
+                      startLabel: 'Start Workout',
+                      onEdit: () =>
+                          context.push('/workouts/${workout.id}/edit'),
+                      onHistory: () => context.push(
+                        WorkoutHistoryScreen.location(
+                          workoutId: workout.id,
+                          version: workout.version,
                         ),
-                      );
-                    },
-                  ),
+                      ),
+                      historyLabel: 'History',
+                      onDelete: showDeleteDialog,
+                    ),
+                  ],
                   SizedBox(height: sizes.spacing),
                 ],
               ),

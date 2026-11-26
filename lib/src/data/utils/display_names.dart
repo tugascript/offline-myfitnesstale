@@ -182,6 +182,30 @@ sealed class EnumDisplayNames {
     }
   }
 
+  static String getEditorTypeDisplayName(EditorType? type) {
+    switch (type) {
+      case EditorType.basic:
+        return 'Basic';
+      case EditorType.advanced:
+        return 'Advanced';
+      case EditorType.cardio:
+        return 'Cardio';
+      case null:
+        return 'Unknown';
+    }
+  }
+
+  static String getCardioSetTypeDisplayName(CardioSetType? type) {
+    switch (type) {
+      case CardioSetType.constant:
+        return 'Constant';
+      case CardioSetType.interval:
+        return 'Interval';
+      case null:
+        return 'Unknown';
+    }
+  }
+
   static String getSetTypeDisplayName(WorkoutSetType? s) {
     switch (s) {
       case WorkoutSetType.standard:
