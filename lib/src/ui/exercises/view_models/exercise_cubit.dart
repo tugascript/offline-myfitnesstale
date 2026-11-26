@@ -71,7 +71,11 @@ class ExerciseCubit extends Cubit<ExerciseState>
       isFavorite: isFavourite,
       createdBy: createdBy,
       limit: limit ?? state.exercisePagination.limit,
-      offset: offset ?? state.exercisePagination.offset,
+      offset:
+          offset ??
+          (type == state.exercisePagination.type
+              ? state.exercisePagination.offset
+              : 0),
       total: 0,
     ),
   );

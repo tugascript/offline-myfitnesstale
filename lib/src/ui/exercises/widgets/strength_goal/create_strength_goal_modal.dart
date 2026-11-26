@@ -61,6 +61,7 @@ class _CreateStrengthGoalModalState extends State<CreateStrengthGoalModal> {
         context.read<ExerciseCubit>().getExercises(
           type: ExerciseType.strength,
           limit: 100,
+          offset: 0,
         );
       }
     }
