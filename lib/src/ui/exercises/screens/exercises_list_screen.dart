@@ -144,14 +144,18 @@ class _ExercisesListScreenState extends State<ExercisesListScreen> {
           },
           builder: (context, state) {
             final pagination = state.exercisePagination;
-            final isCardio = pagination.type == ExerciseType.cardio;
+            final pendingQuery = state.pendingExercisesQuery;
+            final activeType = pendingQuery?.type ?? pagination.type;
+            final isCardio = activeType == ExerciseType.cardio;
+            final isReloading =
+                pendingQuery != null && pendingQuery.offset == 0;
 
             return Column(
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
                 ExerciseTypeToggle(
                   key: const ValueKey('exercise-search-type-toggle'),
-                  selectedType: pagination.type,
+                  selectedType: activeType,
                   sizes: sizes,
                   enabled: !state.isLoading,
                   onChanged: (nextType) => _onTypeChanged(nextType, pagination),
@@ -241,6 +245,8 @@ class _ExercisesListScreenState extends State<ExercisesListScreen> {
                     theme: theme,
                     sizes: sizes,
                     isLoading: state.isLoading,
+                    isReloading: isReloading,
+                    skeletonType: activeType,
                     exercises: state.exercises,
                     scrollController: _scrollController,
                   ),

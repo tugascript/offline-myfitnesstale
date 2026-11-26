@@ -21,16 +21,20 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 import 'package:myfitnesstale/src/data/repositories/exercises/dtos/exercise_dto.dart';
 import 'package:myfitnesstale/src/data/repositories/exercises/exercise_repository.dart';
 import 'package:myfitnesstale/src/data/utils/enums.dart';
 import 'package:myfitnesstale/src/data/utils/exercise_details.dart';
+import 'package:myfitnesstale/src/data/utils/json_data.dart';
 import 'package:myfitnesstale/src/routing/routes.dart';
 import 'package:myfitnesstale/src/ui/exercises/screens/exercises_list_screen.dart';
 import 'package:myfitnesstale/src/ui/exercises/view_models/exercise_cubit.dart';
 import 'package:myfitnesstale/src/ui/exercises/view_models/states/exercise_state.dart';
 import 'package:myfitnesstale/src/ui/exercises/widgets/cardio_exercise_search_form.dart';
 import 'package:myfitnesstale/src/ui/exercises/widgets/details/create_exercise_modal.dart';
+import 'package:myfitnesstale/src/ui/exercises/widgets/exercise_card.dart';
+import 'package:myfitnesstale/src/ui/exercises/widgets/exercises_list.dart';
 import 'package:myfitnesstale/src/utils/nullable.dart';
 
 class _GetExercisesCall {
@@ -63,6 +67,8 @@ class _ExerciseSearchCubit extends ExerciseCubit {
   final releaseEquipmentFetch = Completer<void>();
   final bool blockEquipmentFetch;
   final List<_GetExercisesCall> getExercisesCalls = [];
+  Completer<void>? pendingExercisesFetch;
+  List<ExerciseDto>? nextExercises;
 
   _ExerciseSearchCubit({
     this.blockEquipmentFetch = true,
@@ -134,19 +140,34 @@ class _ExerciseSearchCubit extends ExerciseCubit {
       ),
     );
 
+    final query = ExercisePagination(
+      name: name ?? '',
+      type: type,
+      muscleGroup: effectiveMuscleGroup,
+      cardioBaseMode: effectiveCardioBaseMode,
+      cardioUnitType: effectiveCardioUnitType,
+      difficulty: difficulty,
+      equipmentId: equipmentId,
+      isFavorite: isFavourite,
+      createdBy: createdBy,
+      limit: limit ?? state.exercisePagination.limit,
+      offset: offset ?? 0,
+      total: 0,
+    );
+
+    if (pendingExercisesFetch != null) {
+      emit(state.copyWith(pendingExercisesQuery: Nullable(query)));
+      await pendingExercisesFetch!.future;
+      if (isClosed) return;
+    }
+
     emit(
       state.copyWith(
-        exercisePagination: state.exercisePagination.copyWith(
-          name: name ?? '',
-          type: type,
-          muscleGroup: Nullable(effectiveMuscleGroup),
-          cardioBaseMode: Nullable(effectiveCardioBaseMode),
-          cardioUnitType: Nullable(effectiveCardioUnitType),
-          difficulty: Nullable(difficulty),
-          equipmentId: Nullable(equipmentId),
-          isFavorite: isFavourite,
-          createdBy: Nullable(createdBy),
+        exercises: nextExercises ?? state.exercises,
+        exercisePagination: query.copyWith(
+          total: (nextExercises ?? state.exercises).length,
         ),
+        pendingExercisesQuery: const Nullable(null),
       ),
     );
   }
@@ -378,6 +399,129 @@ void main() {
         find.byKey(const ValueKey('cardio-exercise-search-form')),
         findsOneWidget,
       );
+    },
+  );
+
+  testWidgets(
+    'Strength to Cardio toggle hides stale strength items behind Skeletonizer while offset-0 reload is in flight',
+    (tester) async {
+      final fetchCompleter = Completer<void>();
+      final cubit =
+          _ExerciseSearchCubit(
+              blockEquipmentFetch: false,
+              initialExercises: const [
+                ExerciseDto(
+                  id: 1,
+                  name: 'Bench Press',
+                  description: 'Chest press',
+                  details: StrengthExerciseDetails(
+                    muscleGroup: MuscleGroup.push,
+                    muscles: TargetMuscles(
+                      primary: {Muscle.chest},
+                      secondary: {},
+                    ),
+                    weightProgress: ExerciseWeightProgress.positive,
+                  ),
+                  difficulty: Difficulty.intermediate,
+                  createdBy: CreatedBy.system,
+                ),
+              ],
+            )
+            ..pendingExercisesFetch = fetchCompleter
+            ..nextExercises = const [
+              ExerciseDto(
+                id: 2,
+                name: 'Outdoor Run',
+                description: 'Steady run',
+                details: CardioExerciseDetails(
+                  defaultMode: CardioBaseMode.time,
+                  unitType: CardioUnitType.distance,
+                  unit: 'km',
+                ),
+                difficulty: Difficulty.beginner,
+                createdBy: CreatedBy.user,
+              ),
+            ];
+      addTearDown(cubit.close);
+
+      var pushedExerciseDetail = false;
+      final router = GoRouter(
+        initialLocation: Routes.exercises.name,
+        routes: [
+          GoRoute(
+            path: Routes.exercises.name,
+            builder: (_, _) => const ExercisesListScreen(),
+          ),
+          GoRoute(
+            path: '/exercises/:id',
+            builder: (_, _) {
+              pushedExerciseDetail = true;
+              return const Scaffold(body: Text('Exercise Detail'));
+            },
+          ),
+        ],
+      );
+      addTearDown(router.dispose);
+
+      await tester.pumpWidget(
+        BlocProvider<ExerciseCubit>.value(
+          value: cubit,
+          child: MaterialApp.router(routerConfig: router),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Bench Press'), findsOneWidget);
+
+      // Toggle to Cardio while the fetch is pending.
+      await tester.tap(
+        find.descendant(
+          of: find.byKey(const ValueKey('exercise-search-type-toggle')),
+          matching: find.text('Cardio'),
+        ),
+      );
+      await tester.pump();
+
+      // Stale Strength card is hidden, Skeletonizer is active with 3 placeholder cards,
+      // and tapping a placeholder does not navigate.
+      expect(find.text('Bench Press'), findsNothing);
+      expect(
+        find.descendant(
+          of: find.byType(ExercisesList),
+          matching: find.byType(CircularProgressIndicator),
+        ),
+        findsNothing,
+      );
+      expect(
+        find.descendant(
+          of: find.byType(ExercisesList),
+          matching: find.byWidgetPredicate(
+            (w) => w is Skeletonizer && w.enabled,
+          ),
+        ),
+        findsOneWidget,
+      );
+      expect(find.byType(ExerciseCard), findsNWidgets(3));
+
+      await tester.tap(find.byType(ExerciseCard).first);
+      await tester.pump();
+      expect(pushedExerciseDetail, isFalse);
+
+      // Complete the Cardio reload and verify Cardio results appear.
+      fetchCompleter.complete();
+      await tester.pumpAndSettle();
+
+      expect(
+        find.descendant(
+          of: find.byType(ExercisesList),
+          matching: find.byWidgetPredicate(
+            (w) => w is Skeletonizer && w.enabled,
+          ),
+        ),
+        findsNothing,
+      );
+      expect(find.text('Outdoor Run'), findsOneWidget);
+      expect(find.text('Bench Press'), findsNothing);
     },
   );
 }

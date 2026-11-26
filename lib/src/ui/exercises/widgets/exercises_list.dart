@@ -17,16 +17,52 @@
 
 import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 
 import '../../../data/repositories/exercises/dtos/exercise_dto.dart';
+import '../../../data/utils/enums.dart';
+import '../../../data/utils/exercise_details.dart';
+import '../../../data/utils/json_data.dart';
 import '../../core/sizes/data_display_sizes.dart';
 import '../../core/widgets/not_found_list.dart';
 import './exercise_card.dart';
+
+const _skeletonStrengthExercise = ExerciseDto(
+  id: 0,
+  name: 'Loading Exercise Name...',
+  description: '',
+  details: StrengthExerciseDetails(
+    muscleGroup: MuscleGroup.push,
+    muscles: TargetMuscles(primary: {}, secondary: {}),
+    weightProgress: ExerciseWeightProgress.positive,
+  ),
+  difficulty: Difficulty.beginner,
+  isFavorite: false,
+  createdBy: CreatedBy.system,
+);
+
+const _skeletonCardioExercise = ExerciseDto(
+  id: 0,
+  name: 'Loading Cardio Exercise...',
+  description: '',
+  details: CardioExerciseDetails(
+    defaultMode: CardioBaseMode.time,
+    unitType: CardioUnitType.distance,
+    unit: 'km',
+  ),
+  difficulty: Difficulty.beginner,
+  isFavorite: false,
+  createdBy: CreatedBy.system,
+);
+
+void _noopTap() {}
 
 class ExercisesList extends StatelessWidget {
   final ThemeData theme;
   final DataDisplaySizesList sizes;
   final bool isLoading;
+  final bool isReloading;
+  final ExerciseType skeletonType;
   final List<ExerciseDto> exercises;
   final ScrollController? scrollController;
   final bool shrinkWrap;
@@ -38,6 +74,8 @@ class ExercisesList extends StatelessWidget {
     required this.theme,
     required this.sizes,
     required this.isLoading,
+    this.isReloading = false,
+    this.skeletonType = ExerciseType.strength,
     required this.exercises,
     this.scrollController,
     this.shrinkWrap = false,
@@ -47,26 +85,43 @@ class ExercisesList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (isLoading && exercises.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
-    }
+    final showSkeletonList = isReloading || (isLoading && exercises.isEmpty);
 
-    if (exercises.isEmpty) {
+    if (!showSkeletonList && exercises.isEmpty) {
       return NotFoundList(sizes: sizes, name: 'exercises', height: emptyHeight);
     }
 
-    return ListView.builder(
+    final skeletonExercise = skeletonType == ExerciseType.cardio
+        ? _skeletonCardioExercise
+        : _skeletonStrengthExercise;
+
+    final listView = ListView.builder(
       controller: scrollController,
       shrinkWrap: shrinkWrap,
       physics: physics,
-      itemCount: exercises.length + (isLoading ? 1 : 0),
+      itemCount: showSkeletonList ? 3 : exercises.length + (isLoading ? 1 : 0),
       itemBuilder: (context, index) {
-        if (index == exercises.length) {
-          return Padding(
-            padding: EdgeInsets.all(sizes.padding),
-            child: const Center(child: CircularProgressIndicator()),
+        if (showSkeletonList) {
+          return ExerciseCard(
+            theme: theme,
+            exercise: skeletonExercise,
+            sizes: sizes,
+            onTap: _noopTap,
           );
         }
+
+        if (index == exercises.length) {
+          return Skeletonizer(
+            enabled: true,
+            child: ExerciseCard(
+              theme: theme,
+              exercise: skeletonExercise,
+              sizes: sizes,
+              onTap: _noopTap,
+            ),
+          );
+        }
+
         final exercise = exercises[index];
         return ExerciseCard(
           theme: theme,
@@ -76,5 +131,11 @@ class ExercisesList extends StatelessWidget {
         );
       },
     );
+
+    if (showSkeletonList) {
+      return Skeletonizer(enabled: true, child: listView);
+    }
+
+    return listView;
   }
 }
