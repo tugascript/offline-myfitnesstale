@@ -31,7 +31,9 @@ enum CreatedBy {
 
 enum EditorType {
   basic("basic"),
-  advanced("advanced");
+  advanced("advanced"),
+  cardio("cardio"),
+  advancedWithCardio("advanced_with_cardio");
 
   final String value;
 

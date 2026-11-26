@@ -30,6 +30,7 @@ import 'package:myfitnesstale/src/data/repositories/exercises/exercise_repositor
 import 'package:myfitnesstale/src/data/services/sqlite/database_helper.dart';
 import 'package:myfitnesstale/src/data/services/sqlite/database_migration.dart';
 import 'package:myfitnesstale/src/data/utils/enums.dart';
+import 'package:myfitnesstale/src/data/utils/exercise_details.dart';
 import 'package:myfitnesstale/src/data/utils/json_data.dart';
 import 'package:path/path.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
@@ -519,8 +520,11 @@ void main() {
         Exercise.table,
         Exercise.create(
           name: kBarbellChestPressName,
-          muscleGroup: MuscleGroup.push,
-          muscles: const TargetMuscles(primary: {}, secondary: {}),
+          details: const StrengthExerciseDetails(
+            muscleGroup: MuscleGroup.push,
+            muscles: TargetMuscles(primary: {}, secondary: {}),
+            weightProgress: ExerciseWeightProgress.positive,
+          ),
           difficulty: Difficulty.beginner,
           createdBy: CreatedBy.system,
         ).toMap(),

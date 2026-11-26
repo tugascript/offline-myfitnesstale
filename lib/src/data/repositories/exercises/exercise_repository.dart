@@ -30,6 +30,7 @@ import '../../services/sqlite/database_helper.dart';
 import '../../services/sqlite/join_dao.dart';
 import '../../utils/dates.dart';
 import '../../utils/enums.dart';
+import '../../utils/exercise_details.dart';
 import '../../utils/where_builder.dart';
 import '../core/dtos/paginated_dto.dart';
 import '../core/repository.dart';
@@ -102,7 +103,11 @@ final class ExerciseRepository implements Repository {
       query.and(ExerciseColumns.name.like, '%$name%');
     }
     if (muscleGroup != null) {
-      query.and(ExerciseColumns.muscleGroup.equal, muscleGroup.value);
+      query.and(ExerciseColumns.type.equal, ExerciseType.strength.value);
+      query.and(
+        ExerciseColumns.details.jsonEqual('muscleGroup'),
+        muscleGroup.value,
+      );
     }
     if (isFavorite) {
       query.and(ExerciseColumns.isFavorite.equal, 1);
@@ -170,7 +175,11 @@ final class ExerciseRepository implements Repository {
       query.and(ExerciseColumns.name.like, '%$name%');
     }
     if (muscleGroup != null) {
-      query.and(ExerciseColumns.muscleGroup.equal, muscleGroup.value);
+      query.and(ExerciseColumns.type.equal, ExerciseType.strength.value);
+      query.and(
+        ExerciseColumns.details.jsonEqual('muscleGroup'),
+        muscleGroup.value,
+      );
     }
     if (isFavorite) {
       query.and(ExerciseColumns.isFavorite.equal, 1);
@@ -255,14 +264,16 @@ final class ExerciseRepository implements Repository {
     _logger.info("Creating exercise with name: ${input.name}");
     final Exercise exercise = Exercise.create(
       name: input.name,
-      muscleGroup: input.muscleGroup,
-      muscles: input.muscles,
+      details: StrengthExerciseDetails(
+        muscleGroup: input.muscleGroup,
+        muscles: input.muscles,
+        weightProgress: input.weightProgress,
+      ),
       description: input.description.value,
       picture: input.picture.value,
       video: input.video.value,
       isFavorite: input.isFavorite,
       difficulty: input.difficulty.value,
-      weightProgress: input.weightProgress,
       createdBy: createdBy,
     );
 
@@ -362,13 +373,15 @@ final class ExerciseRepository implements Repository {
         for (final exerciseInput in exerciseInputs) {
           final exercise = Exercise.create(
             name: exerciseInput.name,
-            muscleGroup: exerciseInput.muscleGroup,
-            muscles: exerciseInput.muscles,
+            details: StrengthExerciseDetails(
+              muscleGroup: exerciseInput.muscleGroup,
+              muscles: exerciseInput.muscles,
+              weightProgress: exerciseInput.weightProgress,
+            ),
             description: exerciseInput.description.value,
             picture: exerciseInput.picture.value,
             video: exerciseInput.video.value,
             difficulty: exerciseInput.difficulty.value,
-            weightProgress: exerciseInput.weightProgress,
             isFavorite: exerciseInput.isFavorite,
             createdBy: createdBy,
           );
@@ -444,13 +457,15 @@ final class ExerciseRepository implements Repository {
       final Exercise updatedExercise = exercise.copyWith(
         name: input.name,
         description: input.description,
-        muscles: input.muscles,
-        muscleGroup: input.muscleGroup,
+        details: StrengthExerciseDetails(
+          muscleGroup: input.muscleGroup,
+          muscles: input.muscles,
+          weightProgress: input.weightProgress,
+        ),
         picture: input.picture,
         video: input.video,
         isFavorite: input.isFavorite,
         difficulty: input.difficulty,
-        weightProgress: input.weightProgress,
         updatedAt: DateUtilities.getNowUtcUnix(),
       );
 

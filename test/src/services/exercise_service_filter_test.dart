@@ -26,6 +26,7 @@ import 'package:myfitnesstale/src/data/repositories/exercises/inputs/equipment_i
 import 'package:myfitnesstale/src/data/repositories/exercises/inputs/exercise_input.dart';
 import 'package:myfitnesstale/src/data/repositories/exercises/inputs/exercise_record_input.dart';
 import 'package:myfitnesstale/src/data/utils/enums.dart';
+import 'package:myfitnesstale/src/data/utils/exercise_details.dart';
 import 'package:myfitnesstale/src/data/utils/json_data.dart';
 import 'package:myfitnesstale/src/ui/exercises/view_models/exercise_cubit.dart';
 import 'package:myfitnesstale/src/ui/exercises/view_models/exercise_record_cubit.dart';
@@ -51,11 +52,14 @@ void main() {
       Exercise.table,
       Exercise.create(
         name: name,
-        muscleGroup: muscleGroup,
+        details: StrengthExerciseDetails(
+          muscleGroup: muscleGroup,
+          muscles: const TargetMuscles(primary: {}, secondary: {}),
+          weightProgress: ExerciseWeightProgress.positive,
+        ),
         difficulty: difficulty,
         isFavorite: isFavorite,
         createdBy: createdBy,
-        muscles: const TargetMuscles(primary: {}, secondary: {}),
       ).toMap(),
     );
   }
@@ -410,5 +414,102 @@ void main() {
       )).value.picture,
       isNull,
     );
+  });
+
+  test('filters strength exercises by muscleGroup inside details JSON and excludes cardio exercises', () async {
+    final db = await testDatabase.db;
+    await createExercise(
+      db,
+      name: 'Push Press',
+      muscleGroup: MuscleGroup.push,
+      difficulty: Difficulty.beginner,
+      isFavorite: false,
+    );
+    await createExercise(
+      db,
+      name: 'Pull Up',
+      muscleGroup: MuscleGroup.pull,
+      difficulty: Difficulty.intermediate,
+      isFavorite: false,
+    );
+    await db.insert(
+      Exercise.table,
+      Exercise.create(
+        name: 'Treadmill Run',
+        details: const CardioExerciseDetails(
+          defaultMode: CardioBaseMode.time,
+          unitType: CardioUnitType.distance,
+          unit: 'km',
+        ),
+        difficulty: Difficulty.beginner,
+      ).toMap(),
+    );
+
+    final paginatedPush = await service.getExercises(
+      muscleGroup: MuscleGroup.push,
+    );
+    expect(paginatedPush.isOk(), isTrue);
+    expect(paginatedPush.value.total, 1);
+    expect(paginatedPush.value.data.single.name, 'Push Press');
+    expect(paginatedPush.value.data.single.muscleGroup, MuscleGroup.push);
+
+    final allPull = await service.getAllExercises(
+      muscleGroup: MuscleGroup.pull,
+    );
+    expect(allPull.isOk(), isTrue);
+    expect(allPull.value, hasLength(1));
+    expect(allPull.value.single.name, 'Pull Up');
+    expect(allPull.value.single.muscleGroup, MuscleGroup.pull);
+  });
+
+  test('createExercise and updateExercise persist and round-trip StrengthExerciseDetails fields', () async {
+    final created = await service.createExercise(
+      const ExerciseInput(
+        name: 'Assisted Dip',
+        muscleGroup: MuscleGroup.push,
+        muscles: TargetMuscles(
+          primary: {Muscle.triceps},
+          secondary: {Muscle.chest},
+        ),
+        weightProgress: ExerciseWeightProgress.negative,
+      ),
+    );
+    expect(created.isOk(), isTrue);
+    expect(created.value.muscleGroup, MuscleGroup.push);
+    expect(created.value.muscles.primary, {Muscle.triceps});
+    expect(created.value.muscles.secondary, {Muscle.chest});
+    expect(created.value.weightProgress, ExerciseWeightProgress.negative);
+
+    final fetched = await service.getExercise(created.value.id);
+    expect(fetched.isOk(), isTrue);
+    expect(fetched.value.muscleGroup, MuscleGroup.push);
+    expect(fetched.value.muscles.primary, {Muscle.triceps});
+    expect(fetched.value.muscles.secondary, {Muscle.chest});
+    expect(fetched.value.weightProgress, ExerciseWeightProgress.negative);
+
+    final updated = await service.updateExercise(
+      created.value.id,
+      const ExerciseInput(
+        name: 'Weighted Pull-Up',
+        muscleGroup: MuscleGroup.pull,
+        muscles: TargetMuscles(
+          primary: {Muscle.lats},
+          secondary: {Muscle.biceps},
+        ),
+        weightProgress: ExerciseWeightProgress.positive,
+      ),
+    );
+    expect(updated.isOk(), isTrue);
+    expect(updated.value.muscleGroup, MuscleGroup.pull);
+    expect(updated.value.muscles.primary, {Muscle.lats});
+    expect(updated.value.muscles.secondary, {Muscle.biceps});
+    expect(updated.value.weightProgress, ExerciseWeightProgress.positive);
+
+    final refetched = await service.getExercise(created.value.id);
+    expect(refetched.isOk(), isTrue);
+    expect(refetched.value.muscleGroup, MuscleGroup.pull);
+    expect(refetched.value.muscles.primary, {Muscle.lats});
+    expect(refetched.value.muscles.secondary, {Muscle.biceps});
+    expect(refetched.value.weightProgress, ExerciseWeightProgress.positive);
   });
 }

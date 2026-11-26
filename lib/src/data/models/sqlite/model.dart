@@ -20,6 +20,8 @@ mixin Columns {
 
   String get equal => "$value = ?";
 
+  String jsonEqual(String path) => "json_extract($value, '\$.$path') = ?";
+
   String get like => "$value LIKE ?";
 
   String get notEqual => "$value <> ?";

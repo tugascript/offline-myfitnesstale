@@ -31,6 +31,7 @@ import 'package:myfitnesstale/src/data/repositories/weight/inputs/weight_goal_in
 import 'package:myfitnesstale/src/data/repositories/weight/inputs/weight_record_input.dart';
 import 'package:myfitnesstale/src/data/repositories/weight/weight_record_repository.dart';
 import 'package:myfitnesstale/src/data/utils/enums.dart';
+import 'package:myfitnesstale/src/data/utils/exercise_details.dart';
 import 'package:myfitnesstale/src/data/utils/json_data.dart';
 import 'package:myfitnesstale/src/ui/foods/view_models/food_cubit.dart';
 import 'package:myfitnesstale/src/ui/weight/view_models/weight_record_cubit.dart';
@@ -91,8 +92,11 @@ void main() {
       final db = await database.db;
       final exercise = Exercise.create(
         name: 'Bench press',
-        muscleGroup: MuscleGroup.push,
-        muscles: const TargetMuscles(primary: {}, secondary: {}),
+        details: const StrengthExerciseDetails(
+          muscleGroup: MuscleGroup.push,
+          muscles: TargetMuscles(primary: {}, secondary: {}),
+          weightProgress: ExerciseWeightProgress.positive,
+        ),
       );
       final exerciseId = await db.insert(Exercise.table, exercise.toMap());
       final service = ExerciseRecordRepository.create();

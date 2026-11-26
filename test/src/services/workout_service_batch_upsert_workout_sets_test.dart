@@ -22,6 +22,7 @@ import 'package:myfitnesstale/src/data/utils/json_data.dart';
 import 'package:sqflite/sqflite.dart';
 
 import 'package:myfitnesstale/src/data/utils/enums.dart';
+import 'package:myfitnesstale/src/data/utils/exercise_details.dart';
 import 'package:myfitnesstale/src/data/models/sqlite/exercise_model.dart';
 import 'package:myfitnesstale/src/data/models/sqlite/workout_model.dart';
 import 'package:myfitnesstale/src/data/models/sqlite/workout_record_model.dart';
@@ -70,10 +71,13 @@ void main() {
   }) async {
     final exercise = Exercise.create(
       name: uniqueName('exercise'),
-      muscleGroup: muscleGroup,
-      muscles: TargetMuscles(
-        primary: primaryMuscles,
-        secondary: const <Muscle>{},
+      details: StrengthExerciseDetails(
+        muscleGroup: muscleGroup,
+        muscles: TargetMuscles(
+          primary: primaryMuscles,
+          secondary: const <Muscle>{},
+        ),
+        weightProgress: ExerciseWeightProgress.positive,
       ),
       difficulty: Difficulty.beginner,
     );

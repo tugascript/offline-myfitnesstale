@@ -20,6 +20,7 @@ import 'package:equatable/equatable.dart';
 import '../../../../utils/nullable.dart';
 import '../../../models/sqlite/exercise_model.dart';
 import '../../../utils/enums.dart';
+import '../../../utils/exercise_details.dart';
 import '../../../utils/json_data.dart';
 import '../../core/dtos/dto.dart';
 import '../../core/dtos/picture_dto.dart';
@@ -62,6 +63,24 @@ final class ExerciseDto extends Equatable implements ModelDto<Exercise> {
     Exercise exercise, {
     List<EquipmentDto>? equipments,
   }) {
+    final (
+      MuscleGroup muscleGroup,
+      TargetMuscles muscles,
+      ExerciseWeightProgress weightProgress,
+    ) = switch (exercise.details) {
+      StrengthExerciseDetails(
+        :final muscleGroup,
+        :final muscles,
+        :final weightProgress,
+      ) =>
+        (muscleGroup, muscles, weightProgress),
+      CardioExerciseDetails() => (
+        MuscleGroup.full,
+        const TargetMuscles(primary: {}, secondary: {}),
+        ExerciseWeightProgress.positive,
+      ),
+    };
+
     return ExerciseDto(
       id: exercise.id!,
       name: exercise.name,
@@ -72,11 +91,11 @@ final class ExerciseDto extends Equatable implements ModelDto<Exercise> {
       video: exercise.video != null
           ? VideoDto.fromModel(exercise.video!)
           : null,
-      muscleGroup: exercise.muscleGroup,
-      muscles: exercise.muscles,
+      muscleGroup: muscleGroup,
+      muscles: muscles,
       isFavorite: exercise.isFavorite,
       difficulty: exercise.difficulty,
-      weightProgress: exercise.weightProgress,
+      weightProgress: weightProgress,
       equipments: equipments,
       createdBy: exercise.createdBy,
     );

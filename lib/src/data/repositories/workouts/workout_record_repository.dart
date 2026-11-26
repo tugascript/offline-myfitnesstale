@@ -31,6 +31,7 @@ import '../../services/sqlite/dao.dart' show Dao;
 import '../../services/sqlite/database_helper.dart';
 import '../../utils/dates.dart';
 import '../../utils/enums.dart';
+import '../../utils/exercise_details.dart';
 import '../../utils/json_data.dart';
 import '../../utils/where_builder.dart';
 import '../core/dtos/paginated_dto.dart';
@@ -829,11 +830,20 @@ final class WorkoutRecordRepository implements Repository {
       );
       final int id = await _workoutRecordDao.startTransaction((trx) async {
         final int id = await _setExerciseRecordDao.insert(record, trx);
+        final StrengthExerciseDetails? strengthDetails =
+            switch (exercise.details) {
+              final StrengthExerciseDetails details => details,
+              CardioExerciseDetails() => null,
+            };
         final updatedWorkoutRecord = workoutRecord.copyWith(
           totalReps: workoutRecord.totalReps + input.reps,
           totalVolume: workoutRecord.totalVolume + (input.reps * input.weight),
-          muscleGroups: {...workoutRecord.muscleGroups, exercise.muscleGroup},
-          muscles: workoutRecord.muscles.addOther(exercise.muscles),
+          muscleGroups: strengthDetails != null
+              ? {...workoutRecord.muscleGroups, strengthDetails.muscleGroup}
+              : workoutRecord.muscleGroups,
+          muscles: strengthDetails != null
+              ? workoutRecord.muscles.addOther(strengthDetails.muscles)
+              : workoutRecord.muscles,
           currentExercisePosition: workoutRecord.currentExercisePosition + 1,
           updatedAt: DateUtilities.getNowUtcUnix(),
         );
@@ -903,8 +913,10 @@ final class WorkoutRecordRepository implements Repository {
     );
     final exerciseMap = <int, ExerciseDto>{};
     for (final exercise in fetchedExercises) {
-      muscleGroups.add(exercise.muscleGroup);
-      muscles = muscles.addOther(exercise.muscles);
+      if (exercise.details case final StrengthExerciseDetails details) {
+        muscleGroups.add(details.muscleGroup);
+        muscles = muscles.addOther(details.muscles);
+      }
       if (exercise.id != null) {
         exerciseMap[exercise.id!] = ExerciseDto.fromModel(exercise);
       }
