@@ -736,6 +736,46 @@ void main() {
         expect(find.text('Failed to update exercise'), findsOneWidget);
       },
     );
+
+    testWidgets(
+      'shows error snackbar again when a retried operation clears prior error and emits identical ErrorState',
+      (tester) async {
+        final cubit = _TestExerciseCubit()..nextExercise = sampleExercise();
+
+        await pumpExerciseScreen(tester, cubit: cubit);
+        await tester.pumpAndSettle();
+
+        const failure = ErrorState(
+          type: 'operationFailure',
+          description: 'Failed to update exercise favorite',
+        );
+
+        cubit.emit(cubit.state.copyWith(error: const Nullable(failure)));
+        await tester.pumpAndSettle();
+        expect(find.text('Failed to update exercise favorite'), findsOneWidget);
+
+        ScaffoldMessenger.of(tester.element(find.byType(ExerciseDetailScreen)))
+            .clearSnackBars();
+        await tester.pumpAndSettle();
+        expect(find.byType(SnackBar), findsNothing);
+
+        // Retry starts (clears prior error) and fails with an identical error.
+        cubit.emit(
+          cubit.state.copyWith(isLoading: true, error: const Nullable(null)),
+        );
+        await tester.pump();
+        cubit.emit(
+          cubit.state.copyWith(
+            isLoading: false,
+            error: const Nullable(failure),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.byType(SnackBar), findsOneWidget);
+        expect(find.text('Failed to update exercise favorite'), findsOneWidget);
+      },
+    );
   });
 
   group('EquipmentDetailsScreen Skeletonizer', () {
