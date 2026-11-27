@@ -18,6 +18,7 @@
 import 'package:equatable/equatable.dart';
 
 import '../../core/inputs/input.dart';
+import 'workout_cardio_set_record_batch_input.dart';
 import 'workout_set_record_batch_input.dart';
 
 final class WorkoutRecordBatchInput extends Equatable implements Input {
@@ -26,15 +27,24 @@ final class WorkoutRecordBatchInput extends Equatable implements Input {
   final DateTime startedAt;
   final DateTime completedAt;
   final List<WorkoutSetRecordBatchInput> sets;
+  final List<WorkoutCardioSetRecordBatchInput> cardioSets;
 
   const WorkoutRecordBatchInput({
     required this.workoutId,
     required this.version,
     required this.startedAt,
     required this.completedAt,
-    required this.sets,
+    this.sets = const [],
+    this.cardioSets = const [],
   });
 
   @override
-  List<Object?> get props => [workoutId, version, startedAt, completedAt, sets];
+  List<Object?> get props => [
+    workoutId,
+    version,
+    startedAt,
+    completedAt,
+    sets,
+    cardioSets,
+  ];
 }

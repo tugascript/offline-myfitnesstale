@@ -22,6 +22,8 @@ import '../../../utils/errors.dart';
 import '../../../utils/nullable.dart';
 import '../../../utils/result.dart';
 import '../../models/sqlite/exercise_model.dart';
+import '../../models/sqlite/workout_cardio_set_exercise_record_model.dart';
+import '../../models/sqlite/workout_cardio_set_record_model.dart';
 import '../../models/sqlite/workout_model.dart';
 import '../../models/sqlite/workout_record_model.dart';
 import '../../models/sqlite/workout_set_exercise_record_model.dart';
@@ -38,10 +40,15 @@ import '../core/dtos/paginated_dto.dart';
 import '../core/repository.dart';
 import '../core/repository_helpers.dart';
 import '../exercises/dtos/exercise_dto.dart';
+import './dtos/workout_cardio_set_exercise_record_dto.dart';
+import './dtos/workout_cardio_set_record_dto.dart';
 import './dtos/workout_dto.dart';
 import './dtos/workout_record_dto.dart';
 import './dtos/workout_set_exercise_record_dto.dart';
 import './dtos/workout_set_record_dto.dart';
+import './inputs/workout_cardio_set_exercise_record_input.dart';
+import './inputs/workout_cardio_set_record_batch_input.dart';
+import './inputs/workout_cardio_set_record_input.dart';
 import './inputs/workout_record_batch_input.dart';
 import './inputs/workout_record_input.dart';
 import './inputs/workout_set_exercise_record_input.dart';
@@ -52,6 +59,8 @@ final class WorkoutRecordRepository implements Repository {
   final Dao<WorkoutRecord> _workoutRecordDao;
   final Dao<WorkoutSetRecord> _setRecordDao;
   final Dao<WorkoutSetExerciseRecord> _setExerciseRecordDao;
+  final Dao<WorkoutCardioSetRecord> _cardioSetRecordDao;
+  final Dao<WorkoutCardioSetExerciseRecord> _cardioSetExerciseRecordDao;
   final Dao<Workout> _workoutDao;
   final Dao<Exercise> _exerciseDao;
 
@@ -61,6 +70,8 @@ final class WorkoutRecordRepository implements Repository {
     required this._workoutRecordDao,
     required this._setRecordDao,
     required this._setExerciseRecordDao,
+    required this._cardioSetRecordDao,
+    required this._cardioSetExerciseRecordDao,
     required this._workoutDao,
     required this._exerciseDao,
   });
@@ -82,6 +93,16 @@ final class WorkoutRecordRepository implements Repository {
         databaseHelper: helper,
         tableName: WorkoutSetExerciseRecord.table,
         fromMap: WorkoutSetExerciseRecord.fromMap,
+      ),
+      cardioSetRecordDao: Dao<WorkoutCardioSetRecord>(
+        databaseHelper: helper,
+        tableName: WorkoutCardioSetRecord.table,
+        fromMap: WorkoutCardioSetRecord.fromMap,
+      ),
+      cardioSetExerciseRecordDao: Dao<WorkoutCardioSetExerciseRecord>(
+        databaseHelper: helper,
+        tableName: WorkoutCardioSetExerciseRecord.table,
+        fromMap: WorkoutCardioSetExerciseRecord.fromMap,
       ),
       workoutDao: Dao<Workout>(
         databaseHelper: helper,
@@ -255,77 +276,134 @@ final class WorkoutRecordRepository implements Repository {
             WorkoutSetExerciseRecordColumns.id.orderAsc,
           ],
         ),
+        _cardioSetRecordDao.selectMany(
+          where: WorkoutCardioSetRecordColumns.workoutRecordId.equal,
+          whereArgs: [id],
+          orderBy: [
+            WorkoutCardioSetRecordColumns.workoutRecordId.orderAsc,
+            WorkoutCardioSetRecordColumns.roundNumber.orderAsc,
+            WorkoutCardioSetRecordColumns.id.orderAsc,
+          ],
+        ),
+        _cardioSetExerciseRecordDao.selectMany(
+          where: WorkoutCardioSetExerciseRecordColumns.workoutRecordId.equal,
+          whereArgs: [id],
+          orderBy: [
+            WorkoutCardioSetExerciseRecordColumns
+                .workoutCardioSetRecordId
+                .orderAsc,
+            WorkoutCardioSetExerciseRecordColumns.position.orderAsc,
+            WorkoutCardioSetExerciseRecordColumns.id.orderAsc,
+          ],
+        ),
       ]);
       final setRecords = childResults[0] as List<WorkoutSetRecord>;
-      if (setRecords.isEmpty) {
+      final setExerciseRecords =
+          childResults[1] as List<WorkoutSetExerciseRecord>;
+      final cardioSetRecords = childResults[2] as List<WorkoutCardioSetRecord>;
+      final cardioSetExerciseRecords =
+          childResults[3] as List<WorkoutCardioSetExerciseRecord>;
+
+      if (setRecords.isEmpty && cardioSetRecords.isEmpty) {
         _logger.info('Got workout record with id $id');
         return ok(WorkoutRecordDto.fromModel(record));
       }
 
-      final setExerciseRecords =
-          childResults[1] as List<WorkoutSetExerciseRecord>;
-      if (setExerciseRecords.isEmpty) {
-        _logger.info('Got workout record with id $id');
-        return ok(
-          WorkoutRecordDto.fromModel(
-            record,
-            setRecords: setRecords
-                .map((sr) => WorkoutSetRecordDto.fromModel(sr))
-                .toList(),
-          ),
+      final allExerciseIds = <int>{
+        ...setExerciseRecords.map((s) => s.exerciseId),
+        ...cardioSetExerciseRecords.map((c) => c.exerciseId),
+      };
+
+      final exercisesMap = <int, ExerciseDto>{};
+      if (allExerciseIds.isNotEmpty) {
+        final exercisesResult = await selectManyInChunks(
+          failureType: SingleErrorTypes.operationFailure,
+          dao: _exerciseDao,
+          column: ExerciseColumns.id,
+          values: allExerciseIds,
         );
+        if (exercisesResult.isErr()) return err(exercisesResult.error);
+        for (final exercise in exercisesResult.value) {
+          exercisesMap[exercise.id!] = ExerciseDto.fromModel(exercise);
+        }
       }
 
-      final exercisesResult = await selectManyInChunks(
-        failureType: SingleErrorTypes.operationFailure,
-        dao: _exerciseDao,
-        column: ExerciseColumns.id,
-        values: setExerciseRecords.map((s) => s.exerciseId),
-      );
-      if (exercisesResult.isErr()) return err(exercisesResult.error);
-      final exercises = exercisesResult.value;
-
-      final exercisesMap = exercises.fold<Map<int, ExerciseDto>>(
-        {},
-        (map, exercise) =>
-            map..[exercise.id!] = ExerciseDto.fromModel(exercise),
-      );
-      final setExerciseRecordsMap = setExerciseRecords
-          .fold<Map<int, List<WorkoutSetExerciseRecordDto>>>({}, (
-            map,
-            setExerciseRecord,
-          ) {
-            map.update(
-              setExerciseRecord.workoutSetRecordId,
-              (list) => list
-                ..add(
+      List<WorkoutSetRecordDto>? mappedSetRecords;
+      if (setRecords.isNotEmpty) {
+        final setExerciseRecordsMap = setExerciseRecords
+            .fold<Map<int, List<WorkoutSetExerciseRecordDto>>>({}, (
+              map,
+              setExerciseRecord,
+            ) {
+              map.update(
+                setExerciseRecord.workoutSetRecordId,
+                (list) => list
+                  ..add(
+                    WorkoutSetExerciseRecordDto.fromModel(
+                      setExerciseRecord,
+                      exercise: exercisesMap[setExerciseRecord.exerciseId],
+                    ),
+                  ),
+                ifAbsent: () => [
                   WorkoutSetExerciseRecordDto.fromModel(
                     setExerciseRecord,
                     exercise: exercisesMap[setExerciseRecord.exerciseId],
                   ),
-                ),
-              ifAbsent: () => [
-                WorkoutSetExerciseRecordDto.fromModel(
-                  setExerciseRecord,
-                  exercise: exercisesMap[setExerciseRecord.exerciseId],
-                ),
-              ],
-            );
-            return map;
-          });
+                ],
+              );
+              return map;
+            });
+        mappedSetRecords = setRecords
+            .map(
+              (sr) => WorkoutSetRecordDto.fromModel(
+                sr,
+                setExerciseRecords: setExerciseRecordsMap[sr.id!],
+              ),
+            )
+            .toList();
+      }
+
+      List<WorkoutCardioSetRecordDto>? mappedCardioSetRecords;
+      if (cardioSetRecords.isNotEmpty) {
+        final cardioExerciseRecordsMap = cardioSetExerciseRecords
+            .fold<Map<int, List<WorkoutCardioSetExerciseRecordDto>>>({}, (
+              map,
+              cardioExerciseRecord,
+            ) {
+              map.update(
+                cardioExerciseRecord.workoutCardioSetRecordId,
+                (list) => list
+                  ..add(
+                    WorkoutCardioSetExerciseRecordDto.fromModel(
+                      cardioExerciseRecord,
+                      exercise: exercisesMap[cardioExerciseRecord.exerciseId],
+                    ),
+                  ),
+                ifAbsent: () => [
+                  WorkoutCardioSetExerciseRecordDto.fromModel(
+                    cardioExerciseRecord,
+                    exercise: exercisesMap[cardioExerciseRecord.exerciseId],
+                  ),
+                ],
+              );
+              return map;
+            });
+        mappedCardioSetRecords = cardioSetRecords
+            .map(
+              (sr) => WorkoutCardioSetRecordDto.fromModel(
+                sr,
+                exerciseRecords: cardioExerciseRecordsMap[sr.id!],
+              ),
+            )
+            .toList();
+      }
 
       _logger.info('Got workout record with id $id');
       return ok(
         WorkoutRecordDto.fromModel(
           record,
-          setRecords: setRecords
-              .map(
-                (sr) => WorkoutSetRecordDto.fromModel(
-                  sr,
-                  setExerciseRecords: setExerciseRecordsMap[sr.id!],
-                ),
-              )
-              .toList(),
+          setRecords: mappedSetRecords,
+          cardioSetRecords: mappedCardioSetRecords,
         ),
       );
     } catch (e) {
@@ -868,6 +946,341 @@ final class WorkoutRecordRepository implements Repository {
     }
   }
 
+  Future<Result<WorkoutCardioSetRecordDto, ServiceError<OperationErrorTypes>>>
+  upsertWorkoutCardioSetRecord(WorkoutCardioSetRecordInput input) async {
+    _logger.info('Upserting workout cardio set record');
+    if (input.roundNumber < 1) {
+      return err(
+        const ServiceError(
+          type: OperationErrorTypes.invalidInput,
+          description: 'Round number must be at least 1',
+        ),
+      );
+    }
+    if ((input.totalRestSecs.value ?? 0) < 0) {
+      return err(
+        const ServiceError(
+          type: OperationErrorTypes.invalidInput,
+          description: 'Rest duration cannot be negative',
+        ),
+      );
+    }
+
+    final whereBuild = WhereBuilder()
+      ..and(
+        WorkoutCardioSetRecordColumns.workoutCardioSetId.equal,
+        input.workoutCardioSetId,
+      )
+      ..and(
+        WorkoutCardioSetRecordColumns.workoutRecordId.equal,
+        input.workoutRecordId,
+      )
+      ..and(WorkoutCardioSetRecordColumns.roundNumber.equal, input.roundNumber);
+
+    try {
+      final WorkoutRecord? workoutRecord = await _workoutRecordDao.selectOne(
+        input.workoutRecordId,
+      );
+      if (workoutRecord == null) {
+        return err(
+          ServiceError(
+            type: OperationErrorTypes.invalidInput,
+            description:
+                'Workout record with id: ${input.workoutRecordId} not found',
+          ),
+        );
+      }
+
+      final List<WorkoutCardioSetRecord> records = await _cardioSetRecordDao
+          .selectMany(
+            where: whereBuild.where,
+            whereArgs: whereBuild.args,
+            limit: 1,
+          );
+
+      if (records.isNotEmpty) {
+        final WorkoutCardioSetRecord record = records.first;
+        final int oldRest = record.totalRestSecs ?? 0;
+        final WorkoutCardioSetRecord updatedRecord = record.copyWith(
+          startedAt: DateUtilities.getDateUnix(input.startedAt),
+          totalRestSecs: input.totalRestSecs,
+          completedAt: Nullable(
+            input.completedAt.value != null
+                ? DateUtilities.getDateUnix(input.completedAt.value!)
+                : null,
+          ),
+          updatedAt: DateUtilities.getNowUtcUnix(),
+        );
+        await _workoutRecordDao.startTransaction((trx) async {
+          await _cardioSetRecordDao.update(updatedRecord, trx);
+          final updatedWorkoutRecord = workoutRecord.copyWith(
+            totalRestSecs:
+                workoutRecord.totalRestSecs +
+                (updatedRecord.totalRestSecs ?? 0) -
+                oldRest,
+            updatedAt: DateUtilities.getNowUtcUnix(),
+          );
+          await _workoutRecordDao.update(updatedWorkoutRecord, trx);
+        });
+
+        _logger.info('Updated workout cardio set record with id ${record.id}');
+        return ok(WorkoutCardioSetRecordDto.fromModel(updatedRecord));
+      }
+
+      final WorkoutCardioSetRecord record = WorkoutCardioSetRecord.create(
+        workoutCardioSetId: input.workoutCardioSetId,
+        workoutRecordId: input.workoutRecordId,
+        roundNumber: input.roundNumber,
+        startedAt: DateUtilities.getDateUnix(input.startedAt),
+        totalRestSecs: input.totalRestSecs.value,
+        completedAt: input.completedAt.value != null
+            ? DateUtilities.getDateUnix(input.completedAt.value!)
+            : null,
+      );
+      final int id = await _workoutRecordDao.startTransaction((trx) async {
+        final int id = await _cardioSetRecordDao.insert(record, trx);
+
+        final updatedWorkoutRecord = workoutRecord.copyWith(
+          totalSets: workoutRecord.totalSets + 1,
+          totalRestSecs:
+              workoutRecord.totalRestSecs + (record.totalRestSecs ?? 0),
+          currentSetPosition: workoutRecord.currentSetPosition + 1,
+          currentSetNumber: workoutRecord.currentSetNumber + 1,
+          updatedAt: DateUtilities.getNowUtcUnix(),
+        );
+        await _workoutRecordDao.update(updatedWorkoutRecord, trx);
+
+        return id;
+      });
+      _logger.info('Created workout cardio set record with id $id');
+      return ok(
+        WorkoutCardioSetRecordDto.fromModel(record.copyWith(id: Nullable(id))),
+      );
+    } catch (e) {
+      _logger.severe('Failed to upsert workout cardio set record', e);
+      return err(
+        const ServiceError(
+          type: OperationErrorTypes.operationFailure,
+          description: 'Failed to create workout cardio set record',
+        ),
+      );
+    }
+  }
+
+  Future<
+    Result<WorkoutCardioSetExerciseRecordDto, ServiceError<OperationErrorTypes>>
+  >
+  upsertWorkoutCardioSetExerciseRecord(
+    WorkoutCardioSetExerciseRecordInput input,
+  ) async {
+    _logger.info('Upserting workout cardio set exercise record');
+    final validationError = _validateCardioExerciseValues(
+      position: input.position,
+      mode: input.mode,
+      quantity: input.quantity,
+      durationSecs: input.durationSecs,
+      restSecs: input.restSecs,
+      rpe: input.rpe,
+    );
+    if (validationError != null) {
+      return err(validationError);
+    }
+
+    try {
+      final whereBuild = WhereBuilder()
+        ..and(
+          WorkoutCardioSetExerciseRecordColumns
+              .workoutCardioSetExerciseId
+              .equal,
+          input.workoutCardioSetExerciseId,
+        )
+        ..and(
+          WorkoutCardioSetExerciseRecordColumns.workoutRecordId.equal,
+          input.workoutRecordId,
+        )
+        ..and(
+          WorkoutCardioSetExerciseRecordColumns.workoutCardioSetRecordId.equal,
+          input.workoutCardioSetRecordId,
+        )
+        ..and(
+          WorkoutCardioSetExerciseRecordColumns.position.equal,
+          input.position,
+        );
+      final preloads = await Future.wait([
+        _workoutRecordDao.selectOne(input.workoutRecordId),
+        _cardioSetRecordDao.selectOne(input.workoutCardioSetRecordId),
+        _exerciseDao.selectOne(input.exerciseId),
+        _cardioSetExerciseRecordDao.selectMany(
+          where: whereBuild.where,
+          whereArgs: whereBuild.args,
+          limit: 1,
+        ),
+      ]);
+      final WorkoutRecord? workoutRecord = preloads[0] as WorkoutRecord?;
+      if (workoutRecord == null) {
+        return err(
+          ServiceError(
+            type: OperationErrorTypes.invalidInput,
+            description:
+                'Workout record with id: ${input.workoutRecordId} not found',
+          ),
+        );
+      }
+
+      final WorkoutCardioSetRecord? cardioSetRecord =
+          preloads[1] as WorkoutCardioSetRecord?;
+      if (cardioSetRecord == null) {
+        return err(
+          ServiceError(
+            type: OperationErrorTypes.invalidInput,
+            description:
+                'Workout cardio set record with id: ${input.workoutCardioSetRecordId} not found',
+          ),
+        );
+      }
+
+      final Exercise? exercise = preloads[2] as Exercise?;
+      if (exercise == null) {
+        return err(
+          ServiceError(
+            type: OperationErrorTypes.invalidInput,
+            description: 'Exercise with id: ${input.exerciseId} not found',
+          ),
+        );
+      }
+      if (exercise.type != ExerciseType.cardio) {
+        return err(
+          ServiceError(
+            type: OperationErrorTypes.invalidInput,
+            description:
+                'Exercise with id: ${input.exerciseId} is not a cardio exercise',
+          ),
+        );
+      }
+
+      final List<WorkoutCardioSetExerciseRecord> records =
+          preloads[3] as List<WorkoutCardioSetExerciseRecord>;
+      if (records.isNotEmpty) {
+        final WorkoutCardioSetExerciseRecord record = records.first;
+        final int oldRest = record.restSecs;
+        final WorkoutCardioSetExerciseRecord updatedRecord = record.copyWith(
+          mode: input.mode,
+          quantity: input.quantity,
+          durationSecs: input.durationSecs,
+          restSecs: input.restSecs,
+          rpe: input.rpe,
+          exerciseId: input.exerciseId,
+          updatedAt: DateUtilities.getNowUtcUnix(),
+        );
+        await _workoutRecordDao.startTransaction((trx) async {
+          await _cardioSetExerciseRecordDao.update(updatedRecord, trx);
+          final updatedWorkoutRecord = workoutRecord.copyWith(
+            totalRestSecs:
+                workoutRecord.totalRestSecs + input.restSecs - oldRest,
+            updatedAt: DateUtilities.getNowUtcUnix(),
+          );
+          await _workoutRecordDao.update(updatedWorkoutRecord, trx);
+        });
+
+        return ok(
+          WorkoutCardioSetExerciseRecordDto.fromModel(
+            updatedRecord,
+            exercise: ExerciseDto.fromModel(exercise),
+          ),
+        );
+      }
+
+      final WorkoutCardioSetExerciseRecord record =
+          WorkoutCardioSetExerciseRecord.create(
+            workoutCardioSetExerciseId: input.workoutCardioSetExerciseId,
+            workoutRecordId: input.workoutRecordId,
+            workoutCardioSetRecordId: input.workoutCardioSetRecordId,
+            exerciseId: input.exerciseId,
+            position: input.position,
+            mode: input.mode,
+            quantity: input.quantity,
+            durationSecs: input.durationSecs,
+            restSecs: input.restSecs,
+            rpe: input.rpe,
+          );
+      final int id = await _workoutRecordDao.startTransaction((trx) async {
+        final int id = await _cardioSetExerciseRecordDao.insert(record, trx);
+        final updatedWorkoutRecord = workoutRecord.copyWith(
+          totalRestSecs: workoutRecord.totalRestSecs + input.restSecs,
+          currentExercisePosition: workoutRecord.currentExercisePosition + 1,
+          updatedAt: DateUtilities.getNowUtcUnix(),
+        );
+        await _workoutRecordDao.update(updatedWorkoutRecord, trx);
+        return id;
+      });
+      _logger.info('Created workout cardio set exercise record with id $id');
+
+      return ok(
+        WorkoutCardioSetExerciseRecordDto.fromModel(
+          record.copyWith(id: Nullable(id)),
+          exercise: ExerciseDto.fromModel(exercise),
+        ),
+      );
+    } catch (e) {
+      _logger.severe('Failed to upsert workout cardio set exercise record', e);
+      return err(
+        const ServiceError(
+          type: OperationErrorTypes.operationFailure,
+          description: 'Failed to create workout cardio set exercise record',
+        ),
+      );
+    }
+  }
+
+  ServiceError<OperationErrorTypes>? _validateCardioExerciseValues({
+    required int position,
+    required CardioBaseMode mode,
+    required int quantity,
+    required int durationSecs,
+    required int restSecs,
+    required int rpe,
+  }) {
+    if (position < 1) {
+      return const ServiceError(
+        type: OperationErrorTypes.invalidInput,
+        description: 'Exercise position must be at least 1',
+      );
+    }
+    if (mode == CardioBaseMode.units && quantity <= 0) {
+      return const ServiceError(
+        type: OperationErrorTypes.invalidInput,
+        description: 'Completed units must be greater than 0',
+      );
+    }
+    if (mode == CardioBaseMode.time && quantity < 0) {
+      return const ServiceError(
+        type: OperationErrorTypes.invalidInput,
+        description: 'Logged time cannot be negative',
+      );
+    }
+    if (durationSecs < 0) {
+      return const ServiceError(
+        type: OperationErrorTypes.invalidInput,
+        description: 'Duration cannot be negative',
+      );
+    }
+    if (restSecs < 0) {
+      return const ServiceError(
+        type: OperationErrorTypes.invalidInput,
+        description: 'Rest duration cannot be negative',
+      );
+    }
+    if (rpe < WorkoutSetExerciseDifficultyType.rpe.minValue ||
+        rpe > WorkoutSetExerciseDifficultyType.rpe.maxValue) {
+      return ServiceError(
+        type: OperationErrorTypes.invalidInput,
+        description:
+            'RPE must be between ${WorkoutSetExerciseDifficultyType.rpe.minValue} and ${WorkoutSetExerciseDifficultyType.rpe.maxValue}',
+      );
+    }
+    return null;
+  }
+
   Future<
     Result<
       ({
@@ -930,6 +1343,106 @@ final class WorkoutRecordRepository implements Repository {
       muscles: muscles,
       exerciseMap: exerciseMap,
     ));
+  }
+
+  Future<
+    Result<
+      ({int totalRestSecs, Map<int, ExerciseDto> exerciseMap}),
+      ServiceError<OperationErrorTypes>
+    >
+  >
+  _prepareCardioBatchRecordData(WorkoutRecordBatchInput input) async {
+    if (input.cardioSets.isEmpty) {
+      return err(
+        const ServiceError(
+          type: OperationErrorTypes.invalidInput,
+          description: 'Please log at least one cardio round',
+        ),
+      );
+    }
+
+    int totalRestSecs = 0;
+    final Set<int> allExerciseIds = {};
+
+    for (final set in input.cardioSets) {
+      if (set.roundNumber < 1) {
+        return err(
+          const ServiceError(
+            type: OperationErrorTypes.invalidInput,
+            description: 'Round number must be at least 1',
+          ),
+        );
+      }
+      if (set.totalRestSecs < 0) {
+        return err(
+          const ServiceError(
+            type: OperationErrorTypes.invalidInput,
+            description: 'Rest duration cannot be negative',
+          ),
+        );
+      }
+      if (set.exercises.isEmpty) {
+        return err(
+          const ServiceError(
+            type: OperationErrorTypes.invalidInput,
+            description: 'Each cardio round must include at least one exercise',
+          ),
+        );
+      }
+
+      totalRestSecs += set.totalRestSecs;
+      for (final ex in set.exercises) {
+        final validationError = _validateCardioExerciseValues(
+          position: ex.position,
+          mode: ex.mode,
+          quantity: ex.quantity,
+          durationSecs: ex.durationSecs,
+          restSecs: ex.restSecs,
+          rpe: ex.rpe,
+        );
+        if (validationError != null) {
+          return err(validationError);
+        }
+        totalRestSecs += ex.restSecs;
+        allExerciseIds.add(ex.exerciseId);
+      }
+    }
+
+    final fetchedExercisesResult = await selectManyInChunks(
+      failureType: OperationErrorTypes.operationFailure,
+      dao: _exerciseDao,
+      column: ExerciseColumns.id,
+      values: allExerciseIds,
+    );
+    if (fetchedExercisesResult.isErr()) {
+      return err(fetchedExercisesResult.error);
+    }
+    final fetchedExercises = fetchedExercisesResult.value;
+    final exerciseMap = <int, ExerciseDto>{};
+    for (final exercise in fetchedExercises) {
+      if (exercise.type != ExerciseType.cardio) {
+        return err(
+          ServiceError(
+            type: OperationErrorTypes.invalidInput,
+            description:
+                'Exercise with id: ${exercise.id} is not a cardio exercise',
+          ),
+        );
+      }
+      if (exercise.id != null) {
+        exerciseMap[exercise.id!] = ExerciseDto.fromModel(exercise);
+      }
+    }
+    if (exerciseMap.length != allExerciseIds.length) {
+      return err(
+        const ServiceError(
+          type: OperationErrorTypes.invalidInput,
+          description: 'One or more cardio exercises were not found',
+        ),
+      );
+    }
+
+    return ok((totalRestSecs: totalRestSecs, exerciseMap: exerciseMap));
   }
 
   Future<Result<List<WorkoutSetRecordDto>, ServiceError<OperationErrorTypes>>>
@@ -1010,6 +1523,95 @@ final class WorkoutRecordRepository implements Repository {
     }
   }
 
+  Future<
+    Result<List<WorkoutCardioSetRecordDto>, ServiceError<OperationErrorTypes>>
+  >
+  _insertBatchCardioSetsAndExercises({
+    required Transaction trx,
+    required int workoutRecordId,
+    required List<WorkoutCardioSetRecordBatchInput> cardioSets,
+    required Map<int, ExerciseDto> exerciseMap,
+  }) async {
+    const failure = ServiceError(
+      type: OperationErrorTypes.operationFailure,
+      description: 'Failed to save cardio workout record sets',
+    );
+    try {
+      final List<WorkoutCardioSetRecordDto> cardioSetRecordDtos = [];
+      for (final setDto in cardioSets) {
+        final WorkoutCardioSetRecord setRecord = WorkoutCardioSetRecord.create(
+          workoutCardioSetId: setDto.workoutCardioSetId,
+          workoutRecordId: workoutRecordId,
+          roundNumber: setDto.roundNumber,
+          startedAt: DateUtilities.getDateUnix(setDto.startedAt),
+          completedAt: setDto.completedAt != null
+              ? DateUtilities.getDateUnix(setDto.completedAt!)
+              : null,
+          totalRestSecs: setDto.totalRestSecs,
+        );
+        final int setRecordId = await _cardioSetRecordDao.insert(
+          setRecord,
+          trx,
+        );
+        if (setRecordId <= 0) return err(failure);
+
+        final exercises = <(int, WorkoutCardioSetExerciseRecordDto)>[];
+        for (final exDto in setDto.exercises) {
+          final WorkoutCardioSetExerciseRecord exRecord =
+              WorkoutCardioSetExerciseRecord.create(
+                workoutCardioSetExerciseId: exDto.workoutCardioSetExerciseId,
+                workoutRecordId: workoutRecordId,
+                workoutCardioSetRecordId: setRecordId,
+                exerciseId: exDto.exerciseId,
+                position: exDto.position,
+                mode: exDto.mode,
+                quantity: exDto.quantity,
+                durationSecs: exDto.durationSecs,
+                restSecs: exDto.restSecs,
+                rpe: exDto.rpe,
+              );
+          final int exRecordId = await _cardioSetExerciseRecordDao.insert(
+            exRecord,
+            trx,
+          );
+          if (exRecordId <= 0) return err(failure);
+          exercises.add((
+            exDto.position,
+            WorkoutCardioSetExerciseRecordDto.fromModel(
+              exRecord.copyWith(id: Nullable(exRecordId)),
+              exercise: exerciseMap[exDto.exerciseId],
+            ),
+          ));
+        }
+
+        exercises.sort((a, b) {
+          final byPosition = a.$1.compareTo(b.$1);
+          return byPosition == 0 ? a.$2.id.compareTo(b.$2.id) : byPosition;
+        });
+        cardioSetRecordDtos.add(
+          WorkoutCardioSetRecordDto.fromModel(
+            setRecord.copyWith(id: Nullable(setRecordId)),
+            exerciseRecords: exercises.isEmpty
+                ? null
+                : exercises.map((exercise) => exercise.$2).toList(),
+          ),
+        );
+      }
+      cardioSetRecordDtos.sort((a, b) {
+        final byRoundNumber = a.roundNumber.compareTo(b.roundNumber);
+        return byRoundNumber == 0 ? a.id.compareTo(b.id) : byRoundNumber;
+      });
+      return ok(cardioSetRecordDtos);
+    } catch (error, stackTrace) {
+      _logger.severe(
+        'Failed to save cardio workout record sets',
+        error,
+        stackTrace,
+      );
+      return err(failure);
+    }
+  }
+
   Future<Result<WorkoutRecordDto, ServiceError<OperationErrorTypes>>>
   batchCreateWorkoutRecord(WorkoutRecordBatchInput input) async {
     _logger.info('Batch creating workout record');
@@ -1020,6 +1622,73 @@ final class WorkoutRecordRepository implements Repository {
           ServiceError(
             type: OperationErrorTypes.invalidInput,
             description: 'Workout with id: ${input.workoutId} not found',
+          ),
+        );
+      }
+
+      final bool isCardio = workout.editorType == EditorType.cardio;
+      if (isCardio) {
+        if (input.sets.isNotEmpty) {
+          return err(
+            const ServiceError(
+              type: OperationErrorTypes.invalidInput,
+              description:
+                  'Strength set records cannot be saved for a cardio workout',
+            ),
+          );
+        }
+        final preparedResult = await _prepareCardioBatchRecordData(input);
+        if (preparedResult.isErr()) return err(preparedResult.error);
+        final prepared = preparedResult.value;
+        final WorkoutRecord baseRecord = WorkoutRecord.create(
+          version: input.version,
+          workoutId: input.workoutId,
+          startedAt: DateUtilities.getDateUnix(input.startedAt),
+          completedAt: DateUtilities.getDateUnix(input.completedAt),
+          status: ProgressStatus.completed,
+          totalSets: input.cardioSets.length,
+          totalRestSecs: prepared.totalRestSecs,
+          totalReps: 0,
+          totalVolume: 0,
+          muscleGroups: const <MuscleGroup>{},
+          muscles: const TargetMuscles(
+            primary: <Muscle>{},
+            secondary: <Muscle>{},
+          ),
+        );
+
+        final createdDto = await _workoutRecordDao.startTransaction((
+          trx,
+        ) async {
+          final int recordId = await _workoutRecordDao.insert(baseRecord, trx);
+          final savedChildren = await _insertBatchCardioSetsAndExercises(
+            trx: trx,
+            workoutRecordId: recordId,
+            cardioSets: input.cardioSets,
+            exerciseMap: prepared.exerciseMap,
+          );
+          // Throw inside the transaction to roll back earlier writes.
+          if (savedChildren.isErr()) throw savedChildren.error;
+          final cardioSetRecordDtos = savedChildren.value;
+          return WorkoutRecordDto.fromModel(
+            baseRecord.copyWith(id: Nullable(recordId)),
+            cardioSetRecords: cardioSetRecordDtos.isEmpty
+                ? null
+                : cardioSetRecordDtos,
+          );
+        });
+        _logger.info(
+          'Batch created cardio workout record with id ${createdDto.id}',
+        );
+        return ok(createdDto);
+      }
+
+      if (input.cardioSets.isNotEmpty) {
+        return err(
+          const ServiceError(
+            type: OperationErrorTypes.invalidInput,
+            description:
+                'Cardio set records cannot be saved for a strength workout',
           ),
         );
       }
@@ -1079,14 +1748,115 @@ final class WorkoutRecordRepository implements Repository {
   ) async {
     _logger.info('Batch updating workout record with id $workoutRecordId');
     try {
-      final WorkoutRecord? record = await _workoutRecordDao.selectOne(
-        workoutRecordId,
-      );
+      final preloads = await Future.wait([
+        _workoutRecordDao.selectOne(workoutRecordId),
+        _workoutDao.selectOne(input.workoutId),
+      ]);
+      final WorkoutRecord? record = preloads[0] as WorkoutRecord?;
       if (record == null) {
         return err(
           ServiceError(
             type: OperationErrorTypes.invalidInput,
             description: 'Workout record with id: $workoutRecordId not found',
+          ),
+        );
+      }
+      final Workout? workout = preloads[1] as Workout?;
+      if (workout == null) {
+        return err(
+          ServiceError(
+            type: OperationErrorTypes.invalidInput,
+            description: 'Workout with id: ${input.workoutId} not found',
+          ),
+        );
+      }
+
+      final bool isCardio = workout.editorType == EditorType.cardio;
+      if (isCardio) {
+        if (input.sets.isNotEmpty) {
+          return err(
+            const ServiceError(
+              type: OperationErrorTypes.invalidInput,
+              description:
+                  'Strength set records cannot be saved for a cardio workout',
+            ),
+          );
+        }
+        final preparedResult = await _prepareCardioBatchRecordData(input);
+        if (preparedResult.isErr()) return err(preparedResult.error);
+        final prepared = preparedResult.value;
+        final updatedRecord = record.copyWith(
+          workoutId: input.workoutId,
+          version: input.version,
+          startedAt: DateUtilities.getDateUnix(input.startedAt),
+          completedAt: Nullable(DateUtilities.getDateUnix(input.completedAt)),
+          droppedAt: const Nullable(null),
+          status: ProgressStatus.completed,
+          totalSets: input.cardioSets.length,
+          totalRestSecs: prepared.totalRestSecs,
+          totalReps: 0,
+          totalVolume: 0,
+          muscleGroups: const <MuscleGroup>{},
+          muscles: const TargetMuscles(
+            primary: <Muscle>{},
+            secondary: <Muscle>{},
+          ),
+          updatedAt: DateUtilities.getNowUtcUnix(),
+        );
+
+        final updatedDto = await _workoutRecordDao.startTransaction((
+          trx,
+        ) async {
+          await _cardioSetExerciseRecordDao.deleteMany(
+            where: WorkoutCardioSetExerciseRecordColumns.workoutRecordId.equal,
+            whereArgs: [workoutRecordId],
+            trx: trx,
+          );
+          await _cardioSetRecordDao.deleteMany(
+            where: WorkoutCardioSetRecordColumns.workoutRecordId.equal,
+            whereArgs: [workoutRecordId],
+            trx: trx,
+          );
+          await _setExerciseRecordDao.deleteMany(
+            where: WorkoutSetExerciseRecordColumns.workoutRecordId.equal,
+            whereArgs: [workoutRecordId],
+            trx: trx,
+          );
+          await _setRecordDao.deleteMany(
+            where: WorkoutSetRecordColumns.workoutRecordId.equal,
+            whereArgs: [workoutRecordId],
+            trx: trx,
+          );
+          await _workoutRecordDao.update(updatedRecord, trx);
+
+          final savedChildren = await _insertBatchCardioSetsAndExercises(
+            trx: trx,
+            workoutRecordId: workoutRecordId,
+            cardioSets: input.cardioSets,
+            exerciseMap: prepared.exerciseMap,
+          );
+          // Throw inside the transaction to roll back earlier writes.
+          if (savedChildren.isErr()) throw savedChildren.error;
+          final cardioSetRecordDtos = savedChildren.value;
+          return WorkoutRecordDto.fromModel(
+            updatedRecord,
+            cardioSetRecords: cardioSetRecordDtos.isEmpty
+                ? null
+                : cardioSetRecordDtos,
+          );
+        });
+        _logger.info(
+          'Batch updated cardio workout record with id $workoutRecordId',
+        );
+        return ok(updatedDto);
+      }
+
+      if (input.cardioSets.isNotEmpty) {
+        return err(
+          const ServiceError(
+            type: OperationErrorTypes.invalidInput,
+            description:
+                'Cardio set records cannot be saved for a strength workout',
           ),
         );
       }
@@ -1118,6 +1888,16 @@ final class WorkoutRecordRepository implements Repository {
         );
         await _setRecordDao.deleteMany(
           where: WorkoutSetRecordColumns.workoutRecordId.equal,
+          whereArgs: [workoutRecordId],
+          trx: trx,
+        );
+        await _cardioSetExerciseRecordDao.deleteMany(
+          where: WorkoutCardioSetExerciseRecordColumns.workoutRecordId.equal,
+          whereArgs: [workoutRecordId],
+          trx: trx,
+        );
+        await _cardioSetRecordDao.deleteMany(
+          where: WorkoutCardioSetRecordColumns.workoutRecordId.equal,
           whereArgs: [workoutRecordId],
           trx: trx,
         );

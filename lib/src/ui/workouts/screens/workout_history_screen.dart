@@ -130,6 +130,7 @@ class _WorkoutHistoryScreenState extends State<WorkoutHistoryScreen> {
                           units: units,
                           workoutId: widget.workoutId,
                           workoutVersion: workoutVersion,
+                          isCardio: selectedWorkout?.isCardio,
                         ),
                         SizedBox(height: sizes.spacing),
                         WorkoutRecordHistory(
@@ -139,6 +140,7 @@ class _WorkoutHistoryScreenState extends State<WorkoutHistoryScreen> {
                           units: units,
                           workoutId: widget.workoutId,
                           workoutVersion: workoutVersion,
+                          isCardio: selectedWorkout?.isCardio,
                         ),
                       ],
                     );

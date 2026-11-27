@@ -17,6 +17,9 @@
 
 import 'package:equatable/equatable.dart';
 
+import '../../../../data/repositories/workouts/dtos/workout_cardio_set_dto.dart';
+import '../../../../data/repositories/workouts/dtos/workout_cardio_set_exercise_dto.dart';
+import '../../../../data/repositories/workouts/dtos/workout_cardio_set_exercise_record_dto.dart';
 import '../../../../data/repositories/workouts/dtos/workout_dto.dart';
 import '../../../../data/repositories/workouts/dtos/workout_record_dto.dart';
 import '../../../../data/repositories/workouts/dtos/workout_set_dto.dart';
@@ -33,6 +36,8 @@ class ActiveWorkoutState extends Equatable {
   final int currentSetNumber;
   final int currentExercisePosition;
   final bool isResting;
+  final int? pendingRestSecs;
+  final bool isRoundRest;
   final bool isLoading;
   final bool isCompleted;
   final ErrorState? error;
@@ -48,6 +53,8 @@ class ActiveWorkoutState extends Equatable {
     required this.currentSetNumber,
     required this.currentExercisePosition,
     required this.isResting,
+    this.pendingRestSecs,
+    this.isRoundRest = true,
     required this.currentSetStartedAt,
     required this.isLoading,
     required this.isCompleted,
@@ -57,6 +64,8 @@ class ActiveWorkoutState extends Equatable {
     this.day,
     this.workoutPosition,
   });
+
+  bool get isCardio => workout?.isCardio ?? false;
 
   WorkoutSetDto? get currentSet {
     if (workout == null || workout!.sets == null) return null;
@@ -74,6 +83,25 @@ class ActiveWorkoutState extends Equatable {
       return null;
     }
     return set.exercises![currentExercisePosition];
+  }
+
+  WorkoutCardioSetDto? get currentCardioSet {
+    if (workout == null || workout!.cardioSets == null) return null;
+    if (currentSetPosition < 0 ||
+        currentSetPosition >= workout!.cardioSets!.length) {
+      return null;
+    }
+    return workout!.cardioSets![currentSetPosition];
+  }
+
+  WorkoutCardioSetExerciseDto? get currentCardioExercise {
+    final cardioSet = currentCardioSet;
+    if (cardioSet == null || cardioSet.exercises == null) return null;
+    if (currentExercisePosition < 0 ||
+        currentExercisePosition >= cardioSet.exercises!.length) {
+      return null;
+    }
+    return cardioSet.exercises![currentExercisePosition];
   }
 
   /// The current entry when resuming, or the most recently logged occurrence
@@ -121,11 +149,73 @@ class ActiveWorkoutState extends Equatable {
     return latestMatch;
   }
 
+  /// The current cardio entry when resuming, or the most recently logged
+  /// occurrence of the same exercise in this cardio block.
+  WorkoutCardioSetExerciseRecordDto? get latestMatchingCardioExerciseRecord {
+    final cardioSet = currentCardioSet;
+    final cardioExercise = currentCardioExercise;
+    final records = workoutRecord?.cardioSetRecords;
+    if (cardioSet == null || cardioExercise == null || records == null) {
+      return null;
+    }
+
+    WorkoutCardioSetExerciseRecordDto? latestMatch;
+    var latestRoundNumber = -1;
+
+    for (final setRecord in records) {
+      if (setRecord.workoutCardioSetId != cardioSet.id ||
+          setRecord.roundNumber > currentSetNumber) {
+        continue;
+      }
+
+      final exerciseRecords = setRecord.exerciseRecords;
+      if (exerciseRecords == null || exerciseRecords.isEmpty) continue;
+
+      if (setRecord.roundNumber == currentSetNumber) {
+        for (final record in exerciseRecords) {
+          if (record.workoutCardioSetExerciseId == cardioExercise.id) {
+            return record;
+          }
+        }
+      }
+
+      if (latestMatch != null && setRecord.roundNumber <= latestRoundNumber) {
+        continue;
+      }
+
+      for (var i = exerciseRecords.length - 1; i >= 0; i--) {
+        final record = exerciseRecords[i];
+        if (record.exerciseId == cardioExercise.exerciseId) {
+          latestMatch = record;
+          latestRoundNumber = setRecord.roundNumber;
+          break;
+        }
+      }
+    }
+
+    return latestMatch;
+  }
+
   int get totalSets {
     return workout?.totalSets ?? 0;
   }
 
   int get totalCurrentSet {
+    if (isCardio) {
+      final cardioSets = workout?.cardioSets;
+      if (cardioSets == null || cardioSets.isEmpty) return currentSetNumber;
+      final boundedPosition = currentSetPosition < 0
+          ? 0
+          : currentSetPosition > cardioSets.length
+          ? cardioSets.length
+          : currentSetPosition;
+      var precedingRoundCount = 0;
+      for (var i = 0; i < boundedPosition; i++) {
+        precedingRoundCount += cardioSets[i].rounds;
+      }
+      return precedingRoundCount + currentSetNumber;
+    }
+
     final sets = workout?.sets;
     if (sets == null || sets.isEmpty) return currentSetNumber;
     final boundedPosition = currentSetPosition < 0
@@ -152,6 +242,7 @@ class ActiveWorkoutState extends Equatable {
       currentExercisePosition: 0,
       currentSetNumber: 1,
       isResting: false,
+      isRoundRest: true,
       isLoading: false,
       isCompleted: false,
       currentSetStartedAt: DateTime.now(),
@@ -165,6 +256,8 @@ class ActiveWorkoutState extends Equatable {
     int? currentExercisePosition,
     int? currentSetNumber,
     bool? isResting,
+    Nullable<int>? pendingRestSecs,
+    bool? isRoundRest,
     DateTime? currentSetStartedAt,
     bool? isLoading,
     bool? isCompleted,
@@ -184,6 +277,10 @@ class ActiveWorkoutState extends Equatable {
           currentExercisePosition ?? this.currentExercisePosition,
       currentSetNumber: currentSetNumber ?? this.currentSetNumber,
       isResting: isResting ?? this.isResting,
+      pendingRestSecs: pendingRestSecs != null
+          ? pendingRestSecs.value
+          : this.pendingRestSecs,
+      isRoundRest: isRoundRest ?? this.isRoundRest,
       currentSetStartedAt: currentSetStartedAt ?? this.currentSetStartedAt,
       isLoading: isLoading ?? this.isLoading,
       isCompleted: isCompleted ?? this.isCompleted,
@@ -203,6 +300,8 @@ class ActiveWorkoutState extends Equatable {
     currentExercisePosition,
     currentSetNumber,
     isResting,
+    pendingRestSecs,
+    isRoundRest,
     currentSetStartedAt,
     isLoading,
     error,

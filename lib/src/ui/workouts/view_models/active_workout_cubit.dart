@@ -22,6 +22,8 @@ import 'package:logging/logging.dart';
 
 import '../../../data/repositories/workout_plans/inputs/workout_plan_workout_record_input.dart';
 import '../../../data/repositories/workout_plans/workout_plan_record_repository.dart';
+import '../../../data/repositories/workouts/inputs/workout_cardio_set_exercise_record_input.dart';
+import '../../../data/repositories/workouts/inputs/workout_cardio_set_record_input.dart';
 import '../../../data/repositories/workouts/inputs/workout_record_input.dart';
 import '../../../data/repositories/workouts/inputs/workout_set_exercise_record_input.dart';
 import '../../../data/repositories/workouts/inputs/workout_set_record_input.dart';
@@ -179,7 +181,12 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
       }
     }
 
-    final workoutRecord = workoutRecordResult.value;
+    final hydratedRecordResult = await _workoutRecordService.getWorkoutRecord(
+      workoutRecordResult.value.id,
+    );
+    final workoutRecord = hydratedRecordResult.isOk()
+        ? hydratedRecordResult.value
+        : workoutRecordResult.value;
     emit(
       state.copyWith(
         workout: Nullable(workoutResult.value),
@@ -187,6 +194,9 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
         currentSetPosition: 0,
         currentExercisePosition: 0,
         currentSetNumber: 1,
+        isResting: false,
+        pendingRestSecs: const Nullable(null),
+        isRoundRest: true,
         currentSetStartedAt: startedAt,
         isLoading: false,
         error: const Nullable(null),
@@ -302,8 +312,129 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
     );
   }
 
-  void startRest() {
-    emit(state.copyWith(isResting: true));
+  Future<void> logCardioExerciseSet({
+    required int position,
+    required CardioBaseMode mode,
+    required int quantity,
+    required int durationSecs,
+    required int roundNumber,
+    required int rpe,
+    int exerciseRestSecs = 0,
+    int? roundRestSecs,
+    bool markRoundCompleted = false,
+  }) async {
+    final currentCardioSet = state.currentCardioSet;
+    final currentCardioExercise = state.currentCardioExercise;
+    final workoutRecord = state.workoutRecord;
+
+    if (currentCardioSet == null ||
+        currentCardioExercise == null ||
+        workoutRecord == null) {
+      _logger.warning("No current cardio set, exercise, or record found");
+      return;
+    }
+
+    if (roundNumber < 1 || roundNumber > currentCardioSet.rounds) {
+      _logger.warning(
+        "Round number $roundNumber exceeds rounds ${currentCardioSet.rounds}",
+      );
+      return;
+    }
+
+    emit(state.copyWith(isLoading: true, isCompleted: false));
+    final setRecordResult = await _workoutRecordService
+        .upsertWorkoutCardioSetRecord(
+          WorkoutCardioSetRecordInput(
+            workoutCardioSetId: currentCardioSet.id,
+            workoutRecordId: workoutRecord.id,
+            roundNumber: roundNumber,
+            startedAt: state.currentSetStartedAt,
+            totalRestSecs: Nullable(roundRestSecs),
+            completedAt: markRoundCompleted
+                ? Nullable(DateTime.now())
+                : const Nullable(null),
+          ),
+        );
+
+    if (setRecordResult.isErr()) {
+      final error = setRecordResult.error;
+      _logger.warning("Failed to upsert cardio set record");
+      emit(
+        state.copyWith(
+          isLoading: false,
+          error: Nullable(
+            ErrorState(type: error.type.name, description: error.description),
+          ),
+        ),
+      );
+      return;
+    }
+
+    final setRecord = setRecordResult.value;
+    final exerciseRecordResult = await _workoutRecordService
+        .upsertWorkoutCardioSetExerciseRecord(
+          WorkoutCardioSetExerciseRecordInput(
+            workoutCardioSetExerciseId: currentCardioExercise.id,
+            workoutRecordId: workoutRecord.id,
+            workoutCardioSetRecordId: setRecord.id,
+            exerciseId: currentCardioExercise.exerciseId,
+            position: position,
+            mode: mode,
+            quantity: quantity,
+            durationSecs: durationSecs,
+            restSecs: exerciseRestSecs,
+            rpe: rpe,
+          ),
+        );
+
+    if (exerciseRecordResult.isErr()) {
+      final error = exerciseRecordResult.error;
+      _logger.warning("Failed to upsert cardio exercise record");
+      emit(
+        state.copyWith(
+          isLoading: false,
+          error: Nullable(
+            ErrorState(type: error.type.name, description: error.description),
+          ),
+        ),
+      );
+      return;
+    }
+
+    final updatedRecordResult = await _workoutRecordService.getWorkoutRecord(
+      workoutRecord.id,
+    );
+    if (updatedRecordResult.isErr()) {
+      final error = updatedRecordResult.error;
+      _logger.warning("Failed to refresh workout record");
+      emit(
+        state.copyWith(
+          isLoading: false,
+          error: Nullable(
+            ErrorState(type: error.type.name, description: error.description),
+          ),
+        ),
+      );
+      return;
+    }
+
+    emit(
+      state.copyWith(
+        workoutRecord: Nullable(updatedRecordResult.value),
+        isLoading: false,
+        error: const Nullable(null),
+      ),
+    );
+  }
+
+  void startRest({int? recommendedSecs, bool isRoundRest = true}) {
+    emit(
+      state.copyWith(
+        isResting: true,
+        pendingRestSecs: Nullable(recommendedSecs),
+        isRoundRest: isRoundRest,
+      ),
+    );
   }
 
   void nextExercise() {
@@ -313,6 +444,46 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
     int nextSetIndex = state.currentSetPosition;
     int nextExerciseIndex = state.currentExercisePosition + 1;
     int nextSetNumber = state.currentSetNumber;
+
+    if (state.isCardio) {
+      final currentCardioSet = state.currentCardioSet;
+      if (currentCardioSet != null && currentCardioSet.exercises != null) {
+        if (nextExerciseIndex >= currentCardioSet.exercises!.length) {
+          if (nextSetNumber < currentCardioSet.rounds) {
+            nextSetNumber++;
+            nextExerciseIndex = 0;
+          } else {
+            nextSetIndex++;
+            nextExerciseIndex = 0;
+            nextSetNumber = 1;
+          }
+        }
+      } else {
+        nextSetIndex++;
+        nextExerciseIndex = 0;
+        nextSetNumber = 1;
+      }
+
+      final isWorkoutCompleted =
+          nextSetIndex >= (state.workout?.cardioSets?.length ?? 0);
+      if (isWorkoutCompleted) {
+        completeWorkout();
+        return;
+      }
+
+      emit(
+        state.copyWith(
+          isResting: false,
+          pendingRestSecs: const Nullable(null),
+          isRoundRest: true,
+          currentSetPosition: nextSetIndex,
+          currentExercisePosition: nextExerciseIndex,
+          currentSetNumber: nextSetNumber,
+          currentSetStartedAt: nextSetStartedAt,
+        ),
+      );
+      return;
+    }
 
     final currentSet = state.currentSet;
 
@@ -358,6 +529,8 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
     emit(
       state.copyWith(
         isResting: false,
+        pendingRestSecs: const Nullable(null),
+        isRoundRest: true,
         currentSetPosition: nextSetIndex,
         currentExercisePosition: nextExerciseIndex,
         currentSetNumber: nextSetNumber,
@@ -367,11 +540,49 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
   }
 
   void previousExercise() {
-    if (state.workout == null || state.workout!.sets == null) return;
+    if (state.workout == null) return;
 
     int prevSetIndex = state.currentSetPosition;
     int prevExerciseIndex = state.currentExercisePosition - 1;
     int prevSetNumber = state.currentSetNumber;
+
+    if (state.isCardio) {
+      final cardioSets = state.workout!.cardioSets;
+      if (cardioSets == null || cardioSets.isEmpty) return;
+
+      if (prevExerciseIndex < 0) {
+        prevSetNumber--;
+        if (prevSetNumber > 0) {
+          final currentSet = cardioSets[prevSetIndex];
+          prevExerciseIndex = (currentSet.exercises?.length ?? 1) - 1;
+        } else {
+          prevSetIndex--;
+          if (prevSetIndex >= 0) {
+            final prevSet = cardioSets[prevSetIndex];
+            prevSetNumber = prevSet.rounds;
+            prevExerciseIndex = (prevSet.exercises?.length ?? 1) - 1;
+          } else {
+            prevSetIndex = 0;
+            prevExerciseIndex = 0;
+            prevSetNumber = 1;
+          }
+        }
+      }
+
+      emit(
+        state.copyWith(
+          isResting: false,
+          pendingRestSecs: const Nullable(null),
+          isRoundRest: true,
+          currentSetPosition: prevSetIndex,
+          currentExercisePosition: prevExerciseIndex,
+          currentSetNumber: prevSetNumber,
+        ),
+      );
+      return;
+    }
+
+    if (state.workout!.sets == null) return;
 
     if (prevExerciseIndex < 0) {
       prevSetNumber--;
@@ -394,6 +605,9 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
 
     emit(
       state.copyWith(
+        isResting: false,
+        pendingRestSecs: const Nullable(null),
+        isRoundRest: true,
         currentSetPosition: prevSetIndex,
         currentExercisePosition: prevExerciseIndex,
         currentSetNumber: prevSetNumber,
@@ -403,9 +617,11 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
 
   void skipToNextSet() {
     int nextSetIndex = state.currentSetPosition + 1;
+    final totalBlocks = state.isCardio
+        ? (state.workout?.cardioSets?.length ?? 0)
+        : (state.workout?.sets?.length ?? 0);
 
-    final isWorkoutCompleted =
-        nextSetIndex >= (state.workout?.sets?.length ?? 0);
+    final isWorkoutCompleted = nextSetIndex >= totalBlocks;
 
     if (isWorkoutCompleted) {
       completeWorkout();
@@ -414,6 +630,9 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
 
     emit(
       state.copyWith(
+        isResting: false,
+        pendingRestSecs: const Nullable(null),
+        isRoundRest: true,
         currentSetPosition: nextSetIndex,
         currentExercisePosition: 0,
         currentSetNumber: 1,
@@ -493,6 +712,8 @@ class ActiveWorkoutCubit extends Cubit<ActiveWorkoutState> {
           isCompleted: true,
           isLoading: false,
           isResting: false,
+          pendingRestSecs: const Nullable(null),
+          isRoundRest: true,
           error: const Nullable(null),
         ),
       );

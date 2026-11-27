@@ -27,6 +27,7 @@ import '../../../../core/utils/formatters.dart';
 import '../../../../core/widgets/layout/list_card.dart';
 import '../../../../core/widgets/not_found_list.dart';
 import '../../../../core/widgets/total_numeric_string.dart';
+import '../../../../core/widgets/total_string.dart';
 import '../../../view_models/states/workout_record_state.dart';
 
 class SingleWorkoutRecordList extends StatelessWidget {
@@ -35,6 +36,7 @@ class SingleWorkoutRecordList extends StatelessWidget {
   final bool isLoading;
   final int? workoutId;
   final int? workoutVersion;
+  final bool? isCardio;
   final List<WorkoutRecordDto> workoutRecords;
   final WorkoutRecordPagination pagination;
   final ScrollController? scrollController;
@@ -46,6 +48,7 @@ class SingleWorkoutRecordList extends StatelessWidget {
     required this.isLoading,
     this.workoutId,
     this.workoutVersion,
+    this.isCardio,
     required this.workoutRecords,
     required this.pagination,
     this.scrollController,
@@ -76,6 +79,7 @@ class SingleWorkoutRecordList extends StatelessWidget {
               workoutRecord: WorkoutRecordDto.empty(),
               workoutId: workoutId,
               workoutVersion: workoutVersion,
+              isCardio: isCardio,
             );
           }
 
@@ -85,6 +89,7 @@ class SingleWorkoutRecordList extends StatelessWidget {
             workoutRecord: workoutRecords[index],
             workoutId: workoutId,
             workoutVersion: workoutVersion,
+            isCardio: isCardio,
           );
         },
       ),
@@ -99,6 +104,7 @@ class _SingleWorkoutRecordCard extends StatelessWidget {
   final WorkoutRecordDto workoutRecord;
   final int? workoutId;
   final int? workoutVersion;
+  final bool? isCardio;
 
   const _SingleWorkoutRecordCard({
     required this.sizes,
@@ -106,10 +112,13 @@ class _SingleWorkoutRecordCard extends StatelessWidget {
     required this.workoutRecord,
     required this.workoutId,
     required this.workoutVersion,
+    this.isCardio,
   });
 
   @override
   Widget build(BuildContext context) {
+    final isCardioWorkout =
+        isCardio ?? workoutRecord.workout?.isCardio ?? false;
     return ListCard(
       margin: sizes.margins / 2,
       padding: sizes.padding,
@@ -118,7 +127,10 @@ class _SingleWorkoutRecordCard extends StatelessWidget {
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.fitness_center, size: sizes.subtitleFontSize * 1.2),
+              Icon(
+                isCardioWorkout ? Icons.directions_run : Icons.fitness_center,
+                size: sizes.subtitleFontSize * 1.2,
+              ),
               Flexible(
                 child: Text(
                   " ${workoutRecord.workout!.name}",
@@ -154,24 +166,60 @@ class _SingleWorkoutRecordCard extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.start,
           mainAxisSize: MainAxisSize.max,
           children: [
-            Expanded(
-              child: TotalNumericString(
-                leading: Icon(Icons.repeat, size: sizes.fontSize * 1.2),
-                name: 'Sets',
-                total: workoutRecord.totalSets,
-                fontSize: sizes.fontSize,
+            if (isCardioWorkout) ...[
+              Expanded(
+                child: TotalNumericString(
+                  leading: Icon(Icons.repeat, size: sizes.fontSize * 1.2),
+                  name: 'Rounds',
+                  total: workoutRecord.totalSets,
+                  fontSize: sizes.fontSize,
+                ),
               ),
-            ),
-            Expanded(
-              child: TotalNumericString(
-                leading: Icon(Icons.scale, size: sizes.fontSize * 1.2),
-                name: 'Volume',
-                total: units == Units.metric
-                    ? Converters.gramsToKg(workoutRecord.totalVolume).round()
-                    : Converters.gramsToLbs(workoutRecord.totalVolume).round(),
-                fontSize: sizes.fontSize,
+              Expanded(
+                child: workoutRecord.completedAt != null
+                    ? TotalString(
+                        leading: Icon(
+                          Icons.schedule,
+                          size: sizes.fontSize * 1.2,
+                        ),
+                        name: 'Duration',
+                        total: Formatters.formatDuration(
+                          workoutRecord.completedAt!
+                              .difference(workoutRecord.startedAt)
+                              .inSeconds,
+                        ),
+                        fontSize: sizes.fontSize,
+                      )
+                    : TotalString(
+                        leading: Icon(Icons.timer, size: sizes.fontSize * 1.2),
+                        name: 'Rest',
+                        total: Formatters.formatDuration(
+                          workoutRecord.totalRestSecs,
+                        ),
+                        fontSize: sizes.fontSize,
+                      ),
               ),
-            ),
+            ] else ...[
+              Expanded(
+                child: TotalNumericString(
+                  leading: Icon(Icons.repeat, size: sizes.fontSize * 1.2),
+                  name: 'Sets',
+                  total: workoutRecord.totalSets,
+                  fontSize: sizes.fontSize,
+                ),
+              ),
+              Expanded(
+                child: TotalNumericString(
+                  leading: Icon(Icons.scale, size: sizes.fontSize * 1.2),
+                  name: 'Volume',
+                  total: units == Units.metric
+                      ? Converters.gramsToKg(workoutRecord.totalVolume).round()
+                      : Converters.gramsToLbs(workoutRecord.totalVolume)
+                            .round(),
+                  fontSize: sizes.fontSize,
+                ),
+              ),
+            ],
           ],
         ),
       ],

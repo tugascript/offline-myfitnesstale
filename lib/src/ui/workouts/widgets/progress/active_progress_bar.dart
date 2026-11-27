@@ -29,6 +29,7 @@ class ActiveProgressBar extends StatefulWidget {
   final double progress;
   final int totalSets;
   final int currentSet;
+  final String unitLabel;
 
   const ActiveProgressBar({
     super.key,
@@ -37,6 +38,7 @@ class ActiveProgressBar extends StatefulWidget {
     required this.progress,
     required this.totalSets,
     required this.currentSet,
+    this.unitLabel = 'Set',
   });
 
   @override
@@ -80,14 +82,17 @@ class _ActiveProgressBarState extends State<ActiveProgressBar> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  'Progress',
-                  style: TextStyle(
-                    fontSize: widget.sizes.subtitleFontSize,
-                    fontWeight: FontWeight.bold,
-                    color: widget.theme.colorScheme.onSurface,
+                Flexible(
+                  child: Text(
+                    'Progress',
+                    style: TextStyle(
+                      fontSize: widget.sizes.subtitleFontSize,
+                      fontWeight: FontWeight.bold,
+                      color: widget.theme.colorScheme.onSurface,
+                    ),
                   ),
                 ),
+                SizedBox(width: widget.sizes.halfSpacing),
                 Text(
                   '${(widget.progress * 100).toStringAsFixed(0)}%',
                   style: TextStyle(
@@ -105,46 +110,54 @@ class _ActiveProgressBarState extends State<ActiveProgressBar> {
               minHeight: widget.sizes.fontSize / 2,
             ),
             SizedBox(height: halfSpacing),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.repeat,
-                      size: widget.sizes.fontSize * 1.2,
-                      color: widget.theme.colorScheme.onSurfaceVariant,
-                    ),
-                    Text(
-                      ' Set ${widget.currentSet} of ${widget.totalSets}',
-                      style: TextStyle(
-                        fontSize: widget.sizes.fontSize,
+            SizedBox(
+              width: double.infinity,
+              child: Wrap(
+                alignment: WrapAlignment.spaceBetween,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                spacing: widget.sizes.halfSpacing,
+                runSpacing: widget.sizes.quarterSpacing,
+                children: [
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.repeat,
+                        size: widget.sizes.fontSize * 1.2,
                         color: widget.theme.colorScheme.onSurfaceVariant,
                       ),
-                    ),
-                  ],
-                ),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      _elapsedSeconds % 2 == 0
-                          ? Icons.hourglass_top_outlined
-                          : Icons.hourglass_bottom_outlined,
-                      size: widget.sizes.fontSize * 1.2,
-                      color: greyColor,
-                    ),
-                    Text(
-                      ' ${Formatters.formatTimer(_elapsedSeconds)}',
-                      style: TextStyle(
-                        fontSize: widget.sizes.fontSize,
+                      Flexible(
+                        child: Text(
+                          ' ${widget.unitLabel} ${widget.currentSet} of ${widget.totalSets}',
+                          style: TextStyle(
+                            fontSize: widget.sizes.fontSize,
+                            color: widget.theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        _elapsedSeconds % 2 == 0
+                            ? Icons.hourglass_top_outlined
+                            : Icons.hourglass_bottom_outlined,
+                        size: widget.sizes.fontSize * 1.2,
                         color: greyColor,
                       ),
-                    ),
-                  ],
-                ),
-              ],
+                      Text(
+                        ' ${Formatters.formatTimer(_elapsedSeconds)}',
+                        style: TextStyle(
+                          fontSize: widget.sizes.fontSize,
+                          color: greyColor,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ],
         ),

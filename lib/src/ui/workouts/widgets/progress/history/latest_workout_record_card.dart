@@ -31,6 +31,7 @@ class LatestWorkoutRecordCard extends StatelessWidget {
   final bool isLoading;
   final int? workoutId;
   final int? workoutVersion;
+  final bool? isCardio;
   final WorkoutRecordDto? workoutRecord;
 
   const LatestWorkoutRecordCard({
@@ -41,6 +42,7 @@ class LatestWorkoutRecordCard extends StatelessWidget {
     required this.isLoading,
     required this.workoutId,
     required this.workoutVersion,
+    this.isCardio,
     required this.workoutRecord,
   });
 
@@ -75,11 +77,13 @@ class LatestWorkoutRecordCard extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   mainAxisSize: MainAxisSize.max,
                   children: [
-                    Text(
-                      "Latest Record",
-                      style: TextStyle(
-                        fontSize: sizes.titleFontSize,
-                        fontWeight: FontWeight.bold,
+                    Expanded(
+                      child: Text(
+                        "Latest Record",
+                        style: TextStyle(
+                          fontSize: sizes.titleFontSize,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                     Icon(
@@ -96,6 +100,7 @@ class LatestWorkoutRecordCard extends StatelessWidget {
                   units: units,
                   isLoading: isLoading,
                   workoutRecord: workoutRecord,
+                  isCardio: isCardio,
                 ),
               ],
             ),

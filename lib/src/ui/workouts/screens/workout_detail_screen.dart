@@ -35,7 +35,6 @@ import '../../core/widgets/action_buttons.dart';
 import '../../core/widgets/confirmation_dialog.dart';
 import '../../core/widgets/layout/app_scaffold.dart';
 import '../../core/widgets/layout/responsive_scaffold.dart';
-import '../../core/widgets/mutation_buttons.dart';
 import '../view_models/states/workout_state.dart';
 import '../view_models/workout_cubit.dart';
 import '../widgets/details/empty_sets_card.dart';
@@ -384,17 +383,6 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
                           ),
                         );
                       }),
-                    SizedBox(height: sizes.spacing),
-                    if (!isSkeletonLoading &&
-                        workout.createdBy == CreatedBy.user)
-                      MutationButtons(
-                        theme: theme,
-                        sizes: sizes,
-                        isLoading: workoutState.isLoading,
-                        onEdit: () =>
-                            context.push('/workouts/${workout.id}/edit'),
-                        onDelete: showDeleteDialog,
-                      ),
                   ] else ...[
                     if (sets.length >= 4) ...[
                       WorkoutBlockStrip(
@@ -442,27 +430,26 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
                           ),
                         );
                       }),
-                    SizedBox(height: sizes.spacing),
-                    ActionButtons(
-                      isLoading: workoutState.isLoading,
-                      theme: theme,
-                      sizes: sizes,
-                      showMutationBtns: workout.createdBy == CreatedBy.user,
-                      onStart: () =>
-                          context.push("/workouts/${workout.id}/active"),
-                      startLabel: 'Start Workout',
-                      onEdit: () =>
-                          context.push('/workouts/${workout.id}/edit'),
-                      onHistory: () => context.push(
-                        WorkoutHistoryScreen.location(
-                          workoutId: workout.id,
-                          version: workout.version,
-                        ),
-                      ),
-                      historyLabel: 'History',
-                      onDelete: showDeleteDialog,
-                    ),
                   ],
+                  SizedBox(height: sizes.spacing),
+                  ActionButtons(
+                    isLoading: workoutState.isLoading,
+                    theme: theme,
+                    sizes: sizes,
+                    showMutationBtns: workout.createdBy == CreatedBy.user,
+                    onStart: () =>
+                        context.push("/workouts/${workout.id}/active"),
+                    startLabel: 'Start Workout',
+                    onEdit: () => context.push('/workouts/${workout.id}/edit'),
+                    onHistory: () => context.push(
+                      WorkoutHistoryScreen.location(
+                        workoutId: workout.id,
+                        version: workout.version,
+                      ),
+                    ),
+                    historyLabel: 'History',
+                    onDelete: showDeleteDialog,
+                  ),
                   SizedBox(height: sizes.spacing),
                 ],
               ),

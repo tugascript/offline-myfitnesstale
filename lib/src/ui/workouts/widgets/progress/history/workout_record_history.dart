@@ -37,6 +37,7 @@ class WorkoutRecordHistory extends StatefulWidget {
   final Units units;
   final int? workoutId;
   final int? workoutVersion;
+  final bool? isCardio;
 
   const WorkoutRecordHistory({
     super.key,
@@ -46,6 +47,7 @@ class WorkoutRecordHistory extends StatefulWidget {
     required this.units,
     this.workoutId,
     this.workoutVersion,
+    this.isCardio,
   });
 
   @override
@@ -228,6 +230,7 @@ class _WorkoutRecordHistoryState extends State<WorkoutRecordHistory> {
                 pagination: state.pagination,
                 workoutId: widget.workoutId,
                 workoutVersion: widget.workoutVersion,
+                isCardio: widget.isCardio,
               ),
             );
           },

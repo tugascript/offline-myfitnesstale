@@ -20,7 +20,10 @@ import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
+import '../../../data/repositories/workouts/dtos/workout_cardio_set_dto.dart';
+import '../../../data/repositories/workouts/dtos/workout_cardio_set_exercise_dto.dart';
 import '../../../data/utils/enums.dart';
+import '../../../data/utils/exercise_details.dart';
 import '../../../data/utils/json_data.dart';
 import '../../../routing/routes.dart';
 import '../../core/sizes/data_display_sizes.dart';
@@ -35,6 +38,9 @@ import '../../workout_plans/view_models/workout_plan_record_cubit.dart';
 import '../view_models/active_workout_cubit.dart';
 import '../view_models/states/active_workout_state.dart';
 import '../widgets/details/complete_modal.dart';
+import '../widgets/progress/active_cardio_exercise_card.dart';
+import '../widgets/progress/active_cardio_time_exercise.dart';
+import '../widgets/progress/active_cardio_units_exercise.dart';
 import '../widgets/progress/active_completed_workout.dart';
 import '../widgets/progress/active_exercise_card.dart';
 import '../widgets/progress/active_progress_bar.dart';
@@ -69,6 +75,11 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
       WorkoutSetExerciseDifficultyType.rir;
   int _loggedDifficultyValue = 2;
 
+  int _loggedCardioQuantity = 0;
+  int _loggedCardioDurationSecs = 0;
+  int _loggedCardioRpe = WorkoutSetExerciseDifficultyType.rpe.defaultValue;
+  bool _loggedCardioRoundCompleted = false;
+
   void _leaveActiveWorkout() {
     if (context.canPop()) {
       context.pop();
@@ -79,6 +90,79 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
           widget.workoutId.toString(),
         ),
       );
+    }
+  }
+
+  Future<void> _handleCompleteCardioExercise({
+    required ActiveWorkoutState activeState,
+    required WorkoutCardioSetDto currentCardioSet,
+    required WorkoutCardioSetExerciseDto cardioExercise,
+    required int quantity,
+    required int durationSecs,
+    required int rpe,
+  }) async {
+    final totalBlocks = activeState.workout?.cardioSets?.length ?? 0;
+    final totalExercises = currentCardioSet.exercises?.length ?? 1;
+    final isLastExerciseInRound =
+        activeState.currentExercisePosition >= totalExercises - 1;
+    final isLastRoundInBlock =
+        activeState.currentSetNumber >= currentCardioSet.rounds;
+    final isLastBlock = activeState.currentSetPosition >= totalBlocks - 1;
+    final isFinalStepOfWorkout =
+        isLastExerciseInRound && isLastRoundInBlock && isLastBlock;
+
+    setState(() {
+      _loggedCardioQuantity = quantity;
+      _loggedCardioDurationSecs = durationSecs;
+      _loggedCardioRpe = rpe;
+      _loggedCardioRoundCompleted = isLastExerciseInRound;
+    });
+
+    final cubit = context.read<ActiveWorkoutCubit>();
+    await cubit.logCardioExerciseSet(
+      position: cardioExercise.position,
+      mode: cardioExercise.mode,
+      quantity: quantity,
+      durationSecs: durationSecs,
+      roundNumber: activeState.currentSetNumber,
+      rpe: rpe,
+      markRoundCompleted: isLastExerciseInRound,
+    );
+
+    if (!mounted || cubit.state.error != null) return;
+
+    if (isFinalStepOfWorkout) {
+      cubit.nextExercise();
+      return;
+    }
+
+    if (!isLastExerciseInRound) {
+      if (currentCardioSet.setType == CardioSetType.interval &&
+          cardioExercise.restSecs > 0) {
+        cubit.startRest(
+          recommendedSecs: cardioExercise.restSecs,
+          isRoundRest: false,
+        );
+      } else {
+        cubit.nextExercise();
+      }
+      return;
+    }
+
+    if (currentCardioSet.restSecs > 0) {
+      cubit.startRest(
+        recommendedSecs: currentCardioSet.restSecs,
+        isRoundRest: true,
+      );
+    } else if (!isLastRoundInBlock &&
+        currentCardioSet.setType == CardioSetType.interval &&
+        cardioExercise.restSecs > 0) {
+      cubit.startRest(
+        recommendedSecs: cardioExercise.restSecs,
+        isRoundRest: false,
+      );
+    } else {
+      cubit.nextExercise();
     }
   }
 
@@ -143,19 +227,41 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
           isEntity: true,
           body: BlocBuilder<ProfileCubit, ProfileState>(
             builder: (context, profileState) {
+              final isCardio = activeState.isCardio;
               final workoutSetExercise = activeState.currentExercise;
               final exercise = workoutSetExercise?.exercise;
               final currentSet = activeState.currentSet;
               final previousRecord = activeState.latestMatchingExerciseRecord;
 
+              final currentCardioSet = activeState.currentCardioSet;
+              final currentCardioExercise = activeState.currentCardioExercise;
+              final cardioExerciseDto = currentCardioExercise?.exercise;
+              final previousCardioRecord =
+                  activeState.latestMatchingCardioExerciseRecord;
+
+              final isMissingStep = isCardio
+                  ? (currentCardioSet == null ||
+                        currentCardioExercise == null ||
+                        cardioExerciseDto == null)
+                  : (workoutSetExercise == null ||
+                        exercise == null ||
+                        currentSet == null);
+
+              final totalBlocks = activeState.workout?.cardioSets?.length ?? 0;
+              final totalCardioExercises =
+                  currentCardioSet?.exercises?.length ?? 1;
+              final isFinalCardioStep =
+                  isCardio &&
+                  currentCardioSet != null &&
+                  activeState.currentExercisePosition >=
+                      totalCardioExercises - 1 &&
+                  activeState.currentSetNumber >= currentCardioSet.rounds &&
+                  activeState.currentSetPosition >= totalBlocks - 1;
+
               return Padding(
                 padding: EdgeInsets.all(sizes.viewPadding),
                 child: Skeletonizer(
-                  enabled:
-                      activeState.isLoading &&
-                      (workoutSetExercise == null ||
-                          exercise == null ||
-                          currentSet == null),
+                  enabled: activeState.isLoading && isMissingStep,
                   child: Column(
                     children: [
                       ActiveProgressBar(
@@ -164,6 +270,7 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
                         progress: activeState.progress,
                         totalSets: activeState.totalSets,
                         currentSet: activeState.totalCurrentSet,
+                        unitLabel: isCardio ? 'Round' : 'Set',
                       ),
                       SizedBox(height: sizes.spacing),
                       if (activeState.isCompleted)
@@ -172,28 +279,149 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
                           sizes: sizes,
                           theme: theme,
                         )
-                      else if (workoutSetExercise == null ||
-                          exercise == null ||
-                          currentSet == null)
+                      else if (isMissingStep)
                         NotFoundActiveWorkout(
                           theme: theme,
                           breakPoint: breakpoints,
                           sizes: sizes,
                         )
-                      else ...[
+                      else if (isCardio) ...[
+                        ActiveCardioExerciseCard(
+                          sizes: sizes,
+                          theme: theme,
+                          setType: currentCardioSet!.setType,
+                          currentBlock: activeState.currentSetPosition + 1,
+                          totalBlocks: totalBlocks,
+                          currentRound: activeState.currentSetNumber,
+                          totalRounds: currentCardioSet.rounds,
+                          currentExercise:
+                              activeState.currentExercisePosition + 1,
+                          totalExercises: totalCardioExercises,
+                          exerciseName: cardioExerciseDto!.name,
+                          mode: currentCardioExercise!.mode,
+                          targetQuantity: currentCardioExercise.quantity,
+                          unit: cardioExerciseDto
+                              .getDetails<CardioExerciseDetails>()
+                              ?.unit,
+                          exerciseRestSecs: currentCardioExercise.restSecs,
+                          setRestSecs: currentCardioSet.restSecs,
+                        ),
+                        SizedBox(height: sizes.spacing),
+                        if (activeState.isResting)
+                          ActiveRestTimer(
+                            breakPoint: breakpoints,
+                            sizes: sizes,
+                            theme: theme,
+                            recommendedSecs:
+                                (activeState.pendingRestSecs ??
+                                        currentCardioSet.restSecs) >
+                                    0
+                                ? (activeState.pendingRestSecs ??
+                                      currentCardioSet.restSecs)
+                                : 1,
+                            onNext: (int restTime) async {
+                              final cubit = context.read<ActiveWorkoutCubit>();
+                              await cubit.logCardioExerciseSet(
+                                position: currentCardioExercise.position,
+                                mode: currentCardioExercise.mode,
+                                quantity: _loggedCardioQuantity,
+                                durationSecs: _loggedCardioDurationSecs,
+                                roundNumber: activeState.currentSetNumber,
+                                rpe: _loggedCardioRpe,
+                                exerciseRestSecs: activeState.isRoundRest
+                                    ? 0
+                                    : restTime,
+                                roundRestSecs: activeState.isRoundRest
+                                    ? restTime
+                                    : null,
+                                markRoundCompleted: _loggedCardioRoundCompleted,
+                              );
+                              if (!mounted || cubit.state.error != null) return;
+                              cubit.nextExercise();
+                            },
+                          )
+                        else if (currentCardioExercise.mode ==
+                            CardioBaseMode.time)
+                          ActiveCardioTimeExercise(
+                            sizes: sizes,
+                            theme: theme,
+                            workoutCardioSetExerciseId:
+                                currentCardioExercise.id,
+                            roundNumber: activeState.currentSetNumber,
+                            targetSecs: currentCardioExercise.quantity,
+                            initialRpe:
+                                previousCardioRecord?.rpe ??
+                                WorkoutSetExerciseDifficultyType
+                                    .rpe
+                                    .defaultValue,
+                            isLoading: activeState.isLoading,
+                            completeLabel: isFinalCardioStep
+                                ? 'Finish Workout'
+                                : 'Complete & Next',
+                            onComplete:
+                                ({required int elapsedSecs, required int rpe}) {
+                                  _handleCompleteCardioExercise(
+                                    activeState: activeState,
+                                    currentCardioSet: currentCardioSet,
+                                    cardioExercise: currentCardioExercise,
+                                    quantity: elapsedSecs,
+                                    durationSecs: elapsedSecs,
+                                    rpe: rpe,
+                                  );
+                                },
+                          )
+                        else
+                          ActiveCardioUnitsExercise(
+                            sizes: sizes,
+                            theme: theme,
+                            workoutCardioSetExerciseId:
+                                currentCardioExercise.id,
+                            roundNumber: activeState.currentSetNumber,
+                            initialQuantity:
+                                previousCardioRecord?.quantity ??
+                                currentCardioExercise.quantity,
+                            unit: cardioExerciseDto
+                                .getDetails<CardioExerciseDetails>()
+                                ?.unit,
+                            initialRpe:
+                                previousCardioRecord?.rpe ??
+                                WorkoutSetExerciseDifficultyType
+                                    .rpe
+                                    .defaultValue,
+                            isLoading: activeState.isLoading,
+                            completeLabel: isFinalCardioStep
+                                ? 'Finish Workout'
+                                : 'Complete & Next',
+                            onComplete:
+                                ({
+                                  required int quantity,
+                                  required int elapsedSecs,
+                                  required int rpe,
+                                }) {
+                                  _handleCompleteCardioExercise(
+                                    activeState: activeState,
+                                    currentCardioSet: currentCardioSet,
+                                    cardioExercise: currentCardioExercise,
+                                    quantity: quantity,
+                                    durationSecs: elapsedSecs,
+                                    rpe: rpe,
+                                  );
+                                },
+                          ),
+                      ] else ...[
                         ActiveExerciseCard(
                           sizes: sizes,
                           theme: theme,
-                          minSets: currentSet.minSets,
+                          minSets: currentSet!.minSets,
                           maxSets: currentSet.maxSets,
                           currentSet: activeState.currentSetNumber,
                           exercises: currentSet.exercises?.length ?? 0,
                           currentExercise:
                               activeState.currentExercisePosition + 1,
-                          minReps: workoutSetExercise.minReps,
+                          minReps: workoutSetExercise!.minReps,
                           maxReps: workoutSetExercise.maxReps,
                           toMaxReps: workoutSetExercise.toMaxReps,
-                          exerciseName: exercise.name,
+                          exerciseName: exercise!.name,
                           recommendedRestSecs: currentSet.recommendedRestSecs,
                           maxRestSecs: currentSet.maxRestSecs,
                           difficulty: workoutSetExercise.difficulty,
