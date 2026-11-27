@@ -26,6 +26,7 @@ import '../../../core/sizes/data_display_sizes.dart';
 import '../../../core/utils/converters.dart';
 import '../../../core/widgets/cardio_set_type_badge.dart';
 import '../../../core/widgets/detail_number.dart';
+import '../../../exercises/screens/exercise_detail_screen.dart';
 
 class WorkoutCardioSetCard extends StatelessWidget {
   final ThemeData theme;
@@ -82,7 +83,12 @@ class WorkoutCardioSetCard extends StatelessWidget {
       margin: EdgeInsets.zero,
       shape: const BeveledRectangleBorder(),
       child: InkWell(
-        onTap: () => context.push('/exercises/${exercise.exerciseId}'),
+        onTap: () => context.push(
+          ExerciseDetailScreen.location(
+            exercise.exerciseId,
+            type: ExerciseType.cardio,
+          ),
+        ),
         child: Padding(
           padding: EdgeInsets.all(sizes.padding),
           child: Row(
@@ -334,7 +340,12 @@ class _CardioExerciseRow extends StatelessWidget {
     final mutedColor = colors.onSurfaceVariant;
 
     return InkWell(
-      onTap: () => context.push('/exercises/${exercise.exerciseId}'),
+      onTap: () => context.push(
+        ExerciseDetailScreen.location(
+          exercise.exerciseId,
+          type: ExerciseType.cardio,
+        ),
+      ),
       child: Padding(
         padding: EdgeInsets.symmetric(
           vertical: sizes.halfSpacing,

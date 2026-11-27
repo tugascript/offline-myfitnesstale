@@ -17,6 +17,7 @@
 
 import 'package:go_router/go_router.dart';
 
+import '../data/utils/enums.dart';
 import '../ui/core/screens/not_found_screen.dart';
 import '../ui/exercises/screens/equipment_details_screen.dart';
 import '../ui/exercises/screens/equipments_list_screen.dart';
@@ -106,7 +107,12 @@ sealed class AppRouter {
         if (id == null) {
           return const NotFoundScreen();
         }
-        return ExerciseDetailScreen(exerciseId: id);
+        final exerciseType = switch (state.uri.queryParameters['type']) {
+          'strength' => ExerciseType.strength,
+          'cardio' => ExerciseType.cardio,
+          _ => null,
+        };
+        return ExerciseDetailScreen(exerciseId: id, exerciseType: exerciseType);
       },
     ),
     GoRoute(

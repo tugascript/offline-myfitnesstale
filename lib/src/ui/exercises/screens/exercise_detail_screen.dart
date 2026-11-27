@@ -37,9 +37,10 @@ import '../view_models/exercise_cubit.dart';
 import '../view_models/states/exercise_state.dart';
 import '../widgets/details/edit_exercise_modal.dart';
 import '../widgets/details/exercise_header_card.dart';
+import '../widgets/details/exercise_skeleton_placeholder.dart';
 import '../widgets/strength_goal/create_strength_goal_modal.dart';
 
-const _skeletonExercise = ExerciseDto(
+const _skeletonStrengthExercise = ExerciseDto(
   id: 0,
   name: 'Loading Exercise Name',
   description: 'Loading exercise description placeholder...',
@@ -52,12 +53,41 @@ const _skeletonExercise = ExerciseDto(
   createdBy: CreatedBy.system,
 );
 
+const _skeletonCardioExercise = ExerciseDto(
+  id: 0,
+  name: 'Loading Cardio Exercise',
+  description: 'Loading exercise description placeholder...',
+  details: CardioExerciseDetails(
+    defaultMode: CardioBaseMode.time,
+    unitType: CardioUnitType.distance,
+    unit: 'km',
+  ),
+  difficulty: Difficulty.beginner,
+  createdBy: CreatedBy.system,
+);
+
 class ExerciseDetailScreen extends StatefulWidget {
   static const name = "exercise-detail";
 
   final int exerciseId;
+  final ExerciseType? exerciseType;
 
-  const ExerciseDetailScreen({super.key, required this.exerciseId});
+  const ExerciseDetailScreen({
+    super.key,
+    required this.exerciseId,
+    this.exerciseType,
+  });
+
+  static String location(int exerciseId, {ExerciseType? type}) {
+    final base = Routes.exerciseDetail.name.replaceFirst(
+      ':id',
+      exerciseId.toString(),
+    );
+    if (type == null) {
+      return base;
+    }
+    return '$base?type=${type.value}';
+  }
 
   @override
   State<ExerciseDetailScreen> createState() => _ExerciseDetailScreenState();
@@ -68,6 +98,28 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
   void initState() {
     super.initState();
     context.read<ExerciseCubit>().getExercise(widget.exerciseId);
+  }
+
+  ExerciseType? _resolveSkeletonType(ExerciseState exerciseState) {
+    for (final item in exerciseState.exercises) {
+      if (item.id == widget.exerciseId) {
+        return item.type;
+      }
+    }
+    final relatedExercises = exerciseState.selectedEquipment?.relatedExercises;
+    if (relatedExercises != null) {
+      for (final item in relatedExercises) {
+        if (item.id == widget.exerciseId) {
+          return item.type;
+        }
+      }
+    }
+    for (final item in exerciseState.exerciseSelection) {
+      if (item.id == widget.exerciseId) {
+        return item.type;
+      }
+    }
+    return widget.exerciseType;
   }
 
   void _toggleFavorite(bool isFavorite) {
@@ -168,8 +220,26 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
           );
         }
 
+        final skeletonType = isSkeletonLoading
+            ? _resolveSkeletonType(exerciseState)
+            : null;
+
+        if (isSkeletonLoading && skeletonType == null) {
+          return ResponsiveScaffold(
+            title: "Exercise Details",
+            isEntity: false,
+            showBackButton: true,
+            body: Skeletonizer(
+              enabled: true,
+              child: ExerciseSkeletonPlaceholder(sizes: sizes),
+            ),
+          );
+        }
+
         final exercise = isSkeletonLoading
-            ? _skeletonExercise
+            ? (skeletonType == ExerciseType.cardio
+                  ? _skeletonCardioExercise
+                  : _skeletonStrengthExercise)
             : exerciseState.selectedExercise!;
 
         return ResponsiveScaffold(
